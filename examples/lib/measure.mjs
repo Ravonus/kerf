@@ -83,14 +83,7 @@ function unusedJs(entry) {
   return { size: len, unused: seen.reduce((n, x) => n + (x ? 0 : 1), 0) }
 }
 
-/** Fresh context, no throttle: what crossed the wire, sized the same way for everyone, and what of it ran. */
-export async function bytesPass(browser, url, { cookies = [] } = {}) {
-  const ctx = await browser.newContext({ viewport: { width: 412, height: 823 } }),
-    page = await ctx.newPage()
-  await ctx.addCookies(cookies)
-  const seen = [],
-    origin = new URL(url).origin,
-    wait = []
+function collectResponses(page, seen, origin, wait) {
   page.on('response', (r) =>
     wait.push(
       (async () => {
@@ -112,6 +105,17 @@ export async function bytesPass(browser, url, { cookies = [] } = {}) {
       })(),
     ),
   )
+}
+
+/** Fresh context, no throttle: what crossed the wire, sized the same way for everyone, and what of it ran. */
+export async function bytesPass(browser, url, { cookies = [] } = {}) {
+  const ctx = await browser.newContext({ viewport: { width: 412, height: 823 } }),
+    page = await ctx.newPage()
+  await ctx.addCookies(cookies)
+  const seen = [],
+    origin = new URL(url).origin,
+    wait = []
+  collectResponses(page, seen, origin, wait)
   await page.coverage.startJSCoverage({ resetOnNavigation: false })
   await page.coverage.startCSSCoverage({ resetOnNavigation: false })
   await page.goto(url, { waitUntil: 'load' })

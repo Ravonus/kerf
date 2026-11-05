@@ -245,6 +245,31 @@ function mouth(kind: MouthKind) {
         </g>
       )
     case 'open':
+    case 'grin':
+    case 'laugh':
+    case 'o':
+    case 'ooh':
+      return filledMouth(kind, filled)
+    case 'hmm':
+      return <path d="M93 118 Q98 115.5 103 118 Q107 120 110 116.5" {...stroke} />
+    case 'smirk':
+      return (
+        <g>
+          <path d="M88 113 Q101 124 113 109.5" {...stroke} />
+          <path d="M111 108.5 L115.5 111" {...stroke} stroke-width={SW * 0.9} />
+        </g>
+      )
+    case 'set':
+      return <path d="M92 117.5 Q100 121.5 108 117.5" {...stroke} />
+  }
+}
+
+function filledMouth(
+  kind: Extract<MouthKind, 'open' | 'grin' | 'laugh' | 'o' | 'ooh'>,
+  filled: { fill: string; stroke: string; 'stroke-width': number; 'stroke-linejoin': 'round' },
+) {
+  switch (kind) {
+    case 'open':
       return (
         <g>
           <path d="M87 111 Q100 113.5 113 111 Q112 128 100 128 Q88 128 87 111 Z" {...filled} />
@@ -287,17 +312,6 @@ function mouth(kind: MouthKind) {
       )
     case 'ooh':
       return <ellipse cx={102} cy={117} rx={3.6} ry={4.4} {...filled} />
-    case 'hmm':
-      return <path d="M93 118 Q98 115.5 103 118 Q107 120 110 116.5" {...stroke} />
-    case 'smirk':
-      return (
-        <g>
-          <path d="M88 113 Q101 124 113 109.5" {...stroke} />
-          <path d="M111 108.5 L115.5 111" {...stroke} stroke-width={SW * 0.9} />
-        </g>
-      )
-    case 'set':
-      return <path d="M92 117.5 Q100 121.5 108 117.5" {...stroke} />
   }
 }
 

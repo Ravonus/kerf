@@ -269,6 +269,14 @@ describe('against Postgres and a browser', { skip: !pgUp }, () => {
   })
   after(() => browser.close())
 
+  registerClone()
+  registerProxy(up)
+  registerSite(up, () => browser)
+  registerCorrectRace(up, fresh, () => browser)
+  registerUnguardedRace(up, fresh, () => browser)
+})
+
+function registerClone() {
   test('a clone holds exactly the seed, a reset brings it back, and two seed builds agree', async () => {
     const a = await ensureSeed(),
       name = 'weft_bench_test_clone',
@@ -284,7 +292,9 @@ describe('against Postgres and a browser', { skip: !pgUp }, () => {
     await psql('postgres', `drop database ${again}`)
     await psql('postgres', `drop database ${name}`)
   })
+}
 
+function registerProxy(up) {
   test('the proxy adds its RTT to SELECT 1, and a server keeps working through a reset', async () => {
     const s = await up('rtt')
     try {
@@ -299,7 +309,9 @@ describe('against Postgres and a browser', { skip: !pgUp }, () => {
       await s.stop()
     }
   })
+}
 
+function registerSite(up, getBrowser) {
   test('sitePass fills what applies and leaves the rest null', async () => {
     const s = await up('site'),
       out = {
@@ -315,7 +327,7 @@ describe('against Postgres and a browser', { skip: !pgUp }, () => {
         v: { name: 'site' },
         site: s.site,
         server: s.server,
-        browser,
+        browser: getBrowser(),
         samples: 1,
         out,
       })
@@ -356,12 +368,14 @@ describe('against Postgres and a browser', { skip: !pgUp }, () => {
     assert.equal(out.pages['/login'].canary.label, 'unchecked')
     assert.equal(out.db.queries, 'pg_stat_statements')
   })
+}
 
+function registerCorrectRace(up, fresh, getBrowser) {
   test('a correct client passes every race', async () => {
     const s = await up('good')
     try {
       const r = await raceOnce({
-        browser,
+        browser: getBrowser(),
         url: s.server.url,
         race: manifest.race,
         fresh: fresh(s),
@@ -381,12 +395,14 @@ describe('against Postgres and a browser', { skip: !pgUp }, () => {
       await s.stop()
     }
   })
+}
 
+function registerUnguardedRace(up, fresh, getBrowser) {
   test('a client with no ordering guard fails them', async () => {
     const s = await up('bad', { FIXTURE_BUG: '1' })
     try {
       const r = await raceOnce({
-        browser,
+        browser: getBrowser(),
         url: s.server.url,
         race: manifest.race,
         fresh: fresh(s),
@@ -399,7 +415,7 @@ describe('against Postgres and a browser', { skip: !pgUp }, () => {
       for (let i = 0; i < 4 && !caught; i++)
         caught = !(
           await raceOnce({
-            browser,
+            browser: getBrowser(),
             url: s.server.url,
             race: manifest.race,
             fresh: fresh(s),
@@ -413,4 +429,4 @@ describe('against Postgres and a browser', { skip: !pgUp }, () => {
       await s.stop()
     }
   })
-})
+}
