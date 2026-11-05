@@ -2,13 +2,21 @@
 // writes and no fetch (the cache starts from #weft-cache); an optimistic toggle writes one attribute and the
 // mutation's response carries the refreshed list; a failing mutation rolls back; the route's own data (its `meta`)
 // follows the invalidation; and a loader's redirect works in the client router. The dev server's todos are shared
-// with fn.test.mjs, so counts here are relative.
+// with fn.test.ts, so counts here are relative.
 import { createRequire } from 'node:module'
 import { inject } from 'vitest'
+import type * as Playwright from 'playwright-core'
+
+declare global {
+  interface Window {
+    __writes: string[]
+    __mo: MutationObserver
+  }
+}
 
 const url = inject('url')
-const { chromium } = createRequire(import.meta.url)('playwright-core')
-let browser
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await chromium.launch()
 })
@@ -16,10 +24,10 @@ afterAll(async () => {
   await browser?.close()
 })
 
-async function open(path) {
+async function open(path: string) {
   const page = await browser.newPage()
-  const errors = []
-  const calls = []
+  const errors: string[] = []
+  const calls: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   page.on('console', (m) =>
     m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined,
@@ -34,7 +42,7 @@ async function open(path) {
   return { page, errors, calls }
 }
 
-async function record(page) {
+async function record(page: Playwright.Page) {
   await page.evaluate(() => {
     window.__writes = []
     window.__mo = new MutationObserver((r) =>
@@ -44,7 +52,7 @@ async function record(page) {
         ),
       ),
     )
-    window.__mo.observe(document.getElementById('app'), {
+    window.__mo.observe(document.getElementById('app')!, {
       subtree: true,
       childList: true,
       characterData: true,
@@ -60,9 +68,9 @@ async function record(page) {
     })
 }
 
-const items = (page) =>
+const items = (page: Playwright.Page) =>
   page.$$eval('ul.todos li', (l) => l.map((li) => `${li.className}:${li.textContent}`))
-const slow = (page) =>
+const slow = (page: Playwright.Page) =>
   page.route('**/_weft/fn/**', async (r) => {
     await new Promise((ok) => {
       setTimeout(ok, 300)
@@ -87,8 +95,8 @@ test('an optimistic toggle writes one attribute, before the response, which carr
   const answered = page.waitForResponse((r) => r.request().method() === 'POST')
   await page.click('ul.todos li:nth-child(2) .toggle')
   await page.waitForFunction(
-    (was) => document.querySelector('ul.todos li:nth-child(2)').className !== was,
-    before[1].split(':')[0],
+    (was) => document.querySelector('ul.todos li:nth-child(2)')!.className !== was,
+    before[1]!.split(':')[0],
   )
   await answered
   await page.waitForTimeout(100)
@@ -148,18 +156,18 @@ test('client navigation to a redirecting route lands on its target, with one his
 })
 
 // Realtime in Chrome (research 30): the same page in two tabs, a real reader on a real connection.
-const text = (page, label) => page.getByLabel(label).textContent()
+const text = (page: Playwright.Page, label: string) => page.getByLabel(label).textContent()
 
 test('a live query and a stream hydrate 0/0, then update in place from another tab', async () => {
   const a = await open('/live')
   const b = await open('/live')
   await a.page.waitForFunction(
-    () => document.querySelector('[aria-label=status]').textContent === 'live',
+    () => document.querySelector('[aria-label=status]')!.textContent === 'live',
     null,
     { timeout: 10_000 },
   )
   await b.page.waitForFunction(
-    () => document.querySelector('[aria-label=status]').textContent === 'live',
+    () => document.querySelector('[aria-label=status]')!.textContent === 'live',
     null,
     { timeout: 10_000 },
   )
@@ -167,14 +175,14 @@ test('a live query and a stream hydrate 0/0, then update in place from another t
   const writes = await record(a.page)
   await b.page.getByRole('button', { name: 'bump' }).click()
   await a.page.waitForFunction(
-    (n) => document.querySelector('[aria-label=hits]').textContent === String(n),
+    (n) => document.querySelector('[aria-label=hits]')!.textContent === String(n),
     hits + 1,
     { timeout: 10_000 },
   )
   expect(await writes()).toEqual(['characterData:#text'])
   await b.page.getByRole('button', { name: 'post' }).click()
   await a.page.waitForFunction(
-    () => document.querySelector('[aria-label=notes]').textContent.endsWith('hi'),
+    () => document.querySelector('[aria-label=notes]')!.textContent.endsWith('hi'),
     null,
     { timeout: 10_000 },
   )
@@ -188,7 +196,7 @@ test('cut off and back: status follows, and what was published meanwhile arrives
   const a = await open('/live')
   const b = await open('/live')
   await a.page.waitForFunction(
-    () => document.querySelector('[aria-label=status]').textContent === 'live',
+    () => document.querySelector('[aria-label=status]')!.textContent === 'live',
     null,
     { timeout: 10_000 },
   )
@@ -196,14 +204,14 @@ test('cut off and back: status follows, and what was published meanwhile arrives
   await a.page.context().setOffline(true) // shared context: each `newPage` has its own
   // Headless Chrome cuts the network and leaves `navigator.onLine` true: the connection dropping is what shows.
   await a.page.waitForFunction(
-    () => document.querySelector('[aria-label=status]').textContent !== 'live',
+    () => document.querySelector('[aria-label=status]')!.textContent !== 'live',
     null,
     { timeout: 10_000 },
   )
   await b.page.getByRole('button', { name: 'bump' }).click()
   await a.page.context().setOffline(false)
   await a.page.waitForFunction(
-    (n) => document.querySelector('[aria-label=hits]').textContent === String(n),
+    (n) => document.querySelector('[aria-label=hits]')!.textContent === String(n),
     hits + 1,
     { timeout: 15_000 },
   )
