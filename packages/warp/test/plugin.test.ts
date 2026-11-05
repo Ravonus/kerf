@@ -2,15 +2,49 @@
 // The warp plugin: seed → tokens (gated by the spec's own contrast checker), classic fields, catalog and AGENTS text.
 import { readFileSync } from 'node:fs'
 import { parseAst } from 'vite'
-import { dtcg, warp } from '../plugin.mjs'
+import * as plugin from '../plugin.mjs'
+import type { WarpOptions } from '../plugin.mjs'
 
-const run = (opts) => warp(opts).contribute({ command: 'build', mode: 'production', root: '' })
-const code = (fn) => {
+type TokenFile = {
+  color: Record<string, { $type: string; $value: { colorSpace: string; hex: string } }> & {
+    $type: string
+  }
+  space: Record<string, { $value: { value: number; unit: string } }>
+  radius: Record<string, { $value: { value: number } }>
+  modifiers: { mode: { contexts: Record<string, unknown> } }
+}
+const { warp, dtcg } = plugin as typeof plugin & {
+  dtcg: (css?: string) => Record<string, TokenFile>
+}
+type CardScheme = { text: string; background: string; subtle: string; accent: string }
+type Contribution = {
+  tokens: { css: string; values: { fields: string } }
+  catalog: { name: string }[]
+  agents: { text: string }
+  card: { scheme: string; dark: CardScheme; light: CardScheme }
+  notes: string[]
+}
+type LiteralNode = {
+  type: string
+  properties: { key: { name?: string; value?: string }; value: LiteralNode }[]
+  value: unknown
+  operator: string
+  argument: LiteralNode
+}
+
+const run = (opts?: WarpOptions) =>
+  warp(opts).contribute({
+    command: 'build',
+    mode: 'production',
+    root: '',
+  }) as unknown as Contribution
+const code = (fn: () => unknown) => {
   try {
     fn()
   } catch (e) {
-    return e.code
+    return (e as { code: string }).code
   }
+  return undefined
 }
 
 test('the default seed adds no CSS; the catalog names every export; the AGENTS section fits in 1 KB', () => {
@@ -77,11 +111,11 @@ test("a hue outside the default's window keeps its hue and chroma: only the ligh
 }, 30_000)
 
 test("a token that breaks contrast with a seed is D010, listing the pairs; an invalid seed is weft's option error (P115)", () => {
-  let err
+  let err!: { code: string; failures: unknown[] }
   try {
     run({ seed: { hue: 20, chroma: 0.2 }, tokens: { '--warp-color-accent-solid': '#ffffff' } })
   } catch (e) {
-    err = e
+    err = e as typeof err
   }
   expect(err?.code).toBe('D010')
   expect(err.failures.length).toBeGreaterThan(0)
@@ -140,11 +174,11 @@ test.each([
   [{ tokens: { color: 'red' } }, 'tokens.color'],
   [{ tokens: { '--warp-color-page': 'red' } }, 'tokens.--warp-color-page'],
 ])('rejects %j', (input, path) => {
-  let error
+  let error!: { help: string }
   try {
-    warp(input)
+    warp(input as WarpOptions)
   } catch (e) {
-    error = e
+    error = e as typeof error
   }
   expect(error).toMatchObject({ code: 'P115', path })
 })
@@ -152,22 +186,22 @@ test.each([
 test('dtcg: every theme × expression, DTCG colours and dimensions, and a resolver over them', () => {
   const files = dtcg()
   expect(Object.keys(files)).toHaveLength(7)
-  const light = files['warp.light.quiet.tokens.json']
+  const light = files['warp.light.quiet.tokens.json']!
   expect(light.color.$type).toBe('color')
-  expect(light.color.text.$value.colorSpace).toBe('srgb')
-  expect(light.color.text.$value.hex).toMatch(/^#[0-9a-f]{6}$/)
-  expect(light.space.group.$value).toEqual({ value: 16, unit: 'px' })
-  expect(light.radius.control.$value.value).toBe(8)
-  expect(files['warp.dark.vivid.tokens.json'].radius.control.$value.value).toBe(2)
-  expect(Object.keys(files['warp.resolver.json'].modifiers.mode.contexts)).toHaveLength(6)
-  expect(files['warp.dark.quiet.tokens.json'].color.text.$value.hex).not.toBe(
-    light.color.text.$value.hex,
+  expect(light.color.text!.$value.colorSpace).toBe('srgb')
+  expect(light.color.text!.$value.hex).toMatch(/^#[0-9a-f]{6}$/)
+  expect(light.space.group!.$value).toEqual({ value: 16, unit: 'px' })
+  expect(light.radius.control!.$value.value).toBe(8)
+  expect(files['warp.dark.vivid.tokens.json']!.radius.control!.$value.value).toBe(2)
+  expect(Object.keys(files['warp.resolver.json']!.modifiers.mode.contexts)).toHaveLength(6)
+  expect(files['warp.dark.quiet.tokens.json']!.color.text!.$value.hex).not.toBe(
+    light.color.text!.$value.hex,
   )
 })
 test('dtcg: the seed reaches the tokens', () => {
   const css = run({ seed: { hue: 20, chroma: 0.12 } }).tokens.css
-  expect(dtcg(css)['warp.light.quiet.tokens.json'].color['accent-solid'].$value.hex).not.toBe(
-    dtcg()['warp.light.quiet.tokens.json'].color['accent-solid'].$value.hex,
+  expect(dtcg(css)['warp.light.quiet.tokens.json']!.color['accent-solid']!.$value.hex).not.toBe(
+    dtcg()['warp.light.quiet.tokens.json']!.color['accent-solid']!.$value.hex,
   )
 })
 
@@ -179,11 +213,11 @@ test('D010 checks only the stops the dials leave, and still fails on those', () 
 }, 30_000)
 
 test('a D010 says what to do, and the neutral seed lands on every scope', () => {
-  let error
+  let error!: { help: string }
   try {
     run({ tokens: { '--warp-color-page': '#fafafa' } })
   } catch (e) {
-    error = e
+    error = e as typeof error
   }
   expect(error.help).toContain('weft docs theme')
   const css = run({ seed: { neutral: { hue: 60, chroma: 0.03 } } }).tokens.css
@@ -202,24 +236,24 @@ test('a brand colour says where it landed', () => {
 }, 30_000)
 
 // a config in the docs is an object of plain literals: read it as one, without running it
-const literal = (n) =>
+const literal = (n: LiteralNode): unknown =>
   n.type === 'ObjectExpression'
-    ? Object.fromEntries(n.properties.map((p) => [p.key.name ?? p.key.value, literal(p.value)]))
+    ? Object.fromEntries(n.properties.map((p) => [p.key.name ?? p.key.value!, literal(p.value)]))
     : n.type === 'Literal'
       ? n.value
       : n.type === 'UnaryExpression' && n.operator === '-'
-        ? -literal(n.argument)
+        ? -(literal(n.argument) as number)
         : expect.fail(`not a literal: ${n.type}`)
 
 test('every config in `weft docs theme` passes D010', () => {
   const doc = readFileSync(new URL('../../cli/docs/theme.md', import.meta.url), 'utf8')
   const looks = [...doc.matchAll(/```ts\nwarp\((\{[\s\S]*?\})\)\n```/g)].map((m) =>
-    literal(parseAst(`(${m[1]})`).body[0].expression),
+    literal((parseAst(`(${m[1]})`).body[0] as unknown as { expression: LiteralNode }).expression),
   )
   expect(looks).toHaveLength(3)
   for (const look of looks)
     expect(
-      code(() => run(look)),
+      code(() => run(look as WarpOptions)),
       JSON.stringify(look),
     ).toBeUndefined()
 }, 60_000)
@@ -229,13 +263,14 @@ test('share cards get warp`s colours, in both schemes, readable, and the theme d
   expect(card.scheme).toBe('dark')
   expect(run({ dials: { theme: 'light' } }).card.scheme).toBe('light')
   expect(run({ seed: { hue: 20, chroma: 0.1 } }).card.dark.accent).not.toBe(card.dark.accent)
-  const lum = (hex) => {
+  const lum = (hex: string) => {
     const [r, g, b] = [1, 3, 5]
       .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
       .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!
   }
-  const contrast = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05)
+  const contrast = (a: string, b: string) =>
+    (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05)
   for (const c of [card.dark, card.light]) {
     expect(contrast(c.text, c.background)).toBeGreaterThan(7)
     expect(contrast(c.subtle, c.background)).toBeGreaterThan(4.5)
