@@ -30,7 +30,7 @@ export function checkoutNavigation(input: CheckoutInput, s: State) {
   const go = (to: CheckoutStep, focus?: 'field', back?: boolean) => {
     dir.value = back ? 'back' : undefined
     step.value = to
-    input.onStepChange()?.(to)
+    input.onStepChange(to)
     if (refs.root)
       announce(
         refs.root.ownerDocument,
