@@ -2,6 +2,21 @@ import { state } from '@weft-js/core'
 import { Button, Center, Cover, Heading, Input, Row, Stack, Text } from '@weft-js/warp'
 import { SCREEN } from './shared'
 
+function signInForm(send: (e: Event) => void) {
+  return (
+    <Stack as="form" gap="group" onSubmit={send}>
+      <Stack gap="hair">
+        <Heading level={3}>Sign in to weft</Heading>
+        <Text subtle>We'll email you a link. No password needed.</Text>
+      </Stack>
+      <Input label="Work email" type="email" required />
+      <Button type="submit" full>
+        Email me a link
+      </Button>
+    </Stack>
+  )
+}
+
 export function CoverSignIn() {
   const sent = state(false)
   const send = (e: Event) => {
@@ -26,16 +41,7 @@ export function CoverSignIn() {
             </Button>
           </Stack>
         ) : (
-          <Stack as="form" gap="group" onSubmit={send}>
-            <Stack gap="hair">
-              <Heading level={3}>Sign in to weft</Heading>
-              <Text subtle>We'll email you a link. No password needed.</Text>
-            </Stack>
-            <Input label="Work email" type="email" required />
-            <Button type="submit" full>
-              Email me a link
-            </Button>
-          </Stack>
+          signInForm(send)
         )}
       </Center>
       <Text role="caption" subtle>
