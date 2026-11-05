@@ -9,9 +9,9 @@ import { fit, suggest } from '../src/deploy/fit.mjs'
 import { host } from '../src/deploy/hosts.mjs'
 import {
   deployChecks,
-  deployCommand,
+  deployCommand as deployCommandRaw,
   hostsCommand,
-  initCommand,
+  initCommand as initCommandRaw,
   initContext,
   urlFrom,
   withDeploy,
@@ -19,8 +19,36 @@ import {
 import { needsOf } from '../src/deploy/needs.mjs'
 import { unsafeAllowed } from '../src/start.mjs'
 
+type DeployOptions = {
+  yes?: boolean
+  prod?: boolean
+  env?: NodeJS.ProcessEnv
+  which?: (cmd: string) => boolean
+  build?: (
+    dir: string,
+    opts: { preset: string },
+  ) => void | Promise<{ ok: boolean; diagnostics: unknown[] }>
+  exec?: (cmd: string, args: string[]) => void | Promise<{ code: number; stdout: string }>
+  post?: (url: string) => Promise<{ ok: boolean }>
+}
+const deployCommand = deployCommandRaw as unknown as (
+  dir: string,
+  config: Record<string, unknown>,
+  options: DeployOptions,
+) => ReturnType<typeof deployCommandRaw>
+const initCommand = initCommandRaw as unknown as (
+  dir: string,
+  config: Record<string, unknown>,
+  options?: {
+    target?: string
+    force?: boolean
+    dryRun?: boolean
+    unsafe?: ReturnType<typeof unsafeAllowed>
+  },
+) => ReturnType<typeof initCommandRaw>
+
 const tmp = fileURLToPath(new URL('./.tmp/', import.meta.url))
-const made = []
+const made: string[] = []
 afterAll(() => {
   for (const d of made) rmSync(d, { recursive: true, force: true })
 })
@@ -78,11 +106,11 @@ describe('needs', () => {
     )
     expect(needs.sockets).toEqual({ file: 'src/server/chat.server.ts', what: 'a `channel`' })
     expect(needs.memoryBus).toBeTruthy()
-    expect(needs.sqlite.file).toBe('src/db/index.server.ts')
-    expect(needs.uploads.what).toBe('media uploads')
-    expect(needs.sidecar.what).toBe("`remote('rust://search')`")
-    expect(needs.required.file).toBe('src/routes/feed.tsx')
-    expect(needs.addons.what).toBe('`sharp`')
+    expect(needs.sqlite!.file).toBe('src/db/index.server.ts')
+    expect(needs.uploads!.what).toBe('media uploads')
+    expect(needs.sidecar!.what).toBe("`remote('rust://search')`")
+    expect(needs.required!.file).toBe('src/routes/feed.tsx')
+    expect(needs.addons!.what).toBe('`sharp`')
   })
 
   it('a named bus, an external sidecar and an external listener are not needs', () => {
@@ -108,16 +136,16 @@ describe('fit', () => {
   it("E001: a channel can't run on Netlify or Vercel, and runs on Fly and Render", () => {
     const n = chat()
     for (const id of ['netlify', 'vercel']) {
-      const r = fit(n, host(id))
+      const r = fit(n, host(id)!)
       expect(r.fits).toBe(false)
       expect(r.findings[0]).toMatchObject({
         code: 'E001',
         severity: 'error',
         file: 'src/server/chat.server.ts',
       })
-      expect(r.findings[0].why).toContain('R024')
+      expect(r.findings[0]!.why).toContain('R024')
     }
-    for (const id of ['fly', 'render']) expect(fit(n, host(id)).fits).toBe(true)
+    for (const id of ['fly', 'render']) expect(fit(n, host(id)!).fits).toBe(true)
     expect(suggest(n)).toMatchObject({ host: 'fly', alternative: 'render' })
   })
 
@@ -129,20 +157,20 @@ describe('fit', () => {
           'export default realtime({ bus: durableObjectBus({ namespace }) })\n',
       }),
     )
-    expect(fit(n, host('cloudflare')).findings).toEqual([])
+    expect(fit(n, host('cloudflare')!).findings).toEqual([])
     expect(suggest(n).host).toBe('cloudflare')
   })
 
   it('E003: SQLite needs a volume on Fly, a disk on Render, and is out on a function host', () => {
     const n = needsOf(app(SQLITE))
-    expect(fit(n, host('netlify')).findings[0]).toMatchObject({ code: 'E003', severity: 'error' })
-    expect(fit(n, host('fly')).findings[0]).toMatchObject({ code: 'E003', severity: 'error' })
-    expect(fit(n, host('fly'), { assume: true }).findings[0].severity).toBe('warning')
-    expect(fit(n, host('fly'), { deploy: { fly: { volume: { name: 'data' } } } }).findings).toEqual(
-      [],
-    )
+    expect(fit(n, host('netlify')!).findings[0]).toMatchObject({ code: 'E003', severity: 'error' })
+    expect(fit(n, host('fly')!).findings[0]).toMatchObject({ code: 'E003', severity: 'error' })
+    expect(fit(n, host('fly')!, { assume: true }).findings[0]!.severity).toBe('warning')
     expect(
-      fit(n, host('render'), { deploy: { render: { disk: { sizeGb: 1 } } } }).findings,
+      fit(n, host('fly')!, { deploy: { fly: { volume: { name: 'data' } } } }).findings,
+    ).toEqual([])
+    expect(
+      fit(n, host('render')!, { deploy: { render: { disk: { sizeGb: 1 } } } }).findings,
     ).toEqual([])
     expect(suggest(n).host).toBe('fly')
   })
@@ -154,16 +182,16 @@ describe('fit', () => {
           "import { remote } from '@weft-js/start/rust'\nexport const s = remote('rust://s')\n",
       }),
     )
-    expect(fit(n, host('vercel')).findings.map((f) => f.code)).toEqual(['E002'])
-    expect(fit(n, host('render')).fits).toBe(true)
+    expect(fit(n, host('vercel')!).findings.map((f) => f.code)).toEqual(['E002'])
+    expect(fit(n, host('render')!).fits).toBe(true)
   })
 
   it("E004 only for a prebuilt deploy from a machine that isn't Linux", () => {
     const n = needsOf(app({ 'package.json': '{ "dependencies": { "better-sqlite3": "1" } }' }))
-    const codes = fit(n, host('netlify'), { local: true }).findings.map((f) => f.code)
+    const codes = fit(n, host('netlify')!, { local: true }).findings.map((f) => f.code)
     expect(codes).toEqual(process.platform === 'linux' ? [] : ['E004'])
-    expect(fit(n, host('netlify')).findings).toEqual([])
-    expect(fit(n, host('fly'), { local: true }).findings).toEqual([]) // Fly builds the image itself
+    expect(fit(n, host('netlify')!).findings).toEqual([])
+    expect(fit(n, host('fly')!, { local: true }).findings).toEqual([]) // Fly builds the image itself
   })
 })
 
@@ -178,17 +206,17 @@ describe('files', () => {
       '.dockerignore',
       '.github/workflows/weft-deploy.yml',
     ])
-    const toml = files[0].text
+    const toml = files[0]!.text
     expect(toml).toMatch(/^# weft deploy init fly, sha [0-9a-f]{12}\napp = "shop"/)
     expect(toml).toContain('destination = "/app/.data"')
-    expect(fileStates(dir, files).map((f) => f.state)).toEqual([
+    expect(fileStates(dir, files).map((f: { state: string }) => f.state)).toEqual([
       'missing',
       'missing',
       'missing',
       'missing',
     ])
     expect(writeFiles(dir, fileStates(dir, files))).toHaveLength(4)
-    expect(fileStates(dir, files).every((f) => f.state === 'current')).toBe(true)
+    expect(fileStates(dir, files).every((f: { state: string }) => f.state === 'current')).toBe(true)
     // the config moved on: weft's own file is stale
     const moved = filesFor(
       initContext(
@@ -213,7 +241,7 @@ describe('files', () => {
     const dir = app()
     const netlify = filesFor(initContext(dir, { deploy: { target: 'netlify' } }, 'netlify')).find(
       (f) => f.path.endsWith('.yml'),
-    ).text
+    )!.text
     // oxlint-disable-next-line no-template-curly-in-string -- GitHub Actions expressions in the workflow it writes
     expect(netlify).toContain('NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}')
     expect(netlify).toContain('pull_request:')
@@ -224,10 +252,10 @@ describe('files', () => {
     const render = filesFor(
       initContext(dir, { deploy: { target: 'render', branch: 'prod' } }, 'render'),
     )
-    const wf = render.find((f) => f.path.endsWith('.yml')).text
+    const wf = render.find((f) => f.path.endsWith('.yml'))!.text
     expect(wf).not.toContain('pull_request:')
     expect(wf).toContain('branches: [prod]')
-    expect(render.find((f) => f.path === 'render.yaml').text).toContain('autoDeploy: false')
+    expect(render.find((f) => f.path === 'render.yaml')!.text).toContain('autoDeploy: false')
   })
 
   it("a sidecar's image builds with cargo and runs `weft start`", () => {
@@ -237,12 +265,12 @@ describe('files', () => {
     })
     const docker = filesFor(initContext(dir, { deploy: { target: 'fly' } }, 'fly')).find(
       (f) => f.path === 'Dockerfile',
-    ).text
+    )!.text
     expect(docker).toContain('rustup')
     expect(docker).toContain('CMD ["npx", "weft", "start"]')
     const plain = filesFor(initContext(app(), { deploy: { target: 'fly' } }, 'fly')).find(
       (f) => f.path === 'Dockerfile',
-    ).text
+    )!.text
     expect(plain).toContain('CMD ["node", ".output/server/index.mjs"]')
     expect(plain).not.toContain('rustup')
   })
@@ -271,7 +299,11 @@ describe('secrets and CDN', () => {
   })
 
   it('E010–E014: a proxy in front of nothing or of a CDN, Cloudinary half set up', () => {
-    const codes = (c) => cdnFindings(c.config ?? c, c.env ? { env: c.env } : {}).map((f) => f.code)
+    const codes = (c: {
+      config?: Record<string, unknown>
+      env?: NodeJS.ProcessEnv
+      [key: string]: unknown
+    }) => cdnFindings(c.config ?? c, c.env ? { env: c.env } : {}).map((f) => f.code)
     expect(
       codes({
         site: { url: 'https://shop.fly.dev' },
@@ -318,7 +350,7 @@ describe('weft check and doctor', () => {
       file: 'src/server/chat.server.ts',
       docs: 'weft docs E001',
     })
-    expect(d[0].fix.text).toContain("target: 'fly'")
+    expect((d[0] as unknown as { fix: { text: string } }).fix.text).toContain("target: 'fly'")
     expect(deployChecks(dir, {})).toEqual([]) // no target: check stays quiet; doctor says E005
     expect(deployChecks(dir, {}, { preset: 'vercel' }).map((x) => x.code)).toEqual(['E001', 'E009'])
   })
@@ -326,7 +358,7 @@ describe('weft check and doctor', () => {
   it('doctor: every host and the suggestion, E005 without a target', () => {
     const r = hostsCommand(app(CHAT), {})
     expect(r.suggestion.host).toBe('fly')
-    expect(r.fits.find((f) => f.host === 'netlify').fits).toBe(false)
+    expect(r.fits.find((f) => f.host === 'netlify')!.fits).toBe(false)
     expect(r.diagnostics).toMatchObject([{ code: 'E005', severity: 'info' }])
   })
 })
@@ -390,7 +422,7 @@ describe('weft deploy init', () => {
 })
 
 describe('weft deploy', () => {
-  const which = (cmd) => cmd === 'netlify' || cmd === 'flyctl'
+  const which = (cmd: string) => cmd === 'netlify' || cmd === 'flyctl'
 
   registerDryDeploy(which)
 
@@ -413,7 +445,7 @@ describe('weft deploy', () => {
     await expect(
       deployCommand(dir, { deploy: { target: 'fly', fly: { app: 'shop' } } }, { which, env: {} }),
     ).rejects.toThrow(/--prod/)
-    const calls = []
+    const calls: string[][] = []
     const r = await deployCommand(
       dir,
       { deploy: { target: 'fly', fly: { app: 'shop' } } },
@@ -430,7 +462,7 @@ describe('weft deploy', () => {
   })
 
   it('Render: the deploy hook, read from the environment', async () => {
-    const posted = []
+    const posted: string[] = []
     const r = await deployCommand(
       app(),
       { deploy: { target: 'render', render: { service: 'shop' } } },
@@ -455,9 +487,9 @@ describe('weft deploy', () => {
   })
 })
 
-function registerProductionDeploy(which) {
+function registerProductionDeploy(which: (cmd: string) => boolean) {
   it('--yes builds for the target, runs the host CLI and reports the URL', async () => {
-    const calls = []
+    const calls: string[][] = []
     const r = await deployCommand(
       app(),
       { deploy: { target: 'netlify' } },
@@ -496,7 +528,7 @@ function registerProductionDeploy(which) {
   })
 }
 
-function registerDryDeploy(which) {
+function registerDryDeploy(which: (cmd: string) => boolean) {
   it('without --yes runs nothing, and says what it would', async () => {
     let ran = false
     const r = await deployCommand(
@@ -515,15 +547,15 @@ function registerDryDeploy(which) {
     )
     expect(ran).toBe(false)
     expect(r.dryRun).toBe(true)
-    expect(r.steps.map((s) => s.what)).toEqual([
+    expect(r.steps!.map((s) => s.what)).toEqual([
       'weft build --preset netlify',
       'netlify deploy --dir dist --functions .netlify/functions-internal --json --site shop',
     ])
-    expect(r.steps[1].reads).toEqual(['NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'])
+    expect(r.steps![1]!.reads).toEqual(['NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'])
   })
 }
 
-function registerCiTokenChecks(which) {
+function registerCiTokenChecks(which: (cmd: string) => boolean) {
   it('E007 in CI: a token the CLI would otherwise take from its login', async () => {
     await expect(
       deployCommand(
