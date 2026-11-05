@@ -1,0 +1,214 @@
+import { flush } from '@weft-js/core'
+import { setHead } from '@weft-js/core/head'
+import { applyMatches, client, type NavigateOptions, type RoutePayload } from '../router'
+import type { ClientRoutes } from '../run'
+import { streamed, type mount } from './boot'
+import { ask, current_, guess, revive } from './helpers'
+
+const SLOW_FADE = 100
+const RETRY = 1000,
+  RETRIES = 30_000
+
+type Options = NavigateOptions & { pop?: boolean; hops?: number }
+type Page = ReturnType<typeof mount>
+type Warm = { path: string; at: number; since: number; res: Promise<Response> }
+
+export class Navigation {
+  route: Page['route']
+  chunk: Page['chunk']
+  island: Page['island']
+  setBag: Page['setBag']
+  tags: Page['initialTags']
+  current: AbortController | undefined
+  refreshing: { ctrl: AbortController; tags: string[] } | undefined
+  /** Tags invalidated while a navigation was out: its route may read them, and that's only known when it lands. */
+  owed: string[] = []
+  again: ReturnType<typeof setTimeout> | undefined
+  tries = 0
+  warm: Warm | undefined
+  // A fade pictures the whole page twice, and the picture holds up every frame. Where that's slow, the page just changes.
+  fades = !(navigator.hardwareConcurrency <= 4)
+  fading: ViewTransition | undefined
+  painted = false
+  at!: string
+
+  constructor(
+    readonly routes: ClientRoutes,
+    page: Page,
+  ) {
+    this.route = page.route
+    this.chunk = page.chunk
+    this.island = page.island
+    this.setBag = page.setBag
+    this.tags = page.initialTags
+    // Two frames in, the page has painted; a transition before then has no old picture to hold.
+    requestAnimationFrame(() => requestAnimationFrame(() => (this.painted = true)))
+  }
+
+  now = () => client.now?.() ?? 0
+  needs = (next: RoutePayload) =>
+    Promise.all([...next.m.map((m) => this.chunk(m.id)), ...(next.i ?? []).map(this.island)])
+  reads = (t: string[]) => this.tags.some((l) => l.some((x) => t.includes(x)))
+
+  /** The page moved on: drop old chunks and build held Boundaries from this data. */
+  release() {
+    const h = streamed.$wh || {}
+    for (const k of Object.keys(h)) {
+      const build = h[k]!
+      h[k] = () => {}
+      build()
+    }
+  }
+
+  apply(next: RoutePayload, url: URL, path: string, since: number, scroll: boolean) {
+    this.at = path
+    if (next.c) client.seed ? client.seed(next.c, since) : (client.seeds ??= []).push(...next.c)
+    this.tags = next.m.map((m) => m.t ?? [])
+    this.setBag(next.b)
+    return () => {
+      applyMatches(this.route, next.m.map(revive), path, next.s)
+      if (next.m.some((m) => m.s)) current_(url.pathname)
+      if (next.h) setHead(next.h, url.pathname)
+      this.release()
+      flush()
+      if (scroll) {
+        const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)))
+        target ? target.scrollIntoView() : window.scrollTo(0, 0)
+      }
+    }
+  }
+
+  /** No navigation is out any more: what it left owed is for the page now showing. */
+  settle() {
+    this.current = undefined
+    const t = this.owed
+    this.owed = []
+    if (this.reads(t)) void this.refresh(t)
+  }
+
+  go = async (href: string, opts: Options = {}) => {
+    const url = new URL(href, location.href)
+    if (url.origin !== location.origin) return location.assign(url.href)
+    this.current?.abort()
+    if (this.refreshing) {
+      this.refreshing.ctrl.abort()
+      this.owed.push(...this.refreshing.tags)
+      this.refreshing = undefined
+    }
+    const ctrl = (this.current = new AbortController())
+    try {
+      await this.travel(url, ctrl, opts)
+    } finally {
+      if (this.current === ctrl) this.settle()
+    }
+  }
+
+  async travel(url: URL, ctrl: AbortController, opts: Options) {
+    const path = url.pathname + url.search
+    for (const id of guess(this.routes, url.pathname)) void this.chunk(id).catch(() => {})
+    let next: RoutePayload
+    let since = this.now()
+    try {
+      const held =
+        this.warm?.path === path && performance.now() - this.warm.at < 10_000
+          ? this.warm
+          : undefined
+      this.warm = undefined
+      if (held) since = held.since
+      next = await (held?.res ?? ask(url, ctrl.signal)).then((r) => r.clone().json())
+    } catch (e) {
+      if (ctrl.signal.aborted) return
+      return location.assign(url.href)
+    }
+    if (ctrl.signal.aborted) return
+    if (next.r) {
+      const hops = (opts.hops ?? 0) + 1
+      return hops > 5
+        ? location.assign(next.r)
+        : this.go(next.r, { replace: opts.pop || opts.replace, hops })
+    }
+    try {
+      await this.needs(next)
+    } catch {
+      if (!ctrl.signal.aborted) location.assign(url.href)
+      return
+    }
+    if (ctrl.signal.aborted) return
+    if (!opts.pop) history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
+    const swap = this.apply(next, url, path, since, opts.scroll !== false && !opts.pop)
+    if (
+      this.fades &&
+      this.painted &&
+      document.startViewTransition &&
+      !document.hidden &&
+      !matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      const started = performance.now()
+      const fade = (this.fading = document.startViewTransition(swap))
+      void fade.ready
+        .then(() => {
+          if (performance.now() - started > SLOW_FADE) this.fades = false
+          return fade.finished
+        })
+        .catch(() => {})
+        .then(() => {
+          if (this.fading === fade) this.fading = undefined
+        })
+      // A transition the browser aborts rejects `finished`: the page already swapped.
+      void fade.finished.catch(() => {})
+      await fade.updateCallbackDone
+    } else swap()
+  }
+
+  /** Fetch the page's data again in place, retrying a failed refresh. */
+  async refresh(t: string[]) {
+    t = [...new Set([...t, ...(this.refreshing?.tags ?? [])])]
+    this.refreshing?.ctrl.abort()
+    const self = (this.refreshing = { ctrl: new AbortController(), tags: t })
+    const url = new URL(location.href),
+      since = this.now()
+    try {
+      const next: RoutePayload = await ask(url, self.ctrl.signal).then((r) => r.json())
+      if (next.r && !self.ctrl.signal.aborted) {
+        this.refreshing = undefined
+        return void this.go(next.r, { replace: true })
+      }
+      await this.needs(next)
+      if (self.ctrl.signal.aborted) return
+      this.apply(next, url, url.pathname + url.search, since, false)()
+      this.tries = 0
+    } catch {
+      if (this.refreshing === self) {
+        this.owed.push(...t)
+        clearTimeout(this.again)
+        this.again = setTimeout(this.owing, Math.min(RETRIES, RETRY * 2 ** this.tries++))
+      }
+    }
+    if (this.refreshing === self) this.refreshing = undefined
+  }
+
+  owing = () => {
+    if (!this.current && !this.refreshing) this.settle()
+  }
+
+  reloaded = async ({ queries }: { queries: boolean }) => {
+    const url = new URL(location.href),
+      since = this.now()
+    const res = await ask(url)
+    if (!res.ok || (await res.clone().json()).s >= 500) return
+    if (queries) client.refreshed?.()
+    this.warm = {
+      path: url.pathname + url.search,
+      at: performance.now(),
+      since,
+      res: Promise.resolve(res),
+    }
+    await this.go(url.href, { pop: true })
+  }
+
+  invalidated = (t: string[]) => {
+    this.warm = undefined
+    if (this.current) this.owed.push(...t)
+    else if (this.reads(t)) void this.refresh(t)
+  }
+}
