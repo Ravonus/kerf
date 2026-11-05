@@ -5,11 +5,22 @@
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { rolldown } from 'rolldown'
+import type * as Playwright from 'playwright-core'
+import type * as Dither from '../../warp-core/src/dither/index'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+declare const dither: typeof Dither
+declare global {
+  interface Window {
+    probes: number
+    field: ReturnType<typeof dither.ditherField>
+  }
+}
+
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
-let browser, bundle
+let browser: Playwright.Browser
+let bundle: string
 beforeAll(async () => {
   const build = await rolldown({
     input: fileURLToPath(new URL('../../warp-core/src/dither/index.ts', import.meta.url)),
@@ -29,13 +40,15 @@ async function open() {
   await page.addScriptTag({ content: bundle })
   await page.evaluate(() => {
     window.probes = 0
-    const stage = document.getElementById('stage')
+    const stage = document.getElementById('stage')!
     new MutationObserver((list) => {
       window.probes += list.length
       if (window.probes < 20_000)
         stage.setAttribute('data-expression', stage.getAttribute('data-expression') ?? 'balanced')
-    }).observe(document.querySelector('main'), { childList: true, subtree: true })
-    window.field = dither.ditherField(document.getElementById('c'), { ramp: ['#000', '#fff'] })
+    }).observe(document.querySelector('main')!, { childList: true, subtree: true })
+    window.field = dither.ditherField(document.getElementById('c') as HTMLCanvasElement, {
+      ramp: ['#000', '#fff'],
+    })
     stage.setAttribute('data-expression', 'balanced')
   })
   return page
@@ -53,7 +66,7 @@ test('a real change still repaints', async () => {
   const page = await open()
   const before = await page.evaluate(() => window.probes)
   await page.evaluate(() =>
-    document.getElementById('stage').setAttribute('data-expression', 'vivid'),
+    document.getElementById('stage')!.setAttribute('data-expression', 'vivid'),
   )
   await page.waitForTimeout(100)
   expect(await page.evaluate(() => window.probes)).toBeGreaterThan(before)
