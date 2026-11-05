@@ -18,7 +18,10 @@ import {
   toRange,
 } from '../plugin/build.mjs'
 
-const inter = (w) =>
+type FontOptions = Parameters<typeof createFontBuild>[0] & { trim?: boolean }
+const fontBuild: (options: FontOptions) => ReturnType<typeof createFontBuild> = createFontBuild
+
+const inter = (w: number) =>
   fileURLToPath(
     new URL(
       `../node_modules/@fontsource/inter/files/inter-latin-${w}-normal.woff2`,
@@ -35,12 +38,13 @@ describe('text() options', () => {
       },
     })
     expect(p.provides).toEqual(['font.build', 'text.measure'])
-    const [ref] = p.contribute({ command: 'check', mode: 'development', root: '' }).provides
-    expect(ref.sides.build.module).toBe(
+    const [ref] = p.contribute({ command: 'check', mode: 'development', root: '' }).provides!
+    expect(ref!.sides.build!.module).toBe(
       fileURLToPath(new URL('../plugin/build.mjs', import.meta.url)),
     )
-    expect(ref.sides.build.export).toBe('createFontBuild')
-    expect(ref.sides.build.options.fonts).toEqual({
+    expect(ref!.sides.build!.export).toBe('createFontBuild')
+    const resolved = ref!.sides.build!.options as unknown as FontOptions
+    expect(resolved.fonts).toEqual({
       body: {
         family: 'Inter',
         src: './fonts/Inter.woff2',
@@ -62,8 +66,8 @@ describe('text() options', () => {
         preload: false,
       },
     })
-    expect(ref.sides.build.options.subsets).toEqual(['latin'])
-    expect(ref.sides.build.options.trim).toBe(true)
+    expect(resolved.subsets).toEqual(['latin'])
+    expect(resolved.trim).toBe(true)
   })
 
   it('its agent notes say the fonts load on their own, and where the docs are', () => {
@@ -71,14 +75,18 @@ describe('text() options', () => {
       command: 'check',
       mode: 'development',
       root: '',
-    }).agents
+    }).agents!
     expect(notes).toContain('no import')
     expect(notes).toContain('weft docs fonts')
     expect(notes).not.toContain("import 'weft:fonts'")
   })
 
+  registerInvalidFontOptions()
+})
+
+function registerInvalidFontOptions() {
   it('rejects block display (X021), unknown subsets and measure, as P115 with the path', () => {
-    const bad = [
+    const bad: [unknown, string, RegExp][] = [
       [
         { fonts: { body: { family: 'Inter', src: 'a', fallback: 'Arial', display: 'block' } } },
         'fonts.body.display',
@@ -97,15 +105,15 @@ describe('text() options', () => {
     for (const [input, path, message] of bad) {
       let error
       try {
-        text(input)
+        text(input as Parameters<typeof text>[0])
       } catch (e) {
         error = e
       }
       expect(error, path).toMatchObject({ code: 'P115', path })
-      expect(error.message).toMatch(message)
+      expect((error as Error).message).toMatch(message)
     }
   })
-})
+}
 
 it('rangeText() expands a unicode-range', () => {
   expect(rangeText('U+0041-0043,U+0061')).toBe('ABCa')
@@ -130,7 +138,7 @@ it("the fallback face matches research 11's Inter/Arial numbers", async () => {
 })
 
 describe('createFontBuild().build()', () => {
-  let cacheDir
+  let cacheDir: string
   beforeEach(() => (cacheDir = mkdtempSync(join(tmpdir(), 'weft-fonts-'))))
   afterEach(() => rmSync(cacheDir, { recursive: true, force: true }))
 
@@ -149,8 +157,8 @@ describe('createFontBuild().build()', () => {
         label: { family: 'Inter', src: inter(400), fallback: 'Arial' }, // the same face as body: emitted once
       },
       subsets: ['latin', 'latin-ext'],
-    }).contribute({ command: 'build', mode: 'production', root: '' }).provides[0].sides.build
-      .options,
+    }).contribute({ command: 'build', mode: 'production', root: '' }).provides![0]!.sides.build!
+      .options as FontOptions,
     { trim: false },
   )
   registerFontSubsetTests(opts, () => cacheDir)
@@ -159,10 +167,10 @@ describe('createFontBuild().build()', () => {
     const many = Object.fromEntries(
       [400, 500, 600, 700, 800, 900].map((w) => [
         `r${w}`,
-        { ...opts.fonts.body, src: inter(w), weight: w, preload: true },
+        { ...opts.fonts.body!, src: inter(w), weight: w, preload: true },
       ]),
     )
-    const out = await createFontBuild({ fonts: many, subsets: ['latin'], trim: false }).build({
+    const out = await fontBuild({ fonts: many, subsets: ['latin'], trim: false }).build({
       root: '/',
       cacheDir,
       url: (n) => n,
@@ -173,8 +181,8 @@ describe('createFontBuild().build()', () => {
 
   it('names the fix for an unknown fallback', async () => {
     await expect(
-      createFontBuild({
-        fonts: { body: { ...opts.fonts.body, fallback: 'Comic Neue Mono' } },
+      fontBuild({
+        fonts: { body: { ...opts.fonts.body!, fallback: 'Comic Neue Mono' } },
         subsets: ['latin'],
       }).build({ root: '/', cacheDir, url: (n) => n }),
     ).rejects.toThrow(/no metrics for fallback "Comic Neue Mono"/)
@@ -212,7 +220,7 @@ describe('axes', () => {
   })
 
   it('reads fvar, and finds none in a static face', async () => {
-    const axis = (tag, min, def, max) => {
+    const axis = (tag: string, min: number, def: number, max: number) => {
       const b = Buffer.alloc(20)
       b.write(tag, 'latin1')
       b.writeInt32BE(min * 65536, 4)
@@ -246,9 +254,9 @@ it('toRange() runs code points together, sorted and without repeats', () => {
   expect(toRange('cabaz')).toBe('U+0061-0063,U+007A')
 })
 
-function registerFontSubsetTests(opts, getCacheDir) {
+function registerFontSubsetTests(opts: FontOptions, getCacheDir: () => string) {
   it('subsets per range, adds one fallback face, preloads the body face only, within budget', async () => {
-    const out = await createFontBuild(opts).build({
+    const out = await fontBuild(opts).build({
       root: '/',
       cacheDir: getCacheDir(),
       url: (n) => `/assets/${n}`,
@@ -261,29 +269,29 @@ function registerFontSubsetTests(opts, getCacheDir) {
     ])
     for (const f of out.files) expect(new TextDecoder().decode(f.bytes.subarray(0, 4))).toBe('wOF2')
     const [latin, ext] = out.files
-    expect(ext.bytes.length).toBeLessThan(latin.bytes.length / 2) // the source is latin-only: latin-ext keeps little
+    expect(ext!.bytes.length).toBeLessThan(latin!.bytes.length / 2) // the source is latin-only: latin-ext keeps little
 
     const rules = out.css.trim().split('\n')
     expect(rules).toHaveLength(5)
     expect(rules[0]).toBe(
-      `@font-face{font-family:"Inter";src:url(/assets/${latin.name}) format("woff2");font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}`,
+      `@font-face{font-family:"Inter";src:url(/assets/${latin!.name}) format("woff2");font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}`,
     )
     expect(rules[2]).toContain('font-weight:700')
     expect(rules[4]).toBe(
       '@font-face{font-family:"Inter Fallback";src:local("Arial");size-adjust:107.12%;ascent-override:90.44%;descent-override:22.52%;line-gap-override:0%}',
     )
 
-    expect(out.preloads).toEqual([{ href: `/assets/${latin.name}`, type: 'font/woff2' }])
-    expect(out.metrics.Inter).toMatchObject({
+    expect(out.preloads).toEqual([{ href: `/assets/${latin!.name}`, type: 'font/woff2' }])
+    expect((out.metrics as Record<string, unknown>).Inter).toMatchObject({
       unitsPerEm: 2048,
       capHeight: 1490 / 2048,
       xHeight: 1118 / 2048,
     })
-    expect(out.report.preloadBytes).toBe(latin.bytes.length)
+    expect(out.report.preloadBytes).toBe(latin!.bytes.length)
     expect(out.report.cssBrotli).toBeLessThanOrEqual(BUDGET.cssBrotli)
     expect(out.report.overBudget).toEqual([])
 
-    const again = await createFontBuild(opts).build({
+    const again = await fontBuild(opts).build({
       root: '/',
       cacheDir: getCacheDir(),
       url: (n) => n,
@@ -293,20 +301,20 @@ function registerFontSubsetTests(opts, getCacheDir) {
   })
 }
 
-function registerFontTrimmingTests(opts, getCacheDir) {
+function registerFontTrimmingTests(opts: FontOptions, getCacheDir: () => string) {
   describe('trimming', () => {
-    const body = { fonts: { body: opts.fonts.body }, subsets: ['latin'] }
+    const body = { fonts: { body: opts.fonts.body! }, subsets: ['latin'] }
     registerTrimCoverageTests(body, getCacheDir)
 
     it('moves the characters the source uses into the core', async () => {
-      const out = await createFontBuild({ ...body, trim: true }).build({
+      const out = await fontBuild({ ...body, trim: true }).build({
         root: '/',
         cacheDir: getCacheDir(),
         url: (n) => n,
         source: '<p>Café ñ 日本</p>',
       })
       const [core, rest] = [...out.css.matchAll(/unicode-range:([^}]+)/g)].map((m) =>
-        rangeText(m[1]),
+        rangeText(m[1]!),
       )
       expect(core).toContain('\u00e9')
       expect(core).toContain('\u00f1')
@@ -319,7 +327,7 @@ function registerFontTrimmingTests(opts, getCacheDir) {
         { trim: true, dev: true },
         { trim: false, dev: false },
       ]) {
-        const out = await createFontBuild({ ...body, trim: run.trim }).build({
+        const out = await fontBuild({ ...body, trim: run.trim }).build({
           root: '/',
           cacheDir: getCacheDir(),
           url: (n) => n,
@@ -334,10 +342,10 @@ function registerFontTrimmingTests(opts, getCacheDir) {
       const many = Object.fromEntries(
         [400, 500, 600, 700, 800, 900].map((w) => [
           `r${w}`,
-          { ...opts.fonts.body, src: inter(w), weight: w, preload: true },
+          { ...opts.fonts.body!, src: inter(w), weight: w, preload: true },
         ]),
       )
-      const out = await createFontBuild({ fonts: many, subsets: ['latin'] }).build({
+      const out = await fontBuild({ fonts: many, subsets: ['latin'] }).build({
         root: '/',
         cacheDir: getCacheDir(),
         url: (n) => n,
@@ -348,9 +356,9 @@ function registerFontTrimmingTests(opts, getCacheDir) {
   })
 }
 
-function registerTrimCoverageTests(body, getCacheDir) {
+function registerTrimCoverageTests(body: FontOptions, getCacheDir: () => string) {
   it('splits latin into a preloaded core and an on-demand rest that together cover the whole subset', async () => {
-    const out = await createFontBuild({ ...body, trim: true }).build({
+    const out = await fontBuild({ ...body, trim: true }).build({
       root: '/',
       cacheDir: getCacheDir(),
       url: (n) => n,
@@ -360,23 +368,23 @@ function registerTrimCoverageTests(body, getCacheDir) {
       'inter-400-latin',
       'inter-400-latin-rest',
     ])
-    expect(out.preloads).toEqual([{ href: core.name, type: 'font/woff2' }])
-    const ranges = [...out.css.matchAll(/unicode-range:([^}]+)/g)].map((m) => rangeText(m[1]))
+    expect(out.preloads).toEqual([{ href: core!.name, type: 'font/woff2' }])
+    const ranges = [...out.css.matchAll(/unicode-range:([^}]+)/g)].map((m) => rangeText(m[1]!))
     expect(ranges).toHaveLength(2)
     expect(ranges[0]).toContain('a')
     expect(ranges[0]).toContain('\u2019')
     expect(ranges[0]).not.toContain('\u00e9')
     expect(ranges[1]).toContain('\u00e9')
-    expect(Array.from(ranges[0]).filter((c) => ranges[1].includes(c))).toEqual([])
+    expect(Array.from(ranges[0]!).filter((c) => ranges[1]!.includes(c))).toEqual([])
     expect(Array.from(ranges.join('')).sort().join('')).toBe(
       Array.from(rangeText(RANGES.latin)).sort().join(''),
     )
-    const all = await createFontBuild({ ...body, trim: false }).build({
+    const all = await fontBuild({ ...body, trim: false }).build({
       root: '/',
       cacheDir: getCacheDir(),
       url: (n) => n,
     })
-    expect(core.bytes.length).toBeLessThan(all.files[0].bytes.length * 0.8)
+    expect(core!.bytes.length).toBeLessThan(all.files[0]!.bytes.length * 0.8)
   })
 }
 
