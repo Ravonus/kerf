@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, Show } from 'solid-js'
+import { createMemo, createSignal, For, Show, type Accessor, type Setter } from 'solid-js'
 import { Dialog } from '@kobalte/core'
 import { Field } from '../ui'
 
@@ -59,64 +59,7 @@ export default function Customers() {
           placeholder="Search by name"
         />
       </div>
-      <div class="card overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full min-w-[40rem] text-left text-sm">
-            <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600 dark:bg-slate-800/50 dark:text-slate-400">
-              <tr>
-                <th scope="col" class="px-4 py-3 font-semibold">
-                  Name
-                </th>
-                <th scope="col" class="px-4 py-3 font-semibold">
-                  Email
-                </th>
-                <th scope="col" class="px-4 py-3 font-semibold">
-                  Plan
-                </th>
-                <th scope="col" class="px-4 py-3 font-semibold">
-                  Status
-                </th>
-                <th scope="col" class="px-4 py-3">
-                  <span class="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
-              <For each={shown()}>
-                {(c) => (
-                  <tr>
-                    <td class="px-4 py-3 font-medium">{c.name}</td>
-                    <td class="px-4 py-3 text-slate-600 dark:text-slate-400">{c.email}</td>
-                    <td class="px-4 py-3">{c.plan}</td>
-                    <td class="px-4 py-3">
-                      <span
-                        class={`rounded-full px-2.5 py-0.5 text-xs font-medium ${badge[c.status]}`}
-                      >
-                        {c.status}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        aria-label={`Delete ${c.name}`}
-                        class="btn btn-secondary !px-3 !py-1.5"
-                        onClick={() => setTarget(c)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                )}
-              </For>
-            </tbody>
-          </table>
-        </div>
-        <Show when={shown().length === 0}>
-          <p class="px-4 py-12 text-center text-slate-600 dark:text-slate-400">
-            No customers found
-          </p>
-        </Show>
-      </div>
+      {customerTable(shown, setTarget)}
 
       <Dialog.Root open={target() !== null} onOpenChange={(o) => !o && setTarget(null)}>
         <Dialog.Portal>
@@ -140,5 +83,66 @@ export default function Customers() {
         </Dialog.Portal>
       </Dialog.Root>
     </>
+  )
+}
+
+function customerTable(shown: Accessor<Customer[]>, setTarget: Setter<Customer | null>) {
+  return (
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[40rem] text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600 dark:bg-slate-800/50 dark:text-slate-400">
+            <tr>
+              <th scope="col" class="px-4 py-3 font-semibold">
+                Name
+              </th>
+              <th scope="col" class="px-4 py-3 font-semibold">
+                Email
+              </th>
+              <th scope="col" class="px-4 py-3 font-semibold">
+                Plan
+              </th>
+              <th scope="col" class="px-4 py-3 font-semibold">
+                Status
+              </th>
+              <th scope="col" class="px-4 py-3">
+                <span class="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+            <For each={shown()}>
+              {(c) => (
+                <tr>
+                  <td class="px-4 py-3 font-medium">{c.name}</td>
+                  <td class="px-4 py-3 text-slate-600 dark:text-slate-400">{c.email}</td>
+                  <td class="px-4 py-3">{c.plan}</td>
+                  <td class="px-4 py-3">
+                    <span
+                      class={`rounded-full px-2.5 py-0.5 text-xs font-medium ${badge[c.status]}`}
+                    >
+                      {c.status}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      aria-label={`Delete ${c.name}`}
+                      class="btn btn-secondary !px-3 !py-1.5"
+                      onClick={() => setTarget(c)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              )}
+            </For>
+          </tbody>
+        </table>
+      </div>
+      <Show when={shown().length === 0}>
+        <p class="px-4 py-12 text-center text-slate-600 dark:text-slate-400">No customers found</p>
+      </Show>
+    </div>
   )
 }
