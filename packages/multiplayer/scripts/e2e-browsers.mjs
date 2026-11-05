@@ -160,11 +160,7 @@ const peers = (page, name) =>
 
 async function scenario(browser, urlA, urlB, via, log) {
   const checks = []
-  const check = (name, ok, detail) => {
-    if (!ok) throw new Error(`${name}: ${JSON.stringify(detail)}`)
-    checks.push(name)
-    log(`ok ${name}`)
-  }
+  const check = checkRecorder(checks, log)
   const a = await user(browser, urlA, 'ana', { width: 1280, height: 800 }, via)
   const b = await user(browser, urlB, 'kofi', { width: 800, height: 600 }, via)
   await peers(a.page, 'kofi').waitFor({ timeout: 10_000 })
@@ -202,15 +198,7 @@ async function scenario(browser, urlA, urlB, via, log) {
     await a.page.getByLabel('via').filter({ hasText: via }).waitFor({ timeout: 20_000 })
     await b.page.getByLabel('via').filter({ hasText: via }).waitFor({ timeout: 20_000 })
     check(`cursors are going over ${via}`, true)
-    // oxlint-disable typescript/unbound-method -- wrapping a prototype method: `s.call(this, t)` gives it its `this` back
-    await a.page.evaluate(() => {
-      window.__sent = 0
-      const s = WebSocket.prototype.send /* oxlint-enable typescript/unbound-method */
-      WebSocket.prototype.send = function (t) {
-        if (typeof t === 'string' && t.includes('mp.cursor')) window.__sent++
-        return s.call(this, t)
-      }
-    })
+    await a.page.evaluate(trackCursorFrames)
   }
 
   // Three quarters across and halfway down the board, on two boards of different sizes.
@@ -221,17 +209,8 @@ async function scenario(browser, urlA, urlB, via, log) {
   await seen.waitFor({ state: 'attached', timeout: 5000 })
   await sleep(300)
   const other = await b.page.getByLabel('board').boundingBox()
-  const at = await seen.evaluate((el) => {
-    const m = new DOMMatrix(getComputedStyle(el).transform)
-    return { x: m.e, y: m.f }
-  })
-  const dx = at.x - (other.x + other.width * 0.75),
-    dy = at.y - (other.y + other.height * 0.5)
-  check(
-    'a cursor lands on the same spot of an anchor on another screen',
-    Math.abs(dx) < 8 && Math.abs(dy) < 8,
-    { dx, dy },
-  )
+  const at = await seen.evaluate(cursorPosition)
+  checkCursorPlacement(at, other, check)
   if (via)
     check(
       'none of those frames went through the server',
@@ -257,6 +236,39 @@ async function scenario(browser, urlA, urlB, via, log) {
     throw new Error(`page errors: ${[...a.errors, ...b.errors].join('; ')}`)
   await b.context.close()
   return checks
+}
+
+function checkRecorder(checks, log) {
+  return (name, ok, detail) => {
+    if (!ok) throw new Error(`${name}: ${JSON.stringify(detail)}`)
+    checks.push(name)
+    log(`ok ${name}`)
+  }
+}
+
+function trackCursorFrames() {
+  window.__sent = 0
+  // oxlint-disable typescript/unbound-method -- wrapping a prototype method: `s.call(this, t)` gives it its `this` back
+  const s = WebSocket.prototype.send /* oxlint-enable typescript/unbound-method */
+  WebSocket.prototype.send = function (t) {
+    if (typeof t === 'string' && t.includes('mp.cursor')) window.__sent++
+    return s.call(this, t)
+  }
+}
+
+function cursorPosition(el) {
+  const m = new DOMMatrix(getComputedStyle(el).transform)
+  return { x: m.e, y: m.f }
+}
+
+function checkCursorPlacement(at, other, check) {
+  const dx = at.x - (other.x + other.width * 0.75),
+    dy = at.y - (other.y + other.height * 0.5)
+  check(
+    'a cursor lands on the same spot of an anchor on another screen',
+    Math.abs(dx) < 8 && Math.abs(dy) < 8,
+    { dx, dy },
+  )
 }
 
 let failed = false
