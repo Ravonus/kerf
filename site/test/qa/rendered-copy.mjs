@@ -4,7 +4,12 @@ export async function checkCopies(page) {
     window.__qaCopies = []
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
-      value: { writeText: async (text) => window.__qaCopies.push(text) },
+      value: {
+        writeText: (text) => {
+          window.__qaCopies.push(text)
+          return Promise.resolve()
+        },
+      },
     })
   })
   const buttons = page.locator('main [data-scope="codeblock"] [data-act="copy"]')

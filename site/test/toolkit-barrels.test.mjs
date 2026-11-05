@@ -230,7 +230,7 @@ await test('a local helper may also reexport other names', () =>
     )
     const text = showExample(readExamples(join(dir, 'root.tsx')).get('Alpha'), 'Alpha')
     assert.match(text, /function Alpha/)
-    assert.doesNotMatch(text, /Beta|from ['\"]\./)
+    assert.doesNotMatch(text, /Beta|from ['"]\./)
     assert.equal(
       ts.createSourceFile('copy.tsx', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
         .parseDiagnostics.length,
