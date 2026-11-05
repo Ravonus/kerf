@@ -3,43 +3,7 @@ import { runTask, tasks } from '../src/tasks.mjs'
 import { fixture, project } from './helpers.mjs'
 
 describe('weft tasks', () => {
-  it('lists the built-ins on the reference app, marking what is not shipped yet', async () => {
-    const r = await tasks(fixture)
-    expect(r).toMatchObject({
-      version: 1,
-      ok: true,
-      config: null,
-      environments: [],
-      diagnostics: [],
-    })
-    const available = r.tasks.filter((t) => t.available).map((t) => t.name)
-    expect(available).toEqual([
-      'check',
-      'tasks',
-      'docs',
-      'agents-md',
-      'mcp',
-      'style',
-      'map',
-      'add',
-      'test',
-      'fix',
-      'tokens',
-      'browser',
-      'run',
-      'surfaces',
-      'plugins',
-    ])
-    for (const t of r.tasks) {
-      expect(t).toMatchObject({
-        kind: 'builtin',
-        command: expect.stringMatching(/^weft /),
-        description: expect.any(String),
-        sideEffects: expect.any(Array),
-      })
-      expect(t.args.type).toBe('object')
-    }
-  })
+  registerBuiltinTasks()
 
   it('runs a project task at the project root and passes its exit code on', async () => {
     const dir = project({
@@ -105,3 +69,43 @@ export default defineConfig({
     })
   })
 })
+
+function registerBuiltinTasks() {
+  it('lists the built-ins on the reference app, marking what is not shipped yet', async () => {
+    const r = await tasks(fixture)
+    expect(r).toMatchObject({
+      version: 1,
+      ok: true,
+      config: null,
+      environments: [],
+      diagnostics: [],
+    })
+    const available = r.tasks.filter((t) => t.available).map((t) => t.name)
+    expect(available).toEqual([
+      'check',
+      'tasks',
+      'docs',
+      'agents-md',
+      'mcp',
+      'style',
+      'map',
+      'add',
+      'test',
+      'fix',
+      'tokens',
+      'browser',
+      'run',
+      'surfaces',
+      'plugins',
+    ])
+    for (const t of r.tasks) {
+      expect(t).toMatchObject({
+        kind: 'builtin',
+        command: expect.stringMatching(/^weft /),
+        description: expect.any(String),
+        sideEffects: expect.any(Array),
+      })
+      expect(t.args.type).toBe('object')
+    }
+  })
+}
