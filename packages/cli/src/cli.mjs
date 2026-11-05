@@ -62,7 +62,7 @@ import {
   commandRun,
   commandDocs,
   commandAgentsMd,
-} from './cli/commands-1.mjs'
+} from './cli/project.mjs'
 import {
   commandMap,
   commandIcons,
@@ -72,7 +72,7 @@ import {
   commandTokens,
   commandStyle,
   commandMcp,
-} from './cli/commands-2.mjs'
+} from './cli/authoring.mjs'
 
 const usage = `usage: weft <command> [--json] [--root <dir>]
 
