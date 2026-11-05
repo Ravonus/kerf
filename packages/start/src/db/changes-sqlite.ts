@@ -45,6 +45,73 @@ interface Options {
   interval?: number
 }
 
+async function startWatcher(
+  sink: Sink,
+  how: Probe,
+  path: string,
+  open: Options['open'],
+  tables: string[],
+  interval: number,
+  set: (tick?: () => void, out?: Sink) => void,
+) {
+  if (how.mode === 'off') return () => {}
+  const c = await open(path)
+  const version = () => (c.query('pragma data_version', [], 'values') as number[][])[0]![0]!
+  const usable = how.mode === 'feed'
+  const newest = () =>
+    (c.query(`select coalesce(max(seq), 0) from ${LOG}`, [], 'values') as number[][])[0]![0]!
+  let seq = usable ? newest() : 0
+  let at = version()
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const read = () => {
+    const rows = c.query(
+      `select seq, tbl, pk from ${LOG} where seq > ? order by seq`,
+      [seq],
+      'values',
+    ) as [number, string, string | null][]
+    if (!rows.length) return
+    if (rows[0]![0] > seq + 1) sink.lost() // the log moved past us
+    const byTable = new Map<string, Set<string> | null>()
+    for (const [, table, id] of rows) {
+      if (id === null) byTable.set(table, null)
+      else if (byTable.get(table) !== null) {
+        const ids = byTable.get(table) ?? new Set()
+        ids.add(id)
+        byTable.set(table, ids.size > MAX_IDS ? null : ids)
+      }
+    }
+    seq = rows.at(-1)![0]
+    const list: Change[] = []
+    for (const [table, ids] of byTable)
+      ids ? list.push(...[...ids].map((id) => ({ table, id }))) : list.push({ table })
+    sink.changes(list)
+  }
+  const look = () => {
+    try {
+      const now = version()
+      if (now === at) return
+      at = now
+      if (usable) read()
+      else sink.changes(tables.map((table) => ({ table })))
+      sink.up()
+    } catch (e) {
+      sink.down(`SQLite watcher: ${(e as Error | null)?.message ?? String(e)}`)
+    }
+  }
+  set(look, sink)
+  const every = () => {
+    look()
+    timer = setTimeout(every, interval)
+    ;(timer as { unref?(): void }).unref?.()
+  }
+  every()
+  return () => {
+    set()
+    clearTimeout(timer)
+    c.close?.()
+  }
+}
+
 export function sqliteChanges({ path, open, tables, interval = 100 }: Options) {
   const log = (c: Conn) =>
     (
@@ -96,69 +163,13 @@ export function sqliteChanges({ path, open, tables, interval = 100 }: Options) {
     }
   }
 
-  async function start(sink: Sink, how: Probe) {
-    if (how.mode === 'off') return () => {}
-    const c = await open(path)
-    const version = () => (c.query('pragma data_version', [], 'values') as number[][])[0]![0]!
-    const usable = how.mode === 'feed'
-    const newest = () =>
-      (c.query(`select coalesce(max(seq), 0) from ${LOG}`, [], 'values') as number[][])[0]![0]!
-    let seq = usable ? newest() : 0
-    let at = version()
-    let timer: ReturnType<typeof setTimeout> | undefined
-    const read = () => {
-      const rows = c.query(
-        `select seq, tbl, pk from ${LOG} where seq > ? order by seq`,
-        [seq],
-        'values',
-      ) as [number, string, string | null][]
-      if (!rows.length) return
-      if (rows[0]![0] > seq + 1) sink.lost() // the log moved past us
-      const byTable = new Map<string, Set<string> | null>()
-      for (const [, table, id] of rows) {
-        if (id === null) byTable.set(table, null)
-        else if (byTable.get(table) !== null) {
-          const ids = byTable.get(table) ?? new Set()
-          ids.add(id)
-          byTable.set(table, ids.size > MAX_IDS ? null : ids)
-        }
-      }
-      seq = rows.at(-1)![0]
-      const list: Change[] = []
-      for (const [table, ids] of byTable)
-        ids ? list.push(...[...ids].map((id) => ({ table, id }))) : list.push({ table })
-      sink.changes(list)
-    }
-    const look = () => {
-      try {
-        const now = version()
-        if (now === at) return
-        at = now
-        if (usable) read()
-        else sink.changes(tables.map((table) => ({ table })))
-        sink.up()
-      } catch (e) {
-        sink.down(`SQLite watcher: ${(e as Error | null)?.message ?? String(e)}`)
-      }
-    }
-    tick = look
-    out = sink
-    const every = () => {
-      look()
-      timer = setTimeout(every, interval)
-      ;(timer as { unref?(): void }).unref?.()
-    }
-    every()
-    return () => {
-      tick = out = undefined
-      clearTimeout(timer)
-      c.close?.()
-    }
-  }
-
   return {
     probe,
-    start,
+    start: (sink: Sink, how: Probe) =>
+      startWatcher(sink, how, path, open, tables, interval, (next, target) => {
+        tick = next
+        out = target
+      }),
     /** In this process, so the barrier needs no trip: read what's committed now, and let the hub drop what the poke covers. */
     settle(tags: string[]) {
       tick?.()

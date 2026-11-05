@@ -5,7 +5,7 @@
 //
 // Reachable only from routes that import it, so an app without forms doesn't pay.
 
-import { derived, flush, state, untrack, type Derived } from '@weft-js/core'
+import { derived, flush, state, untrack, type Derived, type State } from '@weft-js/core'
 import {
   currentScope,
   decodeForm,
@@ -92,6 +92,44 @@ const at = (values: Record<string, unknown> | undefined, name: string) =>
     .split('.')
     .reduce<unknown>((v, k) => (v as Record<string, unknown> | undefined)?.[k], values) as FormValue
 
+function createSubmit<O>(
+  m: { [SUBMIT]: (input: unknown, form: true | FormData) => Promise<O> },
+  calls: State<number>,
+  errors: State<Record<string, string>>,
+  message: State<string | undefined>,
+  result: State<O | undefined>,
+  reset: () => boolean | undefined,
+  onSuccess: () => ((result: O) => void) | undefined,
+  onError: () => ((error: unknown) => void) | undefined,
+) {
+  return async function submit(e: SubmitEvent) {
+    e.preventDefault()
+    if (calls.value) return
+    const el = e.target as HTMLFormElement
+    const data = new FormData(el, e.submitter)
+    const files = [...data.values()].some((v) => typeof v !== 'string' && v.size)
+    calls.value++
+    try {
+      const v = await m[SUBMIT](decodeForm(data), files ? data : true)
+      errors.value = {}
+      message.value = undefined
+      result.value = v
+      if (untrack(reset) !== false) el.reset()
+      untrack(onSuccess)?.(v)
+    } catch (err) {
+      const issues = (err as FnError).issues
+      const f = fieldsOf(issues)
+      errors.value = f.errors
+      message.value = issues ? f.message : (err as Error).message
+      flush()
+      el.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+      untrack(onError)?.(err)
+    } finally {
+      calls.value--
+    }
+  }
+}
+
 /** A form that posts to a mutation, and works before any code has loaded. */
 export function Form<I, O>({
   of,
@@ -143,32 +181,16 @@ export function Form<I, O>({
     ),
   }
 
-  async function submit(e: SubmitEvent) {
-    e.preventDefault()
-    if (calls.value) return
-    const el = e.target as HTMLFormElement
-    const data = new FormData(el, e.submitter)
-    const files = [...data.values()].some((v) => typeof v !== 'string' && v.size)
-    calls.value++
-    try {
-      const v = await m[SUBMIT](decodeForm(data), files ? data : true)
-      errors.value = {}
-      message.value = undefined
-      result.value = v
-      if (untrack(() => reset) !== false) el.reset()
-      untrack(() => onSuccess)?.(v)
-    } catch (err) {
-      const issues = (err as FnError).issues
-      const f = fieldsOf(issues)
-      errors.value = f.errors
-      message.value = issues ? f.message : (err as Error).message
-      flush()
-      el.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
-      untrack(() => onError)?.(err)
-    } finally {
-      calls.value--
-    }
-  }
+  const submit = createSubmit(
+    m,
+    calls,
+    errors,
+    message,
+    result,
+    () => reset,
+    () => onSuccess,
+    () => onError,
+  )
 
   return (
     <form
