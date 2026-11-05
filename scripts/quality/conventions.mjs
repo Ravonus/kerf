@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { dirname, posix, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { references } from './conventions-references.mjs'
 
 export function tracked(cwd = process.cwd()) {
   return execFileSync('git', ['ls-files', '-z', '--', 'packages'], { cwd, encoding: 'utf8' })
@@ -10,12 +11,16 @@ export function tracked(cwd = process.cwd()) {
     .filter(Boolean)
 }
 
-function references(text) {
-  return [
-    ...text.matchAll(
-      /(?:from\s*|import\s*\(|import\s*|require\s*\(|new\s+URL\s*\()\s*['"](\.[^'"]+\.mjs)['"]/g,
-    ),
-  ].map((match) => match[1])
+function contractEntries(value) {
+  if (Array.isArray(value)) return value.flatMap(contractEntries)
+  if (value && typeof value === 'object')
+    return Object.entries(value)
+      .filter(([key]) => key !== 'types')
+      .flatMap(([, entry]) => contractEntries(entry))
+  if (typeof value !== 'string') return []
+  return [...value.matchAll(/(?:^|[\s"'=])(?:\.\/)?(src\/[^\s"'*]+\.mjs)(?=$|[\s"'])/g)].map(
+    (match) => match[1],
+  )
 }
 
 function nodeClosure(files, cwd) {
@@ -25,10 +30,13 @@ function nodeClosure(files, cwd) {
       /^packages\/[^/]+\/(?:scripts\/|bin\/|test\/e2e\/|[^/]+\.mjs$)/.test(f) && f.endsWith('.mjs'),
   )
   for (const manifest of files.filter((f) => /^packages\/[^/]+\/package\.json$/.test(f))) {
-    const text = readFileSync(resolve(cwd, manifest), 'utf8')
-    for (const match of text.matchAll(/"(\.\/src\/[^"*]+\.mjs)"/g)) {
-      const entry = posix.join(dirname(manifest), match[1])
-      if (all.has(entry)) roots.push(entry)
+    const pkg = JSON.parse(readFileSync(resolve(cwd, manifest), 'utf8'))
+    const scripts = Object.values(pkg.scripts ?? {}).filter(
+      (command) => typeof command === 'string' && /(?:^|[;&|])\s*node\s/.test(command),
+    )
+    for (const entry of contractEntries([pkg.bin, scripts, pkg.main, pkg.exports, pkg.imports])) {
+      const path = posix.join(dirname(manifest), entry)
+      if (all.has(path)) roots.push(path)
     }
   }
   const seen = new Set()
@@ -65,7 +73,7 @@ export function conventions(files, cwd = process.cwd()) {
       problems.push(`${file}: package tests use .test.ts or .test.tsx`)
   }
   for (const file of files.filter(
-    (f) => /^packages\/[^/]+\//.test(f) && /\.test\.(?:ts|tsx|js|jsx|mjs|cjs)$/.test(f),
+    (f) => /^packages\/[^/]+\//.test(f) && /\.(?:test|spec)\.(?:ts|tsx|js|jsx|mjs|cjs)$/.test(f),
   )) {
     if (
       !/^packages\/[^/]+\/test\//.test(file) &&
