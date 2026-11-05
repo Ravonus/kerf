@@ -195,6 +195,29 @@ async function allowedKeys(rule: ShareRule, ctx: Context, keys: string[]) {
   return keys.filter((_, i) => answers[i])
 }
 
+function clientMessages() {
+  return {
+    u: schema<{ add: string[]; drop: string[] }>((v) => {
+      const add = v?.add ?? [],
+        drop = v?.drop ?? []
+      return Array.isArray(add) &&
+        Array.isArray(drop) &&
+        add.length + drop.length <= MAX_BATCH &&
+        add.every(isKey) &&
+        drop.every(isKey)
+        ? { add, drop }
+        : no(`\`u\` takes up to ${MAX_BATCH} keys of 1 to ${MAX_KEY} characters`)
+    }),
+    set: schema<{ e: [string, number][] }>((v) =>
+      Array.isArray(v?.e) &&
+      v.e.length <= MAX_BATCH &&
+      v.e.every((x) => Array.isArray(x) && isKey(x[0]) && isBits(x[1]))
+        ? { e: v.e }
+        : no('`set` takes `[key, bits]` pairs, bits 0 to 7'),
+    ),
+  }
+}
+
 /** The `channel` behind `share`, made per hub. socket.ts takes it for `$share`, so every limit a channel has applies. */
 export function shareChannel(h: Hub): Fn {
   const rule = h.share
@@ -216,26 +239,7 @@ export function shareChannel(h: Hub): Fn {
           'add `share: ({ ctx, key }) => …` to `realtime()`; `() => true` must be written out',
         )
       },
-      client: {
-        u: schema<{ add: string[]; drop: string[] }>((v) => {
-          const add = v?.add ?? [],
-            drop = v?.drop ?? []
-          return Array.isArray(add) &&
-            Array.isArray(drop) &&
-            add.length + drop.length <= MAX_BATCH &&
-            add.every(isKey) &&
-            drop.every(isKey)
-            ? { add, drop }
-            : no(`\`u\` takes up to ${MAX_BATCH} keys of 1 to ${MAX_KEY} characters`)
-        }),
-        set: schema<{ e: [string, number][] }>((v) =>
-          Array.isArray(v?.e) &&
-          v.e.length <= MAX_BATCH &&
-          v.e.every((x) => Array.isArray(x) && isKey(x[0]) && isBits(x[1]))
-            ? { e: v.e }
-            : no('`set` takes `[key, bits]` pairs, bits 0 to 7'),
-        ),
-      },
+      client: clientMessages(),
       server: { ok: anything, b: anything },
       on: {
         async u({ msg, id, ctx, reply }: Said<{ add: string[]; drop: string[] }>) {
