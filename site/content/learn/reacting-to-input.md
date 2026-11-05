@@ -143,6 +143,12 @@ export function Quiz() {
   const status = state<Status>('typing')
   const error = state<string | null>(null)
   const empty = derived(() => answer.value.trim() === '')
+  const updateAnswer = (
+    e: Event & { currentTarget: HTMLTextAreaElement },
+  ) => {
+    answer.value = e.currentTarget.value
+    error.value = null
+  }
 
   const submit = async (e: SubmitEvent) => {
     e.preventDefault()
@@ -152,7 +158,8 @@ export function Quiz() {
       status.value = 'success'
     } catch (err) {
       status.value = 'typing'
-      error.value = err instanceof Error ? err.message : String(err)
+      error.value =
+        err instanceof Error ? err.message : String(err)
     }
   }
 
@@ -166,18 +173,19 @@ export function Quiz() {
             aria-label="Your answer"
             value={answer.value}
             disabled={status.value === 'submitting'}
-            onInput={e => {
-              answer.value = e.currentTarget.value
-              error.value = null
-            }}
+            onInput={updateAnswer}
           />
           <button
             type="submit"
-            disabled={empty.value || status.value === 'submitting'}
+            disabled={
+              empty.value || status.value === 'submitting'
+            }
           >
             Submit
           </button>
-          {error.value !== null && <p role="alert">{error.value}</p>}
+          {error.value !== null && (
+            <p role="alert">{error.value}</p>
+          )}
         </form>
       )}
     </section>
