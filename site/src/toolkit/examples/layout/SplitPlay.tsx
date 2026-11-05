@@ -9,7 +9,9 @@ export const SplitPlay = (p: {
   at?: 'tablet' | 'desktop'
 }) => (
   <Split
-    width={p.width === 'aside' ? undefined : (p.width as 'nav')}
+    width={
+      p.width === 'aside' ? undefined : (p.width as 'nav')
+    }
     side={p.side}
     gap={p.gap}
     at={p.at}

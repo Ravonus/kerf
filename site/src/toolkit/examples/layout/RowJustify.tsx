@@ -5,7 +5,10 @@ export const RowJustify = () => (
   <Stack gap="related">
     {JUSTIFIES.map((justify) => (
       <Inset key={justify}>
-        <Row justify={justify} gap="tight">
+        <Row
+          justify={justify}
+          gap="tight"
+        >
           <Box>{justify}</Box>
           <Box>Two</Box>
           <Box>Three</Box>

@@ -2,10 +2,17 @@ import { Grid, Inset, Stack } from '@weft-js/warp'
 import { Box, ALIGNS } from './shared'
 
 export const StackAlign = () => (
-  <Grid min="xs" cols={3} gap="group">
+  <Grid
+    min="xs"
+    cols={3}
+    gap="group"
+  >
     {ALIGNS.map((align) => (
       <Inset key={align}>
-        <Stack gap="tight" align={align}>
+        <Stack
+          gap="tight"
+          align={align}
+        >
           <Box>{align}</Box>
           <Box>A longer one</Box>
           <Box>Short</Box>

@@ -2,10 +2,19 @@ import { Grid, Stack, Text } from '@weft-js/warp'
 import { Box, STACK_GAPS } from './shared'
 
 export const StackGaps = () => (
-  <Grid min="xs" gap="group">
+  <Grid
+    min="xs"
+    gap="group"
+  >
     {STACK_GAPS.map((gap) => (
-      <Stack key={gap} gap="tight">
-        <Text role="label" subtle>
+      <Stack
+        key={gap}
+        gap="tight"
+      >
+        <Text
+          role="label"
+          subtle
+        >
           {gap}
         </Text>
         <Stack gap={gap}>

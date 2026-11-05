@@ -7,9 +7,16 @@ export const GridPlay = (p: {
   cols?: 'any' | 2 | 3 | 4 | 6
   gap?: Gap
 }) => (
-  <Grid min={p.min} cols={p.cols === 'any' ? undefined : p.cols} gap={p.gap}>
+  <Grid
+    min={p.min}
+    cols={p.cols === 'any' ? undefined : p.cols}
+    gap={p.gap}
+  >
     {EIGHT.map((n) => (
-      <Box key={n} tall={64}>
+      <Box
+        key={n}
+        tall={64}
+      >
         {n}
       </Box>
     ))}

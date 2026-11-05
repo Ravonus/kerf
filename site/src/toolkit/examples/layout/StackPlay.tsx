@@ -9,7 +9,11 @@ export const StackPlay = (p: {
 }) => (
   <Stack
     gap={p.gap}
-    align={p.align === ('stretch' as string) ? undefined : p.align}
+    align={
+      p.align === ('stretch' as string)
+        ? undefined
+        : p.align
+    }
     divided={p.divided}
     style="inline-size:min(100%,320px)"
   >

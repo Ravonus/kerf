@@ -6,7 +6,11 @@ export const CenterPlay = (p: {
   gutter?: boolean
   intrinsic?: boolean
 }) => (
-  <Center max={p.max} gutter={p.gutter} intrinsic={p.intrinsic}>
+  <Center
+    max={p.max}
+    gutter={p.gutter}
+    intrinsic={p.intrinsic}
+  >
     <Box tall={96}>A measured column</Box>
   </Center>
 )

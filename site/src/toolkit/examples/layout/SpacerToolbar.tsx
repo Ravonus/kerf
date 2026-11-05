@@ -1,5 +1,10 @@
 import { state } from '@weft-js/core'
-import { Button, Row, Segmented, Spacer } from '@weft-js/warp'
+import {
+  Button,
+  Row,
+  Segmented,
+  Spacer,
+} from '@weft-js/warp'
 import { VIEWS } from './shared'
 
 export function SpacerToolbar() {
@@ -14,7 +19,11 @@ export function SpacerToolbar() {
         onChange={(v) => (view.value = v)}
       />
       <Spacer />
-      <Button emphasis="ghost" tone="neutral" icon="download">
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        icon="download"
+      >
         Export
       </Button>
       <Button icon="plus">New project</Button>
