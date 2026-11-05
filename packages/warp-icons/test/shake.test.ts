@@ -6,19 +6,19 @@ import { brotliCompressSync, constants } from 'node:zlib'
 import { build } from 'vite'
 import weft from '@weft-js/core/vite'
 
-const br = (text) =>
+const br = (text: string) =>
   brotliCompressSync(Buffer.from(text), { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 const pkg = new URL('..', import.meta.url).pathname
 
 // A project inside the package, so it resolves weft. Its alias file picks the tiers; '@weft-js/warp-icons' to itself means all of them.
-function project(alias) {
+function project(alias: Record<string, string>) {
   const dir = mkdtempSync(join(pkg, '.tmp-'))
   mkdirSync(join(dir, '.weft', 'tokens'), { recursive: true })
   writeFileSync(join(dir, '.weft', 'tokens', 'icons.alias.json'), JSON.stringify(alias))
   return dir
 }
 const ALL = { '@weft-js/warp-icons': '@weft-js/warp-icons' }
-async function bundle(code, { alias = ALL } = {}) {
+async function bundle(code: string, { alias = ALL } = {}) {
   const root = project(alias)
   writeFileSync(join(root, 'app.tsx'), code) // the build scans the project's files
   try {
@@ -27,7 +27,7 @@ async function bundle(code, { alias = ALL } = {}) {
     rmSync(root, { recursive: true, force: true })
   }
 }
-async function run(code, root) {
+async function run(code: string, root: string) {
   const id = '\0shake-entry.tsx'
   const out = await build({
     configFile: false,
@@ -48,7 +48,9 @@ async function run(code, root) {
       rolldownOptions: { input: 'shake-entry.tsx' },
     },
   })
-  const files = (Array.isArray(out) ? out : [out]).flatMap((o) => o.output)
+  const files = (Array.isArray(out) ? out : [out]).flatMap(
+    (o) => (o as Extract<typeof o, { output: unknown }>).output,
+  )
   return {
     chunks: files.filter((f) => f.type === 'chunk').map((f) => f.code),
     js: files
@@ -57,11 +59,11 @@ async function run(code, root) {
       .join('\n'),
     css: files
       .filter((f) => f.fileName.endsWith('.css'))
-      .map((f) => String(f.source))
+      .map((f) => String((f as Extract<typeof f, { type: 'asset' }>).source))
       .join('\n'),
   }
 }
-const page = (names, from = '@weft-js/warp-icons') =>
+const page = (names: string[], from = '@weft-js/warp-icons') =>
   `import { render } from '@weft-js/core/dom'\nimport { ${names.join(', ')} } from '${from}'\nrender(() => <div>${names.map((n) => `<${n} />`).join('')}</div>, document.body)\n`
 
 test('one icon imported: its drawing ships, and no other', async () => {
@@ -133,7 +135,7 @@ test.each(Object.keys(forms))(
   '%s: exactly one icon, the same output as a named import',
   async (form) => {
     const base = await bundle(forms.named),
-      out = await bundle(forms[form])
+      out = await bundle(forms[form as keyof typeof forms])
     expect(out.js).toContain('M')
     expect(out.js.match(/data-t="v"/g)?.length).toBe(base.js.match(/data-t="v"/g)?.length)
     expect(out.js.includes('SearchIcon') || out.js.length > base.js.length * 1.05).toBe(false)
@@ -155,8 +157,8 @@ test('a dynamic name: the pack is its own chunk, and the page stays small', asyn
   )
   expect(lazy.chunks.length).toBeGreaterThan(1)
   const [main, ...rest] = lazy.chunks.toSorted((a, b) => a.length - b.length)
-  process.stderr.write(`BYTES dynamic: page ${br(main)} B js, pack chunk ${br(rest.join(''))} B\n`)
-  expect(br(main)).toBeLessThan(br(rest.join('')))
+  process.stderr.write(`BYTES dynamic: page ${br(main!)} B js, pack chunk ${br(rest.join(''))} B\n`)
+  expect(br(main!)).toBeLessThan(br(rest.join('')))
 }, 90000)
 
 test('an action costs nothing unless that one is used', async () => {

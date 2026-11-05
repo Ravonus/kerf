@@ -9,7 +9,7 @@ import { names } from '../src/gen/names'
 
 const art = await load()
 const entries = Object.entries(art)
-const inked = (g) => g.map((r) => r.map((c) => (c === 'w' ? '#' : c)))
+const inked = (g: string[][]) => g.map((r) => r.map((c) => (c === 'w' ? '#' : c)))
 
 test('the set is at least 500, with every warp and lemonstand name', () => {
   expect(names.length).toBeGreaterThanOrEqual(500)
@@ -68,7 +68,7 @@ test.each(entries)('%s: both outlines draw, and the pixels are 16×16 with ink',
     { ink } = cells(grid)
   expect(ink).toMatch(/^M/)
   expect(grid).toHaveLength(16)
-  expect(grid.flat().filter((c) => c === '#').length, name).toBeGreaterThan(5)
+  expect(grid.flat().filter((c: string) => c === '#').length, name).toBeGreaterThan(5)
 })
 
 test('no two icons share a pixel drawing', () => {
@@ -83,8 +83,10 @@ test('no two icons share a pixel drawing', () => {
 test('a crescent holds together: no loose cells, and none too small to read as shade', () => {
   for (const [name, [spec]] of entries) {
     const g = crescent(auto(spec)),
-      on = (x, y) => g[y]?.[x] === '#',
-      lit = g.flatMap((r, y) => r.flatMap((c, x) => (c === '#' ? [[x, y]] : [])))
+      on = (x: number, y: number) => g[y]?.[x] === '#',
+      lit = g.flatMap((r: string[], y: number) =>
+        r.flatMap((c: string, x: number) => (c === '#' ? [[x, y] as [number, number]] : [])),
+      )
     expect(lit.length === 0 || lit.length >= 6, name).toBe(true)
     for (const [x, y] of lit)
       expect(

@@ -11,7 +11,7 @@ import { outputs } from '../scripts/build.mjs'
 const root = fileURLToPath(new URL('..', import.meta.url))
 const repo = resolve(root, '../..')
 
-function check(dir) {
+function check(dir: string) {
   const env = { ...process.env }
   delete env.NODE_TEST_CONTEXT
   return spawnSync(process.execPath, [join(dir, 'scripts/build.mjs'), '--check'], {
@@ -28,7 +28,7 @@ test('icon declarations match the independent pre-split artwork reference', asyn
     .flatMap(([, text]) =>
       text.split('\n').filter((line) => /^export (const |\{ (?!iconSet))/.test(line)),
     )
-  const digest = (lines) => createHash('sha256').update(lines.join('\n')).digest('hex')
+  const digest = (lines: string[]) => createHash('sha256').update(lines.join('\n')).digest('hex')
   const reference = 'fd020d848726f48a096da1c89c6f8cad738beb31dc953beb636cf70e0a83dde8'
   expect(declarations.filter((line) => /^export const .*?Icon =/.test(line))).toHaveLength(651)
   expect(declarations).toHaveLength(1958)
@@ -136,7 +136,7 @@ test('the Vite icon transform covers generated modules only', async () => {
     expect(vivid.code).not.toContain('data-bw=')
     const moduleId = '\0weft:icon/TestIcon'
     const sampleId = '/project/node_modules/@weft-js/warp-icons/src/gen/all-test.tsx'
-    const drawing = (shape) => `export const TestIcon = /*#__PURE__*/ icon('${shape}')`
+    const drawing = (shape: string) => `export const TestIcon = /*#__PURE__*/ icon('${shape}')`
     await handler(drawing('first'), sampleId)
     expect((await plugins.resolve.load.handler(moduleId)).code).toContain('first')
     await handler(drawing('second'), sampleId)

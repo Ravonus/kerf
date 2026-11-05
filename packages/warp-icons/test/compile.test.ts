@@ -15,7 +15,7 @@ import {
 } from '../compile.mjs'
 
 const catalog = list()
-function scan(files) {
+function scan(files: Record<string, string>) {
   const root = mkdtempSync(join(tmpdir(), 'icons-scan-'))
   try {
     for (const [f, code] of Object.entries(files)) {
@@ -27,11 +27,11 @@ function scan(files) {
     rmSync(root, { recursive: true, force: true })
   }
 }
-const app = (body) => ({
+const app = (body: string) => ({
   'src/a.tsx': `import { Button, Icon, Chip } from '@weft-js/warp'\n${body}`,
 })
 /** @param {{ names: Iterable<string> }} r */
-const names = (r) => [...r.names].sort()
+const names = (r: { names: Iterable<string> }) => [...r.names].sort()
 
 test('a literal', () =>
   expect(names(scan(app(`export const A = () => <Icon name="check" />`)))).toEqual(['check']))
@@ -195,7 +195,7 @@ test('trimTiers keeps what the stops show', () => {
   )
 })
 
-const pack = (body) => ({ 'src/a.tsx': `import Icons from '@weft-js/warp-icons'\n${body}` })
+const pack = (body: string) => ({ 'src/a.tsx': `import Icons from '@weft-js/warp-icons'\n${body}` })
 test('a pack member is that icon', () =>
   expect(names(scan(pack(`export const A = () => <Icons.Bell />`)))).toEqual(['bell']))
 test('a pack variant', () =>
@@ -251,7 +251,8 @@ test('rewrite refuses an unknown member', () =>
     rewrite(`import Icons from '@weft-js/warp-icons'\nconst a = <Icons.Bel />`, 'a.tsx', catalog),
   ).toThrow(/I001 no icon 'Bel', did you mean 'Bell'/))
 test('a remote source fetches singles, with no pack in the build', () => {
-  const m = namesModule(['check'], { source: 'https://cdn.example.com/icons/' })
+  const remoteNames = namesModule as (names: string[], options: { source: string }) => string
+  const m = remoteNames(['check'], { source: 'https://cdn.example.com/icons/' })
   expect(m).toContain('remote("https://cdn.example.com/icons/")')
   expect(m).not.toContain('@weft-js/warp-icons/all')
 })
