@@ -15,15 +15,17 @@ import {
 } from '@weft-js/warp'
 import { SLUG, REGION_OPTIONS } from './shared'
 
+function nameProblem(name: string) {
+  return SLUG.test(name) ? undefined : 'Use lowercase letters, numbers and dashes.'
+}
+
 export function FormProjectSettings() {
   const name = state('storefront')
   const about = state('The public shop, served from the edge.')
   const region = state<string | null>('eu-west')
   const copies = state(3)
   const onPush = state(true)
-  const problem = derived(() =>
-    SLUG.test(name.value) ? undefined : 'Use lowercase letters, numbers and dashes.',
-  )
+  const problem = derived(() => nameProblem(name.value))
   const save = (e: Event) => {
     e.preventDefault()
     if (!problem.value)
