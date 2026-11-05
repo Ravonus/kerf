@@ -32,22 +32,7 @@ export function ShortcutsOverlay({
   const apple = state(false)
   const rev = state(0)
   const query = state('')
-  onMount(() => {
-    apple.value = isApple(navigator)
-    const quiet = reg.subscribe(() => rev.value++)
-    const drop = reg.register({
-      keys: '?',
-      label: 'Show shortcuts',
-      group: 'Help',
-      run: () => (on.value = true),
-    })
-    const stop = reg.listen(document)
-    onCleanup(() => {
-      drop()
-      stop()
-      quiet()
-    })
-  })
+  registerShortcuts(reg, on, apple, rev)
   const groups = derived(() => {
     void rev.value
     const by = new Map<string, Shortcut[]>()
@@ -104,4 +89,28 @@ export function ShortcutsOverlay({
       </div>
     </Modal>
   )
+}
+
+function registerShortcuts(
+  reg: Shortcuts,
+  on: State<boolean>,
+  apple: State<boolean>,
+  rev: State<number>,
+) {
+  onMount(() => {
+    apple.value = isApple(navigator)
+    const quiet = reg.subscribe(() => rev.value++)
+    const drop = reg.register({
+      keys: '?',
+      label: 'Show shortcuts',
+      group: 'Help',
+      run: () => (on.value = true),
+    })
+    const stop = reg.listen(document)
+    onCleanup(() => {
+      drop()
+      stop()
+      quiet()
+    })
+  })
 }

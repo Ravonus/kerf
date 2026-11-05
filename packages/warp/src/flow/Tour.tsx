@@ -53,16 +53,7 @@ function Running({
     at.value = i
     onStepChange?.(i)
   }
-  watch(
-    () => at.value,
-    (i) => {
-      if (typeof document === 'object')
-        announce(
-          document,
-          `${many ? `Step ${i + 1} of ${list.length}. ` : ''}${typeof list[i]!.title === 'string' ? list[i]!.title : ''}`,
-        )
-    },
-  )
+  watchTour(at, list, many)
   let root: HTMLDivElement | undefined
   use(
     tourSpot,
@@ -199,5 +190,18 @@ export function Coachmark({
         </div>
       )}
     </div>
+  )
+}
+
+function watchTour(at: State<number>, list: TourStep[], many: boolean) {
+  watch(
+    () => at.value,
+    (i) => {
+      if (typeof document === 'object')
+        announce(
+          document,
+          `${many ? `Step ${i + 1} of ${list.length}. ` : ''}${typeof list[i]!.title === 'string' ? list[i]!.title : ''}`,
+        )
+    },
   )
 }

@@ -1,6 +1,6 @@
 import { CheckIcon, FileTextIcon } from '@weft-js/warp-icons'
 import { announce, uid } from '@weft-js/warp-core'
-import { derived, state, untrack, watch } from '@weft-js/core'
+import { derived, state, untrack, watch, type State } from '@weft-js/core'
 import { Badge } from '../Badge'
 import { Button, type Tone } from '../Button'
 import { Drawer } from '../Drawer'
@@ -99,24 +99,7 @@ export function SignGate({
     if (innerWidth < 600) sheet.value = true
     else signing.value = true
   }
-  watch(
-    () => s.value,
-    (now, was) => {
-      if (was === undefined || now === was) return
-      if (now === 'pending') announce(document, 'Signature pending. Checking with the provider.')
-      if (now === 'signed') {
-        sheet.value = false
-        signing.value = false
-        announce(document, 'Agreement signed.')
-        onSigned?.()
-      }
-      if (now === 'expired' || now === 'declined' || now === 'error') {
-        sheet.value = false
-        signing.value = false
-        announce(document, COPY[now], true)
-      }
-    },
-  )
+  watchSignStatus(s, sheet, signing, () => onSigned)
   return (
     <div data-scope="gate" data-state={s.value}>
       <div data-part="content" inert={s.value === 'signed' ? undefined : true}>
@@ -166,5 +149,31 @@ export function SignGate({
         )}
       </Drawer>
     </div>
+  )
+}
+
+function watchSignStatus(
+  s: { readonly value: SignStatus },
+  sheet: State<boolean>,
+  signing: State<boolean>,
+  onSigned: () => SignGateProps['onSigned'],
+) {
+  watch(
+    () => s.value,
+    (now, was) => {
+      if (was === undefined || now === was) return
+      if (now === 'pending') announce(document, 'Signature pending. Checking with the provider.')
+      if (now === 'signed') {
+        sheet.value = false
+        signing.value = false
+        announce(document, 'Agreement signed.')
+        onSigned()?.()
+      }
+      if (now === 'expired' || now === 'declined' || now === 'error') {
+        sheet.value = false
+        signing.value = false
+        announce(document, COPY[now], true)
+      }
+    },
   )
 }
