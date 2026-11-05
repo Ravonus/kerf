@@ -9,10 +9,13 @@ import { specialize } from '../specialize.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const upstream = path.join(root, 'node_modules/@chenglou/pretext/src')
-const coverage = path.join(root, 'src/coverage/blink.json')
-const coverageDirectory = path.dirname(coverage)
+const vendor = path.join(root, 'vendor/pretext/src')
+const engines = ['blink', 'webkit', 'gecko']
+const coverageDirectory = path.join(root, 'src/coverage')
+const coverageFiles = engines.map((engine) => path.join(coverageDirectory, `${engine}.json`))
 const hadCoverageDirectory = fs.existsSync(coverageDirectory)
-const previous = fs.existsSync(coverage) ? fs.readFileSync(coverage) : null
+const previous = coverageFiles.map((file) => (fs.existsSync(file) ? fs.readFileSync(file) : null))
+const modules = fs.readdirSync(vendor).filter((f) => f.endsWith('.ts') && f !== 'rich-inline.ts')
 const ran = fs
   .readdirSync(upstream)
   .filter((f) => f.endsWith('.ts'))
@@ -28,9 +31,18 @@ const ran = fs
       .map((s) => s.name.text),
   )
 try {
-  fs.mkdirSync(path.dirname(coverage), { recursive: true })
-  fs.writeFileSync(coverage, JSON.stringify({ ran }))
-  await specialize('blink')
+  fs.mkdirSync(coverageDirectory, { recursive: true })
+  for (const file of coverageFiles) fs.writeFileSync(file, JSON.stringify({ ran }))
+  for (const engine of engines) {
+    await specialize(engine)
+    const out = path.join(root, 'gen', engine)
+    assert.deepEqual(
+      modules.filter((file) => !fs.existsSync(path.join(out, file))),
+      [],
+    )
+    const rare = fs.readdirSync(out).filter((file) => file.endsWith('.rare.ts'))
+    assert.deepEqual(rare, [], `${engine}: split helpers moved to the rare pack`)
+  }
   const source = fs.readFileSync(path.join(root, 'gen/blink/line-breaks.ts'), 'utf8')
   const isStub = (text) =>
     /function ruleBoundary\([^]*?__missing\('rare', 'ruleBoundary'\)/.test(text)
@@ -49,10 +61,15 @@ try {
   const flags = new Uint8Array(4)
   mod.markRuleBoundaries(mod.getBreakRules('chromium/line_normal'), 'a b', flags)
   assert.deepEqual([...flags], [0, 0, 1, 1])
-  console.log('Coverage keeps split helpers in the base; boundary output matches.')
+  console.log(
+    `Coverage keeps split helpers in the base: ${modules.length} modules, ${ran.length} names, ${engines.length} engines; boundary output matches.`,
+  )
 } finally {
-  if (previous === null) fs.unlinkSync(coverage)
-  else fs.writeFileSync(coverage, previous)
+  coverageFiles.forEach((file, i) => {
+    if (previous[i] === null) {
+      if (fs.existsSync(file)) fs.unlinkSync(file)
+    } else fs.writeFileSync(file, previous[i])
+  })
   if (!hadCoverageDirectory) fs.rmdirSync(coverageDirectory)
-  await specialize('blink')
+  for (const engine of engines) await specialize(engine)
 }
