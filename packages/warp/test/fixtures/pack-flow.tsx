@@ -266,6 +266,27 @@ export const ReauthCase = () => (
 const param = (k: string) =>
   typeof location === 'object' ? new URLSearchParams(location.search).get(k) : null
 
+function tour() {
+  return (
+    <>
+      <h1>warp flow</h1>
+      <Toaster />
+      <p>
+        <button type="button" data-tour="a">
+          Target
+        </button>
+      </p>
+      <Tour
+        open={shown}
+        steps={[
+          { target: '[data-tour=a]', title: 'Start here', body: 'Press it.' },
+          { target: '[data-tour=a]', title: 'Again', body: 'Twice.' },
+        ]}
+      />
+    </>
+  )
+}
+
 export const Part = () => {
   const open = param('flow')
   if (open === 'mfa')
@@ -297,25 +318,7 @@ export const Part = () => {
         <ShortcutsOverlay open={shown} />
       </>
     )
-  if (open === 'tour')
-    return (
-      <>
-        <h1>warp flow</h1>
-        <Toaster />
-        <p>
-          <button type="button" data-tour="a">
-            Target
-          </button>
-        </p>
-        <Tour
-          open={shown}
-          steps={[
-            { target: '[data-tour=a]', title: 'Start here', body: 'Press it.' },
-            { target: '[data-tour=a]', title: 'Again', body: 'Twice.' },
-          ]}
-        />
-      </>
-    )
+  if (open === 'tour') return tour()
   return (
     <>
       <h1>warp flow</h1>

@@ -371,54 +371,89 @@ export const Part = () => {
         />
       </div>
       <h2>Shared brief</h2>
-      <Following peer={follow.value} onStop={() => (follow.value = null)}>
-        <div data-part="app-bar">
-          <b>Q4 brief</b>
-          <SyncIndicator state="saved" />
-          <span data-part="spacer"></span>
-          <PresenceStack
-            peers={peers}
-            onFollow={(p) => (follow.value = p)}
-            following={follow.value?.id}
+      <SharedBrief follow={follow} active={active} peers={peers} share={share} />
+      <CollabDetails />
+      <ShareDialog
+        open={share}
+        title="Q4 brief"
+        members={members}
+        people={[{ ...kofi, email: 'kofi@loom.app' }]}
+        link={link}
+        url="https://loom.app/d/q4"
+        onInvite={send}
+        onRoleChange={send}
+        onLinkAccess={(v) => (link.value = v)}
+      />
+      <Toaster />
+    </>
+  )
+}
+
+function SharedBrief({
+  follow,
+  active,
+  peers,
+  share,
+}: {
+  follow: ReturnType<typeof state<Peer | null>>
+  active: ReturnType<typeof state<string | null>>
+  peers: Peer[]
+  share: ReturnType<typeof state<boolean>>
+}) {
+  return (
+    <Following peer={follow.value} onStop={() => (follow.value = null)}>
+      <div data-part="app-bar">
+        <b>Q4 brief</b>
+        <SyncIndicator state="saved" />
+        <span data-part="spacer"></span>
+        <PresenceStack
+          peers={peers}
+          onFollow={(p) => (follow.value = p)}
+          following={follow.value?.id}
+        />
+        <Button size="sm" onClick={() => (share.value = true)}>
+          Share
+        </Button>
+      </div>
+      <div style="position:relative;display:grid;grid-template-columns:44px minmax(0,1fr);gap:20px;padding:16px">
+        <div style="block-size:240px;display:grid">
+          <ViewportRail peers={rail} self={{ top: 0.05, height: 0.38 }} onJump={send} />
+        </div>
+        <article style="display:grid;gap:14px;max-inline-size:640px">
+          <h3 data-anchor="h1">
+            Agenda first, drag second <SectionPeers peers={[mei]} />
+          </h3>
+          <p data-anchor="p1">
+            Phones open on the agenda, because touch scheduling is mostly{' '}
+            <PeerMark peer={mei}>reading and rescheduling</PeerMark>. Long-press opens a{' '}
+            <CommentAnchor thread="c1" active={active}>
+              move sheet with real slots
+            </CommentAnchor>
+            ; events <PeerSelection peer={ana}>span right while the lanes are free</PeerSelection>.
+          </p>
+          <LockedField peer={kofi} label="Owner" value="Kofi Mensah" />
+          <ConflictAlert
+            field="Ship date"
+            peer={ana}
+            time="10:31"
+            theirs="Nov 25"
+            yours="Nov 18"
+            onUseTheirs={send}
+            onKeepMine={send}
+            onCompare={send}
           />
-          <Button size="sm" onClick={() => (share.value = true)}>
-            Share
-          </Button>
-        </div>
-        <div style="position:relative;display:grid;grid-template-columns:44px minmax(0,1fr);gap:20px;padding:16px">
-          <div style="block-size:240px;display:grid">
-            <ViewportRail peers={rail} self={{ top: 0.05, height: 0.38 }} onJump={send} />
-          </div>
-          <article style="display:grid;gap:14px;max-inline-size:640px">
-            <h3 data-anchor="h1">
-              Agenda first, drag second <SectionPeers peers={[mei]} />
-            </h3>
-            <p data-anchor="p1">
-              Phones open on the agenda, because touch scheduling is mostly{' '}
-              <PeerMark peer={mei}>reading and rescheduling</PeerMark>. Long-press opens a{' '}
-              <CommentAnchor thread="c1" active={active}>
-                move sheet with real slots
-              </CommentAnchor>
-              ; events <PeerSelection peer={ana}>span right while the lanes are free</PeerSelection>
-              .
-            </p>
-            <LockedField peer={kofi} label="Owner" value="Kofi Mensah" />
-            <ConflictAlert
-              field="Ship date"
-              peer={ana}
-              time="10:31"
-              theirs="Nov 25"
-              yours="Nov 18"
-              onUseTheirs={send}
-              onKeepMine={send}
-              onCompare={send}
-            />
-          </article>
-          {/* the audits outlast the idle fade, which is decorative and 40% by design: they read the active label */}
-          <Cursors peers={cursors} idle={3600000} />
-        </div>
-        <CommentRail threads={[threadOne, threadTwo]} active={active} />
-      </Following>
+        </article>
+        {/* the audits outlast the idle fade, which is decorative and 40% by design: they read the active label */}
+        <Cursors peers={cursors} idle={3600000} />
+      </div>
+      <CommentRail threads={[threadOne, threadTwo]} active={active} />
+    </Following>
+  )
+}
+
+function CollabDetails() {
+  return (
+    <>
       <h2>Versions</h2>
       <VersionHistory
         versions={versions}
@@ -458,18 +493,6 @@ export const Part = () => {
           <p>Notes for the layout.</p>
         </section>
       </AutoTrack>
-      <ShareDialog
-        open={share}
-        title="Q4 brief"
-        members={members}
-        people={[{ ...kofi, email: 'kofi@loom.app' }]}
-        link={link}
-        url="https://loom.app/d/q4"
-        onInvite={send}
-        onRoleChange={send}
-        onLinkAccess={(v) => (link.value = v)}
-      />
-      <Toaster />
     </>
   )
 }
