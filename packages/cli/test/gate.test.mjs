@@ -160,7 +160,7 @@ test('labels low and zero stock', () => {
 })
 `
 
-describe('the gate', () => {
+function registerSoundAndJunk() {
   it('accepts sound tests: they fail before, pass after, and kill mutants', async () => {
     const dir = fixture({ 'src/stock.ts': after, 'src/stock.test.ts': sound })
     const r = await gate(dir, {
@@ -219,7 +219,9 @@ test('implementation detail', () => {
       after: 'failed',
     }) // no DOM here: it can't even run
   })
+}
 
+function registerMutationAndGit() {
   it('reports T011 for a test that fails before but kills no mutant of the changed lines', async () => {
     const weak = `import { label } from './stock'
 test('label is a string with text', () => {
@@ -276,4 +278,9 @@ test('label is a string with text', () => {
     expect(r.tests.every((t) => t.before === null && t.kills > 0)).toBe(true)
     expect(r.ok).toBe(true)
   })
+}
+
+describe('the gate', () => {
+  registerSoundAndJunk()
+  registerMutationAndGit()
 })
