@@ -8,9 +8,7 @@ function Greeting(props: {
   return (
     <p>
       Hello, <strong>{name}</strong>.{' '}
-      {visits > 1
-        ? `Visit ${visits}.`
-        : 'First visit.'}
+      {visits > 1 ? `Visit ${visits}.` : 'First visit.'}
     </p>
   )
 }
@@ -18,8 +16,14 @@ function Greeting(props: {
 export default function Welcome() {
   return (
     <Card title="Two greetings">
-      <Greeting name="Ana" visits={1} />
-      <Greeting name="Ben" visits={4} />
+      <Greeting
+        name="Ana"
+        visits={1}
+      />
+      <Greeting
+        name="Ben"
+        visits={4}
+      />
     </Card>
   )
 }

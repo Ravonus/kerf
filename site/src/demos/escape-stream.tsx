@@ -28,7 +28,10 @@ export default function Reply() {
   onCleanup(() => clearInterval(timer))
   return (
     <Card title="Streamed text">
-      <Button size="sm" onClick={send}>
+      <Button
+        size="sm"
+        onClick={send}
+      >
         Ask
       </Button>
       <Text stream>{text.value}</Text>

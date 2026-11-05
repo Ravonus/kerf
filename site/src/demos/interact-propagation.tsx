@@ -23,7 +23,10 @@ export default function Bubbling() {
           say('…and the toolbar heard it too')
         }
       >
-        <Button size="sm" onClick={() => say('Open')}>
+        <Button
+          size="sm"
+          onClick={() => say('Open')}
+        >
           Open
         </Button>
         <Button
@@ -34,9 +37,7 @@ export default function Bubbling() {
           Star
         </Button>
       </div>
-      <form
-        onSubmit={submit}
-      >
+      <form onSubmit={submit}>
         <Button
           type="submit"
           size="sm"
