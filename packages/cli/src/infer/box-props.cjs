@@ -64,6 +64,19 @@ function attribute(ts, file, start) {
   return { expression, tag: opening.tagName }
 }
 
+// Scalar aliases and synthesized boxes stay opaque; no complete contract is proven there.
+function originatingBox(ts, expression) {
+  while (ts.isParenthesizedExpression(expression) || ts.isAsExpression(expression)
+    || ts.isTypeAssertionExpression(expression) || ts.isNonNullExpression(expression)
+    || ts.isSatisfiesExpression(expression)) expression = expression.expression
+  if (ts.isPropertyAccessExpression(expression) && expression.name.text === 'value')
+    return expression.expression
+  if (ts.isElementAccessExpression(expression)
+    && expression.argumentExpression && ts.isStringLiteralLike(expression.argumentExpression)
+    && expression.argumentExpression.text === 'value') return expression.expression
+  return null
+}
+
 /** A core diagnostic only when changing box/value direction explains the type error. */
 function boxMismatch(ts, program, diagnostic) {
   if (!assignmentCodes.has(diagnostic.code) || !diagnostic.file || diagnostic.start === undefined)
@@ -87,6 +100,12 @@ function boxMismatch(ts, program, diagnostic) {
   const to = given === 'box' ? expected : value
   if (!checker.isTypeAssignableTo(from, to))
     return null
+  if (given === 'value') {
+    const origin = originatingBox(ts, site.expression)
+    const original = origin && checker.getTypeAtLocation(origin)
+    if (boxKind(ts, checker, original, members) !== 'box'
+      || !checker.isTypeAssignableTo(original, expected)) return null
+  }
   const text = site.expression.getText(diagnostic.file)
   return {
     code: 'W008',

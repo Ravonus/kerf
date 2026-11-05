@@ -57,7 +57,6 @@ describe('W008 typed component props', () => {
       ['<Value n={d} />', 'expects a value'],
       ['<Box n={n.value} />', 'expects a core box'],
       ['<ReadonlyBox n={d.value} />', 'expects a core box'],
-      ['<Box n={1} />', 'expects a core box'],
     ]) {
       const result = findings(`${prefix} const app = ${jsx}`)
       expect(result).toHaveLength(1)
@@ -66,6 +65,54 @@ describe('W008 typed component props', () => {
       expect(result[0].help).toContain(direction === 'expects a value' ? '.value' : 'box itself')
       expect(result[0].edits).toBeUndefined()
     }
+  })
+
+  it('requires the originating box to satisfy the whole expected contract', () => {
+    const accepts = [
+      `${prefix} const a = <Box n={n.value} />`,
+      `${prefix} const a = <Box n={n['value']} />`,
+      `${prefix} const a = <Box n={(n.value as number)} />`,
+      `${prefix} const alias = n; const a = <Box n={alias.value} />`,
+      `${prefix} type Counter = State<number>;
+       declare function Card(props: { n: Counter }): JSX.Element;
+       const a = <Card n={n.value} />`,
+      `${prefix} declare function Card(props: { n: State<number> | Derived<number> }): JSX.Element;
+       const a = <Card n={n.value} />`,
+      `${prefix} declare function Card(props: { n: State<number> | undefined }): JSX.Element;
+       const a = <Card n={n.value} />`,
+      `${prefix} type Labeled = State<number> & { label: string };
+       declare const labeled: Labeled;
+       declare function Card(props: { n: Labeled }): JSX.Element;
+       const a = <Card n={labeled.value} />`,
+    ]
+    for (const source of accepts) expect(codes(source)).toEqual(['W008'])
+    const preserves = [
+      `${prefix} declare function Card(props: { n: State<number> & { label: string } }): JSX.Element;
+       const a = <Card n={n.value} />`,
+      `${prefix} type Labeled = State<number> & { label: string };
+       declare function Card(props: { n: Labeled }): JSX.Element;
+       const a = <Card n={n['value']} />`,
+      `${prefix} type Labeled = State<number> & { label: string };
+       const alias = n; declare function Card(props: { n: Labeled }): JSX.Element;
+       const a = <Card n={alias.value} />`,
+      `${prefix} type Choice = (State<number> & { label: string })
+         | (State<number> & { id: number });
+       declare function Card(props: { n: Choice }): JSX.Element;
+       const a = <Card n={n.value} />`,
+      `${prefix} declare const optional: State<number> | undefined;
+       const a = <Box n={optional?.value!} />`,
+      `${prefix} const a = <Box n={1} />`,
+      `${prefix} const scalar = n.value; const a = <Box n={scalar} />`,
+      `${prefix} const wrong = state('wrong'); const a = <Box n={wrong.value as unknown as number} />`,
+      `${prefix} const item = state({ count: 1 });
+       declare function Detail(props: { n: { count: number } & { label: string } }): JSX.Element;
+       const a = <Detail n={item} />`,
+    ]
+    for (const source of preserves) expect(codes(source)).toEqual(['TS2322'])
+    expect(findings(`${prefix} type Labeled = State<number> & { label: string };
+      declare const labeled: Labeled;
+      declare function Card(props: { n: Labeled }): JSX.Element;
+      const a = <Card n={labeled} />`)).toEqual([])
   })
 
   it('keeps repaired value and valid box props quiet', () => {
