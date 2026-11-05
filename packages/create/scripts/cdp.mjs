@@ -43,29 +43,7 @@ export async function launch(exe = findChrome()) {
   }
   let ws
   try {
-    const url = await new Promise((ok, no) => {
-      let log = ''
-      const timer = setTimeout(
-        () => no(new Error(`Chrome didn't start: ${log.slice(-400)}`)),
-        30000,
-      )
-      chrome.on('error', (e) => {
-        clearTimeout(timer)
-        no(e)
-      })
-      chrome.on('exit', (code) => {
-        clearTimeout(timer)
-        no(new Error(`Chrome exited with ${code} before it started: ${log.slice(-400)}`))
-      })
-      chrome.stderr.on('data', (d) => {
-        log += d
-        const m = log.match(/ws:\/\/\S+/)
-        if (m) {
-          clearTimeout(timer)
-          ok(m[0])
-        }
-      })
-    })
+    const url = await debuggerUrl(chrome)
     ws = new WebSocket(url)
     await new Promise((ok, no) => {
       ws.onopen = ok
@@ -94,40 +72,66 @@ export async function launch(exe = findChrome()) {
   return {
     /** A new page. `eval` runs an expression in it, awaiting a promise; `loads` counts the document loads seen. */
     async page(url) {
-      const { targetId } = await send('Target.createTarget', { url: 'about:blank' })
-      const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true })
-      const page = { loads: 0, errors: [] }
-      listeners.add((m) => {
-        if (m.sessionId !== sessionId) return
-        if (m.method === 'Page.loadEventFired') page.loads++
-        if (m.method === 'Runtime.exceptionThrown')
-          page.errors.push(
-            m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text,
-          )
-      })
-      await send('Page.enable', {}, sessionId)
-      await send('Runtime.enable', {}, sessionId)
-      page.eval = async (expression) => {
-        const r = await send(
-          'Runtime.evaluate',
-          { expression, awaitPromise: true, returnByValue: true },
-          sessionId,
-        )
-        if (r.exceptionDetails)
-          throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text)
-        return r.result.value
-      }
-      /** Real key presses in whatever has focus. */
-      page.type = async (text) => {
-        for (const c of text)
-          await send('Input.dispatchKeyEvent', { type: 'char', text: c }, sessionId)
-      }
-      await send('Page.navigate', { url }, sessionId)
-      return page
+      return openPage(send, listeners, url)
     },
     async close() {
       ws.close()
       await stop()
     },
   }
+}
+
+async function openPage(send, listeners, url) {
+  const { targetId } = await send('Target.createTarget', { url: 'about:blank' })
+  const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true })
+  const page = { loads: 0, errors: [] }
+  listeners.add((m) => {
+    if (m.sessionId !== sessionId) return
+    if (m.method === 'Page.loadEventFired') page.loads++
+    if (m.method === 'Runtime.exceptionThrown')
+      page.errors.push(
+        m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text,
+      )
+  })
+  await send('Page.enable', {}, sessionId)
+  await send('Runtime.enable', {}, sessionId)
+  page.eval = async (expression) => {
+    const r = await send(
+      'Runtime.evaluate',
+      { expression, awaitPromise: true, returnByValue: true },
+      sessionId,
+    )
+    if (r.exceptionDetails)
+      throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text)
+    return r.result.value
+  }
+  /** Real key presses in whatever has focus. */
+  page.type = async (text) => {
+    for (const c of text) await send('Input.dispatchKeyEvent', { type: 'char', text: c }, sessionId)
+  }
+  await send('Page.navigate', { url }, sessionId)
+  return page
+}
+
+function debuggerUrl(chrome) {
+  return new Promise((ok, no) => {
+    let log = ''
+    const timer = setTimeout(() => no(new Error(`Chrome didn't start: ${log.slice(-400)}`)), 30000)
+    chrome.on('error', (e) => {
+      clearTimeout(timer)
+      no(e)
+    })
+    chrome.on('exit', (code) => {
+      clearTimeout(timer)
+      no(new Error(`Chrome exited with ${code} before it started: ${log.slice(-400)}`))
+    })
+    chrome.stderr.on('data', (d) => {
+      log += d
+      const m = log.match(/ws:\/\/\S+/)
+      if (m) {
+        clearTimeout(timer)
+        ok(m[0])
+      }
+    })
+  })
 }

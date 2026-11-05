@@ -82,10 +82,7 @@ export async function hotChecks(app, base, log, pass) {
       return /[1-9]$/.test(await page.eval(text('c')))
     })
     const loaded = await page.eval(`performance.getEntriesByType('resource').map(r => r.name)`)
-    const twice = loaded
-      .filter((u) => /\.[jt]sx?(\?|$)/.test(u))
-      .map((u) => u.replace(/\?.*$/, ''))
-      .filter((u, i, all) => all.indexOf(u) !== i)
+    const twice = duplicateUrls(loaded)
     if (twice.length)
       throw new Error(`a module loaded under two URLs: ${twice.slice(0, 3).join(', ')}`)
     await page.eval(
@@ -140,41 +137,7 @@ export async function hotChecks(app, base, log, pass) {
     await shows('the last of 30 quick saves', 'c', 'v30')
     await kept('30 quick saves')
 
-    // A mistake, and its fix right behind it, over and over: a dropped save would leave the page on the mistake.
-    const good = read(route)
-    for (let i = 0; i < 6; i++) {
-      write(route, good.replace('<main>', '<main'))
-      await until(
-        'the error shows',
-        15000,
-        async () =>
-          (await fetch(`${base}/hot`, { headers: { accept: 'application/json' } })).status >= 500 ||
-          i % 2,
-      )
-      write(route, good.replace('second', `fixed${i}`))
-      await until(`fix ${i} recovers`, 15000, () => page.eval(`${text('t')} === 'fixed${i}'`))
-      await until(`fix ${i} on the server`, 15000, async () =>
-        (await (await fetch(`${base}/hot`)).text()).includes(`fixed${i}`),
-      )
-    }
-    await kept('6 syntax errors, each fixed at once')
-
-    // A tab that opens while the code is broken has no module to update, and comes back by itself.
-    write(route, good.replace('<main>', '<main'))
-    await until(
-      'the error shows',
-      15000,
-      async () =>
-        (await fetch(`${base}/hot`, { headers: { accept: 'application/json' } })).status >= 500,
-    )
-    const broken = await chrome.page(`${base}/hot`)
-    await until('the failure page', 15000, () =>
-      broken.eval(`document.title === 'This page failed to load'`),
-    )
-    await wait(500)
-    write(route, good.replace('second', 'recovered'))
-    await until('the failed tab recovers', 20000, () => broken.eval(`${text('t')} === 'recovered'`))
-    pass('hot reload: a tab opened on a syntax error recovers when it is fixed')
+    await checkRecovery({ read, write, route, base, page, chrome, kept, pass })
 
     // Where a reload is right, the terminal says why.
     const loads = page.loads
@@ -186,4 +149,49 @@ export async function hotChecks(app, base, log, pass) {
   } finally {
     await chrome.close()
   }
+}
+
+async function checkRecovery({ read, write, route, base, page, chrome, kept, pass }) {
+  // A mistake, and its fix right behind it, over and over: a dropped save would leave the page on the mistake.
+  const good = read(route)
+  for (let i = 0; i < 6; i++) {
+    write(route, good.replace('<main>', '<main'))
+    await until(
+      'the error shows',
+      15000,
+      async () =>
+        (await fetch(`${base}/hot`, { headers: { accept: 'application/json' } })).status >= 500 ||
+        i % 2,
+    )
+    write(route, good.replace('second', `fixed${i}`))
+    await until(`fix ${i} recovers`, 15000, () => page.eval(`${text('t')} === 'fixed${i}'`))
+    await until(`fix ${i} on the server`, 15000, async () =>
+      (await (await fetch(`${base}/hot`)).text()).includes(`fixed${i}`),
+    )
+  }
+  await kept('6 syntax errors, each fixed at once')
+
+  // A tab that opens while the code is broken has no module to update, and comes back by itself.
+  write(route, good.replace('<main>', '<main'))
+  await until(
+    'the error shows',
+    15000,
+    async () =>
+      (await fetch(`${base}/hot`, { headers: { accept: 'application/json' } })).status >= 500,
+  )
+  const broken = await chrome.page(`${base}/hot`)
+  await until('the failure page', 15000, () =>
+    broken.eval(`document.title === 'This page failed to load'`),
+  )
+  await wait(500)
+  write(route, good.replace('second', 'recovered'))
+  await until('the failed tab recovers', 20000, () => broken.eval(`${text('t')} === 'recovered'`))
+  pass('hot reload: a tab opened on a syntax error recovers when it is fixed')
+}
+
+function duplicateUrls(loaded) {
+  return loaded
+    .filter((u) => /\.[jt]sx?(\?|$)/.test(u))
+    .map((u) => u.replace(/\?.*$/, ''))
+    .filter((u, i, all) => all.indexOf(u) !== i)
 }

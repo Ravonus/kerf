@@ -274,6 +274,22 @@ function freePorts() {
   })
 }
 
+async function checkProduction(base, pass) {
+  await until('start', 60000, async () => (await fetch(`${base}/live`)).status === 200)
+  const signUp = await fetch(`${base}/api/auth/sign-up/email`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', origin: base },
+    body: JSON.stringify({
+      email: 'a@example.test',
+      password: 'correct-horse-battery',
+      name: 'A',
+    }),
+  })
+  if (signUp.status !== 200) throw new Error(`sign-up: ${signUp.status} ${await signUp.text()}`)
+  await socketUpgrades(base)
+  pass('start: a page, a sign-up and a socket')
+}
+
 async function flow(runtime, port) {
   const dir = join(root, runtime)
   mkdirSync(dir)
@@ -298,19 +314,7 @@ async function flow(runtime, port) {
   const site = `http://localhost:${port}`
   const served = { ...env, BETTER_AUTH_URL: site, BETTER_AUTH_SECRET: 'x'.repeat(40) }
   await serving(served, app, [...flows.weft, 'start'], port, async (base) => {
-    await until('start', 60000, async () => (await fetch(`${base}/live`)).status === 200)
-    const signUp = await fetch(`${base}/api/auth/sign-up/email`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', origin: base },
-      body: JSON.stringify({
-        email: 'a@example.test',
-        password: 'correct-horse-battery',
-        name: 'A',
-      }),
-    })
-    if (signUp.status !== 200) throw new Error(`sign-up: ${signUp.status} ${await signUp.text()}`)
-    await socketUpgrades(base)
-    pass('start: a page, a sign-up and a socket')
+    await checkProduction(base, pass)
   })
 
   prepare(app) // plain elements, on purpose: they aren't an app `weft check` would pass
