@@ -8,7 +8,7 @@ import type * as Playwright from 'playwright-core'
 declare global {
   interface Window {
     __sockets: WebSocket[]
-    __weft?: { hydrated: boolean }
+    __weft?: { hydrated: boolean; misses: number; writes: number }
   }
 }
 

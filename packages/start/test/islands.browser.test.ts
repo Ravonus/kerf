@@ -4,11 +4,22 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { inject } from 'vitest'
+import type * as Playwright from 'playwright-core'
 import { fixture } from './dev-server.setup.mjs'
 
+declare global {
+  interface Window {
+    stayed: boolean
+    shift: number
+    was: Element | null
+    __fades: number
+    __link: HTMLAnchorElement
+  }
+}
+
 const url = inject('url')
-const { chromium } = createRequire(import.meta.url)('playwright-core')
-let browser
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await chromium.launch()
 })
@@ -16,13 +27,13 @@ afterAll(async () => {
   await browser?.close()
 })
 
-async function open(path, desktop = false) {
+async function open(path: string, desktop = false) {
   const page = await browser.newPage()
   if (desktop)
     await page.addInitScript(() =>
       Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 }),
     )
-  const errors = []
+  const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   page.on('console', (m) =>
     m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined,
@@ -32,12 +43,12 @@ async function open(path, desktop = false) {
   return { page, errors }
 }
 
-const settled = (page) => page.waitForTimeout(50) // the sweep is a macrotask after the claim
-const count = (page) =>
+const settled = (page: Playwright.Page) => page.waitForTimeout(50) // the sweep is a macrotask after the claim
+const count = (page: Playwright.Page) =>
   page.evaluate(() => {
-    const w = document.createTreeWalker(document.getElementById('app'), 128)
+    const w = document.createTreeWalker(document.getElementById('app')!, 128)
     const left = []
-    while (w.nextNode()) left.push(w.currentNode.data.slice(0, 3))
+    while (w.nextNode()) left.push((w.currentNode as Comment).data.slice(0, 3))
     return { comments: left, wk: document.querySelectorAll('#app [wk]').length }
   })
 
@@ -49,28 +60,29 @@ test('the server writes no keys or markers in the static parts, and props as JSO
   expect(html).toContain('<template><p class="late">From the server</p></template>') // Reveal didn't render its children
   const plan = JSON.parse(readFileSync(join(fixture, '.weft/hydration.json'), 'utf8'))
   expect(
-    plan.islands.filter((i) => i.startsWith('src/routes/islands.tsx')).length,
+    plan.islands.filter((i: string) => i.startsWith('src/routes/islands.tsx')).length,
   ).toBeGreaterThanOrEqual(5)
   expect(
     plan.files
-      .find((f) => f.file === 'src/routes/islands.tsx')
-      .nodes.find((n) => n.name === 'Islands').client,
+      .find((f: { file: string }) => f.file === 'src/routes/islands.tsx')
+      .nodes.find((n: { name: string }) => n.name === 'Islands').client,
   ).toBeNull()
   expect(
     plan.files
-      .find((f) => f.file === 'src/components/islands.tsx')
-      .nodes.find((n) => n.name === 'Counter').client,
+      .find((f: { file: string }) => f.file === 'src/components/islands.tsx')
+      .nodes.find((n: { name: string }) => n.name === 'Counter').client,
   ).toMatch(/@weft client/)
   expect(
-    plan.files.find((f) => f.file === 'src/components/lazy.tsx').nodes.find((n) => n.name === 'Tap')
-      .client,
+    plan.files
+      .find((f: { file: string }) => f.file === 'src/components/lazy.tsx')
+      .nodes.find((n: { name: string }) => n.name === 'Tap').client,
   ).toMatch(/onClick/)
 })
 
 test('a row whose key differs between server and client is built whole, works, and says so', async () => {
   const { page, errors } = await open('/miss')
   await settled(page)
-  expect((await page.evaluate(() => window.__weft)).misses).toBeGreaterThan(0)
+  expect((await page.evaluate(() => window.__weft!)).misses).toBeGreaterThan(0)
   expect(errors.join()).toContain('a key differs between server and client')
   expect(await page.locator('.miss li').count()).toBe(1)
   const input = page.locator('.miss li input')
@@ -80,7 +92,7 @@ test('a row whose key differs between server and client is built whole, works, a
   expect(await page.locator('.miss li').getAttribute('class')).toBe('row off')
   expect(await page.locator('.miss li').getAttribute('title')).toBe('off')
   await page.locator('.miss label').click()
-  await page.waitForFunction(() => document.querySelector('.miss li').className === 'row on')
+  await page.waitForFunction(() => document.querySelector('.miss li')!.className === 'row on')
   expect(await input.isChecked()).toBe(true)
   expect(await page.locator('.miss .plain').getAttribute('title')).toBe('on') // before the miss: still bound
   expect(await page.locator('.miss .after').getAttribute('title')).toBe('on') // after it, on a claimed element
@@ -89,10 +101,10 @@ test('a row whose key differs between server and client is built whole, works, a
 
 test('what was typed before a miss is not overwritten by the first writes after it', async () => {
   const page = await browser.newPage()
-  const held = []
-  let letGo = (go) => held.push(go)
+  const held: (() => void)[] = []
+  let letGo: (go: () => void) => void = (go) => held.push(go)
   await page.route(/\.(js|mjs|ts|tsx)(\?|$)/, (r) =>
-    new Promise((go) => {
+    new Promise<void>((go) => {
       letGo(go)
     }).then(() => r.continue()),
   )
@@ -105,7 +117,7 @@ test('what was typed before a miss is not overwritten by the first writes after 
   held.forEach((go) => go())
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
   await settled(page)
-  expect((await page.evaluate(() => window.__weft)).misses).toBeGreaterThan(0)
+  expect((await page.evaluate(() => window.__weft!)).misses).toBeGreaterThan(0)
   expect(await page.locator('.miss .typed').inputValue()).toBe('before')
   expect(await page.locator('.miss .ticked').isChecked()).toBe(true)
   expect(await page.locator('.miss .later').inputValue()).toBe('sibling')
@@ -154,7 +166,7 @@ test("an island's children stay the server's: rendered, or waiting until it show
   await page.waitForFunction(() => !document.querySelector('.kept'))
   await page.click('.fold-toggle')
   await page.waitForSelector('.kept')
-  expect(await kept.evaluate((e) => e.isConnected)).toBe(true) // the same node
+  expect(await kept!.evaluate((e) => e.isConnected)).toBe(true) // the same node
   expect(await page.$('.late')).toBeNull()
   await page.click('.reveal')
   expect(await page.textContent('.late')).toBe('From the server')
@@ -261,15 +273,16 @@ test('dev: editing an island keeps the page working', async () => {
 
 // ---- lazy islands: nothing runs before it's needed, and nothing done before then is lost -------------------------
 
-const CODE = (u) => u.pathname.endsWith('/components/lazy.tsx') && !u.search.includes('weft-assets')
+const CODE = (u: URL) =>
+  u.pathname.endsWith('/components/lazy.tsx') && !u.search.includes('weft-assets')
 /** `/lazy`, with its islands' code stalled until `release`. */
-async function stalled(path = '/lazy', options) {
+async function stalled(path = '/lazy', options?: Parameters<Playwright.Browser['newContext']>[0]) {
   const context = await browser.newContext(options)
   const page = await context.newPage()
-  const errors = []
+  const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
-  let release
-  const gate = new Promise((ok) => {
+  let release!: () => void
+  const gate = new Promise<void>((ok) => {
     release = ok
   })
   await page.route(CODE, async (r) => {
@@ -280,13 +293,14 @@ async function stalled(path = '/lazy', options) {
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
   return { page, errors, release, close: () => context.close() }
 }
-const claimed = (page, sel) => page.$eval(sel, (e) => !!e.$k || !e.hasAttribute('wk'))
+const claimed = (page: Playwright.Page, sel: string) =>
+  page.$eval(sel, (e) => !!(e as Element & { $k?: unknown }).$k || !e.hasAttribute('wk'))
 
 test("a page that's only read runs no client at all; the first click brings it, and counts", async () => {
   const page = await browser.newPage()
-  const errors = []
+  const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
-  const asked = []
+  const asked: string[] = []
   page.on('request', (r) => asked.push(new URL(r.url()).pathname))
   await page.goto(url + '/lazy?boot')
   await page.waitForTimeout(300)
@@ -294,7 +308,7 @@ test("a page that's only read runs no client at all; the first click brings it, 
   expect(await page.evaluate(() => window.__weft)).toBeUndefined()
   await page.click('.tap[data-id=one]')
   await page.click('.tap[data-id=one]')
-  await page.waitForFunction(() => document.querySelector('.tap').textContent === 'one: 2')
+  await page.waitForFunction(() => document.querySelector('.tap')!.textContent === 'one: 2')
   expect(asked.filter((p) => /\/run\.tsx/.test(p)).length).toBe(1)
   expect(errors).toEqual([])
   await page.close()
@@ -304,7 +318,7 @@ test('scrolling to an island that wants to run brings the client, and a link is 
   const page = await browser.newPage()
   await page.goto(url + '/lazy?boot')
   await page.$eval('.seen', (e) => e.scrollIntoView())
-  await page.waitForFunction(() => document.querySelector('.seen').textContent === 'ran')
+  await page.waitForFunction(() => document.querySelector('.seen')!.textContent === 'ran')
   await page.close()
   const other = await browser.newPage()
   await other.goto(url + '/lazy?boot')
@@ -327,7 +341,10 @@ test('scrolling to an island that wants to run brings the client, and a link is 
 test('hydration.json says when each island loads and why, and H010 what would let it wait', async () => {
   await fetch(url + '/lazy')
   const plan = JSON.parse(readFileSync(join(fixture, '.weft/hydration.json'), 'utf8'))
-  const of = (tag) => plan.loads.find((l) => l.id.startsWith('src/routes/lazy') && l.tag === tag)
+  const of = (tag: string) =>
+    plan.loads.find(
+      (l: { id: string; tag: string }) => l.id.startsWith('src/routes/lazy') && l.tag === tag,
+    )
   expect(of('Tap')).toMatchObject({
     when: 'interaction',
     why: expect.stringMatching(/handlers only/),
@@ -340,16 +357,18 @@ test('hydration.json says when each island loads and why, and H010 what would le
   expect(of('Held')).toMatchObject({ when: 'visible', why: expect.stringMatching(/server data/) })
   expect(of('Auto')).toMatchObject({ when: 'load', why: expect.stringMatching(/autofocus/) })
   expect(of('Titled')).toMatchObject({ when: 'load', why: expect.stringMatching(/document/) })
-  expect(plan.loads.find((l) => l.tag === 'Counter')).toMatchObject({
+  expect(plan.loads.find((l: { id: string; tag: string }) => l.tag === 'Counter')).toMatchObject({
     when: 'load',
     why: expect.stringMatching(/@weft client/),
   })
-  expect(plan.diagnostics.find((d) => d.line && d.why.includes('Titled'))).toMatchObject({
+  expect(
+    plan.diagnostics.find((d: { line: number; why: string }) => d.line && d.why.includes('Titled')),
+  ).toMatchObject({
     code: 'H010',
     file: 'src/routes/lazy-early.tsx',
     fix: expect.stringMatching(/@weft visible/),
   })
-  expect(plan.diagnostics.some((d) => d.why.includes('Auto'))).toBe(false)
+  expect(plan.diagnostics.some((d: { why: string }) => d.why.includes('Auto'))).toBe(false)
 })
 
 test('a page of lazy islands hydrates with no complaints about the ones that wait', async () => {
@@ -366,7 +385,7 @@ test('a click before the code arrives counts, once, in order', async () => {
   await page.click('.tap[data-id=one]')
   expect(await page.textContent('.tap[data-id=one]')).toBe('one: 0')
   release()
-  await page.waitForFunction(() => document.querySelector('.tap').textContent === 'one: 2')
+  await page.waitForFunction(() => document.querySelector('.tap')!.textContent === 'one: 2')
   await page.click('.tap[data-id=one]')
   expect(await page.textContent('.tap[data-id=one]')).toBe('one: 3')
   expect(errors).toEqual([])
@@ -379,9 +398,9 @@ test('pointer, focus and keys replay in order across controls, and focus stays p
   await page.keyboard.press('x')
   await page.click('.log-b')
   release()
-  await page.waitForFunction(() => document.querySelector('.log-out').textContent.endsWith('b'))
+  await page.waitForFunction(() => document.querySelector('.log-out')!.textContent.endsWith('b'))
   expect(await page.textContent('.log-out')).toBe('down focus a key:x focus b')
-  expect(await page.evaluate(() => document.activeElement.className)).toBe('log-b')
+  expect(await page.evaluate(() => document.activeElement!.className)).toBe('log-b')
   expect(errors).toEqual([])
   await close()
 })
@@ -391,7 +410,7 @@ test('the keyboard alone: Tab to a button, Enter clicks it', async () => {
   await page.focus('.tap[data-id=one]')
   await page.keyboard.press('Enter')
   release()
-  await page.waitForFunction(() => document.querySelector('.tap').textContent === 'one: 1')
+  await page.waitForFunction(() => document.querySelector('.tap')!.textContent === 'one: 1')
   await close()
 })
 
@@ -402,7 +421,7 @@ test('typing before hydration: the value and the caret stay, and the island catc
   await page.click('.field-box')
   expect(await page.inputValue('.field-in')).toBe('hello')
   release()
-  await page.waitForFunction(() => document.querySelector('.field-out').textContent === 'hello|on')
+  await page.waitForFunction(() => document.querySelector('.field-out')!.textContent === 'hello|on')
   expect(await page.inputValue('.field-in')).toBe('hello')
   expect(await page.isChecked('.field-box')).toBe(true)
   expect(errors).toEqual([])
@@ -412,11 +431,13 @@ test('typing before hydration: the value and the caret stay, and the island catc
 test('a value no event told anyone about (autofill, a restored form) reaches the island too', async () => {
   const { page, release, close } = await stalled()
   await page.$eval('.field-in', (e) => {
-    e.value = 'filled'
+    ;(e as HTMLInputElement).value = 'filled'
   })
   await page.click('.field-box')
   release()
-  await page.waitForFunction(() => document.querySelector('.field-out').textContent === 'filled|on')
+  await page.waitForFunction(
+    () => document.querySelector('.field-out')!.textContent === 'filled|on',
+  )
   await close()
 })
 
@@ -478,11 +499,13 @@ test("client navigation: the page shows before its islands' code, and leaving dr
   await page.waitForFunction(() => !document.querySelector('.lazy'))
   release()
   await page.waitForTimeout(100)
-  expect(await page.evaluate(() => window.__wq?.q.length ?? 0)).toBe(0)
+  expect(
+    await page.evaluate(() => (window as Window & { __wq?: { q: Event[] } }).__wq?.q.length ?? 0),
+  ).toBe(0)
   await page.goForward()
   await page.waitForSelector('.lazy')
   await page.click('.tap[data-id=one]')
-  await page.waitForFunction(() => document.querySelector('.tap').textContent === 'one: 1') // a new page: the old click is gone
+  await page.waitForFunction(() => document.querySelector('.tap')!.textContent === 'one: 1') // a new page: the old click is gone
   expect(errors).toEqual([])
   await close()
 })
@@ -504,7 +527,7 @@ test('a Boundary in a lazy island and work of its own run when it comes into vie
   await page.waitForTimeout(200)
   expect(await page.textContent('.seen')).toBe('waiting')
   await page.$eval('.seen', (e) => e.scrollIntoView())
-  await page.waitForFunction(() => document.querySelector('.seen').textContent === 'ran')
+  await page.waitForFunction(() => document.querySelector('.seen')!.textContent === 'ran')
   expect(await page.textContent('.lazy-stock')).toBe('In stock: 3')
   expect(errors).toEqual([])
   await close()
@@ -528,7 +551,7 @@ test('a visitor who asked for less data loads on interaction only', async () => 
   expect(await page.textContent('.seen')).toBe('waiting')
   await page.click('.tap[data-id=far]')
   await page.waitForFunction(
-    () => document.querySelector('.tap[data-id=far]').textContent === 'far: 1',
+    () => document.querySelector('.tap[data-id=far]')!.textContent === 'far: 1',
   )
   await context.close()
 })
@@ -545,7 +568,7 @@ test('an island whose code fails once is tried again, and a press on it still la
   await page.waitForFunction(() => window.__weft?.hydrated)
   await page.click('.tap[data-id=far]')
   await page.waitForFunction(
-    () => document.querySelector('.tap[data-id=far]').textContent === 'far: 1',
+    () => document.querySelector('.tap[data-id=far]')!.textContent === 'far: 1',
   )
   await context.close()
 })
@@ -579,14 +602,15 @@ test('running late moves nothing: no layout shift, and the same element under th
   await page.evaluate(() => {
     window.shift = 0
     new PerformanceObserver((l) => {
-      for (const e of l.getEntries()) window.shift += e.value
+      for (const e of l.getEntries())
+        window.shift += (e as PerformanceEntry & { value: number }).value
     }).observe({ type: 'layout-shift', buffered: true })
     window.was = document.querySelector('.tap')
   })
   const before = await page.$eval('.tap', (e) => JSON.stringify(e.getBoundingClientRect()))
   await page.click('.tap[data-id=one]')
   release()
-  await page.waitForFunction(() => document.querySelector('.tap').textContent === 'one: 1')
+  await page.waitForFunction(() => document.querySelector('.tap')!.textContent === 'one: 1')
   await settled(page)
   expect(await page.$eval('.tap', (e) => JSON.stringify(e.getBoundingClientRect()))).toBe(before)
   expect(await page.evaluate(() => window.was === document.querySelector('.tap'))).toBe(true)
@@ -599,10 +623,10 @@ test("what can't wait runs with the page, beside what can", async () => {
   const { page } = await open('/lazy-early')
   await page.waitForFunction(() => document.title === 'titled')
   expect(await claimed(page, '.auto')).toBe(true)
-  expect(await page.evaluate(() => document.activeElement.className)).toBe('auto')
+  expect(await page.evaluate(() => document.activeElement!.className)).toBe('auto')
   expect(await claimed(page, '.tap')).toBe(false)
   await page.click('.tap')
-  await page.waitForFunction(() => document.querySelector('.tap').textContent === 'beside: 1')
+  await page.waitForFunction(() => document.querySelector('.tap')!.textContent === 'beside: 1')
   await page.close()
 })
 
@@ -620,7 +644,7 @@ test('a CSP that blocks the capture script: islands stop waiting, so nothing is 
   await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
   await page.waitForFunction(() => {
     const t = document.querySelector('.tap')
-    return !t.hasAttribute('wk') || t.$k
+    return !t!.hasAttribute('wk') || (t as Element & { $k?: unknown }).$k
   })
   await page.click('.tap[data-id=one]')
   expect(await page.textContent('.tap[data-id=one]')).toBe('one: 1')
@@ -659,7 +683,9 @@ test('a route change on a phone-sized CPU does not ask for a fade at all', async
   await context.addInitScript(() => {
     Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 4 })
     window.__fades = 0
-    document.startViewTransition = (fn) => {
+    ;(
+      document as unknown as { startViewTransition: (fn: () => void) => unknown }
+    ).startViewTransition = (fn) => {
       window.__fades++
       const done = Promise.resolve().then(fn)
       return { ready: done, updateCallbackDone: done, finished: done }
@@ -682,7 +708,9 @@ test('a route fade that was slow to start is not asked for again', async () => {
   const { page, errors } = await open('/about', true)
   await page.evaluate(() => {
     window.__fades = 0
-    document.startViewTransition = (fn) => {
+    ;(
+      document as unknown as { startViewTransition: (fn: () => void) => unknown }
+    ).startViewTransition = (fn) => {
       window.__fades++
       const done = Promise.resolve().then(fn)
       return {
@@ -697,7 +725,7 @@ test('a route fade that was slow to start is not asked for again', async () => {
       }
     }
   })
-  const go = async (href) => {
+  const go = async (href: string) => {
     await page.evaluate((h) => {
       window.__link = Object.assign(document.createElement('a'), { href: h })
       document.body.append(window.__link)
