@@ -75,6 +75,57 @@ export function threads(
   return { cover, born, band }
 }
 
+function stepLattice(
+  nx: number,
+  ny: number,
+  ux: Float32Array,
+  uy: Float32Array,
+  vx: Float32Array,
+  vy: Float32Array,
+) {
+  let peak = 0
+  for (let y = 1; y < ny - 1; y++)
+    for (let x = 1; x < nx - 1; x++) {
+      const i = y * nx + x
+      vx[i] =
+        (vx[i]! +
+          (ux[i - 1]! + ux[i + 1]! + ux[i - nx]! + ux[i + nx]! - 4 * ux[i]!) * 0.2 -
+          ux[i]! * 0.022) *
+        0.955
+      vy[i] =
+        (vy[i]! +
+          (uy[i - 1]! + uy[i + 1]! + uy[i - nx]! + uy[i + nx]! - 4 * uy[i]!) * 0.2 -
+          uy[i]! * 0.022) *
+        0.955
+    }
+  for (let i = 0; i < ux.length; i++) {
+    ux[i]! += vx[i]!
+    uy[i]! += vy[i]!
+    peak = Math.max(peak, Math.abs(ux[i]!), Math.abs(uy[i]!), Math.abs(vx[i]!), Math.abs(vy[i]!))
+  }
+  return peak > 0.02
+}
+
+function around(
+  nx: number,
+  ny: number,
+  GAP: number,
+  px: number,
+  py: number,
+  r: number,
+  fn: (i: number, dx: number, dy: number, d: number) => void,
+) {
+  const n = Math.ceil(r / GAP)
+  const cx = Math.round(px / GAP),
+    cy = Math.round(py / GAP)
+  for (let y = Math.max(1, cy - n); y <= Math.min(ny - 2, cy + n); y++)
+    for (let x = Math.max(1, cx - n); x <= Math.min(nx - 2, cx + n); x++) {
+      const dx = x * GAP - px,
+        dy = y * GAP - py
+      fn(y * nx + x, dx, dy, Math.hypot(dx, dy))
+    }
+}
+
 export function weaver(cols: number, rows: number, word: Float32Array | null, logo: Threads) {
   const GAP = 5
   const nx = Math.ceil(cols / GAP) + 2,
@@ -87,48 +138,12 @@ export function weaver(cols: number, rows: number, word: Float32Array | null, lo
 
   /** One tick of the lattice: each node springs home, leans on its neighbours (so a push travels), and loses a little. */
   const step = () => {
-    let peak = 0
-    for (let y = 1; y < ny - 1; y++)
-      for (let x = 1; x < nx - 1; x++) {
-        const i = y * nx + x
-        vx[i] =
-          (vx[i]! +
-            (ux[i - 1]! + ux[i + 1]! + ux[i - nx]! + ux[i + nx]! - 4 * ux[i]!) * 0.2 -
-            ux[i]! * 0.022) *
-          0.955
-        vy[i] =
-          (vy[i]! +
-            (uy[i - 1]! + uy[i + 1]! + uy[i - nx]! + uy[i + nx]! - 4 * uy[i]!) * 0.2 -
-            uy[i]! * 0.022) *
-          0.955
-      }
-    for (let i = 0; i < ux.length; i++) {
-      ux[i]! += vx[i]!
-      uy[i]! += vy[i]!
-      peak = Math.max(peak, Math.abs(ux[i]!), Math.abs(uy[i]!), Math.abs(vx[i]!), Math.abs(vy[i]!))
-    }
-    moving = peak > 0.02
+    moving = stepLattice(nx, ny, ux, uy, vx, vy)
   }
 
-  const around = (
-    px: number,
-    py: number,
-    r: number,
-    fn: (i: number, dx: number, dy: number, d: number) => void,
-  ) => {
-    const n = Math.ceil(r / GAP)
-    const cx = Math.round(px / GAP),
-      cy = Math.round(py / GAP)
-    for (let y = Math.max(1, cy - n); y <= Math.min(ny - 2, cy + n); y++)
-      for (let x = Math.max(1, cx - n); x <= Math.min(nx - 2, cx + n); x++) {
-        const dx = x * GAP - px,
-          dy = y * GAP - py
-        fn(y * nx + x, dx, dy, Math.hypot(dx, dy))
-      }
-  }
   /** The pointer drags the threads it crosses and draws them toward it; the springs take them back. */
   const pull = (px: number, py: number, mx: number, my: number) => {
-    around(px, py, 30, (i, dx, dy, d) => {
+    around(nx, ny, GAP, px, py, 30, (i, dx, dy, d) => {
       const f = Math.exp(-(d * d) / 180)
       vx[i]! += (mx * 0.42 - dx * 0.018) * f
       vy[i]! += (my * 0.42 - dy * 0.018) * f
@@ -137,7 +152,7 @@ export function weaver(cols: number, rows: number, word: Float32Array | null, lo
   }
   /** A press kicks every nearby node outward; the lattice carries it across the field as a ring. */
   const shock = (px: number, py: number) => {
-    around(px, py, 22, (i, dx, dy, d) => {
+    around(nx, ny, GAP, px, py, 22, (i, dx, dy, d) => {
       const f = Math.exp(-(d * d) / 120) * 2.6
       const n = d || 1
       vx[i]! += (dx / n) * f
