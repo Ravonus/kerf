@@ -51,7 +51,32 @@ function namespaceImports(sf, path, ts) {
   return namespaces
 }
 
-// A forwarding barrel contains only named reexports or namespace property aliases.
+function forwardDeclaration(d, namespaces, path, ts, put) {
+  const value = d.initializer
+  if (ts.isObjectBindingPattern(d.name)) {
+    if (!value || !ts.isIdentifier(value) || !namespaces.has(value.text) || !d.name.elements.length)
+      throw new Error(`Unsupported forwarding declaration in ${path}`)
+    for (const e of d.name.elements) {
+      if (e.propertyName || e.initializer || e.dotDotDotToken || !ts.isIdentifier(e.name))
+        throw new Error(`Unsupported forwarding binding in ${path}`)
+      put(e.name.text, namespaces.get(value.text))
+    }
+    return
+  }
+  if (
+    !ts.isIdentifier(d.name) ||
+    !value ||
+    !ts.isPropertyAccessExpression(value) ||
+    !ts.isIdentifier(value.expression) ||
+    !namespaces.has(value.expression.text)
+  )
+    throw new Error(`Unsupported forwarding declaration in ${path}`)
+  if (d.name.text !== value.name.text)
+    throw new Error(`Unsupported renamed example ${d.name.text} in ${path}`)
+  put(d.name.text, namespaces.get(value.expression.text))
+}
+
+// A forwarding barrel contains only named reexports or same-name namespace forwards.
 function forwarding(sf, path, ts, root = false) {
   const forwards = new Map()
   const barrel = sf.statements.some(
@@ -100,20 +125,8 @@ function forwarding(sf, path, ts, root = false) {
       n.declarationList.flags & ts.NodeFlags.Const &&
       ts.getModifiers(n)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)
     ) {
-      for (const d of n.declarationList.declarations) {
-        const value = d.initializer
-        if (
-          !ts.isIdentifier(d.name) ||
-          !value ||
-          !ts.isPropertyAccessExpression(value) ||
-          !ts.isIdentifier(value.expression) ||
-          !namespaces.has(value.expression.text)
-        )
-          throw new Error(`Unsupported forwarding declaration in ${path}`)
-        if (d.name.text !== value.name.text)
-          throw new Error(`Unsupported renamed example ${d.name.text} in ${path}`)
-        put(d.name.text, namespaces.get(value.expression.text))
-      }
+      for (const d of n.declarationList.declarations)
+        forwardDeclaration(d, namespaces, path, ts, put)
     } else {
       throw new Error(`Unsupported forwarding statement in ${path}`)
     }

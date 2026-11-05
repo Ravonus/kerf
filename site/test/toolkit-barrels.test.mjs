@@ -179,3 +179,44 @@ await test('unsupported root statements and renamed namespace aliases are reject
     )
     assert.throws(() => readExamples(root), /renamed/i)
   }))
+
+await test('namespace object bindings forward ordered leaves without sibling demos', () =>
+  fixture((dir) => {
+    const expected = directPrograms(dir)
+    writeFileSync(join(dir, 'root.tsx'), "export { Beta, Alpha } from './examples/index'\n")
+    writeFileSync(
+      join(dir, 'examples/index.tsx'),
+      "import * as first from './alpha'\nimport * as second from './beta'\nexport const { Alpha, AlphaOther } = first\nexport const { Beta } = second\n",
+    )
+    assertParity(readExamples(join(dir, 'root.tsx')), expected)
+  }))
+
+await test('namespace object forwarding rejects renamed, default, rest and computed bindings', () =>
+  fixture((dir) => {
+    const root = join(dir, 'root.tsx')
+    writeFileSync(root, "export { Alpha } from './examples/index'\n")
+    const path = join(dir, 'examples/index.tsx')
+    for (const binding of ['Alpha: Other', 'Alpha = 1', '...rest', "['Alpha']: Alpha"]) {
+      writeFileSync(path, `import * as first from './alpha'\nexport const { ${binding} } = first\n`)
+      assert.throws(() => readExamples(root), /unsupported|renamed/i, binding)
+    }
+    writeFileSync(
+      path,
+      "import * as first from './alpha'\nexport const { Alpha } = first.Alpha()\n",
+    )
+    assert.throws(() => readExamples(root), /unsupported/i)
+    writeFileSync(path, "import * as first from './alpha'\nexport const {} = first\n")
+    assert.throws(() => readExamples(root), /unsupported/i)
+  }))
+
+await test('namespace object forwarding rejects a forwarding cycle', () =>
+  fixture((dir) => {
+    const root = join(dir, 'root.tsx')
+    writeFileSync(root, "export { Alpha } from './examples/index'\n")
+    writeFileSync(
+      join(dir, 'examples/index.tsx'),
+      "import * as other from './cycle'\nexport const { Alpha } = other\n",
+    )
+    writeFileSync(join(dir, 'examples/cycle.tsx'), "export { Alpha } from './index'\n")
+    assert.throws(() => readExamples(root), /cycle/i)
+  }))
