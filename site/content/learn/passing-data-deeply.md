@@ -309,7 +309,13 @@ function Row(props: { names: string[]; size: number }) {
   const { names, size } = props
   return (
     <div>
-      {names.map(n => <Photo key={n} name={n} size={size} />)}
+      {names.map(n => (
+        <Photo
+          key={n}
+          name={n}
+          size={size}
+        />
+      ))}
     </div>
   )
 }

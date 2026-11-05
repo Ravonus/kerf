@@ -33,7 +33,13 @@ To pass a value from JavaScript instead, replace the quotes with braces:
 export function Avatar() {
   const avatar = 'https://i.imgur.com/7vQD0fPs.jpg'
   const description = 'Gregorio Y. Zara'
-  return <img class="avatar" src={avatar} alt={description} />
+  return (
+    <img
+      class="avatar"
+      src={avatar}
+      alt={description}
+    />
+  )
 }
 ```
 
