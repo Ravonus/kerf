@@ -1,0 +1,26 @@
+import { Button, Tooltip } from '@weft-js/warp'
+
+export const TooltipSides = () => (
+  <>
+    <Tooltip content="Above" side="top">
+      <Button emphasis="outline" tone="neutral">
+        Top
+      </Button>
+    </Tooltip>
+    <Tooltip content="Below" side="bottom">
+      <Button emphasis="outline" tone="neutral">
+        Bottom
+      </Button>
+    </Tooltip>
+    <Tooltip content="Before" side="left">
+      <Button emphasis="outline" tone="neutral">
+        Left
+      </Button>
+    </Tooltip>
+    <Tooltip content="After" side="right">
+      <Button emphasis="outline" tone="neutral">
+        Right
+      </Button>
+    </Tooltip>
+  </>
+)
