@@ -6,17 +6,17 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const require = createRequire(new URL('../../packages/cli/package.json', import.meta.url))
 const ts = require('typescript')
 
-function pathValue(node, values, file, aliases) {
+function pathValue(node, values, file) {
   if (ts.isParenthesizedExpression(node) || ts.isAsExpression(node))
-    return pathValue(node.expression, values, file, aliases)
+    return pathValue(node.expression, values, file)
   if (ts.isStringLiteral(node)) return { value: node.text, anchored: false }
   if (ts.isIdentifier(node)) return values.get(node.text)
   if (node.getText() === 'import.meta.url')
     return { value: pathToFileURL(file).href, anchored: true }
   if (node.getText() === 'import.meta.dirname') return { value: dirname(file), anchored: true }
   if (ts.isNewExpression(node) && node.expression.getText() === 'URL') {
-    const args = node.arguments?.map((a) => pathValue(a, values, file, aliases)) ?? []
-    if (args.length !== 2 || args.some((a) => !a)) return
+    const args = node.arguments?.map((a) => pathValue(a, values, file)) ?? []
+    if (args.length !== 2 || args.some((a) => !a || typeof a.value !== 'string')) return
     try {
       return {
         value: new URL(args[0].value, args[1].value).href,
@@ -27,10 +27,20 @@ function pathValue(node, values, file, aliases) {
     }
   }
   if (!ts.isCallExpression(node)) return
-  const local = node.expression.getText().split('.').at(-1)
-  const name = aliases.get(local) ?? local
-  const args = node.arguments.map((a) => pathValue(a, values, file, aliases))
-  if (args.some((a) => !a)) return
+  const call = node.expression
+  const name = ts.isIdentifier(call)
+    ? values.get(call.text)?.builtin
+    : ts.isPropertyAccessExpression(call) && ts.isIdentifier(call.expression)
+      ? values.get(call.expression.text)?.namespace === 'path'
+        ? call.name.text
+        : values.get(call.expression.text)?.namespace === 'url' &&
+            call.name.text === 'fileURLToPath'
+          ? call.name.text
+          : undefined
+      : undefined
+  if (!name) return
+  const args = node.arguments.map((a) => pathValue(a, values, file))
+  if (args.some((a) => !a || typeof a.value !== 'string')) return
   const anchored = args.some((a) => a.anchored)
   const items = args.map((a) => a.value)
   if (name === 'fileURLToPath' && items.length === 1) {
@@ -85,29 +95,54 @@ export function inspectSource(path, text, cwd, roots, escapes) {
       : ts.ScriptKind.TS
   const ast = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, kind)
   const values = new Map(),
-    aliases = new Map(),
     problems = []
   for (const statement of ast.statements) {
     if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier))
       continue
-    if (!['node:path', 'path', 'node:url', 'url'].includes(statement.moduleSpecifier.text)) continue
-    const named = statement.importClause?.namedBindings
+    const module = statement.moduleSpecifier.text.replace(/^node:/, '')
+    if (!['path', 'url'].includes(module)) continue
+    const clause = statement.importClause
+    if (clause?.name) values.set(clause.name.text, { namespace: module })
+    const named = clause?.namedBindings
+    if (named && ts.isNamespaceImport(named)) values.set(named.name.text, { namespace: module })
     if (named && ts.isNamedImports(named))
-      for (const item of named.elements)
-        aliases.set(item.name.text, (item.propertyName ?? item.name).text)
+      for (const item of named.elements) {
+        const name = (item.propertyName ?? item.name).text
+        if (
+          (module === 'path' && ['dirname', 'join', 'resolve'].includes(name)) ||
+          (module === 'url' && name === 'fileURLToPath')
+        )
+          values.set(item.name.text, { builtin: name })
+      }
   }
   const add = (node, name) =>
     problems.push(
       `${path}:${ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1}: duplicate ${name}`,
     )
-  function visit(node) {
+  function visit(node, scope = values, owner) {
+    if (ts.isFunctionLike(node) || ts.isBlock(node)) {
+      scope = new Map(scope)
+      if (ts.isFunctionLike(node)) {
+        owner = node
+        for (const param of node.parameters)
+          if (ts.isIdentifier(param.name)) scope.set(param.name.text, undefined)
+      }
+    }
     if (roots && ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
-      const value = pathValue(node.initializer, values, resolve(cwd, path), aliases)
+      const value = pathValue(node.initializer, scope, resolve(cwd, path))
+      scope.set(node.name.text, value)
       if (value) {
-        values.set(node.name.text, value)
         if ((value.anchored && value.value === resolve(cwd)) || node.name.text === 'repoRoot')
           add(node, 'repoRoot')
       }
+    }
+    if (roots && ts.isArrowFunction(node) && !ts.isBlock(node.body)) {
+      const value = pathValue(node.body, scope, resolve(cwd, path))
+      if (value?.anchored && resolve(value.value) === resolve(cwd)) add(node, 'repoRoot')
+    }
+    if (roots && ts.isReturnStatement(node) && node.expression && owner) {
+      const value = pathValue(node.expression, scope, resolve(cwd, path))
+      if (value?.anchored && resolve(value.value) === resolve(cwd)) add(node, 'repoRoot')
     }
     if (
       escapes &&
@@ -125,7 +160,7 @@ export function inspectSource(path, text, cwd, roots, escapes) {
       fullEscape(node)
     )
       add(node, 'esc')
-    ts.forEachChild(node, visit)
+    ts.forEachChild(node, (child) => visit(child, scope, owner))
   }
   visit(ast)
   return problems
