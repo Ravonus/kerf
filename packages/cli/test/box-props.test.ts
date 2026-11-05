@@ -4,21 +4,11 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
+import { declarations, typedProgram } from './typed-program.js'
 
 const require = createRequire(import.meta.url)
 const { boxMismatch, withBoxProps } = require('../src/infer/box-props.cjs')
 const { Session } = require('../src/infer/session.cjs')
-const declarations = `
-declare module '@weft-js/core' {
-  export interface State<T> { value: T; readonly stateBrand: 'state' }
-  export interface Derived<T> { readonly value: T; readonly derivedBrand: 'derived' }
-  export function state<T>(value: T): State<T>;
-  export function derived<T>(read: () => T): Derived<T>;
-}
-declare namespace JSX {
-  interface Element {}
-  interface IntrinsicElements { div: { title?: number } }
-}`
 const prefix = `
 import { state, derived, type State, type Derived } from '@weft-js/core';
 declare function Value(props: { n: number }): JSX.Element;
@@ -28,22 +18,7 @@ const n = state(1); const d = derived(() => 1);
 `
 
 function findings(source: string, extra: Record<string, string> = {}) {
-  const files: Record<string, string> = {
-    '/app/core.d.ts': declarations,
-    '/app/App.tsx': source,
-    ...extra,
-  }
-  const options: ts.CompilerOptions = {
-    strict: true, noLib: true, jsx: ts.JsxEmit.Preserve,
-    module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Node10,
-  }
-  const host = ts.createCompilerHost(options)
-  host.fileExists = (file) => file in files
-  host.readFile = (file) => files[file]
-  host.directoryExists = (dir) => Object.keys(files).some((file) => file.startsWith(`${dir}/`))
-  host.getSourceFile = (file, version) => files[file] === undefined ? undefined
-    : ts.createSourceFile(file, files[file], version, true)
-  const program = ts.createProgram(Object.keys(files), options, host)
+  const program = typedProgram(source, extra)
   return program.getSemanticDiagnostics(program.getSourceFile('/app/App.tsx')).map((diagnostic) =>
     boxMismatch(ts, program, diagnostic) ?? { code: `TS${diagnostic.code}` })
 }
