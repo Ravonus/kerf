@@ -10,6 +10,8 @@ import { specialize } from '../specialize.mjs'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const upstream = path.join(root, 'node_modules/@chenglou/pretext/src')
 const coverage = path.join(root, 'src/coverage/blink.json')
+const coverageDirectory = path.dirname(coverage)
+const hadCoverageDirectory = fs.existsSync(coverageDirectory)
 const previous = fs.existsSync(coverage) ? fs.readFileSync(coverage) : null
 const ran = fs
   .readdirSync(upstream)
@@ -51,5 +53,6 @@ try {
 } finally {
   if (previous === null) fs.unlinkSync(coverage)
   else fs.writeFileSync(coverage, previous)
+  if (!hadCoverageDirectory) fs.rmdirSync(coverageDirectory)
   await specialize('blink')
 }
