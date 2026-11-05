@@ -57,7 +57,7 @@ export const Card = (props) => <article {...card({ status: props.status, selecte
 export const Late = () => <article {...card({ status: 'late' })} />
 `
 
-describe('compiler: call sites lower to attributes', () => {
+function registerCompilerMarkup() {
   test('literal axes are static template attributes; reactive ones bind; parts are static', () => {
     const out = transform(SRC, { filename: '/app/card.tsx' })
     expect(out.diagnostics).toEqual([])
@@ -109,7 +109,9 @@ describe('compiler: call sites lower to attributes', () => {
       "group can't be evaluated at build: `px` at g.axes.size.big.pad isn't a literal",
     )
   })
+}
 
+function registerCompilerDiagnostics() {
   test('D025: unknown axis values, keys and parts, with the closest names', () => {
     const bad =
       SRC +
@@ -174,15 +176,14 @@ describe('compiler: call sites lower to attributes', () => {
       transform(SRC, { filename: '/app/card.tsx', checkOnly: true }).facts.groups[0]!.doc,
     ).toBeNull()
   })
+}
+
+describe('compiler: call sites lower to attributes', () => {
+  registerCompilerMarkup()
+  registerCompilerDiagnostics()
 })
 
-describe('CSS: only what call sites can produce', () => {
-  const groups = (): GroupSource[] =>
-    transform(SRC, { filename: '/app/card.tsx', checkOnly: true }).facts.groups.map((g) => ({
-      ...g,
-      file: 'card.tsx',
-    }))
-
+function registerCssRules(groups: () => GroupSource[]) {
   test('a literal emits its one value, in @layer app.groups, scoped, with a dev comment', () => {
     const css = emitGroups(
       groups(),
@@ -243,7 +244,9 @@ describe('CSS: only what call sites can produce', () => {
     )
     expect(css.indexOf('data-accent')).toBeGreaterThan(css.indexOf('data-status="late"'))
   })
+}
 
+function registerCssValidation(groups: () => GroupSource[]) {
   test('unused groups emit nothing', () => {
     expect(emitGroups(groups(), [])).toBe('')
   })
@@ -260,6 +263,17 @@ describe('CSS: only what call sites can produce', () => {
       'grid-template-columns': '1fr auto',
     })
   })
+}
+
+describe('CSS: only what call sites can produce', () => {
+  const groups = (): GroupSource[] =>
+    transform(SRC, { filename: '/app/card.tsx', checkOnly: true }).facts.groups.map((g) => ({
+      ...g,
+      file: 'card.tsx',
+    }))
+
+  registerCssRules(groups)
+  registerCssValidation(groups)
 })
 
 test('every token the vocabulary names exists in warp.css', async () => {
