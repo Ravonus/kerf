@@ -116,6 +116,34 @@ export function coreState(root, graph) {
   return (expression) => resolve(expression)
 }
 
+// This syntax cannot produce undefined on normal completion. Identifiers, member reads,
+// calls and compound expressions remain unknown; type assertions add no runtime evidence.
+function nonUndefined(expression) {
+  expression = peel(expression)
+  return [
+    ts.SyntaxKind.NumericLiteral, ts.SyntaxKind.BigIntLiteral, ts.SyntaxKind.StringLiteral,
+    ts.SyntaxKind.NoSubstitutionTemplateLiteral, ts.SyntaxKind.RegularExpressionLiteral,
+    ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword, ts.SyntaxKind.NullKeyword,
+    ts.SyntaxKind.ObjectLiteralExpression, ts.SyntaxKind.ArrayLiteralExpression,
+    ts.SyntaxKind.FunctionExpression, ts.SyntaxKind.ArrowFunction, ts.SyntaxKind.ClassExpression,
+    ts.SyntaxKind.NewExpression, ts.SyntaxKind.PrefixUnaryExpression,
+    ts.SyntaxKind.PostfixUnaryExpression, ts.SyntaxKind.TypeOfExpression,
+    ts.SyntaxKind.DeleteExpression,
+  ].includes(expression.kind)
+}
+
+function iifeDefaults(call, callee, visit) {
+  const spread = call.arguments.findIndex(ts.isSpreadElement)
+  const fixed = spread < 0 ? call.arguments.length : spread
+  // A TypeScript this parameter consumes no positional argument.
+  const params = callee.parameters.filter((param) =>
+    !ts.isIdentifier(param.name) || param.name.text !== 'this')
+  for (const [index, param] of params.entries()) {
+    if (param.initializer && (index >= fixed || !nonUndefined(call.arguments[index])))
+      visit(param.initializer)
+  }
+}
+
 /** Walk module evaluation, not deferred factories or instance-field initializers. */
 export function moduleCalls(sf, report) {
   const visit = (node) => {
@@ -123,7 +151,7 @@ export function moduleCalls(sf, report) {
       report(node)
       const callee = peel(node.expression)
       if (ts.isFunctionExpression(callee) || ts.isArrowFunction(callee)) {
-        for (const param of callee.parameters) if (param.initializer) visit(param.initializer)
+        iifeDefaults(node, callee, visit)
         // Generator calls create iterators; their bodies wait for iteration.
         if (!ts.isFunctionExpression(callee) || !callee.asteriskToken) visit(callee.body)
       }

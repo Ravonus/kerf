@@ -23,6 +23,15 @@ const shared = "import { state } from '@weft-js/core'; export const shared = sta
 const inspect = (root: string, exclude: string[] = []) =>
   serverStateChecks(root, { files: [], exclude })
 
+const defaultForms = [
+  'function (n = state(0)) {}',
+  'async function (n = state(0)) {}',
+  'function* (n = state(0)) {}',
+  'async function* (n = state(0)) {}',
+  '(n = state(0)) => {}',
+  'async (n = state(0)) => {}',
+]
+
 describe('W030 server-reachable module state', () => {
   it('reports a seeded reachable allocation with error severity, ownership advice and no edits', () => {
     const root = seed({
@@ -156,6 +165,61 @@ describe('W030 server-reachable module state', () => {
       const source = "import { state } from '@weft-js/core'; " + invocation
       expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code))
         .toEqual(['W030'])
+    }
+  })
+
+  it('skips defaults for proven nonundefined IIFE arguments in every function form', () => {
+    for (const form of defaultForms) {
+      for (const argument of [
+        '123', '0', 'null', 'false', "'value'", '{}', '[]', '1n', '/value/',
+        '() => 0', 'class {}', '(123 as number)', '-1', 'typeof missing', 'new Object()',
+      ]) {
+        const source = "import { state } from '@weft-js/core'; " + `(${form})(${argument})`
+        expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
+      }
+    }
+  })
+
+  it('keeps omitted and explicit undefined defaults in every function form', () => {
+    for (const form of defaultForms) {
+      for (const argument of ['', 'undefined', 'void 0', '(undefined as unknown as number)']) {
+        const source = "import { state } from '@weft-js/core'; " + `(${form})(${argument})`
+        expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code))
+          .toEqual(['W030'])
+      }
+    }
+  })
+
+  it('uses fixed positions before spreads and leaves unknown values conservative', () => {
+    for (const [invocation, count] of [
+      ['(function* (a = state(0), b = state(1)) {})(123)', 1],
+      ['(function* (a = state(0), b = state(1)) {})(123, undefined)', 1],
+      ['(function* (a = state(0), b = state(1)) {})(undefined, 123)', 1],
+      ['(async (a = state(0), b = state(1)) => {})(void 0, 123)', 1],
+      ['(function* (a = state(0), b = state(1)) {})(123, ...values)', 1],
+      ['(function* (a = state(0), b = state(1)) {})(...values, 123)', 2],
+      ['(function* (n = state(0)) {})(unknown)', 1],
+      ['(function* (n = state(0)) {})(value.member)', 1],
+      ['(function* (n = state(0)) {})(getValue())', 1],
+      ['(function (this: unknown, n = state(0)) {})(123)', 0],
+      ['(function (this: unknown, n = state(0)) {})()', 1],
+    ] as const) {
+      const source = "import { state } from '@weft-js/core'; " + invocation
+      expect(inspect(seed({ 'src/app.server.ts': source })).length).toBe(count)
+    }
+  })
+
+  it('preserves argument effects and body evaluation independently from defaults', () => {
+    for (const [invocation, count] of [
+      ['(function* (n = state(0)) { state(1) })({ shared: state(2) })', 1],
+      ['(async function* (n = state(0)) { state(1) })(123)', 0],
+      ['(function (n = state(0)) { state(1) })(123)', 1],
+      ['(async function (n = state(0)) { state(1); await wait() })(123)', 1],
+      ['((n = state(0)) => state(1))(123)', 1],
+      ['(function* (n = state(0)) { state(1) })()', 1],
+    ] as const) {
+      const source = "import { state } from '@weft-js/core'; " + invocation
+      expect(inspect(seed({ 'src/app.server.ts': source })).length).toBe(count)
     }
   })
 
