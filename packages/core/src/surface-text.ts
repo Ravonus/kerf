@@ -146,6 +146,101 @@ function inspect(el: HTMLElement, font: string, exact: boolean | undefined) {
     )
 }
 
+function mountText(
+  ctx: CanvasRenderingContext2D | null | undefined,
+  live: Live,
+  el: HTMLElement,
+  host: TextHost,
+  read: () => TextOptions,
+  getHandle: () => MeasureHandle | undefined,
+  getFont: () => string,
+  getLaid: () => MeasureHandle | undefined,
+  text: string | (() => string),
+) {
+  effect(read, (o) => {
+    const s = el.style
+    s.left = `${o.x}px`
+    s.top = `${o.y}px`
+    s.width = `${o.width}px`
+    if (o.font) s.font = o.font
+    if (o.lineHeight) s.lineHeight = `${o.lineHeight}px`
+    if (o.align) s.textAlign = o.align
+    if (o.class) el.className = o.class
+    if (!ctx) s.color = o.color ?? 'inherit' // no text path: the mirror is what's seen
+    host.invalidate()
+  })
+  effect(
+    () => (typeof text === 'function' ? text() : text),
+    (value) => {
+      if (el.textContent !== value) el.textContent = value // the one DOM write per change
+    },
+  )
+  host.el.append(el)
+  if (ctx) {
+    fallback()
+    watchFonts()
+    const ready = () => {
+      live.prepare()
+      if (!getHandle()) return
+      host.invalidate()
+      if (DEV) inspect(el, getFont(), read().exact)
+      document.fonts?.load?.(getFont()).then(
+        () => {
+          if (getFont() && !getLaid()) host.invalidate()
+        },
+        () => {},
+      )
+    }
+    const changed = new MutationObserver(() => {
+      live.prepare()
+      host.invalidate()
+    }) // a write of ours, or a translator's
+    changed.observe(el, { childList: true, characterData: true, subtree: true })
+    onCleanup(() => changed.disconnect())
+    loadMeasure().then(
+      (p) => {
+        provider = p
+        if (nodes.has(live)) ready()
+      },
+      (error) => console.error(error),
+    )
+  } else if (DEV) inspect(el, fontOf(getComputedStyle(el)), true)
+}
+
+function drawText(
+  ctx: CanvasRenderingContext2D,
+  o: TextOptions,
+  lines: { text: string; width: number }[],
+  font: string,
+  color: string,
+  leading: number,
+) {
+  ctx.font = font
+  ctx.fillStyle = color
+  ctx.textBaseline = 'alphabetic'
+  const m = ctx.measureText('')
+  const ascent = m.fontBoundingBoxAscent ?? 0,
+    descent = m.fontBoundingBoxDescent ?? 0
+  const top = o.y + (leading - ascent - descent) / 2 + ascent // CSS half-leading, so canvas and mirror share a baseline
+  lines.forEach((line, i) => {
+    const at =
+      o.align === 'center'
+        ? (o.width - line.width) / 2
+        : o.align === 'right'
+          ? o.width - line.width
+          : 0
+    ctx.fillText(line.text, o.x + at, top + i * leading)
+  })
+}
+
+function ownText(live: Live, el: HTMLElement) {
+  nodes.add(live)
+  onCleanup(() => {
+    nodes.delete(live)
+    el.remove()
+  })
+}
+
 /** The mirror goes in `host.el`; the caller's scope owns its effects. */
 export function surfaceText(
   host: TextHost,
@@ -187,61 +282,19 @@ export function surfaceText(
         }) // an exact tier or pack arrived: lay out again
     },
   }
-  nodes.add(live)
-  onCleanup(() => {
-    nodes.delete(live)
-    el.remove()
-  })
+  ownText(live, el)
 
-  effect(read, (o) => {
-    const s = el.style
-    s.left = `${o.x}px`
-    s.top = `${o.y}px`
-    s.width = `${o.width}px`
-    if (o.font) s.font = o.font
-    if (o.lineHeight) s.lineHeight = `${o.lineHeight}px`
-    if (o.align) s.textAlign = o.align
-    if (o.class) el.className = o.class
-    if (!ctx) s.color = o.color ?? 'inherit' // no text path: the mirror is what's seen
-    host.invalidate()
-  })
-  effect(
-    () => (typeof text === 'function' ? text() : text),
-    (value) => {
-      if (el.textContent !== value) el.textContent = value // the one DOM write per change
-    },
+  mountText(
+    ctx,
+    live,
+    el,
+    host,
+    read,
+    () => handle,
+    () => font,
+    () => laid,
+    text,
   )
-  host.el.append(el)
-
-  if (ctx) {
-    fallback()
-    watchFonts()
-    const ready = () => {
-      live.prepare()
-      if (!handle) return
-      host.invalidate()
-      if (DEV) inspect(el, font, read().exact)
-      document.fonts?.load?.(font).then(
-        () => {
-          if (font && !laid) host.invalidate()
-        },
-        () => {},
-      )
-    }
-    const changed = new MutationObserver(() => {
-      live.prepare()
-      host.invalidate()
-    }) // a write of ours, or a translator's
-    changed.observe(el, { childList: true, characterData: true, subtree: true })
-    onCleanup(() => changed.disconnect())
-    loadMeasure().then(
-      (p) => {
-        provider = p
-        if (nodes.has(live)) ready()
-      },
-      (error) => console.error(error),
-    )
-  } else if (DEV) inspect(el, fontOf(getComputedStyle(el)), true)
 
   const paint = () => {
     if (!handle || !provider || !ctx || plain?.matches) return
@@ -263,22 +316,7 @@ export function surfaceText(
           )
       }
     }
-    ctx.font = font
-    ctx.fillStyle = color
-    ctx.textBaseline = 'alphabetic'
-    const m = ctx.measureText('')
-    const ascent = m.fontBoundingBoxAscent ?? 0,
-      descent = m.fontBoundingBoxDescent ?? 0
-    const top = o.y + (leading - ascent - descent) / 2 + ascent // CSS half-leading, so canvas and mirror share a baseline
-    lines.forEach((line, i) => {
-      const at =
-        o.align === 'center'
-          ? (o.width - line.width) / 2
-          : o.align === 'right'
-            ? o.width - line.width
-            : 0
-      ctx.fillText(line.text, o.x + at, top + i * leading)
-    })
+    drawText(ctx, o, lines, font, color, leading)
   }
 
   return { el, lineCount, height, paint }
