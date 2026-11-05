@@ -8,26 +8,16 @@ type KeyForm = {
   nameError: State<string>
   chosen: State<string[]>
   scopeError: State<string>
-  scopes: () => { value: string; label: string }[]
+  readonly scopes: { value: string; label: string }[]
   expires: State<string>
-  expiries: () => { value: string; label: string }[]
+  readonly expiries: { value: string; label: string }[]
   toggle: (value: string, on: boolean) => void
   make: () => Promise<void>
   setForm: (node: HTMLElement) => void
 }
 
-export function keyForm({
-  name,
-  nameError,
-  chosen,
-  scopeError,
-  scopes,
-  expires,
-  expiries,
-  toggle,
-  make,
-  setForm,
-}: KeyForm) {
+export function keyForm(input: KeyForm) {
+  const { name, nameError, chosen, scopeError, expires, toggle, make, setForm } = input
   return (
     <form
       ref={(n) => setForm(n)}
@@ -52,11 +42,11 @@ export function keyForm({
       />
       <fieldset data-scope="choice">
         <legend>Scopes</legend>
-        {scopes().map((s) => (
+        {input.scopes.map((s) => (
           <Checkbox
             key={s.value}
             checked={chosen.value.includes(s.value)}
-            error={s === scopes()[0] && scopeError.value ? scopeError.value : undefined}
+            error={s === input.scopes[0] && scopeError.value ? scopeError.value : undefined}
             onChange={(e: Event) => toggle(s.value, (e.currentTarget as HTMLInputElement).checked)}
           >
             {s.label}
@@ -65,7 +55,7 @@ export function keyForm({
       </fieldset>
       <Select
         label="Expires"
-        options={expiries()}
+        options={input.expiries}
         value={expires.value}
         onChange={(e: Event) => (expires.value = (e.currentTarget as HTMLInputElement).value)}
       />
