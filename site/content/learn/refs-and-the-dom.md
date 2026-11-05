@@ -327,10 +327,17 @@ export function Player() {
   const playing = state(false)
   return (
     <div>
-      <Button onClick={() => (playing.value = !playing.value)}>
+      <Button
+        onClick={() => (playing.value = !playing.value)}
+      >
         {playing.value ? 'Pause' : 'Play'}
       </Button>
-      <video src="/flower.mp4" width="300" muted playsinline />
+      <video
+        src="/flower.mp4"
+        width="300"
+        muted
+        playsinline
+      />
     </div>
   )
 }
