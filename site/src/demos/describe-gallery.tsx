@@ -10,7 +10,10 @@ function Profile({
 }) {
   return (
     <Row gap="related">
-      <Badge emphasis="solid" tone="accent">
+      <Badge
+        emphasis="solid"
+        tone="accent"
+      >
         {name[0]}
       </Badge>
       <span>
@@ -29,8 +32,14 @@ export default function Gallery() {
           name="Katherine Johnson"
           field="mathematician"
         />
-        <Profile name="Mario Molina" field="chemist" />
-        <Profile name="Hedy Lamarr" field="inventor" />
+        <Profile
+          name="Mario Molina"
+          field="chemist"
+        />
+        <Profile
+          name="Hedy Lamarr"
+          field="inventor"
+        />
       </Stack>
     </Card>
   )
