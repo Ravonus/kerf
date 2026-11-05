@@ -2,19 +2,28 @@
 // QA defects jsdom can't show: real container queries, a real resize, real typing and a real hover, in Chromium.
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { createServer } from 'node:http'
+import { createServer, type Server } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import type * as Playwright from 'playwright-core'
 import { tmpdir } from 'node:os'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'vite'
 import weft from '@weft-js/core/vite'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 180_000 })
 
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }
-let dist, server, browser, page
-const errors = []
+const types: Record<string, string> = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+}
+let dist: string
+let server: Server
+let browser: Playwright.Browser
+let page: Playwright.Page
+const errors: string[] = []
 
 beforeAll(async () => {
   dist = mkdtempSync(join(tmpdir(), 'warp-qa-'))
@@ -26,22 +35,23 @@ beforeAll(async () => {
     build: { outDir: dist, emptyOutDir: true },
   })
   server = createServer((q, r) => {
-    let p = join(dist, q.url.split('?')[0])
+    let p = join(dist, q.url!.split('?')[0]!)
     if (p.endsWith('/')) p += 'index.html'
     if (!existsSync(p)) {
       r.statusCode = 404
-      return r.end()
+      r.end()
+      return
     }
     r.setHeader('content-type', types[extname(p)] ?? 'application/octet-stream')
     r.end(readFileSync(p))
   }).listen(0)
-  await new Promise((r) => {
+  await new Promise<void>((r) => {
     server.once('listening', r)
   })
   browser = await chromium.launch()
   page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
   page.on('pageerror', (e) => errors.push(e.message))
-  await page.goto(`http://localhost:${server.address().port}/`)
+  await page.goto(`http://localhost:${(server.address() as AddressInfo).port}/`)
   await page.waitForSelector('#spark svg')
   await page.waitForTimeout(200)
 })
@@ -55,13 +65,13 @@ afterEach(() => {
 })
 
 test('a 598px table has headers to press; a 342px one is cards', async () => {
-  const look = (id) =>
+  const look = (id: string) =>
     page.evaluate((which) => {
-      const t = document.querySelector(`#${which} [data-scope="table"]`)
+      const t = document.querySelector<HTMLElement>(`#${which} [data-scope="table"]`)!
       return {
         phone: t.dataset.phone,
-        head: getComputedStyle(t.querySelector('thead')).display,
-        sort: t.querySelector('thead [data-part="sort"]').getBoundingClientRect().width,
+        head: getComputedStyle(t.querySelector('thead')!).display,
+        sort: t.querySelector('thead [data-part="sort"]')!.getBoundingClientRect().width,
         bar: !!t.querySelector('[data-part="sortbar"]'),
       }
     }, id)
@@ -93,11 +103,11 @@ test('typing into an empty editor throws nothing', async () => {
 test('hovering a sparkline moves its dot and says the value', async () => {
   const dot = () =>
     page.evaluate(() => {
-      const d = document.querySelector('#spark .dot')
+      const d = document.querySelector('#spark .dot')!
       return [d.getAttribute('cx'), d.getAttribute('cy')]
     })
   const home = await dot()
-  const r = await page.locator('#spark svg').boundingBox()
+  const r = (await page.locator('#spark svg').boundingBox())!
   await page.mouse.move(r.x + 70, r.y + 18)
   await page.waitForTimeout(50)
   expect(await page.textContent('#spark text')).toBe('30')
