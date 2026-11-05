@@ -25,7 +25,7 @@ type View = KeyActionsContext &
 
 export function keyView(view: View) {
   const { title, list, columns, tools, armed, dialog, secret, footer } = view
-  const { name, seen, nameError, chosen, scopeError, scopes, expires, expiries } = view
+  const { name, seen, nameError, chosen, scopeError, expires } = view
   const { toggle, make, setForm, typedOpen, revoking, gone, plainOpen } = view
   return (
     <div data-scope="stack">
@@ -64,9 +64,13 @@ export function keyView(view: View) {
               nameError,
               chosen,
               scopeError,
-              scopes,
+              get scopes() {
+                return view.scopes()
+              },
               expires,
-              expiries,
+              get expiries() {
+                return view.expiries()
+              },
               toggle,
               make,
               setForm,
