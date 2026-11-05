@@ -1,24 +1,9 @@
-import {
-  announce,
-  arrivals,
-  feed,
-  filterNotes,
-  groupByDay,
-  indicator,
-  nextIndex,
-  readOnView,
-  uid,
-  unreadCount,
-  type InboxTab,
-} from '@weft-js/warp-core'
-import { derived, state, untrack } from '@weft-js/core'
-import { Avatar, type LiveState } from '../parts'
-import { Badge } from '../Badge'
+import type { InboxTab } from '@weft-js/warp-core'
+import type { LiveState } from '../parts'
 import { Button } from '../Button'
-import { Skeleton } from '../Skeleton'
-import { toast } from '../Toast'
-import { use } from '@weft-js/warp-core/weft'
-import { avatarTint, G, val, type GlyphName } from './shared'
+import { inboxModel } from './InboxModel'
+import { InboxHeader, InboxTabs } from './InboxHeader'
+import { InboxFeed } from './InboxFeed'
 import '../styles'
 import '@weft-js/warp-core/styles/components/tabs.css'
 import '@weft-js/warp-core/styles/components/link.css'
@@ -50,18 +35,6 @@ export interface Note {
   read?: boolean | undefined
   actions?: NoteAction[] | undefined
 }
-
-const KIND: Record<NoteKind, [GlyphName, string]> = {
-  mention: ['at', 'accent'],
-  comment: ['comment', 'info'],
-  assign: ['flag', 'caution'],
-  approve: ['check', 'positive'],
-  system: ['alert', 'critical'],
-  invite: ['cal', 'accent'],
-}
-const TABS: Record<InboxTab, string> = { all: 'All', unread: 'Unread', mentions: 'Mentions' }
-const sentence = (n: Note) => [n.actor, n.verb, n.object, n.detail].filter(Boolean).join(' ')
-const label = (n: Note) => `${sentence(n)}${n.read ? '' : ', unread'}, ${n.time}`
 
 /** Props for Inbox. */
 export interface InboxProps {
@@ -115,338 +88,47 @@ export function Inbox({
   onAction,
   onOpen,
 }: InboxProps) {
-  const id = uid('inbox')
-  const tab = state<InboxTab>(untrack(() => tabs)[0]!)
-  const data = derived(() => val<Note[] | undefined>(items))
-  const all = derived(() => data.value ?? [])
-  const leaving = state<string[]>([])
-  const fresh = state(0)
-  const focused = state<string | undefined>(undefined)
-  const shown = derived(() => filterNotes(all.value, tab.value))
-  const unread = derived(() => unreadCount(all.value))
-  const days = derived(() => groupByDay(shown.value))
-  const stop = derived(() =>
-    shown.value.some((n) => n.id === focused.value) ? focused.value : shown.value[0]?.id,
-  )
-  const tabId = (t: InboxTab) => `${id}-tab-${t}`
-  let list: HTMLDivElement | undefined
-  let tablist: HTMLDivElement | undefined
-  let root: HTMLElement | undefined
-  const doc = () => root!.ownerDocument
-
-  use(
-    indicator,
-    () => tablist,
-    () => ({ selected: '[aria-selected="true"]', x: '--_ix', w: '--_iw', at: tab.value }),
-  )
-  use(
-    feed,
-    () => list,
-    () => ({ items: '[data-scope="notification"]' }),
-  )
-  use(
-    readOnView,
-    () => list,
-    () => ({
-      items: '[data-scope="notification"]',
-      active: !!(open as unknown),
-      onRead: (rid: string) => onRead?.(rid),
-    }),
-  )
-  use(
-    arrivals,
-    () => list,
-    () => ({
-      items: '[data-scope="notification"]',
-      ids: all.value.map((n) => n.id),
-      onArrive: (ids: string[]) => {
-        if (list && list.scrollTop > 0) fresh.value += ids.length
-      },
-    }),
-  )
-
-  const pick = (t: InboxTab) => {
-    tab.value = t
-    fresh.value = 0
-  }
-  const onTabKey = (e: KeyboardEvent) => {
-    const at = tabs.indexOf(tab.value)
-    const rtl = getComputedStyle(e.currentTarget as Element).direction === 'rtl'
-    const to = nextIndex(e.key, at, tabs.length, { rtl })
-    if (to < 0) return
-    e.preventDefault()
-    pick(tabs[to]!)
-    tablist!.querySelectorAll<HTMLElement>('[role="tab"]')[to]?.focus()
-  }
-  const dismiss = (n: Note, row: HTMLElement) => {
-    const rest = [...list!.querySelectorAll<HTMLElement>('[data-scope="notification"]')].filter(
-      (r) => r !== row && r.dataset.state !== 'dismissed',
-    )
-    const at = [...list!.querySelectorAll('[data-scope="notification"]')].indexOf(row)
-    leaving.value = [...leaving.value, n.id]
-    ;(rest[at] ?? rest[at - 1])?.focus()
-    setTimeout(() => {
-      onDismiss?.(n.id)
-      leaving.value = leaving.value.filter((x) => x !== n.id)
-    }, 240)
-    toast.show({
-      title: 'Notification dismissed',
-      description: sentence(n),
-      action: { label: 'Undo', onClick: () => onRestore?.(n) },
-    })
-  }
-  const readAll = () => {
-    onReadAll?.()
-    announce(doc(), 'All notifications marked as read')
-  }
-  const open1 = (n: Note) => {
-    if (!n.read) onRead?.(n.id)
-    onOpen?.(n)
-  }
-  const onRowKey = (e: KeyboardEvent, n: Note) => {
-    if (e.target !== e.currentTarget) return
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      open1(n)
-    }
-    if (e.key === 'Delete') {
-      e.preventDefault()
-      dismiss(n, e.currentTarget as HTMLElement)
-    }
-  }
-  const pressRow = (e: MouseEvent, n: Note) => {
-    if (!(e.target as Element).closest?.('button, a')) open1(n)
-  }
-  const toTop = () => {
-    list?.scrollTo?.({ top: 0 })
-    if (list) list.scrollTop = 0
-    fresh.value = 0
-  }
-  const onScroll = () => {
-    if (list!.scrollTop <= 0) fresh.value = 0
-  }
-  const sync = derived(() => {
-    const q = val<number>(queued)
-    if (q) return `${q} update${q > 1 ? 's' : ''} waiting to sync`
-    return (val<LiveState | undefined>(live) ?? 'live') === 'connecting'
-      ? 'Connecting…'
-      : 'Up to date'
-  })
-  const page = derived(() => viewAll)
-
+  const model = inboxModel(() => ({
+    items,
+    live,
+    tabs,
+    title,
+    variant,
+    open,
+    queued,
+    viewAll,
+    settings,
+    onRead,
+    onReadAll,
+    onDismiss,
+    onRestore,
+    onAction,
+    onOpen,
+  }))
   return (
     <section
-      ref={(n) => (root = n)}
+      ref={model.setRoot}
       data-scope="inbox"
       data-part="root"
       data-variant={variant}
-      aria-labelledby={`${id}-t`}
+      aria-labelledby={`${model.id}-t`}
     >
-      <div data-part="header">
-        <h3 id={`${id}-t`}>{title}</h3>
-        <Button emphasis="ghost" tone="neutral" size="sm" onClick={readAll}>
-          Mark all as read
-        </Button>
-        {settings && (
-          <Button
-            emphasis="ghost"
-            tone="neutral"
-            size="sm"
-            data-icon-only=""
-            aria-label="Notification settings"
-            onClick={settings}
-          >
-            <G name="more" />
-          </Button>
-        )}
-      </div>
-      <div data-scope="tabs" data-part="root">
-        <div
-          ref={(n) => (tablist = n)}
-          data-part="list"
-          role="tablist"
-          aria-label="Filter"
-          onKeyDown={onTabKey}
-        >
-          {tabs.map((t) => (
-            <button
-              key={t}
-              data-part="trigger"
-              role="tab"
-              type="button"
-              id={tabId(t)}
-              aria-controls={`${id}-panel`}
-              aria-selected={t === tab.value ? 'true' : 'false'}
-              tabindex={t === tab.value ? undefined : '-1'}
-              onClick={() => pick(t)}
-            >
-              {TABS[t]}
-              {t === 'unread' && (
-                <>
-                  {' '}
-                  <Badge count>{unread.value}</Badge>
-                </>
-              )}
-            </button>
-          ))}
-          <span data-part="indicator" aria-hidden="true" data-instant=""></span>
-        </div>
-      </div>
-      {fresh.value > 0 && (
-        <Button size="sm" data-part="new-pill" onClick={toTop}>
-          {fresh.value} new
+      <InboxHeader title={title} settings={settings} model={model} />
+      <InboxTabs tabs={tabs} model={model} />
+      {model.fresh.value > 0 && (
+        <Button size="sm" data-part="new-pill" onClick={model.toTop}>
+          {model.fresh.value} new
         </Button>
       )}
-      <div role="tabpanel" id={`${id}-panel`} aria-labelledby={tabId(tab.value)} data-part="panel">
-        <div
-          ref={(n) => (list = n)}
-          data-part="list"
-          role="feed"
-          aria-label={title}
-          aria-busy={data.value === undefined ? 'true' : 'false'}
-          tabindex={shown.value.length ? undefined : '0'}
-          onScroll={onScroll}
-        >
-          {data.value === undefined && (
-            <div data-part="group" aria-hidden="true">
-              <Skeleton lines={3} />
-            </div>
-          )}
-          {days.value.map((g) => (
-            <div key={g.day} role="none">
-              <div data-part="group" aria-hidden="true">
-                {g.day}
-              </div>
-              {g.rows.map((n) => (
-                <Row
-                  key={n.id}
-                  n={n}
-                  at={shown.value.indexOf(n) + 1}
-                  size={shown.value.length}
-                  leaving={leaving.value.includes(n.id)}
-                  stop={stop.value === n.id}
-                  onKey={onRowKey}
-                  onPress={pressRow}
-                  onFocus={() => (focused.value = n.id)}
-                  onDismiss={dismiss}
-                  onAction={(x: Note, a: string) => onAction?.(x, a)}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-        {data.value !== undefined && shown.value.length === 0 && (
-          <div data-scope="empty-state">
-            <p data-part="title">You're all caught up</p>
-            <p data-part="description">New mentions, invites and approvals show up here.</p>
-          </div>
-        )}
-      </div>
+      <InboxFeed title={title} model={model} onAction={onAction} />
       <div data-part="footer">
-        <span>{sync.value}</span>
-        {page.value && (
-          <a href={page.value} data-scope="link">
+        <span>{model.sync.value}</span>
+        {model.page.value && (
+          <a href={model.page.value} data-scope="link">
             View all
           </a>
         )}
       </div>
     </section>
-  )
-}
-
-function Row({
-  n,
-  at,
-  size,
-  leaving,
-  stop,
-  onKey,
-  onPress,
-  onFocus,
-  onDismiss,
-  onAction,
-}: {
-  n: Note
-  at: number
-  size: number
-  leaving: boolean
-  stop: boolean
-  onKey: (e: KeyboardEvent, n: Note) => void
-  onPress: (e: MouseEvent, n: Note) => void
-  onFocus: () => void
-  onDismiss: (n: Note, row: HTMLElement) => void
-  onAction: (n: Note, id: string) => void
-}) {
-  const icon = derived(() => KIND[n.kind] ?? KIND.system)
-  const name = derived(() => label(n))
-  const glyph = derived(() => icon.value[0])
-  return (
-    <article
-      data-scope="notification"
-      data-sweep="surface"
-
-      data-id={n.id}
-      data-read={n.read ? '' : undefined}
-      data-state={leaving ? 'dismissed' : undefined}
-      tabindex={stop ? '0' : '-1'}
-      data-initial={stop ? '' : undefined}
-      aria-label={name.value}
-      aria-posinset={at}
-      aria-setsize={size}
-      onKeyDown={(e: KeyboardEvent) => onKey(e, n)}
-      onClick={(e: MouseEvent) => onPress(e, n)}
-      onFocusIn={onFocus}
-    >
-      <span data-part="sweep-base" aria-hidden="true"></span>
-      <span data-part="sweep" aria-hidden="true"></span>
-      <span data-part="icon">
-        <Avatar name={n.actor} style={avatarTint(n.actor)} />
-        <span data-part="kind" data-tone={icon.value[1]}>
-          <G name={glyph.value} />
-        </span>
-      </span>
-      <p data-part="text">
-        <b>{n.actor}</b> {n.verb}
-        {n.object ? ' ' : ''}
-        {n.object && <b>{n.object}</b>}
-        {n.detail ? ` ${n.detail}` : ''}
-      </p>
-      <span data-part="unread" aria-hidden="true"></span>
-      {n.quote && <div data-part="quote">{n.quote}</div>}
-      <span data-part="meta">
-        {n.time}
-        {n.source ? ` · ${n.source}` : ''}
-      </span>
-      <Button
-        emphasis="ghost"
-        tone="neutral"
-        size="sm"
-        data-icon-only=""
-        data-part="dismiss"
-        aria-label={`Dismiss: ${n.actor} ${n.verb}`}
-        tabindex="-1"
-        onClick={(e: MouseEvent) => {
-          e.stopPropagation()
-          onDismiss(n, (e.currentTarget as HTMLElement).closest('article')!)
-        }}
-      >
-        <G name="x" />
-      </Button>
-      {n.actions?.length ? (
-        <div data-part="actions">
-          {n.actions.map((a: NoteAction) => (
-            <Button
-              key={a.id}
-              size="sm"
-              emphasis={a.emphasis ?? 'solid'}
-              tone={a.emphasis === 'outline' ? 'neutral' : undefined}
-              onClick={() => onAction(n, a.id)}
-            >
-              {a.label}
-            </Button>
-          ))}
-        </div>
-      ) : null}
-    </article>
   )
 }
