@@ -2,6 +2,8 @@
 // there, keeping identity and writing only what changed (06 §1: a data change rewrites `d`, `cx`, `cy` on existing
 // nodes, and sort, filter and resize never rebuild marks). A node's identity is its tag, class, series and mark index.
 
+import { esc as escapeHtml } from '@weft-js/core/markup'
+
 export type Attrs = Record<string, string | number | boolean | null | undefined>
 /** An SVG node as plain data: tag, attributes, children. */
 export type Scene = { t: string; a: Attrs; c: Child[] }
@@ -37,8 +39,7 @@ const animated = new Set([
 ])
 const runtime = new Set(['tabindex', 'data-active', 'data-series-active'])
 
-export const esc = (v: string) =>
-  v.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
+export const esc = (v: string) => escapeHtml(v, 'full')
 const text = (v: string | number | boolean) =>
   v === true ? '' : typeof v === 'number' ? String(+v.toFixed(2)) : String(v)
 const on = (v: unknown): v is string | number | true => v !== null && v !== undefined && v !== false

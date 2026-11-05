@@ -1,4 +1,8 @@
 // The chart math, the scene, and the behaviour on plain DOM: nothing here needs a framework.
+import { esc as canonicalEsc } from '@weft-js/core/markup'
+import type * as Markup from '@weft-js/core/markup'
+import { esc as chartEsc } from '../src/charts/scene'
+
 import {
   type BarConfig,
   type Form,
@@ -16,6 +20,11 @@ import {
   squarify,
   toHTML,
 } from '../src/charts'
+
+vi.mock('@weft-js/core/markup', async (importOriginal) => {
+  const original = await importOriginal<typeof Markup>()
+  return { ...original, esc: vi.fn(original.esc) }
+})
 
 test('niceTicks lands on round steps around the data', () => {
   expect(niceTicks(0, 98, 4)).toEqual([0, 20, 40, 60, 80, 100])
@@ -60,6 +69,18 @@ test('toHTML escapes and drops what is off', () => {
       s('text', { x: 1.256, hidden: false, 'data-mark': true, 'aria-label': 'a"<b' }, 'x & y'),
     ]),
   ).toBe('<text x="1.26" data-mark="" aria-label="a&quot;&lt;b">x &amp; y</text>')
+})
+
+test('chart escaping delegates to the full markup policy', () => {
+  const canonical = vi.mocked(canonicalEsc)
+  canonical.mockClear()
+  expect(chartEsc(`&<>"'`)).toBe(`&amp;&lt;&gt;&quot;'`)
+  expect(canonical).toHaveBeenCalledExactlyOnceWith(`&<>"'`, 'full')
+  const chars = ['a', '&', '<', '>', '"', "'", '', 'é']
+  for (const a of chars)
+    for (const b of chars) expect(chartEsc(a + b)).toBe(canonicalEsc(a + b, 'full'))
+  for (const value of [null, undefined, 42])
+    expect(() => chartEsc(value as unknown as string)).toThrow(TypeError)
 })
 
 function host(body: Scene[]) {
