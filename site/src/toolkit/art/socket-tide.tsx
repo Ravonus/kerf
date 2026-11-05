@@ -36,6 +36,45 @@ const day = (() => {
 const scale = 1800,
   count = (i: number) => Math.round(day[i]! * scale)
 
+function tideRings(
+  ctx: CanvasRenderingContext2D,
+  c: ReturnType<typeof colours>,
+  cx: number,
+  cy: number,
+  inner: number,
+  span: number,
+) {
+  ctx.lineWidth = 1
+  ctx.strokeStyle = c.rule
+  ctx.beginPath()
+  for (const k of [0, 0.5, 1]) {
+    ctx.moveTo(cx + inner + span * k, cy)
+    ctx.arc(cx, cy, inner + span * k, 0, TAU)
+  }
+  ctx.stroke()
+}
+
+function tideHours(
+  ctx: CanvasRenderingContext2D,
+  c: ReturnType<typeof colours>,
+  cx: number,
+  cy: number,
+  inner: number,
+) {
+  ctx.fillStyle = c.label
+  ctx.font = '11px var(--warp-font-mono, monospace)'
+  ctx.textAlign = 'center'
+  for (let h = 0; h < 24; h += 6) {
+    const a = (h / 24) * TAU - Math.PI / 2
+    ctx.fillText(
+      String(h).padStart(2, '0'),
+      cx + Math.cos(a) * inner * 0.74,
+      cy + Math.sin(a) * inner * 0.74 + 4,
+    )
+  }
+  ctx.textAlign = 'start'
+}
+
 export default function SocketTide({ live = true }: ArtProps) {
   const found = state('')
   const draw = ({ ctx, width, height, time, still, pointer }: Frame) => {
@@ -53,14 +92,7 @@ export default function SocketTide({ live = true }: ArtProps) {
           ? Math.floor((((Math.atan2(dy, dx) + Math.PI / 2 + TAU) % TAU) / TAU) * SLOTS)
           : -1
     ctx.clearRect(0, 0, width, height)
-    ctx.lineWidth = 1
-    ctx.strokeStyle = c.rule
-    ctx.beginPath()
-    for (const k of [0, 0.5, 1]) {
-      ctx.moveTo(cx + inner + span * k, cy)
-      ctx.arc(cx, cy, inner + span * k, 0, TAU)
-    }
-    ctx.stroke()
+    tideRings(ctx, c, cx, cy, inner, span)
     for (let pass = 0; pass < 2; pass++) {
       ctx.strokeStyle = pass ? c.high : c.low
       ctx.lineWidth = pass ? 1.4 : 1
@@ -76,18 +108,7 @@ export default function SocketTide({ live = true }: ArtProps) {
       }
       ctx.stroke()
     }
-    ctx.fillStyle = c.label
-    ctx.font = '11px var(--warp-font-mono, monospace)'
-    ctx.textAlign = 'center'
-    for (let h = 0; h < 24; h += 6) {
-      const a = (h / 24) * TAU - Math.PI / 2
-      ctx.fillText(
-        String(h).padStart(2, '0'),
-        cx + Math.cos(a) * inner * 0.74,
-        cy + Math.sin(a) * inner * 0.74 + 4,
-      )
-    }
-    ctx.textAlign = 'start'
+    tideHours(ctx, c, cx, cy, inner)
     const hand = at >= 0 ? at : (0.4 * SLOTS + t * 0.5) % SLOTS,
       a = (hand / SLOTS) * TAU - Math.PI / 2
     ctx.strokeStyle = c.hand
