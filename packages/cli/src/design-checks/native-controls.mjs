@@ -1,6 +1,6 @@
 import { NATIVE, NATIVE_TYPES, addImport } from './rules.mjs'
 
-export function element3({ el, f, report, localComponents }) {
+export function checkNativeControls({ el, f, report, localComponents }) {
   const typed = (el.name === 'input' || el.name === 'Input') && NATIVE_TYPES[el.attr('type')?.value]
   if (typed && !el.attr('hidden') && !el.attr('data-part'))
     report(

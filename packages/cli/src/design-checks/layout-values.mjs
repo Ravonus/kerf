@@ -1,7 +1,7 @@
 import { addImport } from './rules.mjs'
 import { styleDecls, declaration, utility, layoutOf } from './values.mjs'
 
-export function element1({ el, f, report }) {
+export function checkLayoutValues({ el, f, report }) {
   const style = el.attr('style')
   if (style) for (const d of styleDecls(style)) declaration(d, report)
   const cls = el.attr('class') ?? el.attr('className')

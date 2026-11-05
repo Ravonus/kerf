@@ -2,7 +2,7 @@ import { WARP } from './values.mjs'
 import { positions } from '../diag.mjs'
 import { allowed, addImport, headingSite } from './rules.mjs'
 
-export function element2({ el, f, report, warpName, looks, localComponents, scan }) {
+export function checkHeadingLinks({ el, f, report, warpName, looks, localComponents, scan }) {
   const bare = /^h[1-6]$/.test(el.name)
   if (bare || (el.name === 'Heading' && warpName('Heading'))) {
     const site = headingSite(el, bare)

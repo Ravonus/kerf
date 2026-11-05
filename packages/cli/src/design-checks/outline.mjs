@@ -1,6 +1,6 @@
 import { scanParent } from './rules.mjs'
 
-export function element7({ el, warpName, headings, solids, scan }) {
+export function checkOutline({ el, warpName, headings, solids, scan }) {
   // -- outline --
   const h = /^h([1-6])$/.exec(el.name)
   const level = h

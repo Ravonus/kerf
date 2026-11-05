@@ -1,6 +1,6 @@
 import { STATIC, INTERACTIVE } from './rules.mjs'
 
-export function element6({ el, f, report }) {
+export function checkInteraction({ el, f, report }) {
   // -- behaviour on the wrong element --
   if (
     STATIC.has(el.name) &&

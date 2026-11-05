@@ -1,7 +1,7 @@
 import { styleDecls } from './values.mjs'
 import { literalColor, ratio } from './rules.mjs'
 
-export function element4({ el, report }) {
+export function checkContrast({ el, report }) {
   // -- contrast of a literal pair --
   const style = el.attr('style')
   if (style) {

@@ -1,6 +1,6 @@
 import { named, hasName, GENERIC, UNNAMED } from './rules.mjs'
 
-export function element5({ el, report, labelled }) {
+export function checkAccessibleNames({ el, report, labelled }) {
   // -- accessible names --
   if (['input', 'select', 'textarea'].includes(el.name)) {
     const type = el.attr('type')?.value
