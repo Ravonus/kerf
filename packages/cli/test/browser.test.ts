@@ -41,12 +41,14 @@ describe('cli words', () => {
   })
 })
 
+type Run = (cmd: string, p?: Record<string, unknown>) => ReturnType<typeof browser>
+
 const chrome = findChrome()
 
 // Drives a real browser, and CI machines and containers may not have Chrome.
 describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => {
-  let root, server
-  const run = (cmd, p) => browser(root, cmd, p)
+  let root: string, server: Awaited<ReturnType<typeof createServer>>
+  const run: Run = (cmd, p) => browser(root, cmd, p)
 
   beforeAll(async () => {
     mkdirSync(tmpRoot, { recursive: true })
@@ -76,7 +78,7 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
   registerBrowserSessionTests(run)
 })
 
-function registerBrowserNavigationTests(run) {
+function registerBrowserNavigationTests(run: Run) {
   it('snapshots roles, names and refs, plus the graph with real names', async () => {
     expect(
       (
@@ -118,7 +120,7 @@ function registerBrowserNavigationTests(run) {
   })
 }
 
-function registerBrowserSessionTests(run) {
+function registerBrowserSessionTests(run: Run) {
   it('pauses the clock from page load: nothing loads until time advances', async () => {
     await run('time', { op: 'pause', reload: true })
     await new Promise((r) => {
