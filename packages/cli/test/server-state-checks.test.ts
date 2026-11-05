@@ -79,7 +79,9 @@ describe('W030 server-reachable module state', () => {
     })
     expect(inspect(root)).toEqual([])
   })
+})
 
+describe('W030 server-reachable module state', () => {
   it('recognizes server modules and SSR routes without treating browser roots as server entries', () => {
     for (const file of [
       'src/server/handler.ts',
@@ -130,7 +132,9 @@ describe('W030 server-reachable module state', () => {
     ])
       expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
   })
+})
 
+describe('W030 server-reachable module state', () => {
   it('respects explicit globals and deferred request/component/context factories', () => {
     for (const source of [
       "import { state } from '@weft-js/core'; export const value = state.global(0)",
@@ -180,7 +184,9 @@ describe('W030 server-reachable module state', () => {
       )
     }
   })
+})
 
+describe('W030 server-reachable module state', () => {
   it('preserves eager generator parameter initializers without visiting their bodies', () => {
     for (const invocation of [
       '(function* (n = state(0)) { state(1) })()',
@@ -228,7 +234,9 @@ describe('W030 server-reachable module state', () => {
       }
     }
   })
+})
 
+describe('W030 server-reachable module state', () => {
   it('uses fixed positions before spreads and leaves unknown values conservative', () => {
     for (const [invocation, count] of [
       ['(function* (a = state(0), b = state(1)) {})(123)', 1],

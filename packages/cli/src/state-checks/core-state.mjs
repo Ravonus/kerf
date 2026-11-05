@@ -55,22 +55,7 @@ function written(node, symbol, out) {
     written(node.left, symbol, out)
 }
 
-/** Resolve state, linked and explicit global calls through local binding identities. */
-export function coreState(root, graph) {
-  const checker = binder(root, graph)
-  const symbol = (node) => {
-    const parent = node.parent
-    return parent && ts.isShorthandPropertyAssignment(parent) && parent.name === node
-      ? checker.getShorthandAssignmentValueSymbol(parent)
-      : checker.getSymbolAtLocation(node)
-  }
-  const values = new Map(),
-    writes = new Set(),
-    aliases = []
-  const remember = (node, tag) => {
-    const sym = symbol(node)
-    if (sym && tag && !writes.has(sym)) values.set(sym, tag)
-  }
+function scanWrites(graph, symbol, writes, aliases) {
   const scan = (node) => {
     if (ts.isBinaryExpression(node)) {
       const operator = node.operatorToken.kind
@@ -93,8 +78,27 @@ export function coreState(root, graph) {
       aliases.push(node)
     ts.forEachChild(node, scan)
   }
+  for (const { sf } of graph.values()) scan(sf)
+}
+
+/** Resolve state, linked and explicit global calls through local binding identities. */
+export function coreState(root, graph) {
+  const checker = binder(root, graph)
+  const symbol = (node) => {
+    const parent = node.parent
+    return parent && ts.isShorthandPropertyAssignment(parent) && parent.name === node
+      ? checker.getShorthandAssignmentValueSymbol(parent)
+      : checker.getSymbolAtLocation(node)
+  }
+  const values = new Map(),
+    writes = new Set(),
+    aliases = []
+  const remember = (node, tag) => {
+    const sym = symbol(node)
+    if (sym && tag && !writes.has(sym)) values.set(sym, tag)
+  }
+  scanWrites(graph, symbol, writes, aliases)
   for (const { sf } of graph.values()) {
-    scan(sf)
     for (const node of sf.statements) {
       if (
         !ts.isImportDeclaration(node) ||

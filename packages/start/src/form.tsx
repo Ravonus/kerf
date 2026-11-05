@@ -134,6 +134,14 @@ function createSubmit<O>(
   }
 }
 
+function invalidMutation() {
+  return new StartError(
+    'F001',
+    '`<Form of>` needs a mutation',
+    '`<Form of={addTodo}>`, with `addTodo` a `mutation()` export of a server module',
+  )
+}
+
 /** A form that posts to a mutation, and works before any code has loaded. */
 export function Form<I, O>({
   of,
@@ -149,12 +157,7 @@ export function Form<I, O>({
   }
   const key = untrack(() => id)
   const fnId = fnOf(m)?.$id
-  if (fnOf(m)?.kind !== 'mutation')
-    throw new StartError(
-      'F001',
-      '`<Form of>` needs a mutation',
-      '`<Form of={addTodo}>`, with `addTodo` a `mutation()` export of a server module',
-    )
+  if (fnOf(m)?.kind !== 'mutation') throw invalidMutation()
   const seed = failure(fnId, key)
   const errors = state<Record<string, string>>(seed?.errors ?? {})
   const message = state(seed?.message)

@@ -52,7 +52,9 @@ describe('W007 core Derived writes', () => {
       expect(result).not.toContain('TS2540')
     }
   })
+})
 
+describe('W007 core Derived writes', () => {
   it('follows core import, namespace, receiver and written type aliases', () => {
     for (const source of [
       "import { derived as calculate } from '@weft-js/core'; const d = calculate(() => 0); d.value = 1",
@@ -93,7 +95,9 @@ describe('W007 core Derived writes', () => {
       expect(codes(source)).not.toContain('W007')
     expect(codes(`${prefix} declare const known: Derived<any>; known.value = 1`)).toEqual(['W007'])
   })
+})
 
+describe('W007 core Derived writes', () => {
   it('recognizes the exported Derived alias without mistaking a matching State mapping for it', () => {
     const mapped = `declare module '@weft-js/core' {
       export interface State<T> { value: T; readonly stateBrand: 'state' }
@@ -112,7 +116,9 @@ describe('W007 core Derived writes', () => {
     ])
       expect(findings(source)).toEqual([])
   })
+})
 
+describe('W007 core Derived writes', () => {
   it('checks plain TypeScript through analyze/all and clears repaired findings', async () => {
     for (const filename of ['state.ts', 'state.mts', 'state.cts']) {
       const root = mkdtempSync(join(tmpdir(), 'weft-derived-write-'))

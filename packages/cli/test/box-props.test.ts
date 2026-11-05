@@ -92,7 +92,9 @@ describe('W008 typed component props', () => {
       const a = <Card n={labeled} />`),
     ).toEqual([])
   })
+})
 
+describe('W008 typed component props', () => {
   it('keeps repaired value and valid box props quiet', () => {
     for (const jsx of [
       '<Value n={n.value} />',
@@ -137,7 +139,9 @@ describe('W008 typed component props', () => {
     ])
       expect(codes(source)).not.toContain('W008')
   })
+})
 
+describe('W008 typed component props', () => {
   it('preserves unrelated type errors, valid unions, native props and non-prop errors', () => {
     expect(codes(`${prefix} const s = state('wrong'); const a = <Value n={s} />`)).toEqual([
       'TS2322',

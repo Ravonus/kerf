@@ -152,7 +152,12 @@ describe.each([
     )
     expect(r.list).toMatchObject([{ code: 'TS2339', file: 'src/goal.tsx', line: 7 }])
   }, 60_000)
+})
 
+describe.each([
+  ['tsgo', 7],
+  ['typescript 6', 6],
+])('inference edges on %s', (_, version) => {
   it('every edge in the fixture', async () => {
     const { types: t, list } = await run(app({}, { version }))
     expect(t).toMatchObject({
