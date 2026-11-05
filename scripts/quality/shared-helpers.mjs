@@ -35,7 +35,7 @@ const distinct = new Set([
   'packages/warp/test/markup.test.tsx:walk',
   'packages/core/test/back-end.test.tsx:walk',
   'packages/core/test/oracle.test.tsx:walk',
-  'packages/warp/test/polish.browser.test.mjs:walk',
+  'packages/warp/test/polish.browser.test.ts:walk',
 ])
 
 /** Check every tracked repository script and test, including setup files. */

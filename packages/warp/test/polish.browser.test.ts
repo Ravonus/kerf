@@ -3,20 +3,30 @@
 // pressed toggle's stroke after release, in Chromium.
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { createServer } from 'node:http'
+import { createServer, type Server } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import type * as Playwright from 'playwright-core'
 import { tmpdir } from 'node:os'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'vite'
 import weft from '@weft-js/core/vite'
 import { timelineNames } from './polish.browser-timeline.mjs'
+import { registerSmallButtonOffset } from './polish.browser-offset'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 180_000 })
 
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }
-let dist, server, browser, page
-const errors = []
+const types: Record<string, string> = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+}
+let dist: string
+let server: Server
+let browser: Playwright.Browser
+let page: Playwright.Page
+const errors: string[] = []
 
 beforeAll(async () => {
   dist = mkdtempSync(join(tmpdir(), 'warp-polish-'))
@@ -28,22 +38,23 @@ beforeAll(async () => {
     build: { outDir: dist, emptyOutDir: true },
   })
   server = createServer((q, r) => {
-    let p = join(dist, q.url.split('?')[0])
+    let p = join(dist, q.url!.split('?')[0]!)
     if (p.endsWith('/')) p += 'index.html'
     if (!existsSync(p)) {
       r.statusCode = 404
-      return r.end()
+      r.end()
+      return
     }
     r.setHeader('content-type', types[extname(p)] ?? 'application/octet-stream')
     r.end(readFileSync(p))
   }).listen(0)
-  await new Promise((r) => {
+  await new Promise<void>((r) => {
     server.once('listening', r)
   })
   browser = await chromium.launch()
   page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
   page.on('pageerror', (e) => errors.push(e.message))
-  await page.goto(`http://localhost:${server.address().port}/`)
+  await page.goto(`http://localhost:${(server.address() as AddressInfo).port}/`)
   await page.waitForSelector('#toggles button')
   await page.waitForTimeout(300)
 })
@@ -60,8 +71,8 @@ test('Toggle sizes differ: sm is shorter than md, lg taller', async () => {
   const h = await page.$$eval('#toggles button', (bs) =>
     bs.map((b) => b.getBoundingClientRect().height),
   )
-  expect(h[0]).toBeLessThan(h[1])
-  expect(h[2]).toBeGreaterThan(h[1])
+  expect(h[0]!).toBeLessThan(h[1]!)
+  expect(h[2]!).toBeGreaterThan(h[1]!)
 })
 
 test('a toggle released from pressed keeps no stroke once the pointer leaves', async () => {
@@ -71,7 +82,7 @@ test('a toggle released from pressed keeps no stroke once the pointer leaves', a
   await page.mouse.move(5, 800)
   await page.waitForTimeout(60) // well inside the sweep's own exit, which would still be drawing a bracket
   const left = await t.evaluate((b) => {
-    const s = getComputedStyle(b.querySelector('[data-part="sweep"]'))
+    const s = getComputedStyle(b.querySelector<HTMLElement>('[data-part="sweep"]')!)
     return { clip: s.clipPath, sl: s.getPropertyValue('--_sl'), sr: s.getPropertyValue('--_sr') }
   })
   expect(left.sl.trim()).toBe('100%')
@@ -81,16 +92,18 @@ test('a toggle released from pressed keeps no stroke once the pointer leaves', a
   await page.waitForTimeout(700)
   expect(
     await t.evaluate((b) =>
-      getComputedStyle(b.querySelector('[data-part="sweep"]')).getPropertyValue('--_sr').trim(),
+      getComputedStyle(b.querySelector<HTMLElement>('[data-part="sweep"]')!)
+        .getPropertyValue('--_sr')
+        .trim(),
     ),
   ).toBe('0%')
 })
 
-const clearOfChevron = (sel) =>
+const clearOfChevron = (sel: string) =>
   page.evaluate((s) => {
-    const f = document.querySelector(s)
-    const v = f.querySelector('[data-part="value"]'),
-      i = f.querySelector('[data-part="indicator"]')
+    const f = document.querySelector<HTMLElement>(s)!
+    const v = f.querySelector<HTMLElement>('[data-part="value"]')!,
+      i = f.querySelector<HTMLElement>('[data-part="indicator"]')!
     const r = document.createRange()
     r.selectNodeContents(v)
     return {
@@ -116,8 +129,8 @@ test('a narrow select keeps its value clear of the chevron (sort bar, pager size
 test('a table wider than its box scrolls and shows an edge shadow on the side with more', async () => {
   const look = () =>
     page.evaluate(() => {
-      const t = document.querySelector('#wide [data-scope="table"]'),
-        v = t.querySelector('[data-part="viewport"]')
+      const t = document.querySelector<HTMLElement>('#wide [data-scope="table"]')!,
+        v = t.querySelector<HTMLElement>('[data-part="viewport"]')!
       return {
         overflow: t.dataset.overflow ?? '',
         start: getComputedStyle(t, '::before').opacity,
@@ -134,7 +147,7 @@ test('a table wider than its box scrolls and shows an edge shadow on the side wi
   expect((await look()).end).toBe('1')
   expect((await look()).start).toBe('0')
   await page.evaluate(() => {
-    const v = document.querySelector('#wide [data-part="viewport"]')
+    const v = document.querySelector<HTMLElement>('#wide [data-part="viewport"]')!
     v.scrollLeft = v.scrollWidth
   })
   await page.waitForTimeout(250)
@@ -146,25 +159,27 @@ test('a table wider than its box scrolls and shows an edge shadow on the side wi
   // a table that fits says nothing
   expect(
     await page.evaluate(
-      () => document.querySelector('#sortbar [data-scope="table"]').dataset.overflow ?? '',
+      () =>
+        document.querySelector<HTMLElement>('#sortbar [data-scope="table"]')!.dataset.overflow ??
+        '',
     ),
   ).toBe('')
 })
 
 test('vivid: the pointer fill on a solid button is clearly lighter than its rest; balanced is unchanged', async () => {
-  const lum = (c) => {
-    const m = c.match(/[\d.]+/g).map(Number)
-    const f = (x) => {
+  const lum = (c: string) => {
+    const m = c.match(/[\d.]+/g)!.map(Number)
+    const f = (x: number) => {
       x /= 255
       return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
     }
-    return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2])
+    return 0.2126 * f(m[0]!) + 0.7152 * f(m[1]!) + 0.0722 * f(m[2]!)
   }
-  const sample = async (sel) => {
+  const sample = async (sel: string) => {
     const b = page.locator(`${sel} button`)
     await page.mouse.move(5, 800)
     await page.waitForTimeout(900)
-    const box = await b.boundingBox()
+    const box = (await b.boundingBox())!
     const shot = async () => {
       const buf = await page.screenshot({
         clip: { x: box.x + box.width - 6, y: box.y + box.height / 2, width: 1, height: 1 },
@@ -176,10 +191,10 @@ test('vivid: the pointer fill on a solid button is clearly lighter than its rest
     await page.waitForTimeout(900)
     const hoverBuf = await shot()
     await page.mouse.move(5, 800)
-    return [restBuf, hoverBuf]
+    return [restBuf, hoverBuf] as [Buffer, Buffer]
   }
   // read the pixel through a canvas in the page, so no image library is needed
-  const px = (buf) =>
+  const px = (buf: Buffer) =>
     page.evaluate(async (b64) => {
       const img = new Image()
       img.src = `data:image/png;base64,${b64}`
@@ -187,7 +202,7 @@ test('vivid: the pointer fill on a solid button is clearly lighter than its rest
       const c = document.createElement('canvas')
       c.width = 1
       c.height = 1
-      const g = c.getContext('2d')
+      const g = c.getContext('2d')!
       g.drawImage(img, 0, 0)
       const d = g.getImageData(0, 0, 1, 1).data
       return `rgb(${d[0]},${d[1]},${d[2]})`
@@ -198,10 +213,10 @@ test('vivid: the pointer fill on a solid button is clearly lighter than its rest
   expect(hover / rest).toBeGreaterThan(1.12)
   // ink on the landed fill still reads: on-solid vs the fill stays at 4.5:1
   const ink = await page.evaluate(
-    () => getComputedStyle(document.querySelector('#solid button')).color,
+    () => getComputedStyle(document.querySelector<HTMLElement>('#solid button')!).color,
   )
-  const [a, b] = [await px(vr), await px(vh)].map((c) => c.match(/\d+/g).map(Number))
-  expect(Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])).toBeGreaterThan(40) // a different, brighter ink, not a shade
+  const [a, b] = [await px(vr), await px(vh)].map((c) => c.match(/\d+/g)!.map(Number))
+  expect(Math.hypot(a![0]! - b![0]!, a![1]! - b![1]!, a![2]! - b![2]!)).toBeGreaterThan(40) // a different, brighter ink, not a shade
   const inkL = lum(ink.startsWith('rgb') ? ink : 'rgb(250,250,250)')
   expect((Math.max(inkL, hover) + 0.05) / (Math.min(inkL, hover) + 0.05)).toBeGreaterThanOrEqual(
     4.5,
@@ -211,15 +226,15 @@ test('vivid: the pointer fill on a solid button is clearly lighter than its rest
 })
 
 test('vivid on light: the hovered solid draws no rim round its fill, and its ink keeps 4.5:1 on the fill', async () => {
-  const lum = (c) => {
-    const m = c.match(/[\d.]+/g).map(Number)
-    const f = (x) => {
+  const lum = (c: string) => {
+    const m = c.match(/[\d.]+/g)!.map(Number)
+    const f = (x: number) => {
       x /= 255
       return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
     }
-    return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2])
+    return 0.2126 * f(m[0]!) + 0.7152 * f(m[1]!) + 0.0722 * f(m[2]!)
   }
-  const px = (x, y) =>
+  const px = (x: number, y: number) =>
     page.screenshot({ clip: { x, y, width: 1, height: 1 } }).then((buf) =>
       page.evaluate(async (b64) => {
         const img = new Image()
@@ -228,7 +243,7 @@ test('vivid on light: the hovered solid draws no rim round its fill, and its ink
         const c = document.createElement('canvas')
         c.width = 1
         c.height = 1
-        const g = c.getContext('2d')
+        const g = c.getContext('2d')!
         g.drawImage(img, 0, 0)
         const d = g.getImageData(0, 0, 1, 1).data
         return `rgb(${d[0]},${d[1]},${d[2]})`
@@ -237,22 +252,27 @@ test('vivid on light: the hovered solid draws no rim round its fill, and its ink
   const b = page.locator('#solid button')
   await page.mouse.move(5, 800)
   await page.waitForTimeout(900)
-  let box = await b.boundingBox()
-  const rimAt = (bx) => [bx.x + bx.width / 2, bx.y + bx.height - 1.5] // the bottom edge, under no glyph
+  let box = (await b.boundingBox())!
+  const rimAt = (bx: { x: number; y: number; width: number; height: number }): [number, number] => [
+    bx.x + bx.width / 2,
+    bx.y + bx.height - 1.5,
+  ] // the bottom edge, under no glyph
   await page.mouse.move(box.x + 4, box.y + box.height / 2)
   await page.waitForTimeout(900)
-  box = await b.boundingBox() // it lifts
+  box = (await b.boundingBox())! // it lifts
   const rim = lum(await px(...rimAt(box)))
   const fill = lum(await px(box.x + box.width - 8, box.y + box.height / 2))
   await page.mouse.move(5, 800)
   expect(
-    await b.evaluate((e) => getComputedStyle(e.querySelector('[data-part="sweep"]') ?? e).display),
+    await b.evaluate(
+      (e) => getComputedStyle(e.querySelector<HTMLElement>('[data-part="sweep"]') ?? e).display,
+    ),
   ).not.toBe('block') // no edge part drawn
   expect(rim / fill).toBeLessThan(1.6) // the bottom edge is the fill, not a bright line
   // the computed colour can be oklch(): a canvas resolves it to sRGB
   const ink = await page.evaluate(() => {
-    const g = document.createElement('canvas').getContext('2d')
-    g.fillStyle = getComputedStyle(document.querySelector('#solid button')).color
+    const g = document.createElement('canvas').getContext('2d')!
+    g.fillStyle = getComputedStyle(document.querySelector<HTMLElement>('#solid button')!).color
     g.fillRect(0, 0, 1, 1)
     const d = g.getImageData(0, 0, 1, 1).data
     return `rgb(${d[0]},${d[1]},${d[2]})`
@@ -264,8 +284,8 @@ test('vivid on light: the hovered solid draws no rim round its fill, and its ink
 test('a Kanban board cut at its box shows an edge shadow on the side with more, like a wide table', async () => {
   const look = () =>
     page.evaluate(() => {
-      const e = document.querySelector('#board [data-scope="edges"]'),
-        k = e.querySelector('[data-scope="kanban"]')
+      const e = document.querySelector<HTMLElement>('#board [data-scope="edges"]')!,
+        k = e.querySelector<HTMLElement>('[data-scope="kanban"]')!
       return {
         overflow: e.dataset.overflow ?? '',
         start: getComputedStyle(e, '::before').opacity,
@@ -284,7 +304,7 @@ test('a Kanban board cut at its box shows an edge shadow on the side with more, 
   expect((await look()).end).toBe('1')
   expect((await look()).start).toBe('0')
   await page.evaluate(() => {
-    const k = document.querySelector('#board [data-scope="kanban"]')
+    const k = document.querySelector<HTMLElement>('#board [data-scope="kanban"]')!
     k.style.scrollSnapType = 'none'
     k.scrollLeft = k.scrollWidth
   })
@@ -296,7 +316,7 @@ test('a Kanban board cut at its box shows an edge shadow on the side with more, 
   expect(far.end).toBe('0')
 })
 
-const calendarIn = (id) => `#${id} [data-scope="calendar"][data-part="root"]`
+const calendarIn = (id: string) => `#${id} [data-scope="calendar"][data-part="root"]`
 
 test("a phone timeline shows every booking's whole name, broken only between words, and scrolls with a shadow", async () => {
   await page.waitForTimeout(100) // the hours settle their width a frame after mount
@@ -311,9 +331,9 @@ test("a phone timeline shows every booking's whole name, broken only between wor
     if (!e.title) expect(e.start).toBe(true)
   }
   // "Billing walkthrough" and "Incident review: mobile-bff" are an hour or less: they show whole, not "walkth…"
-  expect(m.events.filter((e) => e.title).map((e) => e.name)).toEqual(
-    expect.arrayContaining(['Billing walkthrough', 'Design crit']),
-  )
+  expect(
+    m.events.filter((e: { title: string }) => e.title).map((e: { name: string }) => e.name),
+  ).toEqual(expect.arrayContaining(['Billing walkthrough', 'Design crit']))
 })
 
 test('a desktop timeline shows every name whole, and the now line runs under the bookings', async () => {
@@ -325,9 +345,9 @@ test('a desktop timeline shows every name whole, and the now line runs under the
   // it only scrolls when an hour had to widen for a word, and then says so with its edge shadow
   expect(m.sw > m.cw + 1 ? m.overflow : '').toBe(m.sw > m.cw + 1 ? 'end' : '')
   const z = await page.evaluate((sel) => {
-    const root = document.querySelector(sel),
-      ev = root.querySelector('[data-id="c"]'),
-      now = root.querySelector('[data-part="lane"] [data-part="now"]')
+    const root = document.querySelector<HTMLElement>(sel)!,
+      ev = root.querySelector<HTMLElement>('[data-id="c"]')!,
+      now = root.querySelector<HTMLElement>('[data-part="lane"] [data-part="now"]')!
     return { evZ: +getComputedStyle(ev).zIndex, nowZ: +getComputedStyle(now).zIndex }
   }, calendarIn('tl-desk'))
   expect(z.nowZ).toBeLessThan(z.evZ)
@@ -337,9 +357,9 @@ test('a phone week keeps all seven days at a readable width and scrolls sideways
   const sel = calendarIn('week-phone')
   await page.locator(sel).scrollIntoViewIfNeeded()
   const m = await page.evaluate((at) => {
-    const root = document.querySelector(at),
-      sc = root.querySelector('[data-view="time"] > [data-part="scroller"]')
-    const cols = [...root.querySelectorAll('[data-part="col"]')].map(
+    const root = document.querySelector<HTMLElement>(at)!,
+      sc = root.querySelector<HTMLElement>('[data-view="time"] > [data-part="scroller"]')!
+    const cols = [...root.querySelectorAll<HTMLElement>('[data-part="col"]')].map(
       (c) => c.getBoundingClientRect().width,
     )
     const titles = [
@@ -349,22 +369,22 @@ test('a phone week keeps all seven days at a readable width and scrolls sideways
       w: t.getBoundingClientRect().width,
       shown: t.getBoundingClientRect().width >= t.scrollWidth - 1,
     }))
-    const gutter = root.querySelector('[data-part="cols"] > [data-part="gutter"]')
+    const gutter = root.querySelector<HTMLElement>('[data-part="cols"] > [data-part="gutter"]')!
     const before = gutter.getBoundingClientRect().left
     sc.scrollLeft = 200
     const after = gutter.getBoundingClientRect().left
-    const head = root.querySelector('[data-part="top"]'),
+    const head = root.querySelector<HTMLElement>('[data-part="top"]')!,
       headTop = head.getBoundingClientRect().top
     sc.scrollTop += 300
     const headTop2 = head.getBoundingClientRect().top
-    const chip = root.querySelector('[data-part="allday"] [data-part="chip"]')
+    const chip = root.querySelector<HTMLElement>('[data-part="allday"] [data-part="chip"]')!
     return {
       days: cols.length,
       min: Math.min(...cols),
       sw: sc.scrollWidth,
       cw: sc.clientWidth,
       titles,
-      shadow: root.querySelector('[data-view="time"]').dataset.overflow ?? '',
+      shadow: root.querySelector<HTMLElement>('[data-view="time"]')!.dataset.overflow ?? '',
       gutterStays: Math.abs(after - before) < 1,
       headStays: Math.abs(headTop2 - headTop) < 1,
       chip: {
@@ -390,12 +410,12 @@ test('a phone week keeps all seven days at a readable width and scrolls sideways
 
 test("a phone day shows its all-day event by name, and a short event's name before its times", async () => {
   const m = await page.evaluate((sel) => {
-    const root = document.querySelector(sel)
-    const chip = root.querySelector('[data-part="allday"] [data-part="chip"]')
+    const root = document.querySelector<HTMLElement>(sel)!
+    const chip = root.querySelector<HTMLElement>('[data-part="allday"] [data-part="chip"]')!
     const standup = [...root.querySelectorAll('[data-part="event"]')].find((e) =>
       e.textContent.includes('Standup'),
     )
-    const t = standup?.querySelector('[data-part="event-title"]')
+    const t = standup?.querySelector<HTMLElement>('[data-part="event-title"]')
     return {
       chip: chip && {
         w: chip.getBoundingClientRect().width,
@@ -408,13 +428,13 @@ test("a phone day shows its all-day event by name, and a short event's name befo
   expect(m.chip.text).toBe('Jun on call')
   expect(m.chip.font).toBeGreaterThan(10)
   expect(m.chip.w).toBeGreaterThan(80)
-  expect(m.title.w).toBeGreaterThanOrEqual(m.title.need - 1) // "Standup" whole; the times give way first
+  expect(m.title!.w).toBeGreaterThanOrEqual(m.title!.need - 1) // "Standup" whole; the times give way first
 })
 
-const monthChips = (sel) =>
+const monthChips = (sel: string) =>
   page.$$eval(`${sel} [data-part="day-cell"] [data-part="chip"]`, (cs) =>
     cs.map((c) => ({
-      day: c.closest('[data-part="day-cell"]').dataset.date,
+      day: c.closest<HTMLElement>('[data-part="day-cell"]')!.dataset.date,
       text: c.textContent,
       over: c.scrollWidth > c.clientWidth + 1,
       ellipsis: getComputedStyle(c).textOverflow,
@@ -448,26 +468,26 @@ test('a month whose every day has room lets long names take a second line on eve
   const release = chips.filter((c) => c.text === 'Release 2026.11 to every region') // Saturday, Sunday and Monday
   expect(release.length).toBe(3)
   expect(new Set(release.map((c) => c.h)).size).toBe(1)
-  expect(release[0].h).toBeGreaterThan(18)
-  expect(chips.find((c) => c.text === 'Retro').h).toBe(18) // a short name stays one line
+  expect(release[0]!.h).toBeGreaterThan(18)
+  expect(chips.find((c) => c.text === 'Retro')!.h).toBe(18) // a short name stays one line
 })
 
 test('a month day fills its room before it says "+N more", and shows everything when it can', async () => {
   const days = await page.$$eval('#month [data-part="day-cell"]', (cells) =>
     cells.map((c) => {
       const box = c.getBoundingClientRect(),
-        more = c.querySelector('[data-part="more"]'),
+        more = c.querySelector<HTMLElement>('[data-part="more"]')!,
         chips = c.querySelectorAll('[data-part="chip"]').length
-      const n = +(/(\d+) events/.exec(c.querySelector('.sr').textContent)?.[1] ?? 0)
+      const n = +(/(\d+) events/.exec(c.querySelector<HTMLElement>('.sr')!.textContent)?.[1] ?? 0)
       const last = [...c.children]
         .filter((k) => !k.classList.contains('sr'))
-        .at(-1)
+        .at(-1)!
         .getBoundingClientRect()
       return {
         date: c.dataset.date,
         n,
         chips,
-        more: more ? +/\d+/.exec(more.textContent)[0] : 0,
+        more: more ? +/\d+/.exec(more.textContent)![0] : 0,
         left: box.bottom - parseFloat(getComputedStyle(c).paddingBlockEnd) - last.bottom,
       }
     }),
@@ -482,12 +502,12 @@ test('a month day fills its room before it says "+N more", and shows everything 
 
 test('the now line never peeks out beside the events over it: no tick at the edge, no dash past the last lane', async () => {
   const m = await page.evaluate((sel) => {
-    const root = document.querySelector(sel)
-    return [...root.querySelectorAll('[data-part="col"]')].flatMap((col) =>
+    const root = document.querySelector<HTMLElement>(sel)!
+    return [...root.querySelectorAll<HTMLElement>('[data-part="col"]')].flatMap((col) =>
       [...col.querySelectorAll(':scope > [data-part="now"]')].map((now) => {
         const r = now.getBoundingClientRect(),
           dot = getComputedStyle(now, '::before').content
-        const hit = [...col.querySelectorAll('[data-part="event"]')]
+        const hit = [...col.querySelectorAll<HTMLElement>('[data-part="event"]')]
           .filter((e) => {
             const b = e.getBoundingClientRect()
             return (
@@ -516,10 +536,10 @@ test('the now line never peeks out beside the events over it: no tick at the edg
 
 test('the month shows all its weeks in the height it has, with "+N more" for days that hold more', async () => {
   const m = await page.evaluate((sel) => {
-    const root = document.querySelector(sel),
-      sc = root.querySelector('[data-part="main"] [data-part="scroller"]')
+    const root = document.querySelector<HTMLElement>(sel)!,
+      sc = root.querySelector<HTMLElement>('[data-part="main"] [data-part="scroller"]')!
     const cells = [...root.querySelectorAll('[data-part="day-cell"]')]
-    const last = cells[cells.length - 1].getBoundingClientRect(),
+    const last = cells[cells.length - 1]!.getBoundingClientRect(),
       box = sc.getBoundingClientRect()
     const clipped = cells.filter((c) =>
       [...c.children].some(
@@ -544,9 +564,9 @@ test('the month shows all its weeks in the height it has, with "+N more" for day
 
 test('a calendar no parent gives a height bounds itself, and opens the week at its working hours', async () => {
   const m = await page.evaluate((sel) => {
-    const root = document.querySelector(sel),
-      sc = root.querySelector('[data-part="scroller"]'),
-      cols = root.querySelector('[data-part="cols"]')
+    const root = document.querySelector<HTMLElement>(sel)!,
+      sc = root.querySelector<HTMLElement>('[data-part="scroller"]')!,
+      cols = root.querySelector<HTMLElement>('[data-part="cols"]')!
     return {
       h: root.getBoundingClientRect().height,
       vh: innerHeight,
@@ -570,36 +590,19 @@ test('a textarea opens at its rows: rows=5 is five lines tall, the default three
         parseFloat(getComputedStyle(t).paddingTop) + parseFloat(getComputedStyle(t).paddingBottom),
     })),
   )
-  expect(Math.round((h[0].h - h[0].pad) / h[0].line)).toBe(5)
-  expect(Math.round((h[1].h - h[1].pad) / h[1].line)).toBe(3)
+  expect(Math.round((h[0]!.h - h[0]!.pad) / h[0]!.line)).toBe(5)
+  expect(Math.round((h[1]!.h - h[1]!.pad) / h[1]!.line)).toBe(3)
 })
 
-test('vivid: a small button lifts on a small offset, not the full bar under a 24px copy icon', async () => {
-  const off = await page.evaluate(() => {
-    const read = (el) => {
-      const i = document.createElement('i')
-      i.style.cssText = 'position:absolute;inline-size:var(--warp-offset)'
-      el.append(i)
-      const w = i.getBoundingClientRect().width
-      i.remove()
-      return w
-    }
-    return {
-      copy: read(document.querySelector('#code-vivid [data-act="copy"]')),
-      solid: read(document.querySelector('#solid button')),
-    }
-  })
-  expect(off.solid).toBeGreaterThan(0)
-  expect(off.copy).toBeLessThanOrEqual(off.solid / 2)
-})
+registerSmallButtonOffset(() => page)
 
 test("a bell's count sits on the glyph's corner, a compact badge that leaves the bell itself clear, at every density", async () => {
   const bells = await page.$$eval('#bells [data-scope="bell"]', (bs) =>
     bs.map((b) => {
-      const g = b.querySelector('[data-scope="button"] svg').getBoundingClientRect()
-      const c = b.querySelector('[data-scope="badge"]').getBoundingClientRect()
+      const g = b.querySelector<HTMLElement>('[data-scope="button"] svg')!.getBoundingClientRect()
+      const c = b.querySelector<HTMLElement>('[data-scope="badge"]')!.getBoundingClientRect()
       return {
-        text: b.querySelector('[data-scope="badge"]').textContent,
+        text: b.querySelector<HTMLElement>('[data-scope="badge"]')!.textContent,
         glyph: g.width,
         h: c.height,
         w: c.width,
@@ -635,15 +638,15 @@ test('a webhook URL wraps after a slash or before a dot, never inside a word, in
           at = 0
         const walk = document.createTreeWalker(code, NodeFilter.SHOW_TEXT)
         for (let n = walk.nextNode(); n; n = walk.nextNode()) {
-          for (let i = 0; i < n.length; i++, at++) {
+          for (let i = 0; i < (n as Text).length; i++, at++) {
             r.setStart(n, i)
             r.setEnd(n, i + 1)
-            const y = Math.round(r.getClientRects()[0]?.top ?? top)
+            const y = Math.round((r.getClientRects()[0]?.top ?? top) as number)
             if (top !== undefined && y > top + 2) breaks.push(at)
             top = y
           }
         }
-        const box = code.parentElement.getBoundingClientRect(),
+        const box = code.parentElement!.getBoundingClientRect(),
           own = code.getBoundingClientRect()
         return {
           text,
@@ -658,7 +661,7 @@ test('a webhook URL wraps after a slash or before a dot, never inside a word, in
   for (const { text, breaks } of lines)
     for (const [before, after] of breaks) {
       expect(
-        /[/&=]$/.test(before) || /^[.?#]/.test(after),
+        /[/&=]$/.test(before!) || /^[.?#]/.test(after!),
         `${text}: broke "${before}|${after}"`,
       ).toBe(true)
     }
@@ -667,12 +670,14 @@ test('a webhook URL wraps after a slash or before a dot, never inside a word, in
 test('an inline Modal, Drawer, Popover and Tooltip draw their surface open in their box, in flow, with no top layer', async () => {
   const seen = await page.evaluate(() =>
     ['in-modal', 'in-drawer', 'in-popover', 'in-tooltip'].map((id) => {
-      const box = document.getElementById(id)
-      const el = box.querySelector('[data-presentation="inline"]')
+      const box = document.getElementById(id)!
+      const el = box.querySelector<HTMLElement>('[data-presentation="inline"]')!
       const s = getComputedStyle(el),
         r = el.getBoundingClientRect(),
         b = box.getBoundingClientRect()
-      const trigger = box.querySelector(':scope > button, :scope > [data-scope="button"]')
+      const trigger = box.querySelector<HTMLElement>(
+        ':scope > button, :scope > [data-scope="button"]',
+      )!
       return {
         id,
         position: s.position,
@@ -704,8 +709,8 @@ test('an inline Modal, Drawer, Popover and Tooltip draw their surface open in th
   // the drawer keeps its side's shape: it sits at the box's end
   const end = await page.evaluate(() =>
     Math.abs(
-      document.querySelector('#in-drawer dialog').getBoundingClientRect().right -
-        document.getElementById('in-drawer').getBoundingClientRect().right,
+      document.querySelector<HTMLElement>('#in-drawer dialog')!.getBoundingClientRect().right -
+        document.getElementById('in-drawer')!.getBoundingClientRect().right,
     ),
   )
   expect(end).toBeLessThan(1)
@@ -722,13 +727,13 @@ test('a bubble toolbar takes the press: no closed tip lies over its tools, and i
   expect(laid).toEqual([])
   const select = () =>
     page.evaluate(() => {
-      const p = document.querySelector('#rte-bubble [contenteditable] p'),
-        t = p.firstChild,
+      const p = document.querySelector<HTMLElement>('#rte-bubble [contenteditable] p')!,
+        t = p.firstChild!,
         r = document.createRange()
-      p.closest('[contenteditable]').focus()
+      p.closest<HTMLElement>('[contenteditable]')!.focus()
       r.setStart(t, 0)
       r.setEnd(t, 6)
-      const s = getSelection()
+      const s = getSelection()!
       s.removeAllRanges()
       s.addRange(r)
     })
@@ -736,8 +741,8 @@ test('a bubble toolbar takes the press: no closed tip lies over its tools, and i
   await page.waitForTimeout(250)
   const gap = () =>
     page.evaluate(() => {
-      const bar = document.querySelector('#rte-bubble [role="toolbar"]'),
-        r = getSelection().getRangeAt(0).getBoundingClientRect(),
+      const bar = document.querySelector<HTMLElement>('#rte-bubble [role="toolbar"]')!,
+        r = getSelection()!.getRangeAt(0).getBoundingClientRect(),
         b = bar.getBoundingClientRect()
       return { open: bar.matches(':popover-open'), above: r.top - b.bottom, left: b.left - r.left }
     })
@@ -751,7 +756,7 @@ test('a bubble toolbar takes the press: no closed tip lies over its tools, and i
     return b.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2))
   })
   expect(hit).toBe(true)
-  const r = await bold.boundingBox()
+  const r = (await bold.boundingBox())!
   await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2)
   await page.waitForTimeout(100)
   expect(await bold.getAttribute('aria-pressed')).toBe('true')
@@ -770,9 +775,9 @@ test('the pagination bar keeps "Go to" and its box on one line, beside the pages
     '#pager [data-scope="pagination"], #pager-wide [data-scope="pagination"], #pager-mid [data-scope="pagination"]',
     (navs) =>
       navs.map((n) => {
-        const label = n.querySelector('label[for$="-go"]').getBoundingClientRect(),
-          input = n.querySelector('[data-part="jump"]').getBoundingClientRect()
-        const pages = n.querySelector('ol').getBoundingClientRect()
+        const label = n.querySelector<HTMLElement>('label[for$="-go"]')!.getBoundingClientRect(),
+          input = n.querySelector<HTMLElement>('[data-part="jump"]')!.getBoundingClientRect()
+        const pages = n.querySelector<HTMLElement>('ol')!.getBoundingClientRect()
         return {
           pair: Math.abs((label.top + label.bottom) / 2 - (input.top + input.bottom) / 2),
           besidePages:
@@ -785,6 +790,6 @@ test('the pagination bar keeps "Go to" and its box on one line, beside the pages
     expect(b.pair).toBeLessThan(4)
     expect(b.inputAfterLabel).toBe(true)
   }
-  expect(m[1].besidePages).toBe(true) // 760px holds the whole bar on one line
-  expect(m[2].besidePages).toBe(true) // and so does 598px, the docs stage, once "Rows per page" says "Rows"
+  expect(m[1]!.besidePages).toBe(true) // 760px holds the whole bar on one line
+  expect(m[2]!.besidePages).toBe(true) // and so does 598px, the docs stage, once "Rows per page" says "Rows"
 })
