@@ -1,4 +1,7 @@
-import type { IntegrityStats, IntegrityEvent } from '@weft-js/warp'
+import type {
+  IntegrityStats,
+  IntegrityEvent,
+} from '@weft-js/warp'
 
 export const INTEGRITY_STATS: IntegrityStats = {
   sent: 42,
@@ -9,7 +12,26 @@ export const INTEGRITY_STATS: IntegrityStats = {
 }
 
 export const INTEGRITY_EVENTS: IntegrityEvent[] = [
-  { id: 'e3', seq: 42, kind: 'status', route: 'Jun → you', lag: 31 },
-  { id: 'e2', seq: 41, kind: 'title', route: 'Jun → you', note: 'duplicate, ignored', lag: 54 },
-  { id: 'e1', seq: 41, kind: 'title', route: 'Jun → you', lag: 28 },
+  {
+    id: 'e3',
+    seq: 42,
+    kind: 'status',
+    route: 'Jun → you',
+    lag: 31,
+  },
+  {
+    id: 'e2',
+    seq: 41,
+    kind: 'title',
+    route: 'Jun → you',
+    note: 'duplicate, ignored',
+    lag: 54,
+  },
+  {
+    id: 'e1',
+    seq: 41,
+    kind: 'title',
+    route: 'Jun → you',
+    lag: 28,
+  },
 ]

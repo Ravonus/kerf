@@ -1,4 +1,8 @@
-export type Status = 'Live' | 'Building' | 'Failed' | 'Paused'
+export type Status =
+  | 'Live'
+  | 'Building'
+  | 'Failed'
+  | 'Paused'
 
 export const PROJECTS: {
   id: string
@@ -134,7 +138,10 @@ export const PROJECTS: {
   },
 ]
 
-export const TONE_OF: Record<Status, 'positive' | 'info' | 'critical' | 'neutral'> = {
+export const TONE_OF: Record<
+  Status,
+  'positive' | 'info' | 'critical' | 'neutral'
+> = {
   Live: 'positive',
   Building: 'info',
   Failed: 'critical',

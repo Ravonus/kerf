@@ -1,12 +1,42 @@
-import type { Version, ShareMember, ShareContact } from '@weft-js/warp'
-import { MARA, JUN, LENA, PRIYA, TOMAS, SAM } from './peers'
+import type {
+  Version,
+  ShareMember,
+  ShareContact,
+} from '@weft-js/warp'
+import {
+  MARA,
+  JUN,
+  LENA,
+  PRIYA,
+  TOMAS,
+  SAM,
+} from './peers'
 
 export const VERSIONS: Version[] = [
-  { id: 'v5', title: 'Current', meta: 'Jun, Lena, you · now', current: true },
-  { id: 'v4', title: 'After the d-4819 review', meta: 'Jun · 10:02', named: true },
+  {
+    id: 'v5',
+    title: 'Current',
+    meta: 'Jun, Lena, you · now',
+    current: true,
+  },
+  {
+    id: 'v4',
+    title: 'After the d-4819 review',
+    meta: 'Jun · 10:02',
+    named: true,
+  },
   { id: 'v3', title: 'Autosave', meta: 'You · 09:41' },
-  { id: 'v2', title: 'Autosave', meta: 'Lena · Yesterday' },
-  { id: 'v1', title: 'First draft', meta: 'Sam · Mon', named: true },
+  {
+    id: 'v2',
+    title: 'Autosave',
+    meta: 'Lena · Yesterday',
+  },
+  {
+    id: 'v1',
+    title: 'First draft',
+    meta: 'Sam · Mon',
+    named: true,
+  },
 ]
 
 export const SHARE_MEMBERS: ShareMember[] = [

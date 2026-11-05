@@ -6,7 +6,12 @@ export const BUSY_TODAY = '2026-11-04'
 
 export const BUSY_NOW = '2026-11-04T11:40'
 
-export const CALENDARS = ['Releases', 'On-call', 'Team', 'Customers'].map((name, i) => ({
+export const CALENDARS = [
+  'Releases',
+  'On-call',
+  'Team',
+  'Customers',
+].map((name, i) => ({
   id: i + 1,
   name,
 }))

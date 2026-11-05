@@ -7,7 +7,17 @@ export const ON_CALL_HOURS: Availability = {
     ranges: day === 5 ? [[540, 840]] : [[540, 1020]],
   })),
   overrides: [
-    { id: 'o1', date: '2026-12-24', ranges: null, note: 'Christmas Eve' },
-    { id: 'o2', date: '2026-11-13', ranges: [[540, 780]], note: 'Half day' },
+    {
+      id: 'o1',
+      date: '2026-12-24',
+      ranges: null,
+      note: 'Christmas Eve',
+    },
+    {
+      id: 'o2',
+      date: '2026-11-13',
+      ranges: [[540, 780]],
+      note: 'Half day',
+    },
   ],
 }

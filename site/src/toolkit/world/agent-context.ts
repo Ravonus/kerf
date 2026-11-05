@@ -1,13 +1,25 @@
-import type { PromptSuggestion, ContextUse } from '@weft-js/warp'
+import type {
+  PromptSuggestion,
+  ContextUse,
+} from '@weft-js/warp'
 import { PEOPLE } from './people'
 
 export const COMMANDS: PromptSuggestion[] = [
   { value: '/logs', description: "Read a deploy's log" },
-  { value: '/rollback', description: 'Go back to an earlier deploy' },
-  { value: '/status', description: "Show every project's status" },
+  {
+    value: '/rollback',
+    description: 'Go back to an earlier deploy',
+  },
+  {
+    value: '/status',
+    description: "Show every project's status",
+  },
 ]
 
-export const MENTIONS: PromptSuggestion[] = PEOPLE.slice(0, 4).map((p) => ({
+export const MENTIONS: PromptSuggestion[] = PEOPLE.slice(
+  0,
+  4,
+).map((p) => ({
   value: `@${p.id}`,
   description: p.name,
 }))

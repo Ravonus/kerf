@@ -57,8 +57,10 @@ export { PREF_LOCKED } from './world/preferences'
 export { CALL } from './world/calls'
 export { CALL_SELF } from './world/calls'
 export { CALL_DEVICES } from './world/calls'
-export { REQUESTS_BY_REGION } from './world/traffic-charts'
-export { COST_BY_SERVICE } from './world/traffic-charts'
+export {
+  REQUESTS_BY_REGION,
+  COST_BY_SERVICE,
+} from './world/traffic-charts'
 export { DEPLOYS_BY_TEAM } from './world/deploy-charts'
 export { PLAN_MIX } from './world/deploy-charts'
 export { REGION_SLICES } from './world/deploy-charts'

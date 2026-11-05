@@ -12,36 +12,80 @@ export const PREF_GROUPS: PrefGroup[] = [
     id: 'deploys',
     label: 'Deploys',
     events: [
-      { id: 'failed', label: 'Failed deploys', hint: 'A deploy you own fails a check' },
-      { id: 'live', label: 'Deploys gone live', hint: 'On projects you watch' },
-      { id: 'approve', label: 'Approvals', hint: 'A release needs your yes' },
+      {
+        id: 'failed',
+        label: 'Failed deploys',
+        hint: 'A deploy you own fails a check',
+      },
+      {
+        id: 'live',
+        label: 'Deploys gone live',
+        hint: 'On projects you watch',
+      },
+      {
+        id: 'approve',
+        label: 'Approvals',
+        hint: 'A release needs your yes',
+      },
     ],
   },
   {
     id: 'team',
     label: 'Team',
     events: [
-      { id: 'mention', label: 'Mentions', hint: 'Someone @-mentions you' },
-      { id: 'invite', label: 'Invitations', hint: 'New events and changes' },
+      {
+        id: 'mention',
+        label: 'Mentions',
+        hint: 'Someone @-mentions you',
+      },
+      {
+        id: 'invite',
+        label: 'Invitations',
+        hint: 'New events and changes',
+      },
     ],
   },
   {
     id: 'account',
     label: 'Account',
     events: [
-      { id: 'security', label: 'Security alerts', hint: 'New sign-in or API key', instant: true },
-      { id: 'billing', label: 'Billing', hint: 'Invoices and failed payments' },
+      {
+        id: 'security',
+        label: 'Security alerts',
+        hint: 'New sign-in or API key',
+        instant: true,
+      },
+      {
+        id: 'billing',
+        label: 'Billing',
+        hint: 'Invoices and failed payments',
+      },
     ],
   },
 ]
 
 export const PREFS = {
-  failed: { inapp: true, email: true, push: true, sms: true },
+  failed: {
+    inapp: true,
+    email: true,
+    push: true,
+    sms: true,
+  },
   live: { inapp: true, email: false, push: false },
   approve: { inapp: true, email: true, push: true },
-  mention: { inapp: true, email: true, push: true, sms: false },
+  mention: {
+    inapp: true,
+    email: true,
+    push: true,
+    sms: false,
+  },
   invite: { inapp: true, email: true },
-  security: { inapp: true, email: true, push: true, sms: true },
+  security: {
+    inapp: true,
+    email: true,
+    push: true,
+    sms: true,
+  },
   billing: { inapp: false, email: true },
 }
 
