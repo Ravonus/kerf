@@ -1,12 +1,11 @@
-import { XIcon } from '@weft-js/warp-icons'
-import { flush, onCleanup, state, untrack } from '@weft-js/core'
+import { onCleanup, state, untrack } from '@weft-js/core'
 import { formReset } from '@weft-js/warp-core'
 import { bindable, type Bindable } from './bind'
-import { Button } from './Button'
-import { Segmented } from './Choice'
 import { JsonEditor } from './CodeInput'
 import { Field, type FieldShell } from './Field'
 import { use } from '@weft-js/warp-core/weft'
+import { KeyValueRows, formatSwitcher } from './KeyValueEditor/rows'
+import { keyValueActions } from './KeyValueEditor/actions'
 import '@weft-js/warp-core/styles/rich/body.css'
 import '@weft-js/warp-core/styles/rich/key-value.css'
 
@@ -50,82 +49,34 @@ export function KeyValueEditor({
     [],
     () => onValueChange,
   )
-  let serial = 0
-  const ids = state(untrack(() => held.value.map(() => ++serial)))
+  const refs: {
+    serial: number
+    body?: HTMLElement | undefined
+    timer?: ReturnType<typeof setTimeout> | undefined
+  } = { serial: 0 }
+  const ids = state(untrack(() => held.value.map(() => ++refs.serial)))
   const mode = state<'form' | 'json'>('form')
   const text = state('')
-  let body: HTMLElement | undefined
-  let timer: ReturnType<typeof setTimeout> | undefined
-  onCleanup(() => clearTimeout(timer))
-  const dup = (rows: KeyValue[], at: number) =>
-    !!rows[at]!.key && rows.findIndex((r) => r.key === rows[at]!.key) !== at
-  const hasDup = () => held.value.some((_, at) => dup(held.value, at))
-  const edit = (at: number, part: 'key' | 'value', v: string) =>
-    held.set(
-      held.value.map((r, n) => (n === at ? { ...r, [part]: v } : r)),
-      'keyboard',
-    )
-  const add = () => {
-    held.set([...held.value, { key: '', value: '' }], 'pointer')
-    ids.value = [...ids.value, ++serial]
-    flush()
-    body?.querySelector<HTMLElement>('tbody tr:last-child input')?.focus()
-  }
-  const remove = (at: number) => {
-    held.set(
-      held.value.filter((_, n) => n !== at),
-      'pointer',
-    )
-    ids.value = ids.value.filter((_, n) => n !== at)
-    flush()
-    const left = body?.querySelectorAll<HTMLElement>('[data-part="remove"]')
-    ;(
-      left?.[Math.min(at, (left?.length ?? 1) - 1)] ??
-      body?.querySelector<HTMLElement>('[data-part="add"]')
-    )?.focus()
-  }
-  const flipMode = (m: 'form' | 'json') => {
-    if (m === 'json') text.value = toJson(held.value)
-    mode.value = m
-  }
-  const fromJson = (v: string) => {
-    text.value = v
-    clearTimeout(timer)
-    timer = setTimeout(() => {
-      try {
-        const o = JSON.parse(v)
-        if (!o || typeof o !== 'object' || Array.isArray(o)) return
-        const rows = Object.entries(o).map(([key, val]) => ({
-          key,
-          value: typeof val === 'string' ? val : JSON.stringify(val),
-        }))
-        held.set(rows, 'keyboard')
-        ids.value = rows.map(() => ++serial)
-      } catch {
-        /* the editor shows the error; the last good value stands */
-      }
-    }, 250)
-  }
-  const switcher = untrack(() => json) ? (
-    <Segmented
-      label={`${rest.label} format`}
-      size="sm"
-      value={mode.value}
-      options={[
-        { value: 'form', label: 'Form' },
-        { value: 'json', label: 'JSON' },
-      ]}
-      onChange={(m) => flipMode(m)}
-    />
-  ) : undefined
+  onCleanup(() => clearTimeout(refs.timer))
+  const { dup, hasDup, edit, add, remove, flipMode, fromJson } = keyValueActions(
+    held,
+    ids,
+    mode,
+    text,
+    refs,
+    toJson,
+  )
+  const switcher = untrack(() => json)
+    ? formatSwitcher(() => rest.label, mode, flipMode)
+    : undefined
   let root: HTMLDivElement | undefined
   use(
     formReset,
     () => root,
     () => () => {
-      clearTimeout(timer)
+      clearTimeout(refs.timer)
       held.reset()
-      ids.value = held.value.map(() => ++serial)
+      ids.value = held.value.map(() => ++refs.serial)
       text.value = toJson(held.value)
     },
   )
@@ -142,57 +93,17 @@ export function KeyValueEditor({
           hint={hasDup() ? 'That key is already here: the last one wins.' : hint}
           attrs={{ 'data-multiline': '' }}
           control={() => (
-            <div ref={(n) => (body = n)}>
-              <table>
-                <thead>
-                  <tr>
-                    <th scope="col">{keyLabel}</th>
-                    <th scope="col">{valueLabel}</th>
-                    <th scope="col">
-                      <span data-part="sr-only">Remove</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ids.value.map((rowId, at) => (
-                    <tr key={rowId}>
-                      <td>
-                        <input
-                          aria-label={`${keyLabel}, row ${at + 1}`}
-                          value={held.value[at]?.key ?? ''}
-                          data-duplicate={held.value[at] && dup(held.value, at) ? '' : undefined}
-                          onInput={(e: Event) =>
-                            edit(at, 'key', (e.currentTarget as HTMLInputElement).value)
-                          }
-                        />
-                      </td>
-                      <td>
-                        <input
-                          aria-label={`${valueLabel}, row ${at + 1}`}
-                          value={held.value[at]?.value ?? ''}
-                          onInput={(e: Event) =>
-                            edit(at, 'value', (e.currentTarget as HTMLInputElement).value)
-                          }
-                        />
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          data-part="remove"
-                          aria-label={`Remove row ${at + 1}`}
-                          onClick={() => remove(at)}
-                        >
-                          <XIcon />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <Button emphasis="ghost" tone="neutral" size="sm" data-part="add" onClick={add}>
-                Add row
-              </Button>
-            </div>
+            <KeyValueRows
+              setBody={(n) => (refs.body = n)}
+              keyLabel={keyLabel}
+              valueLabel={valueLabel}
+              ids={ids}
+              held={held}
+              dup={dup}
+              edit={edit}
+              add={add}
+              remove={remove}
+            />
           )}
         />
       )}
