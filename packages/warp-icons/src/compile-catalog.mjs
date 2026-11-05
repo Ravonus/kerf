@@ -22,7 +22,21 @@ export const list = () => [
 
 /** What the pack costs if a page takes it: every icon in one tier, brotli. */
 export function packCost() {
-  const code = readFileSync(new URL('./gen/all.tsx', import.meta.url), 'utf8')
+  const entry = readFileSync(new URL('./gen/all.tsx', import.meta.url), 'utf8')
+  const modules = [...entry.matchAll(/^export \* from '(\.\/all-[^']+)'$/gm)]
+  const header = entry
+    .slice(0, entry.indexOf('export * from'))
+    .replace("import '../svg'", "import { icon } from '../svg'")
+  const code =
+    header +
+    modules
+      .map(([, path]) =>
+        readFileSync(new URL(`./gen/${path.slice(2)}.tsx`, import.meta.url), 'utf8').replace(
+          /^.*\nimport \{ icon \} from '\.\.\/svg'\n\n/,
+          '',
+        ),
+      )
+      .join('')
   return brotliCompressSync(Buffer.from(code), { params: { [constants.BROTLI_PARAM_QUALITY]: 5 } })
     .length
 }

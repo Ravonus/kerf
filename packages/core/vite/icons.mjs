@@ -31,7 +31,10 @@ function iconLoader() {
     })())
   return {
     load,
-    setConfig: (c) => (config = c),
+    setConfig(c) {
+      config = c
+      loading = undefined
+    },
     get config() {
       return config
     },
@@ -66,26 +69,32 @@ export function icons() {
       enforce: 'pre',
       configResolved(c) {
         state.setConfig(c)
+        drawings.clear()
       },
       transform: {
         filter: {
           id: /\.[jt]sx?(\?|$)/,
-          code: /@weft-js\/(warp-icons|warp)|\/\*#__PURE__\*\/ icon\(|export default pack/,
+          code: /@weft-js\/(warp-icons|warp)|\/\*#__PURE__\*\/ icon\(|export default pack|export \* from '\.\/all-/,
         },
         async handler(code, id) {
+          const path = id.replace(/\?.*$/, '').replaceAll('\\', '/')
+          const generated = /(?:^|\/)warp-icons\/src\/gen\/(index|all(?:-[a-z0-9-]+)?)\.tsx$/.exec(
+            path,
+          )
           // a build reads the pack as a namespace (rewrite), and this default would keep every icon alive
-          if (/icons\/src\/gen\/index\.tsx/.test(id))
+          if (generated?.[1] === 'index')
             return state.config.command === 'build' ? "export * from './all'\n" : null
-          if (/icons\/src\/gen\/all\.tsx/.test(id)) {
+          if (generated?.[1].startsWith('all')) {
             if (state.config.command !== 'build') return null
             const p = await load(this, id)
             if (!p) return null
             // A module per icon, because a module goes in one chunk: as one file, every icon any page uses is on every page.
             const svg = JSON.stringify(join(dirname(id.replace(/\?.*$/, '')), '../svg.tsx'))
             const trimmed = p.trimTiers(code, p.stops)
-            const tiers = trimmed.includes("'../tiers.css'")
-              ? `import ${JSON.stringify(join(dirname(id.replace(/\?.*$/, '')), '../tiers.css'))}\n`
-              : ''
+            const tiers =
+              p.stops.size !== 1
+                ? `import ${JSON.stringify(join(dirname(id.replace(/\?.*$/, '')), '../tiers.css'))}\n`
+                : ''
             return trimmed
               .replace(
                 /^export const (\w+) = (\/\*#__PURE__\*\/ icon\(.*)$/gm,
