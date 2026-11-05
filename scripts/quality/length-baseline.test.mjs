@@ -3,7 +3,6 @@ import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
 import {
   copyFileSync,
-  cpSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -13,7 +12,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { compareLengths } from './length-baseline.mjs'
 import { clippyProblems, lintProblems } from './length-diagnostics.mjs'
 import { fileLimit, lineCount } from './length-metrics.mjs'
@@ -49,27 +48,29 @@ await test('new and worsened findings fail, while removal and shrinkage pass', (
   assert.match(compareLengths(entry(file, 450), {}, base).join('\n'), /new length offender/)
 })
 
-await test('package folder check rejects a mismatched name', () =>
-  temp((dir) => {
-    cpSync(join(root, 'scripts'), join(dir, 'scripts'), { recursive: true })
-    mkdirSync(join(dir, 'packages/core'), { recursive: true })
-    mkdirSync(join(dir, 'evals'))
-    const manifest = join(dir, 'packages/core/package.json')
+await test('package folder check rejects a mismatched name', () => {
+  const dir = mkdtempSync(join(root, 'packages/folder-check-'))
+  try {
+    const manifest = join(dir, 'package.json')
+    const env = { ...process.env }
+    delete env.NODE_TEST_CONTEXT
     const check = () =>
       spawnSync(process.execPath, ['scripts/check.mjs', '--only=package-folders'], {
-        cwd: dir,
+        cwd: root,
+        env,
         encoding: 'utf8',
       })
-    writeFileSync(manifest, JSON.stringify({ name: '@weft-js/core' }))
-    assert.equal(check().status, 0)
+    writeFileSync(manifest, JSON.stringify({ name: `@weft-js/${basename(dir)}` }))
+    const checked = check()
+    assert.equal(checked.status, 0, checked.stdout + checked.stderr)
     writeFileSync(manifest, JSON.stringify({ name: '@weft-js/wrong' }))
     const result = check()
     assert.equal(result.status, 1)
-    assert.match(
-      result.stdout,
-      /packages\/core: package name @weft-js\/wrong requires packages\/wrong/,
-    )
-  }))
+    assert.ok(result.stdout.includes(`packages/${basename(dir)}: package name @weft-js/wrong`))
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
 
 await test('renamed offenders retain their trusted limit', () => {
   const old = ['file:packages', 'weft', 'src/a.ts'].join('/')

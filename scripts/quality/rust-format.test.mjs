@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, copyFileSync } from 'node:fs'
+import {
+  cpSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+  copyFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -17,6 +25,7 @@ function fixture(t) {
   t.after(() => rmSync(dir, { recursive: true, force: true }))
   mkdirSync(join(dir, 'scripts/quality'), { recursive: true })
   copyFileSync(source, join(dir, 'scripts/quality/rust-format.mjs'))
+  cpSync(join(dirname(source), '..', 'lib'), join(dir, 'scripts/lib'), { recursive: true })
   writeFileSync(join(dir, 'rustfmt.toml'), 'max_width = 100\n')
   assert.equal(command(dir, 'git', ['init', '-q']).status, 0)
   return dir
