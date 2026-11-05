@@ -92,7 +92,7 @@ fn rest_props_stay_live() {
     // on an element: a plain copy, read by the element's one spread binding (no view, no merged object)
     let (code, _) = run("export function A({ a, ...rest }) { return <div {...rest}>{a}</div> }");
     assert!(
-        code.contains(r#"import { restOf as _$restOf } from "@weft-js/core""#),
+        code.contains(r#"import { restOf as _$restOf } from "@weft-js/core/internal""#),
         "{code}"
     );
     assert!(

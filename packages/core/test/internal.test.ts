@@ -1,5 +1,7 @@
 import * as internal from '@weft-js/core/internal'
 import { collect, createRoot, flush, state } from '@weft-js/core'
+import * as root from '../src/full'
+import manifest from '../package.json'
 import * as graph from '../src/index/graph'
 import { Box } from '../src/index/state'
 
@@ -27,7 +29,7 @@ test('internal bindings and public state share tracking and disposal', () => {
   const dispose = createRoot((dispose) => {
     internal.hole(() => {
       expect(internal.listener).toBe(graph.listener)
-      expect(internal.listener).not.toBeNull()
+      expect(internal.listener).toBeTruthy()
       return count.value
     }, (value) => seen.push(value))
     return dispose
@@ -42,4 +44,17 @@ test('internal bindings and public state share tracking and disposal', () => {
   count.value = 3
   flush()
   expect(seen).toEqual([1, 2])
+})
+
+test('the published root excludes compiler and runtime internals', () => {
+  expect(manifest.exports['.']).toBe('./src/full.ts')
+  expect(manifest.exports['./internal']).toBe('./src/internal.ts')
+  for (const name of [...graphNames, 'Box', 'collecting', 'hole', 'localProps', 'restOf']) {
+    expect(name in root, name).toBe(false)
+    expect(name in internal, name).toBe(true)
+  }
+  expect(root.memo).toBeTypeOf('function')
+  const box = root.state({ value: 1 })
+  expect(box).toBeInstanceOf(internal.Box)
+  expect(box.get('value')).toBe(1)
 })
