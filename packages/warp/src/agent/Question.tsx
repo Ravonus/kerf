@@ -35,7 +35,7 @@ export function Question({ question, onAnswer, quiet }: QuestionProps) {
   const submit = questionSubmit(
     { picks, free, other },
     () => question,
-    () => onAnswer,
+    (answer) => onAnswer?.(answer),
   )
   // one build per phase: a list around this reads its nodes again as siblings arrive, and picks must survive that
   const done = derived(() => answered.value !== undefined)
@@ -116,12 +116,12 @@ function questionToggle(picks: State<string[]>, question: () => AgentQuestion) {
 function questionSubmit(
   { picks, free, other }: { picks: State<string[]>; free: State<string>; other: string },
   question: () => AgentQuestion,
-  onAnswer: () => QuestionProps['onAnswer'],
+  onAnswer: NonNullable<QuestionProps['onAnswer']>,
 ) {
   return (e: Event) => {
     e.preventDefault()
     const chosen = picks.value.map((p) => (p === other ? free.value.trim() : p)).filter(Boolean)
-    if (chosen.length) onAnswer()?.(question().multiple ? chosen : chosen[0]!)
+    if (chosen.length) onAnswer(question().multiple ? chosen : chosen[0]!)
   }
 }
 

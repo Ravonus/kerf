@@ -71,7 +71,7 @@ export function Button({
   const canLoad = derived(() => loading !== undefined)
   const glyph = derived(() => icon)
   // a loading or aria-disabled button swallows presses (components.html guard())
-  const press = (e: MouseEvent) => pressButton(e, onClick)
+  const press = (e: MouseEvent) => pressButton(e, (event) => onClick?.(event))
   const content = () => (
     <>
       {glyph.value && <Icon name={glyph.value} />}

@@ -14,7 +14,7 @@ export type TabOption<V extends string> = {
 function tabKeys<V extends string>(
   options: () => TabOption<V>[],
   value: () => V,
-  onChange: () => (v: V) => void,
+  onChange: (v: V) => void,
 ) {
   return (e: KeyboardEvent) => {
     const tabs = options().filter((o) => !o.disabled)
@@ -23,7 +23,7 @@ function tabKeys<V extends string>(
     const to = nextIndex(e.key, at, tabs.length, { rtl })
     if (to < 0) return
     e.preventDefault()
-    onChange()(tabs[to]!.value)
+    onChange(tabs[to]!.value)
     ;(e.currentTarget as HTMLElement)
       .querySelectorAll<HTMLElement>('[role="tab"]') // oxlint-disable-next-line no-unexpected-multiline -- computed member in this chain
       [options().findIndex((o) => o.value === tabs[to]!.value)]?.focus() // by position: a hydrated server id isn't this side's
@@ -74,7 +74,7 @@ export function Tabs<V extends string>({
   const onKey = tabKeys(
     () => options,
     () => value,
-    () => onChange,
+    (next) => onChange(next),
   )
   const selected = () => options.findIndex((o) => o.value === value)
   return (

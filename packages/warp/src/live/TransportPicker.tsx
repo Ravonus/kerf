@@ -198,16 +198,16 @@ function transportLifecycle(
 function transportActions(
   sim: ReturnType<typeof transportSim>,
   start: TransportConfig,
-  onConfigChange: () => ((c: TransportConfig) => void) | undefined,
+  onConfigChange: (config: TransportConfig) => void,
   root: () => HTMLDivElement | undefined,
 ) {
   const set = (next: Partial<TransportConfig>) => {
     sim.configure(next)
-    onConfigChange()?.(sim.config)
+    onConfigChange(sim.config)
   }
   const reset = () => {
     sim.reset(start)
-    onConfigChange()?.(sim.config)
+    onConfigChange(sim.config)
     announce(root()!.ownerDocument, 'Realtime sandbox reset')
   }
   const drop = () => {
@@ -295,7 +295,7 @@ export function TransportPicker({
   const { set, reset, drop } = transportActions(
     sim,
     start,
-    () => onConfigChange,
+    (config) => onConfigChange?.(config),
     () => root,
   )
 
