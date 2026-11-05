@@ -51,6 +51,12 @@ function fixture() {
   const copies = [
     'scripts/check.mjs',
     'scripts/jobs.mjs',
+    'scripts/lib/helpers.mjs',
+    'scripts/lib/sleep.mjs',
+    'scripts/quality/leak-places.mjs',
+    'scripts/quality/package-folders.mjs',
+    'scripts/quality/conventions.mjs',
+    'scripts/quality/conventions-references.mjs',
     'scripts/quality/lengths.mjs',
     'scripts/quality/length-diagnostics.mjs',
     'scripts/quality/length-baseline.mjs',
