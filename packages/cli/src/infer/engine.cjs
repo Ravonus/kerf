@@ -1,7 +1,7 @@
 // Prop inference (research 44). Facts come from syntax; the types come from whichever checker the host wraps, asked
 // about the call sites in the program's own terms. A round writes each component's annotation into its file's shadow;
 // the next round sees the types that made possible (a prop forwarded to another inferred component, a component passed
-// as a prop). Rounds stop when nothing changes, and a project with nothing to infer never starts a checker.
+// as a prop). Rounds stop when nothing changes. A checker starts for inference or box/value prop checks.
 
 const { fileFacts, hashOf } = require('./facts.cjs')
 const { shadow, toShadow } = require('./shadow.cjs')
@@ -50,11 +50,21 @@ class Engine {
   comps() {
     return [...this.facts.values()].flatMap((f) => f.comps)
   }
-  /** Facts that need a shadow at all: most projects have none, and then no checker starts. */
+  /** Facts that need a checker: inferred props, bindings or possible box/value prop errors. */
   needed() {
-    return [...this.facts.values()].some(
-      (f) => f.comps.length || f.sites.some((s) => s.attrs.some((a) => a.bind)),
+    return (
+      this.boxPropsNeeded() || [...this.facts.values()].some(
+        (f) => f.comps.length || f.sites.some((s) => s.attrs.some((a) => a.bind)),
+      )
     )
+  }
+
+  /** Syntax only gates startup; the checker proves every W008 finding. */
+  boxPropsNeeded() {
+    const sites = [...this.facts.values()].some((facts) =>
+      facts.sites.some((site) => site.attrs.length),
+    )
+    return sites && [...this.texts.values()].some((text) => /['"]@weft-js\/core['"]/.test(text))
   }
 
   /** Files with a component or a site of one that import `file`: what they pass may have changed type. */
@@ -76,6 +86,7 @@ class Engine {
   /** Whether a saved file can move anything: it holds a component or a site of one, or such a file imports it. */
   relevant(file) {
     if (!this.needed()) return false
+    if (this.boxPropsNeeded()) return true
     const facts = this.facts.get(file)
     if (!facts || facts.comps.length || facts.sites.some((s) => s.attrs.some((a) => a.bind)))
       return true

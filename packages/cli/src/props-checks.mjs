@@ -39,7 +39,7 @@ export function toDiagnostics(root, list, file) {
   )
 }
 
-/** The checks `weft check` adds. A project with nothing to infer parses its `.tsx` files once and starts nothing. */
+/** Prop inference and box/value checks; a project with no relevant JSX starts no checker. */
 export async function propChecks(root, config) {
   if (config.check?.props === false || !existsSync(join(root, 'tsconfig.json'))) return []
   const session = new Session(ts, root)

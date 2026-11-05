@@ -32,3 +32,36 @@ test('unknown dynamic constructor fails', () => {
   ok(problems.some((problem) => problem.includes('unrecognized constructor')))
   deepStrictEqual(run(), [])
 })
+
+const mappedCatalog = [{ code: 'W008', by: 'cli' }]
+const cli = {
+  source: { 'packages/cli/src/box.cjs': "function emit() { return { code: 'W008' } }" },
+  tests: { 'packages/cli/test/box.test.ts': "expect(result.code).toBe('W008')" },
+}
+const mapped = (c = mappedCatalog, s = cli.source, t = cli.tests) =>
+  compare(gaps(c, {}, {}, { source: s, tests: t }), [])
+
+test('mapped CLI rules require both real emit and assertion sites', () => {
+  deepStrictEqual(mapped(), [])
+  deepStrictEqual(mapped(mappedCatalog, {}), ['missing emit: W008'])
+  deepStrictEqual(mapped(mappedCatalog, cli.source, {}), ['missing test: W008'])
+  deepStrictEqual(mapped([]), ['missing entry: W008'])
+  ok(mapped([{ code: 'W008', by: 'compiler' }]).includes('missing emit: W008'))
+  deepStrictEqual(mapped(), [])
+})
+
+test('CLI mentions, strings, comments and catalog entries are not coverage', () => {
+  for (const text of [
+    "// return { code: 'W008' }",
+    'const text = "return { code: \'W008\' }"',
+    "const catalog = [{ code: 'W008' }]",
+    "format({ code: 'W008' })",
+    "const pattern = /return { code: 'W008' }/",
+    'const text = `return { code: "W008" }`',
+    'const text = `a ${`nested`} return { code: "W008" }`',
+  ]) deepStrictEqual(mapped(mappedCatalog, { 'fake.cjs': text }), ['missing emit: W008'])
+  for (const text of ["// expect(code).toBe('W008')", "const code = 'W008'", "describe('W008', () => {})",
+    "other.toContain('W008')", 'const text = `expect(code).toBe("W008")`'])
+    deepStrictEqual(mapped(mappedCatalog, cli.source, { 'fake.test.ts': text }), ['missing test: W008'])
+  deepStrictEqual(mapped(), [])
+})

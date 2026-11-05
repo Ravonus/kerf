@@ -113,7 +113,7 @@ export const compilerDiagnostics = [
   {
     code: 'W008',
     severity: 'error',
-    by: 'compiler',
+    by: 'cli',
     catches: 'Box/value mismatch at a prop (a `State<T>` where `T` is expected, or the reverse)',
     fix: 'Pass `count.value` / pass `count`',
   },
