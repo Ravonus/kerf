@@ -63,7 +63,10 @@ export default function Chat() {
                 (draft.value = e.currentTarget.value)
               }
             />
-            <Button type="submit" disabled={!up.value}>
+            <Button
+              type="submit"
+              disabled={!up.value}
+            >
               Send
             </Button>
             <Button

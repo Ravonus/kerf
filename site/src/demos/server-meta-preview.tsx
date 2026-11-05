@@ -66,7 +66,10 @@ export default function MetaPreview() {
         <small>acme.dev/pricing</small>
       </figure>
       {problems.value.map((p) => (
-        <Alert key={p} tone="caution">
+        <Alert
+          key={p}
+          tone="caution"
+        >
           {p}
         </Alert>
       ))}

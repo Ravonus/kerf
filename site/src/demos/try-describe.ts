@@ -11,12 +11,12 @@ export const tries: Record<string, string> = {
     'root.',
   'describe-braces':
     "Drag the slider. Only the list's font-size " +
-    "changes: the style object reads size.value, so " +
-    "it is a live binding.",
+    'changes: the style object reads size.value, so ' +
+    'it is a live binding.',
   'describe-children':
-    "Sell bags until fewer than two are left. The " +
+    'Sell bags until fewer than two are left. The ' +
     "Milk panel's border and its data-low attribute " +
-    "follow the count.",
+    'follow the count.',
   'describe-packing':
     'Tick and untick items. The ternary swaps plain ' +
     'text for a struck-through name, and && adds or ' +

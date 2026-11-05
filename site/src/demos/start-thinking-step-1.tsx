@@ -98,7 +98,10 @@ function ProductTable({
           {products
             .filter((p) => p.category === c)
             .map((p) => (
-              <ProductRow key={p.name} product={p} />
+              <ProductRow
+                key={p.name}
+                product={p}
+              />
             ))}
         </tbody>
       ))}

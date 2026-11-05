@@ -96,8 +96,8 @@ export default function Shop() {
         <p>Nothing matches “{search.value}”.</p>
       )}
       <p>
-        {items.value} items · subtotal ${subtotal.value}
-        {' '}· shipping ${shipping.value}
+        {items.value} items · subtotal ${subtotal.value} ·
+        shipping ${shipping.value}
       </p>
       <p>
         <strong>Total ${total.value}</strong>
