@@ -22,6 +22,7 @@ test('every export and what the warp plugin reads ship', () => {
     'styles/warp.css',
     'styles/components/menu.css',
     'scripts/contrast-check.mjs',
+    'scripts/contrast-check-colors.mjs',
   ])
     expect(paths).toContain(p)
 })
