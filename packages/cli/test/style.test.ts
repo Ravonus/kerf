@@ -8,7 +8,7 @@ import { handle } from '../src/mcp.mjs'
 import { classSoup, findGroups, parseTarget, styleMatrix } from '../src/style.mjs'
 import { bin, project } from './helpers.mjs'
 
-const weft = (...args) => {
+const weft = (...args: string[]) => {
   const r = spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' })
   return { code: r.status, stdout: r.stdout, stderr: r.stderr }
 }
@@ -68,12 +68,12 @@ describe('weft style find', () => {
       states: ['selected'],
       uses: 2,
     })
-    expect(findGroups(matrix, 'status label').groups[0].name).toBe('status-badge') // doc words
+    expect(findGroups(matrix, 'status label').groups[0]!.name).toBe('status-badge') // doc words
     expect(findGroups(matrix, 'critical').groups.map((g) => g.name)).toEqual([
       'order-card',
       'status-badge',
     ]) // a token both use
-    expect(findGroups(matrix, 'ordr card').groups[0].name).toBe('order-card') // one typo in a name word
+    expect(findGroups(matrix, 'ordr card').groups[0]!.name).toBe('order-card') // one typo in a name word
     expect(findGroups(matrix, 'zebra')).toMatchObject({ groups: [], total: 2 })
   })
 
@@ -106,7 +106,7 @@ function registerStyleResolution() {
     const out = JSON.parse(r.stdout)
     expect(out.selection).toEqual({ axes: { status: 'late' }, states: ['selected'], accent: {} })
     expect(out.attributes.root).toBe('data-g="order-card" data-status="late" aria-selected="true"')
-    const root = out.elements.find((e) => e.element === 'root').decls
+    const root = out.elements.find((e: { element: string }) => e.element === 'root').decls
     expect(root).toContainEqual({
       prop: 'padding',
       value: 'var(--warp-space-group)',
@@ -126,11 +126,19 @@ function registerStyleResolution() {
       at: 'state selected',
     })
     // the compound wins over the part's own text size, and says so
-    const meta = out.elements.find((e) => e.element === 'part meta').decls
-    expect(meta.find((d) => d.prop === 'font-size' && d.at === 'part meta')).toMatchObject({
+    const meta = out.elements.find((e: { element: string }) => e.element === 'part meta').decls
+    expect(
+      meta.find(
+        (d: { prop: string; at: string }) => d.prop === 'font-size' && d.at === 'part meta',
+      ),
+    ).toMatchObject({
       overridden: true,
     })
-    expect(meta.find((d) => d.prop === 'font-size' && d.at === 'compound 0')).toMatchObject({
+    expect(
+      meta.find(
+        (d: { prop: string; at: string }) => d.prop === 'font-size' && d.at === 'compound 0',
+      ),
+    ).toMatchObject({
       value: 'var(--warp-text-label-size)',
       from: 'text: label',
     })
@@ -321,16 +329,22 @@ describe('weft check: the style D-codes and .weft/styles.json', () => {
 describe('MCP style tools', () => {
   it('style_find and style_explain return the CLI JSON', async () => {
     const dir = clean()
-    const call = (name, args) =>
+    const call = (name: string, args: Record<string, unknown>) =>
       handle(dir, {
         jsonrpc: '2.0',
         id: 1,
         method: 'tools/call',
         params: { name, arguments: args },
-      })
+      }) as unknown as Promise<{
+        result: {
+          isError: boolean
+          structuredContent: { groups: { name: string }[]; elements: { element: string }[] }
+          content: unknown[]
+        }
+      }>
     const found = await call('style_find', { query: 'card' })
     expect(found.result.isError).toBe(false)
-    expect(found.result.structuredContent.groups[0].name).toBe('order-card')
+    expect(found.result.structuredContent.groups[0]!.name).toBe('order-card')
     const explained = await call('style_explain', {
       target: 'order-card.title',
       axes: { status: 'shipped' },
@@ -340,10 +354,9 @@ describe('MCP style tools', () => {
       selection: { axes: { status: 'shipped' } },
       attributes: { part: 'data-part="title"' },
     })
-    expect(explained.result.structuredContent.elements.map((e) => e.element)).toEqual([
-      'root',
-      'part title',
-    ])
+    expect(
+      explained.result.structuredContent.elements.map((e: { element: string }) => e.element),
+    ).toEqual(['root', 'part title'])
     const bad = await call('style_explain', { target: 'order-card', axes: { size: 'big' } })
     expect(bad.result).toMatchObject({
       isError: true,
