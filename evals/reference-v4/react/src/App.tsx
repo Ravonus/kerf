@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from 'react'
 import type { Api, Holding, Sector, Stock } from './api'
 import { DetailsPanel } from './components/DetailsPanel'
 import { Header } from './components/Header'
@@ -42,121 +50,27 @@ export function App({ api }: { api: Api }) {
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [saves, setSaves] = useState<Save[]>([])
 
-  useEffect(() => {
-    let alive = true
-    Promise.all([api.listStocks(), api.listHoldings()]).then(([list, held]) => {
-      if (!alive) return
-      setStocks(list)
-      setHoldings(held)
-      setLive(Object.fromEntries(list.map((s) => [s.id, { price: s.price, history: [s.price] }])))
-      setFavorites(Object.fromEntries(list.map((s) => [s.id, s.favorite])))
-    })
-    return () => {
-      alive = false
-    }
-  }, [api])
-
-  // React batches the updates of a synchronous burst into one render.
-  useEffect(
-    () =>
-      api.subscribeQuotes(({ id, price }) =>
-        setLive((all) =>
-          all[id]
-            ? { ...all, [id]: { price, history: [...all[id].history, price].slice(-20) } }
-            : all,
-        ),
-      ),
-    [api],
-  )
+  useData(api, setStocks, setHoldings, setLive, setFavorites)
 
   useEffect(() => {
     localStorage.setItem(VIEW_KEY, JSON.stringify(saved))
   }, [saved])
 
-  const tab = saved.tab
-  const view = saved.views[tab]
-  const setView = useCallback(
-    (patch: Partial<View>) =>
-      setSaved((s) => ({ ...s, views: { ...s.views, [s.tab]: { ...s.views[s.tab], ...patch } } })),
-    [],
-  )
-  const selectTab = (t: Tab) => {
-    setSaved((s) => ({ ...s, tab: t }))
-    setVisited((v) => (v.has(t) ? v : new Set([...v, t])))
-  }
-  const onSearch = useCallback(
-    (t: Tab, state: SearchState) => setSearches((s) => ({ ...s, [t]: state })),
-    [],
-  )
-  const search = searches[tab]
-
-  const favRef = useRef(favorites)
-  favRef.current = favorites
-  const clicks = useRef<Record<string, number>>({})
-  const toggle = useCallback(
-    (stock: Stock) => {
-      const before = favRef.current[stock.id]
-      const click = (clicks.current[stock.id] ?? 0) + 1
-      clicks.current[stock.id] = click
-      favRef.current = { ...favRef.current, [stock.id]: !before }
-      setFavorites((f) => ({ ...f, [stock.id]: !before }))
-      api.setFavorite(stock.id, !before).catch(() => {
-        if (clicks.current[stock.id] === click) setFavorites((f) => ({ ...f, [stock.id]: before }))
-        setAlert(`Couldn't update ${stock.symbol}`)
-      })
-    },
-    [api],
+  const { tab, view, setView, selectTab, onSearch, search } = useViews(
+    saved,
+    setSaved,
+    setVisited,
+    searches,
+    setSearches,
   )
 
-  const opener = useRef<HTMLElement | null>(null)
-  const openDetails = useCallback((id: string, button: HTMLElement) => {
-    opener.current = button
-    setOpenId(id)
-  }, [])
-  useEffect(() => {
-    if (openId === null && opener.current) {
-      opener.current.focus()
-      opener.current = null
-    }
-  }, [openId])
+  const toggle = useFavorites(api, favorites, setFavorites, setAlert)
 
-  const save = useCallback((id: string, text: string) => {
-    setNotes((n) => {
-      setSaves((s) => [...s, { id, prev: n[id] ?? '' }])
-      return { ...n, [id]: text }
-    })
-  }, [])
-  const undo = () => {
-    const last = saves[saves.length - 1]
-    if (!last) return
-    setSaves(saves.slice(0, -1))
-    setNotes((n) => ({ ...n, [last.id]: last.prev }))
-  }
+  const openDetails = useDetails(openId, setOpenId)
 
-  const results = view.query.trim() ? (search?.results ?? null) : null
-  const filtered = useMemo(
-    () =>
-      (stocks ?? []).filter(
-        (s) =>
-          (tab === 'All' || s.sector === tab) &&
-          (!results || results.has(s.id)) &&
-          (!view.favoritesOnly || favorites[s.id]),
-      ),
-    [stocks, tab, results, view.favoritesOnly, favorites],
-  )
-  // Only the Change sort reads live prices, so quotes don't re-sort a Symbol-sorted list.
-  const ordered = view.sort === 'change' ? live : null
-  const shown = useMemo(
-    () =>
-      ordered
-        ? [...filtered].sort((a, b) => changeOf(b, ordered) - changeOf(a, ordered))
-        : filtered,
-    [filtered, ordered],
-  )
-  const portfolio = useMemo(
-    () => holdings.reduce((sum, h) => sum + h.qty * (live[h.id]?.price ?? 0), 0),
-    [holdings, live],
-  )
+  const { save, undo } = useNotes(saves, setSaves, setNotes)
+
+  const { shown, portfolio } = useResults(stocks, holdings, live, tab, view, search, favorites)
 
   if (!stocks) return <p>Loading…</p>
   const open = openId ? stocks.find((s) => s.id === openId) : undefined
@@ -199,4 +113,164 @@ export function App({ api }: { api: Api }) {
       )}
     </div>
   )
+}
+
+type Setter<T> = Dispatch<SetStateAction<T>>
+function useData(
+  api: Api,
+  setStocks: Setter<Stock[] | null>,
+  setHoldings: Setter<Holding[]>,
+  setLive: Setter<Record<string, Live>>,
+  setFavorites: Setter<Record<string, boolean>>,
+) {
+  useEffect(() => {
+    let alive = true
+    Promise.all([api.listStocks(), api.listHoldings()]).then(([list, held]) => {
+      if (!alive) return
+      setStocks(list)
+      setHoldings(held)
+      setLive(Object.fromEntries(list.map((s) => [s.id, { price: s.price, history: [s.price] }])))
+      setFavorites(Object.fromEntries(list.map((s) => [s.id, s.favorite])))
+    })
+    return () => {
+      alive = false
+    }
+  }, [api])
+
+  // React batches the updates of a synchronous burst into one render.
+  useEffect(
+    () =>
+      api.subscribeQuotes(({ id, price }) =>
+        setLive((all) =>
+          all[id]
+            ? { ...all, [id]: { price, history: [...all[id].history, price].slice(-20) } }
+            : all,
+        ),
+      ),
+    [api],
+  )
+}
+function useFavorites(
+  api: Api,
+  favorites: Record<string, boolean>,
+  setFavorites: Setter<Record<string, boolean>>,
+  setAlert: Setter<string | null>,
+) {
+  const favRef = useRef(favorites)
+  favRef.current = favorites
+  const clicks = useRef<Record<string, number>>({})
+  const toggle = useCallback(
+    (stock: Stock) => {
+      const before = favRef.current[stock.id]
+      const click = (clicks.current[stock.id] ?? 0) + 1
+      clicks.current[stock.id] = click
+      favRef.current = { ...favRef.current, [stock.id]: !before }
+      setFavorites((f) => ({ ...f, [stock.id]: !before }))
+      api.setFavorite(stock.id, !before).catch(() => {
+        if (clicks.current[stock.id] === click) setFavorites((f) => ({ ...f, [stock.id]: before }))
+        setAlert(`Couldn't update ${stock.symbol}`)
+      })
+    },
+    [api],
+  )
+
+  return toggle
+}
+function useDetails(openId: string | null, setOpenId: Setter<string | null>) {
+  const opener = useRef<HTMLElement | null>(null)
+  const openDetails = useCallback((id: string, button: HTMLElement) => {
+    opener.current = button
+    setOpenId(id)
+  }, [])
+  useEffect(() => {
+    if (openId === null && opener.current) {
+      opener.current.focus()
+      opener.current = null
+    }
+  }, [openId])
+
+  return openDetails
+}
+function useNotes(
+  saves: Save[],
+  setSaves: Setter<Save[]>,
+  setNotes: Setter<Record<string, string>>,
+) {
+  const save = useCallback((id: string, text: string) => {
+    setNotes((n) => {
+      setSaves((s) => [...s, { id, prev: n[id] ?? '' }])
+      return { ...n, [id]: text }
+    })
+  }, [])
+  const undo = () => {
+    const last = saves[saves.length - 1]
+    if (!last) return
+    setSaves(saves.slice(0, -1))
+    setNotes((n) => ({ ...n, [last.id]: last.prev }))
+  }
+
+  return { save, undo }
+}
+function useResults(
+  stocks: Stock[] | null,
+  holdings: Holding[],
+  live: Record<string, Live>,
+  tab: Tab,
+  view: View,
+  search: SearchState | undefined,
+  favorites: Record<string, boolean>,
+) {
+  const results = view.query.trim() ? (search?.results ?? null) : null
+  const filtered = useMemo(
+    () =>
+      (stocks ?? []).filter(
+        (s) =>
+          (tab === 'All' || s.sector === tab) &&
+          (!results || results.has(s.id)) &&
+          (!view.favoritesOnly || favorites[s.id]),
+      ),
+    [stocks, tab, results, view.favoritesOnly, favorites],
+  )
+  // Only the Change sort reads live prices, so quotes don't re-sort a Symbol-sorted list.
+  const ordered = view.sort === 'change' ? live : null
+  const shown = useMemo(
+    () =>
+      ordered
+        ? [...filtered].sort((a, b) => changeOf(b, ordered) - changeOf(a, ordered))
+        : filtered,
+    [filtered, ordered],
+  )
+  const portfolio = useMemo(
+    () => holdings.reduce((sum, h) => sum + h.qty * (live[h.id]?.price ?? 0), 0),
+    [holdings, live],
+  )
+
+  return { shown, portfolio }
+}
+
+function useViews(
+  saved: Saved,
+  setSaved: Setter<Saved>,
+  setVisited: Setter<Set<Tab>>,
+  searches: Partial<Record<Tab, SearchState>>,
+  setSearches: Setter<Partial<Record<Tab, SearchState>>>,
+) {
+  const tab = saved.tab
+  const view = saved.views[tab]
+  const setView = useCallback(
+    (patch: Partial<View>) =>
+      setSaved((s) => ({ ...s, views: { ...s.views, [s.tab]: { ...s.views[s.tab], ...patch } } })),
+    [],
+  )
+  const selectTab = (t: Tab) => {
+    setSaved((s) => ({ ...s, tab: t }))
+    setVisited((v) => (v.has(t) ? v : new Set([...v, t])))
+  }
+  const onSearch = useCallback(
+    (t: Tab, state: SearchState) => setSearches((s) => ({ ...s, [t]: state })),
+    [],
+  )
+  const search = searches[tab]
+
+  return { tab, view, setView, selectTab, onSearch, search }
 }
