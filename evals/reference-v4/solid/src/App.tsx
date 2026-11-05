@@ -9,7 +9,7 @@ import {
   onCleanup,
   Show,
 } from 'solid-js'
-import { createStore } from 'solid-js/store'
+import { createStore, type SetStoreFunction } from 'solid-js/store'
 import type { Api, Quote, Sector, Stock } from './api'
 import { DetailsPanel } from './components/DetailsPanel'
 import { Header } from './components/Header'
@@ -40,119 +40,16 @@ function loadSaved(): Saved {
 
 export function App(props: { api: Api }) {
   const api = props.api
-  // Per-stock live state lives in stores keyed by id: a quote writes one stock's fields, so only the
-  // computations that read that stock (its row, the panel, the portfolio if held, a Change sort) run again.
-  const [live, setLive] = createStore<Record<string, Live>>({})
-  const [favorites, setFavorites] = createStore<Record<string, boolean>>({})
-  const [notes, setNotes] = createStore<Record<string, string>>({})
+  const { live, favorites, notes, setFavorites, setNotes, data } = createLive(api)
 
-  const [data] = createResource(() =>
-    Promise.all([api.listStocks(), api.listHoldings()]).then(([stocks, holdings]) => {
-      batch(() => {
-        setLive(
-          Object.fromEntries(stocks.map((s) => [s.id, { price: s.price, history: [s.price] }])),
-        )
-        setFavorites(Object.fromEntries(stocks.map((s) => [s.id, s.favorite])))
-      })
-      return { stocks, holdings, byId: new Map(stocks.map((s) => [s.id, s])) }
-    }),
-  )
-
-  // The server calls onQuote many times in a row, synchronously. Each call outside a batch would be its own
-  // update (and its own portfolio format), so quotes are queued and applied together in one batch on the next
-  // microtask: every quote still appends to its sparkline, but each row and the portfolio update once per burst.
-  let queued: Quote[] = []
-  const applyQuotes = () => {
-    const quotes = queued
-    queued = []
-    batch(() => {
-      for (const { id, price } of quotes) {
-        if (live[id]) setLive(id, (l) => ({ price, history: [...l.history, price].slice(-20) }))
-      }
-    })
-  }
-  onCleanup(
-    api.subscribeQuotes((quote) => {
-      if (queued.push(quote) === 1) queueMicrotask(applyQuotes)
-    }),
-  )
-
-  const [saved, setSaved] = createStore<Saved>(loadSaved())
-  createEffect(() => localStorage.setItem(VIEW_KEY, JSON.stringify(saved)))
-  const tab = () => saved.tab
-  const view = () => saved.views[saved.tab]
-  const setView = (patch: Partial<View>) => setSaved('views', saved.tab, patch)
-
-  // Each tab gets its own search the first time it is shown, and keeps it (and any request in flight) from then on.
-  const [visited, setVisited] = createSignal<Tab[]>([saved.tab])
-  const searches = createMemo(
-    mapArray(visited, (t) => ({
-      tab: t,
-      search: createTabSearch(api, () => saved.views[t].query),
-    })),
-  )
-  const selectTab = (t: Tab) =>
-    batch(() => {
-      setSaved('tab', t)
-      if (!visited().includes(t)) setVisited((v) => [...v, t])
-    })
-  const search = (): SearchState => searches().find((s) => s.tab === tab())?.search ?? idle
+  const { tab, view, setView, selectTab, search } = createViews(api)
 
   const [alert, setAlert] = createSignal<string | null>(null)
-  const clicks = new Map<string, number>()
-  const toggle = (stock: Stock) => {
-    const before = favorites[stock.id]
-    const click = (clicks.get(stock.id) ?? 0) + 1
-    clicks.set(stock.id, click)
-    setFavorites(stock.id, !before)
-    api.setFavorite(stock.id, !before).catch(() => {
-      batch(() => {
-        if (clicks.get(stock.id) === click) setFavorites(stock.id, before)
-        setAlert(`Couldn't update ${stock.symbol}`)
-      })
-    })
-  }
+  const toggle = favoriteActions(api, favorites, setFavorites, setAlert)
 
-  const [openId, setOpenId] = createSignal<string | null>(null)
-  let opener: HTMLElement | undefined
-  const openDetails = (id: string, button: HTMLElement) => {
-    opener = button
-    setOpenId(id)
-  }
-  const closeDetails = () => {
-    setOpenId(null)
-    opener?.focus()
-    opener = undefined
-  }
+  const { openId, openDetails, closeDetails, saves, save, undo } = detailActions(notes, setNotes)
 
-  const [saves, setSaves] = createSignal<Save[]>([])
-  const save = (id: string, text: string) =>
-    batch(() => {
-      setSaves((s) => [...s, { id, prev: notes[id] ?? '' }])
-      setNotes(id, text)
-    })
-  const undo = () => {
-    const last = saves().at(-1)
-    if (!last) return
-    batch(() => {
-      setSaves((s) => s.slice(0, -1))
-      setNotes(last.id, last.prev)
-    })
-  }
-
-  // The rows keep their identity (the same Stock objects from the load), so <For> only adds, removes and moves rows.
-  const filtered = createMemo(() => {
-    const all = data()?.stocks ?? []
-    const t = tab()
-    const ids = search().results
-    const onlyFavorites = view().favoritesOnly
-    return all.filter(
-      (s) =>
-        (t === 'All' || s.sector === t) &&
-        (!ids || ids.has(s.id)) &&
-        (!onlyFavorites || favorites[s.id]),
-    )
-  })
+  const filtered = createFiltered(data, tab, search, view, favorites)
   // Only the Change sort reads live prices, so quotes don't re-sort a Symbol-sorted list. Array#sort is stable,
   // which keeps ties in list order.
   const shown = createMemo(() => {
@@ -210,4 +107,147 @@ export function App(props: { api: Api }) {
       )}
     </Show>
   )
+}
+
+function createLive(api: Api) {
+  // Per-stock live state lives in stores keyed by id: a quote writes one stock's fields, so only the
+  // computations that read that stock (its row, the panel, the portfolio if held, a Change sort) run again.
+  const [live, setLive] = createStore<Record<string, Live>>({})
+  const [favorites, setFavorites] = createStore<Record<string, boolean>>({})
+  const [notes, setNotes] = createStore<Record<string, string>>({})
+
+  const [data] = createResource(() =>
+    Promise.all([api.listStocks(), api.listHoldings()]).then(([stocks, holdings]) => {
+      batch(() => {
+        setLive(
+          Object.fromEntries(stocks.map((s) => [s.id, { price: s.price, history: [s.price] }])),
+        )
+        setFavorites(Object.fromEntries(stocks.map((s) => [s.id, s.favorite])))
+      })
+      return { stocks, holdings, byId: new Map(stocks.map((s) => [s.id, s])) }
+    }),
+  )
+
+  // The server calls onQuote many times in a row, synchronously. Each call outside a batch would be its own
+  // update (and its own portfolio format), so quotes are queued and applied together in one batch on the next
+  // microtask: every quote still appends to its sparkline, but each row and the portfolio update once per burst.
+  let queued: Quote[] = []
+  const applyQuotes = () => {
+    const quotes = queued
+    queued = []
+    batch(() => {
+      for (const { id, price } of quotes) {
+        if (live[id]) setLive(id, (l) => ({ price, history: [...l.history, price].slice(-20) }))
+      }
+    })
+  }
+  onCleanup(
+    api.subscribeQuotes((quote) => {
+      if (queued.push(quote) === 1) queueMicrotask(applyQuotes)
+    }),
+  )
+
+  return { live, favorites, notes, setFavorites, setNotes, data }
+}
+function createViews(api: Api) {
+  const [saved, setSaved] = createStore<Saved>(loadSaved())
+  createEffect(() => localStorage.setItem(VIEW_KEY, JSON.stringify(saved)))
+  const tab = () => saved.tab
+  const view = () => saved.views[saved.tab]
+  const setView = (patch: Partial<View>) => setSaved('views', saved.tab, patch)
+
+  // Each tab gets its own search the first time it is shown, and keeps it (and any request in flight) from then on.
+  const [visited, setVisited] = createSignal<Tab[]>([saved.tab])
+  const searches = createMemo(
+    mapArray(visited, (t) => ({
+      tab: t,
+      search: createTabSearch(api, () => saved.views[t].query),
+    })),
+  )
+  const selectTab = (t: Tab) =>
+    batch(() => {
+      setSaved('tab', t)
+      if (!visited().includes(t)) setVisited((v) => [...v, t])
+    })
+  const search = (): SearchState => searches().find((s) => s.tab === tab())?.search ?? idle
+
+  return { tab, view, setView, selectTab, search }
+}
+function favoriteActions(
+  api: Api,
+  favorites: Record<string, boolean>,
+  setFavorites: SetStoreFunction<Record<string, boolean>>,
+  setAlert: (message: string) => unknown,
+) {
+  const clicks = new Map<string, number>()
+  const toggle = (stock: Stock) => {
+    const before = favorites[stock.id]
+    const click = (clicks.get(stock.id) ?? 0) + 1
+    clicks.set(stock.id, click)
+    setFavorites(stock.id, !before)
+    api.setFavorite(stock.id, !before).catch(() => {
+      batch(() => {
+        if (clicks.get(stock.id) === click) setFavorites(stock.id, before)
+        setAlert(`Couldn't update ${stock.symbol}`)
+      })
+    })
+  }
+
+  return toggle
+}
+function detailActions(
+  notes: Record<string, string>,
+  setNotes: SetStoreFunction<Record<string, string>>,
+) {
+  const [openId, setOpenId] = createSignal<string | null>(null)
+  let opener: HTMLElement | undefined
+  const openDetails = (id: string, button: HTMLElement) => {
+    opener = button
+    setOpenId(id)
+  }
+  const closeDetails = () => {
+    setOpenId(null)
+    opener?.focus()
+    opener = undefined
+  }
+
+  const [saves, setSaves] = createSignal<Save[]>([])
+  const save = (id: string, text: string) =>
+    batch(() => {
+      setSaves((s) => [...s, { id, prev: notes[id] ?? '' }])
+      setNotes(id, text)
+    })
+  const undo = () => {
+    const last = saves().at(-1)
+    if (!last) return
+    batch(() => {
+      setSaves((s) => s.slice(0, -1))
+      setNotes(last.id, last.prev)
+    })
+  }
+
+  return { openId, openDetails, closeDetails, saves, save, undo }
+}
+
+function createFiltered(
+  data: ReturnType<typeof createLive>['data'],
+  tab: () => Tab,
+  search: () => SearchState,
+  view: () => View,
+  favorites: Record<string, boolean>,
+) {
+  // The rows keep their identity (the same Stock objects from the load), so <For> only adds, removes and moves rows.
+  const filtered = createMemo(() => {
+    const all = data()?.stocks ?? []
+    const t = tab()
+    const ids = search().results
+    const onlyFavorites = view().favoritesOnly
+    return all.filter(
+      (s) =>
+        (t === 'All' || s.sector === t) &&
+        (!ids || ids.has(s.id)) &&
+        (!onlyFavorites || favorites[s.id]),
+    )
+  })
+  return filtered
 }
