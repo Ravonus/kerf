@@ -46,3 +46,17 @@ command requires a policy-safe, owned golden at
 The golden setup is not yet verified: Corepack may fetch its own pnpm version
 before pnpm applies `minimumReleaseAge`. Do not infer calibration success from
 fixture tests or use the current unverified setup for an evaluation.
+
+For the combined S5 checkout, M4 can run the prepared manager script after
+checking Node 26, the cached pnpm entry, compiler stamps, available disk and
+Chromium. Set `WEFT_T06_PNPM_ENTRY` to the cached pnpm 12.15.0 `bin/pnpm.mjs`:
+
+```bash
+WEFT_T06_PNPM_ENTRY="$HOME/.cache/node/corepack/v1/pnpm/12.15.0/bin/pnpm.mjs" \
+  bash "$HOME/work/weft-S5-verify/repo/evals/agent-eval/evidence/T06/yuna-calibrate.sh"
+```
+
+The script prints its receipt directory and writes progress to `setup.log`.
+It packs the combined checkout into an owned staging directory, checks installed
+package bytes against those tarballs, then runs the reference before mutants.
+Its fixture tests are not evidence of a completed manager run.

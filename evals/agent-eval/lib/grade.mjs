@@ -3,15 +3,18 @@
 import { execFile, spawn } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { createServer } from 'node:net'
+import { createRequire } from 'node:module'
 import { join, relative } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { promisify } from 'node:util'
 import { gzipSync } from 'node:zlib'
-import { chromium } from 'playwright-core'
 import { here } from './paths.mjs'
 import { boxed, env } from './sandbox.mjs'
 
-const axe = readFileSync(join(here, 'node_modules/axe-core/axe.min.js'), 'utf8')
+const dependencyRoot = process.env.WEFT_EVAL_DEPS ?? here
+const require = createRequire(join(dependencyRoot, 'package.json'))
+const { chromium } = require('playwright-core')
+const axe = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
 const run = promisify(execFile)
 const freePort = () =>
   new Promise((ok) => {
@@ -60,7 +63,7 @@ export async function build(copy, stack) {
     return {
       ok: false,
       ms: Date.now() - at,
-      error: `${e.stdout ?? ''}\n${e.stderr ?? ''}`.slice(-16000),
+      error: `${e.stdout ?? ''}\n${e.stderr ?? ''}`,
     }
   }
 }
@@ -75,7 +78,10 @@ export async function serve(copy, stack) {
       PORT: String(port),
       HOST: '127.0.0.1',
       ...(stack.calibrationPnpm
-        ? { PATH: `${join(copy.app, '.calibration-bin')}:${env(copy).PATH}` }
+        ? {
+            PATH: `${join(copy.app, '.calibration-bin')}:${env(copy).PATH}`,
+            npm_config_verify_deps_before_run: 'false',
+          }
         : {}),
     }),
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -104,7 +110,7 @@ export async function serve(copy, stack) {
     })
   }
   stop()
-  throw new Error(`server never answered: ${output.slice(-800)}`)
+  throw new Error(`server never answered: ${output}`)
 }
 
 /** Run a task's hidden tests, each in a fresh browser context. A failure gets one rerun, and a flake is recorded as one. */
@@ -130,7 +136,7 @@ export async function hidden(task, base) {
       ])
       return null
     } catch (e) {
-      return String(e.message).slice(0, 2000)
+      return String(e.message)
     } finally {
       clearTimeout(timer)
       await ctx.close()

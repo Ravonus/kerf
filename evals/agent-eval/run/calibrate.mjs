@@ -11,14 +11,14 @@ import {
 } from 'node:fs'
 import { join, relative } from 'node:path'
 import { calibrationTarget } from './calibration-target.mjs'
+import { goldens, here, projects } from '../lib/paths.mjs'
 
 export async function calibrate(args) {
   const mutant = calibrationTarget(args)
-  const golden = '/private/tmp/aeval/golden/weft-warp/app'
+  const golden = join(goldens, 'weft-warp', 'app')
   if (!existsSync(join(golden, 'package.json')))
     throw new Error(`missing owned calibration golden: ${golden}`)
   const { gradeOnce } = await import('./grade-once.mjs')
-  const { here, projects } = await import('../lib/paths.mjs')
   mkdirSync(projects, { recursive: true })
   const root = mkdtempSync(join(projects, 'calibration-'))
   const box = { root, app: join(root, 'app'), home: join(root, 'home'), tmp: join(root, 'tmp') }

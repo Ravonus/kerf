@@ -5,7 +5,7 @@
 // linked into it is the login keychain, which is where `claude` keeps its sign-in: the keychain is read, never copied.
 import { mkdirSync, symlinkSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { claudeBin, nodeBin, projects, realHome, registryPort } from './paths.mjs'
+import { claudeBin, hostHome, nodeBin, projects, realHome, registryPort } from './paths.mjs'
 import { randomBytes } from 'node:crypto'
 
 export function newBox() {
@@ -34,7 +34,7 @@ export function profile(box) {
   const q = (s) => JSON.stringify(s)
   return `(version 1)
 (allow default)
-(deny file-read* (subpath ${q(realHome)}) (subpath "/private/tmp") (subpath "/private/var/folders") (subpath "/Volumes"))
+(deny file-read* (subpath ${q(realHome)}) (subpath ${q(hostHome)}) (subpath "/private/tmp") (subpath "/private/var/folders") (subpath "/Volumes"))
 (allow file-read-metadata ${[...new Set([...ancestors(claudeBin), ...ancestors(nodeBin), ...ancestors(root), realHome])].map((p) => `(literal ${q(p)})`).join(' ')})
 (allow file-read* ${readable.map((p) => `(subpath ${q(p)})`).join(' ')} (literal ${q(join(realHome, 'Library/Preferences/com.apple.security.plist'))}) (subpath ${q(root)}))
 (deny file-write* (subpath "/"))
