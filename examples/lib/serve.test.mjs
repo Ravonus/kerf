@@ -25,10 +25,11 @@ await test('a production server starts and stops without a database', async () =
     )
     assert.equal(await (await fetch(server.url)).text(), '<p>Owned server</p>')
     await server.stop()
+    assert.ok(child.exitCode !== null || child.signalCode !== null)
     await assert.rejects(fetch(server.url, { signal: AbortSignal.timeout(2000) }))
   } finally {
     if (server?.alive()) await server.stop()
-    if (child?.pid && child.exitCode === null) {
+    if (child?.pid && child.exitCode === null && child.signalCode === null) {
       try {
         if (process.platform === 'win32')
           childProcess.execFileSync('taskkill', ['/T', '/F', '/PID', String(child.pid)])
