@@ -1150,7 +1150,11 @@ const inline = (md) => markdownToHtml(md).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, '')
 
 /** Every drawing, from the set's generated source: `{ name: [hollow, solid] }`, content-addressed in `public/`. */
 function buildIcons() {
-  const source = readFileSync(join(repo, 'packages/warp-icons/src/gen/all.tsx'), 'utf8')
+  const icons = join(repo, 'packages/warp-icons/src/gen')
+  const entry = readFileSync(join(icons, 'all.tsx'), 'utf8')
+  const source = [...entry.matchAll(/^export \* from '(\.\/all-[^']+)'$/gm)]
+    .map(([, path]) => readFileSync(join(icons, `${path}.tsx`), 'utf8'))
+    .join('\n')
   const names = JSON.parse(
     /names = (\[[^\]]*\])/.exec(
       readFileSync(join(repo, 'packages/warp-icons/src/gen/names.ts'), 'utf8'),
