@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
+import { formatImport } from './imports.mjs'
 
 function source(path, ts) {
   const sf = ts.createSourceFile(
@@ -100,7 +101,11 @@ export function expandExamples(path, ts) {
         })
         .map(([key, names]) => {
           const [from, type] = key.split('\0')
-          return `import ${type === 'true' ? 'type ' : ''}{ ${[...names].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)).join(', ')} } from '${from}'`
+          return formatImport(
+            [...names].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+            from,
+            type === 'true',
+          )
         })
       if (found.world) {
         let world = relative(dirname(resolve(path)), found.world)

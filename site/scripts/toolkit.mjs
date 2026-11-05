@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path'
 import { readFileSync } from 'node:fs'
 import { expandExamples } from './toolkit/examples.mjs'
 import { readWorld } from './toolkit/world.mjs'
+import { formatImport } from './toolkit/imports.mjs'
 
 const require = createRequire(new URL('../../packages/cli/package.json', import.meta.url))
 const ts = require('typescript')
@@ -109,16 +110,14 @@ function readExampleSource(path, text) {
     const head = [
       ...imports.flatMap(({ from: module, names: imported, type }) => {
         const used = imported.filter((n) => uses(all, n))
-        return used.length
-          ? [`import ${type ? 'type ' : ''}{ ${used.join(', ')} } from '${module}'`]
-          : []
+        return used.length ? [formatImport(used, module, type)] : []
       }),
       ...[...new Set(typed.map((i) => `${i.type ? 'type' : 'value'}\0${i.from}`))].map((key) => {
         const [kind, f] = key.split('\0')
-        return `import ${kind === 'type' ? 'type ' : ''}{ ${typed
+        const importNames = typed
           .filter((i) => i.from === f && i.type === (kind === 'type'))
           .map((i) => i.name)
-          .join(', ')} } from '${f}'`
+        return formatImport(importNames, f, kind === 'type')
       }),
     ]
     out.set(name, { name, stateless, body, head, local })
@@ -139,7 +138,7 @@ export function showExample(found, component) {
   const shown = found.stateless
     ? `export function ${name}() {\n  return (\n${found.body
         .split('\n')
-        .map((l) => (l ? `    ${l}` : l))
+        .map((l) => (l ? `  ${l}` : l))
         .join('\n')}\n  )\n}`
     : `export ${found.body.replaceAll(found.name, name)}`
   return [found.head.join('\n'), shown, found.local.join('\n\n')].filter(Boolean).join('\n\n')
