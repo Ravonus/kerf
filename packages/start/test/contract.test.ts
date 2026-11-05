@@ -1,7 +1,7 @@
 // `.weft/contract.json` (research 28 §4): functions as JSON Schema with tags, cache and auth; C001 for a schema with
 // no converter, C002 for a value its `output` rejects; Q012 when the database or auth reaches the client graph.
 import { z } from 'zod'
-import { busProblem, describe as contract } from '../src/contract.mjs'
+import { busProblem as busProblemSource, describe as contract } from '../src/contract.mjs'
 import { holdsSockets } from '../src/live-target.mjs'
 import { createScope, fetchQuery } from '../src/exec'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -10,8 +10,18 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import weftStart, { clientStubs, withIds } from '../src/vite.mjs'
 
-const fn = (kind, $id, def) => ({ kind, $id, def })
-const bare = { '~standard': { version: 1, vendor: 't', validate: (v) => ({ value: v }) } }
+const busProblem = busProblemSource as (options: {
+  preset: string
+  bus: string
+  streams: boolean
+  root?: string
+}) => ReturnType<typeof busProblemSource>
+const fn = (
+  kind: 'channel' | 'mutation' | 'query' | 'shared' | 'stream',
+  $id: string,
+  def: Record<string, unknown>,
+) => ({ kind, $id, def })
+const bare = { '~standard': { version: 1, vendor: 't', validate: (v: unknown) => ({ value: v }) } }
 
 test('one entry per function, sorted, in JSON Schema', () => {
   const { functions, diagnostics } = contract(
@@ -36,7 +46,7 @@ test('one entry per function, sorted, in JSON Schema', () => {
         'c',
         fn('query', 'getTodo.000000', {
           input: z.object({ id: z.string() }),
-          tags: ({ id }) => [`todo:${id}`],
+          tags: ({ id }: { id: string }) => [`todo:${id}`],
         }),
       ],
       ['d', fn('mutation', 'rename.111111', { invalidates: () => [] })],
@@ -76,7 +86,7 @@ test('C001: a schema with no JSON Schema is `{}` and a warning', () => {
   const { functions, diagnostics } = contract(new Map([['a', fn('query', 'odd', { input: bare })]]))
   expect(functions[0].input).toEqual({})
   expect(diagnostics).toMatchObject([{ code: 'C001', severity: 'warning' }])
-  expect(diagnostics[0].why).toContain('`odd`')
+  expect(diagnostics[0]!.why).toContain('`odd`')
 })
 
 test("C002: dev and tests check the value against `output`; production doesn't", async () => {
@@ -93,9 +103,15 @@ test("C002: dev and tests check the value against `output`; production doesn't",
 
 test('Q012: the database or auth in the client graph stops the build; on the server it passes through', () => {
   const plugin =
-    weftStart({ root: import.meta.dirname }).find?.((p) => p.resolveId?.handler) ??
+    (
+      weftStart({ root: import.meta.dirname }) as ReturnType<typeof weftStart> & {
+        find?: (
+          predicate: (p: ReturnType<typeof weftStart>) => unknown,
+        ) => ReturnType<typeof weftStart>
+      }
+    ).find?.((p) => typeof p.resolveId?.handler === 'function') ??
     weftStart({ root: import.meta.dirname })
-  const { handler, filter } = plugin.resolveId
+  const { filter } = plugin.resolveId
   for (const id of [
     '@weft-js/start/db',
     '@weft-js/start/db/sqlite',
@@ -104,16 +120,20 @@ test('Q012: the database or auth in the client graph stops the build; on the ser
   ])
     expect(filter.id.test(id)).toBe(true)
   expect(filter.id.test('@weft-js/start/data')).toBe(false)
-  const ctx = (consumer) => ({
+  const ctx = (consumer: string) => ({
     environment: { config: { consumer } },
-    error(m) {
+    error(m: string) {
       throw new Error(m)
     },
   })
   expect(() =>
-    handler.call(ctx('client'), '@weft-js/start/db/sqlite', `${import.meta.dirname}/page.tsx`),
+    plugin.resolveId.handler.call(
+      ctx('client'),
+      '@weft-js/start/db/sqlite',
+      `${import.meta.dirname}/page.tsx`,
+    ),
   ).toThrow(/^Q012: .*page\.tsx/)
-  expect(handler.call(ctx('server'), '@weft-js/start/auth', 'x')).toBeUndefined()
+  expect(plugin.resolveId.handler.call(ctx('server'), '@weft-js/start/auth', 'x')).toBeUndefined()
 })
 
 test('a stream is in the contract, with its message; R005: an unbounded input warns', () => {
