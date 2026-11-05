@@ -63,31 +63,13 @@ export function OtpField({
     { k: `c${i}`, i },
     ...(i === half - 1 ? [{ k: 'sep', i: -1 }] : []),
   ]).flat()
-  // the error shows until the next key, whatever the prop still says
-  const shown = state(untrack(() => error))
-  watch(
+  const { shown, setRoot } = otpBinding(
+    n,
     () => error,
-    (e) => {
-      shown.value = e
-    },
-  )
-  let root: HTMLDivElement | undefined
-  use(
-    otpInput,
-    () => root,
-    () => ({
-      length: n,
-      invalid: !!shown.value,
-      success: status === 'success',
-      onValue: (v: string) => {
-        if (v) shown.value = undefined
-        onValueChange?.(v)
-      },
-      onComplete(v: string) {
-        onComplete?.(v)
-        if (autoSubmit) root?.querySelector('input')?.form?.requestSubmit()
-      },
-    }),
+    () => status,
+    () => onValueChange,
+    () => onComplete,
+    () => autoSubmit,
   )
   return (
     <div data-scope="stack" style="--_gap:8px">
@@ -95,7 +77,7 @@ export function OtpField({
         {label}
       </label>
       <div
-        ref={(el) => (root = el)}
+        ref={setRoot}
         data-scope="otp"
         data-invalid={shown.value ? '' : undefined}
         data-state={
@@ -133,6 +115,40 @@ export function OtpField({
       </p>
     </div>
   )
+}
+
+function otpBinding(
+  n: number,
+  error: () => OtpFieldProps['error'],
+  status: () => OtpFieldProps['status'],
+  onValueChange: () => OtpFieldProps['onValueChange'],
+  onComplete: () => OtpFieldProps['onComplete'],
+  autoSubmit: () => boolean,
+) {
+  // the error shows until the next key, whatever the prop still says
+  const shown = state(untrack(error))
+  watch(error, (e) => {
+    shown.value = e
+  })
+  let root: HTMLDivElement | undefined
+  use(
+    otpInput,
+    () => root,
+    () => ({
+      length: n,
+      invalid: !!shown.value,
+      success: status() === 'success',
+      onValue: (v: string) => {
+        if (v) shown.value = undefined
+        onValueChange()?.(v)
+      },
+      onComplete(v: string) {
+        onComplete()?.(v)
+        if (autoSubmit()) root?.querySelector('input')?.form?.requestSubmit()
+      },
+    }),
+  )
+  return { shown, setRoot: (el: HTMLDivElement) => (root = el) }
 }
 
 /** What the code step submits. */

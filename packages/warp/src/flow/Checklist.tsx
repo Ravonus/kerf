@@ -1,6 +1,6 @@
 import { XIcon } from '@weft-js/warp-icons'
 import { announce, uid } from '@weft-js/warp-core'
-import { derived, state, watch } from '@weft-js/core'
+import { derived, state, watch, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
 import { toast } from '../Toast'
@@ -56,29 +56,12 @@ export function Checklist({
   const total = derived(() => list.value.length)
   const hidden = state(false)
   const closed = state(false)
-  watch(
-    () => count.value,
-    (n, was) => {
-      if (was !== undefined && n > was)
-        announce(document, n === total.value ? 'All set up.' : `${n} of ${total.value} done.`)
-    },
+  watchChecklist(count, total)
+  const hide = checklistHide(
+    hidden,
+    () => onHide,
+    () => onUndoHide,
   )
-  const hide = () => {
-    hidden.value = true
-    onHide?.()
-    toast.show({
-      title: 'Checklist hidden',
-      description: 'Find it again under Help.',
-      duration: 10000,
-      action: {
-        label: 'Undo',
-        onClick() {
-          hidden.value = false
-          onUndoHide?.()
-        },
-      },
-    })
-  }
   return (
     <section
       data-scope="checklist"
@@ -121,42 +104,8 @@ export function Checklist({
           )}
         </div>
       </div>
-      <div data-part="progress">
-        <Rail
-          value={total.value ? (count.value / total.value) * 100 : 0}
-          role="progressbar"
-          aria-label="Setup progress"
-          aria-valuemin="0"
-          aria-valuemax={total.value}
-          aria-valuenow={count.value}
-        />
-      </div>
-      <ol id={`${id}-l`} hidden={closed.value || undefined}>
-        {list.value.map((it) => (
-          <li key={it.id} data-part="item" data-state={it.done ? 'done' : undefined}>
-            <Checkbox
-              checked={!!it.done}
-              disabled={!onToggle}
-              aria-labelledby={`${id}-${it.id}`}
-              onChange={(e: Event) =>
-                onToggle?.(it.id, (e.currentTarget as HTMLInputElement).checked)
-              }
-            />
-            <b id={`${id}-${it.id}`}>
-              {it.title}
-              <span data-part="sr-only">{it.done ? ', done' : ', to do'}</span>
-            </b>
-            {it.action ? (
-              <Button data-part="action" emphasis="frame" size="sm" onClick={it.action.onClick}>
-                {it.action.label}
-              </Button>
-            ) : (
-              <span></span>
-            )}
-            {it.description !== undefined && <p>{it.description}</p>}
-          </li>
-        ))}
-      </ol>
+      <ChecklistProgress count={count} total={total} />
+      <ChecklistRows id={id} closed={closed} list={list} onToggle={onToggle} />
       <div data-part="done">
         <Mark tone="positive" draw />
         <div>
@@ -166,5 +115,98 @@ export function Checklist({
       </div>
       {footer}
     </section>
+  )
+}
+
+function watchChecklist(count: { readonly value: number }, total: { readonly value: number }) {
+  watch(
+    () => count.value,
+    (n, was) => {
+      if (was !== undefined && n > was)
+        announce(document, n === total.value ? 'All set up.' : `${n} of ${total.value} done.`)
+    },
+  )
+}
+function checklistHide(
+  hidden: State<boolean>,
+  onHide: () => ChecklistProps['onHide'],
+  onUndoHide: () => ChecklistProps['onUndoHide'],
+) {
+  return () => {
+    hidden.value = true
+    onHide()?.()
+    toast.show({
+      title: 'Checklist hidden',
+      description: 'Find it again under Help.',
+      duration: 10000,
+      action: {
+        label: 'Undo',
+        onClick() {
+          hidden.value = false
+          onUndoHide()?.()
+        },
+      },
+    })
+  }
+}
+function ChecklistRows({
+  id,
+  closed,
+  list,
+  onToggle,
+}: {
+  id: string
+  closed: State<boolean>
+  list: { readonly value: ChecklistItem[] }
+  onToggle: ChecklistProps['onToggle']
+}) {
+  return (
+    <ol id={`${id}-l`} hidden={closed.value || undefined}>
+      {list.value.map((it) => (
+        <li key={it.id} data-part="item" data-state={it.done ? 'done' : undefined}>
+          <Checkbox
+            checked={!!it.done}
+            disabled={!onToggle}
+            aria-labelledby={`${id}-${it.id}`}
+            onChange={(e: Event) =>
+              onToggle?.(it.id, (e.currentTarget as HTMLInputElement).checked)
+            }
+          />
+          <b id={`${id}-${it.id}`}>
+            {it.title}
+            <span data-part="sr-only">{it.done ? ', done' : ', to do'}</span>
+          </b>
+          {it.action ? (
+            <Button data-part="action" emphasis="frame" size="sm" onClick={it.action.onClick}>
+              {it.action.label}
+            </Button>
+          ) : (
+            <span></span>
+          )}
+          {it.description !== undefined && <p>{it.description}</p>}
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+function ChecklistProgress({
+  count,
+  total,
+}: {
+  count: { readonly value: number }
+  total: { readonly value: number }
+}) {
+  return (
+    <div data-part="progress">
+      <Rail
+        value={total.value ? (count.value / total.value) * 100 : 0}
+        role="progressbar"
+        aria-label="Setup progress"
+        aria-valuemin="0"
+        aria-valuemax={total.value}
+        aria-valuenow={count.value}
+      />
+    </div>
   )
 }
