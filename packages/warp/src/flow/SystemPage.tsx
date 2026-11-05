@@ -1,126 +1,17 @@
-import { ClockIcon, CopyIcon, PlusIcon, RefreshIcon } from '@weft-js/warp-icons'
-import { announce, copyText, menu, uid } from '@weft-js/warp-core'
+import { ClockIcon, RefreshIcon } from '@weft-js/warp-icons'
+import { announce, copyText } from '@weft-js/warp-core'
 import { derived, state, untrack, watch } from '@weft-js/core'
-import { Badge } from '../Badge'
 import { Button, type ButtonProps } from '../Button'
 import { Search, Textarea } from '../Field'
-import { Avatar } from '../parts'
 import { toast } from '../Toast'
-import { use } from '@weft-js/warp-core/weft'
+import { Broken, Whole, Locked, Head, RequestId } from './SystemPage/art'
+import { AccountMenu } from './SystemPage/accounts'
 import '../styles'
 import '@weft-js/warp-core/styles/flows/tokens.css'
 import '@weft-js/warp-core/styles/flows/base.css'
 import '@weft-js/warp-core/styles/app/tokens.css'
 import '@weft-js/warp-core/styles/app/system-page.css'
 import '@weft-js/warp-core/styles/flows/system-page.css'
-
-const X = [8, 27.5, 47, 66.5, 86, 105.5, 125].map((x) => ({ x }))
-const Threads = ({ y2 = 84 }: { y2?: number }) => (
-  <>
-    {X.map((t) => (
-      <line key={t.x} x1={t.x} y1="0" x2={t.x} y2={y2} />
-    ))}
-  </>
-)
-
-/** 404 and 500: a weft thread broken in two. */
-const Broken = () => (
-  <svg data-part="weave" viewBox="0 0 132 84" preserveAspectRatio="none" aria-hidden="true">
-    <Threads />
-    <path pathLength="1" style="--i:0" d="M0 22H132" />
-    <path pathLength="1" style="--i:1" d="M0 44H70" data-broken="" />
-    <path pathLength="1" style="--i:2" d="M86 44H132" opacity=".35" />
-    <path pathLength="1" style="--i:3" d="M0 64H132" />
-  </svg>
-)
-/** First run: whole threads. */
-const Whole = () => (
-  <svg data-part="weave" viewBox="0 0 132 84" preserveAspectRatio="none" aria-hidden="true">
-    <Threads />
-    <path pathLength="1" style="--i:0" d="M0 22H132" />
-    <path pathLength="1" style="--i:1" d="M0 44H132" />
-    <path pathLength="1" style="--i:2" d="M0 64H132" />
-  </svg>
-)
-/** 403: a thread stops at a padlock on the crossing, in ink: nothing broke (07 §6.5). */
-const Locked = () => (
-  <svg
-    data-part="weave"
-    viewBox="0 0 132 84"
-    preserveAspectRatio="xMidYMid meet"
-    aria-hidden="true"
-  >
-    {[16, 36, 56, 76, 96, 116].map((x) => (
-      <line key={x} x1={x} y1="4" x2={x} y2="80" />
-    ))}
-    <path pathLength="1" style="--i:0" d="M4 22 C 30 18, 40 26, 66 22 S 102 18, 128 22" />
-    <path pathLength="1" style="--i:1" d="M4 62 C 30 58, 40 66, 66 62 S 102 58, 128 62" />
-    <path pathLength="1" style="--i:2" d="M4 42 C 20 40, 34 44, 52 42" />
-    <path data-part="shackle" d="M58 40 v-7 a8 8 0 0 1 16 0 v7" />
-    <rect data-part="lock" x="54" y="39" width="24" height="19" rx="4" />
-    <path data-part="keyhole" d="M66 46 v5" />
-  </svg>
-)
-
-const focusTitle = (el: HTMLElement) => {
-  el.focus({ preventScroll: true })
-  return { update() {}, destroy() {} }
-}
-
-/** The title and code: every result page's top. */
-function Head({
-  art,
-  code,
-  title,
-  focus,
-  as,
-}: {
-  art: unknown
-  code: unknown
-  title: unknown
-  focus?: boolean | undefined
-  as?: 'h2' | 'h3' | undefined
-}) {
-  const h3 = derived(() => as === 'h3')
-  let el: HTMLElement | undefined
-  if (untrack(() => focus)) use(focusTitle, () => el)
-  return (
-    <>
-      <span data-part="art">{art}</span>
-      <span data-part="code">{code}</span>
-      {h3.value ? (
-        <h3 ref={(n) => (el = n)} data-part="title" tabindex="-1">
-          {title}
-        </h3>
-      ) : (
-        <h2 ref={(n) => (el = n)} data-part="title" tabindex="-1">
-          {title}
-        </h2>
-      )}
-    </>
-  )
-}
-
-function RequestId({ id }: { id: string }) {
-  return (
-    <span data-part="meta">
-      Request ID <code>{id}</code>
-      <Button
-        emphasis="ghost"
-        tone="neutral"
-        size="sm"
-        data-icon-only=""
-        label="Copy request ID"
-        onClick={async () => {
-          await copyText(document, id)
-          announce(document, 'Copied')
-        }}
-      >
-        <CopyIcon />
-      </Button>
-    </span>
-  )
-}
 
 /** An account to switch to from a no-access page. */
 export interface SwitchAccount {
@@ -129,73 +20,6 @@ export interface SwitchAccount {
   detail?: string
   hasAccess?: boolean
   current?: boolean | undefined
-}
-
-function AccountMenu({
-  accounts,
-  onSwitch,
-}: {
-  accounts: SwitchAccount[]
-  onSwitch?: (id: string | undefined) => void
-}) {
-  const id = uid('accounts')
-  const open = state(false)
-  let list: HTMLElement | undefined
-  use(
-    menu,
-    () => list,
-    () => ({
-      open: open.value,
-      trigger: () => list?.parentElement?.querySelector<HTMLElement>('[data-switch]'),
-      onClose: () => (open.value = false),
-    }),
-  )
-  const pick = (a: string | undefined) => {
-    open.value = false
-    list?.parentElement?.querySelector<HTMLElement>('[data-switch]')?.focus()
-    onSwitch?.(a)
-  }
-  return {
-    open,
-    id,
-    press: () => (open.value = !open.value),
-    menu: () => (
-      <ul
-        ref={(n) => (list = n)}
-        data-part="accounts"
-        role="menu"
-        id={id}
-        aria-label="Switch account"
-        hidden={!open.value || undefined}
-      >
-        {accounts.map((a) => (
-          <li key={a.id} role="none">
-            <button type="button" role="menuitem" tabindex="-1" onClick={() => pick(a.id)}>
-              <Avatar name={a.email} size="sm" />
-              <span>
-                {a.email}
-                {a.detail && <small>{a.detail}</small>}
-              </span>
-              {a.hasAccess ? (
-                <Badge tone="positive">Has access</Badge>
-              ) : a.current ? (
-                <small>Current</small>
-              ) : (
-                <span></span>
-              )}
-            </button>
-          </li>
-        ))}
-        <li role="none">
-          <button type="button" role="menuitem" tabindex="-1" onClick={() => pick(undefined)}>
-            <PlusIcon />
-            <span>Use another account</span>
-            <span></span>
-          </button>
-        </li>
-      </ul>
-    ),
-  }
 }
 
 /** An access request, and how to send and withdraw it. */
@@ -310,7 +134,33 @@ function Act({
 }
 
 /** 403's four states (07 §6.5): can request (then a note), pending, can't request, granted in place. */
-function Denied(p: SystemPageProps) {
+function accountSwitch(p: SystemPageProps, accounts: ReturnType<typeof AccountMenu>) {
+  return () =>
+    p.accounts?.length ? (
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        data-switch=""
+        aria-haspopup="menu"
+        aria-expanded={accounts.open.value ? 'true' : 'false'}
+        aria-controls={accounts.id}
+        onClick={accounts.press}
+      >
+        Switch account
+      </Button>
+    ) : p.onSwitch ? (
+      <Button emphasis="ghost" tone="neutral" onClick={() => p.onSwitch!(undefined)}>
+        Switch account
+      </Button>
+    ) : null
+}
+
+async function copyOwnerLink(p: SystemPageProps, approvers: ReturnType<typeof derived<string>>) {
+  await copyText(document, p.request?.link ?? location.href)
+  announce(document, `Link copied. Send it to ${approvers.value}.`)
+}
+
+function deniedState(p: SystemPageProps) {
   const compose = state(false)
   const sent = state(false)
   const note = state('')
@@ -370,43 +220,55 @@ function Denied(p: SystemPageProps) {
     note.value = ''
     announce(document, 'Request withdrawn')
   }
-  const copyLink = async () => {
-    await copyText(document, p.request?.link ?? location.href)
-    announce(document, `Link copied. Send it to ${approvers.value}.`)
+  const copyLink = () => copyOwnerLink(p, approvers)
+  const Switch = accountSwitch(p, accounts)
+  return {
+    view,
+    compose,
+    note,
+    busy,
+    approvers,
+    accounts,
+    send,
+    withdraw,
+    copyLink,
+    titleOf,
+    Switch,
+    setRoot: (n: HTMLElement) => {
+      root = n
+    },
   }
-  const Switch = () =>
-    p.accounts?.length ? (
-      <Button
-        emphasis="ghost"
-        tone="neutral"
-        data-switch=""
-        aria-haspopup="menu"
-        aria-expanded={accounts.open.value ? 'true' : 'false'}
-        aria-controls={accounts.id}
-        onClick={accounts.press}
-      >
-        Switch account
-      </Button>
-    ) : p.onSwitch ? (
-      <Button emphasis="ghost" tone="neutral" onClick={() => p.onSwitch!(undefined)}>
-        Switch account
-      </Button>
-    ) : null
+}
+
+function deniedNote(note: ReturnType<typeof state<string>>) {
+  return (
+    <Textarea
+      label="Note (optional)"
+      hint="They'll see it with your request"
+      counter={280}
+      maxlength="280"
+      value={note.value}
+      onInput={(e) => (note.value = e.currentTarget.value)}
+    />
+  )
+}
+
+function deniedView(p: SystemPageProps, ctx: ReturnType<typeof deniedState>) {
   return (
     <>
-      {view.value === 'granted' ? (
+      {ctx.view.value === 'granted' ? (
         p.children
       ) : (
-        <div ref={(n) => (root = n)} data-scope="system-page">
+        <div ref={(n) => ctx.setRoot(n)} data-scope="system-page">
           <div data-part="body">
             <Head
               art={<Locked />}
               code={p.code ?? CODES[403]}
               as={p.as}
               focus={p.autofocus ?? true}
-              title={view.value === 'pending' ? 'Request sent' : (p.title ?? titleOf)}
+              title={ctx.view.value === 'pending' ? 'Request sent' : (p.title ?? ctx.titleOf)}
             />
-            {view.value === 'request' && (
+            {ctx.view.value === 'request' && (
               <p>
                 {p.description ?? (
                   <>
@@ -416,62 +278,66 @@ function Denied(p: SystemPageProps) {
                 )}
               </p>
             )}
-            {view.value === 'compose' && (
-              <p>{approvers.value} can share it. Add a note if it helps them decide.</p>
+            {ctx.view.value === 'compose' && (
+              <p>{ctx.approvers.value} can share it. Add a note if it helps them decide.</p>
             )}
-            {view.value === 'closed' && (
+            {ctx.view.value === 'closed' && (
               <p>
-                This workspace doesn't take access requests. Ask {approvers.value} to share it
+                This workspace doesn't take access requests. Ask {ctx.approvers.value} to share it
                 {p.account ? ` with ${p.account}` : ''}.
               </p>
             )}
-            {view.value === 'pending' && (
+            {ctx.view.value === 'pending' && (
               <span data-part="pending" role="status">
-                <ClockIcon /> Request sent to {approvers.value} · we'll email you when they answer
+                <ClockIcon /> Request sent to {ctx.approvers.value} · we'll email you when they
+                answer
               </span>
             )}
-            {view.value === 'compose' ? (
+            {ctx.view.value === 'compose' ? (
               <div data-part="request">
-                <Textarea
-                  label="Note (optional)"
-                  hint="They'll see it with your request"
-                  counter={280}
-                  maxlength="280"
-                  value={note.value}
-                  onInput={(e) => (note.value = e.currentTarget.value)}
-                />
+                {deniedNote(ctx.note)}
                 <div data-part="actions">
-                  <Button emphasis="ghost" tone="neutral" onClick={() => (compose.value = false)}>
+                  <Button
+                    emphasis="ghost"
+                    tone="neutral"
+                    onClick={() => (ctx.compose.value = false)}
+                  >
                     Cancel
                   </Button>
-                  <Button loading={busy.value} onClick={send}>
+                  <Button loading={ctx.busy.value} onClick={ctx.send}>
                     Send request
                   </Button>
                 </div>
               </div>
             ) : (
               <div data-part="actions">
-                {view.value === 'request' && (
-                  <Button onClick={() => (compose.value = true)}>Request access</Button>
+                {ctx.view.value === 'request' && (
+                  <Button onClick={() => (ctx.compose.value = true)}>Request access</Button>
                 )}
-                {view.value === 'pending' && (
-                  <Button emphasis="outline" tone="neutral" onClick={withdraw}>
+                {ctx.view.value === 'pending' && (
+                  <Button emphasis="outline" tone="neutral" onClick={ctx.withdraw}>
                     Withdraw request
                   </Button>
                 )}
-                {view.value === 'closed' && (
-                  <Button onClick={copyLink}>Copy link for the owner</Button>
+                {ctx.view.value === 'closed' && (
+                  <Button onClick={ctx.copyLink}>Copy link for the owner</Button>
                 )}
-                <Switch />
+                <ctx.Switch />
               </div>
             )}
-            {accounts.menu()}
+            {ctx.accounts.menu()}
             {p.requestId && <RequestId id={p.requestId} />}
           </div>
         </div>
       )}
     </>
   )
+}
+
+function Denied(p: SystemPageProps) {
+  const props = untrack(() => p)
+  const ctx = deniedState(props)
+  return deniedView(props, ctx)
 }
 
 /**

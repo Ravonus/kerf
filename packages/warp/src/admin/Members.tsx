@@ -1,16 +1,15 @@
-import { CheckIcon, TrashIcon, UsersIcon } from '@weft-js/warp-icons'
-import { isLastOwner, plural, uid } from '@weft-js/warp-core'
-import { derived, state, type State } from '@weft-js/core'
-import { Badge } from '../Badge'
+import { CheckIcon, UsersIcon } from '@weft-js/warp-icons'
+import { isLastOwner, plural } from '@weft-js/warp-core'
+import { derived, state, untrack, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
-import { Avatar } from '../parts'
-import { Table, type Column } from '../Table'
+import { Table } from '../Table'
 import { toast } from '../Toast'
 import { ConfirmDialog } from './Danger'
 import { InviteDialog } from './InviteDialog'
 import { PlainTable } from './PlainTable'
-import { InlineSelect, read } from './atoms'
+import { read } from './atoms'
+import { memberColumns, inviteColumns } from './Members/columns'
 import '../styles'
 import '@weft-js/warp-core/styles/flows/tokens.css'
 import '@weft-js/warp-core/styles/flows/base.css'
@@ -75,56 +74,62 @@ export interface MembersTableProps {
   onRevoke?: (invite: Invite) => void
 }
 
-/**
- * Members (09 §4.2): DataTable with an inline role select, a bulk bar, and pending invites below. Role changes apply at
- * once with Undo; removals ask, with one Undo for the batch. The last owner can't be demoted or removed, and the
- * select says why; demoting yourself warns first.
- */
-export function MembersTable({
-  members,
-  invites,
-  me,
-  roles,
-  owner = 'owner',
-  seats,
-  onRoleChange,
-  onRemove,
-  onRestore,
-  onInvite,
-  onResend,
-  onRevoke,
-}: MembersTableProps) {
+function removeMembers(
+  p: MembersTableProps,
+  leaving: State<Member[]>,
+  selected: State<Record<string, boolean>>,
+) {
+  return async () => {
+    const gone = leaving.value
+    await p.onRemove(gone)
+    selected.value = {}
+    toast.show({
+      title: gone.length > 1 ? `${gone.length} members removed` : `${gone[0]!.name} removed`,
+      action: p.onRestore && { label: 'Undo', onClick: () => p.onRestore!(gone) },
+    })
+  }
+}
+
+function askMembers(leaving: State<Member[]>, confirming: State<boolean>) {
+  return (list: Member[]) => {
+    leaving.value = list
+    confirming.value = true
+  }
+}
+
+function membersState(p: MembersTableProps) {
   const inviting = state(false)
   const confirming = state(false)
   const demoting = state(false)
   const leaving = state<Member[]>([])
   const selected = state<Record<string, boolean>>({})
   let demote: { m: Member; role: string } | undefined
-  const people = derived(() => read(members))
-  const pending = derived(() => read(invites ?? []))
+  const people = derived(() => read(p.members))
+  const pending = derived(() => read(p.invites ?? []))
   const used = derived(() => people.value.length + pending.value.length)
-  const label = (v: string) => roles.find((r) => r.value === v)?.label ?? v
-  const locked = (m: Member) => isLastOwner(people.value as Member[], m, owner)
+  const label = (v: string) => p.roles.find((r) => r.value === v)?.label ?? v
+  const locked = (m: Member) =>
+    isLastOwner(people.value as Member[], m, p.owner === undefined ? 'owner' : p.owner)
   const assign = (m: Member, role: string) => {
     const prev = m.role
-    onRoleChange(m, role)
+    p.onRoleChange(m, role)
     toast.show({
       title: `${m.name} is now ${label(role)}`,
-      action: { label: 'Undo', onClick: () => onRoleChange({ ...m, role }, prev) },
+      action: { label: 'Undo', onClick: () => p.onRoleChange({ ...m, role }, prev) },
     })
   }
   const change = (m: Member, role: string) => {
     if (locked(m)) {
       return void toast.show({
-        title: m.id === me ? 'You’re the only owner' : `${m.name} is the only owner`,
+        title: m.id === p.me ? 'You’re the only owner' : `${m.name} is the only owner`,
         description: 'Make someone else owner first, then change this role.',
         tone: 'critical',
       })
     }
     if (
-      m.id === me &&
-      roles.find((r) => r.value === m.role)?.manages &&
-      !roles.find((r) => r.value === role)?.manages
+      m.id === p.me &&
+      p.roles.find((r) => r.value === m.role)?.manages &&
+      !p.roles.find((r) => r.value === role)?.manages
     ) {
       demote = { m, role }
       demoting.value = true
@@ -132,231 +137,125 @@ export function MembersTable({
     }
     assign(m, role)
   }
-  const ask = (list: Member[]) => {
-    leaving.value = list
-    confirming.value = true
-  }
-  const remove = async () => {
-    const gone = leaving.value
-    await onRemove(gone)
-    selected.value = {}
-    toast.show({
-      title: gone.length > 1 ? `${gone.length} members removed` : `${gone[0]!.name} removed`,
-      action: onRestore && { label: 'Undo', onClick: () => onRestore(gone) },
-    })
-  }
+  const ask = askMembers(leaving, confirming)
+  const remove = removeMembers(p, leaving, selected)
   const removable = (keys: string[]) =>
-    people.value.filter((m) => keys.includes(m.id) && m.id !== me && !locked(m))
+    people.value.filter((m) => keys.includes(m.id) && m.id !== p.me && !locked(m))
   const count = derived(() => leaving.value.length)
-  const columns: Column<Member>[] = [
-    {
-      id: 'name',
-      header: 'Name',
-      rowHeader: true,
-      card: 'title',
-      sort: true,
-      cell: (m) => (
-        <span data-scope="row" data-wrap="none">
-          <Avatar name={m.name} size="sm" />
-          <span>
-            <b>{m.name}</b>
-            {m.id === me && (
-              <>
-                {' '}
-                <Badge>You</Badge>
-              </>
-            )}
-            <br />
-            <span class="muted">{m.email}</span>
-          </span>
-        </span>
-      ),
-    },
-    {
-      id: 'role',
-      header: 'Role',
-      cell: (m) => {
-        const held = derived(() => locked(m))
-        return (
-          <RoleCell
-            member={m}
-            label={`Role for ${m.name}`}
-            roles={roles}
-            locked={held.value}
-            onChange={(r) => change(m, r)}
-          />
-        )
-      },
-    },
-    { id: 'lastActive', header: 'Last active', card: 'hide' },
-    {
-      id: 'menu',
-      header: 'Actions',
-      value: () => '',
-      cell: (m) =>
-        m.id === me || locked(m) ? (
-          ''
-        ) : (
-          <Button
-            emphasis="ghost"
-            tone="critical"
-            size="sm"
-            data-icon-only=""
-            label={`Remove ${m.name}`}
-            onClick={() => ask([m])}
-          >
-            <TrashIcon />
-          </Button>
-        ),
-    },
-  ]
-  const inviteColumns: Column<Invite>[] = [
-    {
-      id: 'email',
-      header: 'Email',
-      rowHeader: true,
-      card: 'title',
-      cell: (v) => (
-        <span data-scope="row" data-wrap="none">
-          <Avatar name={v.email} size="sm" />
-          <span>
-            <b>{v.email}</b>
-            <br />
-            <span class="muted">Invite pending, sent {v.sent}</span>
-          </span>
-        </span>
-      ),
-    },
-    { id: 'role', header: 'Role', cell: (v) => <Badge>{label(v.role)}</Badge> },
-    {
-      id: 'actions',
-      header: 'Actions',
-      value: () => '',
-      cell: (v) => (
-        <span data-scope="row">
-          <Button
-            emphasis="link"
-            aria-label={`Resend invite to ${v.email}`}
-            onClick={() => {
-              onResend?.(v)
-              toast.show({ title: `Invite resent to ${v.email}`, tone: 'positive' })
-            }}
-          >
-            Resend
-          </Button>
-          <Button
-            emphasis="link"
-            tone="critical"
-            aria-label={`Revoke invite to ${v.email}`}
-            onClick={() => onRevoke?.(v)}
-          >
-            Revoke
-          </Button>
-        </span>
-      ),
-    },
-  ]
+  const columns = memberColumns(
+    () => p.me,
+    () => p.roles,
+    locked,
+    change,
+    ask,
+  )
+  const invitesColumns = inviteColumns(
+    label,
+    (v) => p.onResend?.(v),
+    (v) => p.onRevoke?.(v),
+  )
+  const confirmDemote = () => {
+    const d = demote!
+    assign(d.m, d.role)
+  }
+  return {
+    inviting,
+    confirming,
+    demoting,
+    leaving,
+    selected,
+    people,
+    pending,
+    used,
+    ask,
+    remove,
+    removable,
+    count,
+    columns,
+    invitesColumns,
+    confirmDemote,
+  }
+}
+
+function membersView(p: MembersTableProps, ctx: ReturnType<typeof membersState>) {
   return (
     <div data-scope="stack">
       <div data-scope="row" data-justify="between">
-        <SeatsMeter used={used.value} total={seats} />
-        <Button onClick={() => (inviting.value = true)}>Invite people</Button>
+        <SeatsMeter used={ctx.used.value} total={p.seats} />
+        <Button onClick={() => (ctx.inviting.value = true)}>Invite people</Button>
       </div>
       <Table
         caption="Workspace members"
         captionHidden
-        rows={people}
-        columns={columns}
+        rows={ctx.people}
+        columns={ctx.columns}
         picker={false}
         heading={3}
-        selection={selected}
+        selection={ctx.selected}
         bulk={(keys) => {
-          const list = removable(keys)
+          const list = ctx.removable(keys)
           return (
             <Button
               emphasis="soft"
               tone="critical"
               size="sm"
               disabled={!list.length}
-              onClick={() => ask(list)}
+              onClick={() => ctx.ask(list)}
             >
               {list.length ? `Remove ${plural(list.length, 'member')}` : 'Can’t remove these'}
             </Button>
           )
         }}
       />
-      {pending.value.length > 0 && (
+      {ctx.pending.value.length > 0 && (
         <Table
           caption="Pending invites"
-          rows={pending}
-          columns={inviteColumns}
+          rows={ctx.pending}
+          columns={ctx.invitesColumns}
           picker={false}
           heading={3}
         />
       )}
       <InviteDialog
-        open={inviting}
-        roles={roles.filter((r) => r.value !== owner)}
-        seatsLeft={seats - used.value}
-        onSend={onInvite}
+        open={ctx.inviting}
+        roles={p.roles.filter((r) => r.value !== (p.owner === undefined ? 'owner' : p.owner))}
+        seatsLeft={p.seats - ctx.used.value}
+        onSend={p.onInvite}
         defaultRole="member"
       />
       <ConfirmDialog
-        open={confirming}
+        open={ctx.confirming}
         glyph={UsersIcon}
         tone="critical"
         title={
-          count.value > 1 ? `Remove ${count.value} members?` : `Remove ${leaving.value[0]?.name}?`
+          ctx.count.value > 1
+            ? `Remove ${ctx.count.value} members?`
+            : `Remove ${ctx.leaving.value[0]?.name}?`
         }
-        description={`${leaving.value.map((m) => m.name).join(', ')} ${count.value > 1 ? 'lose' : 'loses'} access right away. Their work stays.`}
-        action={count.value > 1 ? `Remove ${count.value} members` : 'Remove member'}
-        onConfirm={remove}
+        description={`${ctx.leaving.value.map((m) => m.name).join(', ')} ${ctx.count.value > 1 ? 'lose' : 'loses'} access right away. Their work stays.`}
+        action={ctx.count.value > 1 ? `Remove ${ctx.count.value} members` : 'Remove member'}
+        onConfirm={ctx.remove}
       />
       <ConfirmDialog
-        open={demoting}
+        open={ctx.demoting}
         tone="critical"
         title="Change your own role?"
         description="You’ll lose access to this page, and someone else will have to give it back."
         action="Change my role"
-        onConfirm={() => {
-          const d = demote!
-          assign(d.m, d.role)
-        }}
+        onConfirm={ctx.confirmDemote}
       />
     </div>
   )
 }
 
-function RoleCell({
-  member,
-  label,
-  roles,
-  locked,
-  onChange,
-}: {
-  member: Member
-  label: string
-  roles: Role[]
-  locked: boolean
-  onChange: (role: string) => void
-}) {
-  const id = uid('role')
-  return (
-    <>
-      <InlineSelect
-        label={label}
-        value={member.role}
-        options={roles}
-        describedby={locked ? `${id}-why` : undefined}
-        onValueChange={onChange}
-      />
-      {locked && (
-        <span data-part="sr-only" id={`${id}-why`}>
-          This is the only owner. Make someone else owner first.
-        </span>
-      )}
-    </>
-  )
+/**
+ * Members (09 §4.2): DataTable with an inline role select, a bulk bar, and pending invites below. Role changes apply at
+ * once with Undo; removals ask, with one Undo for the batch. The last owner can't be demoted or removed, and the
+ * select says why; demoting yourself warns first.
+ */
+export function MembersTable(props: MembersTableProps) {
+  const p = untrack(() => props)
+  return membersView(p, membersState(p))
 }
 
 /** One row of the permissions matrix, with the roles that have it. */
