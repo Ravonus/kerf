@@ -25,6 +25,75 @@ interface Signal {
   candidate?: RTCIceCandidateInit
 }
 
+function connections(
+  room: PeerRoom,
+  iceServers: RTCIceServer[],
+  conns: Map<string, Conn>,
+  open: { value: number },
+) {
+  const channel = (id: string, c: Conn, dc: RTCDataChannel) => {
+    c.dc = dc
+    dc.onopen = () => {
+      open.value++
+    }
+    dc.onclose = () => {
+      open.value++
+    }
+    dc.onmessage = (e) => {
+      if (typeof e.data === 'string' && e.data.length < 1024) room.receive(id, e.data)
+    }
+  }
+  const connect = (id: string) => {
+    const had = conns.get(id)
+    if (had) return had
+    const c: Conn = { pc: new RTCPeerConnection({ iceServers }), makingOffer: false }
+    conns.set(id, c)
+    c.pc.onicecandidate = (e) => {
+      if (e.candidate) room.signal(id, { candidate: e.candidate.toJSON() })
+    }
+    c.pc.onconnectionstatechange = () => {
+      open.value++
+    }
+    c.pc.ondatachannel = (e) => channel(id, c, e.channel)
+    c.pc.onnegotiationneeded = async () => {
+      try {
+        c.makingOffer = true
+        await c.pc.setLocalDescription()
+        room.signal(id, { description: c.pc.localDescription!.toJSON() })
+      } catch {
+        // The other side's offer won: its handler takes over.
+      } finally {
+        c.makingOffer = false
+      }
+    }
+    return c
+  }
+  return { channel, connect }
+}
+
+function signalHandler(room: PeerRoom, connect: (id: string) => Conn) {
+  return async (from: string, data: unknown) => {
+    if (!untrack(() => room.peers.value).includes(from) || typeof data !== 'object' || !data) return
+    const { description, candidate } = data as Signal
+    const c = connect(from)
+    try {
+      if (description) {
+        // Perfect negotiation: the lower id gives way when both offer at once.
+        const collision =
+          description.type === 'offer' && (c.makingOffer || c.pc.signalingState !== 'stable')
+        if (collision && room.self > from) return
+        await c.pc.setRemoteDescription(description)
+        if (description.type === 'offer') {
+          await c.pc.setLocalDescription()
+          room.signal(from, { description: c.pc.localDescription!.toJSON() })
+        }
+      } else if (candidate) await c.pc.addIceCandidate(candidate).catch(() => {})
+    } catch {
+      // A bad frame from a peer costs that peer its link: frames for it stay on the socket.
+    }
+  }
+}
+
 /** A peer transport over a mesh of WebRTC data channels, for `presence(conn, { transport })`. */
 export function webrtc({ iceServers = [], max = 8 }: WebRtcOptions = {}): PeerTransport {
   return {
@@ -33,64 +102,8 @@ export function webrtc({ iceServers = [], max = 8 }: WebRtcOptions = {}): PeerTr
       return createRoot((dispose) => {
         const conns = new Map<string, Conn>()
         const open = state(0)
-        const channel = (id: string, c: Conn, dc: RTCDataChannel) => {
-          c.dc = dc
-          dc.onopen = () => {
-            open.value++
-          }
-          dc.onclose = () => {
-            open.value++
-          }
-          dc.onmessage = (e) => {
-            if (typeof e.data === 'string' && e.data.length < 1024) room.receive(id, e.data)
-          }
-        }
-        const connect = (id: string) => {
-          const had = conns.get(id)
-          if (had) return had
-          const c: Conn = { pc: new RTCPeerConnection({ iceServers }), makingOffer: false }
-          conns.set(id, c)
-          c.pc.onicecandidate = (e) => {
-            if (e.candidate) room.signal(id, { candidate: e.candidate.toJSON() })
-          }
-          c.pc.onconnectionstatechange = () => {
-            open.value++
-          }
-          c.pc.ondatachannel = (e) => channel(id, c, e.channel)
-          c.pc.onnegotiationneeded = async () => {
-            try {
-              c.makingOffer = true
-              await c.pc.setLocalDescription()
-              room.signal(id, { description: c.pc.localDescription!.toJSON() })
-            } catch {
-              // The other side's offer won: its handler takes over.
-            } finally {
-              c.makingOffer = false
-            }
-          }
-          return c
-        }
-        const answer = async (from: string, data: unknown) => {
-          if (!untrack(() => room.peers.value).includes(from) || typeof data !== 'object' || !data)
-            return
-          const { description, candidate } = data as Signal
-          const c = connect(from)
-          try {
-            if (description) {
-              // Perfect negotiation: the lower id gives way when both offer at once.
-              const collision =
-                description.type === 'offer' && (c.makingOffer || c.pc.signalingState !== 'stable')
-              if (collision && room.self > from) return
-              await c.pc.setRemoteDescription(description)
-              if (description.type === 'offer') {
-                await c.pc.setLocalDescription()
-                room.signal(from, { description: c.pc.localDescription!.toJSON() })
-              }
-            } else if (candidate) await c.pc.addIceCandidate(candidate).catch(() => {})
-          } catch {
-            // A bad frame from a peer costs that peer its link: frames for it stay on the socket.
-          }
-        }
+        const { channel, connect } = connections(room, iceServers, conns, open)
+        const answer = signalHandler(room, connect)
         const stop = room.onSignal((from, data) => void answer(from, data))
         const close = (id: string) => {
           conns.get(id)?.pc.close()
