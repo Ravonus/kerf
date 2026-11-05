@@ -30,7 +30,7 @@ const settle = async (ms = 0) => {
 }
 const $ = (s: string) => document.querySelector<HTMLElement>(s)!
 
-test('field shell: a scripted session', async () => {
+function prepareFieldTrace() {
   // jsdom has no layout: give the parts the box the measurement reads (and no canvas: translucent colours are checked
   // in a browser, not here)
   const box = (sel: string, o: Record<string, number>) => {
@@ -59,6 +59,10 @@ test('field shell: a scripted session', async () => {
     clientLeft: 1,
     clientTop: 1,
   })
+}
+
+test('field shell: a scripted session', async () => {
+  prepareFieldTrace()
   const state = () =>
     [...document.querySelectorAll<HTMLElement>('[data-scope="field"]')]
       .map((f) => {
