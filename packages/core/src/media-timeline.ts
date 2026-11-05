@@ -38,6 +38,114 @@ export interface Timeline<C extends string = string> {
   bind(element: HTMLMediaElement): () => void
 }
 
+function bindTimeline(
+  el: HTMLMediaElement,
+  options: TimelineOptions<string>,
+  setMedia: (el: HTMLMediaElement | undefined) => void,
+  getLast: () => number,
+  setLast: (t: number) => void,
+  getShown: () => boolean,
+  place: (t: number, crossing: boolean) => void,
+  playing: State<boolean>,
+  over: State<boolean>,
+  length: State<number>,
+) {
+  setMedia(el)
+  if (options.loop !== undefined) el.loop = options.loop
+  const video = el as HTMLVideoElement
+  const frames = !!video.requestVideoFrameCallback
+  let live = true
+  const next = () => {
+    if (el.paused || !live) return
+    if (frames)
+      video.requestVideoFrameCallback((_, m) => {
+        tick(m.mediaTime)
+      })
+    else requestAnimationFrame(() => tick(el.currentTime))
+  }
+  const tick = (t: number) => {
+    if (t < getLast()) setLast(-1) // the loop came round
+    place(t, true)
+    next()
+  }
+  const sync = () => {
+    if (getShown() !== !el.paused) playing.value = !el.paused
+    over.value = el.ended
+  }
+  const events: [string, () => void][] = [
+    [
+      'play',
+      () => {
+        sync()
+        next()
+      },
+    ],
+    ['pause', sync],
+    ['ended', sync],
+    [
+      'seeked',
+      () => {
+        setLast(el.currentTime)
+        place(el.currentTime, false)
+      },
+    ],
+    [
+      'durationchange',
+      () => {
+        if (Number.isFinite(el.duration)) length.value = el.duration
+      },
+    ],
+  ]
+  for (const [name, run] of events) el.addEventListener(name, run)
+  sync()
+  next()
+  return () => {
+    live = false
+    setMedia(undefined)
+    for (const [name, run] of events) el.removeEventListener(name, run)
+  }
+}
+
+function watchTimeline(
+  currentTime: State<number>,
+  playing: State<boolean>,
+  failure: State<Error | null>,
+  getMedia: () => HTMLMediaElement | undefined,
+  getSeen: () => number,
+  setShown: (on: boolean) => void,
+) {
+  watch(
+    () => currentTime.value,
+    (t) => {
+      const media = getMedia()
+      if (media && t !== getSeen()) media.currentTime = t
+    },
+  )
+  watch(
+    () => playing.value,
+    (on) => {
+      setShown(on)
+      const media = getMedia()
+      if (!media || on !== media.paused) return
+      if (on)
+        media.play().catch((e) => {
+          failure.value = e
+          playing.value = false
+        })
+      else media.pause()
+    },
+  )
+}
+
+function listenTimeline<C>(listeners: Map<C, Set<() => void>>, cue: C, run: () => void) {
+  const set = listeners.get(cue) ?? new Set()
+  listeners.set(cue, set)
+  set.add(run)
+  const off = () => set.delete(run)
+  if (getOwner()) onCleanup(off)
+  return off
+}
+
 /** The timeline of an animated asset, a video or an audio file. On the server it stays at 0, paused. */
 export function timeline<C extends string = never>(
   asset: MediaAsset,
@@ -74,23 +182,14 @@ export function timeline<C extends string = never>(
     last = t
   }
 
-  watch(
-    () => currentTime.value,
-    (t) => {
-      if (media && t !== seen) media.currentTime = t
-    },
-  )
-  watch(
-    () => playing.value,
-    (on) => {
-      shown = on
-      if (!media || on !== media.paused) return
-      if (on)
-        media.play().catch((e) => {
-          failure.value = e
-          playing.value = false
-        })
-      else media.pause()
+  watchTimeline(
+    currentTime,
+    playing,
+    failure,
+    () => media,
+    () => seen,
+    (value) => {
+      shown = value
     },
   )
 
@@ -101,69 +200,24 @@ export function timeline<C extends string = never>(
     ended: derived(() => over.value),
     cue: derived(() => reached.value),
     error: derived(() => failure.value),
-    on(cue, run) {
-      const set = listeners.get(cue) ?? new Set()
-      listeners.set(cue, set)
-      set.add(run)
-      const off = () => set.delete(run)
-      if (getOwner()) onCleanup(off)
-      return off
-    },
+    on: (cue, run) => listenTimeline(listeners, cue, run),
     bind(el) {
-      media = el
-      if (options.loop !== undefined) el.loop = options.loop
-      const video = el as HTMLVideoElement
-      const frames = !!video.requestVideoFrameCallback
-      let live = true
-      const next = () => {
-        if (el.paused || !live) return
-        if (frames)
-          video.requestVideoFrameCallback((_, m) => {
-            tick(m.mediaTime)
-          })
-        else requestAnimationFrame(() => tick(el.currentTime))
-      }
-      const tick = (t: number) => {
-        if (t < last) last = -1 // the loop came round
-        place(t, true)
-        next()
-      }
-      const sync = () => {
-        if (shown !== !el.paused) playing.value = !el.paused
-        over.value = el.ended
-      }
-      const events: [string, () => void][] = [
-        [
-          'play',
-          () => {
-            sync()
-            next()
-          },
-        ],
-        ['pause', sync],
-        ['ended', sync],
-        [
-          'seeked',
-          () => {
-            last = el.currentTime
-            place(el.currentTime, false)
-          },
-        ],
-        [
-          'durationchange',
-          () => {
-            if (Number.isFinite(el.duration)) length.value = el.duration
-          },
-        ],
-      ]
-      for (const [name, run] of events) el.addEventListener(name, run)
-      sync()
-      next()
-      return () => {
-        live = false
-        media = undefined
-        for (const [name, run] of events) el.removeEventListener(name, run)
-      }
+      return bindTimeline(
+        el,
+        options,
+        (value) => {
+          media = value
+        },
+        () => last,
+        (value) => {
+          last = value
+        },
+        () => shown,
+        place,
+        playing,
+        over,
+        length,
+      )
     },
   }
 }
