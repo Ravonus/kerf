@@ -29,12 +29,15 @@ export default function Gallery() {
   return (
     <Card
       eyebrow={
-        `${index.value + 1} of ${sculptures.length}`
+        `${index.value + 1} of ` + `${sculptures.length}`
       }
       title={sculpture.value?.name}
     >
       <p>by {sculpture.value?.artist}</p>
-      <Button size="sm" onClick={next}>
+      <Button
+        size="sm"
+        onClick={next}
+      >
         Next
       </Button>
       <Button
@@ -44,9 +47,7 @@ export default function Gallery() {
       >
         {showMore.value ? 'Hide' : 'Show'} details
       </Button>
-      {showMore.value && (
-        <p>{sculpture.value?.about}</p>
-      )}
+      {showMore.value && <p>{sculpture.value?.about}</p>}
     </Card>
   )
 }

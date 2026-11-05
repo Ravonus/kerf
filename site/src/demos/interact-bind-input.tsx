@@ -26,8 +26,14 @@ export default function Signup() {
   }
   return (
     <Card title="Two bound fields, one that isn't">
-      <NameField label="First name" bind:value={first} />
-      <NameField label="Last name" bind:value={last} />
+      <NameField
+        label="First name"
+        bind:value={first}
+      />
+      <NameField
+        label="Last name"
+        bind:value={last}
+      />
       <NameField
         label="Nickname (not bound)"
         value={first.value}

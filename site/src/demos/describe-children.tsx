@@ -42,7 +42,10 @@ export default function Panels() {
   return (
     <Card title="Two panels">
       <Stack gap="related">
-        <Panel title="Beans" aria-label="Beans in stock">
+        <Panel
+          title="Beans"
+          aria-label="Beans in stock"
+        >
           {stock.value} bags left
         </Panel>
         <Panel
@@ -52,9 +55,7 @@ export default function Panels() {
         >
           Order more when the beans run low.
         </Panel>
-        <Button onClick={sell}>
-          Sell a bag
-        </Button>
+        <Button onClick={sell}>Sell a bag</Button>
       </Stack>
     </Card>
   )
