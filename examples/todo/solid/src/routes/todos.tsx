@@ -62,21 +62,7 @@ export default function Todos() {
     toggle(id, done).catch(() => {})
   }
 
-  // Another tab, or another device, may have changed the list while this one was in the background.
-  onMount(() => {
-    let last = 0
-    const refresh = () => {
-      if (document.hidden || performance.now() - last < 250) return
-      last = performance.now()
-      revalidate(getTodos.key)
-    }
-    addEventListener('focus', refresh)
-    document.addEventListener('visibilitychange', refresh)
-    onCleanup(() => {
-      removeEventListener('focus', refresh)
-      document.removeEventListener('visibilitychange', refresh)
-    })
-  })
+  refreshOnReturn()
 
   return (
     <>
@@ -93,52 +79,14 @@ export default function Todos() {
       </header>
       <main class="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
         <h1 class="text-3xl font-semibold tracking-tight">Todos</h1>
-        <form action={addTodo} method="post" onSubmit={submit} class="mt-6 flex gap-2">
-          <input
-            name="title"
-            aria-label="New todo"
-            placeholder="What needs doing?"
-            required
-            maxlength="200"
-            autocomplete="off"
-            class={field}
-          />
-          <button type="submit" class={primary}>
-            Add
-          </button>
-        </form>
+        {todoForm(submit)}
         <Show when={failed()}>
           <p role="alert" class="mt-2 text-sm font-medium text-danger">
             That change wasn't saved. Check your connection and try again.
           </p>
         </Show>
-        <nav aria-label="Filter" class="mt-6 flex gap-1">
-          <For each={filters}>
-            {(f) => (
-              <a
-                href={f === 'all' ? '/todos' : `/todos?filter=${f}`}
-                aria-current={filter() === f ? 'page' : undefined}
-                class="rounded-lg px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink aria-[current=page]:bg-sunken aria-[current=page]:text-accent-text"
-              >
-                {labels[f]}
-              </a>
-            )}
-          </For>
-        </nav>
-        <ErrorBoundary
-          fallback={(_, reset) => (
-            <div role="alert" class="mt-3 rounded-2xl border border-line bg-surface p-6 text-sm">
-              <p class="font-medium text-danger">Your list didn't load. Nothing was lost.</p>
-              <button
-                type="button"
-                class="mt-2 font-semibold text-accent-text underline underline-offset-4"
-                onClick={reset}
-              >
-                Try again
-              </button>
-            </div>
-          )}
-        >
+        {filterNav(filter)}
+        <ErrorBoundary fallback={(_, reset) => failedList(reset)}>
           <Suspense fallback={<Loading />}>
             <TodoList
               filter={filter()}
@@ -153,6 +101,76 @@ export default function Todos() {
       </main>
     </>
   )
+}
+
+function failedList(reset: () => void) {
+  return (
+    <div role="alert" class="mt-3 rounded-2xl border border-line bg-surface p-6 text-sm">
+      <p class="font-medium text-danger">Your list didn't load. Nothing was lost.</p>
+      <button
+        type="button"
+        class="mt-2 font-semibold text-accent-text underline underline-offset-4"
+        onClick={reset}
+      >
+        Try again
+      </button>
+    </div>
+  )
+}
+
+function filterNav(filter: () => Filter) {
+  return (
+    <nav aria-label="Filter" class="mt-6 flex gap-1">
+      <For each={filters}>
+        {(f) => (
+          <a
+            href={f === 'all' ? '/todos' : `/todos?filter=${f}`}
+            aria-current={filter() === f ? 'page' : undefined}
+            class="rounded-lg px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink aria-[current=page]:bg-sunken aria-[current=page]:text-accent-text"
+          >
+            {labels[f]}
+          </a>
+        )}
+      </For>
+    </nav>
+  )
+}
+
+function todoForm(submit: (e: SubmitEvent & { currentTarget: HTMLFormElement }) => void) {
+  return (
+    <form action={addTodo} method="post" onSubmit={submit} class="mt-6 flex gap-2">
+      <input
+        name="title"
+        aria-label="New todo"
+        placeholder="What needs doing?"
+        required
+        maxlength="200"
+        autocomplete="off"
+        class={field}
+      />
+      <button type="submit" class={primary}>
+        Add
+      </button>
+    </form>
+  )
+}
+
+function refreshOnReturn() {
+  // Another tab, or another device, may have changed the list while this one was in the background.
+  onMount(() => {
+    let last = 0
+    const refresh = () => {
+      if (document.hidden || performance.now() - last < 250) return
+      last = performance.now()
+      revalidate(getTodos.key)
+    }
+    addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    onCleanup(() => {
+      removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    })
+  })
 }
 
 /** The middleware turned away anyone with no cookie, so the shell is already out. A cookie that no longer stands is caught here. */
@@ -175,14 +193,16 @@ function Account() {
 type Pending<Input extends unknown[]> = Iterable<{ pending: boolean; input: Input }>
 type Fields = FormData | URLSearchParams
 
-function TodoList(props: {
+type TodoListProps = {
   filter: Filter
   adds: Pending<[Fields]>
   toggles: Pending<[string, boolean]>
   deletes: Pending<[Fields]>
   onToggle(id: string, done: boolean): void
   onDelete(): void
-}) {
+}
+
+function TodoList(props: TodoListProps) {
   const data = createAsyncStore(() => getTodos(props.filter), { reconcile: { key: 'id' } })
 
   // What's on its way to the server, laid over the last list it sent. A submission leaves these as soon as its reply has been applied.
@@ -226,46 +246,7 @@ function TodoList(props: {
       {/* The delete buttons belong to this form from a distance: Enter on a checkbox inside it would press the first one. */}
       <form id="delete-todo" action={deleteTodo} method="post" onSubmit={props.onDelete} />
       <ul role="list" aria-label="Todos" class="divide-y divide-line">
-        <For each={rows()}>
-          {(todo) => (
-            <li class="flex items-center gap-2 pr-2">
-              <label class="flex min-w-0 flex-1 cursor-pointer items-center gap-3 py-3 pl-4">
-                <input
-                  type="checkbox"
-                  class="check"
-                  checked={isDone(todo)}
-                  onInput={(e) => props.onToggle(todo.id, e.currentTarget.checked)}
-                />
-                <span
-                  class="min-w-0 wrap-anywhere"
-                  classList={{ 'text-faint line-through': isDone(todo) }}
-                >
-                  {todo.title}
-                </span>
-              </label>
-              <button
-                type="submit"
-                form="delete-todo"
-                name="id"
-                value={todo.id}
-                aria-label={`Delete ${todo.title}`}
-                class="grid size-9 flex-none cursor-pointer place-items-center rounded-lg text-faint transition-colors hover:bg-sunken hover:text-danger"
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 16 16"
-                  class="size-4"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.75"
-                  stroke-linecap="round"
-                >
-                  <path d="M3.5 3.5l9 9m0-9l-9 9" />
-                </svg>
-              </button>
-            </li>
-          )}
-        </For>
+        <For each={rows()}>{(todo) => todoRow(todo, isDone, props)}</For>
       </ul>
       <Show when={!rows().length}>
         <p class="px-4 py-10 text-center text-muted">{empty[props.filter]}</p>
@@ -275,6 +256,48 @@ function TodoList(props: {
         class="border-t border-line px-4 py-2.5 text-sm text-muted tabular-nums"
       >{`${left()} left`}</p>
     </div>
+  )
+}
+
+function todoRow(
+  todo: { id: string; title: string; done: boolean },
+  isDone: (todo: { id: string; done: boolean }) => boolean,
+  props: TodoListProps,
+) {
+  return (
+    <li class="flex items-center gap-2 pr-2">
+      <label class="flex min-w-0 flex-1 cursor-pointer items-center gap-3 py-3 pl-4">
+        <input
+          type="checkbox"
+          class="check"
+          checked={isDone(todo)}
+          onInput={(e) => props.onToggle(todo.id, e.currentTarget.checked)}
+        />
+        <span class="min-w-0 wrap-anywhere" classList={{ 'text-faint line-through': isDone(todo) }}>
+          {todo.title}
+        </span>
+      </label>
+      <button
+        type="submit"
+        form="delete-todo"
+        name="id"
+        value={todo.id}
+        aria-label={`Delete ${todo.title}`}
+        class="grid size-9 flex-none cursor-pointer place-items-center rounded-lg text-faint transition-colors hover:bg-sunken hover:text-danger"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 16 16"
+          class="size-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+        >
+          <path d="M3.5 3.5l9 9m0-9l-9 9" />
+        </svg>
+      </button>
+    </li>
   )
 }
 
