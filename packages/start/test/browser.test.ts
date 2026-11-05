@@ -5,11 +5,19 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { inject } from 'vitest'
+import type * as Playwright from 'playwright-core'
 import { fixture } from './dev-server.setup.mjs'
 
+declare global {
+  interface Window {
+    __mounted?: boolean
+    __plain?: unknown
+  }
+}
+
 const url = inject('url')
-const { chromium } = createRequire(import.meta.url)('playwright-core')
-let browser
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await chromium.launch()
 })
@@ -17,9 +25,9 @@ afterAll(async () => {
   await browser?.close()
 })
 
-async function open(path) {
+async function open(path: string) {
   const page = await browser.newPage()
-  const errors = []
+  const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   page.on('console', (m) =>
     m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined,
@@ -30,7 +38,7 @@ async function open(path) {
 }
 
 /** Start recording DOM writes under #app; `take()` returns them as `type:node` strings. */
-async function record(page) {
+async function record(page: Playwright.Page) {
   await page.evaluate(() => {
     window.__writes = []
     window.__mo = new MutationObserver((r) =>
@@ -40,7 +48,7 @@ async function record(page) {
         ),
       ),
     )
-    window.__mo.observe(document.getElementById('app'), {
+    window.__mo.observe(document.getElementById('app')!, {
       subtree: true,
       childList: true,
       characterData: true,
@@ -57,7 +65,7 @@ async function record(page) {
 }
 
 test("a client that starts after a failure lands takes its error view, and doesn't read it again", async () => {
-  const fetched = []
+  const fetched: string[] = []
   const page = await browser.newPage()
   page.on('request', (r) => r.url().includes('/_weft/') && fetched.push(r.url()))
   await page.goto(url + '/held?ms=0')
@@ -89,7 +97,8 @@ test('a streamed page: Boundaries swapped in before hydration, then 0/0, and no 
   const markers = await page.evaluate(() => {
     const w = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT)
     const out = []
-    for (let n; (n = w.nextNode());) if (/^\/?wb:/.test(n.data)) out.push(n.data)
+    for (let n; (n = w.nextNode());)
+      if (/^\/?wb:/.test((n as Comment).data)) out.push((n as Comment).data)
     return out
   })
   expect(markers).toEqual([])
@@ -99,9 +108,9 @@ test('a streamed page: Boundaries swapped in before hydration, then 0/0, and no 
 
 describe('a client running before the chunks land', () => {
   async function held() {
-    const fetched = []
+    const fetched: string[] = []
     const page = await browser.newPage()
-    const errors = []
+    const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
     page.on('request', (r) => r.url().includes('/_weft/') && fetched.push(r.url()))
     await page.goto(url + '/held?ms=2500', { waitUntil: 'commit' })
@@ -135,7 +144,7 @@ describe('a client running before the chunks land', () => {
     expect(await page.textContent('.more')).toBe('landed 0')
     expect(await page.evaluate(() => window.__mounted)).toBe(true) // on the page by then, in a document with a window
     await page.click('.more')
-    await page.waitForFunction(() => document.querySelector('.more').textContent === 'landed 1')
+    await page.waitForFunction(() => document.querySelector('.more')!.textContent === 'landed 1')
     expect(await page.textContent('.inner')).toBe('inside')
     expect(await page.textContent('.plain')).toBe('plain')
     expect(fetched).toEqual([])
@@ -146,7 +155,8 @@ describe('a client running before the chunks land', () => {
     const markers = await page.evaluate(() => {
       const w = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT)
       const out = []
-      for (let n; (n = w.nextNode());) if (/^\/?wb:/.test(n.data)) out.push(n.data)
+      for (let n; (n = w.nextNode());)
+        if (/^\/?wb:/.test((n as Comment).data)) out.push((n as Comment).data)
       return out
     })
     expect(markers).toEqual([])
@@ -190,7 +200,7 @@ test('navigating between users keeps both layouts and writes only what changed',
     'childList:DIV',
     'childList:DIV',
   ])
-  expect(await section.evaluate((e) => e.isConnected)).toBe(true)
+  expect(await section!.evaluate((e) => e.isConnected)).toBe(true)
   expect(await mounts()).toBe(1)
   expect(page.url()).toBe(url + '/users/2')
   // The head is the server's merged metadata for the new route (setHead), for the tab title and history.
@@ -283,7 +293,7 @@ test('dev: with JS off the first paint has every stylesheet of the route, and on
   try {
     const page = await context.newPage()
     await page.goto(url + '/styled')
-    const color = (selector) =>
+    const color = (selector: string) =>
       page
         .locator(selector)
         .first()
@@ -294,7 +304,7 @@ test('dev: with JS off the first paint has every stylesheet of the route, and on
     expect(await color('.badge')).toBe('rgb(4, 5, 6)')
     for (const href of await page
       .locator('link[rel="stylesheet"]')
-      .evaluateAll((l) => l.map((e) => e.href))) {
+      .evaluateAll((l) => l.map((e) => (e as HTMLLinkElement).href))) {
       const res = await fetch(href, { headers: { accept: 'text/css' } })
       expect([href, res.status, res.headers.get('content-type')]).toEqual([
         href,
@@ -321,7 +331,7 @@ test('dev: the client adds no second copy of a linked sheet, and HMR updates the
       () =>
         [...document.styleSheets].filter((s) => {
           try {
-            return [...s.cssRules].some((r) => r.selectorText === '.styled')
+            return [...s.cssRules].some((r) => (r as CSSStyleRule).selectorText === '.styled')
           } catch {
             return false
           }
@@ -332,7 +342,7 @@ test('dev: the client adds no second copy of a linked sheet, and HMR updates the
     expect(await page.locator('style[data-vite-dev-id]').count()).toBe(0)
     writeFileSync(file, before.replace('rgb(1, 2, 3)', 'rgb(21, 22, 23)'))
     await page.waitForFunction(
-      () => getComputedStyle(document.querySelector('.styled')).color === 'rgb(21, 22, 23)',
+      () => getComputedStyle(document.querySelector('.styled')!).color === 'rgb(21, 22, 23)',
       null,
       { timeout: 10_000 },
     )
