@@ -16,37 +16,50 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
 import { check } from '../../cli/src/check.mjs'
-import { scaffold, template, TEMPLATES } from '../src/index.mjs'
+import { scaffold, template as templateSource, TEMPLATES } from '../src/index.mjs'
+import type * as TS from '../../cli/node_modules/typescript/lib/typescript.js'
 import { resolveChoices } from '../src/wizard.mjs'
 import { idempotent, loadTemplate, withTemplate } from '../src/templates.mjs'
 
-const ts = createRequire(new URL('../../cli/package.json', import.meta.url))('typescript')
+const template = templateSource as (
+  options?: Parameters<typeof templateSource>[0],
+) => Record<string, string>
+const choose = resolveChoices as (
+  given: Record<string, unknown>,
+  options: { interactive?: boolean; yes?: boolean },
+) => ReturnType<typeof resolveChoices>
+const ts = createRequire(new URL('../../cli/package.json', import.meta.url))(
+  'typescript',
+) as typeof TS
 const here = new URL('../', import.meta.url)
 const tmp = fileURLToPath(new URL('./.tmp-templates/', import.meta.url))
 const pkgs = fileURLToPath(new URL('../../', import.meta.url))
 afterAll(() => rmSync(tmp, { recursive: true, force: true }))
 
 // Package folders match their npm name without the scope.
-const home = (dep) => join(pkgs, dep.replace('@weft-js/', ''))
+const home = (dep: string) => join(pkgs, dep.replace('@weft-js/', ''))
 
 const written = TEMPLATES.filter((name) =>
   existsSync(new URL(`templates/${name}/template.json`, here)),
 )
 
-function literal(node) {
+function literal(node: TS.Node): unknown {
   if (ts.isStringLiteral(node)) return node.text
   if (ts.isNumericLiteral(node)) return Number(node.text)
   if (ts.isObjectLiteralExpression(node))
     return Object.fromEntries(
       node.properties.map((p) => {
         expect(ts.isPropertyAssignment(p)).toBe(true)
-        return [p.name.text, literal(p.initializer)]
+        return [
+          ((p as TS.PropertyAssignment).name as { text: string }).text,
+          literal((p as TS.PropertyAssignment).initializer),
+        ]
       }),
     )
   throw new Error(`Unexpected warp option: ${node.getText()}`)
 }
 
-function app(name, options = {}) {
+function app(name: string, options: { config?: string } = {}) {
   const dir = join(tmp, `${name}-${options.config ?? 'ts'}`)
   rmSync(dir, { recursive: true, force: true })
   scaffold(dir, { template: name, ...options })
@@ -103,7 +116,8 @@ describe.each(written)('--template %s', (name) => {
   // Without them the routes don't load, and H016 says their source was checked instead. weft's own packages are linked,
   // so one of those not resolving is a fault here, not a missing install.
   it('weft check is clean', async () => {
-    const uninstalled = (d) => d.code === 'H016' && d.route === '*' && !d.why.includes('@weft-js/')
+    const uninstalled = (d: { code: string; route?: string; why: string }) =>
+      d.code === 'H016' && d.route === '*' && !d.why.includes('@weft-js/')
     expect((await check(app(name))).diagnostics.filter((d) => !uninstalled(d))).toEqual([])
   })
 
@@ -118,7 +132,7 @@ describe.each(written)('--template %s', (name) => {
 
 describe('the overlay', () => {
   const files = template({ template: 'landing', name: 'launch' })
-  const pkg = JSON.parse(files['package.json'])
+  const pkg = JSON.parse(files['package.json']!)
 
   it('implies what the template requires, with postgres as the database', () => {
     expect(pkg.dependencies.postgres).toBeDefined()
@@ -141,18 +155,18 @@ describe('the overlay', () => {
   it("puts the template's warp options in the config", () => {
     const source = ts.createSourceFile(
       'weft.config.ts',
-      files['weft.config.ts'],
+      files['weft.config.ts']!,
       ts.ScriptTarget.Latest,
     )
-    const calls = []
-    const visit = (node) => {
+    const calls: TS.CallExpression[] = []
+    const visit = (node: TS.Node) => {
       if (ts.isCallExpression(node) && node.expression.getText(source) === 'warp') calls.push(node)
       ts.forEachChild(node, visit)
     }
     visit(source)
     expect(calls).toHaveLength(1)
-    expect(calls[0].arguments).toHaveLength(1)
-    expect(literal(calls[0].arguments[0])).toEqual(loadTemplate('landing').warp)
+    expect(calls[0]!.arguments).toHaveLength(1)
+    expect(literal(calls[0]!.arguments[0]!)).toEqual(loadTemplate('landing').warp)
   })
 
   it('the default stays what it was without a template', () => {
@@ -161,7 +175,7 @@ describe('the overlay', () => {
   })
 
   it('the wizard asks nothing the template settled, and takes its auth over the default', async () => {
-    const choices = await resolveChoices(withTemplate({ template: 'landing' }), {
+    const choices = await choose(withTemplate({ template: 'landing' }), {
       interactive: false,
       yes: true,
     })
@@ -196,7 +210,7 @@ it('every scaffold gets a short AGENTS.md', () => {
   expect(shipped).toContain('`src/theme.css`')
   expect(shipped).toContain('`drizzle/` applies on the first request')
   expect(shipped).not.toContain('before the first run')
-  expect(Buffer.byteLength(shipped)).toBeLessThan(2048)
+  expect(Buffer.byteLength(shipped!)).toBeLessThan(2048)
 })
 
 it('idempotent() guards every statement drizzle-kit writes', () => {
@@ -238,7 +252,7 @@ it('the bin takes --template, and the tarball carries templates/', () => {
       cwd: fileURLToPath(here),
       encoding: 'utf8',
     }).stdout,
-  ).files.map((f) => f.path)
+  ).files.map((f: { path: string }) => f.path)
   expect(packed).toEqual(
     expect.arrayContaining([
       'templates/landing/template.json',
@@ -247,5 +261,5 @@ it('the bin takes --template, and the tarball carries templates/', () => {
       'templates/landing/files/drizzle/meta/_journal.json',
     ]),
   )
-  expect(packed).not.toContain('test/scaffold.test.mjs')
+  expect(packed).not.toContain('test/scaffold.test.ts')
 })
