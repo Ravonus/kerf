@@ -1,19 +1,34 @@
 import { state } from '@weft-js/core'
-import { Grid, MarkdownEditor, RichTextEditor, SignaturePad, Stack, Text } from '@weft-js/warp'
+import {
+  Grid,
+  MarkdownEditor,
+  RichTextEditor,
+  SignaturePad,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 import type { SignatureValue } from '@weft-js/warp'
 import { Cell } from '../../world'
 import { people } from './mentions-rich-text'
 
 export const RichTextEditorStates = () => (
-  <Grid cols={3} gap="group">
+  <Grid
+    cols={3}
+    gap="group"
+  >
     <Cell name="Empty">
-      <RichTextEditor label="Notes" toolbar="none" />
+      <RichTextEditor
+        label="Notes"
+        toolbar="none"
+      />
     </Cell>
     <Cell name="Filled">
       <RichTextEditor
         label="Notes"
         toolbar="none"
-        defaultValue="<p>Shipped on <strong>Friday</strong>.</p>"
+        defaultValue={
+          '<p>Shipped on <strong>Friday</strong>.</p>'
+        }
       />
     </Cell>
     <Cell name="Hint">
@@ -25,7 +40,11 @@ export const RichTextEditorStates = () => (
       />
     </Cell>
     <Cell name="Invalid">
-      <RichTextEditor label="Notes" toolbar="none" error="Write something before you publish." />
+      <RichTextEditor
+        label="Notes"
+        toolbar="none"
+        error="Write something before you publish."
+      />
     </Cell>
   </Grid>
 )
@@ -44,13 +63,20 @@ The public shop, served from the **edge**.
 See [the deploy guide](https://weft.dev/docs) for more.
 `
 
-export const MarkdownEditorBasic = () => <MarkdownEditor label="README" defaultValue={README} />
+export const MarkdownEditorBasic = () => (
+  <MarkdownEditor
+    label="README"
+    defaultValue={README}
+  />
+)
 
 export const MarkdownEditorShort = () => (
   <MarkdownEditor
     label="Changelog entry"
     rows={5}
-    defaultValue={'**Fixed:** retries on timed out calls.'}
+    defaultValue={
+      '**Fixed:** retries on timed out calls.'
+    }
     hint="⌘B and ⌘I wrap the selection."
   />
 )
@@ -58,13 +84,24 @@ export const MarkdownEditorShort = () => (
 export const MarkdownEditorStates = () => (
   <Stack gap="group">
     <Cell name="Empty">
-      <MarkdownEditor label="Changelog entry" rows={3} />
+      <MarkdownEditor
+        label="Changelog entry"
+        rows={3}
+      />
     </Cell>
     <Cell name="Filled">
-      <MarkdownEditor label="Changelog entry" rows={3} defaultValue="**Fixed:** retries." />
+      <MarkdownEditor
+        label="Changelog entry"
+        rows={3}
+        defaultValue="**Fixed:** retries."
+      />
     </Cell>
     <Cell name="Hint">
-      <MarkdownEditor label="Changelog entry" rows={3} hint="⌘B and ⌘I wrap the selection." />
+      <MarkdownEditor
+        label="Changelog entry"
+        rows={3}
+        hint="⌘B and ⌘I wrap the selection."
+      />
     </Cell>
     <Cell name="Invalid">
       <MarkdownEditor
@@ -99,8 +136,15 @@ export function SignaturePadBasic() {
   const signature = state<SignatureValue | null>(null)
   return (
     <Stack gap="related">
-      <SignaturePad label="Signature" value={signature} />
-      <Text subtle>{signature.value ? `Signed: ${signature.value.method}` : 'Not signed yet'}</Text>
+      <SignaturePad
+        label="Signature"
+        value={signature}
+      />
+      <Text subtle>
+        {signature.value
+          ? `Signed: ${signature.value.method}`
+          : 'Not signed yet'}
+      </Text>
     </Stack>
   )
 }
@@ -108,6 +152,10 @@ export function SignaturePadBasic() {
 export const SignaturePadTyped = () => (
   <SignaturePad
     label="Signature"
-    defaultValue={{ method: 'typed', text: 'Mara Lindqvist', svg: '' }}
+    defaultValue={{
+      method: 'typed',
+      text: 'Mara Lindqvist',
+      svg: '',
+    }}
   />
 )

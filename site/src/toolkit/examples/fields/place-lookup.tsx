@@ -1,5 +1,9 @@
 import { state } from '@weft-js/core'
-import { PlaceLookupInput, Stack, Text } from '@weft-js/warp'
+import {
+  PlaceLookupInput,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 import type { Place } from '@weft-js/warp'
 
 /* ---- PlaceLookupInput ---- */
@@ -68,13 +72,23 @@ const PLACE_KINDS = [
   { id: 'air', label: 'Airports' },
 ]
 
-export const findPlace = async (q: string, o: { bias: Record<string, boolean> }) => {
+export const findPlace = async (
+  q: string,
+  o: { bias: Record<string, boolean> },
+) => {
   await new Promise((done) => {
     setTimeout(done, 200)
   })
-  const kinds = [o.bias.city && 'City', o.bias.air && 'Airport']
+  const kinds = [
+    o.bias.city && 'City',
+    o.bias.air && 'Airport',
+  ]
   return PLACES.filter(
-    (p) => kinds.includes(p.category) && p.displayName.toLowerCase().includes(q.toLowerCase()),
+    (p) =>
+      kinds.includes(p.category) &&
+      p.displayName
+        .toLowerCase()
+        .includes(q.toLowerCase()),
   )
 }
 
@@ -91,10 +105,15 @@ export function PlaceLookupInputPicked() {
   const place = state<Place | null>(PLACES[0] ?? null)
   return (
     <Stack gap="related">
-      <PlaceLookupInput label="Nearest office" search={findPlace} value={place} />
+      <PlaceLookupInput
+        label="Nearest office"
+        search={findPlace}
+        value={place}
+      />
       <Text subtle>
         {place.value
-          ? `New deploys run close to ${place.value.displayName}.`
+          ? 'New deploys run close to ' +
+            `${place.value.displayName}.`
           : 'Pick a place from the list.'}
       </Text>
     </Stack>
