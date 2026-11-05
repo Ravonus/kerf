@@ -628,7 +628,7 @@ export async function audit(root, options = {}) {
       }
     }
     await Promise.all(
-      Array.from({ length: Math.min(options.concurrency ?? 4, jobs.length) }, worker),
+      Array.from({ length: Math.min(options.concurrency ?? 1, jobs.length) }, worker),
     )
   } finally {
     browser.close()
