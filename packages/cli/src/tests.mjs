@@ -17,12 +17,12 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import ts from 'typescript'
 import { diagnostic, positions } from './diag.mjs'
-import { parse, testCall, walk } from './tests/syntax.mjs'
-import { contextOf } from './tests/context.mjs'
-import { runTestRules } from './tests/test-rules.mjs'
-import { fileRules, renderResultsOf } from './tests/file-rules.mjs'
+import { parse, testCall, walk } from './test-rules/syntax.mjs'
+import { contextOf } from './test-rules/context.mjs'
+import { runTestRules } from './test-rules/test-rules.mjs'
+import { fileRules, renderResultsOf } from './test-rules/file-rules.mjs'
 
-export { isSubject, matcherOf, norm, parse, resolveImport, testCall } from './tests/syntax.mjs'
+export { isSubject, matcherOf, norm, parse, resolveImport, testCall } from './test-rules/syntax.mjs'
 
 export const testGlobs = ['**/*.{test,spec}.{ts,tsx,mts,cts,js,jsx,mjs,cjs}']
 
