@@ -38,14 +38,13 @@ function loadSaved(): Saved {
   }
 }
 
-export function App(props: { api: Api }) {
-  const api = props.api
+function createMarket(api: Api) {
   // Per-stock live state lives in stores keyed by id: a quote writes one stock's fields, so only the
   // computations that read that stock (its row, the panel, the portfolio if held, a Change sort) run again.
   const [live, setLive] = createStore<Record<string, Live>>({})
   const [favorites, setFavorites] = createStore<Record<string, boolean>>({})
   const [notes, setNotes] = createStore<Record<string, string>>({})
-  const [stocks, setStocks] = createSignal<Stock[]>([])
+  const [stockRows, setStocks] = createSignal<Stock[]>([])
 
   const [data] = createResource(() =>
     Promise.all([api.listStocks(), api.listHoldings()]).then(([stocks, holdings]) => {
@@ -81,6 +80,10 @@ export function App(props: { api: Api }) {
     }),
   )
 
+  return [live, favorites, setFavorites, notes, setNotes, data, stockRows] as const
+}
+
+function createNavigation(api: Api) {
   const [saved, setSaved] = createStore<Saved>(loadSaved())
   createEffect(() => localStorage.setItem(VIEW_KEY, JSON.stringify(saved)))
   const tab = () => saved.tab
@@ -102,6 +105,11 @@ export function App(props: { api: Api }) {
     })
   const search = (): SearchState => searches().find((s) => s.tab === tab())?.search ?? idle
 
+  return [tab, view, setView, selectTab, search] as const
+}
+
+function createFavorites(api: Api, market: ReturnType<typeof createMarket>) {
+  const [, favorites, setFavorites] = market
   const [alert, setAlert] = createSignal<string | null>(null)
   const clicks = new Map<string, number>()
   const toggle = (stock: Stock) => {
@@ -117,18 +125,11 @@ export function App(props: { api: Api }) {
     })
   }
 
-  const [openId, setOpenId] = createSignal<string | null>(null)
-  let opener: HTMLElement | undefined
-  const openDetails = (id: string, button: HTMLElement) => {
-    opener = button
-    setOpenId(id)
-  }
-  const closeDetails = () => {
-    setOpenId(null)
-    opener?.focus()
-    opener = undefined
-  }
+  return [alert, toggle] as const
+}
 
+function createSaves(market: ReturnType<typeof createMarket>) {
+  const [, , , notes, setNotes] = market
   const [saves, setSaves] = createSignal<Save[]>([])
   const save = (id: string, text: string) =>
     batch(() => {
@@ -144,9 +145,18 @@ export function App(props: { api: Api }) {
     })
   }
 
+  return [saves, save, undo] as const
+}
+
+function createDisplay(
+  market: ReturnType<typeof createMarket>,
+  navigation: ReturnType<typeof createNavigation>,
+) {
+  const [live, favorites, , , , , stockRows] = market
+  const [tab, view, , , search] = navigation
   // The rows keep their identity (the same Stock objects from the load), so <For> only adds, removes and moves rows.
   const filtered = createMemo(() => {
-    const all = stocks()
+    const all = stockRows()
     const t = tab()
     const ids = search().results
     const onlyFavorites = view().favoritesOnly
@@ -165,6 +175,30 @@ export function App(props: { api: Api }) {
     const change = new Map(rows.map((s) => [s, (live[s.id].price - s.prevClose) / s.prevClose]))
     return [...rows].sort((a, b) => change.get(b)! - change.get(a)!)
   })
+  return shown
+}
+
+export function App(props: { api: Api }) {
+  const api = props.api
+  const market = createMarket(api)
+  const [live, favorites, , notes, , data] = market
+  const navigation = createNavigation(api)
+  const [tab, view, setView, selectTab, search] = navigation
+  const [alert, toggle] = createFavorites(api, market)
+  const [openId, setOpenId] = createSignal<string | null>(null)
+  let opener: HTMLElement | undefined
+  const openDetails = (id: string, button: HTMLElement) => {
+    opener = button
+    setOpenId(id)
+  }
+  const closeDetails = () => {
+    setOpenId(null)
+    opener?.focus()
+    opener = undefined
+  }
+
+  const [saves, save, undo] = createSaves(market)
+  const shown = createDisplay(market, navigation)
   const portfolio = createMemo(() =>
     (data()?.holdings ?? []).reduce((sum, h) => sum + h.qty * (live[h.id]?.price ?? 0), 0),
   )
