@@ -14,9 +14,11 @@ import type { Column, TableProps } from './Table-types'
 export type TableInput<T> = TableProps<T>
 type Refs = { el: HTMLDivElement | undefined; columnsButton: HTMLElement | undefined }
 
-function tableCore<T>(input: TableInput<T>, refs: Refs) {
+/** Create the table model under its existing owner. */
+export function tableModel<T>(input: TableInput<T>) {
+  const refs: Refs = { el: undefined, columnsButton: undefined }
   const base = tableBase(input)
-  const { id, level, cols, keyOf, read, title, typed, order, sel, open, at, sheet } = base
+  const { cols, keyOf, read, typed, order, sel, at } = base
   const source = tableSource(input, cols, typed, order, at, read)
   watch(
     () => typed.value,
@@ -25,30 +27,8 @@ function tableCore<T>(input: TableInput<T>, refs: Refs) {
     },
   )
   const selection = tableSelection(sel, source.visible, keyOf, cols, order, input)
-  const details = tableDetails({
-    id,
-    level,
-    cols,
-    keyOf,
-    read,
-    sel,
-    open,
-    title,
-    pick: selection.pick,
-    sheet,
-    columns: () => input.columns,
-    props: input,
-    details: () => input.details,
-    element: () => refs.el,
-  })
-  return { base, source, selection, details }
-}
-
-/** Create the table model under its existing owner. */
-export function tableModel<T>(input: TableInput<T>) {
-  const refs: Refs = { el: undefined, columnsButton: undefined }
-  const { base, source, selection, details } = tableCore(input, refs)
-  const { cols, typed, hidden, at, sheet, width } = base
+  const details = tableDetails(input, base, selection.pick, () => refs.el)
+  const { hidden, sheet, width } = base
   const paging = tablePaging(input, source, at)
   const notice = tableNotice(input, source.phase, typed)
   use(
