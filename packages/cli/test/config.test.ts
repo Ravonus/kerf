@@ -1,13 +1,21 @@
 import { readFileSync } from 'node:fs'
 import typescript from 'typescript'
 import { describe, expect, it } from 'vitest'
-import { configSchema, loadConfig } from '../src/load-config.mjs'
+import { configSchema, loadConfig as loadConfigRaw } from '../src/load-config.mjs'
 import { bindSlots } from '../src/slots.mjs'
 import { project } from './helpers.mjs'
 
-const withConfig = (body) =>
+type Diagnostic = { code: string; span?: [number, number]; why: string; severity: string }
+type ConfigResult = Omit<Awaited<ReturnType<typeof loadConfigRaw>>, 'diagnostics'> & {
+  diagnostics: Diagnostic[]
+}
+const loadConfig = loadConfigRaw as (dir: string) => Promise<ConfigResult>
+type Schema = { shape?: Record<string, Schema>; unwrap?: () => Schema }
+type Pairs = [string, string[], string[]][]
+
+const withConfig = (body: string) =>
   project({ 'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'\n${body}` })
-const codes = (r) => r.diagnostics.map((d) => [d.code, d.span[0]])
+const codes = (r: ConfigResult) => r.diagnostics.map((d) => [d.code, d.span![0]])
 
 describe('weft.config.ts', () => {
   it('is optional', async () => {
@@ -27,19 +35,19 @@ export default defineConfig({
 `)
     const r = await loadConfig(dir)
     expect(r.diagnostics).toEqual([])
-    expect(r.config.tasks.seed.env).toEqual(['dev'])
-    expect(r.config.test.lanes).toEqual(['fast'])
+    expect(r.config.tasks!.seed!.env).toEqual(['dev'])
+    expect(r.config.test!.lanes).toEqual(['fast'])
   })
 
   it('sees edits on the next load (for a long-lived weft mcp)', async () => {
     const { writeFileSync } = await import('node:fs')
     const dir = withConfig('export default defineConfig({ environments: { dev: {} } })\n')
-    expect(Object.keys((await loadConfig(dir)).config.environments)).toEqual(['dev'])
+    expect(Object.keys((await loadConfig(dir)).config.environments!)).toEqual(['dev'])
     writeFileSync(
       `${dir}/weft.config.ts`,
       "import { defineConfig } from '@weft-js/core/config'\nexport default defineConfig({ environments: { ci: {} } })\n",
     )
-    expect(Object.keys((await loadConfig(dir)).config.environments)).toEqual(['ci'])
+    expect(Object.keys((await loadConfig(dir)).config.environments!)).toEqual(['ci'])
   })
 
   it('P007: unknown keys and wrong types, with the path', async () => {
@@ -90,7 +98,7 @@ describe('site (research 20 §2, §6)', () => {
 `),
     )
     expect(r.diagnostics).toEqual([])
-    expect(r.config.site.url).toBe('https://acme.dev')
+    expect(r.config.site!.url).toBe('https://acme.dev')
   })
 
   it("imports the app's own modules the way the app does: no extension, or a folder's index", async () => {
@@ -139,7 +147,7 @@ describe('site (research 20 §2, §6)', () => {
         ),
       )
       expect(codes(r)).toEqual([['H001', 2]])
-      expect(r.diagnostics[0].severity).toBe('warning') // a server falls back to the request's origin
+      expect(r.diagnostics[0]!.severity).toBe('warning') // a server falls back to the request's origin
     }
     const abs = await loadConfig(
       withConfig(
@@ -153,8 +161,8 @@ describe('site (research 20 §2, §6)', () => {
 })
 
 describe('slot binding (research 13 §2.2)', () => {
-  const run = (config) => {
-    const out = []
+  const run = (config: Parameters<typeof bindSlots>[0]) => {
+    const out: { code: string; why: string }[] = []
     const slots = bindSlots(config, (code, why) => out.push({ code, why }))
     return { slots, out }
   }
@@ -252,7 +260,7 @@ describe('JSON and YAML config (research 34 §2)', () => {
       (await loadConfig(project({ 'weft.config.json': '{ nope' }))).diagnostics.map((d) => d.code),
     ).toEqual(['P007'])
     expect(
-      (await loadConfig(project({ 'weft.config.yaml': 'plugins: [ghost]\n' }))).diagnostics[0].why,
+      (await loadConfig(project({ 'weft.config.yaml': 'plugins: [ghost]\n' }))).diagnostics[0]!.why,
     ).toContain("`ghost` isn't installed")
   })
 
@@ -264,7 +272,7 @@ describe('JSON and YAML config (research 34 §2)', () => {
       }),
     )
     expect(r.diagnostics.map((d) => d.code)).toEqual(['P010'])
-    expect(r.diagnostics[0].why).toContain('`weft.config.yaml`')
+    expect(r.diagnostics[0]!.why).toContain('`weft.config.yaml`')
   })
 })
 
@@ -284,7 +292,7 @@ describe('config.d.ts and the schema', () => {
       .map((s) => [s.name.text, s]),
   )
   /** The member names of an object type, following a reference to an interface in the file. */
-  const members = (t) => {
+  const members = (t: typescript.Node | undefined) => {
     if (t && typescript.isTypeReferenceNode(t)) t = named.get(t.typeName.getText(sf))
     if (t && typescript.isTypeAliasDeclaration(t)) t = t.type
     const list =
@@ -300,12 +308,17 @@ describe('config.d.ts and the schema', () => {
       )
     )
   }
-  const shape = (s) => {
+  const shape = (s: Schema | undefined) => {
     while (s && !s.shape && s.unwrap) s = s.unwrap()
     return s?.shape
   }
   /** Every object both sides describe, compared key for key, `path` deep. */
-  const compare = (type, schema, path, out) => {
+  const compare = (
+    type: typescript.Node | undefined,
+    schema: Schema | undefined,
+    path: string,
+    out: Pairs,
+  ): Pairs => {
     const keys = members(type),
       fields = shape(schema)
     if (!keys || !fields) return out
