@@ -16,7 +16,7 @@ function filesIn(dir, out = []) {
     else if (!['task.json', 'verification.json'].includes(entry.name))
       out.push(relative(root, path))
   }
-  return out.sort()
+  return out.sort((a, b) => a.localeCompare(b))
 }
 
 test('verified medium metadata, source and readiness agree', () => {
@@ -35,15 +35,60 @@ test('verified medium metadata, source and readiness agree', () => {
   )
   assert.equal(tests.length, evidence.referenceChecks)
   assert.equal(mutants.length, evidence.mutantsCaught)
-  assert.deepEqual(filesIn(root), Object.keys(evidence.files).sort())
+  assert.deepEqual(
+    filesIn(root),
+    Object.keys(evidence.files).sort((a, b) => a.localeCompare(b)),
+  )
   for (const [file, expected] of Object.entries(evidence.files)) {
     const data = readFileSync(join(root, file))
     const blob = createHash('sha1').update(`blob ${data.length}\0`).update(data).digest('hex')
     assert.equal(blob, expected, file)
   }
-  for (const name of ['edit-shop', 'bugfix-shop', 'large-live']) {
+  for (const name of ['bugfix-shop', 'large-live']) {
     const pending = JSON.parse(readFileSync(new URL(`../tasks/${name}/task.json`, import.meta.url)))
     assert.equal(pending.gradeable, false)
     assert.deepEqual(taskReadiness(name, pending), [`${name}: grader is incomplete`])
+  }
+})
+
+test('verified edit metadata, source and readiness agree', async () => {
+  const editRoot = fileURLToPath(new URL('../tasks/edit-shop/', import.meta.url))
+  const task = JSON.parse(readFileSync(join(editRoot, 'task.json')))
+  const evidence = JSON.parse(readFileSync(join(editRoot, 'verification.json')))
+  const mutants = JSON.parse(readFileSync(join(editRoot, 'mutants.json')))
+  const { tests: editTests } = await import('../tasks/edit-shop/hidden.mjs')
+  assert.equal(task.gradeable, true)
+  assert.deepEqual(taskReadiness('edit-shop', task), [])
+  assert.deepEqual(taskReadiness('edit-shop', { ...task, gradeable: false }), [
+    'edit-shop: grader is incomplete',
+  ])
+  assert.equal(evidence.candidate, 'a06371b148a4bab640f0aa2eb48556ddf6728661')
+  assert.equal(
+    evidence.receiptSha256,
+    '85dfc6a0db7f51ab51dca25fffc14d926dda40235fe62a63a30fc3ef1cceb085',
+  )
+  assert.equal(editTests.length, evidence.referenceChecks)
+  assert.equal(mutants.length, evidence.mutantsCaught)
+  const listed = []
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, e.name)
+      if (e.isDirectory()) walk(path)
+      else if (!['task.json', 'verification.json'].includes(e.name))
+        listed.push(relative(editRoot, path))
+    }
+  }
+  walk(editRoot)
+  assert.deepEqual(
+    listed.sort((a, b) => a.localeCompare(b)),
+    Object.keys(evidence.files).sort((a, b) => a.localeCompare(b)),
+  )
+  for (const [file, expected] of Object.entries(evidence.files)) {
+    const data = readFileSync(join(editRoot, file))
+    assert.equal(
+      createHash('sha1').update(`blob ${data.length}\0`).update(data).digest('hex'),
+      expected,
+      file,
+    )
   }
 })
