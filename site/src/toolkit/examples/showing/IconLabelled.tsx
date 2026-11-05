@@ -2,7 +2,11 @@ import { Row, Icon, Text } from '@weft-js/warp'
 
 export const IconLabelled = () => (
   <Row gap="related">
-    <Icon name="alert-circle" size={24} label="Failed" />
+    <Icon
+      name="alert-circle"
+      size={24}
+      label="Failed"
+    />
     <Text>mobile-bff</Text>
   </Row>
 )

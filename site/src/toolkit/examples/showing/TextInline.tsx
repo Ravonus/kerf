@@ -3,11 +3,17 @@ import { Text } from '@weft-js/warp'
 export const TextInline = () => (
   <Text>
     Uptime is{' '}
-    <Text inline tone="positive">
+    <Text
+      inline
+      tone="positive"
+    >
       99.98%
     </Text>{' '}
     this month,{' '}
-    <Text inline subtle>
+    <Text
+      inline
+      subtle
+    >
       up from 99.91%
     </Text>
     .

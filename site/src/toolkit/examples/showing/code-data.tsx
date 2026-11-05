@@ -1,6 +1,8 @@
 import { DEPLOYS } from '../../world'
 
-export const CONFIG = `import { defineProject } from 'weft'
+export const CONFIG =
+  `import { defineProject } from 'weft'` +
+  `
 
 export default defineProject({
   name: 'storefront',
@@ -11,7 +13,10 @@ export default defineProject({
 export const SAMPLE = JSON.stringify(DEPLOYS[0], null, 2)
 
 export const STACKS = {
-  ts: `const res = await weft.deploy({ project: 'storefront' })\nconsole.log(res.url)`,
+  ts:
+    'const res = await weft.deploy({ ' +
+    "project: 'storefront' })" +
+    '\nconsole.log(res.url)',
   sh: `weft deploy --project storefront`,
   json: `{ "project": "storefront" }`,
 }

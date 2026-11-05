@@ -2,16 +2,28 @@ import { Stack, Heading } from '@weft-js/warp'
 
 export const HeadingRoles = () => (
   <Stack gap="related">
-    <Heading level={2} role="display">
+    <Heading
+      level={2}
+      role="display"
+    >
       Ship it
     </Heading>
-    <Heading level={2} role="title">
+    <Heading
+      level={2}
+      role="title"
+    >
       Ship it
     </Heading>
-    <Heading level={2} role="heading">
+    <Heading
+      level={2}
+      role="heading"
+    >
       Ship it
     </Heading>
-    <Heading level={2} role="label">
+    <Heading
+      level={2}
+      role="label"
+    >
       Ship it
     </Heading>
   </Stack>

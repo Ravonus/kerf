@@ -1,5 +1,9 @@
 import { state } from '@weft-js/core'
-import { Stack, Segmented, CodeBlock } from '@weft-js/warp'
+import {
+  Stack,
+  Segmented,
+  CodeBlock,
+} from '@weft-js/warp'
 import { WAYS, STACKS } from './code-data'
 
 export function CodeBlockChooser() {
@@ -13,9 +17,24 @@ export function CodeBlockChooser() {
         onChange={(v) => (way.value = v)}
         options={WAYS}
       />
-      {way.value === 'ts' && <CodeBlock code={STACKS.ts} language="ts" />}
-      {way.value === 'sh' && <CodeBlock code={STACKS.sh} language="sh" />}
-      {way.value === 'json' && <CodeBlock code={STACKS.json} language="json" />}
+      {way.value === 'ts' && (
+        <CodeBlock
+          code={STACKS.ts}
+          language="ts"
+        />
+      )}
+      {way.value === 'sh' && (
+        <CodeBlock
+          code={STACKS.sh}
+          language="sh"
+        />
+      )}
+      {way.value === 'json' && (
+        <CodeBlock
+          code={STACKS.json}
+          language="json"
+        />
+      )}
     </Stack>
   )
 }

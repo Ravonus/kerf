@@ -1,6 +1,8 @@
-export const NOTES = `## October release
+export const NOTES =
+  `## October release
 
-Previews now **stay up** for 30 days after a branch is deleted. See the [guide](/docs) for more.
+Previews now **stay up** for 30 days after a ` +
+  `branch is deleted. See the [guide](/docs) for more.
 
 - Lower stale window on \`edge-cache\`
 - Apple Pay in \`checkout\`
@@ -20,7 +22,9 @@ export const SNIPPET = `Add this to your project:
 export default { name: 'storefront' }
 \`\`\``
 
-export const COMMENT = `Looks good. Two things before we ship:
+export const COMMENT =
+  'Looks good. Two things before we ship:' +
+  `
 
 1. **Rename** the flag to \`use_edge_images\`
 2. Add a test for the _empty cart_`
