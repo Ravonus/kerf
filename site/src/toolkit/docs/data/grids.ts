@@ -1,0 +1,235 @@
+import type { DocGroup } from '../../types.ts'
+
+export const grids: DocGroup['docs'] = [
+  {
+    component: 'DataGrid',
+    summary:
+      'A table you work in like a spreadsheet: move by cell, select ranges, edit, group and export.',
+    use: {
+      when: ['People edit or copy many cells', 'Analysts who filter, group and save views'],
+      instead: [
+        { name: 'Table', why: 'people mostly read rows' },
+        { name: 'ScrollGrid', why: 'it is read-only and very large' },
+        { name: 'PivotTable', why: 'you want totals across two dimensions' },
+      ],
+    },
+    playground: {
+      example: 'DataGridPlay',
+      code: '<DataGrid caption="Projects" rows={projects} columns={columns}{props} />',
+      knobs: [
+        {
+          prop: 'density',
+          control: 'segmented',
+          options: ['compact', 'cozy', 'comfortable'],
+          initial: 'cozy',
+          default: 'cozy',
+        },
+        {
+          prop: 'groupBy',
+          control: 'select',
+          options: ['none', 'region', 'status', 'owner'],
+          initial: 'region',
+          default: 'none',
+        },
+        {
+          prop: 'exportName',
+          control: 'select',
+          options: ['export', 'weft-projects', 'off'],
+          initial: 'export',
+          default: 'export',
+        },
+      ],
+      stage: 'fill',
+      height: 540,
+    },
+    sections: [
+      {
+        kind: 'variants',
+        title: 'Variants',
+        examples: [
+          {
+            id: 'DataGridBasic',
+            title: 'The grid',
+            note: 'Click a cell, then use the arrows. Shift extends a range, ⌘C copies it. Drag a header to move a column. Filters, Columns and Export CSV all work.',
+            stage: 'fill',
+            height: 540,
+          },
+          {
+            id: 'DataGridEdit',
+            title: 'Editing',
+            note: 'Enter or a double-click edits. A bad value never commits. Paste a block from a spreadsheet and it lands cell by cell.',
+            stage: 'fill',
+            height: 540,
+          },
+          {
+            id: 'DataGridGroups',
+            title: 'Groups and totals',
+            note: "Press Group to toggle. `aggregate` fills each group's subtotal and the footer.",
+            stage: 'fill',
+            height: 640,
+          },
+          {
+            id: 'DataGridViews',
+            title: 'Saved views',
+            note: 'A view holds columns, filters, sort and grouping. Pick one, change it, then Save view.',
+            stage: 'fill',
+            height: 560,
+          },
+          {
+            id: 'DataGridTree',
+            title: 'A tree',
+            note: 'Rows with `kids` become branches, and each parent rolls up its children. Filtering keeps the path to each match.',
+            stage: 'fill',
+            height: 400,
+          },
+          {
+            id: 'DataGridLazyTree',
+            title: 'A tree that loads',
+            note: '`load` fetches a branch on its first open.',
+            stage: 'fill',
+            height: 360,
+          },
+          {
+            id: 'DataGridBulk',
+            title: 'Bulk actions',
+            note: 'Shift-select across rows and the bar appears over them.',
+            stage: 'fill',
+            height: 540,
+          },
+          {
+            id: 'DataGridDetails',
+            title: 'Row details',
+            note: 'Use `expand` to open extra detail under a row.',
+            stage: 'fill',
+            height: 540,
+          },
+          {
+            id: 'DataGridPaged',
+            title: 'Pages',
+            note: 'Use `page` to show a few rows at a time, here four.',
+            stage: 'fill',
+            height: 400,
+          },
+        ],
+      },
+    ],
+    keyboard: [
+      ['↑ ↓ ← →', 'Moves the cell'],
+      ['Shift + arrows', 'Extends the range'],
+      ['⌘ C', 'Copies the range as tab-separated text'],
+      ['⌘ V', 'Pastes into editable cells'],
+      ['Enter, F2', 'Edits the cell'],
+      ['Esc', 'Cancels the edit'],
+      ['Alt ← →', 'Moves the column'],
+      ['→ ←', 'In a tree, opens and closes a branch'],
+    ],
+    a11yNotes: [
+      'One tab stop, then arrows: the APG grid pattern, or treegrid when grouped or hierarchical.',
+      'Moves, edits and exports are announced.',
+      'An invalid edit stays open and says why.',
+    ],
+    propDocs: {
+      columns: 'As in Table, plus `filter`, `options`, `aggregate` and `format`.',
+      views: 'Named views for the View select.',
+      view: 'Which view it starts on.',
+      groupBy: 'The column the Group button groups by.',
+      tree: 'Hierarchical rows. An empty object uses `row.kids`.',
+      filter: "A tree's filter field, labelled this.",
+      expand: 'What opens under a row.',
+      bulk: "The bar's actions, given the keys of the rows in the range.",
+      page: 'Rows per page.',
+      exportName: "The CSV's name. `false` removes Export.",
+    },
+    related: ['Table', 'PivotTable', 'ScrollGrid'],
+  },
+  {
+    component: 'ScrollGrid',
+    summary:
+      'A huge read-only grid that scrolls both ways: thousands of rows and columns, and only what you see exists.',
+    use: {
+      when: [
+        'Metrics with many rows and many columns',
+        'Anything far past what a Table should hold',
+      ],
+      instead: [
+        { name: 'DataGrid', why: 'people edit, sort or group' },
+        { name: 'VirtualList', why: 'there is only one column' },
+      ],
+    },
+    playground: {
+      example: 'ScrollGridPlay',
+      code: '<ScrollGrid label="Latency by hour" rows={2000} columns={hours} rowHeader={route} cell={latency}{props} />',
+      knobs: [
+        {
+          prop: 'rows',
+          control: 'slider',
+          min: 100,
+          max: 100000,
+          step: 100,
+          initial: 2000,
+          default: 0,
+        },
+        {
+          prop: 'headerWidth',
+          control: 'slider',
+          min: 96,
+          max: 200,
+          step: 4,
+          initial: 132,
+          default: 132,
+        },
+      ],
+      stage: 'fill',
+      height: 424,
+    },
+    tile: 'ScrollGridLatency',
+    sections: [
+      {
+        kind: 'variants',
+        title: 'Variants',
+        examples: [
+          {
+            id: 'ScrollGridLatency',
+            title: '2,000 rows by 24 columns',
+            note: 'The header and first column stay put. Click in and use the arrows, Page Up and Down, Home and End.',
+            stage: 'fill',
+            height: 464,
+          },
+          {
+            id: 'ScrollGridNegative',
+            title: 'Flagging values',
+            note: '`negative` marks a cell in the critical colour.',
+            stage: 'fill',
+            height: 384,
+          },
+          {
+            id: 'ScrollGridWidths',
+            title: 'Column widths',
+            note: 'Each column sets its own `width`, and `headerWidth` sizes the first column.',
+            stage: 'fill',
+            height: 364,
+          },
+        ],
+      },
+    ],
+    keyboard: [
+      ['↑ ↓ ← →', 'Moves one cell'],
+      ['Page Up, Page Down', 'Moves one screen'],
+      ['Home, End', "Goes to the row's ends"],
+      ['⌘ Home, ⌘ End', "Goes to the grid's ends"],
+    ],
+    a11yNotes: [
+      "Only the rows in view exist, so `aria-rowindex` and `aria-colindex` keep each cell's place in the whole.",
+      'One tab stop. The active cell is announced as you move.',
+    ],
+    propDocs: {
+      rows: 'How many rows there are. Cells are asked for as they come into view.',
+      columns: 'Each with `id`, `header` and an optional `width`.',
+      cell: 'What a row and column hold.',
+      rowHeader: "The first column's text.",
+      corner: 'The top-left cell. Default `label`.',
+      negative: 'Marks a cell critical.',
+    },
+    related: ['DataGrid', 'VirtualList', 'Table'],
+  },
+]
