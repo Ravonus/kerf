@@ -5,6 +5,7 @@
 mod flow;
 mod loops;
 mod reads;
+mod watch;
 mod writes;
 
 use std::collections::{HashMap, HashSet};
@@ -33,6 +34,8 @@ enum Target {
 enum Api {
     Derived,
     Resource,
+    WatchSource,
+    WatchCallback,
 }
 
 struct Call {
@@ -44,7 +47,7 @@ struct Index<'s> {
     a: &'s Analyzer<'s>,
     imports: HashMap<SymbolId, (String, String)>,
     bindings: HashMap<SymbolId, Target>,
-    requests: HashMap<SpanKey, (Target, Call)>,
+    requests: HashMap<(SpanKey, usize), (Target, Call)>,
     boxes: HashSet<SymbolId>,
     props: HashSet<SymbolId>,
     pending_component: bool,
@@ -170,20 +173,26 @@ impl<'a> Visit<'a> for Index<'_> {
     fn visit_call_expression(&mut self, it: &CallExpression<'a>) {
         if let Some((module, name)) = imported_value(&it.callee, self.a.scoping, &self.imports)
             && module == "@weft-js/core"
-            && matches!(name, "derived" | "resource")
-            && let Some(target) = it
-                .arguments
-                .first()
-                .and_then(|arg| arg.as_expression())
-                .and_then(|e| self.target(e))
         {
-            let api = if name == "derived" {
-                Api::Derived
-            } else {
-                Api::Resource
+            let apis: &[Api] = match name {
+                "derived" => &[Api::Derived],
+                "resource" => &[Api::Resource],
+                "watch" => &[Api::WatchSource, Api::WatchCallback],
+                _ => &[],
             };
-            self.requests
-                .insert(key(it.span), (target, Call { api, span: it.span }));
+            for (argument, &api) in apis.iter().enumerate() {
+                if let Some(target) = it
+                    .arguments
+                    .get(argument)
+                    .and_then(|arg| arg.as_expression())
+                    .and_then(|expression| self.target(expression))
+                {
+                    self.requests.insert(
+                        (key(it.span), argument),
+                        (target, Call { api, span: it.span }),
+                    );
+                }
+            }
         }
         walk::walk_call_expression(self, it);
     }
@@ -192,6 +201,7 @@ impl<'a> Visit<'a> for Index<'_> {
 struct Check<'s> {
     index: Index<'s>,
     calls: HashMap<SpanKey, Vec<Call>>,
+    accesses: HashMap<SpanKey, watch::Accesses>,
     diagnostics: Vec<Diagnostic>,
 }
 
@@ -218,7 +228,16 @@ impl Check<'_> {
         let derived = calls.iter().any(|call| call.api == Api::Derived);
         let resource = calls.iter().any(|call| call.api == Api::Resource);
         let mut flow = reads::Flow::new(&self.index, derived, resource);
+        if calls
+            .iter()
+            .any(|call| matches!(call.api, Api::WatchSource | Api::WatchCallback))
+        {
+            flow.watch = Some(watch::Accesses::default());
+        }
         inspect(&mut flow);
+        if let Some(accesses) = flow.watch {
+            self.accesses.insert(key(span), accesses);
+        }
         self.diagnostics.extend(flow.diagnostics);
     }
 }
@@ -296,8 +315,14 @@ pub(super) fn diagnostics<'s>(program: &Program<'_>, a: &'s Analyzer<'s>) -> Vec
     let mut check = Check {
         index,
         calls,
+        accesses: HashMap::new(),
         diagnostics: Vec::new(),
     };
     check.visit_program(program);
+    check.diagnostics.extend(watch::diagnostics(
+        &check.index,
+        &check.calls,
+        &check.accesses,
+    ));
     check.diagnostics
 }

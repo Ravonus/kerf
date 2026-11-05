@@ -8,3 +8,4 @@ include!("compile/numeric_jsx.rs");
 include!("compile/numeric_properties.rs");
 include!("compile/async_callbacks.rs");
 include!("compile/derived_writes.rs");
+include!("compile/watch_cycles.rs");

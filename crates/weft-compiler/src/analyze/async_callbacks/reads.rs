@@ -19,8 +19,8 @@ use oxc_syntax::scope::ScopeFlags;
 use crate::diag::{Diagnostic, Severity};
 
 use super::super::{SpanKey, key, symbol_of};
-use super::Index;
 use super::flow::{Frame, State, Trap};
+use super::{Index, watch};
 
 pub(super) struct Flow<'x, 's> {
     pub(super) index: &'x Index<'s>,
@@ -30,6 +30,7 @@ pub(super) struct Flow<'x, 's> {
     pub(super) label: Option<String>,
     pub(super) diagnostics: Vec<Diagnostic>,
     pub(super) reported: HashSet<(&'static str, SpanKey)>,
+    pub(super) watch: Option<watch::Accesses>,
     pub(super) derived: bool,
     resource: bool,
     write_only: bool,
@@ -48,6 +49,7 @@ impl<'x, 's> Flow<'x, 's> {
             label: None,
             diagnostics: Vec::new(),
             reported: HashSet::new(),
+            watch: None,
             derived,
             resource,
             write_only: false,
@@ -195,6 +197,9 @@ impl<'a> Visit<'a> for Flow<'_, '_> {
 
     fn visit_static_member_expression(&mut self, it: &StaticMemberExpression<'a>) {
         self.visit_expression(&it.object);
+        if it.property.name == "value" {
+            self.watch_read(&it.object);
+        }
         if self.reference(&it.object, true)
             || (it.property.name == "value" && self.reference(&it.object, false))
         {
@@ -205,6 +210,11 @@ impl<'a> Visit<'a> for Flow<'_, '_> {
     fn visit_computed_member_expression(&mut self, it: &ComputedMemberExpression<'a>) {
         self.visit_expression(&it.object);
         self.visit_expression(&it.expression);
+        if matches!(it.expression.get_inner_expression(),
+            Expression::StringLiteral(name) if name.value == "value")
+        {
+            self.watch_read(&it.object);
+        }
         if self.reference(&it.object, true)
             || (self.reference(&it.object, false)
                 && matches!(it.expression.get_inner_expression(),
@@ -224,6 +234,7 @@ impl<'a> Visit<'a> for Flow<'_, '_> {
             && self.reference(&m.object, false)
         {
             self.report(it.span);
+            self.watch_read(&m.object);
         }
     }
 
@@ -232,6 +243,9 @@ impl<'a> Visit<'a> for Flow<'_, '_> {
             self.visit_expression(init);
             if let BindingPattern::ObjectPattern(object) = &it.id {
                 for property in &object.properties {
+                    if property.key.static_name().is_some_and(|name| name == "value") {
+                        self.watch_read(init);
+                    }
                     if self.reference(init, true)
                         || (self.reference(init, false)
                             && property

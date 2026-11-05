@@ -9,7 +9,7 @@ use super::reads::Flow;
 
 impl Flow<'_, '_> {
     pub(super) fn state_write(&mut self, target: &SimpleAssignmentTarget<'_>) {
-        if !self.derived || !self.state.alive() {
+        if (!self.derived && self.watch.is_none()) || !self.state.alive() {
             return;
         }
         let (object, name, span) = match target {
@@ -25,7 +25,14 @@ impl Flow<'_, '_> {
             }
             _ => return,
         };
-        if name != "value"
+        if name == "value"
+            && let Some(accesses) = &mut self.watch
+            && let Some(sym) = self.index.box_symbol(object)
+        {
+            accesses.writes.insert(key(span), sym);
+        }
+        if !self.derived
+            || name != "value"
             || !self.reference(object, false)
             || !self.reported.insert(("W002", key(span)))
         {
