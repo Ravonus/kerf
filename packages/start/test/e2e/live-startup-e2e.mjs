@@ -1,18 +1,20 @@
-import { freePort, sleep as wait } from '../../../scripts/lib/helpers.mjs'
+import { freePort, sleep as wait } from '../../../../scripts/lib/helpers.mjs'
 // What a built server does at startup with a required live query, on real infrastructure: a pooler in each mode, no
 // triggers, a role that can't add them; and a separate listener process feeding an app that holds no feed of its own.
 //
-//   DIRECT=postgres://…/live TX=postgres://…pgbouncer-transaction…/live SESSION=postgres://…session…/live node scripts/live-startup-e2e.mjs
+//   DIRECT=postgres://…/live TX=postgres://…pgbouncer-transaction…/live SESSION=postgres://…session…/live node test/e2e/live-startup-e2e.mjs
 import { spawn, spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import postgres from 'postgres'
-import { changeStatements } from '../src/changes-sql.mjs'
+import { changeStatements } from '../../src/changes-sql.mjs'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+const { chromium } = createRequire(new URL('../../scripts/live-startup-e2e.mjs', import.meta.url))(
+  'playwright-core',
+)
 const { DIRECT, TX, SESSION } = process.env
-const fixture = fileURLToPath(new URL('../test/fixtures/live-db', import.meta.url))
-const bin = fileURLToPath(new URL('../../cli/bin/weft.mjs', import.meta.url))
+const fixture = fileURLToPath(new URL('../fixtures/live-db', import.meta.url))
+const bin = fileURLToPath(new URL('../../../cli/bin/weft.mjs', import.meta.url))
 const failed = []
 const check = (ok, what) => {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`)
@@ -32,7 +34,7 @@ if (!process.env.SKIP_BUILD) {
       }),
     ],
     {
-      cwd: fileURLToPath(new URL('..', import.meta.url)),
+      cwd: fileURLToPath(new URL('../..', import.meta.url)),
       stdio: 'inherit',
       env: { ...process.env, WEFT_BUILD: '1' },
     },

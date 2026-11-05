@@ -2,36 +2,10 @@
   "name": "@weft-js/multiplayer",
   "version": "0.1.1",
   "description": "@weft-js/multiplayer: presence, cursors anchored to elements, a typed interaction relay and synced scroll on `channel`. A library, not a plugin",
-  "license": "MIT",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts",
-    "./server": "./src/server.ts",
-    "./ui": "./src/Cursors.tsx",
-    "./test": "./src/conformance.ts"
-  },
-  "scripts": {
-    "test": "vitest run"
-  },
-  "peerDependencies": {
-    "@weft-js/start": "*",
-    "@weft-js/core": "*"
-  },
-  "devDependencies": {
-    "@testing-library/dom": "10.4.2",
-    "@testing-library/user-event": "14.6.8",
-    "@weft-js/start": "workspace:*",
-    "jsdom": "30.1.3",
-    "playwright-core": "1.64.1",
-    "vitest": "5.0.5",
-    "@weft-js/core": "workspace:*"
-  },
-  "engines": {
-    "node": ">=26"
-  },
   "keywords": [
     "weft"
   ],
+  "license": "MIT",
   "files": [
     "src",
     "plugin.mjs",
@@ -39,7 +13,34 @@
     "README.md",
     "LICENSE"
   ],
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./ui": "./src/Cursors.tsx",
+    "./test": "./src/conformance.ts"
+  },
   "publishConfig": {
     "access": "public"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:e2e": "node test/e2e/e2e-browsers.mjs"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/user-event": "14.6.8",
+    "@weft-js/core": "workspace:*",
+    "@weft-js/start": "workspace:*",
+    "jsdom": "30.1.3",
+    "playwright-core": "1.64.1",
+    "vitest": "5.0.5"
+  },
+  "peerDependencies": {
+    "@weft-js/core": "*",
+    "@weft-js/start": "*"
+  },
+  "engines": {
+    "node": ">=26"
   }
 }

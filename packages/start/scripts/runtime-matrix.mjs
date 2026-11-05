@@ -27,7 +27,7 @@ const { values, positionals } = parseArgs({
   },
 })
 const app = resolve(positionals[0] ?? '.')
-const e2e = resolve(values.e2e ?? new URL('./e2e-todo.mjs', import.meta.url).pathname)
+const e2e = resolve(values.e2e ?? new URL('../test/e2e/e2e-todo.mjs', import.meta.url).pathname)
 const SERVERS = {
   node: ['node', ['--disable-warning=ExperimentalWarning', '.output/server/index.mjs']],
   bun: ['bun', ['run', '.output/server/index.mjs']],

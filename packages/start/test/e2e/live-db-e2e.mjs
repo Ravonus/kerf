@@ -1,20 +1,20 @@
-import { freePort, sleep as wait } from '../../../scripts/lib/helpers.mjs'
+import { freePort, sleep as wait } from '../../../../scripts/lib/helpers.mjs'
 // The change feed end to end: a built app, two instances, a real browser, and a second process writing straight to the
 // database. Not in `vitest`: it needs a real database and takes a minute.
 //
-//   DATABASE_URL=postgres://… node scripts/live-db-e2e.mjs     (the database's `notes` is dropped)
-//   DATABASE_URL=file:/tmp/x.db node scripts/live-db-e2e.mjs
+//   DATABASE_URL=postgres://… node test/e2e/live-db-e2e.mjs     (the database's `notes` is dropped)
+//   DATABASE_URL=file:/tmp/x.db node test/e2e/live-db-e2e.mjs
 import { execFile, spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, rmSync, symlinkSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import { changeStatements } from '../src/changes-sql.mjs'
+import { changeStatements } from '../../src/changes-sql.mjs'
 
-const require = createRequire(import.meta.url)
+const require = createRequire(new URL('../../scripts/live-db-e2e.mjs', import.meta.url))
 const { chromium } = require('playwright-core')
 const postgres = (await import('postgres')).default
-const fixture = fileURLToPath(new URL('../test/fixtures/live-db', import.meta.url))
+const fixture = fileURLToPath(new URL('../fixtures/live-db', import.meta.url))
 const url = process.env.DATABASE_URL
 const isPg = url.startsWith('postgres')
 const run = promisify(execFile)
@@ -68,7 +68,7 @@ const env = { ...process.env, NODE_ENV: 'production' }
 mkdirSync(`${fixture}/node_modules/@weft-js`, { recursive: true })
 if (!existsSync(`${fixture}/node_modules/@weft-js/start`))
   symlinkSync(
-    fileURLToPath(new URL('..', import.meta.url)),
+    fileURLToPath(new URL('../..', import.meta.url)),
     `${fixture}/node_modules/@weft-js/start`,
   )
 if (!process.env.SKIP_BUILD) {
@@ -83,7 +83,7 @@ if (!process.env.SKIP_BUILD) {
         logLevel: 'error',
       }),
     ],
-    { cwd: new URL('..', import.meta.url), env: { ...env, WEFT_BUILD: '1' }, stdio: 'inherit' },
+    { cwd: new URL('../..', import.meta.url), env: { ...env, WEFT_BUILD: '1' }, stdio: 'inherit' },
   )
   if (b.status) throw new Error('build failed')
 }

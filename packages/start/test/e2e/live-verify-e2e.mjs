@@ -1,19 +1,19 @@
-import { freePort, sleep as wait } from '../../../scripts/lib/helpers.mjs'
+import { freePort, sleep as wait } from '../../../../scripts/lib/helpers.mjs'
 // `live: { verify }` against a disposable Postgres and a built app: a pass, each link broken on purpose, the refusals, and
-// proof no row survives any of it. Needs `node scripts/live-db-e2e.mjs` to have built the fixture.
+// proof no row survives any of it. Needs `node test/e2e/live-db-e2e.mjs` to have built the fixture.
 //
-//   DATABASE_URL=postgres://…localhost…/x node scripts/live-verify-e2e.mjs
+//   DATABASE_URL=postgres://…localhost…/x node test/e2e/live-verify-e2e.mjs
 import { spawn } from 'node:child_process'
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import postgres from 'postgres'
-import { writeContract, readLivePlan } from '../src/contract.mjs'
-import { changeStatements } from '../src/changes-sql.mjs'
-import { literalSecrets, refusal, resolveTarget } from '../src/live-target.mjs'
+import { writeContract, readLivePlan } from '../../src/contract.mjs'
+import { changeStatements } from '../../src/changes-sql.mjs'
+import { literalSecrets, refusal, resolveTarget } from '../../src/live-target.mjs'
 
-const root = fileURLToPath(new URL('../test/fixtures/live-db', import.meta.url))
+const root = fileURLToPath(new URL('../fixtures/live-db', import.meta.url))
 const url = process.env.DATABASE_URL
 const failed = []
 const check = (ok, what) => {

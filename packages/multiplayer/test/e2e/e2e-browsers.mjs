@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-import { freePort, sleep } from '../../../scripts/lib/helpers.mjs'
+import { freePort, sleep } from '../../../../scripts/lib/helpers.mjs'
 // Two browsers, one document (research 35 §6): a real app, built for each runtime, served on it, and driven by two
 // Chromium contexts with different users and window sizes. With `--bus redis` or `nats` each browser talks to its own
 // instance, so everything also has to cross the bus. `--via` runs cursors over a transport pack.
 //
-//   node packages/multiplayer/scripts/e2e-browsers.mjs prepare <dir> [--tarballs <dir>]
-//   node packages/multiplayer/scripts/e2e-browsers.mjs run <dir> [--runtimes node,bun,deno] [--bus memory,redis] [--via webrtc]
+//   node packages/multiplayer/test/e2e/e2e-browsers.mjs prepare <dir> [--tarballs <dir>]
+//   node packages/multiplayer/test/e2e/e2e-browsers.mjs run <dir> [--runtimes node,bun,deno] [--bus memory,redis] [--via webrtc]
 //
 // `--redis <bin>`, `--nats <bin>`: run a throwaway server. `REDIS_URL`/`NATS_URL` use yours. `LIVEKIT_URL` with
 // `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` enables `--via livekit`.
@@ -16,10 +16,10 @@ import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
-import { pin, writePackedPolicy } from '../../create/scripts/tarballs.mjs'
+import { pin, writePackedPolicy } from '../../../create/scripts/tarballs.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const repo = resolve(here, '../../..')
+const repo = resolve(here, '../../../..')
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
@@ -92,7 +92,7 @@ if (command === 'prepare') {
   pkg.dependencies['socket.io-client'] = '4.8.4'
   pkg.dependencies['livekit-client'] = '2.23.0'
   writeFileSync(file, JSON.stringify(tarballs ? pin(pkg, tarballs) : pkg, null, 2) + '\n')
-  cpSync(join(here, '../fixture/src'), join(app, 'src'), { recursive: true })
+  cpSync(join(here, '../../fixture/src'), join(app, 'src'), { recursive: true })
   writePackedPolicy(app, tarballs)
   must('pnpm', ['install', '--no-frozen-lockfile'])
   configure('memory')

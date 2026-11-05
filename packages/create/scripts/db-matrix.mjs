@@ -122,7 +122,7 @@ await pool(combos, jobs(), async ({ layer, db, seam }) => {
         '--runtimes',
         runtime,
         '--e2e',
-        script(auth === true ? 'e2e-todo.mjs' : 'e2e-crud.mjs'),
+        join(pkgs, 'start/test/e2e', auth === true ? 'e2e-todo.mjs' : 'e2e-crud.mjs'),
       ],
       undefined,
       { DATABASE_URL: url },

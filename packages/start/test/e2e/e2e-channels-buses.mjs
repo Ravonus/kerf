@@ -1,15 +1,15 @@
-import { freePort, sleep } from '../../../scripts/lib/helpers.mjs'
+import { freePort, sleep } from '../../../../scripts/lib/helpers.mjs'
 // The redis and nats buses across two real instances, on each runtime (research 32 §6): both started by this script
 // on throwaway servers. A message said on one instance reaches a client of the other, in both directions, and a shared
 // value crosses too.
 //
-//   node packages/start/scripts/e2e-realtime.mjs prepare <dir>
-//   node packages/start/scripts/e2e-channels-buses.mjs <dir> [--runtimes node,bun,deno] [--redis <bin>] [--nats <bin>]
+//   node packages/start/test/e2e/e2e-realtime.mjs prepare <dir>
+//   node packages/start/test/e2e/e2e-channels-buses.mjs <dir> [--runtimes node,bun,deno] [--redis <bin>] [--nats <bin>]
 import { spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
-import { fnId, open } from '../test/ws-client.mjs'
+import { fnId, open } from '../ws-client.mjs'
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,

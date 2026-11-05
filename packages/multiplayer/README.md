@@ -7,3 +7,9 @@ Presence, cursors anchored to elements, a typed interaction relay and synced scr
 ```bash
 npm install @weft-js/multiplayer
 ```
+
+## End-to-end tests
+
+From the repository, `pnpm --filter @weft-js/multiplayer test:e2e prepare <dir>` prepares a room;
+`pnpm --filter @weft-js/multiplayer test:e2e run <dir>` runs it in two browsers. The entrypoint
+stays `.mjs` because Node runs it directly, outside Vitest.

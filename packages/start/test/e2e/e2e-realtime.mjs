@@ -1,18 +1,18 @@
 // The runtime matrix's realtime check (research 30 §10): SSE through each runtime's server, on a built app.
 //
-//   node packages/start/scripts/runtime-matrix.mjs <app> --e2e packages/start/scripts/e2e-realtime.mjs
+//   node packages/start/scripts/runtime-matrix.mjs <app> --e2e packages/start/test/e2e/e2e-realtime.mjs
 //
-// The app is `node packages/start/scripts/e2e-realtime.mjs prepare <dir>`: a scaffold plus test/fixtures/app's
+// The app is `node packages/start/test/e2e/e2e-realtime.mjs prepare <dir>`: a scaffold plus test/fixtures/app's
 // `src/server/feed.ts` and `/live` route. With `WEFT_RT_POSTGRES` set the build uses the postgres bus, and this file
 // also proves a NOTIFY from outside the process reaches a connection.
 import { spawnSync } from 'node:child_process'
 import { cpSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { connect, frameId, pageCursor, rpc } from '../test/rt-client.mjs'
+import { connect, frameId, pageCursor, rpc } from '../rt-client.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const repo = resolve(here, '../../..')
+const repo = resolve(here, '../../../..')
 
 export default async function run({ url, log }) {
   const checks = []
@@ -145,7 +145,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === 'p
   pkg.dependencies['@weft-js/realtime-redis'] = `file:${join(repo, 'packages/realtime-redis')}`
   pkg.dependencies['@weft-js/realtime-nats'] = `file:${join(repo, 'packages/realtime-nats')}`
   writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
-  const fixture = join(here, '../test/fixtures/app/src')
+  const fixture = join(here, '../fixtures/app/src')
   cpSync(join(fixture, 'server/feed.ts'), join(dir, 'src/server/feed.ts'))
   cpSync(join(fixture, 'schema.ts'), join(dir, 'src/schema.ts'))
   cpSync(join(fixture, 'routes/live.tsx'), join(dir, 'src/routes/live.tsx'))

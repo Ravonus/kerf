@@ -1,5 +1,5 @@
 // The token, read back by LiveKit's own rules. The transport against a real server is `WEFT_TEST_LIVEKIT` in Chromium:
-// packages/multiplayer/scripts/e2e-browsers.mjs.
+// packages/multiplayer/test/e2e/e2e-browsers.mjs.
 import { verifyTicket } from '@weft-js/multiplayer/server'
 import { livekitTicket } from '../src/server'
 

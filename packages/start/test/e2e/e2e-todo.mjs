@@ -3,9 +3,11 @@
 // nothing leaves the local server.
 import { randomBytes } from 'node:crypto'
 import { createRequire } from 'node:module'
-import { functionRequestsIdle } from './request-idle.mjs'
+import { functionRequestsIdle } from '../../scripts/request-idle.mjs'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+const { chromium } = createRequire(new URL('../../scripts/e2e-todo.mjs', import.meta.url))(
+  'playwright-core',
+)
 
 export function suite({ url, log }) {
   const checks = []
@@ -148,7 +150,7 @@ async function hydrationChecks({ check, eq, fail, titles }, a) {
           if (!ul) return
           window.__h = []
           // The server's list, as a reader sees it. The claim writes nothing; a macrotask later `sweep` drops the keys and
-          // hole markers only the claim needed, on purpose (hydrate.ts, islands.browser.test.mjs). Only that may be seen.
+          // hole markers only the claim needed, on purpose (hydrate.ts, islands.browser.test.ts). Only that may be seen.
           window.__plain = (root) => {
             const c = root.cloneNode(true)
             c.querySelectorAll('[wk]').forEach((e) => e.removeAttribute('wk'))

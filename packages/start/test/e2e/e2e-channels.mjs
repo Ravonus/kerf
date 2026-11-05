@@ -1,9 +1,9 @@
 // The runtime matrix's channel check (research 32): a real WebSocket through each runtime's server, on a built app.
 //
-//   node packages/start/scripts/e2e-realtime.mjs prepare <dir>     (the same app has the chat fixture)
-//   node packages/start/scripts/runtime-matrix.mjs <dir> --e2e packages/start/scripts/e2e-channels.mjs
-import { fnId, handshake, open } from '../test/ws-client.mjs'
-import { rpc } from '../test/rt-client.mjs'
+//   node packages/start/test/e2e/e2e-realtime.mjs prepare <dir>     (the same app has the chat fixture)
+//   node packages/start/scripts/runtime-matrix.mjs <dir> --e2e packages/start/test/e2e/e2e-channels.mjs
+import { fnId, handshake, open } from '../ws-client.mjs'
+import { rpc } from '../rt-client.mjs'
 
 export default async function run({ url, log }) {
   const checks = []

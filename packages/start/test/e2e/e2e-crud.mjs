@@ -3,7 +3,9 @@
 import { createRequire } from 'node:module'
 import { suite } from './e2e-todo.mjs'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+const { chromium } = createRequire(new URL('../../scripts/e2e-crud.mjs', import.meta.url))(
+  'playwright-core',
+)
 
 export default async function run({ url, log }) {
   const t = suite({ url, log })
