@@ -75,9 +75,9 @@ export function MeetingRoom({
     onCamera,
     onHand,
     onShare,
-    onReact,
-    onLeave,
-    onMore,
+    onReact: onReact ? (emoji: string) => onReact?.(emoji) : undefined,
+    onLeave: onLeave ? () => onLeave?.() : undefined,
+    onMore: onMore ? () => onMore() : undefined,
   })
   const model = meetingModel(p)
   return <MeetingRoomView model={model} p={p} />

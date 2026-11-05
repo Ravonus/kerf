@@ -71,11 +71,11 @@ export function NotificationPreferences({
     offered,
     locked,
     lockReason,
-    onChange,
+    onChange: onChange ? (changes: PrefChange[]) => onChange?.(changes) : undefined,
     digest,
     digestChannel,
     digests,
-    onDigest,
+    onDigest: onDigest ? (next: string) => onDigest?.(next) : undefined,
     defaults,
   }))
   return (

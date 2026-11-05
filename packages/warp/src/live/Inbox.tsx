@@ -98,12 +98,12 @@ export function Inbox({
     queued,
     viewAll,
     settings,
-    onRead,
-    onReadAll,
-    onDismiss,
-    onRestore,
+    onRead: onRead ? (id: string) => onRead?.(id) : undefined,
+    onReadAll: onReadAll ? () => onReadAll?.() : undefined,
+    onDismiss: onDismiss ? (id: string) => onDismiss?.(id) : undefined,
+    onRestore: onRestore ? (note: Note) => onRestore?.(note) : undefined,
     onAction,
-    onOpen,
+    onOpen: onOpen ? (note: Note) => onOpen?.(note) : undefined,
   }))
   return (
     <section
@@ -120,7 +120,11 @@ export function Inbox({
           {model.fresh.value} new
         </Button>
       )}
-      <InboxFeed title={title} model={model} onAction={onAction} />
+      <InboxFeed
+        title={title}
+        model={model}
+        onAction={(note, action) => onAction?.(note, action)}
+      />
       <div data-part="footer">
         <span>{model.sync.value}</span>
         {model.page.value && (
