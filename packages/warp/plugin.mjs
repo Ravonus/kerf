@@ -17,6 +17,8 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { definePlugin } from '@weft-js/core/plugin'
 import { fromHex, hex, luminance, toLinear } from './tokens/color.mjs'
+import { componentCatalog } from './src/plugin/catalog.mjs'
+import { dtcgTokens } from './src/plugin/dtcg.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
 const DEFAULT = { hue: 152, chroma: 0.115 }
@@ -203,77 +205,9 @@ function landed(seed, declarations, asked) {
     : `warp: accent ${asked} landed as ${light} light, ${dark} dark. A seed sets the hue family; pin an exact brand with \`--warp-color-accent-solid\` (\`weft docs theme\`).`
 }
 
-/** The resolved tokens as DTCG 2025.10: one token file per theme × expression and a resolver over them. `css`: the app's seed and overrides. */
+/** The resolved tokens as DTCG 2025.10, using the app's seed and overrides. */
 export function dtcg(css = '') {
-  const dir = mkdtempSync(join(tmpdir(), 'warp-seed-'))
-  let resolved
-  try {
-    const file = join(dir, 'warp.css')
-    writeFileSync(
-      file,
-      readFileSync(new URL('styles/warp.css', core), 'utf8') +
-        `\n${css.replace(/@layer warp\.\w+\{([\s\S]*)\}\n?$/gm, '$1')}\n`,
-    )
-    let out
-    try {
-      out = execFileSync(
-        process.execPath,
-        [fileURLToPath(new URL('scripts/contrast-check.mjs', core)), file, '--json'],
-        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
-      )
-    } catch (e) {
-      out = e.stdout
-    }
-    resolved = JSON.parse(out).resolved
-  } finally {
-    rmSync(dir, { recursive: true, force: true })
-  }
-  const px = (value) => ({ $value: { value, unit: 'px' } })
-  const SPACE = { hair: 2, tight: 4, related: 8, group: 16 }
-  const X = { quiet: 0, balanced: 0.5, vivid: 1 }
-  const files = {}
-  for (const [combo, colours] of Object.entries(resolved)) {
-    const [theme, expression] = combo.split('/')
-    const x = X[expression]
-    const color = Object.fromEntries(
-      Object.entries(colours)
-        .filter(([, v]) => /^#[0-9a-f]{6}$/i.test(v))
-        .map(([name, code]) => [
-          name,
-          {
-            $value: {
-              colorSpace: 'srgb',
-              components: [1, 3, 5].map((i) => parseInt(code.slice(i, i + 2), 16) / 255),
-              hex: code,
-            },
-          },
-        ]),
-    )
-    files[`warp.${theme}.${expression}.tokens.json`] = {
-      color: { $type: 'color', ...color },
-      space: {
-        $type: 'dimension',
-        ...Object.fromEntries(Object.entries(SPACE).map(([k, v]) => [k, px(v)])),
-      },
-      radius: {
-        $type: 'dimension',
-        mark: px(Math.round(4 - 2 * x)),
-        control: px(Math.round(8 - 6 * x)),
-        surface: px(Math.round(12 - 10 * x)),
-      },
-    }
-  }
-  // Each file is whole, so one modifier picks one file: the dials don't layer in DTCG terms.
-  const contexts = Object.fromEntries(
-    Object.keys(files).map((f) => [f.split('.').slice(1, 3).join('-'), [{ $ref: f }]]),
-  )
-  files['warp.resolver.json'] = {
-    name: 'warp',
-    version: '2025.10',
-    modifiers: { mode: { contexts, default: 'light-balanced' } },
-    resolutionOrder: [{ $ref: '#/modifiers/mode' }],
-  }
-  return files
+  return dtcgTokens(css, core)
 }
 
 // A token's value in the spec, with `from` (its lightness for one theme) replaced by `to`.
@@ -401,109 +335,7 @@ function cardColors(seed, dials) {
 
 const agents = `Import components from \`@weft-js/warp\`. Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page). No raw values (D001–D007); intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). The look comes from dials: \`data-expression|theme|density|motion|flair\` on any element (scopes nest). Fields take \`label\` (required), \`hint\`, \`error\`. App-wide: \`warp({ seed: { accent }, dials, radius, fonts, tokens })\`; D010 fails a pair that can't pass.`
 
-const catalog = [
-  ['Stack', 'Vertical flow; `gap` is the relationship'],
-  ['Row', 'Horizontal cluster that wraps; `justify`, `reflow` to stack below a step'],
-  ['Grid', 'Intrinsic columns by `min`, capped by `cols`'],
-  ['Split', 'Fixed side and fluid main, stacked below its step'],
-  ['Center', 'Measured column, centred; `max`, `gutter`'],
-  ['Cover', 'Fills the screen with one centred child (auth, errors)'],
-  ['Frame', 'Fixed-ratio media box'],
-  ['Spacer', 'Takes the free space in a Row or Stack'],
-  ['Inset', 'Sunken padded region'],
-  ['Heading', 'Real heading: `level` is the outline and picks the look; `role` overrides it'],
-  ['Text', 'Text in a role: `role`, `tone`, `subtle`, `faint`'],
-  ['Link', "A link: `href`, `subtle`, `external`; a bare `<a>` still gets warp's colour"],
-  ['VirtualList', 'A long list with exact text heights: rows render only in view'],
-  ['Thread', 'A chat log on a window: stick to end, older messages, unread divider'],
-  ['Feed', 'APG feed on a window with Page Up/Down between articles'],
-  ['Kanban', 'A board whose columns are windows; drag, menu and Alt + arrows'],
-  ['ScrollGrid', 'Read-only two-axis grid, both axes virtual, wrapped columns optional'],
-  ['DateField', 'Typed date segments with a calendar; ISO value'],
-  ['DateRangeField', 'Two date segments, range calendar, presets, compare'],
-  ['TimeField', 'Typed time with a slot list or wheels'],
-  ['DateTimeField', 'Date and time in one field; value is a plain date-time'],
-  ['InlineCalendar', 'The calendar grid in the page: single, multiple, range'],
-  ['MonthPicker', 'Month grid in a field'],
-  ['WeekPicker', 'Week selection with week numbers'],
-  ['PeriodPicker', 'Year, quarter, month or week in one trigger'],
-  ['TimeZoneSelect', 'Searchable IANA zones with offsets'],
-  ['CountrySelect', 'Searchable countries, names from Intl'],
-  ['LanguageSelect', 'Searchable languages with endonyms'],
-  ['CurrencySelect', 'Searchable currencies with symbols'],
-  ['PhoneField', 'Country button and tel input; E.164 value'],
-  ['DurationField', 'Spinbuttons per unit; ISO duration, balanced'],
-  ['RecurrenceField', 'RRULE builder in plain language with next dates'],
-  ['PlaceLookupInput', 'Place combobox over your search()'],
-  ['AddressField', 'Country-first address, optional provider, manual fallback'],
-  ['PaymentCardInput', "Field shell around the provider's hosted card field"],
-  ['CardNumberText', 'Saved card display'],
-  ['SignaturePad', 'Draw or type a signature'],
-  [
-    'Button',
-    'Native button: tone, emphasis (solid soft outline ghost frame link), size, loading, icon-only; `collapse` shows only the icon on a phone or tablet and keeps the text as its name',
-  ],
-  ['Toggle', 'Button with aria-pressed'],
-  ['Input', 'Text field: floating border label (or classic), hint, error, prefix, suffix, clear'],
-  ['Search', 'Search field with icon and clear'],
-  ['Textarea', 'Multi-line field that grows 3 to 10 lines; Cmd/Ctrl+Enter submits'],
-  ['Select', 'Native select in the field shell'],
-  ['Checkbox', 'Native checkbox; indeterminate'],
-  ['Switch', 'Checkbox with role switch; the rail fills with the sweep'],
-  ['Segmented', 'Radio group with a sliding face'],
-  ['Chip', 'Filter chip (aria-pressed)'],
-  ['Tabs', 'Tablist (line, pill, enclosed) with panels'],
-  ['Card', 'Surface: eyebrow, title, body; sweeps only with the sweep prop'],
-  ['Badge', 'Status or count; status dot'],
-  ['Tag', 'User label, removable'],
-  ['Kbd', 'One keyboard key'],
-  ['Alert', 'Inline message with icon, title, description, actions'],
-  ['Progress', 'Linear or circular progress; indeterminate'],
-  ['Spinner', 'Busy indicator'],
-  ['Skeleton', 'Loading placeholder: text, circle, block'],
-  ['Tooltip', 'Hint on hover and keyboard focus (never essential)'],
-  ['Popover', 'Button that opens a non-modal dialog panel'],
-  ['Modal', 'Native modal dialog; alert dialog'],
-  ['Drawer', 'Sheet: side on wide screens, bottom on phones'],
-  ['Toaster', 'Toast region; toast.show() from anywhere'],
-  [
-    'Table',
-    'Data table: sort, filter, Columns, resize, pin, selection, bulk bar, details, inline edit, live cells, phone cards',
-  ],
-  [
-    'LineChart',
-    'Line or area chart: multi-series, crosshair, annotations, reference lines, live tween',
-  ],
-  ['BarChart', 'Bars: grouped, stacked or percent (`layout`)'],
-  ['ComboChart', 'Bars plus a moving average on one axis'],
-  ['DonutChart', 'Donut or `pie`, centre readout'],
-  ['RadialChart', '270° radial bars'],
-  ['FunnelChart', 'Step bars with % of previous'],
-  ['ScatterChart', 'Points, shape per group'],
-  ['BubbleChart', 'Points sized by value'],
-  ['Histogram', 'Bins with p50 and p95'],
-  ['HeatGrid', 'Week by day heatmap; calendar at 52 weeks'],
-  ['RadarChart', 'Polygons on up to 3 series'],
-  ['Treemap', 'Squarified areas'],
-  ['Sunburst', 'Two-ring part to whole'],
-  ['SankeyChart', 'Flows between columns'],
-  ['CandlestickChart', 'Candles or `variant="ohlc"`'],
-  ['BoxPlot', 'Quartiles, whiskers, outliers'],
-  ['WaterfallChart', 'Bridge with totals'],
-  ['StreamChart', 'Rolling window on a fixed domain, Pause'],
-  ['BrushChart', 'Overview and brush window'],
-  ['TileMap', 'Tile-grid choropleth'],
-  ['GaugeChart', 'Banded gauge with a needle'],
-  ['Sparkline', 'Inline trend, aria-hidden inside a labelled parent'],
-  [
-    'Shell',
-    'App shell: bottom bar, rail or sidebar by its own width; header, account menu, More sheet, focus variant',
-  ],
-  [
-    'SideNav',
-    'Docs sidebar: a left panel of folding sections, remembered; a collapse bar at its edge folds it when docked and opens it over the page on phones; filter',
-  ],
-].map(([name, summary]) => ({ name, import: '@weft-js/warp', summary }))
+const catalog = componentCatalog()
 
 export const warp = definePlugin({
   name: '@weft-js/warp',

@@ -1,0 +1,1420 @@
+--- original
++++ modified
+@@ -554 +554 @@
+-function toggleFx(list, name, on) {
++function toggleFxList(list, name, on) {
+@@ -570,5 +570 @@
+-function fxUniforms(resolved, look) {
+-  const on = {};
+-  for (const p of resolved) if (p.on) on[p.name] = p.params;
+-  const ramp2 = (r) => typeof r === "number" ? r : look.ramp(r);
+-  const entry = (c) => {
++function colourEntry(c, ramp2, look) {
+@@ -581 +577,7 @@
+-  };
++  }
++
++function fxUniforms(resolved, look) {
++  const on = {};
++  for (const p of resolved) if (p.on) on[p.name] = p.params;
++  const ramp2 = (r) => typeof r === "number" ? r : look.ramp(r);
++  const entry = (c) => colourEntry(c, ramp2, look);
+@@ -1440,50 +1442,2 @@
+-function createIndexedPass(env, createDepth) {
+-  const gl = env.gl;
+-  const nearest = () => {
+-    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+-  };
+-  let extra = null;
+-  function bakeMode() {
+-    if (!extra) {
+-      const bw = program(gl, FULLSCREEN_VS, BAKE_WORLD_FS);
+-      ["Boxes", "Wedges", "Capsules"].forEach((name, i) => gl.uniformBlockBinding(bw.p, gl.getUniformBlockIndex(bw.p, name), i));
+-      extra = { world: bw, index: program(gl, FULLSCREEN_VS, INDEX_FS), depth: createDepth?.() ?? null, height: null, fb: gl.createFramebuffer(), tex: gl.createTexture(), w: 0, h: 0 };
+-    }
+-    if (extra.w !== env.width || extra.h !== env.height) {
+-      gl.bindTexture(gl.TEXTURE_2D, extra.tex);
+-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, env.width, env.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+-      nearest();
+-      gl.bindFramebuffer(gl.FRAMEBUFFER, extra.fb);
+-      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, extra.tex, 0);
+-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+-      extra.w = env.width;
+-      extra.h = env.height;
+-    }
+-    return extra;
+-  }
+-  function pass(prog, fb, textures) {
+-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+-    gl.viewport(0, 0, env.width, env.height);
+-    gl.useProgram(prog);
+-    textures.forEach(([t, loc], i) => {
+-      gl.activeTexture(gl.TEXTURE0 + i);
+-      gl.bindTexture(gl.TEXTURE_2D, t);
+-      gl.uniform1i(loc, i);
+-    });
+-    gl.bindBuffer(gl.ARRAY_BUFFER, env.quad);
+-    const a = gl.getAttribLocation(prog, "aPos");
+-    gl.enableVertexAttribArray(a);
+-    gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+-  }
+-  function readTarget(fb, attachment) {
+-    const out = new Uint8Array(env.width * env.height * 4);
+-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+-    if (fb) gl.readBuffer(attachment);
+-    gl.readPixels(0, 0, env.width, env.height, gl.RGBA, gl.UNSIGNED_BYTE, out);
+-    if (fb) gl.readBuffer(gl.COLOR_ATTACHMENT0);
+-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+-    return out;
+-  }
+-  const api = {
+-    renderIndexed({ eye, target: look, fov = 1.2, time = 0, sun = [0.4, 0.8, 0.3], waterY = 0, fogNear = 25, fogFar = 110, gap = 0.56, split, ortho = 0 }) {
++function makeIndexedRender(env, gl, bakeMode, pass) {
++  return function renderIndexed({ eye, target: look, fov = 1.2, time = 0, sun = [0.4, 0.8, 0.3], waterY = 0, fogNear = 25, fogFar = 110, gap = 0.56, split, ortho = 0 }) {
+@@ -1530,5 +1484,5 @@
+-    },
+-    readIndexed() {
+-      return readTarget(bakeMode().fb, gl.COLOR_ATTACHMENT0);
+-    },
+-    renderIndexedHeights({ eye, target: look, fov = 1.2, pixelsPerMetre, eps = 0, ortho = 0 }) {
++    };
++}
++
++function makeIndexedHeights(env, gl, bakeMode, pass) {
++  return function renderIndexedHeights({ eye, target: look, fov = 1.2, pixelsPerMetre, eps = 0, ortho = 0 }) {
+@@ -1560,0 +1515,24 @@
++    };
++}
++
++function createIndexedPass(env, createDepth) {
++  const gl = env.gl;
++  const nearest = () => {
++    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
++  };
++  let extra = null;
++  function bakeMode() {
++    if (!extra) {
++      const bw = program(gl, FULLSCREEN_VS, BAKE_WORLD_FS);
++      ["Boxes", "Wedges", "Capsules"].forEach((name, i) => gl.uniformBlockBinding(bw.p, gl.getUniformBlockIndex(bw.p, name), i));
++      extra = { world: bw, index: program(gl, FULLSCREEN_VS, INDEX_FS), depth: createDepth?.() ?? null, height: null, fb: gl.createFramebuffer(), tex: gl.createTexture(), w: 0, h: 0 };
++    }
++    if (extra.w !== env.width || extra.h !== env.height) {
++      gl.bindTexture(gl.TEXTURE_2D, extra.tex);
++      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, env.width, env.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
++      nearest();
++      gl.bindFramebuffer(gl.FRAMEBUFFER, extra.fb);
++      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, extra.tex, 0);
++      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
++      extra.w = env.width;
++      extra.h = env.height;
+@@ -1561,0 +1540,32 @@
++    return extra;
++  }
++  function pass(prog, fb, textures) {
++    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
++    gl.viewport(0, 0, env.width, env.height);
++    gl.useProgram(prog);
++    textures.forEach(([t, loc], i) => {
++      gl.activeTexture(gl.TEXTURE0 + i);
++      gl.bindTexture(gl.TEXTURE_2D, t);
++      gl.uniform1i(loc, i);
++    });
++    gl.bindBuffer(gl.ARRAY_BUFFER, env.quad);
++    const a = gl.getAttribLocation(prog, "aPos");
++    gl.enableVertexAttribArray(a);
++    gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
++    gl.drawArrays(gl.TRIANGLES, 0, 3);
++  }
++  function readTarget(fb, attachment) {
++    const out = new Uint8Array(env.width * env.height * 4);
++    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
++    if (fb) gl.readBuffer(attachment);
++    gl.readPixels(0, 0, env.width, env.height, gl.RGBA, gl.UNSIGNED_BYTE, out);
++    if (fb) gl.readBuffer(gl.COLOR_ATTACHMENT0);
++    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
++    return out;
++  }
++  const api = {
++    renderIndexed: makeIndexedRender(env, gl, bakeMode, pass),
++    readIndexed() {
++      return readTarget(bakeMode().fb, gl.COLOR_ATTACHMENT0);
++    },
++    renderIndexedHeights: makeIndexedHeights(env, gl, bakeMode, pass)
+@@ -1613,44 +1623,7 @@
+-function createPixelRenderer(canvas, { width = 128, height = 128, bakeOnly = false, profile: profile2 } = {}) {
+-  const ctx = canvas.getContext("webgl2", { antialias: false, preserveDrawingBuffer: true });
+-  if (!ctx) throw new Error("WebGL2 is not available");
+-  const gl = ctx;
+-  let worldP = null, pixelP = null, pointsP = null;
+-  let directPixelP = null;
+-  const colourPrograms = () => {
+-    if (!worldP) {
+-      const w = program(gl, FULLSCREEN_VS, WORLD_FS);
+-      if (bakeOnly) ["Boxes", "Wedges", "Capsules"].forEach((name, i) => gl.uniformBlockBinding(w.p, gl.getUniformBlockIndex(w.p, name), i));
+-      worldP = w;
+-      pixelP = program(gl, FULLSCREEN_VS, PIXEL_FS);
+-      pointsP = program(gl, POINTS_VS, POINTS_FS);
+-    }
+-    return { world: worldP, pixel: pixelP, points: pointsP };
+-  };
+-  if (!bakeOnly) colourPrograms();
+-  const quad = gl.createBuffer();
+-  gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+-  const pbuf = gl.createBuffer();
+-  const nearest = () => {
+-    for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.NEAREST], [gl.TEXTURE_MAG_FILTER, gl.NEAREST], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v);
+-  };
+-  const floatTex = (w, h, data = null) => {
+-    const t = gl.createTexture();
+-    gl.bindTexture(gl.TEXTURE_2D, t);
+-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, w, h, 0, gl.RGBA, gl.FLOAT, data);
+-    nearest();
+-    return t;
+-  };
+-  let W2 = width;
+-  let H = height;
+-  let fbo = null;
+-  let dataTex = null;
+-  let data2Tex = null;
+-  let depthTex = null;
+-  function target(w, h) {
+-    W2 = w;
+-    H = h;
+-    canvas.width = W2;
+-    canvas.height = H;
+-    for (const t of [dataTex, data2Tex, depthTex]) if (t) gl.deleteTexture(t);
+-    if (fbo) gl.deleteFramebuffer(fbo);
++function targetImpl(__state, w, h) {
++    __state.W2 = w;
++    __state.H = h;
++    __state.canvas.width = __state.W2;
++    __state.canvas.height = __state.H;
++    for (const t of [__state.dataTex, __state.data2Tex, __state.depthTex]) if (t) __state.gl.deleteTexture(t);
++    if (__state.fbo) __state.gl.deleteFramebuffer(__state.fbo);
+@@ -1658,4 +1631,4 @@
+-      const t = gl.createTexture();
+-      gl.bindTexture(gl.TEXTURE_2D, t);
+-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, W2, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+-      nearest();
++      const t = __state.gl.createTexture();
++      __state.gl.bindTexture(__state.gl.TEXTURE_2D, t);
++      __state.gl.texImage2D(__state.gl.TEXTURE_2D, 0, __state.gl.RGBA8, __state.W2, __state.H, 0, __state.gl.RGBA, __state.gl.UNSIGNED_BYTE, null);
++      __state.nearest();
+@@ -1664,13 +1637,13 @@
+-    dataTex = rgba8();
+-    data2Tex = rgba8();
+-    depthTex = gl.createTexture();
+-    gl.bindTexture(gl.TEXTURE_2D, depthTex);
+-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, W2, H, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
+-    nearest();
+-    fbo = gl.createFramebuffer();
+-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, dataTex, 0);
+-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, data2Tex, 0);
+-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTex, 0);
+-    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+-    fxDirty = true;
++    __state.dataTex = rgba8();
++    __state.data2Tex = rgba8();
++    __state.depthTex = __state.gl.createTexture();
++    __state.gl.bindTexture(__state.gl.TEXTURE_2D, __state.depthTex);
++    __state.gl.texImage2D(__state.gl.TEXTURE_2D, 0, __state.gl.DEPTH_COMPONENT24, __state.W2, __state.H, 0, __state.gl.DEPTH_COMPONENT, __state.gl.UNSIGNED_INT, null);
++    __state.nearest();
++    __state.fbo = __state.gl.createFramebuffer();
++    __state.gl.bindFramebuffer(__state.gl.FRAMEBUFFER, __state.fbo);
++    __state.gl.framebufferTexture2D(__state.gl.FRAMEBUFFER, __state.gl.COLOR_ATTACHMENT0, __state.gl.TEXTURE_2D, __state.dataTex, 0);
++    __state.gl.framebufferTexture2D(__state.gl.FRAMEBUFFER, __state.gl.COLOR_ATTACHMENT1, __state.gl.TEXTURE_2D, __state.data2Tex, 0);
++    __state.gl.framebufferTexture2D(__state.gl.FRAMEBUFFER, __state.gl.DEPTH_ATTACHMENT, __state.gl.TEXTURE_2D, __state.depthTex, 0);
++    __state.gl.drawBuffers([__state.gl.COLOR_ATTACHMENT0, __state.gl.COLOR_ATTACHMENT1]);
++    __state.fxDirty = true;
+@@ -1678,42 +1651,5 @@
+-  const blocks = [["Boxes", 2 * MAX_BOXES], ["Wedges", 3 * MAX_WEDGES], ["Capsules", 2 * MAX_CAPS]].map(([name, vecs], i) => {
+-    const data = new Float32Array(vecs * 4);
+-    const buf = gl.createBuffer();
+-    gl.bindBuffer(gl.UNIFORM_BUFFER, buf);
+-    gl.bufferData(gl.UNIFORM_BUFFER, data.byteLength, gl.DYNAMIC_DRAW);
+-    if (worldP) gl.uniformBlockBinding(worldP.p, gl.getUniformBlockIndex(worldP.p, name), i);
+-    return { data, buf, i };
+-  });
+-  const [boxBlock, wedgeBlock, capBlock] = blocks;
+-  const rampRows = new Float32Array(MAX_RAMPS * 2 * 4);
+-  const rampTex = floatTex(MAX_RAMPS, 2, rampRows);
+-  const matRows = new Float32Array(256 * 4);
+-  const matTex = floatTex(256, 1, matRows);
+-  const screenTex = gl.createTexture();
+-  gl.bindTexture(gl.TEXTURE_2D, screenTex);
+-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, SCREEN_TILE, SCREEN_TILE, 0, gl.RED, gl.UNSIGNED_BYTE, new Uint8Array(SCREEN_TILE * SCREEN_TILE));
+-  nearest();
+-  let screenLoaded = null;
+-  const timer = gl.getExtension("EXT_disjoint_timer_query_webgl2");
+-  let query = null;
+-  let gpuMs = null;
+-  let palTex = null;
+-  let palette = [];
+-  let rampIndex = /* @__PURE__ */ new Map();
+-  let rampList = [];
+-  let nBoxes = 0;
+-  let nWedges = 0;
+-  let nCaps = 0;
+-  let style = { screen: 4, dither: 0.9, outline: 1 };
+-  let activeProfile = targetProfile("native");
+-  let authoredSize = [width, height];
+-  let authoredStyle = { ...style };
+-  let authoredPalette = [];
+-  let authoredRamps = {};
+-  let fxList = [];
+-  let fxResolved = [];
+-  let fxU = null;
+-  let fxDirty = true;
+-  function uploadRamps() {
+-    rampRows.fill(0);
+-    rampList.forEach(([base, len2], i) => {
+-      rampRows.set([base, len2, 0, 0], i * 4);
++
++function uploadRampsImpl(__state) {
++    __state.rampRows.fill(0);
++    __state.rampList.forEach(([base, len2], i) => {
++      __state.rampRows.set([base, len2, 0, 0], i * 4);
+@@ -1721,5 +1657,5 @@
+-    for (let i = 0; i < MAX_RAMPS; i += 1) rampRows[(MAX_RAMPS + i) * 4] = -1;
+-    if (fxU) {
+-      for (const [r, from, speed] of fxU.ramps.cycle) {
+-        rampRows[r * 4 + 2] = from;
+-        rampRows[r * 4 + 3] = speed;
++    for (let i = 0; i < MAX_RAMPS; i += 1) __state.rampRows[(MAX_RAMPS + i) * 4] = -1;
++    if (__state.fxU) {
++      for (const [r, from, speed] of __state.fxU.ramps.cycle) {
++        __state.rampRows[r * 4 + 2] = from;
++        __state.rampRows[r * 4 + 3] = speed;
+@@ -1727 +1663 @@
+-      for (const [r, to] of fxU.ramps.grade) rampRows[(MAX_RAMPS + r) * 4] = to;
++      for (const [r, to] of __state.fxU.ramps.grade) __state.rampRows[(MAX_RAMPS + r) * 4] = to;
+@@ -1729,2 +1665,2 @@
+-    gl.bindTexture(gl.TEXTURE_2D, rampTex);
+-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, MAX_RAMPS, 2, gl.RGBA, gl.FLOAT, rampRows);
++    __state.gl.bindTexture(__state.gl.TEXTURE_2D, __state.rampTex);
++    __state.gl.texSubImage2D(__state.gl.TEXTURE_2D, 0, 0, 0, MAX_RAMPS, 2, __state.gl.RGBA, __state.gl.FLOAT, __state.rampRows);
+@@ -1732,9 +1668,10 @@
+-  function refreshFx() {
+-    fxResolved = resolveFx(fxList, { width: W2, height: H });
+-    const u = fxUniforms(fxResolved, { ramp: (n) => rampIndex.get(n) ?? -1, rampOf: (i) => rampList[i] ?? [0, 1], style, far: FAR });
+-    fxU = u;
+-    if (u.screen && u.screen !== screenLoaded) {
+-      gl.bindTexture(gl.TEXTURE_2D, screenTex);
+-      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, SCREEN_TILE, SCREEN_TILE, gl.RED, gl.UNSIGNED_BYTE, screenTile(u.screen, SCREEN_TILE));
+-      screenLoaded = u.screen;
++
++function refreshFxImpl(__state) {
++    __state.fxResolved = resolveFx(__state.fxList, { width: __state.W2, height: __state.H });
++    const u = fxUniforms(__state.fxResolved, { ramp: (n) => __state.rampIndex.get(n) ?? -1, rampOf: (i) => __state.rampList[i] ?? [0, 1], style: __state.style, far: FAR });
++    __state.fxU = u;
++    if (u.screen && u.screen !== __state.screenLoaded) {
++      __state.gl.bindTexture(__state.gl.TEXTURE_2D, __state.screenTex);
++      __state.gl.pixelStorei(__state.gl.UNPACK_ALIGNMENT, 1);
++      __state.gl.texSubImage2D(__state.gl.TEXTURE_2D, 0, 0, 0, SCREEN_TILE, SCREEN_TILE, __state.gl.RED, __state.gl.UNSIGNED_BYTE, screenTile(u.screen, SCREEN_TILE));
++      __state.screenLoaded = u.screen;
+@@ -1742,2 +1679,2 @@
+-    uploadRamps();
+-    fxDirty = false;
++    __state.uploadRamps();
++    __state.fxDirty = false;
+@@ -1746,12 +1683,7 @@
+-  target(W2, H);
+-  let edges = "smooth";
+-  let supersample = "auto";
+-  let lastK = 1;
+-  let fine = null;
+-  let smoothPixelP = null, smoothDirectP = null, resolveP = null, smoothDepthOutP = null;
+-  function fineBuffers(k) {
+-    if (fine && fine.k === k && fine.w === W2 * k && fine.h === H * k) return fine;
+-    if (fine) {
+-      for (const t of [fine.data, fine.data2, fine.depth, fine.colour]) gl.deleteTexture(t);
+-      gl.deleteFramebuffer(fine.fbo);
+-      gl.deleteFramebuffer(fine.colourFbo);
++
++function fineBuffersImpl(__state, k) {
++    if (__state.fine && __state.fine.k === k && __state.fine.w === __state.W2 * k && __state.fine.h === __state.H * k) return __state.fine;
++    if (__state.fine) {
++      for (const t of [__state.fine.data, __state.fine.data2, __state.fine.depth, __state.fine.colour]) __state.gl.deleteTexture(t);
++      __state.gl.deleteFramebuffer(__state.fine.fbo);
++      __state.gl.deleteFramebuffer(__state.fine.colourFbo);
+@@ -1759 +1691 @@
+-    const w = W2 * k, h = H * k;
++    const w = __state.W2 * k, h = __state.H * k;
+@@ -1761,4 +1693,4 @@
+-      const t = gl.createTexture();
+-      gl.bindTexture(gl.TEXTURE_2D, t);
+-      gl.texImage2D(gl.TEXTURE_2D, 0, internal, w, h, 0, format, type, null);
+-      nearest();
++      const t = __state.gl.createTexture();
++      __state.gl.bindTexture(__state.gl.TEXTURE_2D, t);
++      __state.gl.texImage2D(__state.gl.TEXTURE_2D, 0, internal, w, h, 0, format, type, null);
++      __state.nearest();
+@@ -1767,12 +1699,12 @@
+-    const data = tex(gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE), data2 = tex(gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE), depth = tex(gl.DEPTH_COMPONENT24, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT);
+-    const fb = gl.createFramebuffer();
+-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, data, 0);
+-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, data2, 0);
+-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth, 0);
+-    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+-    const colour2 = tex(gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE), colourFbo = gl.createFramebuffer();
+-    gl.bindFramebuffer(gl.FRAMEBUFFER, colourFbo);
+-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, colour2, 0);
+-    fine = { k, w, h, fbo: fb, data, data2, depth, colourFbo, colour: colour2 };
+-    return fine;
++    const data = tex(__state.gl.RGBA8, __state.gl.RGBA, __state.gl.UNSIGNED_BYTE), data2 = tex(__state.gl.RGBA8, __state.gl.RGBA, __state.gl.UNSIGNED_BYTE), depth = tex(__state.gl.DEPTH_COMPONENT24, __state.gl.DEPTH_COMPONENT, __state.gl.UNSIGNED_INT);
++    const fb = __state.gl.createFramebuffer();
++    __state.gl.bindFramebuffer(__state.gl.FRAMEBUFFER, fb);
++    __state.gl.framebufferTexture2D(__state.gl.FRAMEBUFFER, __state.gl.COLOR_ATTACHMENT0, __state.gl.TEXTURE_2D, data, 0);
++    __state.gl.framebufferTexture2D(__state.gl.FRAMEBUFFER, __state.gl.COLOR_ATTACHMENT1, __state.gl.TEXTURE_2D, data2, 0);
++    __state.gl.framebufferTexture2D(__state.gl.FRAMEBUFFER, __state.gl.DEPTH_ATTACHMENT, __state.gl.TEXTURE_2D, depth, 0);
++    __state.gl.drawBuffers([__state.gl.COLOR_ATTACHMENT0, __state.gl.COLOR_ATTACHMENT1]);
++    const colour2 = tex(__state.gl.RGBA8, __state.gl.RGBA, __state.gl.UNSIGNED_BYTE), colourFbo = __state.gl.createFramebuffer();
++    __state.gl.bindFramebuffer(__state.gl.FRAMEBUFFER, colourFbo);
++    __state.gl.framebufferTexture2D(__state.gl.FRAMEBUFFER, __state.gl.COLOR_ATTACHMENT0, __state.gl.TEXTURE_2D, colour2, 0);
++    __state.fine = { k, w, h, fbo: fb, data, data2, depth, colourFbo, colour: colour2 };
++    return __state.fine;
+@@ -1780,39 +1712,5 @@
+-  let RW = W2, RH = H, rfbo = null;
+-  const indexed = createIndexedPass({
+-    gl,
+-    quad,
+-    matTex,
+-    blocks,
+-    get width() {
+-      return W2;
+-    },
+-    get height() {
+-      return H;
+-    },
+-    get fbo() {
+-      return fbo;
+-    },
+-    get dataTex() {
+-      return dataTex;
+-    },
+-    get data2Tex() {
+-      return data2Tex;
+-    },
+-    get depthTex() {
+-      return depthTex;
+-    },
+-    counts: { get boxes() {
+-      return nBoxes;
+-    }, get wedges() {
+-      return nWedges;
+-    }, get capsules() {
+-      return nCaps;
+-    } }
+-  }, () => program(gl, FULLSCREEN_VS, DEPTH_FS));
+-  const { mode: bakeMode, pass, readTarget } = indexed;
+-  let rasterState = null;
+-  const rasterStats = { meshes: 0, triangles: 0, instances: 0, meshBytes: 0 };
+-  function rasterMode() {
+-    if (rasterState) return rasterState;
+-    const prog = program(gl, RASTER_VS, RASTER_FS);
+-    const depthOut = program(gl, FULLSCREEN_VS, DEPTH_OUT_FS);
++
++function rasterModeImpl(__state) {
++    if (__state.rasterState) return __state.rasterState;
++    const prog = program(__state.gl, RASTER_VS, RASTER_FS);
++    const depthOut = program(__state.gl, FULLSCREEN_VS, DEPTH_OUT_FS);
+@@ -1820,18 +1718,18 @@
+-      const vao = gl.createVertexArray();
+-      gl.bindVertexArray(vao);
+-      const vb = gl.createBuffer();
+-      gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+-      gl.bufferData(gl.ARRAY_BUFFER, t.verts, gl.STATIC_DRAW);
+-      gl.enableVertexAttribArray(0);
+-      gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+-      const nb = gl.createBuffer();
+-      gl.bindBuffer(gl.ARRAY_BUFFER, nb);
+-      gl.bufferData(gl.ARRAY_BUFFER, t.norms, gl.STATIC_DRAW);
+-      gl.enableVertexAttribArray(1);
+-      gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+-      const ib = gl.createBuffer();
+-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib);
+-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, t.index, gl.STATIC_DRAW);
+-      const inst = gl.createBuffer();
+-      gl.bindBuffer(gl.ARRAY_BUFFER, inst);
+-      gl.bufferData(gl.ARRAY_BUFFER, 1024 * RASTER_FLOATS * 4, gl.DYNAMIC_DRAW);
++      const vao = __state.gl.createVertexArray();
++      __state.gl.bindVertexArray(vao);
++      const vb = __state.gl.createBuffer();
++      __state.gl.bindBuffer(__state.gl.ARRAY_BUFFER, vb);
++      __state.gl.bufferData(__state.gl.ARRAY_BUFFER, t.verts, __state.gl.STATIC_DRAW);
++      __state.gl.enableVertexAttribArray(0);
++      __state.gl.vertexAttribPointer(0, 3, __state.gl.FLOAT, false, 0, 0);
++      const nb = __state.gl.createBuffer();
++      __state.gl.bindBuffer(__state.gl.ARRAY_BUFFER, nb);
++      __state.gl.bufferData(__state.gl.ARRAY_BUFFER, t.norms, __state.gl.STATIC_DRAW);
++      __state.gl.enableVertexAttribArray(1);
++      __state.gl.vertexAttribPointer(1, 3, __state.gl.FLOAT, false, 0, 0);
++      const ib = __state.gl.createBuffer();
++      __state.gl.bindBuffer(__state.gl.ELEMENT_ARRAY_BUFFER, ib);
++      __state.gl.bufferData(__state.gl.ELEMENT_ARRAY_BUFFER, t.index, __state.gl.STATIC_DRAW);
++      const inst = __state.gl.createBuffer();
++      __state.gl.bindBuffer(__state.gl.ARRAY_BUFFER, inst);
++      __state.gl.bufferData(__state.gl.ARRAY_BUFFER, 1024 * RASTER_FLOATS * 4, __state.gl.DYNAMIC_DRAW);
+@@ -1839,3 +1737,3 @@
+-        gl.enableVertexAttribArray(2 + k);
+-        gl.vertexAttribPointer(2 + k, 4, gl.FLOAT, false, RASTER_FLOATS * 4, k * 16);
+-        gl.vertexAttribDivisor(2 + k, 1);
++        __state.gl.enableVertexAttribArray(2 + k);
++        __state.gl.vertexAttribPointer(2 + k, 4, __state.gl.FLOAT, false, RASTER_FLOATS * 4, k * 16);
++        __state.gl.vertexAttribDivisor(2 + k, 1);
+@@ -1843 +1741 @@
+-      gl.bindVertexArray(null);
++      __state.gl.bindVertexArray(null);
+@@ -1847,2 +1745,2 @@
+-    rasterState = { prog, depthOut, box: box2, wedge: kind(boxTemplate()), capsule: kind(capsuleTemplate(8, 2)), meshes: /* @__PURE__ */ new Map() };
+-    return rasterState;
++    __state.rasterState = { prog, depthOut, box: box2, wedge: kind(boxTemplate()), capsule: kind(capsuleTemplate(8, 2)), meshes: /* @__PURE__ */ new Map() };
++    return __state.rasterState;
+@@ -1850,2 +1748,3 @@
+-  function drawRaster(frame, eye, fwd, right, up, tanF, sunN, waterY, fogNear, fogFar, time) {
+-    const R = rasterMode();
++
++function drawRasterImpl(__state, frame, eye, fwd, right, up, tanF, sunN, waterY, fogNear, fogFar, time) {
++    const R = __state.rasterMode();
+@@ -1853,19 +1752,19 @@
+-    gl.enable(gl.DEPTH_TEST);
+-    gl.depthFunc(gl.LESS);
+-    gl.depthMask(true);
+-    gl.useProgram(R.prog.p);
+-    gl.uniform3fv(RU.uEye, eye);
+-    gl.uniform3fv(RU.uFwd, fwd);
+-    gl.uniform3fv(RU.uRight, right);
+-    gl.uniform3fv(RU.uUp, up);
+-    gl.uniform1f(RU.uTan, tanF);
+-    gl.uniform1f(RU.uAspect, RW / RH);
+-    gl.activeTexture(gl.TEXTURE1);
+-    gl.bindTexture(gl.TEXTURE_2D, matTex);
+-    gl.uniform1i(RU.uMats, 1);
+-    gl.uniform3fv(RU.uSun, sunN);
+-    gl.uniform1f(RU.uWaterY, frame.waterY ?? waterY);
+-    gl.uniform1f(RU.uFogNear, fogNear);
+-    gl.uniform1f(RU.uFogFar, fogFar);
+-    gl.uniform2f(RU.uRes, RW, RH);
+-    gl.uniform1f(RU.uTime, time);
++    __state.gl.enable(__state.gl.DEPTH_TEST);
++    __state.gl.depthFunc(__state.gl.LESS);
++    __state.gl.depthMask(true);
++    __state.gl.useProgram(R.prog.p);
++    __state.gl.uniform3fv(RU.uEye, eye);
++    __state.gl.uniform3fv(RU.uFwd, fwd);
++    __state.gl.uniform3fv(RU.uRight, right);
++    __state.gl.uniform3fv(RU.uUp, up);
++    __state.gl.uniform1f(RU.uTan, tanF);
++    __state.gl.uniform1f(RU.uAspect, __state.RW / __state.RH);
++    __state.gl.activeTexture(__state.gl.TEXTURE1);
++    __state.gl.bindTexture(__state.gl.TEXTURE_2D, __state.matTex);
++    __state.gl.uniform1i(RU.uMats, 1);
++    __state.gl.uniform3fv(RU.uSun, sunN);
++    __state.gl.uniform1f(RU.uWaterY, frame.waterY ?? waterY);
++    __state.gl.uniform1f(RU.uFogNear, fogNear);
++    __state.gl.uniform1f(RU.uFogFar, fogFar);
++    __state.gl.uniform2f(RU.uRes, __state.RW, __state.RH);
++    __state.gl.uniform1f(RU.uTime, time);
+@@ -1876,4 +1775,4 @@
+-      gl.uniform1i(RU.uKind, 0);
+-      gl.bindVertexArray(m.vao);
+-      if (m.indexed) gl.drawElements(gl.TRIANGLES, m.count, gl.UNSIGNED_INT, 0);
+-      else gl.drawArrays(gl.TRIANGLES, 0, m.count);
++      __state.gl.uniform1i(RU.uKind, 0);
++      __state.gl.bindVertexArray(m.vao);
++      if (m.indexed) __state.gl.drawElements(__state.gl.TRIANGLES, m.count, __state.gl.UNSIGNED_INT, 0);
++      else __state.gl.drawArrays(__state.gl.TRIANGLES, 0, m.count);
+@@ -1887,2 +1786,2 @@
+-        gl.bindVertexArray(k.vao);
+-        gl.bindBuffer(gl.ARRAY_BUFFER, k.inst);
++        __state.gl.bindVertexArray(k.vao);
++        __state.gl.bindBuffer(__state.gl.ARRAY_BUFFER, k.inst);
+@@ -1891 +1790 @@
+-          gl.bufferData(gl.ARRAY_BUFFER, k.cap * RASTER_FLOATS * 4, gl.DYNAMIC_DRAW);
++          __state.gl.bufferData(__state.gl.ARRAY_BUFFER, k.cap * RASTER_FLOATS * 4, __state.gl.DYNAMIC_DRAW);
+@@ -1893,3 +1792,3 @@
+-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, buf.data, 0, buf.count * RASTER_FLOATS);
+-        gl.uniform1i(RU.uKind, id);
+-        gl.drawElementsInstanced(gl.TRIANGLES, k.count, gl.UNSIGNED_SHORT, 0, buf.count);
++        __state.gl.bufferSubData(__state.gl.ARRAY_BUFFER, 0, buf.data, 0, buf.count * RASTER_FLOATS);
++        __state.gl.uniform1i(RU.uKind, id);
++        __state.gl.drawElementsInstanced(__state.gl.TRIANGLES, k.count, __state.gl.UNSIGNED_SHORT, 0, buf.count);
+@@ -1900,4 +1799,4 @@
+-    gl.bindVertexArray(null);
+-    rasterStats.meshes = meshes;
+-    rasterStats.triangles = tris;
+-    rasterStats.instances = insts;
++    __state.gl.bindVertexArray(null);
++    __state.rasterStats.meshes = meshes;
++    __state.rasterStats.triangles = tris;
++    __state.rasterStats.instances = insts;
+@@ -1905,7 +1804,7 @@
+-      frame.draw({ gl, eye: [eye[0], eye[1], eye[2]], forward: fwd, right, up, tan: tanF, width: RW, height: RH, far: FAR, time, sun: sunN });
+-      gl.bindFramebuffer(gl.FRAMEBUFFER, rfbo);
+-      gl.viewport(0, 0, RW, RH);
+-      gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+-      gl.enable(gl.DEPTH_TEST);
+-      gl.depthFunc(gl.LESS);
+-      gl.depthMask(true);
++      frame.draw({ gl: __state.gl, eye: [eye[0], eye[1], eye[2]], forward: fwd, right, up, tan: tanF, width: __state.RW, height: __state.RH, far: FAR, time, sun: sunN });
++      __state.gl.bindFramebuffer(__state.gl.FRAMEBUFFER, __state.rfbo);
++      __state.gl.viewport(0, 0, __state.RW, __state.RH);
++      __state.gl.drawBuffers([__state.gl.COLOR_ATTACHMENT0, __state.gl.COLOR_ATTACHMENT1]);
++      __state.gl.enable(__state.gl.DEPTH_TEST);
++      __state.gl.depthFunc(__state.gl.LESS);
++      __state.gl.depthMask(true);
+@@ -1914,2 +1813,3 @@
+-  function writeDepthOut(map) {
+-    const R = rasterMode();
++
++function writeDepthOutImpl(__state, map) {
++    const R = __state.rasterMode();
+@@ -1917,11 +1817,11 @@
+-    gl.enable(gl.DEPTH_TEST);
+-    gl.depthFunc(gl.ALWAYS);
+-    gl.depthMask(true);
+-    gl.colorMask(false, false, false, false);
+-    const D = lastK > 1 ? smoothDepthOutP ??= program(gl, FULLSCREEN_VS, smoothDepthOutFs(DEPTH_OUT_FS)) : R.depthOut;
+-    gl.useProgram(D.p);
+-    gl.uniform2f(D.loc.uMap, scale2, bias);
+-    if (lastK > 1) gl.uniform1i(D.loc.uSS, lastK);
+-    pass(D.p, null, [[lastK > 1 ? fine.depth : depthTex, D.loc.uDepth]]);
+-    gl.colorMask(true, true, true, true);
+-    gl.disable(gl.DEPTH_TEST);
++    __state.gl.enable(__state.gl.DEPTH_TEST);
++    __state.gl.depthFunc(__state.gl.ALWAYS);
++    __state.gl.depthMask(true);
++    __state.gl.colorMask(false, false, false, false);
++    const D = __state.lastK > 1 ? __state.smoothDepthOutP ??= program(__state.gl, FULLSCREEN_VS, smoothDepthOutFs(DEPTH_OUT_FS)) : R.depthOut;
++    __state.gl.useProgram(D.p);
++    __state.gl.uniform2f(D.loc.uMap, scale2, bias);
++    if (__state.lastK > 1) __state.gl.uniform1i(D.loc.uSS, __state.lastK);
++    __state.pass(D.p, null, [[__state.lastK > 1 ? __state.fine.depth : __state.depthTex, D.loc.uDepth]]);
++    __state.gl.colorMask(true, true, true, true);
++    __state.gl.disable(__state.gl.DEPTH_TEST);
+@@ -1929,35 +1829,169 @@
+-  const api = {
+-    gl,
+-    get width() {
+-      return W2;
+-    },
+-    get height() {
+-      return H;
+-    },
+-    limits: {
+-      boxes: MAX_BOXES,
+-      wedges: MAX_WEDGES,
+-      capsules: MAX_CAPS,
+-      ramps: MAX_RAMPS,
+-      materials: MAX_MATERIALS,
+-      colours: MAX_COLOURS,
+-      fragmentUniformVectors: gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS),
+-      maxTexture: gl.getParameter(gl.MAX_TEXTURE_SIZE)
+-    },
+-    setTarget(w, h) {
+-      if (activeProfile.kind === "hardware" && (w !== activeProfile.width || h !== activeProfile.height)) throw new RangeError(`${activeProfile.label} preview requires ${activeProfile.width} \xD7 ${activeProfile.height}`);
+-      target(Math.max(8, w | 0), Math.max(8, h | 0));
+-      if (activeProfile.kind === "native") authoredSize = [W2, H];
+-    },
+-    get profile() {
+-      return activeProfile;
+-    },
+-    setProfile(input) {
+-      const next = targetProfile(input);
+-      activeProfile = next;
+-      if (next.kind === "native") {
+-        target(authoredSize[0], authoredSize[1]);
+-        style = { ...authoredStyle };
+-      } else {
+-        target(next.width, next.height);
+-        style = { ...authoredStyle, screen: next.screen, dither: next.dither };
++
++function prepareRender(__state, __frame) {
++  { const { world, pixel, points } = __state.colourPrograms(); __frame.world = world; __frame.pixel = pixel; __frame.points = points; }
++  __frame.fx = __state.fxDirty || !__state.fxU ? __state.refreshFx() : __state.fxU;
++  __frame.timing = false;
++  if (__state.timer) {
++          if (__state.query && __state.gl.getQueryParameter(__state.query, __state.gl.QUERY_RESULT_AVAILABLE)) {
++            if (!__state.gl.getParameter(__state.timer.GPU_DISJOINT_EXT)) __state.gpuMs = __state.gl.getQueryParameter(__state.query, __state.gl.QUERY_RESULT) / 1e6;
++            __state.gl.deleteQuery(__state.query);
++            __state.query = null;
++          }
++          if (!__state.query) {
++            __state.query = __state.gl.createQuery();
++            __state.gl.beginQuery(__state.timer.TIME_ELAPSED_EXT, __state.query);
++            __frame.timing = true;
++          }
++        }
++  { const { forward: fwd, right, up } = cameraBasis(__frame.eye, __frame.look); __frame.fwd = fwd; __frame.right = right; __frame.up = up; }
++  __frame.tanF = Math.tan(__frame.fov / 2);
++  __frame.sunN = norm3(__frame.sun);
++  __frame.k = __state.edges === "smooth" && __state.activeProfile.kind === "native" ? supersampleFor(__state.W2, __state.H, __state.supersample) : 1;
++  __frame.F = __frame.k > 1 ? __state.fineBuffers(__frame.k) : null;
++  __state.lastK = __frame.k;
++  __state.RW = __frame.F ? __frame.F.w : __state.W2;
++  __state.RH = __frame.F ? __frame.F.h : __state.H;
++  __state.rfbo = __frame.F ? __frame.F.fbo : __state.fbo;
++  __state.gl.bindFramebuffer(__state.gl.FRAMEBUFFER, __state.rfbo);
++  __state.gl.viewport(0, 0, __state.RW, __state.RH);
++  __state.gl.enable(__state.gl.DEPTH_TEST);
++  __state.gl.depthFunc(__state.gl.ALWAYS);
++  __state.gl.clear(__state.gl.COLOR_BUFFER_BIT | __state.gl.DEPTH_BUFFER_BIT);
++  __frame.U = __frame.world.loc;
++  __state.gl.useProgram(__frame.world.p);
++  __state.gl.uniform2f(__frame.U.uRes, __state.RW, __state.RH);
++  __state.gl.uniform3fv(__frame.U.uEye, __frame.eye);
++  __state.gl.uniform3fv(__frame.U.uFwd, __frame.fwd);
++  __state.gl.uniform3fv(__frame.U.uRight, __frame.right);
++  __state.gl.uniform3fv(__frame.U.uUp, __frame.up);
++  __state.gl.uniform1f(__frame.U.uTan, __frame.tanF);
++  __state.gl.uniform1f(__frame.U.uTime, __frame.time);
++  __state.gl.uniform1i(__frame.U.uBoxes, __state.nBoxes);
++  __state.gl.uniform1i(__frame.U.uWedges, __state.nWedges);
++  __state.gl.uniform1i(__frame.U.uCaps, __state.nCaps);
++  for (const blk of __state.blocks) __state.gl.bindBufferBase(__state.gl.UNIFORM_BUFFER, blk.i, blk.buf);
++  __state.gl.activeTexture(__state.gl.TEXTURE1);
++  __state.gl.bindTexture(__state.gl.TEXTURE_2D, __state.matTex);
++  __state.gl.uniform1i(__frame.U.uMats, 1);
++  __state.gl.uniform3fv(__frame.U.uSun, __frame.sunN);
++  __state.gl.uniform1f(__frame.U.uWaterY, __frame.waterY);
++  __state.gl.uniform1f(__frame.U.uFogNear, __frame.fogNear);
++  __state.gl.uniform1f(__frame.U.uFogFar, __frame.fogFar);
++}
++
++function drawRender(__state, __frame) {
++  if (__frame.raster?.world === false) {
++          __state.gl.clearBufferfv(__state.gl.COLOR, 0, [0.5, (__state.matRows[SKY_MAT * 4] ?? 0) / 255, SKY_MAT / 255, 1]);
++          __state.gl.clearBufferfv(__state.gl.COLOR, 1, [0, 1, 0, 0]);
++        } else {
++          __state.gl.bindBuffer(__state.gl.ARRAY_BUFFER, __state.quad);
++          const aw = __state.gl.getAttribLocation(__frame.world.p, "aPos");
++          __state.gl.enableVertexAttribArray(aw);
++          __state.gl.vertexAttribPointer(aw, 2, __state.gl.FLOAT, false, 0, 0);
++          __state.gl.drawArrays(__state.gl.TRIANGLES, 0, 3);
++        }
++  if (__frame.particles.length) {
++          __state.gl.depthFunc(__state.gl.LESS);
++          const data = new Float32Array(__frame.particles.length * 7);
++          __frame.particles.forEach((q, i) => data.set([q.p[0], q.p[1], q.p[2], q.size ?? 1, q.light ?? 0.8, (q.ramp === void 0 ? void 0 : __state.rampIndex.get(q.ramp)) ?? 0, q.glow ?? 0], i * 7));
++          __state.gl.useProgram(__frame.points.p);
++          const P = __frame.points.loc;
++          __state.gl.uniform3fv(P.uEye, __frame.eye);
++          __state.gl.uniform3fv(P.uFwd, __frame.fwd);
++          __state.gl.uniform3fv(P.uRight, __frame.right);
++          __state.gl.uniform3fv(P.uUp, __frame.up);
++          __state.gl.uniform1f(P.uTan, __frame.tanF);
++          __state.gl.uniform1f(P.uAspect, __state.RW / __state.RH);
++          __state.gl.uniform1f(P.uH, __state.RH);
++          __state.gl.bindBuffer(__state.gl.ARRAY_BUFFER, __state.pbuf);
++          __state.gl.bufferData(__state.gl.ARRAY_BUFFER, data, __state.gl.DYNAMIC_DRAW);
++          const a0 = __state.gl.getAttribLocation(__frame.points.p, "aPos");
++          const a1 = __state.gl.getAttribLocation(__frame.points.p, "aLook");
++          __state.gl.enableVertexAttribArray(a0);
++          __state.gl.vertexAttribPointer(a0, 4, __state.gl.FLOAT, false, 28, 0);
++          __state.gl.enableVertexAttribArray(a1);
++          __state.gl.vertexAttribPointer(a1, 3, __state.gl.FLOAT, false, 28, 16);
++          __state.gl.drawArrays(__state.gl.POINTS, 0, __frame.particles.length);
++          __state.gl.disableVertexAttribArray(a1);
++        }
++  if (__frame.raster) __state.drawRaster(__frame.raster, __frame.eye, __frame.fwd, __frame.right, __frame.up, __frame.tanF, __frame.sunN, __frame.waterY, __frame.fogNear, __frame.fogFar, __frame.time);
++  __state.gl.disable(__state.gl.DEPTH_TEST);
++  __state.gl.bindFramebuffer(__state.gl.FRAMEBUFFER, __frame.F ? __frame.F.colourFbo : null);
++  __state.gl.viewport(0, 0, __state.RW, __state.RH);
++  __frame.pass2 = __frame.F ? __frame.raster?.draw ? __state.smoothDirectP ??= program(__state.gl, FULLSCREEN_VS, smoothPixelFs(DIRECT_PIXEL_FS)) : __state.smoothPixelP ??= program(__state.gl, FULLSCREEN_VS, smoothPixelFs(PIXEL_FS)) : __frame.raster?.draw ? __state.directPixelP ??= program(__state.gl, FULLSCREEN_VS, DIRECT_PIXEL_FS) : __frame.pixel;
++  __state.gl.useProgram(__frame.pass2.p);
++  __frame.X = __frame.pass2.loc;
++  __frame.T = [[__frame.F ? __frame.F.data : __state.dataTex, "uData"], [__frame.F ? __frame.F.data2 : __state.data2Tex, "uData2"], [__frame.F ? __frame.F.depth : __state.depthTex, "uDepth"], [__state.palTex, "uPalette"], [__state.rampTex, "uRamps"], [__state.screenTex, "uScreenTex"]];
++  __frame.T.forEach(([t, name], i) => {
++          __state.gl.activeTexture(__state.gl.TEXTURE0 + i);
++          __state.gl.bindTexture(__state.gl.TEXTURE_2D, t);
++          __state.gl.uniform1i(__frame.X[name], i);
++        });
++  __frame.u = __frame.fx.u;
++  __state.gl.uniform1i(__frame.X.uScreen, __frame.u.uScreen);
++  __state.gl.uniform1f(__frame.X.uDither, __frame.u.uDither);
++  __state.gl.uniform1f(__frame.X.uTime, __frame.time);
++  __state.gl.uniform3fv(__frame.X.uOutline, __frame.u.uOutline);
++  __state.gl.uniform1i(__frame.X.uOutlineInk, __frame.u.uOutlineInk);
++}
++
++function composeRender(__state, __frame) {
++  __state.gl.uniform4fv(__frame.X.uFog, __frame.u.uFog);
++  __state.gl.uniform2fv(__frame.X.uFogLook, __frame.u.uFogLook);
++  __state.gl.uniform4fv(__frame.X.uGlow, __frame.u.uGlow);
++  __state.gl.uniform2fv(__frame.X.uGlowK, __frame.u.uGlowK);
++  __state.gl.uniform4fv(__frame.X.uVig, __frame.u.uVig);
++  __state.gl.uniform4fv(__frame.X.uScan, __frame.u.uScan);
++  __state.gl.uniform4fv(__frame.X.uCrt, __frame.u.uCrt);
++  __state.gl.uniform4fv(__frame.X.uRim, __frame.u.uRim);
++  __frame.rd = __frame.u.uRimDir;
++  if (!__frame.rd) {
++          const sx = dot2(__frame.sunN, __frame.right);
++          const sy = dot2(__frame.sunN, __frame.up);
++          const l = Math.hypot(sx, sy);
++          __frame.rd = l > 1e-3 ? [sx / l, sy / l] : [0, 1];
++        }
++  __state.gl.uniform2fv(__frame.X.uRimDir, __frame.rd);
++  __state.gl.uniform4fv(__frame.X.uFlash, __frame.u.uFlash);
++  __state.gl.uniform4iv(__frame.X.uFlashMats, __frame.u.uFlashMats);
++  __state.gl.uniform2fv(__frame.X.uGrade, __frame.u.uGrade);
++  __state.gl.uniform1i(__frame.X.uCycle, __frame.u.uCycle);
++  if (__frame.F) __state.gl.uniform1i(__frame.X.uSS, __frame.k);
++  __state.gl.bindBuffer(__state.gl.ARRAY_BUFFER, __state.quad);
++  __frame.ap = __state.gl.getAttribLocation(__frame.pass2.p, "aPos");
++  __state.gl.enableVertexAttribArray(__frame.ap);
++  __state.gl.vertexAttribPointer(__frame.ap, 2, __state.gl.FLOAT, false, 0, 0);
++  __state.gl.drawArrays(__state.gl.TRIANGLES, 0, 3);
++  if (__frame.F) {
++          const rp = __state.resolveP ??= program(__state.gl, FULLSCREEN_VS, RESOLVE_FS);
++          __state.gl.bindFramebuffer(__state.gl.FRAMEBUFFER, null);
++          __state.gl.viewport(0, 0, __state.W2, __state.H);
++          __state.gl.useProgram(rp.p);
++          __state.gl.activeTexture(__state.gl.TEXTURE0);
++          __state.gl.bindTexture(__state.gl.TEXTURE_2D, __frame.F.colour);
++          __state.gl.uniform1i(rp.loc.uColour, 0);
++          __state.gl.uniform1i(rp.loc.uSS, __frame.k);
++          const ar = __state.gl.getAttribLocation(rp.p, "aPos");
++          __state.gl.enableVertexAttribArray(ar);
++          __state.gl.vertexAttribPointer(ar, 2, __state.gl.FLOAT, false, 0, 0);
++          __state.gl.drawArrays(__state.gl.TRIANGLES, 0, 3);
++        }
++  if (__frame.depthOut) __state.writeDepthOut(__frame.depthOut);
++  if (__frame.timing && __state.timer) __state.gl.endQuery(__state.timer.TIME_ELAPSED_EXT);
++}
++
++function initializeGraphics(__state) {
++  __state.ctx = __state.canvas.getContext("webgl2", { antialias: false, preserveDrawingBuffer: true });
++  if (!__state.ctx) throw new Error("WebGL2 is not available");
++  __state.gl = __state.ctx;
++  __state.worldP = null;
++  __state.pixelP = null;
++  __state.pointsP = null;
++  __state.directPixelP = null;
++  __state.colourPrograms = () => {
++      if (!__state.worldP) {
++        const w = program(__state.gl, FULLSCREEN_VS, WORLD_FS);
++        if (__state.bakeOnly) ["Boxes", "Wedges", "Capsules"].forEach((name, i) => __state.gl.uniformBlockBinding(w.p, __state.gl.getUniformBlockIndex(w.p, name), i));
++        __state.worldP = w;
++        __state.pixelP = program(__state.gl, FULLSCREEN_VS, PIXEL_FS);
++        __state.pointsP = program(__state.gl, POINTS_VS, POINTS_FS);
+@@ -1965,4 +1999,141 @@
+-      if (authoredPalette.length) api.setPalette(authoredPalette, authoredRamps);
+-      fxDirty = true;
+-    },
+-    setPalette(colours, ramps) {
++      return { world: __state.worldP, pixel: __state.pixelP, points: __state.pointsP };
++    };
++  if (!__state.bakeOnly) __state.colourPrograms();
++  __state.quad = __state.gl.createBuffer();
++  __state.gl.bindBuffer(__state.gl.ARRAY_BUFFER, __state.quad);
++  __state.gl.bufferData(__state.gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), __state.gl.STATIC_DRAW);
++  __state.pbuf = __state.gl.createBuffer();
++  __state.nearest = () => {
++      for (const [k, v] of [[__state.gl.TEXTURE_MIN_FILTER, __state.gl.NEAREST], [__state.gl.TEXTURE_MAG_FILTER, __state.gl.NEAREST], [__state.gl.TEXTURE_WRAP_S, __state.gl.CLAMP_TO_EDGE], [__state.gl.TEXTURE_WRAP_T, __state.gl.CLAMP_TO_EDGE]]) __state.gl.texParameteri(__state.gl.TEXTURE_2D, k, v);
++    };
++  __state.floatTex = (w, h, data = null) => {
++      const t = __state.gl.createTexture();
++      __state.gl.bindTexture(__state.gl.TEXTURE_2D, t);
++      __state.gl.texImage2D(__state.gl.TEXTURE_2D, 0, __state.gl.RGBA32F, w, h, 0, __state.gl.RGBA, __state.gl.FLOAT, data);
++      __state.nearest();
++      return t;
++    };
++  __state.W2 = __state.width;
++  __state.H = __state.height;
++  __state.fbo = null;
++  __state.dataTex = null;
++  __state.data2Tex = null;
++  __state.depthTex = null;
++  __state.blocks = [["Boxes", 2 * MAX_BOXES], ["Wedges", 3 * MAX_WEDGES], ["Capsules", 2 * MAX_CAPS]].map(([name, vecs], i) => {
++      const data = new Float32Array(vecs * 4);
++      const buf = __state.gl.createBuffer();
++      __state.gl.bindBuffer(__state.gl.UNIFORM_BUFFER, buf);
++      __state.gl.bufferData(__state.gl.UNIFORM_BUFFER, data.byteLength, __state.gl.DYNAMIC_DRAW);
++      if (__state.worldP) __state.gl.uniformBlockBinding(__state.worldP.p, __state.gl.getUniformBlockIndex(__state.worldP.p, name), i);
++      return { data, buf, i };
++    });
++  { const [boxBlock, wedgeBlock, capBlock] = __state.blocks; __state.boxBlock = boxBlock; __state.wedgeBlock = wedgeBlock; __state.capBlock = capBlock; }
++  __state.rampRows = new Float32Array(MAX_RAMPS * 2 * 4);
++  __state.rampTex = __state.floatTex(MAX_RAMPS, 2, __state.rampRows);
++  __state.matRows = new Float32Array(256 * 4);
++  __state.matTex = __state.floatTex(256, 1, __state.matRows);
++  __state.screenTex = __state.gl.createTexture();
++  __state.gl.bindTexture(__state.gl.TEXTURE_2D, __state.screenTex);
++  __state.gl.texImage2D(__state.gl.TEXTURE_2D, 0, __state.gl.R8, SCREEN_TILE, SCREEN_TILE, 0, __state.gl.RED, __state.gl.UNSIGNED_BYTE, new Uint8Array(SCREEN_TILE * SCREEN_TILE));
++  __state.nearest();
++}
++
++function initializePaletteAndEffects(__state) {
++  __state.screenLoaded = null;
++  __state.timer = __state.gl.getExtension("EXT_disjoint_timer_query_webgl2");
++  __state.query = null;
++  __state.gpuMs = null;
++  __state.palTex = null;
++  __state.palette = [];
++  __state.rampIndex = new Map();
++  __state.rampList = [];
++  __state.nBoxes = 0;
++  __state.nWedges = 0;
++  __state.nCaps = 0;
++  __state.style = { screen: 4, dither: 0.9, outline: 1 };
++  __state.activeProfile = targetProfile("native");
++  __state.authoredSize = [__state.width, __state.height];
++  __state.authoredStyle = { ...__state.style };
++  __state.authoredPalette = [];
++  __state.authoredRamps = {};
++  __state.fxList = [];
++  __state.fxResolved = [];
++  __state.fxU = null;
++  __state.fxDirty = true;
++  __state.target(__state.W2, __state.H);
++  __state.edges = "smooth";
++  __state.supersample = "auto";
++  __state.lastK = 1;
++  __state.fine = null;
++  __state.smoothPixelP = null;
++  __state.smoothDirectP = null;
++  __state.resolveP = null;
++  __state.smoothDepthOutP = null;
++  __state.RW = __state.W2;
++  __state.RH = __state.H;
++  __state.rfbo = null;
++}
++
++function initializeIndexedBuffers(__state) {
++  __state.indexed = createIndexedPass({
++      gl: __state.gl,
++      quad: __state.quad,
++      matTex: __state.matTex,
++      blocks: __state.blocks,
++      get width() {
++        return __state.W2;
++      },
++      get height() {
++        return __state.H;
++      },
++      get fbo() {
++        return __state.fbo;
++      },
++      get dataTex() {
++        return __state.dataTex;
++      },
++      get data2Tex() {
++        return __state.data2Tex;
++      },
++      get depthTex() {
++        return __state.depthTex;
++      },
++      counts: { get boxes() {
++        return __state.nBoxes;
++      }, get wedges() {
++        return __state.nWedges;
++      }, get capsules() {
++        return __state.nCaps;
++      } }
++    }, () => program(__state.gl, FULLSCREEN_VS, DEPTH_FS));
++  { const { mode: bakeMode, pass, readTarget } = __state.indexed; __state.bakeMode = bakeMode; __state.pass = pass; __state.readTarget = readTarget; }
++  __state.rasterState = null;
++  __state.rasterStats = { meshes: 0, triangles: 0, instances: 0, meshBytes: 0 };
++}
++
++function makeSetTarget(__state) {
++  return function setTarget(w, h) {
++      if (__state.activeProfile.kind === "hardware" && (w !== __state.activeProfile.width || h !== __state.activeProfile.height)) throw new RangeError(`${__state.activeProfile.label} preview requires ${__state.activeProfile.width} \xD7 ${__state.activeProfile.height}`);
++      __state.target(Math.max(8, w | 0), Math.max(8, h | 0));
++      if (__state.activeProfile.kind === "native") __state.authoredSize = [__state.W2, __state.H];
++    };
++}
++
++function makeSetProfile(__state) {
++  return function setProfile(input) {
++      const next = targetProfile(input);
++      __state.activeProfile = next;
++      if (next.kind === "native") {
++        __state.target(__state.authoredSize[0], __state.authoredSize[1]);
++        __state.style = { ...__state.authoredStyle };
++      } else {
++        __state.target(next.width, next.height);
++        __state.style = { ...__state.authoredStyle, screen: next.screen, dither: next.dither };
++      }
++      if (__state.authoredPalette.length) __state.api.setPalette(__state.authoredPalette, __state.authoredRamps);
++      __state.fxDirty = true;
++    };
++}
++
++function makeSetPalette(__state) {
++  return function setPalette(colours, ramps) {
+@@ -1971,2 +2142,2 @@
+-      if (activeProfile.kind !== "native") colours = adaptTargetPalette(sourceColours, activeProfile.id);
+-      palette = colours.map((c) => [c[0] ?? 0, c[1] ?? 0, c[2] ?? 0]);
++      if (__state.activeProfile.kind !== "native") colours = adaptTargetPalette(sourceColours, __state.activeProfile.id);
++      __state.palette = colours.map((c) => [c[0] ?? 0, c[1] ?? 0, c[2] ?? 0]);
+@@ -1981,6 +2152,6 @@
+-      if (palTex) gl.deleteTexture(palTex);
+-      palTex = gl.createTexture();
+-      gl.bindTexture(gl.TEXTURE_2D, palTex);
+-      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, PALETTE_WIDTH, rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
+-      nearest();
++      if (__state.palTex) __state.gl.deleteTexture(__state.palTex);
++      __state.palTex = __state.gl.createTexture();
++      __state.gl.bindTexture(__state.gl.TEXTURE_2D, __state.palTex);
++      __state.gl.pixelStorei(__state.gl.UNPACK_ALIGNMENT, 4);
++      __state.gl.texImage2D(__state.gl.TEXTURE_2D, 0, __state.gl.RGBA8, PALETTE_WIDTH, rows, 0, __state.gl.RGBA, __state.gl.UNSIGNED_BYTE, bytes);
++      __state.nearest();
+@@ -1989,5 +2160,5 @@
+-      authoredPalette = sourceColours;
+-      authoredRamps = Object.fromEntries(entries.map(([name, slot]) => [name, [...slot]]));
+-      rampIndex = /* @__PURE__ */ new Map();
+-      rampList = entries.map(([name, [base, len2]], i) => {
+-        rampIndex.set(name, i);
++      __state.authoredPalette = sourceColours;
++      __state.authoredRamps = Object.fromEntries(entries.map(([name, slot]) => [name, [...slot]]));
++      __state.rampIndex = /* @__PURE__ */ new Map();
++      __state.rampList = entries.map(([name, [base, len2]], i) => {
++        __state.rampIndex.set(name, i);
+@@ -1996,7 +2167,6 @@
+-      fxDirty = true;
+-    },
+-    get palette() {
+-      return palette;
+-    },
+-    ramp: (name) => rampIndex.get(name) ?? 0,
+-    setMaterials(list) {
++      __state.fxDirty = true;
++    };
++}
++
++function makeSetMaterials(__state) {
++  return function setMaterials(list) {
+@@ -2004 +2174 @@
+-      matRows.fill(0);
++      __state.matRows.fill(0);
+@@ -2006 +2176 @@
+-        matRows.set([rampIndex.get(m.ramp) ?? 0, m.light ?? 1, m.pattern ?? 0, m.glow ?? 0], i * 4);
++        __state.matRows.set([__state.rampIndex.get(m.ramp) ?? 0, m.light ?? 1, m.pattern ?? 0, m.glow ?? 0], i * 4);
+@@ -2008,15 +2178,21 @@
+-      gl.bindTexture(gl.TEXTURE_2D, matTex);
+-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 1, gl.RGBA, gl.FLOAT, matRows);
+-    },
+-    setStyle({ screen: s = style.screen, dither: d = style.dither, outline: o = style.outline, edges: e = edges, supersample: k = supersample } = {}) {
+-      style = { screen: s, dither: d, outline: o ? 1 : 0 };
+-      edges = e;
+-      supersample = k;
+-      authoredStyle = { ...style };
+-      fxDirty = true;
+-    },
+-    setWorld(world) {
+-      const counts = uploadWorld(gl, blocks, world);
+-      nBoxes = counts.boxes;
+-      nWedges = counts.wedges;
+-      nCaps = counts.capsules;
++      __state.gl.bindTexture(__state.gl.TEXTURE_2D, __state.matTex);
++      __state.gl.texSubImage2D(__state.gl.TEXTURE_2D, 0, 0, 0, 256, 1, __state.gl.RGBA, __state.gl.FLOAT, __state.matRows);
++    };
++}
++
++function makeSetStyle(__state) {
++  return function setStyle({ screen: s = __state.style.screen, dither: d = __state.style.dither, outline: o = __state.style.outline, edges: e = __state.edges, supersample: k = __state.supersample } = {}) {
++      __state.style = { screen: s, dither: d, outline: o ? 1 : 0 };
++      __state.edges = e;
++      __state.supersample = k;
++      __state.authoredStyle = { ...__state.style };
++      __state.fxDirty = true;
++    };
++}
++
++function makeSetWorld(__state) {
++  return function setWorld(world) {
++      const counts = uploadWorld(__state.gl, __state.blocks, world);
++      __state.nBoxes = counts.boxes;
++      __state.nWedges = counts.wedges;
++      __state.nCaps = counts.capsules;
+@@ -2024,173 +2200,31 @@
+-    },
+-    setFx(list = []) {
+-      fxList = list.map((e) => ({ ...e }));
+-      resolveFx(fxList, { width: W2, height: H });
+-      fxDirty = true;
+-    },
+-    toggleFx(name, on) {
+-      fxList = toggleFx(fxList, name, on);
+-      fxDirty = true;
+-    },
+-    get fx() {
+-      return fxList.map((e) => ({ ...e }));
+-    },
+-    get fxResolved() {
+-      if (fxDirty) refreshFx();
+-      return fxResolved;
+-    },
+-    allFx: ALL_FX,
+-    get gpuMs() {
+-      return gpuMs;
+-    },
+-    get supersample() {
+-      return lastK;
+-    },
+-    render({ eye, target: look, fov = 1.2, time = 0, sun = [0.4, 0.8, 0.3], waterY = 0, fogNear = 25, fogFar = 110, particles = [], raster, depthOut }) {
+-      const { world, pixel, points } = colourPrograms();
+-      const fx = fxDirty || !fxU ? refreshFx() : fxU;
+-      let timing = false;
+-      if (timer) {
+-        if (query && gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)) {
+-          if (!gl.getParameter(timer.GPU_DISJOINT_EXT)) gpuMs = gl.getQueryParameter(query, gl.QUERY_RESULT) / 1e6;
+-          gl.deleteQuery(query);
+-          query = null;
+-        }
+-        if (!query) {
+-          query = gl.createQuery();
+-          gl.beginQuery(timer.TIME_ELAPSED_EXT, query);
+-          timing = true;
+-        }
+-      }
+-      const { forward: fwd, right, up } = cameraBasis(eye, look);
+-      const tanF = Math.tan(fov / 2);
+-      const sunN = norm3(sun);
+-      const k = edges === "smooth" && activeProfile.kind === "native" ? supersampleFor(W2, H, supersample) : 1;
+-      const F = k > 1 ? fineBuffers(k) : null;
+-      lastK = k;
+-      RW = F ? F.w : W2;
+-      RH = F ? F.h : H;
+-      rfbo = F ? F.fbo : fbo;
+-      gl.bindFramebuffer(gl.FRAMEBUFFER, rfbo);
+-      gl.viewport(0, 0, RW, RH);
+-      gl.enable(gl.DEPTH_TEST);
+-      gl.depthFunc(gl.ALWAYS);
+-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+-      const U = world.loc;
+-      gl.useProgram(world.p);
+-      gl.uniform2f(U.uRes, RW, RH);
+-      gl.uniform3fv(U.uEye, eye);
+-      gl.uniform3fv(U.uFwd, fwd);
+-      gl.uniform3fv(U.uRight, right);
+-      gl.uniform3fv(U.uUp, up);
+-      gl.uniform1f(U.uTan, tanF);
+-      gl.uniform1f(U.uTime, time);
+-      gl.uniform1i(U.uBoxes, nBoxes);
+-      gl.uniform1i(U.uWedges, nWedges);
+-      gl.uniform1i(U.uCaps, nCaps);
+-      for (const blk of blocks) gl.bindBufferBase(gl.UNIFORM_BUFFER, blk.i, blk.buf);
+-      gl.activeTexture(gl.TEXTURE1);
+-      gl.bindTexture(gl.TEXTURE_2D, matTex);
+-      gl.uniform1i(U.uMats, 1);
+-      gl.uniform3fv(U.uSun, sunN);
+-      gl.uniform1f(U.uWaterY, waterY);
+-      gl.uniform1f(U.uFogNear, fogNear);
+-      gl.uniform1f(U.uFogFar, fogFar);
+-      if (raster?.world === false) {
+-        gl.clearBufferfv(gl.COLOR, 0, [0.5, (matRows[SKY_MAT * 4] ?? 0) / 255, SKY_MAT / 255, 1]);
+-        gl.clearBufferfv(gl.COLOR, 1, [0, 1, 0, 0]);
+-      } else {
+-        gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+-        const aw = gl.getAttribLocation(world.p, "aPos");
+-        gl.enableVertexAttribArray(aw);
+-        gl.vertexAttribPointer(aw, 2, gl.FLOAT, false, 0, 0);
+-        gl.drawArrays(gl.TRIANGLES, 0, 3);
+-      }
+-      if (particles.length) {
+-        gl.depthFunc(gl.LESS);
+-        const data = new Float32Array(particles.length * 7);
+-        particles.forEach((q, i) => data.set([q.p[0], q.p[1], q.p[2], q.size ?? 1, q.light ?? 0.8, (q.ramp === void 0 ? void 0 : rampIndex.get(q.ramp)) ?? 0, q.glow ?? 0], i * 7));
+-        gl.useProgram(points.p);
+-        const P = points.loc;
+-        gl.uniform3fv(P.uEye, eye);
+-        gl.uniform3fv(P.uFwd, fwd);
+-        gl.uniform3fv(P.uRight, right);
+-        gl.uniform3fv(P.uUp, up);
+-        gl.uniform1f(P.uTan, tanF);
+-        gl.uniform1f(P.uAspect, RW / RH);
+-        gl.uniform1f(P.uH, RH);
+-        gl.bindBuffer(gl.ARRAY_BUFFER, pbuf);
+-        gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+-        const a0 = gl.getAttribLocation(points.p, "aPos");
+-        const a1 = gl.getAttribLocation(points.p, "aLook");
+-        gl.enableVertexAttribArray(a0);
+-        gl.vertexAttribPointer(a0, 4, gl.FLOAT, false, 28, 0);
+-        gl.enableVertexAttribArray(a1);
+-        gl.vertexAttribPointer(a1, 3, gl.FLOAT, false, 28, 16);
+-        gl.drawArrays(gl.POINTS, 0, particles.length);
+-        gl.disableVertexAttribArray(a1);
+-      }
+-      if (raster) drawRaster(raster, eye, fwd, right, up, tanF, sunN, waterY, fogNear, fogFar, time);
+-      gl.disable(gl.DEPTH_TEST);
+-      gl.bindFramebuffer(gl.FRAMEBUFFER, F ? F.colourFbo : null);
+-      gl.viewport(0, 0, RW, RH);
+-      const pass2 = F ? raster?.draw ? smoothDirectP ??= program(gl, FULLSCREEN_VS, smoothPixelFs(DIRECT_PIXEL_FS)) : smoothPixelP ??= program(gl, FULLSCREEN_VS, smoothPixelFs(PIXEL_FS)) : raster?.draw ? directPixelP ??= program(gl, FULLSCREEN_VS, DIRECT_PIXEL_FS) : pixel;
+-      gl.useProgram(pass2.p);
+-      const X = pass2.loc;
+-      const T = [[F ? F.data : dataTex, "uData"], [F ? F.data2 : data2Tex, "uData2"], [F ? F.depth : depthTex, "uDepth"], [palTex, "uPalette"], [rampTex, "uRamps"], [screenTex, "uScreenTex"]];
+-      T.forEach(([t, name], i) => {
+-        gl.activeTexture(gl.TEXTURE0 + i);
+-        gl.bindTexture(gl.TEXTURE_2D, t);
+-        gl.uniform1i(X[name], i);
+-      });
+-      const u = fx.u;
+-      gl.uniform1i(X.uScreen, u.uScreen);
+-      gl.uniform1f(X.uDither, u.uDither);
+-      gl.uniform1f(X.uTime, time);
+-      gl.uniform3fv(X.uOutline, u.uOutline);
+-      gl.uniform1i(X.uOutlineInk, u.uOutlineInk);
+-      gl.uniform4fv(X.uFog, u.uFog);
+-      gl.uniform2fv(X.uFogLook, u.uFogLook);
+-      gl.uniform4fv(X.uGlow, u.uGlow);
+-      gl.uniform2fv(X.uGlowK, u.uGlowK);
+-      gl.uniform4fv(X.uVig, u.uVig);
+-      gl.uniform4fv(X.uScan, u.uScan);
+-      gl.uniform4fv(X.uCrt, u.uCrt);
+-      gl.uniform4fv(X.uRim, u.uRim);
+-      let rd = u.uRimDir;
+-      if (!rd) {
+-        const sx = dot2(sunN, right);
+-        const sy = dot2(sunN, up);
+-        const l = Math.hypot(sx, sy);
+-        rd = l > 1e-3 ? [sx / l, sy / l] : [0, 1];
+-      }
+-      gl.uniform2fv(X.uRimDir, rd);
+-      gl.uniform4fv(X.uFlash, u.uFlash);
+-      gl.uniform4iv(X.uFlashMats, u.uFlashMats);
+-      gl.uniform2fv(X.uGrade, u.uGrade);
+-      gl.uniform1i(X.uCycle, u.uCycle);
+-      if (F) gl.uniform1i(X.uSS, k);
+-      gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+-      const ap = gl.getAttribLocation(pass2.p, "aPos");
+-      gl.enableVertexAttribArray(ap);
+-      gl.vertexAttribPointer(ap, 2, gl.FLOAT, false, 0, 0);
+-      gl.drawArrays(gl.TRIANGLES, 0, 3);
+-      if (F) {
+-        const rp = resolveP ??= program(gl, FULLSCREEN_VS, RESOLVE_FS);
+-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+-        gl.viewport(0, 0, W2, H);
+-        gl.useProgram(rp.p);
+-        gl.activeTexture(gl.TEXTURE0);
+-        gl.bindTexture(gl.TEXTURE_2D, F.colour);
+-        gl.uniform1i(rp.loc.uColour, 0);
+-        gl.uniform1i(rp.loc.uSS, k);
+-        const ar = gl.getAttribLocation(rp.p, "aPos");
+-        gl.enableVertexAttribArray(ar);
+-        gl.vertexAttribPointer(ar, 2, gl.FLOAT, false, 0, 0);
+-        gl.drawArrays(gl.TRIANGLES, 0, 3);
+-      }
+-      if (depthOut) writeDepthOut(depthOut);
+-      if (timing && timer) gl.endQuery(timer.TIME_ELAPSED_EXT);
+-    },
+-    read() {
+-      const out = new Uint8Array(W2 * H * 4);
+-      gl.readPixels(0, 0, W2, H, gl.RGBA, gl.UNSIGNED_BYTE, out);
++    };
++}
++
++function makeSetFx(__state) {
++  return function setFx(list = []) {
++      __state.fxList = list.map((e) => ({ ...e }));
++      resolveFx(__state.fxList, { width: __state.W2, height: __state.H });
++      __state.fxDirty = true;
++    };
++}
++
++function makeToggleFx(__state) {
++  return function toggleFx(name, on) {
++      __state.fxList = toggleFxList(__state.fxList, name, on);
++      __state.fxDirty = true;
++    };
++}
++
++function makeRender(__state) {
++  return function render({ eye, target: look, fov = 1.2, time = 0, sun = [0.4, 0.8, 0.3], waterY = 0, fogNear = 25, fogFar = 110, particles = [], raster, depthOut }) {
++    const __frame = { eye, look, fov, time, sun, waterY, fogNear, fogFar, particles, raster, depthOut };
++    prepareRender(__state, __frame);
++    drawRender(__state, __frame);
++    composeRender(__state, __frame);
++  };
++}
++
++function makeRead(__state) {
++  return function read() {
++      const out = new Uint8Array(__state.W2 * __state.H * 4);
++      __state.gl.readPixels(0, 0, __state.W2, __state.H, __state.gl.RGBA, __state.gl.UNSIGNED_BYTE, out);
+@@ -2198,9 +2232,12 @@
+-    },
+-    readData() {
+-      const x = bakeMode();
+-      const data = readTarget(fbo, gl.COLOR_ATTACHMENT0);
+-      const data2 = readTarget(fbo, gl.COLOR_ATTACHMENT1);
+-      gl.disable(gl.DEPTH_TEST);
+-      pass(x.depth.p, x.fb, [[depthTex, x.depth.loc.uDepth]]);
+-      const packed = readTarget(x.fb, gl.COLOR_ATTACHMENT0);
+-      const depth = new Float32Array(W2 * H);
++    };
++}
++
++function makeReadData(__state) {
++  return function readData() {
++      const x = __state.bakeMode();
++      const data = __state.readTarget(__state.fbo, __state.gl.COLOR_ATTACHMENT0);
++      const data2 = __state.readTarget(__state.fbo, __state.gl.COLOR_ATTACHMENT1);
++      __state.gl.disable(__state.gl.DEPTH_TEST);
++      __state.pass(x.depth.p, x.fb, [[__state.depthTex, x.depth.loc.uDepth]]);
++      const packed = __state.readTarget(x.fb, __state.gl.COLOR_ATTACHMENT0);
++      const depth = new Float32Array(__state.W2 * __state.H);
+@@ -2208,7 +2245,7 @@
+-      return { width: W2, height: H, data, data2, depth };
+-    },
+-    renderIndexed: indexed.renderIndexed,
+-    readIndexed: indexed.readIndexed,
+-    renderIndexedHeights: indexed.renderIndexedHeights,
+-    setMesh(key2, mesh) {
+-      const R = rasterMode();
++      return { width: __state.W2, height: __state.H, data, data2, depth };
++    };
++}
++
++function makeSetMesh(__state) {
++  return function setMesh(key2, mesh) {
++      const R = __state.rasterMode();
+@@ -2217,2 +2254,2 @@
+-        for (const b of old.bufs) gl.deleteBuffer(b);
+-        gl.deleteVertexArray(old.vao);
++        for (const b of old.bufs) __state.gl.deleteBuffer(b);
++        __state.gl.deleteVertexArray(old.vao);
+@@ -2220 +2257 @@
+-        rasterStats.meshBytes -= old.bytes;
++        __state.rasterStats.meshBytes -= old.bytes;
+@@ -2223,2 +2260,2 @@
+-      const vao = gl.createVertexArray();
+-      gl.bindVertexArray(vao);
++      const vao = __state.gl.createVertexArray();
++      __state.gl.bindVertexArray(vao);
+@@ -2227 +2264 @@
+-        const b = gl.createBuffer();
++        const b = __state.gl.createBuffer();
+@@ -2229,4 +2266,4 @@
+-        gl.bindBuffer(gl.ARRAY_BUFFER, b);
+-        gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+-        gl.enableVertexAttribArray(loc);
+-        gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
++        __state.gl.bindBuffer(__state.gl.ARRAY_BUFFER, b);
++        __state.gl.bufferData(__state.gl.ARRAY_BUFFER, data, __state.gl.STATIC_DRAW);
++        __state.gl.enableVertexAttribArray(loc);
++        __state.gl.vertexAttribPointer(loc, size, __state.gl.FLOAT, false, 0, 0);
+@@ -2238,2 +2275,2 @@
+-        gl.disableVertexAttribArray(k);
+-        gl.vertexAttrib4f(k, 0, 0, 0, 0);
++        __state.gl.disableVertexAttribArray(k);
++        __state.gl.vertexAttrib4f(k, 0, 0, 0, 0);
+@@ -2243 +2280 @@
+-        const b = gl.createBuffer();
++        const b = __state.gl.createBuffer();
+@@ -2245,2 +2282,2 @@
+-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b);
+-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.indices, gl.STATIC_DRAW);
++        __state.gl.bindBuffer(__state.gl.ELEMENT_ARRAY_BUFFER, b);
++        __state.gl.bufferData(__state.gl.ELEMENT_ARRAY_BUFFER, mesh.indices, __state.gl.STATIC_DRAW);
+@@ -2249 +2286 @@
+-      gl.bindVertexArray(null);
++      __state.gl.bindVertexArray(null);
+@@ -2251,7 +2288,7 @@
+-      rasterStats.meshBytes += bytes;
+-    },
+-    get rasterStats() {
+-      return { ...rasterStats };
+-    },
+-    offPalette(pixels = api.read()) {
+-      const set = new Set(palette.map((c) => c[0] << 16 | c[1] << 8 | c[2]));
++      __state.rasterStats.meshBytes += bytes;
++    };
++}
++
++function makeOffPalette(__state) {
++  return function offPalette(pixels = __state.api.read()) {
++      const set = new Set(__state.palette.map((c) => c[0] << 16 | c[1] << 8 | c[2]));
+@@ -2261,4 +2298 @@
+-    }
+-  };
+-  if (profile2 !== void 0) api.setProfile(profile2);
+-  return api;
++    };
+@@ -2265,0 +2300,79 @@
++
++function createRendererApi(__state) {
++ return {
++  gl: __state.gl,
++  get width() {
++      return __state.W2;
++    },
++  get height() {
++      return __state.H;
++    },
++  limits: {
++      boxes: MAX_BOXES,
++      wedges: MAX_WEDGES,
++      capsules: MAX_CAPS,
++      ramps: MAX_RAMPS,
++      materials: MAX_MATERIALS,
++      colours: MAX_COLOURS,
++      fragmentUniformVectors: __state.gl.getParameter(__state.gl.MAX_FRAGMENT_UNIFORM_VECTORS),
++      maxTexture: __state.gl.getParameter(__state.gl.MAX_TEXTURE_SIZE)
++    },
++  setTarget: makeSetTarget(__state),
++  get profile() {
++      return __state.activeProfile;
++    },
++  setProfile: makeSetProfile(__state),
++  setPalette: makeSetPalette(__state),
++  get palette() {
++      return __state.palette;
++    },
++  ramp: (name) => __state.rampIndex.get(name) ?? 0,
++  setMaterials: makeSetMaterials(__state),
++  setStyle: makeSetStyle(__state),
++  setWorld: makeSetWorld(__state),
++  setFx: makeSetFx(__state),
++  toggleFx: makeToggleFx(__state),
++  get fx() {
++      return __state.fxList.map((e) => ({ ...e }));
++    },
++  get fxResolved() {
++      if (__state.fxDirty) __state.refreshFx();
++      return __state.fxResolved;
++    },
++  allFx: ALL_FX,
++  get gpuMs() {
++      return __state.gpuMs;
++    },
++  get supersample() {
++      return __state.lastK;
++    },
++  render: makeRender(__state),
++  read: makeRead(__state),
++  readData: makeReadData(__state),
++  renderIndexed: __state.indexed.renderIndexed,
++  readIndexed: __state.indexed.readIndexed,
++  renderIndexedHeights: __state.indexed.renderIndexedHeights,
++  setMesh: makeSetMesh(__state),
++  get rasterStats() {
++      return { ...__state.rasterStats };
++    },
++  offPalette: makeOffPalette(__state),
++ };
++}
++
++function createPixelRenderer(canvas, { width = 128, height = 128, bakeOnly = false, profile: profile2 } = {}) {
++  const __state = { canvas, width, height, bakeOnly, profile2 };
++  __state.target = (...args) => targetImpl(__state, ...args);
++  __state.uploadRamps = (...args) => uploadRampsImpl(__state, ...args);
++  __state.refreshFx = (...args) => refreshFxImpl(__state, ...args);
++  __state.fineBuffers = (...args) => fineBuffersImpl(__state, ...args);
++  __state.rasterMode = (...args) => rasterModeImpl(__state, ...args);
++  __state.drawRaster = (...args) => drawRasterImpl(__state, ...args);
++  __state.writeDepthOut = (...args) => writeDepthOutImpl(__state, ...args);
++  initializeGraphics(__state);
++  initializePaletteAndEffects(__state);
++  initializeIndexedBuffers(__state);
++  __state.api = createRendererApi(__state);
++  if (profile2 !== void 0) __state.api.setProfile(profile2);
++  return __state.api;
++}

@@ -29,16 +29,16 @@ function declarations(sf, moves) {
     }
     if (!names.length) continue
     const refs = new Set()
-    const walk = (n) => {
+    const visitRefs = (n) => {
       if (
         ts.isIdentifier(n) &&
         !(ts.isPropertyAccessExpression(n.parent) && n.parent.name === n) &&
         !(ts.isPropertyAssignment(n.parent) && n.parent.name === n)
       )
         refs.add(n.text)
-      ts.forEachChild(n, walk)
+      ts.forEachChild(n, visitRefs)
     }
-    walk(st)
+    visitRefs(st)
     for (const nm of names) refs.delete(nm)
     // module-level bindings this declaration assigns (a moved copy could not: imports are read-only)
     const writes = new Set()

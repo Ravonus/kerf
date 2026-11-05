@@ -101,12 +101,7 @@ export function table(root: HTMLElement, opts: TableOptions) {
     if (sheet && sheet.textContent !== rule) sheet.textContent = rule
   }
   // the pinned column sits after the select column, whose width only the browser knows
-  const pin = () => {
-    const cells = root.querySelectorAll<HTMLElement>('[data-pinned="last"]')
-    if (!cells.length) return // the width read forces a style and layout pass
-    const w = root.querySelector<HTMLElement>('thead [data-part="select"]')?.offsetWidth ?? 0
-    for (const c of cells) c.style.setProperty('--_pin-x', `${w}px`)
-  }
+  const pin = () => pinColumns(root)
   const value = (handle: Element) =>
     handle.setAttribute('aria-valuenow', String((handle.closest('th') as HTMLElement).offsetWidth))
   // A table wider than its box scrolls, and an overlay scrollbar shows nothing until it moves: data-overflow="start end"
@@ -133,43 +128,11 @@ export function table(root: HTMLElement, opts: TableOptions) {
     for (const h of root.querySelectorAll('[data-part="resize"]')) value(h)
     edges()
   }
-  const size = (handle: Element, w: number) => {
-    const clamped = Math.min(COL_MAX, Math.max(COL_MIN, w))
-    ;(handle.closest('th') as HTMLElement).style.minWidth = `${clamped}px`
-    handle.setAttribute('aria-valuenow', String(Math.round(clamped)))
-  }
   const onScroll = (e: Event) => {
     root.toggleAttribute('data-scrolled', (e.currentTarget as HTMLElement).scrollLeft !== 0)
     edges()
   }
-  const onKey = (e: KeyboardEvent) => {
-    const handle = (e.target as Element).closest?.('[data-part="resize"]')
-    if (!handle || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return
-    e.preventDefault()
-    const rtl = getComputedStyle(root).direction === 'rtl'
-    const grow = (e.key === 'ArrowRight') !== rtl
-    size(handle, (handle.closest('th') as HTMLElement).offsetWidth + (grow ? COL_STEP : -COL_STEP))
-    pin()
-  }
-  const onDown = (e: PointerEvent) => {
-    const handle = (e.target as Element).closest?.<HTMLElement>('[data-part="resize"]')
-    if (!handle) return
-    e.preventDefault()
-    handle.setPointerCapture?.(e.pointerId)
-    handle.setAttribute('data-active', '')
-    const x0 = e.clientX
-    const w0 = (handle.closest('th') as HTMLElement).offsetWidth
-    const rtl = getComputedStyle(root).direction === 'rtl' ? -1 : 1
-    const move = (ev: PointerEvent) => size(handle, w0 + (ev.clientX - x0) * rtl)
-    const up = () => {
-      handle.removeAttribute('data-active')
-      handle.removeEventListener('pointermove', move)
-      pin()
-    }
-    handle.addEventListener('pointermove', move)
-    handle.addEventListener('pointerup', up, { once: true })
-    handle.addEventListener('pointercancel', up, { once: true })
-  }
+  const { onKey, onDown } = columnResize(root, pin)
   viewport()?.addEventListener('scroll', onScroll, { passive: true })
   root.addEventListener('keydown', onKey)
   root.addEventListener('pointerdown', onDown)
@@ -201,4 +164,48 @@ export function table(root: HTMLElement, opts: TableOptions) {
       if (sheet !== given) sheet?.remove()
     },
   }
+}
+
+function columnResize(root: HTMLElement, pin: () => void) {
+  const size = (handle: Element, w: number) => {
+    const clamped = Math.min(COL_MAX, Math.max(COL_MIN, w))
+    ;(handle.closest('th') as HTMLElement).style.minWidth = `${clamped}px`
+    handle.setAttribute('aria-valuenow', String(Math.round(clamped)))
+  }
+  const onKey = (e: KeyboardEvent) => {
+    const handle = (e.target as Element).closest?.('[data-part="resize"]')
+    if (!handle || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return
+    e.preventDefault()
+    const rtl = getComputedStyle(root).direction === 'rtl'
+    const grow = (e.key === 'ArrowRight') !== rtl
+    size(handle, (handle.closest('th') as HTMLElement).offsetWidth + (grow ? COL_STEP : -COL_STEP))
+    pin()
+  }
+  const onDown = (e: PointerEvent) => {
+    const handle = (e.target as Element).closest?.<HTMLElement>('[data-part="resize"]')
+    if (!handle) return
+    e.preventDefault()
+    handle.setPointerCapture?.(e.pointerId)
+    handle.setAttribute('data-active', '')
+    const x0 = e.clientX
+    const w0 = (handle.closest('th') as HTMLElement).offsetWidth
+    const rtl = getComputedStyle(root).direction === 'rtl' ? -1 : 1
+    const move = (ev: PointerEvent) => size(handle, w0 + (ev.clientX - x0) * rtl)
+    const up = () => {
+      handle.removeAttribute('data-active')
+      handle.removeEventListener('pointermove', move)
+      pin()
+    }
+    handle.addEventListener('pointermove', move)
+    handle.addEventListener('pointerup', up, { once: true })
+    handle.addEventListener('pointercancel', up, { once: true })
+  }
+  return { onKey, onDown }
+}
+
+function pinColumns(root: HTMLElement) {
+  const cells = root.querySelectorAll<HTMLElement>('[data-pinned="last"]')
+  if (!cells.length) return // the width read forces a style and layout pass
+  const w = root.querySelector<HTMLElement>('thead [data-part="select"]')?.offsetWidth ?? 0
+  for (const c of cells) c.style.setProperty('--_pin-x', `${w}px`)
 }

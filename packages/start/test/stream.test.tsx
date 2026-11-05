@@ -1,39 +1,20 @@
 // A streamed page on the server: what it keeps, what it sends and when.
 import { setFlagsFromString } from 'node:v8'
 import { runInNewContext } from 'node:vm'
-import { Boundary, defineState, derived, resource, state, untrack } from '@weft-js/core'
-import { renderToStringAsync } from '@weft-js/core/ssr'
-import { FnError, query, type StandardSchemaV1 } from '../src/data'
-import { createHandler, type HandlerOptions, type Manifest } from '../src/server'
+import { Boundary, derived, resource, state } from '@weft-js/core'
+import { query, type StandardSchemaV1 } from '../src/data'
+import { body, serve } from './stream.fixture'
+import { registerReadProgressTests, registerReadStallTest } from './stream.reads'
+import {
+  registerAssetPreloadTests,
+  registerChunkStateTest,
+  registerProductionFailures,
+} from './stream.production'
 
 const any: StandardSchemaV1<unknown> = {
   '~standard': { version: 1, vendor: 't', validate: (v) => ({ value: v }) },
 }
 const typed = <T,>() => any as StandardSchemaV1<T>
-
-const page = (id: string, file: string) => ({
-  id,
-  file,
-  layouts: [],
-  pattern: id,
-  params: [],
-  kind: 'page' as const,
-})
-// `hold: 0`: these are of what streams, and their reads land within the default hold.
-const serve = (routes: Record<string, () => unknown>, options: Partial<HandlerOptions> = {}) => {
-  const manifest: Manifest = {
-    dir: 'src/routes',
-    layouts: [],
-    routes: Object.keys(routes).map((p) => page(p, p)),
-  }
-  const handler = createHandler({
-    manifest,
-    modules: Object.fromEntries(Object.entries(routes).map(([p, c]) => [p, { default: c }])),
-    hold: 0,
-    ...options,
-  })
-  return (path: string) => handler(new Request(`http://localhost${path}`))
-}
 
 // What every render reads and outlives it, as a mutation's `.pending` is.
 const calls = state(0)
@@ -116,8 +97,6 @@ test('a request that goes away mid-stream leaves nothing subscribed either', asy
   })
   expect(held()).toBe(0)
 })
-
-const body = (res: Response) => res.text()
 
 test("a Boundary that fails replaces its fallback with its error, and the page keeps the driver's text to itself", async () => {
   const diagnostics: string[] = []
@@ -303,27 +282,12 @@ describe('a read that never settles down', () => {
     return <p>{r.value}</p>
   }
 
-  test("stops after a few passes, and the Boundary is the client's", async () => {
-    ran = 0
-    const diagnostics: string[] = []
-    const started = Date.now()
-    const get = serve(
-      {
-        '/': () => (
-          <main>
-            <Boundary pending={<i>wait</i>}>
-              <Now />
-            </Boundary>
-          </main>
-        ),
-      },
-      { onDiagnostic: (d) => diagnostics.push(d.message) },
-    )
-    const html = await body(await get('/'))
-    expect(ran).toBeLessThan(8)
-    expect(Date.now() - started).toBeLessThan(1000)
-    expect(html).toContain('$wb()')
-    expect(diagnostics.join()).toContain('stopped reading anything new')
+  registerReadStallTest({
+    Now,
+    reset: () => {
+      ran = 0
+    },
+    count: () => ran,
   })
 
   test("doesn't cost a slow read beside it its chunk", async () => {
@@ -359,277 +323,18 @@ describe('a read that never settles down', () => {
     expect(ran).toBeLessThan(16)
   })
 
-  test("a navigation's render stops too", async () => {
-    ran = 0
-    let key = 0
-    let stalled = 0
-    const Runaway = () => {
-      const k = ++key
-      const r = resource(
-        () =>
-          new Promise<number>((ok) => {
-            ran++
-            setTimeout(ok, 0, k)
-          }),
-        { data: false },
-      )
-      return <p>{r.value}</p>
-    }
-    await renderToStringAsync(
-      () => (
-        <Boundary pending={<i>wait</i>}>
-          <Runaway />
-        </Boundary>
-      ),
-      { passes: 1024, stalled: () => stalled++ },
-    )
-    expect(ran).toBeLessThan(8)
-    expect(stalled).toBe(1)
-  })
-
-  test('reads that each need the last are headway, however many there are', async () => {
-    ran = 0
-    const step = query({
-      $id: 'stream.step',
-      input: typed<number>(),
-      run: ({ input }) => {
-        ran++
-        return Promise.resolve(input)
-      },
-    })
-    const Chain = (props: { n: number }) => {
-      const r = step(() => props.n)
-      return (
-        <div>
-          {r.value === undefined ? null : props.n === 79 ? <p>end</p> : <Chain n={props.n + 1} />}
-        </div>
-      )
-    }
-    const get = serve({
-      '/': () => (
-        <main>
-          <Boundary pending={<i>wait</i>}>
-            <Chain n={0} />
-          </Boundary>
-        </main>
-      ),
-    })
-    const html = await body(await get('/'))
-    expect(ran).toBe(80)
-    expect(html).toContain('>end</p>')
-    expect(html).not.toContain('$wb()')
-  })
-})
-
-describe('what a failure may say in production', () => {
-  const script = (html: string, id: string) =>
-    JSON.parse(html.slice(html.lastIndexOf(`id="${id}">`) + id.length + 6).split('</script>')[0]!)
-  const View = (props: { data: { list: Promise<string> } }) => {
-    const Read = () => {
-      const r = resource(() => props.data.list)
-      return <p>{r.value}</p>
-    }
-    return (
-      <main>
-        <Boundary pending={<i>wait</i>} error={(e) => <b>{(e as Error).message}</b>}>
-          <Read />
-        </Boundary>
-      </main>
-    )
-  }
-  const deferred = async (e: unknown, hold = 0) => {
-    const diagnostics: string[] = []
-    const manifest: Manifest = { dir: 'src/routes', layouts: [], routes: [page('/', '/')] }
-    const load = () =>
-      Promise.resolve({
-        list: new Promise((_, no) => {
-          setTimeout(no, 5, e)
-        }),
-      })
-    const handler = createHandler({
-      manifest,
-      modules: { '/': { default: View, load } },
-      onDiagnostic: (d) => diagnostics.push(d.message),
-      hold,
-    })
-    return { html: await body(await handler(new Request('http://localhost/'))), diagnostics }
-  }
-  const failure = (html: string) =>
-    Object.values(script(html, 'weft-data').r as Record<string, { e?: string }>).map((r) => r.e)
-
-  test("a deferred field that rejects keeps a driver's text out of the HTML and the data", async () => {
-    const { html, diagnostics } = await deferred(
-      new Error('relation "secret_table" does not exist'),
-    )
-    expect(html).not.toContain('secret_table')
-    expect(html).toContain('<template><b')
-    expect(html).toContain('Server function failed.</b></template>')
-    expect(new Set(failure(html))).toEqual(new Set(['Server function failed.']))
-    expect(diagnostics.join()).toContain('secret_table')
-  })
-
-  test('one that rejects within the hold renders its error in the page, saying as little', async () => {
-    const { html, diagnostics } = await deferred(
-      new Error('relation "secret_table" does not exist'),
-      25,
-    )
-    expect(html).not.toContain('secret_table')
-    expect(html).not.toContain('<template>')
-    expect(html).toMatch(/<b[^>]*>Server function failed\.<\/b>/)
-    expect(new Set(failure(html))).toEqual(new Set(['Server function failed.']))
-    expect(diagnostics.join()).toContain('secret_table')
-  })
-
-  test('a deliberate message in a deferred field reads the same in the HTML and the data', async () => {
-    const { html } = await deferred(new FnError({ message: 'That order has closed' }, 409))
-    expect(html).toContain('That order has closed</b></template>')
-    expect(new Set(failure(html))).toEqual(new Set(['That order has closed']))
-  })
-
-  test('a plain resource, a fetcher that throws and a child that throws say as little', async () => {
-    const secret = () => new Error('password authentication failed for user "root"')
-    const Rejects = () => <p>{resource(() => Promise.reject(secret())).value}</p>
-    const Throws = () => (
-      <p>
-        {
-          resource((): string => {
-            throw secret()
-          }).value
-        }
-      </p>
-    )
-    const Dies = (): unknown => {
-      throw secret()
-    }
-    for (const Kid of [Rejects, Throws, Dies]) {
-      const get = serve({
-        '/': () => (
-          <main>
-            <Boundary pending={<i>wait</i>} error={(e) => <b>{(e as Error).message}</b>}>
-              <Kid />
-            </Boundary>
-          </main>
-        ),
-      })
-      const html = await body(await get('/'))
-      expect(html).not.toContain('password')
-      expect(html).toContain('Server function failed.')
-    }
-  })
-
-  test("a resource's own error, read with no Boundary, says as little", async () => {
-    const Own = () => {
-      const r = resource(() => Promise.reject(new Error('relation "secret_table" does not exist')))
-      return <p>{(r.error as Error)?.message}</p>
-    }
-    const html = await body(
-      await serve({
-        '/': () => (
-          <main>
-            <Own />
-          </main>
-        ),
-      })('/'),
-    )
-    expect(html).not.toContain('secret_table')
-  })
-})
-
-test("a chunk says what its render changed of the page's state, once", async () => {
-  const seen = defineState('chunk.seen', () => ({ n: state(0) }))
-  const Late = () => {
-    const r = resource(
-      () =>
-        new Promise<number>((ok) => {
-          setTimeout(ok, 5, 7)
-        }),
-    )
-    seen.n.value = untrack(() => r.value) ?? 0
-    return <p>{r.value}</p>
-  }
-  const Later = () => (
-    <p>
-      {
-        resource(
-          () =>
-            new Promise<string>((ok) => {
-              setTimeout(ok, 30, 'x')
-            }),
-        ).value
-      }
-    </p>
-  )
-  const get = serve({
-    '/': () => (
-      <main>
-        <Boundary pending={<i>a</i>}>
-          <Late />
-        </Boundary>
-        <Boundary pending={<i>b</i>}>
-          <Later />
-        </Boundary>
-      </main>
-    ),
-  })
-  const html = await body(await get('/'))
-  const pushes = [...html.matchAll(/\|\|\[\]\)\.push\((.*?)\);\$wb/g)].map((m) => JSON.parse(m[1]!))
-  expect(pushes.filter((p) => p.s).map((p) => p.s)).toEqual([{ 'chunk.seen': { n: 7 } }])
-})
-
-test("a streamed page's entry is preloaded above its styles, with its script after what it reads", async () => {
-  const Late = () => (
-    <p>
-      {
-        resource(
-          () =>
-            new Promise<string>((ok) => {
-              setTimeout(ok, 5, 'late')
-            }),
-        ).value
-      }
-    </p>
-  )
-  const get = serve(
-    {
-      '/': () => (
-        <main>
-          <Boundary pending={<i>wait</i>}>
-            <Late />
-          </Boundary>
-        </main>
-      ),
+  registerReadProgressTests({
+    reset: () => {
+      ran = 0
     },
-    {
-      assets: {
-        entry: '/e.js',
-        js: [{ href: '/a.js' }],
-        css: [{ href: '/s.css' }],
-        inline: { '/s.css': 'h1{color:red}' },
-      },
+    increment: () => {
+      ran++
     },
-  )
-  const html = await body(await get('/'))
-  const preload = html.indexOf('<link rel="modulepreload" href="/e.js">')
-  expect(preload).toBeGreaterThan(0)
-  expect(preload).toBeLessThan(html.indexOf('<style'))
-  expect(html.indexOf('<script type="module" async src="/e.js">')).toBeGreaterThan(
-    html.indexOf('id="weft-data"'),
-  )
+    count: () => ran,
+    typed,
+  })
 })
 
-test("modulepreloads come before the page's styles", async () => {
-  const get = serve(
-    { '/': () => <h1>Hi</h1> },
-    {
-      assets: {
-        entry: '/e.js',
-        js: [{ href: '/a.js' }],
-        css: [{ href: '/s.css' }],
-        inline: { '/s.css': 'h1{color:red}' },
-      },
-    },
-  )
-  const html = await body(await get('/'))
-  expect(html.indexOf('modulepreload')).toBeGreaterThan(0)
-  expect(html.indexOf('modulepreload')).toBeLessThan(html.indexOf('<style'))
-})
+registerProductionFailures()
+registerChunkStateTest()
+registerAssetPreloadTests()
