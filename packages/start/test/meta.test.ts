@@ -3,14 +3,14 @@ import { inject } from 'vitest'
 // The automatic layer, read the way a crawler reads it: one GET, no JavaScript, and a real HTML parser (research 20 §10).
 const url = inject('url')
 
-function head(text) {
+function head(text: string) {
   const { document } = new JSDOM(text).window
   const el = document.head
-  const meta = {}
+  const meta: Record<string, string> = {}
   for (const n of el.querySelectorAll('meta[data-wm]'))
-    meta[n.getAttribute('property') ?? n.getAttribute('name')] = n.getAttribute('content')
+    meta[(n.getAttribute('property') ?? n.getAttribute('name'))!] = n.getAttribute('content')!
   return {
-    title: el.querySelector('title').textContent,
+    title: el.querySelector('title')!.textContent,
     canonical: el.querySelector('link[rel=canonical]')?.getAttribute('href'),
     meta,
     scripts: [...el.querySelectorAll('script')].map((n) => ({
@@ -22,7 +22,7 @@ function head(text) {
     bodyImages: [...document.body.querySelectorAll('img')],
   }
 }
-const page = async (path) => {
+const page = async (path: string) => {
   const res = await fetch(url + path)
   return { res, text: await res.text() }
 }
@@ -48,7 +48,7 @@ describe('a page with no meta', () => {
   })
   test('its card is a PNG, and shares the page`s URL', async () => {
     const { text } = await page('/meta/plain')
-    const image = head(text).meta['og:image'].replace('https://acme.dev', url)
+    const image = head(text).meta['og:image']!.replace('https://acme.dev', url)
     const res = await fetch(image)
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('image/png')
@@ -60,7 +60,7 @@ describe('a page with no meta', () => {
     const h = head(text)
     expect(nav.h.title).toBe(h.title)
     expect(nav.h.description).toBe(h.meta.description)
-    expect(nav.h.og.image.url).toBe(h.meta['og:image'].replace('https://acme.dev', ''))
+    expect(nav.h.og.image.url).toBe(h.meta['og:image']!.replace('https://acme.dev', ''))
     expect(nav.h.jsonLd).toBeUndefined()
   })
 })
@@ -83,8 +83,8 @@ describe('hostile data in meta', () => {
     // Only weft's own scripts: nothing the data opened. The JSON-LD parses, and holds the text.
     expect(h.scripts.filter((s) => s.text.includes('alert('))).toHaveLength(1)
     const ld = h.scripts.find((s) => s.type === 'application/ld+json')
-    expect(JSON.parse(ld.text).name).toContain('</script><script>alert(2)</script>')
-    expect(ld.text).not.toContain('<')
+    expect(JSON.parse(ld!.text).name).toContain('</script><script>alert(2)</script>')
+    expect(ld!.text).not.toContain('<')
     expect(h.meta['og:title']).toBe(h.title)
   })
 })
@@ -97,7 +97,7 @@ test('a deferred field stays out of a page`s tags, and reading one is H007', asy
 describe('structured data only where weft is sure', () => {
   test('the home page is a WebSite', async () => {
     const h = head((await page('/')).text)
-    const ld = JSON.parse(h.scripts.find((s) => s.type === 'application/ld+json').text)
+    const ld = JSON.parse(h.scripts.find((s) => s.type === 'application/ld+json')!.text)
     expect(ld).toEqual({
       '@context': 'https://schema.org',
       '@type': 'WebSite',
@@ -118,16 +118,16 @@ describe('cards are safe to cache', () => {
     const a = head((await page('/meta/changing')).text).meta['og:image']
     const b = head((await page('/meta/changing')).text).meta['og:image']
     expect(a).toBe(b)
-    const bytes = async (u) =>
+    const bytes = async (u: string) =>
       Buffer.from(await (await fetch(u.replace('https://acme.dev', url))).arrayBuffer()).toString(
         'base64',
       )
-    expect(await bytes(a)).toBe(await bytes(b))
+    expect(await bytes(a!)).toBe(await bytes(b!))
   })
   test('different text is a different URL', async () => {
     const a = head((await page('/users/42')).text).meta['og:image']
     const b = head((await page('/users/1')).text).meta['og:image']
-    expect(a.replace(/.*\?v=/, '')).not.toBe(b.replace(/.*\?v=/, ''))
+    expect(a!.replace(/.*\?v=/, '')).not.toBe(b!.replace(/.*\?v=/, ''))
   })
   test('a card for a page that does not exist is a 404, whatever the path says', async () => {
     expect((await fetch(`${url}/_weft/og/users/${encodeURIComponent('nobody')}.png`)).status).toBe(
