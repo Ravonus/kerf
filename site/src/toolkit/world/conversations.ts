@@ -1,0 +1,49 @@
+import type { ChatConversation } from '@weft-js/warp'
+
+export const CONVERSATIONS: ChatConversation[] = [
+  {
+    id: 'incidents',
+    name: '# incidents',
+    color: 3,
+    channel: true,
+    preview: 'Sam: Rolled back, 5xx are dropping',
+    time: '15:41',
+    unread: 3,
+    pinned: true,
+  },
+  {
+    id: 'deploys',
+    name: '# deploys',
+    color: 5,
+    channel: true,
+    preview: 'storefront is live',
+    time: '16:42',
+    unread: 1,
+  },
+  {
+    id: 'jun',
+    name: 'Jun Tanaka',
+    color: 2,
+    preview: 'You: thanks, merging now',
+    time: '14:30',
+    online: true,
+  },
+  {
+    id: 'web',
+    name: '# web',
+    color: 4,
+    channel: true,
+    preview: 'Priya: new image cache is in',
+    time: '12:05',
+  },
+  { id: 'lena', name: 'Lena Fischer', color: 5, preview: 'Ranking v2 is building', time: 'Thu' },
+  {
+    id: 'random',
+    name: '# random',
+    color: 8,
+    channel: true,
+    preview: 'Tomás pinned a message',
+    time: 'Wed',
+    muted: true,
+  },
+]

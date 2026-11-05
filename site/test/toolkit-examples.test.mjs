@@ -98,3 +98,35 @@ await test('reexported examples follow local dependencies and reject missing or 
     rmSync(root, { recursive: true, force: true })
   }
 })
+
+await test('world reexports include TSX helpers and reject missing names', () => {
+  const root = mkdtempSync(join(tmpdir(), 'weft-world-'))
+  try {
+    mkdirSync(join(root, 'examples'))
+    mkdirSync(join(root, 'world'))
+    const entry = join(root, 'examples', 'demo.tsx')
+    const world = join(root, 'world.ts')
+    const helper = join(root, 'world', 'helper.tsx')
+    writeFileSync(entry, "import { View } from '../world'\nexport const Demo = () => <View />\n")
+    writeFileSync(world, "export { View } from './world/helper'\n")
+    writeFileSync(
+      helper,
+      "import { helper } from './nested'\nexport const View = () => <p>{helper()}</p>\n",
+    )
+    writeFileSync(
+      join(root, 'world', 'nested.ts'),
+      "import { make } from '@fixture/value'\nimport type { Item } from '@fixture/types'\nexport const helper = (): Item => make()\n",
+    )
+    const text = showExample(readExamples(entry).get('Demo'), 'Demo')
+    assert.match(text, /const View/)
+    assert.match(text, /const helper/)
+    assert.match(text, /import \{ make \} from '@fixture\/value'/)
+    assert.match(text, /import type \{ Item \} from '@fixture\/types'/)
+    assert.ok(text.indexOf('const helper') < text.indexOf('const View'))
+    assert.doesNotMatch(text, /from ['"]\./)
+    writeFileSync(helper, 'export const Other = () => <p />\n')
+    assert.throws(() => readExamples(entry), /Missing View/)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
