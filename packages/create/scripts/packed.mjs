@@ -291,7 +291,7 @@ if (clients.default && clients.wasm) {
 // A room on the packs' tarballs: two browsers, over the socket and then peer to peer. TypeScript in node_modules and the
 // packs' optional dependencies are what this adds.
 const room = join(root, 'room')
-const browsers = join(pkgs, 'multiplayer/scripts/e2e-browsers.mjs')
+const browsers = join(pkgs, 'multiplayer/test/e2e/e2e-browsers.mjs')
 writeFileSync(join(root, 'tgz/tarballs.json'), JSON.stringify(tarballs))
 // A person's path through the bin: the install, then the AGENTS.md of the weft that install brought.
 const personScope = join(root, 'person-scope')

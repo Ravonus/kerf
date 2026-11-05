@@ -1,5 +1,5 @@
 // What an agent composing warp gets right without knowing to: the defects a rendered audit (weft audit, axe-core) found
-// in pages built from warp, held at the component. The rendered half is in flow-scroll.browser.test.mjs.
+// in pages built from warp, held at the component. The rendered half is in flow-scroll.browser.test.ts.
 import { render } from '@weft-js/core/test'
 import { Accordion, ActivityFeed, Button, Kbd, Table } from '../src/index'
 

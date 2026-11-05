@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // `channel` and `sharedState` over @weft-js/core/test's fake socket (research 32 §7): the real socket.ts and hub, the real client,
-// a memory bus, no sockets. `test/channel-ws.test.mjs` runs the protocol over a real WebSocket.
+// a memory bus, no sockets. `test/channel-ws.test.ts` runs the protocol over a real WebSocket.
 import { createRoot, defineState, state } from '@weft-js/core'
 import { clock, flush, net, render, screen } from '@weft-js/core/test'
 import {

@@ -1,7 +1,7 @@
-// The hidden e2e for evals/gates/phase3-exit.mjs: everything the scaffold promised (scripts/e2e-todo.mjs), then the sharing
+// The hidden e2e for evals/gates/phase3-exit.mjs: everything the scaffold promised (test/e2e/e2e-todo.mjs), then the sharing
 // feature from the brief, through the UI and by calling server functions directly. Accounts are generated per run.
 import { createRequire } from 'node:module'
-import { base, suite } from '../../packages/start/scripts/e2e-todo.mjs'
+import { base, suite } from '../../packages/start/test/e2e/e2e-todo.mjs'
 
 const { chromium } = createRequire(new URL('../../packages/start/package.json', import.meta.url))(
   'playwright-core',

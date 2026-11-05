@@ -40,3 +40,10 @@ export default function Hello() {
 - `weft docs rust`: server functions with a Rust body, if you want them.
 
 The source of each page is in [packages/cli/docs](../cli/docs).
+
+## End-to-end tests
+
+From the repository, `pnpm --filter @weft-js/start test:e2e <built-app>` runs the runtime matrix.
+Pass `--e2e <path>` to select another scenario in `test/e2e`. The live database scripts in that
+folder run directly with Node and require the database environment shown in each script. They keep
+`.mjs` because Node and the runtime matrix load them without a test transform.

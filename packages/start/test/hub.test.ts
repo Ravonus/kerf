@@ -1,5 +1,5 @@
 // The hub and `/_weft/rt` without a server: rings and cursors, backpressure, limits, the Origin check and the bus
-// contract. What a sink does, a real connection does; test/rt.test.mjs runs the same protocol over HTTP.
+// contract. What a sink does, a real connection does; test/rt.test.ts runs the same protocol over HTTP.
 import { sleep as wait } from '../../../scripts/lib/sleep.mjs'
 import {
   channel,

@@ -16,14 +16,14 @@ const distinct = new Set([
   'benchmarks/speed/shared/driver.js:median',
   'packages/create/scripts/alt-runtimes.mjs:until',
   'packages/create/scripts/hot-checks.mjs:until',
-  'packages/start/scripts/live-db-e2e.mjs:until',
-  'packages/start/scripts/live-startup-e2e.mjs:until',
+  'packages/start/test/e2e/live-db-e2e.mjs:until',
+  'packages/start/test/e2e/live-startup-e2e.mjs:until',
   'evals/agent-eval/tasks/helpers.mjs:until',
   'scripts/quality/boundaries.mjs:walk',
   'packages/core/scripts/parity.mjs:walk',
   'packages/core/scripts/native-stamp.cjs:walk',
   'packages/warp-icons/scripts/style.mjs:walk',
-  'packages/warp/test/native.test.mjs:walk',
+  'packages/warp/test/native.test.ts:walk',
   'packages/warp/test/critical.browser.test.tsx:walk',
   'benchmarks/compare/design/audit.mjs:walk',
   'evals/gates/ds-exit.mjs:walk',
@@ -35,7 +35,7 @@ const distinct = new Set([
   'packages/warp/test/markup.test.tsx:walk',
   'packages/core/test/back-end.test.tsx:walk',
   'packages/core/test/oracle.test.tsx:walk',
-  'packages/warp/test/polish.browser.test.mjs:walk',
+  'packages/warp/test/polish.browser.test.ts:walk',
 ])
 
 /** Check every tracked repository script and test, including setup files. */

@@ -137,7 +137,7 @@
     },
     {
       // Code here runs inside the page, where the bundled warp-core dither entry is the global `dither`.
-      "files": ["packages/warp/test/dither-*.browser.test.mjs"],
+      "files": ["packages/warp/test/dither-*.browser.test.ts"],
       "globals": { "dither": "readonly" }
     },
     {
