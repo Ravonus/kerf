@@ -345,6 +345,23 @@ test('<Media> of a single-file asset (a vector, or no provider) is one img, with
 })
 
 describe('@weft-js/core/vite assets', () => {
+  const fixture = setupAssetTests()
+  registerMediaAssetTests(fixture)
+  registerFontAssetTests(fixture)
+})
+
+type Emitted = { type: string; fileName: string; source: unknown }
+type Hooks = {
+  configResolved(config: object): void
+  load: { handler(this: object, id: string): Promise<string> }
+  configureServer(server: {
+    middlewares: { use(fn: (req: { url: string }, res: unknown, next: () => void) => void): void }
+  }): void
+  transform: { filter: { id: RegExp }; handler(this: object, code: string): unknown }
+  transformIndexHtml: { order: string; handler(): unknown }
+}
+
+function setupAssetTests() {
   let root: string
   const provider = join(import.meta.dirname, 'fixtures', 'media', 'provider.mjs')
   beforeEach(() => {
@@ -353,17 +370,6 @@ describe('@weft-js/core/vite assets', () => {
     writeFileSync(join(root, 'hero.png'), PNG)
   })
   afterEach(() => rmSync(root, { recursive: true, force: true }))
-
-  type Emitted = { type: string; fileName: string; source: unknown }
-  type Hooks = {
-    configResolved(config: object): void
-    load: { handler(this: object, id: string): Promise<string> }
-    configureServer(server: {
-      middlewares: { use(fn: (req: { url: string }, res: unknown, next: () => void) => void): void }
-    }): void
-    transform: { filter: { id: RegExp }; handler(this: object, code: string): unknown }
-    transformIndexHtml: { order: string; handler(): unknown }
-  }
   function plugin(command: 'build' | 'serve') {
     const p = assets() as unknown as Hooks
     p.configResolved({ root, command, base: '/' })
@@ -388,17 +394,29 @@ describe('@weft-js/core/vite assets', () => {
     )
   }
   const record = (code: string) => JSON.parse(code.replace(/^export default /, ''))
+  return {
+    get root() {
+      return root
+    },
+    plugin,
+    bind,
+    record,
+  }
+}
+
+function registerMediaAssetTests(fixture: ReturnType<typeof setupAssetTests>) {
+  const { plugin, bind, record } = fixture
 
   test("readSources: the app's own text, without dependencies, build output or dot folders", () => {
     for (const dir of ['src/routes', 'node_modules/x', 'dist', '.weft'])
-      mkdirSync(join(root, dir), { recursive: true })
-    writeFileSync(join(root, 'src/routes/a.tsx'), 'in-tsx')
-    writeFileSync(join(root, 'src/a.css'), 'in-css')
-    writeFileSync(join(root, 'src/a.png'), 'in-png')
-    writeFileSync(join(root, 'node_modules/x/a.css'), 'in-dep')
-    writeFileSync(join(root, 'dist/a.js'), 'in-dist')
-    writeFileSync(join(root, '.weft/a.ts'), 'in-weft')
-    const text = readSources(root)
+      mkdirSync(join(fixture.root, dir), { recursive: true })
+    writeFileSync(join(fixture.root, 'src/routes/a.tsx'), 'in-tsx')
+    writeFileSync(join(fixture.root, 'src/a.css'), 'in-css')
+    writeFileSync(join(fixture.root, 'src/a.png'), 'in-png')
+    writeFileSync(join(fixture.root, 'node_modules/x/a.css'), 'in-dep')
+    writeFileSync(join(fixture.root, 'dist/a.js'), 'in-dist')
+    writeFileSync(join(fixture.root, '.weft/a.ts'), 'in-weft')
+    const text = readSources(fixture.root)
     expect(text).toContain('in-tsx')
     expect(text).toContain('in-css')
     expect(text).not.toMatch(/in-(png|dep|dist|weft)/)
@@ -406,7 +424,7 @@ describe('@weft-js/core/vite assets', () => {
 
   test('`?media` with no provider: the original file, its header size, emitted under assets/', async () => {
     const { load, emitted } = plugin('build')
-    const a = record(await load(join(root, 'hero.png') + '?media'))
+    const a = record(await load(join(fixture.root, 'hero.png') + '?media'))
     expect(a).toMatchObject({
       kind: 'graphic',
       width: 1200,
@@ -423,7 +441,7 @@ describe('@weft-js/core/vite assets', () => {
   test('`?media` with a media.build provider: its record, URLs mapped, files served in dev, diagnostics surfaced', async () => {
     bind('media.build', { export: 'createMediaBuild', options: { warn: true } })
     const { p, load, emitted, warnings } = plugin('serve')
-    const a = record(await load(join(root, 'hero.png') + '?media'))
+    const a = record(await load(join(fixture.root, 'hero.png') + '?media'))
     expect(a.src).toBe('/@weft-assets/hero-640.jpg')
     expect(a.sources[0].srcset).toBe(
       '/@weft-assets/hero-320.avif 320w, /@weft-assets/hero-640.avif 640w',
@@ -444,6 +462,10 @@ describe('@weft-js/core/vite assets', () => {
       body: [PNG.length],
     })
   })
+}
+
+function registerFontAssetTests(fixture: ReturnType<typeof setupAssetTests>) {
+  const { plugin, bind } = fixture
 
   test('weft:fonts: empty without font.build; with it, the CSS, the preloads, the files and .weft/fonts.json', async () => {
     const { load } = plugin('build')
@@ -459,7 +481,7 @@ describe('@weft-js/core/vite assets', () => {
       'export const preloads = [{"href":"/assets/f-latin.woff2","type":"font/woff2"}]\n',
     )
     expect(built.emitted.map((f) => f.fileName)).toEqual(['assets/f-latin.woff2']) // built once for both modules
-    expect(JSON.parse(readFileSync(join(root, '.weft', 'fonts.json'), 'utf8'))).toEqual({
+    expect(JSON.parse(readFileSync(join(fixture.root, '.weft', 'fonts.json'), 'utf8'))).toEqual({
       plugin: '@test/p',
       metrics: { Inter: { capHeight: 0.7 } },
       report: { preloadBytes: 3 },
@@ -477,10 +499,10 @@ describe('@weft-js/core/vite assets', () => {
 
     bind('font.build', { export: 'createFontBuild', options: { family: 'Inter' } })
     const { p } = plugin('build')
-    for (const id of ['\0virtual:weft/entry-client', join(root, 'src/entry.client.ts')])
+    for (const id of ['\0virtual:weft/entry-client', join(fixture.root, 'src/entry.client.ts')])
       expect(entry(p, id)).toEqual({ code: "import 'weft:fonts'\nstart()\n", map: null })
-    expect(entry(p, join(root, 'src/entry.client.ts'), 'server')).toBeUndefined()
-    expect(entry(p, join(root, 'src/app.ts'))).toBeUndefined()
+    expect(entry(p, join(fixture.root, 'src/entry.client.ts'), 'server')).toBeUndefined()
+    expect(entry(p, join(fixture.root, 'src/app.ts'))).toBeUndefined()
     expect(entry(p, '\0virtual:weft/entry-client?assets=client')).toBeUndefined()
     expect(p.transformIndexHtml.order).toBe('pre')
     expect(p.transformIndexHtml.handler()).toEqual([
@@ -508,4 +530,4 @@ describe('@weft-js/core/vite assets', () => {
     expect(ssr).toEqual(['assets/f-latin.woff2'])
     expect(client).toEqual(['assets/f-latin.woff2'])
   })
-})
+}

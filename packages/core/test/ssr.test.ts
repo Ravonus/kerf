@@ -174,7 +174,44 @@ describe('round trips of every lowered construct: 0 misses, 0 DOM writes, then l
     expect(r.mutations).toHaveLength(0)
   }
   const click = (sel: string) => (document.querySelector(sel) as HTMLElement).click()
+  registerMarkupRoundTrips(clean, click)
+  registerInteractiveRoundTrips(clean, click)
+})
 
+// The point of source-path keys (research 19 §2.4): bindings that exist on one side only don't shift any key.
+
+test('client-only watchers and extra memos shift no key', () => {
+  const r = roundTrip(
+    () => WatchedS({ client: false }),
+    () => WatchedC({ client: true }),
+  )
+  expect(r.warnings).toEqual([])
+  expect(hydration.misses).toBe(0)
+  expect(r.mutations).toHaveLength(0)
+  r.dispose()
+})
+
+test('dev hydration warnings name the source line of the template that missed', () => {
+  const source = readFileSync('test/fixtures/next/Basics.tsx', 'utf8')
+  const button = source.indexOf('<button')
+  expect(button).toBeGreaterThan(-1)
+  const line = source.slice(0, button).split('\n').length
+  const container = document.body.appendChild(document.createElement('div'))
+  container.innerHTML = renderToString(() => basicsS.Hello({}))
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  hydrate(() => basicsC.Counter({}), container)
+  expect(hydration.misses).toBe(1)
+  expect(warn.mock.calls[0]![0]).toBe(
+    `weft: hydration mismatch at test/fixtures/next/Basics.tsx:${line} <button> (wk=0): the client renders <button>, the server rendered <p>; rendering it fresh`,
+  )
+  warn.mockRestore()
+  container.remove()
+})
+
+function registerMarkupRoundTrips(
+  clean: (r: ReturnType<typeof roundTrip>) => void,
+  click: (sel: string) => void,
+) {
   test('text, entities, components with children, fragments, class and style objects', async () => {
     const r = roundTrip(basicsS.Panel, basicsC.Panel)
     clean(r)
@@ -216,7 +253,12 @@ describe('round trips of every lowered construct: 0 misses, 0 DOM writes, then l
     expect(clicks).toEqual(['a'])
     r.dispose()
   })
+}
 
+function registerInteractiveRoundTrips(
+  clean: (r: ReturnType<typeof roundTrip>) => void,
+  click: (sel: string) => void,
+) {
   test("textContent and innerHTML render on the server; a spread's children are a hole", async () => {
     const props = () => ({ rest: { title: 'kids', children: ['one ', 'two'] } })
     const r = roundTrip(
@@ -262,34 +304,4 @@ describe('round trips of every lowered construct: 0 misses, 0 DOM writes, then l
     expect(document.querySelector('circle')!.getAttribute('r')).toBe('3')
     icon.dispose()
   })
-})
-
-// The point of source-path keys (research 19 §2.4): bindings that exist on one side only don't shift any key.
-
-test('client-only watchers and extra memos shift no key', () => {
-  const r = roundTrip(
-    () => WatchedS({ client: false }),
-    () => WatchedC({ client: true }),
-  )
-  expect(r.warnings).toEqual([])
-  expect(hydration.misses).toBe(0)
-  expect(r.mutations).toHaveLength(0)
-  r.dispose()
-})
-
-test('dev hydration warnings name the source line of the template that missed', () => {
-  const source = readFileSync('test/fixtures/next/Basics.tsx', 'utf8')
-  const button = source.indexOf('<button')
-  expect(button).toBeGreaterThan(-1)
-  const line = source.slice(0, button).split('\n').length
-  const container = document.body.appendChild(document.createElement('div'))
-  container.innerHTML = renderToString(() => basicsS.Hello({}))
-  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-  hydrate(() => basicsC.Counter({}), container)
-  expect(hydration.misses).toBe(1)
-  expect(warn.mock.calls[0]![0]).toBe(
-    `weft: hydration mismatch at test/fixtures/next/Basics.tsx:${line} <button> (wk=0): the client renders <button>, the server rendered <p>; rendering it fresh`,
-  )
-  warn.mockRestore()
-  container.remove()
-})
+}
