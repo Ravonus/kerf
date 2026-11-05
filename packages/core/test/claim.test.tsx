@@ -5,7 +5,6 @@ import { hydrate } from '@weft-js/core/dom'
 import { renderToString } from '@weft-js/core/ssr'
 import { createRoot, derived, effect, flush, rt, state, view } from '@weft-js/core'
 import { hydration } from '../src/hydrate'
-// oxlint-disable-next-line import/no-duplicates -- the query makes it a different module: the same file compiled for the server, then for hydration
 import * as Server from './fixtures/ssr/Claims.tsx?weft-ssr'
 import * as Client from './fixtures/ssr/Claims.tsx?weft-hydrate'
 
