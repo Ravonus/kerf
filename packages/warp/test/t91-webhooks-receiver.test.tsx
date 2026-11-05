@@ -81,3 +81,54 @@ test('webhook add uses the current callback and its original receiver', async ()
   expect(calls.slice(1)).toEqual(['https://x.dev/h', ['a.b', 'c.d']])
   expect(d.querySelector<HTMLInputElement>('input[readonly]')!.value).toBe('new secret')
 })
+
+test('webhook add captures its callback before reading the endpoint argument', async () => {
+  const trace: string[] = []
+  const endpoint = 'https://order.example/h'
+  const old = function (this: unknown, url: string, events: string[]) {
+    expect(this).toBe(props)
+    expect(url).toBe(endpoint)
+    expect(events).toEqual(['a.b'])
+    trace.push('old')
+    return Promise.resolve('secret')
+  }
+  const replacement = function () {
+    trace.push('replacement')
+    return Promise.resolve('wrong')
+  }
+  let callback = old
+  const props: WebhooksProps = {
+    hooks: HOOKS,
+    events: ['a.b'],
+    get onAdd() {
+      trace.push('lookup')
+      return callback
+    },
+    onTest: () => Promise.resolve({ status: 200, ms: 1 }),
+  }
+  const { container } = render(() => Webhooks(props))
+  byText(container, 'Add endpoint').click()
+  await tick()
+  const d = dialog()
+  type(d.querySelector<HTMLInputElement>('input[type="url"]')!, endpoint)
+  let trims = 0
+  const trim: (this: string) => string = Object.getOwnPropertyDescriptor(
+    String.prototype,
+    'trim',
+  )!.value
+  const spy = vi.spyOn(String.prototype, 'trim').mockImplementation(function (this: string) {
+    if (this === endpoint && ++trims === 3) {
+      trace.push('url')
+      callback = replacement
+    }
+    return trim.call(this)
+  })
+  try {
+    byText(d, 'Add endpoint').click()
+  } finally {
+    spy.mockRestore()
+  }
+  await tick()
+  expect(trace).toEqual(['lookup', 'url', 'old'])
+  expect(d.querySelector<HTMLInputElement>('input[readonly]')!.value).toBe('secret')
+})
