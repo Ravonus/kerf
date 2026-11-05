@@ -1,6 +1,7 @@
-//! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics (W001, W005, W006,
-//! W010, W013, W014, W015, W016, W017, W018, W019; the @weft-js/core/browser ones are in `browser`). Produces a `Plan` that `transform` applies to the same AST, and the per-file
-//! facts `weft check`'s project view joins across files (`project`).
+//! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics
+//! (W001, W005, W006, W010, W013, W014, W015, W016, W017, W018, W019, W020).
+//! The @weft-js/core/browser diagnostics live in `browser`. Produces a `Plan` that `transform`
+//! applies to the same AST, and the per-file facts `weft check` joins across files (`project`).
 
 mod aliases;
 mod body_reads;
@@ -9,6 +10,7 @@ mod context;
 mod finish;
 mod lists;
 mod props;
+mod react;
 mod row_entries;
 mod support;
 mod visitor;
@@ -134,6 +136,7 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
         spreads: Vec::new(),
         list_sources: Vec::new(),
         imports: HashMap::new(),
+        react_imports: react::imports(program),
         box_props: Vec::new(),
         defaulted: HashSet::new(),
     };
@@ -369,6 +372,8 @@ struct Analyzer<'s> {
     list_sources: Vec<(SymbolId, Span)>,
     /// Local import binding → (module specifier, imported name).
     imports: HashMap<SymbolId, (String, String)>,
+    /// Hoisted value imports, including namespaces; project facts keep their existing import map.
+    react_imports: HashMap<SymbolId, (String, String)>,
     /// Box symbol passed as a component prop: (box, component name, import, prop name).
     box_props: Vec<(SymbolId, String, Option<String>, String)>,
     /// Destructured props with a default: their read isn't a plain path.

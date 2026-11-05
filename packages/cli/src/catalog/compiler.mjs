@@ -205,8 +205,9 @@ export const compilerDiagnostics = [
     severity: 'error',
     by: 'compiler',
     catches:
-      'React-isms (W020–W029): `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`, custom `useX()` hooks, dependency arrays',
-    fix: '`state`, `watch`, `derived`, `ref={el}`, plain functions',
+      'React hooks (`useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`), including imported aliases and namespaces; custom `useX()` calls in components; dependency arrays on core `watch`, `derived`, or `memo`',
+    fix:
+      'Use `state` and `.value`, `watch(source, callback)` with `onCleanup`, `derived` and `.value`, `ref={el}`, or plain functions. Reads track dependencies. Only an empty dependency array on `derived` or `memo` has a safe autofix',
     example:
       "import { useState } from 'react'\nexport function A() { const [n] = useState(0); return <p>{n}</p> }",
   },

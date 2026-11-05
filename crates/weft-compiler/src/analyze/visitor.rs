@@ -348,6 +348,7 @@ impl<'a> Visit<'a> for Analyzer<'_> {
     }
 
     fn visit_call_expression(&mut self, it: &CallExpression<'a>) {
+        self.react_call(it);
         self.bind_call_diagnostic(it);
         if let Some(cb) = map_callback(it) {
             if self.jsx_depth > 0 && returned(cb).0.is_some_and(returns_jsx) {
