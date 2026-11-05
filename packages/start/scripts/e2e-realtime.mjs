@@ -69,6 +69,11 @@ export default async function run({ url, log }) {
   check('a resume replays the missed message', (await b.until('m'))[2].text === 'two')
   check('a resume replays the missed poke', (await b.until('p')).t[0] === 'counter')
 
+  await finishRealtime({ url, check, b, counter, open })
+  return { checks }
+}
+
+async function finishRealtime({ url, check, b, counter, open }) {
   await b.until('a') // the resumed subscription's own
   const change = await fetch(`${url}/_weft/rt`, {
     method: 'POST',
@@ -108,7 +113,6 @@ export default async function run({ url, log }) {
       setTimeout(ok, 100)
     })
   check('a closed client reaches the server', (await open()) < before)
-  return { checks }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === 'prepare') {

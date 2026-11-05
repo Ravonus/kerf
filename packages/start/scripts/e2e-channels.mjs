@@ -75,6 +75,11 @@ export default async function run({ url, log }) {
   await d.until('j')
   check('a cursor from another epoch is a reset', (await d.until('r'))[1] === 1)
 
+  await finishChannels({ url, check, room, roomId, counter, b, c, d })
+  return { checks }
+}
+
+async function finishChannels({ url, check, room, roomId, counter, b, c, d }) {
   const key = { id: roomId }
   c.send('j', 2, counter, key)
   d.send('j', 2, counter, key)
@@ -108,5 +113,4 @@ export default async function run({ url, log }) {
   for (let i = 0; i < 60; i++) h.send('x')
   check('over the rate limit closes the socket', (await h.shut()) === 1008)
   for (const s of [b, c, d, e]) s.close()
-  return { checks }
 }
