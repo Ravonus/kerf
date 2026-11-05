@@ -3,10 +3,17 @@
 // cookie box renders on the server, hydrates 0/0 and the choice survives a reload.
 import { createRequire } from 'node:module'
 import { inject } from 'vitest'
+import type * as Playwright from 'playwright-core'
+
+declare global {
+  interface Window {
+    __same: boolean
+  }
+}
 
 const url = inject('url')
-const { chromium } = createRequire(import.meta.url)('playwright-core')
-let browser
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await chromium.launch()
 })
@@ -14,11 +21,11 @@ afterAll(async () => {
   await browser?.close()
 })
 
-async function open(path, options) {
+async function open(path: string, options?: Parameters<Playwright.Browser['newContext']>[0]) {
   const context = await browser.newContext(options)
   const page = await context.newPage()
-  const errors = []
-  const posts = []
+  const errors: string[] = []
+  const posts: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   page.on('console', (m) => (m.type() === 'error' ? errors.push(m.text()) : undefined))
   page.on('request', (r) =>
@@ -32,7 +39,7 @@ async function open(path, options) {
   return { page, errors, posts, context }
 }
 
-const unique = (name) => `${name} ${Math.random().toString(36).slice(2, 8)}`
+const unique = (name: string) => `${name} ${Math.random().toString(36).slice(2, 8)}`
 
 test('a page with a form hydrates 0/0', async () => {
   const { page, errors, context } = await open('/notes')
@@ -56,16 +63,18 @@ test('a submit stays in the page: pending, the refreshed list, the reset fields,
   await page.click('.note-form button')
   await page.waitForFunction(
     () =>
-      document.querySelector('.note-form button').disabled &&
-      document.querySelector('.note-form').getAttribute('aria-busy') === 'true',
+      document.querySelector<HTMLButtonElement>('.note-form button')!.disabled &&
+      document.querySelector('.note-form')!.getAttribute('aria-busy') === 'true',
   )
   expect(await page.textContent('.note-form button')).toBe('Saving')
   await page.waitForFunction(
-    (t) => document.querySelector('ul.notes').textContent.includes(t),
+    (t) => document.querySelector('ul.notes')!.textContent.includes(t),
     title,
   )
   expect(await page.textContent('ul.notes')).toContain(`${title} × 4`)
-  await page.waitForFunction(() => !document.querySelector('.note-form button').disabled)
+  await page.waitForFunction(
+    () => !document.querySelector<HTMLButtonElement>('.note-form button')!.disabled,
+  )
   expect(await page.inputValue('input[name=title]')).toBe('')
   expect(await page.evaluate(() => window.__same)).toBe(true)
   expect(posts).toEqual(['/_weft/fn/addNote'])
@@ -82,17 +91,17 @@ test('field errors show in place, the first invalid field takes focus, and the t
   await page.waitForSelector('input[name=title][aria-invalid=true]')
   expect(await page.textContent('.title-error')).toBe('Title is too short')
   expect(await page.textContent('.qty-error')).toBe('')
-  expect(await page.evaluate(() => document.activeElement.name)).toBe('title')
+  expect(await page.evaluate(() => (document.activeElement as HTMLInputElement).name)).toBe('title')
   expect(await page.inputValue('input[name=title]')).toBe('x')
   await page.fill('input[name=title]', 'taken')
   await page.click('.note-form button')
   await page.waitForFunction(
-    () => document.querySelector('.title-error').textContent === 'Already taken',
+    () => document.querySelector('.title-error')!.textContent === 'Already taken',
   )
   await page.fill('input[name=title]', 'Fine now')
   await page.click('.note-form button')
   await page.waitForFunction(
-    () => !document.querySelector('input[name=title]').hasAttribute('aria-invalid'),
+    () => !document.querySelector('input[name=title]')!.hasAttribute('aria-invalid'),
   )
   expect(await page.textContent('.title-error')).toBe('')
   expect(errors.filter((e) => !/422/.test(e))).toEqual([]) // the browser logs the failed fetch
@@ -104,7 +113,7 @@ test('a failed submit with no field keeps the form usable, with the message', as
   await page.fill('input[name=title]', 'boom')
   await page.fill('input[name=qty]', '2')
   await page.click('.note-form button')
-  await page.waitForFunction(() => document.querySelector('.message').textContent !== '')
+  await page.waitForFunction(() => document.querySelector('.message')!.textContent !== '')
   expect(await page.textContent('.message')).toContain('kaboom')
   await context.close()
 })
@@ -113,9 +122,9 @@ test('the 422 page hydrates as it was rendered, then submits in place', async ()
   const { page, errors, posts, context } = await open('/notes')
   // Submit before the client takes over: a native POST, as a page that hasn't hydrated yet sends.
   await page.evaluate(() => {
-    const f = document.querySelector('.note-form')
-    f.querySelector('[name=title]').value = 'x'
-    f.querySelector('[name=qty]').value = '1'
+    const f = document.querySelector<HTMLFormElement>('.note-form')!
+    f.querySelector<HTMLInputElement>('[name=title]')!.value = 'x'
+    f.querySelector<HTMLInputElement>('[name=qty]')!.value = '1'
     HTMLFormElement.prototype.submit.call(f)
   })
   await page.waitForFunction(
@@ -129,7 +138,7 @@ test('the 422 page hydrates as it was rendered, then submits in place', async ()
   posts.length = 0
   await page.fill('input[name=title]', unique('Recovered'))
   await page.click('.note-form button')
-  await page.waitForFunction(() => document.querySelector('.title-error').textContent === '')
+  await page.waitForFunction(() => document.querySelector('.title-error')!.textContent === '')
   expect(posts).toEqual(['/_weft/fn/addNote'])
   expect(errors.filter((e) => !/422/.test(e))).toEqual([])
   await context.close()
@@ -154,7 +163,7 @@ test('a cookie box: server-rendered, hydrated 0/0, and it survives a reload', as
   const { page, errors, context } = await open('/prefs')
   expect(await page.textContent('.theme')).toBe('light')
   await page.click('.theme')
-  await page.waitForFunction(() => document.querySelector('.theme').textContent === 'dark')
+  await page.waitForFunction(() => document.querySelector('.theme')!.textContent === 'dark')
   await page.waitForFunction(() => document.cookie.includes('weft.app.prefs.theme'))
   const raw = await (await context.request.get(`${url}/prefs`)).text() // as a crawler with the cookie sees it
   expect(raw).toContain('data-theme="dark"')
