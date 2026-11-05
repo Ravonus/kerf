@@ -1,15 +1,16 @@
 // @vitest-environment node
 // Generated modules must remain complete and checked against their artwork.
+import { repoRoot } from '../../../scripts/lib/helpers.mjs'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { outputs } from '../scripts/build.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
-const repo = resolve(root, '../..')
+const repo = repoRoot
 
 function check(dir: string) {
   const env = { ...process.env }

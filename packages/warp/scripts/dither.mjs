@@ -2,6 +2,7 @@
 // tiers and themes differ in painted pixels, and measures frame rate and idle CPU.
 //   node scripts/dither.mjs                 writes shots to evals/results/dither/ and numbers to evals/results/dither.json
 //   node scripts/dither.mjs --shots=/tmp/x  shots somewhere else
+import { repoRoot } from '../../../scripts/lib/helpers.mjs'
 import {
   existsSync,
   mkdirSync,
@@ -19,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 
 const pkg = join(dirname(fileURLToPath(import.meta.url)), '..')
 const require = createRequire(join(pkg, 'package.json'))
-const repo = resolve(pkg, '../..')
+const repo = repoRoot
 const arg = (k, d) => process.argv.find((a) => a.startsWith(`--${k}=`))?.split('=')[1] ?? d
 const shots = resolve(arg('shots', join(repo, 'evals/results/dither')))
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }

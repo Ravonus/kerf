@@ -15,6 +15,7 @@
 //   a11y      packages/warp/scripts/a11y.mjs on the warp gallery (every component) and the built shop: axe plus
 //             pixel-measured contrast at all 12 stops, expression × theme × motion
 // Writes results/<name>/exit.json and exit.md; exit 1 if any part fails.
+import { repoRoot } from '../../scripts/lib/helpers.mjs'
 import { execFile } from 'node:child_process'
 import {
   cpSync,
@@ -33,7 +34,7 @@ import { promisify } from 'node:util'
 import { brotliCompressSync, constants } from 'node:zlib'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const repo = join(root, '..')
+const repo = repoRoot
 const exec = promisify(execFile)
 const arg = (n, d) => {
   const i = process.argv.indexOf(`--${n}`)

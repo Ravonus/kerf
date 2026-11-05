@@ -5,6 +5,7 @@
 // The app is `node packages/start/test/e2e/e2e-realtime.mjs prepare <dir>`: a scaffold plus test/fixtures/app's
 // `src/server/feed.ts` and `/live` route. With `WEFT_RT_POSTGRES` set the build uses the postgres bus, and this file
 // also proves a NOTIFY from outside the process reaches a connection.
+import { repoRoot } from '../../../../scripts/lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
 import { cpSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -12,7 +13,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { connect, frameId, pageCursor, rpc } from '../rt-client.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const repo = resolve(here, '../../../..')
+const repo = repoRoot
 
 export default async function run({ url, log }) {
   const checks = []

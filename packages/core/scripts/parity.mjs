@@ -2,6 +2,7 @@
 // build, compared as the JSON text each returns (code, map, diagnostics, facts). test/compiler-parity.test.ts runs this.
 // As a script it takes more trees, to try a real app:
 //   node scripts/parity.mjs [--also <dir>]…
+import { repoRoot } from '../../../scripts/lib/helpers.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
@@ -11,7 +12,7 @@ const require = createRequire(import.meta.url)
 const { loadWasm, wasmOptions } = require('../compiler-wasm.cjs')
 const here = dirname(fileURLToPath(import.meta.url))
 const pkg = join(here, '..')
-const repo = join(pkg, '..', '..')
+const repo = repoRoot
 const SKIP = new Set([
   'node_modules',
   'dist',
