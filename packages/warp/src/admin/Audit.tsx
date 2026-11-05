@@ -64,83 +64,17 @@ export function AuditLog({
   const actor = state('all')
   const range = state('all')
   const wait = state(0)
-  const list = derived(() => read(events))
-  const actors = derived(() => [
-    { value: 'all', label: 'Everyone' },
-    ...[...new Set(list.value.map((e) => e.actor))].map((a) => ({ value: a, label: a })),
-  ])
-  const shown = derived(() => {
-    const hours = RANGES.find((r) => r.value === range.value)!.hours
-    return list.value.filter(
-      (e) =>
-        (category.value === 'all' || e.category === category.value) &&
-        (actor.value === 'all' || e.actor === actor.value) &&
-        Date.parse(now) - Date.parse(e.at) <= hours * 36e5,
-    )
-  })
-  let tick: ReturnType<typeof setInterval> | undefined
+  const { actors, shown } = auditFilters(
+    () => events,
+    () => now,
+    { category, actor, range },
+  )
   let root: HTMLElement | undefined
-  const say = (t: string) => {
-    if (root) announce(root.ownerDocument, t)
-  }
-  onCleanup(() => clearInterval(tick))
+  const say = auditAnnouncer(() => root)
+  const exportIt = auditExport(() => onExport, wait, say)
   const refilter = () => queueMicrotask(() => say(`${plural(shown.value.length, 'event')} shown`))
-  const exportIt = async () => {
-    const r = await onExport?.()
-    if (!r?.retryAfter) return
-    wait.value = r.retryAfter
-    say(`Export limit reached. Try again in ${r.retryAfter} seconds.`)
-    tick = setInterval(() => {
-      wait.value -= 1
-      if (wait.value > 0) return
-      clearInterval(tick)
-      say('You can export again.')
-    }, 1000)
-  }
-  const columns: Column<AuditEvent>[] = [
-    {
-      id: 'at',
-      header: 'When',
-      sort: (r) => r.at,
-      cell: (e) => {
-        const at = stamp(e.at)
-        return (
-          <Tooltip content={at}>
-            <time datetime={e.at} tabindex="0">
-              {agoText(e.at, now)}
-            </time>
-          </Tooltip>
-        )
-      },
-    },
-    { id: 'actor', header: 'Who', rowHeader: true, card: 'title' },
-    {
-      id: 'what',
-      header: 'What',
-      value: (e) => `${e.verb} ${e.target}`,
-      cell: (e) => (
-        <>
-          {e.verb} {e.href ? <a href={e.href}>{e.target}</a> : e.target}
-        </>
-      ),
-    },
-    { id: 'ip', header: 'IP', priority: 2, cell: (e) => <code>{e.ip}</code> },
-  ]
-  const diff = (e: AuditEvent) =>
-    e.diff?.length ? (
-      <dl data-scope="desc">
-        {e.diff.map((d) => (
-          <div key={d.field}>
-            <dt>{d.field}</dt>
-            <dd>
-              {d.from} → {d.to}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    ) : (
-      <span class="muted">No field changes were recorded.</span>
-    )
+  const columns = auditColumns(() => now)
+  const diff = (event: AuditEvent) => auditDiff(event)
   const hasLive = derived(() => live !== undefined)
   return (
     <div ref={(n) => (root = n)} data-scope="stack">
@@ -150,10 +84,7 @@ export function AuditLog({
           size="sm"
           value={category.value}
           options={categories}
-          onChange={(v) => {
-            category.value = v
-            refilter()
-          }}
+          onChange={(v) => setAuditFilter(category, v, refilter)}
         />
         {hasLive.value && <LiveStatus state={live!} label="Audit log" />}
       </div>
@@ -164,10 +95,7 @@ export function AuditLog({
             size="sm"
             options={actors.value}
             value={actor.value}
-            onChange={(e: Event) => {
-              actor.value = (e.currentTarget as HTMLInputElement).value
-              refilter()
-            }}
+            onChange={(e: Event) => auditInput(e, actor, refilter)}
           />
         </div>
         <div data-grow="">
@@ -176,10 +104,7 @@ export function AuditLog({
             size="sm"
             options={RANGES}
             value={range.value}
-            onChange={(e: Event) => {
-              range.value = (e.currentTarget as HTMLInputElement).value
-              refilter()
-            }}
+            onChange={(e: Event) => auditInput(e, range, refilter)}
           />
         </div>
         {onExport && (
@@ -205,4 +130,117 @@ export function AuditLog({
       />
     </div>
   )
+}
+
+function auditColumns(now: () => string): Column<AuditEvent>[] {
+  return [
+    {
+      id: 'at',
+      header: 'When',
+      sort: (r) => r.at,
+      cell: (e) => {
+        const at = stamp(e.at)
+        return (
+          <Tooltip content={at}>
+            <time datetime={e.at} tabindex="0">
+              {agoText(e.at, now())}
+            </time>
+          </Tooltip>
+        )
+      },
+    },
+    { id: 'actor', header: 'Who', rowHeader: true, card: 'title' },
+    {
+      id: 'what',
+      header: 'What',
+      value: (e) => `${e.verb} ${e.target}`,
+      cell: (e) => (
+        <>
+          {e.verb} {e.href ? <a href={e.href}>{e.target}</a> : e.target}
+        </>
+      ),
+    },
+    { id: 'ip', header: 'IP', priority: 2, cell: (e) => <code>{e.ip}</code> },
+  ]
+}
+
+function auditDiff(e: AuditEvent) {
+  return e.diff?.length ? (
+    <dl data-scope="desc">
+      {e.diff.map((d) => (
+        <div key={d.field}>
+          <dt>{d.field}</dt>
+          <dd>
+            {d.from} → {d.to}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  ) : (
+    <span class="muted">No field changes were recorded.</span>
+  )
+}
+
+function auditFilters(
+  events: () => AuditLogProps['events'],
+  now: () => string,
+  {
+    category,
+    actor,
+    range,
+  }: { category: State<string>; actor: State<string>; range: State<string> },
+) {
+  const list = derived(() => read(events()))
+  const actors = derived(() => [
+    { value: 'all', label: 'Everyone' },
+    ...[...new Set(list.value.map((e) => e.actor))].map((a) => ({ value: a, label: a })),
+  ])
+  const shown = derived(() => {
+    const hours = RANGES.find((r) => r.value === range.value)!.hours
+    return list.value.filter(
+      (e) =>
+        (category.value === 'all' || e.category === category.value) &&
+        (actor.value === 'all' || e.actor === actor.value) &&
+        Date.parse(now()) - Date.parse(e.at) <= hours * 36e5,
+    )
+  })
+  return { actors, shown }
+}
+
+function auditExport(
+  onExport: () => AuditLogProps['onExport'],
+  wait: State<number>,
+  say: (t: string) => void,
+) {
+  let tick: ReturnType<typeof setInterval> | undefined
+  onCleanup(() => clearInterval(tick))
+  const exportIt = async () => {
+    const r = await onExport()?.()
+    if (!r?.retryAfter) return
+    wait.value = r.retryAfter
+    say(`Export limit reached. Try again in ${r.retryAfter} seconds.`)
+    tick = setInterval(() => {
+      wait.value -= 1
+      if (wait.value > 0) return
+      clearInterval(tick)
+      say('You can export again.')
+    }, 1000)
+  }
+  return exportIt
+}
+
+function auditAnnouncer(root: () => HTMLElement | undefined) {
+  return (text: string) => {
+    const element = root()
+    if (element) announce(element.ownerDocument, text)
+  }
+}
+
+function setAuditFilter(filter: State<string>, value: string, refilter: () => void) {
+  filter.value = value
+  refilter()
+}
+
+function auditInput(e: Event, filter: State<string>, refilter: () => void) {
+  setAuditFilter(filter, (e.currentTarget as HTMLInputElement).value, refilter)
 }
