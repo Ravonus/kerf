@@ -74,14 +74,16 @@ export function Composer({
   const view = composerState({
     quote: () => quote,
     mentions: () => mentions,
-    onSend: () => onSend,
+    onSend: (message) => onSend(message()),
     onAttach: () => onAttach,
     onEmoji: () => onEmoji,
   })
   return (
     <div data-scope="composer" data-sweep="">
       <SWEEP />
-      {(files ?? []).length > 0 && <ComposerFiles files={files} onRemoveFile={onRemoveFile} />}
+      {(files ?? []).length > 0 && (
+        <ComposerFiles files={files} onRemoveFile={(file) => onRemoveFile?.(file())} />
+      )}
       {view.draft.value && <ComposerQuote view={view} />}
       <label data-part="sr-only" for={id}>
         {label}
@@ -106,7 +108,13 @@ export function Composer({
         }}
         onBlur={view.closeList}
       ></textarea>
-      <ComposerRow id={id} view={view} compact={compact} onAttach={onAttach} onEmoji={onEmoji} />
+      <ComposerRow
+        id={id}
+        view={view}
+        compact={compact}
+        onAttach={() => onAttach?.()}
+        onEmoji={() => onEmoji?.(view.insert)}
+      />
       {view.open.value && <ComposerSuggestions id={id} view={view} />}
     </div>
   )

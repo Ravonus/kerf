@@ -1,11 +1,11 @@
 import { announce, insertMention, mentionQuery, nextIndex } from '@weft-js/warp-core'
 import { derived, state, type State } from '@weft-js/core'
-import type { ComposerProps, Mentionable, QuoteDraftValue } from '../Composer'
+import type { ComposerProps, ComposerSend, Mentionable, QuoteDraftValue } from '../Composer'
 
 type Params = {
   quote: () => ComposerProps['quote']
   mentions: () => ComposerProps['mentions']
-  onSend: () => ComposerProps['onSend']
+  onSend: (message: () => ComposerSend) => void
   onAttach: () => ComposerProps['onAttach']
   onEmoji: () => ComposerProps['onEmoji']
 }
@@ -43,7 +43,7 @@ type Data = {
 function composerActions(
   d: Data,
   quote: () => ComposerProps['quote'],
-  onSend: () => ComposerProps['onSend'],
+  onSend: (message: () => ComposerSend) => void,
 ) {
   const { hint, query, active, hasPeople, draft, refs } = d
   const removeQuote = () => {
@@ -78,7 +78,7 @@ function composerActions(
     refs.ta!.value = ''
     closeList()
     removeQuote()
-    onSend()(q ? { text, quote: q } : { text })
+    onSend(() => (q ? { text, quote: q } : { text }))
   }
   const key = composerKeys(d, closeList, pick, removeQuote, send)
   const insert = (text: string) => {

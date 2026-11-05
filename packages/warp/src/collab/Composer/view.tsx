@@ -2,7 +2,7 @@ import { AtIcon, CheckIcon, PaperclipIcon, SendIcon, SmileIcon, XIcon } from '@w
 import { announce } from '@weft-js/warp-core'
 import { Button } from '../../Button'
 import { PeerAvatar } from '../peer'
-import type { ComposerProps } from '../Composer'
+import type { ComposerFile, ComposerProps } from '../Composer'
 import type { composerState } from './state'
 
 type View = ReturnType<typeof composerState>
@@ -12,7 +12,7 @@ export function ComposerFiles({
   onRemoveFile,
 }: {
   files: ComposerProps['files']
-  onRemoveFile: ComposerProps['onRemoveFile']
+  onRemoveFile: (file: () => ComposerFile) => void
 }) {
   return (
     <div data-part="files">
@@ -26,7 +26,7 @@ export function ComposerFiles({
             size="sm"
             icon={XIcon}
             label={`Remove ${f.name}`}
-            onClick={() => onRemoveFile?.(f)}
+            onClick={() => onRemoveFile(() => f)}
           />
         </span>
       ))}
@@ -70,8 +70,8 @@ export function ComposerRow({
   id: string
   view: View
   compact: ComposerProps['compact']
-  onAttach: ComposerProps['onAttach']
-  onEmoji: ComposerProps['onEmoji']
+  onAttach: () => void
+  onEmoji: () => void
 }) {
   return (
     <div data-part="row">
@@ -82,7 +82,7 @@ export function ComposerRow({
           size="sm"
           label="Attach"
           data-icon-only=""
-          onClick={() => onAttach?.()}
+          onClick={() => onAttach()}
         >
           <PaperclipIcon />
         </Button>
@@ -94,7 +94,7 @@ export function ComposerRow({
           size="sm"
           label="Emoji"
           data-icon-only=""
-          onClick={() => onEmoji?.(view.insert)}
+          onClick={() => onEmoji()}
         >
           <SmileIcon />
         </Button>
