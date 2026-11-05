@@ -328,6 +328,14 @@ export function Room(props: { roomId: string }) {
     typing.value = `${who} is typing…`
   })
   const draft = state('')
+  const updateDraft = (
+    e: Event & {
+      currentTarget: HTMLInputElement
+    },
+  ) => {
+    draft.value = e.currentTarget.value
+    void chat.send('typing', {})
+  }
   const send = async (e: SubmitEvent) => {
     e.preventDefault()
     await chat.send('say', { text: draft.value })
@@ -345,10 +353,7 @@ export function Room(props: { roomId: string }) {
       <input
         aria-label="Message"
         value={draft.value}
-        onInput={e => {
-          draft.value = e.currentTarget.value
-          void chat.send('typing', {})
-        }}
+        onInput={updateDraft}
       />
       <button type="submit">Send</button>
     </form>
