@@ -1,10 +1,11 @@
-//! Resolve callback identities before checking where their tracking stops.
+//! Resolve reactive callbacks before checking their tracking and purity.
 //! Only stable bindings and statically named core members have local provenance.
 //! Nested functions are checked separately only when passed to a known core API.
 
 mod flow;
 mod loops;
 mod reads;
+mod writes;
 
 use std::collections::{HashMap, HashSet};
 
@@ -214,11 +215,11 @@ impl Check<'_> {
                 ));
             }
         }
-        if calls.iter().any(|call| call.api == Api::Resource) {
-            let mut flow = reads::Flow::new(&self.index);
-            inspect(&mut flow);
-            self.diagnostics.extend(flow.diagnostics);
-        }
+        let derived = calls.iter().any(|call| call.api == Api::Derived);
+        let resource = calls.iter().any(|call| call.api == Api::Resource);
+        let mut flow = reads::Flow::new(&self.index, derived, resource);
+        inspect(&mut flow);
+        self.diagnostics.extend(flow.diagnostics);
     }
 }
 

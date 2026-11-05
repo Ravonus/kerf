@@ -1,4 +1,4 @@
-//! Reads are untracked only on paths that have resumed after suspension.
+//! Follow callback flow to find untracked reads and writes during derivation.
 
 use std::collections::HashSet;
 
@@ -29,12 +29,14 @@ pub(super) struct Flow<'x, 's> {
     pub(super) traps: Vec<Trap>,
     pub(super) label: Option<String>,
     pub(super) diagnostics: Vec<Diagnostic>,
-    reported: HashSet<SpanKey>,
+    pub(super) reported: HashSet<(&'static str, SpanKey)>,
+    pub(super) derived: bool,
+    resource: bool,
     write_only: bool,
 }
 
 impl<'x, 's> Flow<'x, 's> {
-    pub(super) fn new(index: &'x Index<'s>) -> Self {
+    pub(super) fn new(index: &'x Index<'s>, derived: bool, resource: bool) -> Self {
         Self {
             index,
             state: State {
@@ -46,11 +48,13 @@ impl<'x, 's> Flow<'x, 's> {
             label: None,
             diagnostics: Vec::new(),
             reported: HashSet::new(),
+            derived,
+            resource,
             write_only: false,
         }
     }
 
-    fn reference(&self, expression: &Expression<'_>, props: bool) -> bool {
+    pub(super) fn reference(&self, expression: &Expression<'_>, props: bool) -> bool {
         matches!(expression.get_inner_expression(), Expression::Identifier(id)
             if symbol_of(self.index.a.scoping, id).is_some_and(|sym|
                 if props { self.index.props.contains(&sym) } else { self.index.boxes.contains(&sym) }))
@@ -80,7 +84,7 @@ impl<'x, 's> Flow<'x, 's> {
     }
 
     fn report(&mut self, span: Span) {
-        if !self.state.untracked || !self.reported.insert(key(span)) {
+        if !self.resource || !self.state.untracked || !self.reported.insert(("W012", key(span))) {
             return;
         }
         let text = self.index.a.text(span);
@@ -121,6 +125,7 @@ impl<'a> Visit<'a> for Flow<'_, '_> {
     }
 
     fn visit_simple_assignment_target(&mut self, it: &SimpleAssignmentTarget<'a>) {
+        self.state_write(it);
         if self.write_only {
             match it {
                 SimpleAssignmentTarget::StaticMemberExpression(member) => {
