@@ -137,29 +137,16 @@ export type AddressFieldProps = Bindable<Address | null> & {
   errors?: Partial<Record<AddressPart, string>> | undefined
 }
 
-/**
- * AddressField (04 §3): the country comes first and decides the fields. Line 1 is a combobox when there is a `provider`;
- * manual entry is one click away, and automatic when the provider fails or takes over 1.5s.
- */
-export function AddressField({
-  value,
-  defaultValue,
-  onValueChange,
-  label = 'Address',
-  provider,
-  countries,
-  defaultCountry = 'US',
-  locale,
-  name,
-  errors,
-}: AddressFieldProps) {
-  const v = bindable<Address | null>(
-    () => value,
-    () => defaultValue,
-    null,
-    () => onValueChange,
-  )
-  const country = state<string | null>(untrack(() => v.value?.country ?? defaultCountry))
+function addressState(
+  value: () => AddressFieldProps['value'],
+  defaultValue: () => AddressFieldProps['defaultValue'],
+  onValueChange: () => AddressFieldProps['onValueChange'],
+  defaultCountry: () => string,
+  provider: () => AddressProvider | undefined,
+  root: () => HTMLDivElement | undefined,
+) {
+  const v = bindable<Address | null>(value, defaultValue, null, onValueChange)
+  const country = state<string | null>(untrack(() => v.value?.country ?? defaultCountry()))
   const format = derived(() => addressFormat(country.value!))
   const manual = state(false)
   const note = state('')
@@ -169,7 +156,7 @@ export function AddressField({
     v.set(withAddressPart(address(), part, text), 'keyboard')
   const fill = async (id: string) => {
     try {
-      const a = await provider!.resolve(id)
+      const a = await provider()!.resolve(id)
       country.value = a.country
       v.set(a, 'keyboard')
       note.value = 'Filled from suggestion. Check line 2.'
@@ -186,17 +173,50 @@ export function AddressField({
       t = addressPart(v.value, 'postalCode').trim()
     return f.postal && t && touched.value.postal && !f.postal.test(t) ? f.postalMessage : undefined
   })
+  use(formReset, root, () => () => {
+    v.reset()
+    country.value = v.value?.country ?? defaultCountry()
+    manual.value = false
+    note.value = ''
+    touched.value = {}
+  })
+  return { v, country, format, manual, note, touched, write, fill, goManual, postal }
+}
+
+function postalBlur(part: AddressPart, touched: ReturnType<typeof state<Record<string, boolean>>>) {
+  return part === 'postalCode'
+    ? () => (touched.value = { ...touched.value, postal: true })
+    : undefined
+}
+
+function setAddressCountry(v: ReturnType<typeof bindable<Address | null>>, country: string | null) {
+  if (v.value) v.set({ ...v.value, country: country! }, 'pointer')
+}
+
+/**
+ * AddressField (04 §3): the country comes first and decides the fields. Line 1 is a combobox when there is a `provider`;
+ * manual entry is one click away, and automatic when the provider fails or takes over 1.5s.
+ */
+export function AddressField({
+  value,
+  defaultValue,
+  onValueChange,
+  label = 'Address',
+  provider,
+  countries,
+  defaultCountry = 'US',
+  locale,
+  name,
+  errors,
+}: AddressFieldProps) {
   let root: HTMLDivElement | undefined
-  use(
-    formReset,
+  const { v, country, format, manual, note, touched, write, fill, goManual, postal } = addressState(
+    () => value,
+    () => defaultValue,
+    () => onValueChange,
+    () => defaultCountry,
+    () => provider,
     () => root,
-    () => () => {
-      v.reset()
-      country.value = v.value?.country ?? defaultCountry
-      manual.value = false
-      note.value = ''
-      touched.value = {}
-    },
   )
   return (
     <div ref={(n) => (root = n)} role="group" aria-label={label} class="stack">
@@ -207,9 +227,7 @@ export function AddressField({
           value={country}
           options={countries}
           locale={locale}
-          onValueChange={(c) => {
-            if (v.value) v.set({ ...v.value, country: c! }, 'pointer')
-          }}
+          onValueChange={(c) => setAddressCountry(v, c)}
         />
         {format.value.fields.map(([part, title, span, auto]) => {
           const problem = derived(() => errors?.[part])
@@ -240,11 +258,7 @@ export function AddressField({
                     (errors ? '' : undefined)
                   }
                   onInput={(e) => write(part, e.currentTarget.value)}
-                  onBlur={
-                    part === 'postalCode'
-                      ? () => (touched.value = { ...touched.value, postal: true })
-                      : undefined
-                  }
+                  onBlur={postalBlur(part, touched)}
                 />
               )}
             </div>
