@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "inputs": {
+    "line-break.ts": "4e58875392dded67dd45079b1bb18bd5cb63a0e0b39292b4ebdb0a7ab2ba8f95",
+    "line-breaks.ts": "4b3b654234a175e06ea672ff903c544e00ae7626698bfa8f83616c84fa0aaee4",
+    "measurement.ts": "119fa85d0aacdab4a9ef81990b4810f7bb67c52edb30b113fc4c2c45b88cb9e8",
+    "rich-inline.ts": "1e58e4426aacb9fea66a8d602bd960e0b2b663cd3ff2fe6b09222f557e832481"
+  },
+  "outputs": {
+    "line-break.ts": "8f59d1a999d4836b641e1407348bba1c67c8c37cc0abd23eb4be44e1c2a2d9f1",
+    "line-break-types.ts": "c20f468df9d86c7c49009ad7a3c6523203f03deee2413f86af544d6d3a487b56",
+    "line-break-simple.ts": "c82badb83626af5fcd50a21ff26e929af905ac0006c1105508a3117781c71c99",
+    "line-break-geometry.ts": "8a5c65ebe93293f7c26f608b21e9d214856911ccd729f7d47aef42c490aa5aaf",
+    "line-breaks.ts": "58be5b99d72490fc73f671edb2fed840b4910db04908ac6666615b98ad2bd398",
+    "line-breaks-codec.ts": "d47579debb10c8ea285346e61036f031ec28be276da81ac2e3d7f125225ffec3",
+    "measurement.ts": "8f154f08bec29f058d0a4f0a0d96f49845e7e7268d72640e7c3fd78e80cd177f",
+    "measurement-profile.ts": "f2fffd1e07a950af0a74ac2536fcb3538fd23f86c532d868ed9bd574c69a11f1",
+    "measurement-types.ts": "8c555a1bb8a737186bfc4b9c34024e0d6e53f88b651fed06057d012b039b6055",
+    "measurement-engine.ts": "9e2f315003944ab3ffed92df4592b5e22ccc62cfe93f269cfd14fe20aa10621a",
+    "measurement-metrics.ts": "b4caf21a5874e3f4c54cf209fe797c2bde757e7cf99b0964e68a69cf474403d9",
+    "measurement-font.ts": "a4bdfea14417ca5085ae94b883691a00351f04ecf65519ba9b1deed9355bf09b",
+    "measurement-spacing.ts": "53c2cac46fe77ee1e04105a5a47b8de888535ebd660bf4c811722053ab387f59",
+    "measurement-emoji-dom.ts": "6cd774035096ce6e2365981aa6497cf99ef3796db95253161627af9b7bbb0199",
+    "rich-inline.ts": "98d48eedb8ba5c14338629b210a7ed869daebe740662a39e36c75f260b684b18",
+    "rich-inline-types.ts": "af5d065e084bf1e9cb8820b9aa5ed4cc9c98bdf5ad26e7e8b3eb5308f8e1a9a2",
+    "rich-inline/objects.ts": "5e8fd980c55668f66926b18813d6c4bd8a778929b502de60d817ed52a7593f74",
+    "rich-inline/lines.ts": "8a0954c0bbf1cbd6fc19d6f76e4af8fedfb7ea084f72395c9586723c08f173da",
+    "rich-inline/sources.ts": "5284059194b648b413753383279ab42db53730f71507ccadb9ae4efa7ecc6444"
+  }
+}

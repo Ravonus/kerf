@@ -20,6 +20,26 @@ import { moveFunctions } from './specialize/move.mjs'
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const vendor = path.join(root, 'vendor/pretext/src')
 const ALPHABET = JSON.parse(fs.readFileSync(path.join(root, 'src/alphabet.json'), 'utf8'))
+const upstream = path.join(root, 'node_modules/@chenglou/pretext/src')
+const upstreamFunctions = new Map(
+  fs
+    .readdirSync(upstream)
+    .filter((f) => f.endsWith('.ts'))
+    .map((f) => [
+      f,
+      new Set(
+        ts
+          .createSourceFile(
+            f,
+            fs.readFileSync(path.join(upstream, f), 'utf8'),
+            ts.ScriptTarget.Latest,
+            true,
+          )
+          .statements.filter((s) => ts.isFunctionDeclaration(s) && s.name)
+          .map((s) => s.name.text),
+      ),
+    ]),
+)
 
 // pack -> module -> functions. Every call site upstream is behind a guard that base text never meets
 // (see the comment per pack); the provider checks the same conditions before it prepares.
@@ -57,7 +77,7 @@ const MOVES = {
 }
 
 function readProfile(engine) {
-  const m = fs.readFileSync(path.join(vendor, 'measurement.ts'), 'utf8')
+  const m = fs.readFileSync(path.join(vendor, 'measurement-engine.ts'), 'utf8')
   const body = m.slice(m.indexOf('function buildEngineProfile'))
   const lit = body.slice(body.indexOf('  return {') + 9, body.indexOf('\n  }\n') + 4)
   // oxlint-disable-next-line no-new-func, typescript/no-implied-eval -- `lit` is the object literal in the vendored, pinned Pretext source, and it has to run to fold its reads
@@ -95,7 +115,14 @@ function foldProfile(src, engine, profile) {
 }
 
 // Modules layout() runs: never split by coverage, since layout must not throw.
-const LAYOUT_TIME = new Set(['line-break.ts', 'layout.ts', 'line-text.ts', 'graphemes.ts'])
+const LAYOUT_TIME = new Set([
+  'line-break.ts',
+  'line-break-simple.ts',
+  'line-break-geometry.ts',
+  'layout.ts',
+  'line-text.ts',
+  'graphemes.ts',
+])
 // Called by the specialiser's own code or the provider.
 const KEEP = new Set([
   '__resetEngineData',
@@ -247,7 +274,7 @@ function prepareModule(f, engine, profile, rare, folds, foundMoves) {
   const r = foldProfile(src, engine, profile)
   src = r.src
   folds.count += r.n
-  if (f === 'measurement.ts') {
+  if (f === 'measurement-engine.ts') {
     // Every profile field is folded at its reads, so the profile object is never read: build an empty one.
     src = src.replace(
       /function buildEngineProfile\(\): EngineProfile \{[\s\S]*?\n\}\n/,
@@ -255,6 +282,8 @@ function prepareModule(f, engine, profile, rare, folds, foundMoves) {
         ? `function buildEngineProfile(): EngineProfile {\n  return { namesGenericFamiliesByLanguage: !/^(?:Linux|Win32|Haiku|$)/.test(navigator.platform) } as EngineProfile\n}\n`
         : `function buildEngineProfile(): EngineProfile {\n  return {} as EngineProfile\n}\n`,
     )
+  }
+  if (f === 'measurement.ts') {
     if (engine === 'webkit') {
       // Resolve the language's generic families on the first font string that names a generic keyword,
       // not on the first measurement: getCanvasFont returns a font without one unchanged, so this is the
@@ -296,6 +325,7 @@ function prepareModule(f, engine, profile, rare, folds, foundMoves) {
         ts.isFunctionDeclaration(st) &&
         st.name &&
         st.body &&
+        upstreamFunctions.get(f)?.has(st.name.text) &&
         !rare.has(st.name.text) &&
         !moves[st.name.text] &&
         !KEEP.has(st.name.text)

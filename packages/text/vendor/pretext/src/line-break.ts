@@ -1,3 +1,8 @@
+import { isDiscretionaryLineEnd, consumesAtLineStart, getTabAdvance, getItemTabAdvance, normalizePreparedLineStart } from './line-break-geometry.js'
+export { isDiscretionaryLineEnd, getItemTabAdvance, normalizeMaxWidth, normalizePreparedLineStart } from './line-break-geometry.js'
+export type { PreparedLineBreakData, PreparedLineData, ParagraphSegmentData } from './line-break-types.js'
+
+import { BREAK_AFTER_KINDS, breaksAfterKind, stepPreparedSimpleLineGeometry, countPreparedSimpleLines } from './line-break-simple.js'
 import {
   CONTROL,
   HARD_BREAK,
@@ -17,78 +22,6 @@ import {
 import type { LayoutCursor, LineStats } from './layout.js'
 import { getEngineProfile } from './measurement.js'
 import type { PreparedLineBreakData, PreparedLineData, ParagraphSegmentData, InternalLineVisitor } from './line-break-types.js'
-
-const BREAK_AFTER_KINDS = 1 << SPACE | 1 << ZERO_WIDTH_BREAK | 1 << SOFT_HYPHEN | 1 << PRESERVED_SPACE | 1 << TAB
-
-export type { PreparedLineBreakData, PreparedLineData, ParagraphSegmentData } from './line-break-types.js'
-
-function breaksAfterKind(kind: number): boolean {
-  return (1 << kind & BREAK_AFTER_KINDS) !== 0
-}
-
-// A line ends at a chosen soft hyphen, and paints its hyphen, where the line's end
-// cursor is the start of the segment after one. A soft hyphen that ends the text is
-// consumed with its line and chosen by no wrap, so the cursor at the text's end
-// paints none.
-export function isDiscretionaryLineEnd(
-  segmentFlags: Uint8Array,
-  segmentCount: number,
-  endSegmentIndex: number,
-  endGraphemeIndex: number,
-): boolean {
-  return endGraphemeIndex === 0 && endSegmentIndex > 0 && endSegmentIndex < segmentCount &&
-    (segmentFlags[endSegmentIndex - 1]! & KIND_BITS) === SOFT_HYPHEN
-}
-
-// At a paragraph or hard-break start, ZWSP is real source: it establishes the
-// line and offers a break after it. UAX #14 forbids an ordinary break before
-// ZWSP. After a forced overflow break browsers can still give ZWSP its own line;
-// that start is consumed here.
-function consumesAtLineStart(kind: number, atChunkStart: boolean): boolean {
-  return kind === SPACE || kind === SOFT_HYPHEN || (kind === ZERO_WIDTH_BREAK && !atChunkStart)
-}
-
-// A tab's advance from `position` on the line: to the next stop, or to the one after where
-// the next is under the minimum away. A tab on a stop is a whole stop from the next, so each
-// tab of a run takes one. Stops no wider than 0, under a letter spacing of minus a space or
-// less, leave a tab no advance: Gecko gives tabs no width there (GetSpacingInternal,
-// nsTextFrame.cpp:4262-4264), and Blink's, negative by Font::TabWidth, is clamped to 0 where
-// the tab's item is placed (ClampNegativeToZero, line_breaker.cc:1486, 1703). Gecko counts in
-// whole app units (EngineProfile's tabsInAppUnits), so a tab exactly the minimum from its
-// stop takes it, as many do: in Arial and Helvetica a space is half a `0`. Canvas sums come
-// within float error of such a tie.
-function getTabAdvance(position: number, tabStopAdvance: number, minimumAdvance: number, appUnits: boolean): number {
-  if (appUnits) {
-    const stop = Math.round(tabStopAdvance * 60)
-    if (stop <= 0) return 0
-    const x = Math.round(position * 60)
-    return (Math.ceil((x + Math.round(minimumAdvance * 120) / 2) / stop) * stop - x) / 60
-  }
-  if (tabStopAdvance <= 0) return 0
-
-  // How far the tab is past the stop before it, by a division and a floor, which counts back
-  // from a negative position too. `%` gives the same, within float error, but on numbers that
-  // aren't whole it is a call to the C library's fmod, which was nearly all a tab's arithmetic
-  // cost (RESEARCH.md, JavaScript Engines).
-  const pastStop = position - Math.floor(position / tabStopAdvance) * tabStopAdvance
-  const advance = tabStopAdvance - pastStop
-  return advance < minimumAdvance ? advance + tabStopAdvance : advance
-}
-
-// The advance of tab segment `index` of a rich-inline paragraph, which the line reaches at
-// `lineWidth`: to the next stop of its item's font. Tab stops count from the line's start in
-// every engine, never from an item's (Blink's line_breaker.cc:2963-2971, WebKit's pen position,
-// Gecko's CalcTabWidths, nsTextFrame.cpp:4298-4378). A padded item's text starts after its start
-// edge, half its extraWidth, all of which `lineWidth` counts, for a tab that starts the line too
-// (lineStartExtras): the other half is the end edge, which follows the item's text on the line.
-// Where the paragraph's items differ in letter spacing, a tab's width holds the gap after it, as
-// every segment's holds its own (src/rich-inline.ts); else it is 0.
-export function getItemTabAdvance(prepared: PreparedLineData, items: ParagraphSegmentData, index: number, lineWidth: number, appUnits: boolean): number {
-  const stopAdvance = items.tabStopAdvances === null ? prepared.tabStopAdvance : items.tabStopAdvances[index]!
-  const minimumAdvance = items.minimumTabAdvances === null ? prepared.minimumTabAdvance : items.minimumTabAdvances[index]!
-  const endEdge = items.insideExtras === null ? 0 : items.insideExtras[index]! / 2
-  return getTabAdvance(lineWidth - endEdge, stopAdvance, minimumAdvance, appUnits) + prepared.widths[index]!
-}
 
 function getTerminalLetterSpacing(
   prepared: PreparedLineData,
@@ -126,54 +59,6 @@ function getTerminalLetterSpacing(
   }
 
   return 0
-}
-
-// The width a paragraph is laid out at: `NaN`, which a typed caller can pass, is unbounded.
-// Every comparison fails at `NaN`, and the line loops ask some whether a segment fits and
-// others whether it overflows, so the line APIs called once for a paragraph pass their width
-// through here and the loops stay written for numbers. The streams, called once for each
-// line, take their width as given (RESEARCH.md, Decisions Log, 2026-10-02).
-export function normalizeMaxWidth(maxWidth: number): number {
-  return maxWidth <= Infinity ? maxWidth : Infinity
-}
-
-// Mutates `cursor` to the next renderable line start. False when no line remains.
-// A chunk runs to a hard break or the end of the text, and the hard break ends a
-// line however little the chunk holds: a chunk holding only its hard break, or only
-// source a line start consumes before it, such as soft hyphens, is an empty line,
-// which starts at its hard break. The rest of a chunk after a line that wrapped
-// inside it is no line of its own when a line start consumes all of it.
-export function normalizePreparedLineStart(
-  prepared: PreparedLineData,
-  cursor: LayoutCursor,
-): boolean {
-  const { segmentFlags } = prepared
-  const segmentCount = prepared.widths.length
-  let segmentIndex = cursor.segmentIndex
-  if (segmentIndex >= segmentCount) return false
-  if (cursor.graphemeIndex > 0) return true
-
-  let atChunkStart = segmentIndex === 0 || (segmentFlags[segmentIndex - 1]! & KIND_BITS) === HARD_BREAK
-  while (true) {
-    const kind = segmentFlags[segmentIndex]! & KIND_BITS
-    if (kind === HARD_BREAK) {
-      if (atChunkStart) {
-        cursor.segmentIndex = segmentIndex
-        cursor.graphemeIndex = 0
-        return true
-      }
-      if (++segmentIndex >= segmentCount) return false
-      cursor.segmentIndex = segmentIndex
-      cursor.graphemeIndex = 0
-      atChunkStart = true
-    } else if (consumesAtLineStart(kind, atChunkStart)) {
-      if (++segmentIndex >= segmentCount) return false
-    } else {
-      cursor.segmentIndex = segmentIndex
-      cursor.graphemeIndex = 0
-      return true
-    }
-  }
 }
 
 // Walks every line of the text into `stats`, visiting each, and returns the line count.
@@ -222,59 +107,7 @@ export function countPreparedLines(prepared: PreparedLineData, maxWidth: number)
   if (!prepared.simpleLineWalkFastPath || prepared.overflowLineEndTrims !== null) {
     return prepared.simpleLineCountFastPath ? countSteppedLines(prepared, maxWidth) : walkPreparedLinesRaw(prepared, maxWidth)
   }
-  const { widths, segmentFlags, breakableFitAdvances, breakableLineStartExtras, lineStartExtras, lineEndTrims } = prepared
-  const fitLimit = Math.max(0, maxWidth) + getEngineProfile().lineFitEpsilon
-  const segmentCount = widths.length
-  let count = 0
-  // Every line starts at 0 and adds its content's widths. Firefox runs this loop
-  // about 1.6 times as long when a line's width is set from a segment's width
-  // instead (RESEARCH.md, Keeping Work Bounded).
-  let lineW = 0
-  let hasContent = false
-
-  // A ZWSP at the start of the text starts the first line.
-  for (let i = 0; i < segmentCount; i++) {
-    const kind = segmentFlags[i]! & KIND_BITS
-    const w = widths[i]!
-    const endTrim = lineEndTrims === null ? 0 : lineEndTrims[i]!
-    if (hasContent) {
-      // A segment that fits only by its line-end trim ends the line, as the full
-      // width it adds leaves no room after it.
-      if (lineW + w - endTrim <= fitLimit) {
-        lineW += w
-        continue
-      }
-      count++
-      lineW = 0
-      hasContent = false
-      if (kind !== TEXT) continue
-    } else if (kind === SPACE || (kind === ZERO_WIDTH_BREAK && i > 0)) {
-      continue
-    }
-
-    const startW = lineStartExtras === null ? w : w + lineStartExtras[i]!
-    const advances = breakableFitAdvances[i] as number[] | null
-    if (startW - endTrim <= fitLimit || advances === null) {
-      lineW += startW
-      hasContent = true
-      continue
-    }
-    // An overflowing breakable segment fills lines grapheme by grapheme.
-    const startExtras = breakableLineStartExtras?.[i] ?? null
-    let g = 0
-    while (g < advances.length) {
-      if (startExtras !== null) lineW += startExtras[g]!
-      lineW += advances[g++]!
-      while (g < advances.length && lineW + advances[g]! <= fitLimit) lineW += advances[g++]!
-      if (g < advances.length) {
-        count++
-        lineW = 0
-      } else {
-        hasContent = true
-      }
-    }
-  }
-  return count + (hasContent ? 1 : 0)
+  return countPreparedSimpleLines(prepared, maxWidth)
 }
 
 // layout()'s count of text of the simple walkers' kinds where the scan gives no
@@ -933,71 +766,6 @@ function walkPreparedComplexLines(
     if (singleLine || !normalizePreparedLineStart(prepared, cursor)) break
   }
   return lastLineWidth
-}
-
-// Steps one line of a fast-path handle from a normalized line start.
-function stepPreparedSimpleLineGeometry(
-  prepared: PreparedLineData,
-  cursor: LayoutCursor,
-  maxWidth: number,
-): number {
-  const { widths, segmentFlags, breakableFitAdvances, lineStartExtras, lineEndTrims, overflowLineEndTrims } = prepared
-  // A negative width lays out as 0, as in the complex walker.
-  const fitLimit = Math.max(0, maxWidth) + getEngineProfile().lineFitEpsilon
-  const start = cursor.segmentIndex
-
-  // The first segment of the line, or the rest of one a line ended inside. One that
-  // overflows and can break fills the line grapheme by grapheme.
-  const startAdvances = breakableFitAdvances[start]
-  const startW = lineStartExtras === null ? widths[start]! : widths[start]! + lineStartExtras[start]!
-  const startEndTrim = lineEndTrims === null ? 0 : lineEndTrims[start]!
-  // Blink's retry between graphemes halts an overflowing first segment where that lets it fit.
-  const startTrim = overflowLineEndTrims !== null && startW - overflowLineEndTrims[start]! <= fitLimit
-    ? overflowLineEndTrims[start]!
-    : startEndTrim
-  let lineW: number
-  // The line-end trim of the last segment, where only that trim let it fit. Every
-  // later segment overflows, so the line ends after it and paints that much less.
-  let endTrimmed = 0
-  if (cursor.graphemeIndex > 0 || (startW - startTrim > fitLimit && startAdvances !== null)) {
-    const fitAdvances = startAdvances!
-    const startExtras = prepared.breakableLineStartExtras?.[start] ?? null
-    let g = cursor.graphemeIndex + 1
-    lineW = startExtras === null ? fitAdvances[g - 1]! : fitAdvances[g - 1]! + startExtras[g - 1]!
-    // A line that starts inside a padded rich-inline item, or fills its first segment, pays
-    // the item's extraWidth (ParagraphSegmentData).
-    const items = prepared.items
-    if (items !== undefined && (g > 1 ? items.insideExtras !== null : items.fillExtras !== null)) lineW += g > 1 ? items.insideExtras![start]! : items.fillExtras![start]!
-    for (; g < fitAdvances.length; g++) {
-      if (lineW + fitAdvances[g]! > fitLimit) {
-        cursor.graphemeIndex = g
-        return lineW
-      }
-      lineW += fitAdvances[g]!
-    }
-  } else {
-    lineW = startW
-    if (startW > fitLimit) endTrimmed = startTrim
-  }
-
-  // Every boundary of a fast-path handle is a break, so the line takes whole
-  // segments until one overflows. An overflowing space or ZWSP hangs and ends the
-  // line; before other text, the line leaves out a space or ZWSP it ends with.
-  for (let i = start + 1; i < widths.length; i++) {
-    const w = widths[i]!
-    const endTrim = lineEndTrims === null ? 0 : lineEndTrims[i]!
-    if (lineW + w - endTrim > fitLimit) {
-      const hangs = breaksAfterKind(segmentFlags[i]! & KIND_BITS)
-      cursor.segmentIndex = hangs ? i + 1 : i
-      cursor.graphemeIndex = 0
-      return !hangs && breaksAfterKind(segmentFlags[i - 1]! & KIND_BITS) ? lineW - widths[i - 1]! : lineW - endTrimmed
-    }
-    lineW += w
-    endTrimmed = lineW > fitLimit ? endTrim : 0
-  }
-  cursor.segmentIndex = widths.length
-  cursor.graphemeIndex = 0
-  return lineW - endTrimmed
 }
 
 // Steps one line from a normalized line start. A cursor inside a segment needs that segment's

@@ -53,8 +53,9 @@ A handle has `exact` and `ready`. While a pack it needs is still loading, `layou
 
 ## How it is built
 
-- **`vendor/pretext/`** is the unmodified source of the pinned npm tarball. Its version, sha256 and integrity are in
-  `package.json` under `pretext`.
+- **`vendor/pretext/`** is a mechanically split copy of the pinned npm tarball. Its version, sha256 and integrity are in
+  `package.json` under `pretext`; the independent accuracy reference uses the installed pin.
+  `node scripts/pretext-split.mjs` checks the split against its pinned input and patch; pass `--write` to regenerate it.
 - **`scripts/specialize.mjs`** writes `gen/<engine>/`:
   - It folds the engine profile to constants, so esbuild drops the other engines' code.
   - It re-encodes the break data for that engine only, restricted to `src/alphabet.json`. The scan's state machines

@@ -1,7 +1,8 @@
+import { getSourceUnits, textSources, findSegmentSources, getSourceOffset } from './rich-inline/sources.js'
+import { createLine, createOnlyItemLine } from './rich-inline/lines.js'
 import { getHyphenRooms, setEmptyObjectFacts } from './rich-inline/objects.js'
 import type { LayoutCursor } from './layout.js'
 import {
-  alignToSource,
   analyzeText,
   isCollapsibleSpaceCode,
   HARD_BREAK,
@@ -21,7 +22,6 @@ import {
 } from './analysis.js'
 import { buildLineTextFromRange, buildRangeText, getGraphemeEnds, type PreparedSegments } from './line-text.js'
 import {
-  getItemTabAdvance,
   normalizeMaxWidth,
   normalizePreparedLineStart,
   stepPreparedLineGeometryFromStart,
@@ -49,7 +49,7 @@ import { measureAnalysis, type ParagraphLists } from './prepare.js'
 //   every line the item reaches
 // A line's fragments are its segments cut where the item changes.
 
-import type { RichInlineItem, RichInlineBox, RichInlineOptions, PreparedRichInline, RichInlineCursor, RichInlineFragment, RichInlineFragmentRange, RichInlineLine, RichInlineLineRange, RichInlineStats, InternalRichInlineFragment, InternalPreparedRichInline } from './rich-inline-types.js'
+import type { RichInlineItem, RichInlineBox, RichInlineOptions, PreparedRichInline, RichInlineCursor, RichInlineFragment, RichInlineLine, RichInlineLineRange, RichInlineStats, InternalRichInlineFragment, InternalPreparedRichInline } from './rich-inline-types.js'
 export type { RichInlineItem, RichInlineBox, RichInlineOptions, PreparedRichInline, RichInlineCursor, RichInlineFragment, RichInlineFragmentRange, RichInlineLine, RichInlineLineRange, RichInlineStats } from './rich-inline-types.js'
 
 const PRESERVED_WHITE_SPACE = 1 << PRESERVED_SPACE | 1 << TAB
@@ -64,19 +64,53 @@ function getInternalPreparedRichInline(prepared: PreparedRichInline): InternalPr
   return prepared as InternalPreparedRichInline
 }
 
-export function prepareRichInline(items: Array<RichInlineItem | RichInlineBox>, options?: RichInlineOptions): PreparedRichInline {
-  const whiteSpace = options?.whiteSpace ?? 'normal'
-  const wordBreak = options?.wordBreak ?? 'normal'
-  const preserve = whiteSpace === 'pre-wrap'
-  // One language read for the paragraph's analysis and every item's measurement.
-  const profile = getEngineProfile()
-  const language = getPreparationLanguage(profile)
-  // Whether a line can end before preserved white space that starts an item: WebKit finds a soft
-  // wrap opportunity next to every white-space item (isAtSoftWrapOpportunity,
-  // InlineFormattingUtils.cpp:406-418), which is part of how it finds breaks between inline items,
-  // so the profile's scan names it.
-  const whiteSpaceItemBreaks = profile.lineBreakScan === 'webkit'
+function appendObject(
+  item: RichInlineItem | RichInlineBox, profile: EngineProfile,
+  wordBreak: NonNullable<RichInlineOptions['wordBreak']>, language: string | null,
+  flags: Uint8Array, widths: number[], segments: string[], breakableFitAdvances: (number[] | null)[],
+  sourceStarts: number[], sourceEnds: number[],
+): boolean {
+  // One object: a box's width, or the width of the item's text on a line of its own, laid out
+  // in normal white space, as a chip's box with `white-space: nowrap` collapses its own, plus
+  // its extraWidth: all three browsers lay out a pre-wrap paragraph of 15px Helvetica Neue with
+  // the 12px chip ` @bob ` 6.6px narrower than the chip's text with its spaces. It is prepared
+  // without emergency breaks, as it is only laid out whole.
+  let width = 0
+  let text = ''
+  let textStart = 0
+  let textEnd = 0
+  if (item.text === undefined) {
+    width = item.width
+  } else {
+    const ownAnalysis = analyzeText(item.text, profile, 'normal', wordBreak, language)
+    const own = measureAnalysis(ownAnalysis, 0, ownAnalysis.flags.length, item.font, false, readLetterSpacing(item.letterSpacing, profile), profile, language, false, null)
+    const start: LayoutCursor = { segmentIndex: 0, graphemeIndex: 0 }
+    if (normalizePreparedLineStart(own, start)) width = stepPreparedLineGeometryFromStart(own, start, Number.POSITIVE_INFINITY)!
+    width += item.extraWidth ?? 0
+    // The chip's text as a line of it paints it (buildLineTextFromRange).
+    for (let i = 0; i < ownAnalysis.texts.length; i++) {
+      const kind = own.segmentFlags[i]! & KIND_BITS
+      const ownText = ownAnalysis.texts[i]!
+      if (kind !== SOFT_HYPHEN && kind !== HARD_BREAK && !((kind === ZERO_WIDTH_GLUE || kind === ZERO_WIDTH_BREAK) && ownText.charCodeAt(0) === 0x00AD)) text += ownText
+    }
+    while (isCollapsibleSpaceCode(item.text.charCodeAt(textStart))) textStart++
+    textEnd = item.text.length
+    while (textEnd > textStart && isCollapsibleSpaceCode(item.text.charCodeAt(textEnd - 1))) textEnd--
+  }
+  flags[widths.length] = OBJECT
+  widths.push(width)
+  segments.push(text)
+  breakableFitAdvances.push(null)
+  sourceStarts.push(textStart)
+  sourceEnds.push(textEnd)
+  return width === 0
+}
 
+function singleItem(
+  items: Array<RichInlineItem | RichInlineBox>, profile: EngineProfile,
+  whiteSpace: NonNullable<RichInlineOptions['whiteSpace']>, wordBreak: NonNullable<RichInlineOptions['wordBreak']>,
+  language: string | null,
+): InternalPreparedRichInline | null {
   // A paragraph of one styled run that isn't atomic and has no extraWidth is the most common one,
   // and is that run's text: its handle is the one prepareWithSegments() makes, laid out as
   // layout()'s walkers lay it out. So is a paragraph whose other items are empty, which are
@@ -102,6 +136,10 @@ export function prepareRichInline(items: Array<RichInlineItem | RichInlineBox>, 
     } as InternalPreparedRichInline)
   }
 
+  return null
+}
+
+function collectItems(items: Array<RichInlineItem | RichInlineBox>, profile: EngineProfile) {
   // The paragraph's text: the items' texts joined, an atomic item or a box as one U+FFFC. An atomic
   // item's own white space is none of the paragraph's: its inline-block lays its text out as a
   // paragraph of its own, whose lines drop white space at their start and end. Blink puts the box in
@@ -159,6 +197,26 @@ export function prepareRichInline(items: Array<RichInlineItem | RichInlineBox>, 
     if (!isAtomic && (item.extraWidth ?? 0) !== 0) padded++
     if ((item.extraWidth ?? 0) < 0) mayNarrow = true
   }
+  return { source, starts, atomic, paddedOrObject, padded, sharedSpacing, spacingsDiffer, mayNarrow }
+}
+
+export function prepareRichInline(items: Array<RichInlineItem | RichInlineBox>, options?: RichInlineOptions): PreparedRichInline {
+  const whiteSpace = options?.whiteSpace ?? 'normal'
+  const wordBreak = options?.wordBreak ?? 'normal'
+  const preserve = whiteSpace === 'pre-wrap'
+  // One language read for the paragraph's analysis and every item's measurement.
+  const profile = getEngineProfile()
+  const language = getPreparationLanguage(profile)
+  // Whether a line can end before preserved white space that starts an item: WebKit finds a soft
+  // wrap opportunity next to every white-space item (isAtSoftWrapOpportunity,
+  // InlineFormattingUtils.cpp:406-418), which is part of how it finds breaks between inline items,
+  // so the profile's scan names it.
+  const whiteSpaceItemBreaks = profile.lineBreakScan === 'webkit'
+
+  const single = singleItem(items, profile, whiteSpace, wordBreak, language)
+  if (single !== null) return single
+
+  const { source, starts, atomic, paddedOrObject, padded, sharedSpacing, spacingsDiffer, mayNarrow } = collectItems(items, profile)
   const paragraph: ParagraphItems = { items, starts, atomic, ownSegmentBreaks: !profile.transformsSegmentBreaksAcrossItems, sourceOffsets: null }
   const analysis = analyzeText(source, profile, whiteSpace, wordBreak, language, paragraph)
   const offsets = paragraph.sourceOffsets!
@@ -224,44 +282,11 @@ export function prepareRichInline(items: Array<RichInlineItem | RichInlineBox>, 
     itemStart = widths.length
 
     if (item.text === undefined || atomic[index]) {
-      // One object: a box's width, or the width of the item's text on a line of its own, laid out
-      // in normal white space, as a chip's box with `white-space: nowrap` collapses its own, plus
-      // its extraWidth: all three browsers lay out a pre-wrap paragraph of 15px Helvetica Neue with
-      // the 12px chip ` @bob ` 6.6px narrower than the chip's text with its spaces. It is prepared
-      // without emergency breaks, as it is only laid out whole.
-      let width = 0
-      let text = ''
-      let textStart = 0
-      let textEnd = 0
-      if (item.text === undefined) {
-        width = item.width
-      } else {
-        const ownAnalysis = analyzeText(item.text, profile, 'normal', wordBreak, language)
-        const own = measureAnalysis(ownAnalysis, 0, ownAnalysis.flags.length, item.font, false, readLetterSpacing(item.letterSpacing, profile), profile, language, false, null)
-        const start: LayoutCursor = { segmentIndex: 0, graphemeIndex: 0 }
-        if (normalizePreparedLineStart(own, start)) width = stepPreparedLineGeometryFromStart(own, start, Number.POSITIVE_INFINITY)!
-        width += item.extraWidth ?? 0
-        // The chip's text as a line of it paints it (buildLineTextFromRange).
-        for (let i = 0; i < ownAnalysis.texts.length; i++) {
-          const kind = own.segmentFlags[i]! & KIND_BITS
-          const ownText = ownAnalysis.texts[i]!
-          if (kind !== SOFT_HYPHEN && kind !== HARD_BREAK && !((kind === ZERO_WIDTH_GLUE || kind === ZERO_WIDTH_BREAK) && ownText.charCodeAt(0) === 0x00AD)) text += ownText
-        }
-        while (isCollapsibleSpaceCode(item.text.charCodeAt(textStart))) textStart++
-        textEnd = item.text.length
-        while (textEnd > textStart && isCollapsibleSpaceCode(item.text.charCodeAt(textEnd - 1))) textEnd--
-      }
-      // Gecko places an object of width 0 otherwise than the simple walker does (walkPreparedComplexLines).
-      if (width === 0) {
+      if (appendObject(item, profile, wordBreak, language, flags, widths, segments, breakableFitAdvances, sourceStarts, sourceEnds)) {
+        // Gecko places an object of width 0 otherwise than the simple walker does (walkPreparedComplexLines).
         simple = false
         hasEmptyObject = true
       }
-      flags[widths.length] = OBJECT
-      widths.push(width)
-      segments.push(text)
-      breakableFitAdvances.push(null)
-      sourceStarts.push(textStart)
-      sourceEnds.push(textEnd)
       from = to
       continue
     }
@@ -644,216 +669,6 @@ function getOpeningFit(flags: number[], from: number, to: number, extraWidth: nu
   return extraWidth
 }
 
-// The width on a line of graphemes [from, to) of segment i, to its end where `to` is -1: a line
-// starts or ends inside its first and its last segment only. Where they start the line
-// (`startsLine`), the first of them adds what a line that starts with it does
-// (breakableLineStartExtras), as the walker's line does.
-function getPartWidth(data: PreparedSegments, i: number, from: number, to: number, startsLine: boolean): number {
-  const { breakableFitAdvances, breakableLineStartExtras, letterSpacing, items } = data
-  const advances = breakableFitAdvances[i]!
-  if (to < 0) to = advances.length
-  let w = 0
-  for (let g = from; g < to; g++) w += advances[g]! + letterSpacing
-  const startExtras = startsLine && breakableLineStartExtras !== null ? breakableLineStartExtras[i]! : null
-  if (startExtras !== null) w += startExtras[from]!
-  if (items !== undefined && (from > 0 ? items.insideExtras !== null : items.fillExtras !== null)) w += from > 0 ? items.insideExtras![i]! : items.fillExtras![i]!
-  return w
-}
-
-// A line of a paragraph whose only item with segments has no extraWidth (onlyItem), as most of a
-// chat's are: one fragment of that item, as wide as the line. Every segment is that item's, so a
-// place in the paragraph is the same place in the item. A function of its own, which the walk and
-// the stream call for such a paragraph: with it Safari 27 walked and streamed the chat demo's
-// paragraphs 8.0% and 8.6% faster than with that line as a branch of createLine() and Chrome 154
-// walked them 4.2% faster, and it cost Chrome's walk of items that are a word or a space each 5.3%
-// and Firefox 156's walk of the demo's styled paragraphs 2.2% (RESEARCH.md, Rich Inline As One
-// Paragraph; Decisions Log, 2026-10-08).
-function createOnlyItemLine(
-  flow: InternalPreparedRichInline,
-  width: number,
-  startSegmentIndex: number,
-  startGraphemeIndex: number,
-  endSegmentIndex: number,
-  endGraphemeIndex: number,
-): RichInlineLineRange {
-  const { onlyItem } = flow
-  const ended = endSegmentIndex >= flow.data.widths.length
-  return {
-    fragments: [{
-      itemIndex: onlyItem,
-      gapBefore: 0,
-      gapItemIndex: -1,
-      occupiedWidth: width,
-      start: { segmentIndex: startSegmentIndex, graphemeIndex: startGraphemeIndex },
-      end: { segmentIndex: endSegmentIndex, graphemeIndex: endGraphemeIndex },
-    }],
-    width: Math.max(0, width),
-    end: { itemIndex: ended ? flow.itemSegments.length - 1 : onlyItem, segmentIndex: ended ? 0 : endSegmentIndex, graphemeIndex: endGraphemeIndex },
-  }
-}
-
-// A line of the paragraph from the text walkers' line: its segments cut into fragments where the
-// item changes. A collapsed space at an item's start or end is no fragment's text but the gap
-// before the next fragment on the line, as that item's white space made it. Each fragment's width
-// is its segments' on this line, and the fragments add up to the line's width: what the line's
-// width leaves out at its end comes out of the last fragments and the gaps before them, from the
-// line's end back, as white space that hangs there, but never out of the edge of a padded item's
-// opening, which the line paints whole (getOpeningFit), and what it adds, the hyphen of a soft
-// hyphen the line ends at, goes to the last one. One loop over the line's segments: where a
-// fragment or a gap starts, the paragraph's lists give where that fragment ends, so every other
-// segment only adds its width. A line where no segment's width depends on the line (`bare`), as
-// nearly every line of styled prose is, has a loop of its own that adds bare widths: in one loop
-// with the widths that tabs, letter spacing, halts and a line's edges need, Chrome walked the chat
-// demo's styled paragraphs about 19% slower and Safari 8% (two runs against one build). The widths
-// of the two segments a line can start or end inside are found before the loops, and neither holds
-// another loop or a search: a search for the item, or a call or a loop inside one for a width it
-// rarely needs, cost Firefox a third to a half of a walk's time, and a loop inside for each
-// fragment's widths 9% on items of one segment (RESEARCH.md, Rich Inline As One Paragraph).
-function createLine(
-  flow: InternalPreparedRichInline,
-  width: number,
-  startSegmentIndex: number,
-  startGraphemeIndex: number,
-  endSegmentIndex: number,
-  endGraphemeIndex: number,
-): RichInlineLineRange {
-  const { data, itemSegments } = flow
-  const { widths, segmentFlags, lineStartExtras, letterSpacing } = data
-  const items = data.items!
-  const segmentItems = flow.segmentItems!
-  const gapSegments = flow.gapSegments!
-  const itemCount = itemSegments.length - 1
-  const endItemIndex = endSegmentIndex >= widths.length ? itemCount : segmentItems[endSegmentIndex]!
-  const end: RichInlineCursor = { itemIndex: endItemIndex, segmentIndex: endSegmentIndex - itemSegments[endItemIndex]!, graphemeIndex: endGraphemeIndex }
-  const tabsInAppUnits = getEngineProfile().tabsInAppUnits
-  const itemEndHalts = items.itemEndHalts
-  const fragments: RichInlineFragmentRange[] = []
-  const lastSegmentIndex = endGraphemeIndex > 0 ? endSegmentIndex : endSegmentIndex - 1
-  const firstPartWidth = startSegmentIndex <= lastSegmentIndex && (startGraphemeIndex > 0 || startSegmentIndex === endSegmentIndex)
-    ? getPartWidth(data, startSegmentIndex, startGraphemeIndex, startSegmentIndex < endSegmentIndex ? -1 : endGraphemeIndex, true) : 0
-  const lastPartWidth = endGraphemeIndex > 0 && endSegmentIndex > startSegmentIndex ? getPartWidth(data, endSegmentIndex, 0, endGraphemeIndex, false) : 0
-  // Whether each of the line's segments is as wide on it as its width: in a paragraph of plain
-  // widths, a line that starts and ends between segments and adds nothing at its start.
-  const bare = flow.plainWidths && startGraphemeIndex === 0 && endGraphemeIndex === 0 && (lineStartExtras === null || lineStartExtras[startSegmentIndex] === 0)
-  // The line's width so far, and the gap that waits for a fragment.
-  let lineW = 0
-  let gap = 0
-  let gapItemIndex = -1
-  // The last fragment made, its width so far, and the segment after its last.
-  let fragment: RichInlineFragmentRange | null = null
-  let occupiedWidth = 0
-  let to = startSegmentIndex
-  if (bare) {
-    for (let i = startSegmentIndex; i <= lastSegmentIndex; i++) {
-      if (i === to) {
-        if (fragment !== null) fragment.occupiedWidth = occupiedWidth
-        const itemIndex = segmentItems[i]!
-        if (gapSegments[i]! !== 0) {
-          gap = widths[i]!
-          gapItemIndex = itemIndex
-          to = i + 1
-          continue
-        }
-        const first = itemSegments[itemIndex]!
-        to = Math.min(itemSegments[itemIndex + 1]!, lastSegmentIndex + 1)
-        if (gapSegments[to - 1]! !== 0) to--
-        fragment = { itemIndex, gapBefore: gap, gapItemIndex, occupiedWidth: 0, start: { segmentIndex: i - first, graphemeIndex: 0 }, end: { segmentIndex: to - first, graphemeIndex: 0 } }
-        fragments.push(fragment)
-        lineW += gap
-        gap = 0
-        gapItemIndex = -1
-        occupiedWidth = 0
-      }
-      occupiedWidth += widths[i]!
-      lineW += widths[i]!
-    }
-  } else {
-    for (let i = startSegmentIndex; i <= lastSegmentIndex; i++) {
-      if (i === to) {
-        if (fragment !== null) fragment.occupiedWidth = occupiedWidth
-        const itemIndex = segmentItems[i]!
-        if (gapSegments[i]! !== 0) {
-          // A collapsed space is no tab and no halted mark, and no line starts with one or ends inside one.
-          gap = widths[i]! + (letterSpacing !== 0 && (segmentFlags[i]! & SPACED) !== 0 ? letterSpacing : 0)
-          gapItemIndex = itemIndex
-          to = i + 1
-          continue
-        }
-        // The fragment's segments end at `to`: the item's on the line, less the collapsed space that ends it.
-        const first = itemSegments[itemIndex]!
-        to = Math.min(itemSegments[itemIndex + 1]!, lastSegmentIndex + 1)
-        if (gapSegments[to - 1]! !== 0) to--
-        const endsInside = to > endSegmentIndex
-        fragment = {
-          itemIndex,
-          gapBefore: gap,
-          gapItemIndex,
-          occupiedWidth: 0,
-          start: { segmentIndex: i - first, graphemeIndex: i === startSegmentIndex ? startGraphemeIndex : 0 },
-          end: { segmentIndex: (endsInside ? endSegmentIndex : to) - first, graphemeIndex: endsInside ? endGraphemeIndex : 0 },
-        }
-        fragments.push(fragment)
-        lineW += gap
-        gap = 0
-        gapItemIndex = -1
-        occupiedWidth = 0
-      }
-      // A segment's width on the line, with the letter spacing after each of its graphemes, as a
-      // fragment's width counts it.
-      let w: number
-      if ((i > startSegmentIndex || startGraphemeIndex === 0) && i < endSegmentIndex) {
-        const startExtra = i === startSegmentIndex && lineStartExtras !== null ? lineStartExtras[i]! : 0
-        w = startExtra + ((segmentFlags[i]! & KIND_BITS) !== TAB ? widths[i]! : getItemTabAdvance(data, items, i, lineW + startExtra, tabsInAppUnits))
-        if (letterSpacing !== 0 && (segmentFlags[i]! & SPACED) !== 0) w += letterSpacing
-      } else {
-        w = i === startSegmentIndex ? firstPartWidth : lastPartWidth
-      }
-      // A mark that ends its item was halted where the line went on after it: the line is then
-      // narrower than its segments up to the mark (ParagraphSegmentData, itemEndHalts), since what
-      // follows a halted mark fits in less than the halt. Premise: what follows a mark on its line
-      // takes no less than no room. Its gap is an item after the mark whose letter spacing is more
-      // negative than its letters are wide, where a mark that wasn't halted gives its halt to the
-      // line's last fragment; the line's width and breaks are the walker's either way. The 1e-6px
-      // is room for float error: the walker adds the same advances in another order, so where
-      // nothing after a mark that wasn't halted takes room, the segments up to it can add up to
-      // more than the line by a few units in the last place of the line's width (one is 6e-14px on
-      // a line of 300px, 6e-11px on one of 280,000px), and the mark would read as halted, its halt
-      // going to the line's last fragment.
-      if (itemEndHalts !== null && itemEndHalts[i]! !== 0 && lineW + w - width > 1e-6) w -= itemEndHalts[i]!
-      occupiedWidth += w
-      lineW += w
-    }
-  }
-  if (fragment !== null) fragment.occupiedWidth = occupiedWidth
-
-  let rest = lineW - width
-  if (rest < 0 && fragments.length > 0) fragments[fragments.length - 1]!.occupiedWidth -= rest
-  const openingEdges = items.openingEdges
-  for (let k = fragments.length - 1; k >= 0 && rest > 0; k--) {
-    const last = fragments[k]!
-    // The edge of a padded opening stays painted: it is the first segment of its item, so of a fragment.
-    const edge = openingEdges === null || last.start.graphemeIndex > 0 ? 0 : openingEdges[itemSegments[last.itemIndex]! + last.start.segmentIndex]!
-    if (last.occupiedWidth > edge) {
-      const part = Math.min(rest, last.occupiedWidth - edge)
-      last.occupiedWidth -= part
-      rest -= part
-    }
-    if (rest > 0 && last.gapBefore > 0) {
-      const part = Math.min(rest, last.gapBefore)
-      last.gapBefore -= part
-      rest -= part
-      // A gap taken whole is none, and so is one with under 1e-9px left, which could only be float
-      // error. That needs a width the line leaves out, such as a mark's halt, to be as wide as the
-      // gap to the last bits, which no rule makes it.
-      if (last.gapBefore < 1e-9) {
-        last.gapBefore = 0
-        last.gapItemIndex = -1
-      }
-    }
-  }
-  return { fragments, width: Math.max(0, width), end }
-}
-
 // The paragraph's segment a cursor names, or the segment count for one past the last item.
 function getSegmentIndex(flow: InternalPreparedRichInline, cursor: RichInlineCursor): number {
   const { itemSegments } = flow
@@ -878,65 +693,6 @@ export function layoutNextRichInlineLineRange(
   if (width === null) return null
   return flow.onlyItem >= 0 ? createOnlyItemLine(flow, width, startSegmentIndex, startGraphemeIndex, lineEnd.segmentIndex, lineEnd.graphemeIndex)
     : createLine(flow, width, startSegmentIndex, startGraphemeIndex, lineEnd.segmentIndex, lineEnd.graphemeIndex)
-}
-
-// Where units [from, to) of a paragraph's normalized text are in the text of the item that starts
-// at `itemStart`, from the offset in the paragraph's text each unit comes from, where they aren't
-// one stretch of it: Gecko removes a line feed between two ideographs, and white space after a bidi
-// control that follows white space. Else null.
-function getSourceUnits(offsets: Int32Array, from: number, to: number, itemStart: number): number[] | null {
-  if (to <= from || offsets[to - 1]! - offsets[from]! === to - 1 - from) return null
-  const units: number[] = []
-  for (let unit = from; unit < to; unit++) units.push(offsets[unit]! - itemStart)
-  return units
-}
-
-// Per frozen handle of a paragraph that is one text's handle, the three lists of where its
-// segments are in the item's text (InternalPreparedRichInline), found when a line of it is
-// first materialized. A handle keeps them itself; a frozen one can't take them, so they are
-// kept beside it, as its segments' grapheme ends are (getGraphemeEnds): no line function writes
-// to a frozen handle or to anything it holds, so one the app froze, or a copy of one in a store
-// that freezes its state, materializes as any other. Kept beside every handle, the lookup took
-// a pass that walks and materializes 3,000 of the chat demo's one-item paragraphs, each asked
-// once, 35-47% longer with the handles out of the processor's caches and 7-25% with them in,
-// and 40 of them over and over 1-9% (JavaScriptCore of bun 1.4.2, V8 15.4 and node 23.10's,
-// SpiderMonkey 156, one build a process on the harness's stand-in Canvas, 2026-10-12). Found
-// while preparing, the lists took such paragraphs 6-13% longer to prepare and count once in
-// JavaScriptCore and 12-20% in V8, text seen before, and a third more heap a handle, for lines
-// a long list mostly never paints; found again at every line, walking and materializing took
-// 5-9 times as long, and over 100 times in a paragraph of 6,000 units.
-type TextSources = { sourceStarts: number[]; sourceEnds: number[]; sourceUnits: (number[] | null)[] }
-const textSources = new WeakMap<InternalPreparedRichInline, TextSources>()
-
-// Per segment of a paragraph that is one text's handle, where its text starts and ends in the
-// item's.
-function findSegmentSources(flow: InternalPreparedRichInline): TextSources {
-  const { segments } = flow.data
-  const offsets = alignToSource(flow.text, segments.join(''), getEngineProfile().lineBreakScan)
-  const sourceStarts: number[] = []
-  const sourceEnds: number[] = []
-  const sourceUnits: (number[] | null)[] = []
-  for (let i = 0, at = 0; i < segments.length; at += segments[i++]!.length) {
-    const end = offsets[at + segments[i]!.length - 1]! + 1
-    sourceStarts.push(offsets[at]!)
-    sourceEnds.push(flow.text.charCodeAt(end - 1) === 0x0D && flow.text.charCodeAt(end) === 0x0A && segments[i] === '\n' ? end + 1 : end)
-    sourceUnits.push(getSourceUnits(offsets, at, at + segments[i]!.length, 0))
-  }
-  const sources = { sourceStarts, sourceEnds, sourceUnits }
-  if (Object.isFrozen(flow)) {
-    textSources.set(flow, sources)
-  } else {
-    flow.sourceStarts = sourceStarts
-    flow.sourceEnds = sourceEnds
-    flow.sourceUnits = sourceUnits
-  }
-  return sources
-}
-
-// Where unit `unit` of a segment's text is in its item's text.
-function getSourceOffset(sourceStarts: number[], sourceUnits: (number[] | null)[] | null, segmentIndex: number, unit: number): number {
-  const units = sourceUnits === null ? null : sourceUnits[segmentIndex]!
-  return units === null ? sourceStarts[segmentIndex]! + unit : units[unit]!
 }
 
 // Bridge from cheap range walking to full fragment text. Lets callers do

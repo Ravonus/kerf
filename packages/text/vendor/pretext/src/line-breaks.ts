@@ -231,6 +231,18 @@ const NO_OVERRIDES: CategoryOverrides = { chars: [], categories: [] }
 // utext_next32() over UTF-16 (utext.cpp:272-308), with unpaired surrogates as code points. ICU
 // allocates the look-ahead slots uninitialized (rbbi.cpp:122-129) and never resets them between
 // calls, since the rules read a slot only after setting it; here they start at -1 for each text.
+function ruleBoundary(boundary: number, result: number, start: number, text: string, length: number): number {
+  if (boundary < 0) {
+    boundary = result
+    if (result === start) { // rbbi.cpp:937-942
+      boundary = start + 1
+      if ((text.charCodeAt(start) & 0xfc00) === 0xd800 && boundary < length &&
+        (text.charCodeAt(boundary) & 0xfc00) === 0xdc00) boundary++
+    }
+  }
+  return boundary
+}
+
 export function markRuleBoundaries(r: BreakRules, text: string, flags: Uint8Array, overrides: CategoryOverrides = NO_OVERRIDES): void {
   const rows = r.rows
   const width = r.rowWidth
@@ -299,14 +311,7 @@ export function markRuleBoundaries(r: BreakRules, text: string, flags: Uint8Arra
       }
     }
 
-    if (boundary < 0) {
-      boundary = result
-      if (result === start) { // rbbi.cpp:937-942
-        boundary = start + 1
-        if ((text.charCodeAt(start) & 0xfc00) === 0xd800 && boundary < length &&
-          (text.charCodeAt(boundary) & 0xfc00) === 0xdc00) boundary++
-      }
-    }
+    boundary = ruleBoundary(boundary, result, start, text, length)
     flags[boundary] = 1
     if (dictionaryCharCount > 0) markDictionaryWords(r, text, start, boundary, flags)
     start = boundary // rbbi.cpp:945
