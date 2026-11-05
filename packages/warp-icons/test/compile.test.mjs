@@ -277,7 +277,7 @@ test('findings: unknown is an error code, dynamic and escaped are info codes', (
     expect(
       findings(root)
         .map((f) => f.code)
-        .sort(),
+        .sort((a, b) => a.localeCompare(b)),
     ).toEqual(['I001', 'I002', 'I003'])
   } finally {
     rmSync(root, { recursive: true, force: true })
