@@ -179,14 +179,13 @@ function webhookFooter(
 }
 
 function webhookSaver(
-  onAdd: WebhooksProps['onAdd'],
+  onAdd: () => Promise<string>,
   busy: State<boolean>,
   tried: State<boolean>,
   check: () => void,
   eventError: State<string>,
   picked: State<string[]>,
   urlError: State<string>,
-  url: State<string>,
   secret: State<string>,
 ) {
   const save = async () => {
@@ -197,7 +196,7 @@ function webhookSaver(
     if (urlError.value || eventError.value) return
     busy.value = true
     try {
-      secret.value = await onAdd(url.value.trim(), picked.value)
+      secret.value = await onAdd()
     } catch {
       toast.show({
         title: 'The endpoint wasn’t added',
@@ -235,14 +234,13 @@ export function Webhooks(props: WebhooksProps) {
   const check = () => validateUrl(url, urlError)
   const test = webhookTester((hook) => props.onTest(hook))
   const save = webhookSaver(
-    (endpoint, selected) => props.onAdd(endpoint, selected),
+    () => props.onAdd(url.value.trim(), picked.value),
     busy,
     tried,
     check,
     eventError,
     picked,
     urlError,
-    url,
     secret,
   )
   const open = () => {
