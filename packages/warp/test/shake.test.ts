@@ -3,7 +3,7 @@
 import { build } from 'vite'
 import weft from '@weft-js/core/vite'
 
-async function bundle(jsx, names) {
+async function bundle(jsx: string, names: string) {
   const id = '\0shake-entry.tsx'
   const code = `import { render } from '@weft-js/core/dom'\nimport { ${names} } from '@weft-js/warp'\nrender(() => ${jsx}, document.body)\n`
   const out = await build({
@@ -25,7 +25,9 @@ async function bundle(jsx, names) {
       rolldownOptions: { input: 'shake-entry.tsx' },
     },
   })
-  const files = (Array.isArray(out) ? out : [out]).flatMap((o) => o.output)
+  const files = (Array.isArray(out) ? out : [out]).flatMap(
+    (o) => (o as Extract<typeof o, { output: unknown }>).output,
+  )
   return {
     js: files
       .filter((f) => f.type === 'chunk')
@@ -33,7 +35,7 @@ async function bundle(jsx, names) {
       .join('\n'),
     css: files
       .filter((f) => f.fileName.endsWith('.css'))
-      .map((f) => String(f.source))
+      .map((f) => String((f as Extract<typeof f, { type: 'asset' }>).source))
       .join('\n'),
   }
 }
