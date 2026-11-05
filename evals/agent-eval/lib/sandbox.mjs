@@ -53,7 +53,7 @@ export function env(box, extra = {}) {
     CLAUDE_CODE_TMPDIR: box.tmp,
     LANG: 'en_US.UTF-8',
     SHELL: '/bin/zsh',
-    PATH: [nodeBin, '/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(':'),
+    PATH: [nodeBin, '/opt/homebrew/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(':'),
     NO_COLOR: '1',
     CI: '1',
     NPM_CONFIG_REGISTRY: `http://localhost:${registryPort}/`,

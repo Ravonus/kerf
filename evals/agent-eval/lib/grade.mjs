@@ -35,7 +35,7 @@ export function cloneForGrading(box, n) {
 
 export async function build(copy, stack) {
   for (const d of stack.built) rmSync(join(copy.app, d), { recursive: true, force: true })
-  const [cmd, argv] = boxed(copy, 'npm', ['run', 'build'])
+  const [cmd, argv] = boxed(copy, 'pnpm', ['run', 'build'])
   const at = Date.now()
   try {
     await run(cmd, argv, { cwd: copy.app, env: env(copy), timeout: 300_000, maxBuffer: 1 << 26 })
@@ -77,7 +77,9 @@ export async function serve(copy, stack) {
       if ((await fetch(base, { signal: AbortSignal.timeout(2000) })).status < 500)
         return { base, stop }
     } catch {}
-    await new Promise((r) => setTimeout(r, 200))
+    await new Promise((r) => {
+      setTimeout(r, 200)
+    })
   }
   stop()
   throw new Error(`server never answered: ${output.slice(-800)}`)
@@ -99,7 +101,9 @@ export async function hidden(task, base) {
     try {
       await Promise.race([
         t.run({ page, base, problems }),
-        new Promise((_, no) => setTimeout(() => no(new Error('test timed out')), 30_000)),
+        new Promise((_, no) => {
+          setTimeout(() => no(new Error('test timed out')), 30_000)
+        }),
       ])
       return null
     } catch (e) {
@@ -166,7 +170,7 @@ export async function quality(task, base, copy, golden) {
       nodes: v.nodes.length,
     })),
   )
-  let timing = null
+  let timing
   try {
     timing = interaction ? await interaction(page, base) : null
   } catch (e) {
