@@ -75,7 +75,19 @@ export function expose(stack) {
       return { perTick: median(out), best: Math.min(...out), text: stack.grid.check() }
     },
 
-    /** js-framework-benchmark's operations, on the 1,000 rows it uses (10,000 for `runLots`). */
+    rows: rowOperations(stack, timed, gc, small, median),
+    /** Live rows, for the memory step. */
+    run: () => stack.rows.run(),
+    clear: () => stack.rows.clear(),
+    stack,
+  }
+  stack.rows?.setup?.(place())
+}
+
+/** js-framework-benchmark's operations, on the 1,000 rows it uses (10,000 for `runLots`). */
+function rowOperations(stack, timed, gc, small, median) {
+  return {
+    /** @this {void} */
     rows(name, { warm = 5, samples = 15 } = {}) {
       const r = stack.rows
       if (name === 'small') return r.rotate ? small(r, warm + samples) : null
@@ -121,10 +133,5 @@ export function expose(stack) {
       r.clear()
       return { script: median(script), total: median(total), shown }
     },
-    /** Live rows, for the memory step. */
-    run: () => stack.rows.run(),
-    clear: () => stack.rows.clear(),
-    stack,
-  }
-  stack.rows?.setup?.(place())
+  }.rows
 }
