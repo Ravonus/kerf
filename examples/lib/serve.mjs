@@ -1,5 +1,6 @@
 // Production servers on ports nothing else owns. A stale one fooled a run once, so a server has to prove it's this build:
 // the run's canary file answers, and every JS and CSS file a measurement touches hashes to something the build wrote.
+import { sleep as wait } from '../../scripts/lib/helpers.mjs'
 import { execFileSync, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { createWriteStream, existsSync, readFileSync, statSync } from 'node:fs'
