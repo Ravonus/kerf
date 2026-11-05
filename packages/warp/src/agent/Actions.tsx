@@ -10,9 +10,9 @@ import {
 import { announce, popover } from '@weft-js/warp-core'
 import { derived, state } from '@weft-js/core'
 import { Badge } from '../Badge'
-import { Button } from '../Button'
 import { use } from '@weft-js/warp-core/weft'
 import { IconButton } from './bits'
+import { FeedbackReasonPanel } from './Actions/reasons'
 import '../styles'
 import '@weft-js/warp-core/styles/components/popover.css'
 import '@weft-js/warp-core/styles/app/branch.css'
@@ -149,31 +149,9 @@ export function MessageActions({
         />
       )}
       {onFeedback && (
-        <div
-          ref={(n) => (panel = n)}
-          data-scope="popover"
-          data-part="content"
-          role="dialog"
-          popover="manual"
-          aria-label="What went wrong?"
-        >
-          <p data-part="title">What went wrong?</p>
-          <div>
-            {reasons.map((r) => (
-              <Button
-                key={r}
-                emphasis="ghost"
-                tone="neutral"
-                size="sm"
-                data-close-popover=""
-                onClick={(e: Event) => because(e, r)}
-              >
-                {r}
-              </Button>
-            ))}
-          </div>
-        </div>
+        <FeedbackReasonPanel reasons={reasons} because={because} setPanel={(n) => (panel = n)} />
       )}
+
       {onRegenerate && <IconButton icon={RefreshIcon} label="Regenerate" onClick={onRegenerate} />}
       {onBranch && <IconButton icon={BranchIcon} label="Branch from here" onClick={onBranch} />}
       {has.value && (
