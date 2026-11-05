@@ -10,13 +10,23 @@ import {
 } from '@weft-js/warp'
 import { PEOPLE } from '../../world'
 
+const resendLede =
+  'Press Resend link to stand in for the email.'
+
+const memberDescription =
+  'Members can deploy and edit projects.'
+
 export function MagicLinkSentInbox() {
   const email = PEOPLE[2]!.email
   const changing = state(false)
   return (
     <>
       {changing.value ? (
-        <Button emphasis="outline" tone="neutral" onClick={() => (changing.value = false)}>
+        <Button
+          emphasis="outline"
+          tone="neutral"
+          onClick={() => (changing.value = false)}
+        >
           Back to the sent screen
         </Button>
       ) : (
@@ -33,25 +43,35 @@ export function MagicLinkSentInbox() {
 }
 
 export function ResetPasswordSteps() {
-  const stage = state<'request' | 'sent' | 'password' | 'done'>('request')
+  const stage = state<
+    'request' | 'sent' | 'password' | 'done'
+  >('request')
   return (
     <>
       {stage.value === 'request' && (
-        <ResetPassword heading="h3" onSubmit={() => (stage.value = 'sent')} onBack={() => {}} />
+        <ResetPassword
+          heading="h3"
+          onSubmit={() => (stage.value = 'sent')}
+          onBack={() => {}}
+        />
       )}
       {stage.value === 'sent' && (
         <MagicLinkSent
           heading="h3"
           title="Check your inbox"
           email="priya@weft.dev"
-          lede="Press Resend link to stand in for the email."
+          lede={resendLede}
           onResend={() => (stage.value = 'password')}
           resendIn={0}
           onChangeEmail={() => (stage.value = 'request')}
         />
       )}
       {stage.value === 'password' && (
-        <ResetPassword heading="h3" stage="password" onSubmit={() => (stage.value = 'done')} />
+        <ResetPassword
+          heading="h3"
+          stage="password"
+          onSubmit={() => (stage.value = 'done')}
+        />
       )}
       {stage.value === 'done' && (
         <AuthDone
@@ -71,9 +91,17 @@ export function InviteAcceptWorkspace() {
   return (
     <>
       {answer.value ? (
-        <Stack gap="related" align="center">
+        <Stack
+          gap="related"
+          align="center"
+        >
           <Text>{answer.value}</Text>
-          <Button size="sm" emphasis="ghost" tone="neutral" onClick={() => (answer.value = '')}>
+          <Button
+            size="sm"
+            emphasis="ghost"
+            tone="neutral"
+            onClick={() => (answer.value = '')}
+          >
             Show it again
           </Button>
         </Stack>
@@ -84,9 +112,11 @@ export function InviteAcceptWorkspace() {
           org="weft"
           role="Member"
           email="dara@weft.dev"
-          description="Members can deploy and edit projects."
+          description={memberDescription}
           onAccept={() => (answer.value = 'Joined weft.')}
-          onDecline={() => (answer.value = 'Invite declined.')}
+          onDecline={() =>
+            (answer.value = 'Invite declined.')
+          }
           onOtherAccount={() => {}}
         />
       )}
@@ -95,5 +125,10 @@ export function InviteAcceptWorkspace() {
 }
 
 export const AuthDoneSignedIn = () => (
-  <AuthDone heading="h3" title="You're in" lede="Signed in as mara@weft.dev." delay={3600000} />
+  <AuthDone
+    heading="h3"
+    title="You're in"
+    lede="Signed in as mara@weft.dev."
+    delay={3600000}
+  />
 )

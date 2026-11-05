@@ -11,6 +11,13 @@ import {
 import { createShortcuts } from '@weft-js/warp-core'
 import { wait } from './sign-in'
 
+const firstDeployDescription =
+  'Connect a repository and your first ' +
+  'deploy runs in about a minute.'
+
+const newBuildDescription =
+  'A new build went out while this tab was open.'
+
 export function SystemPage500() {
   const tries = state(0)
   return (
@@ -25,7 +32,12 @@ export function SystemPage500() {
 }
 
 export const SystemPageMaintenance = () => (
-  <SystemPage as="h3" kind="maintenance" backAt="14:00 UTC" secondary={{ label: 'Status page' }} />
+  <SystemPage
+    as="h3"
+    kind="maintenance"
+    backAt="14:00 UTC"
+    secondary={{ label: 'Status page' }}
+  />
 )
 
 export const SystemPageEmpty = () => (
@@ -33,7 +45,7 @@ export const SystemPageEmpty = () => (
     as="h3"
     kind="empty"
     title="No projects yet"
-    description="Connect a repository and your first deploy runs in about a minute."
+    description={firstDeployDescription}
     primary={{ label: 'New project' }}
     secondary={{ label: 'Import' }}
   />
@@ -47,7 +59,12 @@ export function ConnBannerOffline() {
   }
   return (
     <Stack gap="related">
-      <ConnBanner online={online.value} retryIn={4} changes={3} onRetry={() => void reconnect()} />
+      <ConnBanner
+        online={online.value}
+        retryIn={4}
+        changes={3}
+        onRetry={() => void reconnect()}
+      />
       <Button
         size="sm"
         emphasis="outline"
@@ -71,13 +88,17 @@ export function ConnBannerNewVersion() {
         onLater={() => (stale.value = false)}
       />
       <Text subtle>
-        {stale.value ? 'A new build went out while this tab was open.' : 'Dismissed.'}
+        {stale.value ? newBuildDescription : 'Dismissed.'}
       </Text>
     </Stack>
   )
 }
 
-const EXPORT_BUTTON = { children: 'Export CSV', emphasis: 'outline', tone: 'neutral' } as const
+const EXPORT_BUTTON = {
+  children: 'Export CSV',
+  emphasis: 'outline',
+  tone: 'neutral',
+} as const
 
 export const RateLimitedExport = () => (
   <RateLimited
@@ -90,22 +111,49 @@ export const RateLimitedExport = () => (
 
 const KEYS = createShortcuts()
 
-KEYS.register({ keys: 'g d', label: 'Go to deploys', group: 'Navigate', run() {} })
+KEYS.register({
+  keys: 'g d',
+  label: 'Go to deploys',
+  group: 'Navigate',
+  run() {},
+})
 
-KEYS.register({ keys: 'g p', label: 'Go to projects', group: 'Navigate', run() {} })
+KEYS.register({
+  keys: 'g p',
+  label: 'Go to projects',
+  group: 'Navigate',
+  run() {},
+})
 
-KEYS.register({ keys: 'n', label: 'New project', group: 'Projects', run() {} })
+KEYS.register({
+  keys: 'n',
+  label: 'New project',
+  group: 'Projects',
+  run() {},
+})
 
-KEYS.register({ keys: 'mod+k', label: 'Open the command palette', group: 'General', run() {} })
+KEYS.register({
+  keys: 'mod+k',
+  label: 'Open the command palette',
+  group: 'General',
+  run() {},
+})
 
 export function ShortcutsOverlayApp() {
   const open = state(false)
   return (
     <>
-      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        onClick={() => (open.value = true)}
+      >
         Keyboard shortcuts
       </Button>
-      <ShortcutsOverlay open={open} shortcuts={KEYS} />
+      <ShortcutsOverlay
+        open={open}
+        shortcuts={KEYS}
+      />
     </>
   )
 }

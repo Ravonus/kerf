@@ -1,7 +1,19 @@
 import { state } from '@weft-js/core'
-import { AuthDone, Input, OtpField, OtpStep, PasswordMeter, SignUp, Stack } from '@weft-js/warp'
+import {
+  AuthDone,
+  Input,
+  OtpField,
+  OtpStep,
+  PasswordMeter,
+  SignUp,
+  Stack,
+} from '@weft-js/warp'
 import type { SignUpValues } from '@weft-js/warp'
 import { wait, PROVIDERS } from './sign-in'
+
+const authenticatorLede =
+  'Open your authenticator app. The ' +
+  'sample code is 123456.'
 
 export function SignUpWeft() {
   const pending = state(false)
@@ -48,7 +60,9 @@ export function PasswordMeterLive() {
         autocomplete="off"
         value={value.value}
         hint="Try a sample, not a real one."
-        onInput={(e) => (value.value = e.currentTarget.value)}
+        onInput={(e) =>
+          (value.value = e.currentTarget.value)
+        }
       />
       <PasswordMeter value={value.value} />
     </Stack>
@@ -56,20 +70,33 @@ export function PasswordMeterLive() {
 }
 
 export const SignUpTile = () => (
-  <Stack gap="related" style="inline-size:260px">
-    <Input label="New password" type="password" autocomplete="off" defaultValue="sample" />
+  <Stack
+    gap="related"
+    style="inline-size:260px"
+  >
+    <Input
+      label="New password"
+      type="password"
+      autocomplete="off"
+      defaultValue="sample"
+    />
     <PasswordMeter value="sample" />
   </Stack>
 )
 
 export function OtpFieldCheck() {
-  const status = state<'idle' | 'checking' | 'success'>('idle')
+  const status = state<'idle' | 'checking' | 'success'>(
+    'idle',
+  )
   const error = state<string | undefined>(undefined)
   const check = async (code: string) => {
     status.value = 'checking'
     await wait(700)
     status.value = code === '123456' ? 'success' : 'idle'
-    error.value = code === '123456' ? undefined : "That code didn't work. Try 123456."
+    error.value =
+      code === '123456'
+        ? undefined
+        : "That code didn't work. Try 123456."
   }
   return (
     <OtpField
@@ -83,7 +110,12 @@ export function OtpFieldCheck() {
 }
 
 export const OtpFieldFour = () => (
-  <OtpField label="4-digit PIN" length={4} masked autoSubmit={false} />
+  <OtpField
+    label="4-digit PIN"
+    length={4}
+    masked
+    autoSubmit={false}
+  />
 )
 
 export function OtpStepAuthenticator() {
@@ -94,14 +126,20 @@ export function OtpStepAuthenticator() {
     pending.value = true
     await wait(700)
     pending.value = false
-    error.value = code === '123456' ? undefined : { code: 'WRONG_CODE', data: { attemptsLeft: 2 } }
+    error.value =
+      code === '123456'
+        ? undefined
+        : {
+            code: 'WRONG_CODE',
+            data: { attemptsLeft: 2 },
+          }
     if (code === '123456') status.value = 'success'
   }
   return (
     <OtpStep
       heading="h3"
       title="Enter your code"
-      lede="Open your authenticator app. The sample code is 123456."
+      lede={authenticatorLede}
       status={status.value}
       pending={pending.value}
       error={error.value}
