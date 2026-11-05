@@ -42,6 +42,36 @@ export default function Paywall() {
   }
 
   return (
+    <PaywallView
+      step={step}
+      pro={pro}
+      log={log}
+      checkout={checkout}
+      pay={pay}
+      close={close}
+      deliver={deliver}
+    />
+  )
+}
+
+function PaywallView({
+  step,
+  pro,
+  log,
+  checkout,
+  pay,
+  close,
+  deliver,
+}: {
+  step: { value: Step }
+  pro: { readonly value: boolean }
+  log: { value: { n: number; text: string }[] }
+  checkout: () => void
+  pay: () => void
+  close: () => void
+  deliver: (id: string) => void
+}) {
+  return (
     <Card title="Pro, one plan">
       <p>
         Your plan:{' '}
