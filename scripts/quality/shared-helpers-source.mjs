@@ -86,6 +86,19 @@ function fullEscape(node) {
   return chars.size === 4 && !apostrophe
 }
 
+function localBindings(node, scope) {
+  if (!ts.isFunctionLike(node) && !ts.isBlock(node)) return scope
+  const bindings = new Map(scope)
+  // Function declarations bind before statements in their block run.
+  for (const statement of node.statements ?? [])
+    if (ts.isFunctionDeclaration(statement) && statement.name)
+      bindings.set(statement.name.text, undefined)
+  if (ts.isFunctionLike(node))
+    for (const param of node.parameters)
+      if (ts.isIdentifier(param.name)) bindings.set(param.name.text, undefined)
+  return bindings
+}
+
 /** Inspect syntax, not comments, literals or embedded fixture text. */
 export function inspectSource(path, text, cwd, roots, escapes) {
   const kind = path.endsWith('.tsx')
@@ -120,18 +133,8 @@ export function inspectSource(path, text, cwd, roots, escapes) {
       `${path}:${ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1}: duplicate ${name}`,
     )
   function visit(node, scope = values, owner) {
-    if (ts.isFunctionLike(node) || ts.isBlock(node)) {
-      scope = new Map(scope)
-      // Function declarations bind before statements in their block run.
-      for (const statement of node.statements ?? [])
-        if (ts.isFunctionDeclaration(statement) && statement.name)
-          scope.set(statement.name.text, undefined)
-      if (ts.isFunctionLike(node)) {
-        owner = node
-        for (const param of node.parameters)
-          if (ts.isIdentifier(param.name)) scope.set(param.name.text, undefined)
-      }
-    }
+    scope = localBindings(node, scope)
+    if (ts.isFunctionLike(node)) owner = node
     if (roots && ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
       const value = pathValue(node.initializer, scope, resolve(cwd, path))
       scope.set(node.name.text, value)
