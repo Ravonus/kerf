@@ -23,8 +23,8 @@ export async function prepareCode(page) {
     const view = views.nth(i)
     if (await view.isVisible()) await view.click()
   }
-  await page.evaluate(async () => {
-    const pending = document.getAnimations().filter((animation) => {
+  await page.waitForFunction(() => {
+    return !document.getAnimations().some((animation) => {
       const end = animation.effect?.getComputedTiming().endTime
       return (
         animation.timeline === document.timeline &&
@@ -32,7 +32,6 @@ export async function prepareCode(page) {
         Number.isFinite(end)
       )
     })
-    await Promise.allSettled(pending.map((animation) => animation.finished))
   })
 }
 
@@ -46,8 +45,8 @@ export async function checkPageOverflow(page) {
 
 // Scrolling can start a new finite entrance animation after the initial page wait.
 export async function settleBlock(block) {
-  await block.evaluate(async (el) => {
-    const pending = []
+  const element = await block.elementHandle()
+  await block.page().waitForFunction((el) => {
     for (let parent = el; parent; parent = parent.parentElement) {
       for (const animation of parent.getAnimations()) {
         const end = animation.effect?.getComputedTiming().endTime
@@ -56,11 +55,11 @@ export async function settleBlock(block) {
           animation.playState === 'running' &&
           Number.isFinite(end)
         )
-          pending.push(animation.finished)
+          return false
       }
     }
-    await Promise.allSettled(pending)
-  })
+    return true
+  }, element)
 }
 
 // A focusable code scroller must respond to the keyboard before overflow is accepted.
