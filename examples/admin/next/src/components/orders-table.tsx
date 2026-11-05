@@ -9,6 +9,8 @@ import {
   useOptimistic,
   useRef,
   useState,
+  type Dispatch,
+  type SetStateAction,
 } from 'react'
 import { type Dir, type OrderRow, type SortKey } from '@/lib/orders'
 import { markShipped } from '@/server/orders'
@@ -85,6 +87,77 @@ const Row = memo(function Row({
   )
 })
 
+function BulkActions({
+  selected,
+  problem,
+  shipSelected,
+}: {
+  selected: number[]
+  problem: string
+  shipSelected: () => void
+}) {
+  return (
+    <div className="mb-3 flex min-h-9 items-center gap-3">
+      <button
+        type="button"
+        disabled={!selected.length}
+        onClick={shipSelected}
+        className="h-9 cursor-pointer rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent transition-[background-color,opacity] hover:bg-accent-strong focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-50"
+      >
+        Mark shipped
+      </button>
+      <span className="text-sm text-muted tabular-nums">
+        {selected.length ? `${selected.length} selected` : ''}
+      </span>
+      <p role="alert" className="text-sm font-medium text-danger empty:hidden">
+        {problem}
+      </p>
+    </div>
+  )
+}
+
+function OrdersHeader({
+  rows,
+  columns,
+  sort,
+  dir,
+  selected,
+  setSelected,
+}: {
+  rows: OrderRow[]
+  columns: SortColumn[]
+  sort: SortKey
+  dir: Dir
+  selected: number[]
+  setSelected: Dispatch<SetStateAction<number[]>>
+}) {
+  return (
+    <thead className="bg-tint">
+      <tr className="border-b border-line">
+        <th scope="col" className="w-10 px-4 py-2.5">
+          <SelectAll
+            all={rows.length > 0 && selected.length === rows.length}
+            some={selected.length > 0}
+            onChange={(on) => setSelected(on ? rows.map((r) => r.id) : [])}
+          />
+        </th>
+        {columns.map((column) => (
+          <th
+            key={column.key}
+            scope="col"
+            aria-sort={
+              column.key === sort ? (dir === 'asc' ? 'ascending' : 'descending') : undefined
+            }
+            className={`${headCell} ${column.right ? 'text-right' : ''}`}
+          >
+            <SortButton column={column} dir={column.key === sort ? dir : undefined} />
+          </th>
+        ))}
+      </tr>
+    </thead>
+  )
+}
+
 export function OrdersTable({
   rows,
   columns,
@@ -126,47 +199,17 @@ export function OrdersTable({
 
   return (
     <>
-      <div className="mb-3 flex min-h-9 items-center gap-3">
-        <button
-          type="button"
-          disabled={!selected.length}
-          onClick={shipSelected}
-          className="h-9 cursor-pointer rounded-lg bg-accent px-4 text-sm font-semibold text-on-accent transition-[background-color,opacity] hover:bg-accent-strong focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-50"
-        >
-          Mark shipped
-        </button>
-        <span className="text-sm text-muted tabular-nums">
-          {selected.length ? `${selected.length} selected` : ''}
-        </span>
-        <p role="alert" className="text-sm font-medium text-danger empty:hidden">
-          {problem}
-        </p>
-      </div>
+      <BulkActions selected={selected} problem={problem} shipSelected={shipSelected} />
       <div className="overflow-x-auto rounded-2xl border border-line bg-raised">
         <table className="w-full min-w-[42rem] border-collapse">
-          <thead className="bg-tint">
-            <tr className="border-b border-line">
-              <th scope="col" className="w-10 px-4 py-2.5">
-                <SelectAll
-                  all={rows.length > 0 && selected.length === rows.length}
-                  some={selected.length > 0}
-                  onChange={(on) => setSelected(on ? rows.map((r) => r.id) : [])}
-                />
-              </th>
-              {columns.map((column) => (
-                <th
-                  key={column.key}
-                  scope="col"
-                  aria-sort={
-                    column.key === sort ? (dir === 'asc' ? 'ascending' : 'descending') : undefined
-                  }
-                  className={`${headCell} ${column.right ? 'text-right' : ''}`}
-                >
-                  <SortButton column={column} dir={column.key === sort ? dir : undefined} />
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <OrdersHeader
+            rows={rows}
+            columns={columns}
+            sort={sort}
+            dir={dir}
+            selected={selected}
+            setSelected={setSelected}
+          />
           <tbody>
             {shown.map((order) => (
               <Row

@@ -54,7 +54,7 @@ function Missing() {
   )
 }
 
-function Details(props: { order: Order }) {
+function orderStatus(props: { order: Order }) {
   const save = useAction(setStatus)
   const saves = useSubmissions(setStatus)
 
@@ -64,6 +64,31 @@ function Details(props: { order: Order }) {
     const last = mine().at(-1)
     return last && !last.pending && last.error
   }
+
+  return { save, status, failed }
+}
+
+function orderItem(item: Order['items'][number]) {
+  return (
+    <tr>
+      <td class={td}>{item.name}</td>
+      <td class={`${td} text-right tabular-nums`}>{item.quantity}</td>
+      <td class={`${td} text-right tabular-nums`}>{money(item.priceCents)}</td>
+      <td class={`${td} text-right tabular-nums`}>{money(item.priceCents * item.quantity)}</td>
+    </tr>
+  )
+}
+
+function statusOption(s: string, status: () => string) {
+  return (
+    <option value={s} selected={status() === s}>
+      {s}
+    </option>
+  )
+}
+
+function Details(props: { order: Order }) {
+  const { save, status, failed } = orderStatus(props)
 
   return (
     <>
@@ -79,13 +104,7 @@ function Details(props: { order: Order }) {
             class={select}
             onInput={(e) => save(props.order.id, e.currentTarget.value).catch(() => {})}
           >
-            <For each={statuses}>
-              {(s) => (
-                <option value={s} selected={status() === s}>
-                  {s}
-                </option>
-              )}
-            </For>
+            <For each={statuses}>{(s) => statusOption(s, status)}</For>
           </select>
         </label>
       </div>
@@ -118,18 +137,7 @@ function Details(props: { order: Order }) {
                 </tr>
               </thead>
               <tbody class="divide-y divide-line">
-                <For each={props.order.items}>
-                  {(item) => (
-                    <tr>
-                      <td class={td}>{item.name}</td>
-                      <td class={`${td} text-right tabular-nums`}>{item.quantity}</td>
-                      <td class={`${td} text-right tabular-nums`}>{money(item.priceCents)}</td>
-                      <td class={`${td} text-right tabular-nums`}>
-                        {money(item.priceCents * item.quantity)}
-                      </td>
-                    </tr>
-                  )}
-                </For>
+                <For each={props.order.items}>{(item) => orderItem(item)}</For>
               </tbody>
               <tfoot class="border-t border-line font-semibold">
                 <tr>
