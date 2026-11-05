@@ -28,6 +28,7 @@ import { reactChecks } from './react-checks.mjs'
 import { trustDiagnostics } from './trust.mjs'
 import { shareChecks } from './share-checks.mjs'
 import { stateChecks } from './state-checks.mjs'
+import { serverStateChecks } from './server-state-checks.mjs'
 import { surfaceChecks } from './surface-checks.mjs'
 import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
@@ -210,6 +211,7 @@ async function collectDiagnostics(
       : designChecks(root, { files, exclude, tokens: hasTokens(root) })),
     ...textChecks(root, { files, exclude, fontBuild }),
     ...stateChecks(root, { files, exclude }),
+    ...serverStateChecks(root, { files, exclude }),
     ...shareChecks(root, { files }),
     ...reactChecks({ files }),
     ...surfaceChecks(root, { files, exclude, slots: loaded.slots }),

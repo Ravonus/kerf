@@ -214,7 +214,7 @@ export const compilerDiagnostics = [
   {
     code: 'W030',
     severity: 'error',
-    by: 'compiler',
+    by: 'cli',
     catches: 'Module-level `state` reachable from the server entry graph (leaks across requests)',
     fix: '`context`, or mark `state.global`',
   },

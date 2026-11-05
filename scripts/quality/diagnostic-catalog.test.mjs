@@ -65,3 +65,20 @@ test('CLI mentions, strings, comments and catalog entries are not coverage', () 
     deepStrictEqual(mapped(mappedCatalog, cli.source, { 'fake.test.ts': text }), ['missing test: W008'])
   deepStrictEqual(mapped(), [])
 })
+
+test('W030 graph emit, test and CLI ownership remain mandatory', () => {
+  const catalog = [{ code: 'W030', by: 'cli' }]
+  const source = { 'server-state-checks.mjs': "function run() { diagnostic({ code: 'W030' }) }" }
+  const tests = { 'server-state-checks.test.ts': "expect(finding.code).toBe('W030')" }
+  const run = (c = catalog, s = source, t = tests) =>
+    compare(gaps(c, {}, {}, { source: s, tests: t }), [])
+  deepStrictEqual(run(), [])
+  deepStrictEqual(run(catalog, {}), ['missing emit: W030'])
+  deepStrictEqual(run(catalog, source, {}), ['missing test: W030'])
+  deepStrictEqual(run([]), ['missing entry: W030'])
+  ok(run([{ code: 'W030', by: 'compiler' }]).includes('missing emit: W030'))
+  ok(run([{ code: 'W030', by: 'start' }]).includes('unsupported owner: W030'))
+  deepStrictEqual(run(catalog, { 'fake.mjs': "const metadata = { code: 'W030' }" }),
+    ['missing emit: W030'])
+  deepStrictEqual(run(), [])
+})

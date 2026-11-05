@@ -7,7 +7,7 @@ import { compilerDiagnostics } from '../../packages/cli/src/catalog/compiler.mjs
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 // These compiler-family rules move to the CLI checker; ownership never exempts coverage.
-const mappedCodes = new Set(['W008'])
+const mappedCodes = new Set(['W008', 'W030'])
 const baselinePath = resolve(root, 'scripts/quality/diagnostic-catalog-baseline.json')
 
 function tracked(...paths) {
