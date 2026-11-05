@@ -14,6 +14,7 @@ function fixture(
   taskName = 'medium-shop',
   count = 45,
   receiptTask = taskName,
+  inconclusive = false,
 ) {
   const root = mkdtempSync(join(tmpdir(), 'weft-calibration-runner-'))
   const task = join(root, 'evals/agent-eval/tasks', taskName)
@@ -35,7 +36,7 @@ function fixture(
     const broken = !reference && name === 'm0' && ${breakFirst}
     console.log(JSON.stringify({task: ${JSON.stringify(receiptTask)}, target: reference ? 'reference' : name, passed: ok,
       caught: !reference && !broken, grade: {built: {ok: !broken}, total: broken ? null : 1,
-        failed: reference ? [] : [{title: 'expected check', failure: 'full failure detail'}]}}))
+        failed: reference ? [] : [{title: 'expected check', failure: ${JSON.stringify(inconclusive ? 'flash timing inconclusive: retry calibration' : 'full failure detail')}}]}}))
     if (!ok) process.exitCode = 1
   `,
   )
@@ -121,13 +122,13 @@ test('low disk space stops before reference execution', () => {
 })
 
 test('runner rejects a receipt from another task', () => {
-  const item = fixture(true, false, 'edit-shop', 18)
-  const wrong = fixture(true, false, 'edit-shop', 18, 'medium-shop')
+  const item = fixture(true, false, 'edit-shop', 20)
+  const wrong = fixture(true, false, 'edit-shop', 20, 'medium-shop')
   try {
     const child = runFixture(item)
     assert.equal(child.status, 0, child.stderr)
     assert.deepEqual(JSON.parse(readFileSync(join(item.receipts, 'outcome.json'))), {
-      mutants: 18,
+      mutants: 20,
       unexpected: 0,
     })
     assert.equal(JSON.parse(readFileSync(join(item.receipts, 'reference.json'))).task, 'edit-shop')
@@ -150,6 +151,22 @@ test('runner rejects a shortened edit mutant set before grading', () => {
     const child = runFixture(item)
     assert.notEqual(child.status, 0)
     assert.match(child.stderr, /invalid named mutant set/)
+  } finally {
+    rmSync(item.root, { recursive: true, force: true })
+  }
+})
+
+test('runner rejects inconclusive timing instead of counting a caught mutant', () => {
+  const item = fixture(true, false, 'edit-shop', 20, 'edit-shop', true)
+  try {
+    const child = runFixture(item)
+    assert.notEqual(child.status, 0)
+    assert.match(child.stderr, /flash timing inconclusive/)
+    assert.match(readFileSync(join(item.receipts, 'mutant-01.json'), 'utf8'), /inconclusive/)
+    assert.equal(
+      readdirSync(item.receipts).some((name) => name === 'outcome.json'),
+      false,
+    )
   } finally {
     rmSync(item.root, { recursive: true, force: true })
   }

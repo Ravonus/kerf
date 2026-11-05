@@ -16,7 +16,7 @@ const [repo, receipts, task = 'medium-shop'] = process.argv.slice(2)
 if (!repo || !receipts) throw new Error('expected repository and receipt directory')
 if (!['medium-shop', 'edit-shop'].includes(task)) throw new Error('unknown calibration task')
 const mutants = JSON.parse(readFileSync(join(repo, 'evals/agent-eval/tasks', task, 'mutants.json')))
-const expectedMutants = { 'medium-shop': 45, 'edit-shop': 18 }[task]
+const expectedMutants = { 'medium-shop': 45, 'edit-shop': 20 }[task]
 if (
   mutants.length !== expectedMutants ||
   new Set(mutants.map((m) => m.name)).size !== expectedMutants
@@ -121,6 +121,8 @@ for (const [i, mutant] of mutants.entries()) {
     ![1, 2].includes(child.status)
   )
     throw new Error(`${mutant.name}: calibration setup failed; retained full logs`)
+  if (result?.grade?.failed?.some((f) => f.failure?.includes('flash timing inconclusive')))
+    throw new Error(`${mutant.name}: flash timing inconclusive; retry calibration`)
   if (
     child.status !== 1 ||
     result?.task !== task ||
