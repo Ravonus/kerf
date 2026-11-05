@@ -13,7 +13,7 @@ import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { launch } from '../scripts/cdp.mjs'
 
-const fakeChrome = (body) => {
+const fakeChrome = (body: string) => {
   const dir = mkdtempSync(join(tmpdir(), 'weft-fake-chrome-'))
   const exe = join(dir, 'chrome')
   writeFileSync(exe, `#!/bin/sh\n${body}\n`)
