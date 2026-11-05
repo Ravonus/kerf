@@ -126,8 +126,8 @@ describe('Menu href', () => {
   })
 })
 
-describe('required on a composite', () => {
-  const cases: [string, () => unknown, string | null][] = [
+function requiredCases(): [string, () => unknown, string | null][] {
+  return [
     [
       'DateField',
       () => <DateField label="X" required today="2026-01-15" locale="en-US" />,
@@ -164,6 +164,10 @@ describe('required on a composite', () => {
       null,
     ],
   ]
+}
+
+describe('required on a composite', () => {
+  const cases = requiredCases()
   test.each(cases)('%s blocks the form while empty', async (_, ui, role) => {
     const form = inForm(ui)
     await settle()
@@ -239,14 +243,10 @@ describe('required on a composite', () => {
   })
 })
 
-describe('form.reset()', () => {
-  const up = async (form: Element, type: string) => {
-    key(form.querySelector(`[data-type="${type}"]`)!, 'ArrowUp')
-    await settle()
-  }
-  const hidden = (form: Element) =>
-    form.querySelector<HTMLInputElement>('input[type="hidden"]')!.value
-
+function registerDateResets(
+  up: (form: Element, type: string) => Promise<void>,
+  hidden: (form: Element) => string,
+) {
   test('DateField goes back: segments, hidden value and State', async () => {
     const v = state<IsoDate | null>('2026-02-03')
     const form = inForm(() => (
@@ -277,7 +277,12 @@ describe('form.reset()', () => {
     expect(form.querySelector('[data-part="control"]')!.hasAttribute('data-filled')).toBe(false)
     form.parentElement!.remove()
   })
+}
 
+function registerTimeResets(
+  up: (form: Element, type: string) => Promise<void>,
+  hidden: (form: Element) => string,
+) {
   test('TimeField, DateTimeField and DurationField go back', async () => {
     for (const [ui, type, want] of [
       [
@@ -323,7 +328,9 @@ describe('form.reset()', () => {
     expect(hidden(form)).toBe('PT1H')
     form.parentElement!.remove()
   })
+}
 
+function registerTextResets() {
   test('PhoneField, CodeInput and MentionsInput go back', async () => {
     const form = inForm(() => (
       <div>
@@ -384,7 +391,9 @@ describe('form.reset()', () => {
     expect(a.value).toBe('{}')
     form.parentElement!.remove()
   })
+}
 
+function registerStructuredResets() {
   test('KeyValueEditor goes back to its rows', async () => {
     const form = inForm(() => (
       <KeyValueEditor label="K" defaultValue={[{ key: 'a', value: '1' }]} />
@@ -435,7 +444,9 @@ describe('form.reset()', () => {
     expect(i.value).toBe('Lisbon')
     form.parentElement!.remove()
   })
+}
 
+function registerAddressResets() {
   test('AddressField goes back', async () => {
     const start = { country: 'US', lines: ['1 Main St'], city: 'Springfield' } as unknown as Address
     const form = inForm(() => <AddressField name="a" defaultValue={start} locale="en-US" />)
@@ -488,7 +499,12 @@ describe('form.reset()', () => {
     expect(form.checkValidity()).toBe(true)
     form.parentElement!.remove()
   })
+}
 
+function registerIndependentResets(
+  up: (form: Element, type: string) => Promise<void>,
+  hidden: (form: Element) => string,
+) {
   test('a field outside the form stays', async () => {
     const form = document.createElement('form')
     document.body.append(form)
@@ -526,6 +542,22 @@ describe('form.reset()', () => {
     expect(form.querySelector('[data-part="counter"]')!.textContent).toBe('0/10')
     form.parentElement!.remove()
   })
+}
+
+describe('form.reset()', () => {
+  const up = async (form: Element, type: string) => {
+    key(form.querySelector(`[data-type="${type}"]`)!, 'ArrowUp')
+    await settle()
+  }
+  const hidden = (form: Element) =>
+    form.querySelector<HTMLInputElement>('input[type="hidden"]')!.value
+
+  registerDateResets(up, hidden)
+  registerTimeResets(up, hidden)
+  registerTextResets()
+  registerStructuredResets()
+  registerAddressResets()
+  registerIndependentResets(up, hidden)
 })
 
 describe('Slider in a form', () => {
