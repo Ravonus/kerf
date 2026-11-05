@@ -46,47 +46,33 @@ export interface PrejoinProps {
 }
 
 /** Prejoin (07 §3.2): preview, 16-bar mic meter, device Selects, Join with its loading state. */
-export function Prejoin({
-  name = '',
-  preview,
-  level,
-  mic,
-  camera,
-  onMic,
-  onCamera,
-  devices,
-  onDevice,
-  onTestSound,
-  joining,
-  joinLabel = 'Join now',
-  onJoin,
-}: PrejoinProps) {
-  const who = state(untrack(() => name))
+export function Prejoin(props: PrejoinProps) {
+  const who = state(untrack(() => (props.name === undefined ? '' : props.name)))
   const micOn = held<boolean>(
-    () => mic,
+    () => props.mic,
     true,
-    () => onMic,
+    () => props.onMic,
   )
   const camOn = held<boolean>(
-    () => camera,
+    () => props.camera,
     true,
-    () => onCamera,
+    () => props.onCamera,
   )
-  const list = untrack(() => devices) ?? {}
+  const list = untrack(() => props.devices) ?? {}
   let meter: HTMLDivElement | undefined
   use(
     levelMeter,
     () => meter,
-    () => level,
+    () => props.level,
   )
   const pick = (kind: 'mic' | 'camera' | 'speaker', e: Event) =>
-    onDevice?.(kind, (e.target as HTMLSelectElement).value)
+    props.onDevice?.(kind, (e.target as HTMLSelectElement).value)
   return (
     <div data-scope="prejoin">
       <div data-part="layout">
         <div data-part="stack">
-          <PrejoinPreview who={who} micOn={micOn} camOn={camOn} preview={preview} />
-          <PrejoinMeter bind={(n) => (meter = n)} level={level} />
+          <PrejoinPreview who={who} micOn={micOn} camOn={camOn} source={() => props} />
+          <PrejoinMeter bind={(n) => (meter = n)} level={props.level} />
         </div>
         <div data-part="stack">
           <Input
@@ -104,13 +90,18 @@ export function Prejoin({
           {list.speakers && (
             <Select label="Speakers" options={list.speakers} onChange={(e) => pick('speaker', e)} />
           )}
-          {onTestSound && (
-            <Button emphasis="link" size="sm" onClick={onTestSound}>
+          {props.onTestSound && (
+            <Button emphasis="link" size="sm" onClick={props.onTestSound}>
               Play test sound
             </Button>
           )}
-          <Button size="lg" full loading={!!joining} onClick={() => onJoin?.(who.value)}>
-            {joinLabel}
+          <Button
+            size="lg"
+            full
+            loading={!!props.joining}
+            onClick={() => props.onJoin?.(who.value)}
+          >
+            {props.joinLabel === undefined ? 'Join now' : props.joinLabel}
           </Button>
         </div>
       </div>

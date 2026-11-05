@@ -9,18 +9,18 @@ export function PrejoinPreview({
   who,
   micOn,
   camOn,
-  preview,
+  source,
 }: {
   who: State<string>
   micOn: ReturnType<typeof held<boolean>>
   camOn: ReturnType<typeof held<boolean>>
-  preview: PrejoinProps['preview']
+  source: () => PrejoinProps
 }) {
   return (
     <div data-part="preview">
       <div data-scope="tile" data-cam={camOn.value ? undefined : 'off'}>
-        {camOn.value && preview ? (
-          <div data-part="video">{preview()}</div>
+        {camOn.value && source().preview ? (
+          <div data-part="video">{source().preview!()}</div>
         ) : (
           <Avatar name={who.value || 'You'} size="xl" style={avatarTint(who.value)} />
         )}
