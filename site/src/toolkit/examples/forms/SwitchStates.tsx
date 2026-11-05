@@ -1,5 +1,5 @@
 import { Grid, Switch } from '@weft-js/warp'
-import { Cell } from './shared'
+import { Cell } from '../../world'
 
 export const SwitchStates = () => (
   <Grid cols={3} gap="group">

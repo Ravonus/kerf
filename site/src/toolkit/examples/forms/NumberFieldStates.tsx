@@ -1,5 +1,5 @@
 import { Grid, NumberField } from '@weft-js/warp'
-import { Cell } from './shared'
+import { Cell } from '../../world'
 
 export const NumberFieldStates = () => (
   <Grid cols={2} gap="group">

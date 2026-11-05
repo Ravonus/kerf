@@ -130,3 +130,26 @@ await test('world reexports include TSX helpers and reject missing names', () =>
     rmSync(root, { recursive: true, force: true })
   }
 })
+
+await test('shared world helpers appear in copied examples', () => {
+  for (const [group, name, helper] of [
+    ['actions', 'ButtonTones', 'TONES'],
+    ['showing', 'BadgeTones', 'TONES'],
+    ['forms', 'InputStates', 'Cell'],
+    ['dates', 'WeekPickerStates', 'Cell'],
+    ['fields', 'PhoneFieldStates', 'Cell'],
+  ]) {
+    const examples = readExamples(`site/src/toolkit/examples/${group}.tsx`)
+    const text = showExample(examples.get(name), name)
+    assert.match(text, new RegExp(`const ${helper}\\b`), name)
+    assert.doesNotMatch(text, /from ['"]\./, name)
+    const sf = ts.createSourceFile(
+      `${name}.tsx`,
+      text,
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX,
+    )
+    assert.equal(sf.parseDiagnostics.length, 0, name)
+  }
+})

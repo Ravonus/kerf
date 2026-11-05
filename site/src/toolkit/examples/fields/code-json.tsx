@@ -1,5 +1,5 @@
 import { CodeInput, Grid, JsonEditor } from '@weft-js/warp'
-import { Cell } from './phone-country'
+import { Cell } from '../../world'
 import { SCRIPT } from './payment-card-code'
 
 export const CodeInputWrap = () => (

@@ -1,5 +1,5 @@
 import { Grid, Textarea } from '@weft-js/warp'
-import { Cell } from './shared'
+import { Cell } from '../../world'
 
 export const TextareaStates = () => (
   <Grid cols={3} gap="group">

@@ -1,7 +1,7 @@
 import { state } from '@weft-js/core'
 import { Grid, JsonEditor, KeyValueEditor, MentionsInput, Stack, Text } from '@weft-js/warp'
-import { PEOPLE, PROJECTS } from '../../world'
-import { Cell } from './phone-country'
+import { PEOPLE, PROJECTS, Cell } from '../../world'
+
 import { checkConfig } from './code-json'
 
 export const JsonEditorStates = () => (
