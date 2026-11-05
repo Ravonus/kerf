@@ -25,7 +25,10 @@ function ProductRow({
   return (
     <p>
       {product.name} <strong>${product.price}</strong>
-      <Button size="sm" onClick={add}>
+      <Button
+        size="sm"
+        onClick={add}
+      >
         Add
       </Button>
       <Badge count>{cart.get(product.id) ?? 0}</Badge>

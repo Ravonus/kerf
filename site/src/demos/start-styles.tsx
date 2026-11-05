@@ -2,7 +2,10 @@ import { Button, Card, Text } from '@weft-js/warp'
 
 export default function Special() {
   return (
-    <Card eyebrow="Today only" title="Cardamom latte">
+    <Card
+      eyebrow="Today only"
+      title="Cardamom latte"
+    >
       <Text role="title">$5.50</Text>
       <p
         style={{
@@ -15,7 +18,10 @@ export default function Special() {
         Until the oat milk runs out.
       </p>
       <Button tone="positive">Order one</Button>{' '}
-      <Button emphasis="outline" tone="neutral">
+      <Button
+        emphasis="outline"
+        tone="neutral"
+      >
         Maybe later
       </Button>
     </Card>
