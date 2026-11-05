@@ -21,6 +21,75 @@ export interface Forces {
 const TICK = 1 / 40
 const clip = (v: number) => Math.max(-3, Math.min(3, v))
 
+function tick(
+  nx: number,
+  ny: number,
+  size: number,
+  ux: Float32Array,
+  uy: Float32Array,
+  vx: Float32Array,
+  vy: Float32Array,
+) {
+  let peak = 0
+  for (let y = 1; y < ny - 1; y++)
+    for (let x = 1; x < nx - 1; x++) {
+      const i = y * nx + x
+      vx[i] =
+        (vx[i]! +
+          (ux[i - 1]! + ux[i + 1]! + ux[i - nx]! + ux[i + nx]! - 4 * ux[i]!) * 0.2 -
+          ux[i]! * 0.022) *
+        0.955
+      vy[i] =
+        (vy[i]! +
+          (uy[i - 1]! + uy[i + 1]! + uy[i - nx]! + uy[i + nx]! - 4 * uy[i]!) * 0.2 -
+          uy[i]! * 0.022) *
+        0.955
+    }
+  for (let i = 0; i < size; i++) {
+    ux[i]! += vx[i]!
+    uy[i]! += vy[i]!
+    peak = Math.max(peak, Math.abs(ux[i]!), Math.abs(uy[i]!), Math.abs(vx[i]!), Math.abs(vy[i]!))
+  }
+  return peak > 0.02
+}
+
+type Visit = (
+  px: number,
+  py: number,
+  r: number,
+  fn: (i: number, dx: number, dy: number, d: number) => void,
+) => void
+
+function visit(
+  px: number,
+  py: number,
+  r: number,
+  GAP: number,
+  nx: number,
+  ny: number,
+  fn: (i: number, dx: number, dy: number, d: number) => void,
+) {
+  const n = Math.ceil(r / GAP),
+    cx = Math.round(px / GAP),
+    cy = Math.round(py / GAP)
+  for (let y = Math.max(1, cy - n); y <= Math.min(ny - 2, cy + n); y++)
+    for (let x = Math.max(1, cx - n); x <= Math.min(nx - 2, cx + n); x++) {
+      const dx = x * GAP - px,
+        dy = y * GAP - py
+      fn(y * nx + x, dx, dy, Math.hypot(dx, dy))
+    }
+}
+
+function makeKick(around: Visit, power: number, scale: number, vx: Float32Array, vy: Float32Array) {
+  return (px: number, py: number, r: number, wide: number, strength: number) =>
+    around(px, py, r, (i, dx, dy, d) => {
+      const f = Math.exp(-(d * d) / wide) * strength * power * scale,
+        n = d || 1
+      vx[i]! += (dx / n) * f
+      vy[i]! += (dy / n) * f
+    })
+}
+
 /** `power` 0–1 scales every push. The lattice's gap follows the grid, so a push looks alike at any cell size. */
 export function forces(modes: PointerMode[], cols: number, rows: number, power = 1): Forces {
   const ripple = modes.includes('ripple'),
@@ -40,54 +109,11 @@ export function forces(modes: PointerMode[], cols: number, rows: number, power =
     lx = -1,
     ly = -1
 
-  const around = (
-    px: number,
-    py: number,
-    r: number,
-    fn: (i: number, dx: number, dy: number, d: number) => void,
-  ) => {
-    const n = Math.ceil(r / GAP),
-      cx = Math.round(px / GAP),
-      cy = Math.round(py / GAP)
-    for (let y = Math.max(1, cy - n); y <= Math.min(ny - 2, cy + n); y++)
-      for (let x = Math.max(1, cx - n); x <= Math.min(nx - 2, cx + n); x++) {
-        const dx = x * GAP - px,
-          dy = y * GAP - py
-        fn(y * nx + x, dx, dy, Math.hypot(dx, dy))
-      }
+  const around: Visit = (px, py, r, fn) => {
+    visit(px, py, r, GAP, nx, ny, fn)
     moving = true
   }
-  const kick = (px: number, py: number, r: number, wide: number, strength: number) =>
-    around(px, py, r, (i, dx, dy, d) => {
-      const f = Math.exp(-(d * d) / wide) * strength * power * scale,
-        n = d || 1
-      vx[i]! += (dx / n) * f
-      vy[i]! += (dy / n) * f
-    })
-
-  function tick() {
-    let peak = 0
-    for (let y = 1; y < ny - 1; y++)
-      for (let x = 1; x < nx - 1; x++) {
-        const i = y * nx + x
-        vx[i] =
-          (vx[i]! +
-            (ux[i - 1]! + ux[i + 1]! + ux[i - nx]! + ux[i + nx]! - 4 * ux[i]!) * 0.2 -
-            ux[i]! * 0.022) *
-          0.955
-        vy[i] =
-          (vy[i]! +
-            (uy[i - 1]! + uy[i + 1]! + uy[i - nx]! + uy[i + nx]! - 4 * uy[i]!) * 0.2 -
-            uy[i]! * 0.022) *
-          0.955
-      }
-    for (let i = 0; i < size; i++) {
-      ux[i]! += vx[i]!
-      uy[i]! += vy[i]!
-      peak = Math.max(peak, Math.abs(ux[i]!), Math.abs(uy[i]!), Math.abs(vx[i]!), Math.abs(vy[i]!))
-    }
-    moving = peak > 0.02
-  }
+  const kick = makeKick(around, power, scale, vx, vy)
 
   const self: Forces = {
     ox: 0,
@@ -115,7 +141,7 @@ export function forces(modes: PointerMode[], cols: number, rows: number, power =
     step(dt) {
       if (!moving) return false
       due = Math.min(due + dt, TICK * 3)
-      for (; due >= TICK; due -= TICK) tick()
+      for (; due >= TICK; due -= TICK) moving = tick(nx, ny, size, ux, uy, vx, vy)
       return moving
     },
     at(x, y) {

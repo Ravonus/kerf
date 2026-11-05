@@ -12,19 +12,43 @@ export interface NavIndicatorOptions {
 
 type Phase = 'idle' | 'in' | 'out'
 
-/** Slides an indicator to the hovered, focused or current nav item. */
-export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
-  const axis = opts.axis ?? 'x'
-  const win = nav.ownerDocument.defaultView!
-  const doc = nav.ownerDocument
-  const face = nav.querySelector<HTMLElement>(':scope > [data-part="indicator"]')!
-  const links = () => [...nav.querySelectorAll<HTMLAnchorElement>('a[href]')]
-  const current = () => nav.querySelector<HTMLElement>('a[aria-current]')
-  let phase: Phase = 'idle'
-  let hovered: HTMLElement | undefined
-  let focused: HTMLElement | undefined
-  let pendingOut = false
+// The last heading past the top of the reading band, or the last of all once the page cannot scroll further.
+// Read on scroll, since a jump can pass a heading without crossing the band.
+function spy(win: Window, doc: Document, links: () => HTMLAnchorElement[]) {
+  const byTarget = new Map<Element, HTMLAnchorElement>()
+  for (const a of links()) {
+    const el = doc.getElementById(decodeURIComponent(a.hash.slice(1)))
+    if (el) byTarget.set(el, a)
+  }
+  const order = [...byTarget.keys()]
+  let queued = 0
+  const mark = () => {
+    queued = 0
+    const root = doc.documentElement
+    const atEnd = win.scrollY > 0 && win.scrollY + win.innerHeight >= root.scrollHeight - 2
+    const last = atEnd
+      ? order.at(-1)
+      : (order.filter((el) => el.getBoundingClientRect().top <= win.innerHeight / 4).at(-1) ??
+        order[0])
+    const a = last && byTarget.get(last)
+    if (!a || a.hasAttribute('aria-current')) return
+    for (const x of links()) x.removeAttribute('aria-current')
+    a.setAttribute('aria-current', 'location')
+  }
+  const scrolled = () => {
+    queued ||= win.requestAnimationFrame(mark)
+  }
+  win.addEventListener('scroll', scrolled, { passive: true })
+  win.addEventListener('resize', scrolled, { passive: true })
+  mark()
+  return () => {
+    win.removeEventListener('scroll', scrolled)
+    win.removeEventListener('resize', scrolled)
+    if (queued) win.cancelAnimationFrame(queued)
+  }
+}
 
+function geometry(nav: HTMLElement, face: HTMLElement, axis: 'x' | 'y') {
   const write = (start: number, size: number, cross = 0) => {
     face.style.transform =
       axis === 'x'
@@ -45,6 +69,22 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
     void face.offsetWidth
     face.removeAttribute('data-instant')
   }
+  return { write, place, jump }
+}
+
+function motion(
+  face: HTMLElement,
+  axis: 'x' | 'y',
+  win: Window & typeof globalThis,
+  place: (item: HTMLElement) => { start: number; size: number },
+  write: (start: number, size: number, cross?: number) => void,
+  jump: (start: number, size: number) => void,
+  target: () => HTMLElement | null | undefined,
+  current: () => HTMLElement | null,
+  nav: HTMLElement,
+) {
+  let phase: Phase = 'idle'
+  let pendingOut = false
   const grow = (item: HTMLElement) => {
     const { start, size } = place(item)
     if (phase === 'idle') jump(start, 0)
@@ -71,19 +111,36 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
     write(start + size, 0)
   }
   const settle = () => {
-    const target = hovered ?? focused ?? current()
-    if (target) grow(target)
+    const item = target()
+    if (item) grow(item)
     else shrink()
   }
   const ended = (e: TransitionEvent) => {
     if (e.target !== face) return
-    if (pendingOut && !(hovered ?? focused ?? current())) return leave()
+    if (pendingOut && !target()) return leave()
     pendingOut = false
     if (phase === 'out') {
       phase = 'idle'
       face.dataset.phase = 'idle'
     }
   }
+  // The server's page has the bar on the current link already (CSS, `[aria-current]::after`): take over at that spot.
+  const start = () => {
+    const now = current()
+    if (now) {
+      const { start: at, size } = place(now)
+      jump(at, size)
+      phase = 'in'
+      face.dataset.phase = 'in'
+    }
+    nav.dataset.ready = ''
+  }
+  return { settle, ended, start }
+}
+
+function tracking(nav: HTMLElement, current: () => HTMLElement | null, settle: () => void) {
+  let hovered: HTMLElement | undefined
+  let focused: HTMLElement | undefined
   const link = (t: EventTarget | null) =>
     (t as Element | null)?.closest?.('a[href]') as HTMLElement | null
   const over = (e: Event) => {
@@ -112,23 +169,27 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
       settle()
     }
   }
+  return { over, pointerOut: off, focus, blur, target: () => hovered ?? focused ?? current() }
+}
+
+/** Slides an indicator to the hovered, focused or current nav item. */
+export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
+  const axis = opts.axis ?? 'x'
+  const win = nav.ownerDocument.defaultView!
+  const doc = nav.ownerDocument
+  const face = nav.querySelector<HTMLElement>(':scope > [data-part="indicator"]')!
+  const links = () => [...nav.querySelectorAll<HTMLAnchorElement>('a[href]')]
+  const current = () => nav.querySelector<HTMLElement>('a[aria-current]')
+  const { write, place, jump } = geometry(nav, face, axis)
+  const tracked = tracking(nav, current, () => settle())
+  const { over, pointerOut: off, focus, blur, target } = tracked
+  const { settle, ended, start } = motion(face, axis, win, place, write, jump, target, current, nav)
   nav.addEventListener('pointerover', over)
   nav.addEventListener('pointerout', off)
   nav.addEventListener('focusin', focus)
   nav.addEventListener('focusout', blur)
   face.addEventListener('transitionend', ended)
 
-  // The server's page has the bar on the current link already (CSS, `[aria-current]::after`): take over at that spot.
-  const start = () => {
-    const now = current()
-    if (now) {
-      const { start: at, size } = place(now)
-      jump(at, size)
-      phase = 'in'
-      face.dataset.phase = 'in'
-    }
-    nav.dataset.ready = ''
-  }
   // At the frame, once layout is due anyway. Measuring now would force it in the middle of building the page.
   const first = win.requestAnimationFrame(start)
 
@@ -137,7 +198,7 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   const resized =
     typeof win.ResizeObserver === 'function'
       ? new win.ResizeObserver(() => {
-          const t = hovered ?? focused ?? current()
+          const t = target()
           if (t) {
             const { start: at, size } = place(t)
             jump(at, size)
@@ -155,42 +216,7 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
     })
   doc.addEventListener('warp:dial', onDial)
 
-  // The last heading past the top of the reading band, or the last of all once the page can't scroll further: the
-  // final headings may never reach the band. Read on scroll, since a jump can pass a heading without crossing the band.
-  let unspy: (() => void) | undefined
-  if (opts.spy) {
-    const byTarget = new Map<Element, HTMLAnchorElement>()
-    for (const a of links()) {
-      const el = doc.getElementById(decodeURIComponent(a.hash.slice(1)))
-      if (el) byTarget.set(el, a)
-    }
-    const order = [...byTarget.keys()]
-    let queued = 0
-    const mark = () => {
-      queued = 0
-      const root = doc.documentElement
-      const atEnd = win.scrollY > 0 && win.scrollY + win.innerHeight >= root.scrollHeight - 2
-      const last = atEnd
-        ? order.at(-1)
-        : (order.filter((el) => el.getBoundingClientRect().top <= win.innerHeight / 4).at(-1) ??
-          order[0])
-      const a = last && byTarget.get(last)
-      if (!a || a.hasAttribute('aria-current')) return
-      for (const x of links()) x.removeAttribute('aria-current')
-      a.setAttribute('aria-current', 'location')
-    }
-    const scrolled = () => {
-      queued ||= win.requestAnimationFrame(mark)
-    }
-    win.addEventListener('scroll', scrolled, { passive: true })
-    win.addEventListener('resize', scrolled, { passive: true })
-    mark()
-    unspy = () => {
-      win.removeEventListener('scroll', scrolled)
-      win.removeEventListener('resize', scrolled)
-      if (queued) win.cancelAnimationFrame(queued)
-    }
-  }
+  const unspy = opts.spy ? spy(win, doc, links) : undefined
 
   return {
     update() {

@@ -181,46 +181,16 @@ export function popover(el: HTMLElement, opts: PopoverOptions) {
 let warmUntil = 0
 let current: (() => void) | null = null
 
-/**
- * A tooltip (popover="manual", role="tooltip") on its trigger: mouse hover shows after 500ms (at once within 300ms of
- * the last one closing), keyboard focus (:focus-visible) shows, leaving hides after 100ms unless the pointer moved
- * onto the tip, a press hides it; touch long-press (500ms) shows it for 1.5s. One open at a time; Escape closes it
- * (a passive layer: presses pass through).
- */
-export function tooltip(
+function tooltipEvents(
   tip: HTMLElement,
-  opts: { trigger: HTMLElement; side?: Side | undefined; align?: Align | undefined },
-) {
-  let o = opts
-  let timer: ReturnType<typeof setTimeout> | undefined
-  let remove: (() => void) | undefined
-  const open = () => tip.matches?.(':popover-open') ?? false
-  const show = () => {
-    clearTimeout(timer)
-    if (open()) return
-    current?.()
-    tip.toggleAttribute('data-warm', performance.now() < warmUntil)
-    tip.showPopover?.()
-    place(tip, o.trigger, o.side ?? 'top', o.align ?? 'center', 6)
-    remove = pushLayer({ el: tip, trigger: o.trigger, passive: true, close: hide })
-    current = hide
-  }
-  function hide() {
-    clearTimeout(timer)
-    remove?.()
-    remove = undefined
-    if (open()) {
-      tip.hidePopover?.()
-      warmUntil = performance.now() + 300
-    }
-    if (current === hide) current = null
-  }
-  const later = (fn: () => void, ms: number) => {
-    clearTimeout(timer)
-    timer = setTimeout(fn, ms)
-  }
-  const t = () => o.trigger
-  const on: [EventTarget, string, (e: never) => void][] = [
+  t: () => HTMLElement,
+  show: () => void,
+  hide: () => void,
+  open: () => boolean,
+  later: (fn: () => void, ms: number) => void,
+  cancel: () => void,
+): [EventTarget, string, (e: never) => void][] {
+  return [
     [
       t(),
       'pointerenter',
@@ -268,11 +238,53 @@ export function tooltip(
       t(),
       'pointerup',
       (e: PointerEvent) => {
-        if (e.pointerType === 'touch' && !open()) clearTimeout(timer)
+        if (e.pointerType === 'touch' && !open()) cancel()
       },
     ],
-    [t(), 'pointercancel', () => clearTimeout(timer)],
+    [t(), 'pointercancel', () => cancel()],
   ]
+}
+
+/**
+ * A tooltip (popover="manual", role="tooltip") on its trigger: mouse hover shows after 500ms (at once within 300ms of
+ * the last one closing), keyboard focus (:focus-visible) shows, leaving hides after 100ms unless the pointer moved
+ * onto the tip, a press hides it; touch long-press (500ms) shows it for 1.5s. One open at a time; Escape closes it
+ * (a passive layer: presses pass through).
+ */
+export function tooltip(
+  tip: HTMLElement,
+  opts: { trigger: HTMLElement; side?: Side | undefined; align?: Align | undefined },
+) {
+  let o = opts
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let remove: (() => void) | undefined
+  const open = () => tip.matches?.(':popover-open') ?? false
+  const show = () => {
+    clearTimeout(timer)
+    if (open()) return
+    current?.()
+    tip.toggleAttribute('data-warm', performance.now() < warmUntil)
+    tip.showPopover?.()
+    place(tip, o.trigger, o.side ?? 'top', o.align ?? 'center', 6)
+    remove = pushLayer({ el: tip, trigger: o.trigger, passive: true, close: hide })
+    current = hide
+  }
+  function hide() {
+    clearTimeout(timer)
+    remove?.()
+    remove = undefined
+    if (open()) {
+      tip.hidePopover?.()
+      warmUntil = performance.now() + 300
+    }
+    if (current === hide) current = null
+  }
+  const later = (fn: () => void, ms: number) => {
+    clearTimeout(timer)
+    timer = setTimeout(fn, ms)
+  }
+  const t = () => o.trigger
+  const on = tooltipEvents(tip, t, show, hide, open, later, () => clearTimeout(timer))
   for (const [target, type, fn] of on) target.addEventListener(type, fn as EventListener)
   return {
     update: (next: typeof opts) => void (o = next),
