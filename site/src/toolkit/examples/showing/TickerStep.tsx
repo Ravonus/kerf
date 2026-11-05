@@ -6,12 +6,25 @@ export function TickerStep() {
   return (
     <Row gap="related">
       <Text role="title">
-        <Ticker value={n.value} locale="en-US" />
+        <Ticker
+          value={n.value}
+          locale="en-US"
+        />
       </Text>
-      <Button size="sm" emphasis="outline" tone="neutral" onClick={() => (n.value += 1)}>
+      <Button
+        size="sm"
+        emphasis="outline"
+        tone="neutral"
+        onClick={() => (n.value += 1)}
+      >
         Deploy
       </Button>
-      <Button size="sm" emphasis="outline" tone="neutral" onClick={() => (n.value += 88)}>
+      <Button
+        size="sm"
+        emphasis="outline"
+        tone="neutral"
+        onClick={() => (n.value += 88)}
+      >
         Add 88
       </Button>
     </Row>

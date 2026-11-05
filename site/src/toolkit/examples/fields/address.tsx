@@ -11,7 +11,10 @@ import {
   Toaster,
   toast,
 } from '@weft-js/warp'
-import { TEAM_COUNTRIES, NEAR_CURRENCIES } from './phone-country'
+import {
+  TEAM_COUNTRIES,
+  NEAR_CURRENCIES,
+} from './phone-country'
 import { OFFICE } from './region-pricing'
 
 const STREETS = [
@@ -54,24 +57,42 @@ const STREETS = [
 ]
 
 const streetProvider = {
-  suggest: (q: string) =>
-    Promise.resolve(STREETS.filter((s) => s.label.toLowerCase().includes(q.toLowerCase()))),
-  resolve: (id: string) => Promise.resolve(STREETS.find((s) => s.id === id)!.address),
+  suggest: (q: string) => {
+    const query = q.toLowerCase()
+    const matches = STREETS.filter(({ label }) =>
+      label.toLowerCase().includes(query),
+    )
+    return Promise.resolve(matches)
+  },
+  resolve: (id: string) =>
+    Promise.resolve(
+      STREETS.find((s) => s.id === id)!.address,
+    ),
 }
 
 export const AddressFieldBasic = () => (
-  <AddressField label="Billing address" defaultValue={OFFICE} />
+  <AddressField
+    label="Billing address"
+    defaultValue={OFFICE}
+  />
 )
 
 export const AddressFieldLookup = () => (
-  <AddressField label="Shipping address" provider={streetProvider} countries={['US', 'CA']} />
+  <AddressField
+    label="Shipping address"
+    provider={streetProvider}
+    countries={['US', 'CA']}
+  />
 )
 
 export const AddressFieldErrors = () => (
   <AddressField
     label="Billing address"
     defaultValue={OFFICE}
-    errors={{ postalCode: "This postal code doesn't match Berlin." }}
+    errors={{
+      postalCode:
+        "This postal code doesn't match Berlin.",
+    }}
   />
 )
 
@@ -82,12 +103,32 @@ export function FormBilling() {
   }
   return (
     <>
-      <Stack as="form" gap="group" onSubmit={pay}>
+      <Stack
+        as="form"
+        gap="group"
+        onSubmit={pay}
+      >
         <Text role="heading">Billing details</Text>
-        <Input label="Company" autocomplete="organization" defaultValue="weft GmbH" />
-        <AddressField label="Billing address" name="address" defaultValue={OFFICE} />
-        <Grid cols={2} gap="group">
-          <PhoneField label="Phone" name="phone" defaultCountry="DE" countries={TEAM_COUNTRIES} />
+        <Input
+          label="Company"
+          autocomplete="organization"
+          defaultValue="weft GmbH"
+        />
+        <AddressField
+          label="Billing address"
+          name="address"
+          defaultValue={OFFICE}
+        />
+        <Grid
+          cols={2}
+          gap="group"
+        >
+          <PhoneField
+            label="Phone"
+            name="phone"
+            defaultCountry="DE"
+            countries={TEAM_COUNTRIES}
+          />
           <CurrencySelect
             label="Currency"
             name="currency"

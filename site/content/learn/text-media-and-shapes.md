@@ -41,7 +41,11 @@ export function Quote() {
   const quote = state('')
   const load = () => {
     quote.value = ''
-    setTimeout(() => (quote.value = 'Make it work, make it right, make it fast.'), 900)
+    setTimeout(
+      () =>
+        (quote.value = 'Make it work, make it right, make it fast.'),
+      900,
+    )
   }
   return (
     <div>
@@ -104,11 +108,22 @@ import { fit, measure } from '@weft-js/core/text'
 
 export function Headline() {
   const title = state('Fine-grained reactive TSX')
-  const box = measure(() => title.value, { font: '600 24px Inter', lineHeight: 32, width: 320 })
-  const size = fit(() => title.value, { font: s => `700 ${s}px Inter`, width: 320, maxLines: 2 })
+  const box = measure(() => title.value, {
+    font: '600 24px Inter',
+    lineHeight: 32,
+    width: 320,
+  })
+  const size = fit(() => title.value, {
+    font: s => `700 ${s}px Inter`,
+    width: 320,
+    maxLines: 2,
+  })
   return (
     <p>
-      {box.value ? `${box.value.lineCount} lines, ${box.value.height} px` : 'Measuring…'}, fits at {size.value ?? '?'} px
+      {box.value
+        ? `${box.value.lineCount} lines, ${box.value.height} px`
+        : 'Measuring…'}
+      , fits at {size.value ?? '?'} px
     </p>
   )
 }
@@ -135,7 +150,14 @@ import { Media } from '@weft-js/core/media'
 import hero from '../../assets/hero.jpg?media'
 
 export function Hero() {
-  return <Media src={hero} alt="A lighthouse at dusk, its beam crossing low cloud" priority width="1/2" />
+  return (
+    <Media
+      src={hero}
+      alt="A lighthouse at dusk, its beam crossing low cloud"
+      priority
+      width="1/2"
+    />
+  )
 }
 ```
 
@@ -172,9 +194,20 @@ export function Launch() {
   const t = timeline(clip, { cues: { intro: 0, liftoff: 12 } })
   return (
     <div>
-      <Media src={clip} timeline={t} alt="The rocket launch, from the countdown to orbit" />
-      <p>{t.cue.value === 'liftoff' ? 'Liftoff!' : 'Counting down…'} {t.currentTime.value.toFixed(1)} s</p>
-      <Button onClick={() => (t.playing.value = !t.playing.value)}>{t.playing.value ? 'Pause' : 'Play'}</Button>
+      <Media
+        src={clip}
+        timeline={t}
+        alt="The rocket launch, from the countdown to orbit"
+      />
+      <p>
+        {t.cue.value === 'liftoff'
+          ? 'Liftoff!'
+          : 'Counting down…'}{' '}
+        {t.currentTime.value.toFixed(1)} s
+      </p>
+      <Button onClick={() => (t.playing.value = !t.playing.value)}>
+        {t.playing.value ? 'Pause' : 'Play'}
+      </Button>
     </div>
   )
 }
@@ -203,11 +236,23 @@ declare function loadPosts(): Promise<Post[]>
 
 function Feed() {
   const posts = resource(loadPosts)
-  return <ul>{(posts.value ?? []).map(p => <li key={p.id}><strong>{p.title}</strong> {p.body}</li>)}</ul>
+  return (
+    <ul>
+      {(posts.value ?? []).map(p => (
+        <li key={p.id}>
+          <strong>{p.title}</strong> {p.body}
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 export function Posts() {
-  return <Boundary pending="shape"><Feed /></Boundary>
+  return (
+    <Boundary pending="shape">
+      <Feed />
+    </Boundary>
+  )
 }
 ```
 
@@ -249,7 +294,9 @@ const Bars = defineSurface<{ data: number[] }, 'canvas2d'>({
     s.draw(() => {
       const { height } = s.size.value
       s.ctx.fillStyle = s.tokens.accent?.css ?? 'currentColor'
-      props.data.forEach((v, i) => s.ctx.fillRect(i * 24, height - v, 20, v))
+      props.data.forEach((v, i) =>
+        s.ctx.fillRect(i * 24, height - v, 20, v),
+      )
     })
   },
 })
@@ -258,8 +305,19 @@ export function Sales() {
   const boost = state(0)
   return (
     <div>
-      <Slider label="Boost" min={0} max={50} value={boost.value} onChange={v => (boost.value = v)} />
-      <Surface use={Bars} data={[30, 70, 50, 90].map(v => v + boost.value)} aspect="3/1" label="Sales by quarter" />
+      <Slider
+        label="Boost"
+        min={0}
+        max={50}
+        value={boost.value}
+        onChange={v => (boost.value = v)}
+      />
+      <Surface
+        use={Bars}
+        data={[30, 70, 50, 90].map(v => v + boost.value)}
+        aspect="3/1"
+        label="Sales by quarter"
+      />
     </div>
   )
 }
@@ -294,7 +352,13 @@ export const Score = defineSurface<{ points: number }, 'canvas2d'>({
   name: 'score',
   kind: 'canvas2d',
   setup(s, props) {
-    s.text(() => `Score ${props.points}`, { x: 8, y: 8, width: 200, font: '600 16px Inter', lineHeight: 22 })
+    s.text(() => `Score ${props.points}`, {
+      x: 8,
+      y: 8,
+      width: 200,
+      font: '600 16px Inter',
+      lineHeight: 22,
+    })
   },
 })
 ```
@@ -316,7 +380,12 @@ export default defineConfig({
   plugins: [
     text({
       fonts: {
-        body: { family: 'Inter', src: 'assets/fonts/inter.woff2', fallback: 'Arial', axes: { wght: [100, 900] } },
+        body: {
+          family: 'Inter',
+          src: 'assets/fonts/inter.woff2',
+          fallback: 'Arial',
+          axes: { wght: [100, 900] },
+        },
       },
       measure: 'auto',
     }),
@@ -414,7 +483,13 @@ const Ring = defineSurface<{ progress: number }, 'canvas2d'>({
       s.ctx.lineWidth = 8
       s.ctx.strokeStyle = s.tokens.accent?.css ?? 'currentColor'
       s.ctx.beginPath()
-      s.ctx.arc(width / 2, height / 2, r, -Math.PI / 2, -Math.PI / 2 + props.progress * Math.PI * 2)
+      s.ctx.arc(
+        width / 2,
+        height / 2,
+        r,
+        -Math.PI / 2,
+        -Math.PI / 2 + props.progress * Math.PI * 2,
+      )
       s.ctx.stroke()
     })
   },
@@ -424,8 +499,20 @@ export function Upload() {
   const percent = state(40)
   return (
     <div>
-      <Slider label="Progress" min={0} max={100} value={percent.value} onChange={v => (percent.value = v)} />
-      <Surface use={Ring} progress={percent.value / 100} aspect="1/1" style="max-inline-size:8rem" label={`${percent.value}% uploaded`} />
+      <Slider
+        label="Progress"
+        min={0}
+        max={100}
+        value={percent.value}
+        onChange={v => (percent.value = v)}
+      />
+      <Surface
+        use={Ring}
+        progress={percent.value / 100}
+        aspect="1/1"
+        style="max-inline-size:8rem"
+        label={`${percent.value}% uploaded`}
+      />
     </div>
   )
 }
@@ -437,7 +524,14 @@ This chat appends a streamed reply into a scrolling box, and the lines above sha
 
 ```tsx
 export function Reply(props: { text: string }) {
-  return <div style="max-block-size:20rem;overflow:auto;white-space:pre-wrap">{props.text}</div>
+  return (
+    <div
+      style={'max-block-size:20rem;overflow:auto;' +
+        'white-space:pre-wrap'}
+    >
+      {props.text}
+    </div>
+  )
 }
 ```
 :::solution

@@ -36,7 +36,13 @@ export const CONVERSATIONS: ChatConversation[] = [
     preview: 'Priya: new image cache is in',
     time: '12:05',
   },
-  { id: 'lena', name: 'Lena Fischer', color: 5, preview: 'Ranking v2 is building', time: 'Thu' },
+  {
+    id: 'lena',
+    name: 'Lena Fischer',
+    color: 5,
+    preview: 'Ranking v2 is building',
+    time: 'Thu',
+  },
   {
     id: 'random',
     name: '# random',

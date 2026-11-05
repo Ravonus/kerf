@@ -8,8 +8,8 @@ own diagnostics and `weft add` steps. It uses only what any plugin can use, and 
 
 ```
 packages/pay/                     packages/pay/ (`src/stripe.ts`)
-  plugin.mjs       the manifest     plugin.mjs       a `pay.rail` provider
-  src/index.ts     client-safe      src/index.ts     stripeRail(options)
+  plugin.mjs       the manifest     plugin.mjs  `pay.rail` provider
+  src/index.ts     client-safe      src/index.ts  stripeRail(options)
   src/server.ts    the ledger
   src/test.ts      fakePay, payRailSuite
   src/checks.mjs   PAY-codes
@@ -24,8 +24,12 @@ A rail is how a payment happens. `fakePay` is a second rail, which is how you kn
 
 ```js
 export const pay = definePlugin({
-  name: '@weft-js/pay', version: '0.1.0', weft: '*', namespace: 'PAY', permissions: {},
-  contribute: () => ({ provides: [...], diagnostics, check, docs, setup, agents, catalog, map }),
+  name: '@weft-js/pay',
+  version: '0.1.0', weft: '*', namespace: 'PAY', permissions: {},
+  contribute: () => ({
+    provides: [...], diagnostics, check, docs, setup,
+    agents, catalog, map,
+  }),
 })
 ```
 
@@ -42,8 +46,18 @@ imports lazily, on that side only. That's why an app that doesn't use a plugin c
 Pay provides `server.extension`, the slot for anything that needs a server presence:
 
 ```js
-provide(defineSlot({ id: 'server.extension', version: 1, cardinality: 'keyed', sides: ['server'] }),
-  { key: 'pay', sides: { server: { module: '@weft-js/pay/server', export: 'extension' } } })
+provide(
+  defineSlot({
+    id: 'server.extension', version: 1,
+    cardinality: 'keyed', sides: ['server'],
+  }),
+  {
+    key: 'pay',
+    sides: { server: {
+      module: '@weft-js/pay/server', export: 'extension',
+    } },
+  },
+)
 ```
 
 The key is the mount: `/_weft/x/pay/...`. A keyed provider also needs `src/<key>.server.ts`, the app's own configuration, and
@@ -82,7 +96,11 @@ and a good template for a provider.
 `diagnostics` declares each code: severity, what it catches, the fix. `check` finds them:
 
 ```js
-check: { include: ['src/**/*.{ts,tsx}'], run: ctx => import('./src/checks.mjs').then(c => c.run(ctx)) }
+check: {
+  include: ['src/**/*.{ts,tsx}'],
+  run: ctx => import('./src/checks.mjs')
+    .then(c => c.run(ctx)),
+}
 ```
 
 `run(ctx)` gets `files`, `read`, `exists`, `jsx`, `slots`, and returns findings: `{ code, file, start, end, why, help?, fix? }`.
@@ -108,9 +126,14 @@ sees what a user sees. It's imported from `@weft-js/pay/test`, since core can't 
 ```js
 export const setup = {
   with: ['@weft-js/pay/stripe'],     // added too
-  needs: ['db', 'auth'],                 // refused, with nothing changed, until they're there
+  // Refused without changes until these are present.
+  needs: ['db', 'auth'],
   run({ engine, layer, read }) {
-    return { files: {...}, edits: {...}, env: { STRIPE_SECRET_KEY: 'sk_test_placeholder' }, next: ['...'] }
+    return {
+      files: {...}, edits: {...},
+      env: { STRIPE_SECRET_KEY: 'sk_test_placeholder' },
+      next: ['...'],
+    }
   },
 }
 ```

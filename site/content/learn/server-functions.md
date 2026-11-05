@@ -29,7 +29,12 @@ import { todos } from '#/db/schema'
 export const countTodos = query({
   tags: ['todos'],
   auth: 'user',
-  run: async ({ ctx }) => (await ctx.db.select({ id: todos.id }).from(todos).where(eq(todos.userId, ctx.user.id))).length,
+  run: async ({ ctx }) => {
+    const rows = await ctx.db.select({ id: todos.id })
+      .from(todos)
+      .where(eq(todos.userId, ctx.user.id))
+    return rows.length
+  },
 })
 ```
 
@@ -88,16 +93,26 @@ import { z } from 'zod'
 import { todos } from '#/db/schema'
 
 export const renameTodo = mutation({
-  input: z.object({ id: z.string(), title: z.string().trim().min(1, 'Give it a title.').max(200) }),
+  input: z.object({
+    id: z.string(),
+    title: z.string().trim().min(1, 'Give it a title.').max(200),
+  }),
   auth: 'user',
   invalidates: ['todos'],
   run: async ({ input, ctx }) => {
     const [row] = await ctx.db
       .update(todos)
       .set({ title: input.title })
-      .where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id)))
+      .where(and(
+        eq(todos.id, input.id),
+        eq(todos.userId, ctx.user.id),
+      ))
       .returning()
-    if (!row) throw new FnError({ message: 'That todo is gone, or it isn\'t yours.' }, 404)
+    if (!row) {
+      throw new FnError({
+        message: 'That todo is gone, or it isn\'t yours.',
+      }, 404)
+    }
     return row
   },
 })
@@ -111,10 +126,15 @@ import { renameTodo } from '#/server/rename'
 
 export function MakeUrgent(props: { id: string; title: string }) {
   const rename = async () => {
-    await renameTodo({ id: props.id, title: `Urgent: ${props.title}` })
+    const { id, title } = props
+    await renameTodo({ id, title: `Urgent: ${title}` })
   }
   return (
-    <Button size="sm" loading={renameTodo.pending.value} onClick={() => void rename()}>
+    <Button
+      size="sm"
+      loading={renameTodo.pending.value}
+      onClick={() => void rename()}
+    >
       Mark urgent
     </Button>
   )
@@ -151,7 +171,10 @@ export const planTrip = mutation({
     nights: z.int().min(1).max(30),
     when: z.iso.date(),
   }),
-  run: ({ input }) => ({ summary: `${input.nights} nights in ${input.city} from ${input.when}` }),
+  run: ({ input }) => ({
+    summary: `${input.nights} nights in ${input.city} from ` +
+      `${input.when}`,
+  }),
 })
 ```
 
@@ -168,7 +191,9 @@ import { schemasOf } from '@weft-js/start/db'
 import { z } from 'zod'
 import * as schema from '#/db/schema'
 
-const schemas = schemasOf(schema, { todos: { title: (s: z.ZodString) => s.trim().min(1).max(200) } })
+const schemas = schemasOf(schema, {
+  todos: { title: (s: z.ZodString) => s.trim().min(1).max(200) },
+})
 
 export const draftTodo = mutation({
   input: schemas.todos.insert.pick({ title: true }),
@@ -207,7 +232,9 @@ import { session } from '@weft-js/start/auth'
 import auth from '#/auth.server'
 import { db } from '#/db/index.server'
 
-export default async ({ request }: { request: Request }) => ({ db, ...(await session(auth, request)) })
+export default async ({ request }: { request: Request }) => ({
+  db, ...(await session(auth, request)),
+})
 
 type Session = Awaited<ReturnType<typeof auth.session>>
 
@@ -243,7 +270,11 @@ so by throwing, and how you throw decides what the browser sees.
 import { FnError } from '@weft-js/start'
 
 export function mustOwn(owner: string, userId: string) {
-  if (owner !== userId) throw new FnError({ message: 'You can only change your own todos.' }, 403)
+  if (owner !== userId) {
+    throw new FnError({
+      message: 'You can only change your own todos.',
+    }, 403)
+  }
 }
 ```
 
@@ -259,7 +290,9 @@ const TAKEN = new Set(['admin', 'root'])
 export const pickUsername = mutation({
   input: z.object({ username: z.string().min(3) }),
   run: ({ input }) => {
-    if (TAKEN.has(input.username)) invalid({ username: 'That name is taken.' })
+    if (TAKEN.has(input.username)) {
+      invalid({ username: 'That name is taken.' })
+    }
     return { username: input.username }
   },
 })
@@ -303,8 +336,10 @@ export function Book() {
       const r = await bookTable({ time })
       note.value = `Booked for ${r.booked}.`
     } catch (e) {
-      if (e instanceof FnError && e.code === 'full') note.value = `Full then. ${(e.data as { next: string }).next} is free.`
-      else note.value = e instanceof Error ? e.message : String(e)
+      if (e instanceof FnError && e.code === 'full') {
+        const { next } = e.data as { next: string }
+        note.value = `Full then. ${next} is free.`
+      } else note.value = e instanceof Error ? e.message : String(e)
     }
   }
   return (
@@ -362,7 +397,9 @@ import { todos } from '#/db/schema'
 import { listTodos } from './todos'
 
 export const renameFast = mutation({
-  input: z.object({ id: z.string(), title: z.string().trim().min(1) }),
+  input: z.object({
+    id: z.string(), title: z.string().trim().min(1),
+  }),
   auth: 'user',
   invalidates: ['todos'],
   optimistic: ({ input }, cache) =>
@@ -371,7 +408,12 @@ export const renameFast = mutation({
       if (t) t.title = input.title
     }),
   run: ({ input, ctx }) =>
-    ctx.db.update(todos).set({ title: input.title }).where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))).returning(),
+    ctx.db.update(todos)
+      .set({ title: input.title })
+      .where(and(
+        eq(todos.id, input.id), eq(todos.userId, ctx.user.id),
+      ))
+      .returning(),
 })
 ```
 
@@ -460,7 +502,9 @@ export const removeTodo = mutation({
   input: z.object({ id: z.string() }),
   auth: 'user',
   invalidates: ['todos'],
-  run: ({ input, ctx }) => ctx.db.delete(todos).where(eq(todos.id, input.id)).returning(),
+  run: ({ input, ctx }) => ctx.db.delete(todos)
+    .where(eq(todos.id, input.id))
+    .returning(),
 })
 ```
 :::solution
@@ -476,7 +520,11 @@ export const removeTodo = mutation({
   input: z.object({ id: z.string() }),
   auth: 'user',
   invalidates: ['todos'],
-  run: ({ input, ctx }) => ctx.db.delete(todos).where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))).returning(),
+  run: ({ input, ctx }) => ctx.db.delete(todos)
+    .where(and(
+      eq(todos.id, input.id), eq(todos.userId, ctx.user.id),
+    ))
+    .returning(),
 })
 ```
 
@@ -497,7 +545,12 @@ export const flipTodo = mutation({
   input: z.object({ id: z.string() }),
   auth: 'user',
   invalidates: ['todos'],
-  run: ({ input, ctx }) => ctx.db.update(todos).set({ done: not(todos.done) }).where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))).returning(),
+  run: ({ input, ctx }) => ctx.db.update(todos)
+    .set({ done: not(todos.done) })
+    .where(and(
+      eq(todos.id, input.id), eq(todos.userId, ctx.user.id),
+    ))
+    .returning(),
 })
 ```
 :::solution
@@ -519,7 +572,12 @@ export const flipTodo = mutation({
       const t = list.find(x => x.id === input.id)
       if (t) t.done = !t.done
     }),
-  run: ({ input, ctx }) => ctx.db.update(todos).set({ done: not(todos.done) }).where(and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))).returning(),
+  run: ({ input, ctx }) => ctx.db.update(todos)
+    .set({ done: not(todos.done) })
+    .where(and(
+      eq(todos.id, input.id), eq(todos.userId, ctx.user.id),
+    ))
+    .returning(),
 })
 ```
 
@@ -558,7 +616,9 @@ const names = new Set(['ada'])
 export const register = mutation({
   input: z.object({ name: z.string().min(2) }),
   run: ({ input }) => {
-    if (names.has(input.name)) invalid({ name: 'That name is taken.' })
+    if (names.has(input.name)) {
+      invalid({ name: 'That name is taken.' })
+    }
     names.add(input.name)
     return { name: input.name }
   },

@@ -19,7 +19,11 @@ To pass a fixed string as an attribute, put it in single or double quotes, as in
 
 ```tsx
 export function Avatar() {
-  return <img class="avatar" src="https://i.imgur.com/7vQD0fPs.jpg" alt="Gregorio Y. Zara" />
+  return <img
+    class="avatar"
+    src="https://i.imgur.com/7vQD0fPs.jpg"
+    alt="Gregorio Y. Zara"
+  />
 }
 ```
 
@@ -52,7 +56,8 @@ A function call works too. Here the heading shows today's weekday:
 const today = new Date()
 
 function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(date)
+  return new Intl.DateTimeFormat('en-GB', { weekday: 'long' })
+    .format(date)
 }
 
 export function Today() {
@@ -90,7 +95,10 @@ You'll see this most with `style`:
 ```tsx
 export function TodoList() {
   return (
-    <ul style={{ background: 'var(--warp-color-surface-raised)', color: 'var(--warp-color-accent-text)' }}>
+    <ul style={{
+      background: 'var(--warp-color-surface-raised)',
+      color: 'var(--warp-color-accent-text)',
+    }}>
       <li>Improve the videophone</li>
       <li>Prepare aeronautics lectures</li>
       <li>Work on the alcohol-fuelled engine</li>
@@ -149,7 +157,11 @@ import { state } from '@weft-js/core'
 export function Counter() {
   const count = state(0)
   return (
-    <button type="button" onClick={() => count.value++} title={`Clicked ${count.value} times`}>
+    <button
+      type="button"
+      onClick={() => count.value++}
+      title={`Clicked ${count.value} times`}
+    >
       Clicked {count.value} times
     </button>
   )
@@ -174,7 +186,8 @@ stops you with **W001**:
 ```tsx
 export function Counter() {
   const count = state(0)
-  const text = `Clicked ${count.value} times` // read once, when the component is set up
+  // Read once, when the component is set up.
+  const text = `Clicked ${count.value} times`
   return <button onClick={() => count.value++}>{text}</button>
 }
 ```
@@ -227,7 +240,10 @@ problem.
 
 <!-- example: skip the starting point, deliberately broken -->
 ```tsx
-const person = { name: 'Gregorio Y. Zara', theme: { color: 'var(--warp-color-accent-text)' } }
+const person = {
+  name: 'Gregorio Y. Zara',
+  theme: { color: 'var(--warp-color-accent-text)' },
+}
 
 export default function TodoList() {
   return (
@@ -241,7 +257,10 @@ export default function TodoList() {
 `{person}` renders the whole object, and an object turned into text is `[object Object]`. Render one of its fields:
 
 ```tsx
-const person = { name: 'Gregorio Y. Zara', theme: { color: 'var(--warp-color-accent-text)' } }
+const person = {
+  name: 'Gregorio Y. Zara',
+  theme: { color: 'var(--warp-color-accent-text)' },
+}
 
 export default function TodoList() {
   return (
@@ -260,15 +279,26 @@ The image URL is written into the markup. Move it into the `person` object as `i
 const person = { name: 'Gregorio Y. Zara' }
 
 export default function Avatar() {
-  return <img class="avatar" src="https://i.imgur.com/7vQD0fPs.jpg" alt={person.name} />
+  return <img
+    class="avatar"
+    src="https://i.imgur.com/7vQD0fPs.jpg"
+    alt={person.name}
+  />
 }
 ```
 :::solution
 ```tsx
-const person = { name: 'Gregorio Y. Zara', imageUrl: 'https://i.imgur.com/7vQD0fPs.jpg' }
+const person = {
+  name: 'Gregorio Y. Zara',
+  imageUrl: 'https://i.imgur.com/7vQD0fPs.jpg',
+}
 
 export default function Avatar() {
-  return <img class="avatar" src={person.imageUrl} alt={person.name} />
+  return <img
+    class="avatar"
+    src={person.imageUrl}
+    alt={person.name}
+  />
 }
 ```
 :::
@@ -279,19 +309,33 @@ Build the image URL from parts: a base URL, the `imageId`, then the size `s` and
 <!-- example: skip the starting point for the solution below -->
 ```tsx
 const baseUrl = 'https://i.imgur.com/'
-const person = { name: 'Gregorio Y. Zara', imageId: '7vQD0fP', imageSize: 's' }
+const person = {
+  name: 'Gregorio Y. Zara', imageId: '7vQD0fP', imageSize: 's',
+}
 
 export default function Avatar() {
-  return <img class="avatar" src="https://i.imgur.com/7vQD0fPs.jpg" alt={person.name} />
+  return <img
+    class="avatar"
+    src="https://i.imgur.com/7vQD0fPs.jpg"
+    alt={person.name}
+  />
 }
 ```
 :::solution
 ```tsx
 const baseUrl = 'https://i.imgur.com/'
-const person = { name: 'Gregorio Y. Zara', imageId: '7vQD0fP', imageSize: 's' }
+const person = {
+  name: 'Gregorio Y. Zara', imageId: '7vQD0fP', imageSize: 's',
+}
 
 export default function Avatar() {
-  return <img class="avatar" src={baseUrl + person.imageId + person.imageSize + '.jpg'} alt={person.name} />
+  return (
+    <img
+      class="avatar"
+      src={baseUrl + person.imageId + person.imageSize + '.jpg'}
+      alt={person.name}
+    />
+  )
 }
 ```
 A template literal works as well: ``src={`${baseUrl}${person.imageId}${person.imageSize}.jpg`}``.
@@ -310,7 +354,12 @@ export default function Avatar() {
   const big = state(false)
   return (
     <>
-      <img src={`https://i.imgur.com/${person.imageId}${big.value ? 'b' : 's'}.jpg`} alt={person.name} />
+      <img
+        src={`https://i.imgur.com/${person.imageId}${
+          big.value ? 'b' : 's'
+        }.jpg`}
+        alt={person.name}
+      />
       <button type="button" onClick={() => (big.value = !big.value)}>
         {big.value ? 'Smaller' : 'Bigger'}
       </button>

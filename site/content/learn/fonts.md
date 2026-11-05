@@ -29,8 +29,18 @@ export default defineConfig({
     warp(),
     text({
       fonts: {
-        body: { family: 'Inter', src: 'assets/fonts/inter.woff2', fallback: 'Arial', axes: { wght: [100, 900] } },
-        display: { family: 'Fraunces', src: 'assets/fonts/fraunces.woff2', fallback: 'Georgia', weight: 700 },
+        body: {
+          family: 'Inter',
+          src: 'assets/fonts/inter.woff2',
+          fallback: 'Arial',
+          axes: { wght: [100, 900] },
+        },
+        display: {
+          family: 'Fraunces',
+          src: 'assets/fonts/fraunces.woff2',
+          fallback: 'Georgia',
+          weight: 700,
+        },
       },
     }),
   ],
@@ -112,14 +122,26 @@ export default defineConfig({
   plugins: [
     warp({
       fonts: {
-        body: '"Inter", "Inter Fallback", ui-sans-serif, sans-serif',
-        display: '"Fraunces", "Fraunces Fallback", Georgia, serif',
+        body:
+          '"Inter", "Inter Fallback", ui-sans-serif, sans-serif',
+        display:
+          '"Fraunces", "Fraunces Fallback", Georgia, serif',
       },
     }),
     text({
       fonts: {
-        body: { family: 'Inter', src: 'assets/fonts/inter.woff2', fallback: 'Arial', axes: { wght: [100, 900] } },
-        display: { family: 'Fraunces', src: 'assets/fonts/fraunces.woff2', fallback: 'Georgia', weight: 700 },
+        body: {
+          family: 'Inter',
+          src: 'assets/fonts/inter.woff2',
+          fallback: 'Arial',
+          axes: { wght: [100, 900] },
+        },
+        display: {
+          family: 'Fraunces',
+          src: 'assets/fonts/fraunces.woff2',
+          fallback: 'Georgia',
+          weight: 700,
+        },
       },
     }),
   ],
@@ -145,7 +167,10 @@ A custom server can read the list the build made:
 ```ts
 import { preloads } from 'weft:fonts/preloads'
 
-export const fontLinks = preloads.map(p => `<link rel="preload" as="font" type="${p.type}" href="${p.href}" crossorigin>`).join('')
+export const fontLinks = preloads.map((p) =>
+  `<link rel="preload" as="font" type="${p.type}" ` +
+  `href="${p.href}" crossorigin>`
+).join('')
 ```
 
 `@weft-js/core/vite` already loads the generated CSS and adds these links for you, in a Start app or an HTML one, so
@@ -226,7 +251,12 @@ export default defineConfig({
   plugins: [
     text({
       fonts: {
-        body: { family: 'Lora', src: 'public/fonts/lora.woff2', fallback: 'Georgia', axes: { wght: [400, 700] } },
+        body: {
+          family: 'Lora',
+          src: 'public/fonts/lora.woff2',
+          fallback: 'Georgia',
+          axes: { wght: [400, 700] },
+        },
       },
     }),
   ],
@@ -254,9 +284,24 @@ export default defineConfig({
   plugins: [
     text({
       fonts: {
-        body: { family: 'Inter', src: 'assets/fonts/inter.woff2', fallback: 'Arial', axes: { wght: [100, 900] } },
-        display: { family: 'Space Grotesk', src: 'assets/fonts/space-grotesk.woff2', fallback: 'Arial', axes: { wght: [300, 700] } },
-        mono: { family: 'IBM Plex Mono', src: 'assets/fonts/plex-mono.woff2', fallback: 'Courier New', weight: 400 },
+        body: {
+          family: 'Inter',
+          src: 'assets/fonts/inter.woff2',
+          fallback: 'Arial',
+          axes: { wght: [100, 900] },
+        },
+        display: {
+          family: 'Space Grotesk',
+          src: 'assets/fonts/space-grotesk.woff2',
+          fallback: 'Arial',
+          axes: { wght: [300, 700] },
+        },
+        mono: {
+          family: 'IBM Plex Mono',
+          src: 'assets/fonts/plex-mono.woff2',
+          fallback: 'Courier New',
+          weight: 400,
+        },
       },
     }),
   ],
@@ -284,7 +329,12 @@ export default defineConfig({
   plugins: [
     text({
       fonts: {
-        display: { family: 'Fraunces', src: 'assets/fonts/fraunces.woff2', fallback: 'Georgia', axes: { wght: [100, 900], SOFT: [0, 100] } },
+        display: {
+          family: 'Fraunces',
+          src: 'assets/fonts/fraunces.woff2',
+          fallback: 'Georgia',
+          axes: { wght: [100, 900], SOFT: [0, 100] },
+        },
       },
     }),
   ],

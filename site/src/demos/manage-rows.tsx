@@ -8,26 +8,44 @@ const PRODUCTS: Product[] = [
   { id: 'p3', name: 'Strainer' },
 ]
 
-// Gets the whole box and reads its own entry, so a change to another product never re-runs this row.
-function Line(props: { product: Product; cart: State<Record<string, number>> }) {
-  const qty = derived(() => props.cart.get(props.product.id) ?? 0)
+// Reads its own entry from the whole box, so a change
+// to another product never re-runs this row.
+function Line({
+  product,
+  cart,
+}: {
+  product: Product
+  cart: State<Record<string, number>>
+}) {
+  const qty = derived(() => cart.get(product.id) ?? 0)
   const add = () =>
-    props.cart.set((d) => {
-      d[props.product.id] = qty.value + 1
+    cart.set((d) => {
+      d[product.id] = qty.value + 1
     })
   const remove = () =>
-    props.cart.set((d) => {
-      d[props.product.id] = Math.max(0, qty.value - 1)
+    cart.set((d) => {
+      d[product.id] = Math.max(0, qty.value - 1)
     })
   return (
-    <Row gap="tight" align="baseline">
+    <Row
+      gap="tight"
+      align="baseline"
+    >
       <span>
-        {props.product.name}: {qty.value}
+        {product.name}: {qty.value}
       </span>
-      <Button size="sm" onClick={add}>
+      <Button
+        size="sm"
+        onClick={add}
+      >
         +1
       </Button>
-      <Button size="sm" emphasis="ghost" disabled={qty.value === 0} onClick={remove}>
+      <Button
+        size="sm"
+        emphasis="ghost"
+        disabled={qty.value === 0}
+        onClick={remove}
+      >
         −1
       </Button>
     </Row>
@@ -36,11 +54,17 @@ function Line(props: { product: Product; cart: State<Record<string, number>> }) 
 
 export default function Cart() {
   const cart = state<Record<string, number>>({})
-  const count = derived(() => Object.values(cart.value).reduce((a, b) => a + b, 0))
+  const count = derived(() =>
+    Object.values(cart.value).reduce((a, b) => a + b, 0),
+  )
   return (
     <Card title={`Cart: ${count.value} items`}>
       {PRODUCTS.map((p) => (
-        <Line key={p.id} product={p} cart={cart} />
+        <Line
+          key={p.id}
+          product={p}
+          cart={cart}
+        />
       ))}
     </Card>
   )

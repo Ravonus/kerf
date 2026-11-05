@@ -13,7 +13,10 @@ import type { SignStatus } from '@weft-js/warp'
 
 // -- signature gate --
 
-const SIGN_STATES: { value: SignStatus; label: string }[] = [
+const SIGN_STATES: {
+  value: SignStatus
+  label: string
+}[] = [
   { value: 'unsigned', label: 'Unsigned' },
   { value: 'pending', label: 'Pending' },
   { value: 'signed', label: 'Signed' },
@@ -60,7 +63,10 @@ const ALL_SIGN_STATES: SignStatus[] = [
 export const SignGateBadgeStates = () => (
   <>
     {ALL_SIGN_STATES.map((status) => (
-      <SignGateBadge key={status} status={status} />
+      <SignGateBadge
+        key={status}
+        status={status}
+      />
     ))}
   </>
 )
@@ -71,20 +77,33 @@ const STEPS = [
   {
     id: 'project',
     title: 'Create your first project',
-    description: 'Projects hold your services and deploys.',
+    description:
+      'Projects hold your services and deploys.',
   },
-  { id: 'repo', title: 'Connect a repository', description: 'Deploy on every push to main.' },
-  { id: 'invite', title: 'Invite your team', description: 'Add teammates by email.' },
+  {
+    id: 'repo',
+    title: 'Connect a repository',
+    description: 'Deploy on every push to main.',
+  },
+  {
+    id: 'invite',
+    title: 'Invite your team',
+    description: 'Add teammates by email.',
+  },
 ]
 
 export function ChecklistSetup() {
   const done = state(['project'])
-  const finish = (id: string) => (done.value = [...done.value, id])
+  const finish = (id: string) =>
+    (done.value = [...done.value, id])
   const items = derived(() =>
     STEPS.map((step) => ({
       ...step,
       done: done.value.includes(step.id),
-      action: { label: 'Do it', onClick: () => finish(step.id) },
+      action: {
+        label: 'Do it',
+        onClick: () => finish(step.id),
+      },
     })),
   )
   return (
@@ -104,9 +123,20 @@ export function ChecklistSetup() {
 export function ChecklistSelfChecked() {
   const done = state<string[]>([])
   const toggle = (id: string, on: boolean) =>
-    (done.value = on ? [...done.value, id] : done.value.filter((x) => x !== id))
+    (done.value = on
+      ? [...done.value, id]
+      : done.value.filter((x) => x !== id))
   const items = derived(() =>
-    STEPS.map((step) => ({ ...step, done: done.value.includes(step.id) })),
+    STEPS.map((step) => ({
+      ...step,
+      done: done.value.includes(step.id),
+    })),
   )
-  return <Checklist title="Launch day" items={items.value} onToggle={toggle} />
+  return (
+    <Checklist
+      title="Launch day"
+      items={items.value}
+      onToggle={toggle}
+    />
+  )
 }

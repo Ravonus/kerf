@@ -26,8 +26,16 @@ function handleSubmit() {
   button.disabled = true
   spinner.hidden = false
   check(textarea.value).then(
-    () => { form.hidden = true; success.hidden = false },
-    err => { textarea.disabled = false; button.disabled = false; spinner.hidden = true; errorText.textContent = err.message },
+    () => {
+      form.hidden = true
+      success.hidden = false
+    },
+    err => {
+      textarea.disabled = false
+      button.disabled = false
+      spinner.hidden = true
+      errorText.textContent = err.message
+    },
   )
 }
 ```
@@ -163,7 +171,12 @@ export function Quiz() {
               error.value = null
             }}
           />
-          <button type="submit" disabled={empty.value || status.value === 'submitting'}>Submit</button>
+          <button
+            type="submit"
+            disabled={empty.value || status.value === 'submitting'}
+          >
+            Submit
+          </button>
           {error.value !== null && <p role="alert">{error.value}</p>}
         </form>
       )}
@@ -234,15 +247,29 @@ export function Profile() {
   const editing = state(false)
   const first = state('Ana')
   const last = state('Silva')
+  const toggleEditing = (e: Event) => {
+    e.preventDefault()
+    editing.value = !editing.value
+  }
   return (
-    <form onSubmit={e => { e.preventDefault(); editing.value = !editing.value }}>
+    <form onSubmit={toggleEditing}>
       {editing.value ? (
         <>
-          <input aria-label="First name" value={first.value} onInput={e => (first.value = e.currentTarget.value)} />
-          <input aria-label="Last name" value={last.value} onInput={e => (last.value = e.currentTarget.value)} />
+          <input
+            aria-label="First name"
+            value={first.value}
+            onInput={e => (first.value = e.currentTarget.value)}
+          />
+          <input
+            aria-label="Last name"
+            value={last.value}
+            onInput={e => (last.value = e.currentTarget.value)}
+          />
         </>
       ) : (
-        <p>{first.value} {last.value}</p>
+        <p>
+          {first.value} {last.value}
+        </p>
       )}
       <button type="submit">{editing.value ? 'Save' : 'Edit'}</button>
     </form>
@@ -287,11 +314,22 @@ export function Feedback() {
         <p>Thanks for the feedback.</p>
       ) : (
         <>
-          <textarea aria-label="Feedback" value={text.value} disabled={status.value === 'sending'} onInput={e => (text.value = e.currentTarget.value)} />
-          <button type="button" disabled={status.value === 'sending'} onClick={() => void submit()}>
+          <textarea
+            aria-label="Feedback"
+            value={text.value}
+            disabled={status.value === 'sending'}
+            onInput={e => (text.value = e.currentTarget.value)}
+          />
+          <button
+            type="button"
+            disabled={status.value === 'sending'}
+            onClick={() => void submit()}
+          >
             {status.value === 'sending' ? 'Sending…' : 'Send'}
           </button>
-          {status.value === 'error' && <p role="alert">That didn't go through. Try again.</p>}
+          {status.value === 'error' && (
+            <p role="alert">That didn't go through. Try again.</p>
+          )}
         </>
       )}
     </section>
@@ -308,7 +346,11 @@ This component never shows "Saved", even after the save finishes. Why, and how d
 function Save() {
   const saved = state(false)
   if (saved.value) return <p>Saved</p>
-  return <button type="button" onClick={() => (saved.value = true)}>Save</button>
+  return (
+    <button type="button" onClick={() => (saved.value = true)}>
+      Save
+    </button>
+  )
 }
 ```
 :::solution
@@ -319,7 +361,17 @@ import { state } from '@weft-js/core'
 
 export function Save() {
   const saved = state(false)
-  return <>{saved.value ? <p>Saved</p> : <button type="button" onClick={() => (saved.value = true)}>Save</button>}</>
+  return (
+    <>
+      {saved.value ? (
+        <p>Saved</p>
+      ) : (
+        <button type="button" onClick={() => (saved.value = true)}>
+          Save
+        </button>
+      )}
+    </>
+  )
 }
 ```
 :::

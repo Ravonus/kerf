@@ -130,11 +130,35 @@ with Retry). The frame keeps its height. Rows are idle, hover, `data-selected`, 
 the checkbox, not on `aria-selected`.
 
 ```ts
-<Table rows={projects.list.live()} key="id" phone="cards" density="cozy"
-  sort={sort} onSortChange={(s) => sort(s)} selection={sel} onSelectionChange={...}
-  page={{ size: 25, cursor }} onPageChange={(c, reason) => ...} expand={(r) => <Detail row={r} />}>
-  <Table.Column id="name" header="Project" pin rowHeader card="title" sort />
-  <Table.Column id="budget" header="Budget" numeric priority={2} edit={money} validate={(v) => v > 0 || "…"} />
+<Table
+  rows={projects.list.live()}
+  key="id"
+  phone="cards"
+  density="cozy"
+  sort={sort}
+  onSortChange={(s) => sort(s)}
+  selection={sel}
+  onSelectionChange={...}
+  page={{ size: 25, cursor }}
+  onPageChange={(c, reason) => ...}
+  expand={(r) => <Detail row={r} />}
+>
+  <Table.Column
+    id="name"
+    header="Project"
+    pin
+    rowHeader
+    card="title"
+    sort
+  />
+  <Table.Column
+    id="budget"
+    header="Budget"
+    numeric
+    priority={2}
+    edit={money}
+    validate={(v) => v > 0 || "…"}
+  />
 </Table>
 ```
 
@@ -249,7 +273,13 @@ pausing exposes the latest values in the summary.
   message.
 
 ```ts
-<PaginationBar mode="offset" total={2481} page={page} size={size} onPageChange={(p) => page(p)} />
+<PaginationBar
+  mode="offset"
+  total={2481}
+  page={page}
+  size={size}
+  onPageChange={(p) => page(p)}
+/>
 <LoadMore resource={feed} onLoad={(cursor) => feed.next(cursor)} />
 ```
 
@@ -281,9 +311,25 @@ pausing exposes the latest values in the summary.
   Presence is shape-coded: ● online, ▲ away, ■ busy. The group overlaps with a surface ring and a `+n` "more" item.
 
 ```ts
-<List items={people} key="id" swipe={[{ label: "Pin", tone: "info", run }, { label: "Remove", tone: "critical", run }]} />
-<Sortable items={priorities} onReorder={(from, to) => ...} label={(p) => p.name} />
-<Tree items={files} expanded={open} selected={sel} onSelectedChange={...} />
+<List
+  items={people}
+  key="id"
+  swipe={[
+    { label: "Pin", tone: "info", run },
+    { label: "Remove", tone: "critical", run },
+  ]}
+/>
+<Sortable
+  items={priorities}
+  onReorder={(from, to) => ...}
+  label={(p) => p.name}
+/>
+<Tree
+  items={files}
+  expanded={open}
+  selected={sel}
+  onSelectedChange={...}
+/>
 ```
 
 ## 10. Kanban
@@ -375,9 +421,23 @@ render in the same frame height.
 | Choropleth | **tile-grid** map (equal-area tiles, no projection bias, phone-safe); geo shapes via the map pack | 10 |
 
 ```ts
-<LineChart title="Revenue" data={rev} x="month" series={["subs", "usage", "services"]} format={money}
-  summary={(c) => `Total grew ${pct(c.data)}…`} annotations={[{ x: "Sep", label: "Usage pricing" }]} />
-<BarChart title="Seats" data={seats} x="quarter" series={plans} layout={layout.value} toolbar={<Segmented … />} />
+<LineChart
+  title="Revenue"
+  data={rev}
+  x="month"
+  series={["subs", "usage", "services"]}
+  format={money}
+  summary={(c) => `Total grew ${pct(c.data)}…`}
+  annotations={[{ x: "Sep", label: "Usage pricing" }]}
+/>
+<BarChart
+  title="Seats"
+  data={seats}
+  x="quarter"
+  series={plans}
+  layout={layout.value}
+  toolbar={<Segmented … />}
+/>
 ```
 
 **As built** (`packages/warp-core/src/charts`, `packages/warp/src/Chart.tsx`, `Charts.tsx`).

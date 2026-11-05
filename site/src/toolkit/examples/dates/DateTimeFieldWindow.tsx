@@ -14,9 +14,19 @@ export function DateTimeFieldWindow() {
   const at = state<IsoDateTime | null>('2026-11-07T22:00')
   return (
     <Stack gap="related">
-      <DateTimeField label="Maintenance starts" today={TODAY} value={at} min="2026-11-02" />
-      <Text subtle role="caption">
-        {at.value ? `Sent to the API as ${at.value}` : 'Pick a date and a time'}
+      <DateTimeField
+        label="Maintenance starts"
+        today={TODAY}
+        value={at}
+        min="2026-11-02"
+      />
+      <Text
+        subtle
+        role="caption"
+      >
+        {at.value
+          ? `Sent to the API as ${at.value}`
+          : 'Pick a date and a time'}
       </Text>
     </Stack>
   )

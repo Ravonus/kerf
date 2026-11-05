@@ -27,7 +27,10 @@ export const LOOK = [
 
 export const FACTS = [
   { icon: 'globe', says: 'Served from 5 regions' },
-  { icon: 'shield', says: 'Certificates renewed for you' },
+  {
+    icon: 'shield',
+    says: 'Certificates renewed for you',
+  },
   { icon: 'clock', says: 'Roll back in ten seconds' },
   { icon: 'activity', says: 'Live logs on every deploy' },
 ] as const

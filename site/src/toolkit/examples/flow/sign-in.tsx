@@ -1,6 +1,18 @@
 import { state } from '@weft-js/core'
-import { AuthDone, AuthScreen, Button, Heading, Input, SignIn, Stack } from '@weft-js/warp'
+import {
+  AuthDone,
+  AuthScreen,
+  Button,
+  Heading,
+  Input,
+  SignIn,
+  Stack,
+} from '@weft-js/warp'
 import type { SignInValues } from '@weft-js/warp'
+
+const testimonial =
+  'We moved forty services in a quarter' +
+  ' and never missed a deploy.'
 
 export const wait = (ms: number) =>
   new Promise((done) => {
@@ -8,11 +20,22 @@ export const wait = (ms: number) =>
   })
 
 export const PROVIDERS = [
-  { id: 'google', label: 'Google', glyph: 'M12 3a9 9 0 1 0 8.5 12H12' },
-  { id: 'github', label: 'GitHub', glyph: 'M9 8l-5 4 5 4M15 8l5 4-5 4' },
+  {
+    id: 'google',
+    label: 'Google',
+    glyph: 'M12 3a9 9 0 1 0 8.5 12H12',
+  },
+  {
+    id: 'github',
+    label: 'GitHub',
+    glyph: 'M9 8l-5 4 5 4M15 8l5 4-5 4',
+  },
 ]
 
-export const SSO = [...PROVIDERS, { id: 'saml', label: 'SAML', name: 'single sign-on' }]
+export const SSO = [
+  ...PROVIDERS,
+  { id: 'saml', label: 'SAML', name: 'single sign-on' },
+]
 
 // -- signing in --
 
@@ -56,9 +79,15 @@ export function SignInWeft() {
 }
 
 export const SignInTile = () => (
-  <Stack gap="related" style="inline-size:260px">
+  <Stack
+    gap="related"
+    style="inline-size:260px"
+  >
     <Heading level={3}>Sign in to weft</Heading>
-    <Input label="Work email" placeholder="you@weft.dev" />
+    <Input
+      label="Work email"
+      placeholder="you@weft.dev"
+    />
     <Button full>Sign in</Button>
   </Stack>
 )
@@ -76,7 +105,7 @@ export function AuthScreenSplit() {
   return (
     <AuthScreen
       name="weft"
-      quote="We moved forty services in a quarter and never missed a deploy."
+      quote={testimonial}
       cite="Mara Lindqvist · weft"
     >
       <SignIn

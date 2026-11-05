@@ -5,7 +5,11 @@ export function ModalBottom() {
   const open = state(false)
   return (
     <>
-      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        onClick={() => (open.value = true)}
+      >
         Bottom
       </Button>
       <Modal

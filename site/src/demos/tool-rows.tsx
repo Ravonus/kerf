@@ -1,9 +1,16 @@
 import { state } from '@weft-js/core'
 import { Button, Card } from '@weft-js/warp'
 
-const FRUIT = ['Apple', 'Banana', 'Cherry', 'Damson', 'Fig']
+const FRUIT = [
+  'Apple',
+  'Banana',
+  'Cherry',
+  'Damson',
+  'Fig',
+]
 
-// How many times each row's quantity has been worked out. A plain object, so counting isn't itself a state write.
+// How often each row's quantity is worked out. A plain
+// object keeps counting from making a state write.
 const runs: Record<string, number> = {}
 const counted = (id: string, qty: number) => {
   const n = (runs[id] ?? 0) + 1
@@ -23,7 +30,11 @@ export default function Rows() {
         {FRUIT.map((id) => (
           <li key={id}>
             {id}: {counted(id, cart.get(id) ?? 0)}{' '}
-            <Button size="sm" emphasis="ghost" onClick={() => add(id)}>
+            <Button
+              size="sm"
+              emphasis="ghost"
+              onClick={() => add(id)}
+            >
               Add
             </Button>
           </li>

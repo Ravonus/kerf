@@ -11,19 +11,32 @@ import { z } from 'zod'
 export const Bars = defineSurface({
   name: 'bars',
   kind: 'canvas2d',                                // or 'webgl2'
-  props: z.object({ data: z.array(z.number()) }),  // or defineSurface<{ data: number[] }, 'canvas2d'>({ ... })
-  setup(s, props) {                                // runs once; `props.data` is live, so never destructure it
-    s.draw(() => {                                 // repaints when a box it read changes; the canvas is cleared first
-      const { width, height } = s.size.value       // CSS px, live
-      s.ctx.fillStyle = s.tokens.accent.css        // live theme colours: `.css`, or `.linear` for shaders
-      props.data.forEach((v, i) => s.ctx.fillRect(i * 12, height - v, 10, v))
+  // Or defineSurface<{ data: number[] }, 'canvas2d'>({ ... })
+  props: z.object({ data: z.array(z.number()) }),
+  // Runs once; props.data is live, so never destructure it.
+  setup(s, props) {
+    // Repaints on box changes; the canvas is cleared first.
+    s.draw(() => {
+      const { width, height } = s.size.value // CSS px, live
+      // Live theme colours: .css, or .linear for shaders.
+      s.ctx.fillStyle = s.tokens.accent.css
+      props.data.forEach((v, i) => {
+        s.ctx.fillRect(i * 12, height - v, 10, v)
+      })
     })
   },
 })
 
 export function Page() {
   const rows = state([3, 7, 5])
-  return <Surface use={Bars} data={rows.value} aspect="16/9" label="Sales by month" />
+  return (
+    <Surface
+      use={Bars}
+      data={rows.value}
+      aspect="16/9"
+      label="Sales by month"
+    />
+  )
 }
 ```
 
@@ -33,21 +46,43 @@ A control beside the surface needs only a box and a live prop. Nothing re-render
 import { state } from '@weft-js/core'
 import { defineSurface, Surface } from '@weft-js/core/surface'
 
-export const Stars = defineSurface<{ density: number }, 'canvas2d'>({   // name the kind too, so `s.ctx` is typed
+// Name the kind too, so s.ctx is typed.
+export const Stars = defineSurface<{ density: number }, 'canvas2d'>({
   name: 'stars',
   kind: 'canvas2d',
   setup(s, props) {
-    s.frame(({ seconds }) => {                     // every tick; reading `props.density` here keeps it live
-      for (let i = 0; i < props.density; i++) s.ctx.fillRect((i * 37 + seconds * 20) % s.size.value.width, (i * 91) % s.size.value.height, 1, 1)
+    // Every tick; reading props.density here keeps it live.
+    s.frame(({ seconds }) => {
+      for (let i = 0; i < props.density; i++) {
+        const { width, height } = s.size.value
+        const x = (i * 37 + seconds * 20) % width
+        const y = (i * 91) % height
+        s.ctx.fillRect(x, y, 1, 1)
+      }
     })
   },
 })
 
 export function Sky() {
   const density = state(100)
+  const setDensity = (e: Event & {
+    currentTarget: HTMLInputElement
+  }) => (density.value = e.currentTarget.valueAsNumber)
   return <>
-    <input type="range" min="10" max="500" value={density.value} onInput={e => (density.value = e.currentTarget.valueAsNumber)} aria-label="Density" />
-    <Surface use={Stars} density={density.value} aspect="16/9" decorative />
+    <input
+      type="range"
+      min="10"
+      max="500"
+      value={density.value}
+      onInput={setDensity}
+      aria-label="Density"
+    />
+    <Surface
+      use={Stars}
+      density={density.value}
+      aspect="16/9"
+      decorative
+    />
   </>
 }
 ```
@@ -78,7 +113,10 @@ Never `fillText` (X010). `s.text()` keeps a real element over the text, so selec
 forced colours and print all work:
 
 ```tsx
-const score = s.text(() => `Score ${props.score}`, { x: 8, y: 8, width: 200, font: '600 16px Inter', lineHeight: 22 })
+const score = s.text(() => `Score ${props.score}`, {
+  x: 8, y: 8, width: 200,
+  font: '600 16px Inter', lineHeight: 22,
+})
 ```
 
 - Options may be a function, for live positions: `() => ({ x: s.size.value.width / 2, ... })`.
@@ -95,7 +133,13 @@ jsdom has no canvas, so `@weft-js/core/test` gives it a recording one:
 
 <!-- example: skip imports the Page above from its own file -->
 ```tsx
-import { canvasCalls, clock, fakeMeasure, flush, render } from '@weft-js/core/test'
+import {
+  canvasCalls,
+  clock,
+  fakeMeasure,
+  flush,
+  render,
+} from '@weft-js/core/test'
 import { expect, test } from 'vitest'
 import { Page } from './Page'   // the Bars page above
 
@@ -104,7 +148,9 @@ test('draws a bar per value', async () => {
   render(Page, {}, { slots: { 'text.measure': fakeMeasure() } })
   await flush()
   await clock.advance(16)   // a frame
-  expect(canvasCalls(document.querySelector('canvas')!).filter(c => c.name === 'fillRect')).toHaveLength(3)
+  const canvas = document.querySelector('canvas')!
+  const bars = canvasCalls(canvas).filter(c => c.name === 'fillRect')
+  expect(bars).toHaveLength(3)
 })
 ```
 

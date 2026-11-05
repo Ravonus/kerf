@@ -92,17 +92,21 @@ sample-width counts, and the allowlists are committed.
 
 The first thing in the brief: samples that fit their box, written the way we want people to write.
 
+**Status:** implemented. Samples fit 70 columns in docs and 58 in split panes. Width violations
+fail the content build and quality check. All 206 site checks pass, including 30 rendered-page
+checks at 1440, 1024 and 390 px. Copy and annotated hanging indents have failing-before probes.
+
 **Rendering** (`site/src/styles/site.css`, `docs.css`, `example.css`, and the highlighter that emits
 `[data-part="line"]`):
 
-- [ ] Stop wrapping at any character. Wrap only at spaces (`overflow-wrap: normal`) and keep the
+- [x] Stop wrapping at any character. Wrap only at spaces (`overflow-wrap: normal`) and keep the
       leading spaces.
-- [ ] Indent wrapped lines past the line's own indent. The highlighter sets `--indent` on each line
+- [x] Indent wrapped lines past the line's own indent. The highlighter sets `--indent` on each line
       span, and CSS uses `padding-inline-start: calc(var(--indent) + 2ch)` with a matching negative
       `text-indent`. A wrapped line then reads as a continuation, as in Expressive Code's
       `hangingIndent`.
-- [ ] Copy still copies the original lines, as it does now.
-- [ ] Below 600 px, try horizontal scroll with an edge fade against the hanging wrap. Keep the one
+- [x] Copy still copies the original lines, as it does now.
+- [x] Below 600 px, try horizontal scroll with an edge fade against the hanging wrap. Keep the one
       that passes `site/test/qa.mjs` and reads better on a phone.
 
 **Content:** rewrite to fit 70 columns (docs) and 58 (split panes). The patterns to use:
@@ -140,10 +144,10 @@ The target top level:
 ```
 packages/        npm packages. Folder = npm name without the scope
 crates/          Rust: weft, weft-compiler, weft-layout
-site/            the docs site (weft.dev); generated pages aren't tracked
+site/            the docs site (weft.dev); generated pages untracked
 examples/        small runnable apps people copy
 benchmarks/      published size, speed and interactive comparisons
-evals/           agent evals: tasks, references and gates, latest version only
+evals/           agent evals: tasks, references and gates; latest only
 scripts/         repo tooling, plus scripts/lib for the shared helpers
 docs/            contributor docs, ARCHITECTURE.md, decisions/
 .github/         CI, templates, CODEOWNERS, dependabot
@@ -375,7 +379,7 @@ Each has a default. The plan proceeds on the default unless the owner says other
 ## Status
 
 - Sprint 0: guardrails implemented; formatting, lengths, sample warnings and CI are enforced
-- Sprint 1: not started
+- Sprint 1: implemented; fatal sample widths, hanging indents and 206 site checks pass
 - Sprint 2: complete; layout and archive regression gates pass
 - Sprint 3: not started
 - Sprint 4: not started

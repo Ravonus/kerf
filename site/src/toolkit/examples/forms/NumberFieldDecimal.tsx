@@ -2,7 +2,8 @@
 import { REGIONS as _REGIONS } from '../../world'
 import { NumberField } from '@weft-js/warp'
 
-/** A fraction steps by its `step`: a quarter of a CPU at a time, with the unit as a suffix. */
+/** A fraction steps by its `step`: a quarter of a CPU
+ * at a time, with the unit as a suffix. */
 export const NumberFieldDecimal = () => (
   <NumberField
     label="CPU per copy"

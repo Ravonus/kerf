@@ -53,8 +53,13 @@ export function Profile() {
   return (
     <section>
       <h2>{name.value}</h2>
-      <p class={online.value ? 'online' : 'away'}>{online.value ? 'Online' : 'Away'}</p>
-      <button type="button" onClick={() => (online.value = !online.value)}>
+      <p class={online.value ? 'online' : 'away'}>
+        {online.value ? 'Online' : 'Away'}
+      </p>
+      <button
+        type="button"
+        onClick={() => (online.value = !online.value)}
+      >
         Toggle
       </button>
     </section>
@@ -165,21 +170,30 @@ in a helper function, or behind a condition. Since the body runs once, there's n
 ```tsx
 import { state } from '@weft-js/core'
 
-// A plain function that makes state: weft's version of a custom hook, with no naming rule and no call-order rule.
+// A plain function that makes state: weft's custom hook has
+// no naming rule and no call-order rule.
 function toggle(initial: boolean) {
   const on = state(initial)
   return { on, flip: () => (on.value = !on.value) }
 }
 
-// State made in a loop, one box per setting: fine, because the body runs once.
+// One box per setting is fine: the body runs once.
 const names = ['Dark mode', 'Compact rows', 'Sounds']
 
 export function Settings() {
-  const settings = names.map(name => ({ name, ...toggle(false) }))
+  const settings = names.map((name) => ({
+    name,
+    ...toggle(false),
+  }))
   return (
     <>
-      {settings.map(s => (
-        <button type="button" key={s.name} aria-pressed={s.on.value} onClick={s.flip}>
+      {settings.map((s) => (
+        <button
+          type="button"
+          key={s.name}
+          aria-pressed={s.on.value}
+          onClick={s.flip}
+        >
           {s.name}
         </button>
       ))}
@@ -211,7 +225,8 @@ once. The compiler knows which values are state and which are props, so it catch
 <!-- example: skip deliberately wrong: reports W001 -->
 ```tsx
 export function Cart(props: { items: { price: number }[] }) {
-  const total = props.items.reduce((sum, i) => sum + i.price, 0) // W001
+  // W001
+  const total = props.items.reduce((sum, i) => sum + i.price, 0)
   return <p>Total: {total}</p>
 }
 ```
@@ -223,7 +238,9 @@ up, so this never updates") and offers to wrap it in `derived`:
 import { derived } from '@weft-js/core'
 
 export function Cart(props: { items: { price: number }[] }) {
-  const total = derived(() => props.items.reduce((sum, i) => sum + i.price, 0))
+  const total = derived(() =>
+    props.items.reduce((sum, i) => sum + i.price, 0)
+  )
   return <p>Total: {total.value}</p>
 }
 ```
@@ -320,13 +337,19 @@ Rewrite this React component in weft.
 ```tsx
 function Search({ items }) {
   const [query, setQuery] = useState('')
-  const found = useMemo(() => items.filter(i => i.includes(query)), [items, query])
+  const found = useMemo(
+    () => items.filter((i) => i.includes(query)),
+    [items, query],
+  )
   useEffect(() => {
     document.title = `${found.length} results`
   }, [found])
   return (
     <>
-      <input value={query} onChange={e => setQuery(e.target.value)} />
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
       <p>{found.length} found</p>
     </>
   )
@@ -338,16 +361,22 @@ import { derived, state, watch } from '@weft-js/core'
 
 export function Search(props: { items: string[] }) {
   const query = state('')
-  const found = derived(() => props.items.filter(i => i.includes(query.value)))
+  const found = derived(() =>
+    props.items.filter((i) => i.includes(query.value))
+  )
   watch(
     () => found.value.length,
-    n => {
+    (n) => {
       document.title = `${n} results`
     },
   )
   return (
     <>
-      <input aria-label="Search" value={query.value} onInput={e => (query.value = e.currentTarget.value)} />
+      <input
+        aria-label="Search"
+        value={query.value}
+        onInput={(e) => (query.value = e.currentTarget.value)}
+      />
       <p>{found.value.length} found</p>
     </>
   )

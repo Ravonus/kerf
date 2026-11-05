@@ -41,7 +41,10 @@ A prop normally passes a value: `value={guests.value}` gives the child a live re
 gives the child the same live read, plus a way back. The compiler turns it into a prop with a getter and a setter:
 
 ```js
-{ get value() { return guests.value }, set value(v) { guests.value = v } }
+{
+  get value() { return guests.value },
+  set value(v) { guests.value = v },
+}
 ```
 
 Reading `value` in the child reads the box. Writing it, through `let`, `props.value =`, `++` or `+=`, calls the setter,
@@ -82,8 +85,13 @@ warns against.
   `bind:value={guests.value}` or `bind:value={3}`.
 
 ```tsx
-<input bind:value={name} />                                        // W061: a built-in element
-<input value={name.value} onInput={e => (name.value = e.currentTarget.value)} />  // what it should be
+// W061: a built-in element
+<input bind:value={name} />
+// Use a value and handler instead.
+<input
+  value={name.value}
+  onInput={e => (name.value = e.currentTarget.value)}
+/>
 ```
 
 ## Types: `weft tsc` and `bind(box)`
@@ -103,9 +111,21 @@ function Stepper(props: { value: number }) {
   let { value } = props
   return (
     <p>
-      <Button size="sm" emphasis="outline" onClick={() => value--}>−</Button>
+      <Button
+        size="sm"
+        emphasis="outline"
+        onClick={() => value--}
+      >
+        −
+      </Button>
       <strong> {value} </strong>
-      <Button size="sm" emphasis="outline" onClick={() => value++}>+</Button>
+      <Button
+        size="sm"
+        emphasis="outline"
+        onClick={() => value++}
+      >
+        +
+      </Button>
     </p>
   )
 }
@@ -146,8 +166,14 @@ You can also pass the box itself and type the prop as `State<T>`:
 import { type State } from '@weft-js/core'
 import { Input } from '@weft-js/warp'
 
-export function Coupon(props: { code: State<string> }) {
-  return <Input label="Coupon" value={props.code.value} onInput={e => (props.code.value = e.currentTarget.value)} />
+export function Coupon({ code }: { code: State<string> }) {
+  return (
+    <Input
+      label="Coupon"
+      value={code.value}
+      onInput={e => (code.value = e.currentTarget.value)}
+    />
+  )
 }
 ```
 
@@ -194,7 +220,11 @@ export function Settings() {
   return (
     <section>
       <EmailField bind:value={email} />
-      <p>{email.value ? `Receipts go to ${email.value}` : 'No receipts'}</p>
+      <p>
+        {email.value
+          ? `Receipts go to ${email.value}`
+          : 'No receipts'}
+      </p>
     </section>
   )
 }
@@ -232,13 +262,23 @@ You don't have to use `bind:`. The React pattern, a value and a handler prop, wo
 import { state } from '@weft-js/core'
 import { Button } from '@weft-js/warp'
 
-function Stepper(props: { value: number; onChange: (n: number) => void }) {
-  return <Button onClick={() => props.onChange(props.value + 1)}>{props.value}</Button>
+function Stepper(
+  { value, onChange }: {
+    value: number
+    onChange: (n: number) => void
+  },
+) {
+  return <Button onClick={() => onChange(value + 1)}>{value}</Button>
 }
 
 export function Booking() {
   const guests = state(2)
-  return <Stepper value={guests.value} onChange={n => (guests.value = n)} />
+  return (
+    <Stepper
+      value={guests.value}
+      onChange={n => (guests.value = n)}
+    />
+  )
 }
 ```
 
@@ -278,7 +318,14 @@ state can change: look for `bind:`, and for boxes passed as props.
 Stop the `Stepper` in the demo at the top from going below 1.
 :::solution
 ```tsx
-<Button size="sm" emphasis="outline" disabled={value <= 1} onClick={() => value--}>−</Button>
+<Button
+  size="sm"
+  emphasis="outline"
+  disabled={value <= 1}
+  onClick={() => value--}
+>
+  −
+</Button>
 ```
 
 `value` is the live alias, so `disabled` follows it, whether the write came from the child or the parent.
@@ -312,7 +359,11 @@ export function Post() {
   const title = state('')
   return (
     <section>
-      <Input label="Title" value={title.value} onInput={e => (title.value = e.currentTarget.value)} />
+      <Input
+        label="Title"
+        value={title.value}
+        onInput={e => (title.value = e.currentTarget.value)}
+      />
       <p>{title.value.length} characters</p>
     </section>
   )
@@ -335,7 +386,12 @@ function Rating(props: { value?: number }) {
   return (
     <p>
       {[1, 2, 3, 4, 5].map(n => (
-        <Button key={n} size="sm" emphasis={n <= value ? 'solid' : 'outline'} onClick={() => (value = n)}>
+        <Button
+          key={n}
+          size="sm"
+          emphasis={n <= value ? 'solid' : 'outline'}
+          onClick={() => (value = n)}
+        >
           {n <= value ? '★' : '☆'}
         </Button>
       ))}

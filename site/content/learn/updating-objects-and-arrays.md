@@ -27,8 +27,8 @@ position.value = { x: 5, y: 0 }     // a new object: readers update
 and not for this:
 
 ```tsx
-position.value.x = 5                // reads the box, then changes the object it holds: nobody is told
-position.value = position.value     // the same object again: Object.is says nothing changed
+position.value.x = 5            // changes the held object silently
+position.value = position.value  // same object: no change
 ```
 
 The second line *reads* `position.value` and then changes the object it got back. The object did change, but the box
@@ -76,13 +76,30 @@ import { Input } from '@weft-js/warp'
 type Person = { first: string; last: string; email: string }
 
 export function Form() {
-  const person = state<Person>({ first: 'Barbara', last: 'Hepworth', email: 'bhepworth@sculpture.com' })
-  const update = (field: keyof Person, value: string) => (person.value = { ...person.value, [field]: value })
+  const person = state<Person>({
+    first: 'Barbara',
+    last: 'Hepworth',
+    email: 'bhepworth@sculpture.com',
+  })
+  const update = (field: keyof Person, value: string) =>
+    (person.value = { ...person.value, [field]: value })
   return (
     <form>
-      <Input label="First name" value={person.value.first} onInput={e => update('first', e.currentTarget.value)} />
-      <Input label="Last name" value={person.value.last} onInput={e => update('last', e.currentTarget.value)} />
-      <Input label="Email" value={person.value.email} onInput={e => update('email', e.currentTarget.value)} />
+      <Input
+        label="First name"
+        value={person.value.first}
+        onInput={e => update('first', e.currentTarget.value)}
+      />
+      <Input
+        label="Last name"
+        value={person.value.last}
+        onInput={e => update('last', e.currentTarget.value)}
+      />
+      <Input
+        label="Email"
+        value={person.value.email}
+        onInput={e => update('email', e.currentTarget.value)}
+      />
     </form>
   )
 }
@@ -106,7 +123,7 @@ It's exactly the same as writing the spread yourself:
 
 ```tsx
 person.set(d => { d.first = 'Barbara' })               // these two
-person.value = { ...person.value, first: 'Barbara' }   // do the same thing
+person.value = { ...person.value, first: 'Barbara' } // same thing
 ```
 
 For an array, the draft is a copy of the array, so the array methods that mutate are fine on it:
@@ -122,8 +139,8 @@ Changing a nested object or an item of an array through the draft changes the *o
 holds:
 
 ```tsx
-todos.set(d => { d[0]!.done = true })                   // changes the same item object: a keyed row won't see it
-todos.set(d => { d[0] = { ...d[0]!, done: true } })     // a new item: everything sees it
+todos.set(d => { d[0]!.done = true }) // same item; row misses it
+todos.set(d => { d[0] = { ...d[0]!, done: true } }) // new item
 ```
 
 The first line gives the box a new array, so anything reading the whole array updates. But the item is the same object,
@@ -143,8 +160,9 @@ the artist:
 
 ```tsx
 piece.value = {
-  ...piece.value,                                     // copy the piece
-  artist: { ...piece.value.artist, city: 'Paris' },   // with a copy of the artist, with a new city
+  ...piece.value, // copy the piece
+  // Copy the artist with a new city.
+  artist: { ...piece.value.artist, city: 'Paris' },
 }
 ```
 
@@ -189,14 +207,21 @@ Spread the old array into a new one with the item at the end:
 :::demo interact-todos-step-1
 
 ```tsx
-todos.value = [...todos.value, { id: nextId++, title: draft.value, done: false }]
+todos.value = [
+  ...todos.value,
+  { id: nextId++, title: draft.value, done: false },
+]
 ```
 
 Put the new item first, `[item, ...todos.value]`, to add at the start. To insert in the middle, slice around the place:
 
 ```tsx
 const at = 1
-todos.value = [...todos.value.slice(0, at), item, ...todos.value.slice(at)]
+todos.value = [
+  ...todos.value.slice(0, at),
+  item,
+  ...todos.value.slice(at),
+]
 ```
 
 ### Removing an item
@@ -206,7 +231,8 @@ todos.value = [...todos.value.slice(0, at), item, ...todos.value.slice(at)]
 :::demo interact-todos-step-2
 
 ```tsx
-const remove = (id: number) => (todos.value = todos.value.filter(t => t.id !== id))
+const remove = (id: number) =>
+  (todos.value = todos.value.filter(t => t.id !== id))
 ```
 
 ### Changing an item
@@ -217,7 +243,10 @@ every other:
 :::demo interact-todos-step-3
 
 ```tsx
-const toggle = (id: number) => (todos.value = todos.value.map(t => (t.id === id ? { ...t, done: !t.done } : t)))
+const toggle = (id: number) =>
+  (todos.value = todos.value.map(t =>
+    t.id === id ? { ...t, done: !t.done } : t,
+  ))
 ```
 
 Returning `t` unchanged for the other items matters. The list matches rows by `key`, and a row whose item is the same
@@ -234,7 +263,9 @@ identity, so every row in the list updates. The compiler reports that pattern fe
 `sort` and `reverse` change the array they're called on. Copy first:
 
 ```tsx
-const sorted = [...todos.value].sort((a, b) => a.title.localeCompare(b.title))
+const sorted = [...todos.value].sort((a, b) =>
+  a.title.localeCompare(b.title),
+)
 todos.value = sorted
 ```
 
@@ -247,7 +278,9 @@ todos.set(d => { d.reverse() })
 If you only need a sorted *view* and the original order should stay, don't write it back at all. Make it a `derived`:
 
 ```tsx
-const byTitle = derived(() => [...todos.value].sort((a, b) => a.title.localeCompare(b.title)))
+const byTitle = derived(() =>
+  [...todos.value].sort((a, b) => a.title.localeCompare(b.title)),
+)
 ```
 
 ## Reading one entry of a big object
@@ -351,7 +384,9 @@ export function Cart() {
     <ul>
       {lines.value.map(l => (
         <li key={l.id}>
-          {l.name} ({l.count}) <Button size="sm">+</Button> <Button size="sm" emphasis="outline">−</Button>
+          {l.name} ({l.count}){' '}
+          <Button size="sm">+</Button>{' '}
+          <Button size="sm" emphasis="outline">−</Button>
         </li>
       ))}
     </ul>
@@ -380,8 +415,16 @@ export function Cart() {
       {lines.value.map(l => (
         <li key={l.id}>
           {l.name} ({l.count}){' '}
-          <Button size="sm" onClick={() => change(l.id, 1)}>+</Button>{' '}
-          <Button size="sm" emphasis="outline" onClick={() => change(l.id, -1)}>−</Button>
+          <Button size="sm" onClick={() => change(l.id, 1)}>
+            +
+          </Button>{' '}
+          <Button
+            size="sm"
+            emphasis="outline"
+            onClick={() => change(l.id, -1)}
+          >
+            −
+          </Button>
         </li>
       ))}
     </ul>
@@ -408,10 +451,17 @@ export function Tasks() {
     { id: 0, title: 'Sketch', done: false },
     { id: 1, title: 'Carve', done: false },
   ])
+  const finishFirst = () => {
+    tasks.set(d => { d[0]!.done = true })
+  }
   return (
     <section>
-      {tasks.value.map(t => <Checkbox key={t.id} checked={t.done}>{t.title}</Checkbox>)}
-      <Button onClick={() => tasks.set(d => { d[0]!.done = true })}>Finish first</Button>
+      {tasks.value.map(t => (
+        <Checkbox key={t.id} checked={t.done}>
+          {t.title}
+        </Checkbox>
+      ))}
+      <Button onClick={finishFirst}>Finish first</Button>
       <p>{tasks.value.filter(t => t.done).length} done</p>
     </section>
   )
@@ -433,10 +483,17 @@ export function Tasks() {
     { id: 0, title: 'Sketch', done: false },
     { id: 1, title: 'Carve', done: false },
   ])
+  const finishFirst = () => {
+    tasks.set(d => { d[0] = { ...d[0]!, done: true } })
+  }
   return (
     <section>
-      {tasks.value.map(t => <Checkbox key={t.id} checked={t.done}>{t.title}</Checkbox>)}
-      <Button onClick={() => tasks.set(d => { d[0] = { ...d[0]!, done: true } })}>Finish first</Button>
+      {tasks.value.map(t => (
+        <Checkbox key={t.id} checked={t.done}>
+          {t.title}
+        </Checkbox>
+      ))}
+      <Button onClick={finishFirst}>Finish first</Button>
       <p>{tasks.value.filter(t => t.done).length} done</p>
     </section>
   )

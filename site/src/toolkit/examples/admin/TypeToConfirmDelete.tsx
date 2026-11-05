@@ -8,11 +8,18 @@ export function TypeToConfirmDelete() {
   return (
     <>
       {gone.value ? (
-        <Button emphasis="ghost" tone="neutral" onClick={() => (gone.value = false)}>
+        <Button
+          emphasis="ghost"
+          tone="neutral"
+          onClick={() => (gone.value = false)}
+        >
           reports deleted. Put it back
         </Button>
       ) : (
-        <Button tone="critical" onClick={() => (open.value = true)}>
+        <Button
+          tone="critical"
+          onClick={() => (open.value = true)}
+        >
           Delete reports
         </Button>
       )}
@@ -21,7 +28,10 @@ export function TypeToConfirmDelete() {
         title="Delete reports?"
         description="This can't be undone."
         confirmText="reports"
-        items={['41 deploys and their logs', '3 scheduled jobs']}
+        items={[
+          '41 deploys and their logs',
+          '3 scheduled jobs',
+        ]}
         action="Delete project"
         onConfirm={async () => {
           await wait(700)

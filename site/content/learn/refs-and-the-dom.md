@@ -22,7 +22,7 @@ Put `ref` on any element and give it a variable. When weft makes the element, it
 import { Button } from '@weft-js/warp'
 
 export function Focus() {
-  // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
+  // oxlint-disable-next-line no-unassigned-vars -- ref assigns it
   let field!: HTMLInputElement
   return (
     <form>
@@ -81,7 +81,8 @@ running, the element doesn't exist yet:
 ```tsx
 export function Broken() {
   let field!: HTMLInputElement
-  field.focus() // TypeError: field is undefined. The <input> below hasn't been made yet.
+  // TypeError: the input below has not been made yet.
+  field.focus()
   return <input ref={field} aria-label="Name" />
 }
 ```
@@ -100,7 +101,13 @@ import { onMount } from '@weft-js/core'
 export function Search() {
   let field: HTMLInputElement | undefined
   onMount(() => field?.focus())
-  return <input ref={el => (field = el)} type="search" aria-label="Search" />
+  return (
+    <input
+      ref={el => (field = el)}
+      type="search"
+      aria-label="Search"
+    />
+  )
 }
 ```
 
@@ -141,7 +148,15 @@ export function Rename() {
   }
   return (
     <div>
-      {editing.value ? <input ref={el => (field = el)} value="Untitled" aria-label="Name" /> : <Button onClick={start}>Rename</Button>}
+      {editing.value ? (
+        <input
+          ref={el => (field = el)}
+          value="Untitled"
+          aria-label="Name"
+        />
+      ) : (
+        <Button onClick={start}>Rename</Button>
+      )}
     </div>
   )
 }
@@ -165,14 +180,23 @@ function in a list runs once per row, when that row's element is made:
 import { Button } from '@weft-js/warp'
 
 export function Cats(props: { names: string[] }) {
+  const { names } = props
   const rows = new Map<string, HTMLElement>()
-  const show = (name: string) => rows.get(name)?.scrollIntoView({ block: 'nearest' })
+  const show = (name: string) =>
+    rows.get(name)?.scrollIntoView({ block: 'nearest' })
   return (
     <div>
-      <Button emphasis="soft" onClick={() => show('Orlando')}>Find Orlando</Button>
+      <Button emphasis="soft" onClick={() => show('Orlando')}>
+        Find Orlando
+      </Button>
       <ol style="max-block-size:7rem;overflow:auto">
-        {props.names.map(name => (
-          <li key={name} ref={(el: HTMLElement) => rows.set(name, el)}>{name}</li>
+        {names.map(name => (
+          <li
+            key={name}
+            ref={(el: HTMLElement) => rows.set(name, el)}
+          >
+            {name}
+          </li>
         ))}
       </ol>
     </div>
@@ -210,7 +234,10 @@ whoever renders it takes a `ref` prop, a function, and puts it on that element:
 ```tsx
 import { Button } from '@weft-js/warp'
 
-function NameField(props: { label: string; ref?: ((el: HTMLInputElement) => void) | undefined }) {
+function NameField(props: {
+  label: string
+  ref?: ((el: HTMLInputElement) => void) | undefined
+}) {
   return (
     <label>
       {props.label} <input ref={props.ref} />
@@ -254,7 +281,8 @@ import { Button } from '@weft-js/warp'
 
 export function Stopwatch() {
   const tenths = state(0)
-  let timer: ReturnType<typeof setInterval> | undefined // not on screen, so not state
+  // Not on screen, so not state.
+  let timer: ReturnType<typeof setInterval> | undefined
   const start = () => {
     clearInterval(timer)
     timer = setInterval(() => tenths.value++, 100)
@@ -263,7 +291,9 @@ export function Stopwatch() {
   onCleanup(stop)
   return (
     <p>
-      {(tenths.value / 10).toFixed(1)} s <Button onClick={start}>Start</Button> <Button onClick={stop}>Stop</Button>
+      {(tenths.value / 10).toFixed(1)} s{' '}
+      <Button onClick={start}>Start</Button>{' '}
+      <Button onClick={stop}>Stop</Button>
     </p>
   )
 }
@@ -297,7 +327,9 @@ export function Player() {
   const playing = state(false)
   return (
     <div>
-      <Button onClick={() => (playing.value = !playing.value)}>{playing.value ? 'Pause' : 'Play'}</Button>
+      <Button onClick={() => (playing.value = !playing.value)}>
+        {playing.value ? 'Pause' : 'Play'}
+      </Button>
       <video src="/flower.mp4" width="300" muted playsinline />
     </div>
   )
@@ -317,12 +349,15 @@ export function Player() {
   let video: HTMLVideoElement | undefined
   const toggle = () => {
     if (!video) return
-    if (video.paused) video.play().catch(() => (playing.value = false))
+    if (video.paused)
+      video.play().catch(() => (playing.value = false))
     else video.pause()
   }
   return (
     <div>
-      <Button onClick={toggle}>{playing.value ? 'Pause' : 'Play'}</Button>
+      <Button onClick={toggle}>
+        {playing.value ? 'Pause' : 'Play'}
+      </Button>
       <video
         ref={el => (video = el)}
         src="/flower.mp4"
@@ -351,13 +386,23 @@ import { on } from '@weft-js/core/browser'
 
 export function SiteSearch() {
   let field: HTMLInputElement | undefined
-  if (typeof window !== 'undefined') on(window, 'keydown', e => {
-    const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
-    if (e.key !== '/' || typing) return
-    e.preventDefault()
-    field?.focus()
-  })
-  return <input ref={el => (field = el)} type="search" aria-label="Search the site" placeholder="Press / to search" />
+  if (typeof window !== 'undefined')
+    on(window, 'keydown', e => {
+      const typing =
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      if (e.key !== '/' || typing) return
+      e.preventDefault()
+      field?.focus()
+    })
+  return (
+    <input
+      ref={el => (field = el)}
+      type="search"
+      aria-label="Search the site"
+      placeholder="Press / to search"
+    />
+  )
 }
 ```
 
@@ -377,14 +422,25 @@ already in the list when it scrolls.
 ```tsx
 import { onMount, watch } from '@weft-js/core'
 
-export function Chat(props: { messages: { id: number; text: string }[] }) {
+export function Chat(props: {
+  messages: { id: number; text: string }[]
+}) {
+  const { messages } = props
   let list: HTMLElement | undefined
   onMount(() => {
-    watch(() => props.messages.length, () => list?.lastElementChild?.scrollIntoView({ block: 'end' }))
+    watch(
+      () => messages.length,
+      () => list?.lastElementChild?.scrollIntoView({ block: 'end' }),
+    )
   })
   return (
-    <ol ref={el => (list = el)} style="max-block-size:12rem;overflow:auto">
-      {props.messages.map(m => <li key={m.id}>{m.text}</li>)}
+    <ol
+      ref={el => (list = el)}
+      style="max-block-size:12rem;overflow:auto"
+    >
+      {messages.map(m => (
+        <li key={m.id}>{m.text}</li>
+      ))}
     </ol>
   )
 }

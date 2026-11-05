@@ -5,7 +5,10 @@ function CupCounter() {
   const cups = state(0)
   return (
     <p>
-      <Button onClick={() => cups.value++}>Pour a cup</Button> Poured {cups.value}{' '}
+      <Button onClick={() => cups.value++}>
+        Pour a cup
+      </Button>{' '}
+      Poured {cups.value}{' '}
       {cups.value === 1 ? 'cup' : 'cups'}
     </p>
   )

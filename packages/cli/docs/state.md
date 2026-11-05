@@ -3,14 +3,24 @@
 Every reactive function in one place. The rules for using them are `weft docs rules`; props are `weft docs props`.
 
 ```tsx
-import { derived, flush, onCleanup, onMount, state, watch } from '@weft-js/core'
+import {
+  derived,
+  flush,
+  onCleanup,
+  onMount,
+  state,
+  watch,
+} from '@weft-js/core'
 
 export function Counter() {
   const count = state(0)
   const label = derived(() => `Clicked ${count.value} times`)
   let input: HTMLInputElement | undefined
 
-  watch(() => label.value, text => { document.title = text; return () => (document.title = 'App') })
+  watch(() => label.value, text => {
+    document.title = text
+    return () => (document.title = 'App')
+  })
   onMount(() => input?.focus())
   onCleanup(() => console.log('Counter removed'))
 
@@ -21,8 +31,13 @@ export function Counter() {
   }
   return (
     <p>
-      <button type="button" onClick={() => count.value++}>{label.value}</button>
-      <input ref={(n: HTMLInputElement) => (input = n)} aria-label="Note" />
+      <button type="button" onClick={() => count.value++}>
+        {label.value}
+      </button>
+      <input
+        ref={(n: HTMLInputElement) => (input = n)}
+        aria-label="Note"
+      />
       <button type="button" onClick={reset}>Reset</button>
     </p>
   )
@@ -66,9 +81,20 @@ import { defineState, derived, state } from '@weft-js/core'
 import { z } from 'zod'
 
 export const cart = defineState('cart', () => {
-  const lines = state<Record<string, number>>({}, { persist: { in: 'local', schema: z.record(z.string(), z.number()), version: 1 }, sync: 'tabs' })
-  const count = derived(() => Object.values(lines.value).reduce((a, b) => a + b, 0))
-  const add = (id: string) => lines.set(d => { d[id] = (d[id] ?? 0) + 1 })
+  const lines = state<Record<string, number>>({}, {
+    persist: {
+      in: 'local',
+      schema: z.record(z.string(), z.number()),
+      version: 1,
+    },
+    sync: 'tabs',
+  })
+  const count = derived(() =>
+    Object.values(lines.value).reduce((a, b) => a + b, 0),
+  )
+  const add = (id: string) => lines.set(d => {
+    d[id] = (d[id] ?? 0) + 1
+  })
   return { lines, count, add }
 }, { history: { limit: 100 } })
 ```

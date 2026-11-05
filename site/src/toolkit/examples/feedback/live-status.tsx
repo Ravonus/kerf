@@ -1,12 +1,26 @@
 import { state } from '@weft-js/core'
-import { Button, Grid, Heading, LiveStatus, Row, Stack, Text, Toaster, toast } from '@weft-js/warp'
+import {
+  Button,
+  Grid,
+  Heading,
+  LiveStatus,
+  Row,
+  Stack,
+  Text,
+  Toaster,
+  toast,
+} from '@weft-js/warp'
 import type { LiveState } from '@weft-js/warp'
 
 export const LiveStatusWords = () => (
   <>
     <LiveStatus state="live">Synced</LiveStatus>
-    <LiveStatus state="reconnecting">Back in a moment</LiveStatus>
-    <LiveStatus state="offline">Saved on this device</LiveStatus>
+    <LiveStatus state="reconnecting">
+      Back in a moment
+    </LiveStatus>
+    <LiveStatus state="offline">
+      Saved on this device
+    </LiveStatus>
   </>
 )
 
@@ -19,7 +33,10 @@ export function LiveStatusDrop() {
   }
   return (
     <>
-      <LiveStatus state={now.value} label="Log stream" />
+      <LiveStatus
+        state={now.value}
+        label="Log stream"
+      />
       <Button
         size="sm"
         emphasis="outline"
@@ -34,12 +51,18 @@ export function LiveStatusDrop() {
 }
 
 export const LiveStatusHeader = () => (
-  <Row justify="between" gap="group">
+  <Row
+    justify="between"
+    gap="group"
+  >
     <Stack gap="hair">
       <Heading level={3}>Logs</Heading>
       <Text subtle>storefront, eu-west</Text>
     </Stack>
-    <LiveStatus state="live" label="Log stream">
+    <LiveStatus
+      state="live"
+      label="Log stream"
+    >
       Streaming
     </LiveStatus>
   </Row>
@@ -55,16 +78,28 @@ const CORNERS = [
 ] as const
 
 export function ToasterPosition() {
-  const position = state<(typeof CORNERS)[number]>('bottom-right')
+  const position =
+    state<(typeof CORNERS)[number]>('bottom-right')
   const show = (corner: (typeof CORNERS)[number]) => {
     position.value = corner
-    toast.show({ title: 'Deploy finished', description: `Shown ${corner.replace('-', ' ')}.` })
+    toast.show({
+      title: 'Deploy finished',
+      description: `Shown ${corner.replace('-', ' ')}.`,
+    })
   }
   return (
     <>
-      <Grid cols={3} gap="tight">
+      <Grid
+        cols={3}
+        gap="tight"
+      >
         {CORNERS.map((corner) => (
-          <Button key={corner} emphasis="outline" tone="neutral" onClick={() => show(corner)}>
+          <Button
+            key={corner}
+            emphasis="outline"
+            tone="neutral"
+            onClick={() => show(corner)}
+          >
             {corner}
           </Button>
         ))}

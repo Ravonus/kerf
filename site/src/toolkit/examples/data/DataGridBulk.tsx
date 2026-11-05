@@ -16,7 +16,9 @@ export function DataGridBulk() {
   const rows = state(PROJECTS)
   const pause = (keys: string[]) =>
     (rows.value = rows.value.map((p) =>
-      keys.includes(p.id) ? { ...p, status: 'Paused' as const } : p,
+      keys.includes(p.id)
+        ? { ...p, status: 'Paused' as const }
+        : p,
     ))
   return (
     <DataGrid

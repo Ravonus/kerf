@@ -23,24 +23,60 @@ export const LAST_SEEN = [
   'Oct 12',
 ]
 
-export const TEAM_MEMBERS: Member[] = PEOPLE.map((p, i) => ({
-  id: p.id,
-  name: p.name,
-  email: p.email,
-  role: p.role.toLowerCase(),
-  lastActive: LAST_SEEN[i],
-}))
+export const TEAM_MEMBERS: Member[] = PEOPLE.map(
+  (p, i) => ({
+    id: p.id,
+    name: p.name,
+    email: p.email,
+    role: p.role.toLowerCase(),
+    lastActive: LAST_SEEN[i],
+  }),
+)
 
 export const TEAM_INVITES: Invite[] = [
-  { id: 'dara', email: 'dara@weft.dev', role: 'member', sent: '2 days ago' },
-  { id: 'kai', email: 'kai@contract.dev', role: 'viewer', sent: 'Oct 27' },
+  {
+    id: 'dara',
+    email: 'dara@weft.dev',
+    role: 'member',
+    sent: '2 days ago',
+  },
+  {
+    id: 'kai',
+    email: 'kai@contract.dev',
+    role: 'viewer',
+    sent: 'Oct 27',
+  },
 ]
 
 export const TEAM_PERMISSIONS = [
-  { id: 'view', label: 'See projects and deploys', roles: ['owner', 'admin', 'member', 'viewer'] },
-  { id: 'deploy', label: 'Deploy to production', roles: ['owner', 'admin', 'member'] },
-  { id: 'env', label: 'Change environment variables', roles: ['owner', 'admin', 'member'] },
-  { id: 'invite', label: 'Invite and remove members', roles: ['owner', 'admin'] },
-  { id: 'keys', label: 'Create API keys', roles: ['owner', 'admin'] },
-  { id: 'billing', label: 'Change billing and plan', roles: ['owner'] },
+  {
+    id: 'view',
+    label: 'See projects and deploys',
+    roles: ['owner', 'admin', 'member', 'viewer'],
+  },
+  {
+    id: 'deploy',
+    label: 'Deploy to production',
+    roles: ['owner', 'admin', 'member'],
+  },
+  {
+    id: 'env',
+    label: 'Change environment variables',
+    roles: ['owner', 'admin', 'member'],
+  },
+  {
+    id: 'invite',
+    label: 'Invite and remove members',
+    roles: ['owner', 'admin'],
+  },
+  {
+    id: 'keys',
+    label: 'Create API keys',
+    roles: ['owner', 'admin'],
+  },
+  {
+    id: 'billing',
+    label: 'Change billing and plan',
+    roles: ['owner'],
+  },
 ]

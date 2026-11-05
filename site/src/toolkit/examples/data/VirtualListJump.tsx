@@ -1,4 +1,9 @@
-import { Button, Row, Stack, VirtualList } from '@weft-js/warp'
+import {
+  Button,
+  Row,
+  Stack,
+  VirtualList,
+} from '@weft-js/warp'
 
 import type { VirtualControl } from '@weft-js/warp'
 
@@ -33,7 +38,12 @@ export function VirtualListJump() {
         >
           Row 5,000
         </Button>
-        <Button size="sm" emphasis="outline" tone="neutral" onClick={() => list?.scrollToEnd()}>
+        <Button
+          size="sm"
+          emphasis="outline"
+          tone="neutral"
+          onClick={() => list?.scrollToEnd()}
+        >
           Last
         </Button>
       </Row>

@@ -1,6 +1,10 @@
 import { state } from '@weft-js/core'
 
-import { InlineCalendar, Stack, Text } from '@weft-js/warp'
+import {
+  InlineCalendar,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 
 import type { IsoDate } from '@weft-js/warp'
 
@@ -14,8 +18,15 @@ export function InlineCalendarSingle() {
   const day = state<IsoDate | null>('2026-11-12')
   return (
     <Stack gap="related">
-      <InlineCalendar aria-label="Release day" today={TODAY} value={day} />
-      <Text subtle role="caption">
+      <InlineCalendar
+        aria-label="Release day"
+        today={TODAY}
+        value={day}
+      />
+      <Text
+        subtle
+        role="caption"
+      >
         Release day: {day.value ?? 'not set'}
       </Text>
     </Stack>

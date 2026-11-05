@@ -5,9 +5,19 @@ export function ModalConfirm() {
   const open = state(false)
   const kept = state(true)
   return (
-    <Stack gap="related" align="center">
-      <Text subtle>{kept.value ? 'storefront is still here.' : 'storefront is gone.'}</Text>
-      <Button tone="critical" onClick={() => (open.value = true)}>
+    <Stack
+      gap="related"
+      align="center"
+    >
+      <Text subtle>
+        {kept.value
+          ? 'storefront is still here.'
+          : 'storefront is gone.'}
+      </Text>
+      <Button
+        tone="critical"
+        onClick={() => (open.value = true)}
+      >
         Delete project
       </Button>
       <Modal
@@ -16,13 +26,25 @@ export function ModalConfirm() {
         size="sm"
         tone="critical"
         title="Delete storefront?"
-        description="Its 412 deploys and all its logs go too. This can't be undone."
+        description={
+          'Its 412 deploys and all its' +
+          " logs go too. This can't be undone."
+        }
         footer={
           <>
-            <Button emphasis="ghost" tone="neutral" autofocus data-close="">
+            <Button
+              emphasis="ghost"
+              tone="neutral"
+              autofocus
+              data-close=""
+            >
               Keep it
             </Button>
-            <Button tone="critical" data-close="" onClick={() => (kept.value = false)}>
+            <Button
+              tone="critical"
+              data-close=""
+              onClick={() => (kept.value = false)}
+            >
               Delete project
             </Button>
           </>

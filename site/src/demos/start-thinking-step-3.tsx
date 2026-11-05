@@ -1,18 +1,57 @@
 import { derived, state } from '@weft-js/core'
 import { Card, Checkbox, Input } from '@weft-js/warp'
 
-type Product = { category: string; price: string; stocked: boolean; name: string }
+type Product = {
+  category: string
+  price: string
+  stocked: boolean
+  name: string
+}
 
 const PRODUCTS: Product[] = [
-  { category: 'Beans', price: '$12', stocked: true, name: 'House blend' },
-  { category: 'Beans', price: '$16', stocked: false, name: 'Ethiopia natural' },
-  { category: 'Beans', price: '$14', stocked: true, name: 'Decaf' },
-  { category: 'Gear', price: '$40', stocked: true, name: 'Hand grinder' },
-  { category: 'Gear', price: '$5', stocked: false, name: 'Paper filters' },
-  { category: 'Gear', price: '$35', stocked: true, name: 'Kettle' },
+  {
+    category: 'Beans',
+    price: '$12',
+    stocked: true,
+    name: 'House blend',
+  },
+  {
+    category: 'Beans',
+    price: '$16',
+    stocked: false,
+    name: 'Ethiopia natural',
+  },
+  {
+    category: 'Beans',
+    price: '$14',
+    stocked: true,
+    name: 'Decaf',
+  },
+  {
+    category: 'Gear',
+    price: '$40',
+    stocked: true,
+    name: 'Hand grinder',
+  },
+  {
+    category: 'Gear',
+    price: '$5',
+    stocked: false,
+    name: 'Paper filters',
+  },
+  {
+    category: 'Gear',
+    price: '$35',
+    stocked: true,
+    name: 'Kettle',
+  },
 ]
 
-function ProductCategoryRow({ category }: { category: string }) {
+function ProductCategoryRow({
+  category,
+}: {
+  category: string
+}) {
   return (
     <tr>
       <th colspan="2">{category}</th>
@@ -23,7 +62,13 @@ function ProductCategoryRow({ category }: { category: string }) {
 function ProductRow({ product }: { product: Product }) {
   return (
     <tr>
-      <td style={{ color: product.stocked ? undefined : 'var(--warp-color-critical-text)' }}>
+      <td
+        style={{
+          color: product.stocked
+            ? undefined
+            : 'var(--warp-color-critical-text)',
+        }}
+      >
         {product.name}
       </td>
       <td>{product.price}</td>
@@ -43,10 +88,14 @@ function ProductTable({
   const shown = derived(() => {
     const word = filterText.toLowerCase()
     return products.filter(
-      (p) => p.name.toLowerCase().includes(word) && (p.stocked || !inStockOnly),
+      (p) =>
+        p.name.toLowerCase().includes(word) &&
+        (p.stocked || !inStockOnly),
     )
   })
-  const categories = derived(() => [...new Set(shown.value.map((p) => p.category))])
+  const categories = derived(() => [
+    ...new Set(shown.value.map((p) => p.category)),
+  ])
   return (
     <table>
       <thead>
@@ -61,7 +110,10 @@ function ProductTable({
           {shown.value
             .filter((p) => p.category === c)
             .map((p) => (
-              <ProductRow key={p.name} product={p} />
+              <ProductRow
+                key={p.name}
+                product={p}
+              />
             ))}
         </tbody>
       ))}
@@ -69,20 +121,25 @@ function ProductTable({
   )
 }
 
-function SearchBar(props: { filterText?: string; inStockOnly?: boolean }) {
+function SearchBar(props: {
+  filterText?: string
+  inStockOnly?: boolean
+}) {
   let { filterText = '', inStockOnly = false } = props
   return (
     <form>
       <Input
         label="Search"
         value={filterText}
-        onInput={(e) => (filterText = e.currentTarget.value)}
+        onInput={(e) =>
+          (filterText = e.currentTarget.value)
+        }
       />
       <Checkbox
         checked={inStockOnly}
-        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
-          (inStockOnly = e.currentTarget.checked)
-        }
+        onChange={(
+          e: Event & { currentTarget: HTMLInputElement },
+        ) => (inStockOnly = e.currentTarget.checked)}
       >
         Only show products in stock
       </Checkbox>
@@ -95,7 +152,10 @@ export default function FilterableProductTable() {
   const inStockOnly = state(true)
   return (
     <Card title="Shop stock">
-      <SearchBar bind:filterText={filterText} bind:inStockOnly={inStockOnly} />
+      <SearchBar
+        bind:filterText={filterText}
+        bind:inStockOnly={inStockOnly}
+      />
       <ProductTable
         products={PRODUCTS}
         filterText={filterText.value}

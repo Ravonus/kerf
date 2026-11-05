@@ -1,6 +1,14 @@
 import { PayFrame } from '@weft-js/warp'
-import type { OrderStage, Permission } from '@weft-js/warp'
-import { API_KEYS, AUDIT, PLANS, TEAM_MEMBERS } from '../../world'
+import type {
+  OrderStage,
+  Permission,
+} from '@weft-js/warp'
+import {
+  API_KEYS,
+  AUDIT,
+  PLANS,
+  TEAM_MEMBERS,
+} from '../../world'
 
 export const wait = (ms: number) =>
   new Promise<void>((done) => {
@@ -9,16 +17,27 @@ export const wait = (ms: number) =>
 
 // -- settings --
 
-// A row only lays out side by side inside a `settings` container, which SettingsLayout normally provides.
-export const SettingsWidth = ({ children }: { children: unknown }) => (
-  <div style="container: settings / inline-size">{children}</div>
+// A row lays out side by side inside a `settings`
+// container, which SettingsLayout normally provides.
+export const SettingsWidth = ({
+  children,
+}: {
+  children: unknown
+}) => (
+  <div style="container: settings / inline-size">
+    {children}
+  </div>
 )
 
 export const SECTIONS = [
   { id: 'general', label: 'General' },
   { id: 'deploys', label: 'Deploys' },
   { id: 'alerts', label: 'Notifications' },
-  { id: 'project-danger', label: 'Danger zone', tone: 'critical' as const },
+  {
+    id: 'project-danger',
+    label: 'Danger zone',
+    tone: 'critical' as const,
+  },
 ]
 
 export const REGIONS = [
@@ -34,9 +53,15 @@ export const NODE_VERSIONS = [
 
 export const FIRST_FOUR = TEAM_MEMBERS.slice(0, 4)
 
-/** The hub's card: short permissions across three roles, so the grid fits a card whole. */
+/** Short permissions across three roles keep the hub's
+ * grid inside a card.
+ */
 export const TILE_PERMISSIONS: Permission[] = [
-  { id: 'deploy', label: 'Deploy', roles: ['owner', 'admin', 'member'] },
+  {
+    id: 'deploy',
+    label: 'Deploy',
+    roles: ['owner', 'admin', 'member'],
+  },
   { id: 'billing', label: 'Billing', roles: ['owner'] },
 ]
 
@@ -48,7 +73,8 @@ export const gigabytes = (n: number) => `${n} GB`
 
 export const providerFields = (el: HTMLElement) => {
   const fields = el.ownerDocument.createElement('p')
-  fields.textContent = 'Your payment provider mounts its fields here.'
+  fields.textContent =
+    'Your payment provider mounts its fields here.'
   el.append(fields)
   return { destroy: () => fields.remove() }
 }
@@ -56,10 +82,18 @@ export const providerFields = (el: HTMLElement) => {
 export const LATEST_EVENTS = AUDIT.slice(0, 3)
 
 export const PAYMENT_FRAME = () => (
-  <PayFrame title="Card fields from your payment provider" testMode ready mount={providerFields} />
+  <PayFrame
+    title="Card fields from your payment provider"
+    testMode
+    ready
+    mount={providerFields}
+  />
 )
 
-export const STAGES: { value: OrderStage; label: string }[] = [
+export const STAGES: {
+  value: OrderStage
+  label: string
+}[] = [
   { value: 'placed', label: 'Placed' },
   { value: 'packed', label: 'Packed' },
   { value: 'shipped', label: 'Shipped' },

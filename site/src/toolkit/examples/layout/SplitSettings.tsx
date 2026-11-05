@@ -1,5 +1,14 @@
 import { state } from '@weft-js/core'
-import { Button, Heading, Input, Nav, Row, Split, Stack, Text } from '@weft-js/warp'
+import {
+  Button,
+  Heading,
+  Input,
+  Nav,
+  Row,
+  Split,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 import { SECTIONS } from './shared'
 
 export function SplitSettings() {
@@ -9,13 +18,21 @@ export function SplitSettings() {
     section.value = name
   }
   return (
-    <Split width="nav" gap="section">
-      <Nav label="Project settings" axis="y">
+    <Split
+      width="nav"
+      gap="section"
+    >
+      <Nav
+        label="Project settings"
+        axis="y"
+      >
         {SECTIONS.map((name) => (
           <a
             key={name}
             href={`#${name}`}
-            aria-current={section.value === name ? 'page' : undefined}
+            aria-current={
+              section.value === name ? 'page' : undefined
+            }
             onClick={(e: Event) => pick(e, name)}
           >
             {name}
@@ -27,10 +44,22 @@ export function SplitSettings() {
           <Heading level={3}>{section.value}</Heading>
           <Text subtle>Settings for storefront.</Text>
         </Stack>
-        <Input label="Project name" defaultValue="storefront" />
-        <Input label="Production branch" defaultValue="main" />
-        <Row justify="end" gap="tight">
-          <Button emphasis="ghost" tone="neutral">
+        <Input
+          label="Project name"
+          defaultValue="storefront"
+        />
+        <Input
+          label="Production branch"
+          defaultValue="main"
+        />
+        <Row
+          justify="end"
+          gap="tight"
+        >
+          <Button
+            emphasis="ghost"
+            tone="neutral"
+          >
             Cancel
           </Button>
           <Button>Save changes</Button>

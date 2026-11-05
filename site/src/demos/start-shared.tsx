@@ -3,7 +3,9 @@ import { Button, Card } from '@weft-js/warp'
 
 function CupButton(props: { cups?: number }) {
   let { cups = 0 } = props
-  return <Button onClick={() => cups++}>Poured {cups}</Button>
+  return (
+    <Button onClick={() => cups++}>Poured {cups}</Button>
+  )
 }
 
 export default function Cafe() {
@@ -11,7 +13,8 @@ export default function Cafe() {
   return (
     <Card title="One count, shared">
       <p>
-        <CupButton bind:cups={cups} /> <CupButton bind:cups={cups} />
+        <CupButton bind:cups={cups} />{' '}
+        <CupButton bind:cups={cups} />
       </p>
       <p>The café has poured {cups.value} cups today.</p>
       <p>

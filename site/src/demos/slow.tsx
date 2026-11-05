@@ -14,7 +14,12 @@ export default function SlowPage() {
     <div data-part="slow">
       <p>
         {times.map((t) => (
-          <Button key={t} size="sm" tone="neutral" onClick={() => go(t)}>
+          <Button
+            key={t}
+            size="sm"
+            tone="neutral"
+            onClick={() => go(t)}
+          >
             {t / 1000} s
           </Button>
         ))}
@@ -22,7 +27,10 @@ export default function SlowPage() {
       <iframe
         title="A slow page"
         loading="lazy"
-        src={`/examples/slow?ms=${ms.value}&run=${run.value}`}
+        src={
+          `/examples/slow?ms=${ms.value}` +
+          `&run=${run.value}`
+        }
       ></iframe>
     </div>
   )

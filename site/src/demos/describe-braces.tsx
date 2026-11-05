@@ -3,12 +3,18 @@ import { Card, Slider } from '@weft-js/warp'
 
 const person = {
   name: 'Gregorio Y. Zara',
-  theme: { background: 'var(--warp-color-accent-soft)', color: 'var(--warp-color-accent-text)' },
+  theme: {
+    background: 'var(--warp-color-accent-soft)',
+    color: 'var(--warp-color-accent-text)',
+  },
 }
 const today = new Date(2026, 10, 2)
 
 function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(date)
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long',
+  })
+  return formatter.format(date)
 }
 
 export default function TodoList() {
@@ -16,7 +22,8 @@ export default function TodoList() {
   return (
     <Card title={`${person.name}'s todos`}>
       <p>To do on {formatDate(today)}:</p>
-      {/* Double braces: an object inside the braces. Reading size.value makes this style live. */}
+      {/* Double braces hold an object. Reading
+          size.value makes this style live. */}
       <ul
         style={{
           ...person.theme,

@@ -132,7 +132,7 @@ the crate.
 `media`:
 
 ```bash
-weft add rust media            # native(): an addon in the server's process
+weft add rust media            # native(): an in-process addon
 weft add rust search --remote  # remote(): a sidecar
 ```
 
@@ -167,15 +167,25 @@ against it.
 And the body, in `crates/media/src/lib.rs`:
 
 ```rust
-weft::contract!(); // types and a `Service` trait, generated from your Zod: never hand-written
+// Types and a `Service` trait, generated from your Zod.
+weft::contract!();
 use contract::*;
 
 struct Media;
 
 impl Service for Media {
-    async fn digest(&self, _ctx: weft::Ctx, input: DigestInput) -> Result<DigestOutput, weft::Error> {
-        let hash = input.text.bytes().fold(0x811c9dc5u32, |h, b| (h ^ b as u32).wrapping_mul(0x01000193));
-        Ok(DigestOutput { bytes: input.text.len() as i64, hash: format!("{hash:08x}") })
+    async fn digest(
+        &self,
+        _ctx: weft::Ctx,
+        input: DigestInput,
+    ) -> Result<DigestOutput, weft::Error> {
+        let hash = input.text.bytes().fold(0x811c9dc5u32, |h, b| {
+            (h ^ b as u32).wrapping_mul(0x01000193)
+        });
+        Ok(DigestOutput {
+            bytes: input.text.len() as i64,
+            hash: format!("{hash:08x}"),
+        })
     }
 }
 
@@ -312,8 +322,14 @@ export const countWords = query({
 ```
 :::solution
 ```rust
-async fn count_words(&self, _ctx: weft::Ctx, input: CountWordsInput) -> Result<CountWordsOutput, weft::Error> {
-    Ok(CountWordsOutput { words: input.text.split_whitespace().count() as i64 })
+async fn count_words(
+    &self,
+    _ctx: weft::Ctx,
+    input: CountWordsInput,
+) -> Result<CountWordsOutput, weft::Error> {
+    Ok(CountWordsOutput {
+        words: input.text.split_whitespace().count() as i64,
+    })
 }
 ```
 

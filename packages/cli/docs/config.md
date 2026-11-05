@@ -12,24 +12,41 @@ import { dialScript, warp } from '@weft-js/warp/plugin'
 export default defineConfig({
   scope: { write: ['src/**', 'test/**'], forbid: ['.env*'] },
   tasks: {
-    seed: { run: 'node scripts/seed.mjs', description: 'Load demo products into the dev db', sideEffects: ['db'], env: ['dev'] },
+    seed: {
+      run: 'node scripts/seed.mjs',
+      description: 'Load demo products into the dev db',
+      sideEffects: ['db'], env: ['dev'],
+    },
   },
   environments: { dev: { url: 'http://localhost:5173' } },
-  site: {        // page metadata defaults: static tags in the server's first response (weft docs meta)
+  // Metadata defaults: static tags in the first response.
+  // See weft docs meta.
+  site: {
     name: 'Acme',
     url: 'https://acme.dev',
     title: '%s · Acme',
     description: 'Tools for builders.',
     locale: 'en_US',
-    image: { url: '/og.png', width: 1200, height: 630 },   // default 'auto': a generated card (weft docs meta); false: none
+    // Default 'auto': generated card; false: none (weft docs meta).
+    image: { url: '/og.png', width: 1200, height: 630 },
     twitter: { card: 'summary_large_image', site: '@acme' },
-    inlineCss: false, // default true: each page carries what its first paint needs; false keeps plain links, as a strict CSP needs (D012)
-    criticalCss: false, // default true: one hashed sheet plus a first-paint part; false splits by chunk and inlines up to 48 KB
-    criticalKeep: ['theme-x'], // words of selectors a first paint keeps, for classes a head script sets
-    head: dialScript, // raw HTML in every page's head, before the stylesheets: dialScript from @weft-js/warp/plugin restores `setDial(…, { persist: true })` before the first paint
+    // Default true: first-paint CSS. False keeps plain links,
+    // as a strict CSP needs (D012).
+    inlineCss: false,
+    // Default true: one hashed sheet and first-paint CSS.
+    // False splits by chunk and inlines up to 48 KB.
+    criticalCss: false,
+    // Selector words to keep for classes set by a head script.
+    criticalKeep: ['theme-x'],
+    // Raw HTML before stylesheets on every page. dialScript from
+    // @weft-js/warp/plugin restores setDial(…, { persist: true })
+    // before the first paint.
+    head: dialScript,
   },
-  plugins: [warp()],   // plugin factories (@weft-js/core/plugin); a plain `{ name, provides }` entry is data only
-  slots: {},           // names the winner when two plugins provide one slot
+  // Plugin factories; plain { name, provides } entries are data.
+  plugins: [warp()],
+  // Names the winner when two plugins provide one slot.
+  slots: {},
 })
 ```
 

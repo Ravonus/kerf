@@ -11,8 +11,13 @@ type Todo = { id: string; title: string }
 
 export function TodoRow({ todo }: { todo: Todo }) {
   const row = interaction({ share: () => `todo:${todo.id}` })
-  const seen = derived(() => (row.remote.value.hover ? 'someone is here' : ''))
-  watch(() => row.hover.value, on => { if (on) void fetch(`/api/todos/${todo.id}`) }) // only ever your own hover
+  const seen = derived(() =>
+    row.remote.value.hover ? 'someone is here' : '',
+  )
+  // Only your own hover triggers the request.
+  watch(() => row.hover.value, on => {
+    if (on) void fetch(`/api/todos/${todo.id}`)
+  })
   return (
     <li>
       <Checkbox ui={row}>{todo.title}</Checkbox>
@@ -53,7 +58,10 @@ Sharing with other clients is off until you say who may, in `src/realtime.server
 ```ts
 import { realtime } from '@weft-js/start'
 
-export default realtime({ share: ({ ctx, key }) => ctx.user !== null && key.startsWith('todo:') })
+export default realtime({
+  share: ({ ctx, key }) =>
+    ctx.user !== null && key.startsWith('todo:'),
+})
 ```
 
 That rule runs once per key. If it reads a database, a 200-row list means 200 queries, so answer them together instead. You get up to 400 keys in one call and give back the ones allowed:
@@ -61,11 +69,16 @@ That rule runs once per key. If it reads a database, a 200-row list means 200 qu
 ```ts
 import { realtime } from '@weft-js/start'
 
-// visibleKeys is yours: one query that returns the keys this user may see.
-declare function visibleKeys(userId: string, keys: string[]): Promise<string[]>
+// One query returns the keys this user may see.
+declare function visibleKeys(
+  userId: string, keys: string[],
+): Promise<string[]>
 
 export default realtime({
-  share: { keys: async ({ ctx, keys }) => (ctx.user ? visibleKeys(ctx.user.id, keys) : []) },
+  share: {
+    keys: async ({ ctx, keys }) =>
+      ctx.user ? visibleKeys(ctx.user.id, keys) : [],
+  },
 })
 ```
 

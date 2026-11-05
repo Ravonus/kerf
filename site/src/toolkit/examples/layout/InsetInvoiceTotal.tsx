@@ -3,7 +3,9 @@ import { Inset, Row, Stack, Text } from '@weft-js/warp'
 export const InsetInvoiceTotal = () => (
   <Stack gap="related">
     <Text role="heading">Next invoice</Text>
-    <Text subtle>Billed on 1 November to the card ending 4242.</Text>
+    <Text subtle>
+      Billed on 1 November to the card ending 4242.
+    </Text>
     <Inset>
       <Stack gap="tight">
         <Row justify="between">

@@ -10,7 +10,9 @@ export const NOTES: Note[] = [
     time: '9 min',
     day: 'Today',
     source: 'Deploys',
-    quote: 'Can you look at the retry settings before we redeploy?',
+    quote:
+      'Can you look at the retry ' +
+      'settings before we redeploy?',
   },
   {
     id: 'n2',

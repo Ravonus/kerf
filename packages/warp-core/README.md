@@ -65,19 +65,29 @@ const names = ['Plan', 'Billing', 'Team']
 export function Settings() {
   const at = state(0)
   let list: HTMLDivElement | undefined
-  use(indicator, () => list, () => ({ selected: '[aria-selected="true"]', at: at.value }))
+  use(indicator, () => list, () => ({
+    selected: '[aria-selected="true"]',
+    at: at.value,
+  }))
 
   const onKey = (e: KeyboardEvent) => {
     const to = nextIndex(e.key, at.value, names.length)
     if (to < 0) return
     e.preventDefault()
     at.value = to
-    list?.querySelectorAll<HTMLElement>('[role="tab"]')[to]?.focus()
+    const tabs = list?.querySelectorAll<HTMLElement>('[role="tab"]')
+    tabs?.[to]?.focus()
   }
 
   return (
     <div data-scope="tabs" data-part="root">
-      <div ref={(n: any) => (list = n)} data-part="list" role="tablist" aria-label="Settings" onKeyDown={onKey}>
+      <div
+        ref={(n: any) => (list = n)}
+        data-part="list"
+        role="tablist"
+        aria-label="Settings"
+        onKeyDown={onKey}
+      >
         {names.map((name, i) => (
           <button
             key={name}
@@ -93,7 +103,13 @@ export function Settings() {
         ))}
         <span data-part="indicator" aria-hidden="true"></span>
       </div>
-      <div data-part="content" role="tabpanel" tabindex="0">{names[at.value]}</div>
+      <div
+        data-part="content"
+        role="tabpanel"
+        tabindex="0"
+      >
+        {names[at.value]}
+      </div>
     </div>
   )
 }
@@ -113,7 +129,11 @@ export function AccountMenu() {
   const open = state(false)
   let button: HTMLButtonElement | undefined
   let panel: HTMLDivElement | undefined
-  use(menu, () => panel, () => ({ open: open.value, trigger: () => button, onClose: () => (open.value = false) }))
+  use(menu, () => panel, () => ({
+    open: open.value,
+    trigger: () => button,
+    onClose: () => (open.value = false),
+  }))
 
   const pick = (run: () => void) => {
     open.value = false
@@ -123,12 +143,36 @@ export function AccountMenu() {
 
   return (
     <div>
-      <button ref={(n: any) => (button = n)} type="button" aria-haspopup="menu" aria-expanded={open.value ? 'true' : 'false'} onClick={() => (open.value = !open.value)}>
+      <button
+        ref={(n: any) => (button = n)}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open.value ? 'true' : 'false'}
+        onClick={() => (open.value = !open.value)}
+      >
         Account
       </button>
-      <div ref={(n: any) => (panel = n)} role="menu" hidden={!open.value}>
-        <button role="menuitem" tabindex="-1" type="button" onClick={() => pick(() => (location.hash = 'profile'))}>Profile</button>
-        <button role="menuitem" tabindex="-1" type="button" onClick={() => pick(() => (location.hash = 'out'))}>Sign out</button>
+      <div
+        ref={(n: any) => (panel = n)}
+        role="menu"
+        hidden={!open.value}
+      >
+        <button
+          role="menuitem"
+          tabindex="-1"
+          type="button"
+          onClick={() => pick(() => (location.hash = 'profile'))}
+        >
+          Profile
+        </button>
+        <button
+          role="menuitem"
+          tabindex="-1"
+          type="button"
+          onClick={() => pick(() => (location.hash = 'out'))}
+        >
+          Sign out
+        </button>
       </div>
     </div>
   )

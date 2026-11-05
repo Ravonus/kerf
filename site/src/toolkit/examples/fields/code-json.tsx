@@ -1,4 +1,8 @@
-import { CodeInput, Grid, JsonEditor } from '@weft-js/warp'
+import {
+  CodeInput,
+  Grid,
+  JsonEditor,
+} from '@weft-js/warp'
 import { Cell } from '../../world'
 import { SCRIPT } from './payment-card-code'
 
@@ -8,7 +12,10 @@ export const CodeInputWrap = () => (
     language="sh"
     wrap
     rows={3}
-    defaultValue="node --max-old-space-size=4096 server.js --port $PORT --region $REGION --log-level info"
+    defaultValue={
+      'node --max-old-space-size=4096 server.js ' +
+      '--port $PORT --region $REGION --log-level info'
+    }
   />
 )
 
@@ -24,15 +31,32 @@ export const CodeInputErrorLine = () => (
 )
 
 export const CodeInputStates = () => (
-  <Grid cols={3} gap="group">
+  <Grid
+    cols={3}
+    gap="group"
+  >
     <Cell name="Empty">
-      <CodeInput label="Run command" language="sh" rows={3} />
+      <CodeInput
+        label="Run command"
+        language="sh"
+        rows={3}
+      />
     </Cell>
     <Cell name="Filled">
-      <CodeInput label="Run command" language="sh" rows={3} defaultValue="node server.js" />
+      <CodeInput
+        label="Run command"
+        language="sh"
+        rows={3}
+        defaultValue="node server.js"
+      />
     </Cell>
     <Cell name="Hint">
-      <CodeInput label="Run command" language="sh" rows={3} hint="Runs once in every copy." />
+      <CodeInput
+        label="Run command"
+        language="sh"
+        rows={3}
+        hint="Runs once in every copy."
+      />
     </Cell>
     <Cell name="Invalid">
       <CodeInput
@@ -83,16 +107,29 @@ export const checkConfig = (v: unknown) =>
     ? null
     : '"copies" must be a number above zero.'
 
-export const JsonEditorBasic = () => <JsonEditor label="weft.json" defaultValue={CONFIG} rows={7} />
+export const JsonEditorBasic = () => (
+  <JsonEditor
+    label="weft.json"
+    defaultValue={CONFIG}
+    rows={7}
+  />
+)
 
 export const JsonEditorSchema = () => (
-  <JsonEditor label="weft.json" defaultValue={BAD_CONFIG} rows={7} schema={checkConfig} />
+  <JsonEditor
+    label="weft.json"
+    defaultValue={BAD_CONFIG}
+    rows={7}
+    schema={checkConfig}
+  />
 )
 
 export const JsonEditorBroken = () => (
   <JsonEditor
     label="weft.json"
-    defaultValue={'{\n  "region": "eu-west",\n  "copies": 3,\n}'}
+    defaultValue={
+      '{\n  "region": "eu-west",\n  "copies": 3,\n}'
+    }
     rows={5}
   />
 )

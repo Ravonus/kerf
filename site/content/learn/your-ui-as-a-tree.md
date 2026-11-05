@@ -135,7 +135,7 @@ import { createRoot, state, watch } from '@weft-js/core'
 
 export const price = state(10)
 
-// A root of its own: this watch lives until `stop` is called, whatever component was running.
+// This root keeps the watch alive until `stop` is called.
 export const stop = createRoot(dispose => {
   watch(
     () => price.value,
@@ -228,11 +228,18 @@ function Moon() {
 
 export default function Sky() {
   const night = state(true)
-  const planets = state([{ id: 1, name: 'Venus' }, { id: 2, name: 'Mars' }])
+  const planets = state([
+    { id: 1, name: 'Venus' },
+    { id: 2, name: 'Mars' },
+  ])
   return (
     <section>
       {night.value && <Moon />}
-      <ul>{planets.value.map(p => <Planet key={p.id} name={p.name} />)}</ul>
+      <ul>
+        {planets.value.map(p => (
+          <Planet key={p.id} name={p.name} />
+        ))}
+      </ul>
     </section>
   )
 }
@@ -242,7 +249,7 @@ export default function Sky() {
 Sky
 ├── {night.value && …}      can change: the branch is added or removed
 │   └── Moon
-└── {planets.value.map(…)}  can change: rows are added, removed and moved by key
+└── {planets.value.map(…)}  rows change and move by key
     ├── Planet (key 1)
     └── Planet (key 2)
 ```
@@ -273,7 +280,11 @@ export function Header() {
 // AddButton.tsx
 export function AddButton() {
   const count = state(0)
-  return <button onClick={() => count.value++}>Add ({count.value})</button>
+  return (
+    <button onClick={() => count.value++}>
+      Add ({count.value})
+    </button>
+  )
 }
 
 // routes/index.tsx

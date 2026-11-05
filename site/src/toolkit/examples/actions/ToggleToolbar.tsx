@@ -7,13 +7,22 @@ export function ToggleToolbar() {
   const code = state(false)
   return (
     <Row gap="tight">
-      <Toggle pressed={bold.value} onClick={() => (bold.value = !bold.value)}>
+      <Toggle
+        pressed={bold.value}
+        onClick={() => (bold.value = !bold.value)}
+      >
         Bold
       </Toggle>
-      <Toggle pressed={italic.value} onClick={() => (italic.value = !italic.value)}>
+      <Toggle
+        pressed={italic.value}
+        onClick={() => (italic.value = !italic.value)}
+      >
         Italic
       </Toggle>
-      <Toggle pressed={code.value} onClick={() => (code.value = !code.value)}>
+      <Toggle
+        pressed={code.value}
+        onClick={() => (code.value = !code.value)}
+      >
         Code
       </Toggle>
     </Row>

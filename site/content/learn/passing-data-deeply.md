@@ -72,7 +72,9 @@ function Title(props: { children?: unknown }) {
 ```tsx
 function Section(props: { children?: unknown }) {
   const inner = Math.min(LevelContext.use + 1, 6) as Level
-  return LevelContext.provide(inner, () => <section>{props.children}</section>)
+  return LevelContext.provide(inner, () => (
+    <section>{props.children}</section>
+  ))
 }
 ```
 
@@ -135,7 +137,12 @@ const Armed = context<State<boolean>>(state(false))
 
 function DeleteButton() {
   const armed = Armed.use
-  return <button type="button" disabled={!armed.value}>Delete everything</button>
+  return <button
+    type="button"
+    disabled={!armed.value}
+  >
+    Delete everything
+  </button>
 }
 
 function Actions() {
@@ -147,7 +154,11 @@ export function DangerZone() {
   return Armed.provide(armed, () => (
     <section>
       <label>
-        <input type="checkbox" checked={armed.value} onChange={e => (armed.value = e.currentTarget.checked)} /> Allow
+        <input
+          type="checkbox"
+          checked={armed.value}
+          onChange={e => (armed.value = e.currentTarget.checked)}
+        /> Allow
         deleting
       </label>
       <Actions />
@@ -167,8 +178,14 @@ component's place in the tree. Read it there, in the body, and keep the result:
 
 ```tsx
 function DeleteButton() {
-  const armed = Armed.use // right: read once, while the component is made
-  return <button type="button" onClick={() => console.log(armed.value)}>Delete</button>
+  // Right: read once, while the component is made.
+  const armed = Armed.use
+  return <button
+    type="button"
+    onClick={() => console.log(armed.value)}
+  >
+    Delete
+  </button>
 }
 ```
 
@@ -177,7 +194,10 @@ A click handler runs later, from the browser's event loop, not from inside the t
 there's no provider above it to find, and it gets the **fallback**:
 
 ```tsx
-<button type="button" onClick={() => console.log(Armed.use.value)}>Delete</button> // the fallback's value
+// This reads the fallback's value.
+<button type="button" onClick={() => console.log(Armed.use.value)}>
+  Delete
+</button>
 ```
 
 The same goes for code after an `await`, a `setTimeout` callback, or anything else that runs outside the component's
@@ -202,10 +222,17 @@ lines:
 import { context, derived, type Derived } from '@weft-js/core'
 
 type Density = 'compact' | 'cozy'
-export const DensityContext = context<Derived<Density>>(derived<Density>(() => 'cozy'))
+export const DensityContext = context<Derived<Density>>(
+  derived<Density>(() => 'cozy'),
+)
 
-export function DensityScope(props: { value: Density; children?: unknown }) {
-  return DensityContext.provide(derived(() => props.value), () => <div data-density={props.value}>{props.children}</div>)
+export function DensityScope(
+  props: { value: Density; children?: unknown },
+) {
+  const density = derived(() => props.value)
+  return DensityContext.provide(density, () => (
+    <div data-density={props.value}>{props.children}</div>
+  ))
 }
 ```
 
@@ -270,10 +297,21 @@ prop drilling with a context, and let a "Large" checkbox change every photo.
 
 ```tsx
 function Photo(props: { name: string; size: number }) {
-  return <img alt={props.name} width={props.size} height={props.size} src={`/photos/${props.name}.jpg`} />
+  const { name, size } = props
+  return <img
+    alt={name}
+    width={size}
+    height={size}
+    src={`/photos/${name}.jpg`}
+  />
 }
 function Row(props: { names: string[]; size: number }) {
-  return <div>{props.names.map(n => <Photo key={n} name={n} size={props.size} />)}</div>
+  const { names, size } = props
+  return (
+    <div>
+      {names.map(n => <Photo key={n} name={n} size={size} />)}
+    </div>
+  )
 }
 ```
 :::solution
@@ -283,8 +321,14 @@ import { context, state, type State } from '@weft-js/core'
 const Size = context<State<number>>(state(100))
 
 function Photo(props: { name: string }) {
+  const { name } = props
   const size = Size.use
-  return <img alt={props.name} width={size.value} height={size.value} src={`/photos/${props.name}.jpg`} />
+  return <img
+    alt={name}
+    width={size.value}
+    height={size.value}
+    src={`/photos/${name}.jpg`}
+  />
 }
 
 function Row(props: { names: string[] }) {
@@ -296,7 +340,13 @@ export function Gallery() {
   return Size.provide(size, () => (
     <section>
       <label>
-        <input type="checkbox" checked={size.value === 150} onChange={e => (size.value = e.currentTarget.checked ? 150 : 100)} />
+        <input
+          type="checkbox"
+          checked={size.value === 150}
+          onChange={e => (
+            size.value = e.currentTarget.checked ? 150 : 100
+          )}
+        />
         Large
       </label>
       <Row names={['tram', 'harbour', 'tiles']} />
@@ -315,7 +365,12 @@ This button always logs `guest`, even inside a provider for `ana`. Fix it.
 const User = context('guest')
 
 function Greet() {
-  return <button type="button" onClick={() => console.log(`Hello, ${User.use}`)}>Greet</button>
+  return <button
+    type="button"
+    onClick={() => console.log(`Hello, ${User.use}`)}
+  >
+    Greet
+  </button>
 }
 ```
 :::solution
@@ -326,7 +381,12 @@ const User = context('guest')
 
 function Greet() {
   const user = User.use
-  return <button type="button" onClick={() => console.log(`Hello, ${user}`)}>Greet</button>
+  return <button
+    type="button"
+    onClick={() => console.log(`Hello, ${user}`)}
+  >
+    Greet
+  </button>
 }
 
 export function App() {
@@ -349,7 +409,9 @@ const LevelContext = context<Level>(2)
 
 export function Section(props: { children?: unknown }) {
   const inner = Math.min(LevelContext.use + 1, 6) as Level
-  return LevelContext.provide(inner, () => <section>{props.children}</section>)
+  return LevelContext.provide(inner, () => (
+    <section>{props.children}</section>
+  ))
 }
 
 export function Title(props: { children?: unknown }) {

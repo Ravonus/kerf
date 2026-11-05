@@ -5,11 +5,15 @@ Needs one of Node, Bun or Deno, and no Rust (`weft docs rust` is opt-in). An app
 ## Files
 
 ```
-src/routes/**            file routes: _layout.tsx, index.tsx, [id].tsx, [...rest].tsx, 404.tsx, _error.tsx
-src/server/**            server modules: queries and mutations (the client gets stubs); a Rust body: `weft docs rust`
+src/routes/**            file routes: _layout.tsx, index.tsx,
+                         [id].tsx, [...rest].tsx, 404.tsx,
+                         _error.tsx
+src/server/**            queries and mutations (client gets stubs);
+                         a Rust body: `weft docs rust`
 src/db/schema.ts         Drizzle tables; safe to import anywhere
 src/db/index.server.ts   the database client
-src/auth.server.ts       the auth provider (Better Auth by default), mounted at /api/auth/*
+src/auth.server.ts       auth provider (Better Auth by default),
+                         mounted at /api/auth/*
 src/context.server.ts    what `ctx` holds
 ```
 
@@ -24,9 +28,18 @@ Any auth provider works: `defineAuth` from `@weft-js/start/auth` takes a `handle
 import type { LoadArgs, Meta, RouteProps } from '@weft-js/start'
 import { getList } from '#/server/lists'
 
-export const load = async ({ params }: LoadArgs<'/lists/[id]'>) => ({ list: await getList.fetch({ id: params.id }) })
-export const meta: Meta<typeof load> = ({ data }) => ({ title: data.list.name })
-export default function List(props: RouteProps<typeof load, '/lists/[id]'>) { return <h1>{props.data.list.name}</h1> }
+export const load = async ({ params }: LoadArgs<'/lists/[id]'>) => ({
+  list: await getList.fetch({ id: params.id }),
+})
+export const meta: Meta<typeof load> = ({ data }) => ({
+  title: data.list.name,
+})
+export default function List(
+  props: RouteProps<typeof load, '/lists/[id]'>,
+) {
+  const { data } = props
+  return <h1>{data.list.name}</h1>
+}
 ```
 
 `props.data` and `const { data } = props` stay live; compute from them in JSX or `derived`, not in the component body (W001).
@@ -50,21 +63,42 @@ import { z } from 'zod'
 import * as schema from '#/db/schema'
 
 const { todos } = schema
-const schemas = schemasOf(schema, { todos: { title: (s: z.ZodString) => s.trim().min(1) } })
+const schemas = schemasOf(schema, {
+  todos: { title: (s: z.ZodString) => s.trim().min(1) },
+})
 
 export const listTodos = query({
   tags: ['todos'],                  // what invalidates it
-  auth: 'user',                     // anyone else gets A002; ctx.user is non-null here
-  run: ({ ctx }) => ctx.db.select().from(todos).where(eq(todos.userId, ctx.user.id)),
+  auth: 'user', // anyone else gets A002; ctx.user is non-null
+  run: ({ ctx }) => ctx.db
+    .select()
+    .from(todos)
+    .where(eq(todos.userId, ctx.user.id)),
 })
 
 export const addTodo = mutation({
   input: schemas.todos.insert.pick({ title: true }),
   auth: 'user',
-  invalidates: ['todos'],           // queries with this tag come back in the same response
-  optimistic: ({ input }, cache) => cache.update(listTodos, undefined, l => void l.push({ id: `tmp:${input.title}`, title: input.title, done: false, userId: '', createdAt: 0 })),
+  invalidates: ['todos'], // tagged queries return in the response
+  optimistic: ({ input }, cache) => {
+    return cache.update(listTodos, undefined, l => void l.push({
+      id: `tmp:${input.title}`,
+      title: input.title,
+      done: false,
+      userId: '',
+      createdAt: 0,
+    }))
+  },
   run: async ({ input, ctx }) => {
-    const [row] = await ctx.db.insert(todos).values({ id: crypto.randomUUID(), userId: ctx.user.id, createdAt: Date.now(), ...input }).returning()
+    const [row] = await ctx.db
+      .insert(todos)
+      .values({
+        id: crypto.randomUUID(),
+        userId: ctx.user.id,
+        createdAt: Date.now(),
+        ...input,
+      })
+      .returning()
     return row
   },
 })
@@ -111,8 +145,13 @@ import auth from '#/auth.server'
 export const signIn = mutation({
   input: z.object({ email: z.email(), password: z.string().min(8) }),
   run: async ({ input, ctx }) => {
-    await forward(ctx, auth.api.signInEmail({ body: input, headers: ctx.request.headers, asResponse: true }))
-    redirect('/todos')              // with a new session, a full load: nothing cached survives (A004 without one)
+    await forward(ctx, auth.api.signInEmail({
+      body: input,
+      headers: ctx.request.headers,
+      asResponse: true,
+    }))
+    // A new session needs a full load; cached data won't survive.
+    redirect('/todos') // A004 without a full load
   },
 })
 ```
@@ -132,8 +171,18 @@ mutation, a realtime connection and Better Auth's own routes always read the dat
 sign-out and a password change clear the cookie. A request past the window reads the database and renews it.
 
 ```ts
-createAuth({ db, secret, options: { database, session: { cookieCache: { maxAge: 60 } } } })     // a shorter window
-createAuth({ db, secret, options: { database, session: { cookieCache: { enabled: false } } } }) // every request reads the database
+// A shorter window
+createAuth({
+  db, secret,
+  options: { database, session: { cookieCache: { maxAge: 60 } } },
+})
+// Every request reads the database
+createAuth({
+  db, secret,
+  options: {
+    database, session: { cookieCache: { enabled: false } },
+  },
+})
 ```
 
 A hand-written provider follows the same rule: its `session` may cache for GET, never for another method.
@@ -144,7 +193,15 @@ keys and no database (`iss` and `aud` are `BETTER_AUTH_URL`). Signing keys live 
 function takes a token only if it's listed, and `auth: 'user'` still applies:
 
 ```ts
-createAuth({ db, secret, options, api: { functions: () => [orders, shipOrder], jwt: { audience: 'https://api.example.com', expirationTime: '15m' } } })
+createAuth({
+  db, secret, options,
+  api: {
+    functions: () => [orders, shipOrder],
+    jwt: {
+      audience: 'https://api.example.com', expirationTime: '15m',
+    },
+  },
+})
 ```
 
     GET  /_weft/fn/<id>?i=<json>   authorization: Bearer <token>
@@ -180,8 +237,10 @@ clean up for you.
 on any tab, refetches it for every reader. Unchanged rows keep their identity, so the page writes what changed.
 
 ```tsx
-const todos = listTodos.live()             // the same Resource as listTodos(), plus todos.live.value
-<p>{todos.live.value}</p>                  // 'connecting' | 'live' | 'degraded' | 'reconnecting' | 'offline'
+// Same Resource as listTodos(), plus todos.live.value
+const todos = listTodos.live()
+// 'connecting' | 'live' | 'degraded' | 'reconnecting' | 'offline'
+<p>{todos.live.value}</p>
 ```
 
 A live query needs `tags` (W053), and its mutations need one of them in `invalidates` (R003 in dev).
@@ -195,22 +254,31 @@ import { z } from 'zod'
 
 const Price = z.object({ symbol: z.string(), price: z.number() })
 
-export const priceTopic = topic('prices', { key: z.string().max(12), message: Price })
+export const priceTopic = topic('prices', {
+  key: z.string().max(12), message: Price,
+})
 export const prices = stream({
-  input: z.object({ symbols: z.array(z.string().max(12)).max(50) }),   // bound it (R005)
+  // Bound the input (R005).
+  input: z.object({ symbols: z.array(z.string().max(12)).max(50) }),
   message: Price,
-  auth: 'user',                                                        // optional; re-checked every 5 minutes
+  auth: 'user', // optional; re-checked every 5 minutes
   async *run({ input, signal, lastEventId }) {
-    yield* priceTopic.subscribe(input.symbols, { signal, after: lastEventId })   // subscribe first (R006)
+    // Subscribe first (R006).
+    yield* priceTopic.subscribe(input.symbols, {
+      signal, after: lastEventId,
+    })
   },
 })
-// anywhere on the server: await priceTopic.publish('AAPL', { symbol: 'AAPL', price: 1 })
+// Anywhere on the server:
+// await priceTopic.publish('AAPL', { symbol: 'AAPL', price: 1 })
 ```
 
 ```tsx
-const tick = prices({ symbols: ['AAPL'] })                             // tick.value: the latest message
-const board = prices(() => ({ symbols: syms.value }), {                // input is tracked; `skip` works
-  fold: (acc, m) => ({ ...acc, [m.symbol]: m }), initial: {}, keep: '30s',
+const tick = prices({ symbols: ['AAPL'] }) // latest: tick.value
+// Input is tracked; `skip` works.
+const board = prices(() => ({ symbols: syms.value }), {
+  fold: (acc, m) => ({ ...acc, [m.symbol]: m }),
+  initial: {}, keep: '30s',
 })
 ```
 
@@ -226,7 +294,11 @@ undefined after a reset: start again, or read from the database.
 import { realtime } from '@weft-js/start'
 import { postgresBus } from '@weft-js/start/bus/postgres'
 
-export default realtime({ bus: postgresBus({ url: process.env.DATABASE_URL! }), origins: ['https://other.example'], maxDuration: 300 })
+export default realtime({
+  bus: postgresBus({ url: process.env.DATABASE_URL! }),
+  origins: ['https://other.example'],
+  maxDuration: 300,
+})
 ```
 
 `postgresBus` needs a direct connection: pgBouncer in transaction mode breaks LISTEN. `maxDuration` is the platform's
@@ -267,10 +339,13 @@ import { eq } from 'drizzle-orm'
 import { notes } from '#/db/schema'
 
 export const myNotes = query({
-  tags: ['notes'],                               // table name, or `notes:${id}` for one row
+  tags: ['notes'], // table name, or `notes:${id}` for one row
   auth: 'user',
   live: { required: true, verify: 'staging' },   // both optional
-  run: ({ ctx }) => ctx.db.select().from(notes).where(eq(notes.owner, ctx.user.id)),
+  run: ({ ctx }) => ctx.db
+    .select()
+    .from(notes)
+    .where(eq(notes.owner, ctx.user.id)),
 })
 ```
 
@@ -282,7 +357,8 @@ A notification carries a table and primary keys, never a column. Each client ref
 
 ```tsx
 const notes = myNotes.live()
-notes.live.value       // … | 'degraded': connected, and outside writes arrive late or not at all
+// 'degraded': connected; outside writes arrive late or not at all
+notes.live.value
 notes.liveMode.value   // 'feed' | 'external' | 'poll' | 'app' | 'off'
 ```
 
@@ -308,9 +384,15 @@ Polling here is the framework's watcher, in one place on the server. R007 and T0
 <!-- example: skip two files in one block; needs a notes table -->
 ```ts
 // listener.ts: on a VPS, Fly or Railway. `weft db listen` runs it.
-export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), changes: dbChanges(db, [notes]) })
+export default realtime({
+  bus: postgresBus({ url: env.DATABASE_URL }),
+  changes: dbChanges(db, [notes]),
+})
 // the app, on Vercel
-export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), changes: dbChanges(db, [notes], { listener: 'external' }) })
+export default realtime({
+  bus: postgresBus({ url: env.DATABASE_URL }),
+  changes: dbChanges(db, [notes], { listener: 'external' }),
+})
 ```
 
 `weft db listen` loads your server modules from source, so it runs from a checkout with dependencies installed, and with the same env as the app. A listener that stops is noticed: its heartbeat ends, and within a minute `.live()` shows `reconnecting`.
@@ -320,17 +402,25 @@ export default realtime({ bus: postgresBus({ url: env.DATABASE_URL }), changes: 
 **`verify`** proves the chain end to end on every `weft check` and `weft build`, cached by query and contract:
 
 ```ts
-live: { required: true, verify: 'staging' }                                  // a name in weft.config.ts
-live: { verify: { url: 'https://staging.example.dev' } }                     // a running app
-live: { verify: { db: process.env.STAGING_DATABASE_URL } }                   // a database, as an outside writer
-live: { verify: true }                                                       // finds WEFT_STAGING_URL, STAGING_DATABASE_URL
+live: { required: true, verify: 'staging' } // name in config
+live: { verify: { url: 'https://staging.example.dev' } } // app
+// A database, as an outside writer
+live: { verify: { db: process.env.STAGING_DATABASE_URL } }
+// Finds WEFT_STAGING_URL or STAGING_DATABASE_URL
+live: { verify: true }
 ```
 
 Setup, once:
 
 ```ts
 // weft.config.ts
-live: { targets: { staging: { url: 'https://staging.example.dev', db: 'STAGING_DATABASE_URL', production: false } } }
+live: {
+  targets: { staging: {
+    url: 'https://staging.example.dev',
+    db: 'STAGING_DATABASE_URL',
+    production: false,
+  } },
+}
 ```
 
 Set `STAGING_DATABASE_URL`, and `WEFT_STAGING_COOKIE` and `WEFT_STAGING_OTHER_COOKIE` for a signed-in user and one who shouldn't see the row. If the query's table has a required column, say what to write: `verify: { target: 'staging', row: { owner: 'alice' } }`.
@@ -354,26 +444,35 @@ import { isMember, insertMessage, Message } from '#/server/messages'
 
 export const room = channel({
   params: z.object({ roomId: z.string().max(64) }),
-  authorize: ({ ctx, params }) => isMember(ctx.user, params.roomId),   // false: status 'unauthorized' (R011)
-  client: { say: z.object({ text: z.string().min(1).max(2000) }) },    // always validated; bound them (R005)
-  server: { said: Message },                                           // validated in dev and tests
+  // False gives status 'unauthorized' (R011).
+  authorize: ({ ctx, params }) => isMember(ctx.user, params.roomId),
+  // Always validated; bound messages (R005).
+  client: { say: z.object({ text: z.string().min(1).max(2000) }) },
+  server: { said: Message }, // validated in dev and tests
   on: {
     say: async ({ msg, ctx, params, room }) => {
-      const row = await insertMessage(ctx, params.roomId, msg.text)    // throw StartError or FnError to refuse `send`
-      await room.publish('said', row)                                  // `{ exceptSelf: true }` skips the sender
+      // Throw StartError or FnError to refuse `send`.
+      const row = await insertMessage(ctx, params.roomId, msg.text)
+      // { exceptSelf: true } skips the sender.
+      await room.publish('said', row)
     },
   },
-  limits: { perSecond: 10 },                                           // default 20 a second per socket
+  limits: { perSecond: 10 }, // default 20 a second per socket
 })
-// from a mutation or a job: await room.in({ roomId }).publish('said', row)
+// From a mutation or a job:
+// await room.in({ roomId }).publish('said', row)
 ```
 
 ```tsx
-const chat = room.connect(() => ({ roomId: props.roomId }))            // tracked; `skip` leaves; { keep: '30s' }
-const said = chat.collect('said', { max: 200, key: m => m.id })        // Derived<Message[]>, kept in the cache
-chat.on('typing', ({ userId }) => show(userId))                        // removed with the owner
-await chat.send('say', { text })                                       // resolves on the server's ack; rejects with the refusal
-chat.status.value                                                      // 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized'
+// Tracked; `skip` leaves; { keep: '30s' }
+const chat = room.connect(() => ({ roomId: props.roomId }))
+// Derived<Message[]>, kept in the cache
+const said = chat.collect('said', { max: 200, key: m => m.id })
+chat.on('typing', ({ userId }) => show(userId)) // owner removes it
+// Resolves on the server's ack; rejects with the refusal
+await chat.send('say', { text })
+// 'connecting' | 'open' | 'reconnecting' | 'closed' | 'unauthorized'
+chat.status.value
 ```
 
 **The channel is a wire, not a log.** A reconnect replays what the last 60 s or 256 messages hold, per instance. Past
@@ -388,7 +487,9 @@ import { invalidate } from '@weft-js/start'
 const history = listMessages({ roomId })
 const said = chat.collect('said', { key: m => m.id })
 chat.onReset(() => invalidate('messages'))
-const all = derived(() => dedupe([...(history.value ?? []), ...said.value]))
+const all = derived(() =>
+  dedupe([...(history.value ?? []), ...said.value]),
+)
 ```
 
 A refused join is only known once the socket is up, and `status` is `'connecting'` on the server. To render "not
@@ -416,11 +517,15 @@ import { sharedState, skip } from '@weft-js/start'
 import { z } from 'zod'
 
 export const deckSlide = sharedState('deck-slide', {
-  key: z.string().max(64), value: z.number().int().max(999), initial: 0,
-  authorize: { read: isParticipant, write: isPresenter },              // ({ ctx, key }) => boolean, both required
+  key: z.string().max(64),
+  value: z.number().int().max(999),
+  initial: 0,
+  // Both ({ ctx, key }) => boolean functions are required.
+  authorize: { read: isParticipant, write: isPresenter },
 })
-await deckSlide.in(id).set(3)                                          // on the server
-const slide = deckSlide.connect(() => (id.value ? id.value : skip))    // in a defineState: State<number> & { status, error }
+await deckSlide.in(id).set(3) // on the server
+// In defineState: State<number> & { status, error }
+const slide = deckSlide.connect(() => (id.value ? id.value : skip))
 ```
 
 Its value lives in server memory: it survives a restart only while another instance runs. What must last is a mutation.

@@ -1,40 +1,42 @@
-export { TabsPlay } from './moving/TabsPlay'
-export { TabsLine } from './moving/TabsLine'
-export { TabsPill } from './moving/TabsPill'
-export { TabsEnclosed } from './moving/TabsEnclosed'
-export { TabsOverflow } from './moving/TabsOverflow'
-export { TabsDisabled } from './moving/TabsDisabled'
-export { TabsFilterList } from './moving/TabsFilterList'
-export { TabsProjectPage } from './moving/TabsProjectPage'
-export { AccordionPlay } from './moving/AccordionPlay'
-export { AccordionBoxed } from './moving/AccordionBoxed'
-export { AccordionLine } from './moving/AccordionLine'
-export { AccordionMultiple } from './moving/AccordionMultiple'
-export { AccordionDisabled } from './moving/AccordionDisabled'
-export { AccordionHeardChange } from './moving/AccordionHeardChange'
-export { AccordionSettings } from './moving/AccordionSettings'
-export { NavPlay } from './moving/NavPlay'
-export { NavAcross } from './moving/NavAcross'
-export { NavDown } from './moving/NavDown'
-export { NavProductHeader } from './moving/NavProductHeader'
-export { NavSettings } from './moving/NavSettings'
-export { NavContents } from './moving/NavContents'
-export { PaginationBarPlay } from './moving/PaginationBarPlay'
-export { PaginationBarOffset } from './moving/PaginationBarOffset'
-export { PaginationBarCursor } from './moving/PaginationBarCursor'
-export { PaginationBarNarrow } from './moving/PaginationBarNarrow'
-export { PaginationBarControlled } from './moving/PaginationBarControlled'
-export { PaginationBarList } from './moving/PaginationBarList'
-export { LoadMorePlay } from './moving/LoadMorePlay'
-export { LoadMoreOnPress } from './moving/LoadMoreOnPress'
-export { LoadMoreScrolling } from './moving/LoadMoreScrolling'
-export { LoadMoreLoading } from './moving/LoadMoreLoading'
-export { LoadMoreDone } from './moving/LoadMoreDone'
-export { LinkPlay } from './moving/LinkPlay'
-export { LinkInText } from './moving/LinkInText'
-export { LinkSubtle } from './moving/LinkSubtle'
-export { LinkExternal } from './moving/LinkExternal'
-export { LinkFooter } from './moving/LinkFooter'
-export { LinkCardAction } from './moving/LinkCardAction'
-export { SideNavGuide } from './moving/SideNavGuide'
-export { SideNavFilter } from './moving/SideNavFilter'
+export {
+  TabsPlay,
+  TabsLine,
+  TabsPill,
+  TabsEnclosed,
+  TabsOverflow,
+  TabsDisabled,
+  TabsFilterList,
+  TabsProjectPage,
+  AccordionPlay,
+  AccordionBoxed,
+  AccordionLine,
+  AccordionMultiple,
+  AccordionDisabled,
+  AccordionHeardChange,
+  AccordionSettings,
+  NavPlay,
+  NavAcross,
+  NavDown,
+  NavProductHeader,
+  NavSettings,
+  NavContents,
+  PaginationBarPlay,
+  PaginationBarOffset,
+  PaginationBarCursor,
+  PaginationBarNarrow,
+  PaginationBarControlled,
+  PaginationBarList,
+  LoadMorePlay,
+  LoadMoreOnPress,
+  LoadMoreScrolling,
+  LoadMoreLoading,
+  LoadMoreDone,
+  LinkPlay,
+  LinkInText,
+  LinkSubtle,
+  LinkExternal,
+  LinkFooter,
+  LinkCardAction,
+  SideNavGuide,
+  SideNavFilter,
+} from './moving/index'

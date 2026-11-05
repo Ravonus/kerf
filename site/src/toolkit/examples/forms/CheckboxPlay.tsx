@@ -9,9 +9,9 @@ export function CheckboxPlay(p: Knobs) {
       {...p}
       hint={p.hint || undefined}
       checked={on.value}
-      onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
-        (on.value = e.currentTarget.checked)
-      }
+      onChange={(
+        e: Event & { currentTarget: HTMLInputElement },
+      ) => (on.value = e.currentTarget.checked)}
     >
       {p.children}
     </Checkbox>

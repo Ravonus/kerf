@@ -138,6 +138,20 @@ export const EVENTS: CalEvent[] = [
     cal: 3,
     resource: 'cedar',
   },
-  { id: 'a1', title: 'Jun on call', start: '2026-11-02', end: '2026-11-04', allDay: true, cal: 2 },
-  { id: 'a2', title: 'Ship 26.11', start: '2026-11-06', end: '2026-11-06', allDay: true, cal: 1 },
+  {
+    id: 'a1',
+    title: 'Jun on call',
+    start: '2026-11-02',
+    end: '2026-11-04',
+    allDay: true,
+    cal: 2,
+  },
+  {
+    id: 'a2',
+    title: 'Ship 26.11',
+    start: '2026-11-06',
+    end: '2026-11-06',
+    allDay: true,
+    cal: 1,
+  },
 ]

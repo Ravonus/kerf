@@ -11,7 +11,11 @@ on what the reader gets, from what is on the page:
 ```tsx
 import type { Meta } from '@weft-js/start'
 
-export const meta: Meta = { title: 'Pricing', description: 'Three plans, billed monthly, and what each one includes.' }
+export const meta: Meta = {
+  title: 'Pricing',
+  description: 'Three plans, billed monthly, ' +
+    'and what each one includes.',
+}
 ```
 
 On a param route, build it from `data` and `params`, so each page says what it is:
@@ -22,8 +26,14 @@ On a param route, build it from `data` and `params`, so each page says what it i
 import { notFound, type LoadArgs, type Meta } from '@weft-js/start'
 import { getUser } from '#/server/users'
 
-export const load = async ({ params }: LoadArgs<'/users/[id]'>) => (await getUser.fetch({ id: params.id })) ?? notFound()
-export const meta: Meta<typeof load> = ({ data }) => ({ title: data.name, description: data.bio })
+export const load = async ({ params }: LoadArgs<'/users/[id]'>) => {
+  const user = await getUser.fetch({ id: params.id })
+  return user ?? notFound()
+}
+export const meta: Meta<typeof load> = ({ data }) => ({
+  title: data.name,
+  description: data.bio,
+})
 ```
 
 `meta` is plain data: it runs once per request after the loaders and before the first byte. It can't read a box (H006)

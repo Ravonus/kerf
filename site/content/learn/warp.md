@@ -111,12 +111,23 @@ A form is warp's fields inside an ordinary `<form>`. Each field takes a required
 
 ```tsx
 import { derived, state } from '@weft-js/core'
-import { Button, Card, Checkbox, Input, Row, Stack } from '@weft-js/warp'
+import {
+  Button,
+  Card,
+  Checkbox,
+  Input,
+  Row,
+  Stack,
+} from '@weft-js/warp'
 
 export function Billing() {
   const email = state('')
   const tried = state(false)
-  const problem = derived(() => (tried.value && !email.value.includes('@') ? 'Enter an email address.' : undefined))
+  const problem = derived(() =>
+    tried.value && !email.value.includes('@')
+      ? 'Enter an email address.'
+      : undefined,
+  )
   const save = (e: Event) => {
     e.preventDefault()
     tried.value = true
@@ -125,10 +136,24 @@ export function Billing() {
     <Card title="Billing">
       <form onSubmit={save} noValidate>
         <Stack gap="related">
-          <Input label="Billing email" type="email" error={problem.value} value={email.value} onInput={e => (email.value = e.currentTarget.value)} />
-          <Checkbox defaultChecked>Send a receipt for every payment</Checkbox>
+          <Input
+            label="Billing email"
+            type="email"
+            error={problem.value}
+            value={email.value}
+            onInput={e => (email.value = e.currentTarget.value)}
+          />
+          <Checkbox defaultChecked>
+            Send a receipt for every payment
+          </Checkbox>
           <Row gap="tight" justify="end">
-            <Button emphasis="ghost" tone="neutral" type="reset">Reset</Button>
+            <Button
+              emphasis="ghost"
+              tone="neutral"
+              type="reset"
+            >
+              Reset
+            </Button>
             <Button type="submit">Save</Button>
           </Row>
         </Stack>
@@ -162,7 +187,10 @@ export function Project() {
         items={[
           { label: 'Rename', icon: 'pencil' },
           { separator: true },
-          { label: 'Delete', icon: 'trash', tone: 'critical', onSelect: () => (confirming.value = true) },
+          {
+            label: 'Delete', icon: 'trash', tone: 'critical',
+            onSelect: () => (confirming.value = true),
+          },
         ]}
       />
       <Modal
@@ -171,8 +199,20 @@ export function Project() {
         title="Delete this project?"
         footer={
           <>
-            <Button emphasis="ghost" tone="neutral" data-close="" autofocus>Cancel</Button>
-            <Button tone="critical" onClick={() => (confirming.value = false)}>Delete</Button>
+            <Button
+              emphasis="ghost"
+              tone="neutral"
+              data-close=""
+              autofocus
+            >
+              Cancel
+            </Button>
+            <Button
+              tone="critical"
+              onClick={() => (confirming.value = false)}
+            >
+              Delete
+            </Button>
           </>
         }
       >
@@ -206,7 +246,12 @@ import { state } from '@weft-js/core'
 import { Table } from '@weft-js/warp'
 import type { Column, TableSort } from '@weft-js/warp'
 
-type Bean = { id: string; name: string; origin: string; price: number }
+type Bean = {
+  id: string
+  name: string
+  origin: string
+  price: number
+}
 
 const BEANS: Bean[] = [
   { id: 'h', name: 'House blend', origin: 'Brazil', price: 12 },
@@ -214,14 +259,30 @@ const BEANS: Bean[] = [
 ]
 
 const COLUMNS: Column<Bean>[] = [
-  { id: 'name', header: 'Coffee', rowHeader: true, sort: true, card: 'title' },
+  {
+    id: 'name', header: 'Coffee', rowHeader: true,
+    sort: true, card: 'title',
+  },
   { id: 'origin', header: 'Origin', sort: true },
-  { id: 'price', header: 'Price', numeric: true, sort: true, cell: b => `$${b.price}` },
+  {
+    id: 'price', header: 'Price', numeric: true, sort: true,
+    cell: b => `$${b.price}`,
+  },
 ]
 
 export function Beans() {
-  const sort = state<TableSort | undefined>({ id: 'name', dir: 'ascending' })
-  return <Table caption="Coffee in stock" rows={BEANS} columns={COLUMNS} sort={sort} filter="Filter coffee" />
+  const sort = state<TableSort | undefined>({
+    id: 'name', dir: 'ascending',
+  })
+  return (
+    <Table
+      caption="Coffee in stock"
+      rows={BEANS}
+      columns={COLUMNS}
+      sort={sort}
+      filter="Filter coffee"
+    />
+  )
 }
 ```
 
@@ -257,7 +318,9 @@ a `Button` is `data-scope="button"`. Each component's page lists its scope, part
 
 ```css
 /* src/app.css */
-[data-scope="surface"] > [data-part="eyebrow"] { letter-spacing: 0.08em; }
+[data-scope="surface"] > [data-part="eyebrow"] {
+  letter-spacing: 0.08em;
+}
 [data-scope="button"][data-tone="critical"] { font-weight: 700; }
 ```
 
@@ -286,7 +349,7 @@ import { use } from '@weft-js/warp-core/weft'
 
 export function Toolbar() {
   let bar: HTMLDivElement | undefined
-  // One tab stop for the whole toolbar; the arrow keys move between its buttons.
+  // One tab stop; arrow keys move between buttons.
   use(roving, () => bar, () => ({ items: '[data-tool]' }))
   return (
     <div role="toolbar" aria-label="Text" ref={el => { bar = el }}>
@@ -326,7 +389,18 @@ import { Button, Text } from '@weft-js/warp'
 
 export function File() {
   const deleted = state(false)
-  return <>{deleted.value ? <Text subtle>Deleted.</Text> : <Button tone="critical" onClick={() => (deleted.value = true)}>Delete</Button>}</>
+  return (
+    <>
+      {deleted.value ? <Text subtle>Deleted.</Text> : (
+        <Button
+          tone="critical"
+          onClick={() => (deleted.value = true)}
+        >
+          Delete
+        </Button>
+      )}
+    </>
+  )
 }
 ```
 :::solution
@@ -343,14 +417,28 @@ export function File() {
   }
   return (
     <>
-      {deleted.value ? <Text subtle>Deleted.</Text> : <Button tone="critical" onClick={() => (asking.value = true)}>Delete</Button>}
+      {deleted.value ? <Text subtle>Deleted.</Text> : (
+        <Button
+          tone="critical"
+          onClick={() => (asking.value = true)}
+        >
+          Delete
+        </Button>
+      )}
       <Modal
         open={asking}
         alert
         title="Delete this file?"
         footer={
           <>
-            <Button emphasis="ghost" tone="neutral" data-close="" autofocus>Cancel</Button>
+            <Button
+              emphasis="ghost"
+              tone="neutral"
+              data-close=""
+              autofocus
+            >
+              Cancel
+            </Button>
             <Button tone="critical" onClick={remove}>Delete</Button>
           </>
         }
@@ -382,8 +470,12 @@ export function SortMenu() {
         label="Sort"
         trigger={{ emphasis: 'ghost', tone: 'neutral' }}
         items={[
-          { label: 'Newest', onSelect: () => (order.value = 'newest') },
-          { label: 'Oldest', onSelect: () => (order.value = 'oldest') },
+          {
+            label: 'Newest', onSelect: () => (order.value = 'newest'),
+          },
+          {
+            label: 'Oldest', onSelect: () => (order.value = 'oldest'),
+          },
           { label: 'Name', onSelect: () => (order.value = 'name') },
         ]}
       />
@@ -401,7 +493,9 @@ Every `Card` eyebrow in your app should be in the accent colour. Write the CSS, 
 :::solution
 ```css
 /* src/app.css */
-[data-scope="surface"] > [data-part="eyebrow"] { color: var(--warp-color-accent-text); }
+[data-scope="surface"] > [data-part="eyebrow"] {
+  color: var(--warp-color-accent-text);
+}
 ```
 
 The rule has no layer, so it beats warp's layered rule for the eyebrow. `--warp-color-accent-text` is the accent's

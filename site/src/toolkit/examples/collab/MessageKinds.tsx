@@ -11,10 +11,17 @@ export function MessageKinds() {
   return (
     <Stack gap="related">
       <Message message={CHAT[1]!} />
-      <Message message={CHAT[5]!} source={CHAT[1]} />
+      <Message
+        message={CHAT[5]!}
+        source={CHAT[1]}
+      />
       <Message message={CHAT[7]!} />
       <Message
-        message={retried.value ? { ...FAILED, state: 'sent' } : FAILED}
+        message={
+          retried.value
+            ? { ...FAILED, state: 'sent' }
+            : FAILED
+        }
         last
         onRetry={() => (retried.value = true)}
       />

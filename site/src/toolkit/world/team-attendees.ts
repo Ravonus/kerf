@@ -46,6 +46,16 @@ export const TEAM_ROOM: Attendee[] = [
 ]
 
 export const TEAM_MORE: Attendee[] = [
-  { id: 'lena', name: 'Lena Fischer', zone: 'Europe/Berlin', busy: [[900, 960]] },
-  { id: 'tomas', name: 'Tomás Oliveira', zone: 'Europe/Lisbon', busy: [[600, 660]] },
+  {
+    id: 'lena',
+    name: 'Lena Fischer',
+    zone: 'Europe/Berlin',
+    busy: [[900, 960]],
+  },
+  {
+    id: 'tomas',
+    name: 'Tomás Oliveira',
+    zone: 'Europe/Lisbon',
+    busy: [[600, 660]],
+  },
 ]

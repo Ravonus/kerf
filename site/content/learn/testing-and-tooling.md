@@ -25,7 +25,11 @@ import { expect, test } from 'vitest'
 
 function Like() {
   const likes = state(0)
-  return <button type="button" onClick={() => likes.value++}>Likes: {likes.value}</button>
+  return (
+    <button type="button" onClick={() => likes.value++}>
+      Likes: {likes.value}
+    </button>
+  )
 }
 
 test('a click adds a like', async () => {

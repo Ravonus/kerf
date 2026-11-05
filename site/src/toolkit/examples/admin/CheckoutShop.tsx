@@ -17,10 +17,16 @@ export function CheckoutShop() {
         shipping={SHOP_SHIPPING}
         countries={['US', 'GB', 'DE']}
         taxRate={0.08}
-        coupon={(code) => (code === 'WEFT10' ? { code, percentOff: 10 } : undefined)}
+        coupon={(code) =>
+          code === 'WEFT10'
+            ? { code, percentOff: 10 }
+            : undefined
+        }
         payment={<PAYMENT_FRAME />}
         onPlaceOrder={place}
-        onContinueShopping={() => (cart.value = SHOP_CART)}
+        onContinueShopping={() =>
+          (cart.value = SHOP_CART)
+        }
       />
       <Toaster />
     </>

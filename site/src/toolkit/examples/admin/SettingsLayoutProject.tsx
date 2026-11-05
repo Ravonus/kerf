@@ -30,17 +30,38 @@ export function SettingsLayoutProject() {
         description="How storefront appears across weft."
       >
         <SettingRow layout="stack">
-          <Input label="Project name" defaultValue="storefront" />
+          <Input
+            label="Project name"
+            defaultValue="storefront"
+          />
         </SettingRow>
-        <SettingRow title="Region" description="Where its builds and logs live.">
-          <Select label="Region" options={REGIONS} defaultValue="eu-west" />
+        <SettingRow
+          title="Region"
+          description="Where its builds and logs live."
+        >
+          <Select
+            label="Region"
+            options={REGIONS}
+            defaultValue="eu-west"
+          />
         </SettingRow>
       </SettingsSection>
       <ProjectDeploys previews={previews} />
       <ProjectAlerts failures={failures} />
       <DangerZone id="project-danger">
-        <SettingRow title="Archive project" description="Stops deploys and makes it read-only.">
-          <Button emphasis="soft" tone="critical" size="sm" onClick={() => (archive.value = true)}>
+        <SettingRow
+          title="Archive project"
+          description={[
+            'Stops deploys and makes it ',
+            'read-only.',
+          ].join('')}
+        >
+          <Button
+            emphasis="soft"
+            tone="critical"
+            size="sm"
+            onClick={() => (archive.value = true)}
+          >
             Archive
           </Button>
         </SettingRow>
@@ -48,7 +69,10 @@ export function SettingsLayoutProject() {
       <ConfirmDialog
         open={archive}
         title="Archive storefront?"
-        description="Deploys stop. You can restore it at any time."
+        description={[
+          'Deploys stop. You can restore it ',
+          'at any time.',
+        ].join('')}
         action="Archive project"
         onConfirm={() => wait(600)}
       />
@@ -56,17 +80,32 @@ export function SettingsLayoutProject() {
   )
 }
 
-function ProjectDeploys({ previews }: { previews: State<boolean> }) {
+function ProjectDeploys({
+  previews,
+}: {
+  previews: State<boolean>
+}) {
   return (
-    <SettingsSection id="deploys" title="Deploys">
-      <SettingRow title="Preview environments" description="Every pull request gets its own URL.">
-        {(ids: { label: string; description: string }) => (
+    <SettingsSection
+      id="deploys"
+      title="Deploys"
+    >
+      <SettingRow
+        title="Preview environments"
+        description="Every pull request gets its own URL."
+      >
+        {(ids: {
+          label: string
+          description: string
+        }) => (
           <Switch
             size="sm"
             checked={previews.value}
             aria-labelledby={ids.label}
             aria-describedby={ids.description}
-            onChange={() => (previews.value = !previews.value)}
+            onChange={() =>
+              (previews.value = !previews.value)
+            }
           />
         )}
       </SettingRow>
@@ -74,20 +113,35 @@ function ProjectDeploys({ previews }: { previews: State<boolean> }) {
   )
 }
 
-function ProjectAlerts({ failures }: { failures: State<boolean> }) {
+function ProjectAlerts({
+  failures,
+}: {
+  failures: State<boolean>
+}) {
   return (
-    <SettingsSection id="alerts" title="Notifications">
+    <SettingsSection
+      id="alerts"
+      title="Notifications"
+    >
       <SettingRow
         title="Failed deploys"
-        description="Mail the project's owner when a deploy fails."
+        description={[
+          "Mail the project's owner when a ",
+          'deploy fails.',
+        ].join('')}
       >
-        {(ids: { label: string; description: string }) => (
+        {(ids: {
+          label: string
+          description: string
+        }) => (
           <Switch
             size="sm"
             checked={failures.value}
             aria-labelledby={ids.label}
             aria-describedby={ids.description}
-            onChange={() => (failures.value = !failures.value)}
+            onChange={() =>
+              (failures.value = !failures.value)
+            }
           />
         )}
       </SettingRow>

@@ -7,8 +7,16 @@ export function NumberFieldSeats() {
   const seats = state<number | null>(8)
   return (
     <Stack gap="related">
-      <NumberField label="Seats" value={seats} min={1} max={50} hint="$12 a seat, each month." />
-      <Text subtle>Total: ${(seats.value ?? 0) * 12} a month</Text>
+      <NumberField
+        label="Seats"
+        value={seats}
+        min={1}
+        max={50}
+        hint="$12 a seat, each month."
+      />
+      <Text subtle>
+        Total: ${(seats.value ?? 0) * 12} a month
+      </Text>
     </Stack>
   )
 }

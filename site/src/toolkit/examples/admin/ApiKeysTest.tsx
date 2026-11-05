@@ -8,7 +8,10 @@ import { wait } from './shared'
 
 export function ApiKeysTest() {
   const keys = state<readonly ApiKey[]>(API_KEYS)
-  const create = async (draft: { name: string; scopes: string[] }) => {
+  const create = async (draft: {
+    name: string
+    scopes: string[]
+  }) => {
     await wait(600)
     keys.value = [
       {

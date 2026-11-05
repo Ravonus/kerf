@@ -7,13 +7,24 @@ export function ToggleSizes() {
   const large = state(true)
   return (
     <>
-      <Toggle size="sm" pressed={small.value} onClick={() => (small.value = !small.value)}>
+      <Toggle
+        size="sm"
+        pressed={small.value}
+        onClick={() => (small.value = !small.value)}
+      >
         Bold
       </Toggle>
-      <Toggle pressed={medium.value} onClick={() => (medium.value = !medium.value)}>
+      <Toggle
+        pressed={medium.value}
+        onClick={() => (medium.value = !medium.value)}
+      >
         Bold
       </Toggle>
-      <Toggle size="lg" pressed={large.value} onClick={() => (large.value = !large.value)}>
+      <Toggle
+        size="lg"
+        pressed={large.value}
+        onClick={() => (large.value = !large.value)}
+      >
         Bold
       </Toggle>
     </>

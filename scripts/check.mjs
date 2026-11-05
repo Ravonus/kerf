@@ -115,8 +115,8 @@ const STEPS = [
   },
   {
     id: 'sample-width',
-    covers: '70-column doc fences and 58-column split-pane samples (warnings in S0)',
-    fix: 'Rewrite samples to fit their boxes; Sprint 1 makes these warnings errors.',
+    covers: '70-column doc fences and 58-column split-pane samples',
+    fix: 'Rewrite samples to fit their boxes.',
     async run() {
       const result = await run(process.execPath, ['site/scripts/sample-width.mjs'])
       return { ...lines(result), detail: result.code === 0 ? result.out.trim() : '' }

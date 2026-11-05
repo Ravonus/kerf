@@ -3,7 +3,11 @@ import { Skins } from './stage-landing'
 
 // -- DitherStage
 export const StageSkins = () => (
-  <DitherStage kind="drift" ground={0.35} style="padding:28px">
+  <DitherStage
+    kind="drift"
+    ground={0.35}
+    style="padding:28px"
+  >
     <Skins group="look-dither" />
   </DitherStage>
 )

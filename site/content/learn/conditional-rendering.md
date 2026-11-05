@@ -21,7 +21,9 @@ React you might reach for an `if` with an early `return`:
 
 <!-- example: skip deliberately wrong: reports W001 -->
 ```tsx
-function Item({ name, isPacked }: { name: string; isPacked: boolean }) {
+function Item(
+  { name, isPacked }: { name: string; isPacked: boolean },
+) {
   if (isPacked) {
     return <li class="item">{name} (packed)</li>
   }
@@ -37,7 +39,9 @@ never updates."
 The fix is to move the condition into the markup. Markup is the part of a component that stays live:
 
 ```tsx
-function Item({ name, isPacked }: { name: string; isPacked: boolean }) {
+function Item(
+  { name, isPacked }: { name: string; isPacked: boolean },
+) {
   return (
     <li class="item">
       {name} {isPacked ? '(packed)' : ''}
@@ -72,15 +76,20 @@ ternary on the `return` line:
 
 <!-- example: skip deliberately wrong: reports W001 -->
 ```tsx
-function Item({ name, isPacked }: { name: string; isPacked: boolean }) {
-  return isPacked ? null : <li class="item">{name}</li> // W001: the test is outside the markup
+function Item(
+  { name, isPacked }: { name: string; isPacked: boolean },
+) {
+  // W001: the test is outside the markup
+  return isPacked ? null : <li class="item">{name}</li>
 }
 ```
 
 Put the condition inside the markup, wrapping it in a fragment if there's no element to hold it:
 
 ```tsx
-export function Item({ name, isPacked }: { name: string; isPacked: boolean }) {
+export function Item(
+  { name, isPacked }: { name: string; isPacked: boolean },
+) {
   return <>{isPacked ? null : <li class="item">{name}</li>}</>
 }
 ```
@@ -100,8 +109,14 @@ When most of the markup is the same and only a piece differs, put the condition 
 JavaScript's `cond ? a : b` reads as "if `cond`, then `a`, otherwise `b`". In markup it picks between two pieces:
 
 ```tsx
-export function Item({ name, isPacked }: { name: string; isPacked: boolean }) {
-  return <li class="item">{isPacked ? <del>{name} (packed)</del> : name}</li>
+export function Item(
+  { name, isPacked }: { name: string; isPacked: boolean },
+) {
+  return (
+    <li class="item">
+      {isPacked ? <del>{name} (packed)</del> : name}
+    </li>
+  )
 }
 ```
 
@@ -124,7 +139,9 @@ So a condition costs nothing until it flips.
 Another shortcut is `&&`: "if `cond`, show this, otherwise nothing":
 
 ```tsx
-export function Item({ name, isPacked }: { name: string; isPacked: boolean }) {
+export function Item(
+  { name, isPacked }: { name: string; isPacked: boolean },
+) {
   return (
     <li class="item">
       {name} {isPacked && <small>(packed)</small>}
@@ -169,7 +186,9 @@ In React you might assign markup to a variable with an `if` and use the variable
 the body is set once, so give the choice a function instead, and call the function in the markup:
 
 ```tsx
-export function Item({ name, isPacked }: { name: string; isPacked: boolean }) {
+export function Item(
+  { name, isPacked }: { name: string; isPacked: boolean },
+) {
   const label = () => {
     if (isPacked) return <del>{name} (packed)</del>
     return name
@@ -230,7 +249,9 @@ Use `? :` to show "(done)" after a packed item and "(to do)" after the others.
 
 <!-- example: skip the starting point: the prop it asks you to use is still unused -->
 ```tsx
-function Item({ name, isPacked }: { name: string; isPacked: boolean }) {
+function Item(
+  { name, isPacked }: { name: string; isPacked: boolean },
+) {
   return <li class="item">{name}</li>
 }
 
@@ -245,7 +266,9 @@ export default function PackingList() {
 ```
 :::solution
 ```tsx
-function Item({ name, isPacked }: { name: string; isPacked: boolean }) {
+function Item(
+  { name, isPacked }: { name: string; isPacked: boolean },
+) {
   return (
     <li class="item">
       {name} {isPacked ? '(done)' : '(to do)'}
@@ -270,7 +293,9 @@ importance 0 should show nothing extra, and certainly not a `0`.
 
 <!-- example: skip the starting point: the prop it asks you to use is still unused -->
 ```tsx
-function Item({ name, importance }: { name: string; importance: number }) {
+function Item(
+  { name, importance }: { name: string; importance: number },
+) {
   return <li class="item">{name}</li>
 }
 
@@ -286,7 +311,9 @@ export default function PackingList() {
 ```
 :::solution
 ```tsx
-function Item({ name, importance }: { name: string; importance: number }) {
+function Item(
+  { name, importance }: { name: string; importance: number },
+) {
   return (
     <li class="item">
       {name}
@@ -323,7 +350,11 @@ import { state } from '@weft-js/core'
 export function Greeting() {
   const user = state<string | null>(null)
   if (!user.value) {
-    return <button type="button" onClick={() => (user.value = 'Ana')}>Sign in</button>
+    return (
+      <button type="button" onClick={() => (user.value = 'Ana')}>
+        Sign in
+      </button>
+    )
   }
   return <p>Hello, {user.value}.</p>
 }
@@ -362,7 +393,10 @@ export function Notes() {
   const open = state(true)
   return (
     <section>
-      <button type="button" onClick={() => (open.value = !open.value)}>
+      <button
+        type="button"
+        onClick={() => (open.value = !open.value)}
+      >
         {open.value ? 'Close' : 'Open'}
       </button>
       {open.value && <textarea aria-label="Notes" />}
@@ -380,7 +414,10 @@ export function Notes() {
   const open = state(true)
   return (
     <section>
-      <button type="button" onClick={() => (open.value = !open.value)}>
+      <button
+        type="button"
+        onClick={() => (open.value = !open.value)}
+      >
         {open.value ? 'Close' : 'Open'}
       </button>
       <textarea aria-label="Notes" hidden={!open.value} />

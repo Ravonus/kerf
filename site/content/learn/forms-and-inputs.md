@@ -25,8 +25,15 @@ export function Search() {
   const query = state('')
   return (
     <label>
-      Search <input value={query.value} onInput={e => (query.value = e.currentTarget.value)} />
-      <p>{query.value ? `Looking for “${query.value}”` : 'Type to search'}</p>
+      Search <input
+        value={query.value}
+        onInput={e => (query.value = e.currentTarget.value)}
+      />
+      <p>
+        {query.value
+          ? `Looking for “${query.value}”`
+          : 'Type to search'}
+      </p>
     </label>
   )
 }
@@ -51,8 +58,9 @@ writing or by writing what the box already held, leaves the user's typing on scr
 ```tsx
 onInput={e => {
   const digits = e.currentTarget.value.replace(/\D/g, '')
-  code.value = digits                 // "12" again after typing "12a": the box didn't change
-  e.currentTarget.value = code.value  // so put the field back yourself
+  // "12" again after typing "12a": the box didn't change.
+  code.value = digits
+  e.currentTarget.value = code.value // put the field back yourself
 }}
 ```
 
@@ -90,8 +98,17 @@ export function Note() {
   const body = state('')
   return (
     <form>
-      <Input label="Title" value={title.value} onInput={e => (title.value = e.currentTarget.value)} />
-      <Textarea label="Note" rows={4} value={body.value} onInput={e => (body.value = e.currentTarget.value)} />
+      <Input
+        label="Title"
+        value={title.value}
+        onInput={e => (title.value = e.currentTarget.value)}
+      />
+      <Textarea
+        label="Note"
+        rows={4}
+        value={body.value}
+        onInput={e => (body.value = e.currentTarget.value)}
+      />
       <p>{body.value.length} characters</p>
     </form>
   )
@@ -160,7 +177,11 @@ export function Terms() {
   const agreed = state(false)
   return (
     <label>
-      <input type="checkbox" checked={agreed.value} onChange={e => (agreed.value = e.currentTarget.checked)} />
+      <input
+        type="checkbox"
+        checked={agreed.value}
+        onChange={e => (agreed.value = e.currentTarget.checked)}
+      />
       I agree
       <p>{agreed.value ? 'Thanks!' : 'Please tick the box.'}</p>
     </label>
@@ -182,10 +203,18 @@ export function Prefs() {
   const dark = state(false)
   return (
     <section>
-      <Checkbox checked={agreed.value} onChange={(e: Toggle) => (agreed.value = e.currentTarget.checked)}>
+      <Checkbox
+        checked={agreed.value}
+        onChange={(e: Toggle) =>
+          (agreed.value = e.currentTarget.checked)}
+      >
         I agree to the terms
       </Checkbox>
-      <Switch checked={dark.value} onChange={(e: Toggle) => (dark.value = e.currentTarget.checked)}>
+      <Switch
+        checked={dark.value}
+        onChange={(e: Toggle) =>
+          (dark.value = e.currentTarget.checked)}
+      >
         Dark mode
       </Switch>
     </section>
@@ -211,7 +240,13 @@ export function SizePicker() {
       <legend>Size</legend>
       {sizes.map(s => (
         <label key={s}>
-          <input type="radio" name="size" value={s} checked={size.value === s} onChange={() => (size.value = s)} /> {s}
+          <input
+            type="radio"
+            name="size"
+            value={s}
+            checked={size.value === s}
+            onChange={() => (size.value = s)}
+          /> {s}
         </label>
       ))}
     </fieldset>
@@ -235,7 +270,11 @@ export function SizePicker() {
       label="Size"
       value={size.value}
       onChange={v => (size.value = v)}
-      options={[{ value: 'small', label: 'Small' }, { value: 'medium', label: 'Medium' }, { value: 'large', label: 'Large' }]}
+      options={[
+        { value: 'small', label: 'Small' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'large', label: 'Large' },
+      ]}
     />
   )
 }
@@ -253,7 +292,10 @@ export function Milk() {
   return (
     <label>
       Milk{' '}
-      <select value={milk.value} onChange={e => (milk.value = e.currentTarget.value)}>
+      <select
+        value={milk.value}
+        onChange={e => (milk.value = e.currentTarget.value)}
+      >
         <option value="oat">Oat</option>
         <option value="whole">Whole</option>
         <option value="none">None</option>
@@ -280,9 +322,17 @@ export function Milk() {
       <Select
         label="Milk"
         value={milk}
-        options={[{ value: 'oat', label: 'Oat' }, { value: 'whole', label: 'Whole' }, { value: 'none', label: 'None' }]}
+        options={[
+          { value: 'oat', label: 'Oat' },
+          { value: 'whole', label: 'Whole' },
+          { value: 'none', label: 'None' },
+        ]}
       />
-      <p>{milk.value === 'none' ? 'Black' : `With ${milk.value ?? 'no'} milk`}</p>
+      <p>
+        {milk.value === 'none'
+          ? 'Black'
+          : `With ${milk.value ?? 'no'} milk`}
+      </p>
     </section>
   )
 }
@@ -363,7 +413,11 @@ export function Compose() {
   const text = state('')
   return (
     <form>
-      <Textarea label="What's happening?" value={text.value} onInput={e => (text.value = e.currentTarget.value)} />
+      <Textarea
+        label="What's happening?"
+        value={text.value}
+        onInput={e => (text.value = e.currentTarget.value)}
+      />
       <Button type="submit">Post</Button>
     </form>
   )
@@ -386,7 +440,12 @@ export function Compose() {
         error={left.value < 0 ? `${-left.value} too many` : undefined}
         onInput={e => (text.value = e.currentTarget.value)}
       />
-      <Button type="submit" disabled={!text.value.trim() || left.value < 0}>Post</Button>
+      <Button
+        type="submit"
+        disabled={!text.value.trim() || left.value < 0}
+      >
+        Post
+      </Button>
     </form>
   )
 }
@@ -418,7 +477,9 @@ import { Button, Input } from '@weft-js/warp'
 
 export function SignUp() {
   const name = state<string | null>(null)
-  const submit = (e: SubmitEvent & { currentTarget: HTMLFormElement }) => {
+  const submit = (
+    e: SubmitEvent & { currentTarget: HTMLFormElement },
+  ) => {
     e.preventDefault()
     const given = new FormData(e.currentTarget).get('name')
     if (typeof given === 'string') name.value = given
@@ -451,7 +512,12 @@ import { Input } from '@weft-js/warp'
 
 export function Pin() {
   const pin = state('')
-  return <Input label="PIN" inputmode="numeric" value={pin.value} onInput={e => (pin.value = e.currentTarget.value)} />
+  return <Input
+    label="PIN"
+    inputmode="numeric"
+    value={pin.value}
+    onInput={e => (pin.value = e.currentTarget.value)}
+  />
 }
 ```
 :::solution

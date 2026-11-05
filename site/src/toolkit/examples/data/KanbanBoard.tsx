@@ -14,5 +14,11 @@ import { REGIONS as _REGIONS } from '../../world'
 
 export function KanbanBoard() {
   const columns = state(BOARD)
-  return <Kanban label="Release board" columns={columns} height="460px" />
+  return (
+    <Kanban
+      label="Release board"
+      columns={columns}
+      height="460px"
+    />
+  )
 }

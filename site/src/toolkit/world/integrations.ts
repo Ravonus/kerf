@@ -4,10 +4,14 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'github',
     name: 'GitHub',
-    summary: 'Deploy on push, status checks on pull requests.',
+    summary:
+      'Deploy on push, status checks on pull requests.',
     state: 'connected',
     detail: 'weft-dev · 10 repositories',
-    can: ['Read your repositories', 'Post commit statuses'],
+    can: [
+      'Read your repositories',
+      'Post commit statuses',
+    ],
   },
   {
     id: 'slack',
@@ -35,14 +39,16 @@ export const INTEGRATIONS: Integration[] = [
   {
     id: 'pagerduty',
     name: 'PagerDuty',
-    summary: 'Page the on-call person when a deploy fails.',
+    summary:
+      'Page the on-call person when a deploy fails.',
     state: 'off',
     can: ['Open incidents'],
   },
   {
     id: 'sentry',
     name: 'Sentry',
-    summary: 'Tie new errors to the deploy that caused them.',
+    summary:
+      'Tie new errors to the deploy that caused them.',
     state: 'connected',
     detail: 'weft · 4 projects',
     can: ['Read releases'],

@@ -4,7 +4,15 @@ An app with warp has one design language: `@weft-js/warp`'s primitives and compo
 is, and the look follows the theme, the dials and the density.
 
 ```tsx
-import { Button, Card, Heading, Input, Row, Stack, Text } from '@weft-js/warp'
+import {
+  Button,
+  Card,
+  Heading,
+  Input,
+  Row,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 
 export function Billing() {
   return (

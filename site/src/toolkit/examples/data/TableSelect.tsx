@@ -17,12 +17,16 @@ export function TableSelect() {
   const picked = state<Record<string, boolean>>({})
   const pause = (keys: string[]) => {
     rows.value = rows.value.map((p) =>
-      keys.includes(p.id) ? { ...p, status: 'Paused' as const } : p,
+      keys.includes(p.id)
+        ? { ...p, status: 'Paused' as const }
+        : p,
     )
     picked.value = {}
   }
   const remove = (keys: string[]) => {
-    rows.value = rows.value.filter((p) => !keys.includes(p.id))
+    rows.value = rows.value.filter(
+      (p) => !keys.includes(p.id),
+    )
     picked.value = {}
   }
   return (

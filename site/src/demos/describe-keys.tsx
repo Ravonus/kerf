@@ -9,14 +9,24 @@ export default function Seating() {
     { id: 2, name: 'Grace' },
     { id: 3, name: 'Alan' },
   ])
+  const reverse = () => {
+    guests.value = [...guests.value].reverse()
+  }
   return (
     <Card title="Who brings what">
-      <Grid cols={2} gap="group">
+      <Grid
+        cols={2}
+        gap="group"
+      >
         <div>
           <strong>{'key={g.id}'}</strong>
           {guests.value.map((g) => (
             <p key={g.id}>
-              {g.name} <input aria-label={`${g.name} brings`} size={8} />
+              {g.name}{' '}
+              <input
+                aria-label={`${g.name} brings`}
+                size={8}
+              />
             </p>
           ))}
         </div>
@@ -24,14 +34,18 @@ export default function Seating() {
           <strong>{'key={i}'}</strong>
           {guests.value.map((g, i) => (
             <p key={i}>
-              {g.name} <input aria-label={`${g.name} brings, by position`} size={8} />
+              {g.name}{' '}
+              <input
+                aria-label={
+                  g.name + ' brings, by position'
+                }
+                size={8}
+              />
             </p>
           ))}
         </div>
       </Grid>
-      <Button onClick={() => (guests.value = [...guests.value].reverse())}>
-        Reverse the order
-      </Button>
+      <Button onClick={reverse}>Reverse the order</Button>
     </Card>
   )
 }

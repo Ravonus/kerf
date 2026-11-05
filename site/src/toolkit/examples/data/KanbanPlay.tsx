@@ -14,5 +14,11 @@ import { REGIONS as _REGIONS } from '../../world'
 
 export function KanbanPlay(p: { height: string }) {
   const columns = state(BOARD)
-  return <Kanban label="Release board" columns={columns} height={p.height} />
+  return (
+    <Kanban
+      label="Release board"
+      columns={columns}
+      height={p.height}
+    />
+  )
 }

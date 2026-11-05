@@ -17,7 +17,10 @@ import {
   YearView,
   toast,
 } from '@weft-js/warp'
-import type { BookingDetails, BookingSlot } from '@weft-js/warp'
+import type {
+  BookingDetails,
+  BookingSlot,
+} from '@weft-js/warp'
 import { at, clock } from '@weft-js/warp-core'
 import type { CalEvent, Slot } from '@weft-js/warp-core'
 import {
@@ -33,7 +36,12 @@ import {
 } from '../world'
 
 const REVIEW = TEAM_EVENTS.find((e) => e.id === 'e4')!
-const when = (e: CalEvent) => `${e.start.slice(0, 10)}, ${e.start.slice(11)} to ${e.end.slice(11)}`
+const when = (e: CalEvent) => {
+  const date = e.start.slice(0, 10)
+  const start = e.start.slice(11)
+  const end = e.end.slice(11)
+  return `${date}, ${start} to ${end}`
+}
 const pause = (ms: number) =>
   new Promise((done) => {
     setTimeout(done, ms)
@@ -41,8 +49,13 @@ const pause = (ms: number) =>
 
 export function AgendaTeamWeek() {
   const events = state(TEAM_EVENTS)
-  const move = (e: CalEvent, to: { start: string; end: string }) =>
-    (events.value = events.value.map((x) => (x.id === e.id ? { ...x, ...to } : x)))
+  const move = (
+    e: CalEvent,
+    to: { start: string; end: string },
+  ) =>
+    (events.value = events.value.map((x) =>
+      x.id === e.id ? { ...x, ...to } : x,
+    ))
   return (
     <div style="block-size:620px;position:relative">
       <Agenda
@@ -55,7 +68,9 @@ export function AgendaTeamWeek() {
         locale="en-GB"
         firstDayOfWeek={1}
         onMove={move}
-        onCreate={(e) => (events.value = [...events.value, e])}
+        onCreate={(e) =>
+          (events.value = [...events.value, e])
+        }
       />
     </div>
   )
@@ -63,13 +78,24 @@ export function AgendaTeamWeek() {
 
 export const AgendaDayToday = () => (
   <div data-scope="agenda">
-    <AgendaDay events={TEAM_EVENTS} day={TODAY} now={SCHEDULE_NOW} locale="en-GB" label="Tuesday" />
+    <AgendaDay
+      events={TEAM_EVENTS}
+      day={TODAY}
+      now={SCHEDULE_NOW}
+      locale="en-GB"
+      label="Tuesday"
+    />
   </div>
 )
 
 export const AgendaDayEmpty = () => (
   <div data-scope="agenda">
-    <AgendaDay events={TEAM_EVENTS} day="2026-11-07" locale="en-GB" label="Saturday" />
+    <AgendaDay
+      events={TEAM_EVENTS}
+      day="2026-11-07"
+      locale="en-GB"
+      label="Saturday"
+    />
   </div>
 )
 
@@ -85,8 +111,12 @@ export const AvailabilityEditorOnCall = () => (
 
 const TIMES = [540, 570, 600, 630, 660, 780, 810, 840]
 const slotsFor = (date: string): BookingSlot[] =>
-  TIMES.map((s, i) => ({ s, disabled: (i + Number(date.slice(8))) % 4 === 0 }))
-const isWeekend = (date: string) => new Date(date).getUTCDay() % 6 === 0
+  TIMES.map((s, i) => ({
+    s,
+    disabled: (i + Number(date.slice(8))) % 4 === 0,
+  }))
+const isWeekend = (date: string) =>
+  new Date(date).getUTCDay() % 6 === 0
 
 export function BookingCalendarOnboarding() {
   const booked = state<BookingDetails | null>(null)
@@ -107,8 +137,13 @@ export function BookingCalendarOnboarding() {
         onBook={book}
       />
       {booked.value && (
-        <Text role="caption" subtle>
-          Onboarding call booked for {booked.value.date} at {clock(booked.value.s, 'en-GB')}.
+        <Text
+          role="caption"
+          subtle
+        >
+          {'Onboarding call booked for '}
+          {booked.value.date} at{' '}
+          {clock(booked.value.s, 'en-GB')}.
         </Text>
       )}
     </Stack>
@@ -126,10 +161,13 @@ export const BookingCalendarLoading = () => (
   />
 )
 
+const bookingError =
+  "We couldn't load the times. Try again in a moment."
+
 export const BookingCalendarFailed = () => (
   <BookingCalendar
     slots={[]}
-    error="We couldn't load the times. Try again in a moment."
+    error={bookingError}
     defaultDate={TODAY}
     today={TODAY}
     locale="en-GB"
@@ -141,11 +179,16 @@ export function EventEditorChange() {
   const open = state(false)
   const event = state(REVIEW)
   return (
-    <Card title={event.value.title} sweep={false}>
+    <Card
+      title={event.value.title}
+      sweep={false}
+    >
       <Stack gap="related">
         <Text subtle>
           {when(event.value)}
-          {event.value.location ? `, ${event.value.location}` : ''}
+          {event.value.location
+            ? `, ${event.value.location}`
+            : ''}
         </Text>
         <Row>
           <Button
@@ -182,6 +225,11 @@ const BLANK: CalEvent = {
 export function EventEditorNew() {
   const open = state(false)
   const added = state<CalEvent[]>([])
+  const save = (e: CalEvent) =>
+    (added.value = [
+      ...added.value,
+      { ...e, id: `new-${added.value.length}` },
+    ])
   return (
     <Stack gap="related">
       {added.value.map((e) => (
@@ -189,9 +237,14 @@ export function EventEditorNew() {
           {e.title}: {when(e)}
         </Text>
       ))}
-      {!added.value.length && <Text subtle>Nothing added yet.</Text>}
+      {!added.value.length && (
+        <Text subtle>Nothing added yet.</Text>
+      )}
       <Row>
-        <Button icon="plus" onClick={() => (open.value = true)}>
+        <Button
+          icon="plus"
+          onClick={() => (open.value = true)}
+        >
           New event
         </Button>
       </Row>
@@ -203,7 +256,7 @@ export function EventEditorNew() {
         timeZone={TEAM_ZONE}
         today={TODAY}
         locale="en-GB"
-        onSave={(e) => (added.value = [...added.value, { ...e, id: `new-${added.value.length}` }])}
+        onSave={save}
       />
     </Stack>
   )
@@ -211,10 +264,15 @@ export function EventEditorNew() {
 
 export function EventPopoverDetails() {
   const open = state(false)
-  const said = state('Open the event, then join, edit or delete it.')
+  const said = state(
+    'Open the event, then join, edit or delete it.',
+  )
   let opener: HTMLElement | undefined
   return (
-    <Stack gap="related" align="center">
+    <Stack
+      gap="related"
+      align="center"
+    >
       <Button
         ref={(n: HTMLElement) => (opener = n)}
         emphasis="outline"
@@ -223,7 +281,10 @@ export function EventPopoverDetails() {
       >
         {REVIEW.title}
       </Button>
-      <Text role="caption" subtle>
+      <Text
+        role="caption"
+        subtle
+      >
         {said.value}
       </Text>
       <EventPopover
@@ -245,11 +306,18 @@ export function EventPopoverDetails() {
 
 export function MeetingPlannerReview() {
   const sent = () => {
-    toast.show({ title: 'Invite sent', description: 'Everyone has it on their calendar.' })
+    toast.show({
+      title: 'Invite sent',
+      description: 'Everyone has it on their calendar.',
+    })
     return pause(400)
   }
   const search = (q: string) =>
-    Promise.resolve(TEAM_MORE.filter((p) => p.name.toLowerCase().includes(q.toLowerCase())))
+    Promise.resolve(
+      TEAM_MORE.filter((p) =>
+        p.name.toLowerCase().includes(q.toLowerCase()),
+      ),
+    )
   return (
     <>
       <MeetingPlanner
@@ -264,7 +332,9 @@ export function MeetingPlannerReview() {
         locale="en-GB"
         hourCycle="h23"
         onSubmit={sent}
-        onUndo={() => toast.show({ title: 'Invite withdrawn' })}
+        onUndo={() =>
+          toast.show({ title: 'Invite withdrawn' })
+        }
       />
       <Toaster />
     </>
@@ -275,13 +345,24 @@ export function MoveSheetReschedule() {
   const open = state(false)
   const event = state(REVIEW)
   const move = (e: CalEvent, to: Slot) =>
-    (event.value = { ...e, start: at(to.date, to.s), end: at(to.date, to.e) })
+    (event.value = {
+      ...e,
+      start: at(to.date, to.s),
+      end: at(to.date, to.e),
+    })
   return (
-    <Card title={event.value.title} sweep={false}>
+    <Card
+      title={event.value.title}
+      sweep={false}
+    >
       <Stack gap="related">
         <Text subtle>{when(event.value)}</Text>
         <Row>
-          <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>
+          <Button
+            emphasis="outline"
+            tone="neutral"
+            onClick={() => (open.value = true)}
+          >
             Move
           </Button>
         </Row>

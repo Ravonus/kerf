@@ -23,7 +23,15 @@ Props are what you pass to a tag. In HTML, you pass `class`, `src`, `alt` and th
 
 ```tsx
 export function Avatar() {
-  return <img class="avatar" src="https://i.imgur.com/1bX5QH6.jpg" alt="Lin Lanying" width={100} height={100} />
+  return (
+    <img
+      class="avatar"
+      src="https://i.imgur.com/1bX5QH6.jpg"
+      alt="Lin Lanying"
+      width={100}
+      height={100}
+    />
+  )
 }
 ```
 
@@ -38,7 +46,10 @@ Give the child its props as attributes. Here `LinProfile` passes `person`, an ob
 
 ```tsx
 // src/components/Avatar.tsx
-export function Avatar(props: { person: { name: string; imageId: string }; size: number }) {
+export function Avatar(props: {
+  person: { name: string; imageId: string }
+  size: number
+}) {
   return (
     <img
       class="avatar"
@@ -56,7 +67,12 @@ export function Avatar(props: { person: { name: string; imageId: string }; size:
 import { Avatar } from './Avatar'
 
 export function LinProfile() {
-  return <Avatar person={{ name: 'Lin Lanying', imageId: '1bX5QH6' }} size={100} />
+  return (
+    <Avatar
+      person={{ name: 'Lin Lanying', imageId: '1bX5QH6' }}
+      size={100}
+    />
+  )
 }
 ```
 
@@ -68,8 +84,21 @@ The child gets every prop on one object, its first argument, usually called `pro
 destructure them in the parameter list, which is shorter and works the same:
 
 ```tsx
-export function Avatar({ person, size }: { person: { name: string; imageId: string }; size: number }) {
-  return <img src={`https://i.imgur.com/${person.imageId}s.jpg`} alt={person.name} width={size} height={size} />
+export function Avatar({
+  person,
+  size,
+}: {
+  person: { name: string; imageId: string }
+  size: number
+}) {
+  return (
+    <img
+      src={`https://i.imgur.com/${person.imageId}s.jpg`}
+      alt={person.name}
+      width={size}
+      height={size}
+    />
+  )
 }
 ```
 
@@ -91,7 +120,13 @@ from the first `person`, and a new `person` from the parent would never reach it
 To give a prop a value when the parent leaves it out, put a default in the pattern, as in JavaScript:
 
 ```tsx
-export function Avatar({ name, size = 100 }: { name: string; size?: number }) {
+export function Avatar({
+  name,
+  size = 100,
+}: {
+  name: string
+  size?: number
+}) {
   return (
     <span class="avatar" style={{ width: size, height: size }}>
       {name[0]}
@@ -113,7 +148,10 @@ Some components pass all their props on to a child:
 // src/components/ProfileCard.tsx
 import { Avatar } from './Avatar'
 
-export function ProfileCard(props: { person: { name: string; imageId: string }; size: number }) {
+export function ProfileCard(props: {
+  person: { name: string; imageId: string }
+  size: number
+}) {
   return (
     <div class="card">
       <Avatar {...props} />
@@ -246,7 +284,11 @@ export function Rename(props: { name: string }) {
   const draft = state.linked(() => props.name)
   return (
     <label>
-      Name <input value={draft.value} onInput={e => (draft.value = e.currentTarget.value)} />
+      Name{' '}
+      <input
+        value={draft.value}
+        onInput={e => (draft.value = e.currentTarget.value)}
+      />
     </label>
   )
 }
@@ -263,7 +305,8 @@ A value worked out from a prop in the body is worked out once:
 <!-- example: skip deliberately wrong: reports W001 -->
 ```tsx
 export function Price(props: { dollars: number }) {
-  const cents = props.dollars * 100 // W001: read once, when Price was set up
+  // W001: read once, when Price was set up.
+  const cents = props.dollars * 100
   return <span>{cents}¢</span>
 }
 ```
@@ -275,8 +318,13 @@ it, or with `derived` if other code reads it too:
 import { derived } from '@weft-js/core'
 
 export function Price(props: { dollars: number }) {
-  const cents = derived(() => Math.round(props.dollars * 100))
-  return <span title={`${cents.value} cents`}>${props.dollars.toFixed(2)}</span>
+  const { dollars } = props
+  const cents = derived(() => Math.round(dollars * 100))
+  return (
+    <span title={`${cents.value} cents`}>
+      ${dollars.toFixed(2)}
+    </span>
+  )
 }
 ```
 
@@ -301,7 +349,9 @@ function CouponField(props: { value: State<string | null> }) {
     <input
       aria-label="Coupon"
       value={props.value.value ?? ''}
-      onInput={e => (props.value.value = e.currentTarget.value || null)}
+      onInput={e =>
+        (props.value.value = e.currentTarget.value || null)
+      }
     />
   )
 }
@@ -402,12 +452,18 @@ export default function Gallery() {
     <div>
       <section>
         <h2>Maria Skłodowska-Curie</h2>
-        <img src="https://i.imgur.com/szV5sdGs.jpg" alt="Maria Skłodowska-Curie" />
+        <img
+          src="https://i.imgur.com/szV5sdGs.jpg"
+          alt="Maria Skłodowska-Curie"
+        />
         <p>Awards: 4</p>
       </section>
       <section>
         <h2>Katsuko Saruhashi</h2>
-        <img src="https://i.imgur.com/YfeOqp2s.jpg" alt="Katsuko Saruhashi" />
+        <img
+          src="https://i.imgur.com/YfeOqp2s.jpg"
+          alt="Katsuko Saruhashi"
+        />
         <p>Awards: 2</p>
       </section>
     </div>
@@ -416,7 +472,15 @@ export default function Gallery() {
 ```
 :::solution
 ```tsx
-function Profile({ name, imageId, awards }: { name: string; imageId: string; awards: number }) {
+function Profile({
+  name,
+  imageId,
+  awards,
+}: {
+  name: string
+  imageId: string
+  awards: number
+}) {
   return (
     <section>
       <h2>{name}</h2>
@@ -429,8 +493,16 @@ function Profile({ name, imageId, awards }: { name: string; imageId: string; awa
 export default function Gallery() {
   return (
     <div>
-      <Profile name="Maria Skłodowska-Curie" imageId="szV5sdGs" awards={4} />
-      <Profile name="Katsuko Saruhashi" imageId="YfeOqp2s" awards={2} />
+      <Profile
+        name="Maria Skłodowska-Curie"
+        imageId="szV5sdGs"
+        awards={4}
+      />
+      <Profile
+        name="Katsuko Saruhashi"
+        imageId="YfeOqp2s"
+        awards={2}
+      />
     </div>
   )
 }
@@ -477,7 +549,12 @@ function Rating(props: { value?: number }) {
   return (
     <p>
       {[1, 2, 3, 4, 5].map(n => (
-        <button type="button" key={n} aria-pressed={n <= value} onClick={() => (value = n)}>
+        <button
+          type="button"
+          key={n}
+          aria-pressed={n <= value}
+          onClick={() => (value = n)}
+        >
           {n}
         </button>
       ))}
@@ -506,7 +583,12 @@ function Rating(props: { value?: number }) {
   return (
     <p>
       {[1, 2, 3, 4, 5].map(n => (
-        <button type="button" key={n} aria-pressed={n <= value} onClick={() => (value = n)}>
+        <button
+          type="button"
+          key={n}
+          aria-pressed={n <= value}
+          onClick={() => (value = n)}
+        >
           {n}
         </button>
       ))}

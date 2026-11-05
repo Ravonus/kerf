@@ -4,6 +4,11 @@ export const CodeBlockWrap = () => (
   <CodeBlock
     wrap
     language="sh"
-    code="weft deploy --project storefront --region eu-west --region us-east --message 'Cache product images at the edge' --wait"
+    code={
+      'weft deploy --project storefront ' +
+      '--region eu-west --region us-east ' +
+      "--message 'Cache product images at the edge' " +
+      '--wait'
+    }
   />
 )

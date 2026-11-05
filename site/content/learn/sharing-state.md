@@ -27,12 +27,23 @@ A panel that owns its own state looks like this:
 ```tsx
 import { state } from '@weft-js/core'
 
-export function Panel(props: { title: string; children?: unknown }) {
+export function Panel(
+  props: { title: string; children?: unknown },
+) {
   const open = state(false)
   return (
     <section>
       <h3>{props.title}</h3>
-      {open.value ? <p>{props.children}</p> : <button type="button" onClick={() => (open.value = true)}>Show</button>}
+      {open.value
+        ? <p>{props.children}</p>
+        : (
+          <button
+            type="button"
+            onClick={() => (open.value = true)}
+          >
+            Show
+          </button>
+        )}
     </section>
   )
 }
@@ -53,11 +64,24 @@ parent holds it, and gives each panel a way to ask to be opened:
 ```tsx
 import { state } from '@weft-js/core'
 
-function Panel(props: { title: string; active: boolean; onShow: () => void; children?: unknown }) {
+function Panel(
+  props: {
+    title: string
+    active: boolean
+    onShow: () => void
+    children?: unknown
+  },
+) {
   return (
     <section>
       <h3>{props.title}</h3>
-      {props.active ? <p>{props.children}</p> : <button type="button" onClick={props.onShow}>Show</button>}
+      {props.active
+        ? <p>{props.children}</p>
+        : (
+          <button type="button" onClick={props.onShow}>
+            Show
+          </button>
+        )}
     </section>
   )
 }
@@ -66,8 +90,20 @@ export function Accordion() {
   const open = state(0)
   return (
     <>
-      <Panel title="About" active={open.value === 0} onShow={() => (open.value = 0)}>Seven hills.</Panel>
-      <Panel title="Getting around" active={open.value === 1} onShow={() => (open.value = 1)}>Yellow trams.</Panel>
+      <Panel
+        title="About"
+        active={open.value === 0}
+        onShow={() => (open.value = 0)}
+      >
+        Seven hills.
+      </Panel>
+      <Panel
+        title="Getting around"
+        active={open.value === 1}
+        onShow={() => (open.value = 1)}
+      >
+        Yellow trams.
+      </Panel>
     </>
   )
 }
@@ -93,7 +129,11 @@ import { state } from '@weft-js/core'
 
 function Stepper(props: { value?: number }) {
   let { value = 1 } = props
-  return <button type="button" onClick={() => value++}>{value}</button>
+  return (
+    <button type="button" onClick={() => value++}>
+      {value}
+    </button>
+  )
 }
 
 function Summary(props: { qty: number }) {
@@ -135,7 +175,13 @@ You can also pass the box itself, typed `State<T>`:
 import { state, type State } from '@weft-js/core'
 
 function Coupon(props: { code: State<string> }) {
-  return <input aria-label="Coupon" value={props.code.value} onInput={e => (props.code.value = e.currentTarget.value)} />
+  return (
+    <input
+      aria-label="Coupon"
+      value={props.code.value}
+      onInput={(e) => (props.code.value = e.currentTarget.value)}
+    />
+  )
 }
 
 export function Pay() {
@@ -214,12 +260,14 @@ import { state } from '@weft-js/core'
 type Contact = { id: number; name: string }
 
 export function Chat(props: { contact: Contact }) {
-  const draft = state.linked(() => '', { key: () => props.contact.id })
+  const draft = state.linked(() => '', {
+    key: () => props.contact.id,
+  })
   return (
     <textarea
       aria-label={`Message to ${props.contact.name}`}
       value={draft.value}
-      onInput={e => (draft.value = e.currentTarget.value)}
+      onInput={(e) => (draft.value = e.currentTarget.value)}
     />
   )
 }
@@ -257,7 +305,13 @@ import { state } from '@weft-js/core'
 
 function TextField(props: { label: string; value?: string }) {
   let { value = '' } = props
-  return <input aria-label={props.label} value={value} onInput={e => (value = e.currentTarget.value)} />
+  return (
+    <input
+      aria-label={props.label}
+      value={value}
+      onInput={(e) => (value = e.currentTarget.value)}
+    />
+  )
 }
 
 export function SyncedInputs() {
@@ -279,10 +333,16 @@ Both fields write to one box, so each shows what either wrote. Without `bind:`, 
 ```tsx
 function SearchBar() {
   const query = state('')
-  return <input aria-label="Search" value={query.value} onInput={e => (query.value = e.currentTarget.value)} />
+  return (
+    <input
+      aria-label="Search"
+      value={query.value}
+      onInput={(e) => (query.value = e.currentTarget.value)}
+    />
+  )
 }
 function List(props: { cities: string[] }) {
-  return <ul>{props.cities.map(c => <li key={c}>{c}</li>)}</ul>
+  return <ul>{props.cities.map((c) => <li key={c}>{c}</li>)}</ul>
 }
 ```
 :::solution
@@ -295,16 +355,26 @@ const CITIES = ['Lisbon', 'Oslo', 'Osaka', 'Lima', 'Lagos']
 
 function SearchBar(props: { query?: string }) {
   let { query = '' } = props
-  return <input aria-label="Search" value={query} onInput={e => (query = e.currentTarget.value)} />
+  return (
+    <input
+      aria-label="Search"
+      value={query}
+      onInput={(e) => (query = e.currentTarget.value)}
+    />
+  )
 }
 
 function List(props: { cities: string[] }) {
-  return <ul>{props.cities.map(c => <li key={c}>{c}</li>)}</ul>
+  return <ul>{props.cities.map((c) => <li key={c}>{c}</li>)}</ul>
 }
 
 export function Cities() {
   const query = state('')
-  const found = derived(() => CITIES.filter(c => c.toLowerCase().includes(query.value.toLowerCase())))
+  const found = derived(() =>
+    CITIES.filter((c) =>
+      c.toLowerCase().includes(query.value.toLowerCase())
+    )
+  )
   return (
     <>
       <SearchBar bind:query={query} />
@@ -323,10 +393,23 @@ Let the index be `null` for "none", and toggle:
 ```tsx
 import { state } from '@weft-js/core'
 
-function Panel(props: { title: string; active: boolean; onToggle: () => void; children?: unknown }) {
+function Panel(
+  props: {
+    title: string
+    active: boolean
+    onToggle: () => void
+    children?: unknown
+  },
+) {
   return (
     <section>
-      <button type="button" aria-expanded={props.active} onClick={props.onToggle}>{props.title}</button>
+      <button
+        type="button"
+        aria-expanded={props.active}
+        onClick={props.onToggle}
+      >
+        {props.title}
+      </button>
       {props.active && <p>{props.children}</p>}
     </section>
   )
@@ -334,11 +417,25 @@ function Panel(props: { title: string; active: boolean; onToggle: () => void; ch
 
 export function Accordion() {
   const open = state<number | null>(0)
-  const toggle = (i: number) => (open.value = open.value === i ? null : i)
+  const toggle = (
+    i: number,
+  ) => (open.value = open.value === i ? null : i)
   return (
     <>
-      <Panel title="About" active={open.value === 0} onToggle={() => toggle(0)}>Seven hills.</Panel>
-      <Panel title="Getting around" active={open.value === 1} onToggle={() => toggle(1)}>Yellow trams.</Panel>
+      <Panel
+        title="About"
+        active={open.value === 0}
+        onToggle={() => toggle(0)}
+      >
+        Seven hills.
+      </Panel>
+      <Panel
+        title="Getting around"
+        active={open.value === 1}
+        onToggle={() => toggle(1)}
+      >
+        Yellow trams.
+      </Panel>
     </>
   )
 }

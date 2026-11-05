@@ -64,7 +64,13 @@ export function Checkout() {
     <section>
       <p role="status">Step {step.value} of 3</p>
       {error.value && <p role="alert">{error.value}</p>}
-      <button type="button" disabled={step.value === 3} onClick={next}>Next</button>
+      <button
+        type="button"
+        disabled={step.value === 3}
+        onClick={next}
+      >
+        Next
+      </button>
     </section>
   )
 }
@@ -101,14 +107,18 @@ const START = [
 export function PriceList() {
   const products = state(START)
   const discount = (id: string) => {
-    products.value = products.value.map(p => (p.id === id ? { ...p, price: p.price * 0.9 } : p))
+    products.value = products.value.map(
+      (p) => (p.id === id ? { ...p, price: p.price * 0.9 } : p)
+    )
   }
   return (
     <ul>
-      {products.value.map(p => (
+      {products.value.map((p) => (
         <li key={p.id}>
           {p.name}: {p.price.toFixed(2)}{' '}
-          <button type="button" onClick={() => discount(p.id)}>Discount</button>
+          <button type="button" onClick={() => discount(p.id)}>
+            Discount
+          </button>
         </li>
       ))}
     </ul>
@@ -144,14 +154,26 @@ compiler reports that as W017. When a row is its own component, pass it the box 
 ```tsx
 import { state, type State } from '@weft-js/core'
 
-function Row(props: { id: string; cart: State<Record<string, number>> }) {
+function Row(
+  props: { id: string; cart: State<Record<string, number>> },
+) {
   return <li>{props.id}: {props.cart.get(props.id) ?? 0}</li>
 }
 
 export function Basket() {
   const cart = state<Record<string, number>>({ apple: 1 })
   const ids = ['apple', 'pear', 'plum']
-  return <ul>{ids.map(id => <Row key={id} id={id} cart={cart} />)}</ul>
+  return (
+    <ul>
+      {ids.map((id) => (
+        <Row
+          key={id}
+          id={id}
+          cart={cart}
+        />
+      ))}
+    </ul>
+  )
 }
 ```
 
@@ -163,14 +185,36 @@ again after something it read has changed:
 ```tsx
 import { derived, state } from '@weft-js/core'
 
-export function Orders(props: { orders: { id: string; total: number; open: boolean }[] }) {
+export function Orders(
+  props: {
+    orders: { id: string; total: number; open: boolean }[]
+  },
+) {
+  const { orders } = props
   const showAll = state(false)
-  const shown = derived(() => (showAll.value ? props.orders : props.orders.filter(o => o.open)))
-  const sum = derived(() => shown.value.reduce((n, o) => n + o.total, 0))
+  const shown = derived(
+    () => (showAll.value
+      ? orders
+      : orders.filter((o) => o.open))
+  )
+  const sum = derived(() =>
+    shown.value.reduce((n, o) => n + o.total, 0)
+  )
   return (
     <section>
-      <label><input type="checkbox" checked={showAll.value} onChange={e => (showAll.value = e.currentTarget.checked)} /> All orders</label>
-      <p>{shown.value.length} orders, {sum.value.toFixed(2)} in total</p>
+      <label>
+        <input
+          type="checkbox"
+          checked={showAll.value}
+          onChange={(e) => (showAll.value =
+            e.currentTarget.checked)}
+        />{' '}
+        All orders
+      </label>
+      <p>
+        {shown.value.length} orders, {sum.value.toFixed(2)}{' '}
+        in total
+      </p>
     </section>
   )
 }
@@ -216,7 +260,12 @@ On most pages, the largest thing to arrive isn't JavaScript. Two parts of weft h
 
 ```tsx
 // A sketch: `hero.jpg` sits next to the route.
-<Media src={hero} alt="Two cups of coffee on a wooden table" priority width="1/2" />
+<Media
+  src={hero}
+  alt="Two cups of coffee on a wooden table"
+  priority
+  width="1/2"
+/>
 ```
 
 ## Measuring
@@ -289,13 +338,18 @@ This `toggle` marks one task done, but every row runs again on each click. Fix i
 <!-- example: skip a fragment from a component -->
 ```tsx
 const toggle = (id: string) => {
-  tasks.value = tasks.value.map(t => ({ ...t, done: t.id === id ? !t.done : t.done }))
+  tasks.value = tasks.value.map((t) => ({
+    ...t,
+    done: t.id === id ? !t.done : t.done,
+  }))
 }
 ```
 :::solution
 ```tsx
 const toggle = (id: string) => {
-  tasks.value = tasks.value.map(t => (t.id === id ? { ...t, done: !t.done } : t))
+  tasks.value = tasks.value.map(
+    (t) => (t.id === id ? { ...t, done: !t.done } : t)
+  )
 }
 ```
 
@@ -313,15 +367,37 @@ function Seat(props: { id: string; taken: boolean }) {
 }
 
 // in the parent, where booked is state<Record<string, boolean>>
-{seats.map(id => <Seat key={id} id={id} taken={booked.value[id] ?? false} />)}
+{
+  seats.map((id) => (
+    <Seat
+      key={id}
+      id={id}
+      taken={booked.value[id] ?? false}
+    />
+  ))
+}
 ```
 :::solution
 ```tsx
-function Seat(props: { id: string; booked: State<Record<string, boolean>> }) {
-  return <li>{props.id}: {props.booked.get(props.id) ? 'taken' : 'free'}</li>
+function Seat(
+  props: { id: string; booked: State<Record<string, boolean>> },
+) {
+  return (
+    <li>
+      {props.id}: {props.booked.get(props.id) ? 'taken' : 'free'}
+    </li>
+  )
 }
 
-{seats.map(id => <Seat key={id} id={id} booked={booked} />)}
+{
+  seats.map((id) => (
+    <Seat
+      key={id}
+      id={id}
+      booked={booked}
+    />
+  ))
+}
 ```
 
 `booked.value[id]` in the parent reads the whole object, so every seat depends on every booking (W017). Passing the box
@@ -335,7 +411,9 @@ re-runs.
 ```tsx
 test('booking a seat touches one row', async () => {
   render(Plane)
-  await expect(() => user.click(screen.getByRole('button', { name: 'Book 4C' }))).toTouchAtMost(1, { runs: 3 })
+  await expect(() =>
+    user.click(screen.getByRole('button', { name: 'Book 4C' }))
+  ).toTouchAtMost(1, { runs: 3 })
   expect(screen.getByText('4C: taken')).toBeTruthy()
 })
 ```

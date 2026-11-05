@@ -14,5 +14,11 @@ import { REGIONS as _REGIONS } from '../../world'
 
 export function KanbanLong() {
   const columns = state(SPRINT)
-  return <Kanban label="2,000 cards a column" columns={columns} height="420px" />
+  return (
+    <Kanban
+      label="2,000 cards a column"
+      columns={columns}
+      height="420px"
+    />
+  )
 }

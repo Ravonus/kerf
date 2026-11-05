@@ -6,9 +6,14 @@ export const SCHEDULE_NOW = '2026-11-03T10:40'
 
 export const TEAM_ZONE = 'Europe/Stockholm'
 
-export const TEAM_CALENDARS = ['Platform', 'Web', 'Data', 'Mobile', 'Releases', 'Time off'].map(
-  (name, i) => ({ id: i + 1, name }),
-)
+export const TEAM_CALENDARS = [
+  'Platform',
+  'Web',
+  'Data',
+  'Mobile',
+  'Releases',
+  'Time off',
+].map((name, i) => ({ id: i + 1, name }))
 
 export const TEAM_EVENTS: CalEvent[] = [
   {
@@ -38,7 +43,11 @@ export const TEAM_EVENTS: CalEvent[] = [
     end: '2026-11-03T11:00',
     cal: 2,
     video: true,
-    attendees: ['Priya Raman', 'Tomás Oliveira', 'Mara Lindqvist'],
+    attendees: [
+      'Priya Raman',
+      'Tomás Oliveira',
+      'Mara Lindqvist',
+    ],
   },
   {
     id: 'e4',
@@ -73,7 +82,11 @@ export const TEAM_EVENTS: CalEvent[] = [
     start: '2026-11-04T11:00',
     end: '2026-11-04T12:00',
     cal: 5,
-    attendees: ['Mara Lindqvist', 'Jun Tanaka', 'Tomás Oliveira'],
+    attendees: [
+      'Mara Lindqvist',
+      'Jun Tanaka',
+      'Tomás Oliveira',
+    ],
   },
   {
     id: 'e8',

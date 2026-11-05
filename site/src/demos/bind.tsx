@@ -5,11 +5,19 @@ function Stepper(props: { value?: number }) {
   let { value = 0 } = props
   return (
     <p>
-      <Button size="sm" emphasis="outline" onClick={() => value--}>
+      <Button
+        size="sm"
+        emphasis="outline"
+        onClick={() => value--}
+      >
         −
       </Button>
       <strong> {value} </strong>
-      <Button size="sm" emphasis="outline" onClick={() => value++}>
+      <Button
+        size="sm"
+        emphasis="outline"
+        onClick={() => value++}
+      >
         +
       </Button>
     </p>

@@ -59,13 +59,23 @@ The source of each page is in [docs/](docs). Adding a diagnostic is in [CONTRIBU
 `check`, `tasks` and the MCP tools report the same shape:
 
 ```json
-{ "code": "W014", "severity": "error", "owner": "core", "file": "src/App.tsx",
-  "span": [21, 44, 21, 117], "offset": [867, 940],
-  "why": "`.map(p => ({ ...p, … }))` gives every item a new identity on each update…",
-  "fix": { "text": "Keep items stable … or replace only the item that changed." },
+{
+  "code": "W014",
+  "severity": "error",
+  "owner": "core",
+  "file": "src/App.tsx",
+  "span": [21, 44, 21, 117],
+  "offset": [867, 940],
+  "why": "Copying every item gives each a new identity.",
+  "fix": { "text": "Keep unchanged items stable." },
   "project": true,
-  "related": [{ "file": "src/components/ProductList.tsx", "span": [29, 10, 29, 10], "why": "rendered here as a keyed list" }],
-  "docs": "weft docs W014" }
+  "related": [{
+    "file": "src/components/ProductList.tsx",
+    "span": [29, 10, 29, 10],
+    "why": "rendered here as a keyed list"
+  }],
+  "docs": "weft docs W014"
+}
 ```
 
 - `span` is 1-based `[line, col, endLine, endCol]`, with columns in UTF-16 units. `offset` is UTF-16 indices into the

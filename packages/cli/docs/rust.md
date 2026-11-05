@@ -37,10 +37,16 @@ import { z } from 'zod'
 import { search } from './rust'
 
 export const searchDocs = query({
-  input: z.object({ q: z.string().trim().min(1).max(200), limit: z.int().min(1).max(50).default(10) }),
-  output: z.array(z.object({ id: z.string(), title: z.string(), score: z.number() })),
+  input: z.object({
+    q: z.string().trim().min(1).max(200),
+    limit: z.int().min(1).max(50).default(10),
+  }),
+  output: z.array(z.object({
+    id: z.string(), title: z.string(), score: z.number(),
+  })),
   tags: ['docs'],
-  impl: search,          // was: run: ({ input }) => rank(input.q, input.limit)
+  // Was: run: ({ input }) => rank(input.q, input.limit)
+  impl: search,
 })
 ```
 
@@ -54,8 +60,10 @@ serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 weft = { path = "../../node_modules/@weft-js/start/crate" }
 
-[build-dependencies]
-weft = { path = "../../node_modules/@weft-js/start/crate", default-features = false, features = ["build"] }
+[build-dependencies.weft]
+path = "../../node_modules/@weft-js/start/crate"
+default-features = false
+features = ["build"]
 ```
 
 ```rust
@@ -65,13 +73,18 @@ fn main() { weft::build::generate("search"); }
 
 ```rust
 // crates/search/src/main.rs
-weft::contract!();          // types and a `Service` trait, generated from your Zod: never hand-written
+// Types and the `Service` trait are generated from Zod.
+weft::contract!();
 use contract::*;
 
 struct Search;
 
 impl Service for Search {
-    async fn search_docs(&self, ctx: weft::Ctx, input: SearchDocsInput) -> Result<SearchDocsOutput, weft::Error> {
+    async fn search_docs(
+        &self,
+        ctx: weft::Ctx,
+        input: SearchDocsInput,
+    ) -> Result<SearchDocsOutput, weft::Error> {
         ctx.touch("docs");
         Ok(vec![])
     }
@@ -97,7 +110,11 @@ use contract::*;
 
 struct Media;
 impl Service for Media {
-    async fn thumbnail(&self, ctx: weft::Ctx, input: ThumbnailInput) -> Result<ThumbnailOutput, weft::Error> { /* … */ }
+    async fn thumbnail(
+        &self,
+        ctx: weft::Ctx,
+        input: ThumbnailInput,
+    ) -> Result<ThumbnailOutput, weft::Error> { /* … */ }
 }
 
 weft::native!(contract::functions(Media));
@@ -106,7 +123,8 @@ weft::native!(contract::functions(Media));
 ```ts
 // src/server/rust.ts
 import { native } from '@weft-js/start/rust'
-export const media = native('media')          // options: timeout, claims, validate, as for remote()
+// Options: timeout, claims, validate, as for remote().
+export const media = native('media')
 ```
 
 - An addon runs each call on the worker pool, so a long one doesn't hold the event loop. `native()` sizes the pool to the
@@ -147,13 +165,24 @@ All three have `ctx.touch(table)`, `ctx.tag(tag)`, `ctx.remaining()`, `ctx.cance
 
 <!-- example: skip a fragment of src/server/docs.ts -->
 ```ts
-export const getDoc = query({ input, output, errors: { NotFound: z.object({ id: z.string() }) }, impl: search })
-// a TS body raises the same thing: run: () => raise('NotFound', { id })
+export const getDoc = query({
+  input, output,
+  errors: { NotFound: z.object({ id: z.string() }) },
+  impl: search,
+})
+// A TS body raises the same thing:
+// run: () => raise('NotFound', { id })
 ```
 
 ```rust
-async fn get_doc(&self, ctx: weft::Ctx, input: GetDocInput) -> Result<GetDocOutput, GetDocError> {
-    Err(GetDocError::NotFound(GetDocNotFound { id: input.id.to_string() }))
+async fn get_doc(
+    &self,
+    ctx: weft::Ctx,
+    input: GetDocInput,
+) -> Result<GetDocOutput, GetDocError> {
+    Err(GetDocError::NotFound(GetDocNotFound {
+        id: input.id.to_string(),
+    }))
 }
 ```
 
@@ -189,11 +218,12 @@ request id, and the detail stays in the sidecar's log.
 ```ts
 // weft.config.ts
 rust: {
-  unions: 'allow',                                   // let plain object unions through (R102)
+  unions: 'allow', // let plain object unions through (R102)
   services: {
-    search: { crate: 'native/search' },              // default: crates/<name>
-    core: { external: true },                        // built and run elsewhere: no cargo here
-    imaging: { wasm: false },                        // links C, and this host has an addon: no fallback (R104)
+    search: { crate: 'native/search' }, // default: crates/<name>
+    core: { external: true }, // built and run elsewhere: no cargo
+    // Links C; this host has an addon, so no fallback (R104).
+    imaging: { wasm: false },
   },
 }
 ```

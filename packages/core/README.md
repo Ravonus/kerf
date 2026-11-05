@@ -86,7 +86,8 @@ Run these in `packages/core`. Building the compiler needs Rust.
 
 ```bash
 npm ci
-npm run build:native   # the addon and the WebAssembly build, into native/
+# Build the addon and WebAssembly into native/.
+npm run build:native
 npm test
 node scripts/size.mjs  # brotli sizes against the budgets
 ```

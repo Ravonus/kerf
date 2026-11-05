@@ -54,7 +54,11 @@ export default function TodoList() {
   return (
     // This doesn't compile
     <h1>Hedy Lamarr's Todos</h1>
-    <img src="https://i.imgur.com/yXOvdOSs.jpg" alt="Hedy Lamarr" class="photo">
+    <img
+      src="https://i.imgur.com/yXOvdOSs.jpg"
+      alt="Hedy Lamarr"
+      class="photo"
+    >
     <ul>
       <li>Invent new traffic lights
       <li>Rehearse a movie scene
@@ -156,7 +160,11 @@ import { state } from '@weft-js/core'
 export function Send() {
   const sending = state(false)
   return (
-    <button type="button" disabled={sending.value} onClick={() => (sending.value = true)}>
+    <button
+      type="button"
+      disabled={sending.value}
+      onClick={() => (sending.value = true)}
+    >
       {sending.value ? 'Sending…' : 'Send'}
     </button>
   )
@@ -176,7 +184,11 @@ export default function TodoList() {
   return (
     <>
       <h1>Hedy Lamarr's Todos</h1>
-      <img src="https://i.imgur.com/yXOvdOSs.jpg" alt="Hedy Lamarr" class="photo" />
+      <img
+        src="https://i.imgur.com/yXOvdOSs.jpg"
+        alt="Hedy Lamarr"
+        class="photo"
+      />
       <ul>
         <li>Invent new traffic lights</li>
         <li>Rehearse a movie scene</li>
@@ -222,7 +234,10 @@ export function Name() {
   return (
     <label>
       Your name{' '}
-      <input value={name.value} onInput={e => (name.value = e.currentTarget.value)} />
+      <input
+        value={name.value}
+        onInput={(e) => (name.value = e.currentTarget.value)}
+      />
     </label>
   )
 }
@@ -248,8 +263,17 @@ the markup is being built, and passes whatever it returns. When you need an argu
 export function Swatch() {
   return (
     <>
-      <p style="color: var(--warp-color-accent-text)">A string, as in HTML</p>
-      <p style={{ color: 'var(--warp-color-accent-text)', paddingInline: 'var(--warp-space-group)' }}>An object</p>
+      <p style="color: var(--warp-color-accent-text)">
+        A string, as in HTML
+      </p>
+      <p
+        style={{
+          color: 'var(--warp-color-accent-text)',
+          paddingInline: 'var(--warp-space-group)',
+        }}
+      >
+        An object
+      </p>
     </>
   )
 }
@@ -277,7 +301,11 @@ import { state } from '@weft-js/core'
 export function Tab(props: { label: string }) {
   const active = state(false)
   return (
-    <button type="button" class={{ tab: true, active: active.value }} onClick={() => (active.value = !active.value)}>
+    <button
+      type="button"
+      class={{ tab: true, active: active.value }}
+      onClick={() => (active.value = !active.value)}
+    >
       {props.label}
     </button>
   )
@@ -434,7 +462,12 @@ export function Menu() {
   const open = state(false)
   return (
     <div class="menu" data-open={true}>
-      <button type="button" onClick={() => (open.value = !open.value)}>Menu</button>
+      <button
+        type="button"
+        onClick={() => (open.value = !open.value)}
+      >
+        Menu
+      </button>
     </div>
   )
 }
@@ -450,7 +483,10 @@ export function Menu() {
   const open = state(false)
   return (
     <div class="menu" data-open={open.value}>
-      <button type="button" onClick={() => (open.value = !open.value)}>
+      <button
+        type="button"
+        onClick={() => (open.value = !open.value)}
+      >
         Menu
       </button>
     </div>

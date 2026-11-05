@@ -31,16 +31,24 @@ export const MONTH_EXTRA = [
   ['Ship 26.12.1', '2026-12-04T11:00', 1],
 ] as const
 
-export const MONTH_DAYS = Array.from({ length: 42 }, (_, i) =>
-  new Date(Date.UTC(2026, 9, 26 + i)).toISOString().slice(0, 10),
+export const MONTH_DAYS = Array.from(
+  { length: 42 },
+  (_, i) =>
+    new Date(Date.UTC(2026, 9, 26 + i))
+      .toISOString()
+      .slice(0, 10),
 )
 
 export const MONTH_EVENTS = [
   ...EVENTS,
-  ...MONTH_DAYS.filter((d) => d > '2026-11-06' || d < '2026-11-02')
+  ...MONTH_DAYS.filter(
+    (d) => d > '2026-11-06' || d < '2026-11-02',
+  )
     .filter(
       (d) =>
-        [1, 2, 3, 4, 5].includes(new Date(`${d}T12:00Z`).getUTCDay()) &&
+        [1, 2, 3, 4, 5].includes(
+          new Date(`${d}T12:00Z`).getUTCDay(),
+        ) &&
         d !== '2026-11-26' &&
         d !== '2026-11-27',
     )
@@ -56,11 +64,28 @@ export const MONTH_EVENTS = [
     id: `m${i}`,
     title,
     start,
-    end: `${start.slice(0, 11)}${String(+start.slice(11, 13) + 1).padStart(2, '0')}${start.slice(13)}`,
+    end:
+      start.slice(0, 11) +
+      String(+start.slice(11, 13) + 1).padStart(2, '0') +
+      start.slice(13),
     cal,
   })),
-  { id: 'a3', title: 'Sam on call', start: '2026-11-09', end: '2026-11-15', allDay: true, cal: 2 },
-  { id: 'a4', title: 'Inés on call', start: '2026-11-16', end: '2026-11-22', allDay: true, cal: 2 },
+  {
+    id: 'a3',
+    title: 'Sam on call',
+    start: '2026-11-09',
+    end: '2026-11-15',
+    allDay: true,
+    cal: 2,
+  },
+  {
+    id: 'a4',
+    title: 'Inés on call',
+    start: '2026-11-16',
+    end: '2026-11-22',
+    allDay: true,
+    cal: 2,
+  },
   {
     id: 'a5',
     title: 'Offsite',
@@ -70,7 +95,28 @@ export const MONTH_EVENTS = [
     allDay: true,
     cal: 3,
   },
-  { id: 'a6', title: 'No deploys', start: '2026-11-25', end: '2026-11-25', allDay: true, cal: 1 },
-  { id: 'a7', title: 'US holiday', start: '2026-11-26', end: '2026-11-27', allDay: true, cal: 3 },
-  { id: 'a8', title: 'Jun on call', start: '2026-11-30', end: '2026-12-06', allDay: true, cal: 2 },
+  {
+    id: 'a6',
+    title: 'No deploys',
+    start: '2026-11-25',
+    end: '2026-11-25',
+    allDay: true,
+    cal: 1,
+  },
+  {
+    id: 'a7',
+    title: 'US holiday',
+    start: '2026-11-26',
+    end: '2026-11-27',
+    allDay: true,
+    cal: 3,
+  },
+  {
+    id: 'a8',
+    title: 'Jun on call',
+    start: '2026-11-30',
+    end: '2026-12-06',
+    allDay: true,
+    cal: 2,
+  },
 ]

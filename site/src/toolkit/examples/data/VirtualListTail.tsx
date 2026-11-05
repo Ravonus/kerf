@@ -1,6 +1,12 @@
 import { onCleanup, onMount, state } from '@weft-js/core'
 
-import { Button, Row, Stack, Toggle, VirtualList } from '@weft-js/warp'
+import {
+  Button,
+  Row,
+  Stack,
+  Toggle,
+  VirtualList,
+} from '@weft-js/warp'
 
 import type { VirtualControl } from '@weft-js/warp'
 
@@ -20,7 +26,11 @@ export function VirtualListTail() {
   const stuck = state(true)
   let list: VirtualControl | undefined
   const arrive = () => {
-    if (!paused.value) lines.value = [...lines.value, LINES[lines.value.length]!]
+    if (!paused.value)
+      lines.value = [
+        ...lines.value,
+        LINES[lines.value.length]!,
+      ]
   }
   onMount(() => {
     const timer = setInterval(arrive, 700)

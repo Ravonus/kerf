@@ -7,9 +7,9 @@ export default function Banner() {
     <Card title="A banner">
       <Switch
         checked={urgent.value}
-        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
-          (urgent.value = e.currentTarget.checked)
-        }
+        onChange={(
+          e: Event & { currentTarget: HTMLInputElement },
+        ) => (urgent.value = e.currentTarget.checked)}
       >
         Urgent
       </Switch>
@@ -18,11 +18,15 @@ export default function Banner() {
         style={{
           padding: 12,
           borderRadius: 8,
-          background: urgent.value ? 'crimson' : 'transparent',
+          background: urgent.value
+            ? 'crimson'
+            : 'transparent',
           color: urgent.value ? 'white' : undefined,
         }}
       >
-        {urgent.value ? 'Deploys are paused.' : 'All systems normal.'}
+        {urgent.value
+          ? 'Deploys are paused.'
+          : 'All systems normal.'}
       </p>
     </Card>
   )

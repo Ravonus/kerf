@@ -10,7 +10,11 @@ import { LAZY as _Shared2 } from './shared-lazy'
 
 import { toneOf as _Shared3 } from './shared-tone-of'
 
-export const DataGridPlay = (p: { density?: Density; groupBy?: string; exportName?: string }) => (
+export const DataGridPlay = (p: {
+  density?: Density
+  groupBy?: string
+  exportName?: string
+}) => (
   <DataGrid
     caption="Projects"
     captionHidden
@@ -18,6 +22,8 @@ export const DataGridPlay = (p: { density?: Density; groupBy?: string; exportNam
     columns={GROUPED_GRID}
     density={p.density}
     groupBy={p.groupBy === 'none' ? undefined : p.groupBy}
-    exportName={p.exportName === 'off' ? false : p.exportName}
+    exportName={
+      p.exportName === 'off' ? false : p.exportName
+    }
   />
 )

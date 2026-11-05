@@ -1,4 +1,8 @@
-import { ScheduledLobby, Toaster, toast } from '@weft-js/warp'
+import {
+  ScheduledLobby,
+  Toaster,
+  toast,
+} from '@weft-js/warp'
 
 export function ScheduledLobbyReview() {
   const to = Date.now() + 8 * 60_000
@@ -8,7 +12,9 @@ export function ScheduledLobbyReview() {
         title="Incident review"
         to={to}
         onJoin={() => toast.show({ title: 'Joining' })}
-        onAddToCalendar={() => toast.show({ title: 'Added to your calendar' })}
+        onAddToCalendar={() =>
+          toast.show({ title: 'Added to your calendar' })
+        }
       >
         Join opens when the countdown ends.
       </ScheduledLobby>

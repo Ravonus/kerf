@@ -60,29 +60,62 @@ predecessor's ranges off by one at DST boundaries.
 
 ```ts
 import type { State } from "@weft-js/core";
-type IsoDate      = `${number}-${number}-${number}`;                 // Temporal.PlainDate      2026-10-28
-type IsoTime      = `${number}:${number}` | `${number}:${number}:${number}`; // PlainTime   14:30
-type IsoDateTime  = `${IsoDate}T${IsoTime}`;                          // PlainDateTime (wall time, no zone)
-type IsoZoned     = `${IsoDateTime}${string}[${string}]`;             // ZonedDateTime …-07:00[America/Los_Angeles]
-type IsoMonth     = `${number}-${number}`;                            // PlainYearMonth 2026-10
-type IsoWeek      = `${number}-W${number}`;                           // ISO week 2026-W44
-type IsoDuration  = `P${string}`;                                     // Temporal.Duration PT1H30M
-type TimeZoneId   = string;                                           // IANA, e.g. "Europe/Berlin"
-type DateRange    = { start: IsoDate | null; end: IsoDate | null };
+// Temporal.PlainDate      2026-10-28
+type IsoDate = `${number}-${number}-${number}`;
+// PlainTime   14:30
+type IsoTime =
+  | `${number}:${number}`
+  | `${number}:${number}:${number}`;
+// PlainDateTime (wall time, no zone)
+type IsoDateTime = `${IsoDate}T${IsoTime}`;
+// ZonedDateTime …-07:00[America/Los_Angeles]
+type IsoZoned = `${IsoDateTime}${string}[${string}]`;
+// PlainYearMonth 2026-10
+type IsoMonth = `${number}-${number}`;
+// ISO week 2026-W44
+type IsoWeek = `${number}-W${number}`;
+// Temporal.Duration PT1H30M
+type IsoDuration = `P${string}`;
+// IANA, e.g. "Europe/Berlin"
+type TimeZoneId = string;
+type DateRange = { start: IsoDate | null; end: IsoDate | null };
 
 type Bindable<T> =
-  | { value: State<T>; defaultValue?: never; onValueChange?: (v: T, reason: ChangeReason) => void }
-  | { value?: T; defaultValue?: T; onValueChange?: (v: T, reason: ChangeReason) => void };
+  | {
+      value: State<T>;
+      defaultValue?: never;
+      onValueChange?: (v: T, reason: ChangeReason) => void;
+    }
+  | {
+      value?: T;
+      defaultValue?: T;
+      onValueChange?: (v: T, reason: ChangeReason) => void;
+    };
 type ChangeReason = "pointer" | "keyboard" | "programmatic";
-type Openable = { open?: State<boolean> | boolean; defaultOpen?: boolean; onOpenChange?: (o: boolean) => void };
+type Openable = {
+  open?: State<boolean> | boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (o: boolean) => void;
+};
 
 /** The SIGNATURE field shell every input below shares. */
 type FieldShell = {
-  label: string; hint?: string; error?: string | State<string | null>; icon?: IconName;
-  variant?: "floating" | "classic";                             // default: nearest <Form fields> → warp({ fields })
-  required?: boolean; disabled?: boolean; readOnly?: boolean; size?: "sm" | "md" | "lg";
-  prefix?: JSX.Element; suffix?: JSX.Element; name?: string;   // name → hidden input with the ISO value
-  locale?: string;                                              // default: nearest <Surface lang> → document lang
+  label: string;
+  hint?: string;
+  error?: string | State<string | null>;
+  icon?: IconName;
+  // default: nearest <Form fields> → warp({ fields })
+  variant?: "floating" | "classic";
+  required?: boolean;
+  disabled?: boolean;
+  readOnly?: boolean;
+  size?: "sm" | "md" | "lg";
+  prefix?: JSX.Element;
+  suffix?: JSX.Element;
+  // name → hidden input with the ISO value
+  name?: string;
+  // default: nearest <Surface lang> → document lang
+  locale?: string;
 };
 ```
 
@@ -169,12 +202,17 @@ The week starts where the locale says (`Intl.Locale.prototype.getWeekInfo()`, wi
   that switches to the month view), then ‹ ›. Footer: **Today** and **Clear** as ghost buttons. 7 columns ×
   `control-sm` cells (≥ 44px on coarse pointers).
 ```ts
-type DateFieldProps = FieldShell & Bindable<IsoDate | null> & Openable & {
-  min?: IsoDate; max?: IsoDate; isDateUnavailable?: (d: IsoDate) => boolean;
-  firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6;          // default: locale
-  weekNumbers?: boolean; presentation?: "auto" | "popover" | "sheet" | "native";
-  parse?: (text: string, today: IsoDate) => IsoDate | null;
-};
+type DateFieldProps = FieldShell &
+  Bindable<IsoDate | null> &
+  Openable & {
+    min?: IsoDate;
+    max?: IsoDate;
+    isDateUnavailable?: (d: IsoDate) => boolean;
+    firstDayOfWeek?: 0 | 1 | 2 | 3 | 4 | 5 | 6; // default: locale
+    weekNumbers?: boolean;
+    presentation?: "auto" | "popover" | "sheet" | "native";
+    parse?: (text: string, today: IsoDate) => IsoDate | null;
+  };
 ```
 
 ### DateRangeField
@@ -187,12 +225,25 @@ type DateFieldProps = FieldShell & Bindable<IsoDate | null> & Openable & {
   frozen dates. **Comparison:** `compare: "previous-period" | "previous-year" | DateRange` adds a second range,
   reported as "vs Oct 15 – 21, 2026", and paints it in `info-soft` in the grid.
 ```ts
-type RangePreset = { id: string; label: string; range: (today: IsoDate, weekStart: number) => DateRange };
-type DateRangeFieldProps = FieldShell & Bindable<DateRange> & Openable & {
-  presets?: RangePreset[] | "default" | false; preset?: Bindable<string | null>;
-  min?: IsoDate; max?: IsoDate; maxDays?: number; isDateUnavailable?: (d: IsoDate) => boolean;
-  months?: 1 | 2 | "auto"; compare?: Bindable<"previous-period" | "previous-year" | DateRange | null>;
+type RangePreset = {
+  id: string;
+  label: string;
+  range: (today: IsoDate, weekStart: number) => DateRange;
 };
+type DateRangeFieldProps = FieldShell &
+  Bindable<DateRange> &
+  Openable & {
+    presets?: RangePreset[] | "default" | false;
+    preset?: Bindable<string | null>;
+    min?: IsoDate;
+    max?: IsoDate;
+    maxDays?: number;
+    isDateUnavailable?: (d: IsoDate) => boolean;
+    months?: 1 | 2 | "auto";
+    compare?: Bindable<
+      "previous-period" | "previous-year" | DateRange | null
+    >;
+  };
 ```
 
 ### TimeField
@@ -204,11 +255,18 @@ type DateRangeFieldProps = FieldShell & Bindable<DateRange> & Openable & {
   `timeZone` are given, resolves with `disambiguation: "compatible"` and a hint says so: "2:30 AM doesn't exist on
   Mar 8 in New York; using 3:30 AM."
 ```ts
-type TimeFieldProps = FieldShell & Bindable<IsoTime | null> & Openable & {
-  hourCycle?: "h12" | "h23" | "auto"; step?: number; seconds?: boolean;
-  min?: IsoTime; max?: IsoTime; slots?: IsoTime[];        // explicit availability (booking)
-  date?: IsoDate; timeZone?: TimeZoneId;                  // only for DST hints
-};
+type TimeFieldProps = FieldShell &
+  Bindable<IsoTime | null> &
+  Openable & {
+    hourCycle?: "h12" | "h23" | "auto";
+    step?: number;
+    seconds?: boolean;
+    min?: IsoTime;
+    max?: IsoTime;
+    slots?: IsoTime[]; // explicit availability (booking)
+    date?: IsoDate;
+    timeZone?: TimeZoneId; // only for DST hints
+  };
 ```
 
 ### DateTimeField · ZonedDateTimeField
@@ -217,8 +275,15 @@ type TimeFieldProps = FieldShell & Bindable<IsoTime | null> & Openable & {
   is a PlainDateTime with no zone, and the hint spells it out in full. ZonedDateTimeField appends a
   `TimeZoneSelect` as the control's suffix ("PDT ▾").
 ```ts
-type DateTimeFieldProps = Omit<DateFieldProps, keyof Bindable<IsoDate | null>> & Bindable<IsoDateTime | null> & { step?: number };
-type ZonedDateTimeFieldProps = Omit<DateTimeFieldProps, keyof Bindable<IsoDateTime | null>> &
+type DateTimeFieldProps = Omit<
+  DateFieldProps,
+  keyof Bindable<IsoDate | null>
+> &
+  Bindable<IsoDateTime | null> & { step?: number };
+type ZonedDateTimeFieldProps = Omit<
+  DateTimeFieldProps,
+  keyof Bindable<IsoDateTime | null>
+> &
   Bindable<IsoZoned | null> & { timeZone?: Bindable<TimeZoneId> };
 ```
 
@@ -228,9 +293,13 @@ type ZonedDateTimeFieldProps = Omit<DateTimeFieldProps, keyof Bindable<IsoDateTi
   `Intl` long and short names, abbreviations ("PST") and offsets ("+5:30"). Pinned groups: **Local** (detected),
   then **Recent**. Offsets are computed for `referenceDate` (default today), because offsets change with DST.
 ```ts
-type TimeZoneSelectProps = FieldShell & Bindable<TimeZoneId> & Openable & {
-  referenceDate?: IsoDate; zones?: TimeZoneId[]; showOffset?: boolean;
-};
+type TimeZoneSelectProps = FieldShell &
+  Bindable<TimeZoneId> &
+  Openable & {
+    referenceDate?: IsoDate;
+    zones?: TimeZoneId[];
+    showOffset?: boolean;
+  };
 ```
 
 ### DurationField
@@ -238,9 +307,13 @@ type TimeZoneSelectProps = FieldShell & Bindable<TimeZoneId> & Openable & {
   The value is an ISO duration, balanced (`PT90M` → `PT1H30M`) unless `balance: false`. Steppers have a hold-to-repeat
   acceleration. The display string uses `Intl.DurationFormat`, with a fallback.
 ```ts
-type DurationFieldProps = FieldShell & Bindable<IsoDuration | null> & {
-  units?: Array<"d" | "h" | "m" | "s">; max?: IsoDuration; step?: Partial<Record<"h" | "m" | "s", number>>; balance?: boolean;
-};
+type DurationFieldProps = FieldShell &
+  Bindable<IsoDuration | null> & {
+    units?: Array<"d" | "h" | "m" | "s">;
+    max?: IsoDuration;
+    step?: Partial<Record<"h" | "m" | "s", number>>;
+    balance?: boolean;
+  };
 ```
 
 ### InlineCalendar
@@ -248,8 +321,14 @@ type DurationFieldProps = FieldShell & Bindable<IsoDuration | null> & {
   "range"`. Multiple selection toggles days and the grid announces "3 days selected". Used for availability and
   booking. The full event calendar is in `07-app-patterns.md`.
 ```ts
-type InlineCalendarProps = { selection?: "single" | "multiple" | "range"; months?: 1 | 2 | 3; min?: IsoDate; max?: IsoDate;
-  isDateUnavailable?: (d: IsoDate) => boolean; "aria-label": string } & Bindable<IsoDate | IsoDate[] | DateRange | null>;
+type InlineCalendarProps = {
+  selection?: "single" | "multiple" | "range";
+  months?: 1 | 2 | 3;
+  min?: IsoDate;
+  max?: IsoDate;
+  isDateUnavailable?: (d: IsoDate) => boolean;
+  "aria-label": string;
+} & Bindable<IsoDate | IsoDate[] | DateRange | null>;
 ```
 
 ### PeriodPicker (year · quarter · month · week)
@@ -263,8 +342,12 @@ type InlineCalendarProps = { selection?: "single" | "multiple" | "range"; months
   week-number column, and selection covers the whole row (`aria-selected` on every cell in it). The row button is
   named "Week 44, October 26 to November 1, 2026". Numbering is `iso` (default) or `locale`.
 ```ts
-type MonthPickerProps = FieldShell & Bindable<IsoMonth | null> & Openable & { min?: IsoMonth; max?: IsoMonth };
-type WeekPickerProps  = FieldShell & Bindable<IsoWeek | null> & Openable & { numbering?: "iso" | "locale" };
+type MonthPickerProps = FieldShell &
+  Bindable<IsoMonth | null> &
+  Openable & { min?: IsoMonth; max?: IsoMonth };
+type WeekPickerProps = FieldShell &
+  Bindable<IsoWeek | null> &
+  Openable & { numbering?: "iso" | "locale" };
 ```
 
 ### RecurrenceField (an RRULE builder in plain language)
@@ -278,9 +361,14 @@ type WeekPickerProps  = FieldShell & Bindable<IsoWeek | null> & Openable & { num
 - i18n: the sentence is built from ICU messages (`{interval, plural, one {Every week} other {Every # weeks}}`).
   Weekday lists use `Intl.ListFormat`.
 ```ts
-type RecurrenceFieldProps = FieldShell & Bindable<string | null> & {  // RFC 5545 RRULE, e.g. "FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,TH"
-  dtstart: IsoDate; timeZone?: TimeZoneId; preview?: number; frequencies?: Array<"DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY">;
-};
+type RecurrenceFieldProps = FieldShell &
+  Bindable<string | null> & {
+    // RFC 5545 RRULE, e.g. "FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,TH"
+    dtstart: IsoDate;
+    timeZone?: TimeZoneId;
+    preview?: number;
+    frequencies?: Array<"DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY">;
+  };
 ```
 
 **Full calendar and scheduler** (month/week/day views, busy blocks, event drag and resize) belong to
@@ -303,10 +391,15 @@ type RecurrenceFieldProps = FieldShell & Bindable<string | null> & {  // RFC 554
   flag isn't a language. `renderFlag` opts in to images.
 ```ts
 type E164 = `+${number}`;
-type PhoneFieldProps = FieldShell & Bindable<E164 | null> & {
-  country?: Bindable<CountryCode>; defaultCountry?: CountryCode; countries?: CountryCode[]; preferred?: CountryCode[];
-  renderFlag?: (c: CountryCode) => JSX.Element; extension?: boolean;
-};
+type PhoneFieldProps = FieldShell &
+  Bindable<E164 | null> & {
+    country?: Bindable<CountryCode>;
+    defaultCountry?: CountryCode;
+    countries?: CountryCode[];
+    preferred?: CountryCode[];
+    renderFlag?: (c: CountryCode) => JSX.Element;
+    extension?: boolean;
+  };
 ```
 
 ### AddressField (AddressInput)
@@ -318,15 +411,34 @@ type PhoneFieldProps = FieldShell & Bindable<E164 | null> & {
   errors, times out (1.5s) or is offline. The fields carry the full `autocomplete` tokens (`address-line1`,
   `address-level2`, `postal-code`, `country`) so browser autofill works with or without the provider.
 ```ts
-type Address = { country: CountryCode; lines: string[]; locality?: string; dependentLocality?: string;
-  region?: string; postalCode?: string; sortingCode?: string; organization?: string; recipient?: string };
+type Address = {
+  country: CountryCode;
+  lines: string[];
+  locality?: string;
+  dependentLocality?: string;
+  region?: string;
+  postalCode?: string;
+  sortingCode?: string;
+  organization?: string;
+  recipient?: string;
+};
 interface AddressProvider {
-  suggest(q: string, o: { country?: CountryCode; signal: AbortSignal }): Promise<Array<{ id: string; label: string; secondary?: string }>>;
+  suggest(
+    q: string,
+    o: { country?: CountryCode; signal: AbortSignal },
+  ): Promise<
+    Array<{ id: string; label: string; secondary?: string }>
+  >;
   resolve(id: string): Promise<Address>;
 }
-type AddressFieldProps = Omit<FieldShell, "prefix" | "suffix"> & Bindable<Address | null> & {
-  provider?: AddressProvider; countries?: CountryCode[]; fields?: Partial<Record<keyof Address, "required" | "optional" | "hidden">>;
-};
+type AddressFieldProps = Omit<FieldShell, "prefix" | "suffix"> &
+  Bindable<Address | null> & {
+    provider?: AddressProvider;
+    countries?: CountryCode[];
+    fields?: Partial<
+      Record<keyof Address, "required" | "optional" | "hidden">
+    >;
+  };
 ```
 
 ### PlaceLookupInput
@@ -342,11 +454,23 @@ type AddressFieldProps = Omit<FieldShell, "prefix" | "suffix"> & Bindable<Addres
   the input: the popup wrapper is presentational (not a dialog) and pointer-down on an option doesn't blur.
   Closing removes `aria-activedescendant`. AddressField's line 1 follows the same model.
 ```ts
-type Place = { displayName: string; lat: number; lng: number; timezone?: TimeZoneId; category?: string; id?: string };
-type PlaceLookupInputProps = FieldShell & Bindable<Place | null> & {
-  search: (q: string, o: { bias: Record<string, boolean>; signal: AbortSignal }) => Promise<Place[]>;
-  biases?: Array<{ id: string; label: string; default?: boolean }>; minChars?: number;
+type Place = {
+  displayName: string;
+  lat: number;
+  lng: number;
+  timezone?: TimeZoneId;
+  category?: string;
+  id?: string;
 };
+type PlaceLookupInputProps = FieldShell &
+  Bindable<Place | null> & {
+    search: (
+      q: string,
+      o: { bias: Record<string, boolean>; signal: AbortSignal },
+    ) => Promise<Place[]>;
+    biases?: Array<{ id: string; label: string; default?: boolean }>;
+    minChars?: number;
+  };
 ```
 
 ### CountrySelect · LanguageSelect · CurrencySelect
@@ -354,9 +478,20 @@ One combobox each, with names from `Intl.DisplayNames` in the UI locale. Languag
 text ("German · Deutsch"), because people look for their own language in their own script. Currencies read
 "Euro · EUR · €". `preferred` pins items. A long list on phone opens the full-screen search sheet.
 ```ts
-type CountrySelectProps  = FieldShell & Bindable<CountryCode | null>  & { options?: CountryCode[]; preferred?: CountryCode[] };
-type LanguageSelectProps = FieldShell & Bindable<string | null>       & { options?: string[]; endonyms?: boolean };   // BCP 47
-type CurrencySelectProps = FieldShell & Bindable<CurrencyCode | null> & { options?: CurrencyCode[] };                 // ISO 4217
+type CountrySelectProps = FieldShell &
+  Bindable<CountryCode | null> & {
+    options?: CountryCode[];
+    preferred?: CountryCode[];
+  };
+// BCP 47
+type LanguageSelectProps = FieldShell &
+  Bindable<string | null> & {
+    options?: string[];
+    endonyms?: boolean;
+  };
+// ISO 4217
+type CurrencySelectProps = FieldShell &
+  Bindable<CurrencyCode | null> & { options?: CurrencyCode[] };
 ```
 
 ---
@@ -380,12 +515,22 @@ type CurrencySelectProps = FieldShell & Bindable<CurrencyCode | null> & { option
   label, hint and shortcut.
 - Engine: a headless editor model (ProseMirror via `@weft/editor`); warp only skins it with `data-part`s.
 ```ts
-type RichTextEditorProps = FieldShell & Bindable<string> & {
-  format?: "html" | "markdown" | "json"; toolbar?: "fixed" | "bubble" | "none";
-  marks?: Array<"bold" | "italic" | "strike" | "code" | "link">; blocks?: Array<"h2" | "h3" | "ul" | "ol" | "quote" | "codeblock">;
-  commands?: SlashCommand[]; mentions?: { search: (q: string, signal: AbortSignal) => Promise<MentionItem[]> };
-  minRows?: number; maxRows?: number;
-};
+type RichTextEditorProps = FieldShell &
+  Bindable<string> & {
+    format?: "html" | "markdown" | "json";
+    toolbar?: "fixed" | "bubble" | "none";
+    marks?: Array<"bold" | "italic" | "strike" | "code" | "link">;
+    blocks?: Array<"h2" | "h3" | "ul" | "ol" | "quote" | "codeblock">;
+    commands?: SlashCommand[];
+    mentions?: {
+      search: (
+        q: string,
+        signal: AbortSignal,
+      ) => Promise<MentionItem[]>;
+    };
+    minRows?: number;
+    maxRows?: number;
+  };
 ```
 
 ### CodeInput · JsonEditor · KeyValueEditor
@@ -398,8 +543,18 @@ type RichTextEditorProps = FieldShell & Bindable<string> & {
   table of `key | value | remove` rows with "Add row". A duplicate key is a caution, not a block. A **Form ⇄ JSON**
   segmented switch toggles between the two and keeps the value.
 ```ts
-type CodeInputProps = FieldShell & Bindable<string> & { language?: string; lineNumbers?: boolean; tabSize?: 2 | 4; wrap?: boolean };
-type KeyValueEditorProps = FieldShell & Bindable<Array<{ key: string; value: string }>> & { keyLabel?: string; valueLabel?: string };
+type CodeInputProps = FieldShell &
+  Bindable<string> & {
+    language?: string;
+    lineNumbers?: boolean;
+    tabSize?: 2 | 4;
+    wrap?: boolean;
+  };
+type KeyValueEditorProps = FieldShell &
+  Bindable<Array<{ key: string; value: string }>> & {
+    keyLabel?: string;
+    valueLabel?: string;
+  };
 ```
 
 ### MentionsInput
@@ -408,7 +563,13 @@ type KeyValueEditorProps = FieldShell & Bindable<Array<{ key: string; value: str
   ↑/↓ then Enter or Tab inserts, Esc closes, and an insertion is announced. The value keeps tokens as `@[Ada
   Lovelace](user:ada)` markup; the display shows the name.
 ```ts
-type MentionsInputProps = FieldShell & Bindable<string> & { triggers: Record<string, (q: string, s: AbortSignal) => Promise<MentionItem[]>> };
+type MentionsInputProps = FieldShell &
+  Bindable<string> & {
+    triggers: Record<
+      string,
+      (q: string, s: AbortSignal) => Promise<MentionItem[]>
+    >;
+  };
 ```
 
 ### ImageCropper · CameraCapture
@@ -419,8 +580,18 @@ type MentionsInputProps = FieldShell & Bindable<string> & { triggers: Record<str
   allow it in the address bar", "No camera found"), and **Upload a photo instead** is always present. Stop releases
   the tracks.
 ```ts
-type Crop = { zoom: number; x: number; y: number; rotate: 0 | 90 | 180 | 270; aspect: string };
-type ImageCropperProps = Bindable<Crop> & { src: string; aspects?: string[]; "aria-label": string };
+type Crop = {
+  zoom: number;
+  x: number;
+  y: number;
+  rotate: 0 | 90 | 180 | 270;
+  aspect: string;
+};
+type ImageCropperProps = Bindable<Crop> & {
+  src: string;
+  aspects?: string[];
+  "aria-label": string;
+};
 ```
 
 ### Code · CodeBlock · Markdown (display)
@@ -436,8 +607,19 @@ type ImageCropperProps = Bindable<Crop> & { src: string; aspects?: string[]; "ar
   (tables, footnotes, MDX) plug in a parser through `renderer` and keep warp's element styles.
 ```ts
 type CodeProps = { children: string };
-type CodeBlockProps = { code: string; language?: string; filename?: string; lineNumbers?: boolean; wrap?: boolean; copyable?: boolean };
-type MarkdownProps = { source: string; renderer?: (src: string) => Node; linkTarget?: "_self" | "_blank" };
+type CodeBlockProps = {
+  code: string;
+  language?: string;
+  filename?: string;
+  lineNumbers?: boolean;
+  wrap?: boolean;
+  copyable?: boolean;
+};
+type MarkdownProps = {
+  source: string;
+  renderer?: (src: string) => Node;
+  linkTarget?: "_self" | "_blank";
+};
 ```
 
 ### MarkdownEditor
@@ -448,7 +630,11 @@ with toolbar shortcuts (Mod+B, Mod+K); the preview is the Markdown renderer abov
 Search, then an APG Grid (roving focus, 8 columns, 7 on phone), then category tabs; names and keywords from CLDR in
 the UI locale ("grinning face"), a skin-tone selector and recents. IconPicker is the same frame over the app's icons.
 ```ts
-type EmojiPickerProps = Bindable<string | null> & Openable & { recents?: number; skinTone?: Bindable<1 | 2 | 3 | 4 | 5 | 6> };
+type EmojiPickerProps = Bindable<string | null> &
+  Openable & {
+    recents?: number;
+    skinTone?: Bindable<1 | 2 | 3 | 4 | 5 | 6>;
+  };
 ```
 
 ### SignaturePad
@@ -459,8 +645,17 @@ type EmojiPickerProps = Bindable<string | null> & Openable & { recents?: number;
   italic. Keyboard and switch users can sign. The canvas is `role="img"` named "Signature, 3 strokes".
 - The legal ceremony (consent text, audit trail, hashing) lives in the e-sign pack, not here.
 ```ts
-type SignatureValue = { method: "drawn" | "typed"; strokes?: Array<Array<[x: number, y: number, p: number]>>; text?: string; svg: string };
-type SignaturePadProps = FieldShell & Bindable<SignatureValue | null> & { aspect?: number; typedFont?: "display" | "sans" };
+type SignatureValue = {
+  method: "drawn" | "typed";
+  strokes?: Array<Array<[x: number, y: number, p: number]>>;
+  text?: string;
+  svg: string;
+};
+type SignaturePadProps = FieldShell &
+  Bindable<SignatureValue | null> & {
+    aspect?: number;
+    typedFont?: "display" | "sans";
+  };
 ```
 
 **Drawing and annotation** (note only, not v1) reuses SignaturePad's strokes and redraw-on-theme rule, adds shape
@@ -493,10 +688,34 @@ All display-only, all token-styled, and all with a keyboard path and a text alte
   real frame is a sandboxed iframe. **Feedback** ("Was this helpful?"): Yes/No toggles; No reveals an optional
   field; both are acknowledged in a status message.
 ```ts
-type CodeTabsProps = { tabs: Array<{ id: string; label: string; code: string; language?: string }>; syncKey?: string };
-type DiffViewerProps = { before: string; after: string; filename?: string; view?: Bindable<"unified" | "split">; wordDiff?: boolean };
-type LogViewerProps = { lines: State<string[]>; follow?: Bindable<boolean>; maxLines?: number; "aria-label": string };
-type JsonViewerProps = { value: unknown; schema?: Record<string, string>; defaultExpandDepth?: number; "aria-label": string };
+type CodeTabsProps = {
+  tabs: Array<{
+    id: string;
+    label: string;
+    code: string;
+    language?: string;
+  }>;
+  syncKey?: string;
+};
+type DiffViewerProps = {
+  before: string;
+  after: string;
+  filename?: string;
+  view?: Bindable<"unified" | "split">;
+  wordDiff?: boolean;
+};
+type LogViewerProps = {
+  lines: State<string[]>;
+  follow?: Bindable<boolean>;
+  maxLines?: number;
+  "aria-label": string;
+};
+type JsonViewerProps = {
+  value: unknown;
+  schema?: Record<string, string>;
+  defaultExpandDepth?: number;
+  "aria-label": string;
+};
 ```
 
 ## 5. Specialised
@@ -510,8 +729,19 @@ the provider's events, and its tokens passed into the provider's appearance API 
 from the BIN range, grouping 4-4-4-4 / Amex 4-6-5, and expiry as `MM/YY` from the locale. Provider `focus` → `force(true)`,
 `change{complete}` → filled, `change{error}` → pinned critical sweep plus the provider's message.
 ```ts
-type PaymentCardInputProps = FieldShell & { mount: (el: HTMLElement, appearance: ProviderAppearance) => ProviderField };
-interface ProviderField { on(e: "focus" | "blur" | "change", f: (ev: { complete?: boolean; error?: string }) => void): void; destroy(): void }
+type PaymentCardInputProps = FieldShell & {
+  mount: (
+    el: HTMLElement,
+    appearance: ProviderAppearance,
+  ) => ProviderField;
+};
+interface ProviderField {
+  on(
+    e: "focus" | "blur" | "change",
+    f: (ev: { complete?: boolean; error?: string }) => void,
+  ): void;
+  destroy(): void;
+}
 ```
 
 ### FilterBar (search with facets) · QueryBuilder
@@ -526,12 +756,44 @@ interface ProviderField { on(e: "focus" | "blur" | "change", f: (ev: { complete?
   (`maxDepth`). Every row has a remove button and the group has "+ Condition / + Group". It renders the same
   `Filter` model, so a flat query can collapse back to chips.
 ```ts
-type FilterField = { id: string; label: string; type: "enum" | "text" | "number" | "date" | "person"; options?: Array<{ value: string; label: string }> };
-type Filter = { field: string; op: "is" | "is-not" | "any-of" | "contains" | "gt" | "lt" | "between" | "before" | "after"; value: unknown };
-type FilterBarProps = FieldShell & Bindable<Filter[]> & { fields: FilterField[]; query?: Bindable<string>;
-  facets?: (field: string, current: Filter[]) => Promise<Record<string, number>> };
-type QueryGroup = { match: "all" | "any"; items: Array<Filter | QueryGroup> };
-type QueryBuilderProps = Bindable<QueryGroup> & { fields: FilterField[]; maxDepth?: number; "aria-label": string };
+type FilterField = {
+  id: string;
+  label: string;
+  type: "enum" | "text" | "number" | "date" | "person";
+  options?: Array<{ value: string; label: string }>;
+};
+type Filter = {
+  field: string;
+  op:
+    | "is"
+    | "is-not"
+    | "any-of"
+    | "contains"
+    | "gt"
+    | "lt"
+    | "between"
+    | "before"
+    | "after";
+  value: unknown;
+};
+type FilterBarProps = FieldShell &
+  Bindable<Filter[]> & {
+    fields: FilterField[];
+    query?: Bindable<string>;
+    facets?: (
+      field: string,
+      current: Filter[],
+    ) => Promise<Record<string, number>>;
+  };
+type QueryGroup = {
+  match: "all" | "any";
+  items: Array<Filter | QueryGroup>;
+};
+type QueryBuilderProps = Bindable<QueryGroup> & {
+  fields: FilterField[];
+  maxDepth?: number;
+  "aria-label": string;
+};
 ```
 
 ### SortableList
@@ -542,8 +804,13 @@ type QueryBuilderProps = Bindable<QueryGroup> & { fields: FilterField[]; maxDept
   up / Move down** buttons on each row whenever the pointer is coarse (always visible), and on hover/focus for fine
   pointers. Dragging is never the only way (WCAG 2.5.7).
 ```ts
-type SortableListProps<T> = Bindable<T[]> & { getKey: (t: T) => string; itemLabel: (t: T) => string;
-  renderItem: (t: T) => JSX.Element; "aria-label": string; disabled?: boolean };
+type SortableListProps<T> = Bindable<T[]> & {
+  getKey: (t: T) => string;
+  itemLabel: (t: T) => string;
+  renderItem: (t: T) => JSX.Element;
+  "aria-label": string;
+  disabled?: boolean;
+};
 ```
 
 ---

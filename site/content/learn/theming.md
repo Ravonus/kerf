@@ -69,7 +69,8 @@ const THEMES = [
 
 export function ThemeSwitch() {
   const theme = state<Theme>('auto')
-  // The page's dial lives on <html>, which only the browser has: read it once mounted.
+  // The page's dial lives on <html>, only in the browser.
+  // Read it once mounted.
   onMount(() => {
     theme.value = getDial('theme')
   })
@@ -77,7 +78,14 @@ export function ThemeSwitch() {
     theme.value = next
     setDial('theme', next, { persist: true })
   }
-  return <Segmented label="Theme" value={theme.value} options={THEMES} onChange={pick} />
+  return (
+    <Segmented
+      label="Theme"
+      value={theme.value}
+      options={THEMES}
+      onChange={pick}
+    />
+  )
 }
 ```
 
@@ -96,7 +104,11 @@ import { defineConfig } from '@weft-js/core/config'
 import { dialScript, warp } from '@weft-js/warp/plugin'
 
 export default defineConfig({
-  site: { name: 'Roastery', title: '%s · Roastery', head: dialScript },
+  site: {
+    name: 'Roastery',
+    title: '%s · Roastery',
+    head: dialScript,
+  },
   plugins: [warp()],
 })
 ```
@@ -160,7 +172,8 @@ The dials change their values, so your own CSS that reads them follows the theme
   color: var(--warp-color-text-subtle);
   border-radius: var(--warp-radius-surface);
   padding: var(--warp-space-group);
-  transition: background var(--warp-duration-base) var(--warp-ease-out);
+  transition: background var(--warp-duration-base)
+    var(--warp-ease-out);
 }
 ```
 
@@ -226,21 +239,30 @@ the theme changes:
 ```tsx
 import { defineSurface, Surface } from '@weft-js/core/surface'
 
-export const Fill = defineSurface<{ ratio: number }, 'canvas2d'>({
-  name: 'fill',
-  kind: 'canvas2d',
-  setup(s, props) {
-    s.draw(() => {
-      const { width, height } = s.size.value
-      const accent = s.tokens['colorAccentSolid']
-      if (accent) s.ctx.fillStyle = accent.css
-      s.ctx.fillRect(0, 0, width * props.ratio, height)
-    })
+export const Fill = defineSurface<{ ratio: number }, 'canvas2d'>(
+  {
+    name: 'fill',
+    kind: 'canvas2d',
+    setup(s, props) {
+      s.draw(() => {
+        const { width, height } = s.size.value
+        const accent = s.tokens['colorAccentSolid']
+        if (accent) s.ctx.fillStyle = accent.css
+        s.ctx.fillRect(0, 0, width * props.ratio, height)
+      })
+    },
   },
-})
+)
 
 export function Progress() {
-  return <Surface use={Fill} ratio={0.6} aspect="8/1" label="60% roasted" />
+  return (
+    <Surface
+      use={Fill}
+      ratio={0.6}
+      aspect="8/1"
+      label="60% roasted"
+    />
+  )
 }
 ```
 
@@ -272,11 +294,19 @@ export function DarkToggle() {
   onMount(() => {
     dark.value = getDial('theme') === 'dark'
   })
-  const flip = (e: Event & { currentTarget: HTMLInputElement }) => {
+  const flip = (
+    e: Event & { currentTarget: HTMLInputElement },
+  ) => {
     dark.value = e.currentTarget.checked
-    setDial('theme', dark.value ? 'dark' : 'auto', { persist: true })
+    setDial('theme', dark.value ? 'dark' : 'auto', {
+      persist: true,
+    })
   }
-  return <Switch checked={dark.value} onChange={flip}>Dark mode</Switch>
+  return (
+    <Switch checked={dark.value} onChange={flip}>
+      Dark mode
+    </Switch>
+  )
 }
 ```
 
@@ -308,10 +338,18 @@ import { Card, Grid, Text } from '@weft-js/warp'
 
 export function Pricing() {
   return (
-    <section aria-label="Pricing" data-expression="quiet" data-density="compact">
+    <section
+      aria-label="Pricing"
+      data-expression="quiet"
+      data-density="compact"
+    >
       <Grid min="sm" gap="group">
-        <Card title="Starter"><Text>$9 a month</Text></Card>
-        <Card title="Team"><Text>$29 a month</Text></Card>
+        <Card title="Starter">
+          <Text>$9 a month</Text>
+        </Card>
+        <Card title="Team">
+          <Text>$29 a month</Text>
+        </Card>
       </Grid>
     </section>
   )
@@ -325,14 +363,20 @@ Dials nest, so the two attributes apply to everything inside the section and not
 This stylesheet looks right in light mode and wrong in dark. Rewrite it with tokens.
 
 ```css
-.note { background: #fff8e1; color: #5d4037; border: 1px solid #ffe082; border-radius: 8px; }
+.note {
+  background: #fff8e1;
+  color: #5d4037;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+}
 ```
 :::solution
 ```css
 .note {
   background: var(--warp-color-caution-soft);
   color: var(--warp-color-caution-text);
-  border: var(--warp-border-hairline) solid var(--warp-color-caution-border);
+  border: var(--warp-border-hairline) solid
+    var(--warp-color-caution-border);
   border-radius: var(--warp-radius-surface);
 }
 ```

@@ -1,5 +1,11 @@
 import { state } from '@weft-js/core'
-import { CartButton, CartDrawer, Stack, Text, Toaster } from '@weft-js/warp'
+import {
+  CartButton,
+  CartDrawer,
+  Stack,
+  Text,
+  Toaster,
+} from '@weft-js/warp'
 import { SHOP_CART } from '../../world'
 
 export function CartDrawerShop() {
@@ -8,14 +14,28 @@ export function CartDrawerShop() {
   const placed = state(false)
   return (
     <>
-      <Stack gap="related" align="center">
+      <Stack
+        gap="related"
+        align="center"
+      >
         <CartButton
-          count={cart.value.reduce((n, line) => n + line.quantity, 0)}
+          count={cart.value.reduce(
+            (n, line) => n + line.quantity,
+            0,
+          )}
           onClick={() => (open.value = true)}
         />
-        <Text subtle>{placed.value ? 'On to checkout.' : 'Open the cart, change a quantity.'}</Text>
+        <Text subtle>
+          {placed.value
+            ? 'On to checkout.'
+            : 'Open the cart, change a quantity.'}
+        </Text>
       </Stack>
-      <CartDrawer open={open} cart={cart} onCheckout={() => (placed.value = true)} />
+      <CartDrawer
+        open={open}
+        cart={cart}
+        onCheckout={() => (placed.value = true)}
+      />
       <Toaster />
     </>
   )

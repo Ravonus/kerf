@@ -1,4 +1,5 @@
-// The running code of each example, apart from their words: a page that only describes one shouldn't load them all.
+// Running example code, apart from its words. A page
+// that only describes one shouldn't load them all.
 import started from './getting-started'
 import ask from './ask'
 import chat from './chat'

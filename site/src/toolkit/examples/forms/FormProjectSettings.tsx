@@ -15,33 +15,51 @@ import {
 } from '@weft-js/warp'
 import { SLUG, REGION_OPTIONS } from './shared'
 
+const initialAbout =
+  'The public shop, served from the edge.'
+
+function nameProblem(name: string) {
+  return SLUG.test(name)
+    ? undefined
+    : 'Use lowercase letters, numbers and dashes.'
+}
+
 export function FormProjectSettings() {
   const name = state('storefront')
-  const about = state('The public shop, served from the edge.')
+  const about = state(initialAbout)
   const region = state<string | null>('eu-west')
   const copies = state(3)
   const onPush = state(true)
-  const problem = derived(() =>
-    SLUG.test(name.value) ? undefined : 'Use lowercase letters, numbers and dashes.',
-  )
+  const problem = derived(() => nameProblem(name.value))
   const save = (e: Event) => {
     e.preventDefault()
     if (!problem.value)
       toast.show({
         title: 'Settings saved',
-        description: `${name.value} runs ${copies.value} copies in ${region.value}.`,
+        description:
+          `${name.value} runs ${copies.value} copies ` +
+          `in ${region.value}.`,
       })
   }
   return (
     <>
-      <Stack as="form" gap="group" onSubmit={save}>
+      <Stack
+        as="form"
+        gap="group"
+        onSubmit={save}
+      >
         <Text role="heading">Project settings</Text>
-        <Grid cols={2} gap="group">
+        <Grid
+          cols={2}
+          gap="group"
+        >
           <Input
             label="Project name"
             value={name.value}
             error={problem.value}
-            onInput={(e) => (name.value = e.currentTarget.value)}
+            onInput={(e) =>
+              (name.value = e.currentTarget.value)
+            }
           />
           <Select
             label="Region"
@@ -54,7 +72,9 @@ export function FormProjectSettings() {
           label="Description"
           value={about.value}
           counter={120}
-          onInput={(e) => (about.value = e.currentTarget.value)}
+          onInput={(e) =>
+            (about.value = e.currentTarget.value)
+          }
         />
         <Slider
           label="Copies"
@@ -66,9 +86,11 @@ export function FormProjectSettings() {
         <Checkbox
           checked={onPush.value}
           hint="Every push to main goes live."
-          onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
-            (onPush.value = e.currentTarget.checked)
-          }
+          onChange={(
+            e: Event & {
+              currentTarget: HTMLInputElement
+            },
+          ) => (onPush.value = e.currentTarget.checked)}
         >
           Deploy on push
         </Checkbox>
@@ -81,8 +103,14 @@ export function FormProjectSettings() {
 
 function FormActions() {
   return (
-    <Row gap="related" justify="end">
-      <Button emphasis="ghost" tone="neutral">
+    <Row
+      gap="related"
+      justify="end"
+    >
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+      >
         Cancel
       </Button>
       <Button type="submit">Save changes</Button>

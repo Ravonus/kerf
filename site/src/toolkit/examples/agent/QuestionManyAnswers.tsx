@@ -3,12 +3,16 @@ import { Question } from '@weft-js/warp'
 import { NOTIFY } from './shared'
 
 export function QuestionManyAnswers() {
-  const question = state<typeof NOTIFY & { answer?: string | string[] }>(NOTIFY)
+  const question = state<
+    typeof NOTIFY & { answer?: string | string[] }
+  >(NOTIFY)
   return (
     <Question
       question={question.value}
       quiet
-      onAnswer={(answer) => (question.value = { ...NOTIFY, answer })}
+      onAnswer={(answer) =>
+        (question.value = { ...NOTIFY, answer })
+      }
     />
   )
 }

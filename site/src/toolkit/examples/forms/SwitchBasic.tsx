@@ -6,9 +6,9 @@ export function SwitchBasic() {
   return (
     <Switch
       checked={on.value}
-      onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
-        (on.value = e.currentTarget.checked)
-      }
+      onChange={(
+        e: Event & { currentTarget: HTMLInputElement },
+      ) => (on.value = e.currentTarget.checked)}
     >
       Preview deploys
     </Switch>

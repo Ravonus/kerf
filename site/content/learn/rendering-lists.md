@@ -39,7 +39,11 @@ it as data and let the markup be written once:
 3. **Put** the mapped array in your component's markup.
 
 ```tsx
-const people = ['Creola Katherine Johnson: mathematician', 'Mario José Molina-Pasquel Henríquez: chemist', 'Mohammad Abdus Salam: physicist']
+const people = [
+  'Creola Katherine Johnson: mathematician',
+  'Mario José Molina-Pasquel Henríquez: chemist',
+  'Mohammad Abdus Salam: physicist',
+]
 
 export function Scientists() {
   return (
@@ -63,11 +67,20 @@ Real data has more structure. Give each person an `id`, a `name` and a `professi
 ```ts
 // src/data/people.ts
 export const people = [
-  { id: 0, name: 'Creola Katherine Johnson', profession: 'mathematician' },
-  { id: 1, name: 'Mario José Molina-Pasquel Henríquez', profession: 'chemist' },
+  {
+    id: 0, name: 'Creola Katherine Johnson',
+    profession: 'mathematician',
+  },
+  {
+    id: 1, name: 'Mario José Molina-Pasquel Henríquez',
+    profession: 'chemist',
+  },
   { id: 2, name: 'Mohammad Abdus Salam', profession: 'physicist' },
   { id: 3, name: 'Percy Lavon Julian', profession: 'chemist' },
-  { id: 4, name: 'Subrahmanyan Chandrasekhar', profession: 'astrophysicist' },
+  {
+    id: 4, name: 'Subrahmanyan Chandrasekhar',
+    profession: 'astrophysicist',
+  },
 ]
 ```
 
@@ -101,7 +114,9 @@ import { people } from '#/data/people'
 
 export function ByProfession() {
   const only = state('chemist')
-  const shown = derived(() => people.filter(p => p.profession === only.value))
+  const shown = derived(() =>
+    people.filter(p => p.profession === only.value),
+  )
   return (
     <>
       <ul>
@@ -109,7 +124,11 @@ export function ByProfession() {
           <li key={p.id}>{p.name}</li>
         ))}
       </ul>
-      <p>{shown.value.length === 0 ? 'Nobody matches.' : `${shown.value.length} found.`}</p>
+      <p>
+        {shown.value.length === 0
+          ? 'Nobody matches.'
+          : `${shown.value.length} found.`}
+      </p>
     </>
   )
 }
@@ -233,7 +252,9 @@ export function Prices() {
     { id: 'b', name: 'Flat white', price: 4 },
   ])
   const raise = (id: string) => {
-    products.value = products.value.map(p => (p.id === id ? { ...p, price: p.price + 1 } : p))
+    products.value = products.value.map(p =>
+      p.id === id ? { ...p, price: p.price + 1 } : p,
+    )
   }
   return (
     <ul>
@@ -271,7 +292,9 @@ const products = [
 
 export function Shelf() {
   const cart = state<Record<string, number>>({})
-  const add = (id: string) => cart.set(c => void (c[id] = (c[id] ?? 0) + 1))
+  const add = (id: string) => cart.set(c => {
+    c[id] = (c[id] ?? 0) + 1
+  })
   return (
     <ul>
       {products.map(p => (
@@ -366,8 +389,16 @@ Render each recipe's name, then its ingredients as a nested list. Pick the keys.
 <!-- example: skip the starting point for the solution below -->
 ```tsx
 const recipes = [
-  { id: 'greek-salad', name: 'Greek Salad', ingredients: ['tomatoes', 'cucumber', 'onion', 'olives', 'feta'] },
-  { id: 'hawaiian-pizza', name: 'Hawaiian Pizza', ingredients: ['pizza crust', 'pizza sauce', 'mozzarella', 'ham', 'pineapple'] },
+  {
+    id: 'greek-salad', name: 'Greek Salad',
+    ingredients: ['tomatoes', 'cucumber', 'onion', 'olives', 'feta'],
+  },
+  {
+    id: 'hawaiian-pizza', name: 'Hawaiian Pizza',
+    ingredients: [
+      'pizza crust', 'pizza sauce', 'mozzarella', 'ham', 'pineapple',
+    ],
+  },
 ]
 
 export function RecipeList() {
@@ -377,8 +408,16 @@ export function RecipeList() {
 :::solution
 ```tsx
 const recipes = [
-  { id: 'greek-salad', name: 'Greek Salad', ingredients: ['tomatoes', 'cucumber', 'onion', 'olives', 'feta'] },
-  { id: 'hawaiian-pizza', name: 'Hawaiian Pizza', ingredients: ['pizza crust', 'pizza sauce', 'mozzarella', 'ham', 'pineapple'] },
+  {
+    id: 'greek-salad', name: 'Greek Salad',
+    ingredients: ['tomatoes', 'cucumber', 'onion', 'olives', 'feta'],
+  },
+  {
+    id: 'hawaiian-pizza', name: 'Hawaiian Pizza',
+    ingredients: [
+      'pizza crust', 'pizza sauce', 'mozzarella', 'ham', 'pineapple',
+    ],
+  },
 ]
 
 export function RecipeList() {
@@ -416,7 +455,9 @@ export function Sale() {
     { id: 'b', name: 'Flat white', price: 4 },
   ])
   const sale = (id: string) => {
-    products.value = products.value.map(p => ({ ...p, price: p.id === id ? p.price - 1 : p.price }))
+    products.value = products.value.map(p => ({
+      ...p, price: p.id === id ? p.price - 1 : p.price,
+    }))
   }
   return (
     <ul>
@@ -444,7 +485,9 @@ export function Sale() {
     { id: 'b', name: 'Flat white', price: 4 },
   ])
   const sale = (id: string) => {
-    products.value = products.value.map(p => (p.id === id ? { ...p, price: p.price - 1 } : p))
+    products.value = products.value.map(p =>
+      p.id === id ? { ...p, price: p.price - 1 } : p,
+    )
   }
   return (
     <ul>

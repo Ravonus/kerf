@@ -36,7 +36,9 @@ export const AUDIT: AuditEvent[] = [
     verb: 'changed the role of',
     target: 'Tomás Oliveira',
     ip: '10.4.0.31',
-    diff: [{ field: 'Role', from: 'Viewer', to: 'Member' }],
+    diff: [
+      { field: 'Role', from: 'Viewer', to: 'Member' },
+    ],
   },
   {
     id: 'a5',

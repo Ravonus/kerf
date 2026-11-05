@@ -22,12 +22,22 @@ import { QUESTION, FINISHED, play, CHIPS } from './shared'
 import type { Turn } from './shared'
 
 export function ConversationDeployHelp() {
-  const turns = state<Turn[]>([{ id: 1, text: QUESTION, answer: state(FINISHED) }])
-  const last = () => turns.value[turns.value.length - 1]!.answer
-  const busy = derived(() => ['waiting', 'streaming', 'approval'].includes(last().value.state))
+  const turns = state<Turn[]>([
+    { id: 1, text: QUESTION, answer: state(FINISHED) },
+  ])
+  const last = () =>
+    turns.value[turns.value.length - 1]!.answer
+  const busy = derived(() =>
+    ['waiting', 'streaming', 'approval'].includes(
+      last().value.state,
+    ),
+  )
   const send = createSender(turns)
   const stop = () => {
-    last().value = foldAnswer(last().value, { kind: 'done', stopped: true })
+    last().value = foldAnswer(last().value, {
+      kind: 'done',
+      stopped: true,
+    })
   }
   const again = (t: Turn) => {
     t.answer.value = foldAnswer([])
@@ -61,14 +71,24 @@ export function ConversationDeployHelp() {
         }
       >
         {turns.value.map((t) => (
-          <div key={t.id} style="display:contents">
-            <UserMessage text={t.text} arrive={t.id > 1} />
+          <div
+            key={t.id}
+            style="display:contents"
+          >
+            <UserMessage
+              text={t.text}
+              arrive={t.id > 1}
+            />
             <Assistant
               n={t.id}
               quiet={t.id === 1}
               answer={t.answer.value}
-              onApprove={() => play(t.answer, ROLLBACK_RUN)}
-              onDeny={() => play(t.answer, ROLLBACK_DENIED)}
+              onApprove={() =>
+                play(t.answer, ROLLBACK_RUN)
+              }
+              onDeny={() =>
+                play(t.answer, ROLLBACK_DENIED)
+              }
               onFeedback={() => {}}
               onRegenerate={() => again(t)}
             />
@@ -82,7 +102,10 @@ export function ConversationDeployHelp() {
 function createSender(turns: State<Turn[]>) {
   return (text: string) => {
     const answer = state(foldAnswer([]))
-    turns.value = [...turns.value, { id: turns.value.length + 1, text, answer }]
+    turns.value = [
+      ...turns.value,
+      { id: turns.value.length + 1, text, answer },
+    ]
     play(answer, ROLLBACK_ASK)
   }
 }

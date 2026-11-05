@@ -12,7 +12,11 @@ export const RowPlay = (p: {
     <Row
       gap={p.gap}
       justify={p.justify}
-      align={p.align === 'center' ? undefined : (p.align as 'start')}
+      align={
+        p.align === 'center'
+          ? undefined
+          : (p.align as 'start')
+      }
       wrap={p.wrap}
     >
       <Box>Short</Box>

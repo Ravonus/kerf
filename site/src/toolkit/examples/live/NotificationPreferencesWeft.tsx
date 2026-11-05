@@ -1,5 +1,11 @@
 import { NotificationPreferences } from '@weft-js/warp'
-import { CHANNELS, PREF_GROUPS, PREF_LOCKED, PREF_OFFERED, PREFS } from '../../world'
+import {
+  CHANNELS,
+  PREF_GROUPS,
+  PREF_LOCKED,
+  PREF_OFFERED,
+  PREFS,
+} from '../../world'
 import { pause } from './shared'
 
 export const NotificationPreferencesWeft = () => (

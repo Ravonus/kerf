@@ -59,8 +59,16 @@ A handler runs when the event happens, not when the component ran. So it reads p
 ```tsx
 import { Button } from '@weft-js/warp'
 
-export function AlertButton(props: { message: string; children?: unknown }) {
-  return <Button onClick={() => alert(props.message)}>{props.children}</Button>
+export function AlertButton(props: {
+  message: string
+  children?: unknown
+}) {
+  const { message, children } = props
+  return (
+    <Button onClick={() => alert(message)}>
+      {children}
+    </Button>
+  )
 }
 
 export function Toolbar() {
@@ -74,7 +82,7 @@ export function Toolbar() {
 ```
 
 If the parent later passes a different `message`, the next click shows the new one. Nothing re-created the handler: it
-reads `props.message` each time it runs. In React a handler closes over one render's values; in weft there is one run of
+reads `message` each time it runs. In React a handler closes over one render's values; in weft there is one run of
 the component, and every read is live.
 
 ## Passing handlers as props
@@ -97,7 +105,8 @@ happened in your app's words rather than the browser's:
 
 ```tsx
 <Toolbar onPlay={play} onUpload={upload} />    // what the user meant
-<Toolbar onClickOne={play} onClickTwo={upload} /> // how they did it: harder to read
+// How they did it: harder to read.
+<Toolbar onClickOne={play} onClickTwo={upload} />
 ```
 
 A prop called `onPlay` might be fired by a click today and by a key tomorrow. The parent doesn't need to know.
@@ -108,7 +117,10 @@ A handler gets the browser's event. `e.currentTarget` is typed as the element th
 `e.currentTarget.value` is a string with no cast:
 
 ```tsx
-<input value={draft.value} onInput={e => (draft.value = e.currentTarget.value)} />
+<input
+  value={draft.value}
+  onInput={e => (draft.value = e.currentTarget.value)}
+/>
 ```
 
 `e.target` is where the event started, which may be a child of the element: a click on the icon inside a button has the
@@ -217,14 +229,21 @@ The compiler attaches a handler to a built-in element once, when the element is 
 made only then:
 
 ```tsx
-<Button onClick={editing.value ? save : edit}>…</Button>      // on a warp component: fine, props are live
-<button onClick={editing.value ? save : edit}>…</button>      // on a built-in element: stays on the first choice
+// On a warp component: fine, props are live.
+<Button onClick={editing.value ? save : edit}>…</Button>
+// On a built-in element: stays on the first choice.
+<button onClick={editing.value ? save : edit}>…</button>
 ```
 
 Make the choice inside the handler, where it runs on every click:
 
 ```tsx
-<button type="button" onClick={() => (editing.value ? save() : edit())}>…</button>
+<button
+  type="button"
+  onClick={() => (editing.value ? save() : edit())}
+>
+  …
+</button>
 ```
 :::
 
@@ -302,7 +321,11 @@ export function App() {
   const clicks = state(0)
   const hue = state(200)
   return (
-    <div role="group" aria-label="Colour" onClick={() => clicks.value++}>
+    <div
+      role="group"
+      aria-label="Colour"
+      onClick={() => clicks.value++}
+    >
       <Card title={`Hue ${hue.value}`}>
         <ColorSwitch />
         <p>Clicks on the card: {clicks.value}</p>
@@ -333,9 +356,15 @@ export function App() {
   const clicks = state(0)
   const hue = state(200)
   return (
-    <div role="group" aria-label="Colour" onClick={() => clicks.value++}>
+    <div
+      role="group"
+      aria-label="Colour"
+      onClick={() => clicks.value++}
+    >
       <Card title={`Hue ${hue.value}`}>
-        <ColorSwitch onChangeColor={() => (hue.value = (hue.value + 40) % 360)} />
+        <ColorSwitch
+          onChangeColor={() => (hue.value = (hue.value + 40) % 360)}
+        />
         <p>Clicks on the card: {clicks.value}</p>
       </Card>
     </div>

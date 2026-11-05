@@ -8,9 +8,17 @@ export default function Bell() {
   }
   return (
     <Card title="The counter is empty">
-      <p>{rang.value ? 'Someone is coming.' : 'Ring the bell and wait.'}</p>
+      <p>
+        {rang.value
+          ? 'Someone is coming.'
+          : 'Ring the bell and wait.'}
+      </p>
       <Button onClick={ring}>Ring the bell</Button>{' '}
-      <Button emphasis="ghost" tone="neutral" onClick={() => (rang.value = false)}>
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        onClick={() => (rang.value = false)}
+      >
         Start again
       </Button>
     </Card>

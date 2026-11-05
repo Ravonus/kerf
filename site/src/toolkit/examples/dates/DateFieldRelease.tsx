@@ -12,9 +12,18 @@ export function DateFieldRelease() {
   const date = state<IsoDate | null>('2026-11-14')
   return (
     <Stack gap="related">
-      <DateField label="Release date" today={TODAY} value={date} />
-      <Text subtle role="caption">
-        {date.value ? `Saved as ${date.value}` : 'No date set'}
+      <DateField
+        label="Release date"
+        today={TODAY}
+        value={date}
+      />
+      <Text
+        subtle
+        role="caption"
+      >
+        {date.value
+          ? `Saved as ${date.value}`
+          : 'No date set'}
       </Text>
     </Stack>
   )

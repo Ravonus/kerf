@@ -9,7 +9,10 @@ export function NavProductHeader() {
     at.value = name
   }
   return (
-    <Row justify="between" gap="section">
+    <Row
+      justify="between"
+      gap="section"
+    >
       <Row gap="section">
         <Heading level={3}>weft</Heading>
         <Nav label="Main">
@@ -17,7 +20,9 @@ export function NavProductHeader() {
             <a
               key={name}
               href={`#${name}`}
-              aria-current={at.value === name ? 'page' : undefined}
+              aria-current={
+                at.value === name ? 'page' : undefined
+              }
               onClick={(e) => go(e, name)}
             >
               {name}
@@ -25,7 +30,10 @@ export function NavProductHeader() {
           ))}
         </Nav>
       </Row>
-      <Button size="sm" icon="rocket">
+      <Button
+        size="sm"
+        icon="rocket"
+      >
         Deploy
       </Button>
     </Row>

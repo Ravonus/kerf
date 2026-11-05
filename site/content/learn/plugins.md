@@ -105,9 +105,11 @@ Two codes stop `weft check`, `weft dev` and `weft build`:
 So after `weft add`, or after an upgrade, the next check may stop and tell you what changed:
 
 ```bash
-weft plugins audit            # every plugin against the lock: permissions added, undeclared use, with file and line
+# Check permissions and undeclared use against the lock.
+weft plugins audit
 weft plugins approve @weft-js/pay
-weft plugins approve --all    # every plugin, and drop the ones you removed
+# Approve all plugins and drop those removed.
+weft plugins approve --all
 ```
 
 `weft add` never approves for you. Installing a plugin isn't the same as reading what it asks for.
@@ -126,7 +128,11 @@ page and can't be styled.
 
 ```ts
 // src/plugins/acme.ts
-import { definePlugin, type CheckContext, type Finding } from '@weft-js/core/plugin'
+import {
+  definePlugin,
+  type CheckContext,
+  type Finding,
+} from '@weft-js/core/plugin'
 
 function blocking(ctx: CheckContext, banned: string[]): Finding[] {
   const call = new RegExp(`\\b(${banned.join('|')})\\(`, 'g')
@@ -138,8 +144,10 @@ function blocking(ctx: CheckContext, banned: string[]): Finding[] {
         file,
         start: m.index,
         end: m.index + m[0].length,
-        why: `\`${m[1]}\` blocks the whole page until it's dismissed, and can't be styled.`,
-        help: 'Show the message in the page: a warp Alert, or a Modal for a question.',
+        why: `\`${m[1]}\` blocks the whole page ` +
+          `until it's dismissed, and can't be styled.`,
+        help: 'Show the message in the page: a warp Alert, ' +
+          'or a Modal for a question.',
       })
     }
   }
@@ -151,11 +159,27 @@ export const acme = definePlugin({
   version: '0.1.0',
   namespace: 'ACME',
   permissions: {},
-  options: (input: { banned?: string[] }) => ({ banned: input.banned ?? ['alert', 'confirm', 'prompt'] }),
+  options: (input: { banned?: string[] }) => ({
+    banned: input.banned ?? ['alert', 'confirm', 'prompt'],
+  }),
   contribute: ({ banned }) => ({
-    diagnostics: [{ code: 'ACME001', catches: 'A blocking browser dialog', fix: 'Show the message in the page', severity: 'error' }],
-    check: { include: ['src/**/*.tsx'], run: ctx => blocking(ctx, banned) },
-    agents: { title: 'Acme house rules', text: `Never call ${banned.join(', ')}: show messages in the page with warp's Alert or Modal.` },
+    diagnostics: [
+      {
+        code: 'ACME001',
+        catches: 'A blocking browser dialog',
+        fix: 'Show the message in the page',
+        severity: 'error',
+      },
+    ],
+    check: {
+      include: ['src/**/*.tsx'],
+      run: ctx => blocking(ctx, banned),
+    },
+    agents: {
+      title: 'Acme house rules',
+      text: `Never call ${banned.join(', ')}: ` +
+        `show messages in the page with warp's Alert or Modal.`,
+    },
   }),
 })
 ```
@@ -202,8 +226,20 @@ The `acme` plugin only adds to the tools. A plugin that changes what the app doe
 core of how `@weft-js/pay` reaches the server, from its `plugin.mjs`:
 
 ```js
-provide(defineSlot({ id: 'server.extension', version: 1, cardinality: 'keyed', sides: ['server'] }),
-  { key: 'pay', sides: { server: { module: '@weft-js/pay/server', export: 'extension' } } })
+provide(
+  defineSlot({
+    id: 'server.extension',
+    version: 1,
+    cardinality: 'keyed',
+    sides: ['server'],
+  }),
+  {
+    key: 'pay',
+    sides: {
+      server: { module: '@weft-js/pay/server', export: 'extension' },
+    },
+  },
+)
 ```
 
 The slot is `server.extension`; the key `pay` mounts it at `/_weft/x/pay/`; and the module is only imported on the server,
@@ -273,7 +309,12 @@ tasks: {
 :::solution
 ```ts
 tasks: {
-  reset: { run: 'node scripts/reset-db.mjs', description: 'Drop and recreate the dev database', sideEffects: ['db'], env: ['dev'] },
+  reset: {
+    run: 'node scripts/reset-db.mjs',
+    description: 'Drop and recreate the dev database',
+    sideEffects: ['db'],
+    env: ['dev'],
+  },
 },
 ```
 
@@ -287,8 +328,16 @@ A teammate adds a second rule to `acme` and `weft check` now reports P111. What'
 <!-- example: skip a fragment of the acme plugin -->
 ```ts
 diagnostics: [
-  { code: 'ACME001', catches: 'A blocking browser dialog', fix: 'Show the message in the page' },
-  { code: 'W100', catches: 'A raw hex colour in a style', fix: 'Use a token' },
+  {
+    code: 'ACME001',
+    catches: 'A blocking browser dialog',
+    fix: 'Show the message in the page',
+  },
+  {
+    code: 'W100',
+    catches: 'A raw hex colour in a style',
+    fix: 'Use a token',
+  },
 ],
 ```
 :::solution
@@ -296,7 +345,11 @@ diagnostics: [
 shadow, one of weft's own codes or another plugin's. Name it in the namespace:
 
 ```ts
-{ code: 'ACME002', catches: 'A raw hex colour in a style', fix: 'Use a token' },
+{
+  code: 'ACME002',
+  catches: 'A raw hex colour in a style',
+  fix: 'Use a token',
+},
 ```
 
 The check hook's findings have to use the new code too.
@@ -311,10 +364,22 @@ out.push({
   file,
   start: m.index,
   end: m.index + m[0].length,
-  why: `\`${m[1]}\` blocks the whole page until it's dismissed, and can't be styled.`,
-  help: 'Show the message in the page: a warp Alert, or a Modal for a question.',
+  why: `\`${m[1]}\` blocks the whole page ` +
+    `until it's dismissed, and can't be styled.`,
+  help: 'Show the message in the page: a warp Alert, ' +
+    'or a Modal for a question.',
   ...(m[1] === 'alert' && {
-    fix: { description: 'Log it instead', safe: false, edits: [{ start: m.index, end: m.index + m[0].length, text: 'console.warn(' }] },
+    fix: {
+      description: 'Log it instead',
+      safe: false,
+      edits: [
+        {
+          start: m.index,
+          end: m.index + m[0].length,
+          text: 'console.warn(',
+        },
+      ],
+    },
   }),
 })
 ```

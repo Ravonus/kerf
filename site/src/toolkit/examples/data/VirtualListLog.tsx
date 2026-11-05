@@ -11,7 +11,13 @@ import { toneOf as _Shared3 } from './shared-tone-of'
 import { REGIONS as _REGIONS } from '../../world'
 
 export const VirtualListLog = () => (
-  <VirtualList label="Request log" items={LINES} rowKey={(l) => l.id} estimate={38} height="360px">
+  <VirtualList
+    label="Request log"
+    items={LINES}
+    rowKey={(l) => l.id}
+    estimate={38}
+    height="360px"
+  >
     {logLine}
   </VirtualList>
 )

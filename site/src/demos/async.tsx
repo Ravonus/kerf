@@ -1,5 +1,10 @@
 import { state } from '@weft-js/core'
-import { Badge, Button, Card, Spinner } from '@weft-js/warp'
+import {
+  Badge,
+  Button,
+  Card,
+  Spinner,
+} from '@weft-js/warp'
 
 const save = () =>
   new Promise((done) => {
@@ -18,7 +23,10 @@ export default function Profile() {
   return (
     <Card title="Profile">
       <Badge tone="positive">Saves: {saves.value}</Badge>
-      <Button disabled={saving.value} onClick={go}>
+      <Button
+        disabled={saving.value}
+        onClick={go}
+      >
         {saving.value ? <Spinner /> : 'Save changes'}
       </Button>
     </Card>

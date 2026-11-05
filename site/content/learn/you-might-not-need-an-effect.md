@@ -31,7 +31,9 @@ export function Form() {
   const last = state('Lovelace')
   // Don't: a second box, kept in step by hand.
   const full = state('')
-  watch(() => `${first.value} ${last.value}`, name => { full.value = name })
+  watch(() => `${first.value} ${last.value}`, name => {
+    full.value = name
+  })
   return <p>{full.value}</p>
 }
 ```
@@ -62,7 +64,8 @@ Moving the computation into the component body isn't the fix either:
 <!-- example: skip shows the W001 mistake on purpose -->
 ```tsx
 export function Greeting(props: { first: string; last: string }) {
-  const full = `${props.first} ${props.last}` // computed once, never again
+  // Computed once, never again.
+  const full = `${props.first} ${props.last}`
   return <p>{full}</p>
 }
 ```
@@ -84,11 +87,19 @@ import { derived, state } from '@weft-js/core'
 type Row = { id: number; name: string }
 
 export function Directory(props: { rows: Row[] }) {
+  const { rows } = props
   const query = state('')
-  const matches = derived(() => props.rows.filter(r => r.name.toLowerCase().includes(query.value.toLowerCase())))
+  const matches = derived(() => {
+    const lowerQuery = query.value.toLowerCase()
+    return rows.filter(r => r.name.toLowerCase().includes(lowerQuery))
+  })
   return (
     <div>
-      <input value={query.value} onInput={e => (query.value = e.currentTarget.value)} aria-label="Filter" />
+      <input
+        value={query.value}
+        onInput={e => (query.value = e.currentTarget.value)}
+        aria-label="Filter"
+      />
       <ul>{matches.value.map(r => <li key={r.id}>{r.name}</li>)}</ul>
     </div>
   )
@@ -115,12 +126,24 @@ import { state } from '@weft-js/core'
 type Person = { id: number; name: string }
 
 function Profile(props: { person: Person }) {
+  const { person } = props
   const note = state('')
-  return <textarea value={note.value} onInput={e => (note.value = e.currentTarget.value)} aria-label={`A note about ${props.person.name}`} />
+  return (
+    <textarea
+      value={note.value}
+      onInput={e => (note.value = e.currentTarget.value)}
+      aria-label={`A note about ${person.name}`}
+    />
+  )
 }
 
 export function People(props: { shown: Person }) {
-  return <div>{[props.shown].map(p => <Profile key={p.id} person={p} />)}</div>
+  const { shown } = props
+  return (
+    <div>
+      {[shown].map(p => <Profile key={p.id} person={p} />)}
+    </div>
+  )
 }
 ```
 
@@ -135,9 +158,20 @@ key })` is a box you can write, which goes back to `source` whenever the key cha
 ```tsx
 import { state } from '@weft-js/core'
 
-export function Chat(props: { contact: { id: number; name: string } }) {
-  const draft = state.linked(() => '', { key: () => props.contact.id })
-  return <textarea value={draft.value} onInput={e => (draft.value = e.currentTarget.value)} aria-label={`Message to ${props.contact.name}`} />
+type Contact = { id: number; name: string }
+
+export function Chat(props: { contact: Contact }) {
+  const { contact } = props
+  const draft = state.linked(() => '', {
+    key: () => contact.id,
+  })
+  return (
+    <textarea
+      value={draft.value}
+      onInput={e => (draft.value = e.currentTarget.value)}
+      aria-label={`Message to ${contact.name}`}
+    />
+  )
 }
 ```
 
@@ -155,9 +189,13 @@ import { toast } from '@weft-js/warp'
 
 export function Product() {
   const inCart = state(false)
-  // Don't: this fires for any reason inCart turns true, such as restoring a saved cart.
-  watch(() => inCart.value, added => { if (added) toast.show({ title: 'Added to your cart' }) })
-  return <button onClick={() => (inCart.value = true)}>Add to cart</button>
+  // Don't: this also fires when restoring a saved cart.
+  watch(() => inCart.value, added => {
+    if (added) toast.show({ title: 'Added to your cart' })
+  })
+  return (
+    <button onClick={() => (inCart.value = true)}>Add to cart</button>
+  )
 }
 ```
 
@@ -206,7 +244,10 @@ export function Game() {
   }
   return (
     <div>
-      <p>Round {round.value}, golds {golds.value}{over.value ? ': game over' : ''}</p>
+      <p>
+        Round {round.value}, golds {golds.value}
+        {over.value ? ': game over' : ''}
+      </p>
       <Button onClick={playGold}>Play a gold card</Button>
     </div>
   )
@@ -235,9 +276,12 @@ function Toggle(props: { onChange: (on: boolean) => void }) {
 
 export function Panel() {
   const last = state('nothing yet')
+  const changed = (on: boolean) => {
+    last.value = on ? 'turned on' : 'turned off'
+  }
   return (
     <div>
-      <Toggle onChange={on => (last.value = on ? 'turned on' : 'turned off')} />
+      <Toggle onChange={changed} />
       <p>The toggle was {last.value}.</p>
     </div>
   )
@@ -259,7 +303,11 @@ import { online } from '@weft-js/core/browser'
 
 export function Banner() {
   const isOnline = online()
-  return <p hidden={isOnline.value}>You're offline. Changes will be saved when you reconnect.</p>
+  return (
+    <p hidden={isOnline.value}>
+      You're offline. Changes will be saved when you reconnect.
+    </p>
+  )
 }
 ```
 
@@ -296,18 +344,30 @@ import { Boundary, resource, state } from '@weft-js/core'
 type Hit = { id: string; title: string }
 
 function Hits(props: { query: string }) {
+  const { query } = props
   const hits = resource(signal =>
-    fetch(`/api/search?q=${encodeURIComponent(props.query)}`, { signal }).then(r => r.json() as Promise<Hit[]>),
+    fetch(
+      `/api/search?q=${encodeURIComponent(query)}`,
+      { signal },
+    ).then(r => r.json() as Promise<Hit[]>),
   )
-  return <ul>{(hits.value ?? []).map(h => <li key={h.id}>{h.title}</li>)}</ul>
+  return (
+    <ul>
+      {(hits.value ?? []).map(h => <li key={h.id}>{h.title}</li>)}
+    </ul>
+  )
 }
 
 export function Search() {
   const query = state('')
   return (
     <div>
-      <input value={query.value} onInput={e => (query.value = e.currentTarget.value)} aria-label="Search" />
-      {/* The resource is made in Hits, inside the Boundary, so the Boundary waits for it. */}
+      <input
+        value={query.value}
+        onInput={e => (query.value = e.currentTarget.value)}
+        aria-label="Search"
+      />
+      {/* The Boundary waits for the resource made in Hits. */}
       <Boundary pending={<p>Searching…</p>}>
         <Hits query={query.value} />
       </Boundary>
@@ -378,19 +438,27 @@ import { state, watch } from '@weft-js/core'
 type Item = { id: number; name: string; price: number }
 
 export function Cheap(props: { items: Item[] }) {
+  const { items } = props
   const max = state(10)
   const shown = state<Item[]>([])
-  watch(() => props.items.filter(i => i.price <= max.value), list => { shown.value = list })
+  watch(() => items.filter(i => i.price <= max.value), list => {
+    shown.value = list
+  })
   return (
     <div>
-      <input type="number" value={max.value} onInput={e => (max.value = e.currentTarget.valueAsNumber)} aria-label="Maximum price" />
+      <input
+        type="number"
+        value={max.value}
+        onInput={e => (max.value = e.currentTarget.valueAsNumber)}
+        aria-label="Maximum price"
+      />
       <ul>{shown.value.map(i => <li key={i.id}>{i.name}</li>)}</ul>
     </div>
   )
 }
 ```
 :::solution
-`shown` is computed from `props.items` and `max`, so it's `derived`:
+`shown` is computed from `items` and `max`, so it's `derived`:
 
 ```tsx
 import { derived, state } from '@weft-js/core'
@@ -398,11 +466,19 @@ import { derived, state } from '@weft-js/core'
 type Item = { id: number; name: string; price: number }
 
 export function Cheap(props: { items: Item[] }) {
+  const { items } = props
   const max = state(10)
-  const shown = derived(() => props.items.filter(i => i.price <= max.value))
+  const shown = derived(() =>
+    items.filter(i => i.price <= max.value),
+  )
   return (
     <div>
-      <input type="number" value={max.value} onInput={e => (max.value = e.currentTarget.valueAsNumber)} aria-label="Maximum price" />
+      <input
+        type="number"
+        value={max.value}
+        onInput={e => (max.value = e.currentTarget.valueAsNumber)}
+        aria-label="Maximum price"
+      />
       <ul>{shown.value.map(i => <li key={i.id}>{i.name}</li>)}</ul>
     </div>
   )
@@ -425,7 +501,11 @@ export function Checkout() {
   watch(() => submitted.value, sent => {
     if (sent) void fetch('/api/order', { method: 'POST' })
   })
-  return <Button onClick={() => (submitted.value = true)}>Place order</Button>
+  return (
+    <Button onClick={() => (submitted.value = true)}>
+      Place order
+    </Button>
+  )
 }
 ```
 :::solution
@@ -446,7 +526,11 @@ export function Checkout() {
       sending.value = false
     }
   }
-  return <Button disabled={sending.value} onClick={() => void place()}>Place order</Button>
+  return (
+    <Button disabled={sending.value} onClick={() => void place()}>
+      Place order
+    </Button>
+  )
 }
 ```
 
@@ -460,9 +544,18 @@ the old document's edit. Make it start from the new document's title, without a 
 ```tsx
 import { state, untrack } from '@weft-js/core'
 
-export function Editor(props: { doc: { id: string; title: string } }) {
-  const title = state(untrack(() => props.doc.title))
-  return <input value={title.value} onInput={e => (title.value = e.currentTarget.value)} aria-label="Title" />
+type Document = { id: string; title: string }
+
+export function Editor(props: { doc: Document }) {
+  const { doc } = props
+  const title = state(untrack(() => doc.title))
+  return (
+    <input
+      value={title.value}
+      onInput={e => (title.value = e.currentTarget.value)}
+      aria-label="Title"
+    />
+  )
 }
 ```
 :::solution
@@ -472,9 +565,20 @@ new key starts it over from the source:
 ```tsx
 import { state } from '@weft-js/core'
 
-export function Editor(props: { doc: { id: string; title: string } }) {
-  const title = state.linked(() => props.doc.title, { key: () => props.doc.id })
-  return <input value={title.value} onInput={e => (title.value = e.currentTarget.value)} aria-label="Title" />
+type Document = { id: string; title: string }
+
+export function Editor(props: { doc: Document }) {
+  const { doc } = props
+  const title = state.linked(() => doc.title, {
+    key: () => doc.id,
+  })
+  return (
+    <input
+      value={title.value}
+      onInput={e => (title.value = e.currentTarget.value)}
+      aria-label="Title"
+    />
+  )
 }
 ```
 

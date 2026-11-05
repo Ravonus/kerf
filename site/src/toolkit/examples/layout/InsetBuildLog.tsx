@@ -6,7 +6,10 @@ export const InsetBuildLog = () => (
     <Inset>
       <Stack gap="hair">
         {LOG.map((line) => (
-          <Text key={line} role="code">
+          <Text
+            key={line}
+            role="code"
+          >
             {line}
           </Text>
         ))}

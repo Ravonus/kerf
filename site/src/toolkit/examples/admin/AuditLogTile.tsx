@@ -2,7 +2,10 @@ import { Stack, Text } from '@weft-js/warp'
 import { LATEST_EVENTS } from './shared'
 
 export const AuditLogTile = () => (
-  <Stack gap="related" style="inline-size:320px">
+  <Stack
+    gap="related"
+    style="inline-size:320px"
+  >
     {LATEST_EVENTS.map((e) => (
       <Text key={e.id}>
         {e.actor} {e.verb} {e.target}

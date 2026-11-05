@@ -1,6 +1,13 @@
 import { state } from '@weft-js/core'
 
-import { Badge, Button, MonthPicker, Row, Stack, Text } from '@weft-js/warp'
+import {
+  Badge,
+  Button,
+  MonthPicker,
+  Row,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 
 import type { IsoMonth } from '@weft-js/warp'
 
@@ -8,14 +15,30 @@ import { INVOICES } from '../../world'
 
 import { TODAY, usd } from './shared-event'
 
-/** Pick a month and the list shows that month's invoice; Show all clears it. */
+/** Pick a month and the list shows that month's
+ * invoice; Show all clears it. */
 export function MonthPickerInvoices() {
   const month = state<IsoMonth | null>('2026-09')
-  const shown = () => INVOICES.filter((i) => !month.value || i.date.startsWith(month.value))
+  const shown = () =>
+    INVOICES.filter(
+      (i) =>
+        !month.value || i.date.startsWith(month.value),
+    )
+  const total = () =>
+    usd(shown().reduce((t, i) => t + i.amount, 0))
   return (
     <Stack gap="group">
-      <Row gap="related" wrap={false}>
-        <MonthPicker label="Invoices for" today={TODAY} value={month} min="2026-07" max="2026-10" />
+      <Row
+        gap="related"
+        wrap={false}
+      >
+        <MonthPicker
+          label="Invoices for"
+          today={TODAY}
+          value={month}
+          min="2026-07"
+          max="2026-10"
+        />
         <Button
           emphasis="ghost"
           tone="neutral"
@@ -25,12 +48,22 @@ export function MonthPickerInvoices() {
           Show all
         </Button>
       </Row>
-      <Stack gap="related" divided>
+      <Stack
+        gap="related"
+        divided
+      >
         {shown().map((i) => (
-          <Row key={i.id} justify="between" gap="group">
+          <Row
+            key={i.id}
+            justify="between"
+            gap="group"
+          >
             <Stack gap="hair">
               <Text role="label">{i.id}</Text>
-              <Text role="caption" subtle>
+              <Text
+                role="caption"
+                subtle
+              >
                 Issued {i.date}
               </Text>
             </Stack>
@@ -41,9 +74,13 @@ export function MonthPickerInvoices() {
           </Row>
         ))}
       </Stack>
-      <Text subtle role="caption">
-        {shown().length} of {INVOICES.length} invoices,{' '}
-        {usd(shown().reduce((t, i) => t + i.amount, 0))} in all
+      <Text
+        subtle
+        role="caption"
+      >
+        {shown().length} of {INVOICES.length}
+        {' invoices, '}
+        {total()} in all
       </Text>
     </Stack>
   )

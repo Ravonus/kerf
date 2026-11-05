@@ -1,15 +1,33 @@
-import { Stack, Dither, Row, Text, Button } from '@weft-js/warp'
+import {
+  Stack,
+  Dither,
+  Row,
+  Text,
+  Button,
+} from '@weft-js/warp'
 import { SOFT } from './paint-primitives'
 
 export const DitherBanner = () => (
   <Stack gap="group">
-    <Dither gradient={SOFT} ramp="positive" ratio="5 / 1" />
-    <Row gap="related" justify="between">
+    <Dither
+      gradient={SOFT}
+      ramp="positive"
+      ratio="5 / 1"
+    />
+    <Row
+      gap="related"
+      justify="between"
+    >
       <Stack gap="tight">
         <Text role="heading">storefront is live</Text>
-        <Text subtle>Deployed by Priya Raman in 2 minutes.</Text>
+        <Text subtle>
+          Deployed by Priya Raman in 2 minutes.
+        </Text>
       </Stack>
-      <Button emphasis="outline" tone="neutral">
+      <Button
+        emphasis="outline"
+        tone="neutral"
+      >
         View logs
       </Button>
     </Row>

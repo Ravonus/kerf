@@ -30,7 +30,8 @@ import type { Meta } from '@weft-js/start'
 
 export const meta: Meta = {
   title: 'Pricing',
-  description: 'Three plans, billed monthly, and what each one includes.',
+  description: 'Three plans, billed monthly, and what each ' +
+    'one includes.',
 }
 
 export default function PricingPlans() {
@@ -49,28 +50,50 @@ A route like `/posts/[slug]` is many pages, and each should say what it is. Make
 
 ```tsx
 // src/routes/posts/[slug].tsx
-import { notFound, type LoadArgs, type Meta, type Prerender, type RouteProps } from '@weft-js/start'
+import { notFound } from '@weft-js/start'
+import type {
+  LoadArgs,
+  Meta,
+  Prerender,
+  RouteProps,
+} from '@weft-js/start'
 
 const POSTS = [
-  { slug: 'run-once', title: 'Components run once', summary: 'Why a weft component body never runs twice, and what that changes.' },
-  { slug: 'boxes', title: 'State is a box', summary: 'How .value lets the compiler wire each read straight to the page.' },
+  {
+    slug: 'run-once',
+    title: 'Components run once',
+    summary: 'Why a weft component body never runs twice, ' +
+      'and what that changes.',
+  },
+  {
+    slug: 'boxes',
+    title: 'State is a box',
+    summary: 'How .value lets the compiler wire each read ' +
+      'straight to the page.',
+  },
 ]
 
-export const load = ({ params }: LoadArgs<'/posts/[slug]'>) => POSTS.find(p => p.slug === params.slug) ?? notFound()
+export const load = ({ params }: LoadArgs<'/posts/[slug]'>) =>
+  POSTS.find(p => p.slug === params.slug) ?? notFound()
 
-export const meta: Meta<typeof load, '/posts/[slug]'> = ({ data }) => ({
-  title: data.title,
-  description: data.summary,
-  og: { type: 'article' },
-})
+export const meta: Meta<typeof load, '/posts/[slug]'> =
+  ({ data }) => ({
+    title: data.title,
+    description: data.summary,
+    og: { type: 'article' },
+  })
 
-export const prerender: Prerender<'/posts/[slug]'> = () => POSTS.map(p => ({ slug: p.slug }))
+export const prerender: Prerender<'/posts/[slug]'> = () =>
+  POSTS.map(p => ({ slug: p.slug }))
 
-export default function Post(props: RouteProps<typeof load, '/posts/[slug]'>) {
+export default function Post(
+  props: RouteProps<typeof load, '/posts/[slug]'>,
+) {
+  const { data } = props
   return (
     <article>
-      <h1>{props.data.title}</h1>
-      <p>{props.data.summary}</p>
+      <h1>{data.title}</h1>
+      <p>{data.summary}</p>
     </article>
   )
 }
@@ -104,10 +127,15 @@ import type { Meta } from '@weft-js/start'
 
 export const meta: Meta = {
   title: 'Components run once',
-  description: 'Why a weft component body never runs twice, and what that changes.',
+  description: 'Why a weft component body never runs twice, ' +
+    'and what that changes.',
   og: { type: 'article' },
   twitter: { creator: '@acme' },
-  jsonLd: { '@context': 'https://schema.org', '@type': 'Article', headline: 'Components run once' },
+  jsonLd: {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: 'Components run once',
+  },
 }
 ```
 
@@ -202,12 +230,32 @@ metadata, the site, and the title and description the built-in card would show:
 import type { OgProps } from '@weft-js/start'
 import type { load } from './[slug]'
 
-export default function PostCard(props: OgProps<typeof load, '/posts/[slug]'>) {
+export default function PostCard(
+  props: OgProps<typeof load, '/posts/[slug]'>,
+) {
+  const { data, site } = props
   return (
-    <div style="display:flex;flex-direction:column;justify-content:space-between;width:100%;height:100%;padding:72px;background-color:#0b120d;color:#f2f0e8">
-      <p style="margin:0;font-size:28px;color:#6ee7a0">{props.site.name ?? 'Blog'}</p>
-      <h1 style="margin:0;font-size:76px;line-height:1.05">{props.data.title}</h1>
-      <p style="margin:0;font-size:30px;color:#b9bfb4">{props.data.summary}</p>
+    <div
+      style={
+        'display:flex;' +
+        'flex-direction:column;' +
+        'justify-content:space-between;' +
+        'width:100%;' +
+        'height:100%;' +
+        'padding:72px;' +
+        'background-color:#0b120d;' +
+        'color:#f2f0e8'
+      }
+    >
+      <p style="margin:0;font-size:28px;color:#6ee7a0">
+        {site.name ?? 'Blog'}
+      </p>
+      <h1 style="margin:0;font-size:76px;line-height:1.05">
+        {data.title}
+      </h1>
+      <p style="margin:0;font-size:30px;color:#b9bfb4">
+        {data.summary}
+      </p>
     </div>
   )
 }
@@ -281,30 +329,52 @@ description from its tagline.
 
 ```tsx
 // src/routes/products/[id].tsx
-import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
+import { notFound } from '@weft-js/start'
+import type { LoadArgs, Meta, RouteProps } from '@weft-js/start'
 
-const PRODUCTS = [{ id: 'kettle', name: 'Pour-over kettle', tagline: 'A gooseneck kettle that holds its heat for an hour.' }]
+const PRODUCTS = [{
+  id: 'kettle',
+  name: 'Pour-over kettle',
+  tagline: 'A gooseneck kettle that holds its heat for an hour.',
+}]
 
-export const load = ({ params }: LoadArgs<'/products/[id]'>) => PRODUCTS.find(p => p.id === params.id) ?? notFound()
+export const load = ({ params }: LoadArgs<'/products/[id]'>) =>
+  PRODUCTS.find(p => p.id === params.id) ?? notFound()
 
 export const meta: Meta = { title: 'Product' }
 
-export default function ProductPage(props: RouteProps<typeof load, '/products/[id]'>) {
-  return <h1>{props.data.name}</h1>
+export default function ProductPage(
+  props: RouteProps<typeof load, '/products/[id]'>,
+) {
+  const { data } = props
+  return <h1>{data.name}</h1>
 }
 ```
 :::solution
 ```tsx
-import { notFound, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
+import { notFound } from '@weft-js/start'
+import type { LoadArgs, Meta, RouteProps } from '@weft-js/start'
 
-const PRODUCTS = [{ id: 'kettle', name: 'Pour-over kettle', tagline: 'A gooseneck kettle that holds its heat for an hour.' }]
+const PRODUCTS = [{
+  id: 'kettle',
+  name: 'Pour-over kettle',
+  tagline: 'A gooseneck kettle that holds its heat for an hour.',
+}]
 
-export const load = ({ params }: LoadArgs<'/products/[id]'>) => PRODUCTS.find(p => p.id === params.id) ?? notFound()
+export const load = ({ params }: LoadArgs<'/products/[id]'>) =>
+  PRODUCTS.find(p => p.id === params.id) ?? notFound()
 
-export const meta: Meta<typeof load, '/products/[id]'> = ({ data }) => ({ title: data.name, description: data.tagline })
+export const meta: Meta<typeof load, '/products/[id]'> =
+  ({ data }) => ({
+    title: data.name,
+    description: data.tagline,
+  })
 
-export default function ProductPage(props: RouteProps<typeof load, '/products/[id]'>) {
-  return <h1>{props.data.name}</h1>
+export default function ProductPage(
+  props: RouteProps<typeof load, '/products/[id]'>,
+) {
+  const { data } = props
+  return <h1>{data.name}</h1>
 }
 ```
 
@@ -323,8 +393,12 @@ and build `meta` from `data`:
 ```tsx
 import type { LoadArgs, Meta } from '@weft-js/start'
 
-export const load = ({ ctx }: LoadArgs) => ({ name: ctx.user?.name ?? 'Your' })
-export const meta: Meta<typeof load> = ({ data }) => ({ title: `${data.name}'s dashboard` })
+export const load = ({ ctx }: LoadArgs) => ({
+  name: ctx.user?.name ?? 'Your',
+})
+export const meta: Meta<typeof load> = ({ data }) => ({
+  title: `${data.name}'s dashboard`,
+})
 ```
 
 Better still, consider whether the name belongs in the title at all: a title is what a bookmark or a shared link shows,
@@ -340,11 +414,29 @@ in a corner. Which file, and which props?
 import type { OgProps } from '@weft-js/start'
 
 export default function Card(props: OgProps) {
+  const { title, description, site } = props
   return (
-    <div style="display:flex;flex-direction:column;justify-content:space-between;width:100%;height:100%;padding:64px;background-color:#f7f4ec;color:#1f1d18">
-      <h1 style="margin:0;font-size:72px;line-height:1.05">{props.title}</h1>
-      <p style="margin:0;font-size:30px;color:#615e56">{props.description}</p>
-      <p style="margin:0;font-size:26px;font-weight:700">{props.site.name}</p>
+    <div
+      style={
+        'display:flex;' +
+        'flex-direction:column;' +
+        'justify-content:space-between;' +
+        'width:100%;' +
+        'height:100%;' +
+        'padding:64px;' +
+        'background-color:#f7f4ec;' +
+        'color:#1f1d18'
+      }
+    >
+      <h1 style="margin:0;font-size:72px;line-height:1.05">
+        {title}
+      </h1>
+      <p style="margin:0;font-size:30px;color:#615e56">
+        {description}
+      </p>
+      <p style="margin:0;font-size:26px;font-weight:700">
+        {site.name}
+      </p>
     </div>
   )
 }

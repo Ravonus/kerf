@@ -23,7 +23,8 @@ the component the first examples test. Try it before you read its tests:
 A new app has no test runner. Add one, with jsdom and Testing Library, which `@weft-js/core/test` builds on:
 
 ```bash
-npm install -D vitest jsdom @testing-library/dom @testing-library/user-event
+npm install -D vitest jsdom @testing-library/dom \
+  @testing-library/user-event
 ```
 
 Then give vitest the weft compiler, so a `.tsx` test compiles the same way your app does:
@@ -77,7 +78,10 @@ export function Coupon() {
   return (
     <Card title="Your basket">
       <label>
-        Coupon <input value={code.value} onInput={e => (code.value = e.currentTarget.value)} />
+        Coupon <input
+          value={code.value}
+          onInput={e => (code.value = e.currentTarget.value)}
+        />
       </label>
       <Button onClick={apply}>Apply</Button>
       {error.value && <p role="alert">{error.value}</p>}
@@ -174,13 +178,18 @@ import { render, screen, user } from '@weft-js/core/test'
 import { expect, test } from 'vitest'
 import { Coupon } from './Coupon'
 
-test('an unknown code says so, and leaves the total alone', async () => {
-  render(Coupon)
-  await user.type(screen.getByLabelText('Coupon'), 'free')
-  await user.click(screen.getByRole('button', { name: 'Apply' }))
-  expect(screen.getByRole('alert').textContent).toBe("FREE isn't a code we know")
-  expect(screen.getByRole('status').textContent).toBe('Total: $40.00')
-})
+test(
+  'an unknown code says so, and leaves the total alone',
+  async () => {
+    render(Coupon)
+    await user.type(screen.getByLabelText('Coupon'), 'free')
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+    expect(screen.getByRole('alert').textContent)
+      .toBe("FREE isn't a code we know")
+    expect(screen.getByRole('status').textContent)
+      .toBe('Total: $40.00')
+  },
+)
 
 test('a good code clears the earlier error', async () => {
   render(Coupon)
@@ -211,7 +220,11 @@ export function SaveButton() {
     saved.value = true
     setTimeout(() => (saved.value = false), 2000)
   }
-  return <button type="button" onClick={save}>{saved.value ? 'Saved' : 'Save'}</button>
+  return (
+    <button type="button" onClick={save}>
+      {saved.value ? 'Saved' : 'Save'}
+    </button>
+  )
 }
 ```
 
@@ -255,8 +268,12 @@ import { defineState, derived, state } from '@weft-js/core'
 
 export const cart = defineState('cart', () => {
   const lines = state<Record<string, number>>({})
-  const count = derived(() => Object.values(lines.value).reduce((a, b) => a + b, 0))
-  const add = (id: string) => lines.set(d => { d[id] = (d[id] ?? 0) + 1 })
+  const count = derived(() =>
+    Object.values(lines.value).reduce((a, b) => a + b, 0),
+  )
+  const add = (id: string) => lines.set(d => {
+    d[id] = (d[id] ?? 0) + 1
+  })
   const remove = (id: string) => lines.set(d => { delete d[id] })
   return { lines, count, add, remove }
 })
@@ -301,8 +318,11 @@ function CartBadge() {
 }
 
 test('the badge counts a cart that already has things in it', () => {
-  render(CartBadge, {}, { state: { cart: { lines: { beans: 2, filter: 1 } } } })
-  expect(screen.getByRole('status').textContent).toBe('3 in your cart')
+  render(CartBadge, {}, {
+    state: { cart: { lines: { beans: 2, filter: 1 } } },
+  })
+  expect(screen.getByRole('status').textContent)
+    .toBe('3 in your cart')
 })
 ```
 
@@ -334,8 +354,14 @@ import { listTodos } from '../server/todos'
 
 export function OpenTodos() {
   const todos = listTodos()
-  const open = derived(() => (todos.value ?? []).filter(t => !t.done).length)
-  return todos.error ? <p role="alert">Sign in to see your todos.</p> : <p role="status">{open.value} open</p>
+  const open = derived(() =>
+    (todos.value ?? []).filter(t => !t.done).length,
+  )
+  return (
+    todos.error
+      ? <p role="alert">Sign in to see your todos.</p>
+      : <p role="status">{open.value} open</p>
+  )
 }
 ```
 
@@ -364,7 +390,8 @@ test('a signed-out visitor is asked to sign in', async () => {
   net.handle(listTodos, () => rows)
   render(OpenTodos)
   await net.settle()
-  expect(screen.getByRole('alert').textContent).toBe('Sign in to see your todos.')
+  expect(screen.getByRole('alert').textContent)
+    .toBe('Sign in to see your todos.')
 })
 ```
 
@@ -414,19 +441,25 @@ import { state } from '@weft-js/core'
 import { render, user, screen } from '@weft-js/core/test'
 import { expect, test } from 'vitest'
 
-const start = Array.from({ length: 50 }, (_, i) => ({ id: i, name: `Item ${i}`, price: 10 }))
+const start = Array.from({ length: 50 }, (_, i) => ({
+  id: i, name: `Item ${i}`, price: 10,
+}))
 
 function Prices() {
   const items = state(start)
   const cheaper = (id: number) => {
-    items.value = items.value.map(p => (p.id === id ? { ...p, price: p.price - 1 } : p))
+    items.value = items.value.map(p =>
+      p.id === id ? { ...p, price: p.price - 1 } : p,
+    )
   }
   return (
     <ul>
       {items.value.map(p => (
         <li key={p.id}>
           {p.name}: ${p.price}
-          <button type="button" onClick={() => cheaper(p.id)}>Cheaper {p.name}</button>
+          <button type="button" onClick={() => cheaper(p.id)}>
+            Cheaper {p.name}
+          </button>
         </li>
       ))}
     </ul>
@@ -435,7 +468,9 @@ function Prices() {
 
 test('a price change touches one row', async () => {
   render(Prices)
-  const button = screen.getByRole('button', { name: 'Cheaper Item 7' })
+  const button = screen.getByRole('button', {
+    name: 'Cheaper Item 7',
+  })
   await expect(() => user.click(button)).toTouchAtMost(1, { runs: 5 })
   expect(screen.getByText('Item 7: $9')).toBeTruthy()
 })
@@ -556,7 +591,8 @@ Pressing Apply with nothing typed should show "An empty code isn't a code we kno
 test('an empty code gets its own message', async () => {
   render(Coupon)
   await user.click(screen.getByRole('button', { name: 'Apply' }))
-  expect(screen.getByRole('alert').textContent).toBe("An empty code isn't a code we know")
+  expect(screen.getByRole('alert').textContent)
+    .toBe("An empty code isn't a code we know")
 })
 ```
 
@@ -607,10 +643,18 @@ export function CitySearch() {
     clearTimeout(timer)
     timer = setTimeout(() => (query.value = text), 300)
   }
-  const shown = derived(() => CITIES.filter(c => c.toLowerCase().includes(query.value.toLowerCase())))
+  const shown = derived(() => {
+    const word = query.value.toLowerCase()
+    return CITIES.filter(c => c.toLowerCase().includes(word))
+  })
   return (
     <>
-      <label>Search <input value={typed.value} onInput={e => onInput(e.currentTarget.value)} /></label>
+      <label>
+        Search <input
+          value={typed.value}
+          onInput={e => onInput(e.currentTarget.value)}
+        />
+      </label>
       <ul>{shown.value.map(c => <li key={c}>{c}</li>)}</ul>
     </>
   )
@@ -625,7 +669,9 @@ test('filters 300 ms after the last keystroke', async () => {
   await clock.advance(299)
   expect(screen.getAllByRole('listitem').length).toBe(4)
   await clock.advance(1)
-  expect(screen.getAllByRole('listitem').map(li => li.textContent)).toEqual(['Oslo', 'Osaka'])
+  const names = screen.getAllByRole('listitem')
+    .map(li => li.textContent)
+  expect(names).toEqual(['Oslo', 'Osaka'])
 })
 ```
 
@@ -641,7 +687,8 @@ mutation's `error` is set, without a database.
 test('a failed add reports its error', async () => {
   net.context({ user: { id: 'u1' } })
   net.fail(addTodo, new Error('disk full'))
-  await expect(addTodo({ title: 'Milk' })).rejects.toThrow('disk full')
+  await expect(addTodo({ title: 'Milk' }))
+    .rejects.toThrow('disk full')
   await net.settle()
   expect((addTodo.error.value as Error).message).toBe('disk full')
 })

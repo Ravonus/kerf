@@ -63,7 +63,14 @@ import { listTodos } from '#/server/todos'
 export const load = async () => ({ todos: await listTodos.fetch() })
 
 export default function Todos(props: RouteProps<typeof load>) {
-  return <ul>{props.data.todos.map(t => <li key={t.id}>{t.title}</li>)}</ul>
+  const { data } = props
+  return (
+    <ul>
+      {data.todos.map(t => (
+        <li key={t.id}>{t.title}</li>
+      ))}
+    </ul>
+  )
 }
 ```
 
@@ -105,8 +112,14 @@ export function Notes() {
   const notes = listNotes()
   return (
     <div>
-      <ul>{(notes.value ?? []).map(n => <li key={n}>{n}</li>)}</ul>
-      <Button onClick={() => void addNote({ text: 'Buy milk' })}>Add</Button>
+      <ul>
+        {(notes.value ?? []).map(n => (
+          <li key={n}>{n}</li>
+        ))}
+      </ul>
+      <Button onClick={() => void addNote({ text: 'Buy milk' })}>
+        Add
+      </Button>
     </div>
   )
 }
@@ -131,7 +144,12 @@ import { todos } from '#/db/schema'
 export const myTodos = query({
   tags: ['todos'],
   auth: 'user',
-  run: ({ ctx }) => ctx.db.select().from(todos).where(eq(todos.userId, ctx.user.id)).orderBy(asc(todos.createdAt)),
+  run: ({ ctx }) =>
+    ctx.db
+      .select()
+      .from(todos)
+      .where(eq(todos.userId, ctx.user.id))
+      .orderBy(asc(todos.createdAt)),
 })
 ```
 
@@ -145,7 +163,11 @@ Sign-in is Better Auth on your own database. `ctx.user` is the signed-in user or
 refuses anyone else, and a guard in a layout's `load` keeps visitors out of a section:
 
 ```tsx
-import { redirect, type LoadArgs, type RouteProps } from '@weft-js/start'
+import {
+  redirect,
+  type LoadArgs,
+  type RouteProps,
+} from '@weft-js/start'
 
 export const load = ({ ctx }: LoadArgs) => {
   if (!ctx.user) redirect('/login')
@@ -175,8 +197,14 @@ export function AddTodo() {
     <Form of={addTodo}>
       {(form: FormApi) => (
         <>
-          <Input label="New todo" name="title" error={form.error('title')} />
-          <Button type="submit" loading={form.pending.value}>Add</Button>
+          <Input
+            label="New todo"
+            name="title"
+            error={form.error('title')}
+          />
+          <Button type="submit" loading={form.pending.value}>
+            Add
+          </Button>
         </>
       )}
     </Form>
@@ -200,7 +228,11 @@ export function LiveList() {
   return (
     <section>
       <p>{todos.live.value}</p>
-      <ul>{(todos.value ?? []).map(t => <li key={t.id}>{t.title}</li>)}</ul>
+      <ul>
+        {(todos.value ?? []).map(t => (
+          <li key={t.id}>{t.title}</li>
+        ))}
+      </ul>
     </section>
   )
 }
@@ -237,7 +269,11 @@ function can require what a purchase grants:
 
 <!-- example: skip needs what `weft add pay` writes: `requires` is an option the pay plugin adds -->
 ```ts
-export const report = query({ auth: 'user', requires: ['pro'], run: () => buildReport() })
+export const report = query({
+  auth: 'user',
+  requires: ['pro'],
+  run: () => buildReport(),
+})
 ```
 
 Read **[Payments](/learn/payments)** to learn about products, checkout and entitlements.
@@ -250,7 +286,11 @@ and draws a share card for link previews:
 ```tsx
 import type { Meta } from '@weft-js/start'
 
-export const meta: Meta = { title: 'Pricing', description: 'Three plans, billed monthly, and what each one includes.' }
+export const meta: Meta = {
+  title: 'Pricing',
+  description:
+    'Three plans, billed monthly, and what each one includes.',
+}
 
 export default function Pricing() {
   return <h1>Pricing</h1>

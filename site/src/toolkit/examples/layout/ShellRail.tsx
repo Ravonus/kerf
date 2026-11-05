@@ -1,6 +1,12 @@
 import { state } from '@weft-js/core'
 import { Heading, Shell, Text } from '@weft-js/warp'
-import { AppWindow, MARK, ACCOUNT, weftNav, pageOf } from './shared'
+import {
+  AppWindow,
+  MARK,
+  ACCOUNT,
+  weftNav,
+  pageOf,
+} from './shared'
 
 export function ShellRail() {
   const page = state('deploys')
@@ -18,11 +24,15 @@ export function ShellRail() {
         collapsed={folded}
         account={ACCOUNT}
       >
-        <Heading level={1} role="heading">
+        <Heading
+          level={1}
+          role="heading"
+        >
           {pageOf[page.value]!}
         </Heading>
         <Text subtle>
-          The rail keeps icons and short labels. Its toggle opens the full sidebar.
+          The rail keeps icons and short labels. Its
+          toggle opens the full sidebar.
         </Text>
       </Shell>
     </AppWindow>

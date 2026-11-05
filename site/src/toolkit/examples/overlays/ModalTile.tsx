@@ -9,17 +9,26 @@ export function ModalTile() {
       open={open}
       size="sm"
       title="Rename project"
-      description="Everyone on the project sees the new name."
+      description={
+        'Everyone on the project sees the new name.'
+      }
       footer={
         <>
-          <Button emphasis="ghost" tone="neutral" data-close="">
+          <Button
+            emphasis="ghost"
+            tone="neutral"
+            data-close=""
+          >
             Cancel
           </Button>
           <Button data-close="">Save</Button>
         </>
       }
     >
-      <Input label="Project name" value="storefront" />
+      <Input
+        label="Project name"
+        value="storefront"
+      />
     </Modal>
   )
 }

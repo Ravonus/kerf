@@ -1,18 +1,25 @@
-import { defineState, derived, state } from '@weft-js/core'
+import {
+  defineState,
+  derived,
+  state,
+} from '@weft-js/core'
 import { Button, Card, Row, Tag } from '@weft-js/warp'
 
 const CITIES = ['Lisbon', 'Oslo', 'Osaka', 'Lima']
 
-// Every change to `pins` is in here. Components only read the scope and call its actions.
+// Every change to `pins` is in here. Components only read
+// the scope and call its actions.
 const board = defineState(
   'learn-board',
   () => {
     const pins = state<string[]>([])
     const count = derived(() => pins.value.length)
     const pin = (city: string) => {
-      if (!pins.value.includes(city)) pins.value = [...pins.value, city]
+      if (!pins.value.includes(city))
+        pins.value = [...pins.value, city]
     }
-    const unpin = (city: string) => (pins.value = pins.value.filter((c) => c !== city))
+    const unpin = (city: string) =>
+      (pins.value = pins.value.filter((c) => c !== city))
     const clear = () => (pins.value = [])
     return { pins, count, pin, unpin, clear }
   },
@@ -23,16 +30,31 @@ export default function Board() {
   const history = board.$history
   return (
     <Card title={`Pinned: ${board.count.value}`}>
-      <Row gap="tight" wrap>
+      <Row
+        gap="tight"
+        wrap
+      >
         {CITIES.map((c) => (
-          <Button key={c} size="sm" emphasis="soft" onClick={() => board.pin(c)}>
+          <Button
+            key={c}
+            size="sm"
+            emphasis="soft"
+            onClick={() => board.pin(c)}
+          >
             {c}
           </Button>
         ))}
       </Row>
-      <Row gap="tight" wrap>
+      <Row
+        gap="tight"
+        wrap
+      >
         {board.pins.value.map((c) => (
-          <Tag key={c} label={c} onRemove={() => board.unpin(c)}>
+          <Tag
+            key={c}
+            label={c}
+            onRemove={() => board.unpin(c)}
+          >
             {c}
           </Tag>
         ))}

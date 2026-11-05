@@ -6,6 +6,11 @@ import type { Knobs } from './shared'
 export function SegmentedPlay(p: Knobs) {
   const v = state('week')
   return (
-    <Segmented {...p} value={v.value} options={PERIODS} onChange={(next) => (v.value = next)} />
+    <Segmented
+      {...p}
+      value={v.value}
+      options={PERIODS}
+      onChange={(next) => (v.value = next)}
+    />
   )
 }

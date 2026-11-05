@@ -1,17 +1,28 @@
-import type { Scene, StagePiece, StagePainter } from '@weft-js/warp'
+import type {
+  Scene,
+  StagePiece,
+  StagePainter,
+} from '@weft-js/warp'
 
 export const STAGE = 'block-size:240px'
 
-// A token can hold light-dark(), which a canvas can't read, so let CSS resolve it first.
-export const token = (ctx: CanvasRenderingContext2D, name: string) => {
+// A token can hold light-dark(), which a canvas can't
+// read, so let CSS resolve it first.
+export const token = (
+  ctx: CanvasRenderingContext2D,
+  name: string,
+) => {
   ctx.canvas.style.color = `var(${name})`
   return getComputedStyle(ctx.canvas).color
 }
 
 export const SOFT = { angle: 30 }
 
-// A look is a set of painters plus a background and an overlay. This kit makes three from one set of shapes: clean
-// vector, pencil on paper, and neon. Only how a line and a fill are drawn changes between them.
+// A look is a set of painters plus a background and an
+// overlay. This kit makes three from one set of shapes:
+// clean
+// vector, pencil on paper, and neon. Only how a line and
+// a fill are drawn changes between them.
 export type LookName = 'flat' | 'sketch' | 'neon'
 
 export type Style = {
@@ -33,14 +44,16 @@ export type Style = {
   type: (p: StagePiece, s: Scene) => void
 }
 
-// Seeded per element, so a sketchy line wobbles the same way every frame instead of boiling.
+// Seeded per element, so a sketchy line wobbles the same
+// way every frame instead of boiling.
 export const seeds = new WeakMap<Element, number>()
 
 export let seedNext = 1
 
 export const seedOf = (el: Element) => {
   let v = seeds.get(el)
-  if (v === undefined) seeds.set(el, (v = seedNext++ * 7919))
+  if (v === undefined)
+    seeds.set(el, (v = seedNext++ * 7919))
   return v
 }
 
@@ -67,10 +80,21 @@ export function outline(
   const j = rng(seed),
     k = st.rough,
     pts: [number, number][] = []
-  const edge = (ax: number, ay: number, bx: number, by: number) => {
-    const n = Math.max(2, Math.round(Math.hypot(bx - ax, by - ay) / 28))
+  const edge = (
+    ax: number,
+    ay: number,
+    bx: number,
+    by: number,
+  ) => {
+    const n = Math.max(
+      2,
+      Math.round(Math.hypot(bx - ax, by - ay) / 28),
+    )
     for (let i = 0; i < n; i++)
-      pts.push([ax + ((bx - ax) * i) / n + j() * k, ay + ((by - ay) * i) / n + j() * k])
+      pts.push([
+        ax + ((bx - ax) * i) / n + j() * k,
+        ay + ((by - ay) * i) / n + j() * k,
+      ])
   }
   edge(x, y, x + w, y)
   edge(x + w, y, x + w, y + h)
@@ -84,7 +108,12 @@ export function outline(
   ctx.lineTo(pts[0]![0] + j() * k, pts[0]![1] + j() * k)
 }
 
-export function stroke(ctx: CanvasRenderingContext2D, color: string, width: number, st: Style) {
+export function stroke(
+  ctx: CanvasRenderingContext2D,
+  color: string,
+  width: number,
+  st: Style,
+) {
   ctx.strokeStyle = color
   ctx.lineWidth = width
   ctx.lineJoin = ctx.lineCap = 'round'
@@ -108,7 +137,8 @@ export function paint(
     ctx.fill()
     return
   }
-  // Pencil hatching: the shape clips a run of diagonal strokes.
+  // Pencil hatching: the shape clips a run of diagonal
+  // strokes.
   const [x, y, w, h] = box,
     gap = 7 / density
   ctx.save()
@@ -125,9 +155,16 @@ export function paint(
   ctx.restore()
 }
 
-export type PaintColor = (s: Scene, name: string) => string
+export type PaintColor = (
+  s: Scene,
+  name: string,
+) => string
 export type PaintRing = (p: StagePiece, s: Scene) => void
-export type PaintLift = (p: StagePiece, s: Scene, depth: number) => void
+export type PaintLift = (
+  p: StagePiece,
+  s: Scene,
+  depth: number,
+) => void
 export type PaintBody = (
   p: StagePiece,
   s: Scene,
@@ -153,8 +190,13 @@ export function surfacePainters(
       body(
         at,
         s,
-        outlineOnly ? c(s, p.hover ? st.soft : st.paper) : c(s, p.disabled ? st.soft : st.accent),
-        c(s, outlineOnly || st.rough ? st.ink : st.accent),
+        outlineOnly
+          ? c(s, p.hover ? st.soft : st.paper)
+          : c(s, p.disabled ? st.soft : st.accent),
+        c(
+          s,
+          outlineOnly || st.rough ? st.ink : st.accent,
+        ),
         outlineOnly ? 1.5 : 1,
       )
       if (p.hover && !st.hatch && !outlineOnly) {
@@ -166,9 +208,21 @@ export function surfacePainters(
           p.y + p.py,
           p.w * 0.7,
         )
-        g.addColorStop(0, `rgb(255 255 255 / ${0.28 * p.hover})`)
+        g.addColorStop(
+          0,
+          `rgb(255 255 255 / ${0.28 * p.hover})`,
+        )
         g.addColorStop(1, 'rgb(255 255 255 / 0)')
-        outline(s.ctx, at.x, at.y, at.w, at.h, at.r, st, seedOf(p.el))
+        outline(
+          s.ctx,
+          at.x,
+          at.y,
+          at.w,
+          at.h,
+          at.r,
+          st,
+          seedOf(p.el),
+        )
         s.ctx.fillStyle = g
         s.ctx.fill()
       }
@@ -182,7 +236,14 @@ export function surfacePainters(
         p,
         s,
         c(s, st.paper),
-        c(s, chosen ? st.accent : st.rough ? st.ink : st.soft),
+        c(
+          s,
+          chosen
+            ? st.accent
+            : st.rough
+              ? st.ink
+              : st.soft,
+        ),
         chosen ? 3 : 1.5,
       )
       ring(p, s)

@@ -3,7 +3,13 @@ import { Button, Modal, Text } from '@weft-js/warp'
 
 export function ModalPlay(p: {
   size: 'sm' | 'md' | 'lg'
-  placement: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'full'
+  placement:
+    | 'center'
+    | 'top'
+    | 'bottom'
+    | 'left'
+    | 'right'
+    | 'full'
   alert: boolean
   tone: 'neutral' | 'critical'
   title: string
@@ -11,7 +17,11 @@ export function ModalPlay(p: {
   const open = state(false)
   return (
     <>
-      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        onClick={() => (open.value = true)}
+      >
         Open the modal
       </Button>
       <Modal
@@ -19,12 +29,16 @@ export function ModalPlay(p: {
         size={p.size}
         placement={p.placement}
         alert={p.alert}
-        tone={p.tone === 'critical' ? 'critical' : undefined}
+        tone={
+          p.tone === 'critical' ? 'critical' : undefined
+        }
         title={p.title}
         description="Everyone on the project sees this."
         footer={<Button data-close="">Done</Button>}
       >
-        <Text subtle>Press Done, the cross, or Escape to close.</Text>
+        <Text subtle>
+          Press Done, the cross, or Escape to close.
+        </Text>
       </Modal>
     </>
   )

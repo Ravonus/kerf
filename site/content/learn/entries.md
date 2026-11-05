@@ -24,14 +24,23 @@ import { state } from '@weft-js/core'
 const FRUIT = ['apple', 'pear', 'plum']
 
 export function Stock() {
-  const stock = state<Record<string, number>>({ apple: 3, pear: 0, plum: 7 })
-  const restock = (fruit: string) => stock.set(d => { d[fruit] = (d[fruit] ?? 0) + 1 })
+  const stock = state<Record<string, number>>({
+    apple: 3,
+    pear: 0,
+    plum: 7,
+  })
+  const restock = (fruit: string) =>
+    stock.set((d) => {
+      d[fruit] = (d[fruit] ?? 0) + 1
+    })
   return (
     <ul>
-      {FRUIT.map(f => (
+      {FRUIT.map((f) => (
         <li key={f}>
           {f}: {stock.get(f)}
-          <button type="button" onClick={() => restock(f)}>+1</button>
+          <button type="button" onClick={() => restock(f)}>
+            +1
+          </button>
         </li>
       ))}
     </ul>
@@ -65,9 +74,15 @@ calls them, so an app that never uses them doesn't ship them. If you build the m
 `box.set(update)` copies the value one level, hands the copy to `update` to change, and writes it back as a new value:
 
 ```ts
-stock.set(d => { d.pear = 5 })                      // one entry
-stock.set(d => { d.kiwi = 1 })                      // a new entry
-stock.set(d => { d.apple = (d.apple ?? 0) - 1 })    // from its old value
+stock.set((d) => {
+  d.pear = 5
+}) // one entry
+stock.set((d) => {
+  d.kiwi = 1
+}) // a new entry
+stock.set((d) => {
+  d.apple = (d.apple ?? 0) - 1
+}) // from its old value
 ```
 
 It's the same as writing `stock.value = { ...stock.value, pear: 5 }`, in a form that's harder to get wrong. After the
@@ -80,8 +95,12 @@ write, weft compares the entries that `get` readers are following. Only those wh
 too, and its `get` readers see the same object as before, so they don't re-run:
 
 ```ts
-cart.set(d => { d.p1!.qty++ })                          // wrong: the entry is the same object
-cart.set(d => { d.p1 = { ...d.p1!, qty: d.p1!.qty + 1 } }) // right: a new entry
+cart.set((d) => {
+  d.p1!.qty++
+}) // wrong: the entry is the same object
+cart.set((d) => {
+  d.p1 = { ...d.p1!, qty: d.p1!.qty + 1 }
+}) // right: a new entry
 ```
 
 Replace the entry you change. Keep entries small and flat, a number or a small object, and this stays short.
@@ -99,24 +118,44 @@ import { derived, state, type State } from '@weft-js/core'
 
 type Product = { id: string; name: string }
 
-function Line(props: { product: Product; cart: State<Record<string, number>> }) {
-  const qty = derived(() => props.cart.get(props.product.id) ?? 0)
-  const add = () => props.cart.set(d => { d[props.product.id] = qty.value + 1 })
+function Line(props: {
+  product: Product
+  cart: State<Record<string, number>>
+}) {
+  const { product, cart } = props
+  const qty = derived(() => cart.get(product.id) ?? 0)
+  const add = () =>
+    cart.set((d) => {
+      d[product.id] = qty.value + 1
+    })
   return (
     <li>
-      {props.product.name}: {qty.value}
-      <button type="button" onClick={add}>+1</button>
+      {product.name}: {qty.value}
+      <button type="button" onClick={add}>
+        +1
+      </button>
     </li>
   )
 }
 
 export function Cart(props: { products: Product[] }) {
+  const { products } = props
   const cart = state<Record<string, number>>({})
-  const count = derived(() => Object.values(cart.value).reduce((a, b) => a + b, 0))
+  const count = derived(() =>
+    Object.values(cart.value).reduce((a, b) => a + b, 0),
+  )
   return (
     <section>
       <h2>{count.value} items</h2>
-      <ul>{props.products.map(p => <Line key={p.id} product={p} cart={cart} />)}</ul>
+      <ul>
+        {products.map((p) => (
+          <Line
+            key={p.id}
+            product={p}
+            cart={cart}
+          />
+        ))}
+      </ul>
     </section>
   )
 }
@@ -135,7 +174,9 @@ The other half of a fast list is item identity. A keyed list keeps one row per k
 new object, it updates that row in place. So for an array of objects, replace only the item that changed:
 
 ```ts
-products.value = products.value.map(p => (p.id === id ? { ...p, price } : p))
+products.value = products.value.map((p) =>
+  p.id === id ? { ...p, price } : p,
+)
 ```
 
 Copying every item, `products.value.map(p => ({ ...p, price }))`, gives each one a new identity, so every row re-runs,
@@ -155,11 +196,15 @@ import { state } from '@weft-js/core'
 type Guest = { id: number; name: string }
 
 function GuestRow(props: { guest: Guest }) {
+  const { guest } = props
   const note = state('')
   return (
     <label>
-      {props.guest.name}
-      <input value={note.value} onInput={e => (note.value = e.currentTarget.value)} />
+      {guest.name}
+      <input
+        value={note.value}
+        onInput={(e) => (note.value = e.currentTarget.value)}
+      />
     </label>
   )
 }
@@ -171,8 +216,15 @@ export function Guests() {
   ])
   return (
     <section>
-      {guests.value.map(g => <GuestRow key={g.id} guest={g} />)}
-      <button type="button" onClick={() => (guests.value = [...guests.value].reverse())}>Reverse</button>
+      {guests.value.map((g) => (
+        <GuestRow key={g.id} guest={g} />
+      ))}
+      <button
+        type="button"
+        onClick={() => (guests.value = [...guests.value].reverse())}
+      >
+        Reverse
+      </button>
     </section>
   )
 }
@@ -183,7 +235,7 @@ The rules are short:
 - **A key keeps its row.** Reorder the list, and each row moves, with its state and its DOM, focus and typed text
   included. Nothing is rebuilt.
 - **A new item under the same key updates the row.** Rename Ana (a new object with `id: 1`), and her row's
-  `props.guest.name` changes in place. Her note stays.
+  `guest.name` changes in place. Her note stays.
 - **A key that leaves takes its row with it.** Remove Ana, and her row is disposed of, with its note. Add her back, and
   she gets a new row with an empty note.
 
@@ -211,12 +263,24 @@ import { state } from '@weft-js/core'
 type Product = { id: string; name: string; price: number }
 
 export function PriceEditor(props: { product: Product }) {
-  const price = state.linked(() => props.product.price, { key: () => props.product.id })
+  const { product } = props
+  const price = state.linked(() => product.price, {
+    key: () => product.id,
+  })
   return (
     <label>
-      {props.product.name}
-      <input type="number" value={price.value} onInput={e => (price.value = e.currentTarget.valueAsNumber)} />
-      {price.conflict.value && <small>Changed to {price.conflict.value.theirs} while you were editing</small>}
+      {product.name}
+      <input
+        type="number"
+        value={price.value}
+        onInput={(e) => (price.value = e.currentTarget.valueAsNumber)}
+      />
+      {price.conflict.value && (
+        <small>
+          Changed to {price.conflict.value.theirs} while you were
+          editing
+        </small>
+      )}
     </label>
   )
 }
@@ -246,14 +310,27 @@ import { state } from '@weft-js/core'
 const FRUIT = ['apple', 'pear', 'plum']
 
 export function Stock() {
-  const stock = state<Record<string, number>>({ apple: 3, pear: 0, plum: 7 })
-  const sell = (f: string) => stock.set(d => { d[f] = Math.max(0, (d[f] ?? 0) - 1) })
+  const stock = state<Record<string, number>>({
+    apple: 3,
+    pear: 0,
+    plum: 7,
+  })
+  const sell = (f: string) =>
+    stock.set((d) => {
+      d[f] = Math.max(0, (d[f] ?? 0) - 1)
+    })
   return (
     <ul>
-      {FRUIT.map(f => (
+      {FRUIT.map((f) => (
         <li key={f}>
           {f}: {stock.get(f)}
-          <button type="button" disabled={!stock.get(f)} onClick={() => sell(f)}>−1</button>
+          <button
+            type="button"
+            disabled={!stock.get(f)}
+            onClick={() => sell(f)}
+          >
+            −1
+          </button>
         </li>
       ))}
     </ul>
@@ -268,7 +345,10 @@ A price feed calls `update` many times a second. Every row re-runs on every upda
 
 ```tsx
 function update(id: string, price: number) {
-  prices.value = prices.value.map(p => ({ ...p, price: p.id === id ? price : p.price }))
+  prices.value = prices.value.map((p) => ({
+    ...p,
+    price: p.id === id ? price : p.price,
+  }))
 }
 ```
 :::solution
@@ -283,14 +363,21 @@ export function Prices() {
     { id: 'b', name: 'Rye', price: 3 },
   ])
   const update = (id: string, price: number) => {
-    prices.value = prices.value.map(p => (p.id === id ? { ...p, price } : p))
+    prices.value = prices.value.map((p) =>
+      p.id === id ? { ...p, price } : p,
+    )
   }
   return (
     <ul>
-      {prices.value.map(p => (
+      {prices.value.map((p) => (
         <li key={p.id}>
           {p.name}: {p.price}
-          <button type="button" onClick={() => update(p.id, p.price + 1)}>Up</button>
+          <button
+            type="button"
+            onClick={() => update(p.id, p.price + 1)}
+          >
+            Up
+          </button>
         </li>
       ))}
     </ul>
@@ -309,19 +396,39 @@ import { state, type State } from '@weft-js/core'
 
 type Topic = { id: string; title: string }
 
-function TopicRow(props: { topic: Topic; votes: State<Record<string, number>> }) {
-  const vote = () => props.votes.set(d => { d[props.topic.id] = (d[props.topic.id] ?? 0) + 1 })
+function TopicRow(props: {
+  topic: Topic
+  votes: State<Record<string, number>>
+}) {
+  const { topic, votes } = props
+  const vote = () =>
+    votes.set((d) => {
+      d[topic.id] = (d[topic.id] ?? 0) + 1
+    })
   return (
     <li>
-      {props.topic.title}: {props.votes.get(props.topic.id) ?? 0}
-      <button type="button" onClick={vote}>Vote</button>
+      {topic.title}: {votes.get(topic.id) ?? 0}
+      <button type="button" onClick={vote}>
+        Vote
+      </button>
     </li>
   )
 }
 
 export function Topics(props: { topics: Topic[] }) {
+  const { topics } = props
   const votes = state<Record<string, number>>({})
-  return <ul>{props.topics.map(t => <TopicRow key={t.id} topic={t} votes={votes} />)}</ul>
+  return (
+    <ul>
+      {topics.map((t) => (
+        <TopicRow
+          key={t.id}
+          topic={t}
+          votes={votes}
+        />
+      ))}
+    </ul>
+  )
 }
 ```
 The row gets the box and reads its own entry with `.get`, so it follows only that entry.

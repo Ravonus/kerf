@@ -41,7 +41,11 @@ import { Button } from '@weft-js/warp'
 
 export function Like() {
   const likes = state(0)
-  return <Button onClick={() => likes.value++}>♥ {likes.value}</Button>
+  return (
+    <Button onClick={() => likes.value++}>
+      ♥ {likes.value}
+    </Button>
+  )
 }
 ```
 
@@ -76,9 +80,16 @@ import { state } from '@weft-js/core'
 
 export function makeTodos() {
   const todos = state([{ id: 0, title: 'Buy milk', done: false }])
-  const add = (title: string) => (todos.value = [...todos.value, { id: todos.value.length, title, done: false }])
-  const toggle = (id: number) => (todos.value = todos.value.map(t => (t.id === id ? { ...t, done: !t.done } : t)))
-  const rename = (title: string) => todos.set(d => { d[0] = { ...d[0]!, title } })
+  const add = (title: string) => (todos.value = [
+    ...todos.value,
+    { id: todos.value.length, title, done: false },
+  ])
+  const toggle = (id: number) => (todos.value = todos.value.map(
+    t => (t.id === id ? { ...t, done: !t.done } : t),
+  ))
+  const rename = (title: string) => todos.set(d => {
+    d[0] = { ...d[0]!, title }
+  })
   return { todos, add, toggle, rename }
 }
 ```

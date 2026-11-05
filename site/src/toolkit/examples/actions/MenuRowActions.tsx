@@ -1,7 +1,10 @@
 import { Menu, Row, Stack, Text } from '@weft-js/warp'
 
 export const MenuRowActions = () => (
-  <Row justify="between" gap="group">
+  <Row
+    justify="between"
+    gap="group"
+  >
     <Stack gap="hair">
       <Text role="heading">checkout</Text>
       <Text subtle>Live in eu-west</Text>
@@ -9,7 +12,11 @@ export const MenuRowActions = () => (
     <Menu
       label="Manage"
       align="end"
-      trigger={{ emphasis: 'ghost', tone: 'neutral', size: 'sm' }}
+      trigger={{
+        emphasis: 'ghost',
+        tone: 'neutral',
+        size: 'sm',
+      }}
       items={[
         { label: 'Open logs', icon: 'external' },
         { label: 'Redeploy', icon: 'rocket' },

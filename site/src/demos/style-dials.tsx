@@ -1,5 +1,13 @@
 import { state } from '@weft-js/core'
-import { Badge, Button, Card, Input, Row, Segmented, Stack } from '@weft-js/warp'
+import {
+  Badge,
+  Button,
+  Card,
+  Input,
+  Row,
+  Segmented,
+  Stack,
+} from '@weft-js/warp'
 
 type Theme = 'light' | 'dark'
 type Expression = 'quiet' | 'balanced' | 'vivid'
@@ -44,12 +52,23 @@ export default function Dials() {
         options={DENSITIES}
         onChange={(next) => (density.value = next)}
       />
-      {/* The dials are data attributes. Everything inside this div reads its tokens from them. */}
-      <div data-theme={theme.value} data-expression={expression.value} data-density={density.value}>
-        <Card eyebrow="Coffee" title="House blend, 250 g">
+      {/* The dials are data attributes. Everything inside
+          this div reads its tokens from them. */}
+      <div
+        data-theme={theme.value}
+        data-expression={expression.value}
+        data-density={density.value}
+      >
+        <Card
+          eyebrow="Coffee"
+          title="House blend, 250 g"
+        >
           <Stack gap="related">
             <Input label="Gift note" />
-            <Row gap="tight" justify="between">
+            <Row
+              gap="tight"
+              justify="between"
+            >
               <Badge tone="positive">In stock</Badge>
               <Button>Add to cart</Button>
             </Row>

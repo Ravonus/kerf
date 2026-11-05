@@ -4,7 +4,11 @@ import { interval } from '@weft-js/core/browser'
 
 import { StreamChart } from '@weft-js/warp'
 
-import { seed, SPIKE, STREAM_TICKS } from './shared-dollars'
+import {
+  seed,
+  SPIKE,
+  STREAM_TICKS,
+} from './shared-dollars'
 
 import { REGIONS as _REGIONS } from '../../world'
 
@@ -13,7 +17,10 @@ export function StreamChartLive() {
   let t = 60
   interval(1000, () => {
     t++
-    data.value = [...data.value.slice(1), Math.round(52 + Math.sin(t / 5) * 14 + (t % 4))]
+    data.value = [
+      ...data.value.slice(1),
+      Math.round(52 + Math.sin(t / 5) * 14 + (t % 4)),
+    ]
   })
   return (
     <StreamChart

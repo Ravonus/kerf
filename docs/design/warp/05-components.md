@@ -31,12 +31,32 @@ QRCode is a display atom and lives here (§6), per `COVERAGE.md` §1.
 ### weft API conventions
 
 ```ts
-type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
+type Tone =
+  | 'neutral'
+  | 'accent'
+  | 'positive'
+  | 'caution'
+  | 'critical'
+  | 'info'
 type Size = 'sm' | 'md' | 'lg'
 type Reason = 'pointer' | 'keyboard' | 'programmatic'
-interface Bindable<T> { value?: T | Signal<T>; defaultValue?: T; onValueChange?(value: T, reason: Reason): void }
-interface Openable { open?: boolean | Signal<boolean>; defaultOpen?: boolean; onOpenChange?(open: boolean, reason: Reason | 'escape' | 'outside'): void }
-type Named = { 'aria-label': string } | { 'aria-labelledby': string } | { children: Text }   // D010 if none
+interface Bindable<T> {
+  value?: T | Signal<T>
+  defaultValue?: T
+  onValueChange?(value: T, reason: Reason): void
+}
+interface Openable {
+  open?: boolean | Signal<boolean>
+  defaultOpen?: boolean
+  onOpenChange?(
+    open: boolean,
+    reason: Reason | 'escape' | 'outside',
+  ): void
+}
+type Named =
+  | { 'aria-label': string }
+  | { 'aria-labelledby': string }
+  | { children: Text } // D010 if none
 ```
 
 Parts are dotted members (`Menu.Trigger`, `Menu.Content`, `Menu.Item`). Every component accepts `motion?: PresetName`
@@ -119,9 +139,15 @@ fold to an X (`base`, in-out) while the middle bar sweeps out to the right. **Th
 weft line takes the accent, so it follows scheme and tenant accent with no second asset.
 
 ```ts
-Button(props: Named & { emphasis?; tone?: Tone; size?: Size; fill?: boolean; loading?: boolean; onPress?(e): void })
+Button(props: Named & {
+  emphasis?; tone?: Tone; size?: Size; fill?: boolean;
+  loading?: boolean; onPress?(e): void
+})
 Toolbar(props: Named & { overflow?: 'menu' | 'scroll' | 'wrap' })
-CopyButton(props: { value: string | (() => string); label?: string; onCopied?(ok: boolean): void })
+CopyButton(props: {
+  value: string | (() => string); label?: string;
+  onCopied?(ok: boolean): void
+})
 ```
 
 **Press (redesign.md §3).** A press is instant and takes `--warp-press` scale; release settles on `--warp-ease-spring`. Vivid
@@ -187,13 +213,28 @@ input; ↑/↓ move the active option; Enter runs it; matched letters are `<mark
 change the snap, Enter cycles.
 
 ```ts
-Dialog(props: Openable & { title: Text; description?: Text; size?: Size; placement?: 'auto' | 'center'; role?: 'dialog' | 'alertdialog' })
-AlertDialog(props: Openable & { title: Text; description: Text; tone?: Tone; confirmLabel: Text; confirmText?: string; onConfirm(): void | Promise<void> })
-Sheet(props: Openable & Named & { side?: 'auto' | 'right' | 'left' | 'bottom'; snapPoints?: number[]; snap?: Bindable<number> })
-Menu.Root(props: Openable) · Menu.Trigger · Menu.Content · Menu.Item({ onSelect }) · Menu.CheckboxItem(Bindable<boolean>)
-Menu.RadioGroup(Bindable<string>) · Menu.Sub · Menu.Separator · Menu.GroupLabel
-Tooltip(props: { content: Text; side?: Side; kbd?: string })   // never essential: content must also exist elsewhere
-CommandPalette(props: Openable & { commands: Command[]; onRun?(cmd, reason): void })
+Dialog(props: Openable & {
+  title: Text; description?: Text; size?: Size;
+  placement?: 'auto' | 'center'; role?: 'dialog' | 'alertdialog'
+})
+AlertDialog(props: Openable & {
+  title: Text; description: Text; tone?: Tone;
+  confirmLabel: Text; confirmText?: string;
+  onConfirm(): void | Promise<void>
+})
+Sheet(props: Openable & Named & {
+  side?: 'auto' | 'right' | 'left' | 'bottom';
+  snapPoints?: number[]; snap?: Bindable<number>
+})
+Menu.Root(props: Openable) · Menu.Trigger · Menu.Content
+· Menu.Item({ onSelect }) · Menu.CheckboxItem(Bindable<boolean>)
+Menu.RadioGroup(Bindable<string>) · Menu.Sub
+· Menu.Separator · Menu.GroupLabel
+// Never essential: content must also exist elsewhere.
+Tooltip(props: { content: Text; side?: Side; kbd?: string })
+CommandPalette(props: Openable & {
+  commands: Command[]; onRun?(cmd, reason): void
+})
 ```
 
 Built in the redesign: `Menu`, `Accordion`, `Slider`, `Radio`/`RadioGroup`, `Ticker` and `toast.promise`. `Select` keeps a real

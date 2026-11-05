@@ -10,7 +10,11 @@ import { toneOf as _Shared3 } from './shared-tone-of'
 
 import { REGIONS as _REGIONS } from '../../world'
 
-export const VirtualListPlay = (p: { height: string; gap: number; estimate: number }) => (
+export const VirtualListPlay = (p: {
+  height: string
+  gap: number
+  estimate: number
+}) => (
   <VirtualList
     label="Request log"
     items={LINES}

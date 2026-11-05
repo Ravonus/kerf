@@ -12,23 +12,39 @@ import {
 } from '@weft-js/warp'
 import { wait, SSO } from './sign-in'
 
+const passwordError =
+  'That password does not match. Try ' +
+  'sample-password.'
+
+const passkeyDescription =
+  'WebAuthn is yours to run. This one is a stub.'
+
+const providerDescription =
+  'Each stays pending until your app redirects.'
+
+const sampleQrPath =
+  'M0 0h3v3H0zM5 0h3v3H5zM0 5h3v3H0zM4 ' +
+  '4h1v1H4zM6 6h1v1H6zM4 1h1v1H4zM1 ' +
+  '4h1v1H1z'
+
 export function ReauthDialogDelete() {
   const open = state(false)
   const error = state('')
   const confirm = (password: string) => {
     error.value =
-      password === 'sample-password' ? '' : 'That password does not match. Try sample-password.'
+      password === 'sample-password' ? '' : passwordError
     open.value = !!error.value
+  }
+  const requestDelete = () => {
+    error.value = ''
+    open.value = true
   }
   return (
     <>
       <Button
         tone="critical"
         emphasis="soft"
-        onClick={() => {
-          error.value = ''
-          open.value = true
-        }}
+        onClick={requestDelete}
       >
         Delete reports
       </Button>
@@ -47,16 +63,20 @@ export function ReauthDialogDelete() {
 
 export function PasskeyButtonSignIn() {
   const done = state(false)
+  const signIn = async () => {
+    await wait(900)
+    done.value = true
+  }
   return (
-    <Stack gap="related" align="center">
-      <PasskeyButton
-        onPasskey={async () => {
-          await wait(900)
-          done.value = true
-        }}
-      />
+    <Stack
+      gap="related"
+      align="center"
+    >
+      <PasskeyButton onPasskey={signIn} />
       <Text subtle>
-        {done.value ? 'Passkey accepted.' : 'WebAuthn is yours to run. This one is a stub.'}
+        {done.value
+          ? 'Passkey accepted.'
+          : passkeyDescription}
       </Text>
     </Stack>
   )
@@ -70,11 +90,14 @@ export function SsoButtonsProviders() {
   }
   return (
     <Stack gap="related">
-      <SsoButtons providers={SSO} onProvider={go} />
+      <SsoButtons
+        providers={SSO}
+        onProvider={go}
+      />
       <Text subtle>
         {picked.value
           ? `Would redirect to ${picked.value}.`
-          : 'Each stays pending until your app redirects.'}
+          : providerDescription}
       </Text>
     </Stack>
   )
@@ -89,22 +112,39 @@ const SampleQr = () => (
     role="img"
     aria-label="Sample QR code"
   >
-    <path d="M0 0h3v3H0zM5 0h3v3H5zM0 5h3v3H0zM4 4h1v1H4zM6 6h1v1H6zM4 1h1v1H4zM1 4h1v1H1z" />
+    <path d={sampleQrPath} />
   </svg>
 )
 
-const BACKUP_CODES = ['SAMP-LE01', 'SAMP-LE02', 'SAMP-LE03', 'SAMP-LE04']
+const BACKUP_CODES = [
+  'SAMP-LE01',
+  'SAMP-LE02',
+  'SAMP-LE03',
+  'SAMP-LE04',
+]
 
 export function MfaSetupAuthenticator() {
   const open = state(false)
   const on = state(false)
   return (
     <>
-      <Stack gap="related" align="center">
-        <Badge tone={on.value ? 'positive' : 'neutral'} dot>
-          {on.value ? 'Two-step is on' : 'Two-step is off'}
+      <Stack
+        gap="related"
+        align="center"
+      >
+        <Badge
+          tone={on.value ? 'positive' : 'neutral'}
+          dot
+        >
+          {on.value
+            ? 'Two-step is on'
+            : 'Two-step is off'}
         </Badge>
-        <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>
+        <Button
+          emphasis="outline"
+          tone="neutral"
+          onClick={() => (open.value = true)}
+        >
           Set up two-step sign-in
         </Button>
       </Stack>

@@ -51,8 +51,20 @@ export function Actions() {
   return (
     <>
       <Button icon="pencil">Edit</Button>
-      <Button icon={TrashIcon} tone="critical" emphasis="soft">Delete</Button>
-      <Menu label="More" items={[{ label: 'Copy link', icon: 'link' }, { label: 'Archive', icon: 'archive' }]} />
+      <Button
+        icon={TrashIcon}
+        tone="critical"
+        emphasis="soft"
+      >
+        Delete
+      </Button>
+      <Menu
+        label="More"
+        items={[
+          { label: 'Copy link', icon: 'link' },
+          { label: 'Archive', icon: 'archive' },
+        ]}
+      />
     </>
   )
 }
@@ -96,7 +108,13 @@ exactly this, and it becomes the button's accessible name:
 import { Button } from '@weft-js/warp'
 
 export function Close(props: { onClose: () => void }) {
-  return <Button emphasis="ghost" tone="neutral" icon="x" label="Close" onClick={props.onClose} />
+  return <Button
+    emphasis="ghost"
+    tone="neutral"
+    icon="x"
+    label="Close"
+    onClick={props.onClose}
+  />
 }
 ```
 
@@ -175,7 +193,9 @@ import { Icon, type IconName } from '@weft-js/warp'
 
 type Status = 'open' | 'shipped' | 'delivered'
 
-const ICON: Record<Status, IconName> = { open: 'circle', shipped: 'truck', delivered: 'check' }
+const ICON: Record<Status, IconName> = {
+  open: 'circle', shipped: 'truck', delivered: 'check',
+}
 
 export function StatusIcon(props: { status: Status }) {
   return <Icon name={ICON[props.status]} label={props.status} />
@@ -215,8 +235,16 @@ import { Button, Icon } from '@weft-js/warp'
 export function Actions(props: { syncing: boolean }) {
   return (
     <>
-      <Button emphasis="outline" tone="neutral"><Icon name="trash" action /> Empty bin</Button>
-      <RefreshIconAction action={props.syncing ? 'on' : 'hover'} label="Sync" />
+      <Button
+        emphasis="outline"
+        tone="neutral"
+      >
+        <Icon name="trash" action /> Empty bin
+      </Button>
+      <RefreshIconAction
+        action={props.syncing ? 'on' : 'hover'}
+        label="Sync"
+      />
     </>
   )
 }
@@ -233,11 +261,15 @@ Icons draw in `currentColor`, so an icon takes the colour of the text around it,
 icon too. Two hooks go further:
 
 ```css
-/* The stroke that says what the icon means (the "weft") in the accent colour. */
-.feature svg[data-icon] { --warp-icon-weft-color: var(--warp-color-accent-text); }
+/* The meaning-bearing stroke (the "weft") in the accent colour. */
+.feature svg[data-icon] {
+  --warp-icon-weft-color: var(--warp-color-accent-text);
+}
 
-/* A solid icon on a coloured surface: cut its marks out in that surface's colour. */
-.badge-solid svg[data-icon] { --warp-icon-knock: var(--warp-color-accent-solid); }
+/* Cut a solid icon's marks out in the surface colour. */
+.badge-solid svg[data-icon] {
+  --warp-icon-knock: var(--warp-color-accent-solid);
+}
 ```
 
 A solid icon's cut-out marks are drawn in `--warp-icon-knock`, which defaults to `Canvas`, the browser's page background colour. On a
@@ -279,9 +311,24 @@ import { Button, Row } from '@weft-js/warp'
 export function Formatting() {
   return (
     <Row gap="tight" role="toolbar" aria-label="Formatting">
-      <Button emphasis="ghost" tone="neutral" icon="bold" label="Bold" />
-      <Button emphasis="ghost" tone="neutral" icon="italic" label="Italic" />
-      <Button emphasis="ghost" tone="neutral" icon="link" label="Add link" />
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        icon="bold"
+        label="Bold"
+      />
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        icon="italic"
+        label="Italic"
+      />
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        icon="link"
+        label="Add link"
+      />
     </Row>
   )
 }
@@ -301,7 +348,12 @@ import { Toggle } from '@weft-js/warp'
 
 export function Favourite() {
   const on = state(false)
-  return <Toggle pressed={on.value} icon={on.value ? StarIconSolid : StarIcon} label="Favourite" onClick={() => (on.value = !on.value)} />
+  return <Toggle
+    pressed={on.value}
+    icon={on.value ? StarIconSolid : StarIcon}
+    label="Favourite"
+    onClick={() => (on.value = !on.value)}
+  />
 }
 ```
 
@@ -328,7 +380,9 @@ import { Icon, type IconName } from '@weft-js/warp'
 
 type Kind = 'order' | 'payment' | 'message'
 
-const ICON: Record<Kind, IconName> = { order: 'package', payment: 'wallet', message: 'mail' }
+const ICON: Record<Kind, IconName> = {
+  order: 'package', payment: 'wallet', message: 'mail',
+}
 
 export function Notice(props: { kind: Kind; text: string }) {
   return <p><Icon name={ICON[props.kind]} /> {props.text}</p>

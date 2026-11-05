@@ -4,7 +4,13 @@ import { Canvas } from '@weft-js/warp'
 import { token, STAGE } from './paint-primitives'
 
 // -- Canvas
-export function drawRequests({ ctx, width, height, time, still }: CanvasFrame) {
+export function drawRequests({
+  ctx,
+  width,
+  height,
+  time,
+  still,
+}: CanvasFrame) {
   const bar = width / TRAFFIC.length,
     grow = still ? 1 : Math.min(1, time / 0.8)
   ctx.clearRect(0, 0, width, height)

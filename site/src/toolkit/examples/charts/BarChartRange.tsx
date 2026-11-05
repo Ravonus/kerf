@@ -4,7 +4,11 @@ import { BarChart, Segmented } from '@weft-js/warp'
 
 import { COST_BY_SERVICE } from '../../world'
 
-import { dollars, SERVICES, RANGES } from './shared-dollars'
+import {
+  dollars,
+  SERVICES,
+  RANGES,
+} from './shared-dollars'
 
 export function BarChartRange() {
   const range = state('6')

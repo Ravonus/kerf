@@ -9,12 +9,17 @@ export function NavDown() {
     at.value = name
   }
   return (
-    <Nav label="Project" axis="y">
+    <Nav
+      label="Project"
+      axis="y"
+    >
       {PAGES.map((name) => (
         <a
           key={name}
           href={`#${name}`}
-          aria-current={at.value === name ? 'page' : undefined}
+          aria-current={
+            at.value === name ? 'page' : undefined
+          }
           onClick={(e) => go(e, name)}
         >
           {name}

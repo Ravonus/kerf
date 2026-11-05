@@ -2,7 +2,11 @@ import { DataGrid } from '@weft-js/warp'
 
 import { money as _Shared0 } from './shared-project'
 
-import { SPEND, SPEND_COLUMNS, OWN_KIDS } from './shared-statuses'
+import {
+  SPEND,
+  SPEND_COLUMNS,
+  OWN_KIDS,
+} from './shared-statuses'
 
 import { LAZY as _Shared2 } from './shared-lazy'
 

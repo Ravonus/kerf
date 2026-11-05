@@ -10,11 +10,17 @@ import {
   Text,
 } from '@weft-js/warp'
 import { Cell } from '../../world'
-import { MENTIONS, matching, MEMBERS } from './json-key-value'
+import {
+  MENTIONS,
+  matching,
+  MEMBERS,
+} from './json-key-value'
 
 export function MentionsInputComment() {
   const text = state(
-    'Can @[Jun Tanaka](user:jun) look at #[mobile-bff](project:mobile-bff) before the release? ',
+    'Can @[Jun Tanaka](user:jun) look at ' +
+      '#[mobile-bff](project:mobile-bff) ' +
+      'before the release? ',
   )
   const said = state<string[]>([])
   const post = (e: Event) => {
@@ -23,13 +29,25 @@ export function MentionsInputComment() {
     text.value = ''
   }
   return (
-    <Stack as="form" gap="related" onSubmit={post}>
-      <MentionsInput label="Comment" triggers={MENTIONS} value={text} />
+    <Stack
+      as="form"
+      gap="related"
+      onSubmit={post}
+    >
+      <MentionsInput
+        label="Comment"
+        triggers={MENTIONS}
+        value={text}
+      />
       <Row justify="end">
         <Button type="submit">Comment</Button>
       </Row>
       {said.value.map((s) => (
-        <Text key={s} role="code" subtle>
+        <Text
+          key={s}
+          role="code"
+          subtle
+        >
           {s}
         </Text>
       ))}
@@ -38,9 +56,15 @@ export function MentionsInputComment() {
 }
 
 export const MentionsInputStates = () => (
-  <Grid cols={3} gap="group">
+  <Grid
+    cols={3}
+    gap="group"
+  >
     <Cell name="Empty">
-      <MentionsInput label="Comment" triggers={MENTIONS} />
+      <MentionsInput
+        label="Comment"
+        triggers={MENTIONS}
+      />
     </Cell>
     <Cell name="Filled">
       <MentionsInput
@@ -50,7 +74,11 @@ export const MentionsInputStates = () => (
       />
     </Cell>
     <Cell name="Hint">
-      <MentionsInput label="Comment" triggers={MENTIONS} hint="Type @ to tag someone." />
+      <MentionsInput
+        label="Comment"
+        triggers={MENTIONS}
+        hint="Type @ to tag someone."
+      />
     </Cell>
     <Cell name="Invalid">
       <MentionsInput
@@ -82,22 +110,37 @@ export const MentionsInputStates = () => (
 /* ---- RichTextEditor ---- */
 
 const NOTES =
-  '<h2>October release</h2><p>Product images now come from the <strong>edge</strong>, about 40% faster.</p><ul><li>Apple Pay on the last checkout step</li><li>A shorter stale window</li></ul>'
+  '<h2>October release</h2><p>Product images now ' +
+  'come from the <strong>edge</strong>, about 40% ' +
+  'faster.</p><ul><li>Apple Pay on the last checkout ' +
+  'step</li><li>A shorter stale window</li></ul>'
 
 const NOTES_MD =
-  '## October release\n\nProduct images now come from the **edge**.\n\n- Apple Pay at checkout\n- A shorter stale window\n'
+  '## October release\n\nProduct images now ' +
+  'come from the **edge**.\n\n- Apple Pay at checkout' +
+  '\n- A shorter stale window\n'
 
-export const people = { search: (q: string) => Promise.resolve(matching(MEMBERS, q)) }
+export const people = {
+  search: (q: string) =>
+    Promise.resolve(matching(MEMBERS, q)),
+}
 
 export const RichTextEditorBasic = () => (
-  <RichTextEditor label="Release notes" defaultValue={NOTES} mentions={people} />
+  <RichTextEditor
+    label="Release notes"
+    defaultValue={NOTES}
+    mentions={people}
+  />
 )
 
 export const RichTextEditorBubble = () => (
   <RichTextEditor
     label="Release notes"
     toolbar="bubble"
-    defaultValue="<p>Select some of this text to see the toolbar.</p>"
+    defaultValue={
+      '<p>Select some of this text to see ' +
+      'the toolbar.</p>'
+    }
   />
 )
 
@@ -114,8 +157,15 @@ export function RichTextEditorMarkdown() {
   const text = state(NOTES_MD)
   return (
     <Stack gap="related">
-      <RichTextEditor label="Release notes" format="markdown" value={text} />
-      <CodeBlock code={text.value} language="markdown" />
+      <RichTextEditor
+        label="Release notes"
+        format="markdown"
+        value={text}
+      />
+      <CodeBlock
+        code={text.value}
+        language="markdown"
+      />
     </Stack>
   )
 }

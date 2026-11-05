@@ -4,10 +4,14 @@ weft reads what the app uses and says which hosts can run it, before a build and
 writes the host's files and a workflow, and `weft deploy` runs the host's own CLI and reports the URL.
 
 ```bash
-weft deploy hosts          # which hosts fit, why not, what each costs, and the suggestion
-weft deploy init           # the suggested host's files, a GitHub workflow, and `deploy` in weft.config.ts
-weft deploy                # a dry run: the build and the exact commands --yes would run
-weft deploy --yes          # a preview deploy; add --prod for production
+# Host fit, cost and suggestion
+weft deploy hosts
+# Host files, GitHub workflow and deploy config
+weft deploy init
+# Dry run: build and commands that --yes would run
+weft deploy
+# Preview; add --prod for production
+weft deploy --yes
 ```
 
 `weft deploy` without `--yes` runs nothing. An agent runs the dry run on its own, and asks before `--yes`: a deploy
@@ -34,11 +38,19 @@ It needs a second origin and a cookie both can read, and is designed (research 4
 
 ```ts
 deploy: {
-  target: 'fly',                                       // netlify | vercel | cloudflare | fly | render
-  fly: { app: 'shop', region: 'iad', volume: { name: 'data', sizeGb: 1 } },
-  ci: 'github',                                        // the workflow; false for none
+  // netlify | vercel | cloudflare | fly | render
+  target: 'fly',
+  fly: {
+    app: 'shop',
+    region: 'iad',
+    volume: { name: 'data', sizeGb: 1 },
+  },
+  ci: 'github', // the workflow; false for none
   branch: 'main',
-  cdn: { proxy: 'cloudflare', images: { provider: 'cloudinary', cloud: 'shop' } },
+  cdn: {
+    proxy: 'cloudflare',
+    images: { provider: 'cloudinary', cloud: 'shop' },
+  },
 }
 ```
 

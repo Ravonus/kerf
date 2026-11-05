@@ -4,21 +4,45 @@ import { Cell, REGIONS as _REGIONS } from '../../world'
 import { TODAY } from './shared-event'
 
 export const WeekPickerStates = () => (
-  <Grid cols={2} gap="group">
+  <Grid
+    cols={2}
+    gap="group"
+  >
     <Cell name="Empty">
-      <WeekPicker label="Week" today={TODAY} />
+      <WeekPicker
+        label="Week"
+        today={TODAY}
+      />
     </Cell>
     <Cell name="Hint">
-      <WeekPicker label="Week" today={TODAY} hint="Monday to Sunday." />
+      <WeekPicker
+        label="Week"
+        today={TODAY}
+        hint="Monday to Sunday."
+      />
     </Cell>
     <Cell name="Invalid">
-      <WeekPicker label="Week" today={TODAY} error="Choose the week you worked." />
+      <WeekPicker
+        label="Week"
+        today={TODAY}
+        error="Choose the week you worked."
+      />
     </Cell>
     <Cell name="Read-only">
-      <WeekPicker label="Week" today={TODAY} defaultValue="2026-W44" readonly />
+      <WeekPicker
+        label="Week"
+        today={TODAY}
+        defaultValue="2026-W44"
+        readonly
+      />
     </Cell>
     <Cell name="Disabled">
-      <WeekPicker label="Week" today={TODAY} defaultValue="2026-W44" disabled />
+      <WeekPicker
+        label="Week"
+        today={TODAY}
+        defaultValue="2026-W44"
+        disabled
+      />
     </Cell>
   </Grid>
 )

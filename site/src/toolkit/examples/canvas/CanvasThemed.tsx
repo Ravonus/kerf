@@ -2,7 +2,8 @@ import type { CanvasFrame } from '@weft-js/warp'
 import { Canvas } from '@weft-js/warp'
 import { token, STAGE } from './paint-primitives'
 
-// Colours read once and kept, then read again only when the theme changes: `onTheme` drops the cache.
+// Colours read once and kept, then read again only when
+// the theme changes: `onTheme` drops the cache.
 export const TONES_DRAWN = [
   '--warp-color-accent-solid',
   '--warp-color-positive-solid',

@@ -5,7 +5,11 @@ export function ModalCenter() {
   const open = state(false)
   return (
     <>
-      <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>
+      <Button
+        emphasis="outline"
+        tone="neutral"
+        onClick={() => (open.value = true)}
+      >
         Center
       </Button>
       <Modal
@@ -14,7 +18,9 @@ export function ModalCenter() {
         title="Rename project"
         footer={<Button data-close="">Done</Button>}
       >
-        <Text subtle>The default: centred on the page.</Text>
+        <Text subtle>
+          The default: centred on the page.
+        </Text>
       </Modal>
     </>
   )

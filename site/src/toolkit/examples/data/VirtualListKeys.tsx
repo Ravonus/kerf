@@ -1,6 +1,13 @@
 import { state } from '@weft-js/core'
 
-import { Row, Stack, Text, VirtualList } from '@weft-js/warp'
+import {
+  Row,
+  Stack,
+  Text,
+  VirtualList,
+} from '@weft-js/warp'
+
+import type { VirtualControl } from '@weft-js/warp'
 
 import { PROJECTS } from '../../world'
 
@@ -14,11 +21,20 @@ import { toneOf as _Shared3 } from './shared-tone-of'
 
 export function VirtualListKeys() {
   const picked = state(0)
+  const select = (
+    e: KeyboardEvent,
+    c: VirtualControl,
+  ) => {
+    if (e.key === 'Enter')
+      picked.value = PROJECTS.findIndex(
+        (p) => p.id === c.active(),
+      )
+  }
   return (
     <Stack gap="related">
       <Text subtle>
-        Press Tab into the list, then the arrow keys, Home and End. Picked:{' '}
-        {PROJECTS[picked.value]!.name}.
+        Press Tab into the list, then the arrow keys, Home
+        and End. Picked: {PROJECTS[picked.value]!.name}.
       </Text>
       <VirtualList
         label="Projects"
@@ -27,14 +43,19 @@ export function VirtualListKeys() {
         estimate={38}
         height="240px"
         roving
-        onRowKey={(e, c) => {
-          if (e.key === 'Enter') picked.value = PROJECTS.findIndex((p) => p.id === c.active())
-        }}
+        onRowKey={select}
       >
         {(p) => (
-          <Row justify="between" gap="tight">
+          <Row
+            justify="between"
+            gap="tight"
+          >
             <Text inline>{p().name}</Text>
-            <Text inline role="caption" subtle>
+            <Text
+              inline
+              role="caption"
+              subtle
+            >
               {p().region}
             </Text>
           </Row>

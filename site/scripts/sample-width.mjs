@@ -2,11 +2,22 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { SHOWN } from './content/displayed.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
 // Markdown container markers do not occupy columns in the rendered code block.
-const unquote = (line) => line.replace(/^(?:\s{0,3}>[ \t]?)+/, '')
+const unquote = (text, limit = Infinity) => {
+  let line = text
+  let depth = 0
+  while (depth < limit) {
+    const marker = /^ {0,3}>[ \t]?/.exec(line)
+    if (!marker) break
+    line = line.slice(marker[0].length)
+    depth++
+  }
+  return { line, depth }
+}
 const columns = (line) => [...line].reduce((n, c) => (c === '\t' ? n + 4 - (n % 4) : n + 1), 0)
 
 /** Return the line numbers and widths of code inside Markdown fences that exceed the limit. */
@@ -14,11 +25,21 @@ export function scanMarkdown(text, limit = 70) {
   const violations = []
   let fence = null
   for (const [index, raw] of text.split(/\r?\n/).entries()) {
-    const line = unquote(raw)
+    let quoted = unquote(raw, fence?.depth)
+    if (fence && quoted.depth < fence.depth) {
+      fence = null
+      quoted = unquote(raw)
+    }
+    const line = quoted.line
     if (!fence) {
       const match = /^(\s*(?:(?:[-+*]|\d+[.)])[ \t]+)?)(`{3,}|~{3,})(.*)$/.exec(line)
       if (match && !(match[2][0] === '`' && match[3].includes('`'))) {
-        fence = { char: match[2][0], length: match[2].length, indent: match[1].length }
+        fence = {
+          char: match[2][0],
+          length: match[2].length,
+          indent: match[1].length,
+          depth: quoted.depth,
+        }
       }
     } else {
       const closing = /^\s*(`+|~+)\s*$/.exec(line)
@@ -66,9 +87,12 @@ export function scanSamples(repo = root) {
     ...walk(join(repo, 'site/content'), (n) => n.endsWith('.md')),
     ...walk(join(repo, 'packages'), (n) => n === 'README.md' || n.endsWith('.md')),
   ]
-  const sources = ['site/src/toolkit/examples', 'site/src/demos'].flatMap((dir) =>
-    walk(join(repo, dir), (n) => /\.[cm]?[jt]sx?$/.test(n)),
+  const sources = ['site/src/toolkit/examples', 'site/src/demos', 'site/src/toolkit/world'].flatMap(
+    (dir) => walk(join(repo, dir), (n) => /\.[cm]?[jt]sx?$/.test(n)),
   )
+  const world = join(repo, 'site/src/toolkit/world.ts')
+  if (existsSync(world)) sources.push(world)
+  sources.push(...Object.values(SHOWN).map((path) => join(repo, path)))
   const files = [...new Set(markdown)]
     .filter(existsSync)
     .map((path) => [path, scanMarkdown])
@@ -78,11 +102,16 @@ export function scanSamples(repo = root) {
   )
 }
 
-/** Print warning-mode totals and return the violations for callers that need details. */
+/** Fail when any canonical code sample exceeds its width. */
 export function reportSampleWidths(repo = root) {
   const violations = scanSamples(repo)
-  const files = new Set(violations.map((v) => v.file)).size
-  console.warn(`[sample-width] ${violations.length} violations in ${files} files (warning)`)
+  if (violations.length) {
+    const details = violations.map(
+      (v) => `${v.file}:${v.line}: ${v.width} columns (limit ${v.limit})`,
+    )
+    throw new Error(`[sample-width] ${violations.length} violations:\n${details.join('\n')}`)
+  }
+  console.log('[sample-width] 0 violations')
   return violations
 }
 

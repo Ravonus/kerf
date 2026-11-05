@@ -14,5 +14,11 @@ import { REGIONS as _REGIONS } from '../../world'
 
 export function KanbanLimit() {
   const columns = state(OVER)
-  return <Kanban label="Over its limit" columns={columns} height="360px" />
+  return (
+    <Kanban
+      label="Over its limit"
+      columns={columns}
+      height="360px"
+    />
+  )
 }

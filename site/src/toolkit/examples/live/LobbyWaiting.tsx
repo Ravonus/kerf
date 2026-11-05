@@ -6,8 +6,12 @@ export function LobbyWaiting() {
   return (
     <>
       {waiting.value ? (
-        <Lobby title="Waiting for Sam Okafor" onCancel={() => (waiting.value = false)}>
-          Sam is running the incident review. You'll get in as soon as they let you.
+        <Lobby
+          title="Waiting for Sam Okafor"
+          onCancel={() => (waiting.value = false)}
+        >
+          Sam is running the incident review. You'll get
+          in as soon as they let you.
         </Lobby>
       ) : (
         <Row gap="related">

@@ -11,7 +11,9 @@
   every row re-runs on every change (1 DOM write, hundreds of re-runs). Replace only what changed:
 
   ```ts
-  products.value = products.value.map(p => (p.id === id ? { ...p, price } : p))
+  products.value = products.value.map(p =>
+    p.id === id ? { ...p, price } : p,
+  )
   ```
 
   The compiler sees this inside one file; `weft check` follows the box through props into other files.

@@ -1,5 +1,11 @@
 import { state } from '@weft-js/core'
-import { Button, InviteDialog, Stack, Text, Toaster } from '@weft-js/warp'
+import {
+  Button,
+  InviteDialog,
+  Stack,
+  Text,
+  Toaster,
+} from '@weft-js/warp'
 import { INVITE_ROLES } from '../../world'
 import { wait } from './shared'
 
@@ -8,12 +14,20 @@ export function InviteDialogTeam() {
   const sent = state<string[]>([])
   return (
     <>
-      <Stack gap="related" align="center">
-        <Button icon="plus" onClick={() => (open.value = true)}>
+      <Stack
+        gap="related"
+        align="center"
+      >
+        <Button
+          icon="plus"
+          onClick={() => (open.value = true)}
+        >
           Invite people
         </Button>
         <Text subtle>
-          {sent.value.length ? `Invited ${sent.value.join(', ')}` : '3 seats left on Team.'}
+          {sent.value.length
+            ? `Invited ${sent.value.join(', ')}`
+            : '3 seats left on Team.'}
         </Text>
       </Stack>
       <InviteDialog

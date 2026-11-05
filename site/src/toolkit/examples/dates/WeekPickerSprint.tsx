@@ -12,8 +12,15 @@ export function WeekPickerSprint() {
   const week = state<IsoWeek | null>('2026-W45')
   return (
     <Stack gap="related">
-      <WeekPicker label="Sprint week" today={TODAY} value={week} />
-      <Text subtle role="caption">
+      <WeekPicker
+        label="Sprint week"
+        today={TODAY}
+        value={week}
+      />
+      <Text
+        subtle
+        role="caption"
+      >
         Saved as {week.value ?? 'nothing'}
       </Text>
     </Stack>

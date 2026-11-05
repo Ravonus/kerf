@@ -2,20 +2,24 @@ import { context } from '@weft-js/core'
 import { Card, Heading, Inset } from '@weft-js/warp'
 
 type Level = 2 | 3 | 4 | 5 | 6
-// How deep a heading sits. Outside every Section it is the fallback, 2.
+// Heading depth. Outside every Section, the fallback
+// is 2.
 const LevelContext = context<Level>(2)
 
-function Section(props: { children?: unknown }) {
-  // Everything built inside reads one level deeper than this section does.
+function Section({ children }: { children?: unknown }) {
+  // Everything inside reads one level deeper than
+  // this section.
   const inner = Math.min(LevelContext.use + 1, 6) as Level
-  return LevelContext.provide(inner, () => <Inset as="section">{props.children}</Inset>)
+  return LevelContext.provide(inner, () => (
+    <Inset as="section">{children}</Inset>
+  ))
 }
 
-function Title(props: { children?: unknown }) {
+function Title({ children }: { children?: unknown }) {
   const level = LevelContext.use
   return (
     <Heading level={level}>
-      {props.children} (h{level})
+      {children} (h{level})
     </Heading>
   )
 }

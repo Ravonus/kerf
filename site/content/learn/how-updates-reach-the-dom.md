@@ -57,19 +57,24 @@ weft's compiler turns it into something like this. The real output uses generate
 but the shape is the same:
 
 ```js
-// The static markup, parsed once per module and cloned for each Counter.
-const template = tpl('<p>Clicked <!> times<button type="button">+1</button></p>')
+// Parsed once per module and cloned for each Counter.
+const template = tpl(
+  '<p>Clicked <!> times<button type="button">+1</button></p>',
+)
 
 export function Counter() {
   const count = state(0)
   const p = template()
   const marker = p.firstChild.nextSibling
   const button = p.lastChild
-  // One binding per element's dynamic attributes: read, then write what changed.
-  bind(() => (count.value > 9 ? 'big' : 'small'), (value, prev) => cls(p, value, prev))
-  // One binding per dynamic child: this one owns the text before the marker.
+  // One binding per element's dynamic attributes.
+  bind(
+    () => (count.value > 9 ? 'big' : 'small'),
+    (value, prev) => cls(p, value, prev),
+  )
+  // One binding per dynamic child: text before the marker.
   child(p, () => count.value, marker)
-  // The handler, stored on the element: one document listener serves every click.
+  // The handler is on the element; one listener serves clicks.
   button.$$click = () => count.value++
   return p
 }
@@ -129,7 +134,8 @@ export function Basket() {
   const total = derived(() => qty.value * 12)
   const addTwo = () => {
     qty.value += 2
-    console.log(total.value)   // 36: computed on this read, from the new qty
+    // 36: computed on this read, from the new qty
+    console.log(total.value)
   }
   return <Button onClick={addTwo}>Add two ({total.value})</Button>
 }
@@ -170,7 +176,10 @@ export function Rename() {
   return (
     <div>
       {editing.value
-        ? <Input label="Name" ref={(el: HTMLInputElement) => (field = el)} />
+        ? <Input
+          label="Name"
+          ref={(el: HTMLInputElement) => (field = el)}
+        />
         : <Button onClick={start}>Rename</Button>}
     </div>
   )
@@ -194,7 +203,11 @@ the writes inside belong together:
 ```tsx
 import { batch, type State } from '@weft-js/core'
 
-export function rename(name: { first: State<string>; last: State<string> }, first: string, last: string) {
+export function rename(
+  name: { first: State<string>; last: State<string> },
+  first: string,
+  last: string,
+) {
   batch(() => {
     name.first.value = first
     name.last.value = last
@@ -216,8 +229,10 @@ import { derived, state, untrack } from '@weft-js/core'
 export function makeReading() {
   const celsius = state(20)
   const label = state('Kitchen')
-  // Recomputes when the temperature changes. The label is read as it is then, without subscribing to it.
-  const line = derived(() => `${untrack(() => label.value)}: ${celsius.value} °C`)
+  // Recomputes on temperature changes; reads label untracked.
+  const line = derived(() =>
+    `${untrack(() => label.value)}: ${celsius.value} °C`,
+  )
   return { celsius, label, line }
 }
 ```
@@ -250,7 +265,8 @@ one interaction caused, and `toTouchAtMost(n, { runs })` turns that into an asse
 of a list re-run fails a test instead of slowing the app down later:
 
 ```tsx
-await expect(() => user.click(screen.getByRole('button'))).toTouchAtMost(1, { runs: 2 })
+await expect(() => user.click(screen.getByRole('button')))
+  .toTouchAtMost(1, { runs: 2 })
 ```
 
 See [Testing](/reference/testing).
@@ -283,7 +299,11 @@ export function Quiz() {
     n.value = n.value + 1
     console.log(n.value, double.value)
   }
-  return <Button onClick={go}>{n.value} doubled is {double.value}</Button>
+  return (
+    <Button onClick={go}>
+      {n.value} doubled is {double.value}
+    </Button>
+  )
 }
 ```
 :::solution
@@ -305,13 +325,19 @@ export function Packing() {
   const items = state<{ id: number; name: string }[]>([])
   let last: HTMLInputElement | undefined
   const add = () => {
-    items.value = [...items.value, { id: items.value.length, name: '' }]
+    items.value = [
+      ...items.value, { id: items.value.length, name: '' },
+    ]
     last?.focus()
   }
   return (
     <section>
       {items.value.map(item => (
-        <Input key={item.id} label={`Item ${item.id + 1}`} ref={(el: HTMLInputElement) => (last = el)} />
+        <Input
+          key={item.id}
+          label={`Item ${item.id + 1}`}
+          ref={(el: HTMLInputElement) => (last = el)}
+        />
       ))}
       <Button onClick={add}>Add an item</Button>
     </section>
@@ -330,14 +356,20 @@ export function Packing() {
   const items = state<{ id: number; name: string }[]>([])
   let last: HTMLInputElement | undefined
   const add = () => {
-    items.value = [...items.value, { id: items.value.length, name: '' }]
+    items.value = [
+      ...items.value, { id: items.value.length, name: '' },
+    ]
     flush()
     last?.focus()
   }
   return (
     <section>
       {items.value.map(item => (
-        <Input key={item.id} label={`Item ${item.id + 1}`} ref={(el: HTMLInputElement) => (last = el)} />
+        <Input
+          key={item.id}
+          label={`Item ${item.id + 1}`}
+          ref={(el: HTMLInputElement) => (last = el)}
+        />
       ))}
       <Button onClick={add}>Add an item</Button>
     </section>
@@ -355,7 +387,11 @@ version doesn't.
 ```tsx
 // React
 const [count, setCount] = useState(0)
-<button onClick={() => { setCount(count + 1); setCount(count + 1); setCount(count + 1) }}>+3</button>
+<button onClick={() => {
+  setCount(count + 1)
+  setCount(count + 1)
+  setCount(count + 1)
+}}>+3</button>
 ```
 :::solution
 ```tsx

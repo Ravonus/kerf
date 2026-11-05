@@ -11,4 +11,10 @@ export const DateFieldPlay = (p: {
   hint?: string | undefined
   disabled?: boolean | undefined
   weekNumbers?: boolean | undefined
-}) => <DateField defaultValue="2026-11-14" today={TODAY} {...p} />
+}) => (
+  <DateField
+    defaultValue="2026-11-14"
+    today={TODAY}
+    {...p}
+  />
+)

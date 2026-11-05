@@ -15,16 +15,23 @@ export default function Labels() {
   }
   return (
     <Card title="Newsletter">
-      <form onSubmit={submit} noValidate>
+      <form
+        onSubmit={submit}
+        noValidate
+      >
         <Stack gap="related">
-          {/* label is required: it is the field's accessible name. error sets aria-invalid and is read with the field. */}
+          {/* label is required: it is the field's
+              accessible name. error sets aria-invalid
+              and is read with the field. */}
           <Input
             label="Email"
             type="email"
             hint="One email a month."
             error={problem.value}
             value={email.value}
-            onInput={(e) => (email.value = e.currentTarget.value)}
+            onInput={(e) =>
+              (email.value = e.currentTarget.value)
+            }
           />
           <Button type="submit">Sign up</Button>
         </Stack>

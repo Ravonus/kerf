@@ -1,5 +1,13 @@
-import { state } from '@weft-js/core'
-import { Card, Input, NumberField, RadioGroup, Select, Switch, Textarea } from '@weft-js/warp'
+import { derived, state } from '@weft-js/core'
+import {
+  Card,
+  Input,
+  NumberField,
+  RadioGroup,
+  Select,
+  Switch,
+  Textarea,
+} from '@weft-js/warp'
 
 type Size = 'small' | 'large'
 
@@ -10,20 +18,31 @@ export default function Order() {
   const size = state<Size>('small')
   const milk = state<string | null>('oat')
   const iced = state(false)
+  const customer = derived(() => name.value || 'Someone')
   return (
     <Card title="One of each">
       <Input
         label="Name"
         value={name.value}
-        onInput={(e) => (name.value = e.currentTarget.value)}
+        onInput={(e) =>
+          (name.value = e.currentTarget.value)
+        }
       />
       <Textarea
         label="Note"
         value={note.value}
-        onInput={(e) => (note.value = e.currentTarget.value)}
+        onInput={(e) =>
+          (note.value = e.currentTarget.value)
+        }
       />
-      {/* NumberField and Select take the box itself and write it. */}
-      <NumberField label="Cups" min={1} max={9} value={cups} />
+      {/* NumberField and Select take the box itself
+          and write it. */}
+      <NumberField
+        label="Cups"
+        min={1}
+        max={9}
+        value={cups}
+      />
       <Select
         label="Milk"
         value={milk}
@@ -44,15 +63,19 @@ export default function Order() {
       />
       <Switch
         checked={iced.value}
-        onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
-          (iced.value = e.currentTarget.checked)
-        }
+        onChange={(
+          e: Event & { currentTarget: HTMLInputElement },
+        ) => (iced.value = e.currentTarget.checked)}
       >
         Iced
       </Switch>
       <p>
-        {name.value || 'Someone'} wants {cups.value ?? 0} {size.value} {iced.value ? 'iced ' : ''}
-        {milk.value === 'none' ? 'black' : `${milk.value ?? ''} milk`} coffee
+        {customer.value} wants {cups.value ?? 0}{' '}
+        {size.value} {iced.value ? 'iced ' : ''}
+        {milk.value === 'none'
+          ? 'black'
+          : `${milk.value ?? ''} milk`}{' '}
+        coffee
         {note.value ? `: “${note.value}”` : '.'}
       </p>
     </Card>

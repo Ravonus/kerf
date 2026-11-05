@@ -110,12 +110,21 @@ import { group } from '@weft-js/core/style'
 
 export const ticket = group('ticket', {
   base: { surface: 'raised', pad: 'group', radius: 'surface' },
-  axes: { status: { open: { tone: 'info' }, late: { tone: 'critical' } } },
+  axes: {
+    status: {
+      open: { tone: 'info' },
+      late: { tone: 'critical' },
+    },
+  },
   defaults: { status: 'open' },
 })
 
-export function Ticket(props: { status: 'open' | 'late'; number: string }) {
-  return <article {...ticket({ status: props.status })}>Order {props.number}</article>
+export function Ticket(
+  { status, number }: { status: 'open' | 'late'; number: string },
+) {
+  return (
+    <article {...ticket({ status })}>Order {number}</article>
+  )
 }
 ```
 
@@ -197,7 +206,11 @@ import { state } from '@weft-js/core'
 
 export function CupCounter() {
   const cups = state(0)
-  return <button type="button" onClick={() => cups.value++}>Poured {cups.value} cups</button>
+  return (
+    <button type="button" onClick={() => cups.value++}>
+      Poured {cups.value} cups
+    </button>
+  )
 }
 ```
 
@@ -309,7 +322,10 @@ and call it from a component like a function:
 import type { Meta } from '@weft-js/start'
 import { listDrinks } from '#/server/menu'
 
-export const meta: Meta = { title: 'Menu', description: 'What the café pours today.' }
+export const meta: Meta = {
+  title: 'Menu',
+  description: 'What the café pours today.',
+}
 
 export default function Menu() {
   const drinks = listDrinks()

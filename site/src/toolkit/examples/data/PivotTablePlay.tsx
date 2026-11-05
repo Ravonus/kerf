@@ -10,7 +10,9 @@ import { LAZY as _Shared2 } from './shared-lazy'
 
 import { MEASURES } from './shared-tone-of'
 
-export const PivotTablePlay = (p: { rowHeader: string }) => (
+export const PivotTablePlay = (p: {
+  rowHeader: string
+}) => (
   <PivotTable
     caption="Projects by region and status"
     rows={PROJECTS}

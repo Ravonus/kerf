@@ -11,5 +11,11 @@ import { LAZY as _Shared2 } from './shared-lazy'
 import { toneOf as _Shared3 } from './shared-tone-of'
 
 export const TablePriority = () => (
-  <Table caption="Projects" captionHidden rows={PROJECTS} columns={RANKED} picker={false} />
+  <Table
+    caption="Projects"
+    captionHidden
+    rows={PROJECTS}
+    columns={RANKED}
+    picker={false}
+  />
 )
