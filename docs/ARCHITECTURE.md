@@ -9,3 +9,16 @@ The Rust/Oxc compiler parses and checks source, then emits weft's own DOM and se
 warp-core supplies framework-independent behavior. warp adds components, tokens and styling. Other packages provide media, text, payments, multiplayer and adapters. Typed plugin slots connect optional implementations without opening the compiler to plugin code. Surfaces participate in layout; native work targets platform views with shared layout.
 
 The [decisions](decisions/) record the reasoning that still guides the design and link to archived research. [ROADMAP-1.0.md](ROADMAP-1.0.md) is the source of future work; an architectural direction here does not imply that every feature is complete. Performance and size claims require the comparative measurements described in [CLAUDE.md](../CLAUDE.md).
+
+## 1.0 package scope
+
+The 1.0 release scope is `@weft-js/core`, `cli`, `create`, `start`, `db`, `warp`, `warp-core` and
+`warp-icons`. The release script also discovers built compiler platform packages for core's native
+binding; these support the in-scope compiler and are not the native app work below. A package in
+scope still has to pass the release gates.
+
+Native app phases 6a, 6b and 6d, the native half of pay, and packages with only one conformance
+test are out of 1.0. All other top-level add-on packages, including web pay, remain unreleased and
+private until ready. Their code remains in the repository. `scripts/release.mjs` selects non-private
+top-level packages and any built compiler platform packages; it does not use this document as a
+package allowlist.

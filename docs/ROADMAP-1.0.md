@@ -288,6 +288,37 @@ fix. Today, these are in the catalog but the compiler never emits them:
 **Exit:** the catalog check passes. `buggy-v4` reports every seeded React-ism as an error with the
 right code. The API snapshots are committed.
 
+### Earlier phase exits and open questions
+
+The archived plan at `46198714^:docs/PLAN.md` records these exit criteria. Its phase 1b status
+says the verify loop was built and names `evals/gate.mjs`; it does not record the exit result.
+The current tree has no verified 1b exit receipt here, so acceptance of every reference test and
+rejection of planted junk remains unverified. Phase 3x requires the todo and auth app across tested
+engines, data layers and runtimes plus a hand-written auth provider. Phase 3c requires the Velatis
+slice and live sessions to pass conformance and security suites. Neither exit has a verified result
+in this record. Both remain unverified; package scope does not establish a pass.
+
+The archived plan's §11 questions have these dispositions:
+
+- `.value` in JSX: required; W015 catches bare boxes.
+- Compiler spike: settled, then superseded by weft's own backend.
+- Event replay: capture script for lazy-island pages.
+- Partial hydration: inferred by default, with explicit overrides.
+- Lazy islands: inferred by default, with explicit overrides.
+- Hydrated resources: retain the current server value; background revalidation is deferred.
+- Style group syntax and CSS-file input: defer the unresolved spike decision.
+- OG renderer: defer the renderer decision; do not infer it from a dependency alone.
+- Keyed record reads: `box.get(key)`; the compiler hint remains a follow-up.
+- Bun and Deno native addons: retain the archived best-effort qualification; current proof is
+  unverified here.
+- Nitro v3: pin the beta; h3 v2 is the fallback.
+- Android host and iOS engine: defer to the out-of-scope 6a spike.
+- Better Auth on Native connections across engines: defer pending cross-engine proof.
+- Default `idiom`: defer the choice and wizard behavior.
+- Store payment policy ownership and refresh cadence: defer; no owner decision is recorded here.
+- Names: weft is the framework; warp is its default UI toolkit.
+- warp-core: framework-independent behavior and CSS; the `/weft` binding imports weft.
+
 ### Sprint 5: prove it (cheap agents, benchmarks, size)
 
 Test the bet with agents that have nothing going for them.
