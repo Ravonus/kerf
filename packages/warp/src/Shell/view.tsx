@@ -1,18 +1,11 @@
-import {
-  RightIcon,
-  XIcon,
-  LeftIcon,
-  SearchIcon,
-  DownIcon,
-  MoreIcon,
-  PanelIcon,
-  CheckIcon,
-} from '@weft-js/warp-icons'
-import { Crumbs, sweepParts, Item, Entry, draw } from './shared'
+import { RightIcon, XIcon, LeftIcon, PanelIcon, CheckIcon } from '@weft-js/warp-icons'
+import { Crumbs, Item, Entry, draw } from './shared'
 import type { ShellView } from './state'
 import { button } from './button'
+import { brand, command, accountButton, switcherButton, navMore } from './branches'
 
-export function ShellFrame({ view, page }: { view: ShellView; page: unknown }) {
+/** Render the shell in its original owner. */
+export function shellFrame(view: ShellView, page: unknown) {
   return (
     <div
       ref={(n) => (view.refs.root = n)}
@@ -41,25 +34,25 @@ export function ShellFrame({ view, page }: { view: ShellView; page: unknown }) {
         </button>
       )}
       <div data-part="layout">
-        <ShellHeader view={view} />
-        {!view.focus.value && <ShellNav view={view} />}
-        {view.props.island ? (
-          <div
-            data-part="main"
-            id={view.main}
-            tabindex="-1"
-            role="region"
-            aria-label={view.props.label ?? 'Page content'}
-          >
-            {page}
-            {view.props.dock !== undefined && <div data-part="dock">{view.props.dock}</div>}
+        <header data-part="header">
+          {view.focus.value && view.props.close && button(view.props.close, undefined, XIcon)}
+          {!view.focus.value && view.props.back && button(view.props.back, 'back', LeftIcon)}
+          {!view.focus.value && view.props.brand && brand(view)}
+          {view.props.title !== undefined && <p data-part="title">{view.props.title}</p>}
+          {!view.focus.value && view.props.crumbs && <Crumbs items={view.props.crumbs} />}
+          <div data-part="actions">
+            {view.focus.value && view.props.step !== undefined && (
+              <span style="white-space:nowrap;font-size:var(--warp-text-caption-size);color:var(--warp-color-text-subtle)">
+                {view.props.step}
+              </span>
+            )}
+            {!view.focus.value && view.props.command && command(view)}
+            {!view.focus.value && view.props.actions}
+            {!view.focus.value && view.props.account && accountButton(view)}
           </div>
-        ) : (
-          <main data-part="main" id={view.main} tabindex="-1">
-            {page}
-            {view.props.dock !== undefined && <div data-part="dock">{view.props.dock}</div>}
-          </main>
-        )}
+        </header>
+        {!view.focus.value && shellNav(view)}
+        {view.props.island ? islandMain(view, page) : standardMain(view, page)}
       </div>
       <div
         data-part="scrim"
@@ -67,76 +60,15 @@ export function ShellFrame({ view, page }: { view: ShellView; page: unknown }) {
         hidden={!view.navOpen.value}
         onClick={view.closeNav}
       ></div>
-      {!view.focus.value && view.props.account && <ShellAccount view={view} />}
-      {!view.focus.value && <ShellMore view={view} />}
+      {!view.focus.value && view.props.account && shellAccount(view)}
+      {!view.focus.value && shellMore(view)}
       <div data-scope="announcer" role="status" aria-live="polite"></div>
       {view.props.overlays}
     </div>
   )
 }
 
-function ShellHeader({ view }: { view: ShellView }) {
-  return (
-    <header data-part="header">
-      {view.focus.value && view.props.close && button(view.props.close, undefined, XIcon)}
-      {!view.focus.value && view.props.back && button(view.props.back, 'back', LeftIcon)}
-      {!view.focus.value && view.props.brand && (
-        <a
-          href={view.props.brand.href ?? '/'}
-          data-part="brand"
-          aria-label={`${view.props.brand.name}, home`}
-        >
-          {view.props.brand.mark}
-          <span data-part="brand-name">{view.props.brand.name}</span>
-        </a>
-      )}
-      {view.props.title !== undefined && <p data-part="title">{view.props.title}</p>}
-      {!view.focus.value && view.props.crumbs && <Crumbs items={view.props.crumbs} />}
-      <div data-part="actions">
-        {view.focus.value && view.props.step !== undefined && (
-          <span style="white-space:nowrap;font-size:var(--warp-text-caption-size);color:var(--warp-color-text-subtle)">
-            {view.props.step}
-          </span>
-        )}
-        {!view.focus.value && view.props.command && (
-          <button
-            type="button"
-            data-part="command"
-            data-sweep=""
-            aria-haspopup="dialog"
-            aria-keyshortcuts="Meta+K Control+K"
-            onClick={view.props.command.onOpen}
-          >
-            {sweepParts()}
-            <SearchIcon />
-            <span data-part="command-label">{view.props.command.label ?? 'Search'}</span>
-            <span data-part="command-hint">{view.props.command.hint ?? 'Jump to, or run…'}</span>
-            <kbd aria-hidden="true">{view.props.command.shortcut ?? '⌘K'}</kbd>
-          </button>
-        )}
-        {!view.focus.value && view.props.actions}
-        {!view.focus.value && view.props.account && (
-          <button
-            type="button"
-            style="display:inline-grid;place-items:center;inline-size:var(--warp-control-md);block-size:var(--warp-control-md);border:0;background:none;padding:0;cursor:pointer;border-radius:var(--warp-radius-round)"
-            aria-haspopup="menu"
-            aria-expanded={view.menuOpen.value ? 'true' : 'false'}
-            aria-controls={view.menuId}
-            onClick={(e: Event) => view.openMenu(e)}
-            onKeyDown={view.menuKey}
-          >
-            <span data-scope="avatar" aria-hidden="true">
-              {view.props.account.initials}
-            </span>
-            <span data-part="sr-only">Account: {view.props.account.name}</span>
-          </button>
-        )}
-      </div>
-    </header>
-  )
-}
-
-function ShellNav({ view }: { view: ShellView }) {
+function shellNav(view: ShellView) {
   return (
     <nav
       data-part="nav"
@@ -151,71 +83,40 @@ function ShellNav({ view }: { view: ShellView }) {
           {view.groups.value[0].label}
         </p>
       )}
-      {view.props.switcher && (
+      {view.props.switcher && switcherButton(view)}
+      <ul
+        data-part="nav-list"
+        aria-labelledby={view.groups.value[0]?.label !== undefined ? `${view.navId}-g` : undefined}
+      >
+        {view.primary.value.map((p) => (
+          <li key={p.item.id} data-tab={p.tab ? '' : undefined}>
+            <Item item={p.item} current={view.props.current} onPick={view.closeNav} />
+          </li>
+        ))}
+        {view.more.value.length > 0 && navMore(view)}
+      </ul>
+      {view.extra.value.length > 0 && shellNavExtra(view)}
+      <div data-part="nav-foot">
+        {view.props.foot?.map((i) => (
+          <Item key={i.id} item={i} current={view.props.current} onPick={view.closeNav} />
+        ))}
         <button
           type="button"
-          data-part="switcher"
-          data-sweep=""
-          aria-haspopup="menu"
-          aria-expanded={view.menuOpen.value ? 'true' : 'false'}
-          aria-controls={view.menuId}
-          onClick={(e: Event) => view.openMenu(e)}
-          onKeyDown={view.menuKey}
+          data-part="nav-toggle"
+          aria-controls={view.navId}
+          aria-expanded={view.toggleExpanded.value ? 'true' : 'false'}
+          aria-label={view.toggleLabel.value}
+          aria-keyshortcuts="["
+          onClick={view.toggle}
         >
-          {sweepParts()}
-          <span data-scope="avatar" data-shape="square" data-size="sm" aria-hidden="true">
-            {view.workspace.value?.initials}
-          </span>
-          <span data-part="sr-only">Workspace: </span>
-          <span data-part="org">
-            <b>{view.workspace.value?.name}</b>
-            <small>{view.workspace.value?.meta}</small>
-          </span>
-          <span data-part="sr-only">. Switch workspace</span>
-          <DownIcon />
+          <PanelIcon />
         </button>
-      )}
-      <ShellNavList view={view} />
-      {view.extra.value.length > 0 && <ShellNavExtra view={view} />}
-      <ShellNavFoot view={view} />
+      </div>
     </nav>
   )
 }
 
-function ShellNavList({ view }: { view: ShellView }) {
-  return (
-    <ul
-      data-part="nav-list"
-      aria-labelledby={view.groups.value[0]?.label !== undefined ? `${view.navId}-g` : undefined}
-    >
-      {view.primary.value.map((p) => (
-        <li key={p.item.id} data-tab={p.tab ? '' : undefined}>
-          <Item item={p.item} current={view.props.current} onPick={view.closeNav} />
-        </li>
-      ))}
-      {view.more.value.length > 0 && (
-        <li data-tab="" data-part="nav-more">
-          <button
-            type="button"
-            data-part="nav-item"
-            data-sweep=""
-            aria-haspopup="dialog"
-            aria-expanded={view.moreOpen.value ? 'true' : 'false'}
-            onClick={() => (view.moreOpen.value = true)}
-          >
-            <span data-part="icon">
-              <MoreIcon />
-              {sweepParts()}
-            </span>
-            <span data-part="nav-label">More</span>
-          </button>
-        </li>
-      )}
-    </ul>
-  )
-}
-
-function ShellNavExtra({ view }: { view: ShellView }) {
+function shellNavExtra(view: ShellView) {
   return (
     <div data-part="nav-extra">
       {view.extra.value.map((g) => (
@@ -234,28 +135,7 @@ function ShellNavExtra({ view }: { view: ShellView }) {
   )
 }
 
-function ShellNavFoot({ view }: { view: ShellView }) {
-  return (
-    <div data-part="nav-foot">
-      {view.props.foot?.map((i) => (
-        <Item key={i.id} item={i} current={view.props.current} onPick={view.closeNav} />
-      ))}
-      <button
-        type="button"
-        data-part="nav-toggle"
-        aria-controls={view.navId}
-        aria-expanded={view.toggleExpanded.value ? 'true' : 'false'}
-        aria-label={view.toggleLabel.value}
-        aria-keyshortcuts="["
-        onClick={view.toggle}
-      >
-        <PanelIcon />
-      </button>
-    </div>
-  )
-}
-
-function ShellAccount({ view }: { view: ShellView }) {
+function shellAccount(view: ShellView) {
   return (
     <aside aria-label="Account" hidden={!view.menuOpen.value}>
       <div
@@ -325,7 +205,7 @@ function ShellAccount({ view }: { view: ShellView }) {
   )
 }
 
-function ShellMore({ view }: { view: ShellView }) {
+function shellMore(view: ShellView) {
   return (
     <dialog
       ref={(n) => (view.refs.sheetEl = n)}
@@ -372,5 +252,29 @@ function ShellMore({ view }: { view: ShellView }) {
         ))}
       </div>
     </dialog>
+  )
+}
+
+function islandMain(view: ShellView, page: unknown) {
+  return (
+    <div
+      data-part="main"
+      id={view.main}
+      tabindex="-1"
+      role="region"
+      aria-label={view.props.label ?? 'Page content'}
+    >
+      {page}
+      {view.props.dock !== undefined && <div data-part="dock">{view.props.dock}</div>}
+    </div>
+  )
+}
+
+function standardMain(view: ShellView, page: unknown) {
+  return (
+    <main data-part="main" id={view.main} tabindex="-1">
+      {page}
+      {view.props.dock !== undefined && <div data-part="dock">{view.props.dock}</div>}
+    </main>
   )
 }
