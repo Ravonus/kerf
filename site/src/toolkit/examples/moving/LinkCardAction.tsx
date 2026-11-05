@@ -8,6 +8,8 @@ export const LinkCardAction = () => (
     <Text subtle>
       Retry timed out upstream calls, by Sam Okafor.
     </Text>
-    <Link href="/toolkit/alert">See what went wrong</Link>
+    <Link href="/toolkit/alert">
+      {'See what went wrong'}
+    </Link>
   </Card>
 )
