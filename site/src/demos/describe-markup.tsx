@@ -12,7 +12,10 @@ export default function TodoList() {
       </ul>
       <label for="note">A note</label>
       <br />
-      <input id="note" placeholder="Anything else?" />
+      <input
+        id="note"
+        placeholder="Anything else?"
+      />
       <p
         className="hint"
         aria-live="polite"

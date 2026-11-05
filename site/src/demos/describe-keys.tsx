@@ -14,7 +14,10 @@ export default function Seating() {
   }
   return (
     <Card title="Who brings what">
-      <Grid cols={2} gap="group">
+      <Grid
+        cols={2}
+        gap="group"
+      >
         <div>
           <strong>{'key={g.id}'}</strong>
           {guests.value.map((g) => (
@@ -34,7 +37,7 @@ export default function Seating() {
               {g.name}{' '}
               <input
                 aria-label={
-                  `${g.name} brings, by position`
+                  `${g.name} brings, ` + 'by position'
                 }
                 size={8}
               />
@@ -42,9 +45,7 @@ export default function Seating() {
           ))}
         </div>
       </Grid>
-      <Button onClick={reverse}>
-        Reverse the order
-      </Button>
+      <Button onClick={reverse}>Reverse the order</Button>
     </Card>
   )
 }
