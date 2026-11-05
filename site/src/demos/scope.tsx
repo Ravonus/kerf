@@ -26,7 +26,10 @@ function Header() {
 function Shelf() {
   return (
     <p>
-      <Button size="sm" onClick={() => basket.add('Tea')}>
+      <Button
+        size="sm"
+        onClick={() => basket.add('Tea')}
+      >
         Add tea
       </Button>
       <Button

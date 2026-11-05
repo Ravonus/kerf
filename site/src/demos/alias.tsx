@@ -25,7 +25,10 @@ export default function Order() {
   const qty = state(1)
   return (
     <Card title="An order line">
-      <Line item="Espresso" qty={qty.value} />
+      <Line
+        item="Espresso"
+        qty={qty.value}
+      />
       <p>The parent says {qty.value}</p>
       <Button onClick={() => qty.value++}>
         +1 in the parent
