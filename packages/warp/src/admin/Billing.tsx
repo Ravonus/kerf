@@ -53,47 +53,10 @@ export function Invoices({
 }) {
   const list = derived(() => read(invoices))
   const failed = derived(() => list.value.some((i) => i.status === 'failed'))
-  const columns: Column<Invoice>[] = [
-    { id: 'date', header: 'Date', rowHeader: true, card: 'title' },
-    { id: 'number', header: 'Number' },
-    {
-      id: 'status',
-      header: 'Status',
-      card: 'badge',
-      cell: (i) => (
-        <Badge tone={STATUS[i.status][1]} dot>
-          {STATUS[i.status][0]}
-        </Badge>
-      ),
-    },
-    {
-      id: 'amount',
-      header: 'Amount',
-      numeric: true,
-      value: (i) => money(i.amount, currency, locale),
-    },
-    {
-      id: 'pdf',
-      header: 'Receipt',
-      value: () => '',
-      cell: (i) =>
-        i.pdf ? (
-          <a
-            data-scope="button"
-            data-emphasis="ghost"
-            data-tone="neutral"
-            data-size="sm"
-            data-icon-only=""
-            href={i.pdf}
-            aria-label={`PDF for ${i.number}`}
-          >
-            <FileTextIcon />
-          </a>
-        ) : (
-          ''
-        ),
-    },
-  ]
+  const columns = invoiceColumns(
+    () => currency,
+    () => locale,
+  )
   const fix = derived(() => (
     <Button size="sm" tone="critical" onClick={() => onUpdatePayment?.()}>
       Update payment method
@@ -128,6 +91,53 @@ export function Invoices({
       />
     </div>
   )
+}
+
+function invoiceColumns(
+  currency: () => string | undefined,
+  locale: () => string | undefined,
+): Column<Invoice>[] {
+  return [
+    { id: 'date', header: 'Date', rowHeader: true, card: 'title' },
+    { id: 'number', header: 'Number' },
+    {
+      id: 'status',
+      header: 'Status',
+      card: 'badge',
+      cell: (i) => (
+        <Badge tone={STATUS[i.status][1]} dot>
+          {STATUS[i.status][0]}
+        </Badge>
+      ),
+    },
+    {
+      id: 'amount',
+      header: 'Amount',
+      numeric: true,
+      value: (i) => money(i.amount, currency(), locale()),
+    },
+    {
+      id: 'pdf',
+      header: 'Receipt',
+      value: () => '',
+      cell: (i) =>
+        i.pdf ? (
+          <a
+            data-scope="button"
+            data-emphasis="ghost"
+            data-tone="neutral"
+            data-size="sm"
+            data-icon-only=""
+            href={i.pdf}
+            aria-label={`PDF for ${i.number}`}
+          >
+            <FileTextIcon />
+          </a>
+        ) : (
+          ''
+        ),
+    },
+  ]
 }
 
 /** A card on file. */

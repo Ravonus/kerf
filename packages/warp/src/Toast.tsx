@@ -28,14 +28,7 @@ export const toast = {
   promise: <T,>(p: Promise<T>, messages: ToastPromise<T>) => toasts().promise(p, messages),
 }
 
-/**
- * The toast region and the two pre-mounted live regions (05 §5; components.html:1115-1117). Mount once, near the
- * root. While a modal is open they move into it, or it would make them inert. Newest first; three stack, collapsed, and fan out on hover or focus (which pauses every timer); swipe or
- * Dismiss removes one; F8 focuses the newest.
- */
-export function Toaster({
-  position,
-}: {
+type ToasterProps = {
   /** Which corner or edge. Bottom right by default. */ position?:
     | 'top-left'
     | 'top-center'
@@ -43,7 +36,14 @@ export function Toaster({
     | 'bottom-left'
     | 'bottom-center'
     | 'bottom-right'
-} = {}) {
+}
+
+/**
+ * The toast region and the two pre-mounted live regions (05 §5; components.html:1115-1117). Mount once, near the
+ * root. While a modal is open they move into it, or it would make them inert. Newest first; three stack, collapsed, and fan out on hover or focus (which pauses every timer); swipe or
+ * Dismiss removes one; F8 focuses the newest.
+ */
+export function Toaster({ position }: ToasterProps = {}) {
   const list = state<Toast[]>(toasts().get())
   onCleanup(toasts().subscribe((v) => (list.value = v)))
   let region: HTMLElement | undefined
