@@ -188,107 +188,94 @@ test('inks and tier numbers are read at the element, through the cascade', () =>
   el.remove()
 })
 
-describe('surface', () => {
-  let frames: FrameRequestCallback[], box: HTMLDivElement, canvas: HTMLCanvasElement, draws: number
-  const fake = { setTransform: vi.fn() }
-  const tick = (now = 16) => {
-    const q = frames
-    frames = []
-    for (const f of q) f(now)
-  }
-  beforeEach(() => {
-    frames = []
-    draws = 0
-    vi.stubGlobal('requestAnimationFrame', (f: FrameRequestCallback) => frames.push(f))
-    box = document.createElement('div')
-    Object.defineProperty(box, 'clientWidth', { value: 300 })
-    Object.defineProperty(box, 'clientHeight', { value: 150 })
-    canvas = document.createElement('canvas')
-    canvas.getContext = (() => fake) as unknown as typeof canvas.getContext
-    box.append(canvas)
-    document.body.append(box)
-  })
-  afterEach(() => {
-    tick()
-    box.remove()
-    vi.unstubAllGlobals()
-    vi.restoreAllMocks()
-  })
+type SurfaceFixture = {
+  readonly frames: FrameRequestCallback[]
+  readonly box: HTMLDivElement
+  readonly canvas: HTMLCanvasElement
+  draws: number
+  fake: { setTransform: ReturnType<typeof vi.fn> }
+  tick: (now?: number) => void
+}
 
+function registerSurfacePaint(ctx: SurfaceFixture) {
+  const { fake, tick } = ctx
   test('a still surface paints once and schedules nothing more', () => {
-    const s = surface(canvas, { draw: () => void draws++ })
-    expect(frames).toHaveLength(1)
+    const s = surface(ctx.canvas, { draw: () => void ctx.draws++ })
+    expect(ctx.frames).toHaveLength(1)
     tick()
-    expect(draws).toBe(1)
-    expect(frames).toHaveLength(0)
+    expect(ctx.draws).toBe(1)
+    expect(ctx.frames).toHaveLength(0)
     s.invalidate()
     s.invalidate()
-    expect(frames).toHaveLength(1)
+    expect(ctx.frames).toHaveLength(1)
     tick()
-    expect(draws).toBe(2)
+    expect(ctx.draws).toBe(2)
     s.destroy()
   })
 
   test('animation runs on one shared frame, and a draw can keep itself alive and settle', () => {
-    const a = surface(canvas, { draw: () => void draws++, animate: true })
+    const a = surface(ctx.canvas, { draw: () => void ctx.draws++, animate: true })
     let left = 2
     const c2 = document.createElement('canvas')
     c2.getContext = (() => fake) as unknown as typeof c2.getContext
-    box.append(c2)
+    ctx.box.append(c2)
     const b = surface(c2, {
       draw: () => {
-        draws++
+        ctx.draws++
         return --left > 0
       },
     })
-    expect(frames).toHaveLength(1)
+    expect(ctx.frames).toHaveLength(1)
     tick(16)
     tick(32)
     tick(48)
-    expect(draws).toBe(5)
+    expect(ctx.draws).toBe(5)
     a.destroy()
     tick(64)
-    expect(draws).toBe(5)
-    expect(frames).toHaveLength(0)
+    expect(ctx.draws).toBe(5)
+    expect(ctx.frames).toHaveLength(0)
     b.destroy()
   })
 
   test('reduced motion gives one frame of an animated surface', () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true }))
-    const s = surface(canvas, { draw: () => void draws++, animate: true })
+    const s = surface(ctx.canvas, { draw: () => void ctx.draws++, animate: true })
     tick(16)
     tick(32)
-    expect(draws).toBe(1)
+    expect(ctx.draws).toBe(1)
     s.destroy()
   })
 
   test('quiet holds an animated surface still, and the frame says so', async () => {
     const seen: boolean[] = []
-    box.style.setProperty('--warp-x', '0')
-    const s = surface(canvas, { draw: (f) => void seen.push(f.still), animate: true })
+    ctx.box.style.setProperty('--warp-x', '0')
+    const s = surface(ctx.canvas, { draw: (f) => void seen.push(f.still), animate: true })
     tick(16)
     tick(32)
     expect(seen).toEqual([true])
-    box.style.setProperty('--warp-x', '1')
-    box.setAttribute('data-expression', 'vivid')
+    ctx.box.style.setProperty('--warp-x', '1')
+    ctx.box.setAttribute('data-expression', 'vivid')
     await Promise.resolve()
     tick(48)
     tick(64)
     expect(seen.slice(1)).toEqual([false, false])
-    expect(frames).toHaveLength(1)
+    expect(ctx.frames).toHaveLength(1)
     s.destroy()
   })
+}
 
+function registerSurfacePointer(ctx: SurfaceFixture) {
+  const { tick } = ctx
   test('the pointer reaches the frame through the document, in cells, and wakes a settled surface', () => {
     const seen: { x: number; y: number; down: boolean; in: boolean }[] = []
-    vi.spyOn(box, 'getBoundingClientRect').mockReturnValue({
+    vi.spyOn(ctx.box, 'getBoundingClientRect').mockReturnValue({
       left: 10,
       top: 20,
       width: 300,
       height: 150,
     } as DOMRect)
     vi.stubGlobal('devicePixelRatio', 1)
-    const s = surface(canvas, {
+    const s = surface(ctx.canvas, {
       draw: (f) => void seen.push({ ...f.pointer }),
       pointer: true,
       cell: 2,
@@ -317,12 +304,12 @@ describe('surface', () => {
 
   test('a hidden tab stops the loop, and coming back resumes without a jump in time', () => {
     const times: number[] = []
-    const s = surface(canvas, { draw: (f) => void times.push(f.time), animate: true })
+    const s = surface(ctx.canvas, { draw: (f) => void times.push(f.time), animate: true })
     tick(1000)
     tick(1016)
     const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(true)
     tick(1032)
-    expect(frames).toHaveLength(0)
+    expect(ctx.frames).toHaveLength(0)
     hidden.mockReturnValue(false)
     document.dispatchEvent(new Event('visibilitychange'))
     tick(9000)
@@ -330,33 +317,89 @@ describe('surface', () => {
     expect(times.at(-1)! - times[1]!).toBeLessThan(0.05)
     s.destroy()
   })
+}
 
+function registerSurfaceTheme(ctx: SurfaceFixture) {
+  const { tick } = ctx
   test('cell mode snaps to device pixels and backs one pixel per cell', () => {
     vi.stubGlobal('devicePixelRatio', 1.5)
     const seen: number[] = []
-    const s = surface(canvas, { draw: (f) => void seen.push(f.width, f.height), cell: 7 })
+    const s = surface(ctx.canvas, { draw: (f) => void seen.push(f.width, f.height), cell: 7 })
     tick()
     expect(seen).toEqual([41, 21]) // 7 css px is 10.5 device px, snapped to 11 → 7.33 css px
-    expect(canvas.width).toBe(41)
-    expect(parseFloat(canvas.style.width)).toBeCloseTo((41 * 11) / 1.5, 3)
+    expect(ctx.canvas.width).toBe(41)
+    expect(parseFloat(ctx.canvas.style.width)).toBeCloseTo((41 * 11) / 1.5, 3)
     s.destroy()
   })
 
   test('a dial change around the canvas repaints it; one elsewhere does not', async () => {
     let themed = 0
-    const s = surface(canvas, { draw: () => void draws++, onTheme: () => void themed++ })
+    const s = surface(ctx.canvas, { draw: () => void ctx.draws++, onTheme: () => void themed++ })
     tick()
     const other = document.createElement('div')
     document.body.append(other)
     other.setAttribute('data-theme', 'dark')
     await Promise.resolve()
     expect(themed).toBe(0)
-    box.setAttribute('data-expression', 'vivid')
+    ctx.box.setAttribute('data-expression', 'vivid')
     await Promise.resolve()
     expect(themed).toBe(1)
     tick()
-    expect(draws).toBe(2)
+    expect(ctx.draws).toBe(2)
     other.remove()
     s.destroy()
   })
+}
+
+describe('surface', () => {
+  let frames: FrameRequestCallback[], box: HTMLDivElement, canvas: HTMLCanvasElement, draws: number
+  const fake = { setTransform: vi.fn() }
+  const tick = (now = 16) => {
+    const q = frames
+    frames = []
+    for (const f of q) f(now)
+  }
+  beforeEach(() => {
+    frames = []
+    draws = 0
+    vi.stubGlobal('requestAnimationFrame', (f: FrameRequestCallback) => frames.push(f))
+    box = document.createElement('div')
+    Object.defineProperty(box, 'clientWidth', { value: 300 })
+    Object.defineProperty(box, 'clientHeight', { value: 150 })
+    canvas = document.createElement('canvas')
+    canvas.getContext = (() => fake) as unknown as typeof canvas.getContext
+    box.append(canvas)
+    document.body.append(box)
+  })
+  afterEach(() => {
+    tick()
+    box.remove()
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  const fixture: SurfaceFixture = {
+    get frames() {
+      return frames
+    },
+    get box() {
+      return box
+    },
+    get canvas() {
+      return canvas
+    },
+    get draws() {
+      return draws
+    },
+    set draws(value) {
+      draws = value
+    },
+    fake,
+    tick,
+  }
+  registerSurfacePaint(fixture)
+
+  registerSurfacePointer(fixture)
+
+  registerSurfaceTheme(fixture)
 })

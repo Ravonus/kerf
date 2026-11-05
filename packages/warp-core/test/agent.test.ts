@@ -24,7 +24,7 @@ import {
 
 const tools = (a: Answer) => a.tools.map((t) => t.state)
 
-describe('foldAnswer', () => {
+function registerAnswerText() {
   test('nothing yet is waiting', () => expect(foldAnswer([]).state).toBe('waiting'))
 
   test('text coalesces, and reasoning folds with its duration when the answer starts', () => {
@@ -65,7 +65,9 @@ describe('foldAnswer', () => {
     expect(done.tools[0]).toMatchObject({ state: 'done', output: 'ok', ms: 600 })
     expect(done.blocks.map((b) => b.kind)).toEqual(['text', 'tool', 'text'])
   })
+}
 
+function registerAnswerDecisions() {
   test('failed and denied results', () => {
     expect(
       tools(
@@ -113,7 +115,9 @@ describe('foldAnswer', () => {
     expect(a.sources.map((s) => s.title)).toEqual(['A', 'B'])
     expect(a.plan[0]).toMatchObject({ state: 'blocked', note: 'Why' })
   })
+}
 
+function registerAnswerCompletion() {
   test('done finishes what ran; Stop keeps what arrived and settles the rest', () => {
     const e: AgentEvent[] = [
       {
@@ -174,6 +178,14 @@ describe('foldAnswer', () => {
     expect(JSON.stringify(before)).toBe(copy)
     expect(seen[0]).not.toBe(seen[3])
   })
+}
+
+describe('foldAnswer', () => {
+  registerAnswerText()
+
+  registerAnswerDecisions()
+
+  registerAnswerCompletion()
 })
 
 test('parseText: paragraphs, lists, closed and open fences', () => {

@@ -188,21 +188,10 @@ test('connection views rank offline over reconnecting over stale', () => {
   expect(connView({ online: true, state: 'live' })).toBeUndefined()
 })
 
-describe('shortcuts', () => {
-  const press = (
-    key: string,
-    init: KeyboardEventInit = {},
-    target: EventTarget = document.body,
-  ) => {
-    const e = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
-    target.dispatchEvent(e)
-    return e
-  }
-  const setup = () => {
-    const reg = createShortcuts()
-    const stop = reg.listen(document)
-    return { reg, stop }
-  }
+type Press = (key: string, init?: KeyboardEventInit, target?: EventTarget) => KeyboardEvent
+type Setup = () => { reg: ReturnType<typeof createShortcuts>; stop: () => void }
+
+function registerShortcutBasics(press: Press, setup: Setup) {
   test('labels are platform-aware', () => {
     expect(shortcutLabels('mod+k', true)).toEqual([['⌘', 'K']])
     expect(shortcutLabels('mod+k', false)).toEqual([['Ctrl', 'K']])
@@ -223,6 +212,9 @@ describe('shortcuts', () => {
     expect(run).toHaveBeenCalledOnce()
     stop()
   })
+}
+
+function registerShortcutKeys(press: Press, setup: Setup) {
   test('never in a text input; a mod chord still does', () => {
     const { reg, stop } = setup()
     const one = vi.fn(),
@@ -258,6 +250,9 @@ describe('shortcuts', () => {
     expect(run).toHaveBeenCalledOnce()
     stop()
   })
+}
+
+function registerShortcutGating(press: Press, setup: Setup) {
   test('`when` gates firing and the list; unregister and stop end it', () => {
     const { reg, stop } = setup()
     let on = false
@@ -288,4 +283,24 @@ describe('shortcuts', () => {
     ])
     expect(markParts('Any', '')).toEqual([{ at: 0, text: 'Any', hit: false }])
   })
+}
+
+describe('shortcuts', () => {
+  const press = (
+    key: string,
+    init: KeyboardEventInit = {},
+    target: EventTarget = document.body,
+  ) => {
+    const e = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
+    target.dispatchEvent(e)
+    return e
+  }
+  const setup = () => {
+    const reg = createShortcuts()
+    const stop = reg.listen(document)
+    return { reg, stop }
+  }
+  registerShortcutBasics(press, setup)
+  registerShortcutKeys(press, setup)
+  registerShortcutGating(press, setup)
 })
