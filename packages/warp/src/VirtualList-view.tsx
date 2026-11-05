@@ -10,7 +10,8 @@ type Refs = {
   list: HTMLElement | undefined
   readonly virtualizer: Virtualizer | undefined
 }
-type Bindings = {
+type Bindings<T> = {
+  renderChildren: () => VirtualListProps<T>['children']
   waiting: [HTMLElement, VirtualKey, (undo: () => void) => void][]
   pending: State<VirtualKey | undefined>
   active: State<VirtualKey | undefined>
@@ -23,11 +24,11 @@ export function virtualView<T>(
   read: () => VirtualListProps<T>,
   data: ReturnType<typeof virtualData<T>>,
   refs: Refs,
-  bindings: Bindings,
+  bindings: Bindings<T>,
 ) {
   const props = untrack(read)
   const { keys, shown, rows, samples, probing } = data
-  const { waiting, pending, active, probes, onKeyDown } = bindings
+  const { waiting, pending, active, probes, onKeyDown, renderChildren } = bindings
   const inner = untrack(() => props.inner)
   const listRole = () => props.role ?? (props.bareRows ? 'group' : 'list')
   /** A list's rows are its items (axe aria-required-children); `feed`, `log` and bare rows bring or need none. */
@@ -45,6 +46,7 @@ export function virtualView<T>(
     keys,
     rowRole,
     probes,
+    renderChildren,
     get virtualizer() {
       return refs.virtualizer
     },

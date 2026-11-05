@@ -16,6 +16,7 @@ export type { VirtualControl, VirtualListProps } from './VirtualList-types'
  * exist; rows the engine can't size are measured when they render, and what's on screen never moves when one corrects.
  */
 export function VirtualList<T>(props: VirtualListProps<T>) {
+  const renderChildren = () => props.children
   let el: HTMLElement | undefined, list: HTMLElement | undefined
   let v: Virtualizer | undefined
   const waiting: [HTMLElement, VirtualKey, (undo: () => void) => void][] = []
@@ -70,5 +71,6 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
     active,
     probes,
     onKeyDown,
+    renderChildren,
   })
 }
