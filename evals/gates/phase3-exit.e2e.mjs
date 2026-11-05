@@ -64,76 +64,94 @@ export default async function ({ url, log }) {
         eq(await titles(b.page), [], "bob's own list")
       },
     )
-    await check('a hydrated shared list fetches nothing', async () => {
-      const calls = []
-      const listen = (r) => {
-        if (r.url().includes('/_weft/fn/')) calls.push(r.url())
-      }
-      b.page.on('request', listen)
-      await b.page.reload()
-      await b.page.waitForLoadState('networkidle')
-      b.page.off('request', listen)
-      eq(calls, [], 'fetches during hydration')
-    })
-    await check('the recipient toggles it without a reload; the owner sees it', async () => {
-      await b.page.locator('ul.shared li').getByRole('checkbox').click()
-      await b.page.locator('ul.shared li.done').waitFor()
-      await a.page.reload()
-      await a.page.waitForLoadState('networkidle')
-      eq(await titles(a.page), ['done:Write the note', 'done:Run the matrix'], "alice's list")
-    })
-    await check("the owner's toggle reaches the recipient's list on their next load", async () => {
-      await a.page
-        .locator('ul.todos li', { hasText: 'Run the matrix' })
-        .getByRole('checkbox')
-        .click()
-      await a.page
-        .locator('ul.todos li', { hasText: 'Run the matrix' })
-        .and(a.page.locator(':not(.done)'))
-        .waitFor()
-      await a.page.waitForLoadState('networkidle')
-      await bobReload()
-      eq(await shared(b.page), ['open:Run the matrix'], "bob's list")
-    })
-    await check("a third user can't read, toggle or share it, by any id", async () => {
-      eq(await shared(c.page), [], "carol's list")
-      await post(c.context, 'toggleTodo', { id })
-      await post(c.context, 'shareTodo', { id, email: carol.email })
-      await post(b.context, 'shareTodo', { id, email: carol.email }) // a recipient isn't the owner either
-      await c.page.goto('/todos')
-      await c.page.waitForLoadState('networkidle')
-      eq(await shared(c.page), [], 'carol after trying to share to herself')
-      await bobReload()
-      eq(await shared(b.page), ['open:Run the matrix'], 'unchanged')
-    })
-    await check("a recipient can't delete it or take the share back", async () => {
-      await post(b.context, 'deleteTodo', { id })
-      await post(b.context, 'unshareTodo', { id })
-      await bobReload()
-      eq(await shared(b.page), ['open:Run the matrix'], 'still shared')
-    })
-    await check('unshare removes it; the recipient can no longer toggle it', async () => {
-      await a.page.reload()
-      await a.page.waitForLoadState('networkidle')
-      await a.page.getByRole('button', { name: 'Unshare Run the matrix' }).click()
-      await a.page.getByRole('button', { name: 'Share Run the matrix', exact: true }).waitFor()
-      await post(b.context, 'toggleTodo', { id })
-      await bobReload()
-      eq(await shared(b.page), [], "bob's list")
-      await a.page.reload()
-      await a.page.waitForLoadState('networkidle')
-      eq(
-        await titles(a.page),
-        ['done:Write the note', 'open:Run the matrix'],
-        "alice's list unchanged",
-      )
-    })
-    await check("the owner's list still adds, and no page threw", async () => {
-      await add(a.page, 'After sharing')
-      eq([...a.errors, ...b.errors, ...c.errors], [], 'page errors')
-    })
+    await recipientChecks({ a, b, check, eq, titles, shared, bobReload })
+    await accessChecks({ a, b, c, carol, id, post, check, eq, add, titles, shared, bobReload })
     return { checks: t.checks }
   } finally {
     await browser.close()
   }
+}
+
+async function recipientChecks({ a, b, check, eq, titles, shared, bobReload }) {
+  await check('a hydrated shared list fetches nothing', async () => {
+    const calls = []
+    const listen = (r) => {
+      if (r.url().includes('/_weft/fn/')) calls.push(r.url())
+    }
+    b.page.on('request', listen)
+    await b.page.reload()
+    await b.page.waitForLoadState('networkidle')
+    b.page.off('request', listen)
+    eq(calls, [], 'fetches during hydration')
+  })
+  await check('the recipient toggles it without a reload; the owner sees it', async () => {
+    await b.page.locator('ul.shared li').getByRole('checkbox').click()
+    await b.page.locator('ul.shared li.done').waitFor()
+    await a.page.reload()
+    await a.page.waitForLoadState('networkidle')
+    eq(await titles(a.page), ['done:Write the note', 'done:Run the matrix'], "alice's list")
+  })
+  await check("the owner's toggle reaches the recipient's list on their next load", async () => {
+    await a.page.locator('ul.todos li', { hasText: 'Run the matrix' }).getByRole('checkbox').click()
+    await a.page
+      .locator('ul.todos li', { hasText: 'Run the matrix' })
+      .and(a.page.locator(':not(.done)'))
+      .waitFor()
+    await a.page.waitForLoadState('networkidle')
+    await bobReload()
+    eq(await shared(b.page), ['open:Run the matrix'], "bob's list")
+  })
+}
+
+async function accessChecks({
+  a,
+  b,
+  c,
+  carol,
+  id,
+  post,
+  check,
+  eq,
+  add,
+  titles,
+  shared,
+  bobReload,
+}) {
+  await check("a third user can't read, toggle or share it, by any id", async () => {
+    eq(await shared(c.page), [], "carol's list")
+    await post(c.context, 'toggleTodo', { id })
+    await post(c.context, 'shareTodo', { id, email: carol.email })
+    await post(b.context, 'shareTodo', { id, email: carol.email }) // a recipient isn't the owner either
+    await c.page.goto('/todos')
+    await c.page.waitForLoadState('networkidle')
+    eq(await shared(c.page), [], 'carol after trying to share to herself')
+    await bobReload()
+    eq(await shared(b.page), ['open:Run the matrix'], 'unchanged')
+  })
+  await check("a recipient can't delete it or take the share back", async () => {
+    await post(b.context, 'deleteTodo', { id })
+    await post(b.context, 'unshareTodo', { id })
+    await bobReload()
+    eq(await shared(b.page), ['open:Run the matrix'], 'still shared')
+  })
+  await check('unshare removes it; the recipient can no longer toggle it', async () => {
+    await a.page.reload()
+    await a.page.waitForLoadState('networkidle')
+    await a.page.getByRole('button', { name: 'Unshare Run the matrix' }).click()
+    await a.page.getByRole('button', { name: 'Share Run the matrix', exact: true }).waitFor()
+    await post(b.context, 'toggleTodo', { id })
+    await bobReload()
+    eq(await shared(b.page), [], "bob's list")
+    await a.page.reload()
+    await a.page.waitForLoadState('networkidle')
+    eq(
+      await titles(a.page),
+      ['done:Write the note', 'open:Run the matrix'],
+      "alice's list unchanged",
+    )
+  })
+  await check("the owner's list still adds, and no page threw", async () => {
+    await add(a.page, 'After sharing')
+    eq([...a.errors, ...b.errors, ...c.errors], [], 'page errors')
+  })
 }
