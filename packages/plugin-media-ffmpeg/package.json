@@ -1,5 +1,6 @@
 {
   "name": "@weft-js/plugin-media-ffmpeg",
+  "private": true,
   "version": "0.1.1",
   "description": "@weft-js/plugin-media-ffmpeg: the media.encode@1 provider for video and audio (AV1, VP9, HEVC, H.264, Opus, AAC) through an ffmpeg you install",
   "license": "MIT",

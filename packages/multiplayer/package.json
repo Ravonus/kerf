@@ -1,5 +1,6 @@
 {
   "name": "@weft-js/multiplayer",
+  "private": true,
   "version": "0.1.1",
   "description": "@weft-js/multiplayer: presence, cursors anchored to elements, a typed interaction relay and synced scroll on `channel`. A library, not a plugin",
   "keywords": [
