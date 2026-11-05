@@ -122,6 +122,10 @@ export function inspectSource(path, text, cwd, roots, escapes) {
   function visit(node, scope = values, owner) {
     if (ts.isFunctionLike(node) || ts.isBlock(node)) {
       scope = new Map(scope)
+      // Function declarations bind before statements in their block run.
+      for (const statement of node.statements ?? [])
+        if (ts.isFunctionDeclaration(statement) && statement.name)
+          scope.set(statement.name.text, undefined)
       if (ts.isFunctionLike(node)) {
         owner = node
         for (const param of node.parameters)

@@ -120,6 +120,18 @@ for (const [name, source, expected, suffix] of [
     '/package/assets',
   ],
   [
+    'functionShadow',
+    "import {dirname,resolve} from 'node:path';import {fileURLToPath} from 'node:url';const here=dirname(fileURLToPath(import.meta.url));function assets(){function resolve(){return '/assets'};const root=resolve(here,'..');console.log(root)};assets()",
+    0,
+    '/assets',
+  ],
+  [
+    'hoistedFunctionShadow',
+    "import {dirname,resolve} from 'node:path';import {fileURLToPath} from 'node:url';const here=dirname(fileURLToPath(import.meta.url));function assets(){const root=resolve(here,'..');function resolve(){return '/assets'};console.log(root)};assets()",
+    0,
+    '/assets',
+  ],
+  [
     'namespaceRoot',
     "import * as path from 'node:path';import * as url from 'node:url';const root=path.resolve(path.dirname(url.fileURLToPath(import.meta.url)),'..');console.log(root)",
     1,
