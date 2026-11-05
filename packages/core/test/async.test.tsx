@@ -215,34 +215,13 @@ function Wrap(props: { children?: unknown }) {
   return <section>{props.children}</section>
 }
 
-describe('a Boundary directly in a conditional hole', () => {
-  function setup(view: (open: { value: boolean }, boundary: () => unknown) => () => unknown) {
-    const open = state(false),
-      mounts: number[] = []
-    const load = vi.fn(
-      () =>
-        new Promise<string>((ok) => {
-          setTimeout(() => ok('loaded'), 300)
-        }),
-    )
-    function Spy() {
-      mounts.push(1)
-      return <i class="wait">wait</i>
-    }
-    function Inner() {
-      const r = resource(() => load())
-      return <p class="done">{r.value}</p>
-    }
-    render(
-      view(open, () => (
-        <Boundary pending={<Spy />}>
-          <Inner />
-        </Boundary>
-      )),
-    )
-    return { open, load, mounts }
-  }
-
+function registerBoundaryCases(
+  setup: (view: (open: { value: boolean }, boundary: () => unknown) => () => unknown) => {
+    open: { value: boolean }
+    load: unknown
+    mounts: number[]
+  },
+) {
   test.each([
     [
       'bare',
@@ -296,6 +275,37 @@ describe('a Boundary directly in a conditional hole', () => {
     await vi.advanceTimersByTimeAsync(0)
     expect(load).toHaveBeenCalledTimes(2)
   })
+}
+
+describe('a Boundary directly in a conditional hole', () => {
+  function setup(view: (open: { value: boolean }, boundary: () => unknown) => () => unknown) {
+    const open = state(false),
+      mounts: number[] = []
+    const load = vi.fn(
+      () =>
+        new Promise<string>((ok) => {
+          setTimeout(() => ok('loaded'), 300)
+        }),
+    )
+    function Spy() {
+      mounts.push(1)
+      return <i class="wait">wait</i>
+    }
+    function Inner() {
+      const r = resource(() => load())
+      return <p class="done">{r.value}</p>
+    }
+    render(
+      view(open, () => (
+        <Boundary pending={<Spy />}>
+          <Inner />
+        </Boundary>
+      )),
+    )
+    return { open, load, mounts }
+  }
+
+  registerBoundaryCases(setup)
 })
 
 test('a Boundary that goes away takes its content with it; one that stays keeps it', async () => {

@@ -375,21 +375,9 @@ test('a flush by hand leaves the scheduled one harmless, and later writes still 
   expect(seen).toEqual([0, 1, 2, 3])
 })
 
-describe('per-key reads between plain objects', () => {
-  function rows(box: { get(k: never): unknown }, keys: unknown[]) {
-    const seen: unknown[] = []
-    createRoot(() =>
-      keys.forEach((k) =>
-        effect(
-          () => box.get(k as never),
-          (v) => seen.push([k, v]),
-        ),
-      ),
-    )
-    seen.length = 0
-    return seen
-  }
-
+function registerChangedKeys(
+  rows: (box: { get(k: never): unknown }, keys: unknown[]) => unknown[],
+) {
   test('one change reaches the two rows it changes, without visiting the others', () => {
     const keys = Array.from({ length: 1000 }, (_, i) => i)
     const box = state<Record<number, boolean>>({ 5: true })
@@ -427,7 +415,11 @@ describe('per-key reads between plain objects', () => {
       [s, 'c2'],
     ])
   })
+}
 
+function registerPropertyKinds(
+  rows: (box: { get(k: never): unknown }, keys: unknown[]) => unknown[],
+) {
   test('a non-enumerable key, and an inherited key shadowed then not', () => {
     const hidden = (v: number) => Object.defineProperty({}, 'h', { value: v, enumerable: false })
     const box = state<unknown>(hidden(1))
@@ -472,4 +464,24 @@ describe('per-key reads between plain objects', () => {
       [0, undefined],
     ])
   })
+}
+
+describe('per-key reads between plain objects', () => {
+  function rows(box: { get(k: never): unknown }, keys: unknown[]) {
+    const seen: unknown[] = []
+    createRoot(() =>
+      keys.forEach((k) =>
+        effect(
+          () => box.get(k as never),
+          (v) => seen.push([k, v]),
+        ),
+      ),
+    )
+    seen.length = 0
+    return seen
+  }
+
+  registerChangedKeys(rows)
+
+  registerPropertyKinds(rows)
 })

@@ -49,6 +49,48 @@ afterEach(() => {
 
 const click = (sel: string) => (root: Element) => (root.querySelector(sel) as HTMLElement).click()
 
+function registerBenchmarkEntry() {
+  describe('js-framework-benchmark entry', () => {
+    let seed = 0
+    beforeEach(() => {
+      seed = 0
+      vi.spyOn(Math, 'random').mockImplementation(
+        () => (seed = (seed * 9301 + 49297) % 233280) / 233280,
+      )
+    })
+    afterEach(() => vi.restoreAllMocks())
+
+    it('runs every benchmark operation', () => {
+      const root = mount(Bench)
+      const rows = () => [...root.querySelectorAll('tbody tr')]
+      const label = (i: number) => rows()[i]!.querySelector('td:nth-child(2) a')!.textContent
+      const go = (sel: string) => {
+        click(sel)(root)
+        flush()
+      }
+      go('#run')
+      expect(rows()).toHaveLength(1000)
+      go('tbody tr:nth-child(5) td:nth-child(2) a')
+      expect(rows()[4]!.className).toBe('danger')
+      go('#update')
+      expect(
+        label(0).endsWith(' !!!') && label(10).endsWith(' !!!') && !label(1).endsWith(' !!!'),
+      ).toBe(true)
+      const [second, last] = [rows()[1], rows()[998]]
+      go('#swaprows')
+      expect([rows()[1], rows()[998]]).toEqual([last, second])
+      const third = rows()[2]
+      go('tbody tr:nth-child(3) td:nth-child(3) a')
+      expect(rows()).toHaveLength(999)
+      expect(rows()).not.toContain(third)
+      go('#add')
+      expect(rows()).toHaveLength(1999)
+      go('#clear')
+      expect(rows()).toHaveLength(0)
+    })
+  })
+}
+
 describe('weft back end: basics', () => {
   it('compiles without Solid-shaped helpers', () => {
     const out = transform(readFileSync(resolve(__dirname, 'fixtures/next/Basics.tsx'), 'utf8'), {
@@ -109,48 +151,10 @@ describe('weft back end: basics', () => {
     expect(root.querySelector('h2')!.title).toBe('a "quoted" title')
   })
 
-  describe('js-framework-benchmark entry', () => {
-    let seed = 0
-    beforeEach(() => {
-      seed = 0
-      vi.spyOn(Math, 'random').mockImplementation(
-        () => (seed = (seed * 9301 + 49297) % 233280) / 233280,
-      )
-    })
-    afterEach(() => vi.restoreAllMocks())
-
-    it('runs every benchmark operation', () => {
-      const root = mount(Bench)
-      const rows = () => [...root.querySelectorAll('tbody tr')]
-      const label = (i: number) => rows()[i]!.querySelector('td:nth-child(2) a')!.textContent
-      const go = (sel: string) => {
-        click(sel)(root)
-        flush()
-      }
-      go('#run')
-      expect(rows()).toHaveLength(1000)
-      go('tbody tr:nth-child(5) td:nth-child(2) a')
-      expect(rows()[4]!.className).toBe('danger')
-      go('#update')
-      expect(
-        label(0).endsWith(' !!!') && label(10).endsWith(' !!!') && !label(1).endsWith(' !!!'),
-      ).toBe(true)
-      const [second, last] = [rows()[1], rows()[998]]
-      go('#swaprows')
-      expect([rows()[1], rows()[998]]).toEqual([last, second])
-      const third = rows()[2]
-      go('tbody tr:nth-child(3) td:nth-child(3) a')
-      expect(rows()).toHaveLength(999)
-      expect(rows()).not.toContain(third)
-      go('#add')
-      expect(rows()).toHaveLength(1999)
-      go('#clear')
-      expect(rows()).toHaveLength(0)
-    })
-  })
+  registerBenchmarkEntry()
 })
 
-describe('weft back end, step 2', () => {
+function registerConditionalAndSpread() {
   it('conditionals rebuild a branch only when its condition changes', () => {
     const root = mount(two.Toggle)
     const b = root.querySelector('b')!
@@ -207,7 +211,9 @@ describe('weft back end, step 2', () => {
     expect(a.hasAttribute('class')).toBe(false)
     expect(a.getAttribute('data-tone')).toBe('warn')
   })
+}
 
+function registerContentAndRefs() {
   it("a spread's children fill an element that has none, and stay live", async () => {
     const { state } = await import('@weft-js/core')
     const rest = state<Record<string, unknown>>({ title: 't', children: 'first' })
@@ -231,7 +237,9 @@ describe('weft back end, step 2', () => {
     expect(root.querySelector('output')!.textContent).toBe('box')
     expect(seen).toEqual([root.querySelector('span')])
   })
+}
 
+function registerSelectAndSvg() {
   it('<select value> is set after its options exist', () => {
     const root = mount(two.Picker)
     const select = root.querySelector('select')!
@@ -261,4 +269,12 @@ describe('weft back end, step 2', () => {
     flush()
     expect(circle.getAttribute('r')).toBe('3')
   })
+}
+
+describe('weft back end, step 2', () => {
+  registerConditionalAndSpread()
+
+  registerContentAndRefs()
+
+  registerSelectAndSvg()
 })
