@@ -14,9 +14,17 @@ import { toneOf as _Shared3 } from './shared-tone-of'
 
 export function TableEdit() {
   const rows = state(PROJECTS.slice(0, 5))
-  const last = state('Double-click a cell, or focus it and press Enter.')
-  const save = (row: Project, column: string, value: unknown) => {
-    rows.value = rows.value.map((p) => (p.id === row.id ? { ...p, [column]: value } : p))
+  const last = state(
+    'Double-click a cell, or focus it and press Enter.',
+  )
+  const save = (
+    row: Project,
+    column: string,
+    value: unknown,
+  ) => {
+    rows.value = rows.value.map((p) =>
+      p.id === row.id ? { ...p, [column]: value } : p,
+    )
     last.value = `Saved ${column} for ${row.name}.`
   }
   return (

@@ -15,9 +15,17 @@ import { toneOf as _Shared3 } from './shared-tone-of'
 export function DataGridEdit() {
   const rows = state(PROJECTS)
   const last = state('Nothing changed yet.')
-  const save = (row: Project, column: string, value: unknown) => {
-    rows.value = rows.value.map((p) => (p.id === row.id ? { ...p, [column]: value } : p))
-    last.value = `${row.name}: ${column} is now ${String(value)}.`
+  const save = (
+    row: Project,
+    column: string,
+    value: unknown,
+  ) => {
+    rows.value = rows.value.map((p) =>
+      p.id === row.id ? { ...p, [column]: value } : p,
+    )
+    const result = String(value)
+    const message = `${row.name}: ${column} is now `
+    last.value = `${message}${result}.`
   }
   return (
     <Stack gap="related">

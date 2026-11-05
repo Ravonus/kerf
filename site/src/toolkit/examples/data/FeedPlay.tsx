@@ -10,6 +10,14 @@ import { ACTIVITY } from './shared-tone-of'
 
 import { REGIONS as _REGIONS } from '../../world'
 
-export const FeedPlay = (p: { height: string; busy: boolean }) => (
-  <Feed label="Activity" items={ACTIVITY} height={p.height} busy={p.busy} />
+export const FeedPlay = (p: {
+  height: string
+  busy: boolean
+}) => (
+  <Feed
+    label="Activity"
+    items={ACTIVITY}
+    height={p.height}
+    busy={p.busy}
+  />
 )

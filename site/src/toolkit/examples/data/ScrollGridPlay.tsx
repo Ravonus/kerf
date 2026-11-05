@@ -10,7 +10,10 @@ import { HOURS, latency } from './shared-lazy'
 
 import { toneOf as _Shared3 } from './shared-tone-of'
 
-export const ScrollGridPlay = (p: { rows: number; headerWidth: number }) => (
+export const ScrollGridPlay = (p: {
+  rows: number
+  headerWidth: number
+}) => (
   <ScrollGrid
     label="Latency by hour, in milliseconds"
     corner="Route"

@@ -18,8 +18,17 @@ export function KanbanAdd() {
   const add = (column: string, title: string) => {
     const next = { id: `new-${made++}`, title }
     columns.value = columns.value.map((c) =>
-      c.id === column ? { ...c, cards: [...c.cards, next] } : c,
+      c.id === column
+        ? { ...c, cards: [...c.cards, next] }
+        : c,
     )
   }
-  return <Kanban label="Release board" columns={columns} onAdd={add} height="440px" />
+  return (
+    <Kanban
+      label="Release board"
+      columns={columns}
+      onAdd={add}
+      height="440px"
+    />
+  )
 }

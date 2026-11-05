@@ -22,7 +22,10 @@ export function TableError() {
       columns={COLUMNS}
       picker={false}
       status={failed.value ? 'error' : undefined}
-      error={{ title: 'Projects could not load', text: 'The API timed out. Nothing was lost.' }}
+      error={{
+        title: 'Projects could not load',
+        text: 'The API timed out. Nothing was lost.',
+      }}
       onRetry={() => (failed.value = false)}
     />
   )

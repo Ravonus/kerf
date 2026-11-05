@@ -15,7 +15,10 @@ import { LAZY as _Shared2 } from './shared-lazy'
 import { toneOf as _Shared3 } from './shared-tone-of'
 
 export function TableSortable() {
-  const sort = state<TableSort | undefined>({ id: 'cost', dir: 'descending' })
+  const sort = state<TableSort | undefined>({
+    id: 'cost',
+    dir: 'descending',
+  })
   return (
     <Stack gap="related">
       <Text subtle>

@@ -10,4 +10,10 @@ import { ACTIVITY } from './shared-tone-of'
 
 import { REGIONS as _REGIONS } from '../../world'
 
-export const FeedActivity = () => <Feed label="Activity" items={ACTIVITY} height="400px" />
+export const FeedActivity = () => (
+  <Feed
+    label="Activity"
+    items={ACTIVITY}
+    height="400px"
+  />
+)

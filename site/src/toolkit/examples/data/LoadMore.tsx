@@ -26,7 +26,8 @@ export function VirtualListLoadMore() {
   return (
     <Stack gap="related">
       <Text subtle>
-        {shown.value.length} of {LINES.length} loaded{busy.value ? ', loading more' : ''}.
+        {shown.value.length} of {LINES.length} loaded
+        {busy.value ? ', loading more' : ''}.
       </Text>
       <VirtualList
         label="Request log"

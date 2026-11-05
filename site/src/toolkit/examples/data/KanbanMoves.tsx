@@ -14,13 +14,26 @@ import { REGIONS as _REGIONS } from '../../world'
 
 export function KanbanMoves() {
   const columns = state(BOARD)
-  const last = state('Move a card. onMove reports where it landed.')
-  const moved = (id: string, column: string, index: number) =>
-    (last.value = `${id} moved to ${column}, position ${index + 1}.`)
+  const last = state(
+    'Move a card. onMove reports where it landed.',
+  )
+  const moved = (
+    id: string,
+    column: string,
+    index: number,
+  ) =>
+    (last.value =
+      `${id} moved to ${column}, ` +
+      `position ${index + 1}.`)
   return (
     <Stack gap="related">
       <Text subtle>{last.value}</Text>
-      <Kanban label="Release board" columns={columns} onMove={moved} height="420px" />
+      <Kanban
+        label="Release board"
+        columns={columns}
+        onMove={moved}
+        height="420px"
+      />
     </Stack>
   )
 }

@@ -19,7 +19,9 @@ export const TableEmpty = () => (
     picker={false}
     empty={{
       title: 'No projects yet',
-      text: 'Connect a repository and your first deploy runs in about a minute.',
+      text:
+        'Connect a repository and your first deploy ' +
+        'runs in about a minute.',
       action: <Button icon="plus">New project</Button>,
     }}
   />

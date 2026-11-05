@@ -21,13 +21,17 @@ export function FeedLoadMore() {
     await new Promise((done) => {
       setTimeout(done, 700)
     })
-    items.value = ACTIVITY.slice(0, items.value.length + 20)
+    items.value = ACTIVITY.slice(
+      0,
+      items.value.length + 20,
+    )
     busy.value = false
   }
   return (
     <Stack gap="related">
       <Text subtle>
-        {items.value.length} of {ACTIVITY.length} events{busy.value ? ', loading more' : ''}.
+        {items.value.length} of {ACTIVITY.length} events
+        {busy.value ? ', loading more' : ''}.
       </Text>
       <Feed
         label="Activity"
