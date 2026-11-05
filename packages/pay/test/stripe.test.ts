@@ -90,7 +90,7 @@ describe('pay.rail@1', () => {
   })
 })
 
-describe('checkout', () => {
+function checkoutData() {
   const line = {
     product: 'pro',
     name: 'Pro',
@@ -108,7 +108,10 @@ describe('checkout', () => {
     cancelUrl: 'https://app.test/no',
     idempotencyKey: 'key-1',
   }
+  return { line, request }
+}
 
+function checkoutForms({ line, request }: ReturnType<typeof checkoutData>) {
   test('form-encodes the session, with the key, the version and the user on what later events carry', async () => {
     const { calls, fetcher } = mock()
     const { url } = await rail({ fetch: fetcher }).checkout({
@@ -145,7 +148,9 @@ describe('checkout', () => {
     expect(sent['line_items[0][price]']).toBe('price_mapped')
     expect(sent['line_items[0][price_data][unit_amount]']).toBeUndefined()
   })
+}
 
+function checkoutPayments({ request }: ReturnType<typeof checkoutData>) {
   test('a payment puts the metadata on the payment, which its charge inherits', async () => {
     const { calls, fetcher } = mock()
     await rail({ fetch: fetcher }).checkout({
@@ -180,7 +185,9 @@ describe('checkout', () => {
     expect(failed.message).toContain('declined')
     expect(failed.message).not.toContain(KEY)
   })
+}
 
+function checkoutKeys({ request }: ReturnType<typeof checkoutData>) {
   test('no secret key stops before any request', async () => {
     const { calls, fetcher } = mock()
     const old = process.env.STRIPE_SECRET_KEY
@@ -205,7 +212,9 @@ describe('checkout', () => {
     await rail({ fetch: local, api: 'http://127.0.0.1:1', ...placeholder }).checkout(request)
     expect(local).toHaveBeenCalledOnce()
   })
+}
 
+function checkoutPortal() {
   test('the portal and a refund post to their own endpoints', async () => {
     const { calls, fetcher } = mock(() => ({ body: { url: 'https://billing.mock/p/1' } }))
     const r = rail({ fetch: fetcher })
@@ -221,12 +230,17 @@ describe('checkout', () => {
     expect(calls[1]!.headers['idempotency-key']).toBe('refund:pi_1')
     await expect(r.refund!({ purchase: 'sub_1' })).rejects.toMatchObject({ code: 'PAY022' })
   })
+}
+
+describe('checkout', () => {
+  const data = checkoutData()
+  checkoutForms(data)
+  checkoutPayments(data)
+  checkoutKeys(data)
+  checkoutPortal()
 })
 
-describe('verify', () => {
-  const refused = (d: { body: string; headers: Headers }, r = rail()) =>
-    expect(r.verify(d)).rejects.toMatchObject({ code: 'PAY011' })
-
+function verifySubscriptions() {
   test('reads a subscription', async () => {
     const [e] = await rail().verify(signed(sub('trialing')))
     expect(e).toMatchObject({
@@ -265,7 +279,11 @@ describe('verify', () => {
     )
     expect(e!.expires).toBe(end * 1000)
   })
+}
 
+function verifySignatures(
+  refused: (d: { body: string; headers: Headers }, r?: ReturnType<typeof rail>) => Promise<void>,
+) {
   test('a wrong secret, a changed byte, an old time and no header are all refused', async () => {
     await refused(signed(sub('active'), { secret: 'whsec_another' }))
     const good = signed(sub('active'))
@@ -289,7 +307,9 @@ describe('verify', () => {
     )
     expect(await rail().verify(d)).toHaveLength(1)
   })
+}
 
+function verifySubscriptionCheckout() {
   test('a subscription checkout defers to the subscription events, so a trial stays a trial', async () => {
     expect(
       await rail().verify(
@@ -309,7 +329,9 @@ describe('verify', () => {
       ),
     ).toEqual([])
   })
+}
 
+function verifyPayments() {
   const session = (over: object, type = 'checkout.session.completed') => ({
     id: 'evt_p',
     type,
@@ -340,7 +362,9 @@ describe('verify', () => {
       (await rail().verify(signed(session({}, 'checkout.session.async_payment_failed'))))[0]!.state,
     ).toBe('expired')
   })
+}
 
+function verifyEvents() {
   test('only a whole refund is a refund', async () => {
     const charge = (refunded: boolean) => ({
       id: 'evt_r',
@@ -378,6 +402,16 @@ describe('verify', () => {
       ),
     ).toEqual([])
   })
+}
+
+describe('verify', () => {
+  const refused = (d: { body: string; headers: Headers }, r = rail()) =>
+    expect(r.verify(d)).rejects.toMatchObject({ code: 'PAY011' })
+  verifySubscriptions()
+  verifySignatures(refused)
+  verifySubscriptionCheckout()
+  verifyPayments()
+  verifyEvents()
 })
 
 describe('through the ledger', () => {
