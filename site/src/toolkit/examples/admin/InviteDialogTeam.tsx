@@ -12,6 +12,10 @@ import { wait } from './shared'
 export function InviteDialogTeam() {
   const open = state(false)
   const sent = state<string[]>([])
+  const send = async (emails: string[]) => {
+    await wait(600)
+    sent.value = emails
+  }
   return (
     <>
       <Stack
@@ -35,10 +39,7 @@ export function InviteDialogTeam() {
         roles={INVITE_ROLES}
         defaultRole="member"
         seatsLeft={3}
-        onSend={async (emails) => {
-          await wait(600)
-          sent.value = emails
-        }}
+        onSend={send}
       />
       <Toaster />
     </>
