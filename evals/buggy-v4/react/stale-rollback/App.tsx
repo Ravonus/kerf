@@ -29,7 +29,7 @@ function loadSaved(): Saved {
 const changeOf = (s: Stock, live: Record<string, Live>) =>
   (live[s.id].price - s.prevClose) / s.prevClose
 
-export function App({ api }: { api: Api }) {
+function useWatchlist(api: Api) {
   const [stocks, setStocks] = useState<Stock[] | null>(null)
   const [holdings, setHoldings] = useState<Holding[]>([])
   const [live, setLive] = useState<Record<string, Live>>({})
@@ -73,6 +73,45 @@ export function App({ api }: { api: Api }) {
     localStorage.setItem(VIEW_KEY, JSON.stringify(saved))
   }, [saved])
 
+  return {
+    stocks,
+    holdings,
+    live,
+    saved,
+    setSaved,
+    visited,
+    setVisited,
+    searches,
+    setSearches,
+    favorites,
+    setFavorites,
+    alert,
+    setAlert,
+    openId,
+    setOpenId,
+    notes,
+    setNotes,
+    saves,
+    setSaves,
+  }
+}
+
+function useWatchActions(api: Api, model: ReturnType<typeof useWatchlist>) {
+  const {
+    saved,
+    setSaved,
+    setVisited,
+    searches,
+    setSearches,
+    favorites,
+    setFavorites,
+    setAlert,
+    openId,
+    setOpenId,
+    setNotes,
+    saves,
+    setSaves,
+  } = model
   const tab = saved.tab
   const view = saved.views[tab]
   const setView = useCallback(
@@ -134,6 +173,15 @@ export function App({ api }: { api: Api }) {
     setNotes((n) => ({ ...n, [last.id]: last.prev }))
   }
 
+  return { tab, view, setView, selectTab, onSearch, search, toggle, openDetails, save, undo }
+}
+
+function useWatchDisplay(
+  model: ReturnType<typeof useWatchlist>,
+  actions: ReturnType<typeof useWatchActions>,
+) {
+  const { stocks, holdings, live, favorites } = model
+  const { tab, view, search } = actions
   const results = view.query.trim() ? (search?.results ?? null) : null
   const filtered = useMemo(
     () =>
@@ -159,6 +207,16 @@ export function App({ api }: { api: Api }) {
     [holdings, live],
   )
 
+  return { shown, portfolio }
+}
+
+export function App({ api }: { api: Api }) {
+  const model = useWatchlist(api)
+  const actions = useWatchActions(api, model)
+  const { shown, portfolio } = useWatchDisplay(model, actions)
+  const { stocks, live, saved, visited, favorites, alert, openId, notes, saves, setOpenId } = model
+  const { tab, view, setView, selectTab, onSearch, search, toggle, openDetails, save, undo } =
+    actions
   if (!stocks) return <p>Loading…</p>
   const open = openId ? stocks.find((s) => s.id === openId) : undefined
   return (
