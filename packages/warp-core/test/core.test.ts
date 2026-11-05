@@ -113,9 +113,11 @@ test('copy: a refused clipboard write is caught and shows a failed state', async
   const stop = copyButtons()
   const b = document.querySelector<HTMLElement>('[data-act="copy"]')!
   b.click()
-  await new Promise((r) => {
-    setTimeout(r, 80)
-  })
+  await vi.waitFor(() =>
+    expect(document.querySelector('[data-scope="announcer"]')!.textContent).toMatch(
+      /Couldn’t copy/,
+    ),
+  )
   expect(writeText).toHaveBeenCalledWith('x')
   expect(b.hasAttribute('data-failed')).toBe(true)
   expect(b.hasAttribute('data-done')).toBe(false)
