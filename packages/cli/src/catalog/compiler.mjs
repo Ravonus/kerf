@@ -205,9 +205,9 @@ export const compilerDiagnostics = [
     severity: 'error',
     by: 'compiler',
     catches:
-      'React hooks (`useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`), including imported aliases and namespaces; custom `useX()` calls in components; dependency arrays on core `watch`, `derived`, or `memo`',
+      'React hook imports and unbound standard hook names; imported custom `useX()` calls in components and local wrappers with resolved hook calls in their bodies; dependency arrays on core `watch`, `derived`, or `memo`. Local names and parameters alone do not establish a hook',
     fix:
-      'Use `state` and `.value`, `watch(source, callback)` with `onCleanup`, `derived` and `.value`, `ref={el}`, or plain functions. Reads track dependencies. Only an empty dependency array on `derived` or `memo` has a safe autofix',
+      'Use `state` and `.value`, `watch(source, callback)` with `onCleanup`, `derived` and `.value`, `ref={el}`, or plain functions. Core `memo` returns a callable: read `value()`. Reads track dependencies. Only an empty dependency array on `derived` or `memo` has a safe autofix',
     example:
       "import { useState } from 'react'\nexport function A() { const [n] = useState(0); return <p>{n}</p> }",
   },

@@ -74,11 +74,8 @@ fn w020_resolves_aliases_namespaces_and_hoisted_imports() {
 }
 
 #[test]
-fn w020_custom_hook_calls_in_component_setup_need_plain_functions() {
+fn w020_imported_custom_hook_calls_need_plain_functions() {
     let cases = [
-        ("", "useCart()"),
-        ("function useCart() { return 1 }", "useCart()"),
-        ("const useCart = () => 1", "useCart()"),
         ("import { useCart as cart } from './cart'", "cart()"),
         ("import * as cart from './cart'", "cart.useCart()"),
         ("import { useCart as cart } from 'react'", "cart()"),
@@ -183,10 +180,135 @@ fn w020_custom_hooks_in_jsx_and_handlers_are_errors() {
         "return <p>{useCart()}</p>",
         "return <button onClick={() => useCart()} />",
     ] {
-        let source = format!("export function A() {{ {body} }}");
+        let source =
+            format!("import {{ useCart }} from './cart'; export function A() {{ {body} }}");
         let (_, diagnostics) = run(&source);
         assert_eq!(codes(&diagnostics), ["W020"], "{source}: {diagnostics:?}");
     }
+}
+
+#[test]
+fn w020_resolved_react_wrappers_are_hooks_at_the_component_call() {
+    let cases = [
+        (
+            "import { useState as make } from 'react'",
+            "function useCart() { return make(0) }",
+            "useCart",
+            2,
+        ),
+        (
+            "import React from 'react'",
+            "const useCart = () => React.useRef(null)",
+            "useCart",
+            2,
+        ),
+        (
+            "import * as R from 'react'",
+            "const useCart = function () { return R['useMemo'](() => 1, []) }",
+            "useCart",
+            2,
+        ),
+        (
+            "import { useState } from 'react'",
+            "function useCart() { return useState(0) } \
+             function useCheckout() { return useCart() }",
+            "useCheckout",
+            2,
+        ),
+        (
+            "import { useCart as remote } from './cart'",
+            "const useCheckout = () => remote()",
+            "useCheckout",
+            1,
+        ),
+    ];
+    for (import, wrapper, name, count) in cases {
+        let source =
+            format!("{import}; export function A() {{ {name}(); return <p /> }}; {wrapper}");
+        let (_, diagnostics) = run(&source);
+        assert_eq!(diagnostics.len(), count, "{source}: {diagnostics:?}");
+        assert!(diagnostics.iter().all(|d| d.code == "W020"));
+        assert!(
+            diagnostics.iter().any(|d| {
+                d.message.starts_with(&format!("`{name}` is a React hook"))
+                    && d.help.contains("ordinary function")
+                    && d.severity == Severity::Error
+                    && d.fix.is_none()
+            }),
+            "{diagnostics:?}"
+        );
+    }
+}
+
+#[test]
+fn w020_ordinary_use_cart_functions_and_shadowing_parameters_stay_quiet() {
+    let sources = [
+        "function useCart() { return 1 } \
+         export function A() { const n = useCart(); return <p>{n}</p> }",
+        "const useCart = () => 1; export function A() { return <p>{useCart()}</p> }",
+        "const useCart = function () { return 1 }; \
+         export function A() { return <p>{useCart()}</p> }",
+        "const api = { useState: n => n }; function useCart() { return api.useState(0) } \
+         export function A() { return <p>{useCart()}</p> }",
+        "import { useCart } from './cart'; \
+         export function A() { const useCart = () => 1; return <p>{useCart()}</p> }",
+        "import { useCart } from './cart'; \
+         export function A(useCart) { return <p>{useCart()}</p> }",
+        "import { useCart } from './cart'; \
+         export function A({ useCart }) { return <p>{useCart()}</p> }",
+        "import { useState } from 'react'; \
+         function useCart(useState) { return useState(0) } \
+         export function A() { return <p>{useCart(n => n)}</p> }",
+        "function useCart() { return 1 } \
+         function useCheckout() { return useCart() } \
+         export function A() { return <p>{useCheckout()}</p> }",
+    ];
+    for source in sources {
+        let (code, diagnostics) = run(source);
+        assert!(diagnostics.is_empty(), "{source}: {diagnostics:?}");
+        assert!(!code.is_empty(), "ordinary functions must still compile");
+    }
+}
+
+#[test]
+fn w020_wrapper_provenance_excludes_reassignments_and_deferred_callbacks() {
+    for (wrapper, component) in [
+        (
+            "let useCart = () => useState(0); useCart = () => 1",
+            "export function A() { useCart(); return <p /> }",
+        ),
+        (
+            "function useCart() { const deferred = () => useState(0); return 1 }",
+            "export function A() { useCart(); return <p /> }",
+        ),
+        (
+            "function useCart() { return useState(0) }",
+            "export function A(useCart) { return <p>{useCart()}</p> }",
+        ),
+    ] {
+        let source = format!("import {{ useState }} from 'react'; {wrapper}; {component}");
+        let (_, diagnostics) = run(&source);
+        assert_eq!(codes(&diagnostics), ["W020"], "{source}: {diagnostics:?}");
+        assert!(diagnostics[0].message.starts_with("`useState`"));
+    }
+}
+
+#[test]
+fn w020_memo_dependency_advice_reads_the_returned_callable() {
+    let source = "import { memo as cache } from '@weft-js/core'; \
+        export function A() { const value = cache(() => 1, []); return <p>{value()}</p> }";
+    let (_, diagnostics) = run(source);
+    assert_eq!(codes(&diagnostics), ["W020"], "{diagnostics:?}");
+    assert!(diagnostics[0].help.contains("returns a callable"));
+    assert!(diagnostics[0].help.contains("`value()`"));
+    assert!(!diagnostics[0].help.contains(".value"));
+    let repaired = apply_fix(source, &diagnostics[0]);
+    let (code, diagnostics) = run(&repaired);
+    assert!(diagnostics.is_empty(), "{repaired}: {diagnostics:?}");
+    assert!(
+        code.contains("cache(() => 1)") && code.contains("value()"),
+        "{code}"
+    );
 }
 
 #[test]

@@ -137,9 +137,11 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
         list_sources: Vec::new(),
         imports: HashMap::new(),
         react_imports: react::imports(program),
+        react_wrappers: HashSet::new(),
         box_props: Vec::new(),
         defaulted: HashSet::new(),
     };
+    a.react_wrappers = react::wrappers(program, scoping, &a.react_imports);
     a.visit_program(program);
     a.finish()
 }
@@ -374,6 +376,8 @@ struct Analyzer<'s> {
     imports: HashMap<SymbolId, (String, String)>,
     /// Hoisted value imports, including namespaces; project facts keep their existing import map.
     react_imports: HashMap<SymbolId, (String, String)>,
+    /// Local useX functions with a resolved hook call, excluding reassigned bindings.
+    react_wrappers: HashSet<SymbolId>,
     /// Box symbol passed as a component prop: (box, component name, import, prop name).
     box_props: Vec<(SymbolId, String, Option<String>, String)>,
     /// Destructured props with a default: their read isn't a plain path.
