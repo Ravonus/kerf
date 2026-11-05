@@ -44,7 +44,6 @@ export function devBuilder(
           contract,
           exited,
         )
-        // oxlint-disable-next-line no-unmodified-loop-condition -- `again` and `closed` are set by what arrives during the await
       } while (s.again && !closed())
     } finally {
       s.building = false
