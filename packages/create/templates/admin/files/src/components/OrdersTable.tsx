@@ -9,7 +9,7 @@ import {
   type Column,
   type TableSort,
 } from '@weft-js/warp'
-import { derived, state, watch } from '@weft-js/core'
+import { derived, state, watch, type State } from '@weft-js/core'
 import { StatusBadge } from '#/components/StatusBadge'
 import { count, date, money, PAGE_SIZE, viewHref, type OrderView, type SortKey } from '#/lib/orders'
 import { listOrders, markShipped, type OrderRow } from '#/server/orders'
@@ -46,6 +46,27 @@ const tableSort = (view: OrderView): TableSort => ({
   dir: view.dir === 'asc' ? 'ascending' : 'descending',
 })
 
+async function shipOrders(
+  keys: string[],
+  view: () => OrderView,
+  selected: State<Record<string, boolean>>,
+) {
+  try {
+    await markShipped({ ids: keys.map(Number), view: { ...view() } })
+    selected.value = {}
+    toast.show({
+      tone: 'positive',
+      title: keys.length === 1 ? '1 order marked shipped' : `${keys.length} orders marked shipped`,
+    })
+  } catch {
+    toast.show({
+      tone: 'critical',
+      title: "Those orders weren't updated",
+      description: 'Your selection is still here. Try again in a moment.',
+    })
+  }
+}
+
 export function OrdersTable({ view }: { view: OrderView }) {
   const orders = listOrders(() => ({ ...view }))
   const rows = derived(() => orders.value?.rows ?? [])
@@ -72,23 +93,8 @@ export function OrdersTable({ view }: { view: OrderView }) {
       }),
     )
 
-  const ship = async (keys: string[]) => {
-    try {
-      await markShipped({ ids: keys.map(Number), view: { ...view } })
-      selected.value = {}
-      toast.show({
-        tone: 'positive',
-        title:
-          keys.length === 1 ? '1 order marked shipped' : `${keys.length} orders marked shipped`,
-      })
-    } catch {
-      toast.show({
-        tone: 'critical',
-        title: "Those orders weren't updated",
-        description: 'Your selection is still here. Try again in a moment.',
-      })
-    }
-  }
+  const currentView = () => view
+  const ship = (keys: string[]) => shipOrders(keys, currentView, selected)
 
   return (
     <>
