@@ -10,6 +10,7 @@ use oxc_ast::ast::{
 use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::SymbolId;
 use oxc_span::GetSpan;
+use oxc_syntax::operator::UnaryOperator;
 use oxc_syntax::scope::ScopeFlags;
 
 use crate::diag::{Diagnostic, Severity};
@@ -21,6 +22,8 @@ enum Origin {
     Box,
     Props,
     Value,
+    /// Constructed object whose contents or chosen identity depend on reactive reads.
+    Container,
 }
 
 fn origin(a: &Analyzer<'_>, aliases: &HashMap<SymbolId, Origin>, sym: SymbolId) -> Option<Origin> {
@@ -54,16 +57,16 @@ struct Reads<'x, 's> {
     found: bool,
 }
 
-fn reactive(a: &Analyzer<'_>, aliases: &HashMap<SymbolId, Origin>, e: &Expression<'_>) -> bool {
-    // A freshly allocated object is truthy regardless of the values stored in it.
-    if matches!(
+fn allocated_object(e: &Expression<'_>) -> bool {
+    matches!(
         e.get_inner_expression(),
         Expression::ObjectExpression(_)
             | Expression::ArrayExpression(_)
             | Expression::NewExpression(_)
-    ) {
-        return false;
-    }
+    )
+}
+
+fn reactive(a: &Analyzer<'_>, aliases: &HashMap<SymbolId, Origin>, e: &Expression<'_>) -> bool {
     let mut reads = Reads {
         a,
         aliases,
@@ -75,9 +78,10 @@ fn reactive(a: &Analyzer<'_>, aliases: &HashMap<SymbolId, Origin>, e: &Expressio
 
 impl<'a> Visit<'a> for Reads<'_, '_> {
     fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
-        if symbol_of(self.a.scoping, it).and_then(|sym| origin(self.a, self.aliases, sym))
-            == Some(Origin::Value)
-        {
+        if matches!(
+            symbol_of(self.a.scoping, it).and_then(|sym| origin(self.a, self.aliases, sym)),
+            Some(Origin::Value | Origin::Container)
+        ) {
             self.found = true;
         }
     }
@@ -144,7 +148,12 @@ impl<'a> Visit<'a> for Aliases<'_, '_> {
                     if let Some(source) = source {
                         self.bind(&it.id, source);
                     } else if reactive(self.a, &self.symbols, init) {
-                        self.bind(&it.id, Origin::Value);
+                        let source = if allocated_object(init) {
+                            Origin::Container
+                        } else {
+                            Origin::Value
+                        };
+                        self.bind(&it.id, source);
                     }
                 }
                 BindingPattern::ObjectPattern(obj) if source == Some(Origin::Box) => {
@@ -196,6 +205,22 @@ struct Returns<'x, 's> {
 }
 
 impl Returns<'_, '_> {
+    fn boolean_condition(&mut self, test: &Expression<'_>, returns: bool) {
+        // Allocations stay truthy; their inputs can still control iteration or dispatch.
+        let mut value = test.get_inner_expression();
+        while let Expression::UnaryExpression(unary) = value
+            && unary.operator == UnaryOperator::LogicalNot
+        {
+            value = unary.argument.get_inner_expression();
+        }
+        if allocated_object(value)
+            || reference(self.a, self.aliases, value) == Some(Origin::Container)
+        {
+            return;
+        }
+        self.condition(test, returns);
+    }
+
     fn condition(&mut self, test: &Expression<'_>, returns: bool) {
         if !returns || !reactive(self.a, self.aliases, test) {
             return;
@@ -217,7 +242,7 @@ impl Returns<'_, '_> {
 impl<'a> Visit<'a> for Returns<'_, '_> {
     fn visit_if_statement(&mut self, it: &IfStatement<'a>) {
         let returns = has_return(&it.consequent) || it.alternate.as_ref().is_some_and(has_return);
-        self.condition(&it.test, returns);
+        self.boolean_condition(&it.test, returns);
         walk::walk_if_statement(self, it);
     }
 
@@ -233,13 +258,13 @@ impl<'a> Visit<'a> for Returns<'_, '_> {
     }
 
     fn visit_while_statement(&mut self, it: &WhileStatement<'a>) {
-        self.condition(&it.test, has_return(&it.body));
+        self.boolean_condition(&it.test, has_return(&it.body));
         walk::walk_while_statement(self, it);
     }
 
     fn visit_for_statement(&mut self, it: &ForStatement<'a>) {
         if let Some(test) = &it.test {
-            self.condition(test, has_return(&it.body));
+            self.boolean_condition(test, has_return(&it.body));
         }
         walk::walk_for_statement(self, it);
     }

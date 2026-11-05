@@ -100,6 +100,139 @@ fn w040_switch_and_loop_tests_can_control_setup_returns() {
 }
 
 #[test]
+fn w040_spread_collections_keep_dependencies_in_value_contexts() {
+    for (initial, branch) in [
+        ("[]", "for (const item of [...gate.value]) { return null }"),
+        ("{}", "for (const key in { ...gate.value }) { return null }"),
+        (
+            "[]",
+            "for (const item of new Set(gate.value)) { return null }",
+        ),
+        (
+            "{}",
+            "for (const key in new Object(gate.value)) { return null }",
+        ),
+        (
+            "[]",
+            "const items = [...gate.value]; for (const item of items) { return null }",
+        ),
+        (
+            "{}",
+            "const copy = { ...gate.value }; const alias = copy; \
+          for (const key in alias) { return null }",
+        ),
+        (
+            "[]",
+            "switch ([...gate.value].length) { case 0: return null; default: break }",
+        ),
+        (
+            "{}",
+            "switch (0) { case Object.keys({ ...gate.value }).length: \
+          return null; default: break }",
+        ),
+        (
+            "[]",
+            "const items = [...gate.value]; \
+          switch (items.length) { case 0: return null; default: break }",
+        ),
+    ] {
+        let source = format!(
+            "import {{ state }} from '@weft-js/core'; \
+             export function A() {{ const gate = state({initial}); {branch}; return <p /> }}"
+        );
+        let (_, diagnostics) = run(&source);
+        let errors = early_return_errors(&diagnostics);
+        assert_eq!(errors.len(), 1, "{source}: {diagnostics:?}");
+        assert_eq!(errors[0].severity, Severity::Error);
+        assert!(errors[0].help.contains("Branch in JSX"));
+        assert!(errors[0].fix.is_none());
+    }
+}
+
+#[test]
+fn w040_new_objects_keep_identity_dependencies_in_switch_tests() {
+    for branch in [
+        "const expected = {}; switch (new Object(gate.value)) { \
+         case expected: return null; default: break }",
+        "const expected = {}; switch (expected) { \
+         case new Object(gate.value): return null; default: break }",
+        "const expected = {}; const copy = new Object(gate.value); switch (copy) { \
+         case expected: return null; default: break }",
+    ] {
+        let source = format!(
+            "import {{ state }} from '@weft-js/core'; \
+             export function A() {{ const gate = state({{}}); {branch}; return <p /> }}"
+        );
+        let (_, diagnostics) = run(&source);
+        assert_eq!(
+            early_return_errors(&diagnostics).len(),
+            1,
+            "{source}: {diagnostics:?}"
+        );
+    }
+}
+
+#[test]
+fn w040_allocated_objects_and_aliases_have_static_boolean_identity() {
+    for (initial, branch) in [
+        ("[]", "if ([...gate.value]) return null"),
+        ("{}", "if ({ ...gate.value }) return null"),
+        ("[]", "if (new Set(gate.value)) return null"),
+        (
+            "[]",
+            "const items = [...gate.value]; if (items) return null",
+        ),
+        (
+            "{}",
+            "const copy = { ...gate.value }; const alias = copy; if (alias) return null",
+        ),
+        (
+            "[]",
+            "const items = [...gate.value]; if (!items) return null",
+        ),
+        ("{}", "if (!{ ...gate.value }) return null"),
+        ("[]", "while ([...gate.value]) { return null }"),
+        (
+            "[]",
+            "const items = [...gate.value]; while (items) { return null }",
+        ),
+        ("{}", "for (; { ...gate.value };) { return null }"),
+        (
+            "{}",
+            "const copy = { ...gate.value }; for (; copy;) { return null }",
+        ),
+        ("[]", "for (const item of []) { return null }"),
+        ("{}", "for (const key in {}) { return null }"),
+    ] {
+        let source = format!(
+            "import {{ state }} from '@weft-js/core'; \
+             export function A() {{ const gate = state({initial}); {branch}; return <p /> }}"
+        );
+        let (_, diagnostics) = run(&source);
+        assert!(
+            early_return_errors(&diagnostics).is_empty(),
+            "{source}: {diagnostics:?}"
+        );
+    }
+}
+
+#[test]
+fn w040_spread_collection_repairs_branch_in_jsx_without_diagnostics() {
+    for (initial, condition) in [
+        ("[]", "[...gate.value].length === 0"),
+        ("{}", "Object.keys({ ...gate.value }).length === 0"),
+    ] {
+        let source = format!(
+            "import {{ state }} from '@weft-js/core'; export function A() {{ \
+             const gate = state({initial}); return <>{{{condition} ? <p /> : null}}</> }}"
+        );
+        let (code, diagnostics) = run(&source);
+        assert!(diagnostics.is_empty(), "{source}: {diagnostics:?}");
+        assert!(!code.is_empty(), "{source}");
+    }
+}
+
+#[test]
 fn w040_handlers_callbacks_and_ordinary_functions_stay_quiet() {
     let sources = [
         "import { state } from '@weft-js/core'; const gate = state(false); \
