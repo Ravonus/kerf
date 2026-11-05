@@ -3,10 +3,11 @@
 // where the behaviour of the old phase machine's session lives now: every host kind, every way in and out, in one trace.
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import type * as Playwright from 'playwright-core'
 
 import { pixelContrast } from '../scripts/a11y.mjs'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 // a real browser on a busy machine: vitest's 5 s suits jsdom, not this
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
@@ -38,7 +39,7 @@ const ids = [
   'pop',
   'heading',
 ]
-const active = (page) =>
+const active = (page: Playwright.Page) =>
   page.evaluate(
     (list) =>
       list.filter((id) => {
@@ -47,31 +48,32 @@ const active = (page) =>
       }),
     ids,
   )
-const set = (page, id, name, value) =>
+const set = (page: Playwright.Page, id: string, name: string, value: string | null) =>
   page.evaluate(
     ([i, n, v]) => {
-      const e = document.getElementById(i)
+      const e = document.getElementById(i)!
       v === null ? e.removeAttribute(n) : e.setAttribute(n, v)
     },
-    [id, name, value],
+    [id, name, value] as [string, string, string | null],
   )
-const away = (page) => page.hover('#far')
-const part = (id, name) => `#${id} > [data-part="${name}"]`
-const running = (page, selector) => page.locator(selector).evaluate((n) => n.getAnimations().length)
-const clip = (page, selector) =>
+const away = (page: Playwright.Page) => page.hover('#far')
+const part = (id: string, name: string) => `#${id} > [data-part="${name}"]`
+const running = (page: Playwright.Page, selector: string) =>
+  page.locator(selector).evaluate((n) => n.getAnimations().length)
+const clip = (page: Playwright.Page, selector: string) =>
   page.locator(selector).evaluate((n) => getComputedStyle(n).clipPath)
-const finished = (page, selector) =>
+const finished = (page: Playwright.Page, selector: string) =>
   page.locator(selector).evaluate((n) => Promise.all(n.getAnimations().map((a) => a.finished)))
 // Freeze new transitions before input, then advance the part by ms. Time between input and sampling cannot escape.
-const freeze = async (page) => {
+const freeze = async (page: Playwright.Page) => {
   const session = await page.context().newCDPSession(page)
   await session.send('Animation.setPlaybackRate', { playbackRate: 0 })
 }
-const step = (page, selector, ms) =>
+const step = (page: Playwright.Page, selector: string, ms: number) =>
   page.locator(selector).evaluate((n, by) => {
     for (const a of n.getAnimations()) {
       a.pause()
-      a.currentTime = (a.currentTime ?? 0) + by
+      a.currentTime = ((a.currentTime ?? 0) as number) + by
     }
     const g = getComputedStyle(n)
     return {
@@ -80,15 +82,15 @@ const step = (page, selector, ms) =>
     }
   }, ms)
 // how much of the stroke shows, in %: what lies between the left edge and the right
-const cover = (e) => Math.max(0, 100 - e.sl - e.sr)
-const run = async (page, selector, ms, every = 8) => {
+const cover = (e: { sl: number; sr: number }) => Math.max(0, 100 - e.sl - e.sr)
+const run = async (page: Playwright.Page, selector: string, ms: number, every = 8) => {
   const out = []
   for (let t = 0; t < ms; t += every) out.push(await step(page, selector, every))
   return out
 }
 const SWEEP = 620 // balanced
 
-let browser
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await chromium.launch()
 })
@@ -96,7 +98,7 @@ afterAll(async () => {
   await browser?.close()
 })
 
-async function open(options) {
+async function open(options?: Parameters<Playwright.Browser['newContext']>[0]) {
   const context = await browser.newContext({ viewport: { width: 800, height: 700 }, ...options })
   const page = await context.newPage()
   await page.setContent(
@@ -108,8 +110,8 @@ async function open(options) {
 
 test('every host kind goes active and lets go', async () => {
   const { page, close } = await open()
-  const trace = []
-  const at = async (label, act) => {
+  const trace: string[] = []
+  const at = async (label: string, act: () => unknown) => {
     await act()
     trace.push(`${label}: ${(await active(page)).join(' ')}`)
   }
@@ -128,7 +130,7 @@ test('every host kind goes active and lets go', async () => {
   await at('hover switch label', () => page.hover('#sw-label'))
   await at('leave labels', () => away(page))
   await at('focus field', () => page.focus('#in'))
-  await at('blur field', () => page.evaluate(() => document.activeElement.blur()))
+  await at('blur field', () => page.evaluate(() => (document.activeElement as HTMLElement).blur()))
   await at('field data-open', () => set(page, 'field', 'data-open', ''))
   await at('field closed', () => set(page, 'field', 'data-open', null))
   await at('hover inner of a surface', () => page.hover('#inner'))
@@ -153,7 +155,9 @@ test('every host kind goes active and lets go', async () => {
   )
   ids.push('late')
   await at('late host seen', () => {})
-  await at('late host removed', () => page.evaluate(() => document.getElementById('late').remove()))
+  await at('late host removed', () =>
+    page.evaluate(() => document.getElementById('late')!.remove()),
+  )
   ids.pop()
   expect(trace).toMatchSnapshot()
   await close()
@@ -210,12 +214,12 @@ test('a 50 ms hover draws the stroke all the way round, then it leaves L→R (SI
   expect(top).toBeGreaterThan(0) // it got all the way round...
   expect(Math.max(...trace.slice(0, top).map((e) => e.sl))).toBeLessThan(0.5) // ...before the tail moved
   for (let i = 1; i < trace.length; i++) {
-    if (cover(trace[i]) === 0) continue // gone: at rest both edges go back to the right
-    expect(trace[i].sr).toBeLessThanOrEqual(trace[i - 1].sr + 0.01) // the head never goes back
-    expect(trace[i].sl).toBeGreaterThanOrEqual(trace[i - 1].sl - 0.01) // nor the tail: it leaves L→R
+    if (cover(trace[i]!) === 0) continue // gone: at rest both edges go back to the right
+    expect(trace[i]!.sr).toBeLessThanOrEqual(trace[i - 1]!.sr + 0.01) // the head never goes back
+    expect(trace[i]!.sl).toBeGreaterThanOrEqual(trace[i - 1]!.sl - 0.01) // nor the tail: it leaves L→R
   }
   expect(trace.at(-1)).toEqual({ sl: 100, sr: 100 })
-  expect(cover(trace.at(-1))).toBe(0)
+  expect(cover(trace.at(-1)!)).toBe(0)
   await close()
 })
 
@@ -228,17 +232,17 @@ test('a long hover leaves at once; re-entering mid-exit draws the tail back with
   expect(cover(await step(page, stroke, 0))).toBeGreaterThan(99.5)
   await away(page)
   const out = await run(page, stroke, SWEEP / 2)
-  expect(out[2].sl).toBeGreaterThan(0) // the exit starts at once
-  const mid = cover(out.at(-1))
+  expect(out[2]!.sl).toBeGreaterThan(0) // the exit starts at once
+  const mid = cover(out.at(-1)!)
   expect(mid).toBeGreaterThan(5)
   expect(mid).toBeLessThan(95)
   await page.hover('#soft')
   await page.waitForTimeout(150) // delayed sampling must not advance the new transition
-  const back = [out.at(-1), ...(await run(page, stroke, SWEEP))]
+  const back = [out.at(-1)!, ...(await run(page, stroke, SWEEP))]
   // a draw moves at most ~2.5% of the stroke per 8 ms; a jump would be the whole gap in one step
   for (let i = 1; i < back.length; i++)
-    expect(Math.abs(cover(back[i]) - cover(back[i - 1]))).toBeLessThan(6)
-  expect(cover(back.at(-1))).toBeGreaterThan(99.5)
+    expect(Math.abs(cover(back[i]!) - cover(back[i - 1]!))).toBeLessThan(6)
+  expect(cover(back.at(-1)!)).toBeGreaterThan(99.5)
   await close()
 })
 
@@ -259,8 +263,8 @@ test('the frame outline also draws all the way round after a brief hover', async
   for (let t = 0; t < 3 * 760; t += 16) {
     await step(page, outline, 16)
     const [head, tail] = await read()
-    if (peak < 0.995) tailBeforePeak = Math.max(tailBeforePeak, tail)
-    peak = Math.max(peak, head)
+    if (peak < 0.995) tailBeforePeak = Math.max(tailBeforePeak, tail!)
+    peak = Math.max(peak, head!)
   }
   expect(peak).toBeGreaterThan(0.995)
   expect(tailBeforePeak).toBeLessThan(0.005)
@@ -303,7 +307,7 @@ test('touch: hover never counts, and a tap draws one whole sweep, then exits', a
   const stroke = part('soft', 'sweep')
   const on = () =>
     page.locator('#soft').evaluate((n) => getComputedStyle(n).getPropertyValue('--_a').trim())
-  const box = await page.locator('#soft').boundingBox()
+  const box = (await page.locator('#soft').boundingBox())!
   await page.mouse.move(box.x + 4, box.y + 4)
   expect(await on()).toBe('0')
   expect(cover(await step(page, stroke, 0))).toBe(0)
@@ -312,7 +316,7 @@ test('touch: hover never counts, and a tap draws one whole sweep, then exits', a
   await step(page, stroke, 0)
   const trace = await run(page, stroke, 3 * SWEEP)
   expect(Math.max(...trace.map(cover))).toBeGreaterThan(99.5) // ...and the stroke still went all the way round
-  expect(cover(trace.at(-1))).toBe(0)
+  expect(cover(trace.at(-1)!)).toBe(0)
   await close()
 })
 
@@ -338,7 +342,7 @@ test('an open palette holds its sweep and shows its shuttle, with nothing writte
     page.locator('#pal-row').evaluate((n) => getComputedStyle(n).getPropertyValue('--_a').trim())
   const seen = () => page.locator('#face').evaluate((n) => getComputedStyle(n).opacity)
   expect(await held()).toBe('0')
-  await page.evaluate(() => document.getElementById('pal').showModal())
+  await page.evaluate(() => (document.getElementById('pal') as HTMLDialogElement).showModal())
   expect(await held()).toBe('1')
   expect(await seen()).toBe('0')
   await set(page, 'opt', 'aria-selected', 'true')
@@ -353,13 +357,13 @@ test('the contrast measurer skips text clipped out of sight, and only that', asy
     <p data-a11y-px="1" style="color:#fff;clip-path:inset(0)">The colour of the page</p>
     <p data-a11y-px="2" style="color:#eee">Faint, with no clip</p>`)
   expect(await pixelContrast(page, 0)).toBeNull()
-  expect((await pixelContrast(page, 1)).ok).toBe(false)
-  expect((await pixelContrast(page, 2)).ok).toBe(false)
+  expect((await pixelContrast(page, 1))!.ok).toBe(false)
+  expect((await pixelContrast(page, 2))!.ok).toBe(false)
   await page.close()
 })
 
 // when a mask goes in, between the box being read and the screenshot being taken: the race a timed banner ran
-const whenMasked = (move) =>
+const whenMasked = (move: string) =>
   `new MutationObserver(() => (${move})()).observe(document.head, { childList: true })`
 const banner = `<!doctype html><body style="background:#fff;margin:0;height:100vh;display:flex;flex-direction:column">
   <div id="banner" style="height:57px;background:#fff"></div>
@@ -369,7 +373,7 @@ test('the contrast measurer reads text where it is, not where it was', async () 
   const page = await browser.newPage()
   await page.setContent(banner)
   await page.evaluate(whenMasked("() => document.getElementById('banner')?.remove()"))
-  expect((await pixelContrast(page, 0)).ok).toBe(true)
+  expect((await pixelContrast(page, 0))!.ok).toBe(true)
   await page.close()
 })
 
