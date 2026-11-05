@@ -9,13 +9,17 @@ import { afterAll, describe, expect, it } from 'vitest'
 import { agentsMd, limit } from '../../cli/src/agents-md.mjs'
 import { check } from '../../cli/src/check.mjs'
 import { devCommand } from '../../cli/src/start.mjs'
-import { scaffold, template } from '../src/index.mjs'
+import { scaffold, template as templateSource } from '../src/index.mjs'
+
+const template = templateSource as (
+  options?: Parameters<typeof templateSource>[0],
+) => Record<string, string>
 
 const tmp = fileURLToPath(new URL('./.tmp/', import.meta.url))
 const pkgs = fileURLToPath(new URL('../../', import.meta.url))
 afterAll(() => rmSync(tmp, { recursive: true, force: true }))
 
-function app(ui, options = {}) {
+function app(ui: string, options = {}) {
   const dir = join(tmp, `app-${ui}`)
   rmSync(dir, { recursive: true, force: true })
   scaffold(dir, { ui, ...options })
@@ -138,7 +142,7 @@ it('the template: warp() only for warp, a stylesheet otherwise, and only weft sc
   expect(warp['weft.config.ts']).toContain("import { warp } from '@weft-js/warp/plugin'")
   expect(warp['weft.config.ts']).toContain('plugins: [warp()]')
   expect(warp['src/app.css']).toBeUndefined()
-  expect(JSON.parse(warp['package.json']).scripts).toEqual({
+  expect(JSON.parse(warp['package.json']!).scripts).toEqual({
     dev: 'weft dev',
     build: 'weft build',
     check: 'weft check',
@@ -146,7 +150,7 @@ it('the template: warp() only for warp, a stylesheet otherwise, and only weft sc
     start: 'weft start',
   })
   const headless = template({ ui: 'headless' })
-  expect(Object.keys(JSON.parse(headless['package.json']).dependencies)).toEqual([
+  expect(Object.keys(JSON.parse(headless['package.json']!).dependencies)).toEqual([
     '@weft-js/core',
     '@weft-js/start',
     '@weft-js/warp-core',
@@ -161,7 +165,7 @@ it('the template: warp() only for warp, a stylesheet otherwise, and only weft sc
 })
 
 describe('--db, --auth, --runtime', () => {
-  const pkg = (t) => JSON.parse(t['package.json'])
+  const pkg = (t: Record<string, string>) => JSON.parse(t['package.json']!)
 
   it('--db sqlite: drizzle and one driver-free app, a generated script, no postgres', () => {
     const t = template({ ui: 'none', db: 'sqlite' })
@@ -188,7 +192,7 @@ describe('--db, --auth, --runtime', () => {
   it('--auth: better-auth, a guard, a sign-in page, a fresh secret per scaffold', () => {
     const a = template({ ui: 'warp', db: 'sqlite', auth: true })
     const b = template({ ui: 'warp', db: 'sqlite', auth: true })
-    const secret = (t) => /BETTER_AUTH_SECRET=(.+)/.exec(t['.env'])[1]
+    const secret = (t: Record<string, string>) => /BETTER_AUTH_SECRET=(.+)/.exec(t['.env']!)![1]!
     expect(pkg(a).dependencies['better-auth']).toBeDefined()
     expect(a['src/routes/todos/_layout.tsx']).toContain("redirect('/login')")
     expect(a['src/routes/login.tsx']).toBeDefined()
@@ -234,10 +238,10 @@ it('--ui tailwind writes what `weft add tailwind` writes', async () => {
   const files = template({ ui: 'tailwind' })
   expect(files['src/app.css']).toBe(cssEntry(false))
   expect(files['vite.config.ts']).toBe(viteConfig)
-  expect(JSON.parse(files['package.json']).devDependencies).toMatchObject(packages)
+  expect(JSON.parse(files['package.json']!).devDependencies).toMatchObject(packages)
   expect(files['src/routes/index.tsx']).toContain('rounded-lg')
   expect(files['src/routes/_layout.tsx']).toContain('<nav class="flex gap-4 p-4">')
-  expect(JSON.parse(files['package.json']).dependencies).not.toHaveProperty('@weft-js/warp')
+  expect(JSON.parse(files['package.json']!).dependencies).not.toHaveProperty('@weft-js/warp')
 })
 
 describe('--layer', () => {
@@ -250,7 +254,7 @@ describe('--layer', () => {
     const files = template({ db, layer })
     expect(files).toHaveProperty([file])
     expect(files['src/db/index.server.ts']).toContain(entry)
-    expect(JSON.parse(files['package.json']).dependencies).toHaveProperty([dep])
+    expect(JSON.parse(files['package.json']!).dependencies).toHaveProperty([dep])
     if (layer !== 'drizzle') expect(files['weft.config.ts']).toContain(`${layer}()`)
     else expect(files['weft.config.ts']).not.toContain('plugin-db')
   })
@@ -266,14 +270,14 @@ describe('--layer', () => {
     const files = template({ db: 'mysql', layer: 'native', auth: true })
     expect(files['migrations/0000_todos.sql']).toContain('create table `user`')
     expect(files['src/auth.server.ts']).toContain('nativeAuth(db)')
-    expect(files['src/server/todos.ts'].match(/user_id = \$\{ctx\.user\.id\}/g)).toHaveLength(3)
+    expect(files['src/server/todos.ts']!.match(/user_id = \$\{ctx\.user\.id\}/g)).toHaveLength(3)
   })
 
   it('bring your own auth: the seam, no Better Auth, and a public todo app', () => {
     const files = template({ db: 'sqlite', auth: 'custom' })
     expect(files['src/auth.server.ts']).toContain('defineAuth')
     expect(files['src/context.server.ts']).toContain('session(auth, request)')
-    expect(JSON.parse(files['package.json']).dependencies).not.toHaveProperty('better-auth')
+    expect(JSON.parse(files['package.json']!).dependencies).not.toHaveProperty('better-auth')
     expect(files).not.toHaveProperty(['src/routes/login.tsx'])
   })
 
