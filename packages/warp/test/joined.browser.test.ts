@@ -4,8 +4,9 @@
 // RTL flips; a vertical group does the same with top and bottom.
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import type * as Playwright from 'playwright-core'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
 const css = [
@@ -21,14 +22,14 @@ const css = [
   .map((f) => readFileSync(new URL(`../../warp-core/styles/${f}`, import.meta.url), 'utf8'))
   .join('\n')
 
-const seg = (id, items) =>
+const seg = (id: string, items: string[]) =>
   `<div data-scope="segmented" role="radiogroup" id="${id}"><span data-part="indicator" aria-hidden="true"></span>${items
     .map(
       (t, i) =>
         `<label data-sweep id="${id}-${t}"><span data-part="sweep" aria-hidden="true"></span><input type="radio" name="${id}" ${i === 0 ? 'checked' : ''}><span data-part="item">${t}</span></label>`,
     )
     .join('')}</div>`
-const toggles = (id, items, extra = '') =>
+const toggles = (id: string, items: string[], extra = '') =>
   `<div data-scope="toggle-group" role="group" id="${id}" ${extra}>${items
     .map(
       (t) =>
@@ -46,7 +47,8 @@ const PAGE = `
   <div data-joined id="any"><span data-sweep id="any-1"><span data-part="sweep"></span>x</span><span data-sweep id="any-2"><span data-part="sweep"></span>y</span></div>
   <div id="far" style="block-size:40px">away</div>`
 
-let browser, page
+let browser: Playwright.Browser
+let page: Playwright.Page
 beforeAll(async () => {
   browser = await chromium.launch()
   page = await browser.newPage({ viewport: { width: 900, height: 700 } })
@@ -59,11 +61,13 @@ afterAll(async () => {
 })
 
 // which physical edges the stroke draws, and which corners stay round
-const edges = (id) =>
+const edges = (id: string) =>
   page.locator(`#${id} > [data-part="sweep"]`).evaluate((n) => {
     const g = getComputedStyle(n)
-    const on = (s) => parseFloat(g[`border${s}Width`]) > 0
-    const round = (c) => parseFloat(g[`border${c}Radius`]) > 0
+    const on = (s: string) =>
+      parseFloat(g[`border${s}Width` as keyof CSSStyleDeclaration] as string) > 0
+    const round = (c: string) =>
+      parseFloat(g[`border${c}Radius` as keyof CSSStyleDeclaration] as string) > 0
     return {
       drawn: ['Left', 'Top', 'Right', 'Bottom'].filter(on).join(' '),
       round: ['TopLeft', 'TopRight', 'BottomRight', 'BottomLeft'].filter(round).join(' '),
@@ -101,7 +105,7 @@ test('the edges are logical: in RTL the first item draws its right edge', async 
   expect(await edges('rtl-b')).toEqual({ drawn: 'Top Bottom', round: '' })
   expect(await edges('rtl-c')).toEqual({ drawn: 'Left Top Bottom', round: 'TopLeft BottomLeft' })
   // the clip's corners follow, physically
-  const round = (id) =>
+  const round = (id: string) =>
     page
       .locator(`#${id} > [data-part="sweep"]`)
       .evaluate((n) => getComputedStyle(n).clipPath.split(' round ')[1])
@@ -145,14 +149,14 @@ test('a hovered middle segment paints no side edges once drawn', async () => {
       }),
     ),
   )
-  const box = await stroke.boundingBox()
+  const box = (await stroke.boundingBox())!
   const shot = await page.screenshot({ clip: box })
   const { width, height, px } = await page.evaluate(async (b64) => {
     const img = new Image()
     img.src = `data:image/png;base64,${b64}`
     await img.decode()
     const c = new OffscreenCanvas(img.width, img.height),
-      x = c.getContext('2d')
+      x = c.getContext('2d')!
     x.drawImage(img, 0, 0)
     return {
       width: img.width,
@@ -160,8 +164,8 @@ test('a hovered middle segment paints no side edges once drawn', async () => {
       px: Array.from(x.getImageData(0, 0, img.width, img.height).data),
     }
   }, shot.toString('base64'))
-  const at = (x, y) => px.slice((y * width + x) * 4, (y * width + x) * 4 + 3)
-  const diff = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])))
+  const at = (x: number, y: number) => px.slice((y * width + x) * 4, (y * width + x) * 4 + 3)
+  const diff = (a: number[], b: number[]) => Math.max(...a.map((v, i) => Math.abs(v - b[i]!)))
   const mid = Math.floor(height / 2),
     inside = at(Math.floor(width * 0.1), mid)
   expect(diff(at(Math.floor(width / 2), 0), inside)).toBeGreaterThan(40) // the top edge is drawn
