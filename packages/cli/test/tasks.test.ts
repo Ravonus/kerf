@@ -44,7 +44,7 @@ export default defineConfig({
       env: ['dev'],
       available: true,
     })
-    expect(seed.args).toMatchObject({
+    expect(seed!.args).toMatchObject({
       type: 'object',
       properties: { count: { type: 'integer' } },
       required: ['count'],
@@ -61,7 +61,7 @@ export default defineConfig({
     })
     const r = await tasks(dir)
     expect(r.ok).toBe(false)
-    expect(r.diagnostics.map((d) => d.code)).toEqual(['P003', 'P004'])
+    expect(r.diagnostics.map((d) => (d as { code: string }).code)).toEqual(['P003', 'P004'])
     expect(r.tasks.find((t) => t.kind === 'project')).toMatchObject({
       name: 'build',
       description: null,

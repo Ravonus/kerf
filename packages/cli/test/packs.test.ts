@@ -22,9 +22,9 @@ const packs = [
   ['@weft-js/pay/stripe', 'pay', 'stripe-plugin.mjs'],
 ]
 
-const load = async (name) => {
-  const [, dir, file] = packs.find((p) => p[0] === name)
-  const mod = await import(pathToFileURL(join(packages, dir, file)).href)
+const load = async (name: string) => {
+  const [, dir, file] = packs.find((p) => p[0] === name)!
+  const mod = await import(pathToFileURL(join(packages, dir!, file!)).href)
   const plugin = mod.default()
   const manifest = plugin.contribute({ command: 'check', mode: 'development', root: packages })
   return { plugin, manifest }

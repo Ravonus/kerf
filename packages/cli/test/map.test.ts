@@ -6,7 +6,8 @@ import { check } from '../src/check.mjs'
 import { agentMap, formatMap, writeMap } from '../src/map.mjs'
 import { project } from './helpers.mjs'
 
-const want = (map, text) => map.rows.find((r) => r.want === text)
+const want = (map: Awaited<ReturnType<typeof agentMap>>, text: string) =>
+  map.rows.find((r) => r.want === text)!
 const full = {
   'weft.config.ts':
     "export default { site: { name: 'Acme' }, runtime: 'bun', tasks: { seed: { run: 'node s.mjs', description: 'Seed', sideEffects: ['db'] } } }\n",

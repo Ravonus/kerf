@@ -37,8 +37,8 @@ describe('catalog probe', () => {
       'D024',
       'D025',
     ])
-    expect(status.W006.autofix).toBe(true)
-    expect(status.W015.autofix).toBe(true)
+    expect(status.W006!.autofix).toBe(true)
+    expect(status.W015!.autofix).toBe(true)
     expect(status.W001).toMatchObject({ autofix: false, suggestion: true })
     expect(status.W050).toMatchObject({ autofix: false, suggestion: true }) // → on(…) / interval(…)
     expect(status.W054).toMatchObject({ autofix: false, suggestion: true }) // → { ssr: false }
@@ -204,7 +204,7 @@ describe('a plugin in the docs', () => {
   }
   it('its topic is listed and served, and its codes have pages', async () => {
     const dir = app()
-    expect((await docs(dir)).topics.kit).toBe('The kit')
+    expect((await docs(dir)).topics!.kit).toBe('The kit')
     expect((await docs(dir, 'kit')).text).toContain('Hello.')
     const page = await docs(dir, 'KIT001')
     expect(page.text).toContain('A loose kit')
