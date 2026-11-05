@@ -74,11 +74,7 @@ export function suite({ url, log }) {
   return { checks, check, fail, eq, user, open, hydrated, signUp, signIn, signOut, add, titles }
 }
 
-export async function base(t, { url, browser }) {
-  const { check, eq, fail, user, open, hydrated, signUp, signIn, signOut, add, titles } = t
-  const alice = user('alice'),
-    bob = user('bob')
-
+async function visitorChecks({ check, eq }, url) {
   await check('a visitor to /todos gets a 307 to /login, from the layout guard', async () => {
     const r = await fetch(url + '/todos', { redirect: 'manual' })
     eq([r.status, r.headers.get('location')], [307, '/login'], 'guard')
@@ -86,8 +82,9 @@ export async function base(t, { url, browser }) {
   await check('Better Auth is mounted at /api/auth', async () =>
     eq((await fetch(url + '/api/auth/ok')).status, 200, '/api/auth/ok'),
   )
+}
 
-  const a = await open(browser)
+async function personalChecks({ check, eq, fail, hydrated, signUp, add, titles }, a, alice) {
   await check('wrong credentials show the error and stay on /login', async () => {
     await a.page.goto('/login')
     await hydrated(a.page)
@@ -133,6 +130,9 @@ export async function base(t, { url, browser }) {
     )
     if (writes.length > 1) fail(`toggle wrote ${JSON.stringify(writes)}`)
   })
+}
+
+async function hydrationChecks({ check, eq, fail, titles }, a) {
   await check(
     'a reload renders the list on the server and hydrates with no fetch and no writes',
     async () => {
@@ -197,6 +197,15 @@ export async function base(t, { url, browser }) {
       eq(await titles(a.page), ['done:Write the note', 'open:Run the matrix'], 'after reload')
     },
   )
+}
+
+async function accountChecks(
+  { check, eq, open, signOut, signUp, signIn, titles },
+  a,
+  alice,
+  bob,
+  browser,
+) {
   await check(
     'sign-out is a full load: the client cache is gone and /todos redirects',
     async () => {
@@ -220,6 +229,10 @@ export async function base(t, { url, browser }) {
     eq(await titles(a.page), ['done:Write the note', 'open:Run the matrix'], 'list')
   })
 
+  return b
+}
+
+async function accessChecks({ check, eq, titles }, url, a, b) {
   // A real id for the checks below: the page's own payload.
   const cached = await a.page.evaluate(() =>
     JSON.parse(document.getElementById('weft-cache')?.textContent ?? '[]'),
@@ -262,6 +275,21 @@ export async function base(t, { url, browser }) {
     eq([r.status(), e.code, e.issues[0].path], [400, 'Q002', ['title']], 'blank title')
   })
   await check('no page threw', () => eq([...a.errors, ...b.errors], [], 'page errors'))
+  return { post, ids }
+}
+
+export async function base(t, { url, browser }) {
+  const { check, eq, fail, user, open, hydrated, signUp, signIn, signOut, add, titles } = t
+  const steps = { check, eq, fail, open, hydrated, signUp, signIn, signOut, add, titles }
+  const alice = user('alice'),
+    bob = user('bob')
+
+  await visitorChecks(steps, url)
+  const a = await open(browser)
+  await personalChecks(steps, a, alice)
+  await hydrationChecks(steps, a)
+  const b = await accountChecks(steps, a, alice, bob, browser)
+  const { post, ids } = await accessChecks(steps, url, a, b)
   return { a, b, alice, bob, post, ids }
 }
 
