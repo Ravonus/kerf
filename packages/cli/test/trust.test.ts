@@ -31,25 +31,33 @@ const installed = (source = body()) => ({
   'node_modules/acme/package.json': JSON.stringify(pkg),
   'node_modules/acme/plugin.mjs': source,
 })
-const app = (source, config = "{ plugins: ['acme'] }") =>
+const app = (source: string, config = "{ plugins: ['acme'] }") =>
   project({
     ...installed(source),
     'weft.config.json': config.replace(/(\w+):/g, '"$1":').replaceAll("'", '"'),
   })
-const update = (dir, source) => writeFileSync(join(dir, 'node_modules/acme/plugin.mjs'), source)
-const lock = (dir) => JSON.parse(readFileSync(join(dir, lockFile), 'utf8'))
-const approve = async (dir, options = { all: true }) =>
-  approveCommand(dir, await loadConfig(dir), options)
-const audit = async (dir) => auditCommand(dir, await loadConfig(dir))
-const trust = (r) => r.diagnostics.filter((d) => d.code === 'P109' || d.code === 'P110')
-const weft = (...args) => spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' })
+const update = (dir: string, source: string) =>
+  writeFileSync(join(dir, 'node_modules/acme/plugin.mjs'), source)
+const lock = (dir: string) => JSON.parse(readFileSync(join(dir, lockFile), 'utf8'))
+const approveWith = approveCommand as (
+  dir: string,
+  config: Awaited<ReturnType<typeof loadConfig>>,
+  options: { all?: boolean; names?: string[] },
+) => ReturnType<typeof approveCommand>
+const approve = async (dir: string, options: { all?: boolean; names?: string[] } = { all: true }) =>
+  approveWith(dir, await loadConfig(dir), options)
+const audit = async (dir: string) => auditCommand(dir, await loadConfig(dir))
+const trust = (r: { diagnostics: { code: string; why: string; fix: { text: string } }[] }) =>
+  r.diagnostics.filter((d) => d.code === 'P109' || d.code === 'P110')
+const weft = (...args: string[]) =>
+  spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' })
 const io = () => {
   const out = { stdout: '', stderr: '' }
   return {
     out,
     sink: {
-      stdout: { write: (t) => (out.stdout += t) },
-      stderr: { write: (t) => (out.stderr += t) },
+      stdout: { write: (t: string) => (out.stdout += t) },
+      stderr: { write: (t: string) => (out.stderr += t) },
     },
   }
 }
@@ -67,8 +75,8 @@ describe('the plugin lock', () => {
     const found = trust(JSON.parse(blocked.stdout))
     expect(found.map((d) => d.code)).toEqual(['P109', 'P110'])
     expect(found[0]).toMatchObject({ severity: 'error', owner: 'acme', file: 'weft.config.json' })
-    expect(found[0].why).toContain('native, net:api.acme.dev')
-    expect(found[0].fix.text).toContain('weft plugins approve acme')
+    expect(found[0]!.why).toContain('native, net:api.acme.dev')
+    expect(found[0]!.fix.text).toContain('weft plugins approve acme')
 
     const audited = weft('plugins', 'audit', '--root', dir)
     expect(audited.status).toBe(1)
@@ -164,7 +172,12 @@ describe('weft plugins approve', () => {
   it('shows what is waiting and writes nothing without a name or --all', async () => {
     const dir = app(body(`{ net: ['x.dev'] }`))
     const { sink, out } = io()
-    expect(await main(['plugins', 'approve', '--json', '--root', dir], sink)).toBe(1)
+    expect(
+      await main(
+        ['plugins', 'approve', '--json', '--root', dir],
+        sink as unknown as { stdout: typeof process.stdout; stderr: typeof process.stderr },
+      ),
+    ).toBe(1)
     expect(JSON.parse(out.stdout)).toMatchObject({
       ok: false,
       written: false,
@@ -199,7 +212,7 @@ describe('weft plugins approve', () => {
 })
 
 describe('weft plugins audit', () => {
-  const uses = async (source) => (await audit(app(source))).plugins[0]
+  const uses = async (source: string) => (await audit(app(source))).plugins[0]
 
   it.each([
     ['fs', "import { readFileSync } from 'node:fs'", 'fs'],
@@ -250,7 +263,7 @@ describe('weft plugins audit', () => {
 
   it('blocks undeclared use in check even for a plugin that asks for nothing, until it is accepted', async () => {
     const dir = app(body('{}', "import 'node:child_process'"))
-    expect(trust(await check(dir))[0].why).toContain('uses spawn without declaring it')
+    expect(trust(await check(dir))[0]!.why).toContain('uses spawn without declaring it')
     await approve(dir)
     expect(lock(dir).plugins.acme.undeclared).toEqual(['spawn'])
     expect(trust(await check(dir))).toEqual([])
@@ -268,7 +281,7 @@ describe('weft plugins audit', () => {
           ),
         ).href
       )
-      const instance = pluginFactory(mod, meta.name).value()
+      const instance = pluginFactory(mod, meta.name)!.value()
       expect(
         auditPackage(dir, dir, {
           permissions: instance.permissions,
