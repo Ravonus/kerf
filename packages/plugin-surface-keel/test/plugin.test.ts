@@ -7,8 +7,8 @@ describe('keel()', () => {
   it('provides the keel-pixel key of surface.renderer, loaded lazily', () => {
     const p = keel()
     expect(p.provides).toEqual([{ slot: 'surface.renderer', key: 'keel-pixel' }])
-    const [ref] = p.contribute({ command: 'check', mode: 'development', root: '' }).provides
-    expect(ref.sides.client).toEqual({
+    const [ref] = p.contribute({ command: 'check', mode: 'development', root: '' }).provides!
+    expect(ref!.sides.client).toEqual({
       module: '@weft-js/plugin-surface-keel/runtime',
       export: 'renderer',
     })

@@ -40,7 +40,7 @@ describe.skipIf(!existsSync(join(repo, '.git')))('pinned vendor generation', () 
     verify(first, vendor)
     const dir = mkdtempSync(join(tmpdir(), 'weft-keel-test-'))
     try {
-      writeFileSync(join(dir, 'LICENSE'), first.get('LICENSE'))
+      writeFileSync(join(dir, 'LICENSE'), first.get('LICENSE')!)
       writeGenerated(first, dir)
       verify(second, dir)
       const helper = join(dir, 'keel-render', 'renderer-api.mjs')
