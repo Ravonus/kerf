@@ -7,7 +7,7 @@ import type { KeyValue } from '../KeyValueEditor'
 
 type Mode = 'form' | 'json'
 export function formatSwitcher(
-  label: () => unknown,
+  label: () => string,
   mode: State<Mode>,
   flipMode: (m: Mode) => void,
 ) {
