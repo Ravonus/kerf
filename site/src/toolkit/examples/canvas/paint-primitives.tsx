@@ -125,19 +125,24 @@ export function paint(
   ctx.restore()
 }
 
-export function painters1(
+export type PaintColor = (s: Scene, name: string) => string
+export type PaintRing = (p: StagePiece, s: Scene) => void
+export type PaintLift = (p: StagePiece, s: Scene, depth: number) => void
+export type PaintBody = (
+  p: StagePiece,
+  s: Scene,
+  fill: string,
+  line: string,
+  width?: number,
+  solid?: boolean,
+) => void
+
+export function surfacePainters(
   st: Style,
-  c: (s: Scene, name: string) => string,
-  ring: (p: StagePiece, s: Scene) => void,
-  lift: (p: StagePiece, s: Scene, depth: number) => void,
-  body: (
-    p: StagePiece,
-    s: Scene,
-    fill: string,
-    line: string,
-    width?: number,
-    solid?: boolean,
-  ) => void,
+  c: PaintColor,
+  ring: PaintRing,
+  lift: PaintLift,
+  body: PaintBody,
 ): Record<string, StagePainter> {
   return {
     button(p, s) {
