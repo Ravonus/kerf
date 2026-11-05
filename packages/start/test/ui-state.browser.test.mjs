@@ -1,8 +1,18 @@
 // Research 45: shared UI state in a real browser. Real pointer, real tabs, real sockets, real locks.
-import { sleep } from './ui-state.helpers.mjs'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { inject } from 'vitest'
+import {
+  away,
+  box,
+  leaderOf,
+  lit,
+  person,
+  remote,
+  settled,
+  sleep,
+  stats,
+} from './ui-state.helpers.mjs'
 
 const url = inject('url')
 const engines = createRequire(import.meta.url)('playwright-core')
@@ -44,25 +54,6 @@ async function open(context, path = '/ui-state', init) {
   return page
 }
 
-const person = (page, pane, name) => page.getByTestId(`${pane}-${name}`)
-const box = (page, pane, name) => person(page, pane, name).locator('label[data-scope="checkbox"]')
-const hold = (l) => l.evaluate((el) => el.hasAttribute('data-hold'))
-const lit = async (l, on = true) => {
-  await expect.poll(() => hold(l), { timeout: 5000, interval: 10 }).toBe(on)
-}
-const remote = async (l, on = true) => {
-  await expect
-    .poll(() => l.evaluate((el) => el.hasAttribute('data-remote')), { timeout: 5000, interval: 10 })
-    .toBe(on)
-}
-const stats = (page) => page.evaluate(() => ({ ...window.__share }))
-const leaderOf = async (pages) => {
-  for (const p of pages) if ((await stats(p)).role === 'leader') return p
-}
-const settled = async (page, n = 1) => {
-  await expect.poll(async () => ((await stats(page)).conn ? 1 : 0), { timeout: 10_000 }).toBe(n)
-}
-const away = (page) => page.mouse.move(2, 2)
 const shot = async (page, name) => {
   if (shots) await page.screenshot({ path: `${shots}/${name}.png` })
 }
@@ -210,16 +201,25 @@ onlyChromium('killing the leader mid-hover: no stuck hover anywhere', async () =
   const leader = await leaderOf([a1, a2])
   await settled(leader)
   const other = leader === a1 ? a2 : a1
+  // A round trip proves both clients joined the key before the leader is killed.
+  await box(b, 'left', 'Ana').hover()
+  await remote(box(leader, 'left', 'Ana'))
+  await remote(box(other, 'left', 'Ana'))
+  await away(b)
+  await lit(box(leader, 'left', 'Ana'), false)
+  await lit(box(other, 'left', 'Ana'), false)
   await box(leader, 'left', 'Ana').hover()
-  await lit(box(other, 'left', 'Ana'))
-  await lit(box(b, 'left', 'Ana'))
+  await lit(box(leader, 'left', 'Ana'))
+  await remote(box(other, 'left', 'Ana'))
+  await remote(box(b, 'left', 'Ana'))
   const cdp = await one.newCDPSession(leader)
-  const t0 = Date.now()
+  const crashed = leader.waitForEvent('crash')
   cdp.send('Page.crash').catch(() => {})
+  await crashed
+  await expect.poll(async () => (await stats(other)).role, { timeout: 5000 }).toBe('leader')
+  await settled(other)
   await lit(box(other, 'left', 'Ana'), false)
   await lit(box(b, 'left', 'Ana'), false)
-  console.log(`crash to clear: ${Date.now() - t0} ms`)
-  await expect.poll(async () => (await stats(other)).role, { timeout: 5000 }).toBe('leader')
   await one.close()
   await two.close()
 })

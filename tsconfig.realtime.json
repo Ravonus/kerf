@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.base.json",
+  "exclude": ["**/fixture/**", "**/fixtures/**", "**/node_modules/**", "**/vendor/**", "**/dist/**"]
+}

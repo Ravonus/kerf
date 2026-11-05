@@ -116,32 +116,49 @@ describe('routing', () => {
 
 describe('streaming', () => {
   test('head and shell first, then each Boundary as it resolves, then the page data', async () => {
-    const res = await get('/slow')
+    const token = crypto.randomUUID()
+    const path = `/slow?sync=${token}`
+    const res = await get(path)
     const reader = res.body.getReader()
     const dec = new TextDecoder()
-    const chunks = []
-    const t0 = performance.now()
-    for (let r; !(r = await reader.read()).done;)
-      chunks.push({ at: performance.now() - t0, text: dec.decode(r.value) })
-    const all = chunks.map((c) => c.text).join('')
-    const first = chunks[0].text
-    // The first chunk is the whole head (every tag, meta from awaited data) and the shell with both fallbacks.
-    expect(first).toContain('<title data-wm>Slow page · Acme</title>')
-    expect(first).toContain('</head>')
-    expect(first).toContain('Loading reviews')
-    expect(first).toContain('Loading stock')
-    expect(first).toContain('id="weft-route"')
-    expect(first).not.toContain('In stock')
-    // Stock (20 ms) streams before reviews (60 ms); the page data is last.
+    let all = ''
+    const readUntil = async (marker) => {
+      while (!all.includes(marker)) {
+        const part = await reader.read()
+        if (part.done) throw new Error(`Stream ended before ${marker}`)
+        all += dec.decode(part.value, { stream: true })
+      }
+    }
+    const release = async (name) => {
+      const control = await get(`${path}&release=${name}`)
+      await control.text()
+    }
+    try {
+      await readUntil('Loading stock')
+      await readUntil('id="weft-route"')
+      expect(all).toContain('<title data-wm>Slow page · Acme</title>')
+      expect(all).toContain('</head>')
+      expect(all).toContain('Loading reviews')
+      expect(all).toContain('id="weft-route"')
+      expect(all).not.toContain('In stock')
+      await release('stock')
+      await readUntil('In stock: <!--[-->7')
+      expect(all).not.toContain('<li wk')
+      await release('reviews')
+      await readUntil('<li wk')
+      for (let part; !(part = await reader.read()).done;)
+        all += dec.decode(part.value, { stream: true })
+    } finally {
+      await release('stock')
+      await release('reviews')
+      await reader.cancel()
+    }
     const stock = all.indexOf('In stock: <!--[-->7')
     const reviews = all.indexOf('<li wk')
-    expect(stock).toBeGreaterThan(first.length)
+    expect(stock).toBeGreaterThan(all.indexOf('Loading stock'))
     expect(reviews).toBeGreaterThan(stock)
-    expect(all.lastIndexOf('id="weft-data"')).toBeGreaterThan(reviews) // the shell carries a snapshot, the last is the whole
+    expect(all.lastIndexOf('id="weft-data"')).toBeGreaterThan(reviews)
     expect(all.match(/\$wb=function/g)).toHaveLength(1)
-    expect(chunks.find((c) => c.text.includes('In stock')).at).toBeLessThan(
-      chunks.find((c) => c.text.includes('<li wk')).at,
-    )
     // The resolved values travel in the page data, so the client never refetches them.
     const data = JSON.parse([...all.matchAll(/id="weft-data">(.*?)<\/script>/g)].at(-1)[1])
     expect(Object.values(data.r).map((x) => x.v)).toEqual(
