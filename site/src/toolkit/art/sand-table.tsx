@@ -33,70 +33,18 @@ export default function SandTable(_: ArtProps) {
     ly = -1,
     restless = 0
 
-  function build() {
-    for (let y = 0, i = 0; y < H; y++)
-      for (let x = 0; x < W; x++, i++) {
-        const u = (x / W) * 1.6,
-          v = y / H
-        let near = 9,
-          stone = -1
-        STONES.forEach(([sx, sy, r], n) => {
-          const d = Math.hypot(u - sx * 1.6, v - sy) - r
-          if (d < near) {
-            near = d
-            stone = n
-          }
-        })
-        // rings round each stone give way to straight rows, as a rake does
-        const rows = Math.sin(v * 2 * Math.PI * 11),
-          rings = Math.sin(near * 2 * Math.PI * 11 + stone),
-          k = clamp((near - 0.2) / 0.09)
-        rake[i] = sand[i] = (rings * (1 - k) + rows * k) * 0.5
-        rock[i] = near < 0 ? 1 : 0
-      }
-    relight()
-    built = true
-  }
-  function relight() {
-    for (let y = 1; y < H - 1; y++)
-      for (let x = 1, i = y * W + 1; x < W - 1; x++, i++)
-        shade[i] = rock[i]
-          ? 1
-          : clamp(0.44 + (sand[i - 1]! - sand[i + 1]! + sand[i - W]! - sand[i + W]!) * 0.26)
-  }
-  function settle() {
-    let moved = 0
-    for (let y = 1; y < H - 1; y++)
-      for (let x = 1, i = y * W + 1; x < W - 1; x++, i++) {
-        const d = rake[i]! - sand[i]!
-        if (Math.abs(d) < 0.004) continue
-        moved++
-        sand[i]! +=
-          d * 0.012 +
-          (sand[i - 1]! + sand[i + 1]! + sand[i - W]! + sand[i + W]! - 4 * sand[i]!) * 0.05
-      }
-    return moved
-  }
   const garden = (x: number, y: number, t: number) => {
-    if (!built) build()
+    if (!built) {
+      buildGarden(rake, sand, rock, shade)
+      built = true
+    }
     if (x > aspect) aspect = x
     if (t !== stamp) {
       stamp = t
-      if (settle() < 40 && --restless < 0) busy.value = false
-      relight()
+      if (settle(rake, sand) < 40 && --restless < 0) busy.value = false
+      relight(rock, sand, shade)
     }
     return shade[Math.min(H - 1, (y * H) | 0) * W + Math.min(W - 1, ((x / aspect) * W) | 0)]!
-  }
-  function plough(px: number, py: number) {
-    for (let dy = -5; dy <= 5; dy++)
-      for (let dx = -5; dx <= 5; dx++) {
-        const X = px + dx,
-          Y = py + dy,
-          d = Math.hypot(dx, dy)
-        if (X < 1 || Y < 1 || X >= W - 1 || Y >= H - 1 || d > 5) continue
-        const i = Y * W + X
-        if (!rock[i]) sand[i] = d < 2.6 ? -1 : d < 4.4 ? Math.max(sand[i]!, 0.9) : sand[i]!
-      }
   }
   const move = (e: PointerEvent) => {
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect(),
@@ -107,6 +55,8 @@ export default function SandTable(_: ArtProps) {
       plough(
         lx < 0 ? x : Math.round(lx + ((x - lx) * n) / steps),
         lx < 0 ? y : Math.round(ly + ((y - ly) * n) / steps),
+        rock,
+        sand,
       )
     lx = x
     ly = y
@@ -132,4 +82,67 @@ export default function SandTable(_: ArtProps) {
       label="A raked sand garden around three stones"
     />
   )
+}
+
+function relight(rock: Uint8Array, sand: Float32Array, shade: Float32Array) {
+  for (let y = 1; y < H - 1; y++)
+    for (let x = 1, i = y * W + 1; x < W - 1; x++, i++)
+      shade[i] = rock[i]
+        ? 1
+        : clamp(0.44 + (sand[i - 1]! - sand[i + 1]! + sand[i - W]! - sand[i + W]!) * 0.26)
+}
+
+function settle(rake: Float32Array, sand: Float32Array) {
+  let moved = 0
+  for (let y = 1; y < H - 1; y++)
+    for (let x = 1, i = y * W + 1; x < W - 1; x++, i++) {
+      const d = rake[i]! - sand[i]!
+      if (Math.abs(d) < 0.004) continue
+      moved++
+      sand[i]! +=
+        d * 0.012 +
+        (sand[i - 1]! + sand[i + 1]! + sand[i - W]! + sand[i + W]! - 4 * sand[i]!) * 0.05
+    }
+  return moved
+}
+
+function plough(px: number, py: number, rock: Uint8Array, sand: Float32Array) {
+  for (let dy = -5; dy <= 5; dy++)
+    for (let dx = -5; dx <= 5; dx++) {
+      const X = px + dx,
+        Y = py + dy,
+        d = Math.hypot(dx, dy)
+      if (X < 1 || Y < 1 || X >= W - 1 || Y >= H - 1 || d > 5) continue
+      const i = Y * W + X
+      if (!rock[i]) sand[i] = d < 2.6 ? -1 : d < 4.4 ? Math.max(sand[i]!, 0.9) : sand[i]!
+    }
+}
+
+function buildGarden(
+  rake: Float32Array,
+  sand: Float32Array,
+  rock: Uint8Array,
+  shade: Float32Array,
+) {
+  for (let y = 0, i = 0; y < H; y++)
+    for (let x = 0; x < W; x++, i++) {
+      const u = (x / W) * 1.6,
+        v = y / H
+      let near = 9,
+        stone = -1
+      STONES.forEach(([sx, sy, r], n) => {
+        const d = Math.hypot(u - sx * 1.6, v - sy) - r
+        if (d < near) {
+          near = d
+          stone = n
+        }
+      })
+      // rings round each stone give way to straight rows, as a rake does
+      const rows = Math.sin(v * 2 * Math.PI * 11),
+        rings = Math.sin(near * 2 * Math.PI * 11 + stone),
+        k = clamp((near - 0.2) / 0.09)
+      rake[i] = sand[i] = (rings * (1 - k) + rows * k) * 0.5
+      rock[i] = near < 0 ? 1 : 0
+    }
+  relight(rock, sand, shade)
 }

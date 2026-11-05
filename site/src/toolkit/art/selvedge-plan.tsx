@@ -28,6 +28,7 @@ export default function SelvedgePlan(_: ArtProps) {
     to = new Float32Array(NODES),
     speed = new Float32Array(NODES),
     tone = new Uint8Array(NODES)
+  const fields = { at, tone }
   let seed = 5
   function roll() {
     const r = rng(seed++ * 7919)
@@ -39,59 +40,14 @@ export default function SelvedgePlan(_: ArtProps) {
   }
   roll()
   at.set(to)
-  const stroke = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) => {
-    ctx.moveTo(x, y)
-    ctx.lineTo(x + w, y + h)
-  }
 
-  function room(
-    ctx: CanvasRenderingContext2D,
-    c: ReturnType<typeof colours>,
-    gain: number,
-    n: number,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    depth: number,
-    lines: number[],
-  ) {
-    if (depth === DEPTH || (w < 34 && h < 34)) {
-      const t = tone[n]!
-      if (t === 3 && gain < 0.9) return
-      if (t) {
-        ctx.fillStyle = t === 1 ? c.soft : t === 2 ? c.mid : c.solid
-        ctx.fillRect(x, y, w, h)
-      }
-      return
-    }
-    const r = at[n]!
-    if (w > h * 0.8) {
-      const a = w * r
-      lines.push(x + a, y, 0, h)
-      room(ctx, c, gain, n * 2 + 1, x, y, a, h, depth + 1, lines)
-      room(ctx, c, gain, n * 2 + 2, x + a, y, w - a, h, depth + 1, lines)
-    } else {
-      const a = h * r
-      lines.push(x, y + a, w, 0)
-      room(ctx, c, gain, n * 2 + 1, x, y, w, a, depth + 1, lines)
-      room(ctx, c, gain, n * 2 + 2, x, y + a, w, h - a, depth + 1, lines)
-    }
-  }
   const draw = ({ ctx, width, height, tier, dt }: Frame) => {
     const c = colours(ctx.canvas),
       m = 18,
       lines: number[] = []
-    let moving = false
-    for (let i = 0; i < NODES; i++) {
-      const d = to[i]! - at[i]!
-      speed[i] = (speed[i]! + d * dt * 90) * Math.exp(-dt * 11)
-      at[i]! += speed[i]! * dt * 14
-      if (Math.abs(d) > 0.0008 || Math.abs(speed[i]!) > 0.0008) moving = true
-      else at[i] = to[i]!
-    }
+    const moving = moveWalls(at, to, speed, dt)
     ctx.clearRect(0, 0, width, height)
-    room(ctx, c, tier.gain, 0, m, m, width - m * 2, height - m * 2, 0, lines)
+    room(fields, ctx, c, tier.gain, 0, m, m, width - m * 2, height - m * 2, 0, lines)
     ctx.beginPath()
     for (let i = 0; i < lines.length; i += 4)
       stroke(ctx, lines[i]!, lines[i + 1]!, lines[i + 2]!, lines[i + 3]!)
@@ -110,4 +66,70 @@ export default function SelvedgePlan(_: ArtProps) {
       label="Hairline rectangles split by seeded ratios"
     />
   )
+}
+
+const stroke = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) => {
+  ctx.moveTo(x, y)
+  ctx.lineTo(x + w, y + h)
+}
+
+function moveWalls(at: Float32Array, to: Float32Array, speed: Float32Array, dt: number) {
+  let moving = false
+  for (let i = 0; i < NODES; i++) {
+    const d = to[i]! - at[i]!
+    speed[i] = (speed[i]! + d * dt * 90) * Math.exp(-dt * 11)
+    at[i]! += speed[i]! * dt * 14
+    if (Math.abs(d) > 0.0008 || Math.abs(speed[i]!) > 0.0008) moving = true
+    else at[i] = to[i]!
+  }
+  return moving
+}
+
+function room(
+  fields: { at: Float32Array; tone: Uint8Array },
+  ctx: CanvasRenderingContext2D,
+  c: ReturnType<typeof colours>,
+  gain: number,
+  n: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  depth: number,
+  lines: number[],
+) {
+  const { at, tone } = fields
+  if (depth === DEPTH || (w < 34 && h < 34)) {
+    fillRoom(ctx, c, gain, tone[n]!, x, y, w, h)
+    return
+  }
+  const r = at[n]!
+  if (w > h * 0.8) {
+    const a = w * r
+    lines.push(x + a, y, 0, h)
+    room(fields, ctx, c, gain, n * 2 + 1, x, y, a, h, depth + 1, lines)
+    room(fields, ctx, c, gain, n * 2 + 2, x + a, y, w - a, h, depth + 1, lines)
+  } else {
+    const a = h * r
+    lines.push(x, y + a, w, 0)
+    room(fields, ctx, c, gain, n * 2 + 1, x, y, w, a, depth + 1, lines)
+    room(fields, ctx, c, gain, n * 2 + 2, x, y + a, w, h - a, depth + 1, lines)
+  }
+}
+
+function fillRoom(
+  ctx: CanvasRenderingContext2D,
+  c: ReturnType<typeof colours>,
+  gain: number,
+  t: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  if (t === 3 && gain < 0.9) return
+  if (t) {
+    ctx.fillStyle = t === 1 ? c.soft : t === 2 ? c.mid : c.solid
+    ctx.fillRect(x, y, w, h)
+  }
 }

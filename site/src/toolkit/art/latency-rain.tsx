@@ -45,72 +45,7 @@ const whole = requests.map((q) => q.ms),
 
 export default function LatencyRain({ live = true }: ArtProps) {
   const found = state('')
-  let from = -1,
-    to = -1,
-    wasDown = false
-  const scale = (ms: number) => Math.log(1 + ms) / Math.log(1 + MAX)
-  const draw = ({ ctx, width, height, time, still, pointer }: Frame) => {
-    const c = colours(ctx.canvas),
-      mx = 18,
-      top = 14,
-      bottom = height - 14,
-      span = bottom - top,
-      inner = width - mx * 2,
-      clock = still ? 6.7 : time
-    if (pointer.down) {
-      const u = clamp((pointer.x - mx) / inner)
-      if (!wasDown) from = u
-      to = u
-      const a = Math.min(from, to),
-        b = Math.max(from, to),
-        list = requests.filter((q) => q.at >= a && q.at <= b).map((q) => q.ms)
-      if (list.length > 2)
-        found.value = `${list.length} requests · p50 ${Math.round(percentile(list, 0.5))} ms · p95 ${Math.round(percentile(list, 0.95))} ms`
-    }
-    wasDown = pointer.down
-    ctx.clearRect(0, 0, width, height)
-    if (from >= 0) {
-      ctx.fillStyle = c.band
-      ctx.fillRect(mx + Math.min(from, to) * inner, top, Math.abs(to - from) * inner, span)
-    }
-    for (let pass = 0; pass < 3; pass++) {
-      ctx.fillStyle = pass === 2 ? c.err : pass ? c.drop : c.fine
-      ctx.beginPath()
-      for (let i = 0; i < COUNT; i++) {
-        const q = requests[i]!
-        if (
-          +q.error * 2 !== pass &&
-          !(pass === 1 && !q.error && q.ms > p50) &&
-          !(pass === 0 && !q.error && q.ms <= p50)
-        )
-          continue
-        if (pass === 2 && !q.error) continue
-        if (pass < 2 && q.error) continue
-        const age = (clock / LIFE + q.phase) % 1,
-          fall = Math.min(1, age * 3.2),
-          reach = scale(q.ms) * span,
-          tail = Math.min(reach, 12 + reach * 0.42)
-        const y = top + reach * fall,
-          x = mx + q.at * inner
-        ctx.rect(x, y - tail * fall, pass === 2 ? 2 : 1, tail * fall)
-      }
-      ctx.fill()
-    }
-    ctx.fillStyle = c.rule
-    ctx.font = '11px var(--warp-font-mono, monospace)'
-    for (const [name, value] of [
-      ['p50', p50],
-      ['p95', p95],
-    ] as const) {
-      const y = Math.round(top + scale(value) * span)
-      const text = `${name} ${Math.round(value)} ms`
-      ctx.fillRect(mx, y, inner, 1)
-      ctx.fillStyle = c.ground
-      ctx.fillRect(mx, y - 17, ctx.measureText(text).width + 8, 16)
-      ctx.fillStyle = c.rule
-      ctx.fillText(text, mx + 4, y - 5)
-    }
-  }
+  const draw = rainDrawing(found)
   return (
     <>
       <Canvas
@@ -152,4 +87,86 @@ export default function LatencyRain({ live = true }: ArtProps) {
       </table>
     </>
   )
+}
+
+function drawRequests(
+  ctx: CanvasRenderingContext2D,
+  c: ReturnType<typeof colours>,
+  clock: number,
+  span: number,
+  top: number,
+  mx: number,
+  inner: number,
+  scale: (ms: number) => number,
+) {
+  for (let pass = 0; pass < 3; pass++) {
+    ctx.fillStyle = pass === 2 ? c.err : pass ? c.drop : c.fine
+    ctx.beginPath()
+    for (let i = 0; i < COUNT; i++) {
+      const q = requests[i]!
+      if (
+        +q.error * 2 !== pass &&
+        !(pass === 1 && !q.error && q.ms > p50) &&
+        !(pass === 0 && !q.error && q.ms <= p50)
+      )
+        continue
+      if (pass === 2 && !q.error) continue
+      if (pass < 2 && q.error) continue
+      const age = (clock / LIFE + q.phase) % 1,
+        fall = Math.min(1, age * 3.2),
+        reach = scale(q.ms) * span,
+        tail = Math.min(reach, 12 + reach * 0.42)
+      const y = top + reach * fall,
+        x = mx + q.at * inner
+      ctx.rect(x, y - tail * fall, pass === 2 ? 2 : 1, tail * fall)
+    }
+    ctx.fill()
+  }
+}
+
+function rainDrawing(found: ReturnType<typeof state<string>>) {
+  let from = -1,
+    to = -1,
+    wasDown = false
+  const scale = (ms: number) => Math.log(1 + ms) / Math.log(1 + MAX)
+  return ({ ctx, width, height, time, still, pointer }: Frame) => {
+    const c = colours(ctx.canvas),
+      mx = 18,
+      top = 14,
+      bottom = height - 14,
+      span = bottom - top,
+      inner = width - mx * 2,
+      clock = still ? 6.7 : time
+    if (pointer.down) {
+      const u = clamp((pointer.x - mx) / inner)
+      if (!wasDown) from = u
+      to = u
+      const a = Math.min(from, to),
+        b = Math.max(from, to),
+        list = requests.filter((q) => q.at >= a && q.at <= b).map((q) => q.ms)
+      if (list.length > 2)
+        found.value = `${list.length} requests · p50 ${Math.round(percentile(list, 0.5))} ms · p95 ${Math.round(percentile(list, 0.95))} ms`
+    }
+    wasDown = pointer.down
+    ctx.clearRect(0, 0, width, height)
+    if (from >= 0) {
+      ctx.fillStyle = c.band
+      ctx.fillRect(mx + Math.min(from, to) * inner, top, Math.abs(to - from) * inner, span)
+    }
+    drawRequests(ctx, c, clock, span, top, mx, inner, scale)
+    ctx.fillStyle = c.rule
+    ctx.font = '11px var(--warp-font-mono, monospace)'
+    for (const [name, value] of [
+      ['p50', p50],
+      ['p95', p95],
+    ] as const) {
+      const y = Math.round(top + scale(value) * span)
+      const text = `${name} ${Math.round(value)} ms`
+      ctx.fillRect(mx, y, inner, 1)
+      ctx.fillStyle = c.ground
+      ctx.fillRect(mx, y - 17, ctx.measureText(text).width + 8, 16)
+      ctx.fillStyle = c.rule
+      ctx.fillText(text, mx + 4, y - 5)
+    }
+  }
 }
