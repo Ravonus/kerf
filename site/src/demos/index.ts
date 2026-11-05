@@ -1,7 +1,8 @@
 import { examples } from './catalog-examples'
 import { learn } from './catalog-learn'
 
-/** `learn`: shown only in Learn (src/components/LearnDemo.tsx), not on the examples page. */
+/** `learn`: shown only in LearnDemo.tsx, not on the
+ * examples page. */
 export type Demo = {
   title: string
   look: string
@@ -11,7 +12,8 @@ export type Demo = {
   learn?: true
 }
 
-/** Every live example, with the words that say what it is. The landing, the examples page and the docs read this. */
+/** Every live example and its description. The landing,
+ * examples page and docs read this. */
 export const demos: Record<string, Demo> = {
   ...examples,
   ...learn,
