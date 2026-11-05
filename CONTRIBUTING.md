@@ -24,13 +24,13 @@ and CI runs them for you.
 
 ## One command
 
-| Command | What it does |
-|---|---|
-| `pnpm run check` | Runs every rule and every test. Prints what failed and how to fix it. |
-| `pnpm run check --fast` | The same without the test suites. |
-| `pnpm run check --only=lint,types` | Only those steps. `--list` shows them all. |
-| `pnpm run fix` | Fixes what a machine can fix. Run it first when `check` complains. |
-| `pnpm run hooks` | Turns on an optional pre-commit hook that checks staged files in a few seconds. |
+| Command                            | What it does                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------------- |
+| `pnpm run check`                   | Runs every rule and every test. Prints what failed and how to fix it.           |
+| `pnpm run check --fast`            | The same without the test suites.                                               |
+| `pnpm run check --only=lint,types` | Only those steps. `--list` shows them all.                                      |
+| `pnpm run fix`                     | Fixes what a machine can fix. Run it first when `check` complains.              |
+| `pnpm run hooks`                   | Turns on an optional pre-commit hook that checks staged files in a few seconds. |
 
 To work on one package: `pnpm --filter @weft-js/<name> test`. To undo the hook: `git config --unset core.hooksPath`.
 
@@ -46,6 +46,15 @@ CI runs `pnpm run check`, so a pull request has to pass it. The rules are all in
 **TypeScript.** `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride` and `exactOptionalPropertyTypes` are all on. No
 `any` unless you say why. No `@ts-ignore`. `@ts-expect-error` needs a reason after it. Promises are awaited or handled. Types
 are imported with `import type`.
+
+**Source and tests.** Use `.ts` or `.tsx` in package `src/`. Keep `.mjs` for code that Node runs
+without a transpiler, including its imported helpers; preserve package exports and generated import paths. The CLI
+uses `.mjs` with JSDoc types. Start's Node entrypoints and their helpers stay `.mjs`; `capture.ts` is transpiled
+server code. Put unit tests in `test/` as `*.test.ts` or `*.test.tsx`, and browser tests as
+`*.browser.test.ts` or `*.browser.test.tsx`. Put raw Node end-to-end entrypoints and their helpers in `test/e2e/`,
+and run them with the package's `test:e2e` script. The direct Node test in `core/scripts/node-style.test.mjs` is an
+exception. Packages using Vitest have one root `vitest.config.ts`; shared realtime base configurations remain valid.
+`node scripts/quality/conventions.mjs` checks tracked package paths and the Node entry import closure.
 
 **Boundaries.** warp-core doesn't import a framework: that goes in `bindings/`. Core doesn't import Node. Nothing a browser
 loads may reach Node code, however many files away. `scripts/quality/boundaries.mjs` follows the imports to check.

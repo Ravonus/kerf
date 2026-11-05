@@ -16,6 +16,7 @@ import { jobs, pool } from './jobs.mjs'
 import { leakPlaces } from './quality/leak-places.mjs'
 import { packageProblems } from './quality/package-folders.mjs'
 import { checkLengths } from './quality/lengths.mjs'
+import { conventionsStep } from './quality/conventions.mjs'
 import { clippyProblems, lintProblems } from './quality/length-diagnostics.mjs'
 
 // While a new rule beds in this is 'warn': everything is reported and nothing fails. Otherwise 'error'.
@@ -86,6 +87,7 @@ let lengthResult
 const lengths = () => (lengthResult ??= checkLengths())
 
 const STEPS = [
+  conventionsStep(run, lines),
   {
     id: 'package-folders',
     covers: 'package folders, tracked paths and shared repository helpers',
