@@ -30,7 +30,10 @@ export default function Board() {
   const history = board.$history
   return (
     <Card title={`Pinned: ${board.count.value}`}>
-      <Row gap="tight" wrap>
+      <Row
+        gap="tight"
+        wrap
+      >
         {CITIES.map((c) => (
           <Button
             key={c}
@@ -42,7 +45,10 @@ export default function Board() {
           </Button>
         ))}
       </Row>
-      <Row gap="tight" wrap>
+      <Row
+        gap="tight"
+        wrap
+      >
         {board.pins.value.map((c) => (
           <Tag
             key={c}

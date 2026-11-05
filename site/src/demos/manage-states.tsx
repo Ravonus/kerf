@@ -25,7 +25,10 @@ function Form({ status }: { status: Status }) {
   return (
     <>
       {status === 'success' ? (
-        <Alert tone="positive" title="That's right!" />
+        <Alert
+          tone="positive"
+          title="That's right!"
+        />
       ) : (
         <form>
           <Textarea
