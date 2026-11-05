@@ -9,6 +9,7 @@ import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'vite'
 import weft from '@weft-js/core/vite'
+import { timelineNames } from './polish.browser-timeline.mjs'
 
 const { chromium } = createRequire(import.meta.url)('playwright-core')
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 180_000 })
@@ -297,52 +298,9 @@ test('a Kanban board cut at its box shows an edge shadow on the side with more, 
 
 const calendarIn = (id) => `#${id} [data-scope="calendar"][data-part="root"]`
 
-// every booking's whole name shows inside its box, and no word is split across lines
-const timelineNames = (sel) =>
-  page.evaluate((at) => {
-    const root = document.querySelector(at),
-      sc = root.querySelector('[data-part="timeline-edges"] > [data-part="scroller"]')
-    const events = [...root.querySelectorAll('[data-part="lane"] [data-part="event"]')].map((e) => {
-      const t = e.querySelector('[data-part="event-title"]'),
-        st = e.querySelector('[data-part="event-start"]')
-      const shown = (el) => getComputedStyle(el).display !== 'none'
-      const words = document.createRange()
-      words.selectNodeContents(t)
-      const w = words.getBoundingClientRect(),
-        box = e.getBoundingClientRect()
-      // a word split over two lines has letters on two different line tops
-      const split = []
-      for (const m of t.textContent.matchAll(/\S+/g)) {
-        const r = document.createRange(),
-          node = t.firstChild
-        if (!node || node.nodeType !== 3) continue
-        r.setStart(node, m.index)
-        r.setEnd(node, m.index + m[0].length)
-        const tops = new Set([...r.getClientRects()].map((x) => Math.round(x.top)))
-        if (tops.size > 1) split.push(m[0])
-      }
-      return {
-        name: t.textContent,
-        w: box.width,
-        title: shown(t),
-        start: shown(st),
-        cut:
-          shown(t) &&
-          (w.right > box.right + 1 || w.bottom > box.bottom + 1 || w.left < box.left - 1),
-        split,
-      }
-    })
-    return {
-      events,
-      sw: sc.scrollWidth,
-      cw: sc.clientWidth,
-      overflow: root.querySelector('[data-scope="edges"]').dataset.overflow ?? '',
-    }
-  }, sel)
-
 test("a phone timeline shows every booking's whole name, broken only between words, and scrolls with a shadow", async () => {
   await page.waitForTimeout(100) // the hours settle their width a frame after mount
-  const m = await timelineNames(calendarIn('tl-phone'))
+  const m = await timelineNames(page, calendarIn('tl-phone'))
   expect(m.events.length).toBe(5)
   expect(m.sw).toBeGreaterThan(m.cw) // an hour keeps its width, so the day scrolls sideways
   expect(m.overflow).toBe('end')
@@ -359,7 +317,7 @@ test("a phone timeline shows every booking's whole name, broken only between wor
 })
 
 test('a desktop timeline shows every name whole, and the now line runs under the bookings', async () => {
-  const m = await timelineNames(calendarIn('tl-desk'))
+  const m = await timelineNames(page, calendarIn('tl-desk'))
   for (const e of m.events) {
     expect(e.cut, e.name).toBe(false)
     expect(e.split, e.name).toEqual([])
