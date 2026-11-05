@@ -1376,8 +1376,7 @@ await check('home demos start at the top of their pane', '/', async (page) => {
     const run = page
       .locator('[data-site="story"] [data-site="example"] [data-part="run"]')
       .nth(gaps.length)
-    await run.scrollIntoViewIfNeeded()
-    await page.evaluate(() => scrollBy(0, -300))
+    await run.evaluate((r) => r.scrollIntoView({ block: 'start' }))
     await page.waitForTimeout(200)
     gaps.push([
       id,
