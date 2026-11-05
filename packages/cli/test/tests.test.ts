@@ -9,8 +9,8 @@ import { checkTestFile, checkTests, probeTests } from '../src/tests.mjs'
 import { project } from './helpers.mjs'
 
 const repo = repoRoot
-const codes = (src, file = 'x.test.tsx') => checkTestFile(src, file).map((d) => d.code)
-const apply = (src, fix) =>
+const codes = (src: string, file = 'x.test.tsx') => checkTestFile(src, file).map((d) => d.code)
+const apply = (src: string, fix: { edits: { offset: [number, number]; text: string }[] }) =>
   [...fix.edits]
     .sort((a, b) => b.offset[0] - a.offset[0])
     .reduce((s, e) => s.slice(0, e.offset[0]) + e.text + s.slice(e.offset[1]), src)
@@ -301,7 +301,7 @@ function registerConditionalAssertions() {
 
 function registerCatalogExamples() {
   it('every catalog example reports its own code', () => {
-    const status = probeTests(catalog)
+    const status = probeTests(catalog) as Record<string, { implemented: boolean; autofix: boolean }>
     expect(Object.keys(status)).toEqual([
       'T001',
       'T002',
@@ -315,7 +315,7 @@ function registerCatalogExamples() {
       'T013',
     ])
     for (const [code, s] of Object.entries(status)) expect(s.implemented, code).toBe(true)
-    expect(status.T009.autofix).toBe(true)
+    expect(status.T009!.autofix).toBe(true)
   })
 }
 
