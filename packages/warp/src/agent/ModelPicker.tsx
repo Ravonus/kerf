@@ -22,22 +22,19 @@ export type ModelOption = {
   cost?: string
 }
 
+type ModelPickerProps = {
+  models: ModelOption[]
+  value?: string | State<string | undefined> | undefined
+  onChange?: ((id: string) => void) | undefined
+  compact?: boolean | undefined
+}
+
 /**
  * ModelPicker (07 §1.3): the model chip opens a Popover holding a listbox grouped by provider. Each option shows its
  * capabilities, context size and relative cost; the current one is checked. ↑/↓, Home/End move, Enter picks, Escape
  * closes; focus goes back to the chip. `compact` shows the short name.
  */
-export function ModelPicker({
-  models,
-  value,
-  onChange,
-  compact,
-}: {
-  models: ModelOption[]
-  value?: string | State<string | undefined> | undefined
-  onChange?: ((id: string) => void) | undefined
-  compact?: boolean | undefined
-}) {
+export function ModelPicker({ models, value, onChange, compact }: ModelPickerProps) {
   const id = uid('model')
   const open = state(false)
   const picked = held<string | undefined>(
@@ -46,42 +43,16 @@ export function ModelPicker({
     () => (v: string | undefined) => onChange?.(v!),
   )
   const current = derived(() => models.find((m) => m.id === picked.value) ?? models[0])
-  const groups = derived(() =>
-    [...new Set(models.map((m) => m.provider ?? ''))].map((name) => ({
-      name,
-      models: models.filter((m) => (m.provider ?? '') === name),
-    })),
-  )
+  const groups = modelGroups(() => models)
   let chip: HTMLButtonElement | undefined
   let panel: HTMLElement | undefined
-  use(
-    popover,
+  useModelPopover(
     () => panel,
-    () => ({
-      open: open.value,
-      trigger: chip!,
-      side: 'top' as const,
-      align: 'end' as const,
-      onClose: () => (open.value = false),
-    }),
+    () => chip,
+    open,
   )
-  const choose = (m: ModelOption) => {
-    picked.set(m.id)
-    open.value = false
-    announce(panel!.ownerDocument, `Model: ${m.name}`)
-  }
-  const onKey = (e: KeyboardEvent) => {
-    const list = [...panel!.querySelectorAll<HTMLElement>('[role="option"]')]
-    const at = list.indexOf(e.target as HTMLElement)
-    const to = nextIndex(e.key, at, list.length, { orientation: 'vertical' })
-    if (to >= 0) {
-      e.preventDefault()
-      list[to]!.focus()
-    } else if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      list[at]?.click()
-    }
-  }
+  const choose = (m: ModelOption) => chooseModel(m, picked, open, () => panel)
+  const onKey = (e: KeyboardEvent) => modelKey(e, panel!)
   return (
     <span data-scope="prompt" style="display:contents">
       <button
@@ -141,4 +112,51 @@ export function ModelPicker({
       </div>
     </span>
   )
+}
+
+function modelGroups(models: () => ModelOption[]) {
+  return derived(() =>
+    [...new Set(models().map((m) => m.provider ?? ''))].map((name) => ({
+      name,
+      models: models().filter((m) => (m.provider ?? '') === name),
+    })),
+  )
+}
+
+function modelKey(e: KeyboardEvent, panel: HTMLElement) {
+  const list = [...panel.querySelectorAll<HTMLElement>('[role="option"]')]
+  const at = list.indexOf(e.target as HTMLElement)
+  const to = nextIndex(e.key, at, list.length, { orientation: 'vertical' })
+  if (to >= 0) {
+    e.preventDefault()
+    list[to]!.focus()
+  } else if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault()
+    list[at]?.click()
+  }
+}
+
+function useModelPopover(
+  panel: () => HTMLElement | undefined,
+  chip: () => HTMLButtonElement | undefined,
+  open: State<boolean>,
+) {
+  use(popover, panel, () => ({
+    open: open.value,
+    trigger: chip()!,
+    side: 'top' as const,
+    align: 'end' as const,
+    onClose: () => (open.value = false),
+  }))
+}
+
+function chooseModel(
+  m: ModelOption,
+  picked: { set: (value: string | undefined) => void },
+  open: State<boolean>,
+  panel: () => HTMLElement | undefined,
+) {
+  picked.set(m.id)
+  open.value = false
+  announce(panel()!.ownerDocument, `Model: ${m.name}`)
 }

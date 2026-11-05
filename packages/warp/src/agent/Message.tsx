@@ -7,19 +7,17 @@ import { IconButton, Sweep } from './bits'
 import '../styles'
 import '@weft-js/warp-core/styles/app/message.css'
 
+type MessageProps = {
+  text: string
+  arrive?: boolean
+  onEdit?: ((text: string) => void) | undefined
+}
+
 /**
  * The user's turn (07 §1.1): a prompt bubble with edit and copy. `arrive` is a message just sent: it enters and
  * confirms one sweep. Edit opens the bubble as a Textarea in place; saving is `onEdit` (a new branch).
  */
-export function Message({
-  text,
-  arrive,
-  onEdit,
-}: {
-  text: string
-  arrive?: boolean
-  onEdit?: ((text: string) => void) | undefined
-}) {
+export function Message({ text, arrive, onEdit }: MessageProps) {
   const editing = state(false)
   const draft = state('')
   let bubble: HTMLElement | undefined
