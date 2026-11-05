@@ -205,7 +205,198 @@ const payloadOf = (t: string) => JSON.parse(Buffer.from(t.split('.')[1]!, 'base6
 beforeAll(() => db.$weft.migrate([{ tag: 'auth', sql: ddl }]))
 afterEach(() => vi.restoreAllMocks())
 
-describe('the cookie cache', () => {
+function registerATokenLastsMinutesCarriesNo() {
+  test('a token lasts 15 minutes, carries no browser login, and verifies from the public JWKS alone', async () => {
+    const { cookie, id } = await fresh()
+    const { token: t } = await token(cookie)
+    const keys = await (await auth.handler(new Request(`${base}/api/auth/jwks`))).json()
+    expect(keys.keys[0].privateKey ?? keys.keys[0].d).toBeUndefined()
+    const { payload, protectedHeader } = await jwtVerify(t, createLocalJWKSet(keys), {
+      issuer: base,
+      audience: base,
+    })
+    expect(payload.sub).toBe(id)
+    expect(payload.exp! - Math.floor(Date.now() / 1000)).toBeLessThanOrEqual(900)
+    expect(payload.exp! - Math.floor(Date.now() / 1000)).toBeGreaterThan(890)
+    expect(protectedHeader.alg).toBe('EdDSA')
+  })
+}
+
+function registerSessionReadsNeverSignAJwt() {
+  test('session reads never sign a JWT or send one', async () => {
+    const { cookie } = await fresh()
+    const res = await auth.api.getSession({
+      headers: new Headers({ cookie }),
+      query: { disableCookieCache: true },
+      returnHeaders: true,
+    })
+    expect(res.headers.get('set-auth-jwt')).toBeNull()
+  })
+}
+
+function registerAListedFunctionTakesAToken() {
+  test('a listed function takes a token, with auth still enforced', async () => {
+    const { cookie, id, email } = await fresh()
+    const { token: t } = await token(cookie)
+    expect((await (await get(openQuery, undefined, t)).json()).v).toEqual({ id, email })
+    writes.length = 0
+    expect((await (await post(openWrite, undefined, t)).json()).v).toBe(id)
+    expect(writes).toEqual([id])
+    expect((await get(openQuery)).status).toBe(401)
+    expect((await (await get(leaveNoAuth, undefined, 'nonsense')).json()).v).toBe('nobody')
+  })
+}
+
+function registerATokenOpensNothingElseAn() {
+  test("a token opens nothing else: an unlisted function answers as if it weren't there", async () => {
+    const { cookie } = await fresh()
+    const { token: t } = await token(cookie)
+    expect((await get(whoami, undefined, t)).status).toBe(401)
+    expect((await post(write, undefined, t)).status).toBe(401)
+    expect(
+      (
+        await session(
+          auth,
+          new Request(`${base}/some/page`, { headers: { authorization: `Bearer ${t}` } }),
+        )
+      ).user,
+    ).toBeNull()
+  })
+}
+
+function registerAListedMutationRefreshesNothingFor() {
+  test("a listed mutation refreshes nothing for a token: an unlisted query can't ride along", async () => {
+    const { cookie, email } = await fresh()
+    const { token: t } = await token(cookie)
+    const res = await post(openWrite, undefined, t, { f: [[idOf(whoami), null]] })
+    expect(res.status).toBe(200)
+    expect(await res.text()).not.toContain(email)
+  })
+}
+
+function registerTamperedExpiredWrongAudienceWrongIssuer() {
+  test('tampered, expired, wrong audience, wrong issuer and alg=none are refused', async () => {
+    const { cookie, id } = await fresh()
+    const { token: t } = await token(cookie)
+    const [head, body, sig] = t.split('.')
+    const claims = payloadOf(t)
+    const forged = Buffer.from(
+      JSON.stringify({ ...claims, sub: 'someone-else', id: 'someone-else' }),
+    ).toString('base64url')
+    const none = Buffer.from(
+      JSON.stringify({
+        alg: 'none',
+        kid: JSON.parse(Buffer.from(head!, 'base64url').toString()).kid,
+      }),
+    ).toString('base64url')
+    const sign = (payload: object) =>
+      auth.api
+        .signJWT({ body: { payload: { sub: id, sid: claims.sid, ...payload } } })
+        .then((r: { token: string }) => r.token)
+    const bad = {
+      tampered: `${head}.${forged}.${sig}`,
+      resigned: `${head}.${body}.${sig!.slice(0, -4)}AAAA`,
+      none: `${none}.${forged}.`,
+      noneSigned: `${none}.${body}.${sig}`,
+      expired: await sign({ exp: Math.floor(Date.now() / 1000) - 60 }),
+      audience: await sign({ aud: 'https://other.example.test' }),
+      issuer: await sign({ iss: 'https://other.example.test' }),
+    }
+    expect((await (await get(openQuery, undefined, await sign({}))).json()).v.id).toBe(id) // the signer works: only the claim differs
+    for (const [name, value] of Object.entries(bad))
+      expect([name, (await get(openQuery, undefined, value)).status]).toEqual([name, 401])
+    expect((await post(openWrite, undefined, bad.tampered)).status).toBe(401)
+  })
+}
+
+function registerABadTokenNeverFallsBack() {
+  test('a bad token never falls back to the cookie beside it', async () => {
+    const { cookie } = await fresh()
+    expect((await get(openQuery, cookie, 'not.a.token')).status).toBe(401)
+    expect((await get(openQuery, cookie)).status).toBe(200)
+  })
+}
+
+function registerARevokedSessionCanTMint() {
+  test("a revoked session can't mint a token; one it minted can still read, and can't write", async () => {
+    const { cookie, id } = await fresh()
+    const { token: t } = await token(cookie)
+    await revoke(id)
+    expect((await get(openQuery, undefined, t)).status).toBe(200)
+    expect((await post(openWrite, undefined, t)).status).toBe(401)
+  })
+}
+
+function registerATokenCanTWriteOnce() {
+  test("a token can't write once its session has expired, though the row is still there", async () => {
+    const { cookie, id } = await fresh()
+    const { token: t } = await token(cookie)
+    await db
+      .update(sess)
+      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(sess.userId, id))
+    expect((await post(openWrite, undefined, t)).status).toBe(401)
+  })
+}
+
+function registerWithNoFixedUrlNoToken() {
+  test('with no fixed URL no token is accepted: iss and aud would go unchecked', async () => {
+    const { cookie } = await fresh()
+    const url = process.env.BETTER_AUTH_URL
+    delete process.env.BETTER_AUTH_URL
+    try {
+      const open = createAuth({
+        db,
+        secret,
+        options: {
+          database,
+          rateLimit: { enabled: false },
+          baseURL: { allowedHosts: ['localhost:3000'], fallback: base },
+        },
+        api: { functions: () => [openQuery] },
+      })
+      const res = await open.handler(new Request(`${base}/api/auth/token`, { headers: { cookie } }))
+      const { token: t } = await res.json()
+      expect(t).toBeTruthy()
+      expect(
+        (
+          await session(
+            open,
+            new Request(fnUrl(openQuery), { headers: { authorization: `Bearer ${t}` } }),
+          )
+        ).user,
+      ).toBeNull()
+    } finally {
+      if (url !== undefined) process.env.BETTER_AUTH_URL = url
+    }
+  })
+}
+
+function registerApiFalseServesNoTokensAnd() {
+  test('`api: false` serves no tokens and takes none', async () => {
+    const off = createAuth({ db, secret, options, api: false })
+    expect((await off.handler(new Request(`${base}/api/auth/jwks`))).status).toBe(404)
+    expect(off.options.plugins.some((p) => p.id === 'jwt')).toBe(false)
+  })
+}
+
+function registerAudienceAndLifetimeAreOverridable() {
+  test('audience and lifetime are overridable', async () => {
+    const custom = createAuth({
+      db,
+      secret,
+      options,
+      api: { jwt: { audience: 'https://api.example.test', expirationTime: '5m' } },
+    })
+    const { cookie } = await fresh()
+    const res = await custom.handler(new Request(`${base}/api/auth/token`, { headers: { cookie } }))
+    const claims = payloadOf((await res.json()).token)
+    expect(claims.aud).toBe('https://api.example.test')
+    expect(claims.exp - Math.floor(Date.now() / 1000)).toBeLessThanOrEqual(300)
+  })
+}
+
+function registerOnByDefaultCompactFiveMinutes() {
   test('on by default: compact, five minutes, HTTP-only, and the login cookie stays an opaque token', async () => {
     const { res } = await fresh()
     expect(auth.options.session.cookieCache).toEqual({
@@ -219,7 +410,9 @@ describe('the cookie cache', () => {
     const value = decodeURIComponent(line(res, 'session_token')!.split(';')[0]!.split('=')[1]!)
     expect(value.split('.').length).toBeLessThan(3)
   })
+}
 
+function registerAPageReadsNoDatabaseThe() {
   test("a page reads no database; the same revoked session can't write, and its cookies go", async () => {
     const { cookie, id, email } = await fresh()
     await revoke(id)
@@ -233,14 +426,18 @@ describe('the cookie cache', () => {
     expect(writes).toEqual([])
     expect(cleared(line(res, 'session_token'))).toBe(true)
   })
+}
 
+function registerAMutationOnALiveSession() {
   test('a mutation on a live session runs, and renews the cache', async () => {
     const { cookie, id } = await fresh()
     const res = await post(write, cookie)
     expect((await res.json()).v).toBe(id)
     expect(line(res, 'session_data')).toMatch(/max-age=300/i)
   })
+}
 
+function registerPastTheWindowAPageReads() {
   test('past the window a page reads the database and hands back a fresh cookie; a dead session is signed out', async () => {
     const { cookie, id, email } = await fresh()
     const later = Date.now() + 301_000
@@ -260,7 +457,9 @@ describe('the cookie cache', () => {
     expect(gone.status).toBe(401)
     expect(cleared(line(gone, 'session_token'))).toBe(true)
   })
+}
 
+function registerARealtimeRequestReadsTheDatabase() {
   test('a realtime request reads the database: its ctx outlives the request', async () => {
     const { cookie, id } = await fresh()
     await revoke(id)
@@ -272,7 +471,9 @@ describe('the cookie cache', () => {
       (await session(auth, new Request(base + '/_weft/data/a', { headers: { cookie } }))).user,
     ).not.toBeNull()
   })
+}
 
+function registerSignOutClearsTheCacheCookie() {
   test('sign-out clears the cache cookie', async () => {
     const { cookie } = await fresh()
     const res = await post(fnOf({ ...fnOf(whoami), $id: 'cache.out' }), cookie)
@@ -293,7 +494,9 @@ describe('the cookie cache', () => {
       ),
     ).toBe(true)
   })
+}
 
+function registerAPasswordChangeClearsTheCache() {
   test("a password change clears the cache cookie; revoking other sessions replaces it with the new session's", async () => {
     const { cookie } = await fresh()
     const next = crypto.randomUUID()
@@ -321,7 +524,9 @@ describe('the cookie cache', () => {
         .at(-1),
     ).toMatch(/max-age=300/i)
   })
+}
 
+function registerBetterAuthSOwnSessionRoutes() {
   test("Better Auth's own session routes ignore the cache", async () => {
     const { cookie, id } = await fresh()
     await revoke(id)
@@ -331,7 +536,9 @@ describe('the cookie cache', () => {
     ).rejects.toThrow(/unauthorized/i)
     expect((await db.select().from(user).where(eq(user.id, id)))[0]!.name).toBe('U')
   })
+}
 
+function registerOverridableAndOffMeansEveryRead() {
   test('overridable, and off means every read is the database', async () => {
     const other = createAuth({
       db,
@@ -351,6 +558,26 @@ describe('the cookie cache', () => {
     await revoke(id)
     expect((await session(off, new Request(base, { headers: { cookie } }))).user).toBeNull()
   })
+}
+
+describe('the cookie cache', () => {
+  registerOnByDefaultCompactFiveMinutes()
+
+  registerAPageReadsNoDatabaseThe()
+
+  registerAMutationOnALiveSession()
+
+  registerPastTheWindowAPageReads()
+
+  registerARealtimeRequestReadsTheDatabase()
+
+  registerSignOutClearsTheCacheCookie()
+
+  registerAPasswordChangeClearsTheCache()
+
+  registerBetterAuthSOwnSessionRoutes()
+
+  registerOverridableAndOffMeansEveryRead()
 })
 
 describe('a build', () => {
@@ -404,170 +631,27 @@ describe('a session too big for one cookie', () => {
 })
 
 describe('API tokens', () => {
-  test('a token lasts 15 minutes, carries no browser login, and verifies from the public JWKS alone', async () => {
-    const { cookie, id } = await fresh()
-    const { token: t } = await token(cookie)
-    const keys = await (await auth.handler(new Request(`${base}/api/auth/jwks`))).json()
-    expect(keys.keys[0].privateKey ?? keys.keys[0].d).toBeUndefined()
-    const { payload, protectedHeader } = await jwtVerify(t, createLocalJWKSet(keys), {
-      issuer: base,
-      audience: base,
-    })
-    expect(payload.sub).toBe(id)
-    expect(payload.exp! - Math.floor(Date.now() / 1000)).toBeLessThanOrEqual(900)
-    expect(payload.exp! - Math.floor(Date.now() / 1000)).toBeGreaterThan(890)
-    expect(protectedHeader.alg).toBe('EdDSA')
-  })
+  registerATokenLastsMinutesCarriesNo()
 
-  test('session reads never sign a JWT or send one', async () => {
-    const { cookie } = await fresh()
-    const res = await auth.api.getSession({
-      headers: new Headers({ cookie }),
-      query: { disableCookieCache: true },
-      returnHeaders: true,
-    })
-    expect(res.headers.get('set-auth-jwt')).toBeNull()
-  })
+  registerSessionReadsNeverSignAJwt()
 
-  test('a listed function takes a token, with auth still enforced', async () => {
-    const { cookie, id, email } = await fresh()
-    const { token: t } = await token(cookie)
-    expect((await (await get(openQuery, undefined, t)).json()).v).toEqual({ id, email })
-    writes.length = 0
-    expect((await (await post(openWrite, undefined, t)).json()).v).toBe(id)
-    expect(writes).toEqual([id])
-    expect((await get(openQuery)).status).toBe(401)
-    expect((await (await get(leaveNoAuth, undefined, 'nonsense')).json()).v).toBe('nobody')
-  })
+  registerAListedFunctionTakesAToken()
 
-  test("a token opens nothing else: an unlisted function answers as if it weren't there", async () => {
-    const { cookie } = await fresh()
-    const { token: t } = await token(cookie)
-    expect((await get(whoami, undefined, t)).status).toBe(401)
-    expect((await post(write, undefined, t)).status).toBe(401)
-    expect(
-      (
-        await session(
-          auth,
-          new Request(`${base}/some/page`, { headers: { authorization: `Bearer ${t}` } }),
-        )
-      ).user,
-    ).toBeNull()
-  })
+  registerATokenOpensNothingElseAn()
 
-  test("a listed mutation refreshes nothing for a token: an unlisted query can't ride along", async () => {
-    const { cookie, email } = await fresh()
-    const { token: t } = await token(cookie)
-    const res = await post(openWrite, undefined, t, { f: [[idOf(whoami), null]] })
-    expect(res.status).toBe(200)
-    expect(await res.text()).not.toContain(email)
-  })
+  registerAListedMutationRefreshesNothingFor()
 
-  test('tampered, expired, wrong audience, wrong issuer and alg=none are refused', async () => {
-    const { cookie, id } = await fresh()
-    const { token: t } = await token(cookie)
-    const [head, body, sig] = t.split('.')
-    const claims = payloadOf(t)
-    const forged = Buffer.from(
-      JSON.stringify({ ...claims, sub: 'someone-else', id: 'someone-else' }),
-    ).toString('base64url')
-    const none = Buffer.from(
-      JSON.stringify({
-        alg: 'none',
-        kid: JSON.parse(Buffer.from(head!, 'base64url').toString()).kid,
-      }),
-    ).toString('base64url')
-    const sign = (payload: object) =>
-      auth.api
-        .signJWT({ body: { payload: { sub: id, sid: claims.sid, ...payload } } })
-        .then((r: { token: string }) => r.token)
-    const bad = {
-      tampered: `${head}.${forged}.${sig}`,
-      resigned: `${head}.${body}.${sig!.slice(0, -4)}AAAA`,
-      none: `${none}.${forged}.`,
-      noneSigned: `${none}.${body}.${sig}`,
-      expired: await sign({ exp: Math.floor(Date.now() / 1000) - 60 }),
-      audience: await sign({ aud: 'https://other.example.test' }),
-      issuer: await sign({ iss: 'https://other.example.test' }),
-    }
-    expect((await (await get(openQuery, undefined, await sign({}))).json()).v.id).toBe(id) // the signer works: only the claim differs
-    for (const [name, value] of Object.entries(bad))
-      expect([name, (await get(openQuery, undefined, value)).status]).toEqual([name, 401])
-    expect((await post(openWrite, undefined, bad.tampered)).status).toBe(401)
-  })
+  registerTamperedExpiredWrongAudienceWrongIssuer()
 
-  test('a bad token never falls back to the cookie beside it', async () => {
-    const { cookie } = await fresh()
-    expect((await get(openQuery, cookie, 'not.a.token')).status).toBe(401)
-    expect((await get(openQuery, cookie)).status).toBe(200)
-  })
+  registerABadTokenNeverFallsBack()
 
-  test("a revoked session can't mint a token; one it minted can still read, and can't write", async () => {
-    const { cookie, id } = await fresh()
-    const { token: t } = await token(cookie)
-    await revoke(id)
-    expect((await get(openQuery, undefined, t)).status).toBe(200)
-    expect((await post(openWrite, undefined, t)).status).toBe(401)
-  })
+  registerARevokedSessionCanTMint()
 
-  test("a token can't write once its session has expired, though the row is still there", async () => {
-    const { cookie, id } = await fresh()
-    const { token: t } = await token(cookie)
-    await db
-      .update(sess)
-      .set({ expiresAt: new Date(Date.now() - 1000) })
-      .where(eq(sess.userId, id))
-    expect((await post(openWrite, undefined, t)).status).toBe(401)
-  })
+  registerATokenCanTWriteOnce()
 
-  test('with no fixed URL no token is accepted: iss and aud would go unchecked', async () => {
-    const { cookie } = await fresh()
-    const url = process.env.BETTER_AUTH_URL
-    delete process.env.BETTER_AUTH_URL
-    try {
-      const open = createAuth({
-        db,
-        secret,
-        options: {
-          database,
-          rateLimit: { enabled: false },
-          baseURL: { allowedHosts: ['localhost:3000'], fallback: base },
-        },
-        api: { functions: () => [openQuery] },
-      })
-      const res = await open.handler(new Request(`${base}/api/auth/token`, { headers: { cookie } }))
-      const { token: t } = await res.json()
-      expect(t).toBeTruthy()
-      expect(
-        (
-          await session(
-            open,
-            new Request(fnUrl(openQuery), { headers: { authorization: `Bearer ${t}` } }),
-          )
-        ).user,
-      ).toBeNull()
-    } finally {
-      if (url !== undefined) process.env.BETTER_AUTH_URL = url
-    }
-  })
+  registerWithNoFixedUrlNoToken()
 
-  test('`api: false` serves no tokens and takes none', async () => {
-    const off = createAuth({ db, secret, options, api: false })
-    expect((await off.handler(new Request(`${base}/api/auth/jwks`))).status).toBe(404)
-    expect(off.options.plugins.some((p) => p.id === 'jwt')).toBe(false)
-  })
+  registerApiFalseServesNoTokensAnd()
 
-  test('audience and lifetime are overridable', async () => {
-    const custom = createAuth({
-      db,
-      secret,
-      options,
-      api: { jwt: { audience: 'https://api.example.test', expirationTime: '5m' } },
-    })
-    const { cookie } = await fresh()
-    const res = await custom.handler(new Request(`${base}/api/auth/token`, { headers: { cookie } }))
-    const claims = payloadOf((await res.json()).token)
-    expect(claims.aud).toBe('https://api.example.test')
-    expect(claims.exp - Math.floor(Date.now() / 1000)).toBeLessThanOrEqual(300)
-  })
+  registerAudienceAndLifetimeAreOverridable()
 })
