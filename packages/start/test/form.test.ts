@@ -5,14 +5,19 @@ import { fnId } from '../src/vite.mjs'
 
 const url = inject('url')
 const id = fnId('addNote', 'src/server/forms.ts')
-const post = (fields, headers = { origin: url }, path = '/notes') =>
+const post = (
+  fields: Record<string, string>,
+  headers: Record<string, string> = { origin: url },
+  path = '/notes',
+) =>
   fetch(url + path, {
     method: 'POST',
     redirect: 'manual',
     headers,
     body: new URLSearchParams({ $fn: id, ...fields }),
   })
-const form = (html) => JSON.parse(/id="weft-form">(.*?)<\/script>/.exec(html)?.[1] ?? 'null')
+const form = (html: string) =>
+  JSON.parse(/id="weft-form">(.*?)<\/script>/.exec(html)?.[1] ?? 'null')
 
 test('the markup is a real form: method, hidden id, the attributes it was given', async () => {
   const html = await (await fetch(`${url}/notes`)).text()
@@ -131,7 +136,7 @@ test('the prototype chain is out of reach of a field name', async () => {
     '__proto__.polluted': 'yes',
     'a.constructor.prototype.polluted': 'yes',
   })
-  expect({}.polluted).toBeUndefined()
+  expect(({} as { polluted?: unknown }).polluted).toBeUndefined()
 })
 
 test('S002: a scope read in `load` fails the request instead of sharing state between visitors', async () => {

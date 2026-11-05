@@ -12,7 +12,7 @@ const png = (color = { r: 200, g: 60, b: 20 }) =>
     .toBuffer()
 const id = fnId('setCover', 'src/server/forms.ts')
 
-async function upload(bytes, name = 'cover.png', type = 'image/png') {
+async function upload(bytes: BlobPart, name = 'cover.png', type = 'image/png') {
   const body = new FormData()
   body.set('$fn', id)
   body.set('file', new File([bytes], name, { type }))
@@ -63,7 +63,7 @@ test("`auto` negotiates on Accept, in the config's order, with Vary", async () =
     [accepts.webp, 'image/webp', 'RIFF'],
     [accepts.none, 'image/png', 'PNG'],
     ['image/avif;q=0,image/webp', 'image/webp', 'RIFF'],
-  ]) {
+  ] as const) {
     const res = await fetch(url + src, { headers: { accept } })
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe(type)
@@ -87,7 +87,7 @@ test('a named format is served as named, a width resized, with an ETag and a 304
   const meta = await sharp(Buffer.from(await res.arrayBuffer())).metadata()
   expect([meta.width, meta.height]).toEqual([64, 32])
   const again = await fetch(`${url}${base}/64.webp`, {
-    headers: { 'if-none-match': res.headers.get('etag') },
+    headers: { 'if-none-match': res.headers.get('etag')! },
   })
   expect(again.status).toBe(304)
 })
