@@ -25,6 +25,49 @@ export interface InviteDialogProps {
   onSend: (emails: string[], role: string) => Promise<void> | void
 }
 
+function inviteSend(
+  open: () => State<boolean>,
+  emails: State<string[]>,
+  role: State<string>,
+  error: State<string>,
+  busy: State<boolean>,
+  root: () => HTMLElement | undefined,
+  seatsLeft: () => number,
+  onSend: InviteDialogProps['onSend'],
+) {
+  const send = async () => {
+    if (busy.value) return
+    const typed = root()?.querySelector<HTMLInputElement>('input[data-part="input"]')
+    typed?.blur()
+    const problem = inviteProblem(emails.value, seatsLeft())
+    if (problem) {
+      error.value = problem
+      afterFlush(() => typed?.focus())
+      return
+    }
+    busy.value = true
+    try {
+      await onSend(emails.value, role.value)
+      open().value = false
+      toast.show({
+        title: emails.value.length === 1 ? 'Invite sent' : `${emails.value.length} invites sent`,
+        description: emails.value.join(', '),
+        tone: 'positive',
+      })
+    } catch {
+      toast.show({
+        title: 'The invites didn’t send',
+        description: 'Your list is still here.',
+        tone: 'critical',
+        action: { label: 'Retry', onClick: send },
+      })
+    } finally {
+      busy.value = false
+    }
+  }
+  return send
+}
+
 /** Invite (09 §4.2): a multi-email tags field and a role, checked against the seats left before sending. */
 export function InviteDialog({ open, roles, defaultRole, seatsLeft, onSend }: InviteDialogProps) {
   const armed = latch(untrack(() => open))
@@ -42,36 +85,16 @@ export function InviteDialog({ open, roles, defaultRole, seatsLeft, onSend }: In
       }
     },
   )
-  const send = async () => {
-    if (busy.value) return
-    const typed = root?.querySelector<HTMLInputElement>('input[data-part="input"]')
-    typed?.blur()
-    const problem = inviteProblem(emails.value, seatsLeft)
-    if (problem) {
-      error.value = problem
-      afterFlush(() => typed?.focus())
-      return
-    }
-    busy.value = true
-    try {
-      await onSend(emails.value, role.value)
-      open.value = false
-      toast.show({
-        title: emails.value.length === 1 ? 'Invite sent' : `${emails.value.length} invites sent`,
-        description: emails.value.join(', '),
-        tone: 'positive',
-      })
-    } catch {
-      toast.show({
-        title: 'The invites didn’t send',
-        description: 'Your list is still here.',
-        tone: 'critical',
-        action: { label: 'Retry', onClick: send },
-      })
-    } finally {
-      busy.value = false
-    }
-  }
+  const send = inviteSend(
+    () => open,
+    emails,
+    role,
+    error,
+    busy,
+    () => root,
+    () => seatsLeft,
+    (addresses, selectedRole) => onSend(addresses, selectedRole),
+  )
   return (
     <>
       {armed.value && (
