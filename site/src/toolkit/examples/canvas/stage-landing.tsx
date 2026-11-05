@@ -26,39 +26,45 @@ export function Skins(props: { group: string }) {
           <StageSelect options={['eu-west', 'us-east']} />
         </label>
       </Stack>
-      <Stack gap="related" data-skin="card">
-        <label data-part="option">
-          <input type="checkbox" data-skin="check" checked />
-          Preview every push
-        </label>
-        <Row gap="group">
-          <label data-part="option">
-            <input type="radio" name={props.group} data-skin="check" checked />
-            Node
-          </label>
-          <label data-part="option">
-            <input type="radio" name={props.group} data-skin="check" />
-            Bun
-          </label>
-        </Row>
-        <label data-part="option">
-          <input type="checkbox" role="switch" data-skin="switch" checked />
-          Deploy on push
-        </label>
-        <label data-part="label">
-          Build minutes
-          <input type="range" data-skin="range" value="60" />
-        </label>
-        <Row gap="tight" wrap>
-          <button data-skin="chip" aria-pressed="true">
-            Live
-          </button>
-          <button data-skin="chip" aria-pressed="false">
-            Building
-          </button>
-        </Row>
-      </Stack>
+      {skinControls(() => props.group)}
     </Grid>
+  )
+}
+
+function skinControls(group: () => string) {
+  return (
+    <Stack gap="related" data-skin="card">
+      <label data-part="option">
+        <input type="checkbox" data-skin="check" checked />
+        Preview every push
+      </label>
+      <Row gap="group">
+        <label data-part="option">
+          <input type="radio" name={group()} data-skin="check" checked />
+          Node
+        </label>
+        <label data-part="option">
+          <input type="radio" name={group()} data-skin="check" />
+          Bun
+        </label>
+      </Row>
+      <label data-part="option">
+        <input type="checkbox" role="switch" data-skin="switch" checked />
+        Deploy on push
+      </label>
+      <label data-part="label">
+        Build minutes
+        <input type="range" data-skin="range" value="60" />
+      </label>
+      <Row gap="tight" wrap>
+        <button data-skin="chip" aria-pressed="true">
+          Live
+        </button>
+        <button data-skin="chip" aria-pressed="false">
+          Building
+        </button>
+      </Row>
+    </Stack>
   )
 }
 
