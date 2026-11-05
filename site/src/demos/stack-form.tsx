@@ -67,7 +67,10 @@ export default function SignUp() {
           autocomplete="email"
           error={errors.get('email')}
         />
-        <Button type="submit" loading={pending.value}>
+        <Button
+          type="submit"
+          loading={pending.value}
+        >
           Sign up
         </Button>
       </form>

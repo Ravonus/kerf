@@ -7,11 +7,7 @@ import {
   Text,
 } from '@weft-js/warp'
 
-const WEATHER = [
-  'Sunny, 21°',
-  'Rain, 14°',
-  'Windy, 17°',
-]
+const WEATHER = ['Sunny, 21°', 'Rain, 14°', 'Windy, 17°']
 const cancelled = state(0)
 // A request answers after 700 ms, or stops when
 // `signal` says the answer is no longer wanted.
@@ -84,7 +80,10 @@ export default function Forecast() {
         <Button onClick={() => day.value++}>
           Next day
         </Button>
-        <Text role="caption" subtle>
+        <Text
+          role="caption"
+          subtle
+        >
           {cancelled.value === 0
             ? 'No request cancelled yet'
             : `${cancelled.value} earlier ` +

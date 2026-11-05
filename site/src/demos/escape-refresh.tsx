@@ -43,9 +43,14 @@ export default function Weather() {
   const city = state('Lisbon')
   return (
     <Card
-      title="The old value stays while the new one loads"
+      title={
+        'The old value stays ' + 'while the new one loads'
+      }
     >
-      <Row gap="tight" wrap>
+      <Row
+        gap="tight"
+        wrap
+      >
         {CITIES.map((c) => (
           <Button
             key={c}

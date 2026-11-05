@@ -27,8 +27,10 @@ export default function UploadCheck() {
         'pick a JPEG, PNG or WebP.'
       )
     if (f.bytes > LIMIT)
-      return `${f.name} is ${size(f.bytes)}, over the ` +
+      return (
+        `${f.name} is ${size(f.bytes)}, over the ` +
         `${size(LIMIT)} limit.`
+      )
     return ''
   })
   const pick = (
