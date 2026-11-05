@@ -6,8 +6,10 @@ import { check } from '../src/check.mjs'
 import { listSurfaces } from '../src/surface-checks.mjs'
 import { project } from './helpers.mjs'
 
-const codes = (r, ...only) => r.diagnostics.filter((d) => only.includes(d.code)).map((d) => d.code)
-const at = (r, code) => r.diagnostics.find((d) => d.code === code)
+const codes = (r: Awaited<ReturnType<typeof check>>, ...only: string[]) =>
+  r.diagnostics.filter((d) => only.includes(d.code)).map((d) => d.code)
+const at = (r: Awaited<ReturnType<typeof check>>, code: string) =>
+  r.diagnostics.find((d) => d.code === code)!
 
 describe('surface checks', () => {
   it('X009: a <Surface> needs label or decorative', async () => {
