@@ -69,7 +69,15 @@ pub(super) fn imported_call<'b>(
     scoping: &Scoping,
     imports: &'b HashMap<SymbolId, (String, String)>,
 ) -> Option<(&'b str, &'b str)> {
-    let (object, member) = match call.callee.get_inner_expression() {
+    imported_value(&call.callee, scoping, imports)
+}
+
+pub(super) fn imported_value<'b>(
+    value: &'b Expression<'_>,
+    scoping: &Scoping,
+    imports: &'b HashMap<SymbolId, (String, String)>,
+) -> Option<(&'b str, &'b str)> {
+    let (object, member) = match value.get_inner_expression() {
         Expression::Identifier(id) => {
             let (module, name) = imports.get(&symbol_of(scoping, id)?)?;
             return Some((module, name));

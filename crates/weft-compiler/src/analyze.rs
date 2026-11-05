@@ -1,9 +1,11 @@
 //! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics
-//! (W001, W005, W006, W010, W011, W013, W014, W015, W016, W017, W018, W019, W020, W040, W041).
+//! (W001, W005, W006, W010, W011, W012, W013, W014, W015, W016, W017, W018, W019,
+//! W020, W040, W041).
 //! The @weft-js/core/browser diagnostics live in `browser`. Produces a `Plan` that `transform`
 //! applies to the same AST, and the per-file facts `weft check` joins across files (`project`).
 
 mod aliases;
+mod async_callbacks;
 mod body_reads;
 mod component_entries;
 mod context;
@@ -150,6 +152,8 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
     };
     a.react_wrappers = react::wrappers(program, scoping, &a.react_imports);
     a.visit_program(program);
+    let async_diagnostics = async_callbacks::diagnostics(program, &a);
+    a.plan.diagnostics.extend(async_diagnostics);
     a.plan
         .diagnostics
         .extend(numeric_jsx::diagnostics(program, scoping, source));
