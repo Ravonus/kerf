@@ -243,7 +243,11 @@ export function Guests() {
   const guests = state<number | null>(2)
   return (
     <section>
-      <NumberField label="Guests" min={1} value={guests} />
+      <NumberField
+        label="Guests"
+        min={1}
+        value={guests}
+      />
       <p>Table for {guests.value ?? 0}</p>
     </section>
   )

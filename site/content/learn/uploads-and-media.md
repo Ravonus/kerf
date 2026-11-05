@@ -399,7 +399,11 @@ A bare `<img>` has no width or height until the file arrives, so the browser can
 always fetches the largest size. The record already knows the dimensions and every size, so let `<Media>` use them:
 
 ```tsx
-<Media src={p.image} alt={p.alt} width="1/3" />
+<Media
+  src={p.image}
+  alt={p.alt}
+  width="1/3"
+/>
 ```
 
 `width` says how wide it's drawn (here a third of the viewport, the full width on a phone), which becomes `sizes`, so
