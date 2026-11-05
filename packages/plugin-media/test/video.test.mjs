@@ -169,8 +169,7 @@ describe.skipIf(!hasFfmpeg)('video', () => {
   })
 })
 
-// Needs a real `ffmpeg` on PATH: a GIF only becomes video through it.
-describe.skipIf(!hasFfmpeg)('GIF', () => {
+function registerGifConversion() {
   it('turns into video when that saves 15%, looping, with its running time', async () => {
     const { asset, files } = await build('flat.gif')
     expect(asset).toMatchObject({
@@ -201,7 +200,9 @@ describe.skipIf(!hasFfmpeg)('GIF', () => {
     expect(asset.copy.type).toBe('image/gif')
     expect(files.find((f) => f.name === asset.copy.src).bytes).toEqual(read('flat.gif'))
   })
+}
 
+function registerGifFallbackAndAudio() {
   // The "15% smaller at the target" comparison needs the `ssimulacra2` scorer to find the target.
   it.skipIf(!findScorer('ssimulacra2'))(
     'stays a GIF when nothing is 15% smaller at the target',
@@ -260,6 +261,12 @@ describe.skipIf(!hasFfmpeg)('GIF', () => {
     expect(s.streams.map((t) => t.codec_name).sort()).toEqual(['aac', 'h264'])
     expect(Number(s.format.duration)).toBeCloseTo(3, 0)
   })
+}
+
+// Needs a real `ffmpeg` on PATH: a GIF only becomes video through it.
+describe.skipIf(!hasFfmpeg)('GIF', () => {
+  registerGifConversion()
+  registerGifFallbackAndAudio()
 })
 
 // Needs a real `ffmpeg` on PATH: the audio is really encoded.
