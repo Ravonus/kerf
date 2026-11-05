@@ -309,7 +309,13 @@ function Row(props: { names: string[]; size: number }) {
   const { names, size } = props
   return (
     <div>
-      {names.map(n => <Photo key={n} name={n} size={size} />)}
+      {names.map(n => (
+        <Photo
+          key={n}
+          name={n}
+          size={size}
+        />
+      ))}
     </div>
   )
 }
@@ -332,7 +338,8 @@ function Photo(props: { name: string }) {
 }
 
 function Row(props: { names: string[] }) {
-  return <div>{props.names.map(n => <Photo key={n} name={n} />)}</div>
+  const { names } = props
+  return <div>{names.map(n => <Photo key={n} name={n} />)}</div>
 }
 
 export function Gallery() {

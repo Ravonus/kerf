@@ -129,7 +129,11 @@ in the cart: `{ beans: 2, mug: 1 }`. A box is read and written through `.value`,
 Second, `Shop` passes the box itself to each row:
 
 ```tsx
-<ProductRow key={p.id} product={p} cart={cart} />
+<ProductRow
+  key={p.id}
+  product={p}
+  cart={cart}
+/>
 ```
 
 and `ProductRow` types that prop as `State<Cart>`. Usually you pass a value, `cart.value`, and the child only reads it.

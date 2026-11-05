@@ -297,9 +297,21 @@ import { Button, Row } from '@weft-js/warp'
 export function Formatting() {
   return (
     <Row gap="tight">
-      <Button emphasis="ghost" tone="neutral" icon="bold" />
-      <Button emphasis="ghost" tone="neutral" icon="italic" />
-      <Button emphasis="ghost" tone="neutral" icon="link" />
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        icon="bold"
+      />
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        icon="italic"
+      />
+      <Button
+        emphasis="ghost"
+        tone="neutral"
+        icon="link"
+      />
     </Row>
   )
 }
@@ -310,7 +322,11 @@ import { Button, Row } from '@weft-js/warp'
 
 export function Formatting() {
   return (
-    <Row gap="tight" role="toolbar" aria-label="Formatting">
+    <Row
+      gap="tight"
+      role="toolbar"
+      aria-label="Formatting"
+    >
       <Button
         emphasis="ghost"
         tone="neutral"

@@ -116,7 +116,11 @@ export function OrdersPage() {
   return (
     <Stack as="main" gap="section">
       <Heading level={1}>Orders</Heading>
-      <Stack as="section" gap="related" aria-labelledby="today">
+      <Stack
+        as="section"
+        gap="related"
+        aria-labelledby="today"
+      >
         <Heading level={2} id="today">Today</Heading>
         <Text>12 orders to ship.</Text>
       </Stack>

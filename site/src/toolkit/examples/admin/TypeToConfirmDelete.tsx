@@ -5,6 +5,10 @@ import { wait } from './shared'
 export function TypeToConfirmDelete() {
   const open = state(false)
   const gone = state(false)
+  const confirm = async () => {
+    await wait(700)
+    gone.value = true
+  }
   return (
     <>
       {gone.value ? (
@@ -33,10 +37,7 @@ export function TypeToConfirmDelete() {
           '3 scheduled jobs',
         ]}
         action="Delete project"
-        onConfirm={async () => {
-          await wait(700)
-          gone.value = true
-        }}
+        onConfirm={confirm}
       />
     </>
   )

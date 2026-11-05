@@ -154,14 +154,12 @@ Press **Open**: its handler runs, then the toolbar's. Press **Star**: only its o
 ### Stopping propagation
 
 ```tsx
-<Button
-  onClick={e => {
-    e.stopPropagation()
-    star()
-  }}
->
-  Star
-</Button>
+function onStar(e: MouseEvent) {
+  e.stopPropagation()
+  star()
+}
+
+const button = <Button onClick={onStar}>Star</Button>
 ```
 
 `e.stopPropagation()` stops the event from reaching any parent's handler. Use it when a child's action shouldn't also
@@ -180,14 +178,17 @@ it. `e.preventDefault()` stops that, and you handle the event yourself:
 import { Button, Input } from '@weft-js/warp'
 
 export function Signup() {
+  const submit = (e: SubmitEvent) => {
+    e.preventDefault()
+    alert('Submitting!')
+  }
   return (
-    <form
-      onSubmit={e => {
-        e.preventDefault()
-        alert('Submitting!')
-      }}
-    >
-      <Input label="Email" name="email" type="email" />
+    <form onSubmit={submit}>
+      <Input
+        label="Email"
+        name="email"
+        type="email"
+      />
       <Button type="submit">Send</Button>
     </form>
   )
@@ -339,16 +340,16 @@ export function App() {
 import { state } from '@weft-js/core'
 import { Button, Card } from '@weft-js/warp'
 
-function ColorSwitch(props: { onChangeColor: () => void }) {
+function ColorSwitch(props: {
+  onChangeColor: () => void
+}) {
+  const { onChangeColor } = props
+  const changeColor = (e: MouseEvent) => {
+    e.stopPropagation()
+    onChangeColor()
+  }
   return (
-    <Button
-      onClick={e => {
-        e.stopPropagation()
-        props.onChangeColor()
-      }}
-    >
-      Change colour
-    </Button>
+    <Button onClick={changeColor}>Change colour</Button>
   )
 }
 
@@ -363,7 +364,9 @@ export function App() {
     >
       <Card title={`Hue ${hue.value}`}>
         <ColorSwitch
-          onChangeColor={() => (hue.value = (hue.value + 40) % 360)}
+          onChangeColor={() =>
+            (hue.value = (hue.value + 40) % 360)
+          }
         />
         <p>Clicks on the card: {clicks.value}</p>
       </Card>

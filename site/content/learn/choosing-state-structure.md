@@ -411,6 +411,7 @@ import { derived, state } from '@weft-js/core'
 type Snack = { id: number; title: string }
 
 export function Snacks(props: { snacks: Snack[] }) {
+  const { snacks } = props
   // One entry per chosen id. Rows read their own entry with `.get`.
   const chosen = state<Record<number, boolean>>({})
   const count = derived(() =>
@@ -418,7 +419,7 @@ export function Snacks(props: { snacks: Snack[] }) {
   )
   return (
     <section>
-      {props.snacks.map(s => (
+      {snacks.map(s => (
         <label key={s.id}>
           <input
             type="checkbox"
