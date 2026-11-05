@@ -7,6 +7,7 @@ import { loadCompiler, resolveWeft } from '../../../packages/cli/src/weft.mjs'
 import { highlight, level, PALETTE, site, repo, pub } from './context.mjs'
 import { write, readData } from './docs-catalog.mjs'
 
+/** Every drawing, from the set's generated source: `{ name: [hollow, solid] }`, content-addressed in `public/`. */
 function buildIcons() {
   const source = readFileSync(join(repo, 'packages/warp-icons/src/gen/all.tsx'), 'utf8')
   const names = JSON.parse(

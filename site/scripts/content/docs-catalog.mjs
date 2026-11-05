@@ -293,6 +293,7 @@ const slugify = (t) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
 
+/** One line of words: `code` becomes code, and nothing else is expected. */
 const inline = (md) => markdownToHtml(md).replace(/^\s*<p[^>]*>|<\/p>\s*$/g, '')
 
 export {

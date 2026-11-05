@@ -164,15 +164,4 @@ async function buildReference() {
   return { nav, pages, flat, slugs }
 }
 
-/**
- * A Learn page's blocks. Plain Markdown, plus fences of our own, each opened by a line that starts `:::` and closed by a
- * line that is only `:::`:
- *   :::learn             the "You will learn" box (a list)
- *   :::demo <id>         a live demo from src/demos, beside its own source (one line, no closing fence)
- *   :::note [title]      an aside
- *   :::pitfall [title]   a mistake that is easy to make, and what to do instead
- *   :::deepdive <title>  an aside for the curious, closed until opened
- *   :::challenge <t>     a "Try it" task; a `:::solution` line inside starts its hidden answer
- */
-
 export { plain, summary, codeBlock, linkify, renderer, buildReference }

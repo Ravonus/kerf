@@ -1,3 +1,7 @@
+// ------------------------------------------------------------------ toolkit
+
+/** What the common props mean, so a table isn't blank where the source has no comment. A Doc's `propDocs` wins. */
+
 const PROP_WORDS = {
   children: 'What it contains.',
   label: 'Its accessible name. Fields show it; icon-only controls speak it.',

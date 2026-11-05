@@ -268,10 +268,4 @@ function buildToolkit() {
   }))
 }
 
-/** One line of words: `code` becomes code, and nothing else is expected. */
-
-// ------------------------------------------------------------------ icons
-
-/** Every drawing, from the set's generated source: `{ name: [hollow, solid] }`, content-addressed in `public/`. */
-
 export { buildToolkit }
