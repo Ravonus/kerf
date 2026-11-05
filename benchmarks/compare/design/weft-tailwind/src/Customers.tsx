@@ -28,7 +28,7 @@ const th =
   'px-4 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400'
 const td = 'px-4 py-3 whitespace-nowrap'
 
-export function Customers() {
+function useCustomers() {
   const customers = state<Customer[]>(seed)
   const query = state('')
   const pending = state<Customer | null>(null)
@@ -41,6 +41,75 @@ export function Customers() {
     if (target) customers.value = customers.value.filter((c) => c.id !== target.id)
     pending.value = null
   }
+
+  return { query, pending, visible, confirm }
+}
+
+function customerConfirmation(
+  pending: ReturnType<typeof useCustomers>['pending'],
+  confirm: () => void,
+) {
+  return (
+    <div class="fixed inset-0 z-20 flex items-end justify-center bg-slate-950/60 p-4 sm:items-center">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900"
+        onKeyDown={(e: KeyboardEvent) => {
+          if (e.key === 'Escape') pending.value = null
+        }}
+      >
+        <h2 id="confirm-title" class="text-lg font-semibold">
+          Delete this customer?
+        </h2>
+        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+          {pending.value!.name} will be removed from your customer list. This can't be undone.
+        </p>
+        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button
+            autofocus
+            onClick={() => {
+              pending.value = null
+            }}
+          >
+            Keep
+          </Button>
+          <Button tone="danger" onClick={confirm}>
+            Delete
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function customersHead() {
+  return (
+    <thead class="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
+      <tr>
+        <th scope="col" class={th}>
+          Name
+        </th>
+        <th scope="col" class={th}>
+          Email
+        </th>
+        <th scope="col" class={th}>
+          Plan
+        </th>
+        <th scope="col" class={th}>
+          Status
+        </th>
+        <th scope="col" class={th}>
+          <span class="sr-only">Actions</span>
+        </th>
+      </tr>
+    </thead>
+  )
+}
+
+export function Customers() {
+  const { query, pending, visible, confirm } = useCustomers()
 
   return (
     <section>
@@ -70,25 +139,7 @@ export function Customers() {
         ) : (
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
-              <thead class="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50">
-                <tr>
-                  <th scope="col" class={th}>
-                    Name
-                  </th>
-                  <th scope="col" class={th}>
-                    Email
-                  </th>
-                  <th scope="col" class={th}>
-                    Plan
-                  </th>
-                  <th scope="col" class={th}>
-                    Status
-                  </th>
-                  <th scope="col" class={th}>
-                    <span class="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
+              {customersHead()}
               <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
                 {visible.value.map((c) => (
                   <tr key={c.id}>
@@ -120,39 +171,7 @@ export function Customers() {
           </div>
         )}
       </Card>
-      {pending.value && (
-        <div class="fixed inset-0 z-20 flex items-end justify-center bg-slate-950/60 p-4 sm:items-center">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="confirm-title"
-            class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900"
-            onKeyDown={(e: KeyboardEvent) => {
-              if (e.key === 'Escape') pending.value = null
-            }}
-          >
-            <h2 id="confirm-title" class="text-lg font-semibold">
-              Delete this customer?
-            </h2>
-            <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-              {pending.value.name} will be removed from your customer list. This can't be undone.
-            </p>
-            <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <Button
-                autofocus
-                onClick={() => {
-                  pending.value = null
-                }}
-              >
-                Keep
-              </Button>
-              <Button tone="danger" onClick={confirm}>
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {pending.value && customerConfirmation(pending, confirm)}
     </section>
   )
 }

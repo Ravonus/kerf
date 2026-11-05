@@ -68,6 +68,84 @@ function Detail({ row, open, span }: { row: Project; open: boolean; span: number
   )
 }
 
+function tableHead(table: ReturnType<typeof useTable>) {
+  return (
+    <thead>
+      <tr>
+        <th className="narrow">
+          <Checkbox.Root
+            aria-label="Select all"
+            className="check"
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
+          >
+            <Checkbox.Indicator className="tick" />
+          </Checkbox.Root>
+        </th>
+        <th className="narrow" />
+        {table.getVisibleLeafColumns().map((c: any) => (
+          <th
+            key={c.id}
+            aria-sort={
+              c.getIsSorted() === 'asc'
+                ? 'ascending'
+                : c.getIsSorted() === 'desc'
+                  ? 'descending'
+                  : 'none'
+            }
+          >
+            <button className="sort" onClick={c.getToggleSortingHandler()}>
+              {String(c.columnDef.header)}
+            </button>
+          </th>
+        ))}
+      </tr>
+    </thead>
+  )
+}
+
+function tableRows(table: ReturnType<typeof useTable>) {
+  return (
+    <tbody>
+      {table.getRowModel().rows.map((row: any) => (
+        <Fragment key={row.id}>
+          <tr data-selected={row.getIsSelected() ? '' : undefined}>
+            <td>
+              <Checkbox.Root
+                aria-label={`Select ${row.original.name}`}
+                className="check"
+                checked={row.getIsSelected()}
+                onCheckedChange={(v) => row.toggleSelected(!!v)}
+              >
+                <Checkbox.Indicator className="tick" />
+              </Checkbox.Root>
+            </td>
+            <td>
+              <button
+                aria-label={`Details for ${row.original.name}`}
+                aria-expanded={row.getIsExpanded()}
+                onClick={() => row.toggleExpanded()}
+              >
+                {row.getIsExpanded() ? '▾' : '▸'}
+              </button>
+            </td>
+            {row.getVisibleCells().map((cell: any) => (
+              <td key={cell.id} data-label={String(cell.column.columnDef.header)}>
+                <table.FlexRender cell={cell} />
+              </td>
+            ))}
+          </tr>
+          <Detail
+            row={row.original}
+            open={row.getIsExpanded()}
+            span={table.getVisibleLeafColumns().length + 2}
+          />
+        </Fragment>
+      ))}
+    </tbody>
+  )
+}
+
 export function DataTable({ label, columns }: { label: string; columns: any }) {
   const [data, setData] = useState(projects)
   ;(window as any).__tick = () =>
@@ -121,74 +199,8 @@ export function DataTable({ label, columns }: { label: string; columns: any }) {
       <div className="frame">
         <table className="grid">
           <caption className="sr">{label}</caption>
-          <thead>
-            <tr>
-              <th className="narrow">
-                <Checkbox.Root
-                  aria-label="Select all"
-                  className="check"
-                  checked={table.getIsAllPageRowsSelected()}
-                  onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
-                >
-                  <Checkbox.Indicator className="tick" />
-                </Checkbox.Root>
-              </th>
-              <th className="narrow" />
-              {table.getVisibleLeafColumns().map((c: any) => (
-                <th
-                  key={c.id}
-                  aria-sort={
-                    c.getIsSorted() === 'asc'
-                      ? 'ascending'
-                      : c.getIsSorted() === 'desc'
-                        ? 'descending'
-                        : 'none'
-                  }
-                >
-                  <button className="sort" onClick={c.getToggleSortingHandler()}>
-                    {String(c.columnDef.header)}
-                  </button>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row: any) => (
-              <Fragment key={row.id}>
-                <tr data-selected={row.getIsSelected() ? '' : undefined}>
-                  <td>
-                    <Checkbox.Root
-                      aria-label={`Select ${row.original.name}`}
-                      className="check"
-                      checked={row.getIsSelected()}
-                      onCheckedChange={(v) => row.toggleSelected(!!v)}
-                    >
-                      <Checkbox.Indicator className="tick" />
-                    </Checkbox.Root>
-                  </td>
-                  <td>
-                    <button
-                      aria-label={`Details for ${row.original.name}`}
-                      aria-expanded={row.getIsExpanded()}
-                      onClick={() => row.toggleExpanded()}
-                    >
-                      {row.getIsExpanded() ? '▾' : '▸'}
-                    </button>
-                  </td>
-                  {row.getVisibleCells().map((cell: any) => (
-                    <td key={cell.id} data-label={String(cell.column.columnDef.header)}>
-                      <table.FlexRender cell={cell} />
-                    </td>
-                  ))}
-                </tr>
-                <Detail
-                  row={row.original}
-                  open={row.getIsExpanded()}
-                  span={table.getVisibleLeafColumns().length + 2}
-                />
-              </Fragment>
-            ))}
-          </tbody>
+          {tableHead(table)}
+          {tableRows(table)}
         </table>
       </div>
       <div className="pager">
