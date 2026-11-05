@@ -16,9 +16,14 @@ function boxKind(ts, checker, type, members) {
   const declarations = value?.getDeclarations() ?? []
   const names = new Set(checker.getPropertiesOfType(type).map((property) => property.name))
   // A projection of just .value is not evidence of the complete box contract.
-  return members.shapes.some((shape) => shape.names.length > 1
-    && shape.names.every((name) => names.has(name))
-    && declarations.some((declaration) => shape.declarations.has(declaration))) ? 'box' : 'value'
+  return members.shapes.some(
+    (shape) =>
+      shape.names.length > 1 &&
+      shape.names.every((name) => names.has(name)) &&
+      declarations.some((declaration) => shape.declarations.has(declaration)),
+  )
+    ? 'box'
+    : 'value'
 }
 
 function attribute(ts, file, start) {
@@ -33,14 +38,23 @@ function attribute(ts, file, start) {
 
 // Scalar aliases and synthesized boxes stay opaque; no complete contract is proven there.
 function originatingBox(ts, expression) {
-  while (ts.isParenthesizedExpression(expression) || ts.isAsExpression(expression)
-    || ts.isTypeAssertionExpression(expression) || ts.isNonNullExpression(expression)
-    || ts.isSatisfiesExpression(expression)) expression = expression.expression
+  while (
+    ts.isParenthesizedExpression(expression) ||
+    ts.isAsExpression(expression) ||
+    ts.isTypeAssertionExpression(expression) ||
+    ts.isNonNullExpression(expression) ||
+    ts.isSatisfiesExpression(expression)
+  )
+    expression = expression.expression
   if (ts.isPropertyAccessExpression(expression) && expression.name.text === 'value')
     return expression.expression
-  if (ts.isElementAccessExpression(expression)
-    && expression.argumentExpression && ts.isStringLiteralLike(expression.argumentExpression)
-    && expression.argumentExpression.text === 'value') return expression.expression
+  if (
+    ts.isElementAccessExpression(expression) &&
+    expression.argumentExpression &&
+    ts.isStringLiteralLike(expression.argumentExpression) &&
+    expression.argumentExpression.text === 'value'
+  )
+    return expression.expression
   return null
 }
 
@@ -65,24 +79,28 @@ function boxMismatch(ts, program, diagnostic) {
   if (!known(ts, value)) return null
   const from = given === 'box' ? value : actual
   const to = given === 'box' ? expected : value
-  if (!checker.isTypeAssignableTo(from, to))
-    return null
+  if (!checker.isTypeAssignableTo(from, to)) return null
   if (given === 'value') {
     const origin = originatingBox(ts, site.expression)
     const original = origin && checker.getTypeAtLocation(origin)
-    if (boxKind(ts, checker, original, members) !== 'box'
-      || !checker.isTypeAssignableTo(original, expected)) return null
+    if (
+      boxKind(ts, checker, original, members) !== 'box' ||
+      !checker.isTypeAssignableTo(original, expected)
+    )
+      return null
   }
   const text = site.expression.getText(diagnostic.file)
   return {
     code: 'W008',
     severity: 'error',
-    why: given === 'box'
-      ? `This component prop expects a value, but \`${text}\` is a core box.`
-      : `This component prop expects a core box, but \`${text}\` is a value.`,
-    help: given === 'box'
-      ? `Read the box's \`.value\` before passing it to this prop; handle null or undefined first if needed.`
-      : 'Pass the State/Derived box itself, for example `count` instead of `count.value`.',
+    why:
+      given === 'box'
+        ? `This component prop expects a value, but \`${text}\` is a core box.`
+        : `This component prop expects a core box, but \`${text}\` is a value.`,
+    help:
+      given === 'box'
+        ? `Read the box's \`.value\` before passing it to this prop; handle null or undefined first if needed.`
+        : 'Pass the State/Derived box itself, for example `count` instead of `count.value`.',
   }
 }
 
@@ -101,14 +119,14 @@ function withBoxProps(host, createFallback) {
     },
     diagnostics(file) {
       const list = host.diagnostics(file)
-      if (!list.some((diagnostic) => canMap(file, diagnostic)))
-        return list
+      if (!list.some((diagnostic) => canMap(file, diagnostic))) return list
       fallback ??= createFallback()
       const mapped = fallback.diagnostics(file).filter((diagnostic) => diagnostic.weft)
       return list.map((diagnostic) => {
         if (!canMap(file, diagnostic)) return diagnostic
-        const match = mapped.find((candidate) => candidate.start === diagnostic.start
-          && candidate.code === diagnostic.code)
+        const match = mapped.find(
+          (candidate) => candidate.start === diagnostic.start && candidate.code === diagnostic.code,
+        )
         return match ? { ...diagnostic, weft: match.weft } : diagnostic
       })
     },

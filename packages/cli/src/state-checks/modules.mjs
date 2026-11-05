@@ -4,7 +4,8 @@ import { join, relative } from 'node:path'
 import { local } from '../alias.mjs'
 
 /** Whether a file uses the server module convention. */
-export const isServerModule = (rel) => rel.startsWith('src/server/') || /\.server\.[cm]?[jt]sx?$/.test(rel)
+export const isServerModule = (rel) =>
+  rel.startsWith('src/server/') || /\.server\.[cm]?[jt]sx?$/.test(rel)
 /** Resolve a local project module with the existing state-check extensions. */
 export function moduleFile(root, from, spec) {
   const abs = local(join(root, from), spec)

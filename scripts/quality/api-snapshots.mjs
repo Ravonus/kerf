@@ -14,8 +14,15 @@ export function problemsFor(name, exports, snapshot, docs) {
     problems.push(`${name}: export map differs from api.json`)
   for (const path of Object.keys(exports)) {
     const specifier = `@weft-js/${name}${path === '.' ? '' : path.slice(1)}`
-    if (!docs.split('\n').some((line) => line.startsWith(`- \`${specifier}\`: `) &&
-      line.slice(line.indexOf(': ') + 2).trim().length > 0))
+    if (
+      !docs
+        .split('\n')
+        .some(
+          (line) =>
+            line.startsWith(`- \`${specifier}\`: `) &&
+            line.slice(line.indexOf(': ') + 2).trim().length > 0,
+        )
+    )
       problems.push(`${name}: missing reference for ${specifier}`)
   }
   return problems
@@ -23,8 +30,11 @@ export function problemsFor(name, exports, snapshot, docs) {
 
 /** Check tracked package manifests, targets, snapshots and reference entries. */
 export function check(repo = repoRoot) {
-  const tracked = new Set(execFileSync('git', ['ls-files', '-z'], { cwd: repo, encoding: 'utf8' })
-    .split('\0').filter(Boolean))
+  const tracked = new Set(
+    execFileSync('git', ['ls-files', '-z'], { cwd: repo, encoding: 'utf8' })
+      .split('\0')
+      .filter(Boolean),
+  )
   const docsPath = 'packages/cli/docs/entrypoints.md'
   const docs = readFileSync(resolve(repo, docsPath), 'utf8')
   const problems = []

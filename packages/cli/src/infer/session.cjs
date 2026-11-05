@@ -104,9 +104,10 @@ class Session {
     const fresh = !this.host
     const host = await this.start()
     const findings = this.engine.run(host, fresh ? undefined : changed)
-    const redo = fresh || !changed || this.engine.typedChecksNeeded()
-      ? this.engine.affected()
-      : this.engine.touched
+    const redo =
+      fresh || !changed || this.engine.typedChecksNeeded()
+        ? this.engine.affected()
+        : this.engine.touched
     for (const file of redo) {
       if (!this.engine.facts.has(file)) {
         this.errors.delete(file)

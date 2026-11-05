@@ -4,11 +4,16 @@ const programs = new WeakMap()
 /** Resolved core exports and member declarations for one checker program. */
 function coreMembers(ts, program, checker) {
   if (programs.has(program)) return programs.get(program)
-  const roots = new Set(), shapes = [], derivedRoots = new Set()
+  const roots = new Set(),
+    shapes = [],
+    derivedRoots = new Set()
   for (const file of program.getSourceFiles()) {
     for (const node of file.statements) {
-      if ((!ts.isImportDeclaration(node) && !ts.isExportDeclaration(node))
-        || node.moduleSpecifier?.text !== '@weft-js/core') continue
+      if (
+        (!ts.isImportDeclaration(node) && !ts.isExportDeclaration(node)) ||
+        node.moduleSpecifier?.text !== '@weft-js/core'
+      )
+        continue
       const module = checker.getSymbolAtLocation(node.moduleSpecifier)
       if (!module) continue
       for (let symbol of checker.getExportsOfModule(module)) {

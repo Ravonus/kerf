@@ -5,8 +5,7 @@ import { gaps, compare } from './diagnostic-catalog.mjs'
 const catalog = [{ code: 'W001', by: 'compiler' }]
 const source = { 'source.rs': 'Diagnostic::new(source, "W001", severity, span);' }
 const tests = { 'compile.rs': 'assert_eq!(codes(&d), ["W001"]);' }
-const run = (c = catalog, s = source, t = tests, baseline = []) =>
-  compare(gaps(c, s, t), baseline)
+const run = (c = catalog, s = source, t = tests, baseline = []) => compare(gaps(c, s, t), baseline)
 
 test('valid inputs and repaired gaps pass', () => {
   deepStrictEqual(run(), [])
@@ -59,10 +58,18 @@ test('CLI mentions, strings, comments and catalog entries are not coverage', () 
     "const pattern = /return { code: 'W008' }/",
     'const text = `return { code: "W008" }`',
     'const text = `a ${`nested`} return { code: "W008" }`',
-  ]) deepStrictEqual(mapped(mappedCatalog, { 'fake.cjs': text }), ['missing emit: W008'])
-  for (const text of ["// expect(code).toBe('W008')", "const code = 'W008'", "describe('W008', () => {})",
-    "other.toContain('W008')", 'const text = `expect(code).toBe("W008")`'])
-    deepStrictEqual(mapped(mappedCatalog, cli.source, { 'fake.test.ts': text }), ['missing test: W008'])
+  ])
+    deepStrictEqual(mapped(mappedCatalog, { 'fake.cjs': text }), ['missing emit: W008'])
+  for (const text of [
+    "// expect(code).toBe('W008')",
+    "const code = 'W008'",
+    "describe('W008', () => {})",
+    "other.toContain('W008')",
+    'const text = `expect(code).toBe("W008")`',
+  ])
+    deepStrictEqual(mapped(mappedCatalog, cli.source, { 'fake.test.ts': text }), [
+      'missing test: W008',
+    ])
   deepStrictEqual(mapped(), [])
 })
 
@@ -78,8 +85,9 @@ test('W030 graph emit, test and CLI ownership remain mandatory', () => {
   deepStrictEqual(run([]), ['missing entry: W030'])
   ok(run([{ code: 'W030', by: 'compiler' }]).includes('missing emit: W030'))
   ok(run([{ code: 'W030', by: 'start' }]).includes('unsupported owner: W030'))
-  deepStrictEqual(run(catalog, { 'fake.mjs': "const metadata = { code: 'W030' }" }),
-    ['missing emit: W030'])
+  deepStrictEqual(run(catalog, { 'fake.mjs': "const metadata = { code: 'W030' }" }), [
+    'missing emit: W030',
+  ])
   deepStrictEqual(run(), [])
 })
 
@@ -88,16 +96,22 @@ test('compiler entries in other catalog partitions require emits and assertions'
   const style = [{ code: 'D024', by: 'compiler' }]
   const source = { 'style.rs': 'Diagnostic::new(source, "D024", severity, span);' }
   const tests = { 'compile.rs': 'assert_eq!(codes(&d), ["D024"]);' }
-  const baseSource = { ...source, 'compiler.rs': 'Diagnostic::new(source, "W001", severity, span);' }
+  const baseSource = {
+    ...source,
+    'compiler.rs': 'Diagnostic::new(source, "W001", severity, span);',
+  }
   const baseTests = { ...tests, 'other.rs': 'assert_eq!(codes(&d), ["W001"]);' }
   const check = (entries, emit = baseSource, coverage = baseTests) =>
     compare(gaps(entries, emit, coverage), [])
   deepStrictEqual(check([...compiler, ...style]), [])
   deepStrictEqual(check(compiler), ['missing entry: D024'])
-  deepStrictEqual(check([...compiler, ...style], { 'compiler.rs': baseSource['compiler.rs'] }),
-    ['missing emit: D024'])
-  deepStrictEqual(check([...compiler, ...style], baseSource, { 'other.rs': baseTests['other.rs'] }),
-    ['missing test: D024'])
+  deepStrictEqual(check([...compiler, ...style], { 'compiler.rs': baseSource['compiler.rs'] }), [
+    'missing emit: D024',
+  ])
+  deepStrictEqual(
+    check([...compiler, ...style], baseSource, { 'other.rs': baseTests['other.rs'] }),
+    ['missing test: D024'],
+  )
   deepStrictEqual(check([...compiler, ...style]), [])
 })
 
@@ -113,9 +127,11 @@ test('W007 requires CLI emit, assertion and truthful owner evidence', () => {
   deepStrictEqual(run([]), ['missing entry: W007'])
   ok(run([{ code: 'W007', by: 'compiler' }]).includes('missing emit: W007'))
   ok(run([{ code: 'W007', by: 'start' }]).includes('unsupported owner: W007'))
-  deepStrictEqual(run(entries, { 'fake.cjs': "const entry = { code: 'W007' }" }),
-    ['missing emit: W007'])
-  deepStrictEqual(run(entries, source, { 'fake.test.ts': "describe('W007', () => {})" }),
-    ['missing test: W007'])
+  deepStrictEqual(run(entries, { 'fake.cjs': "const entry = { code: 'W007' }" }), [
+    'missing emit: W007',
+  ])
+  deepStrictEqual(run(entries, source, { 'fake.test.ts': "describe('W007', () => {})" }), [
+    'missing test: W007',
+  ])
   deepStrictEqual(run(), [])
 })

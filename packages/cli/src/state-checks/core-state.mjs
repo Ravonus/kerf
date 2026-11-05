@@ -3,18 +3,32 @@
 import ts from 'typescript'
 
 function peel(expression) {
-  while (ts.isParenthesizedExpression(expression) || ts.isAsExpression(expression)
-    || ts.isNonNullExpression(expression) || ts.isSatisfiesExpression(expression))
+  while (
+    ts.isParenthesizedExpression(expression) ||
+    ts.isAsExpression(expression) ||
+    ts.isNonNullExpression(expression) ||
+    ts.isSatisfiesExpression(expression)
+  )
     expression = expression.expression
   return expression
 }
 
-const member = (base, name) => base === 'namespace' && name === 'state' ? 'state'
-  : base === 'state' && ['linked', 'global'].includes(name) ? name : undefined
+const member = (base, name) =>
+  base === 'namespace' && name === 'state'
+    ? 'state'
+    : base === 'state' && ['linked', 'global'].includes(name)
+      ? name
+      : undefined
 
 function binder(root, graph) {
   const files = new Map([...graph.values()].map(({ sf }) => [sf.fileName, sf]))
-  const options = { noLib: true, noResolve: true, types: [], allowJs: true, jsx: ts.JsxEmit.Preserve }
+  const options = {
+    noLib: true,
+    noResolve: true,
+    types: [],
+    allowJs: true,
+    jsx: ts.JsxEmit.Preserve,
+  }
   const host = ts.createCompilerHost(options)
   host.getSourceFile = (file) => files.get(file)
   host.fileExists = (file) => files.has(file)
@@ -28,8 +42,7 @@ function written(node, symbol, out) {
   if (ts.isIdentifier(node)) {
     const sym = symbol(node)
     if (sym) out.add(sym)
-  }
-  else if (ts.isArrayLiteralExpression(node))
+  } else if (ts.isArrayLiteralExpression(node))
     for (const element of node.elements)
       written(ts.isSpreadElement(element) ? element.expression : element, symbol, out)
   else if (ts.isObjectLiteralExpression(node)) {
@@ -51,7 +64,9 @@ export function coreState(root, graph) {
       ? checker.getShorthandAssignmentValueSymbol(parent)
       : checker.getSymbolAtLocation(node)
   }
-  const values = new Map(), writes = new Set(), aliases = []
+  const values = new Map(),
+    writes = new Set(),
+    aliases = []
   const remember = (node, tag) => {
     const sym = symbol(node)
     if (sym && tag && !writes.has(sym)) values.set(sym, tag)
@@ -59,22 +74,35 @@ export function coreState(root, graph) {
   const scan = (node) => {
     if (ts.isBinaryExpression(node)) {
       const operator = node.operatorToken.kind
-      if (operator === ts.SyntaxKind.EqualsToken || (operator >= ts.SyntaxKind.FirstCompoundAssignment
-        && operator <= ts.SyntaxKind.LastCompoundAssignment)) written(node.left, symbol, writes)
+      if (
+        operator === ts.SyntaxKind.EqualsToken ||
+        (operator >= ts.SyntaxKind.FirstCompoundAssignment &&
+          operator <= ts.SyntaxKind.LastCompoundAssignment)
+      )
+        written(node.left, symbol, writes)
     }
     if (ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) {
       if ([ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken].includes(node.operator))
         written(node.operand, symbol, writes)
     }
-    if (ts.isVariableDeclaration(node) && node.initializer
-      && node.parent.flags & ts.NodeFlags.Const) aliases.push(node)
+    if (
+      ts.isVariableDeclaration(node) &&
+      node.initializer &&
+      node.parent.flags & ts.NodeFlags.Const
+    )
+      aliases.push(node)
     ts.forEachChild(node, scan)
   }
   for (const { sf } of graph.values()) {
     scan(sf)
     for (const node of sf.statements) {
-      if (!ts.isImportDeclaration(node) || node.moduleSpecifier.text !== '@weft-js/core'
-        || !node.importClause || node.importClause.isTypeOnly) continue
+      if (
+        !ts.isImportDeclaration(node) ||
+        node.moduleSpecifier.text !== '@weft-js/core' ||
+        !node.importClause ||
+        node.importClause.isTypeOnly
+      )
+        continue
       const named = node.importClause.namedBindings
       if (named && ts.isNamespaceImport(named)) remember(named.name, 'namespace')
       if (named && ts.isNamedImports(named))
@@ -89,8 +117,11 @@ export function coreState(root, graph) {
     if (ts.isIdentifier(expression)) return values.get(symbol(expression))
     if (ts.isPropertyAccessExpression(expression))
       return member(resolve(expression.expression), expression.name.text)
-    if (ts.isElementAccessExpression(expression) && expression.argumentExpression
-      && ts.isStringLiteralLike(expression.argumentExpression))
+    if (
+      ts.isElementAccessExpression(expression) &&
+      expression.argumentExpression &&
+      ts.isStringLiteralLike(expression.argumentExpression)
+    )
       return member(resolve(expression.expression), expression.argumentExpression.text)
     return undefined
   }
@@ -99,12 +130,16 @@ export function coreState(root, graph) {
     for (const alias of aliases) {
       const base = resolve(alias.initializer)
       if (!base) continue
-      if (ts.isIdentifier(alias.name) && !writes.has(symbol(alias.name)))
-        remember(alias.name, base)
+      if (ts.isIdentifier(alias.name) && !writes.has(symbol(alias.name))) remember(alias.name, base)
       if (ts.isObjectBindingPattern(alias.name))
         for (const element of alias.name.elements) {
-          if (!ts.isIdentifier(element.name) || element.initializer || element.dotDotDotToken
-            || writes.has(symbol(element.name))) continue
+          if (
+            !ts.isIdentifier(element.name) ||
+            element.initializer ||
+            element.dotDotDotToken ||
+            writes.has(symbol(element.name))
+          )
+            continue
           const name = element.propertyName ?? element.name
           if (!ts.isIdentifier(name) && !ts.isStringLiteralLike(name)) continue
           const tag = member(base, name.text)
@@ -121,13 +156,23 @@ export function coreState(root, graph) {
 function nonUndefined(expression) {
   expression = peel(expression)
   return [
-    ts.SyntaxKind.NumericLiteral, ts.SyntaxKind.BigIntLiteral, ts.SyntaxKind.StringLiteral,
-    ts.SyntaxKind.NoSubstitutionTemplateLiteral, ts.SyntaxKind.RegularExpressionLiteral,
-    ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword, ts.SyntaxKind.NullKeyword,
-    ts.SyntaxKind.ObjectLiteralExpression, ts.SyntaxKind.ArrayLiteralExpression,
-    ts.SyntaxKind.FunctionExpression, ts.SyntaxKind.ArrowFunction, ts.SyntaxKind.ClassExpression,
-    ts.SyntaxKind.NewExpression, ts.SyntaxKind.PrefixUnaryExpression,
-    ts.SyntaxKind.PostfixUnaryExpression, ts.SyntaxKind.TypeOfExpression,
+    ts.SyntaxKind.NumericLiteral,
+    ts.SyntaxKind.BigIntLiteral,
+    ts.SyntaxKind.StringLiteral,
+    ts.SyntaxKind.NoSubstitutionTemplateLiteral,
+    ts.SyntaxKind.RegularExpressionLiteral,
+    ts.SyntaxKind.TrueKeyword,
+    ts.SyntaxKind.FalseKeyword,
+    ts.SyntaxKind.NullKeyword,
+    ts.SyntaxKind.ObjectLiteralExpression,
+    ts.SyntaxKind.ArrayLiteralExpression,
+    ts.SyntaxKind.FunctionExpression,
+    ts.SyntaxKind.ArrowFunction,
+    ts.SyntaxKind.ClassExpression,
+    ts.SyntaxKind.NewExpression,
+    ts.SyntaxKind.PrefixUnaryExpression,
+    ts.SyntaxKind.PostfixUnaryExpression,
+    ts.SyntaxKind.TypeOfExpression,
     ts.SyntaxKind.DeleteExpression,
   ].includes(expression.kind)
 }
@@ -136,8 +181,9 @@ function iifeDefaults(call, callee, visit) {
   const spread = call.arguments.findIndex(ts.isSpreadElement)
   const fixed = spread < 0 ? call.arguments.length : spread
   // A TypeScript this parameter consumes no positional argument.
-  const params = callee.parameters.filter((param) =>
-    !ts.isIdentifier(param.name) || param.name.text !== 'this')
+  const params = callee.parameters.filter(
+    (param) => !ts.isIdentifier(param.name) || param.name.text !== 'this',
+  )
   for (const [index, param] of params.entries()) {
     if (param.initializer && (index >= fixed || !nonUndefined(call.arguments[index])))
       visit(param.initializer)
@@ -160,8 +206,10 @@ export function moduleCalls(sf, report) {
       if (node.name && ts.isComputedPropertyName(node.name)) visit(node.name.expression)
       return
     }
-    if (ts.isPropertyDeclaration(node)
-      && !node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword)) {
+    if (
+      ts.isPropertyDeclaration(node) &&
+      !node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword)
+    ) {
       if (ts.isComputedPropertyName(node.name)) visit(node.name.expression)
       return
     }

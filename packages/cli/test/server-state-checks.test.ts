@@ -35,7 +35,8 @@ const defaultForms = [
 describe('W030 server-reachable module state', () => {
   it('reports a seeded reachable allocation with error severity, ownership advice and no edits', () => {
     const root = seed({
-      'src/entry-server.ts': "import { shared } from './shared'; export const run = () => shared.value",
+      'src/entry-server.ts':
+        "import { shared } from './shared'; export const run = () => shared.value",
       'src/shared.ts': shared,
       'src/main.ts': "import './browser'",
       'src/browser.ts': shared,
@@ -60,14 +61,16 @@ describe('W030 server-reachable module state', () => {
       'src/unreachable.ts': shared,
     })
     expect(inspect(root).map((finding) => [finding.code, finding.file])).toEqual([
-      ['W030', 'src/shared.ts'], ['W030', 'src/side.ts'],
+      ['W030', 'src/shared.ts'],
+      ['W030', 'src/side.ts'],
     ])
   })
 
   it('keeps type-only imports and reexports out of server reachability', () => {
     const root = seed({
-      'src/app.server.ts': "import type { Thing } from './types'; import { type Other } from './other'; "
-        + "export type { Third } from './third'; export { type Fourth } from './fourth'; export type * from './fifth'",
+      'src/app.server.ts':
+        "import type { Thing } from './types'; import { type Other } from './other'; " +
+        "export type { Third } from './third'; export { type Fourth } from './fourth'; export type * from './fifth'",
       'src/types.ts': `${shared}; export interface Thing {}`,
       'src/other.ts': `${shared}; export interface Other {}`,
       'src/third.ts': `${shared}; export interface Third {}`,
@@ -78,11 +81,24 @@ describe('W030 server-reachable module state', () => {
   })
 
   it('recognizes server modules and SSR routes without treating browser roots as server entries', () => {
-    for (const file of ['src/server/handler.ts', 'src/worker.server.ts', 'src/server.ts',
-      'src/routes/index.tsx']) expect(inspect(seed({ [file]: shared }))[0].code).toBe('W030')
-    expect(inspect(seed({ 'src/main.tsx': "import './shared'", 'src/shared.ts': shared }))).toEqual([])
-    expect(inspect(seed({ 'src/entry-server.ts': 'export const run = () => 0',
-      'src/browser.client.ts': shared }))).toEqual([])
+    for (const file of [
+      'src/server/handler.ts',
+      'src/worker.server.ts',
+      'src/server.ts',
+      'src/routes/index.tsx',
+    ])
+      expect(inspect(seed({ [file]: shared }))[0].code).toBe('W030')
+    expect(inspect(seed({ 'src/main.tsx': "import './shared'", 'src/shared.ts': shared }))).toEqual(
+      [],
+    )
+    expect(
+      inspect(
+        seed({
+          'src/entry-server.ts': 'export const run = () => 0',
+          'src/browser.client.ts': shared,
+        }),
+      ),
+    ).toEqual([])
   })
 
   it('resolves import, namespace, const and destructured aliases with binding identities', () => {
@@ -94,8 +110,10 @@ describe('W030 server-reachable module state', () => {
       "import * as core from '@weft-js/core'; const { state: make } = core; make(0)",
       "import { state } from '@weft-js/core'; state.linked(() => 0)",
       "import { state } from '@weft-js/core'; const link = state['linked']; link(() => 0)",
-    ]) expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code))
-      .toEqual(['W030'])
+    ])
+      expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code)).toEqual(
+        ['W030'],
+      )
   })
 
   it('ignores unrelated, shadowed, type-only, unknown and reassigned state functions', () => {
@@ -109,7 +127,8 @@ describe('W030 server-reachable module state', () => {
       "import { state } from '@weft-js/core'; const make = state; make = value => value; make(0)",
       "import { state } from '@weft-js/core'; const make = state; ({ make } = other); make(0)",
       "import { state } from '@weft-js/core'; let make = state; make = value => value; make(0)",
-    ]) expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
+    ])
+      expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
   })
 
   it('respects explicit globals and deferred request/component/context factories', () => {
@@ -122,13 +141,17 @@ describe('W030 server-reachable module state', () => {
       "import { state, context } from '@weft-js/core'; export const scope = context(() => state(0))",
       "import { state, defineState } from '@weft-js/core'; export const scope = defineState(() => state(0))",
       "import { state } from '@weft-js/core'; class Item { value = state(0) }",
-    ]) expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
+    ])
+      expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
   })
 
   it('detects eager IIFEs and static fields while factory declarations remain quiet', () => {
-    const root = seed({ 'src/app.server.ts': "import { state } from '@weft-js/core'; "
-      + 'const first = (() => state(0))(); class Item { static value = state(0) } '
-      + 'export function request() { return state(0) }' })
+    const root = seed({
+      'src/app.server.ts':
+        "import { state } from '@weft-js/core'; " +
+        'const first = (() => state(0))(); class Item { static value = state(0) } ' +
+        'export function request() { return state(0) }',
+    })
     expect(inspect(root).map((finding) => finding.code)).toEqual(['W030', 'W030'])
   })
 
@@ -152,8 +175,9 @@ describe('W030 server-reachable module state', () => {
       '(async function () { state(0); await wait() })()',
     ]) {
       const source = "import { state } from '@weft-js/core'; " + invocation
-      expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code))
-        .toEqual(['W030'])
+      expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code)).toEqual(
+        ['W030'],
+      )
     }
   })
 
@@ -163,16 +187,30 @@ describe('W030 server-reachable module state', () => {
       '(async function* (n = state(0)) { state(1) })()',
     ]) {
       const source = "import { state } from '@weft-js/core'; " + invocation
-      expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code))
-        .toEqual(['W030'])
+      expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code)).toEqual(
+        ['W030'],
+      )
     }
   })
 
   it('skips defaults for proven nonundefined IIFE arguments in every function form', () => {
     for (const form of defaultForms) {
       for (const argument of [
-        '123', '0', 'null', 'false', "'value'", '{}', '[]', '1n', '/value/',
-        '() => 0', 'class {}', '(123 as number)', '-1', 'typeof missing', 'new Object()',
+        '123',
+        '0',
+        'null',
+        'false',
+        "'value'",
+        '{}',
+        '[]',
+        '1n',
+        '/value/',
+        '() => 0',
+        'class {}',
+        '(123 as number)',
+        '-1',
+        'typeof missing',
+        'new Object()',
       ]) {
         const source = "import { state } from '@weft-js/core'; " + `(${form})(${argument})`
         expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
@@ -184,8 +222,9 @@ describe('W030 server-reachable module state', () => {
     for (const form of defaultForms) {
       for (const argument of ['', 'undefined', 'void 0', '(undefined as unknown as number)']) {
         const source = "import { state } from '@weft-js/core'; " + `(${form})(${argument})`
-        expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code))
-          .toEqual(['W030'])
+        expect(
+          inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code),
+        ).toEqual(['W030'])
       }
     }
   })
@@ -228,10 +267,19 @@ describe('W030 server-reachable module state', () => {
     expect(inspect(root)[0].code).toBe('W030')
     writeFileSync(join(root, 'src/shared.ts'), shared.replace('state(0)', 'state.global(0)'))
     expect(inspect(root)).toEqual([])
-    writeFileSync(join(root, 'src/shared.ts'), shared.replace('export const shared = state(0)',
-      'export const request = () => state(0)'))
+    writeFileSync(
+      join(root, 'src/shared.ts'),
+      shared.replace('export const shared = state(0)', 'export const request = () => state(0)'),
+    )
     expect(inspect(root)).toEqual([])
-    expect(inspect(seed({ 'src/entry-server.ts': "import './ignored/shared'",
-      'src/ignored/shared.ts': shared }), ['src/ignored/**'])).toEqual([])
+    expect(
+      inspect(
+        seed({
+          'src/entry-server.ts': "import './ignored/shared'",
+          'src/ignored/shared.ts': shared,
+        }),
+        ['src/ignored/**'],
+      ),
+    ).toEqual([])
   })
 })

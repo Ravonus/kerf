@@ -11,7 +11,9 @@ export function fieldTypes(form: FormApi, kind: 'text' | 'multiple') {
   const dynamicValue: string | string[] | undefined = dynamic.value
   type Assert<T extends true> = T
   type TextRejectsArray = Assert<string[] extends NonNullable<typeof text.value> ? false : true>
-  type MultipleRejectsString = Assert<string extends NonNullable<typeof multiple.value> ? false : true>
+  type MultipleRejectsString = Assert<
+    string extends NonNullable<typeof multiple.value> ? false : true
+  >
   const negatives: [TextRejectsArray, MultipleRejectsString] = [true, true]
   return { input, stringValue, arrayValue, dynamicValue, negatives }
 }

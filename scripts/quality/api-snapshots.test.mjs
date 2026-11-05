@@ -15,25 +15,36 @@ test('detects added, removed and changed paths and conditions', () => {
     { '.': exports['.'] },
     { ...exports, '.': './other.ts' },
     { ...exports, './test': { types: './other.d.ts', default: './test.js' } },
-  ]) assert.match(problemsFor('core', bad, snapshot, docs).join('\n'), /export map differs/)
+  ])
+    assert.match(problemsFor('core', bad, snapshot, docs).join('\n'), /export map differs/)
   assert.match(problemsFor('core', exports, { exports: {} }, docs).join('\n'), /export map differs/)
 })
 
 test('requires a reference entry for every path', () => {
-  assert.match(problemsFor('core', exports, snapshot, '- `@weft-js/core`: Root.\n').join('\n'),
-    /missing reference for @weft-js\/core\/test/)
-  assert.match(problemsFor('core', exports, snapshot, '- `@weft-js/core/test`: \n').join('\n'),
-    /missing reference/)
+  assert.match(
+    problemsFor('core', exports, snapshot, '- `@weft-js/core`: Root.\n').join('\n'),
+    /missing reference for @weft-js\/core\/test/,
+  )
+  assert.match(
+    problemsFor('core', exports, snapshot, '- `@weft-js/core/test`: \n').join('\n'),
+    /missing reference/,
+  )
 })
 
 test('inventories all tracked core and start manifests and their export targets', () => {
   const result = check()
   assert.deepEqual(check(process.cwd()), result)
-  const manifests = execFileSync('git', [
-    'ls-files', 'packages/core/package.json', 'packages/start/package.json',
-  ], { encoding: 'utf8' }).trim().split('\n')
-  const count = manifests.reduce((sum, path) =>
-    sum + Object.keys(JSON.parse(readFileSync(path, 'utf8')).exports).length, 0)
+  const manifests = execFileSync(
+    'git',
+    ['ls-files', 'packages/core/package.json', 'packages/start/package.json'],
+    { encoding: 'utf8' },
+  )
+    .trim()
+    .split('\n')
+  const count = manifests.reduce(
+    (sum, path) => sum + Object.keys(JSON.parse(readFileSync(path, 'utf8')).exports).length,
+    0,
+  )
   assert.equal(result.manifests, manifests.length)
   assert.equal(result.count, count)
   assert.deepEqual(result.problems, [])

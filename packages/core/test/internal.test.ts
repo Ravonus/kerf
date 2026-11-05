@@ -6,8 +6,19 @@ import * as graph from '../src/index/graph'
 import { Box } from '../src/index/state'
 
 const graphNames = [
-  'DIRTY', 'rt', 'listener', 'read', 'reach', 'clean', 'setFlat', 'flat',
-  'runMounts', 'setKeyed', 'NONE', 'stats', 'devComponent',
+  'DIRTY',
+  'rt',
+  'listener',
+  'read',
+  'reach',
+  'clean',
+  'setFlat',
+  'flat',
+  'runMounts',
+  'setKeyed',
+  'NONE',
+  'stats',
+  'devComponent',
 ] as const
 
 test('the internal entry shares runtime objects and box constructors', () => {
@@ -27,11 +38,14 @@ test('internal bindings and public state share tracking and disposal', () => {
   const count = state(1)
   const seen: unknown[] = []
   const dispose = createRoot((dispose) => {
-    internal.hole(() => {
-      expect(internal.listener).toBe(graph.listener)
-      expect(internal.listener).toBeTruthy()
-      return count.value
-    }, (value) => seen.push(value))
+    internal.hole(
+      () => {
+        expect(internal.listener).toBe(graph.listener)
+        expect(internal.listener).toBeTruthy()
+        return count.value
+      },
+      (value) => seen.push(value),
+    )
     return dispose
   })
   try {

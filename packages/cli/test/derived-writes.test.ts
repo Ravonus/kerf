@@ -10,13 +10,15 @@ const require = createRequire(import.meta.url)
 const { derivedWrite } = require('../src/infer/derived-writes.cjs')
 const { withBoxProps } = require('../src/infer/box-props.cjs')
 const { Session } = require('../src/infer/session.cjs')
-const prefix = "import { state, derived, type State, type Derived } from '@weft-js/core'; "
-  + 'const n = state(0); const d = derived(() => 0); '
+const prefix =
+  "import { state, derived, type State, type Derived } from '@weft-js/core'; " +
+  'const n = state(0); const d = derived(() => 0); '
 
 function findings(source: string, extra: Record<string, string> = {}) {
   const program = typedProgram(source, extra)
-  return program.getSemanticDiagnostics(program.getSourceFile('/app/App.tsx')).map((diagnostic) =>
-    derivedWrite(ts, program, diagnostic) ?? { code: `TS${diagnostic.code}` })
+  return program
+    .getSemanticDiagnostics(program.getSourceFile('/app/App.tsx'))
+    .map((diagnostic) => derivedWrite(ts, program, diagnostic) ?? { code: `TS${diagnostic.code}` })
 }
 
 const codes = (source: string) => findings(source).map((finding: { code: string }) => finding.code)
@@ -34,9 +36,17 @@ describe('W007 core Derived writes', () => {
   })
 
   it('covers assignments, compound updates, computed value keys and destructuring', () => {
-    for (const write of ['d.value = 1', 'd.value += 1', 'd.value ||= 1', '++d.value',
-      'd.value--', "d['value'] = 1", "d['value']++", '({ x: d.value } = { x: 1 })',
-      '[d.value] = [1]']) {
+    for (const write of [
+      'd.value = 1',
+      'd.value += 1',
+      'd.value ||= 1',
+      '++d.value',
+      'd.value--',
+      "d['value'] = 1",
+      "d['value']++",
+      '({ x: d.value } = { x: 1 })',
+      '[d.value] = [1]',
+    ]) {
       const result = codes(`${prefix} ${write}`)
       expect(result.filter((code) => code === 'W007')).toHaveLength(1)
       expect(result).not.toContain('TS2540')
@@ -53,7 +63,8 @@ describe('W007 core Derived writes', () => {
        declare const alias: Reading; alias.value++`,
       `${prefix} declare const alias: Derived<number> & { label: string }; alias.value = 1`,
       `${prefix} declare const alias: Derived<number> | Derived<string>; alias.value = 1`,
-    ]) expect(codes(source)).toEqual(['W007'])
+    ])
+      expect(codes(source)).toEqual(['W007'])
   })
 
   it('retains TS2540 for ordinary readonly objects, shadowed names and State projections', () => {
@@ -67,7 +78,8 @@ describe('W007 core Derived writes', () => {
        declare const valueOnly: ValueOnly; valueOnly.value = 1`,
       `${prefix} d.derivedBrand = 'derived'`,
       `${prefix} n.stateBrand = 'state'`,
-    ]) expect(codes(source)).toEqual(['TS2540'])
+    ])
+      expect(codes(source)).toEqual(['TS2540'])
   })
 
   it('does not relabel State writes, reads, any/unknown receivers or mixed unions', () => {
@@ -77,7 +89,8 @@ describe('W007 core Derived writes', () => {
       `${prefix} declare const opaque: unknown; opaque.value = 1`,
       `${prefix} declare const mixed: State<number> | Derived<number>; mixed.value = 1`,
       `${prefix} declare const unknownType: Missing; unknownType.value = 1`,
-    ]) expect(codes(source)).not.toContain('W007')
+    ])
+      expect(codes(source)).not.toContain('W007')
     expect(codes(`${prefix} declare const known: Derived<any>; known.value = 1`)).toEqual(['W007'])
   })
 
@@ -87,7 +100,8 @@ describe('W007 core Derived writes', () => {
       export type Derived<T> = { readonly [K in keyof State<T>]: State<T>[K] };
       export function derived<T>(read: () => T): Derived<T>;
     }`
-    const source = "import { derived } from '@weft-js/core'; const d = derived(() => 0); d.value = 1"
+    const source =
+      "import { derived } from '@weft-js/core'; const d = derived(() => 0); d.value = 1"
     expect(findings(source, { '/app/core.d.ts': mapped })).toMatchObject([{ code: 'W007' }])
   })
 
@@ -95,16 +109,25 @@ describe('W007 core Derived writes', () => {
     for (const source of [
       "import { state } from '@weft-js/core'; const d = state(0); d.value = 1",
       `${prefix} n.value = 1; const next = derived(() => n.value + 1)`,
-    ]) expect(findings(source)).toEqual([])
+    ])
+      expect(findings(source)).toEqual([])
   })
 
   it('checks plain TypeScript through analyze/all and clears repaired findings', async () => {
     for (const filename of ['state.ts', 'state.mts', 'state.cts']) {
       const root = mkdtempSync(join(tmpdir(), 'weft-derived-write-'))
       const file = join(root, filename)
-      writeFileSync(join(root, 'tsconfig.json'), JSON.stringify({ compilerOptions: {
-        strict: true, noLib: true, module: 'esnext', moduleResolution: 'node',
-      } }))
+      writeFileSync(
+        join(root, 'tsconfig.json'),
+        JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            noLib: true,
+            module: 'esnext',
+            moduleResolution: 'node',
+          },
+        }),
+      )
       writeFileSync(join(root, 'core.d.ts'), declarations)
       writeFileSync(file, `${prefix} d.value = 1`)
       const session = new Session(ts, root)
@@ -124,11 +147,17 @@ describe('W007 core Derived writes', () => {
 
   it('uses native-host fallback for TS2540 outside JSX and requires matching error codes', () => {
     let started = 0
-    const raw = [{ code: 2540, start: 10, length: 1 }, { code: 2322, start: 10, length: 1 }]
+    const raw = [
+      { code: 2540, start: 10, length: 1 },
+      { code: 2322, start: 10, length: 1 },
+    ]
     const host = withBoxProps({ diagnostics: () => raw, update() {}, close() {} }, () => {
       started++
-      return { diagnostics: () => [{ code: 2540, start: 10, weft: { code: 'W007' } }],
-        update() {}, close() {} }
+      return {
+        diagnostics: () => [{ code: 2540, start: 10, weft: { code: 'W007' } }],
+        update() {},
+        close() {},
+      }
     })
     expect(started).toBe(0)
     expect(host.diagnostics('state.ts')[0].weft.code).toBe('W007')

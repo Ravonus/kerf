@@ -54,7 +54,8 @@ class Engine {
   /** Facts that need a checker: inferred props, bindings or possible core box errors. */
   needed() {
     return (
-      this.typedChecksNeeded() || [...this.facts.values()].some(
+      this.typedChecksNeeded() ||
+      [...this.facts.values()].some(
         (f) => f.comps.length || f.sites.some((s) => s.attrs.some((a) => a.bind)),
       )
     )
@@ -70,8 +71,10 @@ class Engine {
 
   /** Syntax only gates startup; TS2540 and resolved core symbols prove readonly writes. */
   derivedWritesNeeded() {
-    return [...this.texts.values()].some((text) => CORE_IMPORT.test(text))
-      && [...this.texts.values()].some((text) => /\bvalue\b/.test(text))
+    return (
+      [...this.texts.values()].some((text) => CORE_IMPORT.test(text)) &&
+      [...this.texts.values()].some((text) => /\bvalue\b/.test(text))
+    )
   }
 
   /** Whether either core box diagnostic family needs the shared checker. */

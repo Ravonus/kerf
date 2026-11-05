@@ -10,8 +10,10 @@ function derivedSymbol(ts, checker, symbol, roots, seen = new Set()) {
     if (!ts.isTypeAliasDeclaration(declaration)) return false
     let type = declaration.type
     while (ts.isParenthesizedTypeNode(type)) type = type.type
-    return ts.isTypeReferenceNode(type)
-      && derivedSymbol(ts, checker, checker.getSymbolAtLocation(type.typeName), roots, seen)
+    return (
+      ts.isTypeReferenceNode(type) &&
+      derivedSymbol(ts, checker, checker.getSymbolAtLocation(type.typeName), roots, seen)
+    )
   })
 }
 
@@ -19,32 +21,46 @@ function derivedType(ts, checker, type, roots) {
   if (!known(ts, type)) return false
   if (type.isUnion()) return type.types.every((part) => derivedType(ts, checker, part, roots))
   if (type.isIntersection()) return type.types.some((part) => derivedType(ts, checker, part, roots))
-  if (derivedSymbol(ts, checker, type.aliasSymbol, roots)
-    || derivedSymbol(ts, checker, type.getSymbol(), roots)) return true
-  return !!type.isClassOrInterface?.()
-    && checker.getBaseTypes(type).some((base) => derivedType(ts, checker, base, roots))
+  if (
+    derivedSymbol(ts, checker, type.aliasSymbol, roots) ||
+    derivedSymbol(ts, checker, type.getSymbol(), roots)
+  )
+    return true
+  return (
+    !!type.isClassOrInterface?.() &&
+    checker.getBaseTypes(type).some((base) => derivedType(ts, checker, base, roots))
+  )
 }
 
 function writeTarget(ts, node) {
   for (let parent = node.parent; parent; node = parent, parent = parent.parent) {
     if (ts.isBinaryExpression(parent) && parent.left === node) {
       const operator = parent.operatorToken.kind
-      return operator === ts.SyntaxKind.EqualsToken
-        || (operator >= ts.SyntaxKind.FirstCompoundAssignment
-          && operator <= ts.SyntaxKind.LastCompoundAssignment)
+      return (
+        operator === ts.SyntaxKind.EqualsToken ||
+        (operator >= ts.SyntaxKind.FirstCompoundAssignment &&
+          operator <= ts.SyntaxKind.LastCompoundAssignment)
+      )
     }
     if (ts.isPrefixUnaryExpression(parent) || ts.isPostfixUnaryExpression(parent))
-      return parent.operand === node
-        && [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken].includes(parent.operator)
+      return (
+        parent.operand === node &&
+        [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken].includes(parent.operator)
+      )
     if (ts.isForOfStatement(parent) || ts.isForInStatement(parent))
       return parent.initializer === node
-    const wrapped = ts.isParenthesizedExpression(parent) || ts.isNonNullExpression(parent)
-      || ts.isAsExpression(parent) || ts.isTypeAssertionExpression(parent)
+    const wrapped =
+      ts.isParenthesizedExpression(parent) ||
+      ts.isNonNullExpression(parent) ||
+      ts.isAsExpression(parent) ||
+      ts.isTypeAssertionExpression(parent)
     const wrapper = wrapped && parent.expression === node
-    const pattern = ts.isArrayLiteralExpression(parent) || ts.isObjectLiteralExpression(parent)
-      || (ts.isPropertyAssignment(parent) && parent.initializer === node)
-      || (ts.isSpreadElement(parent) && parent.expression === node)
-      || (ts.isSpreadAssignment(parent) && parent.expression === node)
+    const pattern =
+      ts.isArrayLiteralExpression(parent) ||
+      ts.isObjectLiteralExpression(parent) ||
+      (ts.isPropertyAssignment(parent) && parent.initializer === node) ||
+      (ts.isSpreadElement(parent) && parent.expression === node) ||
+      (ts.isSpreadAssignment(parent) && parent.expression === node)
     if (!wrapper && !pattern) return false
   }
   return false
@@ -57,9 +73,11 @@ function derivedWrite(ts, program, diagnostic) {
   while (node && !ts.isPropertyAccessExpression(node) && !ts.isElementAccessExpression(node))
     node = node.parent
   if (!node || !writeTarget(ts, node)) return null
-  const name = ts.isPropertyAccessExpression(node) ? node.name
+  const name = ts.isPropertyAccessExpression(node)
+    ? node.name
     : node.argumentExpression && ts.isStringLiteralLike(node.argumentExpression)
-      ? node.argumentExpression : null
+      ? node.argumentExpression
+      : null
   if (name?.text !== 'value') return null
   const checker = program.getTypeChecker()
   const roots = coreMembers(ts, program, checker).derivedRoots
@@ -68,8 +86,9 @@ function derivedWrite(ts, program, diagnostic) {
     code: 'W007',
     severity: 'error',
     why: 'This writes a core Derived.value; derived values are readonly computations.',
-    help: 'Use `state(initial)` or `state.linked(() => source)` when independent writes are intended. '
-      + 'Otherwise keep `derived(() => expression)` pure and update its source state instead.',
+    help:
+      'Use `state(initial)` or `state.linked(() => source)` when independent writes are intended. ' +
+      'Otherwise keep `derived(() => expression)` pure and update its source state instead.',
   }
 }
 

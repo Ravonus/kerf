@@ -19,8 +19,9 @@ const n = state(1); const d = derived(() => 1);
 
 function findings(source: string, extra: Record<string, string> = {}) {
   const program = typedProgram(source, extra)
-  return program.getSemanticDiagnostics(program.getSourceFile('/app/App.tsx')).map((diagnostic) =>
-    boxMismatch(ts, program, diagnostic) ?? { code: `TS${diagnostic.code}` })
+  return program
+    .getSemanticDiagnostics(program.getSourceFile('/app/App.tsx'))
+    .map((diagnostic) => boxMismatch(ts, program, diagnostic) ?? { code: `TS${diagnostic.code}` })
 }
 
 const codes = (source: string) => findings(source).map((finding: { code: string }) => finding.code)
@@ -84,30 +85,40 @@ describe('W008 typed component props', () => {
        const a = <Detail n={item} />`,
     ]
     for (const source of preserves) expect(codes(source)).toEqual(['TS2322'])
-    expect(findings(`${prefix} type Labeled = State<number> & { label: string };
+    expect(
+      findings(`${prefix} type Labeled = State<number> & { label: string };
       declare const labeled: Labeled;
       declare function Card(props: { n: Labeled }): JSX.Element;
-      const a = <Card n={labeled} />`)).toEqual([])
+      const a = <Card n={labeled} />`),
+    ).toEqual([])
   })
 
   it('keeps repaired value and valid box props quiet', () => {
-    for (const jsx of ['<Value n={n.value} />', '<Value n={d.value} />',
-      '<Box n={n} />', '<ReadonlyBox n={d} />'])
+    for (const jsx of [
+      '<Value n={n.value} />',
+      '<Value n={d.value} />',
+      '<Box n={n} />',
+      '<ReadonlyBox n={d} />',
+    ])
       expect(findings(`${prefix} const app = ${jsx}`)).toEqual([])
   })
 
   it('follows import, namespace, type and component aliases', () => {
-    expect(codes(`import * as core from '@weft-js/core';
+    expect(
+      codes(`import * as core from '@weft-js/core';
       type Counter = core.State<number>;
       declare function Card(props: { n: number }): JSX.Element;
-      const Alias = Card; const n: Counter = core.state(1); const a = <Alias n={n} />`))
-      .toEqual(['W008'])
-    const result = findings(`import { state as make } from '@weft-js/core';
+      const Alias = Card; const n: Counter = core.state(1); const a = <Alias n={n} />`),
+    ).toEqual(['W008'])
+    const result = findings(
+      `import { state as make } from '@weft-js/core';
       import type { Counter } from './types';
       declare function Card(props: { n: Counter }): JSX.Element;
-      const n = make(1); const a = <Card n={n.value} />`, {
-      '/app/types.ts': "export type { State as Counter } from '@weft-js/core';",
-    })
+      const n = make(1); const a = <Card n={n.value} />`,
+      {
+        '/app/types.ts': "export type { State as Counter } from '@weft-js/core';",
+      },
+    )
     expect(result).toMatchObject([{ code: 'W008' }])
   })
 
@@ -123,12 +134,14 @@ describe('W008 typed component props', () => {
       `import { state } from '@weft-js/core'; type Derived<T> = { value: T };
        declare function Card(props: { n: number }): JSX.Element;
        const fake: Derived<number> = { value: 1 }; const a = <Card n={fake} />`,
-    ]) expect(codes(source)).not.toContain('W008')
+    ])
+      expect(codes(source)).not.toContain('W008')
   })
 
   it('preserves unrelated type errors, valid unions, native props and non-prop errors', () => {
-    expect(codes(`${prefix} const s = state('wrong'); const a = <Value n={s} />`))
-      .toEqual(['TS2322'])
+    expect(codes(`${prefix} const s = state('wrong'); const a = <Value n={s} />`)).toEqual([
+      'TS2322',
+    ])
     for (const source of [
       `${prefix} declare function Either(props: { n: State<number> | number }): JSX.Element;
        const a = <Either n={n} />`,
@@ -136,15 +149,25 @@ describe('W008 typed component props', () => {
       `${prefix} const value: number = n;`,
       `${prefix} const a = <Missing n={n} />`,
       `${prefix} declare const weak: State<any>; const a = <Value n={weak} />`,
-    ]) expect(codes(source)).not.toContain('W008')
+    ])
+      expect(codes(source)).not.toContain('W008')
   })
 
   it('checks explicitly typed projects and clears a repaired finding after an edit', async () => {
     const root = mkdtempSync(join(tmpdir(), 'weft-box-props-'))
     const file = join(root, 'App.tsx')
-    writeFileSync(join(root, 'tsconfig.json'), JSON.stringify({ compilerOptions: {
-      strict: true, noLib: true, jsx: 'preserve', module: 'esnext', moduleResolution: 'node',
-    } }))
+    writeFileSync(
+      join(root, 'tsconfig.json'),
+      JSON.stringify({
+        compilerOptions: {
+          strict: true,
+          noLib: true,
+          jsx: 'preserve',
+          module: 'esnext',
+          moduleResolution: 'node',
+        },
+      }),
+    )
     writeFileSync(join(root, 'core.d.ts'), declarations)
     writeFileSync(file, `${prefix} const a = <Value n={n} />`)
     const session = new Session(ts, root)
@@ -164,12 +187,21 @@ describe('W008 typed component props', () => {
   })
 
   it('maps native errors lazily and leaves other diagnostics intact', () => {
-    let started = 0, closed = 0
-    const raw = [{ code: 2322, start: 10, length: 1 }, { code: 2339, start: 10, length: 1 }]
+    let started = 0,
+      closed = 0
+    const raw = [
+      { code: 2322, start: 10, length: 1 },
+      { code: 2339, start: 10, length: 1 },
+    ]
     const host = withBoxProps({ diagnostics: () => raw, update() {}, close() {} }, () => {
       started++
-      return { diagnostics: () => [{ code: 2322, start: 10, weft: { code: 'W008' } }],
-        update() {}, close() { closed++ } }
+      return {
+        diagnostics: () => [{ code: 2322, start: 10, weft: { code: 'W008' } }],
+        update() {},
+        close() {
+          closed++
+        },
+      }
     })
     expect(started).toBe(0)
     expect(host.diagnostics('App.tsx')[0].weft.code).toBe('W008')

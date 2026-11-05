@@ -205,7 +205,10 @@ const STEPS = [
     covers: 'compiler diagnostic catalog, emit sites and compile test assertions',
     fix: 'Resolve catalog coverage gaps or update the temporary baseline.',
     async run() {
-      const test = await run(process.execPath, ['--test', 'scripts/quality/diagnostic-catalog.test.mjs'])
+      const test = await run(process.execPath, [
+        '--test',
+        'scripts/quality/diagnostic-catalog.test.mjs',
+      ])
       const check = await run(process.execPath, ['scripts/quality/diagnostic-catalog.mjs'])
       return { problems: [...lines(test).problems, ...lines(check).problems] }
     },

@@ -7,7 +7,11 @@ import { InternalProps } from './fixtures/internal/Props'
 test('compiled locals, rest props and children work with the public runtime', async () => {
   const title = state('first')
   expect(title).toBeInstanceOf(Box)
-  render(() => <InternalProps amount={1} title={title.value}>child</InternalProps>)
+  render(() => (
+    <InternalProps amount={1} title={title.value}>
+      child
+    </InternalProps>
+  ))
   const button = document.querySelector('button')!
   expect(button.textContent).toBe('1child')
   button.click()

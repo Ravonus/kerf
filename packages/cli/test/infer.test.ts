@@ -114,9 +114,7 @@ describe.each([
       }
     `
     const itemType = "class Item { private marker = 0; name = 'one' }"
-    const local = await run(
-      app({ ...goalOnly, 'src/goal.tsx': page(itemType) }, { version }),
-    )
+    const local = await run(app({ ...goalOnly, 'src/goal.tsx': page(itemType) }, { version }))
     expect(local.list).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'W085' })]))
     const visible = page('').replace('function Card', `${itemType}; function Card`)
     const repaired = await run(app({ ...goalOnly, 'src/goal.tsx': visible }, { version }))

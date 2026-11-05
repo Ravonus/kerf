@@ -137,7 +137,8 @@ function affected() {
   const files = new Set(this.maps.keys())
   const derived = this.derivedWritesNeeded()
   if (derived || this.boxPropsNeeded())
-    for (const facts of this.facts.values()) if (derived || facts.sites.length) files.add(facts.file)
+    for (const facts of this.facts.values())
+      if (derived || facts.sites.length) files.add(facts.file)
   for (const sites of this.lastSites?.values() ?? []) for (const s of sites) files.add(s.file)
   return files
 }

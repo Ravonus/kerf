@@ -13,17 +13,21 @@ export function serverStateChecks(root, options) {
     const pos = positions(sf.text)
     moduleCalls(sf, (call) => {
       if (!['state', 'linked'].includes(resolve(call.expression))) return
-      const start = call.getStart(sf), end = call.end
-      out.push(diagnostic({
-        code: 'W030',
-        severity: 'error',
-        file,
-        span: pos.span(start, end),
-        offset: [start, end],
-        why: `This module creates state reachable from server entry \`${entry}\`; requests share it.`,
-        help: 'Create state inside a request/component factory or a context owned by the request. '
-          + 'Use `state.global` only when sharing across requests is intended.',
-      }))
+      const start = call.getStart(sf),
+        end = call.end
+      out.push(
+        diagnostic({
+          code: 'W030',
+          severity: 'error',
+          file,
+          span: pos.span(start, end),
+          offset: [start, end],
+          why: `This module creates state reachable from server entry \`${entry}\`; requests share it.`,
+          help:
+            'Create state inside a request/component factory or a context owned by the request. ' +
+            'Use `state.global` only when sharing across requests is intended.',
+        }),
+      )
     })
   }
   return out.sort((a, b) => a.file.localeCompare(b.file) || a.offset[0] - b.offset[0])
