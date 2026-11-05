@@ -5,15 +5,18 @@ import { inject } from 'vitest'
 import { fnId } from '../src/vite.mjs'
 
 const url = inject('url')
-const id = (name) => fnId(name, 'src/server/todos.ts')
-const get = (path, init) => fetch(url + path, { redirect: 'manual', ...init })
-const call = (name, input) =>
+const id = (name: string) => fnId(name, 'src/server/todos.ts')
+const get = (path: string, init?: RequestInit) => fetch(url + path, { redirect: 'manual', ...init })
+const call = (name: string, input?: unknown) =>
   get(
     `/_weft/fn/${id(name)}${input === undefined ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`,
   )
-const post = (name, body, headers = { 'content-type': 'application/json', 'x-weft': '1' }) =>
-  get(`/_weft/fn/${id(name)}`, { method: 'POST', headers, body: JSON.stringify(body) })
-const cacheOf = (text) =>
+const post = (
+  name: string,
+  body: unknown,
+  headers: Record<string, string> = { 'content-type': 'application/json', 'x-weft': '1' },
+) => get(`/_weft/fn/${id(name)}`, { method: 'POST', headers, body: JSON.stringify(body) })
+const cacheOf = (text: string) =>
   JSON.parse(
     /<script type="application\/json" id="weft-cache">(.*?)<\/script>/.exec(text)?.[1] ?? 'null',
   )
@@ -69,7 +72,7 @@ test('a mutation refreshes the queries it invalidated in the same response (sing
   const a = await res.json()
   expect(a.v).toMatchObject({ title: 'From the test', done: false })
   expect(a.t).toEqual(['todos'])
-  expect(a.c.map((w) => [w[0], w[1]])).toEqual([
+  expect(a.c.map((w: unknown[]) => [w[0], w[1]])).toEqual([
     [id('listTodos'), null],
     [id('getTodo'), { id: '1' }],
   ])
@@ -116,14 +119,14 @@ test('load and the render share one run per request; the page carries it in #wef
   expect(r.status).toBe(200)
   expect(text).toMatch(/<title data-wm>Todos \(\d+\) · Acme<\/title>/)
   const cached = cacheOf(text)
-  expect(cached.map((w) => w[0])).toEqual([id('listTodos')])
+  expect(cached.map((w: unknown[]) => w[0])).toEqual([id('listTodos')])
   const [, input, list, tags] = cached[0]
   expect(input).toBe(null)
   expect(tags).toEqual(['todos'])
   expect(text).toContain(`>${list[0].title}</button>`)
   // The route payload records the tags its load read.
   const route = JSON.parse(
-    /<script type="application\/json" id="weft-route">(.*?)<\/script>/.exec(text)[1],
+    /<script type="application\/json" id="weft-route">(.*?)<\/script>/.exec(text)![1]!,
   )
   expect(route.m.at(-1)).toMatchObject({ id: '/todos', t: ['todos'] })
   expect(before).toBeTruthy()
@@ -131,7 +134,7 @@ test('load and the render share one run per request; the page carries it in #wef
 
 test('client navigation data carries the queries its loaders resolved', async () => {
   const a = await (await get('/_weft/data/todos')).json()
-  expect(a.c.map((w) => w[0])).toEqual([id('listTodos')])
+  expect(a.c.map((w: unknown[]) => w[0])).toEqual([id('listTodos')])
   expect(a.m.at(-1).t).toEqual(['todos'])
 })
 
