@@ -158,38 +158,14 @@ export function assets() {
     if (!providers.has(id)) providers.set(id, buildSlot(root, id))
     return providers.get(id)
   }
-  let fonts
   let encode
-  const fontEnvs = new Set()
   const fontBuild = () => existsSync(join(root, '.weft', 'slots', 'font.build.build.json'))
-
-  /** Run font.build once per process; writes `.weft/fonts.json` (metrics and the budget report X022 reads). */
-  const buildFonts = async (ctx) => {
-    const out = await (fonts ??= (async () => {
-      const p = await provider('font.build')
-      if (!p) return { css: '', preloads: [], files: [] }
-      const built = await p.impl.build({
-        root,
-        cacheDir: join(root, '.weft', 'cache', 'fonts'),
-        url: (name) => store.url(name),
-        dev,
-        source: dev ? '' : readSources(root),
-      })
-      mkdirSync(join(root, '.weft'), { recursive: true })
-      writeFileSync(
-        join(root, '.weft', 'fonts.json'),
-        `${JSON.stringify({ plugin: p.plugin, metrics: built.metrics ?? {}, report: built.report ?? {} }, null, 2)}\n`,
-      )
-      return built
-    })())
-    // Each environment writes its own output: the server's asking first mustn't leave the client's without the files.
-    const env = ctx.environment?.name
-    if (!fontEnvs.has(env)) {
-      fontEnvs.add(env)
-      for (const f of out.files) store.add(ctx, f.name, f.bytes)
-    }
-    return out
-  }
+  const buildFonts = fontBuilder(
+    store,
+    provider,
+    () => root,
+    () => dev,
+  )
 
   return {
     name: 'weft:assets',
@@ -209,20 +185,7 @@ export function assets() {
           return { code: `import '${FONTS}'\n${code}`, map: null }
       },
     },
-    transformIndexHtml: {
-      order: 'pre',
-      handler: () =>
-        fontBuild()
-          ? [
-              {
-                tag: 'script',
-                attrs: { type: 'module' },
-                children: `import '${FONTS}'`,
-                injectTo: 'head',
-              },
-            ]
-          : undefined,
-    },
+    transformIndexHtml: fontHtml(fontBuild),
     resolveId(source) {
       if (source === FONTS) return '\0weft:fonts.css'
       if (source === PRELOADS) return '\0' + PRELOADS
@@ -254,24 +217,77 @@ export function assets() {
               },
             )
           : original(file, bytes)
-        for (const d of out.diagnostics ?? []) {
-          if (d.severity === 'error') this.error(`${d.code} ${d.message}`)
-          else if (d.severity === 'info') this.info(`${d.code} ${d.message}`)
-          else this.warn(`${d.code} ${d.message}`)
-        }
-        for (const f of out.files) store.add(this, f.name, f.bytes)
-        const asset = {
-          ...out.asset,
-          src: store.url(out.asset.src),
-          sources: out.asset.sources.map((s) => ({
-            ...s,
-            srcset: s.srcset.replace(/(^|,\s*)([^\s,]+)/g, (_, sep, n) => sep + store.url(n)),
-          })),
-        }
-        if (asset.poster) asset.poster = store.url(asset.poster)
-        if (asset.copy) asset.copy = { ...asset.copy, src: store.url(asset.copy.src) }
-        return `export default ${JSON.stringify(asset)}\n`
+        return mediaOutput(this, out, store)
       },
     },
+  }
+}
+
+function fontBuilder(store, provider, getRoot, getDev) {
+  let fonts
+  const fontEnvs = new Set()
+  /** Run font.build once per process; writes `.weft/fonts.json` (metrics and the budget report X022 reads). */
+  return async (ctx) => {
+    const out = await (fonts ??= (async () => {
+      const p = await provider('font.build')
+      if (!p) return { css: '', preloads: [], files: [] }
+      const built = await p.impl.build({
+        root: getRoot(),
+        cacheDir: join(getRoot(), '.weft', 'cache', 'fonts'),
+        url: (name) => store.url(name),
+        dev: getDev(),
+        source: getDev() ? '' : readSources(getRoot()),
+      })
+      mkdirSync(join(getRoot(), '.weft'), { recursive: true })
+      writeFileSync(
+        join(getRoot(), '.weft', 'fonts.json'),
+        `${JSON.stringify({ plugin: p.plugin, metrics: built.metrics ?? {}, report: built.report ?? {} }, null, 2)}\n`,
+      )
+      return built
+    })())
+    // Each environment writes its own output: the server's asking first mustn't leave the client's without the files.
+    const env = ctx.environment?.name
+    if (!fontEnvs.has(env)) {
+      fontEnvs.add(env)
+      for (const f of out.files) store.add(ctx, f.name, f.bytes)
+    }
+    return out
+  }
+}
+
+function mediaOutput(ctx, out, store) {
+  for (const d of out.diagnostics ?? []) {
+    if (d.severity === 'error') ctx.error(`${d.code} ${d.message}`)
+    else if (d.severity === 'info') ctx.info(`${d.code} ${d.message}`)
+    else ctx.warn(`${d.code} ${d.message}`)
+  }
+  for (const f of out.files) store.add(ctx, f.name, f.bytes)
+  const asset = {
+    ...out.asset,
+    src: store.url(out.asset.src),
+    sources: out.asset.sources.map((s) => ({
+      ...s,
+      srcset: s.srcset.replace(/(^|,\s*)([^\s,]+)/g, (_, sep, n) => sep + store.url(n)),
+    })),
+  }
+  if (asset.poster) asset.poster = store.url(asset.poster)
+  if (asset.copy) asset.copy = { ...asset.copy, src: store.url(asset.copy.src) }
+  return `export default ${JSON.stringify(asset)}\n`
+}
+
+function fontHtml(fontBuild) {
+  return {
+    order: 'pre',
+    handler: () =>
+      fontBuild()
+        ? [
+            {
+              tag: 'script',
+              attrs: { type: 'module' },
+              children: `import '${FONTS}'`,
+              injectTo: 'head',
+            },
+          ]
+        : undefined,
   }
 }
