@@ -99,7 +99,7 @@ export function SignGate({
     if (innerWidth < 600) sheet.value = true
     else signing.value = true
   }
-  watchSignStatus(s, sheet, signing, () => onSigned)
+  watchSignStatus(s, sheet, signing, () => onSigned?.())
   return (
     <div data-scope="gate" data-state={s.value}>
       <div data-part="content" inert={s.value === 'signed' ? undefined : true}>
@@ -156,7 +156,7 @@ function watchSignStatus(
   s: { readonly value: SignStatus },
   sheet: State<boolean>,
   signing: State<boolean>,
-  onSigned: () => SignGateProps['onSigned'],
+  onSigned: () => void,
 ) {
   watch(
     () => s.value,
@@ -167,7 +167,7 @@ function watchSignStatus(
         sheet.value = false
         signing.value = false
         announce(document, 'Agreement signed.')
-        onSigned()?.()
+        onSigned()
       }
       if (now === 'expired' || now === 'declined' || now === 'error') {
         sheet.value = false

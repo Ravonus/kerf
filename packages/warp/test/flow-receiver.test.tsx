@@ -1,3 +1,5 @@
+import { state } from '@weft-js/core'
+import { SignGate, type SignGateProps, type SignStatus } from '../src/flow/SignGate'
 import { flush, render } from '@weft-js/core/test'
 import { SignIn, type SignInProps } from '../src/flow/SignIn'
 
@@ -21,4 +23,25 @@ test('magic link reads the current callback and calls it with the props receiver
   await flush()
   expect(first).not.toHaveBeenCalled()
   expect(calls).toEqual([{ receiver: props, email: 'a@b.co' }])
+})
+
+test('signature completion reads the current callback with the props receiver', async () => {
+  const status = state<SignStatus>('unsigned')
+  const calls: unknown[] = []
+  const first = vi.fn()
+  const props: SignGateProps = {
+    get status() {
+      return status.value
+    },
+    title: 'Sign',
+    onSigned: first,
+  }
+  render(() => SignGate(props))
+  props.onSigned = function (this: unknown) {
+    calls.push(this)
+  }
+  status.value = 'signed'
+  await flush()
+  expect(first).not.toHaveBeenCalled()
+  expect(calls).toEqual([props])
 })
