@@ -158,14 +158,15 @@ test('actual hidden grader dispatches all bugfix calibration checks', async () =
         `
       const { hidden } = await import(process.argv[1]);
       const result = await hidden('bugfix-shop', 'http://fixture', true);
-      console.log(JSON.stringify({total: result.total, failed: result.failed.length}));
+      const normal = await hidden('bugfix-shop', 'http://fixture', false);
+      console.log(JSON.stringify({total: result.total, failed: result.failed.length, normal: normal.total}));
     `,
         grade,
       ],
       { env, encoding: 'utf8' },
     )
     assert.equal(child.status, 0, child.stderr)
-    assert.deepEqual(JSON.parse(child.stdout), { total: 14, failed: 14 })
+    assert.deepEqual(JSON.parse(child.stdout), { total: 14, failed: 14, normal: 14 })
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

@@ -119,7 +119,8 @@ export async function serve(copy, stack) {
 /** Run a task's hidden tests, each in a fresh browser context. A failure gets one rerun, and a flake is recorded as one. */
 export async function hidden(task, base, calibration = false) {
   const module = await import(pathToFileURL(join(here, 'tasks', task, 'hidden.mjs')).href)
-  const tests = calibration ? calibrationChecks(task, module) : module.tests
+  const tests =
+    calibration || task === 'bugfix-shop' ? calibrationChecks(task, module) : module.tests
   const browser = await chromium.launch()
   const once = async (t) => {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } })
