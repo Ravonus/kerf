@@ -28,6 +28,7 @@ test('requires a reference entry for every path', () => {
 
 test('inventories all tracked core and start manifests and their export targets', () => {
   const result = check()
+  assert.deepEqual(check(process.cwd()), result)
   const manifests = execFileSync('git', [
     'ls-files', 'packages/core/package.json', 'packages/start/package.json',
   ], { encoding: 'utf8' }).trim().split('\n')

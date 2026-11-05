@@ -1,11 +1,11 @@
 // Compare static diagnostic sites and compile-test assertions with the catalog.
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { fileURLToPath, pathToFileURL } from 'node:url'
-import { dirname, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { resolve } from 'node:path'
+import { repoRoot as root } from '../lib/helpers.mjs'
 import { catalog } from '../../packages/cli/src/catalog.mjs'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 // These compiler-family rules move to the CLI checker; ownership never exempts coverage.
 const mappedCodes = new Set(['W007', 'W008', 'W030'])
 const baselinePath = resolve(root, 'scripts/quality/diagnostic-catalog-baseline.json')

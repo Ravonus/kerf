@@ -3,8 +3,8 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { repoRoot } from '../lib/helpers.mjs'
 
-const root = resolve(fileURLToPath(new URL('../..', import.meta.url)))
 const packages = ['core', 'start']
 
 /** Compare one package's complete export map and its reference entries. */
@@ -22,7 +22,7 @@ export function problemsFor(name, exports, snapshot, docs) {
 }
 
 /** Check tracked package manifests, targets, snapshots and reference entries. */
-export function check(repo = root) {
+export function check(repo = repoRoot) {
   const tracked = new Set(execFileSync('git', ['ls-files', '-z'], { cwd: repo, encoding: 'utf8' })
     .split('\0').filter(Boolean))
   const docsPath = 'packages/cli/docs/entrypoints.md'
