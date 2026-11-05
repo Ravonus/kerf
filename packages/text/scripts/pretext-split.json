@@ -4,10 +4,13 @@
     "line-break.ts": "4e58875392dded67dd45079b1bb18bd5cb63a0e0b39292b4ebdb0a7ab2ba8f95",
     "line-breaks.ts": "4b3b654234a175e06ea672ff903c544e00ae7626698bfa8f83616c84fa0aaee4",
     "measurement.ts": "119fa85d0aacdab4a9ef81990b4810f7bb67c52edb30b113fc4c2c45b88cb9e8",
-    "rich-inline.ts": "1e58e4426aacb9fea66a8d602bd960e0b2b663cd3ff2fe6b09222f557e832481"
+    "rich-inline.ts": "1e58e4426aacb9fea66a8d602bd960e0b2b663cd3ff2fe6b09222f557e832481",
+    "analysis.ts": "f36812b56919b4873cf9674e62fec48cb9a240b87b50025658657711e582e617",
+    "gecko-line-breaks.ts": "cf67f7eecaf6c9849acfa9958575070597cb5e6f3a1a17bb2027cef828340248",
+    "prepare.ts": "ef8dec2b9bbb02383d4eb6d135562650b2eff72f543c63fb31b6393dc9f40a49"
   },
   "outputs": {
-    "line-break.ts": "18a0be929e922b46f9f736fc96c1997e88cc67aa34e9446e8eb0672b7012d884",
+    "line-break.ts": "24e0cd17adaebcb10acc569db485b50febf432451e53dd678d372655b260e3e7",
     "line-break-types.ts": "c20f468df9d86c7c49009ad7a3c6523203f03deee2413f86af544d6d3a487b56",
     "line-break-simple.ts": "c82badb83626af5fcd50a21ff26e929af905ac0006c1105508a3117781c71c99",
     "line-break-geometry.ts": "7e51912df71df16b2575cbae3d30fb25fb94ec0a22b9c5ddd4c7d3e4dc073219",
@@ -26,6 +29,20 @@
     "rich-inline/objects.ts": "5e8fd980c55668f66926b18813d6c4bd8a778929b502de60d817ed52a7593f74",
     "rich-inline/preparation.ts": "499908a7e46685e0d19fb1273a2eb876bbd447f5d5d868f594844908e9d5d376",
     "rich-inline/lines.ts": "5ab39dbfad7692e9653bfafe4caf89fa5020e3c4d8e354d79463b50f7f8e42ea",
-    "rich-inline/sources.ts": "6a659bd7cdd103a0b2c871cae440d80a92049f2d6fe3ef3032d8e5104d773d8b"
+    "rich-inline/sources.ts": "6a659bd7cdd103a0b2c871cae440d80a92049f2d6fe3ef3032d8e5104d773d8b",
+    "analysis.ts": "5fcbde7ee6897c5efc44e355a929d362b63846d55d02450dc4878194fcfd25ef",
+    "analysis-segments.ts": "4f5fc6d3ec08465857dd442d32d6d2fdb682b16325c2d3d9dd39333721bc7d8d",
+    "analysis-types.ts": "1a63641f195e341f06c7217c3b51de9bf0603a929dd926784ffbbdbabc375312",
+    "analysis-whitespace.ts": "1d70002e945e4f8c5ffba529b8f48e24a611f316b4b991e5b6361230c872767e",
+    "gecko-line-breaks.ts": "d921afa2df8f8dfc5a86ad7795d74d4d3b68cfcc7f0f6c545a71eb43ed2655ea",
+    "gecko-line-breaks-clusters.ts": "3e652c96d1075f58f73e35d01df61cf45d50ef1ccbab234aeb50e75a70476f40",
+    "gecko-line-breaks-transform.ts": "8175040f0d6fa6f6846b3d1f343dd3a5494dc0afb8e0bd6424bc8b87dc833025",
+    "prepare.ts": "f85950e872ee9235e0689161c9512b525f4baeb234f9c20204b682038da8706c",
+    "prepare-common.ts": "39ca5be54ffa6e1622a3929c431d2173e6e1e11b554b70b78e7c1c7204bc7283",
+    "prepare-finish.ts": "82f41d2b20c9517e0eaeee0430be28d36bc7f1bbe26bec80f710c3d4f3f36d6c",
+    "prepare-measure.ts": "27fae9be446e0c8414e7708598c57758ed6ff5b09acda0a61a5a10a669d8a282",
+    "prepare-script.ts": "8dd335e9103926851cbc3f5cdb01fe4c7f3e6ed36833c660e121c7bf8c10e3b0",
+    "line-break-complex.ts": "898481bb091a7a1513ec394c9ef8c53804bd171d2568ef5e04f8d00ca91a2feb",
+    "line-break-complex-state.ts": "a1bb4b7bb58f133edd8d2121b7aef347a8ef9d7824752937ad71d9de9670f5f0"
   }
 }

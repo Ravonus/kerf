@@ -147,7 +147,13 @@ function movedSources(file, src, sf, decls) {
       if (d.requested) {
         const name = st.name.text
         stubs.push({ n: name, pack: d.pack })
-        const params = st.parameters.map((p) => p.getText(sf).replace(/\s*=[^,]*$/, '')).join(', ')
+        const params = st.parameters
+          .map((p) =>
+            p.initializer?.kind === ts.SyntaxKind.FalseKeyword
+              ? p.getText(sf)
+              : p.getText(sf).replace(/\s*=[^,]*$/, ''),
+          )
+          .join(', ')
         const ret = st.type ? st.type.getText(sf) : 'any'
         edits.push([
           st.getStart(sf),

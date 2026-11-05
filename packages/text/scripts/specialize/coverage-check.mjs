@@ -43,6 +43,21 @@ try {
     const rare = fs.readdirSync(out).filter((file) => file.endsWith('.rare.ts'))
     assert.deepEqual(rare, [], `${engine}: split helpers moved to the rare pack`)
   }
+  // A function moved from upstream still follows coverage in its new module.
+  assert.ok(ran.includes('isInvalidChar'))
+  fs.writeFileSync(
+    coverageFiles[2],
+    JSON.stringify({ ran: ran.filter((name) => name !== 'isInvalidChar') }),
+  )
+  await specialize('gecko')
+  const gecko = path.join(root, 'gen/gecko')
+  const transform = fs.readFileSync(path.join(gecko, 'gecko-line-breaks-transform.ts'), 'utf8')
+  assert.match(transform, /function isInvalidChar\([^]*?__missing\('rare', 'isInvalidChar'\)/)
+  const rareTransform = fs.readFileSync(
+    path.join(gecko, 'gecko-line-breaks-transform.rare.ts'),
+    'utf8',
+  )
+  assert.match(rareTransform, /export function isInvalidChar\(/)
   const source = fs.readFileSync(path.join(root, 'gen/blink/line-breaks.ts'), 'utf8')
   const isStub = (text) =>
     /function ruleBoundary\([^]*?__missing\('rare', 'ruleBoundary'\)/.test(text)
