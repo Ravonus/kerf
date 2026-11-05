@@ -2,11 +2,13 @@
 // Layout and controls in Chrome, from warp's real stylesheets: what jsdom can't compute.
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import type * as Playwright from 'playwright-core'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
-const read = (f) => readFileSync(new URL(`../../warp-core/styles/${f}`, import.meta.url), 'utf8')
+const read = (f: string) =>
+  readFileSync(new URL(`../../warp-core/styles/${f}`, import.meta.url), 'utf8')
 const css = [
   'warp.css',
   'layout/tokens.css',
@@ -18,18 +20,18 @@ const css = [
 ]
   .map(read)
   .join('\n')
-let browser
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await chromium.launch()
 })
 afterAll(() => browser?.close())
 
-async function page(html, width = 1320) {
+async function page(html: string, width = 1320) {
   const p = await browser.newPage({ viewport: { width, height: 800 } })
   await p.setContent(`<!doctype html><style>${css}</style>${html}`)
   return p
 }
-const columns = (p, id) =>
+const columns = (p: Playwright.Page, id: string) =>
   p.$eval(id, (n) => getComputedStyle(n).gridTemplateColumns.split(' ').length)
 const SPLIT = '<div id="s" data-scope="split"><div>a</div><div>b</div></div>'
 
@@ -54,7 +56,7 @@ test('a checkbox input takes the click itself, so role-based tools reach it', as
 
 test("the phone sort bar shows at a phone width of the table's container and no wider", async () => {
   // the table isn't a container itself (each nested one costs the page a style pass), so it follows the one it's in
-  const shown = async (width) =>
+  const shown = async (width: number) =>
     (
       await page(
         `<div style="container-type:inline-size;inline-size:${width}px"><div data-scope="table" data-phone="cards"><div id="b" data-part="sortbar">x</div></div></div>`,
@@ -96,10 +98,10 @@ describe.each([
 
     test(`takes a click on its control, by role, and leaves its links alone${mark}`, async () => {
       const p = await page(html)
-      const under = (id) =>
+      const under = (id: string) =>
         p.$eval(id, (n) => {
           const r = n.getBoundingClientRect()
-          return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2).id
+          return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)!.id
         })
       expect(await under('#l')).toBe('l')
       expect(await under('#h')).toBe('h')
@@ -107,19 +109,21 @@ describe.each([
       expect(new URL(p.url()).hash).toBe('#terms')
       await p.click('#h')
       expect(new URL(p.url()).hash).toBe('#hint')
-      expect(await p.getByRole(role).isChecked()).toBe(false)
-      await p.getByRole(role, { name: 'Pick' }).check({ timeout: 3000 })
-      expect(await p.getByRole(role).isChecked()).toBe(true)
+      expect(await p.getByRole(role as 'checkbox' | 'radio' | 'switch').isChecked()).toBe(false)
+      await p
+        .getByRole(role as 'checkbox' | 'radio' | 'switch', { name: 'Pick' })
+        .check({ timeout: 3000 })
+      expect(await p.getByRole(role as 'checkbox' | 'radio' | 'switch').isChecked()).toBe(true)
       const box = await p.$eval(`[data-part="${control}"]`, (n) => {
         const r = n.getBoundingClientRect()
-        return [r.x + r.width / 2, r.y + r.height / 2]
+        return [r.x + r.width / 2, r.y + r.height / 2] as [number, number]
       })
-      expect(await p.evaluate(([x, y]) => document.elementFromPoint(x, y).tagName, box)).toBe(
+      expect(await p.evaluate(([x, y]) => document.elementFromPoint(x, y)!.tagName, box)).toBe(
         'INPUT',
       )
       if (role === 'radio') return
       await p.getByText('I agree to the').click({ position: { x: 2, y: 2 } })
-      expect(await p.getByRole(role).isChecked()).toBe(false)
+      expect(await p.getByRole(role as 'checkbox' | 'radio' | 'switch').isChecked()).toBe(false)
     })
   }
 })
@@ -141,7 +145,7 @@ test("a button's tone channels set its fill and its hover layer", async () => {
   expect(await p.$eval('#b', (n) => getComputedStyle(n).color)).toBe('rgb(255, 255, 255)')
   // the layer is a color-mix (warp's pointer fill), so it computes in oklab: read it back as the pixel it paints
   const layer = await p.$eval('#b', (n) => {
-    const c = document.createElement('canvas').getContext('2d')
+    const c = document.createElement('canvas').getContext('2d')!
     c.fillStyle = getComputedStyle(n, '::before').backgroundColor
     c.fillRect(0, 0, 1, 1)
     return [...c.getImageData(0, 0, 1, 1).data]
