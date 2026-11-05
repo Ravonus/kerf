@@ -50,9 +50,7 @@ for (const path of paths) {
         if (!measured) throw new Error('no visible highlighted source lines')
         if (width === 390) {
           await checkPageOverflow(page)
-          const copies = await checkCopies(page)
-          if (!copies && !path.startsWith('/components/') && !path.startsWith('/blocks/'))
-            throw new Error('no visible copy action')
+          await checkCopies(page)
         }
       },
       { width, height: 900 },

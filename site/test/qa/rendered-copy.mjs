@@ -27,5 +27,6 @@ export async function checkCopies(page) {
     const copied = await page.evaluate((n) => window.__qaCopies[n - 1], checked)
     if (copied !== source) throw new Error(`copy button ${i + 1} changes source text`)
   }
+  if (!checked) throw new Error('no visible copy action')
   return checked
 }
