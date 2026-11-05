@@ -1,0 +1,33 @@
+export const LOOK = [
+  'rocket',
+  'clock',
+  'server',
+  'globe',
+  'activity',
+  'bell',
+  'user',
+  'users',
+  'settings',
+  'database',
+  'cloud',
+  'terminal',
+  'shield',
+  'key',
+  'lock',
+  'search',
+  'filter',
+  'download',
+  'upload',
+  'external',
+  'copy',
+  'trash',
+  'pencil',
+  'star',
+] as const
+
+export const FACTS = [
+  { icon: 'globe', says: 'Served from 5 regions' },
+  { icon: 'shield', says: 'Certificates renewed for you' },
+  { icon: 'clock', says: 'Roll back in ten seconds' },
+  { icon: 'activity', says: 'Live logs on every deploy' },
+] as const
