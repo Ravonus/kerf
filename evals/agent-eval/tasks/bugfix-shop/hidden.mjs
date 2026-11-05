@@ -15,3 +15,6 @@ export const tests = [
     },
   },
 ]
+
+// The shared grader currently reads `tests`; calibration must explicitly select this full suite.
+export { tests as calibrationTests } from './full-checks.mjs'

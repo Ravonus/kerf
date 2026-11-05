@@ -1,0 +1,50 @@
+[
+  {
+    "name": "filtered product becomes apple",
+    "find": "disabled={p.stock - (m.cart.value[p.name] ?? 0) === 0}\n                onClick={() => m.change(p, 1)}",
+    "replace": "disabled={p.stock - (m.cart.value[p.name] ?? 0) === 0}\n                onClick={() => m.change({ ...p, name: 'Apple' }, 1)}",
+    "mustFail": "search and return preserve product identity"
+  },
+  {
+    "name": "first displayed product used",
+    "find": "disabled={p.stock - (m.cart.value[p.name] ?? 0) === 0}\n                onClick={() => m.change(p, 1)}",
+    "replace": "disabled={p.stock - (m.cart.value[p.name] ?? 0) === 0}\n                onClick={() => m.change(m.shown.value[0] ?? p, 1)}",
+    "mustFail": "search and return preserve product identity"
+  },
+  {
+    "name": "last displayed product used",
+    "find": "disabled={p.stock - (m.cart.value[p.name] ?? 0) === 0}\n                onClick={() => m.change(p, 1)}",
+    "replace": "disabled={p.stock - (m.cart.value[p.name] ?? 0) === 0}\n                onClick={() => m.change(m.shown.value.at(-1) ?? p, 1)}",
+    "mustFail": "search and return preserve product identity"
+  },
+  {
+    "name": "stale total snapshot",
+    "find": "const total = derived(() => products.reduce((n, p) => n + p.price * (cart.value[p.name] ?? 0), 0))",
+    "replace": "const staleCart = cart.value\n  const total = derived(() => products.reduce((n, p) => n + p.price * (staleCart[p.name] ?? 0), 0))",
+    "mustFail": "cart totals follow each quantity change"
+  },
+  {
+    "name": "quantities ignored in total",
+    "find": "n + p.price * (cart.value[p.name] ?? 0)",
+    "replace": "n + p.price * Math.min(1, cart.value[p.name] ?? 0)",
+    "mustFail": "cart totals follow each quantity change"
+  },
+  {
+    "name": "wrong quantity displayed",
+    "find": "<span>{m.cart.value[p.name]}</span>",
+    "replace": "<span>1</span>",
+    "mustFail": "cart totals follow each quantity change"
+  },
+  {
+    "name": "wrong line subtotal",
+    "find": "money(p.price * (m.cart.value[p.name] ?? 0))",
+    "replace": "money(p.price)",
+    "mustFail": "cart totals follow each quantity change"
+  },
+  {
+    "name": "line never removed",
+    "find": "Math.max(0, Math.min(p.stock",
+    "replace": "Math.max(1, Math.min(p.stock",
+    "mustFail": "cart totals follow each quantity change"
+  }
+]
