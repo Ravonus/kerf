@@ -3,7 +3,8 @@ import { Button, Card, Row } from '@weft-js/warp'
 export default function Focus() {
   // The compiler assigns `field` through ref when the
   // input is made, so nothing here assigns it.
-  // oxlint-disable-next-line no-unassigned-vars -- ref
+  /* oxlint-disable-next-line no-unassigned-vars --
+     The ref assigns it when the input is made. */
   let field!: HTMLInputElement
   return (
     <Card title="Focus and select">
