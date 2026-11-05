@@ -124,7 +124,8 @@ export function moduleCalls(sf, report) {
       const callee = peel(node.expression)
       if (ts.isFunctionExpression(callee) || ts.isArrowFunction(callee)) {
         for (const param of callee.parameters) if (param.initializer) visit(param.initializer)
-        visit(callee.body)
+        // Generator calls create iterators; their bodies wait for iteration.
+        if (!ts.isFunctionExpression(callee) || !callee.asteriskToken) visit(callee.body)
       }
     }
     if (ts.isFunctionLike(node)) {

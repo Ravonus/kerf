@@ -123,6 +123,42 @@ describe('W030 server-reachable module state', () => {
     expect(inspect(root).map((finding) => finding.code)).toEqual(['W030', 'W030'])
   })
 
+  it('keeps sync and async generator IIFE bodies deferred', () => {
+    for (const invocation of [
+      '(function* () { state(0) })()',
+      '(async function* () { state(0) })()',
+      '(function* values() { const n = state(0); yield n })()',
+      '(async function* values() { const n = state(0); yield n })()',
+    ]) {
+      const source = "import { state } from '@weft-js/core'; " + invocation
+      expect(inspect(seed({ 'src/app.server.ts': source }))).toEqual([])
+    }
+  })
+
+  it('still visits ordinary and async ordinary IIFE bodies', () => {
+    for (const invocation of [
+      '(() => state(0))()',
+      '(function () { state(0) })()',
+      '(async () => { state(0); await wait() })()',
+      '(async function () { state(0); await wait() })()',
+    ]) {
+      const source = "import { state } from '@weft-js/core'; " + invocation
+      expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code))
+        .toEqual(['W030'])
+    }
+  })
+
+  it('preserves eager generator parameter initializers without visiting their bodies', () => {
+    for (const invocation of [
+      '(function* (n = state(0)) { state(1) })()',
+      '(async function* (n = state(0)) { state(1) })()',
+    ]) {
+      const source = "import { state } from '@weft-js/core'; " + invocation
+      expect(inspect(seed({ 'src/app.server.ts': source })).map((finding) => finding.code))
+        .toEqual(['W030'])
+    }
+  })
+
   it('rechecks repaired sources and honors graph exclusions', () => {
     const root = seed({ 'src/entry-server.ts': "import './shared'", 'src/shared.ts': shared })
     expect(inspect(root)[0].code).toBe('W030')
