@@ -69,35 +69,19 @@ function pure<T>(fn: () => T): T {
 
 const median = (xs: number[]) => [...xs].sort((a, b) => a - b)[xs.length >> 1]!
 
-/** One Check per requirement of `text.measure@1`. Any `ok: false` is P119. */
-export async function textMeasureSuite(
+async function textAccuracy(
   p: MeasureProvider,
   o: MeasureSuiteOptions,
-): Promise<Check[]> {
-  const family = o.family ?? 'Arial',
-    size = o.size ?? 16,
-    lineHeight = o.lineHeight ?? 24,
-    widths = o.widths ?? [320, 480]
-  const font = `${size}px ${family}`
-  const out: Check[] = []
-
-  const box = document.body.appendChild(document.createElement('div'))
-  box.style.cssText = `position:absolute;visibility:hidden;font:${font};line-height:${lineHeight}px;white-space:normal;overflow-wrap:break-word`
-  const dom = (texts: string[], width: number, face = font) => {
-    box.style.width = `${width}px`
-    box.style.font = face
-    box.style.lineHeight = `${lineHeight}px`
-    box.replaceChildren(
-      ...texts.map((t) => Object.assign(document.createElement('div'), { textContent: t })),
-    )
-    return [...box.children].map((c) => c.getBoundingClientRect().height)
-  }
-  const prepared = async (texts: string[], face = font, opts?: { segments?: boolean }) => {
-    const hs = texts.map((t) => p.prepare(t, face, opts))
-    for (const h of hs) await h.ready
-    return hs
-  }
-
+  widths: number[],
+  lineHeight: number,
+  out: Check[],
+  dom: (texts: string[], width: number, face?: string) => number[],
+  prepared: (
+    texts: string[],
+    face?: string,
+    opts?: { segments?: boolean },
+  ) => Promise<ReturnType<MeasureProvider['prepare']>[]>,
+) {
   for (const corpus of o.corpora) {
     const hs = await prepared(corpus.texts)
     let wrong = 0,
@@ -121,7 +105,21 @@ export async function textMeasureSuite(
       detail: `${wrong}/${total} heights differ from the DOM (allowed ${(allow * 100).toFixed(1)}%)${example ? `; ${example}` : ''}`,
     })
   }
+}
 
+async function textChecks(
+  p: MeasureProvider,
+  o: MeasureSuiteOptions,
+  widths: number[],
+  lineHeight: number,
+  font: string,
+  out: Check[],
+  prepared: (
+    texts: string[],
+    face?: string,
+    opts?: { segments?: boolean },
+  ) => Promise<ReturnType<MeasureProvider['prepare']>[]>,
+) {
   const first = o.corpora[0]!.texts
   const lined = await prepared(first, font, { segments: true })
   let broken = ''
@@ -181,6 +179,41 @@ export async function textMeasureSuite(
     ok: median(prepareMs) <= prepareBudget,
     detail: `${median(prepareMs).toFixed(2)} ms per 1k, widths cached (≤ ${prepareBudget})`,
   })
+  return first
+}
+
+/** One Check per requirement of `text.measure@1`. Any `ok: false` is P119. */
+export async function textMeasureSuite(
+  p: MeasureProvider,
+  o: MeasureSuiteOptions,
+): Promise<Check[]> {
+  const family = o.family ?? 'Arial',
+    size = o.size ?? 16,
+    lineHeight = o.lineHeight ?? 24,
+    widths = o.widths ?? [320, 480]
+  const font = `${size}px ${family}`
+  const out: Check[] = []
+
+  const box = document.body.appendChild(document.createElement('div'))
+  box.style.cssText = `position:absolute;visibility:hidden;font:${font};line-height:${lineHeight}px;white-space:normal;overflow-wrap:break-word`
+  const dom = (texts: string[], width: number, face = font) => {
+    box.style.width = `${width}px`
+    box.style.font = face
+    box.style.lineHeight = `${lineHeight}px`
+    box.replaceChildren(
+      ...texts.map((t) => Object.assign(document.createElement('div'), { textContent: t })),
+    )
+    return [...box.children].map((c) => c.getBoundingClientRect().height)
+  }
+  const prepared = async (texts: string[], face = font, opts?: { segments?: boolean }) => {
+    const hs = texts.map((t) => p.prepare(t, face, opts))
+    for (const h of hs) await h.ready
+    return hs
+  }
+
+  await textAccuracy(p, o, widths, lineHeight, out, dom, prepared)
+
+  const first = await textChecks(p, o, widths, lineHeight, font, out, prepared)
 
   if (o.webFont) {
     const face = `${size}px "${o.webFont.family}"`
@@ -233,6 +266,44 @@ export interface BusSuiteOptions {
   restart?: () => Promise<void>
 }
 
+async function busCross(
+  a: BusLike,
+  b: BusLike,
+  room: (s: string) => string,
+  check: (name: string, ok: boolean, detail?: string) => void,
+) {
+  {
+    const got: string[] = []
+    let gaps = 0
+    const c = room('cross')
+    const off = await a.subscribe(
+      c,
+      (m) => got.push(m),
+      () => gaps++,
+    )
+    await b.publish(c, 'one') // straight after `subscribe` resolves: it means listening
+    check(
+      'a publish after `subscribe` resolves arrives on the other instance',
+      await settle(() => got.length === 1),
+      `${got.length} messages`,
+    )
+    check('a first connect is not a gap', gaps === 0, `${gaps} gaps`)
+    await pause(100)
+    check('a message arrives once', got.length === 1, `${got.length} deliveries`)
+    for (let i = 0; i < 200; i++) await b.publish(c, `m${i}`)
+    await settle(() => got.length === 201)
+    check(
+      'messages from one publisher stay in order',
+      got.slice(1).every((m, i) => m === `m${i}`) && got.length === 201,
+      `${got.length} of 201`,
+    )
+    off()
+    await b.publish(c, 'late')
+    await pause(100)
+    check('nothing arrives after the stop', got.at(-1) !== 'late', got.at(-1) ?? '')
+  }
+}
+
 /** One Check per requirement of `realtime.bus@1`. Any `ok: false` is P119. */
 export async function busSuite({ make, restart }: BusSuiteOptions): Promise<Check[]> {
   const out: Check[] = []
@@ -241,36 +312,8 @@ export async function busSuite({ make, restart }: BusSuiteOptions): Promise<Chec
     b = await make()
   const room = (s: string) => `weft:c:conform-${Date.now()}-${s}:{"room":"a*b> c é"}`
   try {
-    {
-      const got: string[] = []
-      let gaps = 0
-      const c = room('cross')
-      const off = await a.subscribe(
-        c,
-        (m) => got.push(m),
-        () => gaps++,
-      )
-      await b.publish(c, 'one') // straight after `subscribe` resolves: it means listening
-      check(
-        'a publish after `subscribe` resolves arrives on the other instance',
-        await settle(() => got.length === 1),
-        `${got.length} messages`,
-      )
-      check('a first connect is not a gap', gaps === 0, `${gaps} gaps`)
-      await pause(100)
-      check('a message arrives once', got.length === 1, `${got.length} deliveries`)
-      for (let i = 0; i < 200; i++) await b.publish(c, `m${i}`)
-      await settle(() => got.length === 201)
-      check(
-        'messages from one publisher stay in order',
-        got.slice(1).every((m, i) => m === `m${i}`) && got.length === 201,
-        `${got.length} of 201`,
-      )
-      off()
-      await b.publish(c, 'late')
-      await pause(100)
-      check('nothing arrives after the stop', got.at(-1) !== 'late', got.at(-1) ?? '')
-    }
+    await busCross(a, b, room, check)
+
     {
       const got: string[] = [],
         c = room('apart'),
@@ -369,37 +412,14 @@ const listParams = (p: Record<string, unknown>) => ({
   ...p,
 })
 
-/** One Check per requirement of `db.adapter@1`. Runs over `limits`, so a source says what it can't do. Any `ok: false` is P119. */
-export async function listSuite({ make, decode }: ListSuiteOptions): Promise<Check[]> {
-  const out: Check[] = []
-  const check = (name: string, ok: boolean, detail = '') => void out.push({ name, ok, detail })
-  const refused = async (name: string, f: () => Promise<unknown>) => {
-    try {
-      const v = await f()
-      check(name, false, `accepted: ${JSON.stringify(v)?.slice(0, 120)}`)
-    } catch (e) {
-      const err = e as { code?: string; name?: string; message?: string } | undefined
-      check(name, err?.code === 'Q002' || err?.name === 'StartError', String(err?.message ?? e))
-    }
-  }
-  const s = (await make()) as SourceLike<ListRow>
-  const ask = (p: Record<string, unknown>) =>
-    listParams({ mode: s.limits?.page === false ? 'cursor' : 'page', ...p }) // or a refusal proves nothing
-  const sortable = (f: string) => !s.limits?.sort || s.limits.sort.includes(f)
-  const ids = (r: { items: ListRow[] }) => r.items.map((i) => i.id)
-  const count = (f: (r: ListRow) => boolean) => LIST_ROWS.filter(f).length
-  const walk = async (sort: { field: string; dir: string } | null, filter = {}) => {
-    const seen: ListRow[] = []
-    let after: unknown = null
-    for (let i = 0; i < 40; i++) {
-      const r = await s.list(ask({ mode: 'cursor', limit: 7, after, sort, filter }))
-      seen.push(...r.items)
-      if (r.next === undefined) break
-      after = decode(String(r.next))
-    }
-    return seen
-  }
-
+async function listPages(
+  s: SourceLike<ListRow>,
+  ask: (p: Record<string, unknown>) => Record<string, unknown>,
+  check: (name: string, ok: boolean, detail?: string) => void,
+  sortable: (f: string) => boolean,
+  ids: (r: { items: ListRow[] }) => string[],
+  walk: (sort: { field: string; dir: string } | null, filter?: object) => Promise<ListRow[]>,
+) {
   if (s.limits?.page !== false) {
     const first = await s.list(ask({ limit: 10 }))
     check(
@@ -446,6 +466,17 @@ export async function listSuite({ make, decode }: ListSuiteOptions): Promise<Che
       )
     }
   }
+}
+
+async function listFilters(
+  s: SourceLike<ListRow>,
+  ask: (p: Record<string, unknown>) => Record<string, unknown>,
+  check: (name: string, ok: boolean, detail?: string) => void,
+  sortable: (f: string) => boolean,
+  ids: (r: { items: ListRow[] }) => string[],
+  walk: (sort: { field: string; dir: string } | null, filter?: object) => Promise<ListRow[]>,
+  count: (f: (r: ListRow) => boolean) => number,
+) {
   const unsorted = await walk(null)
   check(
     'cursor: no sort still walks every row by id',
@@ -493,6 +524,42 @@ export async function listSuite({ make, decode }: ListSuiteOptions): Promise<Che
       )
     }
   }
+}
+
+/** One Check per requirement of `db.adapter@1`. Runs over `limits`, so a source says what it can't do. Any `ok: false` is P119. */
+export async function listSuite({ make, decode }: ListSuiteOptions): Promise<Check[]> {
+  const out: Check[] = []
+  const check = (name: string, ok: boolean, detail = '') => void out.push({ name, ok, detail })
+  const refused = async (name: string, f: () => Promise<unknown>) => {
+    try {
+      const v = await f()
+      check(name, false, `accepted: ${JSON.stringify(v)?.slice(0, 120)}`)
+    } catch (e) {
+      const err = e as { code?: string; name?: string; message?: string } | undefined
+      check(name, err?.code === 'Q002' || err?.name === 'StartError', String(err?.message ?? e))
+    }
+  }
+  const s = (await make()) as SourceLike<ListRow>
+  const ask = (p: Record<string, unknown>) =>
+    listParams({ mode: s.limits?.page === false ? 'cursor' : 'page', ...p }) // or a refusal proves nothing
+  const sortable = (f: string) => !s.limits?.sort || s.limits.sort.includes(f)
+  const ids = (r: { items: ListRow[] }) => r.items.map((i) => i.id)
+  const count = (f: (r: ListRow) => boolean) => LIST_ROWS.filter(f).length
+  const walk = async (sort: { field: string; dir: string } | null, filter = {}) => {
+    const seen: ListRow[] = []
+    let after: unknown = null
+    for (let i = 0; i < 40; i++) {
+      const r = await s.list(ask({ mode: 'cursor', limit: 7, after, sort, filter }))
+      seen.push(...r.items)
+      if (r.next === undefined) break
+      after = decode(String(r.next))
+    }
+    return seen
+  }
+
+  await listPages(s, ask, check, sortable, ids, walk)
+
+  await listFilters(s, ask, check, sortable, ids, walk, count)
 
   await refused('an unknown sort is refused', () =>
     s.list(ask({ sort: { field: 'secret', dir: 'asc' } })),
