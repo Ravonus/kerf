@@ -308,25 +308,12 @@ describe('meetings', () => {
   })
 })
 
-describe('transport', () => {
-  const base: TransportConfig = {
-    wire: 'default',
-    bus: 'postgres',
-    preset: 'multi',
-    network: 'good',
-  }
-  const run = (c: Partial<TransportConfig> = {}) => {
-    let t = 0
-    const s = transportSim({ ...base, ...c }, { random: () => 0.5, now: () => t, pace: (ms) => ms })
-    s.start()
-    return {
-      s,
-      tick: (ms: number) => {
-        t += ms
-        vi.advanceTimersByTime(ms)
-      },
-    }
-  }
+type RunTransport = (c?: Partial<TransportConfig>) => {
+  s: ReturnType<typeof transportSim>
+  tick: (ms: number) => void
+}
+
+function registerTransportConnect(run: RunTransport) {
   test('figures', () => {
     expect(percentile([1, 2, 3, 4], 0.5)).toBe(3)
     expect(percentile([], 0.5)).toBeNull()
@@ -353,6 +340,9 @@ describe('transport', () => {
     s.destroy()
     vi.useRealTimers()
   })
+}
+
+function registerTransportFailures(run: RunTransport) {
   test('WebSocket blocked: the channel lane is offline, SSE stays live, no fallback', () => {
     vi.useFakeTimers()
     const { s, tick } = run()
@@ -378,6 +368,9 @@ describe('transport', () => {
     s.destroy()
     vi.useRealTimers()
   })
+}
+
+function registerTransportRecovery(run: RunTransport) {
   test('Fall behind resets the epoch; pings fill samples', () => {
     vi.useFakeTimers()
     const { s, tick } = run()
@@ -399,4 +392,28 @@ describe('transport', () => {
     s.destroy()
     vi.useRealTimers()
   })
+}
+
+describe('transport', () => {
+  const base: TransportConfig = {
+    wire: 'default',
+    bus: 'postgres',
+    preset: 'multi',
+    network: 'good',
+  }
+  const run = (c: Partial<TransportConfig> = {}) => {
+    let t = 0
+    const s = transportSim({ ...base, ...c }, { random: () => 0.5, now: () => t, pace: (ms) => ms })
+    s.start()
+    return {
+      s,
+      tick: (ms: number) => {
+        t += ms
+        vi.advanceTimersByTime(ms)
+      },
+    }
+  }
+  registerTransportConnect(run)
+  registerTransportFailures(run)
+  registerTransportRecovery(run)
 })
