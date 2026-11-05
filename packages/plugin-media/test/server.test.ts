@@ -14,13 +14,14 @@ const png = (width = 200, height = 100) =>
     .png()
     .toBuffer()
 const options = { formats: ['avif', 'webp'], widths: [64, 128] }
-let dir, m
+let dir: string
+let m: ReturnType<ReturnType<typeof createMediaServer>['at']>
 beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), 'weft-media-server-'))
   m = createMediaServer({ ...options, server: { dir } }).at('/unused')
 })
 afterEach(() => rmSync(dir, { recursive: true, force: true }))
-const hashOf = (asset) => /\/_weft\/m\/([0-9a-f]{32})\//.exec(asset.src)[1]
+const hashOf = (asset: { src: string }) => /\/_weft\/m\/([0-9a-f]{32})\//.exec(asset.src)![1]!
 
 describe('negotiate', () => {
   const formats = ['avif', 'webp']
@@ -136,9 +137,10 @@ describe('serve', () => {
 
 describe("encoder: 'server'", () => {
   it('`?media` imports become records, with no variants in the build', async () => {
+    const context = { cacheDir: dir, root: dir }
     const out = await createMediaBuild({ ...options, encoder: 'server', server: { dir } }).build(
       { file: '/x/hero.png', bytes: new Uint8Array(await png()) },
-      { cacheDir: dir, root: dir },
+      context,
     )
     expect(out.files).toEqual([])
     expect(out.asset.src).toMatch(/^\/_weft\/m\/[0-9a-f]{32}\/128\.auto$/)
