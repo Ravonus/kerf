@@ -1,10 +1,9 @@
 import { dirtyKeys, leaveGuard, plural } from '@weft-js/warp-core'
 import { derived, onCleanup, state, type State, untrack } from '@weft-js/core'
 import { Button } from '../Button'
-import { toast } from '../Toast'
 import { use } from '@weft-js/warp-core/weft'
 import { ConfirmDialog } from './Danger'
-import { afterFlush } from './atoms'
+import { saveActions } from './SaveBar/actions'
 import '../styles'
 import '@weft-js/warp-core/styles/flows/tokens.css'
 import '@weft-js/warp-core/styles/flows/base.css'
@@ -13,8 +12,6 @@ import '@weft-js/warp-core/styles/layout/tokens.css'
 import '@weft-js/warp-core/styles/layout/row.css'
 import '@weft-js/warp-core/styles/layout/stack.css'
 import '@weft-js/warp-core/styles/flows/save-bar.css'
-
-const SAVED_MS = 1500
 
 /** Messages by field name. */
 export type FieldErrors = Record<string, string>
@@ -52,10 +49,12 @@ export function SaveBar<T extends Record<string, unknown>>({
   const phase = state<'idle' | 'pending' | 'saved'>('idle')
   const fixes = state(0)
   const leaving = state(false)
-  let target = ''
-  let el: HTMLDivElement | undefined
-  let timer: ReturnType<typeof setTimeout> | undefined
-  onCleanup(() => clearTimeout(timer))
+  const refs: {
+    target: string
+    el?: HTMLDivElement | undefined
+    timer?: ReturnType<typeof setTimeout> | undefined
+  } = { target: '' }
+  onCleanup(() => clearTimeout(refs.timer))
 
   const changed = derived(() => dirtyKeys(base.value, box.value))
   const dirty = derived(() => changed.value.length > 0)
@@ -66,80 +65,19 @@ export function SaveBar<T extends Record<string, unknown>>({
         ? `Fix ${plural(fixes.value, 'field')} to save`
         : 'You have unsaved changes',
   )
-  const fail = (found: FieldErrors) => {
-    if (errors) errors.value = found
-    fixes.value = Object.keys(found).length
-    afterFlush(() =>
-      el?.closest('form')?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(),
-    )
-  }
-  const save = async () => {
-    if (phase.value === 'pending' || !dirty.value) return
-    const now = box.value
-    const found = validate?.(now)
-    if (found && Object.keys(found).length) return fail(found)
-    phase.value = 'pending'
-    try {
-      const back = await onSave(now)
-      if (back && Object.keys(back).length) {
-        phase.value = 'idle'
-        return fail(back)
-      }
-    } catch {
-      phase.value = 'idle'
-      toast.show({
-        title: 'That didn’t save',
-        description: 'Your changes are still here.',
-        tone: 'critical',
-        action: { label: 'Retry', onClick: save },
-      })
-      return
-    }
-    if (errors) errors.value = {}
-    fixes.value = 0
-    base.value = now
-    phase.value = 'saved'
-    timer = setTimeout(() => (phase.value = 'idle'), SAVED_MS)
-  }
-  const discard = () => {
-    box.value = base.value
-    if (errors) errors.value = {}
-    fixes.value = 0
-    onDiscard?.()
-  }
-  const leave = () => {
-    leaving.value = false
-    discard()
-    if (onLeave) onLeave(target)
-    else el?.ownerDocument.defaultView?.location.assign(target)
-  }
-  use(
-    leaveGuard,
-    () => el,
-    () => ({
-      dirty: dirty.value,
-      onAttempt: (href: string) => {
-        target = href
-        leaving.value = true
-      },
-    }),
+  const { save, discard, leave } = saveActions(
+    { box, base, phase, fixes, leaving, dirty, refs },
+    () => errors,
+    () => validate,
+    () => onSave,
+    () => onDiscard,
+    () => onLeave,
   )
-  use(
-    (node: HTMLDivElement) => {
-      const form = node.closest('form')
-      const submit = (e: Event) => {
-        e.preventDefault()
-        void save()
-      }
-      form?.addEventListener('submit', submit)
-      return { update() {}, destroy: () => form?.removeEventListener('submit', submit) }
-    },
-    () => el,
-  )
+  bindSaveBar(refs, dirty, leaving, save)
   return (
     <>
       <div
-        ref={(n) => (el = n)}
+        ref={(n) => (refs.el = n)}
         data-scope="save-bar"
         data-open={dirty.value || phase.value !== 'idle' ? '' : undefined}
         role="region"
@@ -174,5 +112,36 @@ export function SaveBar<T extends Record<string, unknown>>({
         onConfirm={leave}
       />
     </>
+  )
+}
+
+function bindSaveBar(
+  refs: { target: string; el?: HTMLDivElement | undefined },
+  dirty: { readonly value: boolean },
+  leaving: State<boolean>,
+  save: () => Promise<void>,
+) {
+  use(
+    leaveGuard,
+    () => refs.el,
+    () => ({
+      dirty: dirty.value,
+      onAttempt: (href: string) => {
+        refs.target = href
+        leaving.value = true
+      },
+    }),
+  )
+  use(
+    (node: HTMLDivElement) => {
+      const form = node.closest('form')
+      const submit = (e: Event) => {
+        e.preventDefault()
+        void save()
+      }
+      form?.addEventListener('submit', submit)
+      return { update() {}, destroy: () => form?.removeEventListener('submit', submit) }
+    },
+    () => refs.el,
   )
 }
