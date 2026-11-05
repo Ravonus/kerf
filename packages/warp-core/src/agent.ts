@@ -1,9 +1,7 @@
 // The warp-core half of the agent pack (07 §1): pure logic and actions, no framework. `foldAnswer` is the one path from
 // an event stream to what the UI draws, so replay, reconnect and SSR hydration all render the same value.
-import { nextIndex } from './focus'
-import { place, pushLayer } from './layers'
-import { announce } from './toast'
-import { installSweep } from './sweep'
+import type { TraceRow } from './agent-trace'
+import { formatSeconds, formatTokens } from './agent-format'
 
 /** Where a tool call stands. */
 export type ToolState = 'running' | 'done' | 'failed' | 'approval' | 'denied'
@@ -154,6 +152,30 @@ function settle(a: Answer): AnswerState {
 function step(a: Answer, e: AgentEvent): Answer {
   const n = { ...a }
   switch (e.kind) {
+    case 'reasoning':
+    case 'text':
+    case 'tool':
+    case 'approval':
+    case 'tool-result':
+      applyContent(a, n, e)
+      break
+    case 'question':
+    case 'source':
+    case 'plan':
+    case 'done':
+    case 'error':
+      applyOutcome(a, n, e)
+  }
+  n.state = settle(n)
+  return n
+}
+
+function applyContent(
+  a: Answer,
+  n: Answer,
+  e: Extract<AgentEvent, { kind: 'reasoning' | 'text' | 'tool' | 'approval' | 'tool-result' }>,
+) {
+  switch (e.kind) {
     case 'reasoning': {
       const last = a.blocks.at(-1)
       if (last?.kind === 'reasoning' && last.streaming)
@@ -220,6 +242,15 @@ function step(a: Answer, e: AgentEvent): Answer {
       )
       break
     }
+  }
+}
+
+function applyOutcome(
+  a: Answer,
+  n: Answer,
+  e: Extract<AgentEvent, { kind: 'question' | 'source' | 'plan' | 'done' | 'error' }>,
+) {
+  switch (e.kind) {
     case 'question': {
       const has = a.blocks.some((b) => b.kind === 'question' && b.id === e.id)
       if (has)
@@ -291,8 +322,6 @@ function step(a: Answer, e: AgentEvent): Answer {
       )
       break
   }
-  n.state = settle(n)
-  return n
 }
 
 /**
@@ -305,68 +334,8 @@ export function foldAnswer(a: AgentEvent[] | Answer | undefined, e?: AgentEvent)
   return Array.isArray(a) ? a.reduce(step, emptyAnswer()) : step(a ?? emptyAnswer(), e!)
 }
 
-// ---- text: a minimal safe default until warp has a Markdown component ----------------------------------------------
-
-/** A block of answer text once parsed. */
-export type TextBlock =
-  | { kind: 'p'; at: number; text: string }
-  | { kind: 'ul'; at: number; items: { at: number; text: string }[] }
-  | { kind: 'code'; at: number; lang: string; text: string; open: boolean }
-/** A run of inline answer text: plain, code, or a citation number. */
-export type Inline =
-  | { kind: 'text' | 'code'; at: number; text: string }
-  | { kind: 'cite'; at: number; n: number }
-
-/** Paragraphs, `- ` lists and code fences. A fence with no close yet is already a code block (07 §1.3). */
-export function parseText(text: string): TextBlock[] {
-  const out: TextBlock[] = []
-  const lines = text.split('\n')
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]!
-    const fence = /^```(\S*)/.exec(line)
-    if (fence) {
-      const body: string[] = []
-      let j = i + 1
-      while (j < lines.length && !/^```\s*$/.test(lines[j]!)) body.push(lines[j++]!)
-      out.push({
-        kind: 'code',
-        at: i,
-        lang: fence[1]!,
-        text: body.join('\n'),
-        open: j >= lines.length,
-      })
-      i = j
-    } else if (/^[-*] /.test(line)) {
-      const last = out.at(-1)
-      const item = { at: i, text: line.slice(2) }
-      if (last?.kind === 'ul' && lines[i - 1] !== '') last.items.push(item)
-      else out.push({ kind: 'ul', at: i, items: [item] })
-    } else if (line.trim()) {
-      const last = out.at(-1)
-      if (last?.kind === 'p' && lines[i - 1]!.trim()) last.text += `\n${line}`
-      else out.push({ kind: 'p', at: i, text: line })
-    }
-  }
-  return out
-}
-
-/** Inline code and `[n]` cites; everything else stays text, so nothing in a model's output becomes markup. */
-export function parseInline(text: string): Inline[] {
-  const out: Inline[] = []
-  const re = /`([^`\n]+)`|\[(\d+)\]/g
-  let from = 0
-  for (let m = re.exec(text); m; m = re.exec(text)) {
-    if (m.index > from) out.push({ kind: 'text', at: from, text: text.slice(from, m.index) })
-    out.push(
-      m[1] !== undefined
-        ? { kind: 'code', at: m.index, text: m[1] }
-        : { kind: 'cite', at: m.index, n: Number(m[2]) },
-    )
-    from = m.index + m[0].length
-  }
-  if (from < text.length) out.push({ kind: 'text', at: from, text: text.slice(from) })
-  return out
-}
+export { parseText, parseInline } from './agent-text'
+export type { TextBlock, Inline } from './agent-text'
 
 /** All the answer's text, for Copy. */
 export const answerText = (a: Answer) =>
@@ -374,14 +343,7 @@ export const answerText = (a: Answer) =>
 
 // ---- small rules -----------------------------------------------------------------------------------------------------
 
-/** Milliseconds as seconds, to a tenth. */
-export const formatSeconds = (ms: number) => `${(ms / 1000).toFixed(1)} s`
-/** Seconds as m:ss. */
-export const formatClock = (sec: number) =>
-  `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`
-/** A token count, shortened to k or M. */
-export const formatTokens = (n: number) =>
-  n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n)
+export { formatSeconds, formatClock, formatTokens, contextLevel } from './agent-format'
 
 /** What a ToolCall says: the short status at its end, and the words only a screen reader gets before it. */
 export function toolStatus(t: AgentTool) {
@@ -409,121 +371,10 @@ export function toolStatus(t: AgentTool) {
   return { status, word }
 }
 
-/** 07 §1.2: high at 80%, full at 95%. */
-export const contextLevel = (ratio: number) =>
-  ratio >= 0.95 ? 'full' : ratio >= 0.8 ? 'high' : undefined
+export { argsDiff, suggestQuery, applySuggest } from './agent-edit'
 
-/** The changed lines between two argument texts, as "- " and "+ " lines; empty when they match (07 §1.3). */
-export function argsDiff(before: string, after: string): string[] {
-  if (before === after) return []
-  const a = before.split('\n'),
-    b = after.split('\n')
-  const lcs = a.map(() => Array<number>(b.length + 1).fill(0))
-  lcs.push(Array<number>(b.length + 1).fill(0))
-  for (let i = a.length - 1; i >= 0; i--)
-    for (let j = b.length - 1; j >= 0; j--)
-      lcs[i]![j] =
-        a[i] === b[j] ? lcs[i + 1]![j + 1]! + 1 : Math.max(lcs[i + 1]![j]!, lcs[i]![j + 1]!)
-  const out: string[] = []
-  let i = 0,
-    j = 0
-  while (i < a.length || j < b.length) {
-    if (i < a.length && j < b.length && a[i] === b[j]) {
-      i++
-      j++
-    } else if (j >= b.length || (i < a.length && lcs[i + 1]![j]! >= lcs[i]![j + 1]!))
-      out.push(`- ${a[i++]}`)
-    else out.push(`+ ${b[j++]}`)
-  }
-  return out
-}
-
-/** The open `/` or `@` token at the caret: `/` only at the start of the message, `@` at the start of a word. */
-export function suggestQuery(text: string, caret: number) {
-  const m = /(^|\s)([/@])([^\s/@]*)$/.exec(text.slice(0, caret))
-  if (!m || (m[2] === '/' && m.index + m[1]!.length !== 0)) return null
-  return { trigger: m[2] as '/' | '@', query: m[3]!.toLowerCase(), start: m.index + m[1]!.length }
-}
-
-/** Replace the token from `start` to the caret with `value` plus a space. */
-export function applySuggest(text: string, start: number, caret: number, value: string) {
-  const head = text.slice(0, start) + value + ' '
-  return { text: head + text.slice(caret), caret: head.length }
-}
-
-// ---- trace ---------------------------------------------------------------------------------------------------------
-
-/** One span of an agent run, with its children. */
-export interface TraceSpan {
-  id: string
-  name: string
-  start: number
-  ms: number
-  tokens?: number | undefined
-  cost?: number | undefined
-  children?: TraceSpan[]
-}
-/** A span flattened for the tree grid, carrying its level and place among its siblings. */
-export interface TraceRow {
-  id: string
-  name: string
-  ms: number
-  tokens?: number | undefined
-  cost?: number | undefined
-  level: number
-  pos: number
-  size: number
-  parent?: string | undefined
-  branch: boolean
-  open: boolean
-  x: number
-  w: number
-  color: number
-}
-
-/** The visible rows of a span tree in order, on one time axis: x and w are fractions of the whole run. */
-export function traceRows(
-  spans: TraceSpan[],
-  collapsed: ReadonlySet<string> = new Set(),
-): TraceRow[] {
-  let lo = Infinity,
-    hi = -Infinity
-  const scan = (s: TraceSpan) => {
-    lo = Math.min(lo, s.start)
-    hi = Math.max(hi, s.start + s.ms)
-    s.children?.forEach(scan)
-  }
-  spans.forEach(scan)
-  const span = hi - lo || 1
-  const rows: TraceRow[] = []
-  let order = 0
-  const walk = (list: TraceSpan[], level: number, parent: string | undefined, show: boolean) =>
-    list.forEach((s, i) => {
-      const color = (order++ % 8) + 1
-      const branch = !!s.children?.length,
-        open = branch && !collapsed.has(s.id)
-      if (show)
-        rows.push({
-          id: s.id,
-          name: s.name,
-          ms: s.ms,
-          tokens: s.tokens,
-          cost: s.cost,
-          level,
-          pos: i + 1,
-          size: list.length,
-          parent,
-          branch,
-          open,
-          x: (s.start - lo) / span,
-          w: s.ms / span,
-          color,
-        })
-      if (branch) walk(s.children!, level + 1, s.id, show && open)
-    })
-  walk(spans, 1, undefined, true)
-  return rows
-}
+export { traceRows, traceKey } from './agent-trace'
+export type { TraceSpan, TraceRow } from './agent-trace'
 
 /** A span's time, tokens and cost as one line. */
 export const traceSummary = (r: Pick<TraceRow, 'ms' | 'tokens' | 'cost'>) =>
@@ -535,308 +386,15 @@ export const traceSummary = (r: Pick<TraceRow, 'ms' | 'tokens' | 'cost'>) =>
     .filter(Boolean)
     .join(' · ')
 
-/** APG treegrid keys over visible rows: which row to focus, or which branch to toggle. */
-export function traceKey(
-  key: string,
-  rows: TraceRow[],
-  at: number,
-  rtl = false,
-): { focus?: string | undefined; toggle?: string } | null {
-  const row = rows[at]!
-  const [open, close] = rtl ? ['ArrowLeft', 'ArrowRight'] : ['ArrowRight', 'ArrowLeft']
-  if (key === 'Enter' || key === ' ') return row.branch ? { toggle: row.id } : {}
-  if (key === open)
-    return row.branch && !row.open
-      ? { toggle: row.id }
-      : row.branch
-        ? { focus: rows[at + 1]?.id }
-        : {}
-  if (key === close)
-    return row.branch && row.open ? { toggle: row.id } : row.parent ? { focus: row.parent } : {}
-  const to = nextIndex(key, at, rows.length, { orientation: 'vertical' })
-  return to < 0 ? null : { focus: rows[to]!.id }
-}
-
-// ---- actions ---------------------------------------------------------------------------------------------------------
-
-/** Options for sticking to the bottom: how near counts, and who hears when the reader moves away. */
-export interface StickOptions {
-  threshold?: number
-  onAway(away: boolean): void
-}
-
-/**
- * Keep a scroller at its bottom while the user is within `threshold` px of it (48, 07 §1.3). Reports when they leave,
- * so a binding can show Jump to latest. New content never moves someone who has scrolled up.
- */
-export function stick(el: HTMLElement, opts: StickOptions) {
-  let o = opts
-  let pinned = true
-  const win = el.ownerDocument.defaultView as Window & typeof globalThis
-  const near = () => el.scrollHeight - el.scrollTop - el.clientHeight <= (o.threshold ?? 48)
-  const bottom = () => {
-    el.scrollTop = el.scrollHeight
-  }
-  const grew = () => {
-    if (pinned) bottom()
-    else o.onAway(!near())
-  }
-  const onScroll = () => {
-    pinned = near()
-    o.onAway(!pinned)
-  }
-  el.addEventListener('scroll', onScroll, { passive: true })
-  const mo = new win.MutationObserver(grew)
-  mo.observe(el, { subtree: true, childList: true, characterData: true })
-  const ro = win.ResizeObserver ? new win.ResizeObserver(grew) : undefined
-  ro?.observe(el)
-  bottom()
-  return {
-    update(next: StickOptions) {
-      o = next
-    },
-    destroy() {
-      el.removeEventListener('scroll', onScroll)
-      mo.disconnect()
-      ro?.disconnect()
-    },
-  }
-}
-
-/** Options for a citation link: the panel it opens, and who hears when it does. */
-export interface CiteOptions {
-  panel: HTMLElement
-  onOpen(open: boolean): void
-}
-
-/** The preview of a citation (07 §1.3): opens on hover and keyboard focus, stays while the pointer or focus is in it. */
-export function citePreview(link: HTMLElement, opts: CiteOptions) {
-  let o = opts
-  let timer: ReturnType<typeof setTimeout> | undefined
-  let remove: (() => void) | undefined
-  const later = (fn: () => void, ms: number) => {
-    clearTimeout(timer)
-    timer = setTimeout(fn, ms)
-  }
-  const inside = (n: EventTarget | null) =>
-    n instanceof Node && (o.panel.contains(n) || link.contains(n))
-  function hide() {
-    clearTimeout(timer)
-    if (!remove) return
-    remove()
-    remove = undefined
-    if (o.panel.matches?.(':popover-open')) o.panel.hidePopover?.()
-    o.onOpen(false)
-  }
-  const show = () => {
-    clearTimeout(timer)
-    if (remove) return
-    o.panel.showPopover?.()
-    place(o.panel, link, 'top', 'start', 6)
-    remove = pushLayer({ el: o.panel, trigger: link, passive: true, close: hide })
-    o.onOpen(true)
-  }
-  const leave = () =>
-    later(() => {
-      if (
-        !link.matches(':hover') &&
-        !o.panel.matches(':hover') &&
-        !o.panel.contains(link.ownerDocument.activeElement) &&
-        link.ownerDocument.activeElement !== link
-      )
-        hide()
-    }, 120)
-  const enter = (e: PointerEvent) => {
-    if (e.pointerType !== 'touch') later(show, 250)
-  }
-  const focus = () => {
-    if (link.matches(':focus-visible')) show()
-  }
-  const out = (e: FocusEvent) => {
-    if (!inside(e.relatedTarget)) hide()
-  }
-  const on: [EventTarget, string, (e: never) => void][] = [
-    [link, 'pointerenter', enter],
-    [link, 'pointerleave', leave],
-    [o.panel, 'pointerleave', leave],
-    [link, 'focusin', focus],
-    [link, 'focusout', out],
-    [o.panel, 'focusout', out],
-    [link, 'click', hide],
-  ]
-  for (const [t, n, f] of on) t.addEventListener(n, f as EventListener)
-  return {
-    update(next: CiteOptions) {
-      o = next
-    },
-    destroy() {
-      for (const [t, n, f] of on) t.removeEventListener(n, f as EventListener)
-      clearTimeout(timer)
-      remove?.()
-    },
-  }
-}
-
-/** Where `field-sizing: content` is missing, grow a textarea by hand; its CSS max still caps it at 8 lines. */
-export function autosize(el: HTMLTextAreaElement, _value?: string) {
-  const css = el.ownerDocument.defaultView?.CSS
-  const native = !css?.supports || css.supports('field-sizing', 'content')
-  const fit = () => {
-    if (native) return
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
-  }
-  el.addEventListener('input', fit)
-  fit()
-  return { update: fit, destroy: () => el.removeEventListener('input', fit) }
-}
-
-/** Copy, confirm one sweep on `host`, and say so (05 Copy, 07 §6.4). */
-export async function copyConfirm(el: Element, text: string, host: Element = el) {
-  const doc = el.ownerDocument
-  try {
-    await doc.defaultView?.navigator.clipboard?.writeText(text)
-    installSweep(doc).confirm(host)
-    announce(doc, 'Copied to clipboard')
-  } catch {
-    announce(doc, 'Could not copy', true)
-  }
-}
-
-/** The listening wave: the newest level enters at the start and the bars carry it along. */
-export function speechWave(el: HTMLElement, _level?: number) {
-  const bars = [...el.children] as HTMLElement[]
-  const values = bars.map(() => 0)
-  const push = (v: number) => {
-    values.pop()
-    values.unshift(v)
-    bars.forEach((b, i) => b.style.setProperty('--a', values[i]!.toFixed(2)))
-  }
-  return { update: push, destroy() {} }
-}
+export { stick, citePreview, autosize, copyConfirm, speechWave } from './agent-actions'
+export type { StickOptions, CiteOptions } from './agent-actions'
 
 // ---- dictation: the browser's speech recognition behind SpeechInput ---------------------------------------------------
 
-/** What dictation is doing. */
-export type DictationState = 'idle' | 'listening' | 'blocked' | 'unsupported'
-/** What dictation reports: its state, the words so far, and the mic level. */
-export interface DictationEvents {
-  onState(s: DictationState): void
-  onTranscript(final: string, interim: string): void
-  onLevel(level: number): void
-}
-/** Dictation's controls. */
-export interface DictationEngine {
-  start(mic?: string): void
-  stop(): void
-}
-
-/** The audio inputs the browser will name (labels are empty until the mic has been allowed once). */
-export async function listMics(win: Window) {
-  const all = (await win.navigator.mediaDevices?.enumerateDevices?.().catch(() => [])) ?? []
-  return all
-    .filter((d) => d.kind === 'audioinput' && d.deviceId)
-    .map((d) => ({ value: d.deviceId, label: d.label || 'Microphone' }))
-}
-
-/** The Web Speech recogniser, which the DOM types don't carry: only what dictation touches. */
-export interface Recognizer {
-  continuous: boolean
-  interimResults: boolean
-  onresult:
-    | ((e: {
-        resultIndex: number
-        results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>
-      }) => void)
-    | null
-  onerror: ((e: { error: string }) => void) | null
-  onend: (() => void) | null
-  start(): void
-  stop(): void
-  abort?(): void
-}
-
-/** Web Speech for words, a mic stream and an analyser for the level. Blocked and unsupported are states, not throws. */
-export function dictation(
-  win: Window & {
-    SpeechRecognition?: new () => Recognizer
-    webkitSpeechRecognition?: new () => Recognizer
-    AudioContext?: typeof AudioContext
-  },
-  on: DictationEvents,
-): DictationEngine {
-  let rec: Recognizer | undefined
-  let stream: MediaStream | undefined
-  let audio: AudioContext | undefined
-  let raf = 0
-  const release = () => {
-    win.cancelAnimationFrame(raf)
-    stream?.getTracks().forEach((t) => t.stop())
-    void audio?.close?.()
-    stream = audio = undefined
-    on.onLevel(0)
-  }
-  const meter = async (mic?: string) => {
-    try {
-      stream = await win.navigator.mediaDevices?.getUserMedia({
-        audio: mic ? { deviceId: mic } : true,
-      })
-    } catch {
-      rec?.abort?.()
-      rec = undefined
-      release()
-      return on.onState('blocked')
-    }
-    if (!stream || !win.AudioContext) return
-    audio = new win.AudioContext()
-    const an = audio.createAnalyser()
-    audio.createMediaStreamSource(stream).connect(an)
-    const buf = new Uint8Array(an.fftSize)
-    const tick = () => {
-      an.getByteTimeDomainData(buf)
-      on.onLevel(Math.min(1, Math.max(...buf.map((v) => Math.abs(v - 128))) / 64))
-      raf = win.requestAnimationFrame(tick)
-    }
-    tick()
-  }
-  return {
-    start(mic) {
-      const Speech = win.SpeechRecognition ?? win.webkitSpeechRecognition
-      if (!Speech) return on.onState('unsupported')
-      let final = ''
-      rec = new Speech()
-      rec.continuous = true
-      rec.interimResults = true
-      rec.onresult = (e) => {
-        let interim = ''
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const r = e.results[i]!
-          if (r.isFinal) final += r[0]!.transcript
-          else interim += r[0]!.transcript
-        }
-        on.onTranscript(final, interim)
-      }
-      rec.onerror = (e) => {
-        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-          rec = undefined
-          release()
-          on.onState('blocked')
-        }
-      }
-      rec.onend = () => {
-        if (rec) {
-          rec = undefined
-          release()
-          on.onState('idle')
-        }
-      }
-      rec.start()
-      on.onState('listening')
-      void meter(mic)
-    },
-    stop() {
-      rec?.stop()
-      if (!rec) release()
-    },
-  }
-}
+export { dictation, listMics } from './agent-dictation'
+export type {
+  DictationState,
+  DictationEvents,
+  DictationEngine,
+  Recognizer,
+} from './agent-dictation'
