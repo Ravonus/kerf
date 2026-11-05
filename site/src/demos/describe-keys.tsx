@@ -37,7 +37,7 @@ export default function Seating() {
               {g.name}{' '}
               <input
                 aria-label={
-                  `${g.name} brings, ` + 'by position'
+                  g.name + ' brings, by position'
                 }
                 size={8}
               />
