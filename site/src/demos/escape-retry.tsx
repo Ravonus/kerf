@@ -66,7 +66,10 @@ export default function Retry() {
                 ? e.message
                 : 'Something went wrong.'}
             </p>
-            <Button size="sm" onClick={retry}>
+            <Button
+              size="sm"
+              onClick={retry}
+            >
               Try again
             </Button>
           </Stack>

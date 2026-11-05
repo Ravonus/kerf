@@ -20,7 +20,10 @@ export default function Icons() {
   const solid = state(false)
   return (
     <Card title="Icons">
-      <Row gap="group" align="baseline">
+      <Row
+        gap="group"
+        align="baseline"
+      >
         {/* The word beside it says the same, so the
             decorative icon is hidden from screen
             readers. */}
@@ -35,7 +38,10 @@ export default function Icons() {
           size={24}
         />
         {/* Hover or focus to ring the bell. */}
-        <Button emphasis="outline" tone="neutral">
+        <Button
+          emphasis="outline"
+          tone="neutral"
+        >
           <BellIconAction /> Notify me
         </Button>
       </Row>

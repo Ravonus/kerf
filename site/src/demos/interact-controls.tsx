@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { derived, state } from '@weft-js/core'
 import {
   Card,
   Input,
@@ -18,6 +18,7 @@ export default function Order() {
   const size = state<Size>('small')
   const milk = state<string | null>('oat')
   const iced = state(false)
+  const customer = derived(() => name.value || 'Someone')
   return (
     <Card title="One of each">
       <Input
@@ -69,8 +70,7 @@ export default function Order() {
         Iced
       </Switch>
       <p>
-        {name.value || 'Someone'} wants{' '}
-        {cups.value ?? 0}{' '}
+        {customer.value} wants {cups.value ?? 0}{' '}
         {size.value} {iced.value ? 'iced ' : ''}
         {milk.value === 'none'
           ? 'black'

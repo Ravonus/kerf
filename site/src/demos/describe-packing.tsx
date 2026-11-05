@@ -15,11 +15,7 @@ function Item({
       checked={packed}
       onChange={onToggle}
     >
-      {packed ? (
-        <del>{name}</del>
-      ) : (
-        name
-      )}
+      {packed ? <del>{name}</del> : name}
       {packed && <small> (packed)</small>}
     </Checkbox>
   )
