@@ -54,6 +54,144 @@ const ACCESS_OPTIONS = [
   { value: 'anyone', label: 'Anyone with link' },
 ]
 
+type ShareViewContext = {
+  readonly open: State<boolean>
+  readonly title: string
+  list: { readonly value: ShareMember[] }
+  access: { readonly value: ShareLink }
+  fresh: { readonly value: string[] }
+  typed: State<string>
+  chips: State<string[]>
+  role: State<ShareRole>
+  copied: State<boolean>
+  add: (email: string) => void
+  find: (q: string) => Promise<ShareContact[]>
+  invite: () => void
+  submit: (e: Event) => void
+  copyLink: (e: MouseEvent) => void
+  setCopy: (n: HTMLElement) => void
+  onRoleChange: ShareDialogProps['onRoleChange']
+  onLinkAccess: ShareDialogProps['onLinkAccess']
+}
+
+function memberRole(ctx: ShareViewContext, m: ShareMember) {
+  return m.role === 'owner' ? (
+    <span>Owner</span>
+  ) : (
+    <>
+      <CompactSelect
+        label={`Role for ${m.name}`}
+        value={m.role}
+        options={MEMBER_OPTIONS}
+        onValueChange={(v) => ctx.onRoleChange(m, v === 'remove' ? null : (v as ShareRole))}
+      />
+    </>
+  )
+}
+
+function shareChips(ctx: ShareViewContext) {
+  return (
+    ctx.chips.value.length > 0 && (
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-block-start:8px">
+        {ctx.chips.value.map((c) => (
+          <Tag key={c} onRemove={() => (ctx.chips.value = ctx.chips.value.filter((x) => x !== c))}>
+            {c}
+          </Tag>
+        ))}
+      </div>
+    )
+  )
+}
+
+function shareLinkRole(ctx: ShareViewContext) {
+  return (
+    ctx.access.value.access === 'anyone' && (
+      <CompactSelect
+        label="Link role"
+        value={ctx.access.value.role}
+        options={ROLE_OPTIONS}
+        onValueChange={(v) => ctx.onLinkAccess({ ...ctx.access.value, role: v as ShareRole })}
+      />
+    )
+  )
+}
+
+function shareView(ctx: ShareViewContext) {
+  return (
+    <Modal
+      open={ctx.open}
+      title={`Share “${ctx.title}”`}
+      footer={<Button onClick={() => (ctx.open.value = false)}>Done</Button>}
+    >
+      <div data-scope="share">
+        <form
+          style="display:flex;gap:8px;align-items:center"
+          onSubmit={(e: Event) => ctx.submit(e)}
+        >
+          <div style="flex:1;min-inline-size:0">
+            <ComboField
+              label="Add people or email"
+              minChars={1}
+              text={() => ctx.typed.value}
+              onText={(t) => (ctx.typed.value = t)}
+              find={ctx.find}
+              row={(p: ShareContact) => ({ main: p.name, sub: p.email })}
+              onPick={(p: ShareContact) => ctx.add(p.email)}
+            />
+          </div>
+          <CompactSelect
+            label="Role for new people"
+            value={ctx.role.value}
+            options={ROLE_OPTIONS}
+            onValueChange={(v) => (ctx.role.value = v as ShareRole)}
+          />
+          <Button onClick={ctx.invite}>Invite</Button>
+        </form>
+        {shareChips(ctx)}
+        <div>
+          {ctx.list.value.map((m) => (
+            <div
+              key={m.id}
+              data-part="person"
+              data-arrive={ctx.fresh.value.includes(m.id) ? '' : undefined}
+            >
+              <PeerAvatar peer={m} size="sm" />
+              <span>
+                {m.name}
+                <small>{m.email}</small>
+              </span>
+              {memberRole(ctx, m)}
+            </div>
+          ))}
+        </div>
+        <div data-part="link">
+          <LinkIcon />
+          <CompactSelect
+            label="Link access"
+            value={ctx.access.value.access}
+            options={ACCESS_OPTIONS}
+            onValueChange={(v) =>
+              ctx.onLinkAccess({ ...ctx.access.value, access: v as ShareLink['access'] })
+            }
+          />
+          {shareLinkRole(ctx)}
+          <span data-part="spacer" style="flex:1"></span>
+          <span ref={(n) => ctx.setCopy(n)} style="display:contents">
+            <Button
+              emphasis="outline"
+              tone="neutral"
+              size="sm"
+              onClick={(e: MouseEvent) => ctx.copyLink(e)}
+            >
+              <CopyIcon /> {ctx.copied.value ? 'Copied' : 'Copy link'}
+            </Button>
+          </span>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 /**
  * The share dialog (07 §6.2): the invite combobox with chips, a role per person, link access, Copy link with one
  * confirm sweep, and invited rows arriving.
@@ -98,112 +236,38 @@ export function ShareDialog({
     chips.value = []
     typed.value = ''
   }
-  return (
-    <Modal
-      open={open}
-      title={`Share “${title}”`}
-      footer={<Button onClick={() => (open.value = false)}>Done</Button>}
-    >
-      <div data-scope="share">
-        <form
-          style="display:flex;gap:8px;align-items:center"
-          onSubmit={(e: Event) => {
-            e.preventDefault()
-            if (typed.value.includes('@')) add(typed.value)
-            else invite()
-          }}
-        >
-          <div style="flex:1;min-inline-size:0">
-            <ComboField
-              label="Add people or email"
-              minChars={1}
-              text={() => typed.value}
-              onText={(t) => (typed.value = t)}
-              find={find}
-              row={(p: ShareContact) => ({ main: p.name, sub: p.email })}
-              onPick={(p: ShareContact) => add(p.email)}
-            />
-          </div>
-          <CompactSelect
-            label="Role for new people"
-            value={role.value}
-            options={ROLE_OPTIONS}
-            onValueChange={(v) => (role.value = v as ShareRole)}
-          />
-          <Button onClick={invite}>Invite</Button>
-        </form>
-        {chips.value.length > 0 && (
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-block-start:8px">
-            {chips.value.map((c) => (
-              <Tag key={c} onRemove={() => (chips.value = chips.value.filter((x) => x !== c))}>
-                {c}
-              </Tag>
-            ))}
-          </div>
-        )}
-        <div>
-          {list.value.map((m) => (
-            <div
-              key={m.id}
-              data-part="person"
-              data-arrive={fresh.value.includes(m.id) ? '' : undefined}
-            >
-              <PeerAvatar peer={m} size="sm" />
-              <span>
-                {m.name}
-                <small>{m.email}</small>
-              </span>
-              {m.role === 'owner' ? (
-                <span>Owner</span>
-              ) : (
-                <>
-                  <CompactSelect
-                    label={`Role for ${m.name}`}
-                    value={m.role}
-                    options={MEMBER_OPTIONS}
-                    onValueChange={(v) => onRoleChange(m, v === 'remove' ? null : (v as ShareRole))}
-                  />
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-        <div data-part="link">
-          <LinkIcon />
-          <CompactSelect
-            label="Link access"
-            value={access.value.access}
-            options={ACCESS_OPTIONS}
-            onValueChange={(v) =>
-              onLinkAccess({ ...access.value, access: v as ShareLink['access'] })
-            }
-          />
-          {access.value.access === 'anyone' && (
-            <CompactSelect
-              label="Link role"
-              value={access.value.role}
-              options={ROLE_OPTIONS}
-              onValueChange={(v) => onLinkAccess({ ...access.value, role: v as ShareRole })}
-            />
-          )}
-          <span data-part="spacer" style="flex:1"></span>
-          <span ref={(n) => (copy = n)} style="display:contents">
-            <Button
-              emphasis="outline"
-              tone="neutral"
-              size="sm"
-              onClick={(e: MouseEvent) => {
-                void navigator.clipboard?.writeText(url).catch(() => {})
-                copied.value = true
-                installSweep().confirm(e.currentTarget as Element)
-                announce((e.currentTarget as Element).ownerDocument, 'Link copied')
-              }}
-            >
-              <CopyIcon /> {copied.value ? 'Copied' : 'Copy link'}
-            </Button>
-          </span>
-        </div>
-      </div>
-    </Modal>
-  )
+  const submit = (e: Event) => {
+    e.preventDefault()
+    if (typed.value.includes('@')) add(typed.value)
+    else invite()
+  }
+  const copyLink = (e: MouseEvent) => {
+    void navigator.clipboard?.writeText(url).catch(() => {})
+    copied.value = true
+    installSweep().confirm(e.currentTarget as Element)
+    announce((e.currentTarget as Element).ownerDocument, 'Link copied')
+  }
+  return shareView({
+    get open() {
+      return open
+    },
+    get title() {
+      return title
+    },
+    list,
+    access,
+    fresh,
+    typed,
+    chips,
+    role,
+    copied,
+    add,
+    find,
+    invite,
+    submit,
+    copyLink,
+    setCopy: (n) => (copy = n),
+    onRoleChange: (m, value) => onRoleChange(m, value),
+    onLinkAccess: (value) => onLinkAccess(value),
+  })
 }
