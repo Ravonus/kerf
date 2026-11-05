@@ -292,6 +292,11 @@ right code. The API snapshots are committed.
 
 Test the bet with agents that have nothing going for them.
 
+**Scope trimmed 2026-11-05** after the first week's Codex usage ran out in a day and a half. The
+cheap-agent gauntlet is one small run, not a matrix: weft + warp only, the 6 tasks, 1 sample each,
+on `gpt-6-luna`, with the friction pass on 5 Learn pages instead of 20. The matrix against the
+React stacks waits for a later release. Size, load time and js-framework-benchmark stay in scope.
+
 **Cheap-agent gauntlet** (`evals/agent-eval`, pre-registered in research 42):
 
 - [ ] Run the matrix of weft + warp against Next + shadcn and Vite + React, on all 6 tasks, with a
