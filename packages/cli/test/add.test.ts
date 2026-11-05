@@ -26,18 +26,23 @@ const acme = {
   }),
   'node_modules/acme/plugin.mjs': plugin,
 }
-const add = (dir, name = 'acme') => addCommand(dir, name, { install: false })
-const read = (dir, file) => readFileSync(join(dir, file), 'utf8')
-const names = async (dir) => (await loadConfig(dir)).config.plugins?.map((p) => p.name)
+const add = (dir: string, name = 'acme') => addCommand(dir, name, { install: false })
+const read = (dir: string, file: string) => readFileSync(join(dir, file), 'utf8')
+const names = async (dir: string) => (await loadConfig(dir)).config.plugins?.map((p) => p.name)
 
 describe('weft add rust', () => {
+  const rustCommand = addCommand as (
+    dir: string,
+    name: string,
+    options: Record<string, unknown>,
+  ) => ReturnType<typeof addCommand>
   const app = () =>
     project({
       'package.json': JSON.stringify({ name: 'a', dependencies: { zod: '4' } }),
       'src/routes/index.tsx': 'export default () => <p />\n',
     })
-  const rust = (dir, name, options) =>
-    addCommand(dir, 'rust', { install: false, engine: name, ...options })
+  const rust = (dir: string, name: string, options?: Record<string, unknown>) =>
+    rustCommand(dir, 'rust', { install: false, engine: name, ...options })
 
   it('writes a native crate, its module and the one place targets are named', async () => {
     const dir = app()
@@ -99,7 +104,7 @@ describe('weft add tailwind', () => {
       'src/routes/_layout.tsx': "import { Link } from '@weft-js/start'\n",
       ...extra,
     })
-  const addTw = (dir, o = {}) => addCommand(dir, 'tailwind', { install: false, ...o })
+  const addTw = (dir: string, o = {}) => addCommand(dir, 'tailwind', { install: false, ...o })
 
   it('leaves the reset out of a warp app, whose components it would override', async () => {
     const dir = app({ '@weft-js/warp': '0.0.0' })
@@ -150,7 +155,7 @@ describe('weft add db', () => {
       'src/routes/index.tsx': 'export default () => null\n',
       ...extra,
     })
-  const addDb = (dir, o = {}) => addCommand(dir, 'db', { install: false, ...o })
+  const addDb = (dir: string, o = {}) => addCommand(dir, 'db', { install: false, ...o })
   registerDbWiringTests(app, addDb)
   registerDbPluginTests()
 })
@@ -266,7 +271,7 @@ function registerAddUpdatesTests() {
     )
     mkdirSync(join(dir, 'pkg'))
     for (const [file, text] of Object.entries(acme))
-      writeFileSync(join(dir, 'pkg', file.split('/').at(-1)), text)
+      writeFileSync(join(dir, 'pkg', file.split('/').at(-1)!), text)
     const path = process.env.PATH
     process.env.PATH = `${bin}:${path}`
     try {
@@ -316,7 +321,9 @@ function registerAddAuthTests() {
       'package.json': '{"name":"a","dependencies":{}}\n',
     })
     await add(dir, 'db')
-    const next = (await add(dir, 'auth')).actions.filter((a) => a.startsWith('next:')).join('\n')
+    const next = (await add(dir, 'auth')).actions
+      .filter((a: string) => a.startsWith('next:'))
+      .join('\n')
     for (const [, command] of next.matchAll(/weft db (\w+)/g))
       expect(DB_COMMANDS).toContain(command)
     expect(next).toContain('applies on the next request')
@@ -339,11 +346,14 @@ function registerAddAuthTests() {
           named.push(`${command} in ${f.name}`)
       }
     }
-    expect(named.filter((n) => !DB_COMMANDS.includes(n.split(' ')[0]))).toEqual([])
+    expect(named.filter((n) => !DB_COMMANDS.includes(n.split(' ')[0]!))).toEqual([])
   })
 }
 
-function registerDbWiringTests(app, addDb) {
+function registerDbWiringTests(
+  app: (extra?: Record<string, string>) => string,
+  addDb: (dir: string, options?: object) => ReturnType<typeof addCommand>,
+) {
   it('writes the wiring and no todo app; a layer brings its plugin', async () => {
     const dir = app({
       'weft.config.ts': 'export default {}\n',
@@ -395,7 +405,7 @@ function registerDbWiringTests(app, addDb) {
 function registerDbPluginTests() {
   describe('a plugin with `setup`', () => {
     const source = `import { definePlugin } from '@weft-js/core/plugin'\nconst setup = { needs: ['db'], with: ['helper'], run: ({ engine, read }) => ({ files: { 'src/kit.server.ts': \`// \${engine}\\n\` }, edits: { 'src/env.server.ts': read('src/env.server.ts') + '// kit\\n' }, env: { KIT_KEY: 'placeholder' }, next: ['\`weft kit\`'] }) }\nexport default definePlugin({ name: 'kit', contribute: () => ({ setup }) })\n`
-    const pkg = (name, text) => ({
+    const pkg = (name: string, text: string) => ({
       [`node_modules/${name}/package.json`]: JSON.stringify({
         name,
         type: 'module',
