@@ -148,27 +148,132 @@ function Toggles() {
   )
 }
 
+function sortbarSample() {
+  return box(
+    'sortbar',
+    342,
+    <Table
+      caption="Narrow"
+      rows={rows}
+      columns={columns}
+      picker={false}
+      sort={state({ id: 'cost', dir: 'ascending' as const })}
+    />,
+  )
+}
+
+function wideSample() {
+  return box(
+    'wide',
+    420,
+    <Table caption="Wide" rows={wideRows} columns={WIDE} picker={false} phone="columns" />,
+  )
+}
+
+function rowsSample() {
+  return box(
+    'rows',
+    420,
+    <>
+      <Textarea label="Notes" rows={5} />
+      <Textarea label="Short" />
+    </>,
+  )
+}
+
+function tlPhoneSample() {
+  return box(
+    'tl-phone',
+    326,
+    cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }),
+  )
+}
+
+function tlDeskSample() {
+  return box(
+    'tl-desk',
+    598,
+    cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }),
+  )
+}
+
+function rteBubbleSample() {
+  return box(
+    'rte-bubble',
+    520,
+    <RichTextEditor
+      label="Release notes"
+      toolbar="bubble"
+      defaultValue="<p>Select some of this text to see the toolbar.</p>"
+    />,
+  )
+}
+
+function pagerWideSample() {
+  return box(
+    'pager-wide',
+    760,
+    <PaginationBar label="Projects" total={240} size={10} defaultPage={8} />,
+  )
+}
+
+function pagerMidSample() {
+  return box(
+    'pager-mid',
+    598,
+    <PaginationBar label="Projects" total={240} size={10} defaultPage={8} />,
+  )
+}
+
+function weekPhoneSample() {
+  return box(
+    'week-phone',
+    358,
+    cal({ views: ['week', 'day', 'month'], defaultView: 'week', workingHours: [540, 1080] }),
+  )
+}
+
+function dayPhoneSample() {
+  return box(
+    'day-phone',
+    358,
+    cal({ views: ['day', 'week'], defaultView: 'day', workingHours: [540, 1080] }),
+  )
+}
+
+function weekFreeSample() {
+  return box(
+    'week-free',
+    900,
+    cal({ views: ['week', 'day'], defaultView: 'week', workingHours: [540, 1080] }),
+  )
+}
+
+function webhookSamples() {
+  return [
+    ['hooks-desk', 760],
+    ['hooks-phone', 340],
+  ].map(([id, w]) =>
+    box(
+      id as string,
+      w as number,
+      <Webhooks
+        hooks={HOOKS}
+        events={['deploy.succeeded']}
+        onAdd={() => Promise.resolve('whsec_x')}
+        onTest={() => Promise.resolve({ status: 200, ms: 1 })}
+      />,
+    ),
+  )
+}
+
 render(
   () => (
     <>
       <Toggles />
-      {box(
-        'sortbar',
-        342,
-        <Table
-          caption="Narrow"
-          rows={rows}
-          columns={columns}
-          picker={false}
-          sort={state({ id: 'cost', dir: 'ascending' as const })}
-        />,
-      )}
+      {sortbarSample()}
       {box('pager', 360, <PaginationBar total={200} size={25} />)}
-      {box(
-        'wide',
-        420,
-        <Table caption="Wide" rows={wideRows} columns={WIDE} picker={false} phone="columns" />,
-      )}
+      {wideSample()}
       {box('board', 600, <Kanban label="Board" columns={BOARD} height="240px" />)}
       <div id="solid" data-expression="vivid" style="padding:16px">
         <Button>Deploy now</Button>
@@ -179,24 +284,9 @@ render(
       <div id="code-vivid" data-expression="vivid" style="padding:16px;inline-size:480px">
         <CodeBlock code="import { Button } from '@weft-js/warp'" />
       </div>
-      {box(
-        'rows',
-        420,
-        <>
-          <Textarea label="Notes" rows={5} />
-          <Textarea label="Short" />
-        </>,
-      )}
-      {box(
-        'tl-phone',
-        326,
-        cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }),
-      )}
-      {box(
-        'tl-desk',
-        598,
-        cal({ views: ['timeline', 'day'], defaultView: 'timeline', timeline: [540, 1020] }),
-      )}
+      {rowsSample()}
+      {tlPhoneSample()}
+      {tlDeskSample()}
       <div id="month" style="inline-size:598px;block-size:616px">
         {cal({ views: ['month', 'agenda'], defaultView: 'month' })}
       </div>
@@ -211,21 +301,7 @@ render(
           </div>
         ))}
       </div>
-      {[
-        ['hooks-desk', 760],
-        ['hooks-phone', 340],
-      ].map(([id, w]) =>
-        box(
-          id as string,
-          w as number,
-          <Webhooks
-            hooks={HOOKS}
-            events={['deploy.succeeded']}
-            onAdd={() => Promise.resolve('whsec_x')}
-            onTest={() => Promise.resolve({ status: 200, ms: 1 })}
-          />,
-        ),
-      )}
+      {webhookSamples()}
       <div id="inline-overlays" style="display:grid;gap:24px;inline-size:520px;padding:16px">
         <div id="in-modal">
           <Modal
@@ -257,40 +333,12 @@ render(
           </Tooltip>
         </div>
       </div>
-      {box(
-        'rte-bubble',
-        520,
-        <RichTextEditor
-          label="Release notes"
-          toolbar="bubble"
-          defaultValue="<p>Select some of this text to see the toolbar.</p>"
-        />,
-      )}
-      {box(
-        'pager-wide',
-        760,
-        <PaginationBar label="Projects" total={240} size={10} defaultPage={8} />,
-      )}
-      {box(
-        'pager-mid',
-        598,
-        <PaginationBar label="Projects" total={240} size={10} defaultPage={8} />,
-      )}
-      {box(
-        'week-phone',
-        358,
-        cal({ views: ['week', 'day', 'month'], defaultView: 'week', workingHours: [540, 1080] }),
-      )}
-      {box(
-        'day-phone',
-        358,
-        cal({ views: ['day', 'week'], defaultView: 'day', workingHours: [540, 1080] }),
-      )}
-      {box(
-        'week-free',
-        900,
-        cal({ views: ['week', 'day'], defaultView: 'week', workingHours: [540, 1080] }),
-      )}
+      {rteBubbleSample()}
+      {pagerWideSample()}
+      {pagerMidSample()}
+      {weekPhoneSample()}
+      {dayPhoneSample()}
+      {weekFreeSample()}
     </>
   ),
   document.getElementById('app')!,
