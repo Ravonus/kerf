@@ -1,3 +1,4 @@
+import { esc as escapeHtml } from '@weft-js/core/markup'
 import { createHash } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -84,7 +85,7 @@ function learnBlocks(md, slugs, demoIds) {
   flush()
   return { box, blocks, toc: r.toc }
 }
-const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const esc = (t) => escapeHtml(t, 'text')
 
 /** Learn: the tutorial pages, in order, with prev and next running straight through the chapters. */
 function buildLearn(reference) {
