@@ -148,33 +148,12 @@ export function ComponentPage(props: { data: Page }) {
             {d.playground && <a href="#playground">Try it</a>}
           </p>
         </header>
-        {d.hero && (
-          <section id="preview" data-site="tk-default" aria-labelledby="preview-t">
-            <h2 id="preview-t" data-part="sr-only">
-              Preview
-            </h2>
-            <ExampleFrame file={d.file} example={d.hero} hero flow={FLOW[d.area as Area]} />
-          </section>
-        )}
+        {d.hero && <HeroContent data={d} />}
         <section id="installation" data-site="tk-section">
           <h2 data-flow="heading">Installation</h2>
           <Install />
         </section>
-        {d.playground && (
-          <section id="playground" data-site="tk-section" data-try="">
-            <h2 data-flow="heading">Try it</h2>
-            <p data-part="note" data-flow="item">
-              Change the controls: the preview and its code update together. The address keeps what
-              you set, so you can link to it.
-            </p>
-            <Playground
-              file={d.file}
-              name={d.name}
-              play={d.playground}
-              flow={FLOW[d.area as Area]}
-            />
-          </section>
-        )}
+        {d.playground && <PlaygroundContent data={d} />}
         <section id="usage" data-site="tk-section">
           <h2 data-flow="heading">Usage</h2>
           <div
@@ -185,74 +164,8 @@ export function ComponentPage(props: { data: Page }) {
         {d.sections.map((s) => (
           <DocSection key={s.title} file={d.file} section={s} flow={FLOW[d.area as Area]} />
         ))}
-        {d.use && (
-          <section id="when-to-use" data-site="tk-section">
-            <h2 data-flow="heading">When to use</h2>
-            <div data-part="use" data-flow="item">
-              <div>
-                <h3 data-flow="heading">Use it for</h3>
-                <ul>
-                  {d.use.when.map((w) => (
-                    <li key={w}>{w}</li>
-                  ))}
-                </ul>
-              </div>
-              {d.use.instead?.length ? (
-                <div>
-                  <h3 data-flow="heading">Reach for something else</h3>
-                  <ul>
-                    {d.use.instead.map((x) => (
-                      <li key={x.name}>
-                        <Link href={x.href}>{x.name}</Link>, when {x.why}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-            </div>
-          </section>
-        )}
-        {(d.keyboard || d.a11yNotes) && (
-          <section id="accessibility" data-site="tk-section">
-            <h2 data-flow="heading">Accessibility</h2>
-            {d.keyboard && (
-              <dl data-part="keys" data-flow="item">
-                {d.keyboard.map(([keys, does]) => (
-                  <div key={keys}>
-                    <dt>
-                      {chords(keys).map((alt, i) => (
-                        <span key={i} data-part="chord">
-                          {i > 0 && <span data-part="key-word">or</span>}
-                          {alt.map((t, j) =>
-                            t.kind === 'key' ? (
-                              <Kbd key={j}>{t.text}</Kbd>
-                            ) : (
-                              <span key={j} data-part="key-word">
-                                {t.text}
-                              </span>
-                            ),
-                          )}
-                        </span>
-                      ))}
-                    </dt>
-                    <dd>{does}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-            {d.a11yNotes && (
-              <ul data-part="notes" data-flow="item">
-                {d.a11yNotes.map((n) => (
-                  <li
-                    key={n}
-                    // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
-                    innerHTML={n}
-                  ></li>
-                ))}
-              </ul>
-            )}
-          </section>
-        )}
+        {d.use && <UsageContent data={d} />}
+        {(d.keyboard || d.a11yNotes) && <AccessibilityContent data={d} />}
         <section id="api-reference" data-site="tk-section">
           <h2 data-flow="heading">API Reference</h2>
           {d.groups.length ? (
@@ -262,22 +175,7 @@ export function ComponentPage(props: { data: Page }) {
               Takes no props.
             </p>
           )}
-          {d.parts.length > 0 && (
-            <>
-              <h3 data-flow="heading">Parts</h3>
-              <p data-part="note" data-flow="item">
-                Every element carries a stable name, so you can style it from your own CSS:{' '}
-                <code data-scope="code">{`[data-scope="${d.scope ?? d.slug}"] [data-part="${d.parts[0]}"]`}</code>
-              </p>
-              <p data-part="chips" data-flow="item">
-                {d.parts.map((p) => (
-                  <code key={p} data-scope="code">
-                    {p}
-                  </code>
-                ))}
-              </p>
-            </>
-          )}
+          {d.parts.length > 0 && <PartsContent data={d} />}
           {d.related.length > 0 && (
             <p data-part="chips" data-site="related" data-flow="item">
               <span>Related</span>
@@ -306,5 +204,127 @@ export function ComponentPage(props: { data: Page }) {
       </article>
       {d.area !== 'blocks' && d.toc.length > 0 && <Toc items={d.toc} />}
     </>
+  )
+}
+
+function UsageContent(props: { data: Page }) {
+  const d = props.data
+  return (
+    <section id="when-to-use" data-site="tk-section">
+      <h2 data-flow="heading">When to use</h2>
+      <div data-part="use" data-flow="item">
+        <div>
+          <h3 data-flow="heading">Use it for</h3>
+          <ul>
+            {d.use!.when.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </div>
+        {d.use!.instead?.length ? (
+          <div>
+            <h3 data-flow="heading">Reach for something else</h3>
+            <ul>
+              {d.use!.instead.map((x) => (
+                <li key={x.name}>
+                  <Link href={x.href}>{x.name}</Link>, when {x.why}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  )
+}
+
+function AccessibilityContent(props: { data: Page }) {
+  const d = props.data
+  return (
+    <section id="accessibility" data-site="tk-section">
+      <h2 data-flow="heading">Accessibility</h2>
+      {d.keyboard && (
+        <dl data-part="keys" data-flow="item">
+          {d.keyboard.map(([keys, does]) => (
+            <div key={keys}>
+              <dt>
+                {chords(keys).map((alt, i) => (
+                  <span key={i} data-part="chord">
+                    {i > 0 && <span data-part="key-word">or</span>}
+                    {alt.map((t, j) =>
+                      t.kind === 'key' ? (
+                        <Kbd key={j}>{t.text}</Kbd>
+                      ) : (
+                        <span key={j} data-part="key-word">
+                          {t.text}
+                        </span>
+                      ),
+                    )}
+                  </span>
+                ))}
+              </dt>
+              <dd>{does}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {d.a11yNotes && (
+        <ul data-part="notes" data-flow="item">
+          {d.a11yNotes.map((n) => (
+            <li
+              key={n}
+              // oxlint-disable-next-line weft/no-html-sink -- rendered at build time from warp's own docs
+              innerHTML={n}
+            ></li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+function PartsContent(props: { data: Page }) {
+  const d = props.data
+  return (
+    <>
+      <h3 data-flow="heading">Parts</h3>
+      <p data-part="note" data-flow="item">
+        Every element carries a stable name, so you can style it from your own CSS:{' '}
+        <code data-scope="code">{`[data-scope="${d.scope ?? d.slug}"] [data-part="${d.parts[0]}"]`}</code>
+      </p>
+      <p data-part="chips" data-flow="item">
+        {d.parts.map((p) => (
+          <code key={p} data-scope="code">
+            {p}
+          </code>
+        ))}
+      </p>
+    </>
+  )
+}
+
+function HeroContent(props: { data: Page }) {
+  const d = props.data
+  return (
+    <section id="preview" data-site="tk-default" aria-labelledby="preview-t">
+      <h2 id="preview-t" data-part="sr-only">
+        Preview
+      </h2>
+      <ExampleFrame file={d.file} example={d.hero!} hero flow={FLOW[d.area as Area]} />
+    </section>
+  )
+}
+
+function PlaygroundContent(props: { data: Page }) {
+  const d = props.data
+  return (
+    <section id="playground" data-site="tk-section" data-try="">
+      <h2 data-flow="heading">Try it</h2>
+      <p data-part="note" data-flow="item">
+        Change the controls: the preview and its code update together. The address keeps what you
+        set, so you can link to it.
+      </p>
+      <Playground file={d.file} name={d.name} play={d.playground!} flow={FLOW[d.area as Area]} />
+    </section>
   )
 }
