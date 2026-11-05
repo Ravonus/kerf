@@ -1,0 +1,58 @@
+[
+  {
+    "name": "color-font.mjs",
+    "begin": 0,
+    "end": 24116,
+    "prefix": "\n",
+    "suffix": "\n\nexport {\n  DEFAULT_FONT_RANGES,\n  SCREEN_IDS,\n  SERIFS,\n  SOFTS,\n  ZEROS,\n  contrast,\n  createRoll,\n  deriveSeed,\n  ellipse,\n  fontParamsOf,\n  fromOklch,\n  rgba,\n  stream,\n  toHex,\n};\n"
+  },
+  {
+    "name": "glyph-theme.mjs",
+    "begin": 24116,
+    "end": 45399,
+    "prefix": "import './color-font.mjs';\nimport {\n  DEFAULT_FONT_RANGES,\n  SCREEN_IDS,\n  contrast,\n  createRoll,\n  deriveSeed,\n  ellipse,\n  fontParamsOf,\n  fromOklch,\n  stream,\n} from './color-font.mjs';\n",
+    "suffix": "\n\nexport {\n  CORNERS,\n  CULTURES,\n  FILLS,\n  FRAME_KINDS,\n  ICON_STYLES,\n  MOTIONS,\n  THEME_GENERATOR,\n  TONES,\n  add2,\n  arrowHead,\n  cut,\n  disc,\n  gear,\n  poly,\n  rect,\n  seg,\n  star,\n  strokes,\n  sword,\n  themeOf,\n};\n"
+  },
+  {
+    "name": "icon-schema.mjs",
+    "begin": 45399,
+    "end": 66964,
+    "prefix": "import './glyph-theme.mjs';\nimport {\n  rgba,\n} from './color-font.mjs';\nimport {\n  add2,\n  arrowHead,\n  cut,\n  disc,\n  gear,\n  poly,\n  rect,\n  seg,\n  star,\n  strokes,\n  sword,\n} from './glyph-theme.mjs';\n",
+    "suffix": "\n\nexport {\n  ANCHORS,\n  BitError,\n  BitWriter,\n  DRIVING_KINDS,\n  DRIVING_VARIANTS,\n  SchemaError,\n  WIDGETS,\n  array,\n  asNode,\n  bad,\n  bitsFor,\n  bool,\n  bytes,\n  dyn,\n  enumOf,\n  fieldsOf,\n  fixed,\n  fromHalf,\n  int,\n  node,\n  num,\n  optional,\n  ref,\n  string,\n  struct,\n  toHalf,\n  uint,\n  varint,\n  varuint,\n  whole,\n};\n"
+  },
+  {
+    "name": "schema-codec.mjs",
+    "begin": 66964,
+    "end": 82807,
+    "prefix": "import './icon-schema.mjs';\nimport {\n  BitError,\n  BitWriter,\n  asNode,\n  bad,\n  bitsFor,\n  fieldsOf,\n  fixed,\n  node,\n  num,\n  ref,\n  uint,\n  whole,\n} from './icon-schema.mjs';\n",
+    "suffix": "\n\nexport {\n  CodecError,\n  NUM_KINDS,\n  SCRATCH,\n  Tables,\n  alt,\n  categoryOf,\n  compileBool,\n  compileInt,\n  compileUint,\n  compiled,\n  describe,\n  extend,\n  fail,\n  fresh,\n  fromUtf8,\n  gridOf,\n  intCheck,\n  lastOf,\n  meta,\n  named,\n  planes,\n  put,\n  rd,\n  readNum,\n  recursive,\n  same,\n  seedText,\n  tuple,\n  under,\n  union,\n  unzig,\n  utf8,\n  wellFormed,\n  wr,\n  writeNum,\n  zig,\n};\n"
+  },
+  {
+    "name": "scalar-codecs.mjs",
+    "begin": 82807,
+    "end": 100585,
+    "prefix": "import './schema-codec.mjs';\nimport {\n  BitWriter,\n  SchemaError,\n  bitsFor,\n  fromHalf,\n  toHalf,\n} from './icon-schema.mjs';\nimport {\n  NUM_KINDS,\n  describe,\n  fail,\n  fresh,\n  fromUtf8,\n  gridOf,\n  intCheck,\n  lastOf,\n  meta,\n  rd,\n  readNum,\n  same,\n  under,\n  unzig,\n  utf8,\n  wellFormed,\n  wr,\n  writeNum,\n  zig,\n} from './schema-codec.mjs';\n",
+    "suffix": "\n\nexport {\n  compileArray,\n  compileBiguint,\n  compileBytes,\n  compileConst,\n  compileDefault,\n  compileDyn,\n  compileEnum,\n  compileFixed,\n  compileFloat,\n  compileGrow,\n  compileHex,\n  compileNullable,\n  compileNum,\n  compileRef,\n  compileString,\n  compileStruct,\n  compileTuple,\n  compileVarint,\n};\n"
+  },
+  {
+    "name": "collection-codecs.mjs",
+    "begin": 100585,
+    "end": 112936,
+    "prefix": "import './scalar-codecs.mjs';\nimport {\n  SchemaError,\n  bitsFor,\n} from './icon-schema.mjs';\nimport {\n  CodecError,\n  SCRATCH,\n  categoryOf,\n  describe,\n  fail,\n  gridOf,\n  meta,\n  put,\n  rd,\n  same,\n  under,\n  unzig,\n  wr,\n  zig,\n} from './schema-codec.mjs';\n",
+    "suffix": "\n\nexport {\n  compileAlt,\n  compileDelta,\n  compileLz,\n  compileMap,\n  compileNamed,\n  compilePlanes,\n  compileRec,\n  compileRuns,\n  compileSelf,\n  compileUnion,\n};\n"
+  },
+  {
+    "name": "codec-runtime.mjs",
+    "begin": 112936,
+    "end": 129984,
+    "prefix": "import './collection-codecs.mjs';\nimport {\n  BitWriter,\n  bitsFor,\n} from './icon-schema.mjs';\nimport {\n  NUM_KINDS,\n  Tables,\n  categoryOf,\n  compileBool,\n  compileInt,\n  compileUint,\n  compiled,\n  describe,\n  fail,\n  meta,\n  put,\n  rd,\n  readNum,\n  same,\n  under,\n  unzig,\n  wr,\n  writeNum,\n  zig,\n} from './schema-codec.mjs';\nimport {\n  compileArray,\n  compileBiguint,\n  compileBytes,\n  compileConst,\n  compileDefault,\n  compileDyn,\n  compileEnum,\n  compileFixed,\n  compileFloat,\n  compileGrow,\n  compileHex,\n  compileNullable,\n  compileNum,\n  compileRef,\n  compileString,\n  compileStruct,\n  compileTuple,\n  compileVarint,\n} from './scalar-codecs.mjs';\nimport {\n  compileAlt,\n  compileDelta,\n  compileLz,\n  compileMap,\n  compileNamed,\n  compilePlanes,\n  compileRec,\n  compileRuns,\n  compileSelf,\n  compileUnion,\n} from './collection-codecs.mjs';\n",
+    "suffix": "\n\nexport {\n  K,\n  encodeRaw,\n};\n"
+  },
+  {
+    "name": "schema-theme.mjs",
+    "begin": 129984,
+    "end": 149862,
+    "prefix": "import './codec-runtime.mjs';\nimport {\n  SCREEN_IDS,\n  SERIFS,\n  SOFTS,\n  ZEROS,\n  toHex,\n} from './color-font.mjs';\nimport {\n  CORNERS,\n  CULTURES,\n  FILLS,\n  FRAME_KINDS,\n  ICON_STYLES,\n  MOTIONS,\n  THEME_GENERATOR,\n  TONES,\n  themeOf,\n} from './glyph-theme.mjs';\nimport {\n  ANCHORS,\n  DRIVING_KINDS,\n  DRIVING_VARIANTS,\n  SchemaError,\n  WIDGETS,\n  array,\n  bool,\n  bytes,\n  dyn,\n  enumOf,\n  fixed,\n  int,\n  num,\n  optional,\n  ref,\n  string,\n  struct,\n  uint,\n  varint,\n  varuint,\n} from './icon-schema.mjs';\nimport {\n  alt,\n  extend,\n  named,\n  planes,\n  recursive,\n  seedText,\n  tuple,\n  union,\n} from './schema-codec.mjs';\nimport {\n  K,\n  encodeRaw,\n} from './codec-runtime.mjs';\n",
+    "suffix": "\n\nexport {\n  recipeTheme,\n  themeTokens,\n};\n"
+  }
+]

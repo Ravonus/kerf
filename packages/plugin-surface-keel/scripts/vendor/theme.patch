@@ -1,0 +1,626 @@
+--- original
++++ modified
+@@ -777,0 +778,25 @@
++}
++function themeResult(recipe, tone, surface, ink, accent, semantic, team, outline, accentText, hue2, accentHue, frame, type, unit2, P, drawnIcon, iconStroke, kind, overshoot) {
++  return {
++    recipe,
++    culture: recipe.culture,
++    palette: {
++      tone,
++      surface,
++      ink,
++      accent,
++      good: semantic(145, 0.15),
++      warn: semantic(82, 0.15),
++      bad: semantic(27, 0.18),
++      team,
++      outline,
++      onAccent: accentText,
++      hues: { surface: r3(hue2), accent: r3(accentHue) }
++    },
++    frame,
++    type,
++    space: { unit: unit2, pad: unit2 + frame.border + (frame.bevel ? 1 : 0), gap: unit2 },
++    icon: { style: P.icon ?? drawnIcon, stroke: iconStroke },
++    motion: { kind, press: kind === "none" ? 0 : 1, ms: kind === "snappy" ? 90 : kind === "bouncy" ? 180 : 0, overshoot: kind === "bouncy" ? overshoot : 0 },
++    key: recipeKey(recipe)
++  };
+@@ -778,0 +804 @@
++
+@@ -857,23 +883 @@
+-  return {
+-    recipe,
+-    culture: recipe.culture,
+-    palette: {
+-      tone,
+-      surface,
+-      ink,
+-      accent,
+-      good: semantic(145, 0.15),
+-      warn: semantic(82, 0.15),
+-      bad: semantic(27, 0.18),
+-      team,
+-      outline,
+-      onAccent: accentText,
+-      hues: { surface: r3(hue2), accent: r3(accentHue) }
+-    },
+-    frame,
+-    type,
+-    space: { unit: unit2, pad: unit2 + frame.border + (frame.bevel ? 1 : 0), gap: unit2 },
+-    icon: { style: P.icon ?? drawnIcon, stroke: iconStroke },
+-    motion: { kind, press: kind === "none" ? 0 : 1, ms: kind === "snappy" ? 90 : kind === "bouncy" ? 180 : 0, overshoot: kind === "bouncy" ? overshoot : 0 },
+-    key: recipeKey(recipe)
+-  };
++  return themeResult(recipe, tone, surface, ink, accent, semantic, team, outline, accentText, hue2, accentHue, frame, type, unit2, P, drawnIcon, iconStroke, kind, overshoot);
+@@ -1853,9 +1857,5 @@
+-function compiled2(root) {
+-  return compiled(root, compile);
+-}
+-function compile(n, recs) {
+-  switch (n.kind) {
+-    case "uint": {
+-      const max = 2 ** n.bits;
+-      const what = `uint(${n.bits})`;
+-      return {
++
++function compileUint(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const max = 2 ** n.bits;
++const what = `uint(${n.bits})`;
++return {
+@@ -1870,5 +1870,6 @@
+-    }
+-    case "int": {
+-      const half = 2 ** (n.bits - 1);
+-      const what = `int(${n.bits})`;
+-      return {
++}
++
++function compileInt(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const half = 2 ** (n.bits - 1);
++const what = `int(${n.bits})`;
++return {
+@@ -1883,3 +1884,4 @@
+-    }
+-    case "bool":
+-      return {
++}
++
++function compileBool(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++return {
+@@ -1893,7 +1895,9 @@
+-    case "fixed": {
+-      const g = gridOf(n);
+-      const what = `fixed(${n.min}, ${n.max}, ${n.step})`;
+-      const exact = n.off === "exact";
+-      const signed2 = g.lo < 0;
+-      const self = {};
+-      const put2 = n.delta ? (o, k, x) => {
++}
++
++function compileFixed(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const g = gridOf(n);
++const what = `fixed(${n.min}, ${n.max}, ${n.step})`;
++const exact = n.off === "exact";
++const signed2 = g.lo < 0;
++const self = {};
++const put2 = n.delta ? (o, k, x) => {
+@@ -1909 +1913 @@
+-      const get = n.delta ? (i, x) => {
++const get = n.delta ? (i, x) => {
+@@ -1921 +1925 @@
+-      return {
++return {
+@@ -1955,4 +1959,5 @@
+-    }
+-    case "float": {
+-      const bits = n.bits;
+-      return {
++}
++
++function compileFloat(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const bits = n.bits;
++return {
+@@ -1973,7 +1978,7 @@
+-    }
+-    case "varuint":
+-    case "varint": {
+-      const signed2 = n.kind === "varint";
+-      const put2 = n.group ? (o, u2) => o.groups(u2, n.group) : (o, u2) => o.golomb(u2, n.k);
+-      const get = n.group ? (i) => i.groups(n.group) : (i) => i.golomb(n.k);
+-      return {
++}
++
++function compileVarint(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const signed2 = n.kind === "varint";
++const put2 = n.group ? (o, u2) => o.groups(u2, n.group) : (o, u2) => o.golomb(u2, n.k);
++const get = n.group ? (i) => i.groups(n.group) : (i) => i.golomb(n.k);
++return {
+@@ -1990,3 +1995,4 @@
+-    }
+-    case "num":
+-      return {
++}
++
++function compileNum(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++return {
+@@ -2005,3 +2011,5 @@
+-    case "biguint": {
+-      const lim = 1n << BigInt(n.bits);
+-      return {
++}
++
++function compileBiguint(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const lim = 1n << BigInt(n.bits);
++return {
+@@ -2016,7 +2024,8 @@
+-    }
+-    case "enum": {
+-      const index = new Map(n.values.map((v, k) => [v, k]));
+-      const limit = n.capacity || n.values.length;
+-      const width = bitsFor(limit + (n.other ? 1 : 0));
+-      const str = n.other ? compile({ kind: "string", max: 0 }, []) : null;
+-      return {
++}
++
++function compileEnum(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const index = new Map(n.values.map((v, k) => [v, k]));
++const limit = n.capacity || n.values.length;
++const width = bitsFor(limit + (n.other ? 1 : 0));
++const str = n.other ? compile({ kind: "string", max: 0 }, []) : null;
++return {
+@@ -2049,5 +2058,6 @@
+-    }
+-    case "string": {
+-      const lw = n.max ? bitsFor(n.max + 1) : -1;
+-      const HEX = /^0x(?:[0-9a-f]{2})+$/;
+-      return {
++}
++
++function compileString(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const lw = n.max ? bitsFor(n.max + 1) : -1;
++const HEX = /^0x(?:[0-9a-f]{2})+$/;
++return {
+@@ -2103,4 +2113,5 @@
+-    }
+-    case "ref": {
+-      const text = compile({ kind: "string", max: 0, packHex: n.packHex }, []);
+-      return {
++}
++
++function compileRef(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const text = compile({ kind: "string", max: 0, packHex: n.packHex }, []);
++return {
+@@ -2141,3 +2152,4 @@
+-    }
+-    case "bytes":
+-      return {
++}
++
++function compileBytes(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++return {
+@@ -2162,3 +2174,5 @@
+-    case "hex": {
+-      const re = /^0x(?:[0-9a-f]{2})*$/;
+-      return {
++}
++
++function compileHex(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const re = /^0x(?:[0-9a-f]{2})*$/;
++return {
+@@ -2186,3 +2200,4 @@
+-    }
+-    case "const":
+-      return {
++}
++
++function compileConst(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++return {
+@@ -2195,6 +2210,10 @@
+-    case "dyn":
+-      return dynCodec(n);
+-    case "array": {
+-      const of = compile(n.of, recs);
+-      const lw = n.max ? bitsFor(n.max + 1) : -1;
+-      return {
++}
++
++function compileDyn(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++return dynCodec(n, compile);
++}
++
++function compileArray(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const of = compile(n.of, recs);
++const lw = n.max ? bitsFor(n.max + 1) : -1;
++return {
+@@ -2240,9 +2259,10 @@
+-    }
+-    case "grow": {
+-      const b = n.base;
+-      const item = compile(b.of, recs);
+-      const next = compile(n.of, recs);
+-      const lw = bitsFor(b.max + 1);
+-      const spare = 2 ** lw - 1;
+-      const above = recs.map((c) => c.node);
+-      return {
++}
++
++function compileGrow(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const b = n.base;
++const item = compile(b.of, recs);
++const next = compile(n.of, recs);
++const lw = bitsFor(b.max + 1);
++const spare = 2 ** lw - 1;
++const above = recs.map((c) => c.node);
++return {
+@@ -2291,6 +2311,6 @@
+-    }
+-    case "optional":
+-    case "nullable": {
+-      const of = compile(n.of, recs);
+-      const none = n.kind === "optional" ? void 0 : null;
+-      return {
++}
++
++function compileNullable(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const of = compile(n.of, recs);
++const none = n.kind === "optional" ? void 0 : null;
++return {
+@@ -2311,4 +2331,5 @@
+-    }
+-    case "default": {
+-      const of = compile(n.of, recs);
+-      try {
++}
++
++function compileDefault(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const of = compile(n.of, recs);
++try {
+@@ -2319 +2340 @@
+-      return {
++return {
+@@ -2336,6 +2357,9 @@
+-    }
+-    case "struct":
+-      return structCodec(n.fields, n.open, n.ext, recs, n, null);
+-    case "tuple": {
+-      const items = n.items.map((it) => compile(it, recs));
+-      return {
++}
++
++function compileStruct(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++return structCodec(n.fields, n.open, n.ext, recs, n, null, compile);
++}
++
++function compileTuple(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const items = n.items.map((it) => compile(it, recs));
++return {
+@@ -2355,3 +2379,4 @@
+-    }
+-    case "union": {
+-      const variants = n.variants.map((f) => {
++}
++
++function compileUnion(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const variants = n.variants.map((f) => {
+@@ -2359 +2384 @@
+-        return { name: f.name, c: structCodec(s.fields, s.open, s.ext, recs, s, n.tag) };
++        return { name: f.name, c: structCodec(s.fields, s.open, s.ext, recs, s, n.tag, compile) };
+@@ -2361,3 +2386,3 @@
+-      const index = new Map(variants.map((v, k) => [v.name, k]));
+-      const width = bitsFor(n.capacity || variants.length);
+-      return {
++const index = new Map(variants.map((v, k) => [v.name, k]));
++const width = bitsFor(n.capacity || variants.length);
++return {
+@@ -2385,5 +2410,6 @@
+-    }
+-    case "alt": {
+-      const branches = n.of.map((b) => ({ cat: categoryOf(b), c: compile(b, recs) }));
+-      const width = bitsFor(branches.length);
+-      return {
++}
++
++function compileAlt(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const branches = n.of.map((b) => ({ cat: categoryOf(b), c: compile(b, recs) }));
++const width = bitsFor(branches.length);
++return {
+@@ -2407,5 +2433,6 @@
+-    }
+-    case "map": {
+-      const kc = compile(n.key, recs);
+-      const vc = compile(n.value, recs);
+-      return {
++}
++
++function compileMap(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const kc = compile(n.key, recs);
++const vc = compile(n.value, recs);
++return {
+@@ -2440,7 +2467,8 @@
+-    }
+-    case "delta": {
+-      const first = compile(n.of, recs);
+-      const of = n.of;
+-      const g = of.kind === "fixed" ? gridOf(of) : null;
+-      const toUnits = g ? (v) => g.units(v) : (v) => v;
+-      const fromUnits = g ? (k) => {
++}
++
++function compileDelta(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const first = compile(n.of, recs);
++const of = n.of;
++const g = of.kind === "fixed" ? gridOf(of) : null;
++const toUnits = g ? (v) => g.units(v) : (v) => v;
++const fromUnits = g ? (k) => {
+@@ -2450,4 +2478,4 @@
+-      const lo = g ? g.lo : of.kind === "uint" || of.kind === "varuint" ? 0 : -Infinity;
+-      const hi = g ? g.hi : of.kind === "uint" ? 2 ** of.bits - 1 : of.kind === "int" ? 2 ** (of.bits - 1) - 1 : Infinity;
+-      const lo2 = of.kind === "int" ? -(2 ** (of.bits - 1)) : lo;
+-      return {
++const lo = g ? g.lo : of.kind === "uint" || of.kind === "varuint" ? 0 : -Infinity;
++const hi = g ? g.hi : of.kind === "uint" ? 2 ** of.bits - 1 : of.kind === "int" ? 2 ** (of.bits - 1) - 1 : Infinity;
++const lo2 = of.kind === "int" ? -(2 ** (of.bits - 1)) : lo;
++return {
+@@ -2494,4 +2522,5 @@
+-    }
+-    case "runs": {
+-      const of = compile(n.of, recs);
+-      return {
++}
++
++function compileRuns(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const of = compile(n.of, recs);
++return {
+@@ -2533,9 +2562,4 @@
+-    }
+-    case "lz": {
+-      const of = compile(n.of, recs);
+-      const MIN = n.min;
+-      const WINDOW = 1 << 16;
+-      const CHAIN = 48;
+-      return {
+-        node: n,
+-        w(o, v, x) {
++}
++
++function lzWriter(of, MIN, WINDOW, CHAIN) {
++  return function w(o, v, x) {
+@@ -2593 +2617,11 @@
+-        },
++        };
++}
++
++function compileLz(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const of = compile(n.of, recs);
++const MIN = n.min;
++const WINDOW = 1 << 16;
++const CHAIN = 48;
++return {
++        node: n,
++        w: lzWriter(of, MIN, WINDOW, CHAIN),
+@@ -2619,4 +2653,5 @@
+-    }
+-    case "planes": {
+-      const lim = 2 ** n.bits;
+-      return {
++}
++
++function compilePlanes(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const lim = 2 ** n.bits;
++return {
+@@ -2651,16 +2686,54 @@
+-    }
+-    case "named": {
+-      const of = compile(n.of, recs);
+-      return { node: n, w: (o, v, x) => of.w(o, v, x), r: (i, x) => of.r(i, x) };
+-    }
+-    case "rec": {
+-      const fwd = { c: null };
+-      const self = { node: n, w: (o, v, x) => fwd.c.w(o, v, x), r: (i, x) => fwd.c.r(i, x) };
+-      fwd.c = compile(n.of, [...recs, self]);
+-      return self;
+-    }
+-    case "self": {
+-      const target = recs[recs.length - 1 - n.depth];
+-      if (!target) throw new SchemaError(`A self node (depth ${n.depth}) outside its recursive().`);
+-      return { node: n, w: (o, v, x) => target.w(o, v, x), r: (i, x) => target.r(i, x) };
+-    }
++}
++
++function compileNamed(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const of = compile(n.of, recs);
++return { node: n, w: (o, v, x) => of.w(o, v, x), r: (i, x) => of.r(i, x) };
++}
++
++function compileRec(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const fwd = { c: null };
++const self = { node: n, w: (o, v, x) => fwd.c.w(o, v, x), r: (i, x) => fwd.c.r(i, x) };
++fwd.c = compile(n.of, [...recs, self]);
++return self;
++}
++
++function compileSelf(n, recs, compile, dynCodec, structCodec, holds, valueCategory) {
++const target = recs[recs.length - 1 - n.depth];
++if (!target) throw new SchemaError(`A self node (depth ${n.depth}) outside its recursive().`);
++return { node: n, w: (o, v, x) => target.w(o, v, x), r: (i, x) => target.r(i, x) };
++}
++function compile(n, recs) {
++  switch (n.kind) {
++    case "uint": return compileUint(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "int": return compileInt(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "bool": return compileBool(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "fixed": return compileFixed(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "float": return compileFloat(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "varuint":
++    case "varint": return compileVarint(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "num": return compileNum(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "biguint": return compileBiguint(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "enum": return compileEnum(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "string": return compileString(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "ref": return compileRef(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "bytes": return compileBytes(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "hex": return compileHex(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "const": return compileConst(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "dyn": return compileDyn(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "array": return compileArray(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "grow": return compileGrow(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "optional":
++    case "nullable": return compileNullable(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "default": return compileDefault(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "struct": return compileStruct(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "tuple": return compileTuple(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "union": return compileUnion(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "alt": return compileAlt(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "map": return compileMap(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "delta": return compileDelta(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "runs": return compileRuns(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "lz": return compileLz(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "planes": return compilePlanes(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "named": return compileNamed(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "rec": return compileRec(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
++    case "self": return compileSelf(n, recs, compile, dynCodec, structCodec, holds, valueCategory);
+@@ -2668,0 +2742,4 @@
++function compiled2(root) {
++  return compiled(root, compile);
++}
++
+@@ -2729,11 +2806,2 @@
+-function structCodec(fields, open, ext, recs, node2, tagKey) {
+-  const fs = fields.map((f) => ({ name: f.name, c: compile(f.type, recs), optional: f.type.kind === "optional" }));
+-  const groups = ext.map((g) => g.map((f) => ({ name: f.name, c: compile(f.type, recs), optional: f.type.kind === "optional", node: f.type })));
+-  const known = new Set([...fields, ...ext.flat()].map((f) => f.name));
+-  if (tagKey !== null) known.add(tagKey);
+-  const proto = known.has("__proto__");
+-  const scratch = [];
+-  const empty = (g, v) => g.every((f) => v[f.name] === void 0 || f.node.kind === "default" && same(v[f.name], f.node.value));
+-  return {
+-    node: node2,
+-    w(o, v, x) {
++function structWriter(fs, groups, known, tagKey, open, scratch, empty) {
++  return function w(o, v, x) {
+@@ -2778 +2846,14 @@
+-    },
++    };
++}
++
++function structCodec(fields, open, ext, recs, node2, tagKey, compile) {
++  const fs = fields.map((f) => ({ name: f.name, c: compile(f.type, recs), optional: f.type.kind === "optional" }));
++  const groups = ext.map((g) => g.map((f) => ({ name: f.name, c: compile(f.type, recs), optional: f.type.kind === "optional", node: f.type })));
++  const known = new Set([...fields, ...ext.flat()].map((f) => f.name));
++  if (tagKey !== null) known.add(tagKey);
++  const proto = known.has("__proto__");
++  const scratch = [];
++  const empty = (g, v) => g.every((f) => v[f.name] === void 0 || f.node.kind === "default" && same(v[f.name], f.node.value));
++  return {
++    node: node2,
++    w: structWriter(fs, groups, known, tagKey, open, scratch, empty),
+@@ -2837,2 +2918,43 @@
+-function dynCodec(n) {
+-  const str = compile({ kind: "ref", table: DYN_TABLE, packHex: false }, []);
++function writeDynObject(o, v, x, str, w) {
++if (Array.isArray(v)) {
++          o.bits(6, 3);
++          o.golomb(v.length, 0);
++          for (let k = 0; k < v.length; k += 1) {
++            try {
++              w(o, v[k], x);
++            } catch (e) {
++              throw under(e, k, null);
++            }
++          }
++          return;
++        }
++if (ArrayBuffer.isView(v)) fail("A typed array isn't JSON-like (dyn): give an array, or a typed schema.");
++const rec = v;
++const keys = Object.keys(rec).filter((k) => rec[k] !== void 0);
++o.bits(7, 3);
++const t = x.tables.shapes(DYN_NUMS);
++const sig = JSON.stringify(keys);
++const at = keys.length ? t.index.get(sig) : void 0;
++if (at !== void 0) {
++          o.bool(true);
++          o.bits(at, bitsFor(t.list.length));
++        } else {
++          o.bool(false);
++          o.golomb(keys.length, 0);
++          for (const k of keys) str.w(o, k, x);
++          if (keys.length) {
++            t.index.set(sig, t.list.length);
++            t.list.push(keys);
++          }
++        }
++for (const k of keys) {
++          try {
++            w(o, rec[k], x);
++          } catch (e) {
++            throw under(e, k, null);
++          }
++        }
++return;
++}
++
++function dynWriter(str) {
+@@ -2872,41 +2994 @@
+-      case "object": {
+-        if (Array.isArray(v)) {
+-          o.bits(6, 3);
+-          o.golomb(v.length, 0);
+-          for (let k = 0; k < v.length; k += 1) {
+-            try {
+-              w(o, v[k], x);
+-            } catch (e) {
+-              throw under(e, k, null);
+-            }
+-          }
+-          return;
+-        }
+-        if (ArrayBuffer.isView(v)) fail("A typed array isn't JSON-like (dyn): give an array, or a typed schema.");
+-        const rec = v;
+-        const keys = Object.keys(rec).filter((k) => rec[k] !== void 0);
+-        o.bits(7, 3);
+-        const t = x.tables.shapes(DYN_NUMS);
+-        const sig = JSON.stringify(keys);
+-        const at = keys.length ? t.index.get(sig) : void 0;
+-        if (at !== void 0) {
+-          o.bool(true);
+-          o.bits(at, bitsFor(t.list.length));
+-        } else {
+-          o.bool(false);
+-          o.golomb(keys.length, 0);
+-          for (const k of keys) str.w(o, k, x);
+-          if (keys.length) {
+-            t.index.set(sig, t.list.length);
+-            t.list.push(keys);
+-          }
+-        }
+-        for (const k of keys) {
+-          try {
+-            w(o, rec[k], x);
+-          } catch (e) {
+-            throw under(e, k, null);
+-          }
+-        }
+-        return;
+-      }
++      case "object": return writeDynObject(o, v, x, str, w);
+@@ -2916,0 +2999,4 @@
++  return w;
++}
++
++function dynReader(str, getSelf) {
+@@ -2955 +3041 @@
+-        for (let k = 0; k < len2; k += 1) out[k] = x.trace ? rd(self, i, x, k) : r(i, x);
++        for (let k = 0; k < len2; k += 1) out[k] = x.trace ? rd(getSelf(), i, x, k) : r(i, x);
+@@ -2984 +3070 @@
+-        for (const key of keys) put(out, key, x.trace ? rd(self, i, x, key) : r(i, x));
++        for (const key of keys) put(out, key, x.trace ? rd(getSelf(), i, x, key) : r(i, x));
+@@ -2988,0 +3075,8 @@
++  return r;
++}
++
++function dynCodec(n, compile) {
++  const str = compile({ kind: "ref", table: DYN_TABLE, packHex: false }, []);
++  const w = dynWriter(str);
++
++  const r = dynReader(str, () => self);

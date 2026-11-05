@@ -1,0 +1,44 @@
+[
+  {
+    "name": "core-primitives.mjs",
+    "begin": 0,
+    "end": 24368,
+    "prefix": "\n",
+    "suffix": "\n\nexport {\n  FX_ORDER,\n  GRADE_PRESETS,\n  SCREENS,\n  adaptTargetPalette,\n  cameraBasis,\n  scalePx,\n  screenForTarget,\n  targetProfile,\n};\n"
+  },
+  {
+    "name": "effects-world.mjs",
+    "begin": 24368,
+    "end": 43270,
+    "prefix": "import './core-primitives.mjs';\nimport {\n  FX_ORDER,\n  GRADE_PRESETS,\n  SCREENS,\n  scalePx,\n  screenForTarget,\n} from './core-primitives.mjs';\n",
+    "suffix": "\n\nexport {\n  ALL_FX,\n  FAR,\n  FULLSCREEN_VS,\n  MAX_BOXES,\n  MAX_CAPS,\n  MAX_COLOURS,\n  MAX_MATERIALS,\n  MAX_RAMPS,\n  MAX_WEDGES,\n  PALETTE_WIDTH,\n  POINTS_FS,\n  POINTS_VS,\n  SCREEN_TILE,\n  SKY_MAT,\n  WATER_MAT,\n  WORLD_FS,\n  fxUniforms,\n  resolveFx,\n  screenTile,\n  toggleFxList,\n};\n"
+  },
+  {
+    "name": "pixel-raster.mjs",
+    "begin": 43270,
+    "end": 68323,
+    "prefix": "import './effects-world.mjs';\nimport {\n  FAR,\n  PALETTE_WIDTH,\n  SCREEN_TILE,\n  WATER_MAT,\n  WORLD_FS,\n} from './effects-world.mjs';\n",
+    "suffix": "\n\nexport {\n  BAKE_WORLD_FS,\n  DEPTH_FS,\n  DEPTH_OUT_FS,\n  DIRECT_PIXEL_FS,\n  HEIGHT_FS,\n  INDEX_FS,\n  PIXEL_FS,\n  RASTER_FLOATS,\n  RASTER_FS,\n  RASTER_VS,\n  boxTemplate,\n  capsuleTemplate,\n  smoothDepthOutFs,\n  smoothPixelFs,\n  unpackDepth,\n};\n"
+  },
+  {
+    "name": "indexed-render.mjs",
+    "begin": 68323,
+    "end": 90185,
+    "prefix": "import './pixel-raster.mjs';\nimport {\n  cameraBasis,\n} from './core-primitives.mjs';\nimport {\n  FAR,\n  FULLSCREEN_VS,\n  MAX_BOXES,\n  MAX_CAPS,\n  MAX_RAMPS,\n  MAX_WEDGES,\n  SCREEN_TILE,\n  fxUniforms,\n  resolveFx,\n  screenTile,\n} from './effects-world.mjs';\nimport {\n  BAKE_WORLD_FS,\n  DEPTH_OUT_FS,\n  HEIGHT_FS,\n  INDEX_FS,\n  RASTER_FLOATS,\n  RASTER_FS,\n  RASTER_VS,\n  boxTemplate,\n  capsuleTemplate,\n  smoothDepthOutFs,\n} from './pixel-raster.mjs';\n",
+    "suffix": "\n\nexport {\n  RESOLVE_FS,\n  createIndexedPass,\n  dot2,\n  drawRasterImpl,\n  fineBuffersImpl,\n  norm3,\n  program,\n  rasterModeImpl,\n  refreshFxImpl,\n  supersampleFor,\n  targetImpl,\n  uploadRampsImpl,\n  uploadWorld,\n  writeDepthOutImpl,\n};\n"
+  },
+  {
+    "name": "render-passes.mjs",
+    "begin": 90185,
+    "end": 113148,
+    "prefix": "import './indexed-render.mjs';\nimport {\n  adaptTargetPalette,\n  cameraBasis,\n  targetProfile,\n} from './core-primitives.mjs';\nimport {\n  FULLSCREEN_VS,\n  MAX_BOXES,\n  MAX_CAPS,\n  MAX_COLOURS,\n  MAX_MATERIALS,\n  MAX_RAMPS,\n  MAX_WEDGES,\n  PALETTE_WIDTH,\n  POINTS_FS,\n  POINTS_VS,\n  SCREEN_TILE,\n  SKY_MAT,\n  WORLD_FS,\n  resolveFx,\n  toggleFxList,\n} from './effects-world.mjs';\nimport {\n  DEPTH_FS,\n  DIRECT_PIXEL_FS,\n  PIXEL_FS,\n  smoothPixelFs,\n  unpackDepth,\n} from './pixel-raster.mjs';\nimport {\n  RESOLVE_FS,\n  createIndexedPass,\n  dot2,\n  norm3,\n  program,\n  supersampleFor,\n  uploadWorld,\n} from './indexed-render.mjs';\n",
+    "suffix": "\n\nexport {\n  initializeGraphics,\n  initializeIndexedBuffers,\n  initializePaletteAndEffects,\n  makeOffPalette,\n  makeRead,\n  makeReadData,\n  makeRender,\n  makeSetFx,\n  makeSetMaterials,\n  makeSetMesh,\n  makeSetPalette,\n  makeSetProfile,\n  makeSetStyle,\n  makeSetTarget,\n  makeSetWorld,\n  makeToggleFx,\n};\n"
+  },
+  {
+    "name": "renderer-api.mjs",
+    "begin": 113148,
+    "end": 115723,
+    "prefix": "import './render-passes.mjs';\nimport {\n  ALL_FX,\n  MAX_BOXES,\n  MAX_CAPS,\n  MAX_COLOURS,\n  MAX_MATERIALS,\n  MAX_RAMPS,\n  MAX_WEDGES,\n} from './effects-world.mjs';\nimport {\n  drawRasterImpl,\n  fineBuffersImpl,\n  rasterModeImpl,\n  refreshFxImpl,\n  targetImpl,\n  uploadRampsImpl,\n  writeDepthOutImpl,\n} from './indexed-render.mjs';\nimport {\n  initializeGraphics,\n  initializeIndexedBuffers,\n  initializePaletteAndEffects,\n  makeOffPalette,\n  makeRead,\n  makeReadData,\n  makeRender,\n  makeSetFx,\n  makeSetMaterials,\n  makeSetMesh,\n  makeSetPalette,\n  makeSetProfile,\n  makeSetStyle,\n  makeSetTarget,\n  makeSetWorld,\n  makeToggleFx,\n} from './render-passes.mjs';\n",
+    "suffix": "\n\nexport {\n  createPixelRenderer,\n};\n"
+  }
+]
