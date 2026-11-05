@@ -12,15 +12,18 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-const [repo, receipts] = process.argv.slice(2)
+const [repo, receipts, task = 'medium-shop'] = process.argv.slice(2)
 if (!repo || !receipts) throw new Error('expected repository and receipt directory')
-const mutants = JSON.parse(
-  readFileSync(join(repo, 'evals/agent-eval/tasks/medium-shop/mutants.json')),
+if (!['medium-shop', 'edit-shop'].includes(task)) throw new Error('unknown calibration task')
+const mutants = JSON.parse(readFileSync(join(repo, 'evals/agent-eval/tasks', task, 'mutants.json')))
+const expectedMutants = { 'medium-shop': 45, 'edit-shop': 18 }[task]
+if (
+  mutants.length !== expectedMutants ||
+  new Set(mutants.map((m) => m.name)).size !== expectedMutants
 )
-if (mutants.length !== 45 || new Set(mutants.map((m) => m.name)).size !== 45)
-  throw new Error('expected 45 distinct named mutants')
+  throw new Error('invalid named mutant set')
 const { tests } = await import(
-  pathToFileURL(join(repo, 'evals/agent-eval/tasks/medium-shop/hidden.mjs'))
+  pathToFileURL(join(repo, 'evals/agent-eval/tasks', task, 'hidden.mjs'))
 )
 if (!tests.length) throw new Error('the reference has no checks')
 const env = { ...process.env }
@@ -64,7 +67,7 @@ const run = (args, label) => {
   try {
     child = spawnSync(
       process.execPath,
-      [join(repo, 'evals/agent-eval/run.mjs'), 'calibrate', ...args],
+      [join(repo, 'evals/agent-eval/run.mjs'), 'calibrate', task, ...args],
       {
         cwd: process.env.WEFT_T06_JOB ? join(process.env.WEFT_T06_JOB, 'projects') : repo,
         env,
@@ -100,6 +103,7 @@ const reference = run(['reference'], 'reference')
 if (
   reference.child.status !== 0 ||
   !reference.result?.passed ||
+  reference.result?.task !== task ||
   !reference.result?.grade?.built?.ok ||
   reference.result?.grade?.total !== tests.length
 )
@@ -119,6 +123,7 @@ for (const [i, mutant] of mutants.entries()) {
     throw new Error(`${mutant.name}: calibration setup failed; retained full logs`)
   if (
     child.status !== 1 ||
+    result?.task !== task ||
     result?.target !== mutant.name ||
     !result?.caught ||
     !result?.grade?.built?.ok ||

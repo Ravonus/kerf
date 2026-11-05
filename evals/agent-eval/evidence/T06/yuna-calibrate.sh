@@ -8,11 +8,13 @@ if [[ "${WEFT_T06_CLEAN_ENV:-}" != 1 ]]; then
     WEFT_T06_CLEAN_ENV=1 WEFT_T06_PNPM_ENTRY="$WEFT_T06_PNPM_ENTRY" \
     WEFT_T06_NODE="${WEFT_T06_NODE:-$HOME/work/toolchain/node-v26.13.0-darwin-arm64/bin/node}" \
     WEFT_T06_REPO="${WEFT_T06_REPO:-$HOME/work/weft-S5-verify/repo}" \
+    WEFT_T06_TASK="${WEFT_T06_TASK:-medium-shop}" \
     PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/Library/Caches/ms-playwright}" \
     /bin/bash "$0"
 fi
 
 repo="$WEFT_T06_REPO"
+[[ "$WEFT_T06_TASK" == medium-shop || "$WEFT_T06_TASK" == edit-shop ]] || { echo 'Unknown calibration task' >&2; exit 2; }
 node="$WEFT_T06_NODE"
 pnpm="$WEFT_T06_PNPM_ENTRY"
 pnpm_root="$(dirname "$(dirname "$pnpm")")"
@@ -143,5 +145,5 @@ cp -R "$pnpm_root/dist" "$app/.calibration-pnpm/dist"
 printf '%s\n' '#!/bin/sh' 'exec node "$(dirname "$0")/../.calibration-pnpm/bin/pnpm.mjs" "$@"' > "$app/.calibration-bin/pnpm"
 chmod 755 "$app/.calibration-bin/pnpm" "$app/.calibration-pnpm/pnpm-native"
 unset NODE_TEST_CONTEXT
-"$node" "$repo/evals/agent-eval/evidence/T06/run-calibrations.mjs" "$repo" "$receipts"
+"$node" "$repo/evals/agent-eval/evidence/T06/run-calibrations.mjs" "$repo" "$receipts" "$WEFT_T06_TASK"
 printf 'Calibration receipts: %s\n' "$receipts"

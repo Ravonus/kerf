@@ -14,7 +14,7 @@ import { calibrationTarget } from './calibration-target.mjs'
 import { goldens, here, projects } from '../lib/paths.mjs'
 
 export async function calibrate(args) {
-  const mutant = calibrationTarget(args)
+  const { task, mutant } = calibrationTarget(args)
   const golden = join(goldens, 'weft-warp', 'app')
   if (!existsSync(join(golden, 'package.json')))
     throw new Error(`missing owned calibration golden: ${golden}`)
@@ -26,12 +26,14 @@ export async function calibrate(args) {
     mkdirSync(box.home)
     mkdirSync(box.tmp)
     cpSync(golden, box.app, { recursive: true, dereference: false, verbatimSymlinks: true })
-    const reference = join(here, 'tasks/medium-shop/reference/weft-warp')
+    const starter = join(here, 'tasks', task, 'starter/weft-warp')
+    if (existsSync(starter)) cpSync(starter, box.app, { recursive: true })
+    const reference = join(here, 'tasks', task, 'reference/weft-warp')
     cpSync(reference, box.app, { recursive: true })
     if (mutant) applyMutant(reference, box.app, mutant)
     const stack = JSON.parse(readFileSync(join(here, 'stacks.json'), 'utf8'))['weft-warp']
     stack.calibrationPnpm = true
-    const grade = await gradeOnce(box, 'weft-warp', 'medium-shop', 1, false, {
+    const grade = await gradeOnce(box, 'weft-warp', task, 1, false, {
       stack,
       gradeable: false,
       calibration: true,
@@ -39,7 +41,13 @@ export async function calibrate(args) {
     const passed = grade.total !== null && grade.passed === grade.total
     const caught = mutant && grade.failed?.some((failure) => failure.title === mutant.mustFail)
     console.log(
-      JSON.stringify({ target: mutant?.name ?? 'reference', passed, caught: !!caught, grade }),
+      JSON.stringify({
+        task,
+        target: mutant?.name ?? 'reference',
+        passed,
+        caught: !!caught,
+        grade,
+      }),
     )
     if (!mutant) return passed ? 0 : 1
     return caught ? 1 : 2

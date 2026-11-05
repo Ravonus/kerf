@@ -1,0 +1,110 @@
+[
+  {
+    "name": "ignore price event",
+    "find": "prices.value = { ...prices.value, [product.name]: price }",
+    "replace": "prices.value = { ...prices.value, [product.name]: 50 }",
+    "mustFail": "live prices update products, cart lines and totals"
+  },
+  {
+    "name": "product price stays static",
+    "find": "money(m.priceOf(p))",
+    "replace": "money(p.price)",
+    "mustFail": "live prices update products, cart lines and totals"
+  },
+  {
+    "name": "cart line price stays static",
+    "find": "money(m.priceOf(p) * (m.cart.value[p.name] ?? 0))",
+    "replace": "money(p.price * (m.cart.value[p.name] ?? 0))",
+    "mustFail": "live prices update products, cart lines and totals"
+  },
+  {
+    "name": "cart total stays static",
+    "find": "n + priceOf(p) * (cart.value[p.name] ?? 0)",
+    "replace": "n + p.price * (cart.value[p.name] ?? 0)",
+    "mustFail": "live prices update products, cart lines and totals"
+  },
+  {
+    "name": "no flash",
+    "find": "data-flash={m.flash.value[p.name] ? 'true' : undefined}",
+    "replace": "data-flash={undefined}",
+    "mustFail": "price flash expires and a later update starts it again"
+  },
+  {
+    "name": "flash never expires",
+    "find": "flash.value = { ...flash.value, [product.name]: false }",
+    "replace": "flash.value = { ...flash.value, [product.name]: true }",
+    "mustFail": "price flash expires and a later update starts it again"
+  },
+  {
+    "name": "favourite aria never updates",
+    "find": "aria-pressed={m.favourites.value.includes(p.name)}",
+    "replace": "aria-pressed={false}",
+    "mustFail": "favourites toggle, filter and survive reload"
+  },
+  {
+    "name": "favourites not persisted",
+    "find": "localStorage.setItem('shop-favourites'",
+    "replace": "localStorage.setItem('shop-favourites-bad'",
+    "mustFail": "favourites toggle, filter and survive reload"
+  },
+  {
+    "name": "favourite filter ignored",
+    "find": "(!favouritesOnly.value || favourites.value.includes(p.name))",
+    "replace": "true",
+    "mustFail": "favourites toggle, filter and survive reload"
+  },
+  {
+    "name": "favourite cannot be removed",
+    "find": "favourites.value.filter((item) => item !== itemName)",
+    "replace": "favourites.value",
+    "mustFail": "favourites toggle, filter and survive reload"
+  },
+  {
+    "name": "price increase warning omitted",
+    "find": "m.priceOf(p) > (m.addedPrices.value[p.name] ?? m.priceOf(p))",
+    "replace": "false",
+    "mustFail": "price increase compares with the price at first add"
+  },
+  {
+    "name": "price decrease wrongly warned",
+    "find": "m.priceOf(p) > (m.addedPrices.value[p.name] ?? m.priceOf(p))",
+    "replace": "m.priceOf(p) !== (m.addedPrices.value[p.name] ?? m.priceOf(p))",
+    "mustFail": "price increase compares with the price at first add"
+  },
+  {
+    "name": "addition baseline stays original",
+    "find": "addedPrices.value = { ...addedPrices.value, [p.name]: priceOf(p) }",
+    "replace": "addedPrices.value = { ...addedPrices.value, [p.name]: p.price }",
+    "mustFail": "price increase compares with the price at first add"
+  },
+  {
+    "name": "price sort ignores updates",
+    "find": "? priceOf(a) - priceOf(b)",
+    "replace": "? a.price - b.price",
+    "mustFail": "price sorting follows live updates"
+  },
+  {
+    "name": "existing product price changed",
+    "find": "name: 'Apple', category: 'fruit', price: 50",
+    "replace": "name: 'Apple', category: 'fruit', price: 51",
+    "mustFail": "products show names, prices, stock and default order"
+  },
+  {
+    "name": "existing cart total broken",
+    "find": "n + priceOf(p) * (cart.value[p.name] ?? 0)",
+    "replace": "n + priceOf(p)",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "unchanged price flashes",
+    "find": "if (!product || price === priceOf(product)) return",
+    "replace": "if (!product) return",
+    "mustFail": "price flash expires and a later update starts it again"
+  },
+  {
+    "name": "flash expires too early",
+    "find": "}, 1000),",
+    "replace": "}, 100),",
+    "mustFail": "price flash expires and a later update starts it again"
+  }
+]

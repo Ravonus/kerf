@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
-const tasks = ['bugfix-shop', 'edit-shop', 'large-live']
+const tasks = ['bugfix-shop', 'large-live']
 const root = new URL('../tasks/', import.meta.url)
 
 function pageFor(task, bad) {
