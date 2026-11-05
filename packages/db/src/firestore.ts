@@ -51,6 +51,63 @@ export interface FirestoreCollection {
   doc(id?: string): FirestoreRef
 }
 
+type FirestoreList<Row> = {
+  collection: FirestoreCollection
+  spec: SourceSpec
+  stored: string[]
+  idColumn: string
+  idField: string
+  row: (doc: FirestoreDoc) => Row
+}
+
+async function listRows<Row>(p: ListParams, context: FirestoreList<Row>) {
+  const { collection, spec, stored, idColumn, idField, row } = context
+  const q = plan(spec, p)
+  let b = collection.select(...stored)
+  for (const w of q.where) {
+    if (w.values.length > IN_MAX)
+      throw new StartError('Q002', `Firestore takes ${IN_MAX} values in a filter`, 'ask for fewer')
+    b =
+      w.values.length === 1
+        ? b.where(w.column, '==' as never, w.values[0])
+        : b.where(w.column, 'in' as never, w.values)
+  }
+  let first = q.sort?.column === idColumn ? null : (q.sort?.column ?? null)
+  const dir = q.sort?.dir ?? 'asc'
+  if (q.search) {
+    const field = q.search.columns[0]!
+    if (first && first !== field)
+      throw new StartError(
+        'Q002',
+        "Firestore can't search one field and sort by another",
+        'drop one',
+      )
+    first = field
+    b = b
+      .where(field, '>=' as never, q.search.text)
+      .where(field, '<=' as never, q.search.text + HIGH)
+  }
+  const counted = b
+  if (first) b = b.orderBy(first, dir)
+  b = b.orderBy(NAME, dir)
+  if (p.after) b = first ? b.startAfter(p.after[0], p.after[1]) : b.startAfter(p.after[1])
+  const cursor = p.mode === 'cursor'
+  if (p.offset) b = b.offset(p.offset)
+  const rows = (await b.limit(cursor ? p.limit + 1 : p.limit).get()).docs.map(row)
+  const total = cursor ? undefined : (await counted.count().get()).data().count
+  return pageOf(
+    rows,
+    p,
+    {
+      sort:
+        q.sort?.field ??
+        (first ? Object.keys(spec.columns).find((k) => spec.columns[k] === first) : undefined),
+      id: idField,
+    },
+    total,
+  )
+}
+
 /** A `ListSource` over one collection, keyed by document id. */
 export function firestoreSource<Row = Record<string, unknown>>(
   collection: FirestoreCollection,
@@ -64,55 +121,8 @@ export function firestoreSource<Row = Record<string, unknown>>(
   const at = (id: unknown) => collection.doc(String(id))
   return {
     limits: { search: 'prefix' },
-    async list(p: ListParams) {
-      const q = plan(spec, p)
-      let b = collection.select(...stored)
-      for (const w of q.where) {
-        if (w.values.length > IN_MAX)
-          throw new StartError(
-            'Q002',
-            `Firestore takes ${IN_MAX} values in a filter`,
-            'ask for fewer',
-          )
-        b =
-          w.values.length === 1
-            ? b.where(w.column, '==' as never, w.values[0])
-            : b.where(w.column, 'in' as never, w.values)
-      }
-      let first = q.sort?.column === idColumn ? null : (q.sort?.column ?? null)
-      const dir = q.sort?.dir ?? 'asc'
-      if (q.search) {
-        const field = q.search.columns[0]!
-        if (first && first !== field)
-          throw new StartError(
-            'Q002',
-            "Firestore can't search one field and sort by another",
-            'drop one',
-          )
-        first = field
-        b = b
-          .where(field, '>=' as never, q.search.text)
-          .where(field, '<=' as never, q.search.text + HIGH)
-      }
-      const counted = b
-      if (first) b = b.orderBy(first, dir)
-      b = b.orderBy(NAME, dir)
-      if (p.after) b = first ? b.startAfter(p.after[0], p.after[1]) : b.startAfter(p.after[1])
-      const cursor = p.mode === 'cursor'
-      if (p.offset) b = b.offset(p.offset)
-      const rows = (await b.limit(cursor ? p.limit + 1 : p.limit).get()).docs.map(row)
-      const total = cursor ? undefined : (await counted.count().get()).data().count
-      return pageOf(
-        rows,
-        p,
-        {
-          sort:
-            q.sort?.field ??
-            (first ? Object.keys(spec.columns).find((k) => spec.columns[k] === first) : undefined),
-          id: idField,
-        },
-        total,
-      )
+    list(p: ListParams) {
+      return listRows(p, { collection, spec, stored, idColumn, idField, row })
     },
     async get(id) {
       const doc = await at(id).get()

@@ -50,6 +50,94 @@ export interface DynamoSpec extends SourceSpec {
 const CONDITION = 'ConditionalCheckFailedException'
 const PAGE = 1 << 12
 
+type DynamoList<Row> = {
+  client: DynamoTarget['client']
+  table: string
+  spec: DynamoSpec
+  idColumn: string
+  sortColumn: string | undefined
+  projection: string
+  names: Record<string, string>
+  reading: (row: object) => Row
+  idField: string
+}
+
+async function listRows<Row>(p: ListParams, context: DynamoList<Row>) {
+  const { client, table, spec, idColumn, sortColumn, projection, names, reading, idField } = context
+  if (p.mode === 'page')
+    throw new StartError('Q002', 'DynamoDB has no offset', "ask for `mode: 'cursor'`")
+  const q = plan(spec, p)
+  if (q.sort && q.sort.field !== spec.sortKey)
+    throw new StartError(
+      'Q002',
+      `DynamoDB can sort only on the index's key, not \`${q.sort.field}\``,
+      'set `sortKey`',
+    )
+  const values: Record<string, unknown> = {},
+    ExpressionAttributeNames: Record<string, string> = { ...names }
+  let n = 0
+  const value = (v: unknown) => {
+    const k = `:v${n++}`
+    values[k] = v
+    return k
+  }
+  const name = (c: string) => {
+    const k = `#n${n++}`
+    ExpressionAttributeNames[k] = c
+    return k
+  }
+  const parts = q.where.map((w) => {
+    const col = name(w.column)
+    return `(${w.values.map((v) => (v === null ? `attribute_not_exists(${col})` : `${col} = ${value(v)}`)).join(' or ')})`
+  })
+  if (q.search) {
+    const v = value(q.search.text)
+    parts.push(`(${q.search.columns.map((c) => `contains(${name(c)}, ${v})`).join(' or ')})`)
+  }
+  const query = spec.partition && sortColumn
+  const KeyConditionExpression = query
+    ? `${name(spec.partition!.column)} = ${value(spec.partition!.value)}`
+    : undefined
+  const start = p.after
+    ? {
+        [idColumn]: p.after[1],
+        ...(query
+          ? { [spec.partition!.column]: spec.partition!.value, [sortColumn]: p.after[0] }
+          : {}),
+      }
+    : undefined
+  const rows: Item[] = []
+  let ExclusiveStartKey: Item | undefined = start
+  // `Limit` counts what's read before the filter, so a page can take several trips.
+  do {
+    const input = {
+      TableName: table,
+      ProjectionExpression: projection,
+      ExpressionAttributeNames,
+      ...(Object.keys(values).length ? { ExpressionAttributeValues: values } : {}),
+      ...(parts.length ? { FilterExpression: parts.join(' and ') } : {}),
+      ...(ExclusiveStartKey ? { ExclusiveStartKey } : {}),
+      Limit: PAGE,
+    }
+    const r: DynamoReply = await client.send(
+      query
+        ? new QueryCommand({
+            ...input,
+            IndexName: spec.index,
+            KeyConditionExpression,
+            ScanIndexForward: q.sort?.dir !== 'desc',
+          })
+        : new ScanCommand(input),
+    )
+    rows.push(...(r.Items ?? []))
+    ExclusiveStartKey = r.LastEvaluatedKey
+  } while (ExclusiveStartKey && rows.length <= p.limit)
+  return pageOf(rows.slice(0, p.limit + 1).map(reading), p, {
+    sort: q.sort?.field ?? spec.sortKey,
+    id: idField,
+  })
+}
+
 /** A `ListSource` over one table, in cursor mode. */
 export function dynamoSource<Row = Record<string, unknown>>(
   { client, table }: DynamoTarget,
@@ -71,78 +159,17 @@ export function dynamoSource<Row = Record<string, unknown>>(
   }
   return {
     limits: { page: false, search: 'cased', sort: spec.sortKey ? [spec.sortKey] : [] },
-    async list(p: ListParams) {
-      if (p.mode === 'page')
-        throw new StartError('Q002', 'DynamoDB has no offset', "ask for `mode: 'cursor'`")
-      const q = plan(spec, p)
-      if (q.sort && q.sort.field !== spec.sortKey)
-        throw new StartError(
-          'Q002',
-          `DynamoDB can sort only on the index's key, not \`${q.sort.field}\``,
-          'set `sortKey`',
-        )
-      const values: Record<string, unknown> = {},
-        ExpressionAttributeNames: Record<string, string> = { ...names }
-      let n = 0
-      const value = (v: unknown) => {
-        const k = `:v${n++}`
-        values[k] = v
-        return k
-      }
-      const name = (c: string) => {
-        const k = `#n${n++}`
-        ExpressionAttributeNames[k] = c
-        return k
-      }
-      const parts = q.where.map((w) => {
-        const col = name(w.column)
-        return `(${w.values.map((v) => (v === null ? `attribute_not_exists(${col})` : `${col} = ${value(v)}`)).join(' or ')})`
-      })
-      if (q.search) {
-        const v = value(q.search.text)
-        parts.push(`(${q.search.columns.map((c) => `contains(${name(c)}, ${v})`).join(' or ')})`)
-      }
-      const query = spec.partition && sortColumn
-      const KeyConditionExpression = query
-        ? `${name(spec.partition!.column)} = ${value(spec.partition!.value)}`
-        : undefined
-      const start = p.after
-        ? {
-            [idColumn]: p.after[1],
-            ...(query
-              ? { [spec.partition!.column]: spec.partition!.value, [sortColumn]: p.after[0] }
-              : {}),
-          }
-        : undefined
-      const rows: Item[] = []
-      let ExclusiveStartKey: Item | undefined = start
-      // `Limit` counts what's read before the filter, so a page can take several trips.
-      do {
-        const input = {
-          TableName: table,
-          ProjectionExpression: projection,
-          ExpressionAttributeNames,
-          ...(Object.keys(values).length ? { ExpressionAttributeValues: values } : {}),
-          ...(parts.length ? { FilterExpression: parts.join(' and ') } : {}),
-          ...(ExclusiveStartKey ? { ExclusiveStartKey } : {}),
-          Limit: PAGE,
-        }
-        const r: DynamoReply = await client.send(
-          query
-            ? new QueryCommand({
-                ...input,
-                IndexName: spec.index,
-                KeyConditionExpression,
-                ScanIndexForward: q.sort?.dir !== 'desc',
-              })
-            : new ScanCommand(input),
-        )
-        rows.push(...(r.Items ?? []))
-        ExclusiveStartKey = r.LastEvaluatedKey
-      } while (ExclusiveStartKey && rows.length <= p.limit)
-      return pageOf(rows.slice(0, p.limit + 1).map(reading), p, {
-        sort: q.sort?.field ?? spec.sortKey,
-        id: idField,
+    list(p: ListParams) {
+      return listRows(p, {
+        client,
+        table,
+        spec,
+        idColumn,
+        sortColumn,
+        projection,
+        names,
+        reading,
+        idField,
       })
     },
     get: byId,

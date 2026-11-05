@@ -29,6 +29,73 @@ export interface KyselySpec extends SourceSpec {
 type Tables = Record<string, Record<string, unknown>>
 type Eb = ExpressionBuilder<Tables, string>
 
+type KyselyList<Row> = {
+  db: Kysely<Tables>
+  spec: KyselySpec
+  table: string
+  columns: string[]
+  idColumn: string
+  reading: (row: object) => Row
+}
+
+async function listRows<Row>(p: ListParams, context: KyselyList<Row>) {
+  const { db, spec, table, columns, idColumn, reading } = context
+  const q = plan(spec, p)
+  const filtered = <O>(from: SelectQueryBuilder<Tables, string, O>) => {
+    let b = from
+    for (const w of q.where) {
+      const some = w.values.filter((v) => v !== null)
+      b = b.where((eb: Eb) =>
+        eb.or([
+          ...(some.length ? [eb(w.column, 'in', some)] : []),
+          ...(w.values.includes(null) ? [eb(w.column, 'is', null)] : []),
+        ]),
+      )
+    }
+    if (q.search) {
+      const like = likeOf(q.search.text)
+      b = b.where((eb: Eb) =>
+        eb.or(
+          q.search!.columns.map((c) => sql<boolean>`lower(${sql.ref(c)}) like ${like} escape '!'`),
+        ),
+      )
+    }
+    return b
+  }
+  let b = filtered(db.selectFrom(table).select(columns))
+  const dir = q.sort?.dir === 'desc' ? 'desc' : 'asc',
+    cmp = dir === 'desc' ? '<' : '>'
+  if (p.after) {
+    const [value, id] = p.after
+    b = b.where((eb: Eb) =>
+      q.sort
+        ? eb.or([
+            eb(q.sort.column, cmp, value),
+            eb.and([eb(q.sort.column, '=', value), eb(idColumn, cmp, id)]),
+          ])
+        : eb(idColumn, '>', id),
+    )
+  }
+  b = q.sort ? b.orderBy(q.sort.column, dir).orderBy(idColumn, dir) : b.orderBy(idColumn, 'asc')
+  const cursor = p.mode === 'cursor'
+  const rows = (
+    await b
+      .limit(cursor ? p.limit + 1 : p.limit)
+      .offset(p.offset)
+      .execute()
+  ).map(reading)
+  const total = cursor
+    ? undefined
+    : Number(
+        (
+          await filtered(
+            db.selectFrom(table).select(sql<unknown>`count(*)`.as('n')),
+          ).executeTakeFirstOrThrow()
+        ).n,
+      )
+  return pageOf(rows, p, { sort: q.sort?.field, id: q.id.field }, total)
+}
+
 /** A `ListSource` over one table of any `Kysely<DB>`. */
 export function kyselySource<Row = Record<string, unknown>, DB = unknown>(
   handle: Kysely<DB>,
@@ -44,63 +111,8 @@ export function kyselySource<Row = Record<string, unknown>, DB = unknown>(
     return r ? reading(r) : null
   }
   return {
-    async list(p: ListParams) {
-      const q = plan(spec, p)
-      const filtered = <O>(from: SelectQueryBuilder<Tables, string, O>) => {
-        let b = from
-        for (const w of q.where) {
-          const some = w.values.filter((v) => v !== null)
-          b = b.where((eb: Eb) =>
-            eb.or([
-              ...(some.length ? [eb(w.column, 'in', some)] : []),
-              ...(w.values.includes(null) ? [eb(w.column, 'is', null)] : []),
-            ]),
-          )
-        }
-        if (q.search) {
-          const like = likeOf(q.search.text)
-          b = b.where((eb: Eb) =>
-            eb.or(
-              q.search!.columns.map(
-                (c) => sql<boolean>`lower(${sql.ref(c)}) like ${like} escape '!'`,
-              ),
-            ),
-          )
-        }
-        return b
-      }
-      let b = filtered(db.selectFrom(table).select(columns))
-      const dir = q.sort?.dir === 'desc' ? 'desc' : 'asc',
-        cmp = dir === 'desc' ? '<' : '>'
-      if (p.after) {
-        const [value, id] = p.after
-        b = b.where((eb: Eb) =>
-          q.sort
-            ? eb.or([
-                eb(q.sort.column, cmp, value),
-                eb.and([eb(q.sort.column, '=', value), eb(idColumn, cmp, id)]),
-              ])
-            : eb(idColumn, '>', id),
-        )
-      }
-      b = q.sort ? b.orderBy(q.sort.column, dir).orderBy(idColumn, dir) : b.orderBy(idColumn, 'asc')
-      const cursor = p.mode === 'cursor'
-      const rows = (
-        await b
-          .limit(cursor ? p.limit + 1 : p.limit)
-          .offset(p.offset)
-          .execute()
-      ).map(reading)
-      const total = cursor
-        ? undefined
-        : Number(
-            (
-              await filtered(
-                db.selectFrom(table).select(sql<unknown>`count(*)`.as('n')),
-              ).executeTakeFirstOrThrow()
-            ).n,
-          )
-      return pageOf(rows, p, { sort: q.sort?.field, id: q.id.field }, total)
+    list(p: ListParams) {
+      return listRows(p, { db, spec, table, columns, idColumn, reading })
     },
     get: byId,
     async create(data) {

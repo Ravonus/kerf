@@ -31,6 +31,67 @@ export interface PrismaSpec extends SourceSpec {
 
 const MISSING = 'P2025'
 
+type PrismaList<Row> = {
+  model: PrismaDelegate
+  spec: PrismaSpec
+  select: Record<string, boolean>
+  idColumn: string
+  reading: (row: object) => Row
+  escaped: boolean
+}
+
+async function listRows<Row>(p: ListParams, context: PrismaList<Row>) {
+  const { model, spec, select, idColumn, reading, escaped } = context
+  const q = plan(spec, p)
+  const and: object[] = q.where.map((w) => {
+    const some = w.values.filter((v) => v !== null)
+    return {
+      OR: [
+        ...(some.length ? [{ [w.column]: { in: some } }] : []),
+        ...(w.values.includes(null) ? [{ [w.column]: null }] : []),
+      ],
+    }
+  })
+  if (q.search) {
+    const term = q.search.text.replace(/[\\%_]/g, '\\$&')
+    and.push({
+      OR: q.search.columns.map((c) => ({
+        [c]: { contains: term, ...(escaped ? { mode: 'insensitive' } : {}) },
+      })),
+    })
+  }
+  const where = { AND: and }
+  const dir = q.sort?.dir === 'desc' ? 'desc' : 'asc',
+    cmp = dir === 'desc' ? 'lt' : 'gt'
+  const keyset = p.after
+    ? q.sort
+      ? {
+          OR: [
+            { [q.sort.column]: { [cmp]: p.after[0] } },
+            { [q.sort.column]: p.after[0], [idColumn]: { [cmp]: p.after[1] } },
+          ],
+        }
+      : { [idColumn]: { gt: p.after[1] } }
+    : undefined
+  const orderBy = q.sort ? [{ [q.sort.column]: dir }, { [idColumn]: dir }] : [{ [idColumn]: 'asc' }]
+  const cursor = p.mode === 'cursor'
+  const rows = (
+    await model.findMany({
+      select,
+      where: keyset ? { AND: [where, keyset] } : where,
+      orderBy,
+      take: cursor ? p.limit + 1 : p.limit,
+      skip: p.offset,
+    })
+  ).map(reading)
+  return pageOf(
+    rows,
+    p,
+    { sort: q.sort?.field, id: q.id.field },
+    cursor ? undefined : await model.count({ where }),
+  )
+}
+
 /** A `ListSource` over one Prisma model. */
 export function prismaSource<Row = Record<string, unknown>>(
   model: PrismaDelegate,
@@ -47,57 +108,8 @@ export function prismaSource<Row = Record<string, unknown>>(
   const escaped = spec.insensitive !== false
   return {
     limits: { search: 'cased' },
-    async list(p: ListParams) {
-      const q = plan(spec, p)
-      const and: object[] = q.where.map((w) => {
-        const some = w.values.filter((v) => v !== null)
-        return {
-          OR: [
-            ...(some.length ? [{ [w.column]: { in: some } }] : []),
-            ...(w.values.includes(null) ? [{ [w.column]: null }] : []),
-          ],
-        }
-      })
-      if (q.search) {
-        const term = q.search.text.replace(/[\\%_]/g, '\\$&')
-        and.push({
-          OR: q.search.columns.map((c) => ({
-            [c]: { contains: term, ...(escaped ? { mode: 'insensitive' } : {}) },
-          })),
-        })
-      }
-      const where = { AND: and }
-      const dir = q.sort?.dir === 'desc' ? 'desc' : 'asc',
-        cmp = dir === 'desc' ? 'lt' : 'gt'
-      const keyset = p.after
-        ? q.sort
-          ? {
-              OR: [
-                { [q.sort.column]: { [cmp]: p.after[0] } },
-                { [q.sort.column]: p.after[0], [idColumn]: { [cmp]: p.after[1] } },
-              ],
-            }
-          : { [idColumn]: { gt: p.after[1] } }
-        : undefined
-      const orderBy = q.sort
-        ? [{ [q.sort.column]: dir }, { [idColumn]: dir }]
-        : [{ [idColumn]: 'asc' }]
-      const cursor = p.mode === 'cursor'
-      const rows = (
-        await model.findMany({
-          select,
-          where: keyset ? { AND: [where, keyset] } : where,
-          orderBy,
-          take: cursor ? p.limit + 1 : p.limit,
-          skip: p.offset,
-        })
-      ).map(reading)
-      return pageOf(
-        rows,
-        p,
-        { sort: q.sort?.field, id: q.id.field },
-        cursor ? undefined : await model.count({ where }),
-      )
+    list(p: ListParams) {
+      return listRows(p, { model, spec, select, idColumn, reading, escaped })
     },
     get: async (id) => {
       const r = await model.findUnique({ where: { [idColumn]: id }, select })
