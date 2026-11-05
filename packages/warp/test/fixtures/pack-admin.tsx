@@ -302,24 +302,7 @@ export function SettingsCase() {
           )}
         </SettingRow>
       </SettingsSection>
-      <DangerZone description="These change who can reach fieldwork-prod. Some can’t be undone.">
-        <SettingRow
-          title="Archive project"
-          description="Stops deploys and makes it read-only. You can restore it."
-        >
-          <Button emphasis="frame" size="sm" onClick={() => (arc.value = true)}>
-            Archive
-          </Button>
-        </SettingRow>
-        <SettingRow
-          title="Delete project"
-          description="Deletes fieldwork-prod, 3 environments and 214 deploys for good."
-        >
-          <Button emphasis="soft" tone="critical" size="sm" onClick={() => (del.value = true)}>
-            Delete project…
-          </Button>
-        </SettingRow>
-      </DangerZone>
+      <SettingsDanger arc={arc} del={del} />
       <SaveBar
         values={values}
         errors={errors}
@@ -343,6 +326,29 @@ export function SettingsCase() {
         onConfirm={() => {}}
       />
     </SettingsLayout>
+  )
+}
+
+function SettingsDanger({ arc, del }: { arc: State<boolean>; del: State<boolean> }) {
+  return (
+    <DangerZone description="These change who can reach fieldwork-prod. Some can’t be undone.">
+      <SettingRow
+        title="Archive project"
+        description="Stops deploys and makes it read-only. You can restore it."
+      >
+        <Button emphasis="frame" size="sm" onClick={() => (arc.value = true)}>
+          Archive
+        </Button>
+      </SettingRow>
+      <SettingRow
+        title="Delete project"
+        description="Deletes fieldwork-prod, 3 environments and 214 deploys for good."
+      >
+        <Button emphasis="soft" tone="critical" size="sm" onClick={() => (del.value = true)}>
+          Delete project…
+        </Button>
+      </SettingRow>
+    </DangerZone>
   )
 }
 
