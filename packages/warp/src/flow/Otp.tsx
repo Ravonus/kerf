@@ -67,8 +67,8 @@ export function OtpField({
     n,
     () => error,
     () => status,
-    () => onValueChange,
-    () => onComplete,
+    (value) => onValueChange?.(value),
+    (value) => onComplete?.(value),
     () => autoSubmit,
   )
   return (
@@ -121,8 +121,8 @@ function otpBinding(
   n: number,
   error: () => OtpFieldProps['error'],
   status: () => OtpFieldProps['status'],
-  onValueChange: () => OtpFieldProps['onValueChange'],
-  onComplete: () => OtpFieldProps['onComplete'],
+  onValueChange: (value: string) => void,
+  onComplete: (value: string) => void,
   autoSubmit: () => boolean,
 ) {
   // the error shows until the next key, whatever the prop still says
@@ -140,10 +140,10 @@ function otpBinding(
       success: status() === 'success',
       onValue: (v: string) => {
         if (v) shown.value = undefined
-        onValueChange()?.(v)
+        onValueChange(v)
       },
       onComplete(v: string) {
-        onComplete()?.(v)
+        onComplete(v)
         if (autoSubmit()) root?.querySelector('input')?.form?.requestSubmit()
       },
     }),
