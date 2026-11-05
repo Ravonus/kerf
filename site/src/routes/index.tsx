@@ -185,7 +185,7 @@ function bundleSizes() {
       </ul>
       <p data-part="note">
         JavaScript sent to the browser, compressed with brotli, from this repo's{' '}
-        <a href="https://github.com/Ravonus/weft/tree/main/benchmarks/compare" rel="external">
+        <a href="https://github.com/Ravonus/weft/blob/main/benchmarks/README.md" rel="external">
           comparison app
         </a>
         .
