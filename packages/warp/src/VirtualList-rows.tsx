@@ -5,6 +5,7 @@ import type { VirtualListProps } from './VirtualList-types'
 
 type RowContext<T> = {
   props: VirtualListProps<T>
+  renderChildren: () => VirtualListProps<T>['children']
   waiting: [HTMLElement, VirtualKey, (undo: () => void) => void][]
   pending: State<VirtualKey | undefined>
   active: State<VirtualKey | undefined>
@@ -20,7 +21,9 @@ export function VirtualRow<T>(p: {
   row: { item: T; i: number; key: VirtualKey }
   context: RowContext<T>
 }) {
-  const { props, waiting, pending, active, shown, keys, rowRole } = untrack(() => p.context)
+  const { props, renderChildren, waiting, pending, active, shown, keys, rowRole } = untrack(
+    () => p.context,
+  )
   let node: HTMLElement | undefined
   const key = untrack(() => p.row.key)
   onMount(() => {
@@ -61,15 +64,15 @@ export function VirtualRow<T>(p: {
       active.value = key
     },
   })
-  const body = props.children(() => p.row.item, pos)
+  const body = renderChildren()(() => p.row.item, pos)
   return props.tag === 'ol' ? <li {...attrs()}>{body}</li> : <div {...attrs()}>{body}</div>
 }
 
 /** A hidden row used for text measurement. */
 export function VirtualProbe<T>(p: { sample: [string, T]; context: RowContext<T> }) {
-  const { props, probes } = untrack(() => p.context)
+  const { props, probes, renderChildren } = untrack(() => p.context)
   const [name, item] = untrack(() => p.sample)
-  const body = props.children(
+  const body = renderChildren()(
     () => item,
     () => 0,
   ) // once: measuring overwrites the row's text
