@@ -57,7 +57,8 @@ describe('Q015', () => {
     'drizzle.config.ts': 'export default {}\n',
     'src/db/schema.ts': 'export const a = 1\n',
   }
-  const q015 = async (dir) => (await check(dir)).diagnostics.filter((d) => d.code === 'Q015')
+  const q015 = async (dir: string) =>
+    (await check(dir)).diagnostics.filter((d) => d.code === 'Q015')
 
   it('no migrations yet, then the schema drifting from the recorded hash', async () => {
     const dir = project(db)
@@ -112,9 +113,9 @@ describe('what a build reports to weft check', () => {
 })
 
 describe('U001–U005: interaction() and ui', () => {
-  const page = (body) =>
+  const page = (body: string) =>
     `import { interaction } from '@weft-js/core/interaction'\nimport { Button, Tabs } from '@weft-js/warp'\nexport function A() {\n${body}\n}\n`
-  const codes = async (files) =>
+  const codes = async (files: Record<string, string>) =>
     (await check(project(files))).diagnostics.map((d) => d.code).filter((c) => c.startsWith('U'))
 
   it('a key that can never match', async () => {
@@ -220,7 +221,13 @@ function registerProjectAliasTests() {
     expect(text.slice(...d.offset)).toMatch(/^products\.value\.map\(\(p\) => \(\{ \.\.\.p/)
     expect(d.span.slice(0, 2)).toEqual([26, 28])
     expect(d.why).toContain('src/components/ProductList.tsx:71')
-    expect(d.related.map((x) => [x.file, x.span[0], x.why])).toEqual([
+    expect(
+      d.related.map((x: { file: string; span: number[]; why: string }) => [
+        x.file,
+        x.span[0],
+        x.why,
+      ]),
+    ).toEqual([
       ['src/App.tsx', 54, 'passed as `<ProductList products>`'],
       ['src/components/ProductList.tsx', 71, 'rendered here as a keyed list'],
     ])
@@ -374,7 +381,7 @@ export function Clock() {
       ['W054', 'warning', 6],
       ['W050', 'error', 7],
     ])
-    const apply = (d) =>
+    const apply = (d: { fix: { edits: { offset: [number, number]; text: string }[] } }) =>
       d.fix.edits
         .toSorted((a, b) => b.offset[0] - a.offset[0])
         .reduce((t, e) => t.slice(0, e.offset[0]) + e.text + t.slice(e.offset[1]), clock)
