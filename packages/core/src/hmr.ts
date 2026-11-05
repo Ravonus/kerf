@@ -8,7 +8,8 @@
 // value back. Child components created during a re-run take the state of the child at the same place in the
 // previous run (same component, same order), so an edit keeps the state below it too.
 
-import { Box, derived, flush, getOwner, untrack, type Owner, type State } from './index'
+import { Box } from './index/state'
+import { derived, flush, getOwner, untrack, type Owner, type State } from './index'
 import { createComponent } from './dom'
 import { hmr as scopes } from './scope'
 

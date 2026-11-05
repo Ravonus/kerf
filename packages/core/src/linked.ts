@@ -1,5 +1,6 @@
 // Separate from the core so an app that writes no prop locals and no `state.linked` doesn't carry them.
-import { Box, derived, untrack, type Linked } from './index'
+import { Box } from './index/state'
+import { derived, untrack, type Linked } from './index'
 
 /**
  * A writable box that resets whenever `source` changes (a local copy of a prop). With `key`, it resets when the key

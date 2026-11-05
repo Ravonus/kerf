@@ -4,7 +4,7 @@
 import { renderToStream, renderToString } from '@weft-js/core/ssr'
 import { hydrate, render } from '@weft-js/core/dom'
 import { flush } from '@weft-js/core/test'
-import { rt } from '../src/index'
+import { rt } from '../src/index/graph'
 import { hydration } from '../src/hydrate'
 import { useApp, createApp } from '../src/scope'
 import { Note as ServerNote, Prefs as ServerPrefs } from './fixtures/ssr/Prefs.tsx?weft-ssr'

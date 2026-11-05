@@ -15,6 +15,7 @@ export default defineConfig({
   plugins: [weft()],
   resolve: {
     alias: [
+      { find: /^@weft-js\/core\/internal$/, replacement: src('internal.ts') },
       { find: /^@weft-js\/core\/dom$/, replacement: src('dom.ts') },
       { find: /^@weft-js\/core\/ssr$/, replacement: src('ssr.ts') },
       { find: /^@weft-js\/core\/head$/, replacement: src('head-client.ts') },

@@ -1,4 +1,6 @@
-import { Box, clean, getOwner, memo, rt, setFlat, untrack, within, type Owner } from '../index'
+import { Box } from '../index/state'
+import { clean, rt, setFlat } from '../index/graph'
+import { getOwner, memo, untrack, within, type Owner } from '../index'
 import { DEFER, ENDS, FLAT, LINEAR, ROWBOX, SWAP } from '../flags'
 import { keys, under } from '../keys'
 import { Row, find, rendered, rowStep, type Item } from './rows'

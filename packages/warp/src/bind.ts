@@ -1,5 +1,6 @@
 import type { ChangeReason } from '@weft-js/warp-core'
-import { Box, state, untrack, type State } from '@weft-js/core'
+import { Box } from '@weft-js/core/internal'
+import { state, untrack, type State } from '@weft-js/core'
 
 /** 04 §1.1: a State to bind, or a plain value (controlled) or defaultValue; `onValueChange` hears every change. */
 export interface Bindable<T> {

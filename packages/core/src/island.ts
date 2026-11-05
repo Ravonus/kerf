@@ -11,17 +11,8 @@
 // runs when it's near, `i` only fetches then. Claiming it is a pass of its own, and then `drain` replays what the script
 // held, in order: an event on an island still loading holds up those behind it, so a click can't pass the typing before.
 
-import {
-  DEV,
-  flush,
-  getOwner,
-  onCleanup,
-  rt,
-  runMounts,
-  within,
-  type Owner,
-  type SsrData,
-} from './index'
+import { DEV, flush, getOwner, onCleanup, within, type Owner, type SsrData } from './index'
+import { rt, runMounts } from './index/graph'
 import { hchild } from './claim'
 import { hydration, sweep } from './hydrate'
 import { keys, under } from './keys'

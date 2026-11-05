@@ -128,15 +128,19 @@ fn imports_of(code: &str) -> BTreeMap<String, BTreeSet<String>> {
     out
 }
 
-#[test]
-fn every_helper_the_back_end_imports_exists_in_the_runtime() {
+fn runtime_modules() -> BTreeMap<&'static str, BTreeSet<String>> {
     let runtime = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/core/src");
-    let modules: BTreeMap<&str, BTreeSet<String>> = [
+    [
         ("@weft-js/core", exports_of(&runtime.join("index.ts"))),
         ("@weft-js/core/dom", exports_of(&runtime.join("dom.ts"))),
         ("@weft-js/core/ssr", exports_of(&runtime.join("ssr.ts"))),
     ]
-    .into();
+    .into()
+}
+
+#[test]
+fn every_helper_the_back_end_imports_exists_in_the_runtime() {
+    let modules = runtime_modules();
 
     let files = components();
     assert!(

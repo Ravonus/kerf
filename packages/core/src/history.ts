@@ -3,7 +3,8 @@
 // microtask into one step named `<scope>.write`. Boxes with `history: false` are left out. The weft() Vite plugin
 // imports this where the option is used.
 
-import { Box, DEV, derived } from './index'
+import { Box } from './index/state'
+import { DEV, derived } from './index'
 import {
   features,
   owners,

@@ -1,5 +1,5 @@
+import { Box } from '@weft-js/core/internal'
 import {
-  Box,
   DEV,
   collect as boxes,
   derived,

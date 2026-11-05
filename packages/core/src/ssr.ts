@@ -10,7 +10,8 @@
 // Hydratable output ends with `<script type="application/json" data-weft>`: resolved resources and boundary
 // states by key. Put the whole string in the container `hydrate()` gets.
 
-import { createRoot, memo, rt, type SsrData } from './index'
+import { createRoot, memo, type SsrData } from './index'
+import { rt } from './index/graph'
 import { keys, nextKey, under } from './keys'
 import { createApp, dehydrate, useApp, type AppOptions } from './scope'
 import { withHead, type HeadOptions } from './head'

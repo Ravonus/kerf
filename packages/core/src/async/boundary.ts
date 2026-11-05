@@ -5,13 +5,13 @@ import {
   getOwner,
   memo,
   onCleanup,
-  rt,
   state,
   untrack,
   watch,
   type SsrData,
   type State,
 } from '../index'
+import { rt } from '../index/graph'
 import { keys, nextKey, under } from '../keys'
 import { boundaries, timing, waiting, type Tracked } from './shared'
 import { around, checkSwap } from './view'

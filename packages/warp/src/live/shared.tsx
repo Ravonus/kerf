@@ -32,7 +32,8 @@ import {
   iconSet,
 } from '@weft-js/warp-icons'
 import { hueOf } from '@weft-js/warp-core'
-import { Box, state, untrack, type State } from '@weft-js/core'
+import { Box } from '@weft-js/core/internal'
+import { state, untrack, type State } from '@weft-js/core'
 
 const GLYPHS = {
   bell: BellIcon,

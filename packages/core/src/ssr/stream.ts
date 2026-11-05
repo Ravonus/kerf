@@ -1,4 +1,5 @@
-import { rt, type SsrData } from '../index'
+import { rt } from '../index/graph'
+import { type SsrData } from '../index'
 import type { RenderOptions, Stream } from '../ssr'
 
 type Pass = (

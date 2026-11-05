@@ -1,6 +1,7 @@
 import { PinIcon } from '@weft-js/warp-icons'
 import { peerColor, roving, type Peer } from '@weft-js/warp-core'
-import { Box, derived, state, untrack, type State } from '@weft-js/core'
+import { Box } from '@weft-js/core/internal'
+import { derived, state, untrack, type State } from '@weft-js/core'
 import { Badge } from '../Badge'
 import { Avatar } from '../parts'
 import { use } from '@weft-js/warp-core/weft'

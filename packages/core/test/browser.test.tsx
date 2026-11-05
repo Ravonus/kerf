@@ -1,7 +1,8 @@
 // @weft-js/core/browser (PLAN §4.2, research 07 §6): values that subscribe on first read, share one listener per
 // (target, type), go with their owner, and have a defined server value. Plus @weft-js/core/test's page fakes and T012.
 import { screen } from '@testing-library/dom'
-import { createRoot, defineState, derived, devComponent } from '@weft-js/core'
+import { createRoot, defineState, derived } from '@weft-js/core'
+import { devComponent } from '@weft-js/core/internal'
 import { interval, lifecycle, media, on, online, visible } from '@weft-js/core/browser'
 import { hydrate } from '@weft-js/core/dom'
 import { renderToString } from '@weft-js/core/ssr'

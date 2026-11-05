@@ -21,7 +21,7 @@
 // outside a render S002: this process serves many users, so it has no "the tab's app".
 
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { rt } from '@weft-js/core'
+import { rt } from '@weft-js/core/internal'
 import { runtime } from './data'
 import * as exec from './exec'
 import type { Scope } from './exec'

@@ -6,7 +6,8 @@
 // Names come from the compiler's dev pass (`name(state(0), "Cart.count")`) and from `defineState` (`cart.items`).
 // The page gets `window.__weft__ = { graph, set, flush, errors, overlay }`.
 
-import { Box, DEV, Memo, flush, named, type Computation } from './index'
+import { Box } from './index/state'
+import { DEV, Memo, flush, named, type Computation } from './index'
 
 /** One named box or derived value in the graph: its value, what it reads and what it feeds. */
 export interface GraphNode {

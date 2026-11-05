@@ -2,19 +2,10 @@
 // these are the shared pieces: placing child nodes, attributes, classes, styles, events). Compiled code only; app
 // code imports `render` (or `hydrate`) and nothing else from here.
 
-import {
-  Box,
-  DEV,
-  clean,
-  createRoot,
-  devComponent,
-  flat,
-  hole,
-  memo,
-  onCleanup,
-  runMounts,
-  untrack,
-} from './index'
+import { Box } from './index/state'
+import { DEV, createRoot, memo, onCleanup, untrack } from './index'
+import { clean, devComponent, flat, runMounts } from './index/graph'
+import { hole } from './index/lifecycle'
 import { FLAT, RECORD, ROWBOX, SCAN, STEADY, SWAP, TEXT, WIPE } from './flags'
 import { keys } from './keys'
 import { swap, empty, inOrder } from './dom/optimizations'
