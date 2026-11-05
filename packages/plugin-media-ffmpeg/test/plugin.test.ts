@@ -6,6 +6,12 @@ import { describe, expect, it } from 'vitest'
 import { createMediaEncode } from '../src/build.mjs'
 import { KEYS, mediaFfmpeg } from '../src/index.mjs'
 
+const encode = createMediaEncode as (options: {
+  key: string
+  binary?: string
+  sha256?: string
+}) => ReturnType<typeof createMediaEncode>
+
 const ffmpeg = spawnSync('sh', ['-c', 'command -v ffmpeg'], { encoding: 'utf8' }).stdout.trim()
 
 describe('mediaFfmpeg()', () => {
@@ -23,8 +29,8 @@ describe('mediaFfmpeg()', () => {
       mode: 'development',
       root: '',
     }).notes
-    expect(notes.join(' ')).toMatch(/GPL/)
-    expect(notes.join(' ')).toMatch(/patent/)
+    expect(notes!.join(' ')).toMatch(/GPL/)
+    expect(notes!.join(' ')).toMatch(/patent/)
   })
 
   it('validates options', () => {
@@ -37,20 +43,20 @@ describe('mediaFfmpeg()', () => {
 // Needs a real `ffmpeg` on PATH: these run the binary, and its absence is covered by the option tests above.
 describe.skipIf(!ffmpeg)('the binary', () => {
   it('refuses one that is not the pinned file', async () => {
-    const enc = createMediaEncode({ key: 'video/h264', binary: ffmpeg, sha256: '0'.repeat(64) })
+    const enc = encode({ key: 'video/h264', binary: ffmpeg, sha256: '0'.repeat(64) })
     await expect(enc.versions()).rejects.toMatchObject({ code: 'M019' })
   })
 
   it('runs the pinned file', async () => {
     const sha256 = createHash('sha256').update(readFileSync(ffmpeg)).digest('hex')
-    expect(
-      (await createMediaEncode({ key: 'video/h264', binary: ffmpeg, sha256 }).versions()).encoder,
-    ).toBe('libx264')
+    expect((await encode({ key: 'video/h264', binary: ffmpeg, sha256 }).versions()).encoder).toBe(
+      'libx264',
+    )
   })
 
   it('says what to do when ffmpeg is missing', async () => {
     await expect(
-      createMediaEncode({ key: 'audio/aac', binary: '/nowhere/ffmpeg' }).encoderName(),
+      encode({ key: 'audio/aac', binary: '/nowhere/ffmpeg' }).encoderName(),
     ).rejects.toMatchObject({ code: 'M019' })
   })
 })
