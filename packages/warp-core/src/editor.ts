@@ -3,7 +3,6 @@
 // text, so a value or a paste can't carry a script. The `richText` action is the specimen's engine, contenteditable
 // and execCommand (inputs-rich.html:1522), which costs no editor library.
 
-// oxlint-disable-next-line no-restricted-imports -- Pure markup, verified by boundaries.
 import { esc as escapeHtml } from '@weft-js/core/markup'
 import { safeUrl, unesc } from './editor-url'
 export { safeUrl } from './editor-url'

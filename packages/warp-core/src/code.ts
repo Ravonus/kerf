@@ -1,7 +1,6 @@
 // CodeInput's editing and its highlighted layer (04 CodeInput; inputs-rich.html:2223): the keys a code field changes,
 // a small tokenizer, and the layer itself, drawn with the CSS Custom Highlight API so no key press builds a span.
 
-// oxlint-disable-next-line no-restricted-imports -- Pure markup, verified by boundaries.
 import { esc as escapeHtml } from '@weft-js/core/markup'
 
 /** Indent or outdent. A selection across lines moves whole lines; a caret takes one indent. */

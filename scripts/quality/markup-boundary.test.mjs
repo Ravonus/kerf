@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 import { standaloneMarkup } from './boundaries.mjs'
 
-test('markup stays inside its standalone runtime graph', () => {
+await test('markup stays inside its standalone runtime graph', () => {
   const root = mkdtempSync(join(tmpdir(), 'weft-markup-boundary-'))
   const core = join(root, 'packages/core')
   const source = join(core, 'src')
