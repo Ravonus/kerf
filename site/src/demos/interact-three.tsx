@@ -10,8 +10,8 @@ export default function Three() {
     score.value = score.value + 1
     score.value = score.value + 1
     score.value = score.value + 1
-    note.value =
-      `The handler saw ${score.value}` + ' at its end.'
+    const count = score.value
+    note.value = `The handler saw ${count} at its end.`
   }
   return (
     <Card title="Three writes in a row">
