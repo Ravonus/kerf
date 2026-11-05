@@ -37,6 +37,7 @@ struct Scan<'x, 's> {
     root: Uses,
     functions: HashMap<SpanKey, Uses>,
     bindings: HashMap<SymbolId, Target>,
+    render_calls: HashMap<SpanKey, Vec<Target>>,
     locals: Vec<SymbolId>,
     current: Option<SpanKey>,
     reading: bool,
@@ -87,6 +88,23 @@ impl Scan<'_, '_> {
         (self.current, self.reading) = previous;
     }
 
+    fn output_dependencies(&mut self, statements: &[Statement<'_>]) {
+        if self.event {
+            return;
+        }
+        let seeds = self.uses().reads.clone();
+        let dependencies =
+            super::handler_values::output_dependencies(statements, self.a.scoping, seeds);
+        let mut renders = Vec::new();
+        for call in dependencies.calls {
+            if let Some(targets) = self.render_calls.get(&call) {
+                renders.extend(targets.iter().copied());
+            }
+        }
+        self.uses().reads.extend(dependencies.reads);
+        self.uses().renders.extend(renders);
+    }
+
     fn reachable(&self, roots: &[Target], render: bool) -> Vec<&Uses> {
         let mut pending = roots.to_vec();
         let mut seen = HashSet::new();
@@ -113,7 +131,7 @@ impl Scan<'_, '_> {
     }
 }
 
-fn event_attribute(name: &JSXAttributeName<'_>) -> bool {
+pub(super) fn event_attribute(name: &JSXAttributeName<'_>) -> bool {
     match name {
         JSXAttributeName::Identifier(n) => n
             .name
@@ -159,13 +177,21 @@ impl<'a> Visit<'a> for Scan<'_, '_> {
         if let Some(sym) = it.id.as_ref().and_then(binding_symbol) {
             self.bind(sym, Target::Function(key(it.span)));
         }
-        self.function(it.span, false, |scan| walk::walk_function(scan, it, flags));
+        self.function(it.span, false, |scan| {
+            walk::walk_function(scan, it, flags);
+            if let Some(body) = &it.body {
+                scan.output_dependencies(&body.statements);
+            }
+        });
     }
 
     fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
         let expression = !matches!(&it.body, ArrowFunctionBody::FunctionBody(_));
         self.function(it.span, expression, |scan| {
-            walk::walk_arrow_function_expression(scan, it)
+            walk::walk_arrow_function_expression(scan, it);
+            if let ArrowFunctionBody::FunctionBody(body) = &it.body {
+                scan.output_dependencies(&body.statements);
+            }
         });
     }
 
@@ -260,6 +286,7 @@ impl<'a> Visit<'a> for Scan<'_, '_> {
             }
         }
         let reading = self.reading && !self.event;
+        self.render_calls.insert(key(it.span), renders.clone());
         self.uses().calls.extend(calls);
         if reading {
             self.uses().renders.extend(renders);
@@ -275,6 +302,7 @@ impl Analyzer<'_> {
             root: Uses::default(),
             functions: HashMap::new(),
             bindings: HashMap::new(),
+            render_calls: HashMap::new(),
             locals: Vec::new(),
             current: None,
             reading: false,
@@ -283,6 +311,7 @@ impl Analyzer<'_> {
         for statement in statements {
             scan.visit_statement(statement);
         }
+        scan.output_dependencies(statements);
         let mut reads = scan.root.reads.clone();
         let mut handlers = scan.root.handlers.clone();
         for uses in scan.reachable(&scan.root.renders, true) {

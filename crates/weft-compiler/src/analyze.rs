@@ -10,6 +10,7 @@ mod context;
 mod early_returns;
 mod finish;
 mod handler_mutations;
+mod handler_values;
 mod lists;
 mod props;
 mod react;

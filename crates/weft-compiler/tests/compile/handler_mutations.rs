@@ -125,6 +125,107 @@ fn w041_rendered_reads_include_attributes_helpers_and_jsx_callbacks() {
 }
 
 #[test]
+fn w041_helper_output_follows_local_values_and_return_conditions() {
+    for body in [
+        "const value = n; return value",
+        "let value = n; return value",
+        "const value = n; const alias = value; return alias",
+        "const value = read(); return value",
+        "if (n) return 'yes'; return 'no'",
+        "const value = n; if (value) return 'yes'; return 'no'",
+        "if (positive()) return 'yes'; return 'no'",
+        "if (true) { if (n) return 'yes' } return 'no'",
+        "switch (n) { case 0: return 'no'; default: return 'yes' }",
+        "while (n) { return 'yes' } return 'no'",
+        "for (; n;) { return 'yes' } return 'no'",
+        "for (const item of [n]) { if (item) return 'yes' } return 'no'",
+    ] {
+        let source = format!(
+            "export function A() {{ let n = 0; const read = () => n; \
+             const positive = () => n > 0; function label() {{ {body} }} \
+             return <button onClick={() => n++}>{{label()}}</button> }}"
+        );
+        let (_, diagnostics) = run(&source);
+        let errors = handler_mutation_errors(&diagnostics);
+        assert_eq!(errors.len(), 1, "{source}: {diagnostics:?}");
+        assert_eq!(errors[0].severity, Severity::Error);
+        assert!(errors[0].message.starts_with("`n`"));
+        assert!(errors[0].help.contains("n.value"));
+        assert!(errors[0].fix.is_none());
+    }
+    let (_, diagnostics) = run("export function A() { let n = 0; \
+        const label = () => { const value = n; return value }; \
+        return <button onClick={() => n++}>{label()}</button> }");
+    assert_eq!(
+        handler_mutation_errors(&diagnostics).len(),
+        1,
+        "{diagnostics:?}"
+    );
+}
+
+#[test]
+fn w041_helper_effects_unused_aliases_and_shadows_do_not_reach_output() {
+    for body in [
+        "console.log(n); return 'fixed'",
+        "const value = n; console.log(value); return 'fixed'",
+        "const value = read(); console.log(value); return 'fixed'",
+        "if (n) console.log('effect'); return 'fixed'",
+        "const value = n; if (value) console.log('effect'); return 'fixed'",
+        "if (n) { const unused = () => 'yes' } return 'fixed'",
+        "const value = n; { const value = 'fixed'; return value }",
+        "const n = 7; const value = n; return value",
+        "let value = n; value = 7; return value",
+        "const value = untrack(() => n); return value",
+    ] {
+        let source = format!(
+            "import {{ untrack }} from '@weft-js/core'; export function A() {{ let n = 0; \
+             const read = () => n; function label() {{ {body} }} \
+             return <button onClick={() => n++}>{{label()}}</button> }}"
+        );
+        let (_, diagnostics) = run(&source);
+        assert!(
+            handler_mutation_errors(&diagnostics).is_empty(),
+            "{source}: {diagnostics:?}"
+        );
+    }
+    for source in [
+        "export function A() { let n = 0; function label(n) { const value = n; return value } \
+         return <button onClick={() => n++}>{label(7)}</button> }",
+        "export function A() { let n = 0; function unused() { const value = n; return value } \
+         function label() { const value = 'fixed'; return value } \
+         return <button onClick={() => n++}>{label()}</button> }",
+    ] {
+        let (_, diagnostics) = run(source);
+        assert!(
+            handler_mutation_errors(&diagnostics).is_empty(),
+            "{source}: {diagnostics:?}"
+        );
+    }
+}
+
+#[test]
+fn w041_helper_local_state_repairs_compile_without_diagnostics() {
+    for body in [
+        "const value = n.value; return value",
+        "const value = n.value; const alias = value; return alias",
+        "if (n.value) return 'yes'; return 'no'",
+        "const value = n.value; if (value) return 'yes'; return 'no'",
+    ] {
+        let source = format!(
+            "import {{ state }} from '@weft-js/core'; export function A() {{ \
+             const n = state(0); function label() {{ {body} }} \
+             return <button onClick={() => n.value++}>{{label()}}</button> }}"
+        );
+        let (code, diagnostics) = run(&source);
+        assert!(diagnostics.is_empty(), "{source}: {diagnostics:?}");
+        assert!(
+            code.contains("n.value") && code.contains("label()"),
+            "{code}"
+        );
+    }
+}
+
+#[test]
 fn w041_shadowed_bindings_and_setup_only_mutations_stay_quiet() {
     let sources = [
         "export function A() { let n = 0; return <button onClick={n => n++}>{n}</button> }",

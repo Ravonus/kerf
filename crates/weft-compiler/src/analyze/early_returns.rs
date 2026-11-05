@@ -57,7 +57,7 @@ struct Reads<'x, 's> {
     found: bool,
 }
 
-fn allocated_object(e: &Expression<'_>) -> bool {
+pub(super) fn allocated_object(e: &Expression<'_>) -> bool {
     matches!(
         e.get_inner_expression(),
         Expression::ObjectExpression(_)
@@ -192,7 +192,7 @@ impl<'a> Visit<'a> for Aliases<'_, '_> {
     fn visit_arrow_function_expression(&mut self, _: &ArrowFunctionExpression<'a>) {}
 }
 
-fn has_return(statement: &Statement<'_>) -> bool {
+pub(super) fn has_return(statement: &Statement<'_>) -> bool {
     let mut returns = EarlyReturn { found: false };
     returns.visit_statement(statement);
     returns.found
