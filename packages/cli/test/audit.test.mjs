@@ -153,4 +153,31 @@ describe.skipIf(!chrome)('the rendered pages, in Chrome', () => {
     expect(result.diagnostics.filter((d) => d.file === '/')).toEqual([])
     for (const d of result.diagnostics) expect(d.fix.text).not.toBe('')
   })
+
+  it('audits each page in the foreground', async () => {
+    const foregroundRoot = mkdtempSync(join(tmpdir(), 'weft-audit-foreground-'))
+    const html = `${head('Foreground')}
+<body><main><h1>Foreground</h1><p>Visible words read clearly.</p></main>
+<script>
+  const reflect = () => {
+    document.body.style.color = document.hidden ? '#bbb' : '#111'
+  }
+  document.addEventListener('visibilitychange', reflect)
+  reflect()
+</script></body></html>`
+    try {
+      for (const name of ['a', 'b', 'c', 'd']) {
+        const dir = join(foregroundRoot, 'dist', name)
+        mkdirSync(dir, { recursive: true })
+        writeFileSync(join(dir, 'index.html'), html)
+      }
+      const got = await audit(foregroundRoot, { dir: join(foregroundRoot, 'dist') })
+      expect(got.pages).toEqual(['/a/', '/b/', '/c/', '/d/'])
+      expect(got.skipped).toBeUndefined()
+      expect(got.diagnostics).toEqual([])
+      expect(got.ok).toBe(true)
+    } finally {
+      rmSync(foregroundRoot, { recursive: true, force: true })
+    }
+  }, 30_000)
 })
