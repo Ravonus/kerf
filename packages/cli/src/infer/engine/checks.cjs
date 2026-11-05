@@ -135,14 +135,15 @@ function errors(host, file) {
 
 function affected() {
   const files = new Set(this.maps.keys())
-  if (this.boxPropsNeeded())
-    for (const facts of this.facts.values()) if (facts.sites.length) files.add(facts.file)
+  const derived = this.derivedWritesNeeded()
+  if (derived || this.boxPropsNeeded())
+    for (const facts of this.facts.values()) if (derived || facts.sites.length) files.add(facts.file)
   for (const sites of this.lastSites?.values() ?? []) for (const s of sites) files.add(s.file)
   return files
 }
 
 function run(host, changed) {
-  if (this.boxPropsNeeded()) this.diags.clear()
+  if (this.typedChecksNeeded()) this.diags.clear()
   this.findings = new Map()
   const comps = this.comps()
   if (!this.needed()) {

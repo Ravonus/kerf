@@ -100,3 +100,22 @@ test('compiler entries in other catalog partitions require emits and assertions'
     ['missing test: D024'])
   deepStrictEqual(check([...compiler, ...style]), [])
 })
+
+test('W007 requires CLI emit, assertion and truthful owner evidence', () => {
+  const entries = [{ code: 'W007', by: 'cli' }]
+  const source = { 'derived-writes.cjs': "function emit() { return { code: 'W007' } }" }
+  const tests = { 'derived-writes.test.ts': "expect(result.code).toBe('W007')" }
+  const run = (catalog = entries, emits = source, checks = tests) =>
+    compare(gaps(catalog, {}, {}, { source: emits, tests: checks }), [])
+  deepStrictEqual(run(), [])
+  deepStrictEqual(run(entries, {}), ['missing emit: W007'])
+  deepStrictEqual(run(entries, source, {}), ['missing test: W007'])
+  deepStrictEqual(run([]), ['missing entry: W007'])
+  ok(run([{ code: 'W007', by: 'compiler' }]).includes('missing emit: W007'))
+  ok(run([{ code: 'W007', by: 'start' }]).includes('unsupported owner: W007'))
+  deepStrictEqual(run(entries, { 'fake.cjs': "const entry = { code: 'W007' }" }),
+    ['missing emit: W007'])
+  deepStrictEqual(run(entries, source, { 'fake.test.ts': "describe('W007', () => {})" }),
+    ['missing test: W007'])
+  deepStrictEqual(run(), [])
+})

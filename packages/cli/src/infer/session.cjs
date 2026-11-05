@@ -70,7 +70,7 @@ class Session {
     this.host = null
     this.overlay = new Map()
     this.errors = new Map()
-    for (const f of this.parsed.fileNames) if (/\.tsx?$/.test(f)) this.engine.set(f)
+    for (const f of this.parsed.fileNames) if (/\.(?:[cm]?ts|tsx)$/.test(f)) this.engine.set(f)
   }
 
   async start() {
@@ -104,7 +104,7 @@ class Session {
     const fresh = !this.host
     const host = await this.start()
     const findings = this.engine.run(host, fresh ? undefined : changed)
-    const redo = fresh || !changed || this.engine.boxPropsNeeded()
+    const redo = fresh || !changed || this.engine.typedChecksNeeded()
       ? this.engine.affected()
       : this.engine.touched
     for (const file of redo) {
@@ -140,6 +140,7 @@ class Session {
               end: d.start + d.length,
               why: d.text,
               help: 'Fix the type error',
+              ...d.weft,
             })),
         )
         continue

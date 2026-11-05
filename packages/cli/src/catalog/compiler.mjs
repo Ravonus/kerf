@@ -106,7 +106,7 @@ export const compilerDiagnostics = [
   {
     code: 'W007',
     severity: 'error',
-    by: 'compiler',
+    by: 'cli',
     catches: 'Assigning to a `Derived` (maps TS2540)',
     fix: 'Make it `state` or `state.linked`',
   },

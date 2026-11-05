@@ -4,6 +4,7 @@
 // service, which is what a tsserver plugin has, and what a project on TypeScript 6 gets.
 
 const { boxMismatch } = require('./box-props.cjs')
+const { derivedWrite } = require('./derived-writes.cjs')
 
 const NO_TRUNCATE = 1
 
@@ -150,7 +151,7 @@ function languageHost(ts, service, sync = () => {}) {
         length: d.length ?? 0,
         code: d.code,
         text: ts.flattenDiagnosticMessageText(d.messageText, '\n'),
-        weft: boxMismatch(ts, s.getProgram(), d),
+        weft: derivedWrite(ts, s.getProgram(), d) ?? boxMismatch(ts, s.getProgram(), d),
       }))
     },
     close() {},

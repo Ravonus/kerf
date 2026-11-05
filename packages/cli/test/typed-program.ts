@@ -1,7 +1,9 @@
 // Shared in-memory core declarations and TypeScript host for diagnostic fixtures.
 import ts from 'typescript'
 
+/** Core declarations and minimal globals used by typed diagnostic fixtures. */
 export const declarations = `
+interface Array<T> { length: number; [index: number]: T }
 declare module '@weft-js/core' {
   export interface State<T> { value: T; readonly stateBrand: 'state' }
   export interface Derived<T> { readonly value: T; readonly derivedBrand: 'derived' }
@@ -12,6 +14,7 @@ declare namespace JSX {
   interface Element {}
   interface IntrinsicElements { div: { title?: number } }
 }`
+/** Type-check an in-memory TSX source with optional extra modules. */
 export function typedProgram(source: string, extra: Record<string, string> = {}) {
   const files: Record<string, string> = {
     '/app/core.d.ts': declarations,

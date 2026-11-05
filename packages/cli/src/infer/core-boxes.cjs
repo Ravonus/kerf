@@ -4,7 +4,7 @@ const programs = new WeakMap()
 /** Resolved core exports and member declarations for one checker program. */
 function coreMembers(ts, program, checker) {
   if (programs.has(program)) return programs.get(program)
-  const roots = new Set(), shapes = []
+  const roots = new Set(), shapes = [], derivedRoots = new Set()
   for (const file of program.getSourceFiles()) {
     for (const node of file.statements) {
       if ((!ts.isImportDeclaration(node) && !ts.isExportDeclaration(node))
@@ -13,10 +13,12 @@ function coreMembers(ts, program, checker) {
       if (!module) continue
       for (let symbol of checker.getExportsOfModule(module)) {
         if (!['State', 'Derived'].includes(symbol.name)) continue
+        const derived = symbol.name === 'Derived'
         if (symbol.flags & ts.SymbolFlags.Alias) symbol = checker.getAliasedSymbol(symbol)
         const type = checker.getDeclaredTypeOfSymbol(symbol)
         const value = checker.getPropertyOfType(type, 'value')
         roots.add(symbol)
+        if (derived) derivedRoots.add(symbol)
         shapes.push({
           names: checker.getPropertiesOfType(type).map((property) => property.name),
           declarations: new Set(value?.getDeclarations() ?? []),
@@ -24,7 +26,7 @@ function coreMembers(ts, program, checker) {
       }
     }
   }
-  const core = { roots, shapes }
+  const core = { roots, shapes, derivedRoots }
   programs.set(program, core)
   return core
 }

@@ -168,7 +168,7 @@ describe('W008 typed component props', () => {
     const raw = [{ code: 2322, start: 10, length: 1 }, { code: 2339, start: 10, length: 1 }]
     const host = withBoxProps({ diagnostics: () => raw, update() {}, close() {} }, () => {
       started++
-      return { diagnostics: () => [{ start: 10, weft: { code: 'W008' } }],
+      return { diagnostics: () => [{ code: 2322, start: 10, weft: { code: 'W008' } }],
         update() {}, close() { closed++ } }
     })
     expect(started).toBe(0)

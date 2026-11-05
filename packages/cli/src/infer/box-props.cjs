@@ -86,7 +86,11 @@ function boxMismatch(ts, program, diagnostic) {
   }
 }
 
-/** Keep native inference; lazily use the existing JS host for symbol-backed error mapping. */
+function canMap(file, diagnostic) {
+  return diagnostic.code === 2540 || (file.endsWith('.tsx') && assignmentCodes.has(diagnostic.code))
+}
+
+/** Keep native inference; lazily map core box prop and readonly errors with the existing JS host. */
 function withBoxProps(host, createFallback) {
   let fallback
   return {
@@ -97,13 +101,14 @@ function withBoxProps(host, createFallback) {
     },
     diagnostics(file) {
       const list = host.diagnostics(file)
-      if (!file.endsWith('.tsx') || !list.some((diagnostic) => assignmentCodes.has(diagnostic.code)))
+      if (!list.some((diagnostic) => canMap(file, diagnostic)))
         return list
       fallback ??= createFallback()
       const mapped = fallback.diagnostics(file).filter((diagnostic) => diagnostic.weft)
       return list.map((diagnostic) => {
-        if (!assignmentCodes.has(diagnostic.code)) return diagnostic
-        const match = mapped.find((candidate) => candidate.start === diagnostic.start)
+        if (!canMap(file, diagnostic)) return diagnostic
+        const match = mapped.find((candidate) => candidate.start === diagnostic.start
+          && candidate.code === diagnostic.code)
         return match ? { ...diagnostic, weft: match.weft } : diagnostic
       })
     },
