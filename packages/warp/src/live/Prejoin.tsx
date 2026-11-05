@@ -1,19 +1,19 @@
 import { announce, countdownLabel, countdownParts, levelMeter, uid } from '@weft-js/warp-core'
 import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
-import { Avatar } from '../parts'
 import { Button } from '../Button'
 import { Card } from '../Card'
 import { Input } from '../Field'
 import { Select, type Option } from '../Select'
 import { Spinner } from '../Spinner'
 import { use } from '@weft-js/warp-core/weft'
-import { avatarTint, G, held } from './shared'
+import { G, held } from './shared'
+import { PrejoinPreview } from './PrejoinPreview'
+import { PrejoinMeter } from './PrejoinMeter'
 import '../fields'
 import '@weft-js/warp-core/styles/app/base.css'
 import '@weft-js/warp-core/styles/app/tile.css'
 import '@weft-js/warp-core/styles/app/prejoin.css'
 
-const BARS = Array.from({ length: 16 }, (_, i) => i)
 /** The devices to choose from before joining. */
 export interface PrejoinDevices {
   mics?: Option[]
@@ -85,52 +85,8 @@ export function Prejoin({
     <div data-scope="prejoin">
       <div data-part="layout">
         <div data-part="stack">
-          <div data-part="preview">
-            <div data-scope="tile" data-cam={camOn.value ? undefined : 'off'}>
-              {camOn.value && preview ? (
-                <div data-part="video">{preview()}</div>
-              ) : (
-                <Avatar name={who.value || 'You'} size="xl" style={avatarTint(who.value)} />
-              )}
-              <span data-part="name">You</span>
-            </div>
-            <div data-part="preview-controls">
-              <Button
-                emphasis="soft"
-                tone="neutral"
-                data-icon-only=""
-                aria-pressed={micOn.value ? 'true' : 'false'}
-                aria-label="Microphone"
-                onClick={() => micOn.set(!micOn.value)}
-              >
-                <G name={micOn.value ? 'mic' : 'micoff'} />
-              </Button>
-              <Button
-                emphasis="soft"
-                tone="neutral"
-                data-icon-only=""
-                aria-pressed={camOn.value ? 'true' : 'false'}
-                aria-label="Camera"
-                onClick={() => camOn.set(!camOn.value)}
-              >
-                <G name={camOn.value ? 'cam' : 'camoff'} />
-              </Button>
-            </div>
-          </div>
-          <div
-            ref={(n) => (meter = n)}
-            data-part="meter"
-            role="meter"
-            aria-label="Microphone level"
-            aria-valuemin="0"
-            aria-valuemax="16"
-            aria-valuenow="0"
-            style={level === undefined ? undefined : `--level:${level}`}
-          >
-            {BARS.map((i) => (
-              <i key={i}></i>
-            ))}
-          </div>
+          <PrejoinPreview who={who} micOn={micOn} camOn={camOn} preview={preview} />
+          <PrejoinMeter bind={(n) => (meter = n)} level={level} />
         </div>
         <div data-part="stack">
           <Input
