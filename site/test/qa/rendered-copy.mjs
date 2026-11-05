@@ -1,3 +1,19 @@
+// Wait for scroll-driven layout to settle before clicking the control.
+async function settleCopy(page, button) {
+  await page.evaluate(() => {
+    window.__qaCopyPosition = undefined
+  })
+  const element = await button.elementHandle()
+  await page.waitForFunction((el) => {
+    const r = el.getBoundingClientRect()
+    const position = [r.x, r.y, r.width, r.height].join(',')
+    const previous = window.__qaCopyPosition
+    const frames = previous?.position === position ? previous.frames + 1 : 0
+    window.__qaCopyPosition = { position, frames }
+    return frames >= 3
+  }, element)
+}
+
 // Observe the real copy action and compare it to the unchanged source-line text.
 export async function checkCopies(page) {
   await page.evaluate(() => {
@@ -26,6 +42,7 @@ export async function checkCopies(page) {
     })
     if (source === undefined) throw new Error(`copy button ${i + 1} has no code`)
     await button.scrollIntoViewIfNeeded()
+    await settleCopy(page, button)
     await button.click()
     checked++
     await page.waitForFunction((n) => window.__qaCopies.length >= n, checked)
