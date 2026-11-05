@@ -10,7 +10,7 @@ const { chromium } = createRequire(new URL('../../../packages/warp/package.json'
 const site = readFileSync(new URL('../../src/styles/site.css', import.meta.url), 'utf8')
 const example = readFileSync(new URL('../../src/styles/example.css', import.meta.url), 'utf8')
 
-test('annotated wrapped lines keep their gutter and hanging indent', async () => {
+await test('annotated wrapped lines keep their gutter and hanging indent', async () => {
   const browser = await chromium.launch()
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 900 } })
