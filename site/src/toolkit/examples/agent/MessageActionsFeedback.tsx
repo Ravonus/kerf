@@ -1,0 +1,26 @@
+import { state } from '@weft-js/core'
+import { MessageActions, Prose, Stack, Text } from '@weft-js/warp'
+import { copyConfirm } from '@weft-js/warp-core'
+
+export function MessageActionsFeedback() {
+  const said = state('Nothing yet')
+  return (
+    <Stack gap="related">
+      <Prose text="Rollback finished. `mobile-bff` is back on `d-4801`." />
+      <MessageActions
+        onCopy={(el) => {
+          void copyConfirm(el, 'Rollback finished.')
+          said.value = 'Copied'
+        }}
+        onFeedback={(value, reason) =>
+          (said.value = reason ?? (value ? `Rated ${value}` : 'Rating cleared'))
+        }
+        onRegenerate={() => (said.value = 'Regenerating')}
+        onBranch={() => (said.value = 'New branch')}
+      />
+      <Text role="caption" subtle>
+        Last action: {said.value}
+      </Text>
+    </Stack>
+  )
+}
