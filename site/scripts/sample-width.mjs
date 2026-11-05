@@ -2,6 +2,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { SHOWN } from './content/displayed.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -91,6 +92,11 @@ export function scanSamples(repo = root) {
   )
   const world = join(repo, 'site/src/toolkit/world.ts')
   if (existsSync(world)) sources.push(world)
+  sources.push(
+    ...Object.values(SHOWN)
+      .map((path) => join(repo, path))
+      .filter(existsSync),
+  )
   const files = [...new Set(markdown)]
     .filter(existsSync)
     .map((path) => [path, scanMarkdown])
@@ -100,11 +106,16 @@ export function scanSamples(repo = root) {
   )
 }
 
-/** Print warning-mode totals and return the violations for callers that need details. */
+/** Fail when any canonical code sample exceeds its width. */
 export function reportSampleWidths(repo = root) {
   const violations = scanSamples(repo)
-  const files = new Set(violations.map((v) => v.file)).size
-  console.warn(`[sample-width] ${violations.length} violations in ${files} files (warning)`)
+  if (violations.length) {
+    const details = violations.map(
+      (v) => `${v.file}:${v.line}: ${v.width} columns (limit ${v.limit})`,
+    )
+    throw new Error(`[sample-width] ${violations.length} violations:\n${details.join('\n')}`)
+  }
+  console.log('[sample-width] 0 violations')
   return violations
 }
 

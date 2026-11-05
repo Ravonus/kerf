@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { highlight, site, repo, reportSampleWidths } from './content/context.mjs'
+import { SHOWN } from './content/displayed.mjs'
 const { write, numbers, MOVED } = await import('./content/docs-catalog.mjs')
 const { buildReference } = await import('./content/markdown.mjs')
 const { buildLearn, buildSearch } = await import('./content/learn-search.mjs')
@@ -17,11 +18,8 @@ buildShowcase()
 buildSpeed()
 // The shop's steps, and any demo named `<name>-step-<n>`, mark the lines each one added, so the code shows the app growing.
 // `ask` is a frame, so what it shows is the app inside it. `slow` shows the page it loads.
-const SHOWN = {
-  'ask.tsx': '../benchmarks/arena/graph/main.tsx',
-  'slow.tsx': 'src/routes/examples/slow.tsx',
-}
-const demoText = (f) => readFileSync(join(site, SHOWN[f] ?? `src/demos/${f}`), 'utf8').trim()
+const demoText = (f) =>
+  readFileSync(SHOWN[f] ? join(repo, SHOWN[f]) : join(site, `src/demos/${f}`), 'utf8').trim()
 const demoHtml = (f) => {
   const text = demoText(f)
   const step = /^(shop|.+-step)-(\d+)\.tsx$/.exec(f)
