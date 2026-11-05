@@ -244,7 +244,7 @@ test('a build with no secret gives Better Auth one of its own, so a production b
   }
 })
 
-describe('the handler', () => {
+function handlerFixture() {
   const ran: string[] = []
   const manifest: Manifest = {
     dir: 'src/routes',
@@ -314,6 +314,11 @@ describe('the handler', () => {
         body: JSON.stringify({ i: { email: 'ada@example.test', password } }),
       }),
     )
+  return { ran, handler, found, call }
+}
+
+describe('the handler', () => {
+  const { ran, handler, found, call } = handlerFixture()
   mutation({
     $id: 'login',
     input: credentials,
