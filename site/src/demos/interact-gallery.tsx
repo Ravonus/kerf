@@ -29,7 +29,7 @@ export default function Gallery() {
   return (
     <Card
       eyebrow={
-        `${index.value + 1} of ` + `${sculptures.length}`
+        `${index.value + 1} of ` + sculptures.length
       }
       title={sculpture.value?.name}
     >
