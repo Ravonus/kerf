@@ -6,6 +6,11 @@ import {
   toast,
 } from '@weft-js/warp'
 
+const previewHint =
+  'Every pull request gets its own address.'
+const pauseHint =
+  'Takes the project offline until you switch it back.'
+
 export function SwitchSettings() {
   const previews = state(true)
   const analytics = state(false)
@@ -19,9 +24,7 @@ export function SwitchSettings() {
     >
       <Switch
         checked={previews.value}
-        hint={
-          'Every pull request gets its own ' + 'address.'
-        }
+        hint={previewHint}
         onChange={(
           e: Event & { currentTarget: HTMLInputElement },
         ) =>
@@ -49,10 +52,7 @@ export function SwitchSettings() {
       </Switch>
       <Switch
         checked={paused.value}
-        hint={
-          'Takes the project offline until ' +
-          'you switch it back.'
-        }
+        hint={pauseHint}
         onChange={(
           e: Event & { currentTarget: HTMLInputElement },
         ) =>

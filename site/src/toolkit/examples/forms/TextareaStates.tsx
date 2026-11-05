@@ -1,6 +1,9 @@
 import { Grid, Textarea } from '@weft-js/warp'
 import { Cell } from '../../world'
 
+const description =
+  'The public shop, served from the edge.'
+
 export const TextareaStates = () => (
   <Grid
     cols={3}
@@ -12,9 +15,7 @@ export const TextareaStates = () => (
     <Cell name="Filled">
       <Textarea
         label="Description"
-        defaultValue={
-          'The public shop, served ' + 'from the edge.'
-        }
+        defaultValue={description}
       />
     </Cell>
     <Cell name="Hint">
@@ -33,18 +34,14 @@ export const TextareaStates = () => (
     <Cell name="Disabled">
       <Textarea
         label="Description"
-        defaultValue={
-          'The public shop, served ' + 'from the edge.'
-        }
+        defaultValue={description}
         disabled
       />
     </Cell>
     <Cell name="Read-only">
       <Textarea
         label="Description"
-        defaultValue={
-          'The public shop, served ' + 'from the edge.'
-        }
+        defaultValue={description}
         readonly
       />
     </Cell>

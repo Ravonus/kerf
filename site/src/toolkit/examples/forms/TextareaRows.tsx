@@ -1,20 +1,19 @@
 import { Stack, Textarea } from '@weft-js/warp'
 
+const description =
+  'The public shop, served from the edge.'
+
 export const TextareaRows = () => (
   <Stack gap="group">
     <Textarea
       label="Description"
       rows={2}
-      defaultValue={
-        'The public shop, served ' + 'from the edge.'
-      }
+      defaultValue={description}
     />
     <Textarea
       label="Description"
       rows={5}
-      defaultValue={
-        'The public shop, served ' + 'from the edge.'
-      }
+      defaultValue={description}
     />
   </Stack>
 )

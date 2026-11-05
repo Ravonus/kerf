@@ -1,6 +1,9 @@
 import { Grid, Switch } from '@weft-js/warp'
 import { Cell } from '../../world'
 
+const previewHint =
+  'Every pull request gets its own address.'
+
 export const SwitchStates = () => (
   <Grid
     cols={3}
@@ -13,13 +16,7 @@ export const SwitchStates = () => (
       <Switch checked>Preview deploys</Switch>
     </Cell>
     <Cell name="Hint">
-      <Switch
-        hint={
-          'Every pull request gets its own ' + 'address.'
-        }
-      >
-        Preview deploys
-      </Switch>
+      <Switch hint={previewHint}>Preview deploys</Switch>
     </Cell>
     <Cell name="Disabled off">
       <Switch disabled>Preview deploys</Switch>

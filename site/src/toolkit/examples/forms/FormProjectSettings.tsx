@@ -18,11 +18,15 @@ import { SLUG, REGION_OPTIONS } from './shared'
 const initialAbout =
   'The public shop, served from the edge.'
 
+function nameProblem(name: string) {
+  return SLUG.test(name)
+    ? undefined
+    : 'Use lowercase letters, numbers and dashes.'
+}
+
 export function FormProjectSettings() {
   const name = state('storefront')
-  const about = state(
-    'The public shop, served from the edge.',
-  )
+  const about = state(initialAbout)
   const region = state<string | null>('eu-west')
   const copies = state(3)
   const onPush = state(true)
