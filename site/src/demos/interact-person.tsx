@@ -39,9 +39,7 @@ export default function Person() {
       <Input
         label="Email"
         value={person.value.email}
-        onInput={(e) =>
-          setEmail(e.currentTarget.value)
-        }
+        onInput={(e) => setEmail(e.currentTarget.value)}
       />
       <p>
         {person.value.first} {person.value.last} (

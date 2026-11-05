@@ -44,7 +44,10 @@ export default function Newsletter() {
             required
             disabled={sending.value}
           />
-          <Button type="submit" disabled={sending.value}>
+          <Button
+            type="submit"
+            disabled={sending.value}
+          >
             {sending.value ? <Spinner /> : 'Join'}
           </Button>
         </form>

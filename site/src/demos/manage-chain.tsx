@@ -22,7 +22,10 @@ export default function Tea() {
         {qty.value} × ${PRICE} = ${subtotal.value}
       </p>
       <Row gap="tight">
-        <Button size="sm" onClick={() => qty.value++}>
+        <Button
+          size="sm"
+          onClick={() => qty.value++}
+        >
           Add one
         </Button>
         <Button

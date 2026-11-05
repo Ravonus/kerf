@@ -51,7 +51,10 @@ export default function Quiz() {
   return (
     <Card title="City quiz">
       {status.value === 'success' ? (
-        <Alert tone="positive" title="That's right!">
+        <Alert
+          tone="positive"
+          title="That's right!"
+        >
           Lima is the capital of Peru.
         </Alert>
       ) : (
