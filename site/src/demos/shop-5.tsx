@@ -8,9 +8,24 @@ import {
 } from '@weft-js/warp'
 
 const products = [
-  { id: 1, name: 'Coffee', price: 12, count: state(0) },
-  { id: 2, name: 'Filters', price: 5, count: state(0) },
-  { id: 3, name: 'Grinder', price: 40, count: state(0) },
+  {
+    id: 1,
+    name: 'Coffee',
+    price: 12,
+    count: state(0),
+  },
+  {
+    id: 2,
+    name: 'Filters',
+    price: 5,
+    count: state(0),
+  },
+  {
+    id: 3,
+    name: 'Grinder',
+    price: 40,
+    count: state(0),
+  },
 ]
 
 export default function Shop() {
