@@ -52,14 +52,26 @@ export function scanPatternSource(text, file, offset = 0) {
       const method = node.expression
       const field = method.expression
       if (
-        method.name.text === 'map' &&
         ts.isPropertyAccessExpression(field) &&
         ts.isIdentifier(field.expression) &&
         field.expression.text === 'props' &&
         inJsx(node)
       )
-        report('direct props field map in JSX', node)
+        report(
+          method.name.text === 'map'
+            ? 'direct props field map in JSX'
+            : 'direct props computation in JSX',
+          node,
+        )
     }
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'derived' &&
+      !ts.isVariableDeclaration(node.parent) &&
+      !ts.isPropertyAssignment(node.parent)
+    )
+      report('unnamed derived candidate', node)
     ts.forEachChild(node, visit)
   }
   visit(source)
