@@ -8,7 +8,7 @@ import {
   type DurationParts,
   type IsoDuration,
 } from '@weft-js/warp-core'
-import { derived, state, untrack } from '@weft-js/core'
+import { derived, state, untrack, type State } from '@weft-js/core'
 import {
   bindable,
   Composite,
@@ -33,6 +33,113 @@ export type DurationFieldProps = RichFieldProps &
     step?: Partial<Record<'h' | 'm' | 's', number>>
     balance?: boolean
   }
+
+type DurationKeyContext = {
+  units: () => Unit[]
+  step: () => DurationFieldProps['step']
+  carry: () => boolean
+  group: () => HTMLDivElement | undefined
+  parts: { readonly value: DurationParts }
+  buf: State<string>
+  write: (next: DurationParts) => void
+}
+
+function durationKeys({ units, step, carry, group, parts, buf, write }: DurationKeyContext) {
+  return (e: KeyboardEvent) => {
+    const el = (e.target as HTMLElement).closest?.<HTMLElement>('[data-u]')
+    if (!el) return
+    const u = el.dataset.u as Unit
+    const at = units().indexOf(u)
+    const p = parts.value
+    const size = (step()?.[u as 'h'] ?? (u === 'm' ? 5 : 1)) * SIZE[u] * (e.shiftKey ? 3 : 1)
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      buf.value = ''
+      write(balance(totalSeconds(p) + (e.key === 'ArrowUp' ? size : -size), units()))
+    } else if (/^\d$/.test(e.key)) {
+      e.preventDefault()
+      const b = (buf.value + e.key).slice(-2)
+      buf.value = b
+      const n = +b
+      write(n > MAX[u] && !carry() ? p : { ...p, [u]: n })
+      if (b.length === 2 && at < units().length - 1) {
+        buf.value = ''
+        ;(group()!.querySelector(`[data-u="${units()[at + 1]}"]`) as HTMLElement).focus()
+      }
+    } else if (e.key === 'Backspace') {
+      e.preventDefault()
+      buf.value = ''
+      write({ ...p, [u]: 0 })
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      const to = units()[at + (e.key === 'ArrowRight' ? 1 : -1)]
+      if (to) {
+        e.preventDefault()
+        ;(group()!.querySelector(`[data-u="${to}"]`) as HTMLElement).focus()
+      }
+    }
+  }
+}
+
+type DurationControlContext = {
+  units: () => Unit[]
+  disabled: () => boolean | undefined
+  required: () => boolean | undefined
+  readonly name: string | undefined
+  parts: { readonly value: DurationParts }
+  buf: State<string>
+  onKey: (e: KeyboardEvent) => void
+  setGroup: (el: HTMLDivElement) => void
+  say: (unit: Unit, value: number) => string
+  value: () => IsoDuration | null
+}
+
+function durationControl(ctx: DurationControlContext) {
+  return (
+    <>
+      <div
+        ref={ctx.setGroup}
+        data-part="segments"
+        onKeyDown={ctx.onKey}
+        onFocusOut={() => (ctx.buf.value = '')}
+      >
+        {ctx.units().map((u) => {
+          const n = derived(() => ctx.parts.value[u])
+          return (
+            <>
+              <span
+                key={u}
+                data-part="segment"
+                data-u={u}
+                role="spinbutton"
+                tabindex={ctx.disabled() ? undefined : '0'}
+                aria-label={NAMES[u]}
+                aria-required={ctx.required() ? 'true' : undefined}
+                aria-valuemin="0"
+                aria-valuemax={MAX[u]}
+                aria-valuenow={n.value}
+                aria-valuetext={ctx.say(u, n.value)}
+              >
+                {u === ctx.units()[0] ? n.value : pad(n.value)}
+              </span>
+              <span data-part="literal" class="unit" aria-hidden="true">
+                {SHORT[u]}
+              </span>
+            </>
+          )
+        })}
+      </div>
+      <Hidden name={ctx.name} value={() => ctx.value() ?? ''} />
+    </>
+  )
+}
+
+function sayDuration(locale: string, u: Unit, n: number) {
+  return new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: INTL[u],
+    unitDisplay: 'long',
+  }).format(n)
+}
 
 /**
  * DurationField (04 §2): a spinbutton for each allowed unit; ↑/↓ step with carry into the next unit (Shift for three
@@ -69,12 +176,7 @@ export function DurationField({
   const limit = untrack(() => (max ? totalSeconds(parseDuration(max)) : Infinity))
   const buf = state('')
   let group: HTMLDivElement | undefined
-  const say = (u: Unit, n: number) =>
-    new Intl.NumberFormat(env.locale.value, {
-      style: 'unit',
-      unit: INTL[u],
-      unitDisplay: 'long',
-    }).format(n)
+  const say = (u: Unit, n: number) => sayDuration(env.locale.value, u, n)
   const words = derived(() => {
     const p = parts.value
     const on = units.filter((u) => p[u])
@@ -84,39 +186,15 @@ export function DurationField({
     const t = Math.max(0, Math.min(limit, totalSeconds(next)))
     v.set(formatDuration(carry ? balance(t, units) : next), reason)
   }
-  const onKey = (e: KeyboardEvent) => {
-    const el = (e.target as HTMLElement).closest?.<HTMLElement>('[data-u]')
-    if (!el) return
-    const u = el.dataset.u as Unit
-    const at = units.indexOf(u)
-    const p = parts.value
-    const size = (step?.[u as 'h'] ?? (u === 'm' ? 5 : 1)) * SIZE[u] * (e.shiftKey ? 3 : 1)
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      e.preventDefault()
-      buf.value = ''
-      write(balance(totalSeconds(p) + (e.key === 'ArrowUp' ? size : -size), units))
-    } else if (/^\d$/.test(e.key)) {
-      e.preventDefault()
-      const b = (buf.value + e.key).slice(-2)
-      buf.value = b
-      const n = +b
-      write(n > MAX[u] && !carry ? p : { ...p, [u]: n })
-      if (b.length === 2 && at < units.length - 1) {
-        buf.value = ''
-        ;(group!.querySelector(`[data-u="${units[at + 1]}"]`) as HTMLElement).focus()
-      }
-    } else if (e.key === 'Backspace') {
-      e.preventDefault()
-      buf.value = ''
-      write({ ...p, [u]: 0 })
-    } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-      const to = units[at + (e.key === 'ArrowRight' ? 1 : -1)]
-      if (to) {
-        e.preventDefault()
-        ;(group!.querySelector(`[data-u="${to}"]`) as HTMLElement).focus()
-      }
-    }
-  }
+  const onKey = durationKeys({
+    units: () => units,
+    step: () => step,
+    carry: () => carry,
+    group: () => group,
+    parts,
+    buf,
+    write,
+  })
   return (
     <Composite
       icon={TimerIcon}
@@ -128,43 +206,22 @@ export function DurationField({
       bound={v}
       onReset={() => (buf.value = '')}
       filled={totalSeconds(parts.value) > 0}
-      control={() => (
-        <>
-          <div
-            ref={(n) => (group = n)}
-            data-part="segments"
-            onKeyDown={onKey}
-            onFocusOut={() => (buf.value = '')}
-          >
-            {units.map((u) => {
-              const n = derived(() => parts.value[u])
-              return (
-                <>
-                  <span
-                    key={u}
-                    data-part="segment"
-                    data-u={u}
-                    role="spinbutton"
-                    tabindex={disabled ? undefined : '0'}
-                    aria-label={NAMES[u]}
-                    aria-required={rest.required ? 'true' : undefined}
-                    aria-valuemin="0"
-                    aria-valuemax={MAX[u]}
-                    aria-valuenow={n.value}
-                    aria-valuetext={say(u, n.value)}
-                  >
-                    {u === units[0] ? n.value : pad(n.value)}
-                  </span>
-                  <span data-part="literal" class="unit" aria-hidden="true">
-                    {SHORT[u]}
-                  </span>
-                </>
-              )
-            })}
-          </div>
-          <Hidden name={name} value={() => v.value ?? ''} />
-        </>
-      )}
+      control={() =>
+        durationControl({
+          units: () => units,
+          disabled: () => disabled,
+          required: () => rest.required,
+          get name() {
+            return name
+          },
+          parts,
+          buf,
+          onKey,
+          setGroup: (n) => (group = n),
+          say,
+          value: () => v.value,
+        })
+      }
     />
   )
 }

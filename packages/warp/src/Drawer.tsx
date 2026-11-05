@@ -7,6 +7,16 @@ import '@weft-js/warp-core/styles/components/button.css' // the close button's m
 import '@weft-js/warp-core/styles/components/sheet.css'
 import '@weft-js/warp-core/styles/components/dialog.css' // the backdrop and the parts a sheet shares with the dialog
 
+type DrawerProps = {
+  open: State<boolean>
+  title: unknown
+  description?: unknown
+  footer?: unknown
+  side?: 'auto' | 'right' | 'left' | 'bottom' | 'top'
+  /** Drawn open in the page's flow, not over it: no top layer, scrim or focus trap. For docs and previews. */ inline?: boolean
+  children?: unknown
+}
+
 /**
  * A sheet (05 §3 Drawer/Sheet; components.html:1092-1106): on a native <dialog>, at the side on wide screens and from
  * the bottom on phones (`side="auto"`: bottom under 600px, decided when it opens). The handle shows only at the
@@ -21,15 +31,7 @@ export function Drawer({
   side = 'auto',
   inline,
   children,
-}: {
-  open: State<boolean>
-  title: unknown
-  description?: unknown
-  footer?: unknown
-  side?: 'auto' | 'right' | 'left' | 'bottom' | 'top'
-  /** Drawn open in the page's flow, not over it: no top layer, scrim or focus trap. For docs and previews. */ inline?: boolean
-  children?: unknown
-}) {
+}: DrawerProps) {
   const id = uid('sheet')
   const hasDescription = derived(() => description !== undefined)
   const foot = derived(() => footer) // one build of the footer, however often it is read
