@@ -97,6 +97,23 @@ function disc(g, cx, cy, r, gap) {
 }
 const pts = (w) => w.map((p) => p.split(',').map(Number))
 
+function rawArc(g, o, rx, large, sweep, x, y) {
+  // circular arcs only: enough for this set, and an ellipse would not land on the grid anyway
+  const dx = x - o[0],
+    dy = y - o[1],
+    d = Math.hypot(dx, dy) || 1,
+    r = Math.max(rx, d / 2)
+  const h = Math.sqrt(Math.max(0, r * r - (d * d) / 4)) * (large === sweep ? -1 : 1)
+  const cx = (o[0] + x) / 2 - (h * dy) / d,
+    cy = (o[1] + y) / 2 + (h * dx) / d
+  const a0 = Math.atan2(o[1] - cy, o[0] - cx)
+  let a1 = Math.atan2(y - cy, x - cx)
+  if (sweep && a1 < a0) a1 += Math.PI * 2
+  if (!sweep && a1 > a0) a1 -= Math.PI * 2
+  arc(g, cx, cy, r, a0, a1)
+  return [x, y]
+}
+
 function raw(g, words) {
   const toks = words.join(' ').match(/[MLHVQCAZ]|-?\d*\.?\d+/g)
   let i = 0,
@@ -163,20 +180,7 @@ function raw(g, words) {
       do {
         const [rx, , , large, sweep, x, y] = take(7),
           o = cur
-        // circular arcs only: enough for this set, and an ellipse would not land on the grid anyway
-        const dx = x - o[0],
-          dy = y - o[1],
-          d = Math.hypot(dx, dy) || 1,
-          r = Math.max(rx, d / 2)
-        const h = Math.sqrt(Math.max(0, r * r - (d * d) / 4)) * (large === sweep ? -1 : 1)
-        const cx = (o[0] + x) / 2 - (h * dy) / d,
-          cy = (o[1] + y) / 2 + (h * dx) / d
-        const a0 = Math.atan2(o[1] - cy, o[0] - cx)
-        let a1 = Math.atan2(y - cy, x - cx)
-        if (sweep && a1 < a0) a1 += Math.PI * 2
-        if (!sweep && a1 > a0) a1 -= Math.PI * 2
-        arc(g, cx, cy, r, a0, a1)
-        cur = [x, y]
+        cur = rawArc(g, o, rx, large, sweep, x, y)
       } while (more())
   }
 }
