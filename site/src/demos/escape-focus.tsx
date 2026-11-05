@@ -13,7 +13,10 @@ export default function Focus() {
         value="Ada Lovelace"
       />
       <Row gap="tight">
-        <Button size="sm" onClick={() => field.focus()}>
+        <Button
+          size="sm"
+          onClick={() => field.focus()}
+        >
           Focus
         </Button>
         <Button
