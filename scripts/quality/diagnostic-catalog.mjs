@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
-import { compilerDiagnostics } from '../../packages/cli/src/catalog/compiler.mjs'
+import { catalog } from '../../packages/cli/src/catalog.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 // These compiler-family rules move to the CLI checker; ownership never exempts coverage.
@@ -186,7 +186,7 @@ export function check() {
   const tests = tracked('crates/weft-compiler/tests/compile.rs', 'crates/weft-compiler/tests/compile/*.rs')
   const cliSource = tracked('packages/cli/src').filter((path) => /\.(?:mjs|cjs)$/.test(path))
   const cliTests = tracked('packages/cli/test').filter((path) => /\.(?:ts|tsx|mjs)$/.test(path))
-  const result = gaps(compilerDiagnostics, readFiles(source), readFiles(tests), {
+  const result = gaps(catalog, readFiles(source), readFiles(tests), {
     source: readFiles(cliSource), tests: readFiles(cliTests),
   })
   const baseline = JSON.parse(readFileSync(baselinePath, 'utf8'))

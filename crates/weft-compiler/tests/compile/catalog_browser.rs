@@ -32,6 +32,16 @@ fn catalog_browser_diagnostics_have_quiet_repairs() {
             "import { group } from '@weft-js/core/style'; const px = 13; export const g = group('g', { base: { pad: px } })",
             "import { group } from '@weft-js/core/style'; export const g = group('g', { base: { pad: 13 } })",
         ),
+        (
+            "D024",
+            "import { group } from '@weft-js/core/style'; const a = group('a', { base: { pad: 'group' } }); const b = group('b', { base: { gap: 'related' } }); export function X() { return <li {...a()} {...b()} /> }",
+            "import { group } from '@weft-js/core/style'; const a = group('a', { base: { pad: 'group' } }); const b = group('b', { base: { gap: 'related' } }); export function X() { return <li {...a()}><span {...b()} /></li> }",
+        ),
+        (
+            "D025",
+            "import { group } from '@weft-js/core/style'; const card = group('card', { axes: { status: { open: {}, late: {} } } }); export function X() { return <article {...card({ status: 'lost' })} /> }",
+            "import { group } from '@weft-js/core/style'; const card = group('card', { axes: { status: { open: {}, late: {} } } }); export function X() { return <article {...card({ status: 'late' })} /> }",
+        ),
     ];
     fn covered(case: (&str, &str, &str), code: &str) -> bool {
         let (_, bad, repaired) = case;
@@ -50,4 +60,6 @@ fn catalog_browser_diagnostics_have_quiet_repairs() {
     assert!(covered(cases[3], "W054"));
     assert!(covered(cases[4], "W056"));
     assert!(covered(cases[5], "W060"));
+    assert!(covered(cases[6], "D024"));
+    assert!(covered(cases[7], "D025"));
 }

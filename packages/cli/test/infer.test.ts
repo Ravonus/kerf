@@ -104,17 +104,18 @@ describe.each([
   ['typescript 6', 6],
 ])('inference on %s', (_, version) => {
   it('warns when an inferred type is local to a caller', async () => {
+    // A private member keeps the caller-local class named in the inferred prop type.
     const page = (type: string) => `
       function Card(props) { return <p>{props.item.name}</p> }
       export function Page() {
         ${type}
-        const item: Item = { name: 'one' }
+        const item = new Item()
         return <Card item={item} />
       }
     `
-    const local = await run(app({ ...goalOnly, 'src/goal.tsx': page('type Item = { name: string }') }, { version }))
+    const local = await run(app({ ...goalOnly, 'src/goal.tsx': page("class Item { private marker = 0; name = 'one' }") }, { version }))
     expect(local.list).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'W085' })]))
-    const visible = page('').replace('function Card', 'type Item = { name: string }; function Card')
+    const visible = page('').replace('function Card', "class Item { private marker = 0; name = 'one' }; function Card")
     const repaired = await run(app({ ...goalOnly, 'src/goal.tsx': visible }, { version }))
     expect(repaired.list.filter((finding: { code: string }) => finding.code === 'W085')).toEqual([])
   }, 60_000)

@@ -82,3 +82,21 @@ test('W030 graph emit, test and CLI ownership remain mandatory', () => {
     ['missing emit: W030'])
   deepStrictEqual(run(), [])
 })
+
+test('compiler entries in other catalog partitions require emits and assertions', () => {
+  const compiler = [{ code: 'W001', by: 'compiler' }]
+  const style = [{ code: 'D024', by: 'compiler' }]
+  const source = { 'style.rs': 'Diagnostic::new(source, "D024", severity, span);' }
+  const tests = { 'compile.rs': 'assert_eq!(codes(&d), ["D024"]);' }
+  const baseSource = { ...source, 'compiler.rs': 'Diagnostic::new(source, "W001", severity, span);' }
+  const baseTests = { ...tests, 'other.rs': 'assert_eq!(codes(&d), ["W001"]);' }
+  const check = (entries, emit = baseSource, coverage = baseTests) =>
+    compare(gaps(entries, emit, coverage), [])
+  deepStrictEqual(check([...compiler, ...style]), [])
+  deepStrictEqual(check(compiler), ['missing entry: D024'])
+  deepStrictEqual(check([...compiler, ...style], { 'compiler.rs': baseSource['compiler.rs'] }),
+    ['missing emit: D024'])
+  deepStrictEqual(check([...compiler, ...style], baseSource, { 'other.rs': baseTests['other.rs'] }),
+    ['missing test: D024'])
+  deepStrictEqual(check([...compiler, ...style]), [])
+})
