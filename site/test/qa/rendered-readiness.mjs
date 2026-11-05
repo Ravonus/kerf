@@ -1,3 +1,5 @@
+import { measureBlock, checkBlock } from './rendered-rows.mjs'
+
 // Open intentional solutions and wait for fonts, visible previews and finite animations.
 export async function prepareCode(page) {
   await page.evaluate(async () => {
@@ -60,6 +62,23 @@ export async function settleBlock(block) {
     }
     return true
   }, element)
+  const state = await block.page().waitForFunction((el) => {
+    if (!el.checkVisibility({ visibilityProperty: true })) return 'hidden'
+    let pending = false
+    for (let parent = el; parent; parent = parent.parentElement) {
+      if (Number(getComputedStyle(parent).opacity) !== 0) continue
+      const moving = parent
+        .getAnimations()
+        .some(
+          (animation) =>
+            animation.timeline !== document.timeline && animation.playState === 'running',
+        )
+      if (!moving) return 'hidden'
+      pending = true
+    }
+    return pending ? false : 'visible'
+  }, element)
+  return (await state.jsonValue()) === 'visible'
 }
 
 // A focusable code scroller must respond to the keyboard before overflow is accepted.
@@ -74,4 +93,29 @@ export async function checkCodeScroll(page, block) {
   await block.evaluate((el) => {
     el.scrollLeft = 0
   })
+}
+
+// Measure only visible source lines, and require coverage on every page.
+export async function checkRenderedBlocks(page, phone) {
+  const blocks = page.locator('main pre')
+  let measured = 0
+  for (let i = 0; i < (await blocks.count()); i++) {
+    const block = blocks.nth(i)
+    if (!(await block.isVisible())) continue
+    await block.scrollIntoViewIfNeeded()
+    if (!(await settleBlock(block))) continue
+    const visible = await block.evaluate((el) =>
+      el.checkVisibility({ visibilityProperty: true, opacityProperty: true }),
+    )
+    if (!visible) continue
+    await block.evaluate((el) => {
+      el.scrollLeft = 0
+    })
+    const result = await block.evaluate(measureBlock)
+    checkBlock(result, phone, `block ${i + 1}`)
+    if (phone && result.scrollable && result.lines.some((line) => line.clippedRight))
+      await checkCodeScroll(page, block)
+    measured += result.lines.filter((line) => line.rows.length).length
+  }
+  if (!measured) throw new Error('no visible highlighted source lines')
 }
