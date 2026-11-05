@@ -145,41 +145,7 @@ describe('AGENTS.md', () => {
     expect(text).toMatch(/^- `@weft-js\/core\/test`: .*`net`.*`page`/m)
   })
 
-  it('lists resource, Boundary, hydrate and @weft-js/core/ssr when the installed weft exports them', async () => {
-    const compiler = JSON.stringify(resolveWeft(fixture).compilerPath)
-    const dir = project({
-      'node_modules/@weft-js/core/package.json': JSON.stringify({
-        name: '@weft-js/core',
-        version: '0.1.0',
-        exports: {
-          '.': './index.ts',
-          './dom': './dom.ts',
-          './ssr': './ssr.ts',
-          './test': './test.ts',
-          './compiler': './compiler.cjs',
-        },
-      }),
-      'node_modules/@weft-js/core/compiler.cjs': `module.exports = require(${compiler})\n`,
-      'node_modules/@weft-js/core/index.ts':
-        "export function state() {}\nexport function derived() {}\nexport { Boundary, resource, type Resource } from './async'\nexport { defineState } from './scope'\n",
-      'node_modules/@weft-js/core/dom.ts':
-        'export function render() {}\nexport function hydrate() {}\nexport function insert() {}\n',
-      'node_modules/@weft-js/core/ssr.ts':
-        "export function renderToString() {}\nexport async function renderToStringAsync() {}\nexport function ssrHydrationKey() {}\nexport { createComponent } from './dom'\n",
-      'node_modules/@weft-js/core/test.ts': 'export function render() {}\n',
-    })
-    const { text, bytes } = await agentsMd(dir)
-    expect(bytes).toBeLessThan(limit)
-    expect(text).toContain('weft@0.1.0')
-    expect(text).toMatch(
-      /^- `@weft-js\/core`: `Boundary`, `defineState`, `derived`, `resource`, `state`, `state\.linked`$/m,
-    )
-    expect(text).toContain('- `@weft-js/core/dom`: `render`, `hydrate`.')
-    expect(text).toContain('- `@weft-js/core/ssr`: `renderToString`, `renderToStringAsync`.')
-    expect(text).not.toContain('ssrHydrationKey')
-    expect(text).toContain('10. **Async data is `resource(')
-    expect(text).not.toContain('Not in this version yet: `resource`')
-  })
+  registerOptionalApiDocs()
 
   it('lists project tasks in Commands, so docs cannot drift from weft tasks', async () => {
     const dir = project({
@@ -284,3 +250,41 @@ describe('live data', () => {
     }
   })
 })
+
+function registerOptionalApiDocs() {
+  it('lists resource, Boundary, hydrate and @weft-js/core/ssr when the installed weft exports them', async () => {
+    const compiler = JSON.stringify(resolveWeft(fixture).compilerPath)
+    const dir = project({
+      'node_modules/@weft-js/core/package.json': JSON.stringify({
+        name: '@weft-js/core',
+        version: '0.1.0',
+        exports: {
+          '.': './index.ts',
+          './dom': './dom.ts',
+          './ssr': './ssr.ts',
+          './test': './test.ts',
+          './compiler': './compiler.cjs',
+        },
+      }),
+      'node_modules/@weft-js/core/compiler.cjs': `module.exports = require(${compiler})\n`,
+      'node_modules/@weft-js/core/index.ts':
+        "export function state() {}\nexport function derived() {}\nexport { Boundary, resource, type Resource } from './async'\nexport { defineState } from './scope'\n",
+      'node_modules/@weft-js/core/dom.ts':
+        'export function render() {}\nexport function hydrate() {}\nexport function insert() {}\n',
+      'node_modules/@weft-js/core/ssr.ts':
+        "export function renderToString() {}\nexport async function renderToStringAsync() {}\nexport function ssrHydrationKey() {}\nexport { createComponent } from './dom'\n",
+      'node_modules/@weft-js/core/test.ts': 'export function render() {}\n',
+    })
+    const { text, bytes } = await agentsMd(dir)
+    expect(bytes).toBeLessThan(limit)
+    expect(text).toContain('weft@0.1.0')
+    expect(text).toMatch(
+      /^- `@weft-js\/core`: `Boundary`, `defineState`, `derived`, `resource`, `state`, `state\.linked`$/m,
+    )
+    expect(text).toContain('- `@weft-js/core/dom`: `render`, `hydrate`.')
+    expect(text).toContain('- `@weft-js/core/ssr`: `renderToString`, `renderToStringAsync`.')
+    expect(text).not.toContain('ssrHydrationKey')
+    expect(text).toContain('10. **Async data is `resource(')
+    expect(text).not.toContain('Not in this version yet: `resource`')
+  })
+}

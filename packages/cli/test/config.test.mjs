@@ -56,27 +56,7 @@ export default defineConfig({
     expect(r.diagnostics).toMatchObject([{ code: 'P007', why: expect.stringContaining('boom') }])
   })
 
-  it('P003 and P004 on tasks, located at the task', async () => {
-    const r = await loadConfig(
-      withConfig(`export default defineConfig({
-  environments: { dev: {} },
-  tasks: {
-    seed: { run: 'node seed.mjs', description: 'Seed', sideEffects: ['db'] },
-    check: { run: 'tsc', description: 'Types', sideEffects: [] },
-    again: { run: 'node seed.mjs', description: 'Seed again', sideEffects: ['db'] },
-    vague: { run: 'node vague.mjs' } as any,
-    prod: { run: 'node deploy.mjs', description: 'Deploy', sideEffects: ['network'], env: ['prod'] },
-  },
-})
-`),
-    )
-    expect(codes(r)).toEqual([
-      ['P003', 6],
-      ['P003', 7],
-      ['P004', 8],
-      ['P007', 9],
-    ])
-  })
+  registerTaskDiagnostics()
 
   it('reserved plugins/slots: validated as data, never executed', async () => {
     const r = await loadConfig(
@@ -169,33 +149,7 @@ describe('site (research 20 §2, §6)', () => {
     expect(abs.diagnostics).toEqual([])
   })
 
-  it('H003: no description; H004: long title, template or description (warnings)', async () => {
-    const long = 'x'.repeat(61)
-    const r = await loadConfig(
-      withConfig(`export default defineConfig({
-  site: {
-    name: '${long}',
-    url: 'https://acme.dev',
-    title: '%s | ${'y'.repeat(41)}',
-  },
-})
-`),
-    )
-    expect(codes(r)).toEqual([
-      ['H003', 3],
-      ['H004', 4],
-      ['H004', 6],
-    ])
-    expect(r.diagnostics.every((d) => d.severity === 'warning')).toBe(true)
-    const d = await loadConfig(
-      withConfig(
-        `export default defineConfig({ site: { url: 'https://acme.dev', description: '${'z'.repeat(161)}' } })\n`,
-      ),
-    )
-    expect(d.diagnostics).toMatchObject([
-      { code: 'H004', why: expect.stringContaining('161 characters') },
-    ])
-  })
+  registerSiteDescriptionWarnings()
 })
 
 describe('slot binding (research 13 §2.2)', () => {
@@ -367,3 +321,57 @@ describe('config.d.ts and the schema', () => {
       expect({ path, keys: types }).toEqual({ path, keys: schema })
   })
 })
+
+function registerTaskDiagnostics() {
+  it('P003 and P004 on tasks, located at the task', async () => {
+    const r = await loadConfig(
+      withConfig(`export default defineConfig({
+  environments: { dev: {} },
+  tasks: {
+    seed: { run: 'node seed.mjs', description: 'Seed', sideEffects: ['db'] },
+    check: { run: 'tsc', description: 'Types', sideEffects: [] },
+    again: { run: 'node seed.mjs', description: 'Seed again', sideEffects: ['db'] },
+    vague: { run: 'node vague.mjs' } as any,
+    prod: { run: 'node deploy.mjs', description: 'Deploy', sideEffects: ['network'], env: ['prod'] },
+  },
+})
+`),
+    )
+    expect(codes(r)).toEqual([
+      ['P003', 6],
+      ['P003', 7],
+      ['P004', 8],
+      ['P007', 9],
+    ])
+  })
+}
+
+function registerSiteDescriptionWarnings() {
+  it('H003: no description; H004: long title, template or description (warnings)', async () => {
+    const long = 'x'.repeat(61)
+    const r = await loadConfig(
+      withConfig(`export default defineConfig({
+  site: {
+    name: '${long}',
+    url: 'https://acme.dev',
+    title: '%s | ${'y'.repeat(41)}',
+  },
+})
+`),
+    )
+    expect(codes(r)).toEqual([
+      ['H003', 3],
+      ['H004', 4],
+      ['H004', 6],
+    ])
+    expect(r.diagnostics.every((d) => d.severity === 'warning')).toBe(true)
+    const d = await loadConfig(
+      withConfig(
+        `export default defineConfig({ site: { url: 'https://acme.dev', description: '${'z'.repeat(161)}' } })\n`,
+      ),
+    )
+    expect(d.diagnostics).toMatchObject([
+      { code: 'H004', why: expect.stringContaining('161 characters') },
+    ])
+  })
+}
