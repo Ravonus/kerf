@@ -112,30 +112,36 @@ export default function LearnPage(props: RouteProps<typeof load, '/learn/[slug]'
             ></div>
           ),
         )}
-        <footer data-part="pager">
-          {props.data.prev ? (
-            <Link href={`/learn/${props.data.prev.slug}`} class="prev">
-              <span>Previous</span>
-              {props.data.prev.title}
-            </Link>
-          ) : (
-            <Link href="/learn" class="prev">
-              <span>Previous</span>Overview
-            </Link>
-          )}
-          {props.data.next ? (
-            <Link href={`/learn/${props.data.next.slug}`} class="next">
-              <span>Next</span>
-              {props.data.next.title}
-            </Link>
-          ) : (
-            <Link href="/reference" class="next">
-              <span>Next</span>Reference
-            </Link>
-          )}
-        </footer>
+        {pager(() => props.data)}
       </article>
       {props.data.toc.length > 0 && <Toc items={props.data.toc} />}
     </>
+  )
+}
+
+function pager(data: () => RouteProps<typeof load, '/learn/[slug]'>['data']) {
+  return (
+    <footer data-part="pager">
+      {data().prev ? (
+        <Link href={`/learn/${data().prev!.slug}`} class="prev">
+          <span>Previous</span>
+          {data().prev!.title}
+        </Link>
+      ) : (
+        <Link href="/learn" class="prev">
+          <span>Previous</span>Overview
+        </Link>
+      )}
+      {data().next ? (
+        <Link href={`/learn/${data().next!.slug}`} class="next">
+          <span>Next</span>
+          {data().next!.title}
+        </Link>
+      ) : (
+        <Link href="/reference" class="next">
+          <span>Next</span>Reference
+        </Link>
+      )}
+    </footer>
   )
 }
