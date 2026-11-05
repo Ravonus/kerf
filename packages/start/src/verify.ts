@@ -146,7 +146,6 @@ export async function roundTrip({
     const b = e instanceof Broke ? e : new Broke('trigger', clean(e))
     return { ok: false, broke: { link: b.link, why: clean(b.message) }, ms, untested }
   } finally {
-    // oxlint-disable-next-line no-unsafe-finally -- a row left in a real database outranks whatever the run concluded
     await cleanup(ac, row, ms, sql, listener, marker)
   }
 }

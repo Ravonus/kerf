@@ -7,7 +7,7 @@
   "ignorePatterns": [
     "**/node_modules/**", "**/dist/**", "**/.weft/**", "**/.output/**", "**/target/**",
     "**/fixture/**", "**/fixtures/**", "**/vendor/**", "**/gallery/assets/**",
-    "packages/warp-icons/src/gen/**", "packages/warp-icons/art/**", "packages/text/gen/**", "packages/core/node/*.mjs", "packages/core/native/**",
+    "packages/warp-icons/src/gen/**", "packages/warp-icons/art/**", "packages/text/gen/**", "packages/core/node/*.mjs", "packages/core/node/css/**/*.mjs", "packages/core/node/matrix/**/*.mjs", "packages/core/native/**",
     "packages/core/bench/corpus/**", "packages/warp-core/scripts/contrast-check.mjs", "packages/core/test/corpus-gen/**", "packages/db/test/generated/**",
     "docs/**", "spikes/**", "evals/*/**", "!evals/gates/**", "!evals/lib/**", "site/public/**", "site/content/**", "site/review/**"
   ],

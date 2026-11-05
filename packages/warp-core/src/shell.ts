@@ -17,12 +17,41 @@ export interface ShellOptions {
 
 const ROUTE_MS = 1200
 
+function watchViewport(root: HTMLElement, win: Window) {
+  // the browser shrank only the visual viewport (Safari ignores interactive-widget): the keyboard is up
+  const vv = win.visualViewport
+  const onViewport = () => {
+    const covered = Math.round(win.innerHeight - vv!.height - vv!.offsetTop)
+    root.toggleAttribute('data-keyboard', covered > 80)
+    if (covered > 80) root.style.setProperty('--warp-keyboard', `${covered}px`)
+    else root.style.removeProperty('--warp-keyboard')
+  }
+  vv?.addEventListener('resize', onViewport)
+  return () => vv?.removeEventListener('resize', onViewport)
+}
+
+function watchWidth(
+  root: HTMLElement,
+  win: Window & typeof globalThis,
+  options: () => ShellOptions,
+) {
+  let wide: boolean | undefined
+  const measure = () => {
+    const now = root.clientWidth >= 1000
+    if (now !== wide) options().onWide((wide = now))
+  }
+  const sizes =
+    typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(measure) : undefined
+  sizes?.observe(root) // reports before first paint, without forcing a layout of its own
+  if (!sizes) measure()
+  return () => sizes?.disconnect()
+}
+
 /** The app shell's sidebar, keyboard and viewport behaviour. */
 export function shell(root: HTMLElement, opts: ShellOptions) {
   let o = opts
   let remove: (() => void) | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
-  let wide: boolean | undefined
   const doc = root.ownerDocument
   const win = doc.defaultView!
   const nav = () => root.querySelector<HTMLElement>('[data-part="nav"]')
@@ -38,24 +67,9 @@ export function shell(root: HTMLElement, opts: ShellOptions) {
   }
   doc.addEventListener('keydown', onKey)
 
-  const measure = () => {
-    const now = root.clientWidth >= 1000
-    if (now !== wide) o.onWide((wide = now))
-  }
-  const sizes =
-    typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(measure) : undefined
-  sizes?.observe(root) // reports before first paint, without forcing a layout of its own
-  if (!sizes) measure()
+  const stopWidth = watchWidth(root, win, () => o)
 
-  // the browser shrank only the visual viewport (Safari ignores interactive-widget): the keyboard is up
-  const vv = win.visualViewport
-  const onViewport = () => {
-    const covered = Math.round(win.innerHeight - vv!.height - vv!.offsetTop)
-    root.toggleAttribute('data-keyboard', covered > 80)
-    if (covered > 80) root.style.setProperty('--warp-keyboard', `${covered}px`)
-    else root.style.removeProperty('--warp-keyboard')
-  }
-  vv?.addEventListener('resize', onViewport)
+  const stopViewport = watchViewport(root, win)
 
   const layer = () => {
     const el = nav()
@@ -103,8 +117,8 @@ export function shell(root: HTMLElement, opts: ShellOptions) {
     },
     destroy() {
       doc.removeEventListener('keydown', onKey)
-      sizes?.disconnect()
-      vv?.removeEventListener('resize', onViewport)
+      stopWidth()
+      stopViewport()
       remove?.()
       clearTimeout(timer)
     },

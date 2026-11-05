@@ -1,7 +1,7 @@
 import { state } from '@weft-js/core'
 import { Grid, MarkdownEditor, RichTextEditor, SignaturePad, Stack, Text } from '@weft-js/warp'
 import type { SignatureValue } from '@weft-js/warp'
-import { Cell } from './phone-country'
+import { Cell } from '../../world'
 import { people } from './mentions-rich-text'
 
 export const RichTextEditorStates = () => (

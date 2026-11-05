@@ -64,31 +64,75 @@ export function writeFolds(key: string, folds: Folds) {
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-/**
- * `el` is the side navigation's root, holding `[data-part="panel"]` (with an id), `[data-part="scroll"]`,
- * `[data-part="backdrop"]` and, inside the panel, an optional `[data-part="bar"]` button. Whether the panel is overlaid
- * is read from its computed `position` (`fixed`), so the breakpoint lives in the CSS only. The bar's `aria-expanded`
- * is kept here, since only the CSS knows which of the two it is.
- */
-export function sideNav(el: HTMLElement, opts: SideNavOptions = {}) {
-  const doc = el.ownerDocument,
-    win = doc.defaultView
-  const panel = el.querySelector<HTMLElement>('[data-part="panel"]') ?? el
-  const scroller = el.querySelector<HTMLElement>('[data-part="scroll"]') ?? panel
-  const bar = panel.querySelector<HTMLElement>('[data-part="bar"]')
-  let o = opts,
-    frame = 0,
-    opener: HTMLElement | null = null,
-    shown = false
-  const overlaid = () => !!win && win.getComputedStyle(panel).position === 'fixed'
-  const controllers = () =>
-    panel.id
-      ? [...doc.querySelectorAll<HTMLElement>(`[aria-controls~="${panel.id}"]`)].filter(
-          (b) => !panel.contains(b),
-        )
-      : []
-  const ask = (open: boolean) => o.onOpenChange?.(open)
+function sideNavClick(
+  bar: HTMLElement | null,
+  panel: HTMLElement,
+  el: HTMLElement,
+  options: () => SideNavOptions,
+  overlaid: () => boolean,
+  controllers: () => HTMLElement[],
+  ask: (open: boolean) => void,
+  setOpener: (el: HTMLElement) => void,
+) {
+  return (e: MouseEvent) => {
+    const t = e.target as Element | null
+    if (bar && t && bar.contains(t)) {
+      e.preventDefault()
+      if (!overlaid()) {
+        options().onCollapsedChange?.(!options().collapsed)
+        return
+      }
+      if (!options().open) setOpener(bar)
+      ask(!options().open)
+      return
+    }
+    const button = t?.closest?.('[aria-controls]')
+    if (button && !panel.contains(button) && controllers().includes(button as HTMLElement)) {
+      if (!overlaid()) return
+      e.preventDefault()
+      setOpener(button as HTMLElement)
+      ask(!options().open)
+      return
+    }
+    if (!options().open) return
+    if (t?.closest?.('[data-part="backdrop"]') && el.contains(t)) ask(false)
+    else if (t?.closest?.('[data-part="close"], a[href]') && panel.contains(t)) ask(false)
+  }
+}
 
+function sideNavKey(
+  e: KeyboardEvent,
+  o: SideNavOptions,
+  overlaid: () => boolean,
+  ask: (open: boolean) => void,
+  panel: HTMLElement,
+  doc: Document,
+) {
+  if (!o.open || !overlaid()) return
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    ask(false)
+    return
+  }
+  if (e.key !== 'Tab') return
+  const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+    (n) => n.getClientRects().length > 0,
+  )
+  if (!items.length) return
+  const first = items[0]!,
+    last = items.at(-1)!
+  const at = doc.activeElement
+  if (e.shiftKey && (at === first || !panel.contains(at))) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && (at === last || !panel.contains(at))) {
+    e.preventDefault()
+    first.focus()
+  }
+}
+
+function sideNavReveal(scroller: HTMLElement, win: Window | null) {
+  let frame = 0
   const reveal = () => {
     const at = scroller.querySelector<HTMLElement>('[aria-current="page"]')
     if (!at || scroller.scrollHeight <= scroller.clientHeight) return
@@ -104,66 +148,31 @@ export function sideNav(el: HTMLElement, opts: SideNavOptions = {}) {
       frame = win.requestAnimationFrame(reveal)
     }
   }
+  return { later, destroy: () => win?.cancelAnimationFrame(frame) }
+}
 
-  const onDocClick = (e: MouseEvent) => {
-    const t = e.target as Element | null
-    if (bar && t && bar.contains(t)) {
-      e.preventDefault()
-      if (!overlaid()) {
-        o.onCollapsedChange?.(!o.collapsed)
-        return
-      }
-      if (!o.open) opener = bar
-      ask(!o.open)
-      return
-    }
-    const button = t?.closest?.('[aria-controls]')
-    if (button && !panel.contains(button) && controllers().includes(button as HTMLElement)) {
-      if (!overlaid()) return
-      e.preventDefault()
-      opener = button as HTMLElement
-      ask(!o.open)
-      return
-    }
-    if (!o.open) return
-    if (t?.closest?.('[data-part="backdrop"]') && el.contains(t)) ask(false)
-    else if (t?.closest?.('[data-part="close"], a[href]') && panel.contains(t)) ask(false)
-  }
-  const onKey = (e: KeyboardEvent) => {
-    if (!o.open || !overlaid()) return
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      ask(false)
-      return
-    }
-    if (e.key !== 'Tab') return
-    const items = [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
-      (n) => n.getClientRects().length > 0,
-    )
-    if (!items.length) return
-    const first = items[0]!,
-      last = items.at(-1)!
-    const at = doc.activeElement
-    if (e.shiftKey && (at === first || !panel.contains(at))) {
-      e.preventDefault()
-      last.focus()
-    } else if (!e.shiftKey && (at === last || !panel.contains(at))) {
-      e.preventDefault()
-      first.focus()
-    }
-  }
-  doc.addEventListener('click', onDocClick)
-  doc.addEventListener('keydown', onKey)
+type SideNavState = { opener: HTMLElement | null; shown: boolean }
 
-  const sync = () => {
+function sideNavSync(
+  state: SideNavState,
+  options: () => SideNavOptions,
+  overlaid: () => boolean,
+  controllers: () => HTMLElement[],
+  bar: HTMLElement | null,
+  panel: HTMLElement,
+  doc: Document,
+  win: Window | null,
+  later: () => void,
+) {
+  return () => {
     const over = overlaid(),
-      open = !!o.open && over
+      open = !!options().open && over
     for (const b of controllers()) b.setAttribute('aria-expanded', open ? 'true' : 'false')
-    bar?.setAttribute('aria-expanded', (over ? open : !o.collapsed) ? 'true' : 'false')
-    if (open === shown) return
-    shown = open
+    bar?.setAttribute('aria-expanded', (over ? open : !options().collapsed) ? 'true' : 'false')
+    if (open === state.shown) return
+    state.shown = open
     if (open) {
-      opener ??= doc.activeElement instanceof HTMLElement ? doc.activeElement : null
+      state.opener ??= doc.activeElement instanceof HTMLElement ? doc.activeElement : null
       panel.setAttribute('role', 'dialog')
       panel.setAttribute('aria-modal', 'true')
       const title = panel.querySelector('[data-part="title"]')
@@ -180,11 +189,56 @@ export function sideNav(el: HTMLElement, opts: SideNavOptions = {}) {
       doc.documentElement.style.overflow = ''
       // Back to what opened it, or the bar, unless focus has already gone somewhere else on the page.
       const at = doc.activeElement,
-        back = opener?.isConnected ? opener : bar
+        back = state.opener?.isConnected ? state.opener : bar
       if (back && (!at || at === doc.body || panel.contains(at))) back.focus()
-      opener = null
+      state.opener = null
     }
   }
+}
+
+/**
+ * `el` is the side navigation's root, holding `[data-part="panel"]` (with an id), `[data-part="scroll"]`,
+ * `[data-part="backdrop"]` and, inside the panel, an optional `[data-part="bar"]` button. Whether the panel is overlaid
+ * is read from its computed `position` (`fixed`), so the breakpoint lives in the CSS only. The bar's `aria-expanded`
+ * is kept here, since only the CSS knows which of the two it is.
+ */
+export function sideNav(el: HTMLElement, opts: SideNavOptions = {}) {
+  const doc = el.ownerDocument,
+    win = doc.defaultView
+  const panel = el.querySelector<HTMLElement>('[data-part="panel"]') ?? el
+  const scroller = el.querySelector<HTMLElement>('[data-part="scroll"]') ?? panel
+  const bar = panel.querySelector<HTMLElement>('[data-part="bar"]')
+  let o = opts
+  const state: SideNavState = { opener: null, shown: false }
+  const overlaid = () => !!win && win.getComputedStyle(panel).position === 'fixed'
+  const controllers = () =>
+    panel.id
+      ? [...doc.querySelectorAll<HTMLElement>(`[aria-controls~="${panel.id}"]`)].filter(
+          (b) => !panel.contains(b),
+        )
+      : []
+  const ask = (open: boolean) => o.onOpenChange?.(open)
+
+  const reveal = sideNavReveal(scroller, win)
+  const later = reveal.later
+
+  const onDocClick = sideNavClick(
+    bar,
+    panel,
+    el,
+    () => o,
+    overlaid,
+    controllers,
+    ask,
+    (opener) => {
+      state.opener = opener
+    },
+  )
+  const onKey = (e: KeyboardEvent) => sideNavKey(e, o, overlaid, ask, panel, doc)
+  doc.addEventListener('click', onDocClick)
+  doc.addEventListener('keydown', onKey)
+
+  const sync = sideNavSync(state, () => o, overlaid, controllers, bar, panel, doc, win, later)
   // A phone turned wide while the panel was open: the panel docks, so the modal state goes.
   const onResize = () => {
     if (o.open && !overlaid()) ask(false)
@@ -209,13 +263,13 @@ export function sideNav(el: HTMLElement, opts: SideNavOptions = {}) {
       if (moved) later()
     },
     destroy() {
-      win?.cancelAnimationFrame(frame)
+      reveal.destroy()
       win?.cancelAnimationFrame(settle)
       el.removeAttribute('data-settling')
       doc.removeEventListener('click', onDocClick)
       doc.removeEventListener('keydown', onKey)
       win?.removeEventListener('resize', onResize)
-      if (shown) doc.documentElement.style.overflow = ''
+      if (state.shown) doc.documentElement.style.overflow = ''
     },
   }
 }

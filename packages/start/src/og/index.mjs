@@ -65,54 +65,7 @@ export async function createCardRenderer({ backend, fonts = [], images: imageOpt
   const renderer = new backend.Renderer()
   for (const font of await normalizeFonts(fonts)) await renderer.registerFont(font)
   const cache = imageCache(imageOptions.cacheBytes)
-  const verdicts = new Map() // `${prop}\0${value}` → null (fine) | { severity, message }
-
-  const accepts = async (style) => {
-    try {
-      await renderer.measure({ type: 'container', style }, { width: 1, height: 1 })
-      return true
-    } catch {
-      return false
-    }
-  }
-  async function judge(prop, value) {
-    const key = `${prop}\0${value}`
-    if (verdicts.has(key)) return verdicts.get(key)
-    let v = null
-    if (!(await accepts({ [prop]: value }))) {
-      v = {
-        severity: 'error',
-        message: `\`${kebab(prop)}: ${value}\` isn't a value the card renderer accepts; the declaration is dropped.`,
-      }
-    } else if (await accepts({ [prop]: PROBE })) {
-      v = {
-        severity: 'warning',
-        message: `\`${kebab(prop)}\` isn't a property the card renderer supports; it has no effect.`,
-      }
-    }
-    verdicts.set(key, v)
-    return v
-  }
-
-  /** Walks the tree: checks styles (dropping invalid declarations), and collects image nodes. */
-  async function prepare(html) {
-    const { node, css } = fromHtml(stripComments(html))
-    const diagnostics = [],
-      imageNodes = []
-    const walk = async (n, path) => {
-      if (n.type === 'image') imageNodes.push(n)
-      for (const [prop, value] of Object.entries(n.style ?? {})) {
-        const v = await judge(prop, value)
-        if (!v) continue
-        diagnostics.push({ code: 'H005', severity: v.severity, message: v.message, element: path })
-        if (v.severity === 'error') delete n.style[prop]
-      }
-      for (const [i, c] of (n.children ?? []).entries())
-        await walk(c, `${path} > ${c.tagName ?? c.type}:nth-child(${i + 1})`)
-    }
-    await walk(node, node.tagName ?? node.type)
-    return { node, css, diagnostics, imageNodes }
-  }
+  const prepare = createPreparation(renderer)
 
   return {
     /** Diagnostics only (`weft check`, dev): nothing is fetched or rasterized. */
@@ -176,6 +129,59 @@ export async function createCardRenderer({ backend, fonts = [], images: imageOpt
       return { body, type: TYPES[format], diagnostics }
     },
   }
+}
+
+function createPreparation(renderer) {
+  const verdicts = new Map() // `${prop}\0${value}` → null (fine) | { severity, message }
+
+  const accepts = async (style) => {
+    try {
+      await renderer.measure({ type: 'container', style }, { width: 1, height: 1 })
+      return true
+    } catch {
+      return false
+    }
+  }
+  async function judge(prop, value) {
+    const key = `${prop}\0${value}`
+    if (verdicts.has(key)) return verdicts.get(key)
+    let v = null
+    if (!(await accepts({ [prop]: value }))) {
+      v = {
+        severity: 'error',
+        message: `\`${kebab(prop)}: ${value}\` isn't a value the card renderer accepts; the declaration is dropped.`,
+      }
+    } else if (await accepts({ [prop]: PROBE })) {
+      v = {
+        severity: 'warning',
+        message: `\`${kebab(prop)}\` isn't a property the card renderer supports; it has no effect.`,
+      }
+    }
+    verdicts.set(key, v)
+    return v
+  }
+
+  /** Walks the tree: checks styles (dropping invalid declarations), and collects image nodes. */
+  async function prepare(html) {
+    const { node, css } = fromHtml(stripComments(html))
+    const diagnostics = [],
+      imageNodes = []
+    const walk = async (n, path) => {
+      if (n.type === 'image') imageNodes.push(n)
+      for (const [prop, value] of Object.entries(n.style ?? {})) {
+        const v = await judge(prop, value)
+        if (!v) continue
+        diagnostics.push({ code: 'H005', severity: v.severity, message: v.message, element: path })
+        if (v.severity === 'error') delete n.style[prop]
+      }
+      for (const [i, c] of (n.children ?? []).entries())
+        await walk(c, `${path} > ${c.tagName ?? c.type}:nth-child(${i + 1})`)
+    }
+    await walk(node, node.tagName ?? node.type)
+    return { node, css, diagnostics, imageNodes }
+  }
+
+  return prepare
 }
 
 /**

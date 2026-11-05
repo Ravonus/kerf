@@ -17,4 +17,6 @@ packages/warp/test/a11y/gallery/assets/
 **/snapshots/
 packages/core/node/css.mjs
 packages/core/node/matrix.mjs
+packages/core/node/css/
+packages/core/node/matrix/
 packages/core/node/vocab.mjs

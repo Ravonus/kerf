@@ -87,311 +87,17 @@ const items = () => screen.queryAllByRole('listitem').map((li) => li.textContent
 const say = () => screen.getByRole('button', { name: 'say' }).click()
 
 describe('channel', () => {
-  test('a client without `authorize` is R001, a stub is not', () => {
-    expect(() => channel({ $id: 'no.auth', client: {} } as never)).toThrow(StartError)
-    expect(() => channel({ $id: 'no.auth' } as never)).toThrow('R001')
-    expect(() => channel({ $id: 'stub', $stub: 1 } as never)).not.toThrow()
-    expect(() =>
-      sharedState('x', {
-        key: any,
-        value: any,
-        initial: 0,
-        authorize: { read: () => true },
-      } as never),
-    ).toThrow('R001')
-  })
+  channelAuthorizationTests()
 
-  test("join, send, and the room's message comes back through the bus", async () => {
-    net.context({ user: { id: 'ann' } })
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    expect(status()).toBe('open')
-    say()
-    await net.settle()
-    expect(items()).toEqual(['hi'])
-    expect(net.sent(room)).toEqual([{ id: 'chat.room', name: 'say', msg: { text: 'hi' } }])
-  })
+  channelMessageTests()
 
-  test('a user `authorize` refuses is unauthorized, and `send` rejects', async () => {
-    net.context({ user: { id: 'eve' } })
-    const seen: unknown[] = []
-    function Probe() {
-      const chat = room.connect({ roomId: 'a' })
-      return (
-        <button
-          onClick={() => void chat.send('say', { text: 'x' }).catch((e) => seen.push(e.code))}
-        >
-          {chat.status.value}
-        </button>
-      )
-    }
-    render(Probe)
-    await net.settle()
-    expect(screen.getByRole('button').textContent).toBe('unauthorized')
-    screen.getByRole('button').click()
-    await net.settle()
-    expect(seen).toEqual(['R011'])
-    expect(net.sent()).toEqual([])
-  })
+  channelReplayTests()
 
-  test('a bad message is refused with its issues, and nothing is published', async () => {
-    net.context({ user: { id: 'ann' } })
-    let error!: StartError & { issues: { message: string }[] }
-    function Probe() {
-      const chat = room.connect({ roomId: 'a' })
-      const said = chat.collect('said')
-      return (
-        <button
-          onClick={() => void chat.send('say', { text: 'much too long' }).catch((e) => (error = e))}
-        >
-          {said.value.length}
-        </button>
-      )
-    }
-    render(Probe)
-    await net.settle()
-    screen.getByRole('button').click()
-    await net.settle()
-    expect(error.code).toBe('Q002')
-    expect(error.issues[0]!.message).toBe('bad text')
-    expect(screen.getByRole('button').textContent).toBe('0')
-  })
+  channelConnectionTests()
 
-  test('a handler that throws answers plainly in production terms, and a name like `constructor` finds nothing', async () => {
-    net.context({ user: { id: 'ann' } })
-    const out: string[] = []
-    let conn!: RoomConnection
-    function Probe() {
-      conn = room.connect({ roomId: 'a' })
-      return <p />
-    }
-    render(Probe)
-    await net.settle()
-    await conn
-      .send('constructor' as unknown as 'say', {})
-      .catch((e: StartError) => out.push(e.code))
-    await conn.send('toString' as unknown as 'say', {}).catch((e: StartError) => out.push(e.code))
-    expect(out).toEqual(['Q002', 'Q002'])
-  })
+  channelLifecycleTests()
 
-  test('collect keeps the last `max`, and `key` replaces a repeat', async () => {
-    net.context({ user: { id: 'ann' } })
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    for (const m of [
-      { id: 1, text: 'a' },
-      { id: 2, text: 'b' },
-      { id: 1, text: 'A' },
-      { id: 3, text: 'c' },
-      { id: 4, text: 'd' },
-    ])
-      await net.publish(room, { roomId: 'a' }, 'said', m)
-    expect(items()).toEqual(['b', 'c', 'd'])
-  })
-
-  test("a message another user published reaches the reader; another room's does not", async () => {
-    net.context({ user: { id: 'bob' } })
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    await net.publish(room, { roomId: 'b' }, 'said', { id: 1, text: 'other' })
-    await net.publish(room, { roomId: 'a' }, 'said', { id: 2, text: 'here' })
-    expect(items()).toEqual(['here'])
-  })
-
-  test('a published message of the wrong shape is C002 in tests', async () => {
-    net.context({ user: { id: 'ann' } })
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    await expect(net.publish(room, { roomId: 'a' }, 'said', { text: 'no id' })).rejects.toThrow(
-      'C002',
-    )
-    await expect(net.publish(room, { roomId: 'a' }, 'nope', {})).rejects.toThrow('C002')
-  })
-
-  test('a drop resumes: what was published meanwhile arrives once, and the list is kept', async () => {
-    net.context({ user: { id: 'ann' } })
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
-    const ch = hub().channel(`weft:c:chat.room:${JSON.stringify({ roomId: 'a' })}`)
-    const seq = ch.ring.length
-    await net.drop()
-    expect(net.reconnects()).toBe(1)
-    expect(status()).toBe('open')
-    await net.publish(room, { roomId: 'a' }, 'said', { id: 2, text: 'two' })
-    expect(items()).toEqual(['one', 'two'])
-    expect(ch.ring.length).toBe(seq + 1)
-  })
-
-  test('a message published while the socket is down is replayed on the rejoin', async () => {
-    net.context({ user: { id: 'ann' } })
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
-    const name = `weft:c:chat.room:${JSON.stringify({ roomId: 'a' })}`
-    await net.offline()
-    await hub().bus.publish(name, JSON.stringify({ n: 'said', m: { id: 2, text: 'gap' } }))
-    await flush()
-    await net.online()
-    await net.settle()
-    expect(status()).toBe('open')
-    expect(items()).toEqual(['one', 'gap'])
-  })
-
-  test('out of the window: `collect` empties, `resets` ticks, onReset fires', async () => {
-    net.context({ user: { id: 'ann' } })
-    const fired = vi.fn()
-    let conn!: RoomConnection
-    function Probe() {
-      conn = room.connect({ roomId: 'a' })
-      conn.onReset(fired)
-      const said = conn.collect('said')
-      return <p aria-label="n">{said.value.length}</p>
-    }
-    render(Probe)
-    await net.settle()
-    await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
-    expect(screen.getByLabelText('n').textContent).toBe('1')
-    await net.offline()
-    hub().channel(`weft:c:chat.room:${JSON.stringify({ roomId: 'a' })}`).floor =
-      Number.MAX_SAFE_INTEGER
-    await net.online()
-    await net.settle()
-    expect(fired).toHaveBeenCalledTimes(1)
-    expect(conn.resets.value).toBe(1)
-    expect(screen.getByLabelText('n').textContent).toBe('0')
-  })
-
-  test('a send in flight when the socket dies rejects; one sent while down waits for the rejoin', async () => {
-    net.context({ user: { id: 'ann' } })
-    const slow = channel({
-      $id: 'chat.slow',
-      authorize: () => true,
-      client: { hold: any, go: any },
-      server: {},
-      on: { hold: () => new Promise(() => {}), go: () => {} },
-    })
-    let conn!: ReturnType<typeof slow.connect>
-    function Probe() {
-      conn = slow.connect()
-      return <p />
-    }
-    render(Probe)
-    await net.settle()
-    const lost = conn.send('hold', {}).catch((e: Error) => e.message)
-    await flush()
-    await net.drop()
-    expect(await lost).toContain('may or may not')
-    await net.offline()
-    const later = conn.send('go', {})
-    await net.online()
-    await net.settle()
-    await expect(later).resolves.toBeUndefined()
-  })
-
-  test('session re-check: a user gone is 4401, a user no longer a member is refused', async () => {
-    net.context({ user: { id: 'ann' } })
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    members.a = ['bob']
-    await net.session({ user: { id: 'ann' } })
-    expect(status()).toBe('unauthorized')
-  })
-
-  test('a signed-out user loses the socket, and rejoining is refused', async () => {
-    net.context({ user: { id: 'ann' } })
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    await net.session({})
-    await net.settle()
-    expect(status()).toBe('unauthorized')
-    expect(net.reconnects()).toBe(1)
-  })
-
-  test('a poke of `session:<user>` re-checks at once', async () => {
-    net.context({ user: { id: 'ann' } })
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    members.a = []
-    await hub().poke(['session:ann'])
-    await new Promise((ok) => {
-      setTimeout(ok)
-    })
-    await net.settle()
-    expect(status()).toBe('unauthorized')
-  })
-
-  test('two readers share one join, and a remount within `keep` finds the messages', async () => {
-    net.context({ user: { id: 'ann' } })
-    const first = render(Chat, { roomId: 'a' })
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
-    expect(hub().bus.name).toBe('memory')
-    first.unmount()
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['one', 'one'])
-  })
-
-  test('`skip` leaves, a new param moves the reader', async () => {
-    net.context({ user: { id: 'bob' } })
-    const id = state<string | null>(null)
-    let chat!: RoomConnection
-    function Probe() {
-      chat = room.connect(() => (id.value ? { roomId: id.value } : skip))
-      return <p aria-label="status">{chat.status.value}</p>
-    }
-    render(Probe)
-    await net.settle()
-    expect(status()).toBe('closed')
-    id.value = 'a'
-    await net.settle()
-    expect(status()).toBe('open')
-    id.value = 'b'
-    await net.settle()
-    expect(status()).toBe('open')
-  })
-
-  test('outside an owner is W051; T012 sees a connect left open', async () => {
-    expect(() => room.connect({ roomId: 'a' })).toThrow('W051')
-    net.context({ user: { id: 'ann' } })
-    let close!: () => void
-    createRoot((dispose) => {
-      close = dispose
-      room.connect({ roomId: 'a' })
-    })
-    await net.settle()
-    const { leaks } = await import('@weft-js/core/test')
-    expect(leaks().join()).toContain('chat.room')
-    close()
-  })
-
-  test('over the rate limit closes the socket, and the client reconnects', async () => {
-    net.context({ user: { id: 'ann' } })
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    let conn!: RoomConnection
-    function Probe() {
-      conn = room.connect({ roomId: 'a' })
-      return <p />
-    }
-    render(Probe)
-    await net.settle()
-    await Promise.allSettled(Array.from({ length: 60 }, () => conn.send('say', { text: 'x' })))
-    await net.settle()
-    expect(net.reconnects()).toBe(1)
-    expect(warn.mock.calls.flat().join()).toContain('R008')
-    warn.mockRestore()
-  })
-
-  test('the fake clock: no timers fire on their own', async () => {
-    clock.install()
-    net.context({ user: { id: 'ann' } })
-    render(Chat, { roomId: 'a' })
-    await net.settle()
-    await clock.advance(60_000)
-    expect(status()).toBe('open')
-  })
+  channelClockTests()
 })
 
 describe('sharedState', () => {
@@ -476,51 +182,7 @@ describe('sharedState', () => {
 })
 
 describe('what multiplayer needs of a room', () => {
-  const log: unknown[] = []
-  const lively = channel({
-    $id: 'chat.lively',
-    params: any as StandardSchemaV1<unknown, { roomId: string }>,
-    authorize: ({ ctx }) => (ctx as Visitor).user?.id !== 'out',
-    client: { me: any, only: any, gone: any },
-    server: { hi: any as StandardSchemaV1<unknown, { id: string }>, tick: any },
-    on: {
-      me: async ({ id, room: here }) => {
-        await here.publish('hi', { id }, { to: id })
-      },
-      only: async ({ msg, room: here }) => {
-        await here.publish('hi', { id: 'nobody' }, { to: msg as string })
-      },
-      gone: async ({ room: here }) => {
-        await here.publish('tick', { n: 1 }, { volatile: true })
-      },
-    },
-    left: ({ id, params }) => void log.push({ id, params }),
-  })
-  function Lively(props: { on: boolean }) {
-    const chat = lively.connect(() => (props.on ? { roomId: 'a' } : skip))
-    const hi = chat.collect('hi')
-    return (
-      <>
-        <p aria-label="status">{chat.status.value}</p>
-        <p aria-label="room">{chat.room.value ?? 'none'}</p>
-        <ul>
-          {hi.value.map((m) => (
-            <li key={m.id}>{m.id}</li>
-          ))}
-        </ul>
-        <button onClick={() => void chat.send('me', {})}>me</button>
-        <button onClick={() => void chat.send('only', 'someone-else')}>only</button>
-        <button onClick={() => void chat.send('gone', {})}>tick</button>
-      </>
-    )
-  }
-  const click = async (name: string) => {
-    screen.getByRole('button', { name }).click()
-    await net.settle()
-  }
-  beforeEach(() => {
-    log.length = 0
-  })
+  const { log, lively, Lively, click } = multiplayerRoom()
 
   test('a handler has the connection, `to` reaches only it, and `left` gets the same id', async () => {
     net.context({ user: { id: 'ann' } })
@@ -597,3 +259,371 @@ test('a hidden tab parks its socket, unless a sibling is looking (`share`)', asy
   await clock.advance(30_000)
   clock.uninstall()
 })
+
+function channelAuthorizationTests() {
+  test('a client without `authorize` is R001, a stub is not', () => {
+    expect(() => channel({ $id: 'no.auth', client: {} } as never)).toThrow(StartError)
+    expect(() => channel({ $id: 'no.auth' } as never)).toThrow('R001')
+    expect(() => channel({ $id: 'stub', $stub: 1 } as never)).not.toThrow()
+    expect(() =>
+      sharedState('x', {
+        key: any,
+        value: any,
+        initial: 0,
+        authorize: { read: () => true },
+      } as never),
+    ).toThrow('R001')
+  })
+
+  test("join, send, and the room's message comes back through the bus", async () => {
+    net.context({ user: { id: 'ann' } })
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    expect(status()).toBe('open')
+    say()
+    await net.settle()
+    expect(items()).toEqual(['hi'])
+    expect(net.sent(room)).toEqual([{ id: 'chat.room', name: 'say', msg: { text: 'hi' } }])
+  })
+
+  test('a user `authorize` refuses is unauthorized, and `send` rejects', async () => {
+    net.context({ user: { id: 'eve' } })
+    const seen: unknown[] = []
+    function Probe() {
+      const chat = room.connect({ roomId: 'a' })
+      return (
+        <button
+          onClick={() => void chat.send('say', { text: 'x' }).catch((e) => seen.push(e.code))}
+        >
+          {chat.status.value}
+        </button>
+      )
+    }
+    render(Probe)
+    await net.settle()
+    expect(screen.getByRole('button').textContent).toBe('unauthorized')
+    screen.getByRole('button').click()
+    await net.settle()
+    expect(seen).toEqual(['R011'])
+    expect(net.sent()).toEqual([])
+  })
+}
+
+function channelMessageTests() {
+  test('a bad message is refused with its issues, and nothing is published', async () => {
+    net.context({ user: { id: 'ann' } })
+    let error!: StartError & { issues: { message: string }[] }
+    function Probe() {
+      const chat = room.connect({ roomId: 'a' })
+      const said = chat.collect('said')
+      return (
+        <button
+          onClick={() => void chat.send('say', { text: 'much too long' }).catch((e) => (error = e))}
+        >
+          {said.value.length}
+        </button>
+      )
+    }
+    render(Probe)
+    await net.settle()
+    screen.getByRole('button').click()
+    await net.settle()
+    expect(error.code).toBe('Q002')
+    expect(error.issues[0]!.message).toBe('bad text')
+    expect(screen.getByRole('button').textContent).toBe('0')
+  })
+
+  test('a handler that throws answers plainly in production terms, and a name like `constructor` finds nothing', async () => {
+    net.context({ user: { id: 'ann' } })
+    const out: string[] = []
+    let conn!: RoomConnection
+    function Probe() {
+      conn = room.connect({ roomId: 'a' })
+      return <p />
+    }
+    render(Probe)
+    await net.settle()
+    await conn
+      .send('constructor' as unknown as 'say', {})
+      .catch((e: StartError) => out.push(e.code))
+    await conn.send('toString' as unknown as 'say', {}).catch((e: StartError) => out.push(e.code))
+    expect(out).toEqual(['Q002', 'Q002'])
+  })
+
+  test('collect keeps the last `max`, and `key` replaces a repeat', async () => {
+    net.context({ user: { id: 'ann' } })
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    for (const m of [
+      { id: 1, text: 'a' },
+      { id: 2, text: 'b' },
+      { id: 1, text: 'A' },
+      { id: 3, text: 'c' },
+      { id: 4, text: 'd' },
+    ])
+      await net.publish(room, { roomId: 'a' }, 'said', m)
+    expect(items()).toEqual(['b', 'c', 'd'])
+  })
+
+  test("a message another user published reaches the reader; another room's does not", async () => {
+    net.context({ user: { id: 'bob' } })
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    await net.publish(room, { roomId: 'b' }, 'said', { id: 1, text: 'other' })
+    await net.publish(room, { roomId: 'a' }, 'said', { id: 2, text: 'here' })
+    expect(items()).toEqual(['here'])
+  })
+}
+
+function channelReplayTests() {
+  test('a published message of the wrong shape is C002 in tests', async () => {
+    net.context({ user: { id: 'ann' } })
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    await expect(net.publish(room, { roomId: 'a' }, 'said', { text: 'no id' })).rejects.toThrow(
+      'C002',
+    )
+    await expect(net.publish(room, { roomId: 'a' }, 'nope', {})).rejects.toThrow('C002')
+  })
+
+  test('a drop resumes: what was published meanwhile arrives once, and the list is kept', async () => {
+    net.context({ user: { id: 'ann' } })
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
+    const ch = hub().channel(`weft:c:chat.room:${JSON.stringify({ roomId: 'a' })}`)
+    const seq = ch.ring.length
+    await net.drop()
+    expect(net.reconnects()).toBe(1)
+    expect(status()).toBe('open')
+    await net.publish(room, { roomId: 'a' }, 'said', { id: 2, text: 'two' })
+    expect(items()).toEqual(['one', 'two'])
+    expect(ch.ring.length).toBe(seq + 1)
+  })
+
+  test('a message published while the socket is down is replayed on the rejoin', async () => {
+    net.context({ user: { id: 'ann' } })
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
+    const name = `weft:c:chat.room:${JSON.stringify({ roomId: 'a' })}`
+    await net.offline()
+    await hub().bus.publish(name, JSON.stringify({ n: 'said', m: { id: 2, text: 'gap' } }))
+    await flush()
+    await net.online()
+    await net.settle()
+    expect(status()).toBe('open')
+    expect(items()).toEqual(['one', 'gap'])
+  })
+
+  test('out of the window: `collect` empties, `resets` ticks, onReset fires', async () => {
+    net.context({ user: { id: 'ann' } })
+    const fired = vi.fn()
+    let conn!: RoomConnection
+    function Probe() {
+      conn = room.connect({ roomId: 'a' })
+      conn.onReset(fired)
+      const said = conn.collect('said')
+      return <p aria-label="n">{said.value.length}</p>
+    }
+    render(Probe)
+    await net.settle()
+    await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
+    expect(screen.getByLabelText('n').textContent).toBe('1')
+    await net.offline()
+    hub().channel(`weft:c:chat.room:${JSON.stringify({ roomId: 'a' })}`).floor =
+      Number.MAX_SAFE_INTEGER
+    await net.online()
+    await net.settle()
+    expect(fired).toHaveBeenCalledTimes(1)
+    expect(conn.resets.value).toBe(1)
+    expect(screen.getByLabelText('n').textContent).toBe('0')
+  })
+}
+
+function channelConnectionTests() {
+  test('a send in flight when the socket dies rejects; one sent while down waits for the rejoin', async () => {
+    net.context({ user: { id: 'ann' } })
+    const slow = channel({
+      $id: 'chat.slow',
+      authorize: () => true,
+      client: { hold: any, go: any },
+      server: {},
+      on: { hold: () => new Promise(() => {}), go: () => {} },
+    })
+    let conn!: ReturnType<typeof slow.connect>
+    function Probe() {
+      conn = slow.connect()
+      return <p />
+    }
+    render(Probe)
+    await net.settle()
+    const lost = conn.send('hold', {}).catch((e: Error) => e.message)
+    await flush()
+    await net.drop()
+    expect(await lost).toContain('may or may not')
+    await net.offline()
+    const later = conn.send('go', {})
+    await net.online()
+    await net.settle()
+    await expect(later).resolves.toBeUndefined()
+  })
+
+  test('session re-check: a user gone is 4401, a user no longer a member is refused', async () => {
+    net.context({ user: { id: 'ann' } })
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    members.a = ['bob']
+    await net.session({ user: { id: 'ann' } })
+    expect(status()).toBe('unauthorized')
+  })
+
+  test('a signed-out user loses the socket, and rejoining is refused', async () => {
+    net.context({ user: { id: 'ann' } })
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    await net.session({})
+    await net.settle()
+    expect(status()).toBe('unauthorized')
+    expect(net.reconnects()).toBe(1)
+  })
+
+  test('a poke of `session:<user>` re-checks at once', async () => {
+    net.context({ user: { id: 'ann' } })
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    members.a = []
+    await hub().poke(['session:ann'])
+    await new Promise((ok) => {
+      setTimeout(ok)
+    })
+    await net.settle()
+    expect(status()).toBe('unauthorized')
+  })
+}
+
+function channelLifecycleTests() {
+  test('two readers share one join, and a remount within `keep` finds the messages', async () => {
+    net.context({ user: { id: 'ann' } })
+    const first = render(Chat, { roomId: 'a' })
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
+    expect(hub().bus.name).toBe('memory')
+    first.unmount()
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(['one', 'one'])
+  })
+
+  test('`skip` leaves, a new param moves the reader', async () => {
+    net.context({ user: { id: 'bob' } })
+    const id = state<string | null>(null)
+    let chat!: RoomConnection
+    function Probe() {
+      chat = room.connect(() => (id.value ? { roomId: id.value } : skip))
+      return <p aria-label="status">{chat.status.value}</p>
+    }
+    render(Probe)
+    await net.settle()
+    expect(status()).toBe('closed')
+    id.value = 'a'
+    await net.settle()
+    expect(status()).toBe('open')
+    id.value = 'b'
+    await net.settle()
+    expect(status()).toBe('open')
+  })
+
+  test('outside an owner is W051; T012 sees a connect left open', async () => {
+    expect(() => room.connect({ roomId: 'a' })).toThrow('W051')
+    net.context({ user: { id: 'ann' } })
+    let close!: () => void
+    createRoot((dispose) => {
+      close = dispose
+      room.connect({ roomId: 'a' })
+    })
+    await net.settle()
+    const { leaks } = await import('@weft-js/core/test')
+    expect(leaks().join()).toContain('chat.room')
+    close()
+  })
+
+  test('over the rate limit closes the socket, and the client reconnects', async () => {
+    net.context({ user: { id: 'ann' } })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    let conn!: RoomConnection
+    function Probe() {
+      conn = room.connect({ roomId: 'a' })
+      return <p />
+    }
+    render(Probe)
+    await net.settle()
+    await Promise.allSettled(Array.from({ length: 60 }, () => conn.send('say', { text: 'x' })))
+    await net.settle()
+    expect(net.reconnects()).toBe(1)
+    expect(warn.mock.calls.flat().join()).toContain('R008')
+    warn.mockRestore()
+  })
+}
+
+function channelClockTests() {
+  test('the fake clock: no timers fire on their own', async () => {
+    clock.install()
+    net.context({ user: { id: 'ann' } })
+    render(Chat, { roomId: 'a' })
+    await net.settle()
+    await clock.advance(60_000)
+    expect(status()).toBe('open')
+  })
+}
+
+function multiplayerRoom() {
+  const log: unknown[] = []
+  const lively = channel({
+    $id: 'chat.lively',
+    params: any as StandardSchemaV1<unknown, { roomId: string }>,
+    authorize: ({ ctx }) => (ctx as Visitor).user?.id !== 'out',
+    client: { me: any, only: any, gone: any },
+    server: { hi: any as StandardSchemaV1<unknown, { id: string }>, tick: any },
+    on: {
+      me: async ({ id, room: here }) => {
+        await here.publish('hi', { id }, { to: id })
+      },
+      only: async ({ msg, room: here }) => {
+        await here.publish('hi', { id: 'nobody' }, { to: msg as string })
+      },
+      gone: async ({ room: here }) => {
+        await here.publish('tick', { n: 1 }, { volatile: true })
+      },
+    },
+    left: ({ id, params }) => void log.push({ id, params }),
+  })
+  function Lively(props: { on: boolean }) {
+    const chat = lively.connect(() => (props.on ? { roomId: 'a' } : skip))
+    const hi = chat.collect('hi')
+    return (
+      <>
+        <p aria-label="status">{chat.status.value}</p>
+        <p aria-label="room">{chat.room.value ?? 'none'}</p>
+        <ul>
+          {hi.value.map((m) => (
+            <li key={m.id}>{m.id}</li>
+          ))}
+        </ul>
+        <button onClick={() => void chat.send('me', {})}>me</button>
+        <button onClick={() => void chat.send('only', 'someone-else')}>only</button>
+        <button onClick={() => void chat.send('gone', {})}>tick</button>
+      </>
+    )
+  }
+  const click = async (name: string) => {
+    screen.getByRole('button', { name }).click()
+    await net.settle()
+  }
+  beforeEach(() => {
+    log.length = 0
+  })
+
+  return { log, lively, Lively, click }
+}

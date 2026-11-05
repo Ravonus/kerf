@@ -1,4 +1,4 @@
-import { TONES } from './badge-data'
+import { TONES } from '../../world'
 import { Badge } from '@weft-js/warp'
 
 export const BadgeTones = () => (

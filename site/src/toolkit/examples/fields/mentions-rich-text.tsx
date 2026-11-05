@@ -9,7 +9,7 @@ import {
   Stack,
   Text,
 } from '@weft-js/warp'
-import { Cell } from './phone-country'
+import { Cell } from '../../world'
 import { MENTIONS, matching, MEMBERS } from './json-key-value'
 
 export function MentionsInputComment() {

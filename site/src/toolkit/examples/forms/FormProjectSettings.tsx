@@ -72,14 +72,20 @@ export function FormProjectSettings() {
         >
           Deploy on push
         </Checkbox>
-        <Row gap="related" justify="end">
-          <Button emphasis="ghost" tone="neutral">
-            Cancel
-          </Button>
-          <Button type="submit">Save changes</Button>
-        </Row>
+        <FormActions />
       </Stack>
       <Toaster />
     </>
+  )
+}
+
+function FormActions() {
+  return (
+    <Row gap="related" justify="end">
+      <Button emphasis="ghost" tone="neutral">
+        Cancel
+      </Button>
+      <Button type="submit">Save changes</Button>
+    </Row>
   )
 }

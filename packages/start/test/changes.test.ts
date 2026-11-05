@@ -171,89 +171,9 @@ describe('tags', () => {
 })
 
 describe('dedupe', () => {
-  test("a mutation's barrier covers its own change: one poke, whichever way it arrives", async () => {
-    const source = fakeSource()
-    configure({ changes: source })
-    await hub().probed
-    const a = await open([[1, 'q', 'c.list']])
-    source.sink().changes([{ table: 'todos', id: '1' }]) // the commit
-    await hub().poke(['todos']) // the mutation, a moment later
-    await wait(60)
-    expect(source.barriers).toEqual([['todos']])
-    expect(of(a.s, 'p')).toHaveLength(1)
-  })
+  dedupeBarrierTests()
 
-  test('the connection that made the write gets nothing from the feed either', async () => {
-    const source = fakeSource()
-    configure({ changes: source })
-    await hub().probed
-    const a = await open([[1, 'q', 'c.list']])
-    source.sink().changes([{ table: 'todos', id: '1' }])
-    await hub().poke(['todos'], a.c.k)
-    await wait(60)
-    expect(of(a.s, 'p')).toEqual([])
-  })
-
-  test("what the barrier doesn't cover still arrives: a query of the row, and another table", async () => {
-    const source = fakeSource()
-    configure({ changes: source })
-    await hub().probed
-    const row = await open([[1, 'q', 'c.one', { id: 1 }]])
-    const whole = await open([[1, 'q', 'c.both', { id: 1 }]])
-    source.sink().changes([
-      { table: 'todos', id: '1' },
-      { table: 'notes', id: '9' },
-    ])
-    await hub().poke(['todos'])
-    await wait(60)
-    expect(of(row.s, 'p').map((p) => p.t)).toEqual([['todos:1']]) // the mutation named no row tag
-    expect(of(whole.s, 'p').map((p) => p.t)).toEqual([['todos']]) // poked by the mutation: no second refetch
-  })
-
-  test('a change after the barrier is delivered: nothing is dropped on a clock', async () => {
-    const source = fakeSource()
-    configure({ changes: source })
-    await hub().probed
-    const a = await open([[1, 'q', 'c.list']])
-    await hub().poke(['todos'])
-    source.sink().changes([{ table: 'todos', id: '2' }])
-    await wait(60)
-    expect(of(a.s, 'p')).toHaveLength(2)
-  })
-
-  test("a change after the barrier isn't mistaken for one it covered, however close", async () => {
-    const seen: Poke[] = []
-    const source = fakeSource()
-    const feed = createFeed(source, { emit: (p) => seen.push(p), status() {} }, { hold: 5 })
-    await feed.start({ mode: 'feed', via: 'x' })
-    source.sink().changes([
-      { table: 'todos', id: '1' },
-      { table: 'notes', id: '1' },
-    ])
-    source.sink().settled(['todos'])
-    source.sink().changes([{ table: 'todos', id: '2' }])
-    await wait(20)
-    expect(seen).toHaveLength(1)
-    expect(seen[0]!.k ?? []).not.toContain('todos')
-    expect(seen[0]!.t).toContain('todos')
-  })
-
-  test('a barrier that never returns costs the write nothing', async () => {
-    const feed = createFeed(
-      fakeSource({ settle: () => new Promise(() => {}) }),
-      { emit() {}, status() {} },
-      { barrier: 5 },
-    )
-    await feed.settle(['todos'])
-  })
-
-  test('a mutation of tables nothing watches sends no barrier', async () => {
-    const source = fakeSource()
-    configure({ changes: source })
-    await hub().probed
-    await hub().poke(['settings', 'other:1'])
-    expect(source.barriers).toEqual([])
-  })
+  dedupeTimingTests()
 })
 
 describe('coalescing', () => {
@@ -377,6 +297,138 @@ describe('modes', () => {
   }
   afterEach(() => void vi.restoreAllMocks())
 
+  modeHealthTests(quiet)
+
+  modeExternalTests(quiet)
+
+  modeListenerTests(quiet)
+})
+
+describe('detection helpers', () => {
+  test('`functionHost` reads what a platform sets', () => {
+    expect(functionHost({})).toBeUndefined()
+    expect(functionHost({ VERCEL: '1' })).toBe('Vercel')
+    expect(functionHost({ NETLIFY: 'true' })).toBe('Netlify')
+    expect(functionHost({ AWS_LAMBDA_FUNCTION_NAME: 'f' })).toBe('AWS Lambda')
+  })
+
+  test('`onNetwork`: statfs on Linux, the device name elsewhere', () => {
+    const statfs = (type: number) => (() => ({ type })) as unknown as typeof statfsSync
+    expect(onNetwork('/x', { platform: 'linux', statfs: statfs(0x6969) })).toBe(true)
+    expect(onNetwork('/x', { platform: 'linux', statfs: statfs(0xef53) })).toBe(false)
+    expect(
+      onNetwork('/x', { platform: 'darwin', df: () => 'Filesystem\n//nas/share 1 2 3 4% /mnt\n' }),
+    ).toBe(true)
+    expect(
+      onNetwork('/x', { platform: 'darwin', df: () => 'Filesystem\nhost:/export 1 2 3 4% /mnt\n' }),
+    ).toBe(true)
+    expect(
+      onNetwork('/x', { platform: 'darwin', df: () => 'Filesystem\n/dev/disk3s5 1 2 3 4% /\n' }),
+    ).toBe(false)
+  })
+
+  test("`dbChanges` refuses what it can't watch", () => {
+    expect(() => dbChanges({}, [])).toThrow(/R017/)
+  })
+})
+
+test('a poke of a tag no feed covers takes the old path', async () => {
+  const a = await open([[1, 'q', 'c.list']])
+  await invalidate(createScope(request()), [])
+  await hub().poke(['todos'])
+  await wait()
+  expect(of(a.s, 'p')).toHaveLength(1)
+})
+
+function dedupeBarrierTests() {
+  test("a mutation's barrier covers its own change: one poke, whichever way it arrives", async () => {
+    const source = fakeSource()
+    configure({ changes: source })
+    await hub().probed
+    const a = await open([[1, 'q', 'c.list']])
+    source.sink().changes([{ table: 'todos', id: '1' }]) // the commit
+    await hub().poke(['todos']) // the mutation, a moment later
+    await wait(60)
+    expect(source.barriers).toEqual([['todos']])
+    expect(of(a.s, 'p')).toHaveLength(1)
+  })
+
+  test('the connection that made the write gets nothing from the feed either', async () => {
+    const source = fakeSource()
+    configure({ changes: source })
+    await hub().probed
+    const a = await open([[1, 'q', 'c.list']])
+    source.sink().changes([{ table: 'todos', id: '1' }])
+    await hub().poke(['todos'], a.c.k)
+    await wait(60)
+    expect(of(a.s, 'p')).toEqual([])
+  })
+
+  test("what the barrier doesn't cover still arrives: a query of the row, and another table", async () => {
+    const source = fakeSource()
+    configure({ changes: source })
+    await hub().probed
+    const row = await open([[1, 'q', 'c.one', { id: 1 }]])
+    const whole = await open([[1, 'q', 'c.both', { id: 1 }]])
+    source.sink().changes([
+      { table: 'todos', id: '1' },
+      { table: 'notes', id: '9' },
+    ])
+    await hub().poke(['todos'])
+    await wait(60)
+    expect(of(row.s, 'p').map((p) => p.t)).toEqual([['todos:1']]) // the mutation named no row tag
+    expect(of(whole.s, 'p').map((p) => p.t)).toEqual([['todos']]) // poked by the mutation: no second refetch
+  })
+
+  test('a change after the barrier is delivered: nothing is dropped on a clock', async () => {
+    const source = fakeSource()
+    configure({ changes: source })
+    await hub().probed
+    const a = await open([[1, 'q', 'c.list']])
+    await hub().poke(['todos'])
+    source.sink().changes([{ table: 'todos', id: '2' }])
+    await wait(60)
+    expect(of(a.s, 'p')).toHaveLength(2)
+  })
+
+  test("a change after the barrier isn't mistaken for one it covered, however close", async () => {
+    const seen: Poke[] = []
+    const source = fakeSource()
+    const feed = createFeed(source, { emit: (p) => seen.push(p), status() {} }, { hold: 5 })
+    await feed.start({ mode: 'feed', via: 'x' })
+    source.sink().changes([
+      { table: 'todos', id: '1' },
+      { table: 'notes', id: '1' },
+    ])
+    source.sink().settled(['todos'])
+    source.sink().changes([{ table: 'todos', id: '2' }])
+    await wait(20)
+    expect(seen).toHaveLength(1)
+    expect(seen[0]!.k ?? []).not.toContain('todos')
+    expect(seen[0]!.t).toContain('todos')
+  })
+}
+
+function dedupeTimingTests() {
+  test('a barrier that never returns costs the write nothing', async () => {
+    const feed = createFeed(
+      fakeSource({ settle: () => new Promise(() => {}) }),
+      { emit() {}, status() {} },
+      { barrier: 5 },
+    )
+    await feed.settle(['todos'])
+  })
+
+  test('a mutation of tables nothing watches sends no barrier', async () => {
+    const source = fakeSource()
+    configure({ changes: source })
+    await hub().probed
+    await hub().poke(['settings', 'other:1'])
+    expect(source.barriers).toEqual([])
+  })
+}
+
+function modeHealthTests(quiet: () => void) {
   test('no `changes`: mode `app`, as ever, and no `l` for an old client to trip on', async () => {
     const a = await open([[1, 'q', 'c.list']])
     expect(of(a.s, 'h')[0]!.l).toBeUndefined()
@@ -434,7 +486,9 @@ describe('modes', () => {
     expect(liveHealth().ok).toBe(false)
     expect(hub().refused).toBeUndefined()
   })
+}
 
+function modeExternalTests(quiet: () => void) {
   test('required on a functions host at run time is refused too', async () => {
     quiet()
     vi.stubEnv('VERCEL', '1')
@@ -493,7 +547,9 @@ describe('modes', () => {
     expect(of(a.s, 'p').map((p) => p.t)).toEqual([['todos']])
     await stop()
   })
+}
 
+function modeListenerTests(quiet: () => void) {
   test('`listen` refuses the memory bus and a source with no feed', async () => {
     quiet()
     await expect(
@@ -509,40 +565,4 @@ describe('modes', () => {
       }),
     ).rejects.toThrow(/R015/)
   })
-})
-
-describe('detection helpers', () => {
-  test('`functionHost` reads what a platform sets', () => {
-    expect(functionHost({})).toBeUndefined()
-    expect(functionHost({ VERCEL: '1' })).toBe('Vercel')
-    expect(functionHost({ NETLIFY: 'true' })).toBe('Netlify')
-    expect(functionHost({ AWS_LAMBDA_FUNCTION_NAME: 'f' })).toBe('AWS Lambda')
-  })
-
-  test('`onNetwork`: statfs on Linux, the device name elsewhere', () => {
-    const statfs = (type: number) => (() => ({ type })) as unknown as typeof statfsSync
-    expect(onNetwork('/x', { platform: 'linux', statfs: statfs(0x6969) })).toBe(true)
-    expect(onNetwork('/x', { platform: 'linux', statfs: statfs(0xef53) })).toBe(false)
-    expect(
-      onNetwork('/x', { platform: 'darwin', df: () => 'Filesystem\n//nas/share 1 2 3 4% /mnt\n' }),
-    ).toBe(true)
-    expect(
-      onNetwork('/x', { platform: 'darwin', df: () => 'Filesystem\nhost:/export 1 2 3 4% /mnt\n' }),
-    ).toBe(true)
-    expect(
-      onNetwork('/x', { platform: 'darwin', df: () => 'Filesystem\n/dev/disk3s5 1 2 3 4% /\n' }),
-    ).toBe(false)
-  })
-
-  test("`dbChanges` refuses what it can't watch", () => {
-    expect(() => dbChanges({}, [])).toThrow(/R017/)
-  })
-})
-
-test('a poke of a tag no feed covers takes the old path', async () => {
-  const a = await open([[1, 'q', 'c.list']])
-  await invalidate(createScope(request()), [])
-  await hub().poke(['todos'])
-  await wait()
-  expect(of(a.s, 'p')).toHaveLength(1)
-})
+}

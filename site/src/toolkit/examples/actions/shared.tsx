@@ -1,8 +1,6 @@
 import type { Command, CommandMode } from '@weft-js/warp'
 import { PEOPLE, PROJECTS } from '../../world'
 
-export const TONES = ['neutral', 'accent', 'positive', 'caution', 'critical', 'info'] as const
-
 export const COMMANDS: Command[] = [
   { id: 'deploy', label: 'Deploy storefront', group: 'Projects', icon: 'rocket', shortcut: '⌘D' },
   { id: 'logs', label: 'Open logs', group: 'Projects', icon: 'external' },
