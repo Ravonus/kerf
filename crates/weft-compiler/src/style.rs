@@ -20,23 +20,27 @@
 //! lowers to one static attribute, `data-accent="radius:round"`, so it stays visible in the markup, and the Vite plugin
 //! emits a rule for each accent some site uses. Intents and tokens are checked against the vocabulary there.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::path::{Component, Path, PathBuf};
+mod lower;
+mod values;
+mod visitor;
 
-use oxc_allocator::{Allocator, TakeIn, Vec as ArenaVec};
+use std::collections::{BTreeMap, HashMap, HashSet};
+
+use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Argument, BindingPattern, CallExpression, Declaration, Expression, ImportDeclarationSpecifier,
-    JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXExpression, JSXOpeningElement,
-    ObjectPropertyKind, Program, PropertyKey, PropertyKind, Statement,
+    Argument, BindingPattern, Declaration, Expression, ImportDeclarationSpecifier, Program,
+    Statement,
 };
 use oxc_ast::builder::AstBuilder;
-use oxc_ast_visit::{VisitMut, walk_mut};
+use oxc_ast_visit::VisitMut;
 use oxc_semantic::{Scoping, SymbolId};
-use oxc_span::{GetSpan, SPAN, Span};
+use oxc_span::GetSpan;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
-use crate::diag::{Diagnostic, Severity, line_col};
+use crate::diag::{Diagnostic, line_col};
+pub(crate) use values::resolve;
+use values::{doc_before, eval, not_static, resolves};
 
 /// A `group()` defined in this file.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -80,9 +84,11 @@ const ARIA: &[&str] = &[
 ];
 const PSEUDO: &[&str] = &["hover", "focus", "active", "disabled"];
 
+type Axes = Vec<(String, Vec<String>)>;
+
 struct Meta {
     name: String,
-    axes: Vec<(String, Vec<String>)>,
+    axes: Axes,
     inherit: Vec<String>,
     states: Vec<String>,
     parts: Vec<String>,
@@ -182,6 +188,32 @@ pub fn apply<'a>(
         return (Vec::new(), Vec::new());
     }
 
+    let (defs, handled) = definitions(program, scoping, source, group_fn, &mut metas, diagnostics);
+
+    let mut lower = Lower {
+        allocator,
+        ast: AstBuilder::new(allocator),
+        scoping,
+        source,
+        metas,
+        group_fn,
+        handled,
+        tagged_parts,
+        diagnostics,
+        uses: Vec::new(),
+    };
+    lower.visit_program(program);
+    (defs, lower.uses)
+}
+
+fn definitions(
+    program: &mut Program<'_>,
+    scoping: &Scoping,
+    source: &str,
+    group_fn: Option<SymbolId>,
+    metas: &mut HashMap<SymbolId, Meta>,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> (Vec<GroupDef>, HashSet<u32>) {
     // Definitions: `const x = group('name', { … })` at the top level, exported or not.
     let mut defs = Vec::new();
     let mut handled = HashSet::new();
@@ -248,164 +280,7 @@ pub fn apply<'a>(
         }
     }
 
-    let mut lower = Lower {
-        allocator,
-        ast: AstBuilder::new(allocator),
-        scoping,
-        source,
-        metas,
-        group_fn,
-        handled,
-        tagged_parts,
-        diagnostics,
-        uses: Vec::new(),
-    };
-    lower.visit_program(program);
-    (defs, lower.uses)
-}
-
-/// The `JSDoc` block that ends right before `at` (only whitespace between), as plain text.
-fn doc_before(source: &str, at: u32) -> Option<String> {
-    let before = source[..at as usize].trim_end();
-    let body = before.strip_suffix("*/")?;
-    let open = body.rfind("/**")?;
-    let text = body[open + 3..]
-        .lines()
-        .map(|l| l.trim().trim_start_matches('*').trim())
-        .filter(|l| !l.is_empty())
-        .collect::<Vec<_>>()
-        .join(" ");
-    (!text.is_empty()).then_some(text)
-}
-
-fn not_static(source: &str, span: Span, what: &str, help: &str) -> Diagnostic {
-    Diagnostic::new(
-        source,
-        "W060",
-        Severity::Error,
-        (span.start, span.end),
-        format!("group can't be evaluated at build: {what} isn't a literal"),
-        help,
-    )
-}
-
-fn resolves(scoping: &Scoping, e: &Expression) -> Option<SymbolId> {
-    let Expression::Identifier(id) = e else {
-        return None;
-    };
-    id.reference_id
-        .get()
-        .and_then(|r| scoping.get_reference(r).symbol_id())
-}
-
-/// `./order-card` from `/app/src/x.tsx` → `/app/src/order-card` (extension stripped, as the plugin keys groups).
-pub(crate) fn resolve(filename: &str, spec: &str) -> String {
-    let base = Path::new(filename)
-        .parent()
-        .unwrap_or(Path::new(""))
-        .join(spec);
-    let mut out = PathBuf::new();
-    for c in base.components() {
-        match c {
-            Component::ParentDir => {
-                out.pop();
-            }
-            Component::CurDir => {}
-            c => out.push(c),
-        }
-    }
-    let s = out.to_string_lossy().into_owned();
-    for ext in [".tsx", ".ts", ".jsx", ".js", ".mts", ".mjs"] {
-        if let Some(stem) = s.strip_suffix(ext) {
-            return stem.to_string();
-        }
-    }
-    s
-}
-
-/// A literal value: strings, numbers, booleans, null, objects with plain keys, arrays. `Err` is the first value that
-/// isn't one, with its path in the definition.
-fn eval(e: &Expression) -> Result<Value, (Span, String)> {
-    match e {
-        Expression::StringLiteral(s) => Ok(Value::String(s.value.to_string())),
-        Expression::NumericLiteral(n) => {
-            Ok(serde_json::Number::from_f64(n.value).map_or(Value::Null, Value::Number))
-        }
-        Expression::BooleanLiteral(b) => Ok(Value::Bool(b.value)),
-        Expression::NullLiteral(_) => Ok(Value::Null),
-        Expression::TemplateLiteral(t) if t.expressions.is_empty() => Ok(Value::String(
-            t.quasis
-                .iter()
-                .map(|q| q.value.cooked.map_or(q.value.raw.as_str(), |c| c.as_str()))
-                .collect(),
-        )),
-        Expression::ParenthesizedExpression(p) => eval(&p.expression),
-        Expression::TSAsExpression(a) => eval(&a.expression),
-        Expression::TSSatisfiesExpression(a) => eval(&a.expression),
-        Expression::UnaryExpression(u) if u.operator.as_str() == "-" => match eval(&u.argument)? {
-            Value::Number(n) => Ok(serde_json::Number::from_f64(-n.as_f64().unwrap_or(0.0))
-                .map_or(Value::Null, Value::Number)),
-            _ => Err((u.span, String::new())),
-        },
-        Expression::ArrayExpression(a) => a
-            .elements
-            .iter()
-            .enumerate()
-            .map(|(i, el)| match el.as_expression() {
-                Some(e) => eval(e).map_err(|(s, p)| (s, join(&i.to_string(), &p))),
-                None => Err((a.span, i.to_string())),
-            })
-            .collect::<Result<Vec<_>, _>>()
-            .map(Value::Array),
-        Expression::ObjectExpression(o) => {
-            let mut map = Map::new();
-            for p in &o.properties {
-                let ObjectPropertyKind::ObjectProperty(p) = p else {
-                    return Err((p.span(), String::new()));
-                };
-                let key = match &p.key {
-                    PropertyKey::StaticIdentifier(id) => id.name.to_string(),
-                    PropertyKey::StringLiteral(s) => s.value.to_string(),
-                    PropertyKey::NumericLiteral(n) => n.value.to_string(),
-                    k => return Err((k.span(), String::new())),
-                };
-                if p.computed || p.method || p.kind != PropertyKind::Init {
-                    return Err((p.span, key));
-                }
-                let v = eval(&p.value).map_err(|(s, path)| (s, join(&key, &path)))?;
-                map.insert(key, v);
-            }
-            Ok(Value::Object(map))
-        }
-        e => Err((e.span(), String::new())),
-    }
-}
-
-fn join(head: &str, tail: &str) -> String {
-    if tail.is_empty() {
-        head.to_string()
-    } else {
-        format!("{head}.{tail}")
-    }
-}
-
-/// The values an axis expression can produce, when every leaf is a string literal (`a ? 'x' : 'y'`).
-fn literals(e: &Expression) -> Option<Vec<String>> {
-    match e {
-        Expression::StringLiteral(s) => Some(vec![s.value.to_string()]),
-        Expression::TemplateLiteral(t) if t.expressions.is_empty() => {
-            Some(vec![t.quasis[0].value.raw.to_string()])
-        }
-        Expression::ParenthesizedExpression(p) => literals(&p.expression),
-        Expression::TSAsExpression(a) => literals(&a.expression),
-        Expression::ConditionalExpression(c) => {
-            let mut v = literals(&c.consequent)?;
-            v.extend(literals(&c.alternate)?);
-            v.dedup();
-            Some(v)
-        }
-        _ => None,
-    }
+    (defs, handled)
 }
 
 struct Lower<'a, 'p> {
@@ -420,389 +295,4 @@ struct Lower<'a, 'p> {
     tagged_parts: bool,
     diagnostics: &'p mut Vec<Diagnostic>,
     uses: Vec<GroupUse>,
-}
-
-impl<'a> Lower<'a, '_> {
-    fn attr(&self, name: &str, value: JSXAttributeValue<'a>) -> JSXAttributeItem<'a> {
-        let name =
-            JSXAttributeName::new_identifier(SPAN, self.allocator.alloc_str(name), &self.ast);
-        JSXAttributeItem::new_attribute(SPAN, name, Some(value), &self.ast)
-    }
-
-    fn text(&self, name: &str, value: &str) -> JSXAttributeItem<'a> {
-        self.attr(
-            name,
-            JSXAttributeValue::new_string_literal(
-                SPAN,
-                self.allocator.alloc_str(value),
-                None,
-                &self.ast,
-            ),
-        )
-    }
-
-    fn expr(&self, name: &str, e: Expression<'a>) -> JSXAttributeItem<'a> {
-        self.attr(
-            name,
-            JSXAttributeValue::new_expression_container(SPAN, JSXExpression::from(e), &self.ast),
-        )
-    }
-
-    fn string(&self, value: &str) -> Expression<'a> {
-        Expression::new_string_literal(SPAN, self.allocator.alloc_str(value), None, &self.ast)
-    }
-
-    fn error(&mut self, span: Span, message: String, help: String) {
-        self.diagnostics.push(Diagnostic::new(
-            self.source,
-            "D025",
-            Severity::Error,
-            (span.start, span.end),
-            message,
-            help,
-        ));
-    }
-
-    fn meta_of(&self, e: &Expression) -> Option<&Meta> {
-        resolves(self.scoping, e).and_then(|s| self.metas.get(&s))
-    }
-
-    /// The attributes a group spread lowers to, or `None` to leave it a runtime spread.
-    fn lower(&mut self, arg: &mut Expression<'a>, line: u32) -> Option<Vec<JSXAttributeItem<'a>>> {
-        if let Expression::StaticMemberExpression(m) = arg {
-            let meta = self.meta_of(&m.object)?;
-            let (name, part) = (meta.name.clone(), m.property.name.to_string());
-            if !meta.parts.contains(&part) {
-                let help = format!(
-                    "{}Parts of {name}: {}.",
-                    did_you_mean(&part, &meta.parts),
-                    list(&meta.parts)
-                );
-                self.error(
-                    m.property.span,
-                    format!("group {name} has no part `{part}`"),
-                    help,
-                );
-                return None;
-            }
-            self.uses.push(GroupUse {
-                group: name.clone(),
-                axes: BTreeMap::new(),
-                states: Vec::new(),
-                part: Some(part.clone()),
-                dynamic: false,
-                accent: None,
-                line,
-            });
-            let part_attr = self.text("data-part", &part);
-            return Some(if self.tagged_parts {
-                vec![self.text("data-g", &name), part_attr]
-            } else {
-                vec![part_attr]
-            });
-        }
-        let Expression::CallExpression(call) = arg else {
-            return None;
-        };
-        let meta = self.meta_of(&call.callee)?;
-        let name = meta.name.clone();
-        let axes = meta.axes.clone();
-        let (inherit, states, defaults) = (
-            meta.inherit.clone(),
-            meta.states.clone(),
-            meta.defaults.clone(),
-        );
-        let mut use_ = GroupUse {
-            group: name.clone(),
-            axes: BTreeMap::new(),
-            states: Vec::new(),
-            part: None,
-            dynamic: false,
-            accent: None,
-            line,
-        };
-        let props = match call.arguments.first_mut() {
-            None => None,
-            Some(Argument::ObjectExpression(o))
-                if o.properties
-                    .iter()
-                    .all(|p| matches!(p, ObjectPropertyKind::ObjectProperty(p) if !p.computed)) =>
-            {
-                Some(o)
-            }
-            Some(_) => {
-                use_.dynamic = true;
-                self.uses.push(use_);
-                return None;
-            }
-        };
-        let mut out = vec![self.text("data-g", &name)];
-        for p in props.into_iter().flat_map(|o| o.properties.iter_mut()) {
-            let ObjectPropertyKind::ObjectProperty(p) = p else {
-                continue;
-            };
-            let Some(key) = p.key.static_name().map(|k| k.to_string()) else {
-                continue;
-            };
-            if key == "accent" && !axes.iter().any(|(a, _)| a == "accent") && !states.contains(&key)
-            {
-                match accent(&p.value) {
-                    Ok(set) if set.is_empty() => {}
-                    Ok(set) => {
-                        let words: Vec<String> =
-                            set.iter().map(|(k, v)| format!("{k}:{v}")).collect();
-                        out.push(self.text("data-accent", &words.join(" ")));
-                        use_.accent = Some(set);
-                    }
-                    Err(span) => {
-                        let what = format!(
-                            "`{}` in {name}'s accent",
-                            &self.source[span.start as usize..span.end as usize]
-                        );
-                        self.diagnostics.push(not_static(
-                            self.source,
-                            span,
-                            &what,
-                            "An accent is `{ intent: 'token' }` with literal tokens: accent: { radius: 'round' }.",
-                        ));
-                    }
-                }
-                continue;
-            }
-            if let Some((_, values)) = axes.iter().find(|(a, _)| *a == key) {
-                let produced = literals(&p.value);
-                for v in produced.iter().flatten() {
-                    if !values.contains(v) {
-                        let help = format!(
-                            "{}Values of {name}.{key}: {}.",
-                            did_you_mean(v, values),
-                            list(values)
-                        );
-                        self.error(
-                            p.value.span(),
-                            format!("`{v}` isn't a value of {name}'s `{key}` axis"),
-                            help,
-                        );
-                    }
-                }
-                let attr = format!("data-{key}");
-                out.push(match &p.value {
-                    Expression::StringLiteral(s) => self.text(&attr, &s.value),
-                    _ => self.expr(&attr, p.value.take_in(&self.ast)),
-                });
-                use_.axes.insert(key, produced);
-            } else if states.contains(&key) && !PSEUDO.contains(&key.as_str()) {
-                // ARIA states are the words "true"/"false" for any truthy value, written as text when static; other states are
-                // present or not.
-                let aria = ARIA.contains(&key.as_str());
-                let attr = state_attr(&key);
-                match &p.value {
-                    Expression::BooleanLiteral(b) if aria => {
-                        out.push(self.text(&attr, if b.value { "true" } else { "false" }));
-                    }
-                    Expression::BooleanLiteral(b) if b.value => out.push(self.text(&attr, "")),
-                    Expression::BooleanLiteral(_) => {}
-                    _ => {
-                        let test = p.value.take_in(&self.ast);
-                        let (yes, no) = if aria {
-                            (self.string("true"), self.string("false"))
-                        } else {
-                            (
-                                self.string(""),
-                                Expression::new_null_literal(SPAN, &self.ast),
-                            )
-                        };
-                        out.push(self.expr(
-                            &attr,
-                            Expression::new_conditional_expression(SPAN, test, yes, no, &self.ast),
-                        ));
-                    }
-                }
-                use_.states.push(key);
-            } else {
-                let (message, help) = if PSEUDO.contains(&key.as_str()) && states.contains(&key) {
-                    (
-                        format!("`{key}` is read from the element (:{key}), not passed"),
-                        "Drop it from the call; the group's `states` style it.".to_string(),
-                    )
-                } else if inherit.contains(&key) {
-                    (
-                        format!("{name}'s `{key}` axis is inherited from the nearest surface"),
-                        "Set it on an ancestor, not here.".to_string(),
-                    )
-                } else {
-                    let ax: Vec<String> = axes.iter().map(|(a, _)| a.clone()).collect();
-                    let all: Vec<String> = ax.iter().chain(states.iter()).cloned().collect();
-                    (
-                        format!("group {name} has no axis or state `{key}`"),
-                        format!(
-                            "{}Axes: {}. States: {}.",
-                            did_you_mean(&key, &all),
-                            list(&ax),
-                            list(&states)
-                        ),
-                    )
-                };
-                self.error(p.key.span(), message, help);
-            }
-        }
-        for (axis, value) in defaults {
-            if !use_.axes.contains_key(&axis) && axes.iter().any(|(a, _)| *a == axis) {
-                out.push(self.text(&format!("data-{axis}"), &value));
-                use_.axes.insert(axis, Some(vec![value]));
-            }
-        }
-        self.uses.push(use_);
-        Some(out)
-    }
-}
-
-fn list(xs: &[String]) -> String {
-    if xs.is_empty() {
-        "none".into()
-    } else {
-        xs.join(", ")
-    }
-}
-
-/// `accent: { radius: 'round' }` → intent → token (sorted by intent); `Err` is the first part that isn't literal.
-fn accent(e: &Expression) -> Result<BTreeMap<String, String>, Span> {
-    let Expression::ObjectExpression(o) = e.without_parentheses() else {
-        return Err(e.span());
-    };
-    let mut out = BTreeMap::new();
-    for p in &o.properties {
-        let ObjectPropertyKind::ObjectProperty(p) = p else {
-            return Err(p.span());
-        };
-        let Some(key) = p.key.static_name().filter(|_| !p.computed) else {
-            return Err(p.key.span());
-        };
-        match literals(&p.value).as_deref() {
-            Some([v]) => out.insert(key.to_string(), v.clone()),
-            _ => return Err(p.value.span()),
-        };
-    }
-    Ok(out)
-}
-
-/// Edit distance with adjacent swaps counted as one edit (`titel` → `title`), for "did you mean".
-fn distance(a: &str, b: &str) -> usize {
-    let (a, b): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
-    let mut d = vec![vec![0usize; b.len() + 1]; a.len() + 1];
-    for (i, row) in d.iter_mut().enumerate() {
-        row[0] = i;
-    }
-    for (j, cell) in d[0].iter_mut().enumerate() {
-        *cell = j;
-    }
-    for i in 1..=a.len() {
-        for j in 1..=b.len() {
-            let cost = usize::from(a[i - 1] != b[j - 1]);
-            d[i][j] = (d[i - 1][j] + 1)
-                .min(d[i][j - 1] + 1)
-                .min(d[i - 1][j - 1] + cost);
-            if i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1] {
-                d[i][j] = d[i][j].min(d[i - 2][j - 2] + 1);
-            }
-        }
-    }
-    d[a.len()][b.len()]
-}
-
-/// `Did you mean `late`? ` for the closest names (case-insensitive, within a third of the word), else nothing.
-fn did_you_mean(word: &str, names: &[String]) -> String {
-    let w = word.to_lowercase();
-    let limit = (w.chars().count() / 3).max(1);
-    let mut close: Vec<(usize, &String)> = names
-        .iter()
-        .map(|n| (distance(&w, &n.to_lowercase()), n))
-        .filter(|(d, n)| {
-            *d <= limit || n.to_lowercase().contains(&w) || w.contains(&n.to_lowercase())
-        })
-        .collect();
-    close.sort_by_key(|(d, _)| *d);
-    match close.as_slice() {
-        [] => String::new(),
-        [(_, n)] => format!("Did you mean `{n}`? "),
-        many => format!(
-            "Did you mean {}? ",
-            many.iter()
-                .take(3)
-                .map(|(_, n)| format!("`{n}`"))
-                .collect::<Vec<_>>()
-                .join(" or ")
-        ),
-    }
-}
-
-impl<'a> VisitMut<'a> for Lower<'a, '_> {
-    fn visit_jsx_opening_element(&mut self, it: &mut JSXOpeningElement<'a>) {
-        let is_group = |a: &JSXAttributeItem, me: &Self| match a {
-            JSXAttributeItem::SpreadAttribute(s) => match &s.argument {
-                Expression::StaticMemberExpression(m) => me.meta_of(&m.object).is_some(),
-                Expression::CallExpression(c) => me.meta_of(&c.callee).is_some(),
-                _ => false,
-            },
-            JSXAttributeItem::Attribute(_) => false,
-        };
-        let roots: Vec<(Span, String)> = it
-            .attributes
-            .iter()
-            .filter_map(|a| match a {
-                JSXAttributeItem::SpreadAttribute(s) => match &s.argument {
-                    Expression::CallExpression(c) => {
-                        self.meta_of(&c.callee).map(|m| (s.span, m.name.clone()))
-                    }
-                    _ => None,
-                },
-                JSXAttributeItem::Attribute(_) => None,
-            })
-            .collect();
-        if let [(_, first), .., (span, last)] = roots.as_slice() {
-            let message = format!(
-                "two group roots on one element: {first} and {last} (the last `data-g` would win)"
-            );
-            let help = "One group per element: nest an element for the second group, or make the variation an axis of one group.";
-            self.diagnostics.push(Diagnostic::new(
-                self.source,
-                "D024",
-                Severity::Error,
-                (span.start, span.end),
-                message,
-                help,
-            ));
-        }
-        if it.attributes.iter().any(|a| is_group(a, self)) {
-            let old = std::mem::replace(&mut it.attributes, ArenaVec::new_in(&self.ast));
-            for mut item in old {
-                if is_group(&item, self)
-                    && let JSXAttributeItem::SpreadAttribute(s) = &mut item
-                {
-                    let line = line_col(self.source, s.span.start).0;
-                    if let Some(attrs) = self.lower(&mut s.argument, line) {
-                        it.attributes.extend(attrs);
-                        continue;
-                    }
-                }
-                it.attributes.push(item);
-            }
-        }
-        walk_mut::walk_jsx_opening_element(self, it);
-    }
-
-    fn visit_call_expression(&mut self, it: &mut CallExpression<'a>) {
-        if self.group_fn.is_some()
-            && resolves(self.scoping, &it.callee) == self.group_fn
-            && !self.handled.contains(&it.span.start)
-        {
-            self.diagnostics.push(not_static(
-                self.source,
-                it.span,
-                "a group() call outside a top-level `const`",
-                "Define groups as `export const name = group('name', { … })` at the top of a module.",
-            ));
-        }
-        walk_mut::walk_call_expression(self, it);
-    }
 }
