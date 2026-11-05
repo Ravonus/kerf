@@ -1,4 +1,4 @@
-import { createSignal, Show } from 'solid-js'
+import { createSignal, Show, type Accessor, type Setter } from 'solid-js'
 import { Field, Dropdown, Toggle } from '../ui'
 
 const initial = {
@@ -47,54 +47,20 @@ export default function Settings() {
         </p>
       </header>
       <form onSubmit={save} novalidate class="card max-w-2xl space-y-6 p-5 sm:p-8">
-        <div class="grid gap-6 sm:grid-cols-2">
-          <Field
-            label="Full name"
-            value={name()}
-            onInput={(v) => {
-              setName(v)
-              setOk(false)
-            }}
-          />
-          <Field
-            label="Email"
-            type="email"
-            value={email()}
-            onInput={(v) => {
-              setEmail(v)
-              setOk(false)
-            }}
-            error={error()}
-          />
-        </div>
-        <Dropdown
-          label="Role"
-          options={['Admin', 'Editor', 'Viewer']}
-          value={role()}
-          onChange={(v) => {
-            setRole(v)
-            setOk(false)
-          }}
-        />
-        <Field
-          label="Bio"
-          multiline
-          value={bio()}
-          onInput={(v) => {
-            setBio(v)
-            setOk(false)
-          }}
-        />
-        <div class="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <Toggle
-            label="Email updates"
-            checked={updates()}
-            onChange={(v) => {
-              setUpdates(v)
-              setOk(false)
-            }}
-          />
-        </div>
+        {profileFields({
+          name,
+          setName,
+          email,
+          setEmail,
+          role,
+          setRole,
+          bio,
+          setBio,
+          updates,
+          setUpdates,
+          error,
+          setOk,
+        })}
         <div class="flex flex-wrap items-center gap-3 border-t border-slate-200 pt-6 dark:border-slate-800">
           <button type="submit" class="btn btn-primary">
             Save
@@ -107,6 +73,89 @@ export default function Settings() {
           </p>
         </div>
       </form>
+    </>
+  )
+}
+
+type ProfileFields = {
+  name: Accessor<string>
+  setName: Setter<string>
+  email: Accessor<string>
+  setEmail: Setter<string>
+  role: Accessor<string>
+  setRole: Setter<string>
+  bio: Accessor<string>
+  setBio: Setter<string>
+  updates: Accessor<boolean>
+  setUpdates: Setter<boolean>
+  error: Accessor<string>
+  setOk: Setter<boolean>
+}
+
+function profileFields({
+  name,
+  setName,
+  email,
+  setEmail,
+  role,
+  setRole,
+  bio,
+  setBio,
+  updates,
+  setUpdates,
+  error,
+  setOk,
+}: ProfileFields) {
+  return (
+    <>
+      <div class="grid gap-6 sm:grid-cols-2">
+        <Field
+          label="Full name"
+          value={name()}
+          onInput={(v) => {
+            setName(v)
+            setOk(false)
+          }}
+        />
+        <Field
+          label="Email"
+          type="email"
+          value={email()}
+          onInput={(v) => {
+            setEmail(v)
+            setOk(false)
+          }}
+          error={error()}
+        />
+      </div>
+      <Dropdown
+        label="Role"
+        options={['Admin', 'Editor', 'Viewer']}
+        value={role()}
+        onChange={(v) => {
+          setRole(v)
+          setOk(false)
+        }}
+      />
+      <Field
+        label="Bio"
+        multiline
+        value={bio()}
+        onInput={(v) => {
+          setBio(v)
+          setOk(false)
+        }}
+      />
+      <div class="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+        <Toggle
+          label="Email updates"
+          checked={updates()}
+          onChange={(v) => {
+            setUpdates(v)
+            setOk(false)
+          }}
+        />
+      </div>
     </>
   )
 }

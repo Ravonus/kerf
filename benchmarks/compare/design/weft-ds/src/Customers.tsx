@@ -1,4 +1,4 @@
-import { state, derived } from '@weft-js/core'
+import { state, derived, type Derived } from '@weft-js/core'
 import { Badge, Button, Heading, Modal, Search, Stack, Table, Text } from '@weft-js/warp'
 
 type Status = 'Active' | 'Trial' | 'Past due'
@@ -54,6 +54,38 @@ export function Customers() {
         value={query.value}
         onInput={(e: any) => (query.value = e.currentTarget.value)}
       />
+      {customerTable(shown, ask)}
+      <Modal
+        open={confirming}
+        alert
+        tone="critical"
+        title="Delete customer?"
+        description={`${pending.value?.name ?? 'This customer'} will be removed from Northwind. This can't be undone.`}
+        footer={
+          <>
+            <Button
+              emphasis="ghost"
+              tone="neutral"
+              autofocus
+              onClick={() => (confirming.value = false)}
+            >
+              Keep
+            </Button>
+            <Button tone="critical" onClick={remove}>
+              Delete
+            </Button>
+          </>
+        }
+      >
+        <Text subtle>Their invoices stay in your records.</Text>
+      </Modal>
+    </Stack>
+  )
+}
+
+function customerTable(shown: Derived<Customer[]>, ask: (c: Customer) => void) {
+  return (
+    <>
       {shown.value.length > 0 ? (
         <Table
           caption="Customers"
@@ -92,30 +124,6 @@ export function Customers() {
           No customers found
         </Text>
       )}
-      <Modal
-        open={confirming}
-        alert
-        tone="critical"
-        title="Delete customer?"
-        description={`${pending.value?.name ?? 'This customer'} will be removed from Northwind. This can't be undone.`}
-        footer={
-          <>
-            <Button
-              emphasis="ghost"
-              tone="neutral"
-              autofocus
-              onClick={() => (confirming.value = false)}
-            >
-              Keep
-            </Button>
-            <Button tone="critical" onClick={remove}>
-              Delete
-            </Button>
-          </>
-        }
-      >
-        <Text subtle>Their invoices stay in your records.</Text>
-      </Modal>
-    </Stack>
+    </>
   )
 }
