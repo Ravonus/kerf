@@ -1,7 +1,7 @@
 // The agent pack on one page (?part=agent), with the specimen's sample data. `XCase` exports are what agent-hydrate
 // renders. Imports are per file: the ssr and hydrate query imports follow .tsx only.
 import { foldAnswer, type AgentEvent, type Answer, type TraceSpan } from '@weft-js/warp-core'
-import { state } from '@weft-js/core'
+import { state, type State } from '@weft-js/core'
 import { Button } from '../../src/Button'
 import { Tabs } from '../../src/Tabs'
 import { Toaster } from '../../src/Toast'
@@ -394,41 +394,55 @@ function Desk({ answer, phone }: { answer: Answer; phone: boolean }) {
             onBranch={() => {}}
           />
         </Conversation>
-        <aside
-          aria-label="Run"
-          style="padding:10px 16px;overflow:auto;border-inline-start:1px solid var(--warp-color-border);background:var(--warp-color-surface-sunken)"
-        >
-          <h3 data-part="sr-only">Run</h3>
-          <Tabs
-            label="Run views"
-            value={rail.value}
-            onChange={(v) => (rail.value = v)}
-            options={[
-              { value: 'plan', label: 'Plan' },
-              { value: 'trace', label: 'Trace' },
-              { value: 'changes', label: 'Changes' },
-            ]}
-          >
-            {(v) =>
-              v === 'plan' ? (
-                <AgentPlan
-                  steps={answer.plan}
-                  queue={queue.value}
-                  onRemoveQueued={(id) => (queue.value = queue.value.filter((q) => q.id !== id))}
-                />
-              ) : v === 'trace' ? (
-                <TraceViewer spans={SPANS} />
-              ) : (
-                <Checkpoint label="Checkpoint · before edits" onRestore={() => {}} />
-              )
-            }
-          </Tabs>
-        </aside>
+        <DeskRail answer={answer} queue={queue} rail={rail} />
       </div>
       <Card title="Speech input and mic selector">
         <SpeechCase />
       </Card>
     </>
+  )
+}
+
+function DeskRail({
+  answer,
+  queue,
+  rail,
+}: {
+  answer: Answer
+  queue: State<QueuedMessage[]>
+  rail: State<'plan' | 'trace' | 'changes'>
+}) {
+  return (
+    <aside
+      aria-label="Run"
+      style="padding:10px 16px;overflow:auto;border-inline-start:1px solid var(--warp-color-border);background:var(--warp-color-surface-sunken)"
+    >
+      <h3 data-part="sr-only">Run</h3>
+      <Tabs
+        label="Run views"
+        value={rail.value}
+        onChange={(v) => (rail.value = v)}
+        options={[
+          { value: 'plan', label: 'Plan' },
+          { value: 'trace', label: 'Trace' },
+          { value: 'changes', label: 'Changes' },
+        ]}
+      >
+        {(v) =>
+          v === 'plan' ? (
+            <AgentPlan
+              steps={answer.plan}
+              queue={queue.value}
+              onRemoveQueued={(id) => (queue.value = queue.value.filter((q) => q.id !== id))}
+            />
+          ) : v === 'trace' ? (
+            <TraceViewer spans={SPANS} />
+          ) : (
+            <Checkpoint label="Checkpoint · before edits" onRestore={() => {}} />
+          )
+        }
+      </Tabs>
+    </aside>
   )
 }
 
