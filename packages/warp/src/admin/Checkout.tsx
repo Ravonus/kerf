@@ -61,6 +61,7 @@ export function Checkout({
       payment: () => payment,
       wallet: () => wallet,
       coupon: () => coupon,
+      applyCoupon: (code) => coupon?.(code),
       idempotencyKey: () => idempotencyKey,
       onPlaceOrder: (order) => onPlaceOrder(order),
       onStepChange: (step) => onStepChange?.(step),

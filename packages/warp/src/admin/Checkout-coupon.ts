@@ -10,7 +10,7 @@ export function checkoutCoupon(input: CheckoutInput, s: ReturnType<typeof checko
     const v = code.value.trim().toUpperCase()
     if (!v) return void (codeError.value = 'Enter a code first.')
     checking.value = true
-    const c = await input.coupon()?.(v)
+    const c = await input.applyCoupon(v)
     checking.value = false
     if (!c) return void (codeError.value = 'That code isn’t valid or has expired.')
     applied.value = c
