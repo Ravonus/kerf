@@ -18,7 +18,10 @@ export default function Three() {
       <p>
         <strong>Score {score.value}</strong>
       </p>
-      <Button size="sm" onClick={addThree}>
+      <Button
+        size="sm"
+        onClick={addThree}
+      >
         +3
       </Button>
       <Button
