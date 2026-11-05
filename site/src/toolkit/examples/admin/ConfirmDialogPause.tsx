@@ -1,5 +1,10 @@
 import { state } from '@weft-js/core'
-import { Button, ConfirmDialog, Stack, Text } from '@weft-js/warp'
+import {
+  Button,
+  ConfirmDialog,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 import { wait } from './shared'
 
 export function ConfirmDialogPause() {
@@ -11,16 +16,33 @@ export function ConfirmDialogPause() {
   }
   return (
     <>
-      <Stack gap="related" align="center">
-        <Text subtle>checkout is {paused.value ? 'paused' : 'live'}.</Text>
-        <Button emphasis="outline" tone="neutral" onClick={() => (open.value = true)}>
-          {paused.value ? 'Resume deploys' : 'Pause deploys'}
+      <Stack
+        gap="related"
+        align="center"
+      >
+        <Text subtle>
+          checkout is {paused.value ? 'paused' : 'live'}.
+        </Text>
+        <Button
+          emphasis="outline"
+          tone="neutral"
+          onClick={() => (open.value = true)}
+        >
+          {paused.value
+            ? 'Resume deploys'
+            : 'Pause deploys'}
         </Button>
       </Stack>
       <ConfirmDialog
         open={open}
-        title={paused.value ? 'Resume deploys?' : 'Pause deploys?'}
-        description="This applies to everyone on checkout."
+        title={
+          paused.value
+            ? 'Resume deploys?'
+            : 'Pause deploys?'
+        }
+        description={
+          'This applies to everyone on ' + 'checkout.'
+        }
         action={paused.value ? 'Resume' : 'Pause deploys'}
         onConfirm={confirm}
       />

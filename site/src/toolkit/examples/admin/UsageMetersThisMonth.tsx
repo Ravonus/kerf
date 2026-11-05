@@ -16,7 +16,11 @@ export const UsageMetersThisMonth = () => (
       format={gigabytes}
       note="Slows down past the limit, never stops."
     />
-    <UsageMeter label="Seats" value={8} limit={10} />
+    <UsageMeter
+      label="Seats"
+      value={8}
+      limit={10}
+    />
     <UsageMeter
       label="Log storage"
       value={11.2}

@@ -1,5 +1,9 @@
 import { state } from '@weft-js/core'
-import { OrderTracker, Segmented, Stack } from '@weft-js/warp'
+import {
+  OrderTracker,
+  Segmented,
+  Stack,
+} from '@weft-js/warp'
 import type { OrderStage } from '@weft-js/warp'
 import { STAGES } from './shared'
 

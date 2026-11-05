@@ -19,7 +19,12 @@ export function PlanPickerTeam() {
         seats={8}
         daysLeft={9}
         losses={(plan) =>
-          plan.id === 'hobby' ? ['Preview environments', '7 of your 10 seats'] : []
+          plan.id === 'hobby'
+            ? [
+                'Preview environments',
+                '7 of your 10 seats',
+              ]
+            : []
         }
         onChange={change}
       />
