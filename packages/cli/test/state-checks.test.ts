@@ -9,11 +9,11 @@ const server = {
   'src/server/notes.ts':
     "import { mutation, query } from '@weft-js/start'\nexport const listNotes = query({ run: () => [] })\nexport const getNote = query({ run: () => ({ id: 1 }) })\nexport const addNote = mutation({ run: () => 1 })\nexport const plain = () => []\n",
 }
-const s = (r) =>
+const s = (r: Awaited<ReturnType<typeof check>>) =>
   r.diagnostics
     .filter((d) => ['S001', 'S012'].includes(d.code))
     .map((d) => [d.code, d.file, d.span[0]])
-const line = (name, body) => [
+const line = (name: string, body: string): [string, string] => [
   `src/state/${name}.ts`,
   `import { listNotes, getNote, plain } from '../server/notes'\nimport { defineState, state, watch, derived } from '@weft-js/core'\n${body}\n`,
 ]
@@ -113,7 +113,7 @@ describe('S012', () => {
 })
 
 describe('X037', () => {
-  const page = (name, body) => [
+  const page = (name: string, body: string): [string, string] => [
     `src/routes/x037-${name}.tsx`,
     `import { Boundary, resource as load } from '@weft-js/core'\nimport { listNotes } from '../server/notes'\n${body}\n`,
   ]
@@ -159,11 +159,11 @@ describe('X037', () => {
     )
     const x = r.diagnostics
       .filter((d) => d.code === 'X037')
-      .map((d) => [d.file, d.span[0]])
+      .map((d) => [d.file, d.span[0]] as [string, number])
       .toSorted((a, b) => a[0].localeCompare(b[0]))
     expect(x).toEqual(
       Object.values(flagged)
-        .map(([f]) => [f, 4])
+        .map(([f]) => [f, 4] as [string, number])
         .toSorted((a, b) => a[0].localeCompare(b[0])),
     )
     expect(r.diagnostics.find((d) => d.code === 'X037').severity).toBe('warning')

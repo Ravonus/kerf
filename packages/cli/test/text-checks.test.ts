@@ -6,10 +6,14 @@ import { check } from '../src/check.mjs'
 import { fluidFor } from '../src/text-checks.mjs'
 import { project } from './helpers.mjs'
 
-const x = (r) => r.diagnostics.filter((d) => d.code.startsWith('X'))
-const apply = (dir, d) => {
+const x = (r: Awaited<ReturnType<typeof check>>) =>
+  r.diagnostics.filter((d) => d.code.startsWith('X'))
+const apply = (
+  dir: string,
+  d: { file: string; fix: { edits: { offset: [number, number]; text: string }[] } },
+) => {
   const text = readFileSync(join(dir, d.file), 'utf8')
-  const e = d.fix.edits[0]
+  const e = d.fix.edits[0]!
   return text.slice(0, e.offset[0]) + e.text + text.slice(e.offset[1])
 }
 
