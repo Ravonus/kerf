@@ -75,6 +75,17 @@ enum Seg {
     Lowered((u32, u32)),
 }
 
+fn marker_offset(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> usize {
+    let mut n = 0usize;
+    for d in chars.by_ref() {
+        if d == NUM {
+            break;
+        }
+        n = n * 10 + d.to_digit(10).unwrap_or(0) as usize;
+    }
+    n
+}
+
 /// Strip the markers from `marked`; with `mapping`, also return the source map (JSON).
 pub fn decode(marked: &str, mapping: Option<Mapping>) -> (String, Option<String>) {
     let mut out = String::with_capacity(marked.len());
@@ -94,13 +105,7 @@ pub fn decode(marked: &str, mapping: Option<Mapping>) -> (String, Option<String>
     while let Some(c) = chars.next() {
         match c {
             COPY | LOWERED => {
-                let mut n = 0usize;
-                for d in chars.by_ref() {
-                    if d == NUM {
-                        break;
-                    }
-                    n = n * 10 + d.to_digit(10).unwrap_or(0) as usize;
-                }
+                let n = marker_offset(&mut chars);
                 if c == COPY {
                     next = pts.partition_point(|p| (p.0 as usize) < n);
                     stack.push(Seg::Copy(n));
