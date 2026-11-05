@@ -1,8 +1,7 @@
-import { addTags, announce } from '@weft-js/warp-core'
 import { derived, state, type State } from '@weft-js/core'
 import { Field } from '../Field'
 import { Tag } from '../Tag'
-import { afterFlush } from './atoms'
+import { tagActions } from './TagsInput/actions'
 import '@weft-js/warp-core/styles/inputs/choice.css'
 
 /** Props for TagsInput. */
@@ -38,46 +37,15 @@ export function TagsInput({
 }: TagsInputProps) {
   const draft = state('')
   const armed = state(false)
-  let host: HTMLElement | undefined
-  const say = (text: string) => {
-    if (host) announce(host.ownerDocument, text)
-  }
-  const add = (raw: string) => {
-    const { list, added } = addTags(value.value, raw)
-    draft.value = ''
-    if (!added.length) return
-    value.value = list
-    armed.value = false
-    say(`Added ${added.join(', ')}. ${list.length} in total.`)
-    onEdit?.()
-  }
-  const drop = (tag: string) => {
-    value.value = value.value.filter((t) => t !== tag)
-    armed.value = false
-    say(`Removed ${tag}.`)
-    onEdit?.()
-    afterFlush(() => host?.focus())
-  }
-  const key = (e: KeyboardEvent) => {
-    const text = draft.value.trim()
-    if ((e.key === 'Enter' || e.key === ',') && text) {
-      e.preventDefault()
-      add(text)
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      onSubmit?.()
-    } else if (e.key === 'Backspace' && !draft.value && value.value.length) {
-      if (armed.value) drop(value.value[value.value.length - 1]!)
-      else armed.value = true
-    } else if (e.key !== 'Backspace') armed.value = false
-  }
-  const paste = (e: ClipboardEvent) => {
-    const t = e.clipboardData?.getData('text') ?? ''
-    if (/[\s,;]/.test(t.trim())) {
-      e.preventDefault()
-      add(`${draft.value} ${t}`)
-    }
-  }
+  const refs: { host?: HTMLElement | undefined } = {}
+  const { add, drop, key, paste } = tagActions(
+    () => value,
+    draft,
+    armed,
+    refs,
+    () => onEdit,
+    () => onSubmit,
+  )
   const last = derived(() => value.value[value.value.length - 1])
   return (
     <Field
@@ -100,7 +68,7 @@ export function TagsInput({
             </Tag>
           ))}
           <input
-            ref={(n) => (host = n)}
+            ref={(n) => (refs.host = n)}
             data-part="input"
             id={p.id}
             placeholder=" "
