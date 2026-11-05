@@ -23,6 +23,16 @@ export type ChatConversation = Peer & {
   href?: string
 }
 
+function bindConversationList() {
+  let box: HTMLDivElement | undefined
+  use(
+    roving,
+    () => box,
+    () => ({ items: '[role="option"]', orientation: 'vertical' as const }),
+  )
+  return (n: HTMLDivElement) => (box = n)
+}
+
 /**
  * The conversation list (07 §5.1, §5.4): a listbox with `aria-selected` on the open channel. One tab stop, ↑/↓ and
  * Home/End rove, Enter or a press opens. `value` is a box or a plain id.
@@ -46,12 +56,7 @@ export function ConversationList({
   const current = derived(() => (value instanceof Box ? value.value : (value ?? own.value)))
   const heading = derived(() => title)
   const tools = derived(() => actions)
-  let box: HTMLDivElement | undefined
-  use(
-    roving,
-    () => box,
-    () => ({ items: '[role="option"]', orientation: 'vertical' as const }),
-  )
+  const setBox = bindConversationList()
   const pick = (e: Event, c: ChatConversation) => {
     if (!c.href) e.preventDefault()
     if (value instanceof Box) value.value = c.id
@@ -69,7 +74,7 @@ export function ConversationList({
           {tools.value}
         </div>
       )}
-      <div ref={(n) => (box = n)} role="listbox" aria-label={label} style="display:contents">
+      <div ref={setBox} role="listbox" aria-label={label} style="display:contents">
         {items.map((c) => (
           <a
             key={c.id}
