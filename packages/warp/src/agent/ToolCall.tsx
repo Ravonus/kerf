@@ -7,7 +7,7 @@ import {
   uid,
   type AgentTool,
 } from '@weft-js/warp-core'
-import { derived, onMount, state, untrack, watch } from '@weft-js/core'
+import { derived, onMount, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Checkbox } from '../Choice'
 import { Sweep } from './bits'
@@ -40,43 +40,24 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
   const args = state(untrack(() => call.args))
   const always = state(false)
   const diff = derived(() => argsDiff(call.args, args.value).join('\n'))
-  let frame: HTMLElement | undefined
-  let head: HTMLElement | undefined
-  let ok: HTMLElement | undefined
-  onMount(() => {
-    const asked = () =>
-      queueMicrotask(() => {
-        ok?.focus({ preventScroll: true })
-        if (frame)
-          announce(
-            frame.ownerDocument,
-            `The assistant wants to run ${untrack(() => call.name)}. Approve or deny.`,
-            true,
-          )
-      })
-    watch(
-      () => st.value,
-      (s, prev) => {
-        if (s === 'approval') {
-          args.value = untrack(() => call.args)
-          if (prev !== undefined || !untrack(() => quiet)) asked()
-        }
-        if (prev !== undefined && s === 'done') {
-          installSweep().confirm(frame)
-          announce(frame!.ownerDocument, `${untrack(() => call.name)} finished.`)
-        }
-      },
-    )
-  })
-  const leave = (then: () => void) => {
-    head?.focus({ preventScroll: true })
-    then()
-  }
+  const refs: {
+    frame?: HTMLElement | undefined
+    head?: HTMLElement | undefined
+    ok?: HTMLElement | undefined
+  } = {}
+  toolLifecycle(
+    st,
+    args,
+    () => call,
+    () => quiet,
+    refs,
+  )
+  const leave = toolLeave(refs)
   return (
-    <div ref={(n) => (frame = n)} data-part="tool-frame" data-sweep="">
+    <div ref={(n) => (refs.frame = n)} data-part="tool-frame" data-sweep="">
       <Sweep />
       <details data-scope="tool-call" data-state={st.value} open={st.value === 'approval'}>
-        <summary ref={(n) => (head = n)}>
+        <summary ref={(n) => (refs.head = n)}>
           <span>
             {st.value === 'running' && (
               <span
@@ -114,53 +95,127 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
           </pre>
         </div>
         {st.value === 'approval' && (
-          <div data-part="approve" role="group" aria-label={`Approve ${call.name}`}>
-            <span data-part="eyebrow" id={`${id}-a`}>
-              Arguments · editable
-            </span>
-            <textarea
-              aria-labelledby={`${id}-a`}
-              spellcheck="false"
-              value={args.value}
-              onInput={(e) => (args.value = e.currentTarget.value)}
-            ></textarea>
-            {diff.value && (
-              <section data-part="io">
-                <span>Your edit</span>
-                <pre>{diff.value}</pre>
-              </section>
-            )}
-            <div>
-              <Button
-                size="sm"
-                ref={(n) => (ok = n)}
-                onClick={() => leave(() => onApprove?.(args.value, always.value))}
-              >
-                <CheckIcon />
-                Approve
-              </Button>
-              <Button
-                emphasis="outline"
-                tone="neutral"
-                size="sm"
-                onClick={() => leave(() => onDeny?.())}
-              >
-                Deny
-              </Button>
-              {alwaysAllow !== undefined && (
-                <Checkbox
-                  checked={always.value}
-                  onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
-                    (always.value = e.currentTarget.checked)
-                  }
-                >
-                  {alwaysAllow}
-                </Checkbox>
-              )}
-            </div>
-          </div>
+          <ToolApproval
+            id={id}
+            call={call}
+            args={args}
+            always={always}
+            diff={diff}
+            refs={refs}
+            leave={leave}
+            onApprove={onApprove}
+            onDeny={onDeny}
+            alwaysAllow={alwaysAllow}
+          />
         )}
       </details>
+    </div>
+  )
+}
+
+function toolLeave(refs: { head?: HTMLElement | undefined }) {
+  return (then: () => void) => {
+    refs.head?.focus({ preventScroll: true })
+    then()
+  }
+}
+
+function toolLifecycle(
+  st: { readonly value: AgentTool['state'] },
+  args: State<string>,
+  call: () => AgentTool,
+  quiet: () => boolean | undefined,
+  refs: { frame?: HTMLElement | undefined; ok?: HTMLElement | undefined },
+) {
+  onMount(() => {
+    const asked = () =>
+      queueMicrotask(() => {
+        refs.ok?.focus({ preventScroll: true })
+        if (refs.frame)
+          announce(
+            refs.frame.ownerDocument,
+            `The assistant wants to run ${untrack(() => call().name)}. Approve or deny.`,
+            true,
+          )
+      })
+    watch(
+      () => st.value,
+      (s, prev) => {
+        if (s === 'approval') {
+          args.value = untrack(() => call().args)
+          if (prev !== undefined || !untrack(quiet)) asked()
+        }
+        if (prev !== undefined && s === 'done') {
+          installSweep().confirm(refs.frame)
+          announce(refs.frame!.ownerDocument, `${untrack(() => call().name)} finished.`)
+        }
+      },
+    )
+  })
+}
+function ToolApproval({
+  id,
+  call,
+  args,
+  always,
+  diff,
+  refs,
+  leave,
+  onApprove,
+  onDeny,
+  alwaysAllow,
+}: {
+  id: string
+  call: AgentTool
+  args: State<string>
+  always: State<boolean>
+  diff: { readonly value: string }
+  refs: { ok?: HTMLElement | undefined }
+  leave: (then: () => void) => void
+  onApprove?: ((args: string, always: boolean) => void) | undefined
+  onDeny?: (() => void) | undefined
+  alwaysAllow?: string | undefined
+}) {
+  return (
+    <div data-part="approve" role="group" aria-label={`Approve ${call.name}`}>
+      <span data-part="eyebrow" id={`${id}-a`}>
+        Arguments · editable
+      </span>
+      <textarea
+        aria-labelledby={`${id}-a`}
+        spellcheck="false"
+        value={args.value}
+        onInput={(e) => (args.value = e.currentTarget.value)}
+      ></textarea>
+      {diff.value && (
+        <section data-part="io">
+          <span>Your edit</span>
+          <pre>{diff.value}</pre>
+        </section>
+      )}
+      <div>
+        <Button
+          size="sm"
+          ref={(n) => (refs.ok = n)}
+          onClick={() => leave(() => onApprove?.(args.value, always.value))}
+        >
+          <CheckIcon />
+          Approve
+        </Button>
+        <Button emphasis="outline" tone="neutral" size="sm" onClick={() => leave(() => onDeny?.())}>
+          Deny
+        </Button>
+        {alwaysAllow !== undefined && (
+          <Checkbox
+            checked={always.value}
+            onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
+              (always.value = e.currentTarget.checked)
+            }
+          >
+            {alwaysAllow}
+          </Checkbox>
+        )}
+      </div>
     </div>
   )
 }
