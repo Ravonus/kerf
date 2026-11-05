@@ -9,10 +9,7 @@
 //                  bumps the versions of the tags it invalidates).
 
 import { shapeTree } from './shape.mjs'
-import type { MediaAsset } from '@weft-js/core/media'
-import type { ServerExtension } from './extension'
 import {
-  FnError,
   enter,
   fns,
   isRedirect,
@@ -22,179 +19,55 @@ import {
   type Answer,
   type Context,
   type Fn,
-  type Life,
-  type SchemaIssue,
   type Wire,
+  type Life,
 } from './data'
-import { unavailable } from './db/core'
 
-export interface ScopeEntry {
-  id: string
-  input: unknown
-  p: Promise<ScopeEntry>
-  /** A render's read of it (`landed`). */
-  read?: Promise<unknown>
-  done?: boolean
-  v?: unknown
-  e?: unknown
-  tags: string[]
+import {
+  createScope,
+  frame,
+  memoryStore,
+  defaultStore,
+  type Scope,
+  type ScopeEntry,
+  type Touched,
+} from './exec/scope'
+import { guard, dbError } from './exec/errors'
+import {
+  tracker,
+  untouched,
+  missedTags,
+  reads,
+  liveQueries,
+  missedPokes,
+  missedFeed,
+} from './exec/touch'
+import { validate, formInput, checked, checkTags } from './exec/validation'
+import { landed, shown, said } from './exec/landing'
+export {
+  createScope,
+  frame,
+  memoryStore,
+  defaultStore,
+  guard,
+  dbError,
+  liveQueries,
+  missedFeed,
+  validate,
+  checkTags,
+  shown,
+  said,
 }
-
-export interface Scope {
-  request: Request
-  entries: Map<string, ScopeEntry>
-  /** Tags a mutation or `invalidate()` dropped during this request. */
-  invalidated: Set<string>
-  /** Response headers the functions set (cookies), merged into the response. */
-  headers: Headers
-  /** The page's first byte went out: a redirect can't change the status any more (Q007). */
-  started?: boolean
-  /** The tags of the queries a route level's `load` read (a frame per loader; research 27 §4). */
-  tags?: Set<string>
-  /** Dev: the tables this function's statements read and wrote (a frame per `run`; research 28 §2). */
-  touched?: Touched
-  /** A no-JS form POST that failed: `<Form>` renders it into the page (research 29 §5). */
-  form?: FormFailure
-  /** Failure messages meant for the visitor, the only ones a production page may carry (`shown`). */
-  said: Set<string>
-  /** The render read a live query or a stream: the page carries the realtime cursor (research 30 §1). */
-  live?: boolean
-  ctx(): Promise<Context>
-  options: ScopeOptions
-}
-
-export interface Touched {
-  read: Set<string>
-  write: Set<string>
-}
-
-export interface FormFailure {
-  id: string
-  key?: string
-  values: Record<string, unknown>
-  errors: Record<string, string>
-  message?: string | undefined
-  status: number
-}
-
-/** The `media.server@1` provider (`@weft-js/plugin-media/server`, research 29 §6). */
-export interface MediaServer {
-  ingest(bytes: Uint8Array, options: { name?: string }): Promise<MediaAsset>
-  serve(want: { hash: string; width: number; format: string; accept: string }): Promise<{
-    bytes: Uint8Array
-    type: string
-    width: number
-    format: string
-    negotiated: boolean
-    temporary?: boolean
-  } | null>
-}
-
-export interface ScopeOptions {
-  /** The app's context (`src/context.server.ts`). */
-  context?: ((args: { request: Request }) => object | Promise<object>) | undefined
-  store?: Store | undefined
-  /** Tests (@weft-js/core/test `net.handle`): a replacement `run` by function id. */
-  handlers?: Map<string, (input: unknown, ctx: Context) => unknown>
-  onDiagnostic?: ((d: { code: string; severity: string; message: string }) => void) | undefined
-  dev?: boolean | undefined
-  media?: (() => Promise<MediaServer> | undefined) | undefined
-  /** What plugins add through `server.extension` (extension.ts). */
-  extensions?: ServerExtension[] | undefined
-}
-
-export function createScope(request: Request, options: ScopeOptions = {}): Scope {
-  const headers = new Headers()
-  let ctx: Promise<Context> | undefined
-  return {
-    request,
-    entries: new Map(),
-    invalidated: new Set(),
-    headers,
-    options,
-    said: new Set(),
-    // oxlint-disable typescript/no-unnecessary-type-assertion -- needed where a plugin such as pay adds required fields to Context
-    ctx: () =>
-      (ctx ??= Promise.resolve()
-        .then(() => options.context?.({ request }) ?? {})
-        .then(
-          (app) =>
-            extended(
-              {
-                ...app,
-                request,
-                response: { headers },
-                media: mediaApi(options),
-              } /* oxlint-enable typescript/no-unnecessary-type-assertion */ as Context,
-              options,
-            ),
-          (e) => {
-            throw dbError(e)
-          },
-        )),
-  }
-}
-
-/** Each extension's part of `ctx`, once the app's is there: an extension reads `ctx.user` to say what it adds. */
-function extended(ctx: Context, options: ScopeOptions): Context {
-  for (const e of options.extensions ?? []) Object.assign(ctx, e.context?.(ctx))
-  return ctx
-}
-
-/** `ctx.media`. A refusal is the user's answer, with its own status; `<Form>` shows it. */
-const mediaApi = (options: ScopeOptions): Context['media'] => ({
-  async ingest(file, { name } = {}) {
-    const server = await options.media?.()
-    if (!server)
-      throw new StartError(
-        'M017',
-        '`ctx.media` needs a `media.server` provider',
-        'add `media()` from `@weft-js/plugin-media` to `plugins` in weft.config.ts',
-        { status: 500 },
-      )
-    const bytes = file instanceof Uint8Array ? file : new Uint8Array(await file.arrayBuffer())
-    try {
-      return await server.ingest(bytes, { name: name ?? (file as File).name })
-    } catch (e) {
-      const { code, message } = e as Error & { code?: string }
-      throw code ? new StartError(code, message, undefined, { status: 422 }) : e
-    }
-  },
-})
-
-/** A child scope for one loader: the same entries, its own `tags` collector. */
-export const frame = (scope: Scope): Scope =>
-  Object.create(scope, { tags: { value: new Set<string>() } })
-
-// ---- the shared tagged cache --------------------------------------------------------------------------------------
-
-/** Where `cache: { life }` values live. Memory by default; Nitro storage (fs, KV, Redis) plugs in here. */
-export interface Store {
-  get(key: string): Stored | undefined | Promise<Stored | undefined>
-  set(key: string, value: Stored): void | Promise<void>
-  /** The current version of each tag (0 for one never bumped). */
-  versions(tags: string[]): number[] | Promise<number[]>
-  bump(tags: string[]): void | Promise<void>
-}
-export interface Stored {
-  v: unknown
-  tags: string[]
-  versions: number[]
-  expires: number
-}
-
-export function memoryStore(): Store {
-  const values = new Map<string, Stored>()
-  const tags = new Map<string, number>()
-  return {
-    get: (k) => values.get(k),
-    set: (k, v) => void values.set(k, v),
-    versions: (t) => t.map((x) => tags.get(x) ?? 0),
-    bump: (t) => {
-      for (const x of t) tags.set(x, (tags.get(x) ?? 0) + 1)
-    },
-  }
-}
+export type {
+  Scope,
+  ScopeEntry,
+  ScopeOptions,
+  Touched,
+  FormFailure,
+  MediaServer,
+  Store,
+  Stored,
+} from './exec/scope'
 
 const LIFE: Record<Exclude<Life, number>, number> = {
   seconds: 1,
@@ -204,7 +77,6 @@ const LIFE: Record<Exclude<Life, number>, number> = {
   max: Infinity,
 }
 const seconds = (life: Life = 'minutes') => (typeof life === 'number' ? life : LIFE[life])
-export const defaultStore = memoryStore()
 const storeOf = (scope: Scope) => scope.options.store ?? defaultStore
 
 // ---- queries --------------------------------------------------------------------------------------------------
@@ -216,70 +88,6 @@ export function readQuery(scope: Scope, fn: Fn, input: unknown): unknown {
   if (e.e !== undefined) throw shown(e.e, scope)
   return e.v
 }
-
-/** How long a landed read waits for the others in flight, in ms: long enough for a pool's worth of replies. */
-const GATHER = 4
-
-interface Landing {
-  flying: number
-  held: (() => void)[]
-  timer?: ReturnType<typeof setTimeout> | undefined
-}
-const landings = new WeakMap<object, Landing>()
-
-/**
- * A read as a render sees it. Each landing costs a pass over the whole page, so reads land together: all of them once
- * none is in flight, or `GATHER` after the first, so a slow query never holds a fast one for longer than that.
- */
-function landed(scope: Scope, e: ScopeEntry): Promise<unknown> {
-  if (e.read) return e.read
-  let l = landings.get(scope.entries)
-  if (!l) landings.set(scope.entries, (l = { flying: 0, held: [] }))
-  const at = l
-  at.flying++
-  const release = () => {
-    clearTimeout(at.timer)
-    at.timer = undefined
-    for (const go of at.held.splice(0)) go()
-  }
-  e.read = new Promise((ok, no) => {
-    const land = () => {
-      at.held.push(() => (e.e !== undefined ? no(shown(e.e, scope)) : ok(e.v)))
-      if (!--at.flying) release()
-      else at.timer ??= setTimeout(release, GATHER)
-    }
-    e.p.then(land, land)
-  })
-  e.read.catch(() => {}) // a failure surfaces where the value is read
-  return e.read
-}
-
-const FAILED = 'Server function failed.'
-
-/** A failure as the page may show it. In production a fault's text stays in the diagnostics: a driver's error names tables. */
-export function shown(e: unknown, scope: Scope): unknown {
-  const { dev, onDiagnostic } = scope.options
-  const fault = !(
-    e instanceof FnError ||
-    isRedirect(e) ||
-    (e instanceof StartError && Number(e.extra.status ?? 500) < 500)
-  )
-  const { message, code } = (e ?? {}) as { message?: string; code?: string }
-  if (dev || !fault) {
-    if (message !== undefined) scope.said.add(message)
-    return e
-  }
-  onDiagnostic?.({
-    code: code ?? 'E_FN',
-    severity: 'error',
-    message: `a render read a failed query: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
-  })
-  return new Error(FAILED)
-}
-
-/** The message for a value that's going in a page: its own when `shown` passed it, else the plain one. */
-export const said = (message: string, scope: Scope) =>
-  scope.options.dev || scope.said.has(message) ? message : FAILED
 
 const trees = new WeakMap<Fn, { tree: unknown }>()
 /** A query's shape tree, once per definition. */
@@ -462,141 +270,6 @@ async function call(
   return v
 }
 
-/** `auth: 'user'`: A003 when `ctx` has no `user` at all, A002 when no one is signed in. */
-export function guard(fn: Fn, ctx: Context) {
-  if (fn.def.auth !== 'user') return
-  if (!('user' in ctx))
-    throw new StartError(
-      'A003',
-      `\`${fn.$id}\` has \`auth: 'user'\`, but \`ctx\` has no \`user\``,
-      'spread `session(auth, request)` into what `src/context.server.ts` returns',
-      { status: 500 },
-    )
-  if (!(ctx as { user?: unknown }).user)
-    throw new StartError(
-      'A002',
-      `\`${fn.$id}\` needs a signed-in user`,
-      'sign in first, or guard the route with `redirect()` in its `load`',
-      { status: 401 },
-    )
-}
-
-const DOWN =
-  /^(ECONNREFUSED|ECONNRESET|ENOTFOUND|EHOSTUNREACH|ETIMEDOUT|CONNECT_TIMEOUT|CONNECTION_(CLOSED|ENDED|DESTROYED)|PROTOCOL_CONNECTION_LOST|P100[12])$/
-
-interface Failure {
-  cause?: Failure | null
-  answer?: { message?: string; code?: string; status: number }
-  code?: string | number
-  message?: string
-}
-
-/** A dropped connection is Q016; a missing table is a migration that wasn't generated or applied (Q014): the driver's error, with the fix. */
-export function dbError(e: unknown): unknown {
-  const failure = e as Failure | null | undefined
-  const cause = failure?.cause ?? failure
-  if (failure?.answer) return new FnError(failure.answer, failure.answer.status)
-  if (cause instanceof StartError) return cause // Drizzle wraps what a driver throws, the gate's Q016 included
-  if (!(e instanceof StartError) && DOWN.test(String(cause?.code ?? failure?.code ?? '')))
-    return unavailable(e)
-  const m = cause?.message ?? ''
-  if (
-    e instanceof StartError ||
-    !(
-      /no such (table|column)|has no column named/.test(m) ||
-      cause?.code === '42P01' ||
-      cause?.code === '42703'
-    )
-  )
-    return e
-  return new StartError(
-    'Q014',
-    `the database doesn't match the schema: ${m}`,
-    'run `weft db generate`, then reload (new migrations apply on the next request)',
-    { status: 500 },
-  )
-}
-
-type Obj = Record<PropertyKey, unknown>
-
-const tracker = (scope: Scope): Touched | undefined =>
-  scope.options.dev ? { read: new Set(), write: new Set() } : undefined
-
-/** R105 (dev, once per function): a cached Rust query with tags that named no table, so Q011 has nothing to check it by. */
-function untouched(fn: Fn, read: Set<string>, tags: readonly string[], scope: Scope) {
-  if (!fn.def.impl || !fn.def.cache || read.size || !tags.length || warned.has(`${fn.$id}:R105`))
-    return
-  warned.add(`${fn.$id}:R105`)
-  scope.options.onDiagnostic?.({
-    code: 'R105',
-    severity: 'warning',
-    message: `\`${fn.$id}\` is cached under ${tags.map((t) => `\`${t}\``).join(', ')} and reported no table: nothing can tell whether those tags cover what it reads. Call \`ctx.touch("table")\` in the Rust, or drop \`tags\` if it reads none`,
-  })
-}
-
-/** Q011 (dev, once per function and table): a table the function touched that no tag names (PLAN §4). */
-function missedTags(
-  fn: Fn,
-  verb: 'read' | 'write',
-  tables: Set<string>,
-  tags: readonly string[],
-  scope: Scope,
-) {
-  for (const t of tables) {
-    const key = `${fn.$id}:${t}`
-    if (warned.has(key) || tags.some((x) => x === t || x.startsWith(`${t}:`))) continue
-    warned.add(key)
-    const list = fn.kind === 'query' ? '`tags`' : '`invalidates`'
-    scope.options.onDiagnostic?.({
-      code: 'Q011',
-      severity: 'warning',
-      message: `\`${fn.$id}\` ${verb === 'read' ? 'reads' : 'writes'} table \`${t}\`, but its ${list} don't name it: ${fn.kind === 'query' ? "a mutation of that table won't refresh it" : 'queries of that table stay stale'}. Add \`'${t}'\` to ${list}`,
-    })
-  }
-}
-const warned = new Set<string>()
-
-/** Dev: the tables each query last read, and the tags of the queries read with `.live()` (the hub fills it). */
-const reads = new Map<string, Set<string>>()
-export const liveQueries = new Map<string, string[]>()
-
-/** R003 (dev, once per pair): this mutation wrote what a live query reads, and pokes none of its tags. */
-function missedPokes(fn: Fn, write: Set<string>, tags: string[], scope: Scope) {
-  for (const [id, own] of liveQueries) {
-    const table = [...(reads.get(id) ?? [])].find((t) => write.has(t))
-    const key = `${fn.$id}>${id}`
-    if (!table || warned.has(key) || own.some((t) => tags.includes(t))) continue
-    warned.add(key)
-    scope.options.onDiagnostic?.({
-      code: 'R003',
-      severity: 'warning',
-      message: `\`${fn.$id}\` writes table \`${table}\`, which live query \`${id}\` reads, but their tags don't intersect (${JSON.stringify(tags)} and ${JSON.stringify(own)}): open pages won't update. Add one of the query's tags to \`invalidates\``,
-    })
-  }
-}
-
-/** R012 (dev, once per query and table): a live query whose tags won't hear what `changes` reports, or a table it doesn't report. */
-export function missedFeed(
-  fn: Fn,
-  tags: string[],
-  tables: string[],
-  report: ScopeOptions['onDiagnostic'],
-) {
-  for (const t of reads.get(fn.$id) ?? []) {
-    const key = `${fn.$id}~${t}`
-    const named = tags.some((x) => x === t || x.startsWith(`${t}:`))
-    if (warned.has(key) || (named && tables.includes(t))) continue
-    warned.add(key)
-    report?.({
-      code: 'R012',
-      severity: 'warning',
-      message: tables.includes(t)
-        ? `live query \`${fn.$id}\` reads table \`${t}\`, but no tag names it: writes from outside the app won't refresh it. Add \`'${t}'\` to its \`tags\``
-        : `live query \`${fn.$id}\` reads table \`${t}\`, which \`changes\` doesn't list: only mutations refresh it, not writes from outside the app. Add the table to \`dbChanges\``,
-    })
-  }
-}
-
 /** A cached query's ctx: no request, response or user. Its value is shared by every user (Q006). With `scope: 'user'`, one value per user: `ctx.user` is allowed. */
 function shared(ctx: Context, fn: Fn, scope: Scope): Context {
   const own = fn.def.cache?.scope === 'user'
@@ -689,176 +362,4 @@ export async function invalidate(scope: Scope, tags: string[]) {
       message: `poke of ${tags.join(', ')} failed: ${e instanceof Error ? e.message : e}`,
     }),
   )
-}
-
-// ---- validation and checks ------------------------------------------------------------------------------------
-
-export async function validate(fn: Fn, input: unknown): Promise<unknown> {
-  const schema = fn.def.input
-  if (!schema) return input
-  const r = await schema['~standard'].validate(input)
-  if (!r.issues) return r.value
-  throw rejected(fn, r.issues)
-}
-
-const plainPath = (i: SchemaIssue) => (i.path ?? []).map((p) => (typeof p === 'object' ? p.key : p))
-
-function rejected(fn: Fn, list: readonly SchemaIssue[]) {
-  const issues = list.map((i) => ({
-    message: i.message,
-    path: i.path && plainPath(i),
-  })) as (SchemaIssue & { path?: PropertyKey[] })[]
-  const where = issues
-    .map((i) => `${i.path?.length ? i.path.map(String).join('.') + ': ' : ''}${i.message}`)
-    .join('; ')
-  return new StartError(
-    'Q002',
-    `\`${fn.$id}\` rejected its input: ${where}`,
-    'pass what the schema accepts',
-    { status: 400, issues },
-  )
-}
-/** A form's string as the type it may stand for (research 29 §5): the schema says whether it was wrong. */
-function reading(s: string): unknown {
-  if (s === '') return undefined
-  if (s === 'on' || s === 'true') return true
-  if (s === 'false') return false
-  return /^-?\d+(\.\d+)?$/.test(s) ? Number(s) : s
-}
-/**
- * A form sends strings and a schema may want numbers or booleans, and Standard Schema can't say which: each issue
- * on a string tries its obvious reading, then the input is validated again. Fields a reading fixed report nothing; the
- * rest report what the schema says of what was typed (an empty field: its "required", not "expected a string").
- */
-async function formInput(fn: Fn, input: unknown): Promise<unknown> {
-  const schema = fn.def.input
-  if (!schema || !input || typeof input !== 'object') return validate(fn, input)
-  const value: Obj = { ...input }
-  let left: readonly SchemaIssue[] = []
-  for (let i = 0; i < 3; i++) {
-    const r = await schema['~standard'].validate(value)
-    if (!r.issues) return r.value
-    left = r.issues
-    let changed = false
-    for (const issue of r.issues) {
-      const path = plainPath(issue)
-      if (!path.length) continue
-      let at: Obj | undefined = value
-      for (const p of path.slice(0, -1)) {
-        const inner: unknown = at?.[p]
-        if (!inner || typeof inner !== 'object') {
-          at = undefined
-          break
-        }
-        at = at[p] = (Array.isArray(inner) ? [...inner] : { ...inner }) as Obj
-      }
-      const k = path.at(-1)!
-      const typed = at?.[k]
-      if (typeof typed !== 'string') continue
-      const next = reading(typed)
-      if (next === typed) continue
-      if (next === undefined) delete at![k]
-      else at![k] = next
-      changed = true
-    }
-    if (!changed) break
-  }
-  const first = await schema['~standard'].validate(input)
-  const where = (i: SchemaIssue) => JSON.stringify(plainPath(i))
-  throw rejected(
-    fn,
-    left.map((i) => first.issues?.find((o) => where(o) === where(i)) ?? i),
-  )
-}
-/** Dev and tests: the value against `output` (C002), and what JSON would change (Q005). */
-async function checked(v: unknown, fn: Fn, scope: Scope) {
-  serializable(v, fn, scope)
-  const schema = fn.def.output
-  if (!schema || fn.def.impl) return // `impl`: rust.ts checked what came back, on every call
-  const r = await schema['~standard'].validate(v)
-  if (r.issues)
-    throw new StartError(
-      'C002',
-      `\`${fn.$id}\` returned a value its \`output\` schema rejects: ${r.issues.map((i) => `${i.path?.map((p) => (typeof p === 'object' ? p.key : p)).join('.') ?? ''}: ${i.message}`).join('; ')}`,
-      'fix `run`, or the schema',
-      { status: 500 },
-    )
-}
-/** Q005 (dev): what JSON would change on the way to the client. */
-function serializable(v: unknown, fn: Fn, scope: Scope) {
-  const bad = (x: unknown, path: string): string | undefined => {
-    if (x === null || typeof x === 'string' || typeof x === 'boolean') return undefined
-    if (typeof x === 'number') return Number.isFinite(x) ? undefined : `${path} is ${x}`
-    if (x === undefined) return undefined
-    if (typeof x !== 'object') return `${path} is a ${typeof x}`
-    if (Array.isArray(x)) {
-      for (let i = 0; i < x.length; i++) {
-        if (x[i] === undefined) return `${path}[${i}] is undefined (JSON sends null)`
-        const b = bad(x[i], `${path}[${i}]`)
-        if (b) return b
-      }
-      return undefined
-    }
-    const proto: unknown = Object.getPrototypeOf(x)
-    if (proto !== Object.prototype && proto !== null)
-      return `${path} is a ${(x as { constructor?: { name?: string } }).constructor?.name ?? 'class instance'}`
-    for (const k of Object.keys(x)) {
-      const b = bad((x as Obj)[k], `${path}.${k}`)
-      if (b) return b
-    }
-    return undefined
-  }
-  const b = bad(v, 'result')
-  if (b)
-    scope.options.onDiagnostic?.({
-      code: 'Q005',
-      severity: 'warning',
-      message: `\`${fn.$id}\`'s ${b}: the client gets a different value than the server rendered with. Send plain data (ISO strings, arrays, objects)`,
-    })
-}
-/**
- * Q008 (dev, once): each mutation's static `invalidates` against the tags queries declare. A tags function is called
- * with an input whose every field reads `*`, so `todo:${id}` declares `todo:*`.
- */
-export function checkTags(
-  report: (d: { code: string; severity: string; message: string }) => void,
-) {
-  const star: unknown = new Proxy(
-    {},
-    { get: (_, k) => (k === Symbol.toPrimitive ? () => '*' : '*') },
-  )
-  const declared: string[] = []
-  for (const f of fns.values()) {
-    if (f.kind !== 'query') continue
-    try {
-      declared.push(...(typeof f.def.tags === 'function' ? f.def.tags(star) : (f.def.tags ?? [])))
-    } catch {}
-  }
-  const matches = (tag: string) =>
-    declared.some(
-      (d) =>
-        d === tag ||
-        (d.includes('*') &&
-          new RegExp(`^${d.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^]*')}$`).test(
-            tag,
-          )) ||
-        (tag.includes('*') && d.startsWith(tag.slice(0, tag.indexOf('*')))),
-    )
-  for (const f of fns.values()) {
-    if (f.kind !== 'mutation' || !f.def.invalidates) continue
-    let tags: readonly string[]
-    try {
-      tags =
-        typeof f.def.invalidates === 'function' ? f.def.invalidates(star, star) : f.def.invalidates
-    } catch {
-      continue
-    }
-    for (const t of tags)
-      if (!matches(t))
-        report({
-          code: 'Q008',
-          severity: 'warning',
-          message: `\`${f.$id}\` invalidates \`${t}\`, a tag no query declares: nothing refreshes. Fix the tag, or add it to the query's \`tags\``,
-        })
-  }
 }

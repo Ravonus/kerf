@@ -91,6 +91,60 @@ export function textChecks(root, { files, exclude = [], fontBuild = false }) {
   const fontsJson = join(root, '.weft', 'fonts.json')
   const built = existsSync(fontsJson) ? JSON.parse(readFileSync(fontsJson, 'utf8')) : null
 
+  const reporter = makeReporter(out)
+
+  const faceUrls = checkSheets({ sheets, built, fontBuild, reporter, out })
+
+  // -- Markup: viewport meta, font preloads, media in boundaries, pending timers --
+  const viewport = (file, start, end, content, valueStart) => {
+    const parts = content
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+    const bad = parts.filter(
+      (p) =>
+        /^user-scalable\s*=\s*(no|0)$/i.test(p) ||
+        (/^maximum-scale\s*=/i.test(p) && parseFloat(p.split('=')[1]) < 2),
+    )
+    if (!bad.length) return
+    const keep = parts.filter((p) => !bad.includes(p)).join(', ')
+    reporter(file)(
+      'X008',
+      start,
+      end,
+      `The viewport meta blocks zoom (\`${bad.join('`, `')}\`): people who need larger text can't pinch to get it (WCAG 1.4.4).`,
+      {
+        description: 'Remove the zoom limits',
+        safe: true,
+        text: keep,
+        at: [valueStart, valueStart + content.length],
+      },
+    )
+  }
+  checkPages(pages, viewport, preload)
+
+  /** X023: a font preload no `@font-face` uses (the font build's own preloads live under its asset URLs). */
+  function preload(file, href, start, end) {
+    if (
+      href &&
+      !faceUrls.has(basename(href.split('?')[0])) &&
+      !href.includes('@weft-assets') &&
+      !href.startsWith('/assets/')
+    ) {
+      reporter(file)(
+        'X023',
+        start,
+        end,
+        `This preloads \`${href}\`, which no \`@font-face\` uses: the bytes compete with the page's own critical requests.`,
+      )
+    }
+  }
+
+  checkJsx(files, reporter, viewport, preload)
+  return out
+}
+
+function makeReporter(out) {
   const reporter = (file) => {
     const pos = positions(file.text)
     /** `fix.at`: the replaced range when it isn't the flagged one. */
@@ -112,7 +166,10 @@ export function textChecks(root, { files, exclude = [], fontBuild = false }) {
       )
     }
   }
+  return reporter
+}
 
+function checkSheets({ sheets, built, fontBuild, reporter, out }) {
   // -- CSS: font sizes and font faces --
   const allFaces = sheets.flatMap((s) =>
     faces(stripComments(s.text)).map((f) => ({ ...f, sheet: s })),
@@ -166,32 +223,10 @@ export function textChecks(root, { files, exclude = [], fontBuild = false }) {
     if (code === 'X022') out.push(diagnostic({ code: 'X022', file: '.weft/fonts.json', why }))
   }
 
-  // -- Markup: viewport meta, font preloads, media in boundaries, pending timers --
-  const viewport = (file, start, end, content, valueStart) => {
-    const parts = content
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
-    const bad = parts.filter(
-      (p) =>
-        /^user-scalable\s*=\s*(no|0)$/i.test(p) ||
-        (/^maximum-scale\s*=/i.test(p) && parseFloat(p.split('=')[1]) < 2),
-    )
-    if (!bad.length) return
-    const keep = parts.filter((p) => !bad.includes(p)).join(', ')
-    reporter(file)(
-      'X008',
-      start,
-      end,
-      `The viewport meta blocks zoom (\`${bad.join('`, `')}\`): people who need larger text can't pinch to get it (WCAG 1.4.4).`,
-      {
-        description: 'Remove the zoom limits',
-        safe: true,
-        text: keep,
-        at: [valueStart, valueStart + content.length],
-      },
-    )
-  }
+  return faceUrls
+}
+
+function checkPages(pages, viewport, preload) {
   for (const p of pages) {
     for (const m of p.text.matchAll(/<meta\b[^>]*name\s*=\s*["']viewport["'][^>]*>/gi)) {
       const c = /content\s*=\s*(["'])([^"']*)\1/i.exec(m[0])
@@ -203,24 +238,9 @@ export function textChecks(root, { files, exclude = [], fontBuild = false }) {
         preload(p, /href\s*=\s*["']([^"']+)/i.exec(m[0])?.[1], m.index, m.index + m[0].length)
     }
   }
+}
 
-  /** X023: a font preload no `@font-face` uses (the font build's own preloads live under its asset URLs). */
-  function preload(file, href, start, end) {
-    if (
-      href &&
-      !faceUrls.has(basename(href.split('?')[0])) &&
-      !href.includes('@weft-assets') &&
-      !href.startsWith('/assets/')
-    ) {
-      reporter(file)(
-        'X023',
-        start,
-        end,
-        `This preloads \`${href}\`, which no \`@font-face\` uses: the bytes compete with the page's own critical requests.`,
-      )
-    }
-  }
-
+function checkJsx(files, reporter, viewport, preload) {
   for (const f of files) {
     if (!/\.[jt]sx$/.test(f.rel)) continue
     let scan
@@ -244,66 +264,69 @@ export function textChecks(root, { files, exclude = [], fontBuild = false }) {
         )
     }
     for (const el of scan.elements) {
-      const style = el.attr('style')
-      if (style) {
-        if (style.kind === 'string')
-          for (const m of style.value.matchAll(/font-size\s*:\s*([^;]+)/g))
-            fontSize(m[1], style.valueStart + 1 + m.index + m[0].indexOf(m[1]), report)
-        else
-          for (const m of (style.expr ?? '').matchAll(/fontSize\s*:\s*(['"`])([^'"`]+)\1/g))
-            fontSize(m[2], style.valueStart + m.index + m[0].indexOf(m[2]), report)
-      }
-      if (
-        el.name === 'meta' &&
-        el.attr('name')?.value === 'viewport' &&
-        el.attr('content')?.kind === 'string'
-      ) {
-        const c = el.attr('content')
-        viewport(f, el.start, el.end, c.value, c.valueStart + 1)
-      }
-      if (
-        el.name === 'link' &&
-        el.attr('rel')?.value === 'preload' &&
-        el.attr('as')?.value === 'font'
-      ) {
-        preload(f, el.attr('href')?.value, el.start, el.end)
-      }
-      if (['img', 'video', 'iframe'].includes(el.name) && el.ancestors.includes('Boundary')) {
-        const sized =
-          (el.attr('width') && el.attr('height')) ||
-          /aspect-?ratio/i.test(style?.value ?? style?.expr ?? '')
-        if (!sized)
-          report(
-            'X030',
-            el.start,
-            el.tagEnd,
-            `<${el.name}> inside a <Boundary> has no \`width\`/\`height\` or \`aspect-ratio\`: it renders 0 px tall, then pushes the content down when it loads.`,
-          )
-      }
-      if (/overflow(-[xy]|Y|X)?\s*:\s*['"]?(auto|scroll)/.test(style?.value ?? style?.expr ?? '')) {
-        const live = /\{\s*(\w+)\.value\b/.exec(el.children)?.[1]
-        if (live && new RegExp(`\\b${live}\\s*=\\s*[^\\n]*\\bstream\\b`).test(f.text))
-          report(
-            'X035',
-            el.start,
-            el.tagEnd,
-            `\`${live}\` is streamed straight into a scroll container: as its tail reflows, the lines above it move.`,
-          )
-      }
-      const pending = el.name === 'Boundary' && el.attr('pending')
-      if (pending?.kind === 'expr') {
-        const tag = /^<\s*([A-Z][\w.]*)/.exec(pending.expr)?.[1]
-        const timers = /\b(setTimeout|setInterval)\s*\(/
-        if (timers.test(pending.expr) || (tag && timers.test(scan.functions.get(tag) ?? ''))) {
-          report(
-            'X034',
-            pending.start,
-            pending.end,
-            `This \`pending\` fallback${tag ? ` (<${tag}>)` : ''} runs its own timers: <Boundary> already waits 150 ms before showing it and holds it 400 ms, and a second clock makes it flash.`,
-          )
-        }
-      }
+      checkElement({ el, f, scan, report, viewport, preload })
     }
   }
-  return out
+}
+
+function checkElement({ el, f, scan, report, viewport, preload }) {
+  const style = el.attr('style')
+  if (style) {
+    if (style.kind === 'string')
+      for (const m of style.value.matchAll(/font-size\s*:\s*([^;]+)/g))
+        fontSize(m[1], style.valueStart + 1 + m.index + m[0].indexOf(m[1]), report)
+    else
+      for (const m of (style.expr ?? '').matchAll(/fontSize\s*:\s*(['"`])([^'"`]+)\1/g))
+        fontSize(m[2], style.valueStart + m.index + m[0].indexOf(m[2]), report)
+  }
+  if (
+    el.name === 'meta' &&
+    el.attr('name')?.value === 'viewport' &&
+    el.attr('content')?.kind === 'string'
+  ) {
+    const c = el.attr('content')
+    viewport(f, el.start, el.end, c.value, c.valueStart + 1)
+  }
+  if (
+    el.name === 'link' &&
+    el.attr('rel')?.value === 'preload' &&
+    el.attr('as')?.value === 'font'
+  ) {
+    preload(f, el.attr('href')?.value, el.start, el.end)
+  }
+  if (['img', 'video', 'iframe'].includes(el.name) && el.ancestors.includes('Boundary')) {
+    const sized =
+      (el.attr('width') && el.attr('height')) ||
+      /aspect-?ratio/i.test(style?.value ?? style?.expr ?? '')
+    if (!sized)
+      report(
+        'X030',
+        el.start,
+        el.tagEnd,
+        `<${el.name}> inside a <Boundary> has no \`width\`/\`height\` or \`aspect-ratio\`: it renders 0 px tall, then pushes the content down when it loads.`,
+      )
+  }
+  if (/overflow(-[xy]|Y|X)?\s*:\s*['"]?(auto|scroll)/.test(style?.value ?? style?.expr ?? '')) {
+    const live = /\{\s*(\w+)\.value\b/.exec(el.children)?.[1]
+    if (live && new RegExp(`\\b${live}\\s*=\\s*[^\\n]*\\bstream\\b`).test(f.text))
+      report(
+        'X035',
+        el.start,
+        el.tagEnd,
+        `\`${live}\` is streamed straight into a scroll container: as its tail reflows, the lines above it move.`,
+      )
+  }
+  const pending = el.name === 'Boundary' && el.attr('pending')
+  if (pending?.kind === 'expr') {
+    const tag = /^<\s*([A-Z][\w.]*)/.exec(pending.expr)?.[1]
+    const timers = /\b(setTimeout|setInterval)\s*\(/
+    if (timers.test(pending.expr) || (tag && timers.test(scan.functions.get(tag) ?? ''))) {
+      report(
+        'X034',
+        pending.start,
+        pending.end,
+        `This \`pending\` fallback${tag ? ` (<${tag}>)` : ''} runs its own timers: <Boundary> already waits 150 ms before showing it and holds it 400 ms, and a second clock makes it flash.`,
+      )
+    }
+  }
 }

@@ -8,23 +8,30 @@ import {
   clean,
   createRoot,
   devComponent,
-  getOwner,
   flat,
   hole,
   memo,
-  NONE,
   onCleanup,
-  rt,
   runMounts,
-  setFlat,
   untrack,
-  view,
-  within,
-  type Computation,
-  type Owner,
 } from './index'
-import { DEFER, ENDS, FLAT, LINEAR, RECORD, ROWBOX, SCAN, STEADY, SWAP, TEXT, WIPE } from './flags'
-import { keys, under } from './keys'
+import { FLAT, RECORD, ROWBOX, SCAN, STEADY, SWAP, TEXT, WIPE } from './flags'
+import { keys } from './keys'
+import { swap, empty, inOrder } from './dom/optimizations'
+import { Row, reader, zero } from './dom/rows'
+import { listMemo, type ListState } from './dom/list'
+import { delegateEvents, addEvent } from './dom/events'
+import {
+  WORDS,
+  setAttribute,
+  className,
+  attrName,
+  cssName,
+  cssValue,
+  style,
+  ref,
+  mergeProps,
+} from './dom/attributes'
 
 export { memo }
 export {
@@ -91,8 +98,6 @@ export function render(code: () => unknown, container: Element): () => void {
 // `Cart ({n})` costs one text write, not three new nodes. Nobody else holds them, so reuse can't take a node away.
 const made = new WeakSet<Node>()
 
-type Bag = Record<string, unknown>
-
 /** Every hole's first `current`. `place` only rearranges a list of two or more. */
 const EMPTY: Node[] = []
 
@@ -141,47 +146,6 @@ function kept(next: Node[], current: Node[]) {
     }
   }
   return out
-}
-
-/** The two ends of what's left traded places: moves them, and says so. */
-function swap(
-  parent: Node,
-  current: Node[],
-  next: Node[],
-  start: number,
-  was: number,
-  now: number,
-) {
-  const a = current[start]!,
-    b = current[was - 1]!
-  if (
-    was - start < 2 ||
-    was !== now ||
-    next[start] !== b ||
-    next[now - 1] !== a ||
-    a.parentNode !== parent ||
-    b.parentNode !== parent
-  )
-    return false
-  const after = b.nextSibling
-  parent.insertBefore(b, a)
-  parent.insertBefore(a, after)
-  current[start] = b
-  current[was - 1] = a
-  return true
-}
-
-/** None stay, and this hole is all that's in there. */
-function empty(parent: Node, current: Node[], before: Node[], marker: Node | null) {
-  if (
-    marker ||
-    before.length !== current.length ||
-    parent.firstChild !== current[0] ||
-    parent.lastChild !== current[current.length - 1]
-  )
-    return false
-  parent.textContent = ''
-  return true
 }
 
 /** Makes `value` the nodes between `current` and `marker` with as few DOM writes as it can; returns the new nodes. */
@@ -237,30 +201,6 @@ export function place(parent: Node, value: unknown, current: Node[], marker: Nod
   return next
 }
 
-/** The longest subsequence of `next` that keeps its relative order from `current` (O(n log n)). */
-function inOrder(next: Node[], current: Node[]): Set<Node> {
-  const was = new Map<Node, number>()
-  current.forEach((n, i) => was.set(n, i))
-  const tails: number[] = [] // index into next of the smallest tail for each run length
-  const prev: number[] = []
-  for (let i = 0; i < next.length; i++) {
-    const at = was.get(next[i]!)
-    if (at === undefined) continue
-    let lo = 0,
-      hi = tails.length
-    while (lo < hi) {
-      const mid = (lo + hi) >> 1
-      if (was.get(next[tails[mid]!]!)! < at) lo = mid + 1
-      else hi = mid
-    }
-    prev[i] = lo > 0 ? tails[lo - 1]! : -1
-    tails[lo] = i
-  }
-  const out = new Set<Node>()
-  for (let i = tails.length ? tails[tails.length - 1]! : -1; i >= 0; i = prev[i]!) out.add(next[i]!)
-  return out
-}
-
 /**
  * `marker` undefined: the value is the parent's only dynamic content, appended at the end.
  * `marker` null: append at the end after static children. A node: insert before it.
@@ -312,223 +252,11 @@ export function write(v: unknown, was: unknown, h: Hold) {
   if (STEADY) h.t = primitive && c.length === 1 && c[0]!.nodeType === 3 ? (c[0] as Text) : undefined
 }
 
-// ---- attributes and properties ---------------------------------------------------------------------------------
+export { WORDS, setAttribute, className, attrName, cssName, cssValue, style, ref, mergeProps }
 
-/** Attributes whose states are the words `true`/`false`, so `false` can't mean a missing attribute. Prefixes keep it short. */
-export const WORDS = /^(?:aria-|contented|draggab|focusab|spellch)/i
-
-/** `null`/`false` remove the attribute and `true` writes it empty, except `WORDS`. */
-export function setAttribute(node: Element, name: string, value: unknown) {
-  if (typeof value === 'boolean' && WORDS.test(name)) value = String(value)
-  if (value == null || value === false) node.removeAttribute(name)
-  else node.setAttribute(name, (value === true ? '' : value) as string) // the DOM converts the rest
-}
-
-/** Writes a `class`: a string, or an object whose true keys are the classes. */
-export function className(node: Element, value: unknown, prev?: unknown) {
-  if (value == null || value === false) {
-    if (prev != null) node.removeAttribute('class')
-    return
-  }
-  if (typeof value !== 'object') {
-    // oxlint-disable-next-line typescript/no-base-to-string -- whatever reaches here is a primitive or a mistake, and a mistake should show as it does anywhere else
-    if (value !== prev) node.setAttribute('class', String(value))
-    return
-  }
-  const p = (prev && typeof prev === 'object' ? prev : {}) as Bag
-  for (const k in p) if (!(value as Bag)[k]) node.classList.remove(k)
-  for (const k in value) if ((value as Bag)[k] && !p[k]) node.classList.add(k)
-}
-
-// The compiler resolves names it can see (crates/weft-compiler/src/react.rs); a spread's arrive here. DASHED leaves out
-// SVG font attributes and other names no browser reads, so a spread keeps those as written.
-const NAMES: Record<string, string> = {
-  className: 'class',
-  htmlFor: 'for',
-  acceptCharset: 'accept-charset',
-  httpEquiv: 'http-equiv',
-  tabIndex: 'tabindex',
-  crossOrigin: 'crossorigin',
-  hrefLang: 'hreflang',
-  referrerPolicy: 'referrerpolicy',
-}
-const DASHED =
-  /^(?:alignmentB|baselineS|clip(?:Path$|R)|color[IR]|dominantB|fill[OR]|flood[CO]|font[FSVW]|imageR|letterS|lightingC|marker[EMS]|paintO|pointerE|shapeR|stop[CO]|stroke[DLMOW]|text(?:An|D|R)|transformO|unicodeB|vectorE|wordS|writingM)/
-
-/** The attribute a prop in a spread writes. HTML lowercases the rest itself. */
-export const attrName = (k: string) =>
-  NAMES[k] ??
-  (DASHED.test(k)
-    ? k.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())
-    : /^(?:xlink|xmlns|xml)[A-Z]/.test(k)
-      ? k.replace(/[A-Z]/, (c) => ':' + c.toLowerCase())
-      : k)
-
-const UNITLESS =
-  /^(?:--.*|(?:-\w+-)?(?:animation-iteration-count|aspect-ratio|border-image-(?:outset|slice|width)|box-(?:flex|flex-group|ordinal-group)|column-count|columns|flex(?:-grow|-shrink|-order|-positive|-negative)?|(?:fill|flood|stop|stroke)-opacity|font-weight|grid-(?:area|row|column)(?:-end|-span|-start)?|line-clamp|line-height|opacity|order|orphans|scale|stroke-(?:dasharray|dashoffset|miterlimit|width)|tab-size|widows|z-index|zoom))$/
-
-/** `fontSize` → `font-size`, `WebkitBoxShadow` → `-webkit-box-shadow`, `msTransform` → `-ms-transform`. */
-export const cssName = (k: string) =>
-  k === 'cssFloat'
-    ? 'float'
-    : k[1] === '-'
-      ? k
-      : k.replace(/^ms(?=[A-Z])/, '-ms').replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())
-
-/** React's values: numbers are pixels unless the property is unitless; `null` and booleans mean no declaration. */
-export const cssValue = (name: string, v: unknown) =>
-  v == null || typeof v === 'boolean'
-    ? null
-    : typeof v === 'number' && v && !UNITLESS.test(name)
-      ? `${v}px`
-      : v
-
-/** Writes a `style`: a string, or an object in React's shape. */
-export function style(node: HTMLElement, value: unknown, prev?: unknown) {
-  if (typeof value === 'string' || value == null) {
-    node.style.cssText = value ?? ''
-    return
-  }
-  const p = (prev && typeof prev === 'object' ? prev : {}) as Bag
-  for (const k in p) if ((value as Bag)[k] == null) node.style.removeProperty(cssName(k))
-  for (const k in value) {
-    if ((value as Bag)[k] === p[k]) continue
-    const name = cssName(k)
-    const v = cssValue(name, (value as Bag)[k])
-    if (v == null) node.style.removeProperty(name)
-    else node.style.setProperty(name, v as string) // the DOM converts a number
-  }
-}
-
-/** `ref={fn}` or `ref={[fn, …]}` (nested arrays flatten): each is called with the element, untracked. */
-export function ref(get: () => unknown, el: Element) {
-  const r = untrack(get)
-  if (typeof r === 'function') r(el)
-  else if (Array.isArray(r)) for (const f of r.flat(Infinity)) f && f(el)
-}
-
-/** `<Comp {...a} b={x}>`: a live view of the sources (later wins). A source is an object or a getter for one. */
-export const mergeProps = (...sources: unknown[]) => view(sources)
-
-// ---- events ---------------------------------------------------------------------------------------------------
-
-/** A node as delegation reads it: its handlers sit on it under `_$$<event>`. */
-type Listening = Node & { disabled?: boolean } & Record<string, unknown>
-
-const delegated = new Set<string>()
-
-function dispatch(e: Event) {
-  const key = `_$$${e.type}`
-  let node = e.target as Listening | null
-  Object.defineProperty(e, 'currentTarget', { configurable: true, get: () => node || document })
-  while (node) {
-    const handler = node[key] as ((...args: unknown[]) => void) | undefined
-    if (handler && !node.disabled) {
-      const data = node[`${key}Data`]
-      data !== undefined ? handler.call(node, data, e) : handler.call(node, e)
-      if (e.cancelBubble) return
-    }
-    node = node.parentNode as Listening | null
-  }
-}
-
-/** Puts one document listener behind each of `names`; handlers then sit on their nodes. */
-export function delegateEvents(names: string[]) {
-  for (const name of names) {
-    if (delegated.has(name)) continue
-    delegated.add(name)
-    document.addEventListener(name, dispatch)
-  }
-}
-
-/** `onX={handler}`, read once: delegated when the event is. `[fn, data]` calls `fn(data, event)`. */
-export function addEvent(node: Element, name: string, handler: unknown, delegate?: boolean) {
-  if (!delegate)
-    return node.addEventListener(
-      name,
-      Array.isArray(handler) ? (e: Event) => handler[0](handler[1], e) : (handler as EventListener),
-    )
-  const key = `_$$${name}`
-  if (Array.isArray(handler)) {
-    ;(node as unknown as Listening)[key] = handler[0]
-    ;(node as unknown as Listening)[`${key}Data`] = handler[1]
-  } else (node as unknown as Listening)[key] = handler
-}
+export { delegateEvents, addEvent }
 
 // ---- keyed list (§3.4) ----------------------------------------------------------------------------------------
-
-/**
- * A row is its own root (no closure to dispose it) and the box of its item. `index` exists only when `children` takes
- * one. It sets a box's fields itself: built through `extends Box`, every row costs a derived constructor.
- */
-class Row {
-  v: unknown
-  f: Computation | undefined = undefined
-  o: Computation[] = NONE
-  owned: Owner['owned'] = null
-  tail: Owner['tail'] = null
-  cleanups: Owner['cleanups'] = null
-  nodes: unknown = undefined
-  constructor(
-    item: unknown,
-    public key: unknown,
-    public owner: Owner | null,
-    public index: Box<number> | undefined,
-  ) {
-    this.v = item
-  }
-}
-/** A row as `For` sees it, with the prototype it gets there. `box` holds the item when rows aren't boxes themselves. */
-type Item = Row & Box<unknown> & { box: Box<unknown> }
-
-/** The row under `k` between `from` and `end`, taken out. */
-function find(order: Item[], from: number, end: number, k: unknown): Item | undefined {
-  for (let i = from; i < end; i++) {
-    const r = order[i]
-    // oxlint-disable-next-line no-self-compare -- `k !== k` is the NaN check for a key: this loop is the list's hot path, and Number.isNaN costs bytes and a call
-    if (r && (r.key === k || (k !== k && r.key !== r.key))) return ((order[i] = undefined!), r)
-  }
-  return undefined
-}
-
-/**
- * A row as a path step: its key, so a row claims the server's row of that key wherever the list has moved it, and no two
- * keys can meet. `:` keeps it from a Boundary's scope, and what's escaped would end a step or the `wk` it's written in, or
- * the parser would rewrite it there (`\r`, NUL). An object says nothing the server and client share, so it's the row's place.
- */
-const rowStep = (k: unknown, i: number) =>
-  k === Object(k)
-    ? `%i${i}`
-    : `:${String(k).replace(/[%/.&<>"\0\r]/g, (c) => `%${c.charCodeAt(0).toString(16)}`)}`
-
-/** A server's list: rendered once, so each row is its item and its scope, with no row to keep or owner to clean. */
-function rendered<T>(list: readonly T[], props: Parameters<typeof For<T>>[0], base: string) {
-  // oxlint-disable-next-line unicorn/no-new-array -- sized up front, as the client's list is
-  const out = new Array<unknown>(list.length)
-  const paths = keys.on ? new Set<unknown>() : undefined
-  for (let i = 0; i < list.length; i++) {
-    const item = list[i]!
-    let key = props.by ? props.by(item, i) : item
-    if (paths) {
-      const id = key === Object(key) ? key : String(key)
-      if (paths.has(id)) key = { duplicate: key }
-      paths.add(id)
-    }
-    const make = () =>
-      props.children(
-        () => item,
-        () => i,
-      )
-    out[i] = paths ? under(base + rowStep(key, i) + '/', make) : make()
-  }
-  return out
-}
-
-const reader =
-  <V>(box: Box<V>) =>
-  () =>
-    box.value
-const zero = () => 0
 
 /**
  * Compiled from `xs.map(x => <Row key={x.id} … />)`. Rows are keyed by `by(item, index)` (or the item itself): a new
@@ -540,13 +268,12 @@ export function For<T>(props: {
   children: (item: () => T, index: () => number) => unknown
 }) {
   const base = keys.p // rows created while keys are on are scoped `<hole scope><row key>/`
-  let order: Item[] = []
-  let out: unknown[] = []
-  let fresh = false // rows were made since the last pass
-  let single = true // every row is one element
-  let r: Item // the row being made
+  const data: ListState = { order: [], out: [], fresh: false, single: true, r: undefined! }
   const make = () =>
-    props.children(reader((ROWBOX ? r : r.box) as Box<T>), r.index ? reader(r.index) : zero)
+    props.children(
+      reader((ROWBOX ? data.r : data.r.box) as Box<T>),
+      data.r.index ? reader(data.r.index) : zero,
+    )
   const claim = () => {
     const { hydrating } = keys
     const nodes = make()
@@ -559,107 +286,16 @@ export function For<T>(props: {
   longest = inOrder
   // Only the first row of a key is kept: a repeat is built anew each pass.
   const repeats = () => {
-    fresh = false
+    data.fresh = false
     const seen = new Set<unknown>()
-    for (const row of order) {
+    for (const row of data.order) {
       if (seen.has(row.key)) row.key = { duplicate: row.key }
       seen.add(row.key)
     }
   }
   onCleanup(() => {
-    for (const row of order) clean(row)
-    order = []
+    for (const row of data.order) clean(row)
+    data.order = []
   })
-  return memo(() => {
-    const list = props.each || []
-    if (rt.server) return untrack(() => rendered(list, props, base))
-    const parent = getOwner()
-    // A callback that takes an index (or might: `(...args)`) gets an index box; `(row) =>` doesn't.
-    const indexed = props.children.length !== 1
-    return untrack(() => {
-      const by = props.by
-      const key = (i: number) => (by ? by(list[i]!, i) : list[i])
-      const paths = keys.on ? new Set<unknown>() : undefined // two rows with one key can't share a hydration scope
-      if (DEFER && fresh && list.length) repeats() // not as they're made: making a row costs no lookup that way
-      fresh = false
-      // Rows that stayed at either end are found by position, ends that traded places by each other, the rest by key.
-      let from = 0,
-        end = order.length,
-        stop = list.length,
-        traded = false
-      if (ENDS)
-        for (;;) {
-          while (from < end && from < stop && order[from]!.key === key(from)) from++
-          while (from < end && from < stop && order[end - 1]!.key === key(stop - 1)) {
-            end--
-            stop--
-          }
-          const a = order[from]!,
-            b = order[end - 1]!
-          if (
-            !SWAP ||
-            end - from < 2 ||
-            end !== stop ||
-            a.key !== key(stop - 1) ||
-            b.key !== key(from)
-          )
-            break
-          order[from] = b
-          order[end - 1] = a
-          traded = true
-        }
-      let left: Map<unknown, Item> | undefined
-      if (from < stop) {
-        if (from < end && (!LINEAR || end - from > 8)) left = new Map()
-        if (left) for (let i = from; i < end; i++) left.set(order[i]!.key, order[i]!)
-      } else for (let i = from; i < end; i++) clean(order[i]!)
-      // oxlint-disable unicorn/no-new-array -- sized up front: filling a list of known length is the keyed list's hot path
-      const next = new Array<Item>(list.length),
-        nodes = new Array<unknown>(list.length) /* oxlint-enable unicorn/no-new-array */
-      for (let i = 0; i < list.length; i++) {
-        const item = list[i]!
-        let row = i < from ? order[i] : i >= stop ? order[i + end - stop] : undefined
-        if (!row) {
-          let k: unknown = key(i)
-          if ((row = left?.get(k))) left!.delete(k)
-          else if (LINEAR && !left && from < end && (row = find(order, from, end, k))) {
-          } // taken out of `order`
-          else {
-            if (paths) {
-              const id = k === Object(k) ? k : String(k)
-              if (paths.has(id)) k = { duplicate: k }
-              paths.add(id)
-            }
-            r = row = new Row(item, k, parent, indexed ? new Box(i) : undefined) as Item
-            if (!ROWBOX) r.box = new Box<unknown>(item)
-            // A row the server didn't render builds itself and no more: the next row still claims.
-            r.nodes = within(r, keys.on ? () => under(base + rowStep(k, i) + '/', claim) : make)
-            if (FLAT) single &&= !rt.server && r.nodes instanceof Node && r.nodes.nodeType !== 11
-            fresh = true
-            next[i] = row
-            nodes[i] = r.nodes
-            continue
-          }
-        }
-        if (!ROWBOX) row.box.value = item
-        else if (row.v !== item) row.value = item
-        if (row.index) row.index.value = i
-        next[i] = row
-        nodes[i] = row.nodes
-      }
-      if (left) for (const row of left.values()) clean(row)
-      else if (LINEAR && from < stop)
-        for (let i = from; i < end; i++) if (order[i]) clean(order[i]!)
-      order = next
-      if (!DEFER && fresh) repeats()
-      if (!ENDS || traded || from < end || from < stop) {
-        out = nodes
-        if (FLAT) {
-          if (!out.length) single = true
-          else if (single) setFlat(out)
-        }
-      }
-      return out
-    })
-  })
+  return listMemo(props, base, data, make, claim, repeats)
 }

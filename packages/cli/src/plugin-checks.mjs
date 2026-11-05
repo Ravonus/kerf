@@ -71,44 +71,48 @@ export async function pluginChecks(root, loaded, { files, exclude = [] }) {
       )
       continue
     }
-    for (const d of found) {
-      if (!d.code.startsWith(c.namespace)) {
-        out.push(
-          diagnostic({
-            code: 'P111',
-            file: 'weft.config.ts',
-            why: `\`${c.name}\`'s check reported \`${d.code}\`, outside its namespace \`${c.namespace}\`.`,
-          }),
-        )
-        continue
-      }
-      const text = read(d.file)
-      const pos = positions(text)
-      const [start, end] = [d.start ?? 0, d.end ?? d.start ?? 0]
-      const meta = declared.get(d.code)
-      out.push(
-        diagnostic({
-          code: d.code,
-          owner: c.name,
-          severity: d.severity ?? meta?.severity ?? 'error',
-          file: d.file,
-          span: pos.span(start, end),
-          offset: [start, end],
-          why: d.why,
-          help: d.help ?? (entry(d.code) ? undefined : meta?.fix), // a catalog code keeps the catalog's fix text
-          fix: d.fix && {
-            description: d.fix.description,
-            safe: d.fix.safe === true,
-            edits: d.fix.edits.map((e) => ({
-              file: e.file ?? d.file,
-              span: positions(read(e.file ?? d.file)).span(e.start, e.end),
-              offset: [e.start, e.end],
-              text: e.text,
-            })),
-          },
-        }),
-      )
-    }
+    appendFindings({ found, c, out, declared, read })
   }
   return out
+}
+
+function appendFindings({ found, c, out, declared, read }) {
+  for (const d of found) {
+    if (!d.code.startsWith(c.namespace)) {
+      out.push(
+        diagnostic({
+          code: 'P111',
+          file: 'weft.config.ts',
+          why: `\`${c.name}\`'s check reported \`${d.code}\`, outside its namespace \`${c.namespace}\`.`,
+        }),
+      )
+      continue
+    }
+    const text = read(d.file)
+    const pos = positions(text)
+    const [start, end] = [d.start ?? 0, d.end ?? d.start ?? 0]
+    const meta = declared.get(d.code)
+    out.push(
+      diagnostic({
+        code: d.code,
+        owner: c.name,
+        severity: d.severity ?? meta?.severity ?? 'error',
+        file: d.file,
+        span: pos.span(start, end),
+        offset: [start, end],
+        why: d.why,
+        help: d.help ?? (entry(d.code) ? undefined : meta?.fix), // a catalog code keeps the catalog's fix text
+        fix: d.fix && {
+          description: d.fix.description,
+          safe: d.fix.safe === true,
+          edits: d.fix.edits.map((e) => ({
+            file: e.file ?? d.file,
+            span: positions(read(e.file ?? d.file)).span(e.start, e.end),
+            offset: [e.start, e.end],
+            text: e.text,
+          })),
+        },
+      }),
+    )
+  }
 }

@@ -5,7 +5,7 @@
 const { createHash } = require('node:crypto')
 
 const hashOf = (text) => createHash('sha1').update(text).digest('base64url').slice(0, 16)
-const isCap = (name) => /^[A-Z]/.test(name)
+const { isCap, jsxSite, escapes, holds, isOpening } = require('./facts/sites.cjs')
 /** The comment a generated annotation starts with. It keeps the type regenerable; deleting it makes the type yours. */
 const MARK = '/*inferred*/'
 
@@ -174,142 +174,7 @@ function bodyUses(ts, sf, comp) {
   if (fn.body) visit(fn.body, names)
 }
 
-function jsxSite(ts, sf, node, enclosing) {
-  const tag = node.tagName
-  if (!ts.isIdentifier(tag) && !ts.isPropertyAccessExpression(tag)) return null
-  if (ts.isIdentifier(tag) && !isCap(tag.text)) return null
-  const span = (n) => [n.getStart(sf), n.end]
-  const site = {
-    tag: tag.getText(sf),
-    tagSpan: span(tag),
-    span: span(node),
-    attrs: [],
-    spreads: [],
-    children: null,
-    in: enclosing ?? null,
-  }
-  for (const a of node.attributes.properties) {
-    if (ts.isJsxSpreadAttribute(a)) {
-      site.spreads.push({ span: span(a.expression), text: a.expression.getText(sf) })
-      continue
-    }
-    const raw = a.name.getText(sf)
-    const bind = raw.startsWith('bind:')
-    const name = bind ? raw.slice(5) : raw
-    if (name === 'key') continue
-    const value = a.initializer
-    if (!value) {
-      site.attrs.push({ name, literal: 'true', bind })
-      continue
-    }
-    if (ts.isStringLiteral(value)) {
-      site.attrs.push({
-        name,
-        literal: 'string',
-        exact: JSON.stringify(value.text),
-        whole: span(a),
-        bind,
-      })
-      continue
-    }
-    const expr = value.expression
-    if (!expr) continue
-    const lambda = ts.isArrowFunction(expr) || ts.isFunctionExpression(expr)
-    site.attrs.push({
-      name,
-      span: span(expr),
-      whole: span(a),
-      bind,
-      raw: bind ? span(a.name) : undefined,
-      untypedFn: (lambda && expr.parameters.some((p) => !p.type)) || undefined,
-      value: ts.isIdentifier(expr) && isCap(expr.text) ? expr.text : undefined,
-    })
-  }
-  if (ts.isJsxOpeningElement(node)) {
-    const kids = node.parent.children.filter((c) => !(ts.isJsxText(c) && !c.text.trim()))
-    if (kids.length) {
-      const only = kids.length === 1 ? kids[0] : null
-      const expr = only && ts.isJsxExpression(only) ? only.expression : null
-      const lambda = expr && (ts.isArrowFunction(expr) || ts.isFunctionExpression(expr))
-      site.children = lambda
-        ? {
-            fn: true,
-            span: span(expr),
-            untypedFn: expr.parameters.some((p) => !p.type) || undefined,
-          }
-        : { fn: false }
-    }
-  }
-  return site
-}
-
-/** `const views = { a: A }`, `pick(A, B)`, `<X icon={A} />`: an identifier that leaves JSX tag position. */
-function escapes(ts, node) {
-  const up = node.parent
-  if (ts.isJsxOpeningLikeElement?.(up) && up.tagName === node) return false
-  if (ts.isJsxClosingElement(up)) return false
-  if (ts.isFunctionDeclaration(up) || (ts.isVariableDeclaration(up) && up.name === node))
-    return false
-  if (ts.isPropertyAccessExpression(up) && up.name === node) return false
-  if (
-    ts.isExportSpecifier(up) ||
-    ts.isExportAssignment(up) ||
-    ts.isImportSpecifier(up) ||
-    ts.isImportClause(up)
-  )
-    return false
-  if (ts.isTypeQueryNode(up)) return false
-  return true
-}
-
-/** The names an initializer can hand back: `pick(A, B)`, `{ a: A, b: B }`, `views[k]`, `views.a`, `hoc(A)`, `x ? A : B`. */
-function holds(ts, init) {
-  const name = (e) => (ts.isIdentifier(e) ? [e.text] : [])
-  if (ts.isCallExpression(init)) return init.arguments.flatMap((a) => name(a)).filter(isCap)
-  if (ts.isConditionalExpression(init))
-    return [...name(init.whenTrue), ...name(init.whenFalse)].filter(isCap)
-  if (ts.isObjectLiteralExpression(init))
-    return init.properties
-      .flatMap((p) =>
-        ts.isPropertyAssignment(p)
-          ? name(p.initializer)
-          : ts.isShorthandPropertyAssignment(p)
-            ? [p.name.text]
-            : [],
-      )
-      .filter(isCap)
-  if (ts.isElementAccessExpression(init) || ts.isPropertyAccessExpression(init))
-    return name(init.expression)
-  return []
-}
-
-const isOpening = (ts, n) => ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)
-
-/**
- * @returns the file's facts: `comps` (untyped or generated), `sites` (capitalised JSX tags), `imports`, `wraps`
- * (`const W = hoc(Inner)`), `escaped` (component names used as values), `exports` (local names).
- */
-function fileFacts(ts, file, text, options = {}) {
-  const hash = hashOf(text)
-  if (!file.endsWith('.tsx'))
-    return {
-      file,
-      hash,
-      comps: [],
-      sites: [],
-      imports: new Map(),
-      wraps: new Map(),
-      escaped: new Set(),
-      exported: new Set(),
-      parse: null,
-    }
-  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
-  const comps = [],
-    sites = []
-  const imports = new Map(),
-    wraps = new Map(),
-    escaped = new Set(),
-    exported = new Set()
+function scanImports(ts, sf, imports, exported) {
   let exportsLoad = false
 
   for (const st of sf.statements) {
@@ -337,6 +202,10 @@ function fileFacts(ts, file, text, options = {}) {
       exportsLoad = true
   }
 
+  return exportsLoad
+}
+
+function visitNodes(ts, sf, file, text, comps, sites, wraps, escaped) {
   const enclosing = []
   const visit = (node) => {
     const found = componentAt(ts, node)
@@ -406,6 +275,36 @@ function fileFacts(ts, file, text, options = {}) {
     if (push) enclosing.pop()
   }
   ts.forEachChild(sf, visit)
+}
+
+/**
+ * @returns the file's facts: `comps` (untyped or generated), `sites` (capitalised JSX tags), `imports`, `wraps`
+ * (`const W = hoc(Inner)`), `escaped` (component names used as values), `exports` (local names).
+ */
+function fileFacts(ts, file, text, options = {}) {
+  const hash = hashOf(text)
+  if (!file.endsWith('.tsx'))
+    return {
+      file,
+      hash,
+      comps: [],
+      sites: [],
+      imports: new Map(),
+      wraps: new Map(),
+      escaped: new Set(),
+      exported: new Set(),
+      parse: null,
+    }
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+  const comps = [],
+    sites = []
+  const imports = new Map(),
+    wraps = new Map(),
+    escaped = new Set(),
+    exported = new Set()
+  const exportsLoad = scanImports(ts, sf, imports, exported)
+
+  visitNodes(ts, sf, file, text, comps, sites, wraps, escaped)
 
   for (const c of comps)
     if (exported.has(c.name) || c.isDefault) {

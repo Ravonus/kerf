@@ -185,6 +185,42 @@ function vector(name, stem, bytes) {
   }
 }
 
+async function animatedGif(
+  { bytes, name, stem, audio, meta, width, height },
+  o,
+  encode,
+  diagnostics,
+) {
+  const converted = await gif(
+    { bytes, name, stem, audio, meta, width, height },
+    o,
+    encode,
+    findScorer(o.quality.scorer),
+  )
+  if (converted) return converted
+  if (bytes.length > o.gifLimit)
+    diagnostics.push({
+      code: 'M004',
+      severity: 'warning',
+      message: `${name} is a ${Math.round(bytes.length / 1024)} KB animated GIF, and it ships as is${encode['video/h264'] ? ': nothing beat it by 15%' : '. Add `mediaFfmpeg()` from @weft-js/plugin-media-ffmpeg to turn it into video'}.`,
+    })
+  const fileName = `${stem}-${short(bytes)}.gif`
+  return {
+    asset: {
+      kind: 'graphic',
+      src: fileName,
+      width,
+      height,
+      type: MIME.gif,
+      sources: [],
+      name,
+      quality: 'original',
+    },
+    files: [{ name: fileName, bytes }],
+    diagnostics,
+  }
+}
+
 async function raster({ bytes, name, stem, audio }, o, encode) {
   const meta = await sharp(bytes, { animated: true }).metadata()
   const turned = (meta.orientation ?? 1) >= 5
@@ -192,36 +228,8 @@ async function raster({ bytes, name, stem, audio }, o, encode) {
   const height = turned ? (meta.pageHeight ?? meta.width) : (meta.pageHeight ?? meta.height)
   const diagnostics = []
 
-  if (meta.format === 'gif' && (meta.pages ?? 1) > 1) {
-    const converted = await gif(
-      { bytes, name, stem, audio, meta, width, height },
-      o,
-      encode,
-      findScorer(o.quality.scorer),
-    )
-    if (converted) return converted
-    if (bytes.length > o.gifLimit)
-      diagnostics.push({
-        code: 'M004',
-        severity: 'warning',
-        message: `${name} is a ${Math.round(bytes.length / 1024)} KB animated GIF, and it ships as is${encode['video/h264'] ? ': nothing beat it by 15%' : '. Add `mediaFfmpeg()` from @weft-js/plugin-media-ffmpeg to turn it into video'}.`,
-      })
-    const fileName = `${stem}-${short(bytes)}.gif`
-    return {
-      asset: {
-        kind: 'graphic',
-        src: fileName,
-        width,
-        height,
-        type: MIME.gif,
-        sources: [],
-        name,
-        quality: 'original',
-      },
-      files: [{ name: fileName, bytes }],
-      diagnostics,
-    }
-  }
+  if (meta.format === 'gif' && (meta.pages ?? 1) > 1)
+    return animatedGif({ bytes, name, stem, audio, meta, width, height }, o, encode, diagnostics)
 
   const photo = isPhoto(meta)
   const fallback = photo ? 'jpeg' : 'png'

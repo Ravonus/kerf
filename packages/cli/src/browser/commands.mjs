@@ -52,20 +52,8 @@ export async function browser(root, cmd, p = {}, o = {}) {
       return launch(root, p.route ?? '/', { url: o.url, headed: p.headed })
     case 'close':
       return close(root)
-    case 'open': {
-      const before = await page('info', {})
-      await page('navigate', { to: p.route ?? '/' })
-      // Same tab id after the load (@weft-js/core/agent keeps it in sessionStorage); wait for the new document to say hello.
-      const until = Date.now() + 15_000
-      do {
-        await sleep(150)
-        try {
-          const info = await page('info', {}, { timeout: 2000 })
-          if (info.url !== before.url || p.route === new URL(before.url).pathname) return info
-        } catch {}
-      } while (Date.now() <= until)
-      return waitForTab(root, o)
-    }
+    case 'open':
+      return await openPage(root, p, o, page)
     case 'snapshot': {
       const out = await page('snapshot', {
         interactive: p.interactive,
@@ -127,6 +115,21 @@ export async function browser(root, cmd, p = {}, o = {}) {
     default:
       throw Object.assign(new Error(`unknown browser command ${cmd}`), { code: 'E_USAGE' })
   }
+}
+
+async function openPage(root, p, o, page) {
+  const before = await page('info', {})
+  await page('navigate', { to: p.route ?? '/' })
+  // Same tab id after the load (@weft-js/core/agent keeps it in sessionStorage); wait for the new document to say hello.
+  const until = Date.now() + 15_000
+  do {
+    await sleep(150)
+    try {
+      const info = await page('info', {}, { timeout: 2000 })
+      if (info.url !== before.url || p.route === new URL(before.url).pathname) return info
+    } catch {}
+  } while (Date.now() <= until)
+  return waitForTab(root, o)
 }
 
 /** `button "Add Banana"`, `label Coupon`, `text Cart`, `@e5` → a target, and how many words it took. */

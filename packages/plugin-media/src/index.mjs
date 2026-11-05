@@ -24,36 +24,7 @@ const fail = (path, message) => {
   throw Object.assign(new Error(message), { path })
 }
 
-function options(input) {
-  for (const key of Object.keys(input))
-    if (
-      ![
-        'formats',
-        'widths',
-        'quality',
-        'placeholder',
-        'gifLimit',
-        'encoder',
-        'swap',
-        'video',
-        'gif',
-        'server',
-      ].includes(key)
-    )
-      fail(key, 'unknown option')
-  const out = {}
-  if (input.encoder !== undefined) {
-    if (!['off', 'compatible', 'server'].includes(input.encoder))
-      fail('encoder', `\`${input.encoder}\`: 'off', 'compatible' or 'server'`)
-    out.encoder = input.encoder
-  }
-  if (input.swap !== undefined) {
-    if (!['intent', 'idle', 'never'].includes(input.swap))
-      fail('swap', `\`${input.swap}\`: 'intent', 'idle' or 'never'`)
-    if (input.encoder !== 'compatible')
-      fail('swap', "only means something with `encoder: 'compatible'`")
-    out.swap = input.swap
-  }
+function playbackOptions(input, out) {
   if (input.video !== undefined) {
     const { codecs, widths } = input.video
     if (codecs !== undefined) {
@@ -85,6 +56,39 @@ function options(input) {
       fail('server.maxBytes', 'a positive number of bytes')
     out.server = input.server
   }
+}
+
+function options(input) {
+  for (const key of Object.keys(input))
+    if (
+      ![
+        'formats',
+        'widths',
+        'quality',
+        'placeholder',
+        'gifLimit',
+        'encoder',
+        'swap',
+        'video',
+        'gif',
+        'server',
+      ].includes(key)
+    )
+      fail(key, 'unknown option')
+  const out = {}
+  if (input.encoder !== undefined) {
+    if (!['off', 'compatible', 'server'].includes(input.encoder))
+      fail('encoder', `\`${input.encoder}\`: 'off', 'compatible' or 'server'`)
+    out.encoder = input.encoder
+  }
+  if (input.swap !== undefined) {
+    if (!['intent', 'idle', 'never'].includes(input.swap))
+      fail('swap', `\`${input.swap}\`: 'intent', 'idle' or 'never'`)
+    if (input.encoder !== 'compatible')
+      fail('swap', "only means something with `encoder: 'compatible'`")
+    out.swap = input.swap
+  }
+  playbackOptions(input, out)
   if (input.formats !== undefined) {
     if (!Array.isArray(input.formats)) fail('formats', 'expected an array')
     for (const [i, f] of input.formats.entries())

@@ -3,22 +3,20 @@
 
 import { execFileSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
-import { pathToFileURL } from 'node:url'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
-import ts from 'typescript'
 import { addRust } from './add-rust.mjs'
 import { writeAgentsMd } from './agents-md.mjs'
-import { findConfig, loadConfig, pluginFactory, pluginName } from './load-config.mjs'
+import { findConfig, loadConfig } from './load-config.mjs'
 import { sync } from './plugins.mjs'
 import { cssEntry, packages, viteConfig } from './tailwind.mjs'
 import { database } from './map.mjs'
 import { dbLayer } from './db-layer.mjs'
 import { packageOf, trustStatus } from './trust.mjs'
 
-const usageError = (message) => Object.assign(new Error(message), { code: 'E_USAGE' })
-const refused = (message) => Object.assign(new Error(message), { code: 'E_ADD' })
+import { usageError, refused } from './add/errors.mjs'
+import { addToTs, addToData, listed, names } from './add/config.mjs'
+import { setupOf, planSetup, applySetup, setupActions, authEdits } from './add/setup.mjs'
 
 const ALIASES = {
   warp: '@weft-js/warp',
@@ -98,94 +96,6 @@ function installSpecs(root, manager, verb, specs) {
     { cwd: root, stdio: ['ignore', 'ignore', 'inherit'], shell: process.platform === 'win32' },
   ) // npm is npm.cmd there
 }
-
-/** The import to write: `<pkg>/plugin` when the package has one, and however it exports its factory. */
-function pluginImport(root, pkg) {
-  const require = createRequire(join(root, 'package.json'))
-  const name = pluginName(pkg)
-  for (const spec of [`${pkg}/plugin`, pkg]) {
-    let path
-    try {
-      path = require.resolve(spec)
-    } catch {
-      continue
-    }
-    const factory = pluginFactory(createRequire(import.meta.url)(path), pkg)
-    if (!factory)
-      throw refused(`${spec} exports no plugin factory to call, so nothing was changed.`)
-    return {
-      name: factory.name,
-      line: `import ${factory.named ? `{ ${factory.name} }` : factory.name} from '${spec}'`,
-    }
-  }
-  return { name, line: `import ${name} from '${pkg}'` } // not installed yet: only a dry run gets this far
-}
-
-/** The object literal `export default` gives, directly or through `defineConfig(…)`. */
-function configObject(sf) {
-  for (const st of sf.statements) {
-    if (!ts.isExportAssignment(st)) continue
-    const value = ts.isCallExpression(st.expression) ? st.expression.arguments[0] : st.expression
-    if (value && ts.isObjectLiteralExpression(value)) return value
-  }
-  return null
-}
-
-function addToTs(root, file, text, pkg) {
-  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true)
-  const object = configObject(sf)
-  if (!object)
-    throw refused(
-      `${file} doesn't export a plain object, so \`weft add\` can't edit it. Add \`${pkg}\` to \`plugins\` by hand.`,
-    )
-  const { name, line } = pluginImport(root, pkg)
-  const prop = object.properties.find((p) => p.name?.getText(sf) === 'plugins')
-  if (prop && !(ts.isPropertyAssignment(prop) && ts.isArrayLiteralExpression(prop.initializer)))
-    throw refused(
-      `\`plugins\` in ${file} isn't a plain array, so \`weft add\` can't edit it. Add \`${pkg}\` by hand.`,
-    )
-  const edits = []
-  const imports = sf.statements.filter(ts.isImportDeclaration)
-  const after = imports.at(-1)?.end ?? 0
-  edits.push([after, `${imports.length ? '\n' : ''}${line}${imports.length ? '' : '\n'}`])
-  if (prop) {
-    const list = prop.initializer
-    const last = list.elements.at(-1)
-    edits.push(last ? [last.end, `, ${name}()`] : [list.getStart(sf) + 1, `${name}()`])
-  } else {
-    const last = object.properties.at(-1)
-    edits.push(
-      last
-        ? [
-            object.properties.end,
-            `${object.properties.hasTrailingComma ? '' : ','}\n  plugins: [${name}()],`,
-          ]
-        : [object.getStart(sf) + 1, `\n  plugins: [${name}()],\n`],
-    )
-  }
-  return edits
-    .toSorted((a, b) => b[0] - a[0])
-    .reduce((t, [at, insert]) => t.slice(0, at) + insert + t.slice(at), text)
-}
-
-function addToData(file, text, pkg) {
-  if (file.endsWith('.json')) {
-    const data = JSON.parse(text)
-    data.plugins = [...(data.plugins ?? []), pkg]
-    return `${JSON.stringify(data, null, 2)}\n`
-  }
-  const { parseDocument } = createRequire(import.meta.url)('yaml')
-  const doc = parseDocument(text)
-  if (doc.has('plugins')) doc.addIn(['plugins'], pkg)
-  else doc.set('plugins', [pkg])
-  return doc.toString()
-}
-
-const listed = (config, pkg) => (config.plugins ?? []).some((p) => p.name === pkg)
-
-/** The config names the package already (imported or listed), which a read can tell without loading it. */
-const names = (text, pkg) =>
-  new RegExp(`['"]${pkg.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}(/[\\w-]+)?['"]`).test(text)
 
 const VITE = ['vite.config.ts', 'vite.config.mts', 'vite.config.js', 'vite.config.mjs']
 
@@ -341,25 +251,7 @@ async function addAuth(root, { dryRun, install }) {
     actions.push(`install ${specs.join(' ')} with ${manager}`)
     if (!dryRun) installSpecs(root, manager, verb, specs)
   }
-  const edits = { ...files, 'src/context.server.ts': context }
-  if (!envText.includes('BETTER_AUTH_SECRET'))
-    edits['src/env.server.ts'] = envText.replace(
-      'server: {\n',
-      'server: {\n    BETTER_AUTH_SECRET: z.string().min(32),\n',
-    )
-  if (layer.layer === 'drizzle') {
-    edits['src/db/auth.schema.ts'] = tables
-    edits['src/db/schema.ts'] =
-      `${readFileSync(join(root, 'src/db/schema.ts'), 'utf8').trimEnd()}\n\nexport * from './auth.schema'\n`
-  } else if (layer.layer === 'prisma') {
-    edits['prisma/schema.prisma'] =
-      `${readFileSync(join(root, 'prisma/schema.prisma'), 'utf8').trimEnd()}\n${tables}`
-  } else {
-    const next = existsSync(join(root, 'migrations'))
-      ? readdirSync(join(root, 'migrations')).filter((f) => f.endsWith('.sql')).length
-      : 0
-    edits[`migrations/${String(next).padStart(4, '0')}_auth.sql`] = tables
-  }
+  const edits = authEdits(root, files, context, tables, envText, layer)
   actions.push(...Object.keys(edits).map((f) => `write ${f}`))
   if (!dryRun) {
     for (const [file, text] of Object.entries(edits)) {
@@ -386,64 +278,6 @@ async function addAuth(root, { dryRun, install }) {
     ...(dryRun && { dryRun: true }),
   }
 }
-
-/** The plugin's `setup`, once the package is installed: a plain import, since the package can't run anything by being read. */
-async function setupOf(root, pkg) {
-  let path
-  try {
-    path = createRequire(join(root, 'package.json')).resolve(`${pkg}/plugin`)
-  } catch {
-    return undefined // no plugin entry, or a dry run before the install
-  }
-  const mod = await import(pathToFileURL(path).href)
-  const make = mod.default ?? Object.values(mod).find((v) => typeof v === 'function')
-  return make?.().contribute({ command: 'check', mode: 'development', root }).setup
-}
-
-/** What `setup` wants, checked in full before anything is written, so a refusal changes nothing. */
-async function planSetup(root, setup) {
-  const layer = await dbLayer(root)
-  if (setup.needs?.includes('db') && !layer)
-    throw refused('This needs a database: run `weft add db` first. Nothing was changed.')
-  if (setup.needs?.includes('auth') && !existsSync(join(root, 'src/auth.server.ts')))
-    throw refused('This needs users: run `weft add auth` first. Nothing was changed.')
-  const read = (rel) =>
-    existsSync(join(root, rel)) ? readFileSync(join(root, rel), 'utf8') : undefined
-  let plan
-  try {
-    plan = setup.run({
-      engine: layer ? database(root, layer).engine : null,
-      layer: layer?.layer ?? null,
-      read,
-    })
-  } catch (error) {
-    throw refused(`${error.message}. Nothing was changed.`)
-  }
-  const taken = Object.keys(plan.files ?? {}).filter((f) => existsSync(join(root, f)))
-  if (taken.length) throw refused(`${taken.join(', ')} already exist. Nothing was changed.`)
-  return plan
-}
-
-function applySetup(root, plan) {
-  for (const [file, text] of Object.entries({ ...plan.files, ...plan.edits })) {
-    mkdirSync(dirname(join(root, file)), { recursive: true })
-    writeFileSync(join(root, file), text)
-  }
-  for (const name of ['.env', '.env.example']) {
-    const file = join(root, name)
-    const had = existsSync(file) ? readFileSync(file, 'utf8') : ''
-    const lines = Object.entries(plan.env ?? {})
-      .filter(([k]) => !had.includes(`${k}=`))
-      .map(([k, v]) => `${k}=${v}\n`)
-    if (lines.length) writeFileSync(file, `${had && `${had.trimEnd()}\n`}${lines.join('')}`)
-  }
-}
-
-const setupActions = (plan) => [
-  ...Object.keys({ ...plan.files, ...plan.edits }).map((f) => `write ${f}`),
-  ...(plan.env ? [`add ${Object.keys(plan.env).join(', ')} to .env and .env.example`] : []),
-  ...(plan.next ?? []).map((n) => `next: ${n}`),
-]
 
 export async function addCommand(
   root,
@@ -506,6 +340,10 @@ export async function addCommand(
       dryRun: true,
     }
 
+  return finishAdd(root, file, next, text, config, pkg, install, actions, plan, setup)
+}
+
+async function finishAdd(root, file, next, text, config, pkg, install, actions, plan, setup) {
   writeFileSync(file, next)
   const after = await loadConfig(root)
   const failed = after.diagnostics.filter((d) => d.severity === 'error')
