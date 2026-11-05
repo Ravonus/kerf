@@ -1,22 +1,54 @@
 {
   "weft-warp": {
     "framework": "weft with the warp UI kit",
-    "create": [["npm", "create", "weft@0.0.0", "app", "--", "--ui", "warp", "--db", "none", "--no-git", "--install", "--yes"]],
-    "after": [],
-    "serve": ["npx", "weft", "start"],
+    "create": [
+      [
+        "pnpm",
+        "dlx",
+        "@weft-js/create@0.1.1",
+        "app",
+        "--ui",
+        "warp",
+        "--db",
+        "none",
+        "--no-git",
+        "--yes"
+      ]
+    ],
+    "after": [["pnpm", "install", "--no-frozen-lockfile"]],
+    "serve": ["pnpm", "exec", "weft", "start"],
     "portEnv": "PORT",
     "built": [".output"]
   },
   "next-shadcn": {
     "framework": "Next.js with shadcn/ui",
-    "create": [["npx", "--yes", "create-next-app@latest", "app", "--ts", "--tailwind", "--eslint", "--app", "--src-dir", "--import-alias", "@/*", "--use-npm", "--disable-git", "--yes"]],
+    "create": [
+      [
+        "npx",
+        "--yes",
+        "create-next-app@latest",
+        "app",
+        "--ts",
+        "--tailwind",
+        "--eslint",
+        "--app",
+        "--src-dir",
+        "--import-alias",
+        "@/*",
+        "--use-npm",
+        "--disable-git",
+        "--yes"
+      ]
+    ],
     "after": [["npx", "--yes", "shadcn@latest", "init", "-d"]],
     "serve": ["npx", "next", "start", "-H", "127.0.0.1", "-p", "{port}"],
     "built": [".next"]
   },
   "vite-react": {
     "framework": "React with Vite",
-    "create": [["npm", "create", "vite@latest", "app", "--", "--template", "react-ts", "--no-interactive"]],
+    "create": [
+      ["npm", "create", "vite@latest", "app", "--", "--template", "react-ts", "--no-interactive"]
+    ],
     "after": [["npm", "install", "--silent"]],
     "serve": ["npx", "vite", "preview", "--host", "127.0.0.1", "--strictPort", "--port", "{port}"],
     "built": ["dist"]

@@ -2,8 +2,9 @@ import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
-import { claudeBin, goldens, repo, state, tgz } from '../lib/paths.mjs'
+import { claudeBin, goldens, registryPort, repo, tgz } from '../lib/paths.mjs'
 import { env } from '../lib/sandbox.mjs'
+import { install } from './install.mjs'
 
 function hashTree(dir) {
   const hash = createHash('sha256')
@@ -36,16 +37,15 @@ export async function golden({ withRegistry, stackNames, stacks, packagesCommit,
       rmSync(dir, { recursive: true, force: true })
       mkdirSync(box.home, { recursive: true })
       mkdirSync(box.tmp)
-      const e = { ...env(box), npm_config_cache: join(state, 'npmcache') }
+      if (name !== 'weft-warp') throw new Error('S5 supports only weft-warp')
       say(`== ${name}`)
-      for (const c of stacks[name].create)
-        execFileSync(c[0], c.slice(1), { cwd: dir, env: e, stdio: ['ignore', 'ignore', 'inherit'] })
-      for (const c of stacks[name].after)
-        execFileSync(c[0], c.slice(1), {
-          cwd: box.app,
-          env: e,
-          stdio: ['ignore', 'ignore', 'inherit'],
-        })
+      install({
+        dir,
+        app: box.app,
+        commands: stacks[name],
+        environment: env(box),
+        registry: `http://localhost:${registryPort}/`,
+      })
       for (const d of [...stacks[name].built, '.git'])
         rmSync(join(box.app, d), { recursive: true, force: true })
       const pkg = JSON.parse(readFileSync(join(box.app, 'package.json'), 'utf8'))
@@ -60,7 +60,7 @@ export async function golden({ withRegistry, stackNames, stacks, packagesCommit,
       manifest.stacks[name] = {
         tree: hashTree(box.app),
         versions: Object.fromEntries(
-          ['react', 'next', 'vite', 'weft', 'tailwindcss']
+          ['react', 'next', 'vite', '@weft-js/core', '@weft-js/warp', 'tailwindcss']
             .map((n) => [n, installed(n)])
             .filter(([, v]) => v),
         ),
@@ -79,7 +79,7 @@ export async function pack({ packagesCommit, say }) {
   rmSync(tgz, { recursive: true, force: true })
   const { packWithAddon } = await import(join(repo, 'packages/create/scripts/pack-all.mjs'))
   const packed = packWithAddon(tgz)
-  if (!Object.keys(packed).some((n) => n.startsWith('@weft/compiler-')))
+  if (!Object.keys(packed).some((n) => n.startsWith('@weft-js/compiler-')))
     throw new Error(
       'no native addon packed: run build:native in packages/core, a real install gets one',
     )
