@@ -28,7 +28,7 @@ test('no input type the browser paints', () => {
 test('checkboxes and radios are warp painted', () => {
   // every one sits inside a warp host (Choice), or is hidden with opacity by its own scope's CSS
   const painted =
-    /^(Choice|Table|SignaturePad|Calendar|schedule\/Calendar|live\/TransportPicker|admin\/Plans|admin\/Checkout)\.tsx/
+    /^(Choice|Table(?:-rows)?|SignaturePad|Calendar|schedule\/Calendar|live\/TransportPicker|admin\/Plans|admin\/Checkout(?:-shipping)?)\.tsx/
   expect(hits(/<input\b[^>]*\btype="(checkbox|radio)"/g).filter((h) => !painted.test(h))).toEqual(
     [],
   )
