@@ -17,7 +17,7 @@ const down = '\x1b[B',
   enter = '\r'
 
 /** A fake terminal that presses `keys`, one per question. */
-function terminal(...keys) {
+function terminal(...keys: string[]) {
   const input = new PassThrough(),
     output = new PassThrough()
   output.resume()
@@ -54,6 +54,16 @@ describe('select', () => {
   })
 })
 
+const choose = resolveChoices as (
+  given: Record<string, unknown>,
+  options: {
+    interactive?: boolean
+    yes?: boolean
+    env?: NodeJS.ProcessEnv
+    io?: ReturnType<typeof terminal>
+  },
+) => ReturnType<typeof resolveChoices>
+
 describe('resolveChoices', () => {
   const env = {}
   const defaults = {
@@ -67,7 +77,7 @@ describe('resolveChoices', () => {
   }
 
   it('--yes is Enter all the way through, the todo + auth app', async () => {
-    expect(await resolveChoices({}, { interactive: true, yes: true, env })).toEqual({
+    expect(await choose({}, { interactive: true, yes: true, env })).toEqual({
       ...defaults,
       git: true,
       install: true,
@@ -75,12 +85,12 @@ describe('resolveChoices', () => {
   })
 
   it('no terminal takes the same app, and runs nothing it was not asked to', async () => {
-    expect(await resolveChoices({}, { interactive: false, env })).toEqual({
+    expect(await choose({}, { interactive: false, env })).toEqual({
       ...defaults,
       git: false,
       install: false,
     })
-    expect(await resolveChoices({ install: true }, { interactive: false, env })).toMatchObject({
+    expect(await choose({ install: true }, { interactive: false, env })).toMatchObject({
       install: true,
     })
   })
@@ -88,32 +98,32 @@ describe('resolveChoices', () => {
   it('a flag skips its question, and sign-in is only asked with a database', async () => {
     const keys = questions(env).length - 2
     const io = terminal(...Array(keys).fill(enter))
-    expect(
-      await resolveChoices({ ui: 'none', db: 'none' }, { interactive: true, env, io }),
-    ).toMatchObject({ ui: 'none', db: 'none', auth: false, runtime: 'node' })
+    expect(await choose({ ui: 'none', db: 'none' }, { interactive: true, env, io })).toMatchObject({
+      ui: 'none',
+      db: 'none',
+      auth: false,
+      runtime: 'node',
+    })
     expect(io.shown()).not.toContain('Sign-in')
     expect(io.shown()).not.toContain('Database')
   })
 
   it('uses the package manager that ran it', async () => {
     expect(
-      await resolveChoices(
-        {},
-        { interactive: false, env: { npm_config_user_agent: 'pnpm/10 node/26' } },
-      ),
+      await choose({}, { interactive: false, env: { npm_config_user_agent: 'pnpm/10 node/26' } }),
     ).toMatchObject({ pm: 'pnpm' })
   })
 })
 
 it('no database skips the layer and sign-in', async () => {
-  expect(await resolveChoices({ db: 'none' }, { interactive: false, env: {} })).toMatchObject({
+  expect(await choose({ db: 'none' }, { interactive: false, env: {} })).toMatchObject({
     layer: 'drizzle',
     auth: false,
   })
 })
 
 describe('the command', () => {
-  const run = (...args) =>
+  const run = (...args: string[]) =>
     spawnSync(process.execPath, [bin, ...args], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -134,7 +144,7 @@ describe('the command', () => {
     for (const [format, file] of [
       ['json', 'weft.config.json'],
       ['yaml', 'weft.config.yaml'],
-    ]) {
+    ] as const) {
       const dir = join(tmp, format)
       expect(run(dir, '--config', format, '--db', 'none').status).toBe(0)
       expect(existsSync(join(dir, file))).toBe(true)
