@@ -4,6 +4,7 @@
 
 mod flow;
 mod loops;
+mod patterns;
 mod reads;
 mod watch;
 mod writes;

@@ -3,15 +3,16 @@
 use std::collections::HashSet;
 
 use oxc_ast::ast::{
-    ArrowFunctionExpression, AssignmentExpression, AssignmentTarget, AssignmentTargetWithDefault,
-    AwaitExpression, BindingPattern, BreakStatement, CallExpression, ComputedMemberExpression,
-    ConditionalExpression, ContinueStatement, DoWhileStatement, Expression, ForInStatement,
-    ForOfStatement, ForStatement, Function, IdentifierReference, IfStatement, LabeledStatement,
-    LogicalExpression, ReturnStatement, SimpleAssignmentTarget, Statement, StaticMemberExpression,
-    SwitchStatement, ThrowStatement, TryStatement, UnaryExpression, UpdateExpression,
-    VariableDeclarator, WhileStatement,
+    ArrayAssignmentTarget, ArrowFunctionExpression, AssignmentExpression, AssignmentTarget,
+    AssignmentTargetWithDefault, AwaitExpression, BindingPattern, BreakStatement, CallExpression,
+    ComputedMemberExpression, ConditionalExpression, ContinueStatement, DoWhileStatement,
+    Expression, ForInStatement, ForOfStatement, ForStatement, Function, IdentifierReference,
+    IfStatement, LabeledStatement, LogicalExpression, ObjectAssignmentTarget, ReturnStatement,
+    SimpleAssignmentTarget, Statement, StaticMemberExpression, SwitchStatement, ThrowStatement,
+    TryStatement, UnaryExpression, UpdateExpression, VariableDeclarator, WhileStatement,
 };
 use oxc_ast_visit::{Visit, walk};
+use oxc_semantic::SymbolId;
 use oxc_span::{GetSpan, Span};
 use oxc_syntax::operator::{AssignmentOperator, UnaryOperator};
 use oxc_syntax::scope::ScopeFlags;
@@ -31,6 +32,8 @@ pub(super) struct Flow<'x, 's> {
     pub(super) diagnostics: Vec<Diagnostic>,
     pub(super) reported: HashSet<(&'static str, SpanKey)>,
     pub(super) watch: Option<watch::Accesses>,
+    pub(super) pattern_box: Option<SymbolId>,
+    pub(super) pattern_read: Option<SymbolId>,
     pub(super) derived: bool,
     resource: bool,
     write_only: bool,
@@ -50,6 +53,8 @@ impl<'x, 's> Flow<'x, 's> {
             diagnostics: Vec::new(),
             reported: HashSet::new(),
             watch: None,
+            pattern_box: None,
+            pattern_read: None,
             derived,
             resource,
             write_only: false,
@@ -73,9 +78,15 @@ impl<'x, 's> Flow<'x, 's> {
             AssignmentTarget::ObjectAssignmentTarget(_)
                 | AssignmentTarget::ArrayAssignmentTarget(_)
         );
-        // Patterns receive the RHS before evaluating targets; ordinary references form first.
+        let previous_box = self.pattern_box.take();
+        // Evaluate pattern RHS first; a nested property's getter precedes its default.
         if pattern {
+            let read = self.pattern_read.take();
+            self.watch_box_read(read);
             self.visit_expression(value);
+            if self.watch.is_some() {
+                self.pattern_box = self.index.box_symbol(value);
+            }
         }
         let previous = std::mem::replace(&mut self.write_only, write_only);
         self.visit_assignment_target(target);
@@ -83,6 +94,7 @@ impl<'x, 's> Flow<'x, 's> {
         if !pattern {
             self.visit_expression(value);
         }
+        self.pattern_box = previous_box;
     }
 
     fn report(&mut self, span: Span) {
@@ -126,23 +138,36 @@ impl<'a> Visit<'a> for Flow<'_, '_> {
         self.assignment(&it.binding, &it.init, true);
     }
 
+    fn visit_object_assignment_target(&mut self, it: &ObjectAssignmentTarget<'a>) {
+        self.object_pattern(it);
+    }
+
+    fn visit_array_assignment_target(&mut self, it: &ArrayAssignmentTarget<'a>) {
+        let read = self.pattern_read.take();
+        self.watch_box_read(read);
+        self.pattern_box = None;
+        walk::walk_array_assignment_target(self, it);
+    }
+
     fn visit_simple_assignment_target(&mut self, it: &SimpleAssignmentTarget<'a>) {
+        let read = self.pattern_read.take();
         self.state_write(it);
         if self.write_only {
             match it {
                 SimpleAssignmentTarget::StaticMemberExpression(member) => {
                     self.visit_expression(&member.object);
-                    return;
                 }
                 SimpleAssignmentTarget::ComputedMemberExpression(member) => {
                     self.visit_expression(&member.object);
                     self.visit_expression(&member.expression);
-                    return;
                 }
-                _ => {}
+                _ => walk::walk_simple_assignment_target(self, it),
             }
+        } else {
+            walk::walk_simple_assignment_target(self, it);
         }
-        walk::walk_simple_assignment_target(self, it);
+        // Form the target reference before invoking the source property's getter.
+        self.watch_box_read(read);
     }
 
     fn visit_update_expression(&mut self, it: &UpdateExpression<'a>) {

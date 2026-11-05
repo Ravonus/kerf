@@ -1,7 +1,8 @@
 //! W003 joins each watch's source reads with its callback's writes by box identity.
 //! Inference covers stable local aliases, known callbacks, literal `.value` members and
-//! `.get` reads. Helper calls, dynamic keys, object-held boxes and dependencies through
-//! other boxes stay opaque. Deferred closures have their own execution and are skipped.
+//! `.get` reads, including declaration and assignment value patterns. Helper calls,
+//! dynamic keys, object-held boxes and dependencies through other boxes stay opaque.
+//! Deferred closures have their own execution and are skipped.
 
 use std::collections::{HashMap, HashSet};
 
@@ -40,9 +41,15 @@ impl Index<'_> {
 
 impl Flow<'_, '_> {
     pub(super) fn watch_read(&mut self, expression: &Expression<'_>) {
+        if self.state.tracked && self.watch.is_some() {
+            self.watch_box_read(self.index.box_symbol(expression));
+        }
+    }
+
+    pub(super) fn watch_box_read(&mut self, symbol: Option<SymbolId>) {
         if self.state.tracked
             && let Some(accesses) = &mut self.watch
-            && let Some(sym) = self.index.box_symbol(expression)
+            && let Some(sym) = symbol
         {
             accesses.reads.insert(sym);
         }
