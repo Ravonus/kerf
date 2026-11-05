@@ -33,12 +33,18 @@ export default function Scale() {
           Each role sets a size, weight and leading from
           the theme.
         </Text>
-        <Row gap={gap.value} wrap>
+        <Row
+          gap={gap.value}
+          wrap
+        >
           <Tag>Light</Tag>
           <Tag>Medium</Tag>
           <Tag>Dark</Tag>
         </Row>
-        <Text role="caption" faint>
+        <Text
+          role="caption"
+          faint
+        >
           Prices include shipping.
         </Text>
       </Stack>

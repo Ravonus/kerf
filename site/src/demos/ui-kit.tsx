@@ -15,7 +15,10 @@ export default function Billing() {
   return (
     <Card title="Billing">
       <form onSubmit={submit}>
-        <Input label="Billing email" type="email" />
+        <Input
+          label="Billing email"
+          type="email"
+        />
         <Switch defaultChecked>Send a receipt</Switch>
         <Button type="submit">
           {saved.value ? 'Saved' : 'Save'}
