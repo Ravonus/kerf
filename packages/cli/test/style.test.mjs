@@ -88,7 +88,7 @@ describe('weft style find', () => {
   })
 })
 
-describe('weft style explain', () => {
+function registerStyleResolution() {
   it('resolves one variation, root and parts, with where each value came from', () => {
     const r = weft(
       'style',
@@ -157,7 +157,9 @@ describe('weft style explain', () => {
     )
     expect(r.stderr).toContain('background-color: var(--warp-color-critical-soft)')
   })
+}
 
+function registerStyleTargets() {
   it('unknown names are D025 with the closest ones', () => {
     const dir = clean()
     const r = weft('style', 'explain', 'order-crd', '--json', '--root', dir)
@@ -200,9 +202,14 @@ describe('weft style explain', () => {
     })
     expect(() => parseTarget('')).toThrow(/explain <group\|selector>/)
   })
+}
+
+describe('weft style explain', () => {
+  registerStyleResolution()
+  registerStyleTargets()
 })
 
-describe('weft check: the style D-codes and .weft/styles.json', () => {
+function registerCleanStyleCheck() {
   it('a clean project gets no style codes, and the matrix is written', async () => {
     const dir = clean()
     const r = await check(dir)
@@ -226,7 +233,9 @@ describe('weft check: the style D-codes and .weft/styles.json', () => {
     expect(m.vocab.tone).toContain('critical')
     expect(m.diagnostics).toEqual([])
   })
+}
 
+function registerStyleDiagnostics() {
   it('reports D020–D025 where they are', async () => {
     const dir = project({
       'src/cards.tsx': (
@@ -302,6 +311,11 @@ export const G = () => <p {...orderCard()} {...statusBadge()} />
     expect(r.ok).toBe(false)
     expect(existsSync(join(dir, '.weft/styles.json'))).toBe(true)
   })
+}
+
+describe('weft check: the style D-codes and .weft/styles.json', () => {
+  registerCleanStyleCheck()
+  registerStyleDiagnostics()
 })
 
 describe('MCP style tools', () => {

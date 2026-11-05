@@ -58,7 +58,7 @@ export default defineConfig({ plugins: [${order.map((n) => `all.${n}`).join(', '
 
 const codes = (r) => r.diagnostics.map((d) => d.code)
 
-describe('@weft-js/core/plugin + weft plugins', () => {
+function registerPluginListing() {
   it('lists plugins sorted by name, with the slots they provide and bind', async () => {
     const dir = project({ 'weft.config.ts': config() })
     const r = await list(dir)
@@ -105,7 +105,9 @@ describe('@weft-js/core/plugin + weft plugins', () => {
     })
     expect((await explain(dir, 'text.measure')).binding).toMatchObject({ provider: null })
   })
+}
 
+function registerPluginGeneration() {
   it('generates slot modules, slots.d.ts and token CSS on check and sync, byte-identical for any plugin order', async () => {
     const a = project({ 'weft.config.ts': config() })
     const b = project({ 'weft.config.ts': config({ order: ['kit', 'fonts'] }) })
@@ -155,7 +157,9 @@ describe('@weft-js/core/plugin + weft plugins', () => {
     expect(d).toMatchObject({ severity: 'error', owner: '@acme/kit', file: 'weft.config.ts' })
     expect(d.why).toContain('3.1:1')
   })
+}
 
+function registerPluginDiagnostics() {
   it('P115: invalid options, with the path', async () => {
     const dir = project({ 'weft.config.ts': config({ extra: 'fonts({ subset: 1 as any })' }) })
     const r = await loadConfig(dir)
@@ -202,6 +206,12 @@ describe('@weft-js/core/plugin + weft plugins', () => {
     await check(bare)
     expect(existsSync(join(bare, '.weft'))).toBe(false)
   })
+}
+
+describe('@weft-js/core/plugin + weft plugins', () => {
+  registerPluginListing()
+  registerPluginGeneration()
+  registerPluginDiagnostics()
 })
 
 describe('build-side slots and check hooks (research 26 §2.5, §3.1)', () => {
