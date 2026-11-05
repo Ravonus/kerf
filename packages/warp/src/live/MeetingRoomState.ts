@@ -60,7 +60,7 @@ export function meetingPeople(
   }))
   const cols = derived(() => galleryCols(people.value.length))
   const network = derived<LiveState>(() => {
-    const s = val<string>(props().live)
+    const s = val<string>(props().live === undefined ? 'live' : props().live!)
     return s === 'open' || s === 'live'
       ? 'live'
       : s === 'reconnecting'

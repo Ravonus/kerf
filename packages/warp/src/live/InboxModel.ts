@@ -6,11 +6,15 @@ import { inboxGestures } from './InboxGestures'
 import { inboxHandlers } from './InboxHandlers'
 import type { InboxProps, Note } from './Inbox'
 
-export type InboxInputs = InboxProps & { tabs: InboxTab[]; open: boolean; queued: number }
+export type InboxInputs = InboxProps
 
 export function inboxModel(p: () => InboxInputs) {
   const id = uid('inbox')
-  const tab = state<InboxTab>(untrack(() => p().tabs)[0]!)
+  const tab = state<InboxTab>(
+    untrack(() =>
+      p().tabs === undefined ? ['all', 'unread', 'mentions'] : p().tabs!,
+    )[0]! as InboxTab,
+  )
   const data = derived(() => val<Note[] | undefined>(p().items))
   const all = derived(() => data.value ?? [])
   const leaving = state<string[]>([])
@@ -47,7 +51,7 @@ export function inboxModel(p: () => InboxInputs) {
     doc,
   )
   const sync = derived(() => {
-    const q = val<number>(p().queued)
+    const q = val<number>(p().queued === undefined ? 0 : p().queued!)
     if (q) return `${q} update${q > 1 ? 's' : ''} waiting to sync`
     return (val<LiveState | undefined>(p().live) ?? 'live') === 'connecting'
       ? 'Connecting…'

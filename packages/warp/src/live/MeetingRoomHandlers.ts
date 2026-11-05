@@ -28,8 +28,8 @@ export function meetingHandlers(
     }
     if (c === 'chat' || c === 'people') controls.side.set(controls.side.value === c ? null : c)
     if (c === 'react') {
-      floatReaction(stage()!, p().reaction)
-      p().onReact?.(p().reaction)
+      floatReaction(stage()!, p().reaction === undefined ? '🎉' : p().reaction!)
+      p().onReact?.(p().reaction === undefined ? '🎉' : p().reaction!)
       say('You reacted')
     }
     if (c === 'more') {

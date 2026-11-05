@@ -21,7 +21,7 @@ export function preferencesWatch(
       },
     )
     watch(
-      () => p().digest,
+      () => (p().digest === undefined ? 'instant' : p().digest!),
       (d) => {
         if (save.value !== 'saving') mail.value = d
       },

@@ -18,13 +18,15 @@ export function inboxHandlers(
     tab.value = t
     fresh.value = 0
   }
+  const tabs = () =>
+    p().tabs === undefined ? (['all', 'unread', 'mentions'] as InboxTab[]) : p().tabs!
   const onTabKey = (e: KeyboardEvent) => {
-    const at = p().tabs.indexOf(tab.value)
+    const at = tabs().indexOf(tab.value)
     const rtl = getComputedStyle(e.currentTarget as Element).direction === 'rtl'
-    const to = nextIndex(e.key, at, p().tabs.length, { rtl })
+    const to = nextIndex(e.key, at, tabs().length, { rtl })
     if (to < 0) return
     e.preventDefault()
-    pick(p().tabs[to]!)
+    pick(tabs()[to]!)
     tablist()!.querySelectorAll<HTMLElement>('[role="tab"]')[to]?.focus()
   }
   const dismiss = (n: Note, row: HTMLElement) => {

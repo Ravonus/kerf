@@ -71,59 +71,34 @@ export interface InboxProps {
  * approval patches the row in place. New rows arrive; with the list scrolled, an "n new" pill shows instead of moving
  * it. A dismissed row slides out and Undo is in the toast. Needs a mounted Toaster for Undo and announcements.
  */
-export function Inbox({
-  items,
-  live,
-  tabs = ['all', 'unread', 'mentions'],
-  title = 'Notifications',
-  variant,
-  open = true,
-  queued = 0,
-  viewAll,
-  settings,
-  onRead,
-  onReadAll,
-  onDismiss,
-  onRestore,
-  onAction,
-  onOpen,
-}: InboxProps) {
-  const model = inboxModel(() => ({
-    items,
-    live,
-    tabs,
-    title,
-    variant,
-    open,
-    queued,
-    viewAll,
-    settings,
-    onRead: onRead ? (id: string) => onRead?.(id) : undefined,
-    onReadAll: onReadAll ? () => onReadAll?.() : undefined,
-    onDismiss: onDismiss ? (id: string) => onDismiss?.(id) : undefined,
-    onRestore: onRestore ? (note: Note) => onRestore?.(note) : undefined,
-    onAction,
-    onOpen: onOpen ? (note: Note) => onOpen?.(note) : undefined,
-  }))
+export function Inbox(props: InboxProps) {
+  const model = inboxModel(() => props)
   return (
     <section
       ref={model.setRoot}
       data-scope="inbox"
       data-part="root"
-      data-variant={variant}
+      data-variant={props.variant}
       aria-labelledby={`${model.id}-t`}
     >
-      <InboxHeader title={title} settings={settings} model={model} />
-      <InboxTabs tabs={tabs} model={model} />
+      <InboxHeader
+        title={props.title === undefined ? 'Notifications' : props.title}
+        settings={props.settings}
+        model={model}
+      />
+      <InboxTabs
+        tabs={props.tabs === undefined ? ['all', 'unread', 'mentions'] : props.tabs}
+        model={model}
+      />
       {model.fresh.value > 0 && (
         <Button size="sm" data-part="new-pill" onClick={model.toTop}>
           {model.fresh.value} new
         </Button>
       )}
       <InboxFeed
-        title={title}
+        title={props.title === undefined ? 'Notifications' : props.title}
         model={model}
-        onAction={(note, action) => onAction?.(note, action)}
+        onAction={(note, action) => props.onAction?.(note, action)}
       />
       <div data-part="footer">
         <span>{model.sync.value}</span>
