@@ -5,8 +5,9 @@ import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type * as Playwright from 'playwright-core'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
 const styles = fileURLToPath(new URL('../../warp-core/styles', import.meta.url))
@@ -15,10 +16,10 @@ const css = ['warp.css', 'components/base.css', 'components/button.css']
   .join('\n')
 // the site's own rule for its wide search field: unlayered, so it beats warp's layers unless collapse holds the square
 const app = '.search { inline-size: 240px; justify-content: flex-start }'
-const button = (collapse) =>
+const button = (collapse: string) =>
   `<button type="button" class="search" data-scope="button" data-emphasis="outline" data-size="sm" data-collapse="${collapse}"><svg data-icon aria-hidden="true" width="16" height="16"></svg><span data-part="collapse"><span>Search</span><span aria-hidden="true">⌘K</span></span></button>`
 
-let browser
+let browser: Playwright.Browser
 beforeAll(async () => {
   browser = await chromium.launch()
 })
@@ -26,7 +27,7 @@ afterAll(async () => {
   await browser?.close()
 })
 
-async function at(width, collapse) {
+async function at(width: number, collapse: string) {
   const context = await browser.newContext({ viewport: { width, height: 700 } })
   const page = await context.newPage()
   await page.setContent(
@@ -36,7 +37,7 @@ async function at(width, collapse) {
   const named = await page.getByRole('button', { name: 'Search', exact: true }).count()
   const shown = await page.locator('[data-part="collapse"]').boundingBox()
   await context.close()
-  return { width: Math.round(box.width), named, textWidth: Math.round(shown.width) }
+  return { width: Math.round(box!.width), named, textWidth: Math.round(shown!.width) }
 }
 
 test('tablet: an icon on a phone and a tablet, the whole field on a desktop; named Search at every width', async () => {
