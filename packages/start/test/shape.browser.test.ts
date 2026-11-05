@@ -3,14 +3,25 @@
 import { spawn, spawnSync } from 'node:child_process'
 import { readFileSync, readdirSync, rmSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { createServer as listen } from 'node:net'
+import { createServer as listen, type AddressInfo } from 'node:net'
+import type * as Playwright from 'playwright-core'
+
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { dev } from '../src/app.mjs'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+declare global {
+  interface Window {
+    __cls: number
+    __rec: MutationRecord[]
+  }
+}
+
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 const root = fileURLToPath(new URL('./fixtures/shapes', import.meta.url))
-let browser, server, url
+let browser: Playwright.Browser
+let server: Awaited<ReturnType<typeof dev>>
+let url: string
 beforeAll(async () => {
   server = await dev({
     root,
@@ -18,7 +29,7 @@ beforeAll(async () => {
     port: 0,
     logLevel: 'error',
   })
-  url = server.resolvedUrls.local[0].replace(/\/$/, '')
+  url = server.resolvedUrls!.local[0]!.replace(/\/$/, '')
   browser = await chromium.launch()
 })
 afterAll(async () => {
@@ -26,9 +37,9 @@ afterAll(async () => {
   await server?.close()
 })
 
-async function open(path) {
+async function open(path: string) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
-  const logs = []
+  const logs: string[] = []
   page.on('pageerror', (e) => logs.push(e.message))
   page.on('console', (m) =>
     ['error', 'warning'].includes(m.type()) ? logs.push(m.text()) : undefined,
@@ -44,14 +55,15 @@ async function open(path) {
   await page.evaluate(() => {
     window.__cls = 0
     new PerformanceObserver((l) => {
-      for (const e of l.getEntries()) window.__cls += e.value
+      for (const e of l.getEntries())
+        window.__cls += (e as PerformanceEntry & { value: number }).value
     }).observe({ type: 'layout-shift' })
   })
   return { page, logs }
 }
 
 /** Click, wait for the pending view, then the content: the shift, how far `#after` moved, and the DOM writes. */
-async function swap(page, button, pendingSelector) {
+async function swap(page: Playwright.Page, button: string, pendingSelector: string) {
   await page.click(button)
   await page.waitForTimeout(60) // the click's own mount: not a shift, and the browser doesn't count it as one
   await page.evaluate(() => {
@@ -68,13 +80,13 @@ async function swap(page, button, pendingSelector) {
     window.__rec = []
     window.__mo?.disconnect()
     window.__mo = new MutationObserver((r) => window.__rec.push(...r))
-    window.__mo.observe(document.querySelector('main'), {
+    window.__mo.observe(document.querySelector('main')!, {
       subtree: true,
       childList: true,
       characterData: true,
       attributes: true,
     })
-    return { shown, top: document.getElementById('after').getBoundingClientRect().top }
+    return { shown, top: document.getElementById('after')!.getBoundingClientRect().top }
   })
   await page.waitForFunction(
     () => document.querySelector('.post') && !document.querySelector('[data-skeleton], .bars'),
@@ -84,7 +96,7 @@ async function swap(page, button, pendingSelector) {
   await page.waitForTimeout(100)
   const after = await page.evaluate(() => ({
     cls: window.__cls,
-    top: document.getElementById('after').getBoundingClientRect().top,
+    top: document.getElementById('after')!.getBoundingClientRect().top,
     writes: window.__rec.length + window.__mo.takeRecords().length,
   }))
   return {
@@ -96,7 +108,7 @@ async function swap(page, button, pendingSelector) {
 }
 
 const pendingShape = '[data-scope="skeleton-scope"] [data-skeleton]'
-const clear = async (page) => {
+const clear = async (page: Playwright.Page) => {
   await page.click('#off')
   await page.waitForFunction(() => !document.querySelector('.feed'))
 }
@@ -179,16 +191,16 @@ test('a production build: the schema stays on the server, the stub carries its s
   })
   expect(r.status, r.stderr).toBe(0)
   const public_ = join(output, 'public')
-  const js = readdirSync(public_, { recursive: true })
+  const js = readdirSync(public_, { recursive: true, encoding: 'utf8' })
     .filter((f) => f.endsWith('.js'))
     .map((f) => readFileSync(join(public_, f), 'utf8'))
     .join('\n')
   expect(js).toContain('$of')
   expect(js).not.toContain('ZodError')
 
-  const port = await new Promise((ok) => {
+  const port = await new Promise<number>((ok) => {
     const s = listen().listen(0, () => {
-      const free = s.address().port
+      const free = (s.address() as AddressInfo).port
       s.close(() => ok(free))
     })
   })
