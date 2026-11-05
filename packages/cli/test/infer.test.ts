@@ -103,6 +103,22 @@ describe.each([
   ['tsgo', 7],
   ['typescript 6', 6],
 ])('inference on %s', (_, version) => {
+  it('warns when an inferred type is local to a caller', async () => {
+    const page = (type: string) => `
+      function Card(props) { return <p>{props.item.name}</p> }
+      export function Page() {
+        ${type}
+        const item: Item = { name: 'one' }
+        return <Card item={item} />
+      }
+    `
+    const local = await run(app({ ...goalOnly, 'src/goal.tsx': page('type Item = { name: string }') }, { version }))
+    expect(local.list).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'W085' })]))
+    const visible = page('').replace('function Card', 'type Item = { name: string }; function Card')
+    const repaired = await run(app({ ...goalOnly, 'src/goal.tsx': visible }, { version }))
+    expect(repaired.list.filter((finding: { code: string }) => finding.code === 'W085')).toEqual([])
+  }, 60_000)
+
   it('the goal: props.count is number, from bind: at the only call site', async () => {
     const r = await run(app(goalOnly, { version }))
     expect(r.types.AddButton).toBe('{ count: number }')

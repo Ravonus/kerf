@@ -172,6 +172,14 @@ export const compilerDiagnostics = [
       "import { state } from '@weft-js/core'\nexport function A() { const n = state(0); return <p>{n}</p> }",
   },
   {
+    code: 'W016',
+    severity: 'warning',
+    by: 'compiler',
+    catches: 'A non-reactive call passed as a component prop runs again whenever the prop is read',
+    fix: 'Create the value once before JSX, unless the call must run again',
+    example: 'render(() => <App api={createFakeApi()} />, root)',
+  },
+  {
     code: 'W017',
     severity: 'warning',
     by: 'compiler',

@@ -11,3 +11,4 @@ include!("compile/derived_writes.rs");
 include!("compile/watch_cycles.rs");
 include!("compile/watch_patterns.rs");
 include!("compile/watch_copies.rs");
+include!("compile/catalog_browser.rs");
