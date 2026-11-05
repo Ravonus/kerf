@@ -153,47 +153,7 @@ describe('createFontBuild().build()', () => {
       .options,
     { trim: false },
   )
-
-  it('subsets per range, adds one fallback face, preloads the body face only, within budget', async () => {
-    const out = await createFontBuild(opts).build({
-      root: '/',
-      cacheDir,
-      url: (n) => `/assets/${n}`,
-    })
-    expect(out.files.map((f) => f.name.replace(/-[0-9a-f]{8}\.woff2$/, ''))).toEqual([
-      'inter-400-latin',
-      'inter-400-latin-ext',
-      'inter-700-latin',
-      'inter-700-latin-ext',
-    ])
-    for (const f of out.files) expect(new TextDecoder().decode(f.bytes.subarray(0, 4))).toBe('wOF2')
-    const [latin, ext] = out.files
-    expect(ext.bytes.length).toBeLessThan(latin.bytes.length / 2) // the source is latin-only: latin-ext keeps little
-
-    const rules = out.css.trim().split('\n')
-    expect(rules).toHaveLength(5)
-    expect(rules[0]).toBe(
-      `@font-face{font-family:"Inter";src:url(/assets/${latin.name}) format("woff2");font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}`,
-    )
-    expect(rules[2]).toContain('font-weight:700')
-    expect(rules[4]).toBe(
-      '@font-face{font-family:"Inter Fallback";src:local("Arial");size-adjust:107.12%;ascent-override:90.44%;descent-override:22.52%;line-gap-override:0%}',
-    )
-
-    expect(out.preloads).toEqual([{ href: `/assets/${latin.name}`, type: 'font/woff2' }])
-    expect(out.metrics.Inter).toMatchObject({
-      unitsPerEm: 2048,
-      capHeight: 1490 / 2048,
-      xHeight: 1118 / 2048,
-    })
-    expect(out.report.preloadBytes).toBe(latin.bytes.length)
-    expect(out.report.cssBrotli).toBeLessThanOrEqual(BUDGET.cssBrotli)
-    expect(out.report.overBudget).toEqual([])
-
-    const again = await createFontBuild(opts).build({ root: '/', cacheDir, url: (n) => n })
-    expect(again.files.map((f) => f.bytes.length)).toEqual(out.files.map((f) => f.bytes.length))
-    expect(readdirSync(cacheDir)).toHaveLength(4) // the second build read the cache
-  })
+  registerFontSubsetTests(opts, () => cacheDir)
 
   it('reports X022 when preloads go over budget', async () => {
     const many = Object.fromEntries(
@@ -219,88 +179,7 @@ describe('createFontBuild().build()', () => {
       }).build({ root: '/', cacheDir, url: (n) => n }),
     ).rejects.toThrow(/no metrics for fallback "Comic Neue Mono"/)
   })
-
-  describe('trimming', () => {
-    const body = { fonts: { body: opts.fonts.body }, subsets: ['latin'] }
-
-    it('splits latin into a preloaded core and an on-demand rest that together cover the whole subset', async () => {
-      const out = await createFontBuild({ ...body, trim: true }).build({
-        root: '/',
-        cacheDir,
-        url: (n) => n,
-      })
-      const [core] = out.files
-      expect(out.files.map((f) => f.name.replace(/-[0-9a-f]{8}\.woff2$/, ''))).toEqual([
-        'inter-400-latin',
-        'inter-400-latin-rest',
-      ])
-      expect(out.preloads).toEqual([{ href: core.name, type: 'font/woff2' }])
-      const ranges = [...out.css.matchAll(/unicode-range:([^}]+)/g)].map((m) => rangeText(m[1]))
-      expect(ranges).toHaveLength(2)
-      expect(ranges[0]).toContain('a')
-      expect(ranges[0]).toContain('\u2019')
-      expect(ranges[0]).not.toContain('\u00e9')
-      expect(ranges[1]).toContain('\u00e9')
-      expect(Array.from(ranges[0]).filter((c) => ranges[1].includes(c))).toEqual([])
-      expect(Array.from(ranges.join('')).sort().join('')).toBe(
-        Array.from(rangeText(RANGES.latin)).sort().join(''),
-      )
-      const all = await createFontBuild({ ...body, trim: false }).build({
-        root: '/',
-        cacheDir,
-        url: (n) => n,
-      })
-      expect(core.bytes.length).toBeLessThan(all.files[0].bytes.length * 0.8)
-    })
-
-    it('moves the characters the source uses into the core', async () => {
-      const out = await createFontBuild({ ...body, trim: true }).build({
-        root: '/',
-        cacheDir,
-        url: (n) => n,
-        source: '<p>Café ñ 日本</p>',
-      })
-      const [core, rest] = [...out.css.matchAll(/unicode-range:([^}]+)/g)].map((m) =>
-        rangeText(m[1]),
-      )
-      expect(core).toContain('\u00e9')
-      expect(core).toContain('\u00f1')
-      expect(core).not.toContain('日')
-      expect(rest).not.toContain('\u00e9')
-    })
-
-    it('stays off in dev and with trim: false: one file per subset, its full range', async () => {
-      for (const run of [
-        { trim: true, dev: true },
-        { trim: false, dev: false },
-      ]) {
-        const out = await createFontBuild({ ...body, trim: run.trim }).build({
-          root: '/',
-          cacheDir,
-          url: (n) => n,
-          dev: run.dev,
-        })
-        expect(out.files).toHaveLength(1)
-        expect(out.css).toContain('unicode-range:U+0000-00FF,U+0131')
-      }
-    })
-
-    it('leaves X022 to builds: dev ships no trimmed face to measure', async () => {
-      const many = Object.fromEntries(
-        [400, 500, 600, 700, 800, 900].map((w) => [
-          `r${w}`,
-          { ...opts.fonts.body, src: inter(w), weight: w, preload: true },
-        ]),
-      )
-      const out = await createFontBuild({ fonts: many, subsets: ['latin'] }).build({
-        root: '/',
-        cacheDir,
-        url: (n) => n,
-        dev: true,
-      })
-      expect(out.report.overBudget).toEqual([])
-    })
-  })
+  registerFontTrimmingTests(opts, () => cacheDir)
 })
 
 describe('axes', () => {
@@ -308,31 +187,7 @@ describe('axes', () => {
   const WONK = { tag: 'WONK', min: 0, default: 1, max: 1 }
   const WGHT = { tag: 'wght', min: 100, default: 400, max: 900 }
   const OPSZ = { tag: 'opsz', min: 9, default: 14, max: 144 }
-
-  it('reads literal settings from CSS, JSX styles and Tailwind classes', () => {
-    const css = scanAxes('.a { font-variation-settings: "SOFT" 60, "WONK" 0; color: red }')
-    expect(css.dynamic).toBe(false)
-    expect(css.values.get('SOFT')).toEqual(new Set([60]))
-    expect(css.values.get('WONK')).toEqual(new Set([0]))
-    const jsx = scanAxes(`<p style={{ fontVariationSettings: '"GRAD" 150' }} />`)
-    expect(jsx).toMatchObject({ dynamic: false })
-    expect(jsx.values.get('GRAD')).toEqual(new Set([150]))
-    const tw = scanAxes(`<p class="[font-variation-settings:'SOFT'_30] text-lg" />`)
-    expect(tw).toMatchObject({ dynamic: false })
-    expect(tw.values.get('SOFT')).toEqual(new Set([30]))
-    expect(scanAxes('a { font-variation-settings: normal }').dynamic).toBe(false)
-  })
-
-  it('treats a value it cannot read as dynamic', () => {
-    for (const s of [
-      'a { font-variation-settings: var(--axes) }',
-      `el.style.fontVariationSettings = \`"SOFT" \${n}\``,
-      'style={{ fontVariationSettings: axes }}',
-      "el.style.setProperty('font-variation-settings', v)",
-    ]) {
-      expect(scanAxes(s).dynamic, s).toBe(true)
-    }
-  })
+  registerAxisScanTests()
 
   it('pins unmentioned custom axes to their default and single values to that value, never registered ones', () => {
     expect(pinned([SOFT, WONK, WGHT, OPSZ], {}, scanAxes(''))).toEqual({ SOFT: 0, WONK: 1 })
@@ -390,3 +245,164 @@ describe('axes', () => {
 it('toRange() runs code points together, sorted and without repeats', () => {
   expect(toRange('cabaz')).toBe('U+0061-0063,U+007A')
 })
+
+function registerFontSubsetTests(opts, getCacheDir) {
+  it('subsets per range, adds one fallback face, preloads the body face only, within budget', async () => {
+    const out = await createFontBuild(opts).build({
+      root: '/',
+      cacheDir: getCacheDir(),
+      url: (n) => `/assets/${n}`,
+    })
+    expect(out.files.map((f) => f.name.replace(/-[0-9a-f]{8}\.woff2$/, ''))).toEqual([
+      'inter-400-latin',
+      'inter-400-latin-ext',
+      'inter-700-latin',
+      'inter-700-latin-ext',
+    ])
+    for (const f of out.files) expect(new TextDecoder().decode(f.bytes.subarray(0, 4))).toBe('wOF2')
+    const [latin, ext] = out.files
+    expect(ext.bytes.length).toBeLessThan(latin.bytes.length / 2) // the source is latin-only: latin-ext keeps little
+
+    const rules = out.css.trim().split('\n')
+    expect(rules).toHaveLength(5)
+    expect(rules[0]).toBe(
+      `@font-face{font-family:"Inter";src:url(/assets/${latin.name}) format("woff2");font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}`,
+    )
+    expect(rules[2]).toContain('font-weight:700')
+    expect(rules[4]).toBe(
+      '@font-face{font-family:"Inter Fallback";src:local("Arial");size-adjust:107.12%;ascent-override:90.44%;descent-override:22.52%;line-gap-override:0%}',
+    )
+
+    expect(out.preloads).toEqual([{ href: `/assets/${latin.name}`, type: 'font/woff2' }])
+    expect(out.metrics.Inter).toMatchObject({
+      unitsPerEm: 2048,
+      capHeight: 1490 / 2048,
+      xHeight: 1118 / 2048,
+    })
+    expect(out.report.preloadBytes).toBe(latin.bytes.length)
+    expect(out.report.cssBrotli).toBeLessThanOrEqual(BUDGET.cssBrotli)
+    expect(out.report.overBudget).toEqual([])
+
+    const again = await createFontBuild(opts).build({
+      root: '/',
+      cacheDir: getCacheDir(),
+      url: (n) => n,
+    })
+    expect(again.files.map((f) => f.bytes.length)).toEqual(out.files.map((f) => f.bytes.length))
+    expect(readdirSync(getCacheDir())).toHaveLength(4) // the second build read the cache
+  })
+}
+
+function registerFontTrimmingTests(opts, getCacheDir) {
+  describe('trimming', () => {
+    const body = { fonts: { body: opts.fonts.body }, subsets: ['latin'] }
+    registerTrimCoverageTests(body, getCacheDir)
+
+    it('moves the characters the source uses into the core', async () => {
+      const out = await createFontBuild({ ...body, trim: true }).build({
+        root: '/',
+        cacheDir: getCacheDir(),
+        url: (n) => n,
+        source: '<p>Café ñ 日本</p>',
+      })
+      const [core, rest] = [...out.css.matchAll(/unicode-range:([^}]+)/g)].map((m) =>
+        rangeText(m[1]),
+      )
+      expect(core).toContain('\u00e9')
+      expect(core).toContain('\u00f1')
+      expect(core).not.toContain('日')
+      expect(rest).not.toContain('\u00e9')
+    })
+
+    it('stays off in dev and with trim: false: one file per subset, its full range', async () => {
+      for (const run of [
+        { trim: true, dev: true },
+        { trim: false, dev: false },
+      ]) {
+        const out = await createFontBuild({ ...body, trim: run.trim }).build({
+          root: '/',
+          cacheDir: getCacheDir(),
+          url: (n) => n,
+          dev: run.dev,
+        })
+        expect(out.files).toHaveLength(1)
+        expect(out.css).toContain('unicode-range:U+0000-00FF,U+0131')
+      }
+    })
+
+    it('leaves X022 to builds: dev ships no trimmed face to measure', async () => {
+      const many = Object.fromEntries(
+        [400, 500, 600, 700, 800, 900].map((w) => [
+          `r${w}`,
+          { ...opts.fonts.body, src: inter(w), weight: w, preload: true },
+        ]),
+      )
+      const out = await createFontBuild({ fonts: many, subsets: ['latin'] }).build({
+        root: '/',
+        cacheDir: getCacheDir(),
+        url: (n) => n,
+        dev: true,
+      })
+      expect(out.report.overBudget).toEqual([])
+    })
+  })
+}
+
+function registerTrimCoverageTests(body, getCacheDir) {
+  it('splits latin into a preloaded core and an on-demand rest that together cover the whole subset', async () => {
+    const out = await createFontBuild({ ...body, trim: true }).build({
+      root: '/',
+      cacheDir: getCacheDir(),
+      url: (n) => n,
+    })
+    const [core] = out.files
+    expect(out.files.map((f) => f.name.replace(/-[0-9a-f]{8}\.woff2$/, ''))).toEqual([
+      'inter-400-latin',
+      'inter-400-latin-rest',
+    ])
+    expect(out.preloads).toEqual([{ href: core.name, type: 'font/woff2' }])
+    const ranges = [...out.css.matchAll(/unicode-range:([^}]+)/g)].map((m) => rangeText(m[1]))
+    expect(ranges).toHaveLength(2)
+    expect(ranges[0]).toContain('a')
+    expect(ranges[0]).toContain('\u2019')
+    expect(ranges[0]).not.toContain('\u00e9')
+    expect(ranges[1]).toContain('\u00e9')
+    expect(Array.from(ranges[0]).filter((c) => ranges[1].includes(c))).toEqual([])
+    expect(Array.from(ranges.join('')).sort().join('')).toBe(
+      Array.from(rangeText(RANGES.latin)).sort().join(''),
+    )
+    const all = await createFontBuild({ ...body, trim: false }).build({
+      root: '/',
+      cacheDir: getCacheDir(),
+      url: (n) => n,
+    })
+    expect(core.bytes.length).toBeLessThan(all.files[0].bytes.length * 0.8)
+  })
+}
+
+function registerAxisScanTests() {
+  it('reads literal settings from CSS, JSX styles and Tailwind classes', () => {
+    const css = scanAxes('.a { font-variation-settings: "SOFT" 60, "WONK" 0; color: red }')
+    expect(css.dynamic).toBe(false)
+    expect(css.values.get('SOFT')).toEqual(new Set([60]))
+    expect(css.values.get('WONK')).toEqual(new Set([0]))
+    const jsx = scanAxes(`<p style={{ fontVariationSettings: '"GRAD" 150' }} />`)
+    expect(jsx).toMatchObject({ dynamic: false })
+    expect(jsx.values.get('GRAD')).toEqual(new Set([150]))
+    const tw = scanAxes(`<p class="[font-variation-settings:'SOFT'_30] text-lg" />`)
+    expect(tw).toMatchObject({ dynamic: false })
+    expect(tw.values.get('SOFT')).toEqual(new Set([30]))
+    expect(scanAxes('a { font-variation-settings: normal }').dynamic).toBe(false)
+  })
+
+  it('treats a value it cannot read as dynamic', () => {
+    for (const s of [
+      'a { font-variation-settings: var(--axes) }',
+      `el.style.fontVariationSettings = \`"SOFT" \${n}\``,
+      'style={{ fontVariationSettings: axes }}',
+      "el.style.setProperty('font-variation-settings', v)",
+    ]) {
+      expect(scanAxes(s).dynamic, s).toBe(true)
+    }
+  })
+}
