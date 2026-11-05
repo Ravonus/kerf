@@ -52,6 +52,18 @@ export default { fetch: (request, env) => env.HUB.get(env.HUB.idFromName(new URL
     expect(JSON.parse(await hit('/state?h=a')).got).toEqual(['hello'])
   })
 
+  registerSocketRecovery()
+
+  test('a refused publish is an error the hub can see', async () => {
+    const namespace = {
+      idFromName: (n: string) => n,
+      get: () => ({ fetch: () => Promise.resolve(new Response(null, { status: 500 })) }),
+    }
+    await expect(durableObjectBus({ namespace }).publish('c', 'm')).rejects.toThrow('500')
+  })
+})
+
+function registerSocketRecovery() {
   test('a lost socket is a gap, then a redial; messages flow again; `close` stops it', async () => {
     vi.useFakeTimers()
     type Listener = (e: { data?: unknown }) => void
@@ -104,12 +116,4 @@ export default { fetch: (request, env) => env.HUB.get(env.HUB.idFromName(new URL
     expect(sockets[1]!.close).toHaveBeenCalledWith(1000)
     vi.useRealTimers()
   })
-
-  test('a refused publish is an error the hub can see', async () => {
-    const namespace = {
-      idFromName: (n: string) => n,
-      get: () => ({ fetch: () => Promise.resolve(new Response(null, { status: 500 })) }),
-    }
-    await expect(durableObjectBus({ namespace }).publish('c', 'm')).rejects.toThrow('500')
-  })
-})
+}
