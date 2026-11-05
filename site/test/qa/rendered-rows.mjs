@@ -2,11 +2,9 @@
 export function measureBlock(pre) {
   const ctx = document.createElement('canvas').getContext('2d')
   const box = pre.getBoundingClientRect()
-  const preStyle = getComputedStyle(pre)
-  const scrollable =
-    pre.tabIndex >= 0 &&
-    /^(auto|scroll)$/.test(preStyle.overflowX) &&
-    pre.scrollWidth > pre.clientWidth
+  const overflow = getComputedStyle(pre).overflowX
+  const canScroll =
+    pre.tabIndex >= 0 && /^(auto|scroll)$/.test(overflow) && pre.scrollWidth > pre.clientWidth
   let obstructed = false,
     ancestorLeft = -Infinity,
     ancestorRight = Infinity
@@ -22,7 +20,7 @@ export function measureBlock(pre) {
     element.checkVisibility({ visibilityProperty: true, opacityProperty: true })
   return {
     missing: !pre.querySelector('[data-part="line"]') && !!pre.textContent.trim(),
-    scrollable,
+    scrollable: canScroll,
     obstructed,
     lines: [...pre.querySelectorAll('[data-part="line"]')].filter(visible).map((line, index) => {
       const style = getComputedStyle(line)
@@ -70,7 +68,10 @@ export function measureBlock(pre) {
         clippedRight: glyphs.some((g) => g.right > box.right + 1),
         fontSize: parseFloat(style.fontSize),
         indent: style.getPropertyValue('--indent').trim(),
-        padding: parseFloat(style.paddingInlineStart),
+        padding:
+          parseFloat(style.marginInlineStart) +
+          parseFloat(style.borderInlineStartWidth) +
+          parseFloat(style.paddingInlineStart),
         textIndent: parseFloat(style.textIndent),
         whiteSpace: style.whiteSpace,
         wrap: style.overflowWrap,
