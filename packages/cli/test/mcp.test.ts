@@ -1,17 +1,32 @@
 import { spawn } from 'node:child_process'
 import { createInterface } from 'node:readline'
 import { describe, expect, it } from 'vitest'
-import { handle } from '../src/mcp.mjs'
+import { handle as handleSource } from '../src/mcp.mjs'
 import { bin, fixture, project, spreadBug } from './helpers.mjs'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+type Reply = {
+  result: {
+    protocolVersion: string
+    tools: { name: string; inputSchema: { type: string } }[]
+    content: { text: string }[]
+    isError: boolean
+    structuredContent: { tasks: { name: string }[]; diagnostics: unknown[] }
+  }
+}
+type HandleResponse = { result?: Reply['result']; error?: { code: number } }
+const handle = handleSource as (
+  root: string,
+  message: object,
+) => Promise<HandleResponse | undefined>
+
 /** Talk to a real `weft mcp` process over stdio. */
-function client(root) {
+function client(root: string) {
   const child = spawn(process.execPath, [bin, 'mcp', '--root', root], {
     stdio: ['pipe', 'pipe', 'inherit'],
   })
-  const pending = new Map()
+  const pending = new Map<number, (value: Reply) => void>()
   createInterface({ input: child.stdout }).on('line', (line) => {
     const msg = JSON.parse(line)
     pending.get(msg.id)?.(msg)
@@ -19,14 +34,15 @@ function client(root) {
   })
   let id = 0
   return {
-    request: (method, params) =>
-      new Promise((done) => {
+    request: (method: string, params?: object) =>
+      new Promise<Reply>((done) => {
         pending.set(++id, done)
         child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id, method, params })}\n`)
       }),
-    notify: (method) => child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method })}\n`),
+    notify: (method: string) =>
+      child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method })}\n`),
     close: () =>
-      new Promise((done) => {
+      new Promise<number | null>((done) => {
         child.on('exit', done)
         child.stdin.end()
       }),
@@ -76,7 +92,7 @@ describe('weft mcp (stdio)', () => {
     for (const t of list.result.tools) expect(t.inputSchema.type).toBe('object')
 
     const rules = await c.request('tools/call', { name: 'docs', arguments: { topic: 'rules' } })
-    expect(rules.result.content[0].text).toContain('State is a box')
+    expect(rules.result.content[0]!.text).toContain('State is a box')
 
     const checked = await c.request('tools/call', { name: 'check', arguments: {} })
     expect(checked.result.isError).toBe(false)
@@ -84,7 +100,7 @@ describe('weft mcp (stdio)', () => {
       ok: true,
       summary: { files: 6, errors: 0 },
     })
-    expect(JSON.parse(checked.result.content[0].text)).toEqual(checked.result.structuredContent)
+    expect(JSON.parse(checked.result.content[0]!.text)).toEqual(checked.result.structuredContent)
 
     const listed = await c.request('tools/call', { name: 'tasks', arguments: {} })
     expect(listed.result.structuredContent.tasks.map((t) => t.name)).toContain('check')
@@ -111,39 +127,35 @@ describe('weft mcp (stdio)', () => {
 describe('JSON-RPC handling', () => {
   it('negotiates the protocol version and reports errors the MCP way', async () => {
     expect(
-      (
-        await handle(fixture, {
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'initialize',
-          params: { protocolVersion: '1999-01-01' },
-        })
-      ).result.protocolVersion,
+      (await handle(fixture, {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: { protocolVersion: '1999-01-01' },
+      }))!.result!.protocolVersion,
     ).toBe('2025-11-25')
     expect(
       await handle(fixture, { jsonrpc: '2.0', method: 'notifications/cancelled' }),
     ).toBeUndefined()
     expect(
-      (await handle(fixture, { jsonrpc: '2.0', id: 2, method: 'resources/list' })).error.code,
+      (await handle(fixture, { jsonrpc: '2.0', id: 2, method: 'resources/list' }))!.error!.code,
     ).toBe(-32601)
     expect(
-      (
-        await handle(fixture, {
-          jsonrpc: '2.0',
-          id: 3,
-          method: 'tools/call',
-          params: { name: 'nope' },
-        })
-      ).error.code,
+      (await handle(fixture, {
+        jsonrpc: '2.0',
+        id: 3,
+        method: 'tools/call',
+        params: { name: 'nope' },
+      }))!.error!.code,
     ).toBe(-32602)
-    expect((await handle(fixture, { id: 4 })).error.code).toBe(-32600)
+    expect((await handle(fixture, { id: 4 }))!.error!.code).toBe(-32600)
     const bad = await handle(fixture, {
       jsonrpc: '2.0',
       id: 5,
       method: 'tools/call',
       params: { name: 'docs', arguments: { topic: 'hooks' } },
     })
-    expect(bad.result).toMatchObject({
+    expect(bad!.result).toMatchObject({
       isError: true,
       content: [{ text: expect.stringContaining('E_UNKNOWN_TOPIC') }],
     })
