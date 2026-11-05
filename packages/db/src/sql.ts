@@ -42,6 +42,68 @@ function ident(dialect: string) {
   }
 }
 
+function listSql<Row>(
+  target: SqlTarget,
+  spec: SqlSpec,
+  q: (name: string) => string,
+  bind: (params: unknown[]) => (value: unknown) => string,
+  read: (text: string, params: unknown[]) => Promise<Row[]>,
+  table: string,
+  select: string,
+  idColumn: string,
+): ListSource<Row>['list'] {
+  return async function list(p: ListParams) {
+    const qp = plan(spec, p)
+    const params: unknown[] = []
+    const put = bind(params)
+    const parts = qp.where.map((w) => {
+      const some = w.values.filter((v) => v !== null)
+      const hit =
+        some.length === 1
+          ? `${q(w.column)} = ${put(some[0])}`
+          : some.length
+            ? `${q(w.column)} in (${some.map(put).join(', ')})`
+            : ''
+      return w.values.includes(null) ? `(${hit ? `${hit} or ` : ''}${q(w.column)} is null)` : hit
+    })
+    if (qp.search) {
+      const text = likeOf(qp.search.text)
+      parts.push(
+        `(${qp.search.columns.map((c) => `lower(${q(c)}) like ${put(text)} escape '!'`).join(' or ')})`,
+      )
+    }
+    const filtered = [...parts],
+      mark = params.length // what the count binds: the keyset isn't part of it
+    const cmp = qp.sort?.dir === 'desc' ? '<' : '>'
+    if (p.after) {
+      const [value, id] = p.after
+      const col = qp.sort && q(qp.sort.column)
+      parts.push(
+        col
+          ? `(${col} ${cmp} ${put(value)} or (${col} = ${put(value)} and ${idColumn} ${cmp} ${put(id)}))`
+          : `${idColumn} > ${put(id)}`,
+      )
+    }
+    const where = (conditions: string[]) =>
+      conditions.length ? ` where ${conditions.join(' and ')}` : ''
+    const dir = qp.sort?.dir === 'desc' ? 'desc' : 'asc'
+    const order = qp.sort ? `${q(qp.sort.column)} ${dir}, ${idColumn} ${dir}` : `${idColumn} asc`
+    const cursor = p.mode === 'cursor'
+    const counted = params.slice(0, mark)
+    const rows = await read(
+      `select ${select} from ${table}${where(parts)} order by ${order} limit ${Math.trunc(cursor ? p.limit + 1 : p.limit)} offset ${Math.trunc(p.offset)}`,
+      params,
+    )
+    const total = cursor
+      ? undefined
+      : Number(
+          (await target.query(`select count(*) as n from ${table}${where(filtered)}`, counted))[0]!
+            .n,
+        )
+    return pageOf(rows, p, { sort: qp.sort?.field, id: qp.id.field }, total)
+  }
+}
+
 /** A `ListSource` over one table, as bound SQL. */
 export function sqlSource<Row = Record<string, unknown>>(
   target: SqlTarget,
@@ -68,56 +130,7 @@ export function sqlSource<Row = Record<string, unknown>>(
     ).then((r) => r[0] ?? null)
   }
   return {
-    async list(p: ListParams) {
-      const qp = plan(spec, p)
-      const params: unknown[] = []
-      const put = bind(params)
-      const parts = qp.where.map((w) => {
-        const some = w.values.filter((v) => v !== null)
-        const hit =
-          some.length === 1
-            ? `${q(w.column)} = ${put(some[0])}`
-            : some.length
-              ? `${q(w.column)} in (${some.map(put).join(', ')})`
-              : ''
-        return w.values.includes(null) ? `(${hit ? `${hit} or ` : ''}${q(w.column)} is null)` : hit
-      })
-      if (qp.search) {
-        const text = likeOf(qp.search.text)
-        parts.push(
-          `(${qp.search.columns.map((c) => `lower(${q(c)}) like ${put(text)} escape '!'`).join(' or ')})`,
-        )
-      }
-      const filtered = [...parts],
-        mark = params.length // what the count binds: the keyset isn't part of it
-      const cmp = qp.sort?.dir === 'desc' ? '<' : '>'
-      if (p.after) {
-        const [value, id] = p.after
-        const col = qp.sort && q(qp.sort.column)
-        parts.push(
-          col
-            ? `(${col} ${cmp} ${put(value)} or (${col} = ${put(value)} and ${idColumn} ${cmp} ${put(id)}))`
-            : `${idColumn} > ${put(id)}`,
-        )
-      }
-      const where = (list: string[]) => (list.length ? ` where ${list.join(' and ')}` : '')
-      const dir = qp.sort?.dir === 'desc' ? 'desc' : 'asc'
-      const order = qp.sort ? `${q(qp.sort.column)} ${dir}, ${idColumn} ${dir}` : `${idColumn} asc`
-      const cursor = p.mode === 'cursor'
-      const counted = params.slice(0, mark)
-      const rows = await read(
-        `select ${select} from ${table}${where(parts)} order by ${order} limit ${Math.trunc(cursor ? p.limit + 1 : p.limit)} offset ${Math.trunc(p.offset)}`,
-        params,
-      )
-      const total = cursor
-        ? undefined
-        : Number(
-            (
-              await target.query(`select count(*) as n from ${table}${where(filtered)}`, counted)
-            )[0]!.n,
-          )
-      return pageOf(rows, p, { sort: qp.sort?.field, id: qp.id.field }, total)
-    },
+    list: listSql(target, spec, q, bind, read, table, select, idColumn),
     get: byId,
     async create(data) {
       const row = written(spec, data, true)
