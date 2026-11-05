@@ -113,9 +113,12 @@ describe.each([
         return <Card item={item} />
       }
     `
-    const local = await run(app({ ...goalOnly, 'src/goal.tsx': page("class Item { private marker = 0; name = 'one' }") }, { version }))
+    const itemType = "class Item { private marker = 0; name = 'one' }"
+    const local = await run(
+      app({ ...goalOnly, 'src/goal.tsx': page(itemType) }, { version }),
+    )
     expect(local.list).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'W085' })]))
-    const visible = page('').replace('function Card', "class Item { private marker = 0; name = 'one' }; function Card")
+    const visible = page('').replace('function Card', `${itemType}; function Card`)
     const repaired = await run(app({ ...goalOnly, 'src/goal.tsx': visible }, { version }))
     expect(repaired.list.filter((finding: { code: string }) => finding.code === 'W085')).toEqual([])
   }, 60_000)
