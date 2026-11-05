@@ -15,6 +15,7 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import ts from 'typescript'
 import { genEngineData } from './gendata.mjs'
+import { moveFunctions } from './specialize/move.mjs'
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const vendor = path.join(root, 'vendor/pretext/src')
@@ -93,183 +94,6 @@ function foldProfile(src, engine, profile) {
   return { src, n }
 }
 
-// 3. move functions: returns { base, lazy } sources for one module. A requested function leaves a stub in the
-// base; a helper that only moved code references (and that upstream does not export) moves with it.
-function moveFunctions(file, src, moves /* name -> pack */) {
-  const sf = ts.createSourceFile(file, src, ts.ScriptTarget.Latest, true)
-  const decls = []
-  for (const st of sf.statements) {
-    let names = [],
-      value = true
-    if (ts.isFunctionDeclaration(st) && st.name) names = [st.name.text]
-    else if (ts.isVariableStatement(st))
-      names = st.declarationList.declarations
-        .filter((d) => ts.isIdentifier(d.name))
-        .map((d) => d.name.text)
-    else if (
-      ts.isTypeAliasDeclaration(st) ||
-      ts.isInterfaceDeclaration(st) ||
-      ts.isClassDeclaration(st)
-    ) {
-      names = st.name ? [st.name.text] : []
-      value = ts.isClassDeclaration(st)
-    }
-    if (!names.length) continue
-    const refs = new Set()
-    const walk = (n) => {
-      if (
-        ts.isIdentifier(n) &&
-        !(ts.isPropertyAccessExpression(n.parent) && n.parent.name === n) &&
-        !(ts.isPropertyAssignment(n.parent) && n.parent.name === n)
-      )
-        refs.add(n.text)
-      ts.forEachChild(n, walk)
-    }
-    walk(st)
-    for (const nm of names) refs.delete(nm)
-    // module-level bindings this declaration assigns (a moved copy could not: imports are read-only)
-    const writes = new Set()
-    const ww = (n) => {
-      if (
-        ts.isBinaryExpression(n) &&
-        n.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
-        n.operatorToken.kind <= ts.SyntaxKind.LastAssignment &&
-        ts.isIdentifier(n.left)
-      )
-        writes.add(n.left.text)
-      if (
-        (ts.isPrefixUnaryExpression(n) || ts.isPostfixUnaryExpression(n)) &&
-        ts.isIdentifier(n.operand) &&
-        (n.operator === ts.SyntaxKind.PlusPlusToken || n.operator === ts.SyntaxKind.MinusMinusToken)
-      )
-        writes.add(n.operand.text)
-      ts.forEachChild(n, ww)
-    }
-    if (ts.isFunctionDeclaration(st)) ww(st)
-    decls.push({
-      st,
-      names,
-      value,
-      refs,
-      writes,
-      exported: !!st.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword),
-      pack: ts.isFunctionDeclaration(st) ? moves[st.name.text] : undefined,
-      requested: ts.isFunctionDeclaration(st) && !!moves[st.name?.text],
-    })
-  }
-  // a function that assigns a module-level binding staying in the base cannot move (its copy would assign
-  // an import); drop such requests until none is left
-  const topLet = new Map()
-  for (const d of decls) if (ts.isVariableStatement(d.st)) for (const n of d.names) topLet.set(n, d)
-  for (let changed = true; changed;) {
-    changed = false
-    for (let k = 0; k < 2; k++)
-      for (let c2 = true; c2;) {
-        c2 = false
-        for (const d of decls) {
-          if (d.pack || !d.value || d.exported) continue
-          const referrers = decls.filter((o) => o !== d && d.names.some((n) => o.refs.has(n)))
-          if (!referrers.length) continue
-          const packs = new Set(referrers.map((o) => o.pack))
-          if (packs.size === 1 && !packs.has(undefined)) {
-            d.pack = [...packs][0]
-            c2 = true
-            changed = true
-          }
-        }
-      }
-    for (const d of decls) {
-      if (!d.pack) continue
-      for (const w of d.writes) {
-        const owner = topLet.get(w)
-        if (owner && owner.pack !== d.pack) {
-          d.pack = undefined
-          d.requested = false
-          changed = true
-          break
-        }
-      }
-    }
-    // helpers that moved only because of a function that no longer moves come back
-    for (const d of decls) {
-      if (!d.pack || d.requested) continue
-      const referrers = decls.filter((o) => o !== d && d.names.some((n) => o.refs.has(n)))
-      if (referrers.some((o) => o.pack !== d.pack)) {
-        d.pack = undefined
-        changed = true
-      }
-    }
-    if (changed) continue
-    break
-  }
-  for (let changed = false; changed;) {
-    changed = false
-    for (const d of decls) {
-      if (d.pack || !d.value || d.exported) continue
-      const referrers = decls.filter((o) => o !== d && d.names.some((n) => o.refs.has(n)))
-      if (!referrers.length) continue
-      const packs = new Set(referrers.map((o) => o.pack))
-      if (packs.size === 1 && !packs.has(undefined)) {
-        d.pack = [...packs][0]
-        changed = true
-      }
-    }
-  }
-  const edits = [],
-    moved = {},
-    topNames = [],
-    stubs = []
-  for (const d of decls) {
-    const st = d.st
-    if (d.pack) {
-      const text = src.slice(st.getStart(sf), st.end).replace(/^export\s+/, '')
-      ;(moved[d.pack] ??= []).push(text)
-      if (d.requested) {
-        const name = st.name.text
-        stubs.push({ n: name, pack: d.pack })
-        const params = st.parameters.map((p) => p.getText(sf).replace(/\s*=[^,]*$/, '')).join(', ')
-        const ret = st.type ? st.type.getText(sf) : 'any'
-        edits.push([
-          st.getStart(sf),
-          st.end,
-          `export function ${name}(${params}): ${ret} {\n  return (__packs.${name} ?? __missing('${d.pack}', '${name}'))(${st.parameters.map((p) => p.name.getText(sf)).join(', ')})\n}`,
-        ])
-      } else
-        edits.push([
-          st.getStart(sf),
-          st.end,
-          `// moved to the "${d.pack}" pack: ${d.names.join(', ')}`,
-        ])
-      continue
-    }
-    topNames.push(...d.names.map((n) => ({ n, type: !d.value })))
-    if (!d.exported) edits.push([st.getStart(sf), st.getStart(sf), 'export '])
-  }
-  edits.sort((a, b) => b[0] - a[0])
-  let base = src
-  for (const [s0, e, t] of edits) base = base.slice(0, s0) + t + base.slice(e)
-  const imports = sf.statements.filter(ts.isImportDeclaration).map((d) => d.getText(sf))
-  const lazy = {}
-  for (const [pack, texts] of Object.entries(moved)) {
-    const mod = './' + file.replace(/\.ts$/, '.js')
-    const values = [
-      ...topNames.filter((x) => !x.type).map((x) => x.n),
-      ...stubs.filter((x) => x.pack !== pack).map((x) => x.n),
-    ]
-    const types = topNames.filter((x) => x.type).map((x) => x.n)
-    lazy[pack] =
-      [
-        `// Moved here from ${file} by scripts/specialize.mjs (pack "${pack}"). Upstream code, unchanged.`,
-        ...imports,
-        values.length ? `import { ${values.join(', ')} } from '${mod}'` : '',
-        types.length ? `import type { ${types.join(', ')} } from '${mod}'` : '',
-        ...texts.map((t) => 'export ' + t),
-      ].join('\n') + '\n'
-  }
-  if (Object.keys(moved).length) base = `import { __packs, __missing } from './packs.js'\n` + base
-  return { base, lazy }
-}
-
 // Modules layout() runs: never split by coverage, since layout must not throw.
 const LAYOUT_TIME = new Set(['line-break.ts', 'layout.ts', 'line-text.ts', 'graphemes.ts'])
 // Called by the specialiser's own code or the provider.
@@ -294,85 +118,8 @@ export async function specialize(engine, { useCoverage = true } = {}) {
   fs.rmSync(out, { recursive: true, force: true })
   fs.mkdirSync(path.join(out, 'generated'), { recursive: true })
   const { profile } = readProfile(engine)
-  const files = fs.readdirSync(vendor).filter((f) => f.endsWith('.ts') && f !== 'rich-inline.ts')
-  const packFiles = {} // pack -> [file]
-  let folds = 0
   foldedKeys.clear()
-  const foundMoves = new Set()
-  for (const f of files) {
-    let src = fs.readFileSync(path.join(vendor, f), 'utf8')
-    const r = foldProfile(src, engine, profile)
-    src = r.src
-    folds += r.n
-    if (f === 'measurement.ts') {
-      // Every profile field is folded at its reads, so the profile object is never read: build an empty one.
-      src = src.replace(
-        /function buildEngineProfile\(\): EngineProfile \{[\s\S]*?\n\}\n/,
-        engine === 'webkit'
-          ? `function buildEngineProfile(): EngineProfile {\n  return { namesGenericFamiliesByLanguage: !/^(?:Linux|Win32|Haiku|$)/.test(navigator.platform) } as EngineProfile\n}\n`
-          : `function buildEngineProfile(): EngineProfile {\n  return {} as EngineProfile\n}\n`,
-      )
-      if (engine === 'webkit') {
-        // Resolve the language's generic families on the first font string that names a generic keyword,
-        // not on the first measurement: getCanvasFont returns a font without one unchanged, so this is the
-        // same answer, and Latin pages whose fonts name families never load the families pack.
-        const a =
-          'genericFamilies: language !== null && profile.namesGenericFamiliesByLanguage ? getWebKitGenericFamilies(language, context) : null,'
-        if (!src.includes(a)) throw new Error('webkit families patch: anchor missing')
-        src = src.replace(
-          a,
-          'genericFamilies: language !== null && profile.namesGenericFamiliesByLanguage ? (undefined as unknown as string[]) : null,',
-        )
-        const b =
-          'const canvasFont = state.genericFamilies === null ? font : getCanvasFont(font, state.genericFamilies)'
-        if (!src.includes(b)) throw new Error('webkit families patch: anchor 2 missing')
-        src = src.replace(
-          b,
-          'const canvasFont = state.genericFamilies === null || !genericKeywordRe.test(font) ? font : getCanvasFont(font, state.genericFamilies ??= getWebKitGenericFamilies(state.language!, state.context))',
-        )
-        src += `\n// specialize.mjs: a superset test for genericKeywords (getCanvasFont decides exactly).\nexport const genericKeywordRe = new RegExp('(?:^|[\\\\s,])(?:' + genericKeywords.join('|') + ')\\\\s*(?:,|$)', 'i')\n`
-      }
-    }
-    // reset hooks for caches over engine data, called when the scripts pack installs the full tables
-    const resets = {
-      'line-breaks.ts':
-        'classRuns = null; classRemaps = null; for (const k in breakRules) delete (breakRules as Record<string, unknown>)[k]; webkitLineRules.clear()',
-      'graphemes.ts':
-        'for (const k in graphemeRules) delete (graphemeRules as Record<string, unknown>)[k]',
-      'prepare.ts': 'scriptClasses = null',
-      'gecko-line-breaks.ts': 'eastAsianWidths = null; lineData = null',
-    }
-    if (resets[f])
-      src += `\n// specialize.mjs: drop what was unpacked from the base tables once the full tables are installed.\nexport function __resetEngineData(): void { ${resets[f]} }\n`
-    const moves = {}
-    for (const [pack, mods] of Object.entries(MOVES))
-      for (const fn of mods[f] ?? []) moves[fn] = pack
-    // coverage-guided: prepare-time functions that never ran on in-alphabet text go to "rare"
-    if (rare && !LAYOUT_TIME.has(f)) {
-      for (const st of ts.createSourceFile(f, src, ts.ScriptTarget.Latest, true).statements) {
-        if (
-          ts.isFunctionDeclaration(st) &&
-          st.name &&
-          st.body &&
-          !rare.has(st.name.text) &&
-          !moves[st.name.text] &&
-          !KEEP.has(st.name.text)
-        )
-          moves[st.name.text] = 'rare'
-      }
-    }
-    if (engine !== 'webkit') delete moves.getWebKitGenericFamilies
-    for (const st of ts.createSourceFile(f, src, ts.ScriptTarget.Latest, true).statements)
-      if (ts.isFunctionDeclaration(st) && st.name && moves[st.name.text])
-        foundMoves.add(f + ':' + st.name.text)
-    const { base, lazy } = moveFunctions(f, src, moves)
-    fs.writeFileSync(path.join(out, f), base)
-    for (const [pack, text] of Object.entries(lazy)) {
-      const lf = f.replace(/\.ts$/, `.${pack}.ts`)
-      fs.writeFileSync(path.join(out, lf), text)
-      ;(packFiles[pack] ??= []).push(lf)
-    }
-  }
+  const { packFiles, folds, foundMoves } = writeModules(engine, profile, rare, out)
   // An upstream bump that renames a moved function or drops a profile field must fail here, not ship.
   for (const [pack, mods] of Object.entries(MOVES))
     for (const [mf, fns] of Object.entries(mods))
@@ -394,26 +141,12 @@ export async function specialize(engine, { useCoverage = true } = {}) {
     path.join(vendor, 'generated/webkit-generic-families.ts'),
     path.join(out, 'generated/webkit-generic-families.ts'),
   )
-  // 2. engine data: base (restricted, mutable) + full (installed by the scripts pack)
-  const typesHead = fs
-    .readFileSync(path.join(vendor, 'generated/engine-break-data.ts'), 'utf8')
-    .split('\n')
-    .filter((l) => l.startsWith('export type'))
-    .join('\n')
-  const baseData = await genEngineData({ upstreamDir: vendor, engine, alphabet: ALPHABET })
-  const fullData = await genEngineData({ upstreamDir: vendor, engine, alphabet: null })
-  const names = [...baseData.src.matchAll(/^export const (\w+)/gm)].map((m) => m[1])
-  fs.writeFileSync(
-    path.join(out, 'generated/engine-break-data.ts'),
-    [
-      typesHead,
-      "// The base alphabet's tables. `let`, so installEngineData() can swap in the full ones; ES module",
-      '// bindings are live, so every reader sees the swap.',
-      baseData.src.replace(/^export const (\w+) =/gm, (_, n) => `export let ${n}: any =`),
-      `export function installEngineData(d: any): void { ${names.map((n) => `${n} = d.${n}`).join('; ')} }`,
-    ].join('\n') + '\n',
-  )
-  fs.writeFileSync(path.join(out, 'generated/engine-break-data.full.ts'), fullData.src)
+  const baseData = await writeEngineData(engine, out)
+  writePackEntries(engine, out, packFiles)
+  return { engine, folds, base: baseData.stats, packs: Object.keys(packFiles) }
+}
+
+function writePackEntries(engine, out, packFiles) {
   // registry + pack entries
   fs.writeFileSync(
     path.join(out, 'packs.ts'),
@@ -465,7 +198,116 @@ export function __missing(pack: string, fn: string): never { throw new PackMissi
         path.join(out, `pack-${pack}.ts`),
         `// specialize.mjs: nothing to load for ${engine}.\nexport {}\n`,
       )
-  return { engine, folds, base: baseData.stats, packs: Object.keys(packFiles) }
+}
+
+async function writeEngineData(engine, out) {
+  // 2. engine data: base (restricted, mutable) + full (installed by the scripts pack)
+  const typesHead = fs
+    .readFileSync(path.join(vendor, 'generated/engine-break-data.ts'), 'utf8')
+    .split('\n')
+    .filter((l) => l.startsWith('export type'))
+    .join('\n')
+  const baseData = await genEngineData({ upstreamDir: vendor, engine, alphabet: ALPHABET })
+  const fullData = await genEngineData({ upstreamDir: vendor, engine, alphabet: null })
+  const names = [...baseData.src.matchAll(/^export const (\w+)/gm)].map((m) => m[1])
+  fs.writeFileSync(
+    path.join(out, 'generated/engine-break-data.ts'),
+    [
+      typesHead,
+      "// The base alphabet's tables. `let`, so installEngineData() can swap in the full ones; ES module",
+      '// bindings are live, so every reader sees the swap.',
+      baseData.src.replace(/^export const (\w+) =/gm, (_, n) => `export let ${n}: any =`),
+      `export function installEngineData(d: any): void { ${names.map((n) => `${n} = d.${n}`).join('; ')} }`,
+    ].join('\n') + '\n',
+  )
+  fs.writeFileSync(path.join(out, 'generated/engine-break-data.full.ts'), fullData.src)
+  return baseData
+}
+
+function writeModules(engine, profile, rare, out) {
+  const files = fs.readdirSync(vendor).filter((f) => f.endsWith('.ts') && f !== 'rich-inline.ts')
+  const packFiles = {} // pack -> [file]
+  const folds = { count: 0 }
+  const foundMoves = new Set()
+  for (const f of files) {
+    const { src, moves } = prepareModule(f, engine, profile, rare, folds, foundMoves)
+    const { base, lazy } = moveFunctions(f, src, moves)
+    fs.writeFileSync(path.join(out, f), base)
+    for (const [pack, text] of Object.entries(lazy)) {
+      const lf = f.replace(/\.ts$/, `.${pack}.ts`)
+      fs.writeFileSync(path.join(out, lf), text)
+      ;(packFiles[pack] ??= []).push(lf)
+    }
+  }
+  return { packFiles, folds: folds.count, foundMoves }
+}
+
+function prepareModule(f, engine, profile, rare, folds, foundMoves) {
+  let src = fs.readFileSync(path.join(vendor, f), 'utf8')
+  const r = foldProfile(src, engine, profile)
+  src = r.src
+  folds.count += r.n
+  if (f === 'measurement.ts') {
+    // Every profile field is folded at its reads, so the profile object is never read: build an empty one.
+    src = src.replace(
+      /function buildEngineProfile\(\): EngineProfile \{[\s\S]*?\n\}\n/,
+      engine === 'webkit'
+        ? `function buildEngineProfile(): EngineProfile {\n  return { namesGenericFamiliesByLanguage: !/^(?:Linux|Win32|Haiku|$)/.test(navigator.platform) } as EngineProfile\n}\n`
+        : `function buildEngineProfile(): EngineProfile {\n  return {} as EngineProfile\n}\n`,
+    )
+    if (engine === 'webkit') {
+      // Resolve the language's generic families on the first font string that names a generic keyword,
+      // not on the first measurement: getCanvasFont returns a font without one unchanged, so this is the
+      // same answer, and Latin pages whose fonts name families never load the families pack.
+      const a =
+        'genericFamilies: language !== null && profile.namesGenericFamiliesByLanguage ? getWebKitGenericFamilies(language, context) : null,'
+      if (!src.includes(a)) throw new Error('webkit families patch: anchor missing')
+      src = src.replace(
+        a,
+        'genericFamilies: language !== null && profile.namesGenericFamiliesByLanguage ? (undefined as unknown as string[]) : null,',
+      )
+      const b =
+        'const canvasFont = state.genericFamilies === null ? font : getCanvasFont(font, state.genericFamilies)'
+      if (!src.includes(b)) throw new Error('webkit families patch: anchor 2 missing')
+      src = src.replace(
+        b,
+        'const canvasFont = state.genericFamilies === null || !genericKeywordRe.test(font) ? font : getCanvasFont(font, state.genericFamilies ??= getWebKitGenericFamilies(state.language!, state.context))',
+      )
+      src += `\n// specialize.mjs: a superset test for genericKeywords (getCanvasFont decides exactly).\nexport const genericKeywordRe = new RegExp('(?:^|[\\\\s,])(?:' + genericKeywords.join('|') + ')\\\\s*(?:,|$)', 'i')\n`
+    }
+  }
+  // reset hooks for caches over engine data, called when the scripts pack installs the full tables
+  const resets = {
+    'line-breaks.ts':
+      'classRuns = null; classRemaps = null; for (const k in breakRules) delete (breakRules as Record<string, unknown>)[k]; webkitLineRules.clear()',
+    'graphemes.ts':
+      'for (const k in graphemeRules) delete (graphemeRules as Record<string, unknown>)[k]',
+    'prepare.ts': 'scriptClasses = null',
+    'gecko-line-breaks.ts': 'eastAsianWidths = null; lineData = null',
+  }
+  if (resets[f])
+    src += `\n// specialize.mjs: drop what was unpacked from the base tables once the full tables are installed.\nexport function __resetEngineData(): void { ${resets[f]} }\n`
+  const moves = {}
+  for (const [pack, mods] of Object.entries(MOVES)) for (const fn of mods[f] ?? []) moves[fn] = pack
+  // coverage-guided: prepare-time functions that never ran on in-alphabet text go to "rare"
+  if (rare && !LAYOUT_TIME.has(f)) {
+    for (const st of ts.createSourceFile(f, src, ts.ScriptTarget.Latest, true).statements) {
+      if (
+        ts.isFunctionDeclaration(st) &&
+        st.name &&
+        st.body &&
+        !rare.has(st.name.text) &&
+        !moves[st.name.text] &&
+        !KEEP.has(st.name.text)
+      )
+        moves[st.name.text] = 'rare'
+    }
+  }
+  if (engine !== 'webkit') delete moves.getWebKitGenericFamilies
+  for (const st of ts.createSourceFile(f, src, ts.ScriptTarget.Latest, true).statements)
+    if (ts.isFunctionDeclaration(st) && st.name && moves[st.name.text])
+      foundMoves.add(f + ':' + st.name.text)
+  return { src, moves }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
