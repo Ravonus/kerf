@@ -28,7 +28,9 @@ const distinct = new Set([
   'packages/warp/test/critical.browser.test.tsx:walk',
   'benchmarks/compare/design/audit.mjs:walk',
   'evals/gates/ds-exit.mjs:walk',
-  'evals/agent-eval/run.mjs:walk',
+  // These moved from run.mjs: sorted tree hashing and all-entry mutant scans differ from walk.
+  'evals/agent-eval/run/prepare.mjs:walk',
+  'evals/agent-eval/run/grade-tasks.mjs:walk',
   'evals/run-app.mjs:walk',
   'evals/gate.mjs:walk',
   'packages/warp/test/markup.test.tsx:walk',
