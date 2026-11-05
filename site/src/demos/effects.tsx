@@ -30,9 +30,7 @@ export default function Stopwatch() {
   return (
     <Card title="Stopwatch">
       <p>
-        <strong>
-          {seconds.value} s
-        </strong>
+        <strong>{seconds.value} s</strong>
       </p>
       <Button
         onClick={() => (running.value = !running.value)}
