@@ -48,28 +48,7 @@ export function Settings() {
         noValidate
         className="mt-8 max-w-2xl space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-8 dark:border-slate-800 dark:bg-slate-900"
       >
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Field label="Full name" htmlFor="name">
-            <input
-              id="name"
-              className={inputCls}
-              value={form.name}
-              onChange={(e) => set('name', e.target.value)}
-            />
-          </Field>
-          <Field label="Email" htmlFor="email" error={error}>
-            <input
-              id="email"
-              type="text"
-              inputMode="email"
-              className={`${inputCls} ${error ? 'border-red-500 dark:border-red-500' : ''}`}
-              value={form.email}
-              aria-invalid={!!error}
-              aria-describedby={error ? 'email-error' : undefined}
-              onChange={(e) => set('email', e.target.value)}
-            />
-          </Field>
-        </div>
+        {settingsFields(form, error, set)}
         <Field label="Role" htmlFor="role">
           <RoleSelect
             id="role"
@@ -87,17 +66,7 @@ export function Settings() {
             onChange={(e) => set('bio', e.target.value)}
           />
         </Field>
-        <div className="flex items-center justify-between gap-4 rounded-lg bg-slate-50 p-4 dark:bg-slate-950">
-          <div>
-            <label htmlFor="updates" className="text-sm font-medium">
-              Email updates
-            </label>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Product news and billing notices.
-            </p>
-          </div>
-          <Toggle id="updates" checked={form.updates} onCheckedChange={(v) => set('updates', v)} />
-        </div>
+        {settingsUpdates(form, set)}
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit">Save</Button>
           <Button type="button" variant="secondary" onClick={cancel}>
@@ -109,5 +78,55 @@ export function Settings() {
         </div>
       </form>
     </>
+  )
+}
+
+function settingsFields(
+  form: typeof initial,
+  error: string,
+  set: <K extends keyof typeof initial>(k: K, v: (typeof initial)[K]) => void,
+) {
+  return (
+    <div className="grid gap-6 sm:grid-cols-2">
+      <Field label="Full name" htmlFor="name">
+        <input
+          id="name"
+          className={inputCls}
+          value={form.name}
+          onChange={(e) => set('name', e.target.value)}
+        />
+      </Field>
+      <Field label="Email" htmlFor="email" error={error}>
+        <input
+          id="email"
+          type="text"
+          inputMode="email"
+          className={`${inputCls} ${error ? 'border-red-500 dark:border-red-500' : ''}`}
+          value={form.email}
+          aria-invalid={!!error}
+          aria-describedby={error ? 'email-error' : undefined}
+          onChange={(e) => set('email', e.target.value)}
+        />
+      </Field>
+    </div>
+  )
+}
+
+function settingsUpdates(
+  form: typeof initial,
+  set: <K extends keyof typeof initial>(k: K, v: (typeof initial)[K]) => void,
+) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-lg bg-slate-50 p-4 dark:bg-slate-950">
+      <div>
+        <label htmlFor="updates" className="text-sm font-medium">
+          Email updates
+        </label>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Product news and billing notices.
+        </p>
+      </div>
+      <Toggle id="updates" checked={form.updates} onCheckedChange={(v) => set('updates', v)} />
+    </div>
   )
 }

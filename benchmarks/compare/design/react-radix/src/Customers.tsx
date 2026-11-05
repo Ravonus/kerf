@@ -64,54 +64,7 @@ export function Customers() {
           No customers found
         </p>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-          <table className="w-full min-w-170 text-left text-sm">
-            <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:text-slate-400">
-              <tr>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Name
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Email
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Plan
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {shown.map((c) => (
-                <tr key={c.id}>
-                  <td className="px-4 py-3 font-medium">{c.name}</td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{c.email}</td>
-                  <td className="px-4 py-3">{c.plan}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge[c.status]}`}
-                    >
-                      {c.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      variant="secondary"
-                      className="min-h-8 px-3 text-red-700 dark:text-red-400"
-                      onClick={() => setTarget(c)}
-                    >
-                      Delete {c.name}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        customerTable(shown, setTarget)
       )}
 
       <Dialog.Root open={!!target} onOpenChange={(o) => !o && setTarget(null)}>
@@ -140,5 +93,58 @@ export function Customers() {
         </Dialog.Portal>
       </Dialog.Root>
     </>
+  )
+}
+
+function customerTable(shown: Customer[], setTarget: (customer: Customer) => void) {
+  return (
+    <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+      <table className="w-full min-w-170 text-left text-sm">
+        <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <tr>
+            <th scope="col" className="px-4 py-3 font-semibold">
+              Name
+            </th>
+            <th scope="col" className="px-4 py-3 font-semibold">
+              Email
+            </th>
+            <th scope="col" className="px-4 py-3 font-semibold">
+              Plan
+            </th>
+            <th scope="col" className="px-4 py-3 font-semibold">
+              Status
+            </th>
+            <th scope="col" className="px-4 py-3">
+              <span className="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+          {shown.map((c) => (
+            <tr key={c.id}>
+              <td className="px-4 py-3 font-medium">{c.name}</td>
+              <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{c.email}</td>
+              <td className="px-4 py-3">{c.plan}</td>
+              <td className="px-4 py-3">
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge[c.status]}`}
+                >
+                  {c.status}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-right">
+                <Button
+                  variant="secondary"
+                  className="min-h-8 px-3 text-red-700 dark:text-red-400"
+                  onClick={() => setTarget(c)}
+                >
+                  Delete {c.name}
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
