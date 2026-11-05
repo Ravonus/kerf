@@ -2,7 +2,12 @@ import { LineChart } from '@weft-js/warp'
 
 import { REQUESTS_BY_REGION } from '../../world'
 
-import { millions, REGION_LINES, LAUNCH, TARGET } from './shared-dollars'
+import {
+  millions,
+  REGION_LINES,
+  LAUNCH,
+  TARGET,
+} from './shared-dollars'
 
 export const LineChartRequests = () => (
   <LineChart

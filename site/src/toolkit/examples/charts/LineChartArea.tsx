@@ -2,12 +2,18 @@ import { LineChart } from '@weft-js/warp'
 
 import { TRAFFIC } from '../../world'
 
-import { dollars, thousands, COST_LINE } from './shared-dollars'
+import {
+  dollars,
+  thousands,
+  COST_LINE,
+} from './shared-dollars'
 
 export const LineChartArea = () => (
   <LineChart
     title="Monthly bill"
-    description="Filled to zero, so the height means something"
+    description={
+      'Filled to zero, so the height ' + 'means something'
+    }
     data={TRAFFIC}
     x="month"
     xName="Month"

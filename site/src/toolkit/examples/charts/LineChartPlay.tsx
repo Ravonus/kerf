@@ -6,7 +6,11 @@ import { millions, REGION_LINES } from './shared-dollars'
 
 // -- LineChart
 
-export const LineChartPlay = (p: { area?: boolean; zero?: boolean; direct?: boolean }) => (
+export const LineChartPlay = (p: {
+  area?: boolean
+  zero?: boolean
+  direct?: boolean
+}) => (
   <LineChart
     title="Requests by region"
     data={REQUESTS_BY_REGION}

@@ -9,7 +9,10 @@ import { dollars, thousands } from './shared-dollars'
 export const ComboChartRequests = () => (
   <ComboChart
     title="Monthly bill"
-    description="Bars for each month, the line for the three-month average"
+    description={
+      'Bars for each month, the line ' +
+      'for the three-month average'
+    }
     data={TRAFFIC}
     x="month"
     xName="Month"
