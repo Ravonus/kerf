@@ -10,6 +10,9 @@ export const DateRangeFieldPresets = () => (
   <DateRangeField
     label="Period"
     today={TODAY}
-    defaultValue={{ start: '2026-10-01', end: '2026-10-31' }}
+    defaultValue={{
+      start: '2026-10-01',
+      end: '2026-10-31',
+    }}
   />
 )

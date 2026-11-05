@@ -4,7 +4,8 @@ import { TODAY } from './shared-event'
 
 import { REGIONS as _REGIONS } from '../../world'
 
-/** Statements start when the workspace was made, and the current month isn't billed yet. */
+/** Statements start when the workspace was made, and
+ * the current month isn't billed yet. */
 export const MonthPickerRange = () => (
   <MonthPicker
     label="Statement"

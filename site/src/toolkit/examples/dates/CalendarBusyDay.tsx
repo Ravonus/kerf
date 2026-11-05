@@ -1,10 +1,16 @@
 import { Calendar } from '@weft-js/warp'
 
-import { BUSY_NOW, BUSY_TODAY, CALENDARS } from '../../world'
+import {
+  BUSY_NOW,
+  BUSY_TODAY,
+  CALENDARS,
+} from '../../world'
 
 import { useEvents, DAY_VIEWS } from './shared-event'
 
-/** Wednesday's morning runs five meetings into each other: they share the column side by side, in lanes. */
+/** Wednesday's morning runs five meetings into each
+ * other: they share the column side by side, in
+ * lanes. */
 export function CalendarBusyDay() {
   const s = useEvents()
   return (

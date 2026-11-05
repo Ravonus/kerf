@@ -14,8 +14,16 @@ export function MonthPickerInvoice() {
   const month = state<IsoMonth | null>('2026-10')
   return (
     <Stack gap="related">
-      <MonthPicker label="Invoice month" today={TODAY} value={month} max="2026-11" />
-      <Text subtle role="caption">
+      <MonthPicker
+        label="Invoice month"
+        today={TODAY}
+        value={month}
+        max="2026-11"
+      />
+      <Text
+        subtle
+        role="caption"
+      >
         Showing {month.value ?? 'every month'}
       </Text>
     </Stack>

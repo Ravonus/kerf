@@ -4,9 +4,16 @@ import { Cell, REGIONS as _REGIONS } from '../../world'
 import { TODAY } from './shared-event'
 
 export const PeriodPickerStates = () => (
-  <Grid cols={2} gap="group">
+  <Grid
+    cols={2}
+    gap="group"
+  >
     <Cell name="Empty">
-      <PeriodPicker label="Period" today={TODAY} granularity="quarter" />
+      <PeriodPicker
+        label="Period"
+        today={TODAY}
+        granularity="quarter"
+      />
     </Cell>
     <Cell name="Hint">
       <PeriodPicker
@@ -25,10 +32,20 @@ export const PeriodPickerStates = () => (
       />
     </Cell>
     <Cell name="Read-only">
-      <PeriodPicker label="Period" today={TODAY} defaultValue="2026-Q3" readonly />
+      <PeriodPicker
+        label="Period"
+        today={TODAY}
+        defaultValue="2026-Q3"
+        readonly
+      />
     </Cell>
     <Cell name="Disabled">
-      <PeriodPicker label="Period" today={TODAY} defaultValue="2026-Q3" disabled />
+      <PeriodPicker
+        label="Period"
+        today={TODAY}
+        defaultValue="2026-Q3"
+        disabled
+      />
     </Cell>
   </Grid>
 )

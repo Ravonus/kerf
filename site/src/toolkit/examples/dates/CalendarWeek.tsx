@@ -1,6 +1,10 @@
 import { Calendar } from '@weft-js/warp'
 
-import { CAL_NOW, CAL_TODAY, CALENDARS } from '../../world'
+import {
+  CAL_NOW,
+  CAL_TODAY,
+  CALENDARS,
+} from '../../world'
 
 import { useEvents } from './shared-event'
 

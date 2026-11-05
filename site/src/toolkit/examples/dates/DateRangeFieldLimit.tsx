@@ -13,6 +13,9 @@ export const DateRangeFieldLimit = () => (
     months={1}
     maxDays={14}
     max={TODAY}
-    defaultValue={{ start: '2026-10-20', end: '2026-10-27' }}
+    defaultValue={{
+      start: '2026-10-20',
+      end: '2026-10-27',
+    }}
   />
 )

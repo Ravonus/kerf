@@ -14,8 +14,14 @@ export function DurationFieldTimeout() {
   const timeout = state<IsoDuration | null>('PT1H30M')
   return (
     <Stack gap="related">
-      <DurationField label="Build timeout" value={timeout} />
-      <Text subtle role="caption">
+      <DurationField
+        label="Build timeout"
+        value={timeout}
+      />
+      <Text
+        subtle
+        role="caption"
+      >
         Saved as {timeout.value ?? 'nothing'}
       </Text>
     </Stack>

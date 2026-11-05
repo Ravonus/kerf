@@ -4,7 +4,8 @@ import { TODAY, isWeekend } from './shared-event'
 
 import { REGIONS as _REGIONS } from '../../world'
 
-/** The change freeze runs over the holidays: no weekends, and nothing after the 19th. */
+/** The change freeze runs over the holidays: no
+ * weekends, and nothing after the 19th. */
 export const DateTimeFieldLimits = () => (
   <DateTimeField
     label="Deploy at"

@@ -1,6 +1,11 @@
 import { state } from '@weft-js/core'
 
-import { Row, Stack, Text, TimeField } from '@weft-js/warp'
+import {
+  Row,
+  Stack,
+  Text,
+  TimeField,
+} from '@weft-js/warp'
 
 import type { IsoTime } from '@weft-js/warp'
 
@@ -15,12 +20,29 @@ export function TimeFieldQuietHours() {
   const to = state<IsoTime | null>('07:30')
   return (
     <Stack gap="related">
-      <Row gap="related" wrap={false}>
-        <TimeField label="Quiet from" today={TODAY} value={from} step={30} />
-        <TimeField label="Until" today={TODAY} value={to} step={30} />
+      <Row
+        gap="related"
+        wrap={false}
+      >
+        <TimeField
+          label="Quiet from"
+          today={TODAY}
+          value={from}
+          step={30}
+        />
+        <TimeField
+          label="Until"
+          today={TODAY}
+          value={to}
+          step={30}
+        />
       </Row>
-      <Text subtle role="caption">
-        No alerts from {from.value ?? '…'} to {to.value ?? '…'}, except failed deploys.
+      <Text
+        subtle
+        role="caption"
+      >
+        No alerts from {from.value ?? '…'} to{' '}
+        {to.value ?? '…'}, except failed deploys.
       </Text>
     </Stack>
   )

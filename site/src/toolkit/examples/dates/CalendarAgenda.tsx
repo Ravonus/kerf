@@ -1,6 +1,11 @@
 import { Calendar } from '@weft-js/warp'
 
-import { CAL_NOW, CAL_TODAY, CALENDARS, EVENTS } from '../../world'
+import {
+  CAL_NOW,
+  CAL_TODAY,
+  CALENDARS,
+  EVENTS,
+} from '../../world'
 
 import { AGENDA_VIEWS } from './shared-event'
 

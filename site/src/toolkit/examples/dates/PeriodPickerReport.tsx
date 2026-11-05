@@ -10,8 +10,15 @@ export function PeriodPickerReport() {
   const period = state<string | null>('2026-Q4')
   return (
     <Stack gap="related">
-      <PeriodPicker label="Report period" today={TODAY} value={period} />
-      <Text subtle role="caption">
+      <PeriodPicker
+        label="Report period"
+        today={TODAY}
+        value={period}
+      />
+      <Text
+        subtle
+        role="caption"
+      >
         Saved as {period.value ?? 'nothing'}
       </Text>
     </Stack>
