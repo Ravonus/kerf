@@ -3,14 +3,14 @@
 One screen: a shell (sidebar, account menu, phone drawer) and a 200-row table (sort, filter, selection with a bulk action,
 paging, column picker, inline details, a live cell). One data set and plain `vite build`, with dependencies pinned by the lockfile.
 
-| Stack | Table | Overlays | CSS |
-|---|---|---|---|
-| weft + warp | warp | warp | warp |
-| weft, no warp | hand-written | native `popover` | `shared/design.css` |
-| Solid + Kobalte | TanStack | Kobalte | `shared/design.css` |
-| React + Radix | TanStack | Radix | `shared/design.css` |
-| React + Zustand | TanStack, data in Zustand | Radix | `shared/design.css` |
-| React + MUI | X DataGrid | MUI | MUI's CSS-in-JS |
+| Stack           | Table                     | Overlays         | CSS                 |
+| --------------- | ------------------------- | ---------------- | ------------------- |
+| weft + warp     | warp                      | warp             | warp                |
+| weft, no warp   | hand-written              | native `popover` | `shared/design.css` |
+| Solid + Kobalte | TanStack                  | Kobalte          | `shared/design.css` |
+| React + Radix   | TanStack                  | Radix            | `shared/design.css` |
+| React + Zustand | TanStack, data in Zustand | Radix            | `shared/design.css` |
+| React + MUI     | X DataGrid                | MUI              | MUI's CSS-in-JS     |
 
 `shared/design.css` is one hand-written sheet, so those four stacks ship the same rules: compare frameworks there. The same-CSS
 stacks are the fair framework test; warp and MUI each bring a design system, so compare them as kits.
@@ -80,3 +80,22 @@ cells it restyles. So read it with the CPU ms beside it, and each step also asse
 weft without warp has no menu keyboard handling (arrow keys, typeahead) or focus trap beyond what native `popover` gives, where
 Radix and Kobalte add them, and it has no headless table library in its bundle. warp also keeps a phone sort bar and closed
 menus mounted, which the others don't. MUI's community DataGrid has no detail panel, so details open under the grid.
+
+## Historical size attribution
+
+Use an owned output directory for the pinned October 31 to November 3 audit:
+
+```bash
+node history-bisect.mjs --out /tmp/weft-history-audit
+node --test history-bisect.test.mjs
+```
+
+The script reads Git and archived six-stack vectors. It preserves missing stacks,
+dirty receipts, unresolved source objects and necessary merge-parent bridges. Its
+source-byte deltas describe Git inputs, not compressed bundle contributions. The
+JSON includes exact compiler source stamps and dependency manifests for each pin.
+It does not build historical apps with the current compiler or dependency links.
+Add `--require-artifacts` to fail when a pinned compiler stamp is unavailable;
+repeat `--artifacts /path/to/native` to inspect specific existing caches. No source,
+artifact or dependency is changed. Fresh performance and size measurements still
+use `measure.mjs` with a coherent source/compiler/install combination.
