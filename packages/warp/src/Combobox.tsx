@@ -74,14 +74,14 @@ function comboEnd(ctx: ComboEndContext) {
 }
 
 type ComboOptions<T> = {
-  find: () => ComboFieldProps<T>['find']
+  find: (query: string, controller: AbortController) => Promise<T[]>
   row: () => ComboFieldProps<T>['row']
-  onPick: () => ComboFieldProps<T>['onPick']
-  onText: () => ComboFieldProps<T>['onText']
-  onFail: () => ComboFieldProps<T>['onFail']
+  onPick: (hit: () => T) => unknown
+  onText: (text: string) => void
+  onFail: () => void
   minChars: () => number
   timeout: () => number | undefined
-  status: () => ComboFieldProps<T>['status']
+  status: () => string | undefined
   hint: () => ComboFieldProps<T>['hint']
 }
 
@@ -113,7 +113,7 @@ function comboSearch<T>(
       busy.value = true
       const late = opts.timeout() ? setTimeout(() => me.abort(), opts.timeout()) : undefined
       try {
-        const r = await opts.find()(q.trim(), me.signal)
+        const r = await opts.find(q, me)
         if (me !== stop) return
         hits.value = r
         active.value = 0
@@ -121,7 +121,7 @@ function comboSearch<T>(
       } catch {
         if (me === stop || me.signal.aborted) {
           open.value = false
-          opts.onFail()?.()
+          opts.onFail()
         }
       } finally {
         clearTimeout(late)
@@ -154,7 +154,7 @@ function comboModel<T>(opts: ComboOptions<T>) {
   )
   const pick = (at: number) => {
     open.value = false
-    opts.onPick()(hits.value[at]!)
+    opts.onPick(() => hits.value[at]!)
   }
   const onKey = (e: KeyboardEvent) => {
     const el = e.currentTarget as HTMLInputElement
@@ -163,7 +163,7 @@ function comboModel<T>(opts: ComboOptions<T>) {
       e.preventDefault()
       if (el.value) {
         cancel()
-        opts.onText()?.('')
+        opts.onText('')
       }
     } else if (e.key === 'ArrowDown' && !open.value) {
       e.preventDefault()
@@ -181,7 +181,7 @@ function comboModel<T>(opts: ComboOptions<T>) {
       }
     }
   }
-  const shownHint = derived(() => (busy.value ? 'Searching…' : (opts.status()?.() ?? opts.hint())))
+  const shownHint = derived(() => (busy.value ? 'Searching…' : (opts.status() ?? opts.hint())))
   return [
     id,
     hits,
@@ -219,14 +219,14 @@ export function ComboField<T>({
 }: ComboFieldProps<T>) {
   const [id, hits, active, open, busy, rows, run, pick, onKey, shownHint, setInput, setPop] =
     comboModel({
-      find: () => find,
+      find: (query, controller) => find(query.trim(), controller.signal),
       row: () => row,
-      onPick: () => onPick,
-      onText: () => onText,
-      onFail: () => onFail,
+      onPick: (hit) => onPick(hit()),
+      onText: (value) => onText?.(value),
+      onFail: () => onFail?.(),
       minChars: () => minChars,
       timeout: () => timeout,
-      status: () => status,
+      status: () => status?.(),
       hint: () => hint,
     })
   return (
