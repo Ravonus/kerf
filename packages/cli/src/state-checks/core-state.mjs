@@ -55,7 +55,7 @@ function written(node, symbol, out) {
     written(node.left, symbol, out)
 }
 
-function scanWrites(graph, symbol, writes, aliases) {
+function scanWrites(sf, symbol, writes, aliases) {
   const scan = (node) => {
     if (ts.isBinaryExpression(node)) {
       const operator = node.operatorToken.kind
@@ -78,7 +78,7 @@ function scanWrites(graph, symbol, writes, aliases) {
       aliases.push(node)
     ts.forEachChild(node, scan)
   }
-  for (const { sf } of graph.values()) scan(sf)
+  scan(sf)
 }
 
 /** Resolve state, linked and explicit global calls through local binding identities. */
@@ -97,8 +97,8 @@ export function coreState(root, graph) {
     const sym = symbol(node)
     if (sym && tag && !writes.has(sym)) values.set(sym, tag)
   }
-  scanWrites(graph, symbol, writes, aliases)
   for (const { sf } of graph.values()) {
+    scanWrites(sf, symbol, writes, aliases)
     for (const node of sf.statements) {
       if (
         !ts.isImportDeclaration(node) ||
