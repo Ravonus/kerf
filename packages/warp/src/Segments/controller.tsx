@@ -30,8 +30,8 @@ function segmentModel(
   clears: () => number | undefined,
   disabled: () => boolean | undefined,
   readonly: () => boolean | undefined,
-  onEdit: () => (state: SegmentState, parts: SegmentPart[]) => void,
-  onBlurPartial: () => (() => unknown) | undefined,
+  onEdit: (state: SegmentState, parts: SegmentPart[]) => void,
+  onBlurPartial: () => unknown,
 ) {
   const make = () =>
     writeParts(
@@ -55,8 +55,7 @@ function segmentModel(
     edited = true
     queueMicrotask(() => (edited = false))
     const st: SegmentState = isEmpty(next) ? 'empty' : isComplete(next) ? 'complete' : 'partial'
-    const emit = onEdit()
-    emit(st, next)
+    onEdit(st, next)
   }
   const { onKey, onLeave, onPaste } = segmentEvents(
     parts,
@@ -125,8 +124,8 @@ export function Segments({
     () => clears,
     () => disabled,
     () => readonly,
-    () => onEdit,
-    () => onBlurPartial,
+    (st, parts) => onEdit(st, parts),
+    () => onBlurPartial?.(),
   )
   return segmentView(
     model,
