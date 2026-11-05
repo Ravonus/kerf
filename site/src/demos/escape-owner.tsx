@@ -10,9 +10,7 @@ function Ticker(props: {
   // The rendering branch owns the interval, so it stops
   // when the branch goes.
   interval('1s', () => seconds.value++)
-  onMount(() =>
-    onLog('Ticker mounted, interval started'),
-  )
+  onMount(() => onLog('Ticker mounted, interval started'))
   onCleanup(() =>
     onLog(
       `Ticker removed after ${seconds.value} s, ` +

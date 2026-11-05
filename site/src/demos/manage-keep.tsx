@@ -40,10 +40,16 @@ export default function Guests() {
   return (
     <Card title="Dinner guests">
       {guests.value.map((g) => (
-        <GuestRow key={g.id} guest={g} />
+        <GuestRow
+          key={g.id}
+          guest={g}
+        />
       ))}
       <Row gap="tight">
-        <Button size="sm" onClick={reverse}>
+        <Button
+          size="sm"
+          onClick={reverse}
+        >
           Reverse
         </Button>
         <Button

@@ -16,16 +16,20 @@ export default function Cats() {
   // when the row's element is made.
   const rows = new Map<string, HTMLElement>()
   const show = (name: string) =>
-    rows
-      .get(name)
-      ?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-      })
+    rows.get(name)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+    })
   return (
     <Card title="Scroll to a cat">
-      <Row gap="tight" wrap>
-        <Button size="sm" onClick={() => show('Tom')}>
+      <Row
+        gap="tight"
+        wrap
+      >
+        <Button
+          size="sm"
+          onClick={() => show('Tom')}
+        >
           Tom
         </Button>
         <Button

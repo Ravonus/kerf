@@ -25,8 +25,7 @@ function Profile(props: { person: Person }) {
         emphasis={starred.value ? 'solid' : 'outline'}
         onClick={() => (starred.value = !starred.value)}
       >
-        {starred.value ? 'Starred' : 'Star'}{' '}
-        {person.name}
+        {starred.value ? 'Starred' : 'Star'} {person.name}
       </Button>
       <Textarea
         label={`A note about ${person.name}`}
@@ -59,7 +58,10 @@ export default function People() {
       </Row>
       {/* A new person key replaces the old row. */}
       {[shown.value].map((p) => (
-        <Profile key={p.id} person={p} />
+        <Profile
+          key={p.id}
+          person={p}
+        />
       ))}
     </Card>
   )
