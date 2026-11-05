@@ -122,7 +122,7 @@ export function scanSamples(repo = root) {
   )
 }
 
-/** Fail when any canonical code sample exceeds its width. */
+/** Fail when canonical samples exceed their width or violate JSX pattern rules. */
 export function reportSampleWidths(repo = root) {
   const violations = scanSamples(repo)
   const patterns = sampleFiles(repo).flatMap(([path, scan]) => {
