@@ -16,7 +16,7 @@ import {
 } from '../src/inline.mjs'
 
 const critical = { parse, purge }
-const filler = (n) =>
+const filler = (n: number) =>
   Array.from({ length: n }, (_, i) => `:where([data-scope="unused${i}"]){color:red}`).join('')
 const big = `:where([data-scope="card"]){color:red}:where([data-scope="card"]):hover{color:blue}:where([data-scope="card"][aria-checked="true"]){color:green}:where([data-scope="menu"]){color:pink}@media (forced-colors:active){:where([data-scope="card"]){color:Canvas}}${filler(2000)}`
 const assets = { inline: { '/a.css': big }, critical }
@@ -82,17 +82,20 @@ test('a request with cookies has the browser list the sheets it loaded, by the i
     LATE_SHEETS_KEPT,
   )
   expect(pageStyles(assets, css, html).head).toContain(LATE_SHEETS)
-  const cookies = []
+  const cookies: string[] = []
   const links = [
     { sheet: {}, getAttribute: () => '/a.css' },
     { sheet: null, getAttribute: () => '/failed.css' },
     { sheet: {}, getAttribute: () => '/b.css', media: 'print' },
   ]
-  globalThis.document = {
+  const fakeGlobal = globalThis as unknown as {
+    document?: { cookie: string; querySelectorAll(q: string): typeof links }
+  }
+  fakeGlobal.document = {
     cookie: `weft-css=${sheetId('/a.css')}`,
     querySelectorAll: (q) => (q === 'link[data-late]' ? links.slice(2) : links),
   }
-  Object.defineProperty(globalThis.document, 'cookie', {
+  Object.defineProperty(fakeGlobal.document, 'cookie', {
     get: () => cookies.at(-1)?.split(';')[0] ?? `weft-css=${sheetId('/a.css')}`,
     set: (v) => {
       cookies.push(v)
@@ -109,11 +112,11 @@ test('a request with cookies has the browser list the sheets it loaded, by the i
   await new Promise((r) => {
     setTimeout(r, 0)
   })
-  delete globalThis.document
+  delete fakeGlobal.document
   expect(cookies).toHaveLength(1)
   expect(cookies[0]).toMatch(/;path=\/;max-age=31536000;samesite=lax$/)
-  expect(keptSheets(cookies[0])).toEqual(new Set([sheetId('/a.css'), sheetId('/b.css')]))
-  expect(links[2].media).toBe('all')
+  expect(keptSheets(cookies[0]!)).toEqual(new Set([sheetId('/a.css'), sheetId('/b.css')]))
+  expect(links[2]!.media).toBe('all')
 })
 
 test('a sheet that cannot be inlined stays a blocking link', () => {
@@ -190,7 +193,7 @@ test('a whole-inline page has nothing deferred, so a chunk adds only what the he
 
 test("the layer order names warp's own layers, as warp.css does, so no component sheet can rank first", () => {
   const spec = /@layer (warp\.tokens,[^;]+);/
-    .exec(readFileSync(new URL('../../warp-core/styles/warp.css', import.meta.url), 'utf8'))[1]
+    .exec(readFileSync(new URL('../../warp-core/styles/warp.css', import.meta.url), 'utf8'))![1]!
     .replace(/\s/g, '')
   expect(LAYER_ORDER).toContain(`@layer ${spec};`)
 })
@@ -198,7 +201,7 @@ test("the layer order names warp's own layers, as warp.css does, so no component
 test('a static route from an install keeps the stylesheets of the kit components it names, and only those', async () => {
   const root = mkdtempSync(join(tmpdir(), 'weft-kit-'))
   const kit = join(root, 'node_modules/@weft-js/kit/src')
-  const write = (f, text) => {
+  const write = (f: string, text: string) => {
     mkdirSync(dirname(join(kit, f)), { recursive: true })
     writeFileSync(join(kit, f), text)
   }
@@ -206,7 +209,7 @@ test('a static route from an install keeps the stylesheets of the kit components
   write('Badge.tsx', `import './badge.css'\nexport const Badge = () => null\n`)
   write('Modal.tsx', `import './modal.css'\nexport const Modal = () => null\n`)
   const ctx = {
-    resolve: (spec, from) =>
+    resolve: (spec: string, from: string) =>
       Promise.resolve({
         id:
           spec === '@weft-js/kit'
@@ -225,7 +228,7 @@ test('a static route from an install keeps the stylesheets of the kit components
 })
 
 describe('a static route through a kit barrel', () => {
-  const kit = async (files, page) => {
+  const kit = async (files: Record<string, string>, page: string) => {
     const root = mkdtempSync(join(tmpdir(), 'weft-kit-')),
       dir = join(root, 'node_modules/@weft-js/kit/src')
     for (const [f, text] of Object.entries(files)) {
@@ -233,7 +236,7 @@ describe('a static route through a kit barrel', () => {
       writeFileSync(join(dir, f), text)
     }
     const ctx = {
-      resolve: (spec, from) =>
+      resolve: (spec: string, from: string) =>
         Promise.resolve({
           id:
             spec === '@weft-js/kit'
@@ -307,7 +310,7 @@ test("the first paint leaves out rules for classes, attributes and values the sh
     [{ href: '/b.css' }],
     '<p class="hero" data-role="lede" data-id="7"></p>',
   ).head
-  const inline = /<style>(?!@layer warp,)([\s\S]*?)<\/style>/.exec(page)[1]
+  const inline = /<style>(?!@layer warp,)([\s\S]*?)<\/style>/.exec(page)![1]!
   expect(inline).toContain('.hero{color:blue}')
   expect(inline).toContain('data-role=lede')
   expect(inline).toContain(':where(.hero){margin:0}')
@@ -317,14 +320,14 @@ test("the first paint leaves out rules for classes, attributes and values the sh
 
 describe('the first paint keeps a rule whenever the shell might match it', () => {
   let sheets = 0
-  const first = (rule, shell) => {
+  const first = (rule: string, shell: string) => {
     const href = `/c${sheets++}.css` // hashed in a build, so one name is one sheet
     const page = pageStyles(
       { inline: { [href]: `${rule}${filler(4000)}` }, critical },
       [{ href }],
       shell,
     ).head
-    return /<style>(?!@layer warp,)([\s\S]*?)<\/style>/.exec(page)[1]
+    return /<style>(?!@layer warp,)([\s\S]*?)<\/style>/.exec(page)![1]!
   }
   const keeps = [
     [
