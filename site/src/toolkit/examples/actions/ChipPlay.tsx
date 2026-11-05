@@ -1,7 +1,11 @@
 import { state, untrack } from '@weft-js/core'
 import { Chip } from '@weft-js/warp'
 
-export function ChipPlay(p: { children: string; pressed: boolean; count: number }) {
+export function ChipPlay(p: {
+  children: string
+  pressed: boolean
+  count: number
+}) {
   const on = state(untrack(() => p.pressed))
   return (
     <Chip

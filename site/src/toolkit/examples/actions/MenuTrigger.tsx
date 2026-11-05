@@ -14,7 +14,11 @@ export const MenuTrigger = () => (
     />
     <Menu
       label="More"
-      trigger={{ emphasis: 'outline', tone: 'neutral', size: 'sm' }}
+      trigger={{
+        emphasis: 'outline',
+        tone: 'neutral',
+        size: 'sm',
+      }}
       items={[{ label: 'Archive' }]}
     />
   </>

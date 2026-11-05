@@ -4,11 +4,16 @@ import { Row, Stack, Text, Toggle } from '@weft-js/warp'
 export function ToggleWatch() {
   const watching = state(false)
   return (
-    <Row justify="between" gap="group">
+    <Row
+      justify="between"
+      gap="group"
+    >
       <Stack gap="hair">
         <Text role="heading">storefront</Text>
         <Text subtle>
-          {watching.value ? 'You get a note on every deploy.' : 'No notes from this project.'}
+          {watching.value
+            ? 'You get a note on every deploy.'
+            : 'No notes from this project.'}
         </Text>
       </Stack>
       <Toggle

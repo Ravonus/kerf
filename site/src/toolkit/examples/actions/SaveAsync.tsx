@@ -9,11 +9,17 @@ export function ButtonSaveAsync() {
       setTimeout(done, 1500)
     })
     saving.value = false
-    toast.show({ title: 'Saved', description: 'Your changes are live.' })
+    toast.show({
+      title: 'Saved',
+      description: 'Your changes are live.',
+    })
   }
   return (
     <>
-      <Button loading={saving.value} onClick={save}>
+      <Button
+        loading={saving.value}
+        onClick={save}
+      >
         {saving.value ? 'Saving' : 'Save changes'}
       </Button>
       <Toaster />
