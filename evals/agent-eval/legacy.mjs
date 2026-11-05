@@ -28,7 +28,7 @@ import { golden, pack } from './run/prepare.mjs'
 import { probe } from './run/probe.mjs'
 import { canary } from './run/canary.mjs'
 import { reference, mutants } from './run/grade-tasks.mjs'
-import { build, cloneForGrading, hidden, quality, serve } from './lib/grade.mjs'
+import { gradeOnce as sharedGradeOnce } from './run/grade-once.mjs'
 import { claudeBin, goldens, here, projects, registryPort, repo, state, tgz } from './lib/paths.mjs'
 import { newBox, profile, env } from './lib/sandbox.mjs'
 
@@ -94,36 +94,11 @@ const cleanup = (box) => {
 
 // ---- grading
 async function gradeOnce(box, stackName, task, n, withQuality) {
-  if (!taskOf(task).gradeable) throw new Error(`${task}: grader is incomplete`)
-  const stack = stacks[stackName]
-  const copy = await cloneForGrading(box, n)
-  const built = await build(copy, stack)
-  if (!built.ok)
-    return {
-      built,
-      passed: 0,
-      total: null,
-      failed: [{ title: 'the app builds', failure: built.error }],
-    }
-  let server
-  try {
-    server = await serve(copy, stack)
-  } catch (e) {
-    return {
-      built,
-      passed: 0,
-      total: null,
-      failed: [{ title: 'the app starts', failure: e.message }],
-    }
-  }
-  try {
-    const out = { built, ...(await hidden(task, server.base)) }
-    if (withQuality)
-      out.quality = await quality(task, server.base, copy, join(goldens, stackName, 'app'))
-    return out
-  } finally {
-    server.stop()
-  }
+  return sharedGradeOnce(box, stackName, task, n, withQuality, {
+    stack: stacks[stackName],
+    gradeable: taskOf(task).gradeable,
+    calibration: false,
+  })
 }
 const passedAll = (g) => g.total !== null && g.passed === g.total
 

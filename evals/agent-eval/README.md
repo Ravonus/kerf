@@ -34,3 +34,15 @@ node --test evals/agent-eval/test/*.test.mjs
 
 The archived raw transcripts and boxes live under `/private/tmp`; they are not
 safe to publish without review and sanitization.
+
+## Medium-shop calibration
+
+`node evals/agent-eval/run.mjs calibrate reference` grades only the checked-in
+medium-shop reference. `node evals/agent-eval/run.mjs calibrate mutant 'wrong
+stock'` applies that named checked-in mutant and exits 1 only when its named
+check fails; exit 2 means it was not caught or calibration could not run. No agent is launched. The
+command requires a policy-safe, owned golden at
+`/private/tmp/aeval/golden/weft-warp/app` and local harness dependencies.
+The golden setup is not yet verified: Corepack may fetch its own pnpm version
+before pnpm applies `minimumReleaseAge`. Do not infer calibration success from
+fixture tests or use the current unverified setup for an evaluation.
