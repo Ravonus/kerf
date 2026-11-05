@@ -217,6 +217,33 @@ export function floatingLabel(host: HTMLElement) {
   }
 }
 
+function fieldPointerDown(
+  e: PointerEvent,
+  box: HTMLElement | null,
+  input: HTMLInputElement | HTMLTextAreaElement | null | undefined,
+) {
+  const t = e.target as Element
+  // a composite has no one input: a press on its label (no for) moves focus into the body (04, field shell)
+  if (!input && t.closest?.('[data-part="label"]')) {
+    e.preventDefault()
+    box
+      ?.querySelector<HTMLElement>(
+        '[data-part="body"] :is([tabindex="0"], button:not(:disabled), input:not(:disabled))',
+      )
+      ?.focus()
+    return
+  }
+  if (
+    !input ||
+    t.closest?.(
+      'input, textarea, select, button, [data-scope="popup"], [data-scope="tag"], [data-part="scrub"]',
+    )
+  )
+    return
+  e.preventDefault()
+  input.focus()
+}
+
 /**
  * The field shell's behaviour (03 §1; inputs.html:1089-1110, 1688) as one action on `[data-scope="field"]`: the
  * floating label, the clear button (empties, fires input, refocuses), a press anywhere on the control focuses the
@@ -266,28 +293,7 @@ export function field(el: HTMLElement, opts?: readonly [value?: unknown, label?:
     holder.dispatchEvent(new Event('input', { bubbles: true }))
     input.focus()
   }
-  const onDown = (e: PointerEvent) => {
-    const t = e.target as Element
-    // a composite has no one input: a press on its label (no for) moves focus into the body (04, field shell)
-    if (!input && t.closest?.('[data-part="label"]')) {
-      e.preventDefault()
-      box
-        ?.querySelector<HTMLElement>(
-          '[data-part="body"] :is([tabindex="0"], button:not(:disabled), input:not(:disabled))',
-        )
-        ?.focus()
-      return
-    }
-    if (
-      !input ||
-      t.closest?.(
-        'input, textarea, select, button, [data-scope="popup"], [data-scope="tag"], [data-part="scrub"]',
-      )
-    )
-      return
-    e.preventDefault()
-    input.focus()
-  }
+  const onDown = (e: PointerEvent) => fieldPointerDown(e, box, input)
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && input instanceof HTMLTextAreaElement)
       input.form?.requestSubmit()
