@@ -25,14 +25,14 @@ export type PhoneView = {
   actions: {
     sync(raw: string, caret: number | null): void
     choose(c: PhoneCountry): void
-    onBlur(): void
-    onPaste(e: ClipboardEvent): void
+    onBlur: () => void
+    onPaste: (e: ClipboardEvent) => void
   }
   readonly: boolean | undefined
   disabled: boolean | undefined
   fieldName: string | undefined
   presentation: RichFieldProps['presentation']
-  button(): HTMLButtonElement
+  button: () => HTMLButtonElement
   setButton(n: HTMLButtonElement): void
   setInput(n: HTMLInputElement): void
 }

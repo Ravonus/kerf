@@ -126,9 +126,9 @@ function ShellHeader({ view }: { view: ShellView }) {
             onKeyDown={view.menuKey}
           >
             <span data-scope="avatar" aria-hidden="true">
-              {view.props.account!.initials}
+              {view.props.account.initials}
             </span>
-            <span data-part="sr-only">Account: {view.props.account!.name}</span>
+            <span data-part="sr-only">Account: {view.props.account.name}</span>
           </button>
         )}
       </div>
@@ -283,7 +283,7 @@ function ShellAccount({ view }: { view: ShellView }) {
               <p data-part="group-label" aria-hidden="true" style="margin:0">
                 Workspace
               </p>
-              {view.props.switcher!.workspaces.map((w) => (
+              {view.props.switcher.workspaces.map((w) => (
                 <button
                   key={w.id}
                   type="button"

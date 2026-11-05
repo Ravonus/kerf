@@ -30,8 +30,8 @@ export type EditorView = {
   setMark(n: HTMLSpanElement): void
   setLink(n: HTMLInputElement): void
   rows(): string | undefined
-  onToolKey(e: KeyboardEvent): void
-  onMenuKey(e: KeyboardEvent): void
+  onToolKey: (e: KeyboardEvent) => void
+  onMenuKey: (e: KeyboardEvent) => void
   startLink(): void
   endLink(apply: boolean): void
   choose(at: number): void
