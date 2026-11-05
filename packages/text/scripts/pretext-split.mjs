@@ -23,10 +23,10 @@ try {
     fs.mkdirSync(path.dirname(target), { recursive: true })
     fs.writeFileSync(target, data)
   }
-  execFileSync('git', ['apply', path.join(root, 'scripts/pretext-split.patch')], {
-    cwd: temp,
-    stdio: 'pipe',
-  })
+  const patch = JSON.parse(
+    fs.readFileSync(path.join(root, 'scripts/pretext-split.patch.json'), 'utf8'),
+  ).join('')
+  execFileSync('git', ['apply', '-'], { cwd: temp, input: patch, stdio: 'pipe' })
   for (const [name, hash] of Object.entries(receipt.outputs)) {
     const data = fs.readFileSync(path.join(temp, name))
     if (digest(data) !== hash) throw new Error(`Patched source differs from receipt: ${name}`)

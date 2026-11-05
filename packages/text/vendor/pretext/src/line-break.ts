@@ -21,7 +21,7 @@ import {
 } from './analysis.js'
 import type { LayoutCursor, LineStats } from './layout.js'
 import { getEngineProfile } from './measurement.js'
-import type { PreparedLineBreakData, PreparedLineData, ParagraphSegmentData, InternalLineVisitor } from './line-break-types.js'
+import type { PreparedLineData, InternalLineVisitor } from './line-break-types.js'
 
 function getTerminalLetterSpacing(
   prepared: PreparedLineData,

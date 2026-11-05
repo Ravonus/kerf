@@ -1,6 +1,6 @@
 import { fontSizeRe, familyRe, parseFontSize } from './measurement-font.js'
 export { getHyphenText, parseFontSize } from './measurement-font.js'
-import { getContext, getSegmentMetrics, getFollowingSpaceMetrics, getSpaceWidth } from './measurement-metrics.js'
+import { getContext, getSegmentMetrics } from './measurement-metrics.js'
 export { getContext, getSegmentMetrics, getFollowingSpaceMetrics, getSpaceWidth } from './measurement-metrics.js'
 import { getEngineProfile } from './measurement-engine.js'
 export { getEngineProfile, getLayoutEngine } from './measurement-engine.js'
@@ -154,7 +154,7 @@ export function getPreparationLanguage(profile: EngineProfile): string | null {
 }
 
 // The most app units a Gecko length holds (nscoord_MAX, nsCoord.h:28).
-import { readLetterSpacing, zeros } from './measurement-spacing.js'
+import { zeros } from './measurement-spacing.js'
 export { readLetterSpacing, zeros } from './measurement-spacing.js'
 
 // The Canvas letterSpacing a text is measured under to count the glyphs it spaces: far
