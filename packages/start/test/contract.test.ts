@@ -102,16 +102,10 @@ test("C002: dev and tests check the value against `output`; production doesn't",
 })
 
 test('Q012: the database or auth in the client graph stops the build; on the server it passes through', () => {
-  const plugin =
-    (
-      weftStart({ root: import.meta.dirname }) as ReturnType<typeof weftStart> & {
-        find?: (
-          predicate: (p: ReturnType<typeof weftStart>) => unknown,
-        ) => ReturnType<typeof weftStart>
-      }
-    ).find?.((p) => typeof p.resolveId?.handler === 'function') ??
-    weftStart({ root: import.meta.dirname })
-  const { filter } = plugin.resolveId
+  const resolver = weftStart({ root: import.meta.dirname }).find(
+    (p) => 'resolveId' in p,
+  )!.resolveId!
+  const { filter } = resolver
   for (const id of [
     '@weft-js/start/db',
     '@weft-js/start/db/sqlite',
@@ -127,13 +121,13 @@ test('Q012: the database or auth in the client graph stops the build; on the ser
     },
   })
   expect(() =>
-    plugin.resolveId.handler.call(
+    resolver.handler.call(
       ctx('client'),
       '@weft-js/start/db/sqlite',
       `${import.meta.dirname}/page.tsx`,
     ),
   ).toThrow(/^Q012: .*page\.tsx/)
-  expect(plugin.resolveId.handler.call(ctx('server'), '@weft-js/start/auth', 'x')).toBeUndefined()
+  expect(resolver.handler.call(ctx('server'), '@weft-js/start/auth', 'x')).toBeUndefined()
 })
 
 test('a stream is in the contract, with its message; R005: an unbounded input warns', () => {

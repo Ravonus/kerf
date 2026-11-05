@@ -46,18 +46,32 @@ export { here as startDir } from './vite/shared.mjs'
  */
 export default function weftStart(options = {}) {
   const state = createState(options)
-  return {
-    name: 'weft:start',
-    enforce: 'pre',
-    config: configHook(state),
-    writeBundle: writeBundle(state),
-    renderChunk: renderChunk(state),
-    configResolved: configResolved(state),
-    configureServer: configureServer(state),
-    hotUpdate: hotUpdate(state),
-    resolveId: resolveId(state),
-    load: load(state),
-    transform: transform(state),
-    api: api(state),
-  }
+  return [
+    {
+      name: 'weft:start',
+      enforce: 'pre',
+      config: configHook(state),
+      configResolved: configResolved(state),
+      api: api(state),
+    },
+    {
+      name: 'weft:start:sheets',
+      enforce: 'pre',
+      writeBundle: writeBundle(state),
+      renderChunk: renderChunk(state),
+    },
+    {
+      name: 'weft:start:dev',
+      enforce: 'pre',
+      configureServer: configureServer(state),
+      hotUpdate: hotUpdate(state),
+    },
+    {
+      name: 'weft:start:modules',
+      enforce: 'pre',
+      resolveId: resolveId(state),
+      load: load(state),
+      transform: transform(state),
+    },
+  ]
 }
