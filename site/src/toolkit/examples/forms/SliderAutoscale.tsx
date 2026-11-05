@@ -17,11 +17,15 @@ export function SliderAutoscale() {
       <Stack gap="tight">
         <Row justify="between">
           <Text subtle>When quiet</Text>
-          <Text>€{copies.value[0] * COPY_COST} a month</Text>
+          <Text>
+            €{copies.value[0] * COPY_COST} a month
+          </Text>
         </Row>
         <Row justify="between">
           <Text subtle>At full load</Text>
-          <Text>€{copies.value[1] * COPY_COST} a month</Text>
+          <Text>
+            €{copies.value[1] * COPY_COST} a month
+          </Text>
         </Row>
       </Stack>
     </Stack>

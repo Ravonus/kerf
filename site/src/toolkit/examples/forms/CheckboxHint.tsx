@@ -7,9 +7,9 @@ export function CheckboxHint() {
     <Checkbox
       checked={on.value}
       hint="Failed checks stop the deploy."
-      onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
-        (on.value = e.currentTarget.checked)
-      }
+      onChange={(
+        e: Event & { currentTarget: HTMLInputElement },
+      ) => (on.value = e.currentTarget.checked)}
     >
       Require checks to pass
     </Checkbox>

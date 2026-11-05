@@ -15,7 +15,11 @@ export function RadioPlay(p: Knobs) {
       >
         {p.children}
       </Radio>
-      <Radio name="radio-play" checked={on.value === 'b'} onChange={() => (on.value = 'b')}>
+      <Radio
+        name="radio-play"
+        checked={on.value === 'b'}
+        onChange={() => (on.value = 'b')}
+      >
         Roll out in steps
       </Radio>
     </Stack>

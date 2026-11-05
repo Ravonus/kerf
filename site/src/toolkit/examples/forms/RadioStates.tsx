@@ -1,15 +1,28 @@
 import { Radio, Row } from '@weft-js/warp'
 
 export const RadioStates = () => (
-  <Row gap="section" wrap>
+  <Row
+    gap="section"
+    wrap
+  >
     <Radio name="states-off">Canary</Radio>
-    <Radio name="states-on" checked>
+    <Radio
+      name="states-on"
+      checked
+    >
       Canary
     </Radio>
-    <Radio name="states-off-d" disabled>
+    <Radio
+      name="states-off-d"
+      disabled
+    >
       Canary
     </Radio>
-    <Radio name="states-on-d" checked disabled>
+    <Radio
+      name="states-on-d"
+      checked
+      disabled
+    >
       Canary
     </Radio>
   </Row>

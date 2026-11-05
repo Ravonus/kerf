@@ -1,5 +1,11 @@
 import { state } from '@weft-js/core'
-import { RadioGroup, Row, Slider, Stack, Text } from '@weft-js/warp'
+import {
+  RadioGroup,
+  Row,
+  Slider,
+  Stack,
+  Text,
+} from '@weft-js/warp'
 import { PLANS, SEAT } from './shared'
 
 export function RadioGroupPlan() {
@@ -22,7 +28,9 @@ export function RadioGroupPlan() {
       />
       <Row justify="between">
         <Text subtle>Per month</Text>
-        <Text role="heading">€{SEAT[plan.value]! * seats.value}</Text>
+        <Text role="heading">
+          €{SEAT[plan.value]! * seats.value}
+        </Text>
       </Row>
     </Stack>
   )

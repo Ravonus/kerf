@@ -15,10 +15,20 @@ export function InputSlug() {
       <Input
         label="Project name"
         value={name.value}
-        onInput={(e) => (name.value = e.currentTarget.value)}
-        error={slug.value ? undefined : 'Give it a name with at least one letter.'}
+        onInput={(e) =>
+          (name.value = e.currentTarget.value)
+        }
+        error={
+          slug.value
+            ? undefined
+            : 'Give it a name with at least one letter.'
+        }
       />
-      <Text subtle>{slug.value ? `Lives at ${slug.value}.weft.dev` : 'Waiting for a name'}</Text>
+      <Text subtle>
+        {slug.value
+          ? `Lives at ${slug.value}.weft.dev`
+          : 'Waiting for a name'}
+      </Text>
     </Stack>
   )
 }

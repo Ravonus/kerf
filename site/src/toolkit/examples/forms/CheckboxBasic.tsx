@@ -6,9 +6,9 @@ export function CheckboxBasic() {
   return (
     <Checkbox
       checked={on.value}
-      onChange={(e: Event & { currentTarget: HTMLInputElement }) =>
-        (on.value = e.currentTarget.checked)
-      }
+      onChange={(
+        e: Event & { currentTarget: HTMLInputElement },
+      ) => (on.value = e.currentTarget.checked)}
     >
       Deploy on push
     </Checkbox>
