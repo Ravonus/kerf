@@ -9,7 +9,7 @@ import '@weft-js/warp-core/styles/layout/breadcrumb.css'
 import { untrack } from '@weft-js/core'
 import type { ShellProps } from './shared'
 import { shellState } from './state'
-import { ShellFrame } from './view'
+import { shellFrame } from './view'
 
 /**
  * The app shell (02 §5-6; layout.html:874-906): one element tree, three presentations, chosen by the shell's own
@@ -21,5 +21,5 @@ import { ShellFrame } from './view'
 export function Shell(props: ShellProps) {
   const view = shellState(untrack(() => props))
   const page = <div data-part="page">{props.children}</div>
-  return <ShellFrame view={view} page={page} />
+  return shellFrame(view, page)
 }

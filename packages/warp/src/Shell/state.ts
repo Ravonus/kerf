@@ -53,8 +53,12 @@ function shellData(props: ShellProps) {
         ? 'Collapse navigation'
         : 'Expand navigation',
   )
-  const { openMenu, menuKey, shut } = shellMenu(menuOpen, refs)
   return {
+    ...shellMenu(menuOpen, refs),
+    props,
+    get navLabel() {
+      return props.navLabel === undefined ? 'Main' : props.navLabel
+    },
     main,
     navId,
     menuId,
@@ -76,9 +80,6 @@ function shellData(props: ShellProps) {
     closeNav,
     toggleExpanded,
     toggleLabel,
-    openMenu,
-    menuKey,
-    shut,
   }
 }
 
@@ -132,12 +133,6 @@ function bindShell(props: ShellProps, d: ShellData) {
 export function shellState(props: ShellProps) {
   const d = shellData(props)
   bindShell(props, d)
-  return {
-    ...d,
-    props,
-    get navLabel() {
-      return props.navLabel === undefined ? 'Main' : props.navLabel
-    },
-  }
+  return d
 }
 export type ShellView = ReturnType<typeof shellState>
