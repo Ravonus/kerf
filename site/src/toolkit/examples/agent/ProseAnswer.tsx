@@ -8,7 +8,11 @@ export const ProseAnswer = () => (
       <SparkleIcon />
     </span>
     <div data-part="content">
-      <Prose text={REPORT} sources={CITED} base="report" />
+      <Prose
+        text={REPORT}
+        sources={CITED}
+        base="report"
+      />
     </div>
   </div>
 )

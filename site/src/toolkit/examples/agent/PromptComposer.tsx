@@ -1,16 +1,36 @@
 import { state } from '@weft-js/core'
 import { Prompt, Stack, Text } from '@weft-js/warp'
 import type { PromptFile } from '@weft-js/warp'
-import { COMMANDS, CONTEXT, MENTIONS, MODELS } from '../../world'
+import {
+  COMMANDS,
+  CONTEXT,
+  MENTIONS,
+  MODELS,
+} from '../../world'
 
 export function PromptComposer() {
   const sent = state('')
   const files = state<PromptFile[]>([])
   const web = state(false)
+  const attach = (list: File[]) =>
+    (files.value = [
+      ...files.value,
+      ...list.map((f) => ({
+        id: f.name,
+        name: f.name,
+      })),
+    ])
+  const remove = (id: string) =>
+    (files.value = files.value.filter((f) => f.id !== id))
   return (
     <Stack gap="related">
-      <Text role="caption" subtle>
-        {sent.value ? `Sent: ${sent.value}` : 'Type / for commands or @ for people.'}
+      <Text
+        role="caption"
+        subtle
+      >
+        {sent.value
+          ? `Sent: ${sent.value}`
+          : 'Type / for commands or @ for people.'}
       </Text>
       <Prompt
         placeholder="Ask about a deploy"
@@ -23,10 +43,8 @@ export function PromptComposer() {
         files={files.value}
         web={web.value}
         onWebChange={(on) => (web.value = on)}
-        onAttach={(list) =>
-          (files.value = [...files.value, ...list.map((f) => ({ id: f.name, name: f.name }))])
-        }
-        onRemoveFile={(id) => (files.value = files.value.filter((f) => f.id !== id))}
+        onAttach={attach}
+        onRemoveFile={remove}
         onSubmit={(text) => (sent.value = text)}
       />
     </Stack>
