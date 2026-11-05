@@ -9,3 +9,12 @@ The Rust/Oxc compiler parses and checks source, then emits weft's own DOM and se
 warp-core supplies framework-independent behavior. warp adds components, tokens and styling. Other packages provide media, text, payments, multiplayer and adapters. Typed plugin slots connect optional implementations without opening the compiler to plugin code. Surfaces participate in layout; native work targets platform views with shared layout.
 
 The [decisions](decisions/) record the reasoning that still guides the design and link to archived research. [ROADMAP-1.0.md](ROADMAP-1.0.md) is the source of future work; an architectural direction here does not imply that every feature is complete. Performance and size claims require the comparative measurements described in [CLAUDE.md](../CLAUDE.md).
+
+## Repository map
+
+- [packages](../packages/) contains the runtime, CLI, app framework, UI toolkit and optional integrations.
+- [crates](../crates/) contains the Rust compiler, layout engine and command-line crate.
+- [site](../site/) contains the site and learning material; [examples](../examples/) contains example applications.
+- [benchmarks](../benchmarks/) compares implementations; [evals](../evals/) holds evaluation results and tools.
+- [scripts](../scripts/) contains repository setup and quality checks; [.github](../.github/) contains workflows and templates.
+- [docs](./) contains architecture, decisions and the roadmap.
