@@ -4,11 +4,13 @@
 // which only data-flair="sweep" lights; any other data-sweep (Card's `sweep` prop) sweeps at every stop.
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import type * as Playwright from 'playwright-core'
 
-const { chromium } = createRequire(import.meta.url)('playwright-core')
+const { chromium } = createRequire(import.meta.url)('playwright-core') as typeof Playwright
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
 
-const styles = (f) => readFileSync(new URL(`../../warp-core/styles/${f}`, import.meta.url), 'utf8')
+const styles = (f: string) =>
+  readFileSync(new URL(`../../warp-core/styles/${f}`, import.meta.url), 'utf8')
 const css =
   [
     'warp.css',
@@ -34,7 +36,7 @@ const css =
 
 const part = '<span data-part="sweep"></span>'
 // [id, markup with SWEEP where the data-sweep attribute goes]
-const SURFACES = [
+const SURFACES: [string, string][] = [
   ['card', '<div data-scope="surface" SWEEP>Card</div>'],
   ['link-card', '<a href="#x" data-scope="surface" SWEEP>Link card</a>'],
   ['button-card', '<button type="button" data-scope="surface" SWEEP>Button card</button>'],
@@ -46,13 +48,14 @@ const SURFACES = [
   ['row', '<article data-scope="notification" SWEEP>Row</article>'],
   ['tile', '<div data-scope="tile" SWEEP>Tile</div>'],
 ]
-const host = (id, value) =>
-  SURFACES.find((s) => s[0] === id)[1]
+const host = (id: string, value: string) =>
+  SURFACES.find((s) => s[0] === id)![1]
     .replace('SWEEP', `id="${id}-${value || 'on'}" data-sweep="${value}"`)
     .replace(/<\/(\w+)>$/, `${part}</$1>`)
 const PAGE = SURFACES.map(([id]) => host(id, 'surface') + host(id, '')).join('\n')
 
-let browser, page
+let browser: Playwright.Browser
+let page: Playwright.Page
 beforeAll(async () => {
   browser = await chromium.launch()
   page = await browser.newPage({ viewport: { width: 900, height: 900 } })
@@ -73,7 +76,7 @@ const gates = () =>
       ]),
     ),
   )
-const dial = (expression, flair) =>
+const dial = (expression: string, flair?: string) =>
   page.evaluate(
     ([e, f]) => {
       document.documentElement.dataset.expression = e
@@ -108,7 +111,7 @@ test('data-flair="sweep" still lights the surfaces the kit marks', async () => {
 
 test('a hovered clickable card draws no stroke unless it opted in', async () => {
   await dial('vivid')
-  const shows = async (id) => {
+  const shows = async (id: string) => {
     await page.hover(`#${id}`)
     const s = page.locator(`#${id} > [data-part="sweep"]`)
     await s.evaluate((n) =>
