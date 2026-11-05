@@ -3,9 +3,10 @@
 //! that changes reruns this, and cargo then stops exactly where the implementation no longer fits, which `weft dev`,
 //! `weft build` and `weft check` report as R103 with the function's id.
 
+mod emit;
+
 use std::collections::BTreeMap;
 use std::env;
-use std::fmt::Write as _;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -236,81 +237,14 @@ pub(crate) fn render(contract: &Value, service: &str) -> Result<String, String> 
     let mut methods = String::new();
     let mut table = String::new();
     for s in &specs {
-        let name = &s.type_name;
-        let input = match &s.input {
-            Some(schema) => {
-                extra += &alias(
-                    &format!("{name}Input"),
-                    &add(&mut space, schema, &format!("{name}Input"))?,
-                );
-                format!(", input: {name}Input")
-            }
-            None => String::new(),
-        };
-        extra += &alias(
-            &format!("{name}Output"),
-            &add(&mut space, &s.output, &format!("{name}Output"))?,
-        );
-
-        let error = if s.errors.is_empty() {
-            "::weft::Error".to_string()
-        } else {
-            let mut variants = String::new();
-            for (code, schema) in &s.errors {
-                let data = format!("{name}{code}");
-                extra += &alias(&data, &add(&mut space, schema, &data)?);
-                let _ = writeln!(variants, "{code}({data}),");
-            }
-            let _ = write!(
-                body,
-                r#"
-/// `{id}`'s declared errors, and `Internal` for the rest: any `std::error::Error` converts, so `?` works.
-#[derive(Debug, ::serde::Serialize)]
-#[serde(tag = "code", content = "data")]
-pub enum {name}Error {{
-    {variants}
-    #[serde(skip)]
-    Internal(::std::string::String),
-}}
-impl<E: ::std::error::Error> ::std::convert::From<E> for {name}Error {{
-    fn from(e: E) -> Self {{ Self::Internal(e.to_string()) }}
-}}
-impl ::weft::Failure for {name}Error {{
-    fn failed(self) -> ::weft::Failed {{
-        match self {{
-            Self::Internal(detail) => ::weft::Failed::Internal(detail),
-            typed => match ::serde_json::to_value(typed) {{
-                Ok(v) => ::weft::Failed::Typed(v),
-                Err(e) => ::weft::Failed::Internal(e.to_string()),
-            }},
-        }}
-    }}
-}}
-"#,
-                id = s.id,
-            );
-            format!("{name}Error")
-        };
-
-        let _ = writeln!(
-            methods,
-            "/// `{id}`\nfn {method}(&self, ctx: ::weft::{ctx}{input}) -> impl ::std::future::Future<Output = ::std::result::Result<{name}Output, {error}>> + Send;",
-            id = s.id,
-            method = s.method,
-            ctx = s.ctx,
-        );
-        let (param, args) = if s.input.is_some() {
-            (format!("input: {name}Input"), "ctx, input")
-        } else {
-            ("_: ()".to_string(), "ctx")
-        };
-        let _ = writeln!(
-            table,
-            ".add({id:?}, {{ let s = service.clone(); move |ctx: ::weft::{ctx}, {param}| {{ let s = s.clone(); async move {{ s.{method}({args}).await }} }} }})",
-            id = s.id,
-            ctx = s.ctx,
-            method = s.method,
-        );
+        emit::function(
+            s,
+            &mut space,
+            &mut extra,
+            &mut body,
+            &mut methods,
+            &mut table,
+        )?;
     }
 
     let text = format!(
