@@ -16,6 +16,64 @@ export type NumberFieldProps = FieldShell &
 
 const PAGE = 10
 
+type NumberOptions = {
+  value: () => NumberFieldProps['value']
+  initial: () => NumberFieldProps['defaultValue']
+  onChange: () => NumberFieldProps['onValueChange']
+  min: () => number | undefined
+  max: () => number | undefined
+  step: () => number
+  disabled: () => boolean | undefined
+  readonly: () => boolean | undefined
+}
+
+function numberModel(opts: NumberOptions) {
+  const v = bindable<number | null>(opts.value, opts.initial, null, opts.onChange)
+  const fit = (n: number) => Math.min(opts.max() ?? Infinity, Math.max(opts.min() ?? -Infinity, n))
+  const shown = derived(() => (v.value === null ? '' : String(v.value)))
+  let input: HTMLInputElement | undefined
+  const write = (n: number | null) => {
+    if (n !== untrack(() => v.value)) v.set(n, 'keyboard')
+    if (input) input.value = n === null ? '' : String(n)
+  }
+  const nudge = (by: number) => write(fit((untrack(() => v.value) ?? opts.min() ?? 0) + by))
+  const onKey = (e: KeyboardEvent) => {
+    if (opts.disabled() || opts.readonly()) return
+    const by = (
+      {
+        ArrowUp: opts.step(),
+        ArrowDown: -opts.step(),
+        PageUp: opts.step() * PAGE,
+        PageDown: -opts.step() * PAGE,
+      } as Record<string, number>
+    )[e.key]
+    if (by) {
+      e.preventDefault()
+      return nudge(by)
+    }
+    if (e.key === 'Home' && opts.min() !== undefined) {
+      e.preventDefault()
+      write(opts.min()!)
+    }
+    if (e.key === 'End' && opts.max() !== undefined) {
+      e.preventDefault()
+      write(opts.max()!)
+    }
+  }
+
+  const onInput = (e: Event) => {
+    const text = (e.currentTarget as HTMLInputElement).value.trim()
+    const n = Number(text)
+    if (text === '') v.set(null, 'keyboard')
+    else if (Number.isFinite(n)) v.set(fit(n), 'keyboard')
+  }
+
+  const onBlur = () => {
+    if (input) input.value = untrack(() => shown.value)
+  }
+  return [v, shown, nudge, onKey, onInput, onBlur, (n: HTMLInputElement) => (input = n)] as const
+}
+
 /**
  * A number in the field shell (03: `inputmode` over `type="number"`, which changes on a wheel, takes "e" and has its own
  * locale bugs). The input stays real text, so editing, paste and the numeric keypad are the OS's; warp adds APG spinbutton
@@ -33,50 +91,16 @@ export function NumberField({
   readonly,
   ...rest
 }: NumberFieldProps) {
-  const v = bindable<number | null>(
-    () => value,
-    () => defaultValue,
-    null,
-    () => onValueChange,
-  )
-  const fit = (n: number) => Math.min(max ?? Infinity, Math.max(min ?? -Infinity, n))
-  const shown = derived(() => (v.value === null ? '' : String(v.value)))
-  let input: HTMLInputElement | undefined
-  const write = (n: number | null) => {
-    if (n !== untrack(() => v.value)) v.set(n, 'keyboard')
-    if (input) input.value = n === null ? '' : String(n)
-  }
-  const nudge = (by: number) => write(fit((untrack(() => v.value) ?? min ?? 0) + by))
-  const onKey = (e: KeyboardEvent) => {
-    if (disabled || readonly) return
-    const by = (
-      { ArrowUp: step, ArrowDown: -step, PageUp: step * PAGE, PageDown: -step * PAGE } as Record<
-        string,
-        number
-      >
-    )[e.key]
-    if (by) {
-      e.preventDefault()
-      return nudge(by)
-    }
-    if (e.key === 'Home' && min !== undefined) {
-      e.preventDefault()
-      write(min)
-    }
-    if (e.key === 'End' && max !== undefined) {
-      e.preventDefault()
-      write(max)
-    }
-  }
-  const onInput = (e: Event) => {
-    const text = (e.currentTarget as HTMLInputElement).value.trim()
-    const n = Number(text)
-    if (text === '') v.set(null, 'keyboard')
-    else if (Number.isFinite(n)) v.set(fit(n), 'keyboard')
-  }
-  const onBlur = () => {
-    if (input) input.value = untrack(() => shown.value)
-  }
+  const [v, shown, nudge, onKey, onInput, onBlur, setInput] = numberModel({
+    value: () => value,
+    initial: () => defaultValue,
+    onChange: () => onValueChange,
+    min: () => min,
+    max: () => max,
+    step: () => step,
+    disabled: () => disabled,
+    readonly: () => readonly,
+  })
   const stepper = (label: string, by: number, off: boolean) => (
     <button
       type="button"
@@ -104,7 +128,7 @@ export function NumberField({
       }
       control={(p) => (
         <input
-          ref={(n) => (input = n)}
+          ref={(n) => setInput(n)}
           data-part="input"
           id={p.id}
           role="spinbutton"

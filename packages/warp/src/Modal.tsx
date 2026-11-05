@@ -7,6 +7,27 @@ import './styles'
 import '@weft-js/warp-core/styles/components/button.css' // the close button's markup
 import '@weft-js/warp-core/styles/components/dialog.css'
 
+type ModalProps = {
+  open: State<boolean>
+  title: unknown
+  description?: unknown
+  footer?: unknown
+  size?: 'sm' | 'md' | 'lg' | undefined
+  /** Where it sits, and the edge it arrives from. */ placement?:
+    | 'center'
+    | 'top'
+    | 'bottom'
+    | 'left'
+    | 'right'
+    | 'full'
+    | undefined
+  alert?: boolean | undefined
+  tone?: Tone | undefined
+  /** Drawn above the title (09's result mark). */ mark?: unknown
+  /** Drawn open in the page's flow, not over it: no top layer, scrim or focus trap. For docs and previews. */ inline?: boolean
+  children?: unknown
+}
+
 /**
  * A modal dialog on the native <dialog> (05 §3; components.html:1067-1090): showModal, focus to [autofocus] or the
  * title, back to the opener on every close path, scroll lock by CSS. Named by its title, described by its
@@ -26,26 +47,7 @@ export function Modal({
   mark,
   inline,
   children,
-}: {
-  open: State<boolean>
-  title: unknown
-  description?: unknown
-  footer?: unknown
-  size?: 'sm' | 'md' | 'lg' | undefined
-  /** Where it sits, and the edge it arrives from. */ placement?:
-    | 'center'
-    | 'top'
-    | 'bottom'
-    | 'left'
-    | 'right'
-    | 'full'
-    | undefined
-  alert?: boolean | undefined
-  tone?: Tone | undefined
-  /** Drawn above the title (09's result mark). */ mark?: unknown
-  /** Drawn open in the page's flow, not over it: no top layer, scrim or focus trap. For docs and previews. */ inline?: boolean
-  children?: unknown
-}) {
+}: ModalProps) {
   const id = uid('dlg')
   const hasDescription = derived(() => description !== undefined)
   const sign = derived(() => mark)
