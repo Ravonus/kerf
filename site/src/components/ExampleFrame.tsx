@@ -7,16 +7,18 @@ export type ShownExample = ExampleRef & { code: string; lines: number }
 /** Lines that show before the code folds. */
 const FOLD = 3
 
-/**
- * The page's one object: stage, then code docked under it. The stage's own controls and the fold are plain attributes,
- * handled by StageBar's one listener, so a page of twenty frames runs no code per frame.
- */
-export function ExampleFrame(props: {
+type ExampleFrameProps = {
   file: string
   example: ShownExample
   hero?: boolean
   flow?: string
-}) {
+}
+
+/**
+ * The page's one object: stage, then code docked under it. The stage's own controls and the fold are plain attributes,
+ * handled by StageBar's one listener, so a page of twenty frames runs no code per frame.
+ */
+export function ExampleFrame(props: ExampleFrameProps) {
   const ex = props.example
   return (
     <div data-site="frame" data-flow={props.flow ?? 'card'} data-hero={props.hero ? '' : undefined}>
@@ -45,17 +47,7 @@ export function ExampleFrame(props: {
         </span>
         <span data-part="spacer"></span>
         <span data-part="stage-tools">
-          {ex.replay && (
-            <Button
-              emphasis="ghost"
-              tone="neutral"
-              size="sm"
-              icon="rotate-ccw"
-              data-act="stage-replay"
-            >
-              Replay
-            </Button>
-          )}
+          {ex.replay && replayButton()}
           <Button
             emphasis="ghost"
             tone="neutral"
@@ -100,12 +92,24 @@ export function ExampleFrame(props: {
           // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from this repo's examples
           innerHTML={ex.code}
         ></div>
-        {ex.lines > FOLD && !ex.codeOpen && (
-          <Button emphasis="outline" tone="neutral" size="sm" data-act="stage-code">
-            View code
-          </Button>
-        )}
+        {ex.lines > FOLD && !ex.codeOpen && codeButton()}
       </div>
     </div>
+  )
+}
+
+function replayButton() {
+  return (
+    <Button emphasis="ghost" tone="neutral" size="sm" icon="rotate-ccw" data-act="stage-replay">
+      Replay
+    </Button>
+  )
+}
+
+function codeButton() {
+  return (
+    <Button emphasis="outline" tone="neutral" size="sm" data-act="stage-code">
+      View code
+    </Button>
   )
 }
