@@ -41,12 +41,10 @@ function Temperature({ city }: { city: string }) {
 
 export default function Weather() {
   const city = state('Lisbon')
+  const title =
+    'The old value stays while the new one loads'
   return (
-    <Card
-      title={
-        'The old value stays ' + 'while the new one loads'
-      }
-    >
+    <Card title={title}>
       <Row
         gap="tight"
         wrap
