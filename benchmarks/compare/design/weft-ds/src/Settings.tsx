@@ -14,7 +14,7 @@ import {
 
 const roles = ['Admin', 'Editor', 'Viewer'].map((r) => ({ value: r, label: r }))
 
-export function Settings() {
+function useSettings() {
   const name = state('Ada Lovelace')
   const email = state('ada@northwind.example')
   const role = state('Admin')
@@ -42,6 +42,12 @@ export function Settings() {
     error.value = ''
     saved.value = false
   }
+
+  return { name, email, role, bio, updates, error, saved, save, cancel }
+}
+
+export function Settings() {
+  const { name, email, role, bio, updates, error, saved, save, cancel } = useSettings()
 
   return (
     <Stack gap="group">
