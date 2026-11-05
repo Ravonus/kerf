@@ -110,7 +110,10 @@ function ProductTable({
           {shown.value
             .filter((p) => p.category === c)
             .map((p) => (
-              <ProductRow key={p.name} product={p} />
+              <ProductRow
+                key={p.name}
+                product={p}
+              />
             ))}
         </tbody>
       ))}
@@ -127,7 +130,10 @@ function SearchBar({
 }) {
   return (
     <form>
-      <Input label="Search" value={filterText} />
+      <Input
+        label="Search"
+        value={filterText}
+      />
       <Checkbox checked={inStockOnly}>
         Only show products in stock
       </Checkbox>

@@ -92,7 +92,10 @@ export default function Todos() {
         <Button type="submit">Add</Button>
       </form>
       {problem.value && (
-        <Alert tone="critical" live>
+        <Alert
+          tone="critical"
+          live
+        >
           {problem.value}
         </Alert>
       )}
