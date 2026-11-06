@@ -87,9 +87,14 @@ function toastTools() {
     const box = (await button.boundingBox())!
     if (box.x + box.width > 1100 || box.y + box.height > 700) {
       const evidence = await page.evaluate((selector) => {
-        const region = document.querySelector(selector)
-        const button = region?.querySelector('[data-act]')
-        const nodes = [region, button, region?.closest('dialog'), region?.parentElement]
+        const regionNode = document.querySelector(selector)
+        const buttonNode = regionNode?.querySelector('[data-act]')
+        const nodes = [
+          regionNode,
+          buttonNode,
+          regionNode?.closest('dialog'),
+          regionNode?.parentElement,
+        ]
         return nodes.map(
           (el) =>
             el && {

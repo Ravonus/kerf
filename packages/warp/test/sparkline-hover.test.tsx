@@ -3,6 +3,7 @@ import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { fireEvent } from '@testing-library/dom'
 import { flush, render } from '@weft-js/core/test'
 import { Sparkline } from '../src/Charts'
+import { SparklineColors } from '../../../site/src/toolkit/examples/charts'
 
 const settle = async () => {
   await tick()
@@ -64,13 +65,10 @@ describe('Sparkline hover', () => {
   test("the site's error-rate sparkline carries its headline's unit", async () => {
     const start = performance.now()
     const phases: Record<string, number> = { start: 0 }
-    let phase = 'import'
+    let phase = 'render'
     onTestFailed(() => {
       console.error('site sparkline timing:', { phase, elapsed: performance.now() - start, phases })
     })
-    const { SparklineColors } = await import('../../../site/src/toolkit/examples/charts')
-    phases.import = performance.now() - start
-    phase = 'render'
     const { container: c } = render(() => <SparklineColors />)
     phases.render = performance.now() - start
     phase = 'settle'
