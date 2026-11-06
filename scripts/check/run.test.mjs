@@ -19,7 +19,10 @@ void test('prints complete failed job output and keeps bounded problems', () => 
   assert.equal(child.status, 0)
   const { problems } = JSON.parse(child.stdout)
   assert.equal(problems.length, 82)
-  assert.deepEqual(problems.filter((line) => line.startsWith('--- ')), ['--- first', '--- second'])
+  assert.deepEqual(
+    problems.filter((line) => line.startsWith('--- ')),
+    ['--- first', '--- second'],
+  )
   assert.ok(!problems.some((line) => line.includes('line-0')))
   assert.ok(!child.stderr.includes('successful-secret-marker'))
   for (const label of ['first', 'second']) {
