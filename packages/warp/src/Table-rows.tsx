@@ -2,8 +2,13 @@
 import { pushLayer } from '@weft-js/warp-core'
 import { onCleanup, onMount, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from './Button'
+import { tableEditor } from './Table-editor'
+
 import { For } from '@weft-js/core/dom'
 import type { Column, Ctx } from './Table-types'
+
+/** The input used to edit a cell. */
+export { Editor } from './Table-editor'
 
 /** The details disclosure icon. */
 export const chevron = () => (
@@ -19,60 +24,28 @@ export const chevron = () => (
   </svg>
 )
 /** Every column as a list: what a sheet and a detail row show by default. */
-export function Fields<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
-  return (
-    <dl data-scope="desc">
-      {ctx.cols().map((c) => (
-        <div key={c.id}>
-          <dt>{c.header}</dt>
-          <dd>{(c.cell ?? ((r: T) => ctx.read(c, r)))(row)}</dd>
-        </div>
-      ))}
-    </dl>
+export function Fields<T>(props: { row: T; ctx: Ctx<T> }) {
+  return untrack(() =>
+    tableFields(
+      () => props.row,
+      () => props.ctx,
+    ),
   )
 }
 
-/** The input used to edit a cell. */
-export function Editor({
-  label,
-  start,
-  onDone,
-  onLeave,
-  invalid,
-  describedby,
-}: {
-  label: string
-  start: string
-  onDone: (save: boolean, text: string) => void
-  onLeave?: (save: boolean, text: string) => void
-  invalid?: boolean
-  describedby?: string | undefined
-}) {
-  let input: HTMLInputElement | undefined
-  onMount(() => {
-    input?.focus()
-    input?.select()
-  })
+/** Render row fields under the detail owner. */
+export function tableFields<T>(row: () => T, ctx: () => Ctx<T>) {
   return (
-    <label>
-      <span data-part="sr-only">{label}</span>
-      <input
-        ref={(n) => (input = n)}
-        data-part="editor"
-        aria-invalid={invalid ? 'true' : undefined}
-        aria-describedby={describedby}
-        value={start}
-        onKeyDown={(e: KeyboardEvent) => {
-          if (e.key !== 'Enter' && e.key !== 'Escape') return
-          e.preventDefault()
-          e.stopPropagation()
-          onDone(e.key === 'Enter', (e.currentTarget as HTMLInputElement).value)
-        }}
-        onBlur={(e: FocusEvent) =>
-          (onLeave ?? onDone)(true, (e.currentTarget as HTMLInputElement).value)
-        }
-      />
-    </label>
+    <dl data-scope="desc">
+      <For each={ctx().cols()} by={(column) => column.id}>
+        {(column) => (
+          <div>
+            <dt>{column().header}</dt>
+            <dd>{(column().cell ?? ((value: T) => ctx().read(column(), value)))(row())}</dd>
+          </div>
+        )}
+      </For>
+    </dl>
   )
 }
 
@@ -142,20 +115,17 @@ function cell<T>(row: () => T, col: () => Column<T>, ctx: () => Ctx<T>) {
       tabindex={c.edit ? '0' : undefined}
       aria-description={c.edit ? 'Press Enter to edit' : undefined}
       onDblClick={c.edit ? begin : undefined}
-      onKeyDown={
-        (c.edit
-          ? (e: KeyboardEvent) => {
-              if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === 'F2')) {
-                e.preventDefault()
-                begin()
-              }
-            }
-          : undefined)!
-      }
+      onKeyDown={(c.edit ? cellKey(begin) : undefined)!}
     >
       {editing.value ? (
         <>
-          <Editor label={`${c.header} for ${ctx().title(row())}`} start={seed} onDone={done} />
+          {untrack(() =>
+            tableEditor(
+              () => `${c.header} for ${ctx().title(row())}`,
+              () => seed,
+              { onDone: done },
+            ),
+          )}
           {problem.value && (
             <span data-part="sr-only" id={message()} role="alert">
               {problem.value}
@@ -169,11 +139,31 @@ function cell<T>(row: () => T, col: () => Column<T>, ctx: () => Ctx<T>) {
   )
 }
 
-export function Row<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
-  const key = () => ctx.keyOf(row)
-  const on = () => !!ctx.sel?.get(key())
-  const opened = () => !!(ctx.open.get(key()) as boolean | undefined)
-  const detail = () => `${ctx.id}-d-${key()}`
+function cellKey(begin: () => void) {
+  return (e: KeyboardEvent) => {
+    if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === 'F2')) {
+      e.preventDefault()
+      begin()
+    }
+  }
+}
+
+/** A keyed row with its optional detail row. */
+export function Row<T>(props: { row: T; ctx: Ctx<T> }) {
+  return untrack(() =>
+    tableRow(
+      () => props.row,
+      () => props.ctx,
+    ),
+  )
+}
+
+/** Render a row under the keyed row owner. */
+export function tableRow<T>(row: () => T, ctx: () => Ctx<T>) {
+  const key = () => ctx().keyOf(row())
+  const on = () => !!ctx().sel?.get(key())
+  const opened = () => !!(ctx().open.get(key()) as boolean | undefined)
+  const detail = () => `${ctx().id}-d-${key()}`
   // a closing row stays until it has slid shut. A timer, because transitionend never comes
   // when the transition is skipped, and that would strand an empty row
   const mounted = state(untrack(opened))
@@ -187,10 +177,8 @@ export function Row<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
       setTimeout(settle, slide ? parseFloat(getComputedStyle(slide).transitionDuration) * 1000 : 0)
     })
   })
-  const currentRow = () => row
-  const context = () => ctx
-  const click = rowClick(currentRow, context)
-  const renderCell = (column: () => Column<T>) => untrack(() => cell(currentRow, column, context))
+  const click = rowClick(row, ctx)
+  const renderCell = (column: () => Column<T>) => untrack(() => cell(row, column, ctx))
   return (
     <>
       <tr
@@ -198,17 +186,17 @@ export function Row<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
         role="row"
         data-id={key()}
         data-selected={on() ? '' : undefined}
-        data-clickable={ctx.details ? '' : undefined}
-        onClick={(ctx.details ? click : undefined)!}
+        data-clickable={ctx().details ? '' : undefined}
+        onClick={(ctx().details ? click : undefined)!}
       >
-        {ctx.sel && (
+        {ctx().sel && (
           <td role="cell" data-part="select" data-pinned="first">
             <label data-scope="checkbox">
               <input
                 type="checkbox"
-                checked={ctx.sel.get(key())}
-                aria-label={`Select ${ctx.title(row)}`}
-                onClick={(e: MouseEvent) => ctx.pick(key(), e)}
+                checked={ctx().sel!.get(key())}
+                aria-label={`Select ${ctx().title(row())}`}
+                onClick={(e: MouseEvent) => ctx().pick(key(), e)}
               />
               <span data-part="control">
                 <span data-part="mark" aria-hidden="true"></span>
@@ -216,30 +204,30 @@ export function Row<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
             </label>
           </td>
         )}
-        {ctx.details && (
+        {ctx().details && (
           <td role="cell" style="padding-inline:4px">
             <button
               type="button"
               data-part="expand"
               aria-expanded={opened() ? 'true' : 'false'}
               aria-controls={mounted.value ? detail() : undefined}
-              aria-label={`Details for ${ctx.title(row)}`}
-              onClick={(e: MouseEvent) => ctx.toggle(row, e.currentTarget as HTMLElement)}
+              aria-label={`Details for ${ctx().title(row())}`}
+              onClick={(e: MouseEvent) => ctx().toggle(row(), e.currentTarget as HTMLElement)}
             >
               {chevron()}
             </button>
           </td>
         )}
-        <For each={ctx.cols()} by={(column) => column.id}>
+        <For each={ctx().cols()} by={(column) => column.id}>
           {renderCell}
         </For>
       </tr>
       {mounted.value && (
         <tr data-part="detail" role="row" id={detail()}>
-          <td role="cell" colspan={ctx.span()}>
+          <td role="cell" colspan={ctx().span()}>
             <div data-part="slide" data-closing={opened() ? undefined : ''}>
               <div>
-                <div>{ctx.body(row)}</div>
+                <div>{ctx().body(row())}</div>
               </div>
             </div>
           </td>
@@ -263,23 +251,32 @@ function rowClick<T>(row: () => T, ctx: () => Ctx<T>) {
   }
 }
 
+type SheetProps<T> = { row: T; ctx: Ctx<T>; onClose: (restore?: boolean) => void }
+
 /** The tablet detail sheet (06 §5): non-modal, Escape closes it from anywhere, focus moves to Close and back to the row. */
-export function Sheet<T>({
-  row,
-  ctx,
-  onClose,
-}: {
-  row: T
-  ctx: Ctx<T>
-  onClose: (restore?: boolean) => void
-}) {
+export function Sheet<T>(props: SheetProps<T>) {
+  return untrack(() =>
+    tableSheet(
+      () => props.row,
+      () => props.ctx,
+      props,
+    ),
+  )
+}
+
+/** Render the sheet under its conditional owner. */
+export function tableSheet<T>(
+  row: () => T,
+  ctx: () => Ctx<T>,
+  callbacks: Pick<SheetProps<T>, 'onClose'>,
+) {
   let close: HTMLElement | undefined
   let el: HTMLElement | undefined
   onMount(() => {
     close?.focus()
-    onCleanup(pushLayer({ el: el!, close: (reason) => onClose(reason === 'escape') }))
+    onCleanup(pushLayer({ el: el!, close: (reason) => callbacks.onClose(reason === 'escape') }))
   })
-  const id = () => `${ctx.id}-sh`
+  const id = () => `${ctx().id}-sh`
   return (
     <div
       ref={(n) => (el = n)}
@@ -289,20 +286,20 @@ export function Sheet<T>({
       aria-labelledby={id()}
     >
       <header>
-        <h4 id={id()} aria-level={ctx.level} style="margin:0">
-          {ctx.title(row)}
+        <h4 id={id()} aria-level={ctx().level} style="margin:0">
+          {ctx().title(row())}
         </h4>
         <Button
           emphasis="ghost"
           tone="neutral"
           ref={(n) => (close = n)}
-          onClick={() => onClose(true)}
+          onClick={() => callbacks.onClose(true)}
         >
           Close
         </Button>
       </header>
       <div tabindex="0" role="group" aria-labelledby={id()}>
-        {ctx.body(row)}
+        {ctx().body(row())}
       </div>
     </div>
   )

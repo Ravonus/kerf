@@ -1,7 +1,7 @@
 // Render a table from its per-instance model.
 import { untrack } from '@weft-js/core'
 import { hideRule } from '@weft-js/warp-core'
-import { Sheet } from './Table-rows'
+import { tableSheet } from './Table-rows'
 import { Checkbox } from './Choice'
 import { tableHead } from './Table-head'
 import { tableBody } from './Table-body'
@@ -74,7 +74,14 @@ export const tableView: TableRender = (input, refs, ...parts) => {
         </table>
       </div>
       {footer.value && tableFooter(paging)}
-      {sheet.value && <Sheet row={sheet.value.row} ctx={ctx} onClose={closeSheet} />}
+      {sheet.value &&
+        untrack(() =>
+          tableSheet(
+            () => sheet.value!.row,
+            () => ctx,
+            { onClose: closeSheet },
+          ),
+        )}
     </div>
   )
 }

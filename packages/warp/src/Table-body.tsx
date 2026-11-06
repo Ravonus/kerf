@@ -1,6 +1,8 @@
 // The table's loading, row and empty-state body.
 import { Button } from './Button'
-import { Row } from './Table-rows'
+import { untrack } from '@weft-js/core'
+import { For } from '@weft-js/core/dom'
+import { tableRow } from './Table-rows'
 import type { TableModel } from './Table-model'
 
 const SKELETON_ROWS = 6
@@ -35,7 +37,9 @@ export function tableBody<T>(
           </tr>
         ))
       ) : phase.value === 'ready' ? (
-        visible.value.map((r) => <Row key={keyOf(r)} row={r} ctx={ctx} />)
+        <For each={visible.value} by={keyOf}>
+          {(row) => untrack(() => tableRow(row, () => ctx))}
+        </For>
       ) : (
         <tr role="row">
           <td role="cell" colspan={ctx.span()} style="white-space:normal;block-size:auto">

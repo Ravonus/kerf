@@ -1,6 +1,6 @@
 // The table's row details and editing context.
 import { untrack } from '@weft-js/core'
-import { Fields } from './Table-rows'
+import { tableFields } from './Table-rows'
 import type { tableBase } from './Table-base'
 import type { Ctx, TableProps } from './Table-types'
 
@@ -45,7 +45,15 @@ export function tableDetails<T>(
     pick,
     toggle,
     span: () => cols.value.length + (sel ? 1 : 0) + (hasDetails ? 1 : 0),
-    body: (row) => (props.expand ? props.expand(row) : <Fields row={row} ctx={ctx} />),
+    body: (row) =>
+      props.expand
+        ? props.expand(row)
+        : untrack(() =>
+            tableFields(
+              () => row,
+              () => ctx,
+            ),
+          ),
     edit: (r, c, v) => props.onEdit?.(r, c, v),
   }
 
