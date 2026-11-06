@@ -2,6 +2,7 @@
 import { pushLayer } from '@weft-js/warp-core'
 import { onCleanup, onMount, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from './Button'
+import { For } from '@weft-js/core/dom'
 import type { Column, Ctx } from './Table-types'
 
 /** The details disclosure icon. */
@@ -75,26 +76,25 @@ export function Editor({
   )
 }
 
-// its own component: a new value patches this one text node, and flipping `editing` is the only thing that swaps it
-function Shown<T>({ row, col, value }: { row: T; col: Column<T>; value: () => unknown }) {
-  const c = untrack(() => col)
+// The conditional owner holds the shown value; only editing replaces its nodes.
+function shown<T>(row: () => T, c: Column<T>, value: () => unknown) {
   if (c.live)
     return (
       <>
         <span data-part="dir" aria-hidden="true"></span>
-        {c.cell ? c.cell(row) : value()}
+        {c.cell ? c.cell(row()) : value()}
       </>
     )
-  return <>{c.cell ? c.cell(row) : value()}</>
+  return <>{c.cell ? c.cell(row()) : value()}</>
 }
 
-function Cell<T>({ row, col, ctx }: { row: T; col: Column<T>; ctx: Ctx<T> }) {
-  const c = untrack(() => col)
+function cell<T>(row: () => T, col: () => Column<T>, ctx: () => Ctx<T>) {
+  const c = untrack(col)
   const editing = state(false)
   const problem = state('')
   const delta = state<string | undefined>(undefined)
-  const message = () => `${ctx.id}-${ctx.keyOf(row)}-${c.id}-e`
-  const value = () => ctx.read(c, row)
+  const message = () => `${ctx().id}-${ctx().keyOf(row())}-${c.id}-e`
+  const value = () => ctx().read(c, row())
   let td: HTMLElement | undefined
   if (c.live)
     watch(value, (now, was) => {
@@ -119,7 +119,7 @@ function Cell<T>({ row, col, ctx }: { row: T; col: Column<T>; ctx: Ctx<T> }) {
         problem.value = typeof ok === 'string' ? ok : 'That value is not valid'
         return
       }
-      ctx.edit?.(row, c.id, next)
+      ctx().edit?.(row(), c.id, next)
     }
     problem.value = ''
     editing.value = false
@@ -155,7 +155,7 @@ function Cell<T>({ row, col, ctx }: { row: T; col: Column<T>; ctx: Ctx<T> }) {
     >
       {editing.value ? (
         <>
-          <Editor label={`${c.header} for ${ctx.title(row)}`} start={seed} onDone={done} />
+          <Editor label={`${c.header} for ${ctx().title(row())}`} start={seed} onDone={done} />
           {problem.value && (
             <span data-part="sr-only" id={message()} role="alert">
               {problem.value}
@@ -163,7 +163,7 @@ function Cell<T>({ row, col, ctx }: { row: T; col: Column<T>; ctx: Ctx<T> }) {
           )}
         </>
       ) : (
-        <Shown row={row} col={c} value={value} />
+        untrack(() => shown(row, c, value))
       )}
     </td>
   )
@@ -187,10 +187,10 @@ export function Row<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
       setTimeout(settle, slide ? parseFloat(getComputedStyle(slide).transitionDuration) * 1000 : 0)
     })
   })
-  const click = rowClick(
-    () => row,
-    () => ctx,
-  )
+  const currentRow = () => row
+  const context = () => ctx
+  const click = rowClick(currentRow, context)
+  const renderCell = (column: () => Column<T>) => untrack(() => cell(currentRow, column, context))
   return (
     <>
       <tr
@@ -230,9 +230,9 @@ export function Row<T>({ row, ctx }: { row: T; ctx: Ctx<T> }) {
             </button>
           </td>
         )}
-        {ctx.cols().map((c) => (
-          <Cell key={c.id} row={row} col={c} ctx={ctx} />
-        ))}
+        <For each={ctx.cols()} by={(column) => column.id}>
+          {renderCell}
+        </For>
       </tr>
       {mounted.value && (
         <tr data-part="detail" role="row" id={detail()}>
