@@ -79,6 +79,7 @@ test('reference imports use declared public packages and include all source file
     'drizzle-orm/sqlite-core',
     'drizzle-kit',
     'zod',
+    'node:process',
   ])
   for (const path of all) {
     const text = readFileSync(path, 'utf8')

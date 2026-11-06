@@ -2,7 +2,7 @@ import { channel } from '@weft-js/start'
 import { multiplayer } from '@weft-js/multiplayer/server'
 import { z } from 'zod'
 
-const mp = multiplayer<{ id: string }>({
+const mp = multiplayer<{ room: string }>({
   user: ({ ctx }) => (ctx.user ? { id: ctx.user.id, name: ctx.user.name } : { id: 'guest' }),
 })
 export const boardRoom = channel({
