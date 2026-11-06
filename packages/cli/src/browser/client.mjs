@@ -63,12 +63,14 @@ export async function waitForTab(root, { url, ms = 15_000, check } = {}) {
   const until = Date.now() + ms
   for (;;) {
     check?.()
+    let connected
     try {
-      const t = await tabs(root, { url })
-      if (t.tabs.length) return t
+      connected = await tabs(root, { url })
     } catch (e) {
       if (Date.now() > until) throw e
     }
+    check?.()
+    if (connected?.tabs.length) return connected
     if (Date.now() > until) throw fail('E_NO_TAB', 'no tab connected in time')
     await new Promise((r) => {
       setTimeout(r, 150)

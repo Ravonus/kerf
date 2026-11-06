@@ -54,18 +54,27 @@ describe('cli words', () => {
 // These child fixtures use POSIX shell permissions and syntax.
 describe.skipIf(process.platform === 'win32')('browser launch failures', () => {
   it.each([
-    ['bad executable', 'not an executable', false, /spawn:/],
-    ['early exit', '#!/bin/sh\necho launch-failed >&2\nexit 7\n', true, /exit: 7.*launch-failed/s],
+    ['bad executable', 'not an executable', false, 0, /spawn:/],
+    [
+      'early exit',
+      '#!/bin/sh\necho launch-failed >&2\nexit 7\n',
+      true,
+      0,
+      /exit: 7.*launch-failed/s,
+    ],
+    ['exit during request', '#!/bin/sh\nexit 7\n', true, 300, /exit: 7/],
   ])(
     '%s reports the child failure and cleans state',
-    async (_name, contents, executable, message) => {
+    async (_name, contents, executable, delay, message) => {
       const root = mkdtempSync(join(tmpdir(), 'weft-launch-'))
       const exe = join(root, 'chrome')
       writeFileSync(exe, contents)
       chmodSync(exe, executable ? 0o755 : 0o644)
       const old = process.env.WEFT_CHROME
       process.env.WEFT_CHROME = exe
-      const server = httpServer((_req, res) => res.end(JSON.stringify({ agent: true, tabs: [] })))
+      const server = httpServer((_req, res) => {
+        setTimeout(() => res.end(JSON.stringify({ agent: true, tabs: delay ? [{}] : [] })), delay)
+      })
       await new Promise<void>((resolve) => {
         server.listen(0, '127.0.0.1', resolve)
       })
