@@ -244,7 +244,7 @@ ESCALATIONS.md and carried into S5.
 ### Sprint 4: keep the promise
 
 Design rule 2 says every React habit that's silently wrong in weft is a hard compile error with a
-fix. Today, these are in the catalog but the compiler never emits them:
+fix. At the baseline, these catalog rules had no implementation:
 
 | Code | Catches |
 |---|---|
@@ -259,34 +259,41 @@ fix. Today, these are in the catalog but the compiler never emits them:
 | W008 | A box where a value is expected at a prop, or the reverse |
 | W030 | Module-level `state` the server entry can reach (it leaks across requests) |
 
-- [ ] Implement them in `crates/weft-compiler` in that order. The React-isms and W040 come first:
+- [x] Implement them in `crates/weft-compiler` in that order. The React-isms and W040 come first:
       they're the bugs agents write most. Each code gets a failing fixture, a fix and a
       `tests/compile.rs` case. Where the fix can't change meaning, it gets an autofix. W008 may be
       better as a TS-error mapping, which the plan allows.
-- [ ] Add W016 to the catalog (it's emitted at `analyze.rs:946` but has no entry) and give W085 a
+- [x] Add W016 to the catalog (it's emitted at `analyze.rs:946` but has no entry) and give W085 a
       test.
-- [ ] Type `form.field()` values by field kind. A text field currently returns
+- [x] Type `form.field()` values by field kind. A text field currently returns
       `string | string[] | undefined`; the landing template narrows its email value at the call site.
-- [ ] Add a check that the catalog matches the compiler. Every `by: 'compiler'` entry must have an
+- [x] Add a check that the catalog matches the compiler. Every `by: 'compiler'` entry must have an
       emit site and a test, and every emitted code must have an entry. The catalog can't drift
       again.
-- [ ] Trim the public API. Move the runtime internals out of the `@weft-js/core` root (`DIRTY`,
+- [x] Trim the public API. Move the runtime internals out of the `@weft-js/core` root (`DIRTY`,
       `rt`, `listener`, `read`, `reach`, `clean`, `setFlat`, `flat`, `collecting`, `runMounts`,
       `setKeyed`, `NONE`, `stats`, `devComponent`, `Box`) into `@weft-js/core/internal`, which the
       compiler's output imports. Document `memo`, `hole`, `localProps` and `restOf`, or move them
       too.
-- [ ] For each undocumented subpath export (9 in core, 23 in start), either document it in
+- [x] For each undocumented subpath export (9 in core, 23 in start), either document it in
       `packages/cli/docs` or remove it from `exports`. Commit an API snapshot (`api.json` per
       package) that `check` compares against, so API changes are deliberate.
-- [ ] Settle the 1.0 scope in `docs/ARCHITECTURE.md`. In: core, cli, create, start, db, warp,
+- [x] Settle the 1.0 scope in `docs/ARCHITECTURE.md`. In: core, cli, create, start, db, warp,
       warp-core, warp-icons. Out: native (6a, 6b, 6d), the native half of pay, and anything with
       one conformance test. Unreleased packages get `"private": true` until they're ready, so
       `release.mjs` and the README agree.
-- [ ] Record the exit results for phases 1b, 3x and 3c in this file. Answer or defer each open
+- [x] Record the exit results for phases 1b, 3x and 3c in this file. Answer or defer each open
       question in PLAN §11.
 
 **Exit:** the catalog check passes. `buggy-v4` reports every seeded React-ism as an error with the
 right code. The API snapshots are committed.
+
+**Status:** implemented. W020 uses resolved React imports and local wrappers; opaque imports
+remain outside the single-file proof. W008 and W030 use CLI TypeScript/project analysis.
+Seven `buggy-v4/weft/react-isms` seed/repair pairs have exact-compiler receipts; their core
+test is part of integration. Core/start API snapshots and the empty catalog baseline are
+committed. Field type assertions pass a direct Start type check. All-stack results are at
+`d245aef6`; final integration applies the recorded WebKit-only exception when applicable.
 
 ### Earlier phase exits and open questions
 
@@ -424,6 +431,6 @@ Each has a default. The plan proceeds on the default unless the owner says other
 - Sprint 1: implemented; fatal sample widths, hanging indents and 206 site checks pass
 - Sprint 2: complete; layout and archive regression gates pass
 - Sprint 3: implemented
-- Sprint 4: not started
+- Sprint 4: implemented
 - Sprint 5: not started
 - Sprint 6: not started
