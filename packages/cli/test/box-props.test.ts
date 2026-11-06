@@ -115,13 +115,26 @@ describe('W008 aliases and quiet cases', () => {
     const result = findings(
       `import { state as make } from '@weft-js/core';
       import type { Counter } from './types';
-      declare function Card(props: { n: Counter }): JSX.Element;
+      declare function Card(props: { n: Counter<number> }): JSX.Element;
       const n = make(1); const a = <Card n={n.value} />`,
       {
         '/app/types.ts': "export type { State as Counter } from '@weft-js/core';",
       },
     )
     expect(result).toMatchObject([{ code: 'W008' }])
+  })
+
+  it('preserves missing type arguments on re-exported core aliases', () => {
+    const result = findings(
+      `import { state as make } from '@weft-js/core';
+      import type { Counter } from './types';
+      declare function Card(props: { n: Counter }): JSX.Element;
+      const n = make(1); const a = <Card n={n.value} />`,
+      {
+        '/app/types.ts': "export type { State as Counter } from '@weft-js/core';",
+      },
+    )
+    expect(result).toEqual([{ code: 'TS2314' }])
   })
 
   it('does not guess from any, unknown, shadowed names or ordinary value members', () => {
