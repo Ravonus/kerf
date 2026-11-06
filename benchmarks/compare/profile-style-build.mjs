@@ -1,81 +1,55 @@
 #!/usr/bin/env node
 // M4-only hidden-map reproduction of the archived build; mismatches prohibit attribution.
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { discoverStacks } from './profile-load-data.mjs'
-import { sourcePins, assetPins, managerRoot, resources, verifyBuild } from './profile-load-pins.mjs'
+import { sourcePins, assetPins, managerRoot, verifyBuild } from './profile-load-pins.mjs'
 import { evidence, withLease } from './profile-load-io.mjs'
 import { analyze, options } from './profile-style.mjs'
+import { runStep } from './profile-style-process.mjs'
+import { compareEnvironment } from './profile-style-environment.mjs'
+import {
+  reconstructionRoot,
+  reconstructionEnv,
+  prepareReconstruction,
+} from './profile-style-setup.mjs'
 
 async function hiddenBuild(repo, name, log, root, signal) {
-  resources(root, 512 * 1024 ** 2)
-  const args = ['exec', 'vite', 'build', '--sourcemap', 'hidden', '--logLevel', 'error']
-  const child = spawn('pnpm', args, {
-    cwd: join(repo, 'benchmarks/compare', name),
-    detached: true,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: process.env,
-  })
-  let problem
-  const kill = () => {
-    if (!child.pid) return
-    try {
-      process.kill(-child.pid, 'SIGKILL')
-    } catch (error) {
-      if (error.code !== 'ESRCH') problem ??= error
-    }
-  }
-  const data = (chunk) => {
-    try {
-      log.append(name + '.log', chunk)
-    } catch (error) {
-      problem = error
-      kill()
-    }
-  }
-  child.stdout.on('data', data)
-  child.stderr.on('data', data)
-  child.once('exit', kill)
-  signal.addEventListener('abort', kill)
-  if (signal.aborted) kill()
-  const timer = setInterval(() => {
-    try {
-      resources(root)
-    } catch (error) {
-      problem = error
-      kill()
-    }
-  }, 1000)
-  const deadline = setTimeout(() => {
-    problem = new Error('Hidden build timeout')
-    kill()
-  }, 240000)
-  try {
-    const result = await new Promise((ok, bad) => {
-      child.once('error', bad)
-      child.once('close', (exit, received) => ok({ stack: name, args, exit, signal: received }))
-    })
-    log.json(name + '-exit.json', { ...result, error: problem ? String(problem) : null })
-    assert.ok(!problem && result.exit === 0 && result.signal === null, `Failed build: ${name}`)
-    return result
-  } finally {
-    clearInterval(timer)
-    clearTimeout(deadline)
-    signal.removeEventListener('abort', kill)
-    kill()
-  }
+  const result = await runStep(
+    {
+      cwd: join(repo, 'benchmarks/compare', name),
+      name,
+      command: 'pnpm',
+      args: ['exec', 'vite', 'build', '--sourcemap', 'hidden', '--logLevel', 'error'],
+      env: reconstructionEnv(root),
+    },
+    log,
+    root,
+    signal,
+  )
+  const { stdout: _stdout, ...receipt } = result
+  return receipt
 }
 
-function comparePins(actual, expected) {
-  for (const key of ['commit', 'tree', 'node', 'pnpm', 'compiler', 'files', 'textDist'])
-    assert.deepEqual(actual[key], expected[key], `Archived source/install mismatch: ${key}`)
+/** A fresh reconstruction has no previous dist; remove only the outputs this pass creates. */
+async function preservingEmpty(repo, stacks, task) {
+  const folders = stacks.map(({ name }) => join(repo, 'benchmarks/compare', name, 'dist'))
+  assert.ok(
+    folders.every((folder) => !existsSync(folder)),
+    'Unexpected reconstructed dist',
+  )
+  try {
+    return await task()
+  } finally {
+    for (const folder of folders) rmSync(folder, { recursive: true, force: true })
+  }
 }
 
 /** Retain only the small witnessed outputs in memory and restore them even after a failed build. */
 export async function preservingAssets(repo, stacks, expected, task) {
+  if (expected === null) return preservingEmpty(repo, stacks, task)
   assert.deepEqual(assetPins(repo, stacks), expected, 'Original asset witness mismatch')
   const saved = []
   let bytes = 0
@@ -126,10 +100,10 @@ async function attribute(args, stacks, captured, log, root, signal) {
   return analysis.coverage
 }
 
-/** Build all six once on the exact archived source; never install, fetch or alter source. */
+/** Retained builds require original pins; explicit reconstruction records a new environment. */
 export async function reproduce(args) {
   process.env.WEFT_COMPILER = 'native'
-  const root = managerRoot(args.repo, args.out)
+  const root = args.reconstruct ? reconstructionRoot(args) : managerRoot(args.repo, args.out)
   return withLease(root, async () => {
     const log = evidence(args.out),
       controller = new AbortController()
@@ -142,11 +116,16 @@ export async function reproduce(args) {
         readFileSync(join(args.receipt, '..', 'build-' + captured.pins.commit, 'build-proof.json')),
       )
       verifyBuild(proof, captured.pins, captured.assets)
+      if (args.reconstruct) {
+        await prepareReconstruction(args, captured.pins, log, root, controller.signal)
+        managerRoot(args.repo, args.out)
+      }
       const stacks = discoverStacks(args.repo),
         before = sourcePins(args.repo, stacks)
-      comparePins(before, captured.pins)
+      const environment = compareEnvironment(before, captured.pins, args.reconstruct)
+      log.json('environment-comparison.json', environment)
       log.json('pins-before.json', before)
-      const originalAssets = assetPins(args.repo, stacks)
+      const originalAssets = args.reconstruct ? null : assetPins(args.repo, stacks)
       log.json('assets-before.json', originalAssets)
       const coverage = await preservingAssets(args.repo, stacks, originalAssets, () =>
         attribute(args, stacks, captured, log, root, controller.signal),
@@ -164,5 +143,20 @@ export async function reproduce(args) {
   })
 }
 
+/** Reconstruction is opt-in, with explicit source and compiler artifact inputs. */
+export function buildOptions(values) {
+  const extra = {},
+    rest = []
+  for (let index = 0; index < values.length; index++) {
+    const key = values[index]
+    if (key === '--reconstruct') extra.reconstruct = true
+    else if (['--native', '--native-stamp', '--source-url', '--source-bundle'].includes(key)) {
+      assert.ok(values[index + 1] && !values[index + 1].startsWith('--'), 'Missing setup value')
+      extra[key.slice(2)] = key === '--source-url' ? values[++index] : resolve(values[++index])
+    } else rest.push(key)
+  }
+  return { ...options(rest), ...extra }
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url))
-  console.log(await reproduce(options(process.argv.slice(2))))
+  console.log(await reproduce(buildOptions(process.argv.slice(2))))
