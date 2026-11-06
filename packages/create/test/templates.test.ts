@@ -59,6 +59,14 @@ function literal(node: TS.Node): unknown {
   throw new Error(`Unexpected warp option: ${node.getText()}`)
 }
 
+function linkExternal(dir: string, dep: string) {
+  const source = fileURLToPath(new URL(`../node_modules/${dep}`, import.meta.url))
+  if (!existsSync(source)) throw new Error(`Missing template dependency: ${dep}`)
+  const target = join(dir, 'node_modules', dep)
+  mkdirSync(join(target, '..'), { recursive: true })
+  symlinkSync(source, target, 'dir')
+}
+
 function app(name: string, options: { config?: string } = {}) {
   const dir = join(tmp, `${name}-${options.config ?? 'ts'}`)
   rmSync(dir, { recursive: true, force: true })
@@ -67,6 +75,7 @@ function app(name: string, options: { config?: string } = {}) {
     ...JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')).dependencies,
     '@weft-js/cli': 1,
   })
+  for (const dep of deps.filter((d) => !d.startsWith('@weft-js/'))) linkExternal(dir, dep)
   for (const dep of deps.filter((d) => d.startsWith('@weft-js/'))) {
     mkdirSync(join(dir, 'node_modules', '@weft-js'), { recursive: true })
     symlinkSync(home(dep), join(dir, 'node_modules', dep), 'dir')
@@ -80,6 +89,12 @@ function app(name: string, options: { config?: string } = {}) {
   }
   return dir
 }
+
+it('reports a missing template dependency before checking', () => {
+  expect(() => linkExternal(tmp, 'missing-template-dependency')).toThrow(
+    'Missing template dependency: missing-template-dependency',
+  )
+})
 
 describe.each(written)('--template %s', (name) => {
   const t = loadTemplate(name)
@@ -112,9 +127,7 @@ describe.each(written)('--template %s', (name) => {
     for (const text of sql) expect(idempotent(text)).toBe(text)
   })
 
-  // tsc, a build and the served app need the template's database packages installed: scripts/packed.mjs has those.
-  // Without them the routes don't load, and H016 says their source was checked instead. weft's own packages are linked,
-  // so one of those not resolving is a fault here, not a missing install.
+  // H016 can report a missing build dependency while the source check still runs.
   it('weft check is clean', async () => {
     const uninstalled = (d: { code: string; route?: string; why: string }) =>
       d.code === 'H016' && d.route === '*' && !d.why.includes('@weft-js/')

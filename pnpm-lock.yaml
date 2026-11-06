@@ -274,12 +274,30 @@ importers:
 
   packages/create:
     devDependencies:
+      '@t3-oss/env-core':
+        specifier: 0.13.11
+        version: 0.13.11(typescript@7.0.2)(valibot@1.4.2(typescript@7.0.2))(zod@4.6.7)
+      better-auth:
+        specifier: 1.7.14
+        version: 1.7.14(1dc53cdc138db325c79e5d61afd992cf)
+      drizzle-orm:
+        specifier: 0.45.4
+        version: 0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.17.4)(@opentelemetry/api@1.10.0)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2))(typescript@7.0.2))(kysely@0.29.7)(mysql2@3.24.6(@types/node@26.6.6))(postgres@4.0.0)(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2))
+      drizzle-zod:
+        specifier: 0.8.3
+        version: 0.8.3(drizzle-orm@0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.17.4)(@opentelemetry/api@1.10.0)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2))(typescript@7.0.2))(kysely@0.29.7)(mysql2@3.24.6(@types/node@26.6.6))(postgres@4.0.0)(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2)))(zod@4.6.7)
+      postgres:
+        specifier: 4.0.0
+        version: 4.0.0
       vite:
         specifier: 8.3.5
         version: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
       vitest:
         specifier: 5.0.5
         version: 5.0.5(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(jsdom@30.1.3(@noble/hashes@2.4.0))(vite@8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
 
   packages/db:
     dependencies:
@@ -374,7 +392,7 @@ importers:
         version: link:../start
       drizzle-orm:
         specifier: 0.45.4
-        version: 0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.17.4)(@opentelemetry/api@1.10.0)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@6.0.3))(typescript@6.0.3))(kysely@0.29.7)(mysql2@3.24.6(@types/node@26.6.6))(postgres@4.0.0)(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@6.0.3))
+        version: 0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.17.4)(@opentelemetry/api@1.10.0)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(typescript@6.0.3))(typescript@6.0.3))(kysely@0.29.7)(mysql2@3.24.6(@types/node@26.6.6))(postgres@4.0.0)(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(typescript@6.0.3))
       jsdom:
         specifier: 30.1.3
         version: 30.1.3(@noble/hashes@2.4.0)
@@ -2743,6 +2761,23 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@t3-oss/env-core@0.13.11':
+    resolution: {integrity: sha512-sM7GYY+KL7H/Hl0BE0inWfk3nRHZOLhmVn7sHGxaZt9FAR6KqREXAE+6TqKfiavfXmpRxO/OZ2QgKRd+oiBYRQ==}
+    peerDependencies:
+      arktype: ^2.1.0
+      typescript: '>=5.0.0'
+      valibot: ^1.0.0-beta.7 || ^1.0.0
+      zod: ^3.24.0 || ^4.0.0
+    peerDependenciesMeta:
+      arktype:
+        optional: true
+      typescript:
+        optional: true
+      valibot:
+        optional: true
+      zod:
+        optional: true
 
   '@takumi-rs/core-darwin-arm64@2.18.2':
     resolution: {integrity: sha512-7JjXUdT1ywBGghWAR8nim7emczQRsHV4TkLspITL3a853AahtNIwLTMMb/uK0KVAPwQR0plFEqzVU23iAzRBWQ==}
@@ -6406,20 +6441,20 @@ snapshots:
 
   '@prisma/client-runtime-utils@7.10.1': {}
 
-  '@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@6.0.3))(typescript@6.0.3)':
-    dependencies:
-      '@prisma/client-runtime-utils': 7.10.1
-    optionalDependencies:
-      prisma: 7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@6.0.3)
-      typescript: 6.0.3
-    optional: true
-
   '@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2))(typescript@7.0.2)':
     dependencies:
       '@prisma/client-runtime-utils': 7.10.1
     optionalDependencies:
       prisma: 7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2)
       typescript: 7.0.2
+
+  '@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(typescript@6.0.3))(typescript@6.0.3)':
+    dependencies:
+      '@prisma/client-runtime-utils': 7.10.1
+    optionalDependencies:
+      prisma: 7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(typescript@6.0.3)
+      typescript: 6.0.3
+    optional: true
 
   '@prisma/config@7.10.1':
     dependencies:
@@ -6780,6 +6815,12 @@ snapshots:
   '@speed-highlight/core@1.2.24': {}
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@t3-oss/env-core@0.13.11(typescript@7.0.2)(valibot@1.4.2(typescript@7.0.2))(zod@4.6.7)':
+    optionalDependencies:
+      typescript: 7.0.2
+      valibot: 1.4.2(typescript@7.0.2)
+      zod: 4.6.7
 
   '@takumi-rs/core-darwin-arm64@2.18.2':
     optional: true
@@ -7490,17 +7531,6 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.15
 
-  drizzle-orm@0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.17.4)(@opentelemetry/api@1.10.0)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@6.0.3))(typescript@6.0.3))(kysely@0.29.7)(mysql2@3.24.6(@types/node@26.6.6))(postgres@4.0.0)(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@6.0.3)):
-    optionalDependencies:
-      '@electric-sql/pglite': 0.4.3
-      '@libsql/client': 0.17.4
-      '@opentelemetry/api': 1.10.0
-      '@prisma/client': 7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@6.0.3))(typescript@6.0.3)
-      kysely: 0.29.7
-      mysql2: 3.24.6(@types/node@26.6.6)
-      postgres: 4.0.0
-      prisma: 7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@6.0.3)
-
   drizzle-orm@0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.17.4)(@opentelemetry/api@1.10.0)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2))(typescript@7.0.2))(kysely@0.29.7)(mysql2@3.24.6(@types/node@26.6.6))(postgres@4.0.0)(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2)):
     optionalDependencies:
       '@electric-sql/pglite': 0.4.3
@@ -7511,6 +7541,17 @@ snapshots:
       mysql2: 3.24.6(@types/node@26.6.6)
       postgres: 4.0.0
       prisma: 7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2)
+
+  drizzle-orm@0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.17.4)(@opentelemetry/api@1.10.0)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(typescript@6.0.3))(typescript@6.0.3))(kysely@0.29.7)(mysql2@3.24.6(@types/node@26.6.6))(postgres@4.0.0)(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(typescript@6.0.3)):
+    optionalDependencies:
+      '@electric-sql/pglite': 0.4.3
+      '@libsql/client': 0.17.4
+      '@opentelemetry/api': 1.10.0
+      '@prisma/client': 7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(typescript@6.0.3))(typescript@6.0.3)
+      kysely: 0.29.7
+      mysql2: 3.24.6(@types/node@26.6.6)
+      postgres: 4.0.0
+      prisma: 7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(typescript@6.0.3)
 
   drizzle-zod@0.8.3(drizzle-orm@0.45.4(@electric-sql/pglite@0.4.3)(@libsql/client@0.17.4)(@opentelemetry/api@1.10.0)(@prisma/client@7.10.1(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2))(typescript@7.0.2))(kysely@0.29.7)(mysql2@3.24.6(@types/node@26.6.6))(postgres@4.0.0)(prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2)))(zod@4.6.7):
     dependencies:
@@ -8493,25 +8534,6 @@ snapshots:
       ansi-styles: 5.2.0
       react-is: 17.0.2
 
-  prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@6.0.3):
-    dependencies:
-      '@prisma/config': 7.10.1
-      '@prisma/dev': 0.24.17(typescript@6.0.3)
-      '@prisma/engines': 7.10.1
-      '@prisma/studio-core': 0.33.0(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      mysql2: 3.24.4(@types/node@26.6.6)
-      postgres: 3.4.7
-    optionalDependencies:
-      typescript: 6.0.3
-    transitivePeerDependencies:
-      - '@types/node'
-      - '@types/react'
-      - '@types/react-dom'
-      - magicast
-      - react
-      - react-dom
-    optional: true
-
   prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@7.0.2):
     dependencies:
       '@prisma/config': 7.10.1
@@ -8529,6 +8551,25 @@ snapshots:
       - magicast
       - react
       - react-dom
+
+  prisma@7.10.1(@types/node@26.6.6)(@types/react@19.3.0)(typescript@6.0.3):
+    dependencies:
+      '@prisma/config': 7.10.1
+      '@prisma/dev': 0.24.17(typescript@6.0.3)
+      '@prisma/engines': 7.10.1
+      '@prisma/studio-core': 0.33.0(@types/react@19.3.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      mysql2: 3.24.4(@types/node@26.6.6)
+      postgres: 3.4.7
+    optionalDependencies:
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - '@types/node'
+      - '@types/react'
+      - '@types/react-dom'
+      - magicast
+      - react
+      - react-dom
+    optional: true
 
   promise-limit@2.7.0: {}
 
