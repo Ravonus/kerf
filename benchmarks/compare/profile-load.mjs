@@ -62,9 +62,11 @@ function saveTrial(log, name, result, url) {
     })
     const sampled = cpuAttribution(cpu, row.end)
     row.cpu = {
-      totalRows: sampled.length,
-      top: sampled.slice(0, 40),
-      semantics: 'Sample delta wall time, clipped to metric snapshot; not additive CPU counters.',
+      totalRows: sampled.rows.length,
+      top: sampled.rows.slice(0, 40),
+      clock: sampled.clock,
+      semantics:
+        'Observed adjacent sample wall intervals; unsampled gaps remain unassigned. Not CPU counters.',
     }
   }
   log.json(name + '.json', row)

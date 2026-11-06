@@ -1,5 +1,6 @@
 // Validate balanced dashboard profiles without adding nested trace durations.
 import assert from 'node:assert/strict'
+import { orderedCpuSamples } from './profile-load-clock.mjs'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -204,33 +205,40 @@ export function traceAttribution(events, { origin, frame, start, end }) {
   }
 }
 
-/** CPU sample deltas are sampled wall time under throttling, not Performance CPU counters. */
+/** Attribute only observed adjacent sample intervals; leave unsampled head/tail time unassigned. */
 export function cpuAttribution(profile, cutoff) {
-  assert.ok(
-    Number.isFinite(profile.startTime) && Number.isFinite(cutoff) && cutoff > profile.startTime,
-    'Invalid CPU clock window',
-  )
-  const nodes = new Map(profile.nodes.map((node) => [node.id, node.callFrame]))
-  assert.ok(
-    profile.samples?.length && profile.samples.length === profile.timeDeltas?.length,
-    'Missing or inconsistent CPU samples',
-  )
-  let at = profile.startTime
+  const { nodes, ordered, clock } = orderedCpuSamples(profile, cutoff)
   const groups = new Map()
-  for (const [index, id] of profile.samples.entries()) {
-    const delta = profile.timeDeltas[index]
-    assert.ok(Number.isFinite(delta) && delta >= 0 && nodes.has(id), 'Invalid CPU sample')
-    const duration = Math.max(0, Math.min(at + delta, cutoff) - at)
-    at += delta
-    if (!duration) continue
-    const frame = nodes.get(id),
+  let attributedUs = 0,
+    attributedSamples = 0
+  for (const [index, sample] of ordered.entries()) {
+    const frame = nodes.get(sample.id),
       name = JSON.stringify(frame)
-    const row = groups.get(name) ?? { ...frame, samples: 0, sampledMs: 0 }
-    row.samples++
-    row.sampledMs += duration / 1000
+    const row = groups.get(name) ?? { ...frame, samples: 0, attributedSamples: 0, sampledUs: 0 }
+    row.samples++ // Preserve even zero-width, final and post-cutoff samples in the counters.
+    const next = ordered[index + 1]
+    const duration = next
+      ? Math.min(next.timestampUs, cutoff) - Math.min(sample.timestampUs, cutoff)
+      : 0
+    assert.ok(Number.isFinite(duration) && duration >= 0, 'Invalid ordered CPU interval')
+    row.sampledUs += duration
+    attributedUs += duration
+    if (duration > 0) {
+      row.attributedSamples++
+      attributedSamples++
+    }
     groups.set(name, row)
   }
-  return [...groups.values()].sort((a, b) => b.sampledMs - a.sampledMs)
+  assert.equal(attributedUs, clock.observedSpanUs, 'CPU observed interval counter mismatch')
+  const rows = [...groups.values()]
+    .map(({ sampledUs, ...row }) => ({ ...row, sampledMs: sampledUs / 1000 }))
+    .sort((left, right) => right.sampledMs - left.sampledMs)
+  assert.equal(
+    rows.reduce((total, row) => total + row.samples, 0),
+    clock.rawSamples,
+    'CPU sample counter mismatch',
+  )
+  return { rows, clock: { ...clock, attributedUs, attributedSamples } }
 }
 
 /** Keep every trial and its median/range; no automatic performance acceptance. */

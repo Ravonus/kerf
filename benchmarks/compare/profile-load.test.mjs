@@ -162,12 +162,13 @@ test('trace attribution identifies the renderer, clips the window and never adds
 test('CPU samples retain function/URL attribution and reject missing clocks or node ids', () => {
   const profile = {
     startTime: 1000,
+    endTime: 4000,
     nodes: [{ id: 1, callFrame: { functionName: 'mount', url: 'app.js', lineNumber: 2 } }],
     samples: [1, 1],
     timeDeltas: [1000, 1000],
   }
-  assert.equal(cpuAttribution(profile, 2500)[0].sampledMs, 1.5)
-  assert.equal(cpuAttribution(profile, 2500)[0].url, 'app.js')
+  assert.equal(cpuAttribution(profile, 2500).rows[0].sampledMs, 0.5)
+  assert.equal(cpuAttribution(profile, 2500).rows[0].url, 'app.js')
   assert.throws(() => cpuAttribution({ ...profile, samples: [999, 1] }, 2500))
   assert.throws(() => cpuAttribution({ ...profile, startTime: NaN }, 2500))
 })
@@ -185,7 +186,7 @@ test('stream caps reject partial traces and still close the CDP handle', async (
   assert.equal(String(await readTrace(cdp, 'owned', 5)), '12345')
 })
 
-function mockedCapture(fail = false) {
+function mockedCapture(fail = false, dataLoss = false) {
   const calls = [],
     cdp = new EventEmitter()
   let snapshots = 0,
@@ -200,7 +201,8 @@ function mockedCapture(fail = false) {
       }
     if (method === 'Page.getFrameTree') return { frameTree: { frame: { id: 'F' } } }
     if (method === 'Profiler.stop') return { profile: { nodes: [] } }
-    if (method === 'Tracing.end') cdp.emit('Tracing.tracingComplete', { stream: 'owned' })
+    if (method === 'Tracing.end')
+      cdp.emit('Tracing.tracingComplete', { stream: 'owned', dataLossOccurred: dataLoss })
     if (method === 'IO.read') return { data: '{"traceEvents":[]}', eof: true }
     return {}
   }
@@ -245,10 +247,15 @@ function mockedCapture(fail = false) {
 }
 
 test('capture uses canonical readiness/throttle and closes profilers/context on success or error', async () => {
-  for (const bad of [false, true]) {
-    const fake = mockedCapture(bad)
+  for (const [bad, dataLoss] of [
+    [false, false],
+    [true, false],
+    [false, true],
+  ]) {
+    const fake = mockedCapture(bad, dataLoss)
     const result = await captureTrial(fake.browser, 'http://loop/')
-    assert.equal(result.status, bad ? 'error' : 'ok')
+    assert.equal(result.status, bad || dataLoss ? 'error' : 'ok')
+    if (dataLoss) assert.ok(result.errors.some((error) => error.includes('trace data loss')))
     if (!bad) assert.ok(result.end > result.start)
     assert.ok(
       fake.calls.some(
