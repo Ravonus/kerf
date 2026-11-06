@@ -32,6 +32,9 @@ export function run(cmd, args, cwd = '.', env = {}) {
 export async function allJobs(items, job, limit) {
   const results = await pool(items, limit, async (item) => ({ item, ...(await job(item)) }))
   const failed = results.filter((r) => r.code !== 0)
+  for (const r of failed) {
+    process.stderr.write(`--- ${r.item} ---\n${r.out}${r.out.endsWith('\n') ? '' : '\n'}`)
+  }
   return {
     problems: failed.flatMap((r) => [`--- ${r.item}`, ...r.out.trim().split('\n').slice(-40)]),
   }
