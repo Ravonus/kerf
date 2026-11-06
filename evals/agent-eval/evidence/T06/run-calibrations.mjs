@@ -11,21 +11,21 @@ import {
 import { execFileSync, spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { calibrationChecks } from '../../run/calibration-target.mjs'
 
 const [repo, receipts, task = 'medium-shop'] = process.argv.slice(2)
 if (!repo || !receipts) throw new Error('expected repository and receipt directory')
-if (!['medium-shop', 'edit-shop'].includes(task)) throw new Error('unknown calibration task')
+if (!['medium-shop', 'edit-shop', 'bugfix-shop'].includes(task))
+  throw new Error('unknown calibration task')
 const mutants = JSON.parse(readFileSync(join(repo, 'evals/agent-eval/tasks', task, 'mutants.json')))
-const expectedMutants = { 'medium-shop': 45, 'edit-shop': 20 }[task]
+const expectedMutants = { 'medium-shop': 45, 'edit-shop': 20, 'bugfix-shop': 8 }[task]
 if (
   mutants.length !== expectedMutants ||
   new Set(mutants.map((m) => m.name)).size !== expectedMutants
 )
   throw new Error('invalid named mutant set')
-const { tests } = await import(
-  pathToFileURL(join(repo, 'evals/agent-eval/tasks', task, 'hidden.mjs'))
-)
-if (!tests.length) throw new Error('the reference has no checks')
+const module = await import(pathToFileURL(join(repo, 'evals/agent-eval/tasks', task, 'hidden.mjs')))
+const tests = calibrationChecks(task, module)
 const env = { ...process.env }
 delete env.NODE_TEST_CONTEXT
 function ready() {

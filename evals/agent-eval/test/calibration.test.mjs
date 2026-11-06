@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
-import { calibrationTarget } from '../run/calibration-target.mjs'
+import { calibrationChecks, calibrationTarget } from '../run/calibration-target.mjs'
 
 const entry = fileURLToPath(new URL('../run.mjs', import.meta.url))
 
@@ -110,4 +110,64 @@ test('calibration sandbox denies the owner home as well as its fresh HOME', () =
   assert.equal(child.status, 0, child.stderr)
   assert.match(child.stdout, /deny file-read\*[^\n]*owner-home-fixture/)
   assert.match(child.stdout, /allow file-read\*[^\n]*owned-box/)
+})
+
+test('bugfix calibration selects the full guarded suite', async () => {
+  const module = await import('../tasks/bugfix-shop/hidden.mjs')
+  assert.deepEqual(calibrationTarget(['bugfix-shop', 'reference']), {
+    task: 'bugfix-shop',
+    mutant: null,
+  })
+  assert.equal(calibrationChecks('bugfix-shop', module), module.calibrationTests)
+  assert.equal(calibrationChecks('bugfix-shop', module).length, 14)
+  assert.throws(
+    () => calibrationChecks('bugfix-shop', { calibrationTests: module.tests }),
+    /invalid bugfix-shop calibration check count/,
+  )
+  assert.throws(() => calibrationChecks('../other', module), /unknown calibration task/)
+})
+
+test('actual hidden grader dispatches all bugfix calibration checks', async () => {
+  const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const { join } = await import('node:path')
+  const root = mkdtempSync(join(tmpdir(), 'weft-hidden-dispatch-'))
+  try {
+    mkdirSync(join(root, 'node_modules/playwright-core'), { recursive: true })
+    mkdirSync(join(root, 'node_modules/axe-core'), { recursive: true })
+    writeFileSync(join(root, 'package.json'), '{}')
+    writeFileSync(
+      join(root, 'node_modules/playwright-core/index.js'),
+      `
+      exports.chromium = { launch: async () => ({
+        newContext: async () => ({setDefaultTimeout() {}, newPage: async () => ({
+          on() {}, goto() { throw new Error('fixture stops browser checks') }
+        }), close: async () => {}}), close: async () => {}
+      }) }
+    `,
+    )
+    writeFileSync(join(root, 'node_modules/axe-core/axe.min.js'), 'fixture')
+    const env = { ...process.env, WEFT_EVAL_DEPS: root }
+    delete env.NODE_TEST_CONTEXT
+    const grade = fileURLToPath(new URL('../lib/grade.mjs', import.meta.url))
+    const child = spawnSync(
+      process.execPath,
+      [
+        '--input-type=module',
+        '-e',
+        `
+      const { hidden } = await import(process.argv[1]);
+      const result = await hidden('bugfix-shop', 'http://fixture', true);
+      const normal = await hidden('bugfix-shop', 'http://fixture', false);
+      console.log(JSON.stringify({total: result.total, failed: result.failed.length, normal: normal.total}));
+    `,
+        grade,
+      ],
+      { env, encoding: 'utf8' },
+    )
+    assert.equal(child.status, 0, child.stderr)
+    assert.deepEqual(JSON.parse(child.stdout), { total: 14, failed: 14, normal: 14 })
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
 })

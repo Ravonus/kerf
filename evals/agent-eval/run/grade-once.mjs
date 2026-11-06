@@ -30,7 +30,7 @@ export async function gradeOnce(box, stackName, task, n, withQuality, options) {
     }
   }
   try {
-    const out = { built, ...(await hidden(task, server.base)) }
+    const out = { built, ...(await hidden(task, server.base, options.calibration)) }
     if (withQuality)
       out.quality = await quality(task, server.base, copy, join(goldens, stackName, 'app'))
     return out

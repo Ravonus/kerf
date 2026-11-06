@@ -44,7 +44,7 @@ test('verified medium metadata, source and readiness agree', () => {
     const blob = createHash('sha1').update(`blob ${data.length}\0`).update(data).digest('hex')
     assert.equal(blob, expected, file)
   }
-  for (const name of ['bugfix-shop', 'large-live']) {
+  for (const name of ['large-live']) {
     const pending = JSON.parse(readFileSync(new URL(`../tasks/${name}/task.json`, import.meta.url)))
     assert.equal(pending.gradeable, false)
     assert.deepEqual(taskReadiness(name, pending), [`${name}: grader is incomplete`])
@@ -85,6 +85,48 @@ test('verified edit metadata, source and readiness agree', async () => {
   )
   for (const [file, expected] of Object.entries(evidence.files)) {
     const data = readFileSync(join(editRoot, file))
+    assert.equal(
+      createHash('sha1').update(`blob ${data.length}\0`).update(data).digest('hex'),
+      expected,
+      file,
+    )
+  }
+})
+
+test('verified bugfix metadata, source and readiness agree', async () => {
+  const bugfixRoot = fileURLToPath(new URL('../tasks/bugfix-shop/', import.meta.url))
+  const task = JSON.parse(readFileSync(join(bugfixRoot, 'task.json')))
+  const evidence = JSON.parse(readFileSync(join(bugfixRoot, 'verification.json')))
+  const mutants = JSON.parse(readFileSync(join(bugfixRoot, 'mutants.json')))
+  const { calibrationTests: bugfixTests } = await import('../tasks/bugfix-shop/hidden.mjs')
+  assert.equal(task.gradeable, true)
+  assert.deepEqual(taskReadiness('bugfix-shop', task), [])
+  assert.deepEqual(taskReadiness('bugfix-shop', { ...task, gradeable: false }), [
+    'bugfix-shop: grader is incomplete',
+  ])
+  assert.equal(evidence.candidate, '90dcfd2eb24394b6185af0429c8d04157e9346e1')
+  assert.equal(
+    evidence.receiptSha256,
+    '35574460ffb87c7143cc2f0ca2dedd0dfc5c3eaa2b91a636a1568f725001dbd0',
+  )
+  assert.equal(bugfixTests.length, evidence.referenceChecks)
+  assert.equal(mutants.length, evidence.mutantsCaught)
+  const listed = []
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, e.name)
+      if (e.isDirectory()) walk(path)
+      else if (!['task.json', 'verification.json'].includes(e.name))
+        listed.push(relative(bugfixRoot, path))
+    }
+  }
+  walk(bugfixRoot)
+  assert.deepEqual(
+    listed.sort((a, b) => a.localeCompare(b)),
+    Object.keys(evidence.files).sort((a, b) => a.localeCompare(b)),
+  )
+  for (const [file, expected] of Object.entries(evidence.files)) {
+    const data = readFileSync(join(bugfixRoot, file))
     assert.equal(
       createHash('sha1').update(`blob ${data.length}\0`).update(data).digest('hex'),
       expected,

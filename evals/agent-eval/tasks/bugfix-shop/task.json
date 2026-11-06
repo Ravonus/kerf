@@ -1,1 +1,7 @@
-{ "size": "bugfix", "budgetUsd": 5, "wallMinutes": 30, "gradeable": false, "source": "Starter is each stack's medium-shop reference with the same logical bug planted: a row's Add handler bound to list position, and the total summed from a stale copy. Hidden tests cover both symptoms plus all of medium-shop." }
+{
+  "size": "bugfix",
+  "budgetUsd": 5,
+  "wallMinutes": 30,
+  "gradeable": true,
+  "source": "Starter is each stack's medium-shop reference with the same logical bug planted: a row's Add handler bound to list position, and the total summed from a stale copy. Hidden tests cover both symptoms plus all of medium-shop."
+}

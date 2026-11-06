@@ -2,50 +2,21 @@ import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
-const tasks = ['bugfix-shop', 'large-live']
+const tasks = ['large-live']
 const root = new URL('../tasks/', import.meta.url)
 
-function pageFor(task, bad) {
-  let pressed = false
+function pageFor(_task, bad) {
   return {
-    async goto() {},
-    async reload() {
-      if (bad && task === 'edit-shop') pressed = false
-    },
-    async waitForURL(predicate) {
+    goto() {},
+    waitForURL(predicate) {
       if (!predicate(new URL(bad ? 'http://test/' : 'http://test/signin')))
         throw new Error('wrong route')
     },
     getByLabel() {
-      return { async fill() {}, async waitFor() {} }
+      return { waitFor() {} }
     },
-    getByRole(_role, options) {
-      if (options.name === 'Cart')
-        return {
-          getByText(name) {
-            return {
-              async waitFor() {
-                if (bad) throw new Error(`wrong cart product: ${name}`)
-              },
-            }
-          },
-        }
-      return {
-        async click() {
-          pressed = true
-        },
-        async waitFor() {},
-        async getAttribute() {
-          return String(pressed)
-        },
-      }
-    },
-    getByText() {
-      return {
-        async count() {
-          return bad ? 0 : 1
-        },
-      }
+    getByRole() {
+      return { waitFor() {} }
     },
   }
 }
