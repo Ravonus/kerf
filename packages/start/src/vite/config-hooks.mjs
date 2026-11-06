@@ -1,9 +1,11 @@
 import { createHash } from 'node:crypto'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join, resolve } from 'node:path'
 import { searchForWorkspaceRoot } from 'vite'
 import { INLINE_CSS_MAX } from '../inline.mjs'
 import { packageDirs } from './dev.mjs'
+import { assetBytes } from './asset-bytes.mjs'
 import { combineSheets, sheetPieces, inlineSheets } from './sheets.mjs'
 import { here, V, KIT_CHUNKS, INLINE_SHEETS, SHEET_PIECES } from './shared.mjs'
 
@@ -51,6 +53,14 @@ export const configHook = (s) =>
 export const writeBundle = (s) => ({
   order: 'post',
   async handler(out, bundle) {
+    if (!s.dev && this.environment?.config.consumer === 'client' && out.dir) {
+      const name = 'weft-route-assets.json'
+      if (bundle[name]) throw new Error(`Cannot overwrite emitted ${name}`)
+      const bytes = assetBytes(bundle, (file) => readFileSync(join(out.dir, file)),
+        s.manifest ?? s.scan(), s.abs)
+      writeFileSync(join(out.dir, name), JSON.stringify(bytes))
+      s.routeAssetBytes = bytes
+    }
     if (
       s.dev ||
       this.environment?.config.consumer !== 'client' ||
