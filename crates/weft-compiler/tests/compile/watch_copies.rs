@@ -231,3 +231,69 @@ fn w004_repaired_derived_and_intentional_effects_compile_quietly() {
         assert!(!code.is_empty(), "{source}");
     }
 }
+
+#[test]
+fn w004_parameter_defaults_prevent_a_copy_only_proof() {
+    for callback in [
+        "(value = log()) => mirror.value = value",
+        "function (value = log()) { mirror.value = value }",
+        "(value, previous = log()) => mirror.value = value",
+        "function (value, previous = log()) { mirror.value = value }",
+        "(value, previous, unused = log()) => mirror.value = value",
+        "(unused = log()) => mirror.value = source.value",
+        "(value = (source.value++, 0)) => mirror.value = value",
+        "(value, previous = (mirror.value = 1)) => mirror.value = value",
+        "(value, { [log()]: unused } = {}) => mirror.value = value",
+        "(value, [unused = log()] = []) => mirror.value = value",
+        "(value = 0) => mirror.value = value",
+    ] {
+        let source = copy_watch_body(callback);
+        let (_, diagnostics) = run(&source);
+        assert!(
+            copy_watch_errors(&diagnostics).is_empty(),
+            "{source}: {diagnostics:?}"
+        );
+    }
+}
+
+#[test]
+fn w004_getter_and_aliased_callback_defaults_stay_outside_inference() {
+    for source in [
+        "import { state, watch } from '@weft-js/core'; const a = state(0); const b = state(0); \
+         watch((unused = log()) => a.value, value => b.value = value)",
+        "import { state, watch } from '@weft-js/core'; const a = state(0); const b = state(0); \
+         function read(unused = log()) { return a.value } \
+         watch(read, value => b.value = value)",
+        "import { state, watch } from '@weft-js/core'; const a = state(0); const b = state(0); \
+         const copy = (value, previous = log()) => b.value = value; \
+         const alias = copy; watch(() => a.value, alias)",
+        "import { state, watch } from '@weft-js/core'; const a = state(0); const b = state(0); \
+         function copy(value, previous, unused = log()) { b.value = value } \
+         watch(() => a.value, copy)",
+    ] {
+        let (_, diagnostics) = run(source);
+        assert!(
+            copy_watch_errors(&diagnostics).is_empty(),
+            "{source}: {diagnostics:?}"
+        );
+    }
+}
+
+#[test]
+fn w004_effect_free_parameter_repairs_still_warn() {
+    for callback in [
+        "(value: number) => mirror.value = value",
+        "(value: number, previous?: number) => mirror.value = value",
+        "function (value: number, previous?: number) { mirror.value = value }",
+        "(value, previous, unused) => mirror.value = value",
+        "unused => mirror.value = source.value",
+    ] {
+        let source = copy_watch_body(callback);
+        let (_, diagnostics) = run(&source);
+        let warnings = copy_watch_errors(&diagnostics);
+        assert_eq!(warnings.len(), 1, "{source}: {diagnostics:?}");
+        assert_eq!(warnings[0].severity, Severity::Warning);
+        assert!(warnings[0].help.contains("derived(sourceGetter)"));
+        assert!(warnings[0].fix.is_none());
+    }
+}

@@ -44,7 +44,8 @@ struct Body<'i, 's> {
 
 impl<'i, 's> Body<'i, 's> {
     fn new(index: &'i Index<'s>, params: &FormalParameters<'_>) -> Option<Self> {
-        if params.rest.is_some() {
+        // Defaults can run effects or replace undefined, so the copy is no longer proven.
+        if params.rest.is_some() || params.items.iter().any(|param| param.initializer.is_some()) {
             return None;
         }
         let mut locals = HashMap::new();
