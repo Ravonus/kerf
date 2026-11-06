@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { makeNavigation, validateNavigation } from '../src/server/navigation'
+import { makeNavigation } from '../src/server/navigation'
+import { validateNavigation } from '../src/server/navigation-cache'
 
 const request = (headers: Record<string, string> = {}) =>
   new Request('http://localhost/page', { headers })
