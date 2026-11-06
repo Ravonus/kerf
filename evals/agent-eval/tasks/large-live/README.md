@@ -86,7 +86,8 @@ WEFT_T06_PNPM_ENTRY="$HOME/.cache/node/corepack/v1/pnpm/12.15.0/bin/pnpm.mjs" \
 
 This prepares an owned SQLite app, generates a disposable secret, verifies
 packed-current packages, generates migrations, typechecks and builds. It
-retains phase logs and status at the printed receipt path, and removes the owned
-staging root. It does not launch a server or run browser checks; the configured
-`http://127.0.0.1:4173` is a planned local origin and must match a later server
-listener. A passing build is not proof of session, authorization or live data.
+retains phase logs and status at the printed receipt path, starts the built
+server on `http://127.0.0.1:4173`, and checks its listener belongs to the owned
+process before browser traffic. It runs a two-context runtime and security
+smoke, then stops the server and removes the owned staging root. A port collision
+is inconclusive. The smoke does not run semantic mutants or the full grader.

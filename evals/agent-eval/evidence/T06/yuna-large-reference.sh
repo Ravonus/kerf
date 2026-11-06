@@ -35,10 +35,10 @@ base="$HOME/work/weft-S5-verify"
 mkdir -p "$base" "$repo/evidence/T06"
 job="$(mktemp -d "$base/t06-large-reference.XXXXXXXX")"
 cleanup() {
-  # Kill only this user's processes whose cwd is inside this job's private projects.
+  # Kill only this user's processes whose cwd is inside this job's owned staging root.
   local pids
   owned_pids() {
-    lsof -nP -a -u "$(id -u)" -d cwd -Fpn 2>/dev/null | awk -v root="$job/projects" '
+    lsof -nP -a -u "$(id -u)" -d cwd -Fpn 2>/dev/null | awk -v root="$job" '
       /^p/ { pid=substr($0,2) } /^n/ { path=substr($0,2); if (path==root || index(path,root "/")==1) print pid }
     ' || true
   }
@@ -134,4 +134,8 @@ NODE
 ready
 export WEFT_T06_APP="$app" WEFT_T06_RECEIPTS="$receipts" WEFT_T06_PNPM="$pnpm"
 "$node" "$repo/evals/agent-eval/evidence/T06/large-reference.mjs"
+ready
+(cd "$WEFT_EVAL_DEPS" && pnpm install --ignore-scripts --store-dir "$job/store") > "$receipts/browser-install.log" 2>&1
+ready
+"$node" "$repo/evals/agent-eval/evidence/T06/large-smoke.mjs"
 printf 'Large reference receipts: %s\n' "$receipts"
