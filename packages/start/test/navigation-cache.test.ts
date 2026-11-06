@@ -37,9 +37,29 @@ describe('route response validators', () => {
     expect(result.headers.get('vary')).toBe('Accept-Encoding, Cookie, Accept, Authorization')
   })
 
+  it('preserves quoted directives and escapes at directive boundaries', () => {
+    const policy = 'private="Set-Cookie, Authorization", example="a\\"b,c", must-revalidate'
+    const result = validateNavigation(
+      response('{}', { 'cache-control': policy }), request(), '{}', '', 200,
+    )
+    expect(result.headers.get('cache-control')).toBe(`private, max-age=0, ${policy}`)
+  })
+
+  it('matches weak tags, lists and wildcard and preserves Vary star', () => {
+    const first = validateNavigation(response('{}'), request(), '{}', 'one', 200)
+    const tag = first.headers.get('etag')!
+    for (const candidate of [`"other", W/${tag}`, '*']) {
+      const result = validateNavigation(
+        response('{}', { vary: '*' }), request({ 'if-none-match': candidate }), '{}', 'one', 200,
+      )
+      expect(result.status).toBe(304)
+      expect(result.headers.get('vary')).toBe('*')
+    }
+  })
+
   it('does not retain no-store, cookie changes, or failed responses', () => {
     for (const [headers, status] of [
-      [{ 'cache-control': 'no-store' }, 200],
+      [{ 'cache-control': 'no-store', etag: '"old"' }, 200],
       [{ 'set-cookie': 'session=new' }, 200],
       [{}, 403],
     ] as [Record<string, string>, number][]) {
@@ -52,10 +72,13 @@ describe('route response validators', () => {
   it('runs authorization and loaders before comparing session and mutation results', async () => {
     let value = 1
     let calls = 0
+    let mode = 'normal'
     const resolve = async (_path: string, req: Request) => {
       calls++
       const session = req.headers.get('cookie')
       return {
+        ...(mode === 'error' && { error: new Error('failed') }),
+        ...(mode === 'redirect' && { redirect: { status: 302, href: '/login' } }),
         status: session ? 200 : 403, path: '/page', head: {},
         levels: [{ id: 'page', params: {}, data: { session, value }, raw: {} }],
       }
@@ -89,6 +112,15 @@ describe('route response validators', () => {
     )
     expect(changed.status).toBe(200)
     expect(changed.headers.get('etag')).not.toBe(tag)
-    expect(calls).toBe(5)
+    for (const next of ['error', 'redirect']) {
+      mode = next
+      const result = await data(
+        '/page', request({ cookie: 'session=a', 'if-none-match': tag }), scope(),
+      )
+      expect(result.status).toBe(200)
+      expect(result.headers.get('cache-control')).toBe('no-store')
+      expect(result.headers.has('etag')).toBe(false)
+    }
+    expect(calls).toBe(7)
   })
 })
