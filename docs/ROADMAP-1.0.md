@@ -345,6 +345,10 @@ empty error list, so scrolling acceptance remains unverified. Dashboard JS+CSS
 Brotli remains 52,700 B. The owner requires recording this comparison, not closing
 the load-time gap, for 1.0.
 
+After merging main at `bb77d2da`, a source-matched dashboard size build measures
+52,685 B (30,011 B JS + 22,674 B CSS). The two Listbox event alternatives measure
+52,866 B and 52,861 B and are rejected. The 51,200 B size exit remains unmet.
+
 **Deferred until after 1.0 by the owner:**
 
 - Firefox text preparation: confirm or fix the S3 paired-median increase.
