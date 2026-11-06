@@ -53,6 +53,12 @@ describe('cli words', () => {
 
 // These child fixtures use POSIX shell permissions and syntax.
 describe.skipIf(process.platform === 'win32')('browser launch failures', () => {
+  it('only accepts known launch options', () => {
+    const acceptsWrongOption: 'wrong' extends keyof NonNullable<Parameters<typeof launch>[2]>
+      ? true
+      : false = false
+    expect(acceptsWrongOption).toBe(false)
+  })
   it.each([
     ['bad executable', 'not an executable', false, 0, /spawn:/],
     [

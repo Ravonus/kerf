@@ -107,7 +107,12 @@ export function findChrome() {
 
 const stateFile = (root) => join(root, '.weft', 'browser', 'chrome.json')
 
-/** Start a headless Chrome on `route` (a plain page; @weft-js/core/agent in it connects back to the dev server). */
+/**
+ * Start a headless Chrome on `route` (a plain page; @weft-js/core/agent connects back to the dev server).
+ * @param {string} root
+ * @param {string} [route]
+ * @param {{ url?: string | undefined, headed?: boolean | undefined }} [options]
+ */
 export async function launch(root, route = '/', { url, headed = false } = {}) {
   const exe = findChrome()
   if (!exe)
