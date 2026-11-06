@@ -45,7 +45,7 @@ impl Flow<'_, '_> {
         self.state = self.state.join(std::mem::take(&mut frame.continues));
     }
 
-    pub(super) fn while_loop<'a>(&mut self, it: &WhileStatement<'a>) {
+    pub(super) fn while_loop(&mut self, it: &WhileStatement<'_>) {
         self.repeat(|flow| {
             flow.visit_expression(&it.test);
             let tested = flow.state;
@@ -64,7 +64,7 @@ impl Flow<'_, '_> {
         });
     }
 
-    pub(super) fn do_loop<'a>(&mut self, it: &DoWhileStatement<'a>) {
+    pub(super) fn do_loop(&mut self, it: &DoWhileStatement<'_>) {
         self.repeat(|flow| {
             flow.visit_statement(&it.body);
             flow.next_iteration();
@@ -84,7 +84,7 @@ impl Flow<'_, '_> {
         });
     }
 
-    pub(super) fn for_loop<'a>(&mut self, it: &ForStatement<'a>) {
+    pub(super) fn for_loop(&mut self, it: &ForStatement<'_>) {
         if let Some(init) = &it.init {
             self.visit_for_statement_init(init);
         }
@@ -114,7 +114,7 @@ impl Flow<'_, '_> {
         });
     }
 
-    pub(super) fn for_in<'a>(&mut self, it: &ForInStatement<'a>) {
+    pub(super) fn for_in(&mut self, it: &ForInStatement<'_>) {
         self.visit_expression(&it.right);
         self.repeat(|flow| {
             let exit = flow.state;
@@ -124,7 +124,7 @@ impl Flow<'_, '_> {
         });
     }
 
-    pub(super) fn for_of<'a>(&mut self, it: &ForOfStatement<'a>) {
+    pub(super) fn for_of(&mut self, it: &ForOfStatement<'_>) {
         self.visit_expression(&it.right);
         self.repeat(|flow| {
             if it.r#await {
@@ -137,7 +137,7 @@ impl Flow<'_, '_> {
         });
     }
 
-    pub(super) fn labeled<'a>(&mut self, it: &LabeledStatement<'a>) {
+    pub(super) fn labeled(&mut self, it: &LabeledStatement<'_>) {
         let label = Some(it.label.name.to_string());
         if matches!(
             &it.body,

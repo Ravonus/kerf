@@ -62,14 +62,14 @@ pub(super) fn truth(expression: &Expression<'_>) -> Option<bool> {
 }
 
 impl Flow<'_, '_> {
-    pub(super) fn branch<'a>(&mut self, it: &IfStatement<'a>) {
+    pub(super) fn branch(&mut self, it: &IfStatement<'_>) {
         self.visit_expression(&it.test);
         let entry = self.state;
         let test = truth(&it.test);
-        if test != Some(false) {
-            self.visit_statement(&it.consequent);
-        } else {
+        if test == Some(false) {
             self.state = State::default();
+        } else {
+            self.visit_statement(&it.consequent);
         }
         let consequent = self.state;
         self.state = if test == Some(true) {
@@ -83,7 +83,7 @@ impl Flow<'_, '_> {
         self.state = self.state.join(consequent);
     }
 
-    pub(super) fn conditional<'a>(&mut self, it: &ConditionalExpression<'a>) {
+    pub(super) fn conditional(&mut self, it: &ConditionalExpression<'_>) {
         self.visit_expression(&it.test);
         let entry = self.state;
         let test = truth(&it.test);
@@ -107,7 +107,7 @@ impl Flow<'_, '_> {
         self.state = self.state.join(consequent);
     }
 
-    pub(super) fn logical<'a>(&mut self, it: &LogicalExpression<'a>) {
+    pub(super) fn logical(&mut self, it: &LogicalExpression<'_>) {
         self.visit_expression(&it.left);
         let entry = self.state;
         let take_right = match it.operator {
@@ -129,7 +129,7 @@ impl Flow<'_, '_> {
         }
     }
 
-    pub(super) fn switch<'a>(&mut self, it: &SwitchStatement<'a>) {
+    pub(super) fn switch(&mut self, it: &SwitchStatement<'_>) {
         self.visit_expression(&it.discriminant);
         let mut entries = vec![State::default(); it.cases.len()];
         let mut default = None;
@@ -166,7 +166,7 @@ impl Flow<'_, '_> {
         }
     }
 
-    pub(super) fn try_statement<'a>(&mut self, it: &TryStatement<'a>) {
+    pub(super) fn try_statement(&mut self, it: &TryStatement<'_>) {
         let saved = self.take_exits();
         let entry = self.state;
         self.traps.push(Trap {
@@ -214,7 +214,7 @@ impl Flow<'_, '_> {
             .collect()
     }
 
-    fn finalizer<'a>(&mut self, block: &BlockStatement<'a>, abrupt: State) {
+    fn finalizer(&mut self, block: &BlockStatement<'_>, abrupt: State) {
         let normal = self.state;
         let pending = self.take_exits();
         // A return/throw runs finally too, but must not revive a continuation.

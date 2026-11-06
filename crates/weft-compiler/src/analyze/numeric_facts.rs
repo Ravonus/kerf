@@ -234,7 +234,7 @@ impl Facts<'_> {
                     }
                 }
             }
-            _ => {}
+            BindingPattern::ArrayPattern(_) => {}
         }
     }
 
@@ -312,7 +312,7 @@ impl Facts<'_> {
                     }
                 }
             }
-            _ => {}
+            BindingPattern::ArrayPattern(_) => {}
         }
     }
 }

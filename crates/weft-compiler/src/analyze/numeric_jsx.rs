@@ -187,7 +187,7 @@ impl Check<'_> {
         match expression.get_inner_expression() {
             Expression::ArrowFunctionExpression(f) => match &f.body {
                 ArrowFunctionBody::FunctionBody(body) => {
-                    Output { check: self }.visit_function_body(body)
+                    Output { check: self }.visit_function_body(body);
                 }
                 body => {
                     if let Some(value) = body.as_expression() {

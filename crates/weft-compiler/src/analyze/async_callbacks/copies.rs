@@ -166,7 +166,7 @@ impl<'i, 's> Body<'i, 's> {
 
 struct Shapes<'i, 's> {
     index: &'i Index<'s>,
-    shapes: HashMap<SpanKey, Shape>,
+    entries: HashMap<SpanKey, Shape>,
     states: HashSet<SymbolId>,
 }
 
@@ -197,7 +197,7 @@ impl<'a> Visit<'a> for Shapes<'_, '_> {
             && let Some(mut proof) = Body::new(self.index, &it.params)
             && let Some(shape) = proof.statements(&body.statements)
         {
-            self.shapes.insert(key(it.span), shape);
+            self.entries.insert(key(it.span), shape);
         }
         walk::walk_function(self, it, flags);
     }
@@ -213,7 +213,7 @@ impl<'a> Visit<'a> for Shapes<'_, '_> {
                     .and_then(|expression| proof.expression(expression, true)),
             };
             if let Some(shape) = shape {
-                self.shapes.insert(key(it.span), shape);
+                self.entries.insert(key(it.span), shape);
             }
         }
         walk::walk_arrow_function_expression(self, it);
@@ -227,14 +227,14 @@ pub(super) fn diagnostics(
 ) -> Vec<Diagnostic> {
     let mut shapes = Shapes {
         index,
-        shapes: HashMap::new(),
+        entries: HashMap::new(),
         states: HashSet::new(),
     };
     shapes.visit_program(program);
     let mut sources = HashMap::new();
     let mut callbacks = Vec::new();
     for (function, calls) in calls {
-        let Some(shape) = shapes.shapes.get(function) else {
+        let Some(shape) = shapes.entries.get(function) else {
             continue;
         };
         for call in calls {

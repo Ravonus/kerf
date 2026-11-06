@@ -7,7 +7,7 @@ use oxc_ast_visit::Visit;
 use super::reads::Flow;
 
 impl Flow<'_, '_> {
-    pub(super) fn object_pattern<'a>(&mut self, it: &ObjectAssignmentTarget<'a>) {
+    pub(super) fn object_pattern(&mut self, it: &ObjectAssignmentTarget<'_>) {
         let read = self.pattern_read.take();
         self.watch_box_read(read);
         let source = self.pattern_box.take();

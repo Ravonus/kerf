@@ -151,8 +151,7 @@ impl<'a> Visit<'a> for Index<'_> {
         if it
             .id
             .as_ref()
-            .map(|id| is_component_name(id.name.as_str()))
-            .unwrap_or(pending)
+            .map_or(pending, |id| is_component_name(id.name.as_str()))
         {
             self.component(&it.params);
         }
