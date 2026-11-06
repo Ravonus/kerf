@@ -5,8 +5,8 @@ use std::collections::{HashMap, HashSet};
 use oxc_ast::ast::{
     ArrowFunctionExpression, AssignmentExpression, AssignmentTarget, BindingPattern,
     CallExpression, ComputedMemberExpression, Expression, Function, IdentifierReference,
-    JSXAttribute, JSXAttributeValue, SimpleAssignmentTarget, Statement, StaticMemberExpression,
-    UnaryExpression, UpdateExpression, VariableDeclarator,
+    JSXAttribute, JSXAttributeValue, JSXElementName, JSXOpeningElement, SimpleAssignmentTarget,
+    Statement, StaticMemberExpression, UnaryExpression, UpdateExpression, VariableDeclarator,
 };
 use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::SymbolId;
@@ -189,6 +189,7 @@ struct CallbackEscapes<'x, 's> {
     bindings: &'x HashMap<SymbolId, Target>,
     allowed: HashSet<SpanKey>,
     found: HashSet<SpanKey>,
+    native: bool,
 }
 
 impl CallbackEscapes<'_, '_> {
@@ -258,13 +259,22 @@ impl<'a> Visit<'a> for CallbackEscapes<'_, '_> {
     }
 
     fn visit_jsx_attribute(&mut self, it: &JSXAttribute<'a>) {
-        if event_attribute(&it.name)
+        if self.native
+            && event_attribute(&it.name)
             && let Some(JSXAttributeValue::ExpressionContainer(value)) = &it.value
             && let Some(expression) = value.expression.as_expression()
         {
             self.allow(expression);
         }
         walk::walk_jsx_attribute(self, it);
+    }
+
+    fn visit_jsx_opening_element(&mut self, it: &JSXOpeningElement<'a>) {
+        let native = matches!(&it.name, JSXElementName::Identifier(name)
+            if name.name.starts_with(|c: char| c.is_ascii_lowercase()));
+        let previous = std::mem::replace(&mut self.native, native);
+        walk::walk_jsx_opening_element(self, it);
+        self.native = previous;
     }
 
     fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
@@ -305,6 +315,7 @@ pub(super) fn escaped_callbacks(
         bindings,
         allowed: HashSet::new(),
         found: HashSet::new(),
+        native: false,
     };
     // An opaque consumer can invoke a callback immediately, including its original writer site.
     for statement in statements {

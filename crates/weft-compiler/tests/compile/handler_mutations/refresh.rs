@@ -1,7 +1,7 @@
 // These snapshots refresh through a changing predicate; unrelated state writes do not help.
 
 #[test]
-fn w041_canonical_stream_and_cell_snapshots_refresh_through_their_predicates() {
+fn w041_native_event_stream_and_cell_snapshots_refresh_through_predicates() {
     for source in [
         "import { state, untrack } from '@weft-js/core'; export function StreamChart(p) { \
          const paused = state(false); let held = untrack(() => p.data); \
@@ -330,5 +330,54 @@ fn w041_direct_event_callback_aliases_keep_the_refresh_control_quiet() {
         let (code, diagnostics) = run(&source);
         assert!(diagnostics.is_empty(), "{source}: {diagnostics:?}");
         assert!(!code.is_empty(), "{source}");
+    }
+}
+
+#[test]
+fn w041_opaque_components_can_capture_event_shaped_callback_props() {
+    for (imports, setup, view) in [
+        (
+            "import { Capture, external } from './external'",
+            "",
+            "<Capture onClick={begin} />",
+        ),
+        (
+            "import { Capture as Consumer, external } from './external'",
+            "const alias = begin; const again = alias",
+            "<Consumer onClick={again} />",
+        ),
+        (
+            "import * as UI from './external'; import { external } from './external'",
+            "const callback = () => begin()",
+            "<UI.Capture onClick={callback} />",
+        ),
+        (
+            "import { Capture, external } from './external'",
+            "const View = Capture; const alias = begin",
+            "<View onClick={alias!} />",
+        ),
+        (
+            "import { Capture, external } from './external'",
+            "",
+            "<div data-slot={<Capture onClick={begin} />} />",
+        ),
+        (
+            "import { Button } from './Button'; import { external } from './external'",
+            "",
+            "<Button onClick={begin} />",
+        ),
+    ] {
+        let source = format!(
+            "import {{ state }} from '@weft-js/core'; {imports}; export function A() {{ \
+             const gate = state(false); let n = 0; {setup}; function begin() {{ \
+             if (!gate.value) {{ n = external(); gate.value = true }} }} \
+             return <>{view}<button onClick={{begin}}>{{gate.value ? n : 0}}</button></> }}"
+        );
+        let (_, diagnostics) = run(&source);
+        let errors = handler_mutation_errors(&diagnostics);
+        assert_eq!(errors.len(), 1, "{source}: {diagnostics:?}");
+        assert!(errors[0].message.starts_with("`n`"));
+        assert_eq!(errors[0].severity, Severity::Error);
+        assert!(errors[0].help.contains("n.value") && errors[0].fix.is_none());
     }
 }
