@@ -125,7 +125,7 @@ impl Scan<'_, '_> {
             .or_insert(gates);
     }
 
-    pub(super) fn conditional<'a>(&mut self, it: &ConditionalExpression<'a>) {
+    pub(super) fn conditional(&mut self, it: &ConditionalExpression<'_>) {
         self.visit_expression(&it.test);
         let gate = predicate(&it.test, self.a, &self.states).map(|(sym, _)| sym);
         if let Some(sym) = gate {

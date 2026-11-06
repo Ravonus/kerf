@@ -131,13 +131,13 @@ impl<'a> Visit<'a> for Scan<'_, '_> {
         };
         match &it.left {
             AssignmentTarget::StaticMemberExpression(m) if m.property.name == "value" => {
-                self.write(&m.object, m.span, value)
+                self.write(&m.object, m.span, value);
             }
             AssignmentTarget::ComputedMemberExpression(m)
                 if matches!(m.expression.get_inner_expression(),
                 Expression::StringLiteral(name) if name.value == "value") =>
             {
-                self.write(&m.object, m.span, value)
+                self.write(&m.object, m.span, value);
             }
             _ => {}
         }
@@ -147,10 +147,10 @@ impl<'a> Visit<'a> for Scan<'_, '_> {
     fn visit_update_expression(&mut self, it: &UpdateExpression<'a>) {
         match &it.argument {
             SimpleAssignmentTarget::StaticMemberExpression(m) => {
-                self.write(&m.object, m.span, None)
+                self.write(&m.object, m.span, None);
             }
             SimpleAssignmentTarget::ComputedMemberExpression(m) => {
-                self.write(&m.object, m.span, None)
+                self.write(&m.object, m.span, None);
             }
             _ => {}
         }
