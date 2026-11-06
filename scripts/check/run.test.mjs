@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { test } from 'node:test'
 
-test('prints complete failed job output and keeps bounded problems', () => {
+void test('prints complete failed job output and keeps bounded problems', () => {
   const script = `
     import { allJobs } from './scripts/check/run.mjs'
     const lines = Array.from({ length: 75 }, (_, i) => 'line-' + i).join('\\n')
