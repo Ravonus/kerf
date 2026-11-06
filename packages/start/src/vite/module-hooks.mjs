@@ -5,7 +5,7 @@ import { readMigrations } from '../migrations.mjs'
 import { routeTypes } from '../routes.mjs'
 import { assetsOnly } from './assets.mjs'
 import { entryCss, watchEntryCandidates } from './shape-entry-css.mjs'
-import { shapeOverride } from './shape-override.mjs'
+import { resolveImportedOverride, shapeOverride } from './shape-override.mjs'
 import {
   clientRoutes, serverRoutes, devStyles, markLinks, skeletonExport,
 } from './route-modules.mjs'
@@ -66,9 +66,11 @@ export const load = (s) => ({
       const levels = [...s.manifest.layouts, ...s.manifest.routes]
       if (!levels.some((level) => s.abs(level.file) === file))
         this.error('Unknown skeleton override')
-      const code = shapeOverride(file)
+      const imported = await resolveImportedOverride(this, file, s.root ?? dirname(file))
+      const code = shapeOverride(file) ?? imported?.code
       if (!code) this.error(`Unsafe or missing skeleton override: ${file}`)
       this.addWatchFile(file)
+      if (imported?.file) this.addWatchFile(imported.file)
       return code
     }
     if (which.startsWith(ISLAND)) {
@@ -83,10 +85,18 @@ export const load = (s) => ({
         const entry = s.clientEntry()
         const entryFile = entry.startsWith('virtual:') ? join(here, 'client.tsx') : entry
         const levels = [...s.manifest.layouts, ...s.manifest.routes]
-        const files = [...new Set(levels.map((r) => s.abs(r.file)))]
-          .filter((file) => /\.[jt]sx$/.test(file) &&
-            ['generated', 'custom'].includes(skeletonExport(file)))
+        const all = [...new Set(levels.map((r) => s.abs(r.file)))]
         const root = s.root ?? dirname(entryFile)
+        const overrides = new Map()
+        const dependencies = new Set()
+        for (const file of all) {
+          if (!/\.[jt]sx$/.test(file) || skeletonExport(file) !== 'unavailable') continue
+          const found = await resolveImportedOverride(this, file, root)
+          if (found?.file) dependencies.add(found.file)
+          if (found?.code) overrides.set(file, found.code)
+        }
+        const files = all.filter((file) => /\.[jt]sx$/.test(file) &&
+          (overrides.has(file) || ['generated', 'custom'].includes(skeletonExport(file))))
         const sources = await Promise.all(files.map((file) => entryCss(this, file, root)))
         const shared = await entryCss(this, entryFile, root)
         if (owner && owner !== s.shapeEntryOwner)
@@ -99,10 +109,12 @@ export const load = (s) => ({
         s.shapeEntrySignatures = shared.signatures
         s.shapeEntryCandidates = shared.candidates
         s.shapeEntryMissing = shared.missing
+        s.shapeOverrideDependencies = dependencies
         if (s.dev) watchEntryCandidates(s.vite, shared.missing, root)
         const css = {
           entry: shared.styles,
           levels: new Map(files.map((file, i) => [file, sources[i].styles])),
+          overrides,
         }
         return clientRoutes(s.manifest, s.abs, p, css)
       }

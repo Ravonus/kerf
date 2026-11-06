@@ -210,7 +210,8 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
   }
   const shapes = levels.map((r) => {
     const file = abs(r.file)
-    const kind = skeletonExport(file)
+    const classified = skeletonExport(file)
+    const kind = classified === 'unavailable' && css.overrides?.has(file) ? 'custom' : classified
     const id = JSON.stringify(r.id)
     if (kind === 'disabled') return `${id}: { kind: 'disabled', css: null, bytes: null }`
     if (kind === 'unavailable')

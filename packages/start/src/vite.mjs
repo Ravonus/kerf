@@ -50,6 +50,13 @@ export { here as startDir } from './vite/shared.mjs'
 export function shapeHotUpdate(state, modes, next) {
   return async function (update) {
     if (this.environment.config.consumer === 'client') {
+      if (state.shapeOverrideDependencies?.has(update.file)) {
+        const graph = this.environment.moduleGraph
+        const mod = graph.getModuleById('\0' + V.routes)
+        if (mod) graph.invalidateModule(mod)
+        state.vite?.ws.send({ type: 'full-reload' })
+        return []
+      }
       const rel = relative(state.root, update.file).split('\\').join('/')
       const entrySignatures = state.shapeEntrySignatures
       if (entrySignatures?.has(update.file)) {

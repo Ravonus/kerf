@@ -138,6 +138,7 @@ export function entryWatchLifecycle(state, server, modes) {
         delete state.shapeEntrySignatures
         delete state.shapeEntryCandidates
         delete state.shapeEntryMissing
+        delete state.shapeOverrideDependencies
         if (state.vite === server) state.vite = undefined
         modes.clear()
       }
