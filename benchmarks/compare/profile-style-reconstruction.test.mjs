@@ -5,7 +5,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, existsSync, rmSync } from 'node:
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { compareEnvironment, dependencyGraph, verifyGraph } from './profile-style-environment.mjs'
-import { reconstructionEnv, prepareReconstruction } from './profile-style-setup.mjs'
+import { reconstructionEnv, prepareReconstruction, pnpmArgs } from './profile-style-setup.mjs'
 import { digest } from './profile-style-maps.mjs'
 import { runStep } from './profile-style-process.mjs'
 import { buildOptions, preservingAssets } from './profile-style-build.mjs'
@@ -167,6 +167,26 @@ test('manager steps preserve full logs and nonzero exits; content-check failure 
   assert.match(logs.get('content.log'), /ERR_PNPM_MODIFIED_DEPENDENCY/)
 })
 
+function assertSetupSteps(steps, root, args, receipts) {
+  assert.equal(steps.filter((s) => s.name.endsWith('-install')).length, 2)
+  for (const step of steps.filter((s) => s.name.endsWith('-install'))) {
+    assert.ok(step.args.includes('--frozen-lockfile'))
+    assert.ok(step.args.includes('--verify-store-integrity=true'))
+    assert.ok(step.args.includes('--ignore-scripts'))
+  }
+  assert.equal(steps.filter((s) => s.name.endsWith('-content')).length, 2)
+  assert.deepEqual(steps.at(-1).args, pnpmArgs(root, ['--filter', '@weft-js/text', 'run', 'build']))
+  assert.ok(steps.some((step) => step.name === 'verify-main-bundle'))
+  assert.ok(steps.find((step) => step.name === 'clone').args.includes(args['main-bundle']))
+  assert.ok(steps.some((step) => step.name === 'verify-source-bundle'))
+  assert.deepEqual(steps.find((step) => step.name === 'fetch-source').args, [
+    'fetch',
+    args['source-bundle'],
+    'refs/t02-captured-source',
+  ])
+  assert.equal(receipts.get('reconstruction.json').graphs.length, 2)
+}
+
 test('mocked fresh checkout installs both frozen workspaces, verifies content and rebuilds text', async () => {
   const root = mkdtempSync(join(tmpdir(), 'weft-style-setup-')),
     repo = join(root, 'repo')
@@ -197,7 +217,16 @@ test('mocked fresh checkout installs both frozen workspaces, verifies content an
     let stdout = ''
     if (step.name === 'source-identity') stdout = 'captured\ntree\n'
     if (step.name === 'pnpm-version') stdout = '12.15.0\n'
-    if (step.name.endsWith('-policy')) stdout = '4320\n'
+    if (step.name.includes('-policy-')) {
+      const settings = {
+        enableGlobalVirtualStore: 'false',
+        minimumReleaseAge: '4320',
+        cacheDir: join(root, 'cache'),
+        storeDir: join(root, 'store'),
+        packageImportMethod: 'hardlink',
+      }
+      stdout = settings[step.args.at(-1)] + '\n'
+    }
     if (step.name.endsWith('-installed') || step.name.endsWith('-locked'))
       stdout = JSON.stringify([
         {
@@ -211,26 +240,20 @@ test('mocked fresh checkout installs both frozen workspaces, verifies content an
     repo,
     native,
     'native-stamp': stamp,
-    'source-url': 'https://example.invalid/repo',
+    'main-bundle': join(root, 'bootstrap.bundle'),
     'source-bundle': join(root, 'captured.bundle'),
   }
   try {
-    await prepareReconstruction(args, captured, log, root, new AbortController().signal, runner)
-    assert.equal(steps.filter((s) => s.name.endsWith('-install')).length, 2)
-    for (const step of steps.filter((s) => s.name.endsWith('-install'))) {
-      assert.ok(step.args.includes('--frozen-lockfile'))
-      assert.ok(step.args.includes('--verify-store-integrity=true'))
-      assert.ok(step.args.includes('--ignore-scripts'))
-    }
-    assert.equal(steps.filter((s) => s.name.endsWith('-content')).length, 2)
-    assert.deepEqual(steps.at(-1).args, ['--filter', '@weft-js/text', 'run', 'build'])
-    assert.ok(steps.some((step) => step.name === 'verify-source-bundle'))
-    assert.deepEqual(steps.find((step) => step.name === 'fetch-source').args, [
-      'fetch',
-      args['source-bundle'],
-      'refs/t02-captured-source',
-    ])
-    assert.equal(receipts.get('reconstruction.json').graphs.length, 2)
+    await prepareReconstruction(
+      args,
+      captured,
+      log,
+      root,
+      new AbortController().signal,
+      runner,
+      () => 'pnpm',
+    )
+    assertSetupSteps(steps, root, args, receipts)
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

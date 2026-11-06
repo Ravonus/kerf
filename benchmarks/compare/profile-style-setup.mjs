@@ -14,7 +14,7 @@ export function reconstructionRoot(args) {
   assert.equal(resolve(args.repo), join(root, 'repo'))
   assert.equal(dirname(resolve(args.out)), root)
   assert.ok(
-    args.native && args['native-stamp'] && args['source-url'],
+    args.native && args['native-stamp'] && (args['main-bundle'] || args['source-url']),
     'Missing reconstruction inputs',
   )
   assert.equal(platform(), 'darwin')
@@ -40,9 +40,46 @@ export function reconstructionEnv(root, inherited = process.env) {
     ...env,
     WEFT_COMPILER: 'native',
     COREPACK_ENABLE_NETWORK: '0',
+    COREPACK_HOME: inherited.COREPACK_HOME ?? join(homedir(), '.cache/node/corepack'),
     CI: '1',
     XDG_CACHE_HOME: join(root, 'cache'),
     XDG_STATE_HOME: join(root, 'state'),
+  }
+}
+
+/** Use the already cached version; neither cache selection nor version checks download pnpm. */
+export function cachedPnpmEntry(home) {
+  const folder = join(realpathSync(home), 'v1/pnpm/12.15.0')
+  const pkg = JSON.parse(readFileSync(join(folder, 'package.json')))
+  assert.equal(pkg.version, '12.15.0', 'Cached pnpm version mismatch')
+  // Corepack's package bin can be a shebang-less download wrapper. Require its existing native binary.
+  const entry = resolve(folder, 'pnpm-native')
+  assert.ok(entry.startsWith(folder + '/') && existsSync(entry), 'Missing cached pnpm entry')
+  return entry
+}
+
+/** pnpm12 accepts arbitrary settings through --config, not additional install flags. */
+export function pnpmArgs(root, values) {
+  return [
+    '--config.enableGlobalVirtualStore=false',
+    '--config.cacheDir=' + join(root, 'cache'),
+    '--config.storeDir=' + join(root, 'store'),
+    '--config.packageImportMethod=hardlink',
+    ...values,
+  ]
+}
+
+/** Query the same effective settings that the subsequent install uses before any install. */
+async function verifyPolicy(cwd, name, root, run) {
+  for (const [key, expected] of [
+    ['enableGlobalVirtualStore', 'false'],
+    ['minimumReleaseAge', '4320'],
+    ['cacheDir', join(root, 'cache')],
+    ['storeDir', join(root, 'store')],
+    ['packageImportMethod', 'hardlink'],
+  ]) {
+    const result = await run(cwd, name + '-policy-' + key, 'pnpm', ['config', 'get', key], true)
+    assert.equal(result.stdout.trim(), expected, `Reconstruction policy changed: ${key}`)
   }
 }
 
@@ -76,14 +113,17 @@ async function graphProof(cwd, name, repo, run, log) {
   return proof
 }
 
-async function checkoutSource(args, captured, root, run) {
+/** Clone the chosen local/remote source once, then verify the captured Git identity and files. */
+export async function checkoutSource(args, captured, root, run) {
   await run(root, 'clone', 'git', [
     'clone',
     '--filter=blob:none',
     '--no-checkout',
-    args['source-url'],
+    args['main-bundle'] ?? args['source-url'],
     args.repo,
   ])
+  if (args['main-bundle'])
+    await run(args.repo, 'verify-main-bundle', 'git', ['bundle', 'verify', args['main-bundle']])
   if (args['source-bundle']) {
     await run(args.repo, 'verify-source-bundle', 'git', ['bundle', 'verify', args['source-bundle']])
     await run(args.repo, 'fetch-source', 'git', [
@@ -110,12 +150,30 @@ async function checkoutSource(args, captured, root, run) {
 }
 
 /** Frozen installs and store verification establish fresh evidence; archived metadata is untouched. */
-export async function prepareReconstruction(args, captured, log, root, signal, runner = runStep) {
+export async function prepareReconstruction(
+  args,
+  captured,
+  log,
+  root,
+  signal,
+  runner = runStep,
+  cachedEntry = cachedPnpmEntry,
+) {
   const env = reconstructionEnv(root),
     commands = []
+  const pnpm = cachedEntry(env.COREPACK_HOME)
+  log.json('pnpm-cache.json', { home: env.COREPACK_HOME, entry: pnpm, network: false })
   const run = async (cwd, name, command, values, collect = false) => {
     const result = await runner(
-      { cwd, name, command, args: values, collect, env, timeoutMs: 900000 },
+      {
+        cwd,
+        name,
+        command: command === 'pnpm' ? pnpm : command,
+        args: command === 'pnpm' ? pnpmArgs(root, values) : values,
+        collect,
+        env,
+        timeoutMs: 900000,
+      },
       log,
       root,
       signal,
@@ -136,32 +194,16 @@ export async function prepareReconstruction(args, captured, log, root, signal, r
     ['root', args.repo],
     ['compare', join(args.repo, 'benchmarks/compare')],
   ]) {
-    const policy = await run(
-      cwd,
-      name + '-policy',
-      'pnpm',
-      ['config', 'get', 'minimumReleaseAge'],
-      true,
-    )
-    assert.equal(policy.stdout.trim(), '4320', 'Release-age policy changed')
-    await run(cwd, name + '-install', 'pnpm', [
+    await verifyPolicy(cwd, name, root, run)
+    const install = [
       'install',
       '--frozen-lockfile',
       '--ignore-scripts',
       '--verify-store-integrity=true',
-      '--enable-global-virtual-store=false',
-      '--package-import-method=hardlink',
-      '--store-dir',
-      join(root, 'store'),
-      '--cache-dir',
-      join(root, 'cache'),
-    ])
-    await run(cwd, name + '-content', 'pnpm', [
-      'store',
-      'status',
-      '--store-dir',
-      join(root, 'store'),
-    ])
+    ]
+    await run(cwd, name + '-install-parser', 'pnpm', [...install, '--help'])
+    await run(cwd, name + '-install', 'pnpm', install)
+    await run(cwd, name + '-content', 'pnpm', ['store', 'status'])
     graphs.push(await graphProof(cwd, name, args.repo, run, log))
   }
   await run(args.repo, 'text-build', 'pnpm', ['--filter', '@weft-js/text', 'run', 'build'])

@@ -14,6 +14,8 @@ import {
   reconstructionRoot,
   reconstructionEnv,
   prepareReconstruction,
+  pnpmArgs,
+  cachedPnpmEntry,
 } from './profile-style-setup.mjs'
 
 async function hiddenBuild(repo, name, log, root, signal) {
@@ -21,8 +23,16 @@ async function hiddenBuild(repo, name, log, root, signal) {
     {
       cwd: join(repo, 'benchmarks/compare', name),
       name,
-      command: 'pnpm',
-      args: ['exec', 'vite', 'build', '--sourcemap', 'hidden', '--logLevel', 'error'],
+      command: cachedPnpmEntry(reconstructionEnv(root).COREPACK_HOME),
+      args: pnpmArgs(root, [
+        'exec',
+        'vite',
+        'build',
+        '--sourcemap',
+        'hidden',
+        '--logLevel',
+        'error',
+      ]),
       env: reconstructionEnv(root),
     },
     log,
@@ -103,6 +113,8 @@ async function attribute(args, stacks, captured, log, root, signal) {
 /** Retained builds require original pins; explicit reconstruction records a new environment. */
 export async function reproduce(args) {
   process.env.WEFT_COMPILER = 'native'
+  process.env.COREPACK_ENABLE_NETWORK = '0'
+  if (args['corepack-home']) process.env.COREPACK_HOME = args['corepack-home']
   const root = args.reconstruct ? reconstructionRoot(args) : managerRoot(args.repo, args.out)
   return withLease(root, async () => {
     const log = evidence(args.out),
@@ -150,7 +162,16 @@ export function buildOptions(values) {
   for (let index = 0; index < values.length; index++) {
     const key = values[index]
     if (key === '--reconstruct') extra.reconstruct = true
-    else if (['--native', '--native-stamp', '--source-url', '--source-bundle'].includes(key)) {
+    else if (
+      [
+        '--native',
+        '--native-stamp',
+        '--source-url',
+        '--source-bundle',
+        '--main-bundle',
+        '--corepack-home',
+      ].includes(key)
+    ) {
       assert.ok(values[index + 1] && !values[index + 1].startsWith('--'), 'Missing setup value')
       extra[key.slice(2)] = key === '--source-url' ? values[++index] : resolve(values[++index])
     } else rest.push(key)
