@@ -99,8 +99,8 @@ export const markLinks = (
 })
 `
 
-// Never run a route to inspect its skeleton export. Unknown exports stay unavailable.
-function skeletonExport(file) {
+/** Classify a route skeleton export without evaluating the route. */
+export function skeletonExport(file) {
   const body = parse(file, readFileSync(file, 'utf8')).program.body
   const constants = new Map()
   const bindings = (decl) => {

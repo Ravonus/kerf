@@ -30,7 +30,10 @@
 // document fits the first flight, else the rules the page's HTML reaches, with the sheets behind them as links that
 // don't hold the paint. `site: { inlineCss: false }` keeps plain links.
 
+import { relative } from 'node:path'
 import { createState } from './vite/state.mjs'
+import { skeletonExport } from './vite/route-modules.mjs'
+import { V } from './vite/shared.mjs'
 import { configHook, writeBundle, renderChunk, configResolved } from './vite/config-hooks.mjs'
 import { configureServer, hotUpdate } from './vite/dev-hooks.mjs'
 import { resolveId, load, transform, api } from './vite/module-hooks.mjs'
@@ -41,11 +44,41 @@ export { isServerModule, fnId, withIds, clientStubs } from './vite/server-functi
 export { scanRoutes, routeTypes } from './routes.mjs'
 export { here as startDir } from './vite/shared.mjs'
 
+/** Reload when an edit changes the classification embedded in the client route module. */
+export function shapeHotUpdate(state, modes, next) {
+  return async function (update) {
+    if (this.environment.config.consumer === 'client') {
+      const rel = relative(state.root, update.file).split('\\').join('/')
+      const levels = [...state.manifest.routes, ...state.manifest.layouts]
+      if (levels.some((level) => level.file === rel)) {
+        let mode
+        try {
+          mode = skeletonExport(update.file)
+        } catch {
+          mode = 'invalid'
+        }
+        const before = modes.get(rel)
+        modes.set(rel, mode)
+        if (before !== mode) {
+          const graph = this.environment.moduleGraph
+          const mod = graph.getModuleById('\0' + V.routes)
+          if (mod) graph.invalidateModule(mod)
+          state.vite?.ws.send({ type: 'full-reload' })
+          return []
+        }
+      }
+    }
+    return next.call(this, update)
+  }
+}
+
 /**
  * @param {{ root?: string, site?: import('@weft-js/core/ssr').Site, routesDir?: string, timeout?: number, hold?: number, fonts?: string[], hydration?: 'lazy' | 'partial' | 'full' }} [options]
  */
 export default function weftStart(options = {}) {
   const state = createState(options)
+  const modes = new Map()
+  const configure = configureServer(state)
   return [
     {
       name: 'weft:start',
@@ -63,8 +96,17 @@ export default function weftStart(options = {}) {
     {
       name: 'weft:start:dev',
       enforce: 'pre',
-      configureServer: configureServer(state),
-      hotUpdate: hotUpdate(state),
+      configureServer(server) {
+        for (const level of [...state.manifest.routes, ...state.manifest.layouts]) {
+          try {
+            modes.set(level.file, skeletonExport(state.abs(level.file)))
+          } catch {
+            modes.set(level.file, 'invalid')
+          }
+        }
+        return configure(server)
+      },
+      hotUpdate: shapeHotUpdate(state, modes, hotUpdate(state)),
     },
     {
       name: 'weft:start:modules',
