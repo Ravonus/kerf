@@ -61,7 +61,9 @@ fn known_hook(name: &str) -> bool {
 }
 
 fn hook_import(module: &str, name: &str) -> bool {
-    hook_name(name) && (module == "react" || !known_hook(name))
+    // Opaque imports can be ordinary weft helpers. React imports establish provenance;
+    // local useX wrappers inherit it through resolved calls, not their spelling alone.
+    module == "react" && hook_name(name)
 }
 
 pub(super) fn imported_call<'b>(
@@ -235,7 +237,7 @@ impl Analyzer<'_> {
                 self.dependency_array(call, &name);
                 return;
             }
-            if hook_import(module, name) && (module == "react" || !self.comps.is_empty()) {
+            if hook_import(module, name) {
                 let name = name.to_string();
                 self.react_hook(call, &name);
             }

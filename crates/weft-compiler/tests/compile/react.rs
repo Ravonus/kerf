@@ -35,7 +35,7 @@ fn w020_react_hooks_have_errors_and_specific_manual_fixes() {
             "import {{ state, watch, derived }} from '@weft-js/core'; \
              export function A() {{ const result = {repaired}; return <p /> }}"
         );
-        assert!(run(&fixed).1.is_empty(), "{hook}: {}", fixed);
+        assert!(run(&fixed).1.is_empty(), "{hook}: {fixed}");
     }
 }
 
@@ -76,9 +76,9 @@ fn w020_resolves_aliases_namespaces_and_hoisted_imports() {
 #[test]
 fn w020_imported_custom_hook_calls_need_plain_functions() {
     let cases = [
-        ("import { useCart as cart } from './cart'", "cart()"),
-        ("import * as cart from './cart'", "cart.useCart()"),
         ("import { useCart as cart } from 'react'", "cart()"),
+        ("import * as cart from 'react'", "cart.useCart()"),
+        ("import * as cart from 'react'", "cart['useCart']()"),
     ];
     for (prefix, call) in cases {
         let source = format!("{prefix}; export const A = () => {{ {call}; return <p /> }}");
@@ -180,10 +180,16 @@ fn w020_custom_hooks_in_jsx_and_handlers_are_errors() {
         "return <p>{useCart()}</p>",
         "return <button onClick={() => useCart()} />",
     ] {
-        let source =
-            format!("import {{ useCart }} from './cart'; export function A() {{ {body} }}");
+        let source = format!(
+            "import {{ useState }} from 'react'; function useCart() {{ return useState(0) }} \
+             export function A() {{ {body} }}"
+        );
         let (_, diagnostics) = run(&source);
-        assert_eq!(codes(&diagnostics), ["W020"], "{source}: {diagnostics:?}");
+        assert_eq!(
+            codes(&diagnostics),
+            ["W020", "W020"],
+            "{source}: {diagnostics:?}"
+        );
     }
 }
 
@@ -216,10 +222,10 @@ fn w020_resolved_react_wrappers_are_hooks_at_the_component_call() {
             2,
         ),
         (
-            "import { useCart as remote } from './cart'",
+            "import { useCart as remote } from 'react'",
             "const useCheckout = () => remote()",
             "useCheckout",
-            1,
+            2,
         ),
     ];
     for (import, wrapper, name, count) in cases {
@@ -314,6 +320,28 @@ fn w020_memo_dependency_advice_reads_the_returned_callable() {
 #[test]
 fn w020_ordinary_functions_and_shadowed_imports_stay_quiet() {
     let sources = [
+        // Relative imports match the canonical Card, DurationField, Sources and Otp helpers.
+        "import { untrack } from '@weft-js/core'; import { useUi } from './use-ui'; \
+         export function Card() { useUi(() => undefined, () => undefined); return <p /> }",
+        "import { derived, state, untrack } from '@weft-js/core'; \
+         import { bindable, Composite, Hidden, usePickerEnv } from './Picker'; \
+         export function DurationField() { const env = usePickerEnv({}); return <p /> }",
+        "import { derived } from '@weft-js/core'; import { Sweep, useSweep } from './bits'; \
+         export function Sources() { useSweep(); return <p /> }",
+        "import { state, untrack, watch } from '@weft-js/core'; import { useStepForm } from './kit'; \
+         export function Otp() { const ctl = useStepForm<{ code: string }>(untrack(() => ({}))); return <p /> }",
+        "import { useUi as attach } from './use-ui'; \
+         export function Card() { attach(); return <p /> }",
+        "import * as picker from './Picker'; \
+         export function DurationField() { picker.usePickerEnv(); return <p /> }",
+        "import { useSweep } from './bits'; function useLocal() { return useSweep() } \
+         export function Sources() { useLocal(); return <p /> }",
+        "import { use } from '@weft-js/warp-core/weft'; import { untrack } from '@weft-js/core'; \
+         function useUi(ui, host) { const row = untrack(ui); if (row) use(row.attach, host) } \
+         export function Card() { useUi(() => undefined, () => undefined); return <p /> }",
+        "import { useCart } from './cart'; export function A() { useCart(); return <p /> }",
+        "import * as cart from './cart'; function useCheckout() { return cart.useCart() } \
+         export function A() { useCheckout(); return <p /> }",
         "function useState(n) { return n } \
          export function A() { useState(0); return <p /> }",
         "import { useState } from './ordinary'; \
@@ -342,6 +370,27 @@ fn w020_ordinary_functions_and_shadowed_imports_stay_quiet() {
         assert!(
             !code.is_empty(),
             "correct source must still compile: {source}"
+        );
+    }
+}
+
+#[test]
+fn w020_react_wrappers_do_not_exempt_canonical_helper_names() {
+    for name in ["useUi", "usePickerEnv", "useSweep", "useStepForm"] {
+        let source = format!(
+            "import {{ useState }} from 'react'; function {name}() {{ return useState(0) }} \
+             export function A() {{ {name}(); return <p /> }}"
+        );
+        let (_, diagnostics) = run(&source);
+        assert_eq!(
+            codes(&diagnostics),
+            ["W020", "W020"],
+            "{source}: {diagnostics:?}"
+        );
+        assert!(
+            diagnostics
+                .iter()
+                .any(|d| d.message.starts_with(&format!("`{name}`")))
         );
     }
 }
