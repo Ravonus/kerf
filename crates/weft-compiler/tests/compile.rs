@@ -48,3 +48,25 @@ fn check_reports_default_route_shape_aliases() {
         assert_eq!(facts.shapes, ["default"], "{source}");
     }
 }
+
+#[test]
+fn standalone_shape_drops_module_and_setup_evaluation() {
+    let source = r#"
+        import { secret } from './server';
+        const danger = sideEffect();
+        export default function Page({ value = sideEffect() }) {
+            const x = sideEffect();
+            return <main class={danger} onClick={sideEffect}>{secret}{x}{value}</main>;
+        }
+    "#;
+    let options = Options {
+        filename: "page.tsx?weft-shape".into(),
+        ..Default::default()
+    };
+    let code = compile(source, &options).code.expect("shape compiles");
+    assert!(code.contains("default$shape"), "{code}");
+    assert!(code.contains("skeleton"), "{code}");
+    assert!(!code.contains("sideEffect"), "{code}");
+    assert!(!code.contains("./server"), "{code}");
+    assert!(!code.contains("danger"), "{code}");
+}

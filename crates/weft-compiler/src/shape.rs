@@ -164,6 +164,7 @@ struct Gen<'s> {
     /// Imported variants actually used.
     used: BTreeSet<SymbolId>,
     imports: HashMap<SymbolId, String>,
+    standalone: bool,
 }
 
 struct Sites {
@@ -241,7 +242,8 @@ pub fn apply<'a>(
     filename: &str,
     known: Option<&HashMap<String, bool>>,
 ) -> Shapes {
-    let wanted = known.is_some() || source.contains("pending=\"shape\"");
+    let standalone = filename.ends_with("?weft-shape");
+    let wanted = standalone || known.is_some() || source.contains("pending=\"shape\"");
     if !wanted {
         return Shapes::default();
     }
@@ -253,8 +255,13 @@ pub fn apply<'a>(
         weft: HashMap::new(),
         used: BTreeSet::new(),
         imports: HashMap::new(),
+        standalone,
     };
-    let import_lines = imported_variants(&mut g, program, filename, known);
+    let import_lines = if standalone {
+        HashMap::new()
+    } else {
+        imported_variants(&mut g, program, filename, known)
+    };
 
     let mut code = String::new();
     let mut exports = Vec::new();
@@ -274,6 +281,7 @@ pub fn apply<'a>(
             .first()
             .map(|p| g.pattern(&p.pattern))
             .unwrap_or_default();
+        let param = if standalone { String::new() } else { param };
         let Some(body) = g.body(c.statements, c.expression, &mut allowed) else {
             continue;
         };
@@ -282,6 +290,16 @@ pub fn apply<'a>(
             let _ = writeln!(code, "export {{ {}$shape as {e}$shape }};", c.local);
             exports.push(e.clone());
         }
+    }
+    if standalone {
+        drop(comps);
+        program.body.clear();
+        return Shapes {
+            code: format!(
+                "import {{ shapeAny as $$sa, shapeRead as $$sr, shapeText as $$st }} from \"@weft-js/core/shape\";\n{code}"
+            ),
+            exports,
+        };
     }
     let mut find = FindSites {
         g: &mut g,

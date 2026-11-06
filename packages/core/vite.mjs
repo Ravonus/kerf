@@ -63,22 +63,26 @@ export default function weft({
       return await modeHooks.resolveId.call(this, source, importer)
     },
     transform: {
-      filter: { id: /\.[jt]sx(\?weft-(ssr|hydrate))?$/ },
+      filter: { id: /\.[jt]sx(\?weft-(ssr|hydrate|shape))?$/ },
       async handler(code, id, options) {
+        const standalone = id.endsWith('?weft-shape')
         const mode = MODE.exec(id)?.[1]
         const ssr = mode ? mode === 'ssr' : !!options?.ssr
         const hydrating = hydratable || !!mode
-        const groups = await style.options(this, code, id.replace(/\?.*$/, ''))
-        const shapes = await importedShapes(this, code, id.replace(/\?.*$/, ''))
-        const islands = hydrating && !mode ? await main.api.islands?.(this, id) : undefined
+        const groups = standalone
+          ? undefined
+          : await style.options(this, code, id.replace(/\?.*$/, ''))
+        const shapes = standalone ? {} : await importedShapes(this, code, id.replace(/\?.*$/, ''))
+        const islands =
+          hydrating && !mode && !standalone ? await main.api.islands?.(this, id) : undefined
         const out = transform(code, {
-          filename: id.replace(/\?.*$/, ''),
+          filename: standalone ? id : id.replace(/\?.*$/, ''),
           islands,
           dev: isDev,
           sourceMap: true,
           generate: ssr ? 'ssr' : 'dom',
           hydratable: hydrating,
-          hmr: isDev && isHot && !ssr,
+          hmr: !standalone && isDev && isHot && !ssr,
           groups,
           shapes,
           taggedParts: !!styleOptions?.taggedParts,
@@ -90,7 +94,10 @@ export default function weft({
           else this.warn({ message: text, loc })
         }
         if (!out.code) return null
-        return { code: style.record(this, id, out.facts, out.code, ssr), map: out.map }
+        return {
+          code: standalone ? out.code : style.record(this, id, out.facts, out.code, ssr),
+          map: out.map,
+        }
       },
     },
     configureServer: watchChanges,

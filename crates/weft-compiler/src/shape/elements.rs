@@ -128,6 +128,13 @@ impl Gen<'_> {
         let name = &el.opening_element.name;
         if let JSXElementName::Identifier(i) = name {
             let tag = i.name.as_str();
+            if self.standalone
+                && (tag.contains('-')
+                    || ["script", "style", "link", "object", "embed", "base", "meta"]
+                        .contains(&tag))
+            {
+                return Self::bar(None);
+            }
             if MEDIA.contains(&tag) {
                 return format!(
                     "<{tag}{} data-skeleton />",

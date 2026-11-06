@@ -24,6 +24,15 @@ impl Gen<'_> {
 
     /// Everything `e` reads is kept: placeholders, module scope, or a global.
     pub(super) fn ok(&self, e: &Expression<'_>, allowed: &HashSet<SymbolId>) -> bool {
+        if self.standalone {
+            return matches!(
+                strip(e),
+                Expression::StringLiteral(_)
+                    | Expression::NumericLiteral(_)
+                    | Expression::BooleanLiteral(_)
+                    | Expression::NullLiteral(_)
+            );
+        }
         let root = self.scoping.root_scope_id();
         self.reads(e)
             .iter()
@@ -122,6 +131,9 @@ impl Gen<'_> {
         whole: &Expression<'_>,
         allowed: &HashSet<SymbolId>,
     ) -> String {
+        if self.standalone {
+            return Self::bar(None);
+        }
         let list = match &call.callee {
             Expression::StaticMemberExpression(m) if m.property.name == "map" => Some(&m.object),
             _ => None,
@@ -175,6 +187,10 @@ impl Gen<'_> {
         allowed: &mut HashSet<SymbolId>,
     ) -> Option<String> {
         let ret = returned(statements, expression)?;
+        if self.standalone {
+            let value = self.value(ret, &HashSet::new());
+            return Some(format!("return {}{{{value}}}</div>;", super::WRAP));
+        }
         // Which locals the result needs, back to front.
         let mut needed: HashSet<SymbolId> = self.reads(ret).into_iter().collect();
         let mut keep = vec![false; statements.len()];
