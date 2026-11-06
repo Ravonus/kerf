@@ -34,7 +34,7 @@ import { existsSync } from 'node:fs'
 import { relative } from 'node:path'
 import { createState } from './vite/state.mjs'
 import { shapeSignature } from './vite/route-modules.mjs'
-import { entryCandidate, entryCssSignature } from './vite/shape-entry-css.mjs'
+import { entryCandidate, entryCssSignature, entryWatchLifecycle } from './vite/shape-entry-css.mjs'
 import { V } from './vite/shared.mjs'
 import { configHook, writeBundle, renderChunk, configResolved } from './vite/config-hooks.mjs'
 import { configureServer, hotUpdate } from './vite/dev-hooks.mjs'
@@ -147,7 +147,9 @@ export default function weftStart(options = {}) {
             modes.set(rel, 'invalid')
           }
         }
-        return configure(server)
+        const configured = configure(server)
+        entryWatchLifecycle(state, server, modes)
+        return configured
       },
       hotUpdate: shapeHotUpdate(state, modes, hotUpdate(state)),
     },

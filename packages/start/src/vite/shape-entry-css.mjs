@@ -1,6 +1,21 @@
-import { existsSync } from 'node:fs'
-import { dirname, isAbsolute, relative, resolve } from 'node:path'
+import { existsSync, realpathSync } from 'node:fs'
+import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { shapeBody, shapeCssSource, shapeStyleSpecifier } from './route-modules.mjs'
+
+// Follow existing ancestors so a symlink cannot turn an in-project watch into an outside watch.
+function projectParent(root, file) {
+  try {
+    const project = realpathSync(root)
+    let dir = dirname(file)
+    while (!existsSync(dir) && dirname(dir) !== dir) dir = dirname(dir)
+    const parent = realpathSync(dir)
+    const rel = relative(project, parent)
+    if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) return
+    return parent
+  } catch {
+    return undefined
+  }
+}
 
 // Only static runtime import/export edges can lead to a stylesheet here.
 function sources(file) {
@@ -46,8 +61,10 @@ export async function entryCss(ctx, entry, root) {
         const css = await shapeCssSource(ctx, file, spec, () => {
           if (/^\.{1,2}\//.test(spec)) {
             const candidate = resolve(dirname(file), spec)
-            candidates.add(key(candidate))
-            missing.add(key(candidate))
+            if (projectParent(root, candidate)) {
+              candidates.add(key(candidate))
+              missing.add(key(candidate))
+            }
           }
         })
         if (css) {
@@ -65,8 +82,10 @@ export async function entryCss(ctx, entry, root) {
           /(^|\/)node_modules\//.test(rel) || /(^|\/)server\//.test(rel) ||
           /\.server(?:\.[cm]?[jt]sx?)?$/.test(rel)) continue
       if (!found) {
-        candidates.add(key(target))
-        missing.add(key(target))
+        if (projectParent(root, target)) {
+          candidates.add(key(target))
+          missing.add(key(target))
+        }
         continue
       }
       if (!/\.[cm]?[jt]sx?$/.test(target)) continue
@@ -79,16 +98,35 @@ export async function entryCss(ctx, entry, root) {
 }
 
 /** Watch a missing candidate's nearest existing parent for later creation. */
-export function watchEntryCandidates(server, candidates) {
-  if (!server) return
+export function watchEntryCandidates(server, candidates, root) {
+  if (!server || !root) return
   const dirs = new Set()
   for (const file of candidates) {
     if (existsSync(file)) continue
-    let dir = dirname(file)
-    while (!existsSync(dir) && dirname(dir) !== dir) dir = dirname(dir)
-    dirs.add(dir)
+    const dir = projectParent(root, file)
+    if (dir) dirs.add(dir)
   }
   for (const dir of dirs) server.watcher.add(dir)
+}
+
+/** Clear this server's entry metadata without changing the shared Vite watcher. */
+export function entryWatchLifecycle(state, server, modes) {
+  state.shapeEntryOwner = server
+  const close = server.close
+  server.close = async function (...args) {
+    try {
+      return await close.apply(this, args)
+    } finally {
+      if (state.shapeEntryOwner === server) {
+        delete state.shapeEntryOwner
+        delete state.shapeEntrySignatures
+        delete state.shapeEntryCandidates
+        delete state.shapeEntryMissing
+        if (state.vite === server) state.vite = undefined
+        modes.clear()
+      }
+    }
+  }
 }
 
 /** Match a Vite file event against exact or extensionless local candidates. */

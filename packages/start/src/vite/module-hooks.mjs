@@ -64,6 +64,7 @@ export const load = (s) => ({
       return `export { $i${i.index} as default } from ${JSON.stringify(i.file)}\n`
     }
     if (which === V.routes) {
+      const owner = s.shapeEntryOwner
       const p = await s.hydration(this)
       if (client) {
         const entry = s.clientEntry()
@@ -72,11 +73,14 @@ export const load = (s) => ({
         const files = [...new Set(levels.map((r) => s.abs(r.file)))]
           .filter((file) => /\.[jt]sx$/.test(file) && skeletonExport(file) === 'generated')
         const sources = await Promise.all(files.map((file) => shapeCssSources(this, file)))
-        const shared = await entryCss(this, entryFile, s.root ?? dirname(entryFile))
+        const root = s.root ?? dirname(entryFile)
+        const shared = await entryCss(this, entryFile, root)
+        if (owner && owner !== s.shapeEntryOwner)
+          throw new Error('entry style scan outlived its server')
         s.shapeEntrySignatures = shared.signatures
         s.shapeEntryCandidates = shared.candidates
         s.shapeEntryMissing = shared.missing
-        if (s.dev) watchEntryCandidates(s.vite, shared.candidates)
+        if (s.dev) watchEntryCandidates(s.vite, shared.missing, root)
         const css = {
           entry: shared.styles,
           levels: new Map(files.map((file, i) => [file, sources[i]])),
