@@ -23,3 +23,53 @@ WEFT_T06_TASK=large-live \
 WEFT_T06_PNPM_ENTRY="$HOME/.cache/node/corepack/v1/pnpm/12.15.0/bin/pnpm.mjs" \
   bash "$HOME/work/weft-S5-verify/repo/evals/agent-eval/evidence/T06/yuna-calibrate.sh"
 ```
+
+## Prepared reference setup
+
+`reference/weft-warp` contains source based on the SQLite/auth scaffold. It
+uses the single-server memory bus and native Node SQLite. `reference/dependencies.json`
+records the exact additional scaffold dependencies. Use a fresh owned app with
+the existing weft-warp scaffold and packed-current weft packages, preserve its
+`pnpm-workspace.yaml` with `minimumReleaseAge: 4320` and existing packed-package
+overrides, then copy the reference files into it. Merge the pinned dependencies
+into its package manifest, including the packed-current multiplayer package,
+and run pnpm 12.15.0 install without changing the policy. Generate migrations
+with `pnpm exec weft db generate` before building. Set `DATABASE_URL` to a fresh
+owned SQLite path and set `BETTER_AUTH_SECRET` to a disposable random secret of
+at least 32 characters; set `BETTER_AUTH_URL` to the actual listener origin.
+Do not commit the generated `.env`, database, migrations from another app, or
+credentials. This setup and the reference have not yet been built or run.
+
+For an owned app directory and checkout, set `APP`, `REPO`, `PNPM_ENTRY`,
+`NODE`, `MULTIPLAYER_TGZ` and `ORIGIN` to their absolute local paths or origin.
+The app's existing workspace policy and packed overrides must already be in
+place. These commands have not been run for this fixture:
+
+```sh
+cd "$APP"
+cp -R "$REPO/evals/agent-eval/tasks/large-live/reference/weft-warp/." .
+"$NODE" --input-type=module <<'JS'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+const fixture = join(process.env.REPO, 'evals/agent-eval/tasks/large-live/reference/dependencies.json')
+const pins = JSON.parse(readFileSync(fixture, 'utf8'))
+const manifest = JSON.parse(readFileSync('package.json', 'utf8'))
+manifest.dependencies = { ...manifest.dependencies, ...pins.dependencies,
+  '@weft-js/multiplayer': `file:${process.env.MULTIPLAYER_TGZ}` }
+manifest.devDependencies = { ...manifest.devDependencies, ...pins.devDependencies }
+writeFileSync('package.json', JSON.stringify(manifest, null, 2) + '\n')
+JS
+"$NODE" "$PNPM_ENTRY" install --no-frozen-lockfile
+"$NODE" --input-type=module <<'JS'
+import { randomBytes } from 'node:crypto'
+import { writeFileSync } from 'node:fs'
+const secret = randomBytes(32).toString('hex')
+writeFileSync('.env', `DATABASE_URL=file:.data/app.db\nBETTER_AUTH_SECRET=${secret}\nBETTER_AUTH_URL=${process.env.ORIGIN}\n`, { mode: 0o600, flag: 'wx' })
+JS
+"$NODE" "$PNPM_ENTRY" exec weft db generate
+```
+
+The `APP` must have no existing `.env` for this command. `REPO`,
+`MULTIPLAYER_TGZ` and `ORIGIN` must be exported for the Node processes. Keep the
+app, database and generated secret inside M4's owned staging root and remove
+them after retaining bounded calibration receipts.
