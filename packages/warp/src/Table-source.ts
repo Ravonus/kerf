@@ -55,5 +55,5 @@ export function tableSource<T>(
     }
     return visible.value.length ? 'ready' : 'empty'
   })
-  return { remote, list, envelope, shown, paged, visible, phase }
+  return [remote, list, envelope, shown, paged, visible, phase] as const
 }

@@ -1,7 +1,7 @@
 // The setup/render boundary preserves keyed nodes, comment markers and live callback evaluation.
-import { state } from '@weft-js/core'
+import { resource, state } from '@weft-js/core'
 import { flush, render } from '@weft-js/core/test'
-import { Table, type TableProps } from '../src/Table'
+import { Table, type TableProps, type ListPage } from '../src/Table'
 
 function comments(root: Element) {
   const walk = document.createTreeWalker(root, NodeFilter.SHOW_COMMENT)
@@ -117,4 +117,107 @@ test('selection works with no bulk callback and Clear still writes the shared se
   await flush()
   expect(selected.value).toEqual({})
   expect(container.querySelector<HTMLElement>('[data-part=bulk]')!.hidden).toBe(true)
+})
+
+test('local paging keeps full row counts and selects only the visible page', async () => {
+  const selected = state<Record<string, boolean>>({})
+  const { container } = render(() => (
+    <Table
+      caption="Pages"
+      rows={[{ id: 'a' }, { id: 'b' }, { id: 'c' }]}
+      columns={[{ id: 'id', header: 'Id' }]}
+      selection={selected}
+      page={{ size: 1 }}
+      picker={false}
+    />
+  ))
+  await flush()
+  const table = container.querySelector('table')!
+  const check = container.querySelector<HTMLInputElement>('thead input')!
+  const next = [...container.querySelectorAll('button')].find(
+    (button) => button.textContent === 'Next',
+  )!
+  const prev = [...container.querySelectorAll('button')].find(
+    (button) => button.textContent === 'Previous',
+  )!
+  expect(table.getAttribute('aria-rowcount')).toBe('4')
+  expect(prev.disabled).toBe(true)
+  expect(next.disabled).toBe(false)
+  check.click()
+  await flush()
+  expect(selected.value).toEqual({ a: true })
+  next.click()
+  await flush()
+  expect(container.querySelector('tbody tr')!.getAttribute('data-id')).toBe('b')
+  expect(container.querySelector('[data-part=footer]')!.textContent).toContain('2–2 of 3')
+  expect(check.checked).toBe(false)
+  check.click()
+  await flush()
+  expect(selected.value).toEqual({ a: true, b: true })
+  next.click()
+  await flush()
+  expect(next.disabled).toBe(true)
+  expect(prev.disabled).toBe(false)
+  expect(table.getAttribute('aria-rowcount')).toBe('4')
+})
+
+test('remote paging captures the live callback before its cursor and skips absent calls', async () => {
+  type Item = { id: string }
+  const trace: unknown[] = []
+  let argument = false,
+    cursorReads = 0
+  let callback: TableProps<Item>['onPageChange'] = function (this: unknown, cursor, reason) {
+    trace.push('original', this, cursor, reason)
+  }
+  const replacement: typeof callback = function (this: unknown, cursor, reason) {
+    trace.push('replacement', this, cursor, reason)
+  }
+  const page: ListPage<Item> = {
+    items: [{ id: 'a' }],
+    total: 20,
+    get next() {
+      expect(this).toBe(page)
+      cursorReads++
+      if (argument) {
+        argument = false
+        trace.push('argument')
+        callback = replacement
+      }
+      return 'cursor-a'
+    },
+  }
+  let props!: TableProps<Item>
+  const { container } = render(() => {
+    const rows = resource(() => Promise.resolve(page))
+    props = {
+      caption: 'Remote',
+      rows,
+      columns: [{ id: 'id', header: 'Id' }],
+      picker: false,
+      get onPageChange() {
+        trace.push('lookup')
+        argument = callback !== undefined
+        return callback
+      },
+    }
+    return Table(props)
+  })
+  await new Promise((resolve) => {
+    setTimeout(resolve)
+  })
+  await flush()
+  const next = [...container.querySelectorAll('button')].find(
+    (button) => button.textContent === 'Next',
+  )!
+  next.click()
+  expect(trace).toEqual(['lookup', 'argument', 'original', props, 'cursor-a', 'next'])
+  trace.length = 0
+  next.click()
+  expect(trace).toEqual(['lookup', 'argument', 'replacement', props, 'cursor-a', 'next'])
+  callback = undefined
+  trace.length = 0
+  const before = cursorReads
+  next.click()
+  expect(trace).toEqual(['lookup'])
+  expect(cursorReads).toBe(before)
 })

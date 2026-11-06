@@ -1,5 +1,6 @@
 // Bulk actions and page navigation in a table.
 import type { TableProps } from './Table-types'
+import type { tablePaging } from './Table-paging'
 import { Button } from './Button'
 
 /** Render actions for the current selection. */
@@ -20,22 +21,18 @@ export function tableBulk(
 }
 
 /** Render the table's page navigation. */
-export function tableFooter(ctx: {
-  range: { readonly value: string }
-  hasPrev: { readonly value: boolean }
-  hasNext: { readonly value: boolean }
-  go: (reason: 'next' | 'prev') => void
-}) {
+export function tableFooter(paging: ReturnType<typeof tablePaging>) {
+  const [go, hasPrev, hasNext, range] = paging
   return (
     <div data-part="footer">
-      <span>{ctx.range.value}</span>
+      <span>{range.value}</span>
       <div style="display:flex;gap:8px">
         <Button
           emphasis="outline"
           tone="neutral"
           size="sm"
-          disabled={!ctx.hasPrev.value}
-          onClick={() => ctx.go('prev')}
+          disabled={!hasPrev.value}
+          onClick={() => go('prev')}
         >
           Previous
         </Button>
@@ -43,8 +40,8 @@ export function tableFooter(ctx: {
           emphasis="outline"
           tone="neutral"
           size="sm"
-          disabled={!ctx.hasNext.value}
-          onClick={() => ctx.go('next')}
+          disabled={!hasNext.value}
+          onClick={() => go('next')}
         >
           Next
         </Button>

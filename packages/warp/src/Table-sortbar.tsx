@@ -8,8 +8,8 @@ export function tableSortbar<T>(
   base: TableModel<T>['base'],
   selection: TableModel<T>['selection'],
 ) {
-  const { order, cols } = base
-  const { sortChoices, askSort } = selection
+  const [, , cols, , , , , order] = base
+  const [, , , , , , askSort, sortChoices] = selection
   return (
     <div data-part="sortbar">
       <Select

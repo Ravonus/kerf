@@ -16,7 +16,8 @@ export function tableToolbar<T>(
   hideable: TableModel<T>['hideable'],
   flip: TableModel<T>['flip'],
 ) {
-  const { typed, picking, picked, id, hidden } = base
+  const [id, , , , , , typed, , , , hidden, , , picking, picked] = base
+  const [, , , , count] = paging
   return (
     <div data-part="toolbar">
       {input.filter !== undefined && (
@@ -27,7 +28,7 @@ export function tableToolbar<T>(
         />
       )}
       <span data-part="count" aria-live="polite">
-        {paging.count.value}
+        {count.value}
       </span>
       <span data-part="spacer"></span>
       {input.actions}

@@ -11,7 +11,7 @@ export function tableDetails<T>(
   pick: (key: string, event: MouseEvent) => void,
   element: () => HTMLElement | undefined,
 ) {
-  const { id, level, cols, keyOf, read, sel, open, title, sheet } = base
+  const [id, level, cols, keyOf, read, title, , , sel, open, , , sheet] = base
   const hasDetails = untrack(
     () => props.expand !== undefined || props.columns.some((c) => c.priority),
   )
@@ -49,5 +49,5 @@ export function tableDetails<T>(
     edit: (r, c, v) => props.onEdit?.(r, c, v),
   }
 
-  return { ctx, hasDetails, closeSheet }
+  return [ctx, hasDetails, closeSheet] as const
 }

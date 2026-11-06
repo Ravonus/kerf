@@ -48,23 +48,24 @@ export type TableRender = <T>(
 export function tableModel<T>(input: TableInput<T>, render: TableRender) {
   const refs: Refs = { el: undefined, columnsButton: undefined }
   const base = tableBase(input)
-  const { cols, keyOf, read, typed, order, sel, at } = base
+  const [, , cols, keyOf, read, , typed, order, sel, , hidden, at, sheet, , , width] = base
   const source = tableSource(input, cols, typed, order, at, read)
+  const [, , , , , visible, phase] = source
   watch(
     () => typed.value,
     (_, was) => {
       if (was !== undefined) at.value = 0
     },
   )
-  const selection = tableSelection(sel, source.visible, keyOf, cols, order, input)
-  const details = tableDetails(input, base, selection.pick, () => refs.el)
-  const { hidden, sheet, width } = base
+  const selection = tableSelection(sel, visible, keyOf, cols, order, input)
+  const [, , , pick] = selection
+  const details = tableDetails(input, base, pick, () => refs.el)
   const paging = tablePaging(input, source, at)
-  const notice = tableNotice(input, source.phase, typed)
+  const notice = tableNotice(input, phase, typed)
   use(
     table,
     () => refs.el,
-    () => ({ hidden: hidden.value, rows: source.visible.value, onWidth: (w) => (width.value = w) }),
+    () => ({ hidden: hidden.value, rows: visible.value, onWidth: (w) => (width.value = w) }),
   )
   onCleanup(() => (sheet.value = undefined))
   const toolbar = derived(
