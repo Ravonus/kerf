@@ -33,7 +33,7 @@
 import { relative } from 'node:path'
 import { createState } from './vite/state.mjs'
 import { shapeSignature } from './vite/route-modules.mjs'
-import { entryCssSignature } from './vite/shape-entry-css.mjs'
+import { entryCandidate, entryCssSignature } from './vite/shape-entry-css.mjs'
 import { V } from './vite/shared.mjs'
 import { configHook, writeBundle, renderChunk, configResolved } from './vite/config-hooks.mjs'
 import { configureServer, hotUpdate } from './vite/dev-hooks.mjs'
@@ -67,6 +67,17 @@ export function shapeHotUpdate(state, modes, next) {
           state.vite?.ws.send({ type: 'full-reload' })
           return []
         }
+      }
+      const candidateEvent = (update.type === 'create' || update.type === 'delete') &&
+        entryCandidate(state.shapeEntryCandidates, update.file)
+      const missingUpdate = update.type === 'update' &&
+        entryCandidate(state.shapeEntryMissing, update.file)
+      if (candidateEvent || missingUpdate) {
+        const graph = this.environment.moduleGraph
+        const mod = graph.getModuleById('\0' + V.routes)
+        if (mod) graph.invalidateModule(mod)
+        state.vite?.ws.send({ type: 'full-reload' })
+        return []
       }
       const levels = [...state.manifest.routes, ...state.manifest.layouts]
       if (levels.some((level) => level.file === rel) || state.clientEntry?.() === update.file) {

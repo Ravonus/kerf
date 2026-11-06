@@ -4,7 +4,7 @@ import { dirname, join, relative } from 'node:path'
 import { readMigrations } from '../migrations.mjs'
 import { routeTypes } from '../routes.mjs'
 import { assetsOnly } from './assets.mjs'
-import { entryCss } from './shape-entry-css.mjs'
+import { entryCss, watchEntryCandidates } from './shape-entry-css.mjs'
 import {
   clientRoutes, serverRoutes, devStyles, markLinks, shapeCssSources, skeletonExport,
 } from './route-modules.mjs'
@@ -74,6 +74,9 @@ export const load = (s) => ({
         const sources = await Promise.all(files.map((file) => shapeCssSources(this, file)))
         const shared = await entryCss(this, entryFile, s.root ?? dirname(entryFile))
         s.shapeEntrySignatures = shared.signatures
+        s.shapeEntryCandidates = shared.candidates
+        s.shapeEntryMissing = shared.missing
+        if (s.dev) watchEntryCandidates(s.vite, shared.candidates)
         const css = {
           entry: shared.styles,
           levels: new Map(files.map((file, i) => [file, sources[i]])),

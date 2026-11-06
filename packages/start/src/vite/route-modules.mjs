@@ -165,10 +165,11 @@ function styleImports(file) {
 }
 
 /** Resolve a stylesheet or token import without evaluating its importing module. */
-export async function shapeCssSource(ctx, file, spec) {
+export async function shapeCssSource(ctx, file, spec, onMissing) {
   if (!shapeStyleSpecifier(spec) || /^(https?:|\/\/)/.test(spec)) return
   if (!/^\.{1,2}\//.test(spec) && spec.includes('..')) return
   const found = await ctx.resolve(spec, file, { skipSelf: true })
+  if (!found) onMissing?.()
   if (!found?.external && found?.id && isAbsolute(found.id) && /\.css$/.test(found.id))
     return found.id
 }
