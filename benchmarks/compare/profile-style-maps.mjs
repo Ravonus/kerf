@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync, readdirSync, lstatSync } from 'node:fs'
 import { SourceMap } from 'node:module'
 import { basename, dirname, join, relative, resolve } from 'node:path'
+import { keyedProvenance, authoredPosition } from './profile-style-provenance.mjs'
 
 export const digest = (data) => createHash('sha256').update(data).digest('hex')
 
@@ -21,7 +22,7 @@ export function verifyAssets(dist, expected) {
   }
 }
 
-function sourceProof(repo, commit, mapPath, payload) {
+function sourceProof(repo, commit, mapPath, payload, stack) {
   assert.ok(payload.version === 3 && Array.isArray(payload.sources), 'Invalid source map')
   assert.ok(
     Array.isArray(payload.sourcesContent) &&
@@ -37,8 +38,21 @@ function sourceProof(repo, commit, mapPath, payload) {
     if (path.includes('node_modules')) return { source, status: 'dependency; not Git attributed' }
     assert.ok(!path.startsWith('../') && !path.startsWith('/'), 'Source outside repository')
     const original = execFileSync('git', ['show', `${commit}:${path}`], { cwd: repo })
-    assert.equal(digest(Buffer.from(content)), digest(original), `Mapped source mismatch: ${path}`)
-    return { source, path, sha256: digest(original), status: 'Git content verified' }
+    if (digest(Buffer.from(content)) === digest(original))
+      return { source, path, sha256: digest(original), status: 'Git content verified' }
+    assert.ok(['weft-warp', 'weft-plain'].includes(stack), `Mapped source mismatch: ${path}`)
+    try {
+      const provenance = keyedProvenance(repo, commit, path, content, original)
+      return {
+        source,
+        path,
+        sha256: digest(original),
+        provenance,
+        status: 'Git and keyed replay verified',
+      }
+    } catch (error) {
+      throw new Error(`Mapped source mismatch: ${path}; ${String(error)}`, { cause: error })
+    }
   })
 }
 
@@ -55,7 +69,7 @@ export function loadMaps(repo, pins) {
       assert.ok(raw.length < 16 * 1024 ** 2, 'Oversized source map')
       const payload = JSON.parse(raw)
       assert.equal(payload.file, basename(asset), 'Source map generated file mismatch')
-      const sources = sourceProof(repo, pins.pins.commit, mapPath, payload)
+      const sources = sourceProof(repo, pins.pins.commit, mapPath, payload, stack)
       maps.set(stack + '/' + asset, { map: new SourceMap(payload), sources })
       proofs.push({ stack, asset, mapSha256: digest(raw), sources })
     }
@@ -78,14 +92,7 @@ export function loadMaps(repo, pins) {
       )
       return {
         ...frame,
-        original: source
-          ? {
-              ...source,
-              line: found.originalLine + 1,
-              column: found.originalColumn + 1,
-              name: found.name ?? null,
-            }
-          : null,
+        original: source ? authoredPosition(source, found) : null,
       }
     },
   }

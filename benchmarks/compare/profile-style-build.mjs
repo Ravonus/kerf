@@ -10,6 +10,7 @@ import { evidence, withLease } from './profile-load-io.mjs'
 import { analyze, options } from './profile-style.mjs'
 import { runStep } from './profile-style-process.mjs'
 import { compareEnvironment } from './profile-style-environment.mjs'
+import { preserveMaps } from './profile-style-map-evidence.mjs'
 import {
   reconstructionRoot,
   reconstructionTool,
@@ -88,13 +89,29 @@ export async function preservingAssets(repo, stacks, expected, task) {
   }
 }
 
+/** Preserve diagnostic maps before either restoration path deletes failed outputs. */
+export function analyzeWithEvidence(repo, receipt, assets, log, analyzer = analyze) {
+  try {
+    return analyzer(repo, receipt, true)
+  } catch (error) {
+    try {
+      preserveMaps(repo, assets, log)
+    } catch (saveError) {
+      throw new AggregateError([error, saveError], 'Mapping and evidence preservation failed', {
+        cause: saveError,
+      })
+    }
+    throw error
+  }
+}
+
 async function attribute(args, stacks, captured, log, root, signal, tool) {
   const commands = []
   for (const { name } of stacks) {
     signal.throwIfAborted()
     commands.push(await hiddenBuild(args.repo, name, log, root, signal, tool))
   }
-  const analysis = analyze(args.repo, args.receipt, true)
+  const analysis = analyzeWithEvidence(args.repo, args.receipt, captured.assets, log)
   assert.ok(
     Buffer.byteLength(JSON.stringify(analysis)) < 16 * 1024 ** 2,
     'Mapped analysis exceeds 16 MiB',
