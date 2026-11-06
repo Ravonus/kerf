@@ -158,6 +158,7 @@ test('a static local override is isolated and unsafe closures stay unavailable',
   const other = `\0virtual:weft/shape-override/${encodeURIComponent(f.abs('other.tsx'))}.tsx`
   await assert.rejects(() => moduleLoad(state).handler.call(context, other), /Unknown/)
   const result = await manifestModule(output)
+  assert.equal(result.shapes['/'].kind, 'override')
   assert.equal(result.shapes['/'].component.name, 'Custom')
   const before = shapeSignature(f.abs('page.tsx'))
   const invalidated = []
@@ -185,6 +186,17 @@ test('a static local override is isolated and unsafe closures stay unavailable',
   assert.equal((await manifestModule(clientRoutes(levels, f.abs))).shapes['/'].kind, 'unavailable')
   f.write('page.tsx', 'export const skeleton = false')
   assert.equal((await manifestModule(clientRoutes(levels, f.abs))).shapes['/'].kind, 'disabled')
+})
+
+test('imported custom shape metadata uses the override discriminant', async (t) => {
+  const f = fixture(t)
+  f.write('page.tsx', "import Waiting from './waiting'; export const skeleton = Waiting")
+  const manifest = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
+  const css = { overrides: new Map([[f.abs('page.tsx'), 'validated source']]) }
+  const routes = await manifestModule(clientRoutes(manifest, f.abs, undefined, css))
+  assert.equal(routes.shapes['/'].kind, 'override')
+  assert.equal(routes.shapes['404'].kind, 'generated')
+  assert.equal(routes.shapes.error.kind, 'generated')
 })
 
 test('Vite loads the isolated override as TSX through the plugin pipeline', async (t) => {

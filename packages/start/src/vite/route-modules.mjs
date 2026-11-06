@@ -199,14 +199,16 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
   const isStatic = (r) => plan?.statics.has(abs(r.file))
   const shapeFiles = new Map()
   const styleFiles = new Map()
-  const shape = (file, name = 'default$shape', request = file + '?weft-shape') => {
+  const shape = (file, name = 'default$shape', request = file + '?weft-shape',
+    kind = 'generated') => {
     if (!shapeFiles.has(request)) shapeFiles.set(request, shapeFiles.size)
     const sources = [...(css.entry ?? []), ...(css.levels?.get(file) ?? [])]
     const styles = [...new Set(sources)].map((style) => {
       if (!styleFiles.has(style)) styleFiles.set(style, styleFiles.size)
       return `style${styleFiles.get(style)}`
     })
-    return `shapeEntry(shape${shapeFiles.get(request)}, [${styles.join(', ')}], ${JSON.stringify(name)})`
+    const args = [JSON.stringify(name), JSON.stringify(kind)].join(', ')
+    return `shapeEntry(shape${shapeFiles.get(request)}, [${styles.join(', ')}], ${args})`
   }
   const shapes = levels.map((r) => {
     const file = abs(r.file)
@@ -220,7 +222,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
       return `${id}: { kind: 'unavailable', reason: 'unsupported-file', css: null, bytes: null }`
     if (kind === 'custom') {
       const request = `virtual:weft/shape-override/${encodeURIComponent(file)}.tsx`
-      return `${id}: ${shape(file, 'default', request)}`
+      return `${id}: ${shape(file, 'default', request, 'override')}`
     }
     return `${id}: ${shape(file)}`
   })
@@ -245,12 +247,12 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
       `${JSON.stringify(i.id)}: () => import(${JSON.stringify(i.file)}).then(({ $i${i.index}: d }) => ({ default: d }))`,
   )
   return `${[...shapeImports, ...styleImports].join('\n')}
-const shapeEntry = (module, cssText, name) => {
+const shapeEntry = (module, cssText, name, kind) => {
   const component = Reflect.get(module, name)
   const groupCss = Reflect.get(module, '$weftShapeCss')
   if (typeof groupCss === 'string' && groupCss) cssText = [groupCss, ...cssText]
   return typeof component === 'function'
-    ? { kind: 'generated', component, css: null, cssText, cssStatus: 'partial', bytes: null }
+    ? { kind, component, css: null, cssText, cssStatus: 'partial', bytes: null }
     : { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null }
 }
 export const shapes = { ${shapes.join(', ')} }

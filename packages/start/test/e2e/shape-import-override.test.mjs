@@ -56,6 +56,10 @@ test('Vite resolves direct default and named overrides without running setup', a
       const source = await p.routes()
       assert.ok(source.includes('virtual:weft/shape-override/'))
       assert.ok(source.includes(`() => import(${JSON.stringify(p.file('page.tsx'))})`))
+      const stubbed = source.replace(/^import \* as shape(\d+) from .+$/gm,
+        (_, index) => `const shape${index} = { default() {} }`)
+      const metadata = await import(`data:text/javascript,${encodeURIComponent(stubbed)}`)
+      assert.equal(metadata.shapes['/'].kind, 'override')
       const isolated = await p.override()
       assert.match(isolated, /(?:default|named) marker/)
       assert.doesNotMatch(isolated, /setup|throw/)
