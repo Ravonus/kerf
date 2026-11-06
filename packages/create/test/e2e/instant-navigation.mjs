@@ -63,8 +63,22 @@ async function cold(context, settings, url) {
   await cdp.send('Network.enable')
   await cdp.send('Network.emulateNetworkConditions', { offline: false, ...network })
   console.log(`${name}: CDP accepted ${JSON.stringify(network)}`)
+  await page.addInitScript(() => {
+    const add = document.addEventListener.bind(document)
+    document.addEventListener = (type, listener, options) => {
+      if (type === 'click') window.__clickListenerInstalled = true
+      return add(type, listener, options)
+    }
+  })
   await page.goto(url, { waitUntil: 'networkidle' })
+  await page.waitForFunction(() => window.__clickListenerInstalled === true, null, { timeout: 5000 })
   await page.evaluate(() => document.fonts.ready)
+  let held = 0
+  await page.route('**/_weft/data/pricing*', async (route) => {
+    held++
+    await new Promise((done) => setTimeout(done, 1000))
+    await route.continue()
+  })
   await page.evaluate(observeNavigation)
   const link = page.locator('.site-head a[href="/pricing"]')
   const box = await link.boundingBox()
@@ -78,7 +92,8 @@ async function cold(context, settings, url) {
     await Promise.all([...document.images].map((image) => image.decode().catch(() => {})))
     await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))
   })
-  const result = await page.evaluate(() => window.__navigation.result)
+  const result = await page.evaluate(() => window.__navigation.finish())
+  if (!held) throw new Error('navigation data request was not held')
   console.log(`${name} cold: 1 executed ${JSON.stringify(result)}`)
   assertNavigation(result)
 }
@@ -109,7 +124,7 @@ async function main() {
     for (const settings of profiles) {
       try { await profile(browser, settings, url) } catch (error) { failures.push(error.message) }
     }
-    failures.push('unimplemented: delayed-response, negative controls and remaining navigation cases')
+    failures.push('unimplemented: negative controls and remaining navigation cases')
     throw new Error(failures.join('\n'))
   } finally {
     await browser?.close()

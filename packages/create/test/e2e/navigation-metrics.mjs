@@ -7,11 +7,12 @@ export function observeNavigation() {
   const original = main.firstElementChild
   const shifts = []
   const result = { input: null, response: null, skeleton: null, settled: false, shifts }
-  const observer = new PerformanceObserver((list) => {
-    for (const entry of list.getEntries()) {
+  const collect = (entries) => {
+    for (const entry of entries) {
       shifts.push({ time: entry.startTime, value: entry.value, hadRecentInput: entry.hadRecentInput })
     }
-  })
+  }
+  const observer = new PerformanceObserver((list) => collect(list.getEntries()))
   observer.observe({ type: 'layout-shift', buffered: true })
   addEventListener('pointerdown', (event) => {
     if (!event.isTrusted || result.input !== null) return
@@ -21,18 +22,21 @@ export function observeNavigation() {
   function sample() {
     const now = performance.now()
     const visible = main.getBoundingClientRect().height > 0 && getComputedStyle(main).visibility !== 'hidden'
-    const active = link.getAttribute('aria-current') !== null
+    const style = getComputedStyle(link)
+    const active = link.getAttribute('aria-current') === 'page' &&
+      style.boxShadow !== 'none' && link.getBoundingClientRect().width > 0
     const changed = main.firstElementChild !== original
     const real = main.textContent.includes('Simple pricing that grows with your team')
     if (result.response === null && location.pathname === '/pricing' && active && visible)
       result.response = now - result.input
-    if (result.skeleton === null && changed && visible && !real)
+    const shape = main.querySelector('[inert], [data-skeleton]')
+    if (result.skeleton === null && changed && visible && !real && shape)
       result.skeleton = now - result.input
     if (real && changed) result.settled = true
     result.layout = document.querySelector('.site-head') === layout
     if (now - result.input < 5000) requestAnimationFrame(sample)
   }
-  window.__navigation = { result, observer }
+  window.__navigation = { result, finish() { collect(observer.takeRecords()); observer.disconnect(); return result } }
 }
 
 export function assertNavigation(result) {
