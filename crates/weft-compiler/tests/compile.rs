@@ -171,3 +171,22 @@ fn standalone_shapes_drop_unsafe_elements_and_sizing() {
     }
     assert!(code.contains("data-skeleton"), "{code}");
 }
+
+#[test]
+fn standalone_shape_keeps_lowered_static_group_attributes() {
+    let source = r#"
+        import { group } from '@weft-js/core/style';
+        const card = group('card', { base: { pad: 'group' } });
+        export default function Page() { return <main {...card()} /> }
+    "#;
+    let options = Options {
+        filename: "page.tsx?weft-shape".into(),
+        ..Default::default()
+    };
+    let output = compile(source, &options);
+    let code = output.code.expect("shape compiles");
+    assert!(code.contains("data-g"), "{code}");
+    assert!(code.contains("card"), "{code}");
+    assert_eq!(output.facts.group_uses.len(), 1);
+    assert!(!code.contains("@weft-js/core/style"), "{code}");
+}

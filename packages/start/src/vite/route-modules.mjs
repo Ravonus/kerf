@@ -210,6 +210,8 @@ export function clientRoutes(manifest, abs, plan) {
   return `${[...shapeImports, ...styleImports].join('\n')}
 const shapeEntry = (module, cssText) => {
   const component = Reflect.get(module, 'default$shape')
+  const groupCss = Reflect.get(module, '$weftShapeCss')
+  if (typeof groupCss === 'string' && groupCss) cssText = [groupCss, ...cssText]
   return typeof component === 'function'
     ? { kind: 'generated', component, css: null, cssText, cssStatus: 'partial', bytes: null }
     : { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null }

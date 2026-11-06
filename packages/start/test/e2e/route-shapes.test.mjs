@@ -7,6 +7,7 @@ import { createServer } from 'vite'
 import { clientRoutes, shapeSignature } from '../../src/vite/route-modules.mjs'
 import { shapeHotUpdate } from '../../src/vite.mjs'
 import { parse } from '../../src/vite/syntax.mjs'
+import { shapeGroupCss } from '../../../core/vite/shape-styles.mjs'
 
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'weft-route-shapes-'))
@@ -15,12 +16,13 @@ function fixture(t) {
   return { root, write, abs: (file) => join(root, file) }
 }
 
-async function manifestModule(source, missing = []) {
+async function manifestModule(source, missing = [], groupCss = '') {
   const code = source.replace(/^import \* as shape(\d+) from (.+)$/gm, (_, index, specifier) => {
     const file = JSON.parse(specifier)
     return missing.some((name) => file.endsWith(`${name}?weft-shape`))
       ? `const shape${index} = {}`
-      : `const shape${index} = { 'default$shape': function Shape() {} }`
+      : `const shape${index} = { 'default$shape': function Shape() {}, ` +
+        `${JSON.stringify('$weftShapeCss')}: ${JSON.stringify(groupCss)} }`
   })
   const withStyles = code.replace(
     /^import style(\d+) from (.+)$/gm,
@@ -230,4 +232,25 @@ test('malformed edits invalidate metadata and a repaired route recovers', async 
   assert.deepEqual(calls, ['routes', { type: 'full-reload' }])
   const routes = await manifestModule(clientRoutes(state.manifest, f.abs))
   assert.equal(routes.shapes['/'].kind, 'disabled')
+})
+
+
+test('static group facts produce CSS carried alongside the shape', async (t) => {
+  const f = fixture(t)
+  f.write('page.tsx', 'export default () => <main />')
+  const facts = {
+    groups: [{ name: 'card', def: { base: { pad: 'group' } }, line: 1 }],
+    groupUses: [{ group: 'card', axes: {}, states: [], part: null, dynamic: false }],
+  }
+  const css = shapeGroupCss(facts, {}, f.abs('page.tsx'))
+  assert.ok(css.includes('[data-g="card"]'), css)
+  assert.ok(css.includes('padding'), css)
+  assert.equal(shapeGroupCss({ ...facts, groupUses: [] }, {}, f.abs('page.tsx')), '')
+  const imported = { '/app/card#card': { name: 'card', def: facts.groups[0].def } }
+  assert.equal(shapeGroupCss({ ...facts, groups: [] }, imported, f.abs('page.tsx')), css)
+  const manifest = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
+  const routes = await manifestModule(clientRoutes(manifest, f.abs), [], css)
+  assert.deepEqual(routes.shapes['/'].cssText, [css])
+  assert.equal(routes.shapes['/'].cssStatus, 'partial')
+  assert.equal(routes.shapes['/'].css, null)
 })

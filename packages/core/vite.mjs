@@ -12,6 +12,7 @@ import {
 import { importedShapes } from './vite/shapes.mjs'
 import { purgeCss } from './vite/purge.mjs'
 import { styleGroups } from './vite/style-groups.mjs'
+import { shapeGroupCss } from './vite/shape-styles.mjs'
 import { icons } from './vite/icons.mjs'
 import { agent } from './vite/agent.mjs'
 import { watchChanges } from './vite/watch.mjs'
@@ -69,9 +70,7 @@ export default function weft({
         const mode = MODE.exec(id)?.[1]
         const ssr = mode ? mode === 'ssr' : !!options?.ssr
         const hydrating = hydratable || !!mode
-        const groups = standalone
-          ? undefined
-          : await style.options(this, code, id.replace(/\?.*$/, ''))
+        const groups = await style.options(this, code, id.replace(/\?.*$/, ''))
         const shapes = standalone ? {} : await importedShapes(this, code, id.replace(/\?.*$/, ''))
         const islands =
           hydrating && !mode && !standalone ? await main.api.islands?.(this, id) : undefined
@@ -94,8 +93,16 @@ export default function weft({
           else this.warn({ message: text, loc })
         }
         if (!out.code) return null
+        const generated = standalone
+          ? shapeGroupCss(out.facts, groups, id.replace(/\?.*$/, ''), {
+              dev: isDev,
+              taggedParts: !!styleOptions?.taggedParts,
+            })
+          : ''
         return {
-          code: standalone ? out.code : style.record(this, id, out.facts, out.code, ssr),
+          code: standalone
+            ? `${out.code}\nexport const $weftShapeCss = ${JSON.stringify(generated)};`
+            : style.record(this, id, out.facts, out.code, ssr),
           map: out.map,
         }
       },
