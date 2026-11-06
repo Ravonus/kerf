@@ -1,3 +1,4 @@
+import { For } from '@weft-js/core/dom'
 import { DownIcon } from '@weft-js/warp-icons'
 import { flush, derived, omit, untrack, type State } from '@weft-js/core'
 import {
@@ -27,23 +28,34 @@ export type OptionGroup = { group: string; options: Option[] }
 /** Past this many options a Select searches (03 §4); `searchable` says so either way. */
 const LONG = 15
 
-const Item = ({ o, on }: { o: Option; on: string }) => (
-  <option value={o.value} disabled={o.disabled} selected={o.value === on}>
-    {o.label}
-  </option>
-)
+function item(option: () => Option, selectedValue: () => string) {
+  return (
+    <option
+      value={option().value}
+      disabled={option().disabled}
+      selected={option().value === selectedValue()}
+    >
+      {option().label}
+    </option>
+  )
+}
 
 function Choice({ o, on }: { o: Option | OptionGroup; on: string }) {
   return (
     <>
       {'group' in o ? (
         <optgroup label={o.group}>
-          {o.options.map((x) => (
-            <Item key={x.value} o={x} on={on} />
-          ))}
+          <For each={o.options} by={(option) => option.value}>
+            {(option) => untrack(() => item(option, () => on))}
+          </For>
         </optgroup>
       ) : (
-        <Item o={o} on={on} />
+        untrack(() =>
+          item(
+            () => o,
+            () => on,
+          ),
+        )
       )}
     </>
   )
