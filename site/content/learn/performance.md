@@ -157,7 +157,8 @@ import { state, type State } from '@weft-js/core'
 function Row(
   props: { id: string; cart: State<Record<string, number>> },
 ) {
-  return <li>{props.id}: {props.cart.get(props.id) ?? 0}</li>
+  const { id, cart } = props
+  return <li>{id}: {cart.get(id) ?? 0}</li>
 }
 
 export function Basket() {
@@ -382,9 +383,10 @@ function Seat(props: { id: string; taken: boolean }) {
 function Seat(
   props: { id: string; booked: State<Record<string, boolean>> },
 ) {
+  const { id, booked } = props
   return (
     <li>
-      {props.id}: {props.booked.get(props.id) ? 'taken' : 'free'}
+      {id}: {booked.get(id) ? 'taken' : 'free'}
     </li>
   )
 }

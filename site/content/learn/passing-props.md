@@ -377,11 +377,18 @@ unannotated: weft infers them from the places that use the component and from wh
 editor, in `weft check` and in `weft tsc`.
 
 ```tsx
+import { derived } from '@weft-js/core'
+
 function Row(props) {
+  const { label, onPick } = props
+  const upper = derived(() => label.toUpperCase())
   return (
     <li>
-      <button type="button" onClick={props.onPick}>
-        {props.label.toUpperCase()}
+      <button
+        type="button"
+        onClick={onPick}
+      >
+        {upper.value}
       </button>
     </li>
   )
@@ -390,7 +397,10 @@ function Row(props) {
 export default function List() {
   return (
     <ul>
-      <Row label="One" onPick={() => console.log('picked one')} />
+      <Row
+        label="One"
+        onPick={() => console.log('picked one')}
+      />
     </ul>
   )
 }
