@@ -365,6 +365,40 @@ React stacks waits for a later release. Size, load time and js-framework-benchma
 reason is written down. The agent eval results are published, with weft's pass@1 at or above both
 React stacks.
 
+### Sprint 7: instant navigation
+
+**Added 2026-11-06 (owner).** On a 3G throttle weft loads fast, but a click on a nav item still
+waits before anything moves. Every navigation should respond on the click, by default, with no
+code from the app author.
+
+Build on what exists: `<Boundary pending="shape">` already reserves a compiler-made placeholder,
+and `resource` already tracks `pending`.
+
+- [ ] **Respond on the click.** On pointerdown, update the URL, the active nav state and any shared
+      layout at once, and swap the outgoing route's content for the incoming route's skeleton.
+      The old page stays interactive until the new one can render. Back and forward are instant
+      from the client route cache.
+- [ ] **Skeletons by default.** Every route gets one with no code: the compiler's shape for the
+      route's static structure, refined by the last real render of that route when there is one.
+      Per route: `skeleton: false` turns it off, `skeleton: Component` replaces it. Document both.
+- [ ] **Prefetch by intent and cost.** Prefetch a route's code and data on hover, focus,
+      pointerdown and, for small routes, on entering the viewport. The route manifest records each
+      route's byte size. Respect `navigator.connection` (`saveData`, `effectiveType`): on slow
+      networks prefetch only on strong intent and only small payloads.
+- [ ] **Smart server caching.** Route data responses carry ETags and `stale-while-revalidate`.
+      The client keeps a bounded route-payload cache; a revisit renders from cache and revalidates
+      in the background. Mutations invalidate the routes they touch.
+- [ ] **Optimistic by default.** Actions and form submits update the UI first and roll back on
+      failure, with an opt-out per action. Reuse the existing mutation layer; don't add a second.
+- [ ] **Prove it.** A Playwright test under CDP 3G throttling (Fast 3G and Slow 3G) on the
+      scaffolded app: first visual response to a nav click under 50 ms, skeleton under 100 ms,
+      and no layout shift when content replaces the skeleton (CLS 0). Add it to `pnpm run check`.
+- [ ] A Learn page: "Navigation feels instant", with the defaults, the opt-outs and a custom
+      skeleton. Samples follow S1's widths and patterns.
+
+**Exit:** the tasks above are on main, the 3G test passes in the gate, and warp stays under the
+50 KB ceiling.
+
 ### Sprint 6: open-source release
 
 Everything a first-time visitor and their agent expect to find.
