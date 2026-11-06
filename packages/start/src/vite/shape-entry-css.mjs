@@ -127,9 +127,15 @@ export function watchEntryCandidates(server, candidates, root) {
 
 /** Clear this server's entry metadata without changing the shared Vite watcher. */
 export function entryWatchLifecycle(state, server, modes) {
+  state.shapeScanGeneration = (state.shapeScanGeneration ?? 0) + 1
   state.shapeEntryOwner = server
+  delete state.shapeEntryClosed
   const close = server.close
   server.close = async function (...args) {
+    if (state.shapeEntryOwner === server) {
+      state.shapeEntryClosed = true
+      state.shapeScanGeneration = (state.shapeScanGeneration ?? 0) + 1
+    }
     try {
       return await close.apply(this, args)
     } finally {
