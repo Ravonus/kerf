@@ -1,1 +1,4 @@
-export function App() { const value = () => {}; return <p /> }
+export function App() {
+  const value = () => {}
+  return <p />
+}

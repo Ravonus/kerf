@@ -1,2 +1,5 @@
 import { useEffect } from 'react'
-export function App() { useEffect(() => {}, []); return <p /> }
+export function App() {
+  useEffect(() => {}, [])
+  return <p />
+}

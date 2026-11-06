@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import { deepStrictEqual, match, ok } from 'node:assert/strict'
 import { typeProblems } from './types.mjs'
 
-test('checker exits and diagnostic exclusions', () => {
+void test('checker exits and diagnostic exclusions', () => {
   for (const result of [
     { code: 1, out: '' },
     { code: 1, out: 'Error: spawn tsc ENOENT' },

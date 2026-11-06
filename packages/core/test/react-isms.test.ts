@@ -24,10 +24,17 @@ describe('buggy-v4 React habits', () => {
         transform(readFileSync(new URL(file, fixtures), 'utf8'), { filename: file, dev: true })
       const bad = compile(`${name}.tsx`)
       expect(bad.diagnostics).toHaveLength(name === 'wrapper' ? 2 : 1)
-      expect(bad.diagnostics.every((d: { code: string; severity: string }) =>
-        d.code === 'W020' && d.severity === 'error')).toBe(true)
-      expect(bad.diagnostics.some((d: { message: string; help: string }) =>
-        d.message.includes(message) && d.help.includes(help))).toBe(true)
+      expect(
+        bad.diagnostics.every(
+          (d: { code: string; severity: string }) => d.code === 'W020' && d.severity === 'error',
+        ),
+      ).toBe(true)
+      expect(
+        bad.diagnostics.some(
+          (d: { message: string; help: string }) =>
+            d.message.includes(message) && d.help.includes(help),
+        ),
+      ).toBe(true)
       const fixed = compile(`${name}.fixed.tsx`)
       expect(fixed.diagnostics).toEqual([])
       expect(fixed.code).toBeTruthy()
