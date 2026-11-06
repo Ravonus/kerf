@@ -13,3 +13,22 @@ include!("compile/watch_patterns.rs");
 include!("compile/watch_copies.rs");
 include!("compile/catalog_browser.rs");
 include!("compile/runtime_imports.rs");
+
+#[test]
+fn default_route_shapes_include_lowercase_local_names() {
+    for source in [
+        "export default function page() { return <main>Page</main> }",
+        "const page = () => <main>Page</main>; export default page",
+        "const page = () => <main>Page</main>; export { page as default }",
+    ] {
+        let code = shaped(source);
+        assert!(code.contains("function page$shape"), "{code}");
+        assert!(code.contains("page$shape as default$shape"), "{code}");
+    }
+}
+
+#[test]
+fn lowercase_nondefault_helpers_do_not_gain_shapes() {
+    let code = shaped("export const helper = () => <p>Helper</p>");
+    assert!(!code.contains("function helper$shape"), "{code}");
+}

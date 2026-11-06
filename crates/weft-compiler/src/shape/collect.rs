@@ -82,7 +82,8 @@ pub(super) fn collect<'b, 'a>(program: &'b Program<'a>) -> Vec<Comp<'b, 'a>> {
         }
     }
     comps.retain(|c| {
-        is_component_name(&c.local) && returned(c.statements, c.expression).is_some_and(has_jsx)
+        (is_component_name(&c.local) || c.exported.iter().any(|name| name == "default"))
+            && returned(c.statements, c.expression).is_some_and(has_jsx)
     });
     comps
 }
