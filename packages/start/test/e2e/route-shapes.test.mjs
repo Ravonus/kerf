@@ -1,13 +1,15 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { createServer } from 'vite'
-import { clientRoutes, shapeSignature } from '../../src/vite/route-modules.mjs'
+import { clientRoutes, shapeCssSources, shapeSignature } from '../../src/vite/route-modules.mjs'
 import { shapeHotUpdate } from '../../src/vite.mjs'
+import { load as moduleLoad } from '../../src/vite/module-hooks.mjs'
 import { parse } from '../../src/vite/syntax.mjs'
 import { shapeGroupCss } from '../../../core/vite/shape-styles.mjs'
+import { tokens } from '../../../core/vite/config-plugins.mjs'
 
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'weft-route-shapes-'))
@@ -253,4 +255,120 @@ test('static group facts produce CSS carried alongside the shape', async (t) => 
   assert.deepEqual(routes.shapes['/'].cssText, [css])
   assert.equal(routes.shapes['/'].cssStatus, 'partial')
   assert.equal(routes.shapes['/'].css, null)
+})
+
+
+test('entry and token styles join route shape CSS without running entry code', async (t) => {
+  const f = fixture(t)
+  f.write('entry.ts', `
+    import './app.css'
+    import 'weft:tokens/warp'
+    import 'weft:tokens/missing'
+    import '@kit/tokens.css'
+    import '@kit/unsafe.css'
+    import './entry-runtime.js'
+    throw new Error('entry executed')
+  `)
+  f.write('page.tsx', "import './page.css'; export default () => <main />")
+  const token = f.abs('token.css')
+  const kit = f.abs('kit.css')
+  const calls = []
+  const ctx = { resolve: async (spec) => {
+    calls.push(spec)
+    if (spec === 'weft:tokens/warp') return { id: token }
+    if (spec === 'weft:tokens/missing') return { id: '\0weft:tokens-empty' }
+    if (spec === '@kit/tokens.css') return { id: kit }
+    if (spec === '@kit/unsafe.css') return { id: f.abs('unsafe.js') }
+  } }
+  const entry = await shapeCssSources(ctx, f.abs('entry.ts'))
+  assert.deepEqual(entry, [f.abs('app.css'), token, kit])
+  assert.ok(!calls.includes('./entry-runtime.js'))
+  const levels = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
+  const styles = new Map([[f.abs('page.tsx'), [token, f.abs('page.css')]]])
+  const source = clientRoutes(levels, f.abs, undefined, { entry, levels: styles })
+  assert.ok(!source.includes('entry-runtime.js'))
+  assert.ok(!source.includes('unsafe.js'))
+  const routes = await manifestModule(source)
+  assert.deepEqual(routes.shapes['/'].cssText, [
+    `${f.abs('app.css')}?inline`, `${token}?inline`, `${kit}?inline`, `${f.abs('page.css')}?inline`,
+  ])
+  assert.equal(routes.shapes['/'].cssStatus, 'partial')
+  assert.equal(routes.shapes['/'].css, null)
+  assert.equal(routes.shapes['/'].bytes, null)
+})
+
+test('the token plugin resolves generated token CSS as an inert inline stylesheet', async (t) => {
+  const f = fixture(t)
+  mkdirSync(join(f.root, '.weft', 'tokens'), { recursive: true })
+  f.write('.weft/tokens/warp.css', ':root { --warp-space-group: 12px }')
+  f.write('entry.ts', "import 'weft:tokens/warp'")
+  const server = await createServer({
+    root: f.root, configFile: false, logLevel: 'silent', plugins: [tokens()],
+    server: { middlewareMode: true }, appType: 'custom',
+  })
+  try {
+    const ctx = {
+      resolve: (...args) => server.environments.client.pluginContainer.resolveId(...args),
+    }
+    const styles = await shapeCssSources(ctx, f.abs('entry.ts'))
+    assert.equal(styles.length, 1)
+    assert.ok(styles[0].endsWith('/.weft/tokens/warp.css'), styles[0])
+    const output = await server.environments.client.transformRequest(
+      '/.weft/tokens/warp.css?inline',
+    )
+    assert.ok(output?.code.includes('--warp-space-group: 12px'), output?.code)
+    assert.ok(output?.code.includes('export default'), output?.code)
+    assert.ok(!output?.code.includes('updateStyle'), output?.code)
+  } finally {
+    await server.close()
+  }
+})
+
+test('entry stylesheet import changes invalidate shape metadata', async (t) => {
+  const f = fixture(t)
+  const file = f.abs('entry.ts')
+  f.write('entry.ts', "import './one.css'")
+  const modes = new Map([['entry.ts', shapeSignature(file)]])
+  const calls = []
+  const graph = {
+    getModuleById: () => 'routes',
+    invalidateModule: (value) => calls.push(value),
+  }
+  const state = {
+    root: f.root, manifest: { routes: [], layouts: [] }, clientEntry: () => file,
+    vite: { ws: { send: (value) => calls.push(value) } },
+  }
+  const handler = shapeHotUpdate(state, modes, async () => ['unchanged'])
+  const context = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
+  f.write('entry.ts', "import './two.css'")
+  assert.deepEqual(await handler.call(context, { file, modules: [] }), [])
+  assert.deepEqual(calls, ['routes', { type: 'full-reload' }])
+})
+
+
+test('client virtual routes collect entry and route styles through the Vite hook', async (t) => {
+  const f = fixture(t)
+  f.write('entry.ts', "import './app.css'; throw new Error('entry ran')")
+  f.write('page.tsx', "import 'weft:tokens/warp'; export default () => <main />")
+  f.write('disabled.tsx', "import '@bad/disabled.css'; export const skeleton = false")
+  const manifest = { layouts: [], routes: [
+    { id: '/', file: 'page.tsx', kind: 'page' },
+    { id: '/disabled', file: 'disabled.tsx', kind: 'page' },
+  ] }
+  const state = {
+    manifest, abs: f.abs, clientEntry: () => f.abs('entry.ts'), hydration: async () => undefined,
+  }
+  const context = {
+    environment: { config: { consumer: 'client' } },
+    resolve: async (spec) => {
+      if (spec === '@bad/disabled.css') throw new Error('disabled CSS was resolved')
+      return spec === 'weft:tokens/warp' ? { id: f.abs('token.css') } : null
+    },
+  }
+  const source = await moduleLoad(state).handler.call(context, '\0virtual:weft/routes')
+  const routes = await manifestModule(source)
+  assert.deepEqual(routes.shapes['/'].cssText, [
+    `${f.abs('app.css')}?inline`, `${f.abs('token.css')}?inline`,
+  ])
+  assert.equal(routes.shapes['/'].cssStatus, 'partial')
 })

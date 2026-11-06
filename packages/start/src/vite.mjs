@@ -50,7 +50,7 @@ export function shapeHotUpdate(state, modes, next) {
     if (this.environment.config.consumer === 'client') {
       const rel = relative(state.root, update.file).split('\\').join('/')
       const levels = [...state.manifest.routes, ...state.manifest.layouts]
-      if (levels.some((level) => level.file === rel)) {
+      if (levels.some((level) => level.file === rel) || state.clientEntry?.() === update.file) {
         let mode
         try {
           mode = shapeSignature(update.file)
@@ -102,6 +102,15 @@ export default function weftStart(options = {}) {
             modes.set(level.file, shapeSignature(state.abs(level.file)))
           } catch {
             modes.set(level.file, 'invalid')
+          }
+        }
+        const entry = state.clientEntry()
+        if (!entry.startsWith('virtual:')) {
+          const rel = relative(state.root, entry).split('\\').join('/')
+          try {
+            modes.set(rel, shapeSignature(entry))
+          } catch {
+            modes.set(rel, 'invalid')
           }
         }
         return configure(server)

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { isCSSRequest } from 'vite'
 import { here, ASSETS, SHEET } from './shared.mjs'
 import { parse } from './syntax.mjs'
@@ -152,22 +152,42 @@ export function skeletonExport(file) {
 }
 
 // Inline CSS is data until a consumer applies it. Other dependencies remain unproven.
-function shapeStyles(file) {
-  const body = shapeBody(file)
-  const styles = body
+function styleImports(file) {
+  return shapeBody(file)
     .filter((node) => node.type === 'ImportDeclaration' && !node.specifiers.length)
     .map((node) => node.source.value)
-    .filter((spec) => /^\.{1,2}\//.test(spec) && /(?<!\.module)\.css$/.test(spec))
+    .filter((spec) => /(?<!\.module)\.css$/.test(spec) || /^weft:tokens\/[\w/-]+$/.test(spec))
+}
+
+function shapeStyles(file) {
+  const local = styleImports(file)
+    .filter((spec) => /^\.{1,2}\//.test(spec))
     .map((spec) => resolve(dirname(file), spec))
+  return [...new Set(local)]
+}
+
+/** Resolve only direct stylesheet and token imports, without evaluating their importing module. */
+export async function shapeCssSources(ctx, file) {
+  const styles = []
+  for (const spec of styleImports(file)) {
+    if (/^\.{1,2}\//.test(spec)) {
+      styles.push(resolve(dirname(file), spec))
+      continue
+    }
+    if (/^(https?:|\/\/)/.test(spec) || spec.includes('..')) continue
+    const found = await ctx.resolve(spec, file, { skipSelf: true })
+    if (!found?.external && found?.id && isAbsolute(found.id) && /\.css$/.test(found.id))
+      styles.push(found.id)
+  }
   return [...new Set(styles)]
 }
 
 /** The route facts embedded in the client shape manifest. */
 export function shapeSignature(file) {
-  return JSON.stringify([skeletonExport(file), shapeStyles(file)])
+  return JSON.stringify([skeletonExport(file), styleImports(file)])
 }
 
-export function clientRoutes(manifest, abs, plan) {
+export function clientRoutes(manifest, abs, plan, css = {}) {
   const table = manifest.routes
     .filter((r) => r.kind === 'page')
     .map((r) => ({ id: r.id, pattern: r.pattern, layouts: r.layouts }))
@@ -185,7 +205,8 @@ export function clientRoutes(manifest, abs, plan) {
     if (!/\.[jt]sx$/.test(file))
       return `${id}: { kind: 'unavailable', reason: 'unsupported-file', css: null, bytes: null }`
     if (!shapeFiles.has(file)) shapeFiles.set(file, shapeFiles.size)
-    const styles = shapeStyles(file).map((style) => {
+    const sources = [...(css.entry ?? []), ...(css.levels?.get(file) ?? shapeStyles(file))]
+    const styles = [...new Set(sources)].map((style) => {
       if (!styleFiles.has(style)) styleFiles.set(style, styleFiles.size)
       return `style${styleFiles.get(style)}`
     })

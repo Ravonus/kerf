@@ -4,7 +4,9 @@ import { join, relative } from 'node:path'
 import { readMigrations } from '../migrations.mjs'
 import { routeTypes } from '../routes.mjs'
 import { assetsOnly } from './assets.mjs'
-import { clientRoutes, serverRoutes, devStyles, markLinks } from './route-modules.mjs'
+import {
+  clientRoutes, serverRoutes, devStyles, markLinks, shapeCssSources, skeletonExport,
+} from './route-modules.mjs'
 import {
   serverEntry,
   extensionsModule,
@@ -62,16 +64,27 @@ export const load = (s) => ({
     }
     if (which === V.routes) {
       const p = await s.hydration(this)
-      return client
-        ? clientRoutes(s.manifest, s.abs, p)
-        : serverRoutes(
-            s.manifest,
-            s.abs,
-            s.dev
-              ? await devStyles(s.vite.environments.client, s.manifest, s.abs, s.clientEntry())
-              : undefined,
-            p,
-          )
+      if (client) {
+        const entry = s.clientEntry()
+        const entryFile = entry.startsWith('virtual:') ? join(here, 'client.tsx') : entry
+        const levels = [...s.manifest.layouts, ...s.manifest.routes]
+        const files = [...new Set(levels.map((r) => s.abs(r.file)))]
+          .filter((file) => /\.[jt]sx$/.test(file) && skeletonExport(file) === 'generated')
+        const sources = await Promise.all(files.map((file) => shapeCssSources(this, file)))
+        const css = {
+          entry: await shapeCssSources(this, entryFile),
+          levels: new Map(files.map((file, i) => [file, sources[i]])),
+        }
+        return clientRoutes(s.manifest, s.abs, p, css)
+      }
+      return serverRoutes(
+        s.manifest,
+        s.abs,
+        s.dev
+          ? await devStyles(s.vite.environments.client, s.manifest, s.abs, s.clientEntry())
+          : undefined,
+        p,
+      )
     }
     if (which === V.app)
       return appModule({
