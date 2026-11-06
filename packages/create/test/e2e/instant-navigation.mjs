@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { packWithAddon } from '../../scripts/pack-all.mjs'
 import { writePackedPolicy } from '../../scripts/tarballs.mjs'
 import { findChrome } from '../../scripts/cdp.mjs'
+import { observeNavigation, assertNavigation } from './navigation-metrics.mjs'
 
 const root = fileURLToPath(new URL('../../../../', import.meta.url))
 const entry = 'packages/create/test/e2e/instant-navigation.mjs'
@@ -16,15 +17,14 @@ const profiles = [
   { name: 'Fast 3G', latency: 150, downloadThroughput: 1600000 / 8, uploadThroughput: 750000 / 8 },
   { name: 'Slow 3G', latency: 400, downloadThroughput: 400000 / 8, uploadThroughput: 400000 / 8 },
 ]
-const cases = ['cold', 'warm', 'history', 'search', 'rapid', 'mutation', 'keyboard', 'native',
-  'overrides', 'save-data', 'touch-cancel', 'late-skeleton', 'wrong-height']
+
 
 function command(bin, args, cwd) {
   execFileSync(bin, args, { cwd, stdio: 'inherit' })
 }
 
 function checkEntries() {
-  const tracked = execFileSync('git', ['ls-files', '--', 'packages/create/test/e2e/instant-navigation.mjs'],
+  const tracked = execFileSync('git', ['ls-files', '--', 'packages/create/test/e2e/*-navigation.mjs'],
     { cwd: root, encoding: 'utf8' }).trim().split('\n').filter(Boolean)
   const selected = [entry]
   console.log(`entrypoints: ${selected.length} selected, ${tracked.length} tracked`)
@@ -56,23 +56,36 @@ async function waitForServer(server, url) {
   throw new Error('built server did not become ready')
 }
 
+async function cold(context, settings, url) {
+  const page = await context.newPage()
+  const cdp = await context.newCDPSession(page)
+  const { name, ...network } = settings
+  await cdp.send('Network.enable')
+  await cdp.send('Network.emulateNetworkConditions', { offline: false, ...network })
+  console.log(`${name}: CDP accepted ${JSON.stringify(network)}`)
+  await page.goto(url, { waitUntil: 'networkidle' })
+  await page.evaluate(() => document.fonts.ready)
+  await page.evaluate(observeNavigation)
+  const link = page.locator('.site-head a[href="/pricing"]')
+  const box = await link.boundingBox()
+  if (!box) throw new Error('pricing link is not visible')
+  const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1 })
+  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', clickCount: 1 })
+  await page.waitForFunction(() => window.__navigation?.result.settled, null, { timeout: 10000 })
+  await page.evaluate(async () => {
+    await document.fonts.ready
+    await Promise.all([...document.images].map((image) => image.decode().catch(() => {})))
+    await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))
+  })
+  const result = await page.evaluate(() => window.__navigation.result)
+  console.log(`${name} cold: 1 executed ${JSON.stringify(result)}`)
+  assertNavigation(result)
+}
+
 async function profile(browser, settings, url) {
   const context = await browser.newContext()
-  try {
-    const page = await context.newPage()
-    const cdp = await context.newCDPSession(page)
-    const { name, ...network } = settings
-    await cdp.send('Network.enable')
-    await cdp.send('Network.emulateNetworkConditions', { offline: false, ...network })
-    console.log(`${name}: configured ${JSON.stringify(network)}`)
-    await page.goto(url, { waitUntil: 'networkidle' })
-    if (!await page.locator('a[href="/pricing"]').count()) throw new Error('pricing link missing')
-    // A loaded document alone does not establish router readiness or count as a case.
-    for (const name of cases) console.log(`${settings.name} ${name}: 0 executed`)
-    throw new Error(`${settings.name}: acceptance cases are not implemented`)
-  } finally {
-    await context.close()
-  }
+  try { await cold(context, settings, url) } finally { await context.close() }
 }
 
 async function main() {
@@ -96,7 +109,8 @@ async function main() {
     for (const settings of profiles) {
       try { await profile(browser, settings, url) } catch (error) { failures.push(error.message) }
     }
-    if (failures.length) throw new Error(failures.join('\n'))
+    failures.push('unimplemented: delayed-response, negative controls and remaining navigation cases')
+    throw new Error(failures.join('\n'))
   } finally {
     await browser?.close()
     if (server && server.exitCode === null) {

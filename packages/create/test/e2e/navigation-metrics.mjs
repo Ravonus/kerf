@@ -1,30 +1,47 @@
-// Install before input so shifts caused by the navigation are not excluded.
+// This function runs in the page before the trusted input.
 export function observeNavigation() {
+  const main = document.querySelector('#content')
+  const layout = document.querySelector('.site-head')
+  const link = document.querySelector('.site-head a[href="/pricing"]')
+  if (!main || !layout || !link) throw new Error('landing navigation elements missing')
+  const original = main.firstElementChild
   const shifts = []
-  let pointerdown
+  const result = { input: null, response: null, skeleton: null, settled: false, shifts }
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       shifts.push({ time: entry.startTime, value: entry.value, hadRecentInput: entry.hadRecentInput })
     }
   })
   observer.observe({ type: 'layout-shift', buffered: true })
-  const onPointerDown = (event) => {
-    if (event.isTrusted && pointerdown === undefined) pointerdown = performance.now()
+  addEventListener('pointerdown', (event) => {
+    if (!event.isTrusted || result.input !== null) return
+    result.input = performance.now()
+    requestAnimationFrame(sample)
+  }, { capture: true, once: true })
+  function sample() {
+    const now = performance.now()
+    const visible = main.getBoundingClientRect().height > 0 && getComputedStyle(main).visibility !== 'hidden'
+    const active = link.getAttribute('aria-current') !== null
+    const changed = main.firstElementChild !== original
+    const real = main.textContent.includes('Simple pricing that grows with your team')
+    if (result.response === null && location.pathname === '/pricing' && active && visible)
+      result.response = now - result.input
+    if (result.skeleton === null && changed && visible && !real)
+      result.skeleton = now - result.input
+    if (real && changed) result.settled = true
+    result.layout = document.querySelector('.site-head') === layout
+    if (now - result.input < 5000) requestAnimationFrame(sample)
   }
-  addEventListener('pointerdown', onPointerDown, true)
-  return {
-    get pointerdown() { return pointerdown },
-    shiftsSince(time) {
-      return shifts.filter((shift) => shift.time >= time)
-    },
-    close() {
-      observer.disconnect()
-      removeEventListener('pointerdown', onPointerDown, true)
-    },
-  }
+  window.__navigation = { result, observer }
 }
 
-// Recent-input shifts count: navigation is precisely where they matter.
-export function totalShift(shifts) {
-  return shifts.reduce((sum, shift) => sum + shift.value, 0)
+export function assertNavigation(result) {
+  if (result.input === null) throw new Error('no trusted pointerdown')
+  if (result.response === null || result.response >= 50) throw new Error('painted response >= 50ms or missing')
+  if (result.skeleton === null || result.skeleton >= 100) throw new Error('skeleton >= 100ms or missing')
+  if (!result.layout) throw new Error('shared layout identity changed')
+  if (!result.settled) throw new Error('destination did not settle')
+  const value = result.shifts.filter((shift) => shift.time >= result.input + result.skeleton)
+    .reduce((sum, shift) => sum + shift.value, 0)
+  if (value !== 0) throw new Error(`layout shift ${value}, expected 0`)
 }
