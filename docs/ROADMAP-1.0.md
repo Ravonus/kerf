@@ -288,47 +288,36 @@ fix. Today, these are in the catalog but the compiler never emits them:
 **Exit:** the catalog check passes. `buggy-v4` reports every seeded React-ism as an error with the
 right code. The API snapshots are committed.
 
-### Sprint 5: prove it (cheap agents, benchmarks, size)
+### Sprint 5: prove it (size and load time)
 
-Test the bet with agents that have nothing going for them.
+**Status:** in progress. Final owner scope, 2026-11-05: T01, T02 and T05.
 
-**Cheap-agent gauntlet** (`evals/agent-eval`, pre-registered in research 42):
-
-- [ ] Run the matrix of weft + warp against Next + shadcn and Vite + React, on all 6 tasks, with a
-      small model and a mid model, 5 samples each, on yuna-mbp. Cold start, so each agent has only
-      AGENTS.md, `weft docs` and the MCP server. Record pass@1, the diagnostics hit, tokens, wall
-      time and "had to read source".
-- [ ] Friction pass. Give a small-model agent 20 Learn pages, one at a time: "build what this page
-      teaches, without reading the framework's source". It logs every step where it got stuck,
-      guessed, or found a doc that was wrong. Each friction item is a bug against the docs or the
-      diagnostics.
-- [ ] Fix what the runs find, then run the matrix again. Publish both runs.
-
-**Size and speed** (decide by benchmark, speed over bytes, 50 KB ceiling):
+- [ ] Get the comparison dashboard's weft + warp JS+CSS Brotli total below 51,200 B.
+      Recover S3's growth from 51,397 B to 53,081 B without changing the UI or behavior.
+- [x] Run `benchmarks/compare/measure.mjs` once on Yuna against Solid + Kobalte and
+      record the first-load numbers.
+- [x] `benchmarks/README.md` explains machines, runs, medians, measurements and
+      reproduction. The site's numbers link to it.
 
 S5 measurement (Yuna M3 Pro, Node 26.13.0, source `1b397bf4`): first-load task
 time is 215 ms for weft + warp and 150 ms for Solid + Kobalte; FCP is 204 ms and
 132 ms. Style time is 70 ms and 3 ms. The six-stack command exits 0 and all nine
 parity steps pass for each stack. Warp long-list `heightMoved` is 0 despite an
 empty error list, so scrolling acceptance remains unverified. Dashboard JS+CSS
-Brotli remains 52,700 B. One targeted load fix is pending.
+Brotli remains 52,700 B. The owner requires recording this comparison, not closing
+the load-time gap, for 1.0.
 
+**Deferred until after 1.0 by the owner:**
 
-- [ ] Get weft + warp back under 50 KB. Bisect the growth from 40.8 to 53.0 KB between `10-31` and
-      `37ad91b7`. CSS is about 24.7 KB of it, so look at warp's CSS first. Recover S3's +1,684 B
-      warp growth (51,397 to 53,081 B) on the way under 50 KB.
-- [ ] Firefox text preparation +8.5% paired median in S3: confirm or fix.
-- [ ] Find what makes weft + warp's first load (210 ms) slower than Solid + Kobalte (155 ms),
-      when weft alone is 113 ms. Profile the warp mount path in `benchmarks/compare`.
-- [ ] Submit weft as a keyed implementation to
-      [js-framework-benchmark](https://github.com/krausest/js-framework-benchmark): idiomatic, no
-      hand-written DOM, versions pinned. Its numbers are the ones outsiders trust.
-- [ ] `benchmarks/README.md` explains the method: machines, runs, medians, what's measured and how
-      to reproduce it. The site's numbers link to it.
+- Firefox text preparation: confirm or fix the S3 paired-median increase.
+- Submit the keyed js-framework-benchmark entry upstream. The existing local
+  implementation remains in the repo; submission is the owner's later action.
+- Cheap-agent evaluations, the React comparison matrix, and Learn-page friction
+  runs, including fixes and reruns. T03, T04 and T06 are cancelled for this sprint.
 
-**Exit:** weft + warp is at or under 50 KB. Load time is no worse than Solid + Kobalte, or the
-reason is written down. The agent eval results are published, with weft's pass@1 at or above both
-React stacks.
+**Exit:** dashboard JS+CSS Brotli is below 51,200 B, the load comparison and method
+are recorded, and the sprint branch passes `weft-orchestra/bin/gate` before it
+merges to main. No eval or upstream benchmark submission is required for 1.0.
 
 ### Sprint 6: open-source release
 
