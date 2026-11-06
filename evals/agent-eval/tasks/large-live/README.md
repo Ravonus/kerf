@@ -90,4 +90,6 @@ retains phase logs and status at the printed receipt path, starts the built
 server on `http://127.0.0.1:4173`, and checks its listener belongs to the owned
 process before browser traffic. It runs a two-context runtime and security
 smoke, then stops the server and removes the owned staging root. A port collision
-is inconclusive. The smoke does not run semantic mutants or the full grader.
+is inconclusive. It then rebuilds eight named semantic mutants and checks their expected
+assertions. A failed setup, missing receipt or inconclusive timing is never a
+mutant catch. This is a dedicated calibration, not the general grader.

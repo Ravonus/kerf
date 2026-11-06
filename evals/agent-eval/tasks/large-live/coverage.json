@@ -1,21 +1,31 @@
 {
-  "status": "partial; prepared checks are not yet connected to grading",
+  "status": "partial; dedicated calibration is prepared, not yet browser verified",
   "covered": [
-    { "id": "auth_success_errors", "check": "signup, signout, login and duplicate credentials" },
-    { "id": "http_only_cookie", "check": "signup, signout, login and duplicate credentials" },
-    { "id": "blank_newest_author", "check": "messages reject blanks and appear newest first" },
+    {
+      "id": "auth_success_errors",
+      "check": "signup, signout, login and duplicate credentials"
+    },
+    {
+      "id": "http_only_cookie",
+      "check": "signup, signout, login and duplicate credentials"
+    },
+    {
+      "id": "blank_newest_author",
+      "check": "messages reject blanks and appear newest first"
+    },
     {
       "id": "remote_post_delete_visibility",
       "check": "other signed-in browsers see posts and deletes without reload"
     }
   ],
   "missing": [
-    "server password hashing",
-    "server rejects over-280 even when client is bypassed",
-    "author-only server deletion including forged requests",
-    "online presence count and disconnect",
-    "cross-origin POST rejection",
-    "own post appears at once",
-    "semantic mutants and canonical server-backed reference"
-  ]
+    "real-browser reference and mutant proof",
+    "complete guarded grading entrypoint and acceptance review",
+    "independent controls for server password hashing, blank messages, live deletion, cross-origin POST and presence disconnect"
+  ],
+  "calibrationMutants": {
+    "count": 8,
+    "manifest": "mutants.json",
+    "note": "Named controls map to explicit smoke assertions; remaining coverage and real browser verification remain open."
+  }
 }

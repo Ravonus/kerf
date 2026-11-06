@@ -138,4 +138,6 @@ ready
 (cd "$WEFT_EVAL_DEPS" && pnpm install --ignore-scripts --store-dir "$job/store") > "$receipts/browser-install.log" 2>&1
 ready
 "$node" "$repo/evals/agent-eval/evidence/T06/large-smoke.mjs"
+ready
+"$node" "$repo/evals/agent-eval/evidence/T06/large-mutants.mjs"
 printf 'Large reference receipts: %s\n' "$receipts"

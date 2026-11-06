@@ -51,7 +51,7 @@ export function prepare({ app, repo, job, origin, secret }) {
   )
 }
 
-function checkBudget(job) {
+export function checkBudget(job) {
   const disk = execFileSync('df', ['-Pk', job], { encoding: 'utf8' })
   const free = Number(disk.trim().split('\n').at(-1).trim().split(/\s+/)[3])
   const used = Number(execFileSync('du', ['-sk', job], { encoding: 'utf8' }).trim().split(/\s+/)[0])

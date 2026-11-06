@@ -1,0 +1,58 @@
+[
+  {
+    "name": "wrong password message hidden",
+    "file": "routes/signin.tsx",
+    "find": "{form.message.value && <p role=\"alert\">{form.message.value}</p>}",
+    "replace": "{form.message.value && <p role=\"alert\">Wrong credentials</p>}",
+    "assertion": "wrong-password"
+  },
+  {
+    "name": "duplicate email message hidden",
+    "file": "routes/signup.tsx",
+    "find": "{form.message.value && <p role=\"alert\">{form.message.value}</p>}",
+    "replace": "{form.message.value && <p role=\"alert\">Account exists</p>}",
+    "assertion": "duplicate-email"
+  },
+  {
+    "name": "client length limit missing",
+    "file": "routes/index.tsx",
+    "find": "if (value.length > 280)",
+    "replace": "if (value.length > 1000)",
+    "assertion": "ui-too-long"
+  },
+  {
+    "name": "own message not optimistic",
+    "file": "routes/index.tsx",
+    "find": "pending.value = value",
+    "replace": "pending.value = ''",
+    "assertion": "own-immediate"
+  },
+  {
+    "name": "presence count static",
+    "file": "routes/index.tsx",
+    "find": "room.peers.value.length + 1",
+    "replace": "1",
+    "assertion": "presence"
+  },
+  {
+    "name": "non-author delete visible",
+    "file": "routes/index.tsx",
+    "find": "message.authorId === props.data.id",
+    "replace": "true",
+    "assertion": "non-author-button"
+  },
+  {
+    "name": "server length limit missing",
+    "file": "server/board.ts",
+    "find": ".max(280, 'Too long')",
+    "replace": ".max(1000, 'Too long')",
+    "assertion": "server-too-long"
+  },
+  {
+    "name": "author delete guard missing",
+    "file": "server/board.ts",
+    "find": "eq(messages.authorId, ctx.user.id)",
+    "replace": "eq(messages.authorId, messages.authorId)",
+    "assertion": "author-delete"
+  }
+]
