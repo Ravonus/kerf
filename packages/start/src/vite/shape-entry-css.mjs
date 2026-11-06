@@ -17,6 +17,21 @@ function projectParent(root, file) {
   }
 }
 
+// Resolvers may preserve symlinks, so both the apparent and actual file must be app source.
+function appSource(root, file) {
+  const blocked = (base, path) => {
+    const rel = relative(base, path).replace(/\\/g, '/')
+    return rel === '..' || rel.startsWith('../') || isAbsolute(rel) ||
+      /(^|\/)node_modules\//.test(rel) || /(^|\/)server\//.test(rel) ||
+      /\.server\.[cm]?[jt]sx?$/.test(rel)
+  }
+  try {
+    return !blocked(root, file) && !blocked(realpathSync(root), realpathSync(file))
+  } catch {
+    return false
+  }
+}
+
 // Only static runtime import/export edges can lead to a stylesheet here.
 function sources(file) {
   return shapeBody(file).filter((node) => {
@@ -73,9 +88,10 @@ export async function entryCss(ctx, entry, root) {
         }
         continue
       }
-      if (!/^\.{1,2}\//.test(spec) || /[?#]/.test(spec)) continue
+      if (/[?#]/.test(spec) || /^(?:[a-z][\w+.-]*:|\/\/)/i.test(spec)) continue
       const found = await ctx.resolve(spec, file, { skipSelf: true })
-      const target = found?.id ?? (!found ? resolve(dirname(file), spec) : undefined)
+      const local = /^\.{1,2}\//.test(spec)
+      const target = found?.id ?? (!found && local ? resolve(dirname(file), spec) : undefined)
       if (found?.external || !target || !isAbsolute(target)) continue
       const rel = relative(root, target).replace(/\\/g, '/')
       if (rel === '..' || rel.startsWith('../') || isAbsolute(rel) ||
@@ -88,7 +104,7 @@ export async function entryCss(ctx, entry, root) {
         }
         continue
       }
-      if (!/\.[cm]?[jt]sx?$/.test(target)) continue
+      if (!/\.[cm]?[jt]sx?$/.test(target) || !appSource(root, target)) continue
       candidates.add(key(target))
       await visit(target)
     }
