@@ -12,18 +12,18 @@ import { runStep } from './profile-style-process.mjs'
 import { compareEnvironment } from './profile-style-environment.mjs'
 import {
   reconstructionRoot,
-  reconstructionEnv,
+  reconstructionTool,
   prepareReconstruction,
   pnpmArgs,
-  cachedPnpmEntry,
 } from './profile-style-setup.mjs'
 
-async function hiddenBuild(repo, name, log, root, signal) {
-  const result = await runStep(
+/** Keep the hidden build on the same selected tool/environment as its source pins. */
+export async function hiddenBuild(repo, name, log, root, signal, tool, runner = runStep) {
+  const result = await runner(
     {
       cwd: join(repo, 'benchmarks/compare', name),
       name,
-      command: cachedPnpmEntry(reconstructionEnv(root).COREPACK_HOME),
+      command: tool.command,
       args: pnpmArgs(root, [
         'exec',
         'vite',
@@ -33,7 +33,7 @@ async function hiddenBuild(repo, name, log, root, signal) {
         '--logLevel',
         'error',
       ]),
-      env: reconstructionEnv(root),
+      env: tool.env,
     },
     log,
     root,
@@ -88,11 +88,11 @@ export async function preservingAssets(repo, stacks, expected, task) {
   }
 }
 
-async function attribute(args, stacks, captured, log, root, signal) {
+async function attribute(args, stacks, captured, log, root, signal, tool) {
   const commands = []
   for (const { name } of stacks) {
     signal.throwIfAborted()
-    commands.push(await hiddenBuild(args.repo, name, log, root, signal))
+    commands.push(await hiddenBuild(args.repo, name, log, root, signal, tool))
   }
   const analysis = analyze(args.repo, args.receipt, true)
   assert.ok(
@@ -128,21 +128,30 @@ export async function reproduce(args) {
         readFileSync(join(args.receipt, '..', 'build-' + captured.pins.commit, 'build-proof.json')),
       )
       verifyBuild(proof, captured.pins, captured.assets)
+      const tool = reconstructionTool(root)
       if (args.reconstruct) {
-        await prepareReconstruction(args, captured.pins, log, root, controller.signal)
+        await prepareReconstruction(
+          args,
+          captured.pins,
+          log,
+          root,
+          controller.signal,
+          runStep,
+          tool,
+        )
         managerRoot(args.repo, args.out)
       }
       const stacks = discoverStacks(args.repo),
-        before = sourcePins(args.repo, stacks)
+        before = sourcePins(args.repo, stacks, tool)
       const environment = compareEnvironment(before, captured.pins, args.reconstruct)
       log.json('environment-comparison.json', environment)
       log.json('pins-before.json', before)
       const originalAssets = args.reconstruct ? null : assetPins(args.repo, stacks)
       log.json('assets-before.json', originalAssets)
       const coverage = await preservingAssets(args.repo, stacks, originalAssets, () =>
-        attribute(args, stacks, captured, log, root, controller.signal),
+        attribute(args, stacks, captured, log, root, controller.signal, tool),
       )
-      assert.deepEqual(sourcePins(args.repo, stacks), before, 'Build changed source/install')
+      assert.deepEqual(sourcePins(args.repo, stacks, tool), before, 'Build changed source/install')
       log.json('restored.json', { assets: true, source: true })
       return coverage
     } catch (error) {

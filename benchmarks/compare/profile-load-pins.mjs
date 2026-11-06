@@ -38,8 +38,22 @@ export function managerRoot(repo, out) {
   return root
 }
 
+/** Query the selected executable in the checkout, independently of the launcher's package manager. */
+export function pnpmVersion(repo, tool = { command: 'pnpm', env: process.env }) {
+  const version = execFileSync(tool.command, ['--version'], {
+    cwd: repo,
+    env: tool.env,
+    encoding: 'utf8',
+    timeout: 10000,
+    maxBuffer: 1024 * 1024,
+  }).trim()
+  const expected = JSON.parse(readFileSync(join(repo, 'package.json'))).packageManager
+  assert.equal('pnpm@' + version, expected, 'Selected pnpm version mismatch')
+  return version
+}
+
 /** Record a clean Git tree, actual install records and matching compiler bytes. */
-export function sourcePins(repo, stacks) {
+export function sourcePins(repo, stacks, tool) {
   assert.equal(git(repo, 'status', '--porcelain'), '', 'Build/profile requires a clean worktree')
   const files = [
     'package.json',
@@ -64,8 +78,7 @@ export function sourcePins(repo, stacks) {
     stamp && readFileSync(compiler.file + '.stamp', 'utf8').trim() === stamp,
     'Compiler source stamp mismatch',
   )
-  const pnpm = execFileSync('pnpm', ['--version'], { encoding: 'utf8' }).trim()
-  assert.equal('pnpm@' + pnpm, JSON.parse(readFileSync(join(repo, 'package.json'))).packageManager)
+  const pnpm = pnpmVersion(repo, tool)
   assert.equal(readFileSync(join(repo, '.nvmrc'), 'utf8').trim(), '26')
   return {
     textDist: fileTree(join(repo, 'packages/text/dist')),

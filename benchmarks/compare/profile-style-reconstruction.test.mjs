@@ -175,6 +175,11 @@ function assertSetupSteps(steps, root, args, receipts) {
     assert.ok(step.args.includes('--ignore-scripts'))
   }
   assert.equal(steps.filter((s) => s.name.endsWith('-content')).length, 2)
+  const selected = steps.find((step) => step.name === 'pnpm-version')
+  for (const step of steps.filter((s) => s.args[0] === '--config.enableGlobalVirtualStore=false')) {
+    assert.equal(step.command, '/cached/pnpm')
+    assert.equal(step.env, selected.env)
+  }
   assert.deepEqual(steps.at(-1).args, pnpmArgs(root, ['--filter', '@weft-js/text', 'run', 'build']))
   assert.ok(steps.some((step) => step.name === 'verify-main-bundle'))
   assert.ok(steps.find((step) => step.name === 'clone').args.includes(args['main-bundle']))
@@ -244,15 +249,10 @@ test('mocked fresh checkout installs both frozen workspaces, verifies content an
     'source-bundle': join(root, 'captured.bundle'),
   }
   try {
-    await prepareReconstruction(
-      args,
-      captured,
-      log,
-      root,
-      new AbortController().signal,
-      runner,
-      () => 'pnpm',
-    )
+    await prepareReconstruction(args, captured, log, root, new AbortController().signal, runner, {
+      command: '/cached/pnpm',
+      env: reconstructionEnv(root),
+    })
     assertSetupSteps(steps, root, args, receipts)
   } finally {
     rmSync(root, { recursive: true, force: true })

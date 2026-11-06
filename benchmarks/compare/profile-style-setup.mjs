@@ -58,6 +58,12 @@ export function cachedPnpmEntry(home) {
   return entry
 }
 
+/** Select one cached executable and clean environment for setup, builds and both pin reads. */
+export function reconstructionTool(root) {
+  const env = reconstructionEnv(root)
+  return { command: cachedPnpmEntry(env.COREPACK_HOME), env }
+}
+
 /** pnpm12 accepts arbitrary settings through --config, not additional install flags. */
 export function pnpmArgs(root, values) {
   return [
@@ -157,11 +163,10 @@ export async function prepareReconstruction(
   root,
   signal,
   runner = runStep,
-  cachedEntry = cachedPnpmEntry,
+  tool = reconstructionTool(root),
 ) {
-  const env = reconstructionEnv(root),
+  const { env, command: pnpm } = tool,
     commands = []
-  const pnpm = cachedEntry(env.COREPACK_HOME)
   log.json('pnpm-cache.json', { home: env.COREPACK_HOME, entry: pnpm, network: false })
   const run = async (cwd, name, command, values, collect = false) => {
     const result = await runner(
