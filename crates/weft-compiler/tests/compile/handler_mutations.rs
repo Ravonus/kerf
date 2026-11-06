@@ -41,7 +41,7 @@ fn w041_updates_assignments_and_destructuring_writes_use_symbol_flags() {
     ] {
         let source = format!(
             "export function A() {{ let n = 0; \
-             return <button onClick={() => {{ {mutation} }}}>{{n}}</button> }}"
+             return <button onClick={{() => {{ {mutation} }}}}>{{n}}</button> }}"
         );
         let (_, diagnostics) = run(&source);
         assert_eq!(
@@ -143,7 +143,7 @@ fn w041_helper_output_follows_local_values_and_return_conditions() {
         let source = format!(
             "export function A() {{ let n = 0; const read = () => n; \
              const positive = () => n > 0; function label() {{ {body} }} \
-             return <button onClick={() => n++}>{{label()}}</button> }}"
+             return <button onClick={{() => n++}}>{{label()}}</button> }}"
         );
         let (_, diagnostics) = run(&source);
         let errors = handler_mutation_errors(&diagnostics);
@@ -180,7 +180,7 @@ fn w041_helper_effects_unused_aliases_and_shadows_do_not_reach_output() {
         let source = format!(
             "import {{ untrack }} from '@weft-js/core'; export function A() {{ let n = 0; \
              const read = () => n; function label() {{ {body} }} \
-             return <button onClick={() => n++}>{{label()}}</button> }}"
+             return <button onClick={{() => n++}}>{{label()}}</button> }}"
         );
         let (_, diagnostics) = run(&source);
         assert!(
@@ -214,7 +214,7 @@ fn w041_helper_local_state_repairs_compile_without_diagnostics() {
         let source = format!(
             "import {{ state }} from '@weft-js/core'; export function A() {{ \
              const n = state(0); function label() {{ {body} }} \
-             return <button onClick={() => n.value++}>{{label()}}</button> }}"
+             return <button onClick={{() => n.value++}}>{{label()}}</button> }}"
         );
         let (code, diagnostics) = run(&source);
         assert!(diagnostics.is_empty(), "{source}: {diagnostics:?}");
