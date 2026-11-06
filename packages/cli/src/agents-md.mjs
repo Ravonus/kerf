@@ -196,6 +196,8 @@ function page({ root, info, core, missing, tcodes, startApp, styled, dcodes, lis
     '',
     "Before a change is done, see it work (`weft browser snapshot|act|assert`, or `__weft__.agent` in your own browser) and run `weft test --gate`: new tests must fail on the old code and kill a mutant (T010, T011, T020). `weft build` ends by auditing the pages it built at a phone's and a desktop's width (L-codes: names, contrast, console, the head, sideways scroll, layout shift) and fails on an error; `weft audit --url <deploy>` checks a live site. More: `weft docs verify`.",
     '',
+    'Before publishing, choose `build.audit.indexing`: `public` makes noindex an error; `private` preserves intentional exclusions. Audit the actual deployed URL with `weft audit --url <url> --indexing public` for public search: a proxy header can override correct markup. Never remove private indexing directives just to improve a score.',
+    '',
     ...(startApp ? ['## Full stack', '', fullStack(root), ''] : []),
     ...(styled
       ? [

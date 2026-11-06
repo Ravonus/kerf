@@ -32,7 +32,7 @@ const say = {
   L023: () =>
     'No `<meta name="viewport" content="width=device-width, initial-scale=1">`: a phone renders the page at 980px and shrinks it.',
   L024: (f) =>
-    `Search engines are told not to index this page, by ${f.text}.${f.header ? ' Hosts add this header to preview and permalink URLs (Netlify, Vercel): on the production URL it is gone.' : ''}`,
+    `Search engines are told not to index this page, by ${f.text}.${f.header ? ' The audited endpoint serves this header: check its host or proxy rules as well as the page head.' : ''}`,
   L025: (f) => `The page answered ${f.text}.`,
   L030: (f) =>
     `The page scrolls sideways on a phone: it is ${f.text} wider than the screen.${f.wide?.length ? ` Past the edge: ${f.wide.join(', ')}` : ''}`,
@@ -40,12 +40,15 @@ const say = {
 /** A page may ask not to be indexed, and a host's preview URL does on its behalf: L024 says so without failing. */
 const SEVERITY = { L021: 'warning', L024: 'warning', L030: 'warning', L031: 'warning' }
 
-export function reportFindings(findings, routes, forms) {
+export function reportFindings(findings, routes, forms, indexing = 'auto') {
   const diagnostics = [...findings.values()]
     .map((f) => {
       const pages = routes.filter((r) => f.routes.has(r))
       const on = `${forms.filter((x) => f.forms.has(x)).join(' and ')}, ${pages.length === 1 ? pages[0] : `${pages.length} pages (${pages.slice(0, 3).join(', ')}${pages.length > 3 ? ', …' : ''})`}`
-      const severity = f.code === 'L031' && f.cls > 0.1 ? 'error' : (SEVERITY[f.code] ?? 'error')
+      const severity =
+        (f.code === 'L031' && f.cls > 0.1) || (f.code === 'L024' && indexing === 'public')
+          ? 'error'
+          : (SEVERITY[f.code] ?? 'error')
       // an axe rule outside L001–L003 carries its own fix: the rule's first remedy, and its page
       const help =
         f.code === 'L004'

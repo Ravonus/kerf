@@ -103,6 +103,7 @@ function mainProperties(z, { globs, task, pluginEntry, site }) {
               routes: z.array(z.string()).optional(),
               all: z.boolean().optional(),
               max: z.number().int().positive().optional(),
+              indexing: z.enum(['auto', 'public', 'private']).optional(),
             }),
           ])
           .optional(),

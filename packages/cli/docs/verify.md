@@ -46,3 +46,16 @@ touched.
 
 Tests added for code that didn't change have nothing to fail on: fail-before is skipped, and the mutants come from
 the source files the tests import. `--refactor` promises no behavior change: then no test may change.
+
+
+## Indexing intent
+
+For a site intended for public search, declare
+`build: { audit: { indexing: 'public' } }`. L024 then fails the build or audit if
+robots metadata or an HTTP X-Robots-Tag header says noindex. `private` or the
+backward-compatible `auto` leaves this a warning; neither removes a directive.
+After deployment, run `weft audit --url https://your-site.example --indexing public`:
+a host or proxy may add a header that a local build cannot see. Preserve intentional
+preview/private exclusions. A noindex finding is an indexing policy issue, not
+chat-agent traffic; use a clean profile before attributing other audit failures
+to application or framework code.

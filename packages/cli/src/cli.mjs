@@ -89,7 +89,7 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   build [--runtime node|bun|deno] [--preset <p>]  production build to .output, and .weft/contract.json; then the
                       built pages are audited (L-codes) and an error fails the build
                       [--unsafe-allow <codes>]  go past these codes (R002, L003, a family like L, or all): forces a deploy
-  audit [routes…] [--url <u>] [--all] [--max <n>]  the built pages, or a running site, in a clean Chrome at a phone's
+  audit [routes…] [--url <u>] [--indexing public|private|auto] [--all] [--max <n>]  the built pages, or a running site, in a clean Chrome at a phone's
                       and a desktop's width: axe-core's WCAG rules, console, deprecations, head, sideways scroll, shift
   deploy [--prod] [--yes] [--target t]  fit check, build for the target, then the host's own CLI; without --yes a dry
                       run that prints what would run. Netlify, Vercel, Cloudflare, Fly, Render; the live URL at the end
@@ -126,6 +126,7 @@ const valued = new Set([
   'max-mutants',
   'concurrency',
   'url',
+  'indexing',
   'tab',
   'out',
   'component',

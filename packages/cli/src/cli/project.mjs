@@ -126,6 +126,7 @@ export async function commandBuild({ formatHuman, buildCommand, args, print, say
 export async function commandAudit({ formatHuman, audit, args, print, say }) {
   const result = await audit(args.root, {
     url: args.flags.url,
+    indexing: args.flags.indexing,
     routes: args.positional.length ? args.positional : undefined,
     all: !!args.flags.all,
     max: args.flags.max && Number(args.flags.max),

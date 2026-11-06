@@ -16,6 +16,7 @@ import { diagnostic } from './diag.mjs'
 import { fail, sleep } from './audit/utils.mjs'
 import { auditPage } from './audit/page.mjs'
 import { reportFindings } from './audit/report.mjs'
+import { loadConfig } from './load-config.mjs'
 
 /** The two widths Lighthouse's defaults stand for: its mobile run (a Moto G Power) and its desktop run. */
 export const FORMS = {
@@ -232,12 +233,20 @@ export function appRoutes(root) {
 
 /**
  * @param {string} root project root
- * @param {{ url?: string, dir?: string, routes?: string[], all?: boolean, max?: number, forms?: (keyof FORMS)[], concurrency?: number }} [options]
+ * @param {{ url?: string, dir?: string, routes?: string[], all?: boolean, max?: number, forms?: (keyof FORMS)[], concurrency?: number, indexing?: 'auto' | 'public' | 'private' }} [options]
  *   `url`: audit a running site (a deploy, `weft start`); else `dir`, a build's public directory (found when left out)
  * @returns {Promise<{ ok: boolean, skipped?: string, base: string, pages: string[], diagnostics: object[], ms: number }>}
  */
 export async function audit(root, options = {}) {
   const t = performance.now()
+  const loaded = options.indexing === undefined ? await loadConfig(root) : undefined
+  if (loaded?.diagnostics?.some((d) => d.severity === 'error'))
+    throw new Error('Fix weft.config before auditing, or pass --indexing explicitly')
+  const configured = loaded?.config?.build?.audit
+  const indexing =
+    options.indexing ?? (typeof configured === 'object' ? configured.indexing : undefined) ?? 'auto'
+  if (!['auto', 'public', 'private'].includes(indexing))
+    throw new Error('indexing must be auto, public or private')
   const exe = findChrome()
   const forms = options.forms ?? ['phone', 'desktop']
   const skip = (why) => ({
@@ -299,7 +308,7 @@ export async function audit(root, options = {}) {
     browser.close()
     server?.close()
   }
-  const diagnostics = reportFindings(findings, routes, forms)
+  const diagnostics = reportFindings(findings, routes, forms, indexing)
   return {
     ok: !diagnostics.some((d) => d.severity === 'error'),
     base: options.url ?? base,

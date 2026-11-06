@@ -103,7 +103,17 @@ export interface WeftConfig {
      * The built pages in a clean Chrome at a phone's and a desktop's width, last (L-codes): an error fails the build.
      * `routes` audits those paths, `all` every prerendered page, `max` caps the sample (one page of each kind, 30). Default on.
      */
-    audit?: boolean | { routes?: readonly string[]; all?: boolean; max?: number }
+    audit?:
+      | boolean
+      | {
+          routes?: readonly string[]
+          all?: boolean
+          max?: number
+          /** Public indexing makes noindex in metadata or HTTP headers a build error. Auto/private preserve intentional exclusions. */ indexing?:
+            | 'auto'
+            | 'public'
+            | 'private'
+        }
     /** Codes (`R002`), a family (`L`) or `all` the build goes past instead of failing, each with why. Every build lists them. */
     unsafeAllow?: Record<string, string>
   }

@@ -102,8 +102,8 @@ export const audit = [
     severity: 'warning',
     by: 'cli',
     catches:
-      "A page told search engines not to index it (meta robots, or the host's `x-robots-tag` on a preview URL)",
-    fix: "Remove the `noindex` if the page should be found. On a host's preview URL, audit the production URL instead: `weft audit --url <it>`.",
+      'A page told search engines not to index it through markup or HTTP headers; an error when public indexing is expected',
+    fix: 'Choose indexing intent with `build.audit.indexing` or `weft audit --indexing public|private`. For public search, remove noindex from both the page and host/proxy, then audit the production URL. Preserve intentional private exclusions.',
   },
   {
     code: 'L025',

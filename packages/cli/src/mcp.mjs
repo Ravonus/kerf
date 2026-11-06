@@ -68,6 +68,12 @@ export const tools = [
           type: 'string',
           description: 'A running site to audit instead (a deploy, `weft start`, the dev server)',
         },
+        indexing: {
+          type: 'string',
+          enum: ['auto', 'public', 'private'],
+          description:
+            'Public makes noindex in markup or HTTP headers an error. Private preserves intentional noindex. Default inherits build.audit.indexing.',
+        },
         routes: {
           type: 'array',
           items: { type: 'string' },
@@ -206,7 +212,8 @@ export async function handle(root, msg) {
         else if (name === 'tasks') data = await tasks(root)
         else if (name === 'routes_meta')
           data = await routesCommand(root, { meta: true, preset: args.preset })
-        else if (name === 'audit') data = await audit(root, { url: args.url, routes: args.routes })
+        else if (name === 'audit')
+          data = await audit(root, { url: args.url, routes: args.routes, indexing: args.indexing })
         else if (name === 'map') data = await agentMap(root)
         else if (name === 'style_find')
           data = findGroups((await styleMatrix(root)).matrix, args.query)
