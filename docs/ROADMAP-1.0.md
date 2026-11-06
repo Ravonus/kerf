@@ -349,6 +349,10 @@ After merging main at `bb77d2da`, a source-matched dashboard size build measures
 52,685 B (30,011 B JS + 22,674 B CSS). The two Listbox event alternatives measure
 52,866 B and 52,861 B and are rejected. The 51,200 B size exit remains unmet.
 
+The accepted Table state changes at `85f7078e` measure 52,488 B (29,814 B JS +
+22,674 B CSS), a 197 B reduction from that control. All six stack builds pass and
+the other stacks retain their byte totals. At least 1,289 B of recovery remains.
+
 **Deferred until after 1.0 by the owner:**
 
 - Firefox text preparation: confirm or fix the S3 paired-median increase.
