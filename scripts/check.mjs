@@ -11,6 +11,7 @@
 import { repoRoot } from './lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
 import { run, allJobs } from './check/run.mjs'
+import { typeProblems } from './check/types.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { jobs, pool } from './jobs.mjs'
@@ -144,7 +145,8 @@ const STEPS = [
       const projects = ['.', 'site', ...PACKAGES].filter((d) =>
         existsSync(join(root, d, 'tsconfig.json')),
       )
-      const found = new Set()
+      const test = await run(process.execPath, ['--test', 'scripts/check/types.test.mjs'])
+      const found = new Set(lines(test).problems)
       await pool(projects, limit, async (dir) => {
         const r = await run(bin('tsc'), [
           '-p',
@@ -152,10 +154,7 @@ const STEPS = [
           '--pretty',
           'false',
         ])
-        // Tests import examples from evals/ and examples/ to prove they work, and text's gen/ is vendored code rewritten. Not held to this.
-        for (const line of r.out.split('\n'))
-          if (/error TS\d+/.test(line) && !/^(?:evals|examples|packages\/text\/gen)\//.test(line))
-            found.add(line)
+        for (const problem of typeProblems(dir, r)) found.add(problem)
       })
       return { problems: [...found].toSorted((a, b) => a.localeCompare(b)) }
     },
