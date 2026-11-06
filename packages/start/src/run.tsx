@@ -19,18 +19,22 @@ type Hot = ImportMeta & {
 }
 
 /**
- * Planned route shape manifest contract. Shapes are synchronous and come from a
- * separately compiled safe module, not from the lazy route module. A producer
- * must omit the entry until both its component and sizing CSS are available.
- * Byte counts are emitted asset bytes; null means unknown and must not be
- * treated as free by a prefetch scheduler.
+ * Synchronous shape metadata from separately compiled modules. CSS and emitted
+ * asset bytes are null until known; consumers must not treat them as available
+ * or free. Unavailable covers unproven overrides and unsupported route files.
  */
 export type RouteShape =
-  | { kind: 'disabled'; css: string[]; bytes: number | null }
+  | { kind: 'disabled'; css: string[] | null; bytes: number | null }
+  | {
+      kind: 'unavailable'
+      reason: 'unresolved-export' | 'unsupported-file' | 'missing-shape'
+      css: null
+      bytes: null
+    }
   | {
       kind: 'generated' | 'override'
       component: Component
-      css: string[]
+      css: string[] | null
       bytes: number | null
     }
 
@@ -41,6 +45,8 @@ export type RouteShapes = Record<string, RouteShape>
 export interface ClientRoutes {
   table: { id: string; pattern: string; layouts: string[] }[]
   load: Record<string, () => Promise<{ default?: Component }>>
+  /** Eager shape metadata, keyed by route or layout id. */
+  shapes?: RouteShapes
   /** Each island's code, by id: all a static level loads (PLAN §11). */
   islands?: Record<string, () => Promise<{ default: Component }>>
 }

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { isCSSRequest } from 'vite'
 import { here, ASSETS, SHEET } from './shared.mjs'
+import { parse } from './syntax.mjs'
 
 /**
  * `dev`: the stylesheets from `devStyles`; a build asks Nitro's manifest instead (the plugin's expression reads up to
@@ -98,12 +99,70 @@ export const markLinks = (
 })
 `
 
+// Never run a route to inspect its skeleton export. Unknown exports stay unavailable.
+function skeletonExport(file) {
+  const body = parse(file, readFileSync(file, 'utf8')).program.body
+  const constants = new Map()
+  const bindings = (decl) => {
+    if (decl?.type !== 'VariableDeclaration' || decl.kind !== 'const') return
+    for (const item of decl.declarations) {
+      if (item.id.type !== 'Identifier') continue
+      let value = item.init
+      while (
+        value &&
+        ['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression',
+          'TSTypeAssertion', 'ParenthesizedExpression'].includes(value.type)
+      ) value = value.expression
+      constants.set(
+        item.id.name,
+        value?.value === false && (value.type === 'Literal' || value.type === 'BooleanLiteral'),
+      )
+    }
+  }
+  for (const node of body) bindings(node.declaration ?? node)
+  let exported
+  for (const node of body) {
+    if (node.exportKind === 'type') continue
+    if (node.type === 'ExportAllDeclaration') return 'unavailable'
+    if (node.type !== 'ExportNamedDeclaration') continue
+    const decl = node.declaration
+    if (decl?.type === 'VariableDeclaration') {
+      if (decl.declarations.some((item) => item.id.type !== 'Identifier')) return 'unavailable'
+      if (decl.declarations.some((item) => item.id.name === 'skeleton'))
+        exported = decl.kind === 'const' && constants.get('skeleton') ? 'disabled' : 'unavailable'
+    } else if (decl?.id?.name === 'skeleton') exported = 'unavailable'
+    for (const spec of node.specifiers ?? []) {
+      if (spec.exportKind === 'type' || (spec.exported.name ?? spec.exported.value) !== 'skeleton')
+        continue
+      const local = spec.local.name ?? spec.local.value
+      exported = !node.source && constants.get(local) ? 'disabled' : 'unavailable'
+    }
+  }
+  return exported ?? 'generated'
+}
+
 export function clientRoutes(manifest, abs, plan) {
   const table = manifest.routes
     .filter((r) => r.kind === 'page')
     .map((r) => ({ id: r.id, pattern: r.pattern, layouts: r.layouts }))
   const levels = [...manifest.layouts, ...manifest.routes]
   const isStatic = (r) => plan?.statics.has(abs(r.file))
+  const shapeFiles = new Map()
+  const shapes = levels.map((r) => {
+    const file = abs(r.file)
+    const kind = skeletonExport(file)
+    const id = JSON.stringify(r.id)
+    if (kind === 'disabled') return `${id}: { kind: 'disabled', css: null, bytes: null }`
+    if (kind === 'unavailable')
+      return `${id}: { kind: 'unavailable', reason: 'unresolved-export', css: null, bytes: null }`
+    if (!/\.[jt]sx$/.test(file))
+      return `${id}: { kind: 'unavailable', reason: 'unsupported-file', css: null, bytes: null }`
+    if (!shapeFiles.has(file)) shapeFiles.set(file, shapeFiles.size)
+    return `${JSON.stringify(r.id)}: shapeEntry(shape${shapeFiles.get(file)})`
+  })
+  const shapeImports = [...shapeFiles].map(
+    ([file, i]) => `import * as shape${i} from ${JSON.stringify(file + '?weft-shape')}`,
+  )
   // A static route loads only what its module imports that isn't code: its stylesheets, for a navigation to it.
   const loads = levels.map(
     (r) =>
@@ -114,5 +173,16 @@ export function clientRoutes(manifest, abs, plan) {
     (i) =>
       `${JSON.stringify(i.id)}: () => import(${JSON.stringify(i.file)}).then(({ $i${i.index}: d }) => ({ default: d }))`,
   )
-  return `export const table = ${JSON.stringify(table)}\nexport const load = { ${loads.join(', ')} }\nexport const islands = { ${islands.join(', ')} }\n`
+  return `${shapeImports.join('\n')}
+const shapeEntry = module => {
+  const component = Reflect.get(module, 'default$shape')
+  return typeof component === 'function'
+    ? { kind: 'generated', component, css: null, bytes: null }
+    : { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null }
+}
+export const shapes = { ${shapes.join(', ')} }
+export const table = ${JSON.stringify(table)}
+export const load = { ${loads.join(', ')} }
+export const islands = { ${islands.join(', ')} }
+`
 }
