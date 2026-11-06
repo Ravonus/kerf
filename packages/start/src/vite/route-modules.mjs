@@ -197,6 +197,15 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
   const isStatic = (r) => plan?.statics.has(abs(r.file))
   const shapeFiles = new Map()
   const styleFiles = new Map()
+  const shape = (file, name = 'default$shape') => {
+    if (!shapeFiles.has(file)) shapeFiles.set(file, shapeFiles.size)
+    const sources = [...(css.entry ?? []), ...(css.levels?.get(file) ?? [])]
+    const styles = [...new Set(sources)].map((style) => {
+      if (!styleFiles.has(style)) styleFiles.set(style, styleFiles.size)
+      return `style${styleFiles.get(style)}`
+    })
+    return `shapeEntry(shape${shapeFiles.get(file)}, [${styles.join(', ')}], ${JSON.stringify(name)})`
+  }
   const shapes = levels.map((r) => {
     const file = abs(r.file)
     const kind = skeletonExport(file)
@@ -206,14 +215,12 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
       return `${id}: { kind: 'unavailable', reason: 'unresolved-export', css: null, bytes: null }`
     if (!/\.[jt]sx$/.test(file))
       return `${id}: { kind: 'unavailable', reason: 'unsupported-file', css: null, bytes: null }`
-    if (!shapeFiles.has(file)) shapeFiles.set(file, shapeFiles.size)
-    const sources = [...(css.entry ?? []), ...(css.levels?.get(file) ?? [])]
-    const styles = [...new Set(sources)].map((style) => {
-      if (!styleFiles.has(style)) styleFiles.set(style, styleFiles.size)
-      return `style${styleFiles.get(style)}`
-    })
-    return `${id}: shapeEntry(shape${shapeFiles.get(file)}, [${styles.join(', ')}])`
+    return `${id}: ${shape(file)}`
   })
+  for (const [id, name] of [['404', 'NotFoundPage$shape'], ['error', 'ErrorPage$shape']]) {
+    if (!manifest.routes.some((route) => route.id === id))
+      shapes.push(`${JSON.stringify(id)}: ${shape(join(here, 'builtin.tsx'), name)}`)
+  }
   const shapeImports = [...shapeFiles].map(
     ([file, i]) => `import * as shape${i} from ${JSON.stringify(file + '?weft-shape')}`,
   )
@@ -231,8 +238,8 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
       `${JSON.stringify(i.id)}: () => import(${JSON.stringify(i.file)}).then(({ $i${i.index}: d }) => ({ default: d }))`,
   )
   return `${[...shapeImports, ...styleImports].join('\n')}
-const shapeEntry = (module, cssText) => {
-  const component = Reflect.get(module, 'default$shape')
+const shapeEntry = (module, cssText, name) => {
+  const component = Reflect.get(module, name)
   const groupCss = Reflect.get(module, '$weftShapeCss')
   if (typeof groupCss === 'string' && groupCss) cssText = [groupCss, ...cssText]
   return typeof component === 'function'

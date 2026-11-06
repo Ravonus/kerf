@@ -24,6 +24,7 @@ async function manifestModule(source, missing = [], groupCss = '') {
     return missing.some((name) => file.endsWith(`${name}?weft-shape`))
       ? `const shape${index} = {}`
       : `const shape${index} = { 'default$shape': function Shape() {}, ` +
+        `'NotFoundPage$shape': function NotFound() {}, 'ErrorPage$shape': function Error() {}, ` +
         `${JSON.stringify('$weftShapeCss')}: ${JSON.stringify(groupCss)} }`
   })
   const withStyles = code.replace(
@@ -84,12 +85,51 @@ test('false exports disable shapes; unknown overrides do not import a route', as
     id: name, file: `${name}.${name === 'plain' ? 'ts' : 'tsx'}`, kind: 'page', layouts: [],
   }))
   const source = clientRoutes({ layouts: [], routes }, f.abs)
-  assert.ok(!source.includes('?weft-shape'))
+  for (const route of routes) assert.ok(!source.includes(`${f.abs(route.file)}?weft-shape`))
   const result = await manifestModule(source)
   for (const id of ['disabled', 'direct']) assert.equal(result.shapes[id].kind, 'disabled')
   for (const id of ['override', 'barrel'])
     assert.equal(result.shapes[id].reason, 'unresolved-export')
   assert.equal(result.shapes.plain.reason, 'unsupported-file')
+})
+
+test('built-in error shapes retain nested levels and yield to authored overrides', async (t) => {
+  const f = fixture(t)
+  f.write('outer.tsx', 'export default () => <main />')
+  f.write('inner.tsx', 'export default () => <section />')
+  f.write('page.tsx', 'throw Error("route ran"); export default () => <p />')
+  f.write('404.tsx', 'export const skeleton = false; export default () => <p />')
+  const layouts = [{ id: 'outer', file: 'outer.tsx' }, { id: 'inner', file: 'inner.tsx' }]
+  const page = { id: '/page', file: 'page.tsx', kind: 'page', pattern: '/page',
+    layouts: ['outer', 'inner'] }
+  const source = clientRoutes({ layouts, routes: [page] }, f.abs, undefined, {
+    entry: [f.abs('entry.css')],
+  })
+  assert.equal((source.match(/builtin\.tsx\?weft-shape/g) ?? []).length, 1)
+  assert.ok(source.includes(`() => import(${JSON.stringify(f.abs('page.tsx'))})`))
+  const result = await manifestModule(source)
+  assert.deepEqual(result.table[0].layouts, ['outer', 'inner'])
+  for (const id of ['outer', 'inner', '404', 'error']) {
+    assert.equal(result.shapes[id].kind, 'generated')
+    assert.equal(result.shapes[id].cssStatus, 'partial')
+    assert.deepEqual(result.shapes[id].cssText, [`${f.abs('entry.css')}?inline`])
+  }
+  assert.equal(result.shapes['404'].component.name, 'NotFound')
+  assert.equal(result.shapes.error.component.name, 'Error')
+  assert.equal(result.load['404'], undefined)
+  const missing = await manifestModule(source, ['builtin.tsx'])
+  assert.equal(missing.shapes['404'].reason, 'missing-shape')
+  assert.equal(missing.shapes.error.reason, 'missing-shape')
+  const override = { id: '404', file: '404.tsx', kind: '404', layouts: ['outer'] }
+  const custom = await manifestModule(clientRoutes({ layouts, routes: [page, override] }, f.abs))
+  assert.equal(custom.shapes['404'].kind, 'disabled')
+  assert.equal(custom.shapes.error.kind, 'generated')
+  assert.equal(typeof custom.load['404'], 'function')
+  f.write('error.tsx', 'export const skeleton = false; export default () => <p />')
+  const error = { id: 'error', file: 'error.tsx', kind: 'error', layouts: ['outer'] }
+  const both = clientRoutes({ layouts, routes: [page, override, error] }, f.abs)
+  assert.ok(!both.includes('builtin.tsx?weft-shape'))
+  assert.equal((await manifestModule(both)).shapes.error.kind, 'disabled')
 })
 
 test('metadata edits invalidate and reload only the client route module', async (t) => {
