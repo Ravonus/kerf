@@ -230,8 +230,9 @@ test.each(cases.map((c) => [c.name, c]))(
 
     const want = c.solidWrong ? undefined : golden[c.name]
     if (!c.solidWrong) expect(want, 'a recorded trace').toBeDefined()
-    const trace = [digest(html(a))]
-    expect(html(h)).toBe(html(a))
+    const initial = html(a)
+    const trace = [digest(initial)]
+    expect(html(h)).toBe(initial)
     mark('initial comparison')
     for (const [index, step] of steps(a, c.skip).entries()) {
       mark(`step ${index} start`)
@@ -242,8 +243,9 @@ test.each(cases.map((c) => [c.name, c]))(
       mark(`step ${index} interactions`)
       await flush()
       mark(`step ${index} flush`)
-      trace.push(digest(html(a)))
-      expect(html(h)).toBe(html(a))
+      const current = html(a)
+      trace.push(digest(current))
+      expect(html(h)).toBe(current)
       mark(`step ${index} comparison`)
     }
     if (want) expect(trace).toEqual(want)
