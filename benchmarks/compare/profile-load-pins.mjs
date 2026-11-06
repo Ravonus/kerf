@@ -3,30 +3,19 @@ import assert from 'node:assert/strict'
 import { requireSix } from './profile-load-data.mjs'
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
-import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, statfsSync } from 'node:fs'
+import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { arch, cpus, homedir, hostname, loadavg, platform, release, totalmem } from 'node:os'
+import { arch, cpus, homedir, hostname, platform, release, totalmem } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
+import { resources } from './profile-load-resources.mjs'
+
+export { resources }
 
 export const MAX_OUTPUT = 256 * 1024 ** 2
 export const MAX_TRACE = 8 * 1024 ** 2
 export const MAX_CPU = 4 * 1024 ** 2
-const gib = 1024 ** 3
 export const hash = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const git = (repo, ...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim()
-
-/** Refuse overload or insufficient owned storage before a trial or a build. */
-export function resources(root, reserve = 0) {
-  const disk = statfsSync(root),
-    free = disk.bavail * disk.bsize
-  const owned =
-    Number(execFileSync('du', ['-sk', root], { encoding: 'utf8' }).split(/\s/)[0]) * 1024
-  const load = loadavg()[0]
-  assert.ok(free >= 10 * gib, 'Less than 10 GiB free')
-  assert.ok(owned + reserve < 5 * gib, 'Owned root would reach 5 GiB')
-  assert.ok(load <= 40, 'Host load exceeds 40')
-  return { free, owned, load }
-}
 
 /** These CLIs run in the manager-owned Yuna lease with its explicit Node26 toolchain. */
 export function managerRoot(repo, out) {

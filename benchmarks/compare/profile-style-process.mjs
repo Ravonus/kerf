@@ -3,9 +3,14 @@ import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { resources } from './profile-load-pins.mjs'
 
+function checkResources(check, log, root, name) {
+  const snapshot = check(root, 512 * 1024 ** 2)
+  if (snapshot?.scanRetries) log.append(name + '-resources.log', JSON.stringify(snapshot) + '\n')
+}
+
 /** Kill only this step's process group; graph readers may collect up to 16 MiB of stdout. */
 export async function runStep(step, log, root, signal, check = resources) {
-  check(root, 512 * 1024 ** 2)
+  checkResources(check, log, root, step.name)
   const env = { ...(step.env ?? process.env) }
   delete env.NODE_TEST_CONTEXT
   const child = spawn(step.command, step.args, {
@@ -43,7 +48,7 @@ export async function runStep(step, log, root, signal, check = resources) {
   if (signal.aborted) kill()
   const timer = setInterval(() => {
     try {
-      check(root)
+      checkResources(check, log, root, step.name)
     } catch (error) {
       problem = error
       kill()
