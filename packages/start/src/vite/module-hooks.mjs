@@ -6,7 +6,7 @@ import { routeTypes } from '../routes.mjs'
 import { assetsOnly } from './assets.mjs'
 import { entryCss, watchEntryCandidates } from './shape-entry-css.mjs'
 import {
-  clientRoutes, serverRoutes, devStyles, markLinks, shapeCssSources, skeletonExport,
+  clientRoutes, serverRoutes, devStyles, markLinks, skeletonExport,
 } from './route-modules.mjs'
 import {
   serverEntry,
@@ -72,18 +72,23 @@ export const load = (s) => ({
         const levels = [...s.manifest.layouts, ...s.manifest.routes]
         const files = [...new Set(levels.map((r) => s.abs(r.file)))]
           .filter((file) => /\.[jt]sx$/.test(file) && skeletonExport(file) === 'generated')
-        const sources = await Promise.all(files.map((file) => shapeCssSources(this, file)))
         const root = s.root ?? dirname(entryFile)
+        const sources = await Promise.all(files.map((file) => entryCss(this, file, root)))
         const shared = await entryCss(this, entryFile, root)
         if (owner && owner !== s.shapeEntryOwner)
           throw new Error('entry style scan outlived its server')
+        for (const source of sources) {
+          for (const [file, signature] of source.signatures) shared.signatures.set(file, signature)
+          for (const file of source.candidates) shared.candidates.add(file)
+          for (const file of source.missing) shared.missing.add(file)
+        }
         s.shapeEntrySignatures = shared.signatures
         s.shapeEntryCandidates = shared.candidates
         s.shapeEntryMissing = shared.missing
         if (s.dev) watchEntryCandidates(s.vite, shared.missing, root)
         const css = {
           entry: shared.styles,
-          levels: new Map(files.map((file, i) => [file, sources[i]])),
+          levels: new Map(files.map((file, i) => [file, sources[i].styles])),
         }
         return clientRoutes(s.manifest, s.abs, p, css)
       }

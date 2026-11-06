@@ -63,7 +63,9 @@ test('entry closure follows static CSS in order through cycles without running J
     }
     assert.ok(!source.includes('server.css?inline'))
     assert.ok(!source.includes('dynamic.css?inline'))
-    assert.equal(state.shapeEntrySignatures.size, 3)
+    assert.deepEqual([...state.shapeEntrySignatures.keys()], [
+      p.file('entry.js'), p.file('nested.js'), p.file('deep.js'), p.file('page.tsx'),
+    ])
   } finally {
     await p.server.close()
   }
