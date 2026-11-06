@@ -108,7 +108,7 @@ function listCurrent(
     const c = current.value
     return c === '' ? '' : (items.value.find((i) => i.value === c)?.label ?? '')
   })
-  return { current, text }
+  return [current, text] as const
 }
 
 /**
@@ -131,7 +131,7 @@ function useList(props: ListProps) {
     () => props.onOpenChange,
   )
   const items = listItems(props)
-  const { current, text } = listCurrent(v, items)
+  const [current, text] = listCurrent(v, items)
   let trigger: HTMLButtonElement | undefined
   let carrier: HTMLSelectElement | undefined
   let picking = false
@@ -183,19 +183,18 @@ function useList(props: ListProps) {
     () => carrier,
     () => [current.value, items.value],
   )
-  return {
+  return [
     current,
     text,
-    /** Code that wrote the select with no event: the trigger catches up on focus. */
-    refresh: read,
-    onReset: () => {
+    read, // Code that wrote the select with no event: catch up on focus.
+    () => {
       if (untrack(() => props.value) === undefined) v.reset()
       hold()
     },
-    trigger: (n: HTMLButtonElement) => (trigger = n),
-    carrier: (n: HTMLSelectElement) => (carrier = n),
-    focusTrigger: () => trigger?.focus(),
-  }
+    (n: HTMLButtonElement) => (trigger = n),
+    (n: HTMLSelectElement) => (carrier = n),
+    () => trigger?.focus(),
+  ] as const
 }
 
 const Chevron = () => (
@@ -215,19 +214,21 @@ export function Select(
   props: Omit<FieldProps, 'value' | 'defaultValue'> &
     ListProps & { onChange?: (e: Event & { currentTarget: HTMLSelectElement }) => void },
 ) {
-  const list = useList(untrack(() => props)) // the props object is live; only its reads track
+  const [current, text, refresh, onReset, setTrigger, setCarrier, focusTrigger] = useList(
+    untrack(() => props),
+  ) // the props object is live; only its reads track
   return (
     <Field
       {...omit(props, OWN)}
       label={props.label}
       filled
       labelled
-      reset={list.onReset}
+      reset={onReset}
       end={<Chevron />}
       control={(p) => (
         <>
           <button
-            ref={list.trigger}
+            ref={setTrigger}
             type="button"
             data-part="input"
             id={p.id}
@@ -239,15 +240,15 @@ export function Select(
             aria-invalid={p.invalid ? 'true' : undefined}
             aria-required={p.rest.required ? 'true' : undefined}
             aria-readonly={p.rest.readonly ? 'true' : undefined}
-            onFocus={list.refresh}
+            onFocus={refresh}
             {...omit(p.rest, FOR_CARRIER)}
           >
             <span data-part="value" data-placeholder={props.placeholder}>
-              {list.text.value}
+              {text.value}
             </span>
           </button>
           <select
-            ref={list.carrier}
+            ref={setCarrier}
             data-part="carrier"
             tabindex="-1"
             aria-hidden="true"
@@ -258,10 +259,10 @@ export function Select(
             disabled={p.rest.disabled}
             onChange={(e: Event) => (p.rest.onChange as ((e: Event) => void) | undefined)?.(e)}
             onInput={(e: Event) => (p.rest.onInput as ((e: Event) => void) | undefined)?.(e)}
-            onFocus={list.focusTrigger}
+            onFocus={focusTrigger}
           >
             {props.placeholder !== undefined && (
-              <option value="" selected={untrack(() => list.current.value) === ''}>
+              <option value="" selected={untrack(() => current.value) === ''}>
                 {props.placeholder}
               </option>
             )}
@@ -269,7 +270,7 @@ export function Select(
               <Choice
                 key={'group' in o ? o.group : o.value}
                 o={o}
-                on={untrack(() => list.current.value)}
+                on={untrack(() => current.value)}
               />
             ))}
           </select>
@@ -291,7 +292,7 @@ export function CompactSelect(
     describedby?: string | undefined
   },
 ) {
-  const list = useList(untrack(() => props)) // the props object is live; only its reads track
+  const [current, text, , , setTrigger] = useList(untrack(() => props))
   const id = untrack(() => props.id) ?? uid('sel')
   return (
     <div data-scope="field" data-variant="classic" data-size="sm" data-compact="">
@@ -299,7 +300,7 @@ export function CompactSelect(
         <span data-part="sweep-base" aria-hidden="true"></span>
         <span data-part="sweep" aria-hidden="true"></span>
         <button
-          ref={list.trigger}
+          ref={setTrigger}
           type="button"
           data-part="input"
           id={id}
@@ -311,10 +312,10 @@ export function CompactSelect(
           disabled={props.disabled}
         >
           <span data-part="value" data-placeholder={props.placeholder}>
-            {list.text.value}
+            {text.value}
           </span>
         </button>
-        {props.name && <input type="hidden" name={props.name} value={list.current.value} />}
+        {props.name && <input type="hidden" name={props.name} value={current.value} />}
         <Chevron />
       </div>
     </div>
