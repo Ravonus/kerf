@@ -32,3 +32,19 @@ fn lowercase_nondefault_helpers_do_not_gain_shapes() {
     let code = shaped("export const helper = () => <p>Helper</p>");
     assert!(!code.contains("function helper$shape"), "{code}");
 }
+
+#[test]
+fn check_reports_default_route_shape_aliases() {
+    for source in [
+        "export default function page() { return <main /> }",
+        "const layout = (props) => <main>{props.children}</main>; export default layout",
+        "const page = () => <main />; export { page as default }",
+    ] {
+        let options = Options {
+            check_only: true,
+            ..Default::default()
+        };
+        let facts = compile(source, &options).facts;
+        assert_eq!(facts.shapes, ["default"], "{source}");
+    }
+}

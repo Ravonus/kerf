@@ -18,6 +18,25 @@ type Hot = ImportMeta & {
   hot?: { on(event: string, on: (data: { queries: boolean }) => unknown): void }
 }
 
+/**
+ * Planned route shape manifest contract. Shapes are synchronous and come from a
+ * separately compiled safe module, not from the lazy route module. A producer
+ * must omit the entry until both its component and sizing CSS are available.
+ * Byte counts are emitted asset bytes; null means unknown and must not be
+ * treated as free by a prefetch scheduler.
+ */
+export type RouteShape =
+  | { kind: 'disabled'; css: string[]; bytes: number | null }
+  | {
+      kind: 'generated' | 'override'
+      component: Component
+      css: string[]
+      bytes: number | null
+    }
+
+/** Shape entries are keyed by level id, including layouts and error routes. */
+export type RouteShapes = Record<string, RouteShape>
+
 /** The client half of `virtual:weft/routes`: the page routes in match order, and a chunk loader per route id. */
 export interface ClientRoutes {
   table: { id: string; pattern: string; layouts: string[] }[]
