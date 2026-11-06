@@ -165,6 +165,8 @@ struct Gen<'s> {
     used: BTreeSet<SymbolId>,
     imports: HashMap<SymbolId, String>,
     standalone: bool,
+    outlet_props: Option<SymbolId>,
+    outlet_children: HashSet<SymbolId>,
 }
 
 struct Sites {
@@ -256,6 +258,8 @@ pub fn apply<'a>(
         used: BTreeSet::new(),
         imports: HashMap::new(),
         standalone,
+        outlet_props: None,
+        outlet_children: HashSet::new(),
     };
     let import_lines = if standalone {
         HashMap::new()
@@ -281,7 +285,14 @@ pub fn apply<'a>(
             .first()
             .map(|p| g.pattern(&p.pattern))
             .unwrap_or_default();
-        let param = if standalone { String::new() } else { param };
+        if standalone {
+            g.outlet_params(c.params);
+        }
+        let param = if standalone {
+            "$$shapeProps = {}".into()
+        } else {
+            param
+        };
         let Some(body) = g.body(c.statements, c.expression, &mut allowed) else {
             continue;
         };

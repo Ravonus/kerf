@@ -70,3 +70,48 @@ fn standalone_shape_drops_module_and_setup_evaluation() {
     assert!(!code.contains("./server"), "{code}");
     assert!(!code.contains("danger"), "{code}");
 }
+
+#[test]
+fn standalone_layout_places_only_the_direct_children_outlet() {
+    for source in [
+        r#"export default function Layout(props) {
+            return <main><header>Before</header><section>{props.children}</section>
+                <footer>After</footer>{props.secret.children}{other.children}{props.children()}</main>
+        }"#,
+        r#"export default function Layout({ children: outlet = unsafeDefault(), secret }) {
+            return <main><header>Before</header><section>{outlet}</section>
+                <footer>After</footer>{secret.children}{other.children}{unsafeCall()}</main>
+        }"#,
+    ] {
+        let options = Options {
+            filename: "layout.tsx?weft-shape".into(),
+            generate: "ssr".into(),
+            ..Default::default()
+        };
+        let code = compile(source, &options).code.expect("shape compiles");
+        let before = code.find("Before").expect("header remains");
+        let outlet = code.find("$$shapeProps.children").expect("outlet remains");
+        let after = code.find("After").expect("footer remains");
+        assert!(before < outlet && outlet < after, "{code}");
+        assert_eq!(code.matches("$$shapeProps.children").count(), 1, "{code}");
+        for unsafe_name in ["unsafeDefault", "unsafeCall", "secret", "other"] {
+            assert!(!code.contains(unsafe_name), "{code}");
+        }
+    }
+}
+
+#[test]
+fn standalone_nested_layouts_keep_each_outlet() {
+    let source = r#"
+        export function Inner({ children }) { return <article>{children}</article> }
+        export default function Outer(props) { return <main><Inner>{props.children}</Inner></main> }
+    "#;
+    let options = Options {
+        filename: "layout.tsx?weft-shape".into(),
+        ..Default::default()
+    };
+    let code = compile(source, &options).code.expect("shape compiles");
+    assert!(code.contains("Inner$shape"), "{code}");
+    assert!(code.contains("default$shape"), "{code}");
+    assert_eq!(code.matches("$$shapeProps.children").count(), 2, "{code}");
+}
