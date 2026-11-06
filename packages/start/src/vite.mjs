@@ -30,6 +30,7 @@
 // document fits the first flight, else the rules the page's HTML reaches, with the sheets behind them as links that
 // don't hold the paint. `site: { inlineCss: false }` keeps plain links.
 
+import { existsSync } from 'node:fs'
 import { relative } from 'node:path'
 import { createState } from './vite/state.mjs'
 import { shapeSignature } from './vite/route-modules.mjs'
@@ -73,6 +74,9 @@ export function shapeHotUpdate(state, modes, next) {
       const missingUpdate = update.type === 'update' &&
         entryCandidate(state.shapeEntryMissing, update.file)
       if (candidateEvent || missingUpdate) {
+        // A watched missing path may arrive as an update; Vite clears negative resolution on create.
+        if (missingUpdate && existsSync(update.file))
+          await this.environment.pluginContainer.watchChange(update.file, { event: 'create' })
         const graph = this.environment.moduleGraph
         const mod = graph.getModuleById('\0' + V.routes)
         if (mod) graph.invalidateModule(mod)
