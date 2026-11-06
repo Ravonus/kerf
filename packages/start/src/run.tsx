@@ -21,7 +21,9 @@ type Hot = ImportMeta & {
 /**
  * Synchronous shape metadata from separately compiled modules. CSS and emitted
  * asset bytes are null until known; consumers must not treat them as available
- * or free. Unavailable covers unproven overrides and unsupported route files.
+ * or free. cssText holds direct local stylesheets, but cssStatus stays partial
+ * until indirect and generated styles are covered. Unavailable covers unproven
+ * overrides and unsupported route files.
  */
 export type RouteShape =
   | { kind: 'disabled'; css: string[] | null; bytes: number | null }
@@ -35,6 +37,8 @@ export type RouteShape =
       kind: 'generated' | 'override'
       component: Component
       css: string[] | null
+      cssText: string[]
+      cssStatus: 'partial'
       bytes: number | null
     }
 

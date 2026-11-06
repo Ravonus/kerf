@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { isCSSRequest } from 'vite'
 import { here, ASSETS, SHEET } from './shared.mjs'
 import { parse } from './syntax.mjs'
@@ -141,6 +141,22 @@ export function skeletonExport(file) {
   return exported ?? 'generated'
 }
 
+// Inline CSS is data until a consumer applies it. Other dependencies remain unproven.
+function shapeStyles(file) {
+  const body = parse(file, readFileSync(file, 'utf8')).program.body
+  const styles = body
+    .filter((node) => node.type === 'ImportDeclaration' && !node.specifiers.length)
+    .map((node) => node.source.value)
+    .filter((spec) => /^\.{1,2}\//.test(spec) && /(?<!\.module)\.css$/.test(spec))
+    .map((spec) => resolve(dirname(file), spec))
+  return [...new Set(styles)]
+}
+
+/** The route facts embedded in the client shape manifest. */
+export function shapeSignature(file) {
+  return JSON.stringify([skeletonExport(file), shapeStyles(file)])
+}
+
 export function clientRoutes(manifest, abs, plan) {
   const table = manifest.routes
     .filter((r) => r.kind === 'page')
@@ -148,6 +164,7 @@ export function clientRoutes(manifest, abs, plan) {
   const levels = [...manifest.layouts, ...manifest.routes]
   const isStatic = (r) => plan?.statics.has(abs(r.file))
   const shapeFiles = new Map()
+  const styleFiles = new Map()
   const shapes = levels.map((r) => {
     const file = abs(r.file)
     const kind = skeletonExport(file)
@@ -158,10 +175,17 @@ export function clientRoutes(manifest, abs, plan) {
     if (!/\.[jt]sx$/.test(file))
       return `${id}: { kind: 'unavailable', reason: 'unsupported-file', css: null, bytes: null }`
     if (!shapeFiles.has(file)) shapeFiles.set(file, shapeFiles.size)
-    return `${JSON.stringify(r.id)}: shapeEntry(shape${shapeFiles.get(file)})`
+    const styles = shapeStyles(file).map((style) => {
+      if (!styleFiles.has(style)) styleFiles.set(style, styleFiles.size)
+      return `style${styleFiles.get(style)}`
+    })
+    return `${id}: shapeEntry(shape${shapeFiles.get(file)}, [${styles.join(', ')}])`
   })
   const shapeImports = [...shapeFiles].map(
     ([file, i]) => `import * as shape${i} from ${JSON.stringify(file + '?weft-shape')}`,
+  )
+  const styleImports = [...styleFiles].map(
+    ([file, i]) => `import style${i} from ${JSON.stringify(file + '?inline')}`,
   )
   // A static route loads only what its module imports that isn't code: its stylesheets, for a navigation to it.
   const loads = levels.map(
@@ -173,11 +197,11 @@ export function clientRoutes(manifest, abs, plan) {
     (i) =>
       `${JSON.stringify(i.id)}: () => import(${JSON.stringify(i.file)}).then(({ $i${i.index}: d }) => ({ default: d }))`,
   )
-  return `${shapeImports.join('\n')}
-const shapeEntry = module => {
+  return `${[...shapeImports, ...styleImports].join('\n')}
+const shapeEntry = (module, cssText) => {
   const component = Reflect.get(module, 'default$shape')
   return typeof component === 'function'
-    ? { kind: 'generated', component, css: null, bytes: null }
+    ? { kind: 'generated', component, css: null, cssText, cssStatus: 'partial', bytes: null }
     : { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null }
 }
 export const shapes = { ${shapes.join(', ')} }

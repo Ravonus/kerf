@@ -32,7 +32,7 @@
 
 import { relative } from 'node:path'
 import { createState } from './vite/state.mjs'
-import { skeletonExport } from './vite/route-modules.mjs'
+import { shapeSignature } from './vite/route-modules.mjs'
 import { V } from './vite/shared.mjs'
 import { configHook, writeBundle, renderChunk, configResolved } from './vite/config-hooks.mjs'
 import { configureServer, hotUpdate } from './vite/dev-hooks.mjs'
@@ -44,7 +44,7 @@ export { isServerModule, fnId, withIds, clientStubs } from './vite/server-functi
 export { scanRoutes, routeTypes } from './routes.mjs'
 export { here as startDir } from './vite/shared.mjs'
 
-/** Reload when an edit changes the classification embedded in the client route module. */
+/** Reload when an edit changes shape metadata embedded in the client route module. */
 export function shapeHotUpdate(state, modes, next) {
   return async function (update) {
     if (this.environment.config.consumer === 'client') {
@@ -53,7 +53,7 @@ export function shapeHotUpdate(state, modes, next) {
       if (levels.some((level) => level.file === rel)) {
         let mode
         try {
-          mode = skeletonExport(update.file)
+          mode = shapeSignature(update.file)
         } catch {
           mode = 'invalid'
         }
@@ -99,7 +99,7 @@ export default function weftStart(options = {}) {
       configureServer(server) {
         for (const level of [...state.manifest.routes, ...state.manifest.layouts]) {
           try {
-            modes.set(level.file, skeletonExport(state.abs(level.file)))
+            modes.set(level.file, shapeSignature(state.abs(level.file)))
           } catch {
             modes.set(level.file, 'invalid')
           }

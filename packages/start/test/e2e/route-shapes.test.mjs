@@ -3,7 +3,8 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { clientRoutes } from '../../src/vite/route-modules.mjs'
+import { createServer } from 'vite'
+import { clientRoutes, shapeSignature } from '../../src/vite/route-modules.mjs'
 import { shapeHotUpdate } from '../../src/vite.mjs'
 
 function fixture(t) {
@@ -20,7 +21,11 @@ async function manifestModule(source, missing = []) {
       ? `const shape${index} = {}`
       : `const shape${index} = { 'default$shape': function Shape() {} }`
   })
-  return import(`data:text/javascript,${encodeURIComponent(code)}`)
+  const withStyles = code.replace(
+    /^import style(\d+) from (.+)$/gm,
+    (_, index, specifier) => `const style${index} = ${JSON.stringify(JSON.parse(specifier))}`,
+  )
+  return import(`data:text/javascript,${encodeURIComponent(withStyles)}`)
 }
 
 test('eager shapes keep nested and static route loaders lazy', async (t) => {
@@ -52,6 +57,8 @@ test('eager shapes keep nested and static route loaders lazy', async (t) => {
     assert.equal(routes.shapes[id].kind, 'generated')
     assert.equal(typeof routes.shapes[id].component, 'function')
     assert.equal(routes.shapes[id].css, null)
+    assert.deepEqual(routes.shapes[id].cssText, [])
+    assert.equal(routes.shapes[id].cssStatus, 'partial')
     assert.equal(routes.shapes[id].bytes, null)
     assert.equal(typeof routes.load[id], 'function')
   }
@@ -94,7 +101,7 @@ test('metadata edits invalidate and reload only the client route module', async 
     root: f.root, manifest: { routes: [{ file: 'page.tsx' }], layouts: [] },
     vite: { ws: { send(message) { calls.push(['send', message]) } } },
   }
-  const modes = new Map([['page.tsx', 'disabled']])
+  const modes = new Map([['page.tsx', shapeSignature(file)]])
   const next = async () => { calls.push(['next']); return ['existing'] }
   const handler = shapeHotUpdate(state, modes, next)
   const client = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
@@ -111,4 +118,70 @@ test('metadata edits invalidate and reload only the client route module', async 
   f.write('page.tsx', 'export const skeleton = false')
   assert.deepEqual(await handler.call(server, { file, modules: [] }), ['existing'])
   assert.deepEqual(calls, [['next']])
+})
+
+
+test('direct sizing CSS travels as partial data without importing route code', async (t) => {
+  const f = fixture(t)
+  f.write('size.css', '.panel { min-height: 12rem }')
+  f.write('global.css', '.panel { width: 50vw }')
+  f.write('page.tsx', `
+    import './size.css'
+    import './global.css'
+    import './size.css'
+    import styles from './private.module.css'
+    import './server.js'
+    throw new Error('route executed')
+    export default () => <main class="panel" />
+  `)
+  const levels = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
+  const source = clientRoutes(levels, f.abs)
+  assert.equal((source.match(/import style\d+ from/g) ?? []).length, 2)
+  assert.ok(!source.includes('private.module.css?inline'))
+  assert.ok(!source.includes('server.js?inline'))
+  const routes = await manifestModule(source)
+  assert.deepEqual(routes.shapes['/'].cssText, [
+    `${f.abs('size.css')}?inline`, `${f.abs('global.css')}?inline`,
+  ])
+  assert.equal(routes.shapes['/'].css, null)
+  assert.equal(routes.shapes['/'].cssStatus, 'partial')
+  assert.equal(routes.shapes['/'].bytes, null)
+})
+
+test('Vite transforms an inline CSS request to data without injecting a stylesheet', async (t) => {
+  const f = fixture(t)
+  f.write('size.css', '.panel { min-height: 12rem }')
+  const server = await createServer({
+    root: f.root, configFile: false, logLevel: 'silent',
+    server: { middlewareMode: true }, appType: 'custom',
+  })
+  try {
+    const output = await server.transformRequest('/size.css?inline')
+    assert.ok(output?.code.includes('min-height: 12rem'), output?.code)
+    assert.ok(output?.code.includes('export default'), output?.code)
+    assert.ok(!output?.code.includes('updateStyle'), output?.code)
+  } finally {
+    await server.close()
+  }
+})
+
+test('changing direct stylesheet imports invalidates shape metadata', async (t) => {
+  const f = fixture(t)
+  const file = f.abs('page.tsx')
+  f.write('page.tsx', "import './one.css'; export default () => <main />")
+  const modes = new Map([['page.tsx', shapeSignature(file)]])
+  const calls = []
+  const graph = {
+    getModuleById: () => 'routes',
+    invalidateModule: (value) => calls.push(value),
+  }
+  const state = {
+    root: f.root, manifest: { routes: [{ file: 'page.tsx' }], layouts: [] },
+    vite: { ws: { send: (value) => calls.push(value) } },
+  }
+  const handler = shapeHotUpdate(state, modes, async () => ['unchanged'])
+  const context = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
+  f.write('page.tsx', "import './two.css'; export default () => <main />")
+  assert.deepEqual(await handler.call(context, { file, modules: [] }), [])
+  assert.deepEqual(calls, ['routes', { type: 'full-reload' }])
 })
