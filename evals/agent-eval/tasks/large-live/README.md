@@ -73,3 +73,20 @@ The `APP` must have no existing `.env` for this command. `REPO`,
 `MULTIPLAYER_TGZ` and `ORIGIN` must be exported for the Node processes. Keep the
 app, database and generated secret inside M4's owned staging root and remove
 them after retaining bounded calibration receipts.
+
+## Manager setup, typecheck and build
+
+After the combined candidate includes the reference and the manager script,
+run on Yuna with verified compiler artifacts and the cached pnpm entry:
+
+```sh
+WEFT_T06_PNPM_ENTRY="$HOME/.cache/node/corepack/v1/pnpm/12.15.0/bin/pnpm.mjs" \
+  bash "$HOME/work/weft-S5-verify/repo/evals/agent-eval/evidence/T06/yuna-large-reference.sh"
+```
+
+This prepares an owned SQLite app, generates a disposable secret, verifies
+packed-current packages, generates migrations, typechecks and builds. It
+retains phase logs and status at the printed receipt path, and removes the owned
+staging root. It does not launch a server or run browser checks; the configured
+`http://127.0.0.1:4173` is a planned local origin and must match a later server
+listener. A passing build is not proof of session, authorization or live data.
