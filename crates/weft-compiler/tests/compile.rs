@@ -115,3 +115,59 @@ fn standalone_nested_layouts_keep_each_outlet() {
     assert!(code.contains("default$shape"), "{code}");
     assert_eq!(code.matches("$$shapeProps.children").count(), 2, "{code}");
 }
+
+#[test]
+fn standalone_shapes_replace_recursive_edges() {
+    let options = Options {
+        filename: "tree.tsx?weft-shape".into(),
+        ..Default::default()
+    };
+    let tree = r#"export function Tree({ depth }) {
+        return depth > 0 ? <Tree depth={depth - 1} /> : <p>Leaf</p>
+    }"#;
+    let code = compile(tree, &options).code.expect("shape compiles");
+    assert!(code.contains("function Tree$shape"), "{code}");
+    assert!(!code.contains("(Tree$shape,"), "{code}");
+    assert!(code.contains("data-skeleton"), "{code}");
+    assert!(shaped(tree).contains("(Tree$shape,"));
+
+    let mutual = r#"
+        export function A({ depth }) { return depth ? <B /> : <p>End</p> }
+        function B() { return <A /> }
+        export function Parent() { return <A /> }
+    "#;
+    let code = compile(mutual, &options).code.expect("shape compiles");
+    let a = code.find("function A$shape").expect("A shape");
+    let b = code.find("function B$shape").expect("B shape");
+    let parent = code.find("function Parent$shape").expect("parent shape");
+    assert!(!code[a..b].contains("(B$shape,"), "{code}");
+    assert!(!code[b..parent].contains("(A$shape,"), "{code}");
+    assert!(code[parent..].contains("(A$shape,"), "{code}");
+}
+
+#[test]
+fn standalone_shapes_drop_unsafe_elements_and_sizing() {
+    let source = r#"
+        import Widget from './server-widget';
+        const dimensions = dangerousSetup();
+        export default function Page() {
+            return <main><my-widget /><Widget /><div width={dangerousWidth()}
+                style={dimensions.style} class={dimensions.className} /></main>
+        }
+    "#;
+    let options = Options {
+        filename: "page.tsx?weft-shape".into(),
+        ..Default::default()
+    };
+    let code = compile(source, &options).code.expect("shape compiles");
+    for unsafe_text in [
+        "my-widget",
+        "Widget",
+        "server-widget",
+        "dangerous",
+        "dimensions",
+    ] {
+        assert!(!code.contains(unsafe_text), "{code}");
+    }
+    assert!(code.contains("data-skeleton"), "{code}");
+}
