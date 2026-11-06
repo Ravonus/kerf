@@ -4,7 +4,10 @@ import { Media } from '@weft-js/core/media'
 import hero from '../../assets/hero.webp?media'
 import { WaitlistForm } from '#/components/WaitlistForm'
 
-export const meta: Meta = { title: { absolute: 'Emberline: hear what customers keep asking for' } }
+export const meta: Meta = {
+  title: { absolute: 'Emberline: hear what customers keep asking for' },
+  description: 'Emberline turns customer calls into a ranked list of what to build next.',
+}
 export const prerender = true
 
 const features = [
