@@ -68,7 +68,9 @@ export function SignIn(p: SignInProps) {
       {hasSso.value && (
         <div data-scope="sso">
           {p.onPasskey && <PasskeyButton onPasskey={p.onPasskey} />}
-          {!!(p.providers?.length) && <SsoButtons providers={p.providers} onProvider={p.onProvider} />}
+          {!!p.providers?.length && (
+            <SsoButtons providers={p.providers} onProvider={p.onProvider} />
+          )}
         </div>
       )}
       {hasSso.value && <div data-part="divider">or with email</div>}
