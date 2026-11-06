@@ -329,7 +329,8 @@ const STEPS = [
         PACKAGES.filter(
           (d) => JSON.parse(readFileSync(join(root, d, 'package.json'), 'utf8')).scripts?.test,
         ),
-        (d) => run('pnpm', ['test'], d),
+        // The outer pool owns the budget; independent Vitest pools must not multiply it.
+        (d) => run('pnpm', ['test', '--maxWorkers=1'], d),
       ),
   },
 ]
