@@ -368,6 +368,15 @@ is 236→240 ms against Solid's 173→169 ms; these ordered runs do not isolate 
 speed effect. Warp's long-list heightMoved remains zero, so scrolling is not
 proven. Full source-labeled evidence: S5 `manager-size-35/size-receipts.tar.gz`.
 
+The Select private state and Item helper changes at `721fde60` measure 52,333 B
+(29,659 B JS + 22,674 B CSS), 78 B below the fresh `ce1c4ccb` control. Tuples alone
+measure 52,407 B. All other stacks retain identical sizes. Both canonical runs
+pass 54 parity steps; warp retains 1,590 sampled nodes and its design checks.
+Task time is 225→238 ms against Solid's 173→168 ms; style is 70→77 ms despite
+identical CSS. No isolated code speed effect is inferred. Long-list heightMoved
+remains zero. At least 1,134 B of recovery remains before the strict ceiling.
+Full source-labeled evidence: S5 `manager-size-36/size-receipts.tar.gz`.
+
 **Deferred until after 1.0 by the owner:**
 
 - Firefox text preparation: confirm or fix the S3 paired-median increase.
