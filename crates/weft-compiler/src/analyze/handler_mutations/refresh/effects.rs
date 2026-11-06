@@ -3,16 +3,19 @@
 use std::collections::{HashMap, HashSet};
 
 use oxc_ast::ast::{
-    AssignmentExpression, AssignmentTarget, BindingPattern, ComputedMemberExpression, Expression,
-    IdentifierReference, SimpleAssignmentTarget, Statement, StaticMemberExpression,
+    ArrowFunctionExpression, AssignmentExpression, AssignmentTarget, BindingPattern,
+    CallExpression, ComputedMemberExpression, Expression, Function, IdentifierReference,
+    JSXAttribute, JSXAttributeValue, SimpleAssignmentTarget, Statement, StaticMemberExpression,
     UnaryExpression, UpdateExpression, VariableDeclarator,
 };
 use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::SymbolId;
 use oxc_span::{GetSpan, Span};
 use oxc_syntax::operator::{AssignmentOperator, UnaryOperator};
+use oxc_syntax::scope::ScopeFlags;
 
 use super::super::super::{Analyzer, SpanKey, binding_symbol, key, symbol_of};
+use super::super::{Target, event_attribute};
 use super::{States, state};
 
 #[derive(Default)]
@@ -179,4 +182,133 @@ pub(super) fn collect(statements: &[Statement<'_>], a: &Analyzer<'_>, states: &S
         scan.visit_statement(statement);
     }
     scan.effects
+}
+
+struct CallbackEscapes<'x, 's> {
+    a: &'x Analyzer<'s>,
+    bindings: &'x HashMap<SymbolId, Target>,
+    allowed: HashSet<SpanKey>,
+    found: HashSet<SpanKey>,
+}
+
+impl CallbackEscapes<'_, '_> {
+    fn function(&self, mut target: Target) -> Option<SpanKey> {
+        let mut seen = HashSet::new();
+        loop {
+            match target {
+                Target::Function(span) => return Some(span),
+                Target::Binding(sym) => {
+                    if !seen.insert(sym) {
+                        return None;
+                    }
+                    target = *self.bindings.get(&sym)?;
+                }
+            }
+        }
+    }
+
+    fn allow(&mut self, value: &Expression<'_>) {
+        match value.get_inner_expression() {
+            Expression::Identifier(id) => {
+                self.allowed.insert(key(id.span));
+            }
+            Expression::FunctionExpression(f) => {
+                self.allowed.insert(key(f.span));
+            }
+            Expression::ArrowFunctionExpression(f) => {
+                self.allowed.insert(key(f.span));
+            }
+            Expression::TSNonNullExpression(e) => self.allow(&e.expression),
+            Expression::TSAsExpression(e) => self.allow(&e.expression),
+            Expression::TSSatisfiesExpression(e) => self.allow(&e.expression),
+            Expression::TSTypeAssertion(e) => self.allow(&e.expression),
+            Expression::ConditionalExpression(c) => {
+                self.allow(&c.consequent);
+                self.allow(&c.alternate);
+            }
+            Expression::LogicalExpression(l) => {
+                self.allow(&l.left);
+                self.allow(&l.right);
+            }
+            _ => {}
+        }
+    }
+}
+
+impl<'a> Visit<'a> for CallbackEscapes<'_, '_> {
+    fn visit_statement(&mut self, it: &Statement<'a>) {
+        if let Statement::FunctionDeclaration(f) = it {
+            self.allowed.insert(key(f.span));
+        }
+        walk::walk_statement(self, it);
+    }
+
+    fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
+        if let (BindingPattern::BindingIdentifier(id), Some(init)) = (&it.id, &it.init)
+            && binding_symbol(id).is_some_and(|sym| self.bindings.contains_key(&sym))
+        {
+            self.allow(init);
+        }
+        walk::walk_variable_declarator(self, it);
+    }
+
+    fn visit_call_expression(&mut self, it: &CallExpression<'a>) {
+        self.allow(&it.callee);
+        walk::walk_call_expression(self, it);
+    }
+
+    fn visit_jsx_attribute(&mut self, it: &JSXAttribute<'a>) {
+        if event_attribute(&it.name)
+            && let Some(JSXAttributeValue::ExpressionContainer(value)) = &it.value
+            && let Some(expression) = value.expression.as_expression()
+        {
+            self.allow(expression);
+        }
+        walk::walk_jsx_attribute(self, it);
+    }
+
+    fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
+        if !self.allowed.contains(&key(it.span))
+            && it
+                .reference_id
+                .get()
+                .is_some_and(|id| self.a.scoping.get_reference(id).is_read())
+            && let Some(sym) = symbol_of(self.a.scoping, it)
+            && let Some(span) = self.function(Target::Binding(sym))
+        {
+            self.found.insert(span);
+        }
+    }
+
+    fn visit_function(&mut self, it: &Function<'a>, flags: ScopeFlags) {
+        if !self.allowed.contains(&key(it.span)) {
+            self.found.insert(key(it.span));
+        }
+        walk::walk_function(self, it, flags);
+    }
+
+    fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
+        if !self.allowed.contains(&key(it.span)) {
+            self.found.insert(key(it.span));
+        }
+        walk::walk_arrow_function_expression(self, it);
+    }
+}
+
+pub(super) fn escaped_callbacks(
+    statements: &[Statement<'_>],
+    a: &Analyzer<'_>,
+    bindings: &HashMap<SymbolId, Target>,
+) -> HashSet<SpanKey> {
+    let mut scan = CallbackEscapes {
+        a,
+        bindings,
+        allowed: HashSet::new(),
+        found: HashSet::new(),
+    };
+    // An opaque consumer can invoke a callback immediately, including its original writer site.
+    for statement in statements {
+        scan.visit_statement(statement);
+    }
+    scan.found
 }

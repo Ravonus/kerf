@@ -53,13 +53,23 @@ fn predicate(
 impl Scan<'_, '_> {
     pub(super) fn refreshes(&mut self, statements: &[Statement<'_>]) {
         let effects = effects::collect(statements, self.a, &self.states);
-        let recursive = self
+        let escaped = effects::escaped_callbacks(statements, self.a, &self.bindings);
+        let roots: Vec<_> = escaped
+            .iter()
+            .copied()
+            .map(super::Target::Function)
+            .collect();
+        let invoked = self.reachable(&roots, false);
+        let blocked = self
             .functions
             .iter()
-            .filter(|(_, uses)| {
-                self.reachable(&uses.calls, false)
-                    .iter()
-                    .any(|callee| std::ptr::eq(*callee, *uses))
+            .filter(|(span, uses)| {
+                escaped.contains(*span)
+                    || invoked.iter().any(|callee| std::ptr::eq(*callee, *uses))
+                    || self
+                        .reachable(&uses.calls, false)
+                        .iter()
+                        .any(|callee| std::ptr::eq(*callee, *uses))
             })
             .map(|(&span, _)| span)
             .collect();
@@ -67,7 +77,7 @@ impl Scan<'_, '_> {
             a: self.a,
             states: &self.states,
             effects: &effects,
-            recursive: &recursive,
+            blocked: &blocked,
             functions: &mut self.functions,
         };
         for statement in statements {
@@ -341,13 +351,13 @@ struct Rescan<'x, 's> {
     a: &'x Analyzer<'s>,
     states: &'x States,
     effects: &'x effects::Effects,
-    recursive: &'x HashSet<SpanKey>,
+    blocked: &'x HashSet<SpanKey>,
     functions: &'x mut HashMap<SpanKey, Uses>,
 }
 
 impl Rescan<'_, '_> {
     fn body(&mut self, span: SpanKey, statements: &[Statement<'_>]) {
-        if !self.recursive.contains(&span) {
+        if !self.blocked.contains(&span) {
             self.functions.entry(span).or_default().refreshes =
                 writes(statements, self.a, self.states, self.effects);
         }

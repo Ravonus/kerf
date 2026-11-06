@@ -13,7 +13,7 @@ fn w041_canonical_stream_and_cell_snapshots_refresh_through_their_predicates() {
          let seed = ''; const begin = () => { if (c.edit && !editing.value) { \
          seed = String(untrack(() => p.value) ?? ''); problem.value = ''; editing.value = true } }; \
          const done = () => { problem.value = ''; editing.value = false }; \
-         return <td onDblClick={begin} onKeyDown={() => begin()}>\
+         return <td onDblClick={begin} onKeyDown={(c.edit ? () => begin() : undefined)!}>\
          {editing.value ? <Editor start={seed} onDone={done} /> : <Shown />}</td> }",
     ] {
         let (code, diagnostics) = run(source);
@@ -273,5 +273,62 @@ fn w041_late_and_recursive_mutators_do_not_prove_a_refresh() {
         let errors = handler_mutation_errors(&diagnostics);
         assert_eq!(errors.len(), 1, "{source}: {diagnostics:?}");
         assert!(errors[0].message.starts_with("`n`"));
+    }
+}
+
+#[test]
+fn w041_external_callback_reentry_keeps_the_original_writer_stale() {
+    for (setup, gate, callback) in [
+        ("", "gate", "begin"),
+        ("", "gate", "begin!"),
+        ("const alias = begin; const again = alias", "gate", "again"),
+        ("const box = gate; const alias = begin", "box", "alias"),
+        ("", "gate", "() => begin()"),
+        ("", "gate", "function callback() { return begin() }"),
+        ("function wrapper() { return begin() }", "gate", "wrapper"),
+        ("const wrapper = () => begin", "gate", "wrapper()"),
+        ("const callbacks = { run: begin }", "gate", "callbacks.run"),
+        ("const callbacks = [begin]", "gate", "callbacks[0]"),
+        ("", "gate", "begin.bind(null)"),
+        (
+            "let alias = begin; alias = flag ? begin : alias",
+            "gate",
+            "alias",
+        ),
+    ] {
+        let source = format!(
+            "import {{ state }} from '@weft-js/core'; import {{ external }} from './external'; \
+             export function A() {{ const gate = state(false); let n = 0; {setup}; \
+             function begin() {{ if (!{gate}.value) {{ n = external({callback}); {gate}.value = true }} }} \
+             return <button onClick={{begin}}>{{gate.value ? n : 0}}</button> }}"
+        );
+        let (_, diagnostics) = run(&source);
+        let errors = handler_mutation_errors(&diagnostics);
+        assert_eq!(errors.len(), 1, "{source}: {diagnostics:?}");
+        assert!(errors[0].message.starts_with("`n`"));
+        assert_eq!(errors[0].severity, Severity::Error);
+        assert!(errors[0].help.contains("n.value") && errors[0].fix.is_none());
+    }
+}
+
+#[test]
+fn w041_direct_event_callback_aliases_keep_the_refresh_control_quiet() {
+    for callback in [
+        "begin",
+        "alias",
+        "() => alias()",
+        "alias!",
+        "alias as () => void",
+        "(flag ? () => alias() : undefined)!",
+    ] {
+        let source = format!(
+            "import {{ state }} from '@weft-js/core'; export function A() {{ \
+             const gate = state(false); let n = 0; const begin = () => {{ \
+             if (!gate.value) {{ n = 1; gate.value = true }} }}; const alias = begin; \
+             return <button onClick={{{callback}}}>{{gate.value ? n : 0}}</button> }}"
+        );
+        let (code, diagnostics) = run(&source);
+        assert!(diagnostics.is_empty(), "{source}: {diagnostics:?}");
+        assert!(!code.is_empty(), "{source}");
     }
 }
