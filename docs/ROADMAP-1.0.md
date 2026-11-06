@@ -306,6 +306,14 @@ Test the bet with agents that have nothing going for them.
 
 **Size and speed** (decide by benchmark, speed over bytes, 50 KB ceiling):
 
+S5 measurement (Yuna M3 Pro, Node 26.13.0, source `1b397bf4`): first-load task
+time is 215 ms for weft + warp and 150 ms for Solid + Kobalte; FCP is 204 ms and
+132 ms. Style time is 70 ms and 3 ms. The six-stack command exits 0 and all nine
+parity steps pass for each stack. Warp long-list `heightMoved` is 0 despite an
+empty error list, so scrolling acceptance remains unverified. Dashboard JS+CSS
+Brotli remains 52,700 B. One targeted load fix is pending.
+
+
 - [ ] Get weft + warp back under 50 KB. Bisect the growth from 40.8 to 53.0 KB between `10-31` and
       `37ad91b7`. CSS is about 24.7 KB of it, so look at warp's CSS first. Recover S3's +1,684 B
       warp growth (51,397 to 53,081 B) on the way under 50 KB.
