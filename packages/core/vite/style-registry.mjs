@@ -23,7 +23,7 @@ export function defsOf(s, file) {
 }
 
 /** The exported groups brought in by one file's relative imports. */
-export async function importedGroups(s, ctx, code, id) {
+export async function importedGroups(s, ctx, code, id, onDependency) {
   const out = {}
   for (const [, names, spec] of code.matchAll(IMPORTS)) {
     const hit = ctx
@@ -40,7 +40,10 @@ export async function importedGroups(s, ctx, code, id) {
         .replace(/^type\s+/, '')
         .split(/\s+as\s+/)[0]
       const g = found.find((x) => x.binding === imported)
-      if (g) out[`${key}#${imported}`] = { name: g.name, def: g.def }
+      if (g) {
+        out[`${key}#${imported}`] = { name: g.name, def: g.def }
+        onDependency?.(file)
+      }
     }
   }
   return out

@@ -13,6 +13,7 @@ import { importedShapes } from './vite/shapes.mjs'
 import { purgeCss } from './vite/purge.mjs'
 import { styleGroups } from './vite/style-groups.mjs'
 import { shapeGroupCss } from './vite/shape-styles.mjs'
+import { shapeWatch } from './vite/shape-watch.mjs'
 import { icons } from './vite/icons.mjs'
 import { agent } from './vite/agent.mjs'
 import { watchChanges } from './vite/watch.mjs'
@@ -48,6 +49,7 @@ export default function weft({
   let isDev = false
   let isHot = false
   const style = styleGroups(styleOptions)
+  const watching = shapeWatch((file) => style.forget(file))
   const main = {
     name: 'weft',
     enforce: 'pre',
@@ -70,7 +72,11 @@ export default function weft({
         const mode = MODE.exec(id)?.[1]
         const ssr = mode ? mode === 'ssr' : !!options?.ssr
         const hydrating = hydratable || !!mode
-        const groups = await style.options(this, code, id.replace(/\?.*$/, ''))
+        const dependencies = new Set()
+        const groups = await style.options(this, code, id.replace(/\?.*$/, ''), (file) => {
+          if (standalone) dependencies.add(file)
+        })
+        if (standalone) watching.replace(id, dependencies, this)
         const shapes = standalone ? {} : await importedShapes(this, code, id.replace(/\?.*$/, ''))
         const islands =
           hydrating && !mode && !standalone ? await main.api.islands?.(this, id) : undefined
@@ -108,6 +114,7 @@ export default function weft({
       },
     },
     configureServer: watchChanges,
+    hotUpdate: watching.hotUpdate,
     /** `islands(ctx, id)`: a framework's project view of the file (node/hydration.mjs). */
     api: {},
   }
