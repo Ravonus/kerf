@@ -197,8 +197,21 @@ const digest = (text: string) =>
 test.each(cases.map((c) => [c.name, c]))(
   '%s: weft DOM = weft SSR + hydrate = Solid (recorded), through every interaction',
   async (_, c) => {
+    const started = performance.now()
+    let last = started
+    const mark = (phase: string) => {
+      if (c.name !== 'benchmark app') return
+      const now = performance.now()
+      process.stderr.write(
+        `oracle-timing ${JSON.stringify({ phase, ms: now - last, totalMs: now - started })}\n`,
+      )
+      last = now
+    }
+    mark('start')
     const a = render(c.dom, c.props() as never).container
+    mark('dom mount')
     const server = renderToString(() => c.server(c.props() as never))
+    mark('server render')
     const h = document.body.appendChild(document.createElement('div'))
     h.innerHTML = server
     const mutations: MutationRecord[] = []
@@ -206,6 +219,7 @@ test.each(cases.map((c) => [c.name, c]))(
     observer.observe(h, { subtree: true, childList: true, attributes: true, characterData: true })
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const dispose = hydrate(() => c.client(c.props() as never), h)
+    mark('hydrate')
     mutations.push(...observer.takeRecords())
     observer.disconnect()
     expect(warn).not.toHaveBeenCalled()
@@ -216,18 +230,27 @@ test.each(cases.map((c) => [c.name, c]))(
 
     const want = c.solidWrong ? undefined : golden[c.name]
     if (!c.solidWrong) expect(want, 'a recorded trace').toBeDefined()
-    const trace = [digest(html(a))]
-    expect(html(h)).toBe(html(a))
-    for (const step of steps(a, c.skip)) {
+    const initial = html(a)
+    const trace = [digest(initial)]
+    expect(html(h)).toBe(initial)
+    mark('initial comparison')
+    for (const [index, step] of steps(a, c.skip).entries()) {
+      mark(`step ${index} start`)
       for (const root of [a, h]) {
         seed() // the same "random" rows in each (the benchmark app)
         step(root)
       }
+      mark(`step ${index} interactions`)
       await flush()
-      trace.push(digest(html(a)))
-      expect(html(h)).toBe(html(a))
+      mark(`step ${index} flush`)
+      const current = html(a)
+      trace.push(digest(current))
+      expect(html(h)).toBe(current)
+      mark(`step ${index} comparison`)
     }
     if (want) expect(trace).toEqual(want)
+    mark('golden comparison')
     dispose()
+    mark('dispose')
   },
 )

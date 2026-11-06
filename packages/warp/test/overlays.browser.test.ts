@@ -85,6 +85,40 @@ function toastTools() {
   const undo = async (page: Playwright.Page) => {
     const button = page.getByRole('button', { name: 'Undo' }).first()
     const box = (await button.boundingBox())!
+    if (box.x + box.width > 1100 || box.y + box.height > 700) {
+      const evidence = await page.evaluate((selector) => {
+        const regionNode = document.querySelector(selector)
+        const buttonNode = regionNode?.querySelector('[data-act]')
+        const nodes = [
+          regionNode,
+          buttonNode,
+          regionNode?.closest('dialog'),
+          regionNode?.parentElement,
+        ]
+        return nodes.map(
+          (el) =>
+            el && {
+              tag: el.tagName,
+              id: el.id,
+              part: el.getAttribute('data-part'),
+              title: el.querySelector('[data-part="title"]')?.textContent?.slice(0, 100),
+              rect: el.getBoundingClientRect().toJSON(),
+              popover: el.getAttribute('popover'),
+              open: el.matches(':popover-open'),
+              transform: getComputedStyle(el).transform,
+              translate: getComputedStyle(el).translate,
+              animations: el
+                .getAnimations()
+                .slice(0, 10)
+                .map((a) => ({
+                  state: a.playState,
+                  time: a.currentTime,
+                })),
+            },
+        )
+      }, region)
+      console.error('toast Undo geometry:', JSON.stringify(evidence))
+    }
     expect(box.x + box.width).toBeLessThanOrEqual(1100)
     expect(box.y + box.height).toBeLessThanOrEqual(700)
     const hit = await page.evaluate(

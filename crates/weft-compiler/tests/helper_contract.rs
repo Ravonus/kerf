@@ -1,6 +1,5 @@
-//! Helper contract (research 16 §6.3, research 19): every helper weft's back end imports from `@weft-js/core`, `@weft-js/core/dom` or
-//! `@weft-js/core/ssr` must be exported by `packages/core/src`. Compiles the repo's own components (test fixtures, the v3
-//! reference app, the size fixtures) in each output mode: DOM, DOM dev, hydratable DOM, and SSR.
+//! Every helper imported from core, core/internal, core/dom or core/ssr must exist in the runtime.
+//! Compile the repo's components in DOM, DOM dev, hydratable DOM and SSR modes.
 
 #![allow(
     clippy::unwrap_used,
@@ -128,15 +127,23 @@ fn imports_of(code: &str) -> BTreeMap<String, BTreeSet<String>> {
     out
 }
 
-#[test]
-fn every_helper_the_back_end_imports_exists_in_the_runtime() {
+fn runtime_modules() -> BTreeMap<&'static str, BTreeSet<String>> {
     let runtime = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/core/src");
-    let modules: BTreeMap<&str, BTreeSet<String>> = [
+    [
         ("@weft-js/core", exports_of(&runtime.join("index.ts"))),
+        (
+            "@weft-js/core/internal",
+            exports_of(&runtime.join("internal.ts")),
+        ),
         ("@weft-js/core/dom", exports_of(&runtime.join("dom.ts"))),
         ("@weft-js/core/ssr", exports_of(&runtime.join("ssr.ts"))),
     ]
-    .into();
+    .into()
+}
+
+#[test]
+fn every_helper_the_back_end_imports_exists_in_the_runtime() {
+    let modules = runtime_modules();
 
     let files = components();
     assert!(
@@ -189,6 +196,8 @@ fn every_helper_the_back_end_imports_exists_in_the_runtime() {
     );
     // Guard against the check passing vacuously (e.g. the import source changing).
     for core in [
+        "@weft-js/core/internal:localProps",
+        "@weft-js/core/internal:restOf",
         "@weft-js/core/dom:tpl",
         "@weft-js/core/dom:child",
         "@weft-js/core/dom:bind",

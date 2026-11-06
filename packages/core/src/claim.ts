@@ -3,7 +3,8 @@
 // key instead of cloning, `first`/`next` step over the server's marked hole ranges, and `hchild` adopts the nodes in
 // its range. Client-only output imports `tpl` and `child` (dom-next.ts) instead, so none of this ships there.
 
-import { DEV, hole, untrack } from './index'
+import { DEV, untrack } from './index'
+import { hole } from './index/lifecycle'
 import { insert, place, write, type Hold } from './dom'
 import { keys, nextKey, under } from './keys'
 import { marks } from './island'

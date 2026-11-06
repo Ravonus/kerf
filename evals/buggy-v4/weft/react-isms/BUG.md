@@ -1,0 +1,1 @@
+Each seed uses a React hook habit in Weft component setup. The compiler reports grouped W020 errors with migration help. The paired `.fixed.tsx` files use Weft primitives or ordinary functions and compile without diagnostics. The wrapper seed reports both its resolved React call and the component call.

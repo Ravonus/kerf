@@ -1,7 +1,7 @@
 //! Walk the syntax tree to build the analysis plan and diagnostics.
 
 use oxc_ast::ast::{
-    ArrowFunctionExpression, AssignmentExpression, AssignmentTarget,
+    ArrowFunctionBody, ArrowFunctionExpression, AssignmentExpression, AssignmentTarget,
     AssignmentTargetPropertyIdentifier, BindingPattern, CallExpression, Expression,
     FormalParameters, Function, IdentifierReference, ImportDeclaration, ImportDeclarationSpecifier,
     JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild, JSXElement, JSXElementName,
@@ -115,6 +115,10 @@ impl<'a> Visit<'a> for Analyzer<'_> {
         {
             self.enter_component(name, it.span, &it.params, |s| {
                 walk::walk_function(s, it, flags);
+                if let Some(body) = &it.body {
+                    s.early_return_diagnostics(&body.statements);
+                    s.handler_mutation_diagnostics(&body.statements);
+                }
             });
         } else {
             self.nested(|s| walk::walk_function(s, it, flags));
@@ -126,6 +130,10 @@ impl<'a> Visit<'a> for Analyzer<'_> {
         if let Some(name) = name.filter(|n| is_component_name(n)) {
             self.enter_component(name, it.span, &it.params, |s| {
                 walk::walk_arrow_function_expression(s, it);
+                if let ArrowFunctionBody::FunctionBody(body) = &it.body {
+                    s.early_return_diagnostics(&body.statements);
+                    s.handler_mutation_diagnostics(&body.statements);
+                }
             });
         } else {
             self.nested(|s| walk::walk_arrow_function_expression(s, it));
@@ -348,6 +356,7 @@ impl<'a> Visit<'a> for Analyzer<'_> {
     }
 
     fn visit_call_expression(&mut self, it: &CallExpression<'a>) {
+        self.react_call(it);
         self.bind_call_diagnostic(it);
         if let Some(cb) = map_callback(it) {
             if self.jsx_depth > 0 && returned(cb).0.is_some_and(returns_jsx) {

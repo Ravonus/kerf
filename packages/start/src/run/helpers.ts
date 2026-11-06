@@ -1,4 +1,5 @@
-import { flush, rt } from '@weft-js/core'
+import { flush } from '@weft-js/core'
+import { rt } from '@weft-js/core/internal'
 import type { Match, RoutePayload } from '../router'
 import type { ClientRoutes } from '../run'
 

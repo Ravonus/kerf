@@ -125,47 +125,73 @@ function runEntry(dir, entry) {
   return spawnSync(process.execPath, entry, { cwd: dir, env, encoding: 'utf8' })
 }
 
+const cases = [
+  {
+    path: 'site/content/learn/probe.md',
+    text: `\`\`\`tsx\n${'x'.repeat(71)}\n\`\`\`\n`,
+    expected: 'limit 70',
+  },
+  { path: 'site/src/demos/probe.tsx', text: `// ${'x'.repeat(56)}\n`, expected: 'limit 58' },
+  {
+    path: 'site/content/learn/probe.md',
+    text: '```tsx\nconst x = <A a={1} b={2} c={3} />\n```\n',
+    expected: 'three-plus attributes',
+  },
+  {
+    path: 'site/content/learn/probe.md',
+    text: '```tsx\nconst x = <A onClick={() => { a(); b() }} />\n```\n',
+    expected: 'multi-statement JSX handler',
+  },
+  {
+    path: 'site/content/learn/probe.md',
+    text: '```tsx\nconst x = <>{props.items.map(x => x)}</>\n```\n',
+    expected: 'direct props field map in JSX',
+  },
+  {
+    path: 'site/src/demos/probe.tsx',
+    text: 'const x = <A a={1} b={2} c={3} />\n',
+    expected: 'three-plus attributes',
+  },
+  {
+    path: 'site/src/demos/probe.tsx',
+    text: 'const x = <A onClick={() => { a(); b() }} />\n',
+    expected: 'multi-statement JSX handler',
+  },
+  {
+    path: 'site/src/demos/probe.tsx',
+    text: 'const x = <>{props.items.map(x => x)}</>\n',
+    expected: 'direct props field map in JSX',
+  },
+  {
+    path: 'site/src/demos/probe.tsx',
+    text: 'const x = <>{props.name.toUpperCase()}</>\n',
+    good: 'const { name } = props\nconst x = <>{name.toUpperCase()}</>\n',
+    expected: 'direct props computation in JSX',
+  },
+  {
+    path: 'site/src/demos/probe.tsx',
+    text: "const x = <>{props.data.get('key')}</>\n",
+    good: "const { data } = props\nconst x = <>{data.get('key')}</>\n",
+    expected: 'direct props computation in JSX',
+  },
+  {
+    path: 'site/src/demos/probe.tsx',
+    text: 'const x = <>{props.items.reduce(sum, 0)}</>\n',
+    good: 'const { items } = props\nconst x = <>{items.reduce(sum, 0)}</>\n',
+    expected: 'direct props computation in JSX',
+  },
+  {
+    path: 'site/src/demos/probe.tsx',
+    text: 'const ctx = context(derived(() => 1))\n',
+    good: 'const value = derived(() => 1)\nconst ctx = context(value)\n',
+    expected: 'unnamed derived candidate',
+  },
+]
+
 await test('both real entry paths reject bad samples and pass clean fixtures', () => {
   const { dir, put } = fixture()
   const entries = [['scripts/check.mjs', '--only=sample-width'], ['site/scripts/content.mjs']]
-  const cases = [
-    {
-      path: 'site/content/learn/probe.md',
-      text: `\`\`\`tsx\n${'x'.repeat(71)}\n\`\`\`\n`,
-      expected: 'limit 70',
-    },
-    { path: 'site/src/demos/probe.tsx', text: `// ${'x'.repeat(56)}\n`, expected: 'limit 58' },
-    {
-      path: 'site/content/learn/probe.md',
-      text: '```tsx\nconst x = <A a={1} b={2} c={3} />\n```\n',
-      expected: 'three-plus attributes',
-    },
-    {
-      path: 'site/content/learn/probe.md',
-      text: '```tsx\nconst x = <A onClick={() => { a(); b() }} />\n```\n',
-      expected: 'multi-statement JSX handler',
-    },
-    {
-      path: 'site/content/learn/probe.md',
-      text: '```tsx\nconst x = <>{props.items.map(x => x)}</>\n```\n',
-      expected: 'direct props field map in JSX',
-    },
-    {
-      path: 'site/src/demos/probe.tsx',
-      text: 'const x = <A a={1} b={2} c={3} />\n',
-      expected: 'three-plus attributes',
-    },
-    {
-      path: 'site/src/demos/probe.tsx',
-      text: 'const x = <A onClick={() => { a(); b() }} />\n',
-      expected: 'multi-statement JSX handler',
-    },
-    {
-      path: 'site/src/demos/probe.tsx',
-      text: 'const x = <>{props.items.map(x => x)}</>\n',
-      expected: 'direct props field map in JSX',
-    },
-  ]
+
   try {
     for (const item of cases) {
       put(item.path, item.text)
@@ -177,7 +203,7 @@ await test('both real entry paths reject bad samples and pass clean fixtures', (
         assert.ok(output.includes(`${item.path}:${line}:`), output)
         assert.ok(output.includes(item.expected), output)
       }
-      put(item.path, '')
+      put(item.path, item.good ?? '')
       for (const entry of entries) {
         const clean = runEntry(dir, entry)
         assert.equal(clean.status, 0, clean.stdout + clean.stderr)
@@ -187,6 +213,19 @@ await test('both real entry paths reject bad samples and pass clean fixtures', (
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
+})
+
+await test('JSX computations use destructured fields and derived calls have names', () => {
+  for (const source of [
+    'const x = <>{props.name.toUpperCase()}</>',
+    "const x = <>{props.data.get('key')}</>",
+    'const x = <>{props.items.reduce(sum, 0)}</>',
+  ])
+    assert.deepEqual(rules(source), ['direct props computation in JSX'])
+  assert.deepEqual(rules('const ctx = context(derived(() => 1))'), ['unnamed derived candidate'])
+  assert.deepEqual(rules('const { name } = props; const x = <>{name.toUpperCase()}</>'), [])
+  assert.deepEqual(rules('const value = derived(() => 1); const ctx = context(value)'), [])
+  assert.deepEqual(rules('const x = { value: derived(() => 1) }'), [])
 })
 
 await test('JSX does not map directly from props fields', () => {

@@ -144,3 +144,20 @@ test('S002: a scope read in `load` fails the request instead of sharing state be
   expect(res.status).toBe(500)
   expect(await res.text()).toContain('S002')
 })
+
+test('repeated restored text keeps the first value and the raw failure keeps both', async () => {
+  const body = new URLSearchParams({ $fn: id, qty: 'many' })
+  body.append('title', 'first')
+  body.append('title', 'second')
+  const res = await fetch(`${url}/notes`, {
+    method: 'POST',
+    headers: { origin: url },
+    body,
+  })
+  expect(res.status).toBe(422)
+  const html = await res.text()
+  expect(form(html).values.title).toEqual(['first', 'second'])
+  expect(html).toMatch(
+    /<input[^>]* name="title"[^>]* value="first"|<input[^>]* value="first"[^>]* name="title"/,
+  )
+})

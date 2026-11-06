@@ -1,14 +1,25 @@
-//! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics (W001, W005, W006,
-//! W010, W013, W014, W015, W016, W017, W018, W019; the @weft-js/core/browser ones are in `browser`). Produces a `Plan` that `transform` applies to the same AST, and the per-file
-//! facts `weft check`'s project view joins across files (`project`).
+//! Read-only pass: find components, their props and boxes, JSX lists, and the diagnostics
+//! (W001, W002, W005, W006, W010, W011, W012, W013, W014, W015, W016, W017, W018, W019,
+//! W020, W040, W041).
+//! The @weft-js/core/browser diagnostics live in `browser`. Produces a `Plan` that `transform`
+//! applies to the same AST, and the per-file facts `weft check` joins across files (`project`).
 
 mod aliases;
+mod async_callbacks;
 mod body_reads;
 mod component_entries;
 mod context;
+mod early_returns;
 mod finish;
+mod handler_mutations;
+mod handler_values;
 mod lists;
+mod numeric_facts;
+mod numeric_jsx;
+mod numeric_properties;
+mod numeric_writes;
 mod props;
+mod react;
 mod row_entries;
 mod support;
 mod visitor;
@@ -134,10 +145,18 @@ pub fn analyze(program: &Program<'_>, scoping: &Scoping, source: &str) -> Plan {
         spreads: Vec::new(),
         list_sources: Vec::new(),
         imports: HashMap::new(),
+        react_imports: react::imports(program),
+        react_wrappers: HashSet::new(),
         box_props: Vec::new(),
         defaulted: HashSet::new(),
     };
+    a.react_wrappers = react::wrappers(program, scoping, &a.react_imports);
     a.visit_program(program);
+    let async_diagnostics = async_callbacks::diagnostics(program, &a);
+    a.plan.diagnostics.extend(async_diagnostics);
+    a.plan
+        .diagnostics
+        .extend(numeric_jsx::diagnostics(program, scoping, source));
     a.finish()
 }
 
@@ -369,6 +388,10 @@ struct Analyzer<'s> {
     list_sources: Vec<(SymbolId, Span)>,
     /// Local import binding → (module specifier, imported name).
     imports: HashMap<SymbolId, (String, String)>,
+    /// Hoisted value imports, including namespaces; project facts keep their existing import map.
+    react_imports: HashMap<SymbolId, (String, String)>,
+    /// Local useX functions with a resolved hook call, excluding reassigned bindings.
+    react_wrappers: HashSet<SymbolId>,
     /// Box symbol passed as a component prop: (box, component name, import, prop name).
     box_props: Vec<(SymbolId, String, Option<String>, String)>,
     /// Destructured props with a default: their read isn't a plain path.

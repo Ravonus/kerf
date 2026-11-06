@@ -1,5 +1,5 @@
-// weft core: boxes, derivations, watchers and ownership (§3.1). Phase 1 spike.
-// Push-pull graph: a write marks observers DIRTY/CHECK; effects flush in creation order.
+// Public boxes, derivations, watchers and ownership (§3.1).
+// Compiler and runtime helpers live at @weft-js/core/internal.
 export type {
   Owner,
   Computation,
@@ -11,31 +11,11 @@ export type {
   Derived,
   Linked,
 } from './index/types'
+export { DEV, flush, untrack, within } from './index/graph'
+export { onCleanup, onMount, batch, getOwner, createRoot } from './index/lifecycle'
 export {
-  DIRTY,
-  DEV,
-  devComponent,
-  listener,
-  setKeyed,
-  rt,
-  stats,
-  NONE,
-  read,
-  reach,
-  clean,
-  flat,
-  setFlat,
-  flush,
-  runMounts,
-  untrack,
-  within,
-} from './index/graph'
-export { hole, onCleanup, onMount, batch, getOwner, createRoot } from './index/lifecycle'
-export {
-  collecting,
   collect,
   plain,
-  Box,
   state,
   Memo,
   named,
@@ -45,8 +25,7 @@ export {
   watch,
   effect,
 } from './index/state'
-export { context, view, bind, omit, restOf } from './index/view'
-export { localProps } from './linked'
+export { context, view, bind, omit } from './index/view'
 export { Boundary, resource, type Resource, type ResourceOptions } from './async'
 export { defineState, StateError, type ScopeHandle, type History, type HistoryEntry } from './scope'
 

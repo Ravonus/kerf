@@ -1,3 +1,15 @@
 include!("compile/props.rs");
 include!("compile/lists.rs");
 include!("compile/output.rs");
+include!("compile/react.rs");
+include!("compile/early_returns.rs");
+include!("compile/handler_mutations.rs");
+include!("compile/numeric_jsx.rs");
+include!("compile/numeric_properties.rs");
+include!("compile/async_callbacks.rs");
+include!("compile/derived_writes.rs");
+include!("compile/watch_cycles.rs");
+include!("compile/watch_patterns.rs");
+include!("compile/watch_copies.rs");
+include!("compile/catalog_browser.rs");
+include!("compile/runtime_imports.rs");

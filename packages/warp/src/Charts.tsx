@@ -101,16 +101,16 @@ export const GaugeChart = (p: ChartFrame & GaugeConfig) => <Chart form={gauge} {
 /** A rolling window (06 §12): one `d` write per tick on a fixed domain. Pausing holds the window and shows it as a table. */
 export function StreamChart(p: ChartFrame & Omit<StreamConfig, 'paused'>) {
   const paused = state(false)
-  let held = untrack(() => p.data)
+  const held = state(untrack(() => p.data))
   const flip = () => {
-    held = p.data
+    held.value = p.data
     paused.value = !paused.value
   }
   return (
     <Chart
       form={stream}
       {...p}
-      data={paused.value ? held : p.data}
+      data={paused.value ? held.value : p.data}
       paused={paused.value}
       toolbar={
         <Button emphasis="outline" onClick={flip}>

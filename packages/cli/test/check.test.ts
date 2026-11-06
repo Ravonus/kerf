@@ -180,13 +180,28 @@ describe('U001–U005: interaction() and ui', () => {
 })
 
 function registerProjectAliasTests() {
+  const compilerOptions = {
+    target: 'es2022',
+    module: 'esnext',
+    moduleResolution: 'bundler',
+    strict: true,
+    noEmit: true,
+    skipLibCheck: true,
+    jsx: 'preserve',
+    jsxImportSource: '@weft-js/core',
+    lib: ['es2023', 'dom', 'dom.iterable'],
+    types: [],
+  }
+
   it('follows the #/ alias like a relative import', async () => {
     const aliased = spreadBug(app).replaceAll("from './components/", "from '#/components/")
     expect(aliased).toContain('#/components/ProductList')
     const r = await check(
       project({
         'src/App.tsx': aliased,
-        'tsconfig.json': JSON.stringify({ compilerOptions: { paths: { '#/*': ['./src/*'] } } }),
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: { ...compilerOptions, paths: { '#/*': ['./src/*'] } },
+        }),
       }),
     )
     expect(r.diagnostics.map((d) => [d.code, d.severity, d.project])).toEqual([
@@ -196,8 +211,9 @@ function registerProjectAliasTests() {
 
   it('follows whatever alias the app declares', async () => {
     const aliased = spreadBug(app).replaceAll("from './components/", "from '@/ui/")
-    const tsconfig =
-      '// the app\'s own\n{ "compilerOptions": { "paths": { "@/ui/*": ["./src/components/*"] } } }\n'
+    const tsconfig = `// the app's own\n${JSON.stringify({
+      compilerOptions: { ...compilerOptions, paths: { '@/ui/*': ['./src/components/*'] } },
+    })}\n`
     const r = await check(project({ 'src/App.tsx': aliased, 'tsconfig.json': tsconfig }))
     expect(r.diagnostics.map((d) => [d.code, d.severity, d.project])).toEqual([
       ['W014', 'error', true],

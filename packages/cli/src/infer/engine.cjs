@@ -1,9 +1,10 @@
 // Prop inference (research 44). Facts come from syntax; the types come from whichever checker the host wraps, asked
 // about the call sites in the program's own terms. A round writes each component's annotation into its file's shadow;
 // the next round sees the types that made possible (a prop forwarded to another inferred component, a component passed
-// as a prop). Rounds stop when nothing changes, and a project with nothing to infer never starts a checker.
+// as a prop). Rounds stop when nothing changes. A checker starts for inference or core box diagnostics.
 
 const { fileFacts, hashOf } = require('./facts.cjs')
+const CORE_IMPORT = /['"]@weft-js\/core['"]/
 const { shadow, toShadow } = require('./shadow.cjs')
 
 const { flows, collect, fromBody, infer } = require('./engine/flow.cjs')
@@ -50,11 +51,35 @@ class Engine {
   comps() {
     return [...this.facts.values()].flatMap((f) => f.comps)
   }
-  /** Facts that need a shadow at all: most projects have none, and then no checker starts. */
+  /** Facts that need a checker: inferred props, bindings or possible core box errors. */
   needed() {
-    return [...this.facts.values()].some(
-      (f) => f.comps.length || f.sites.some((s) => s.attrs.some((a) => a.bind)),
+    return (
+      this.typedChecksNeeded() ||
+      [...this.facts.values()].some(
+        (f) => f.comps.length || f.sites.some((s) => s.attrs.some((a) => a.bind)),
+      )
     )
+  }
+
+  /** Syntax only gates startup; the checker proves every W008 finding. */
+  boxPropsNeeded() {
+    const sites = [...this.facts.values()].some((facts) =>
+      facts.sites.some((site) => site.attrs.length),
+    )
+    return sites && [...this.texts.values()].some((text) => CORE_IMPORT.test(text))
+  }
+
+  /** Syntax only gates startup; TS2540 and resolved core symbols prove readonly writes. */
+  derivedWritesNeeded() {
+    return (
+      [...this.texts.values()].some((text) => CORE_IMPORT.test(text)) &&
+      [...this.texts.values()].some((text) => /\bvalue\b/.test(text))
+    )
+  }
+
+  /** Whether either core box diagnostic family needs the shared checker. */
+  typedChecksNeeded() {
+    return this.boxPropsNeeded() || this.derivedWritesNeeded()
   }
 
   /** Files with a component or a site of one that import `file`: what they pass may have changed type. */
@@ -76,6 +101,7 @@ class Engine {
   /** Whether a saved file can move anything: it holds a component or a site of one, or such a file imports it. */
   relevant(file) {
     if (!this.needed()) return false
+    if (this.typedChecksNeeded()) return true
     const facts = this.facts.get(file)
     if (!facts || facts.comps.length || facts.sites.some((s) => s.attrs.some((a) => a.bind)))
       return true

@@ -9,15 +9,9 @@
 // A server renders `init` for local and session, so while hydrating those boxes stay at `init` and take the stored
 // value once hydration ends; reading one in a server render is S013. A cookie is the same on both sides.
 
-import {
-  DEV,
-  createRoot,
-  onMount,
-  rt,
-  type Box,
-  type StandardSchema,
-  type StateOptions,
-} from './index'
+import { DEV, createRoot, onMount, type StandardSchema, type StateOptions } from './index'
+import { rt } from './index/graph'
+import { type Box } from './index/state'
 import { keys } from './keys'
 import { memoryStorage } from './memory'
 import {

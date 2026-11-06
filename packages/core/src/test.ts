@@ -10,7 +10,7 @@
 
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { afterEach, expect } from 'vitest'
-import { rt } from './index'
+import { rt } from './index/graph'
 import { createComponent, render as mount } from './dom'
 import { open } from './browser'
 import { createApp, disposeApp, useApp, withApp, type AppOptions } from './scope'

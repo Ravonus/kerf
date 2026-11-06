@@ -60,17 +60,23 @@ pub fn apply<'a>(
     if !t.rest_used.is_empty() {
         imports.push(("omit", "_$omit"));
     }
+    let mut internal = Vec::new();
     if t.needs_rest_of {
-        imports.push(("restOf", "_$restOf"));
+        internal.push(("restOf", "_$restOf"));
     }
     if t.needs_local {
-        imports.push(("localProps", "_$localProps"));
+        internal.push(("localProps", "_$localProps"));
     }
     if t.needs_memo {
         imports.push(("memo", "_$weftMemo"));
     }
-    if !imports.is_empty() {
-        program.body.insert(0, t.import("@weft-js/core", &imports));
+    for (module, names) in [
+        ("@weft-js/core", imports),
+        ("@weft-js/core/internal", internal),
+    ] {
+        if !names.is_empty() {
+            program.body.insert(0, t.import(module, &names));
+        }
     }
 }
 

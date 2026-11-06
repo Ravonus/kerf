@@ -17,9 +17,9 @@ import {
   type Mutation,
 } from './data'
 import type { FormFailure } from './exec'
+import { fieldValue, type FieldKind, type FormValue } from './form/value'
 
-/** What a failed form's page gives back for a field: what was typed. */
-export type FormValue = string | string[] | undefined
+export type { FormValue } from './form/value'
 
 /** A mutation input's field names: `title`, and `a.b` one level down. */
 type Field<I> = I extends object
@@ -29,6 +29,13 @@ type Field<I> = I extends object
         : K
     }[keyof I & string]
   : string
+
+type FieldProps<V> = {
+  name: string
+  value?: V
+  'aria-invalid'?: true
+  'aria-describedby'?: string
+}
 
 /** The state and fields `<Form>` gives its children. */
 export interface FormApi<I = unknown, O = unknown> {
@@ -45,12 +52,9 @@ export interface FormApi<I = unknown, O = unknown> {
   /** What was typed, when a no-JS submit came back with errors. */
   value(name: Field<I>): FormValue
   /** Spread on the input: `name`, the value to restore, and the invalid state. */
-  field(name: Field<I>): {
-    name: string
-    value?: FormValue
-    'aria-invalid'?: true
-    'aria-describedby'?: string
-  }
+  field(name: Field<I>, kind: 'text' | 'email'): FieldProps<string>
+  field(name: Field<I>, kind: 'multiple'): FieldProps<string[]>
+  field(name: Field<I>, kind?: FieldKind): FieldProps<FormValue>
   /** The field's error text, in a live region that's in the page before it has anything to say. */
   Error(props: { name: Field<I>; class?: string }): unknown
 }
@@ -130,6 +134,14 @@ function createSubmit<O>(
   }
 }
 
+function invalidMutation() {
+  return new StartError(
+    'F001',
+    '`<Form of>` needs a mutation',
+    '`<Form of={addTodo}>`, with `addTodo` a `mutation()` export of a server module',
+  )
+}
+
 /** A form that posts to a mutation, and works before any code has loaded. */
 export function Form<I, O>({
   of,
@@ -145,18 +157,26 @@ export function Form<I, O>({
   }
   const key = untrack(() => id)
   const fnId = fnOf(m)?.$id
-  if (fnOf(m)?.kind !== 'mutation')
-    throw new StartError(
-      'F001',
-      '`<Form of>` needs a mutation',
-      '`<Form of={addTodo}>`, with `addTodo` a `mutation()` export of a server module',
-    )
+  if (fnOf(m)?.kind !== 'mutation') throw invalidMutation()
   const seed = failure(fnId, key)
   const errors = state<Record<string, string>>(seed?.errors ?? {})
   const message = state(seed?.message)
   const result = state<O | undefined>(undefined)
   const calls = state(0)
   const errorId = (name: string) => `${key ?? fnId}-${name}-error`
+
+  function field(name: Field<I>, kind: 'text' | 'email'): FieldProps<string>
+  function field(name: Field<I>, kind: 'multiple'): FieldProps<string[]>
+  function field(name: Field<I>, kind?: FieldKind): FieldProps<FormValue>
+  function field(name: Field<I>, kind?: FieldKind): FieldProps<FormValue> {
+    const value = fieldValue(at(seed?.values, name), kind)
+    const invalid = !!errors.get(name)
+    return {
+      name,
+      ...(value !== undefined && { value }),
+      ...(invalid && { 'aria-invalid': true as const, 'aria-describedby': errorId(name) }),
+    }
+  }
 
   const form: FormApi<I, O> = {
     pending: derived(() => calls.value > 0),
@@ -165,15 +185,7 @@ export function Form<I, O>({
     result,
     error: (name) => errors.get(name),
     value: (name) => at(seed?.values, name),
-    field(name) {
-      const value = at(seed?.values, name)
-      const invalid = !!errors.get(name)
-      return {
-        name,
-        ...(value !== undefined && { value }),
-        ...(invalid && { 'aria-invalid': true as const, 'aria-describedby': errorId(name) }),
-      }
-    },
+    field,
     Error: (props) => (
       <p id={errorId(props.name)} class={props.class} role="alert">
         {errors.get(props.name)}

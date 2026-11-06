@@ -7,7 +7,8 @@
 // Hydration is one synchronous pass over the whole container. Events fired before it finishes are dropped, unless the
 // app has lazy islands: then `@weft-js/start`'s capture script holds them for `drain` (island.ts).
 
-import { DEV, createRoot, rt, runMounts, type SsrData } from './index'
+import { DEV, createRoot, type SsrData } from './index'
+import { rt, runMounts } from './index/graph'
 import { hchild } from './claim'
 import { keys } from './keys'
 

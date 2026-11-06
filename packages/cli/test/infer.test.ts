@@ -103,6 +103,24 @@ describe.each([
   ['tsgo', 7],
   ['typescript 6', 6],
 ])('inference on %s', (_, version) => {
+  it('warns when an inferred type is local to a caller', async () => {
+    // A private member keeps the caller-local class named in the inferred prop type.
+    const page = (type: string) => `
+      function Card(props) { return <p>{props.item.name}</p> }
+      export function Page() {
+        ${type}
+        const item = new Item()
+        return <Card item={item} />
+      }
+    `
+    const itemType = "class Item { private marker = 0; name = 'one' }"
+    const local = await run(app({ ...goalOnly, 'src/goal.tsx': page(itemType) }, { version }))
+    expect(local.list).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'W085' })]))
+    const visible = page('').replace('function Card', `${itemType}; function Card`)
+    const repaired = await run(app({ ...goalOnly, 'src/goal.tsx': visible }, { version }))
+    expect(repaired.list.filter((finding: { code: string }) => finding.code === 'W085')).toEqual([])
+  }, 60_000)
+
   it('the goal: props.count is number, from bind: at the only call site', async () => {
     const r = await run(app(goalOnly, { version }))
     expect(r.types.AddButton).toBe('{ count: number }')
@@ -134,7 +152,12 @@ describe.each([
     )
     expect(r.list).toMatchObject([{ code: 'TS2339', file: 'src/goal.tsx', line: 7 }])
   }, 60_000)
+})
 
+describe.each([
+  ['tsgo', 7],
+  ['typescript 6', 6],
+])('inference edges on %s', (_, version) => {
   it('every edge in the fixture', async () => {
     const { types: t, list } = await run(app({}, { version }))
     expect(t).toMatchObject({

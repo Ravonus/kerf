@@ -2,7 +2,9 @@
 // them in by mentioning them, dotted, as `box['get']` or as `const { linked } = state` (vite.mjs `keyed`), so a page that uses
 // none doesn't pay for them. A name only known at run time (`box[name]`) or a renamed `state` can't be seen: import this module yourself.
 import { OWNKEYS } from './flags'
-import { Box, DIRTY, listener, NONE, plain, reach, read, setKeyed, state } from './index'
+import { Box } from './index/state'
+import { DIRTY, listener, NONE, reach, read, setKeyed } from './index/graph'
+import { plain, state } from './index'
 import { linked } from './linked'
 
 const own = (x: unknown) =>

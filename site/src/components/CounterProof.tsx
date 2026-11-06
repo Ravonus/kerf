@@ -1,4 +1,5 @@
-import { onMount, state, stats } from '@weft-js/core'
+import { onMount, state } from '@weft-js/core'
+import { stats } from '@weft-js/core/internal'
 import { Button } from '@weft-js/warp'
 
 /** The hero's claim, live: press it and the counts come from this page's own MutationObserver and weft's own counter. */

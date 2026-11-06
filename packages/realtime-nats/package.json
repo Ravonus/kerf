@@ -1,5 +1,6 @@
 {
   "name": "@weft-js/realtime-nats",
+  "private": true,
   "version": "0.1.1",
   "description": "@weft-js/realtime-nats: the realtime.bus provider for core NATS",
   "license": "MIT",

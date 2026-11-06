@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { agentsMd, limit, writeAgentsMd } from '../src/agents-md.mjs'
 import { catalog, probe } from '../src/catalog.mjs'
-import { docs, topics } from '../src/docs.mjs'
+import { docs, installed, topics } from '../src/docs.mjs'
 import { loadCompiler, resolveWeft } from '../src/weft.mjs'
 import { fixture, project } from './helpers.mjs'
 
@@ -18,15 +18,24 @@ describe('catalog probe', () => {
     expect(reported).toEqual([
       'W000',
       'W001',
+      'W002',
+      'W003',
+      'W004',
       'W005',
       'W006',
       'W010',
+      'W011',
+      'W012',
       'W013',
       'W014',
       'W015',
+      'W016',
       'W017',
       'W018',
       'W019',
+      'W020',
+      'W040',
+      'W041',
       'W050',
       'W051',
       'W052',
@@ -99,7 +108,9 @@ describe('docs', () => {
     expect((await docs(fixture, 'w014')).text).toMatch(
       new RegExp(`^# W014 \\(error\\)[\\s\\S]*Status in weft@${at}:\\*\\* reported\\.`),
     )
-    expect((await docs(fixture, 'W011')).text).toContain('not reported by this weft yet')
+    const numeric = (await docs(fixture, 'W011')).text
+    expect(numeric).toMatch(new RegExp(`Status in weft@${at}:\\*\\* reported, safe autofix\\.`))
+    expect(numeric).toContain('`cond > 0 &&`')
     expect((await docs(fixture, 'P004')).text).toContain('reported by weft check')
     expect((await docs(fixture, 'W054')).text).toMatch(
       new RegExp(`Status in weft@${at}:\\*\\* reported, suggested edit\\.`),
@@ -107,6 +118,17 @@ describe('docs', () => {
     expect((await docs(fixture, 'diagnostics')).text).toMatch(
       /^\| T012 \| error \| .* \| reported by @weft-js\/core\/test after each test \|$/m,
     )
+  })
+
+  it('shows when the installed compiler does not report a code', async () => {
+    const statuses = installed(fixture).status
+    const previous = statuses.W011
+    try {
+      statuses.W011 = { implemented: false, autofix: false, suggestion: false }
+      expect((await docs(fixture, 'W011')).text).toContain('not reported by this weft yet')
+    } finally {
+      statuses.W011 = previous
+    }
   })
 
   it('rejects unknown topics with the list', async () => {

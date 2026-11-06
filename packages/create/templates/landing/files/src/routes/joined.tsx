@@ -3,6 +3,7 @@ import { Center, Heading, Stack, Text } from '@weft-js/warp'
 
 export const meta: Meta = {
   title: "You're on the list",
+  description: 'We will write when your place in the Emberline queue comes up.',
   extra: [{ name: 'robots', content: 'noindex' }],
 }
 export const prerender = true

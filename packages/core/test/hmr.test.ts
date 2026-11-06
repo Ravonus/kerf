@@ -10,6 +10,7 @@ import * as dom from '@weft-js/core/dom'
 import { component, render } from '@weft-js/core/dom'
 import * as hmr from '@weft-js/core/hmr'
 import { hmrStats } from '@weft-js/core/hmr'
+import { profileHmr, type HmrSample } from './hmr-profile'
 
 const { transform } = createRequire(import.meta.url)('../compiler.cjs')
 
@@ -21,8 +22,14 @@ const modules: Record<string, Exports> = {
 }
 
 /** Compile `source` as `file` and run it; its exports become importable as `file`. */
-function load(file: string, source: string, compile = { dev: true, hmr: true }) {
+function load(
+  file: string,
+  source: string,
+  compile = { dev: true, hmr: true },
+  sample?: HmrSample,
+) {
   const out = transform(source, { filename: file, generate: 'dom', ...compile })
+  sample?.mark('transform')
   if (!out.code) throw new Error(JSON.stringify(out.diagnostics))
   const hot = {
     accepted: false,
@@ -43,8 +50,12 @@ function load(file: string, source: string, compile = { dev: true, hmr: true }) 
     )
     .replace(/import\.meta\.hot/g, '__hot')
   code = `${imports.join('\n')}\n${code}\nreturn { ${names.join(', ')} };`
+  sample?.mark('prepare')
   // oxlint-disable-next-line no-new-func, typescript/no-implied-eval -- running the compiler's output is the test, and the source is this file's own
-  const exports = new Function('__m', '__hot', code)(modules, hot) as Exports
+  const execute = new Function('__m', '__hot', code)
+  sample?.mark('construct')
+  const exports = execute(modules, hot) as Exports
+  sample?.mark('execute')
   modules[file] = exports
   return { exports, hot, code: out.code as string }
 }
@@ -318,7 +329,7 @@ describe('updates', () => {
 })
 
 describe('gate: HMR with 1k mounted components (PLAN §3.7, ≤ 50 ms p95)', () => {
-  test('editing one of 1k components: compile + module run + DOM update', () => {
+  test('editing one of 1k components: compile + module run + DOM update', async () => {
     const N = 1000
     const dir = `/app/gate${++n}`
     const comp = (i: number, label: string) => `
@@ -340,17 +351,25 @@ describe('gate: HMR with 1k mounted components (PLAN §3.7, ≤ 50 ms p95)', () 
     const el = mount(App)
     expect(el.querySelectorAll('li')).toHaveLength(N)
 
+    const profile = profileHmr()
+    disposers.push(profile.dispose)
     const times: number[] = []
     for (let r = 0; r < 60; r++) {
       const i = (r * 397) % N
       const t0 = performance.now()
-      load(`${dir}/C${i}.tsx`, comp(i, `edit${r}`))
+      const sample = profile.sample(r, i, t0)
+      load(`${dir}/C${i}.tsx`, comp(i, `edit${r}`), undefined, sample)
+      sample.mark('load')
       flush()
+      sample.mark('flush')
       const li = el.querySelectorAll('li')[i]
+      sample.mark('query')
       times.push(performance.now() - t0)
+      sample.finish(times.at(-1)!)
       expect(li!.firstChild!.textContent).toBe(`edit${r}`)
       expect(li!.textContent).toBe(`edit${r} x ${i}`)
     }
+    console.log('hmr diagnostic', JSON.stringify(await profile.report()))
     times.sort((a, b) => a - b)
     const p = (q: number) => times[Math.min(times.length - 1, Math.floor(q * times.length))]!
     console.log(

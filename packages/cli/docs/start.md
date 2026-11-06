@@ -118,6 +118,18 @@ A table a function touches must be in its `tags`/`invalidates` (Q011): a tag nam
 **`auth: 'user'` says who is calling, not what they may touch.** A `run` taking a row's id must check that row belongs
 to `ctx.user`. `and(eq(todos.id, input.id), eq(todos.userId, ctx.user.id))` in the `where` is the usual way.
 
+## Form fields
+
+`form.field(name)` restores the raw submitted value, which can
+be a string or an array for repeated names. Pass `'text'` or
+`'email'` as the second argument for a string-valued input:
+`form.field('email', 'email')`. If a name was repeated, these
+modes restore its first value. Pass `'multiple'` to restore an
+array, including when only one value was submitted. Missing
+values stay absent. Use the raw default for checkbox and radio
+fields when their submitted values need no projection.
+`form.value(name)` always reads the raw restored value.
+
 ## Database
 
 Drizzle, async on every driver: `await ctx.db.select()…`, `const [row] = await ….returning()`,

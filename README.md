@@ -52,8 +52,8 @@ export default function Counter() {
 | `@weft-js/warp-core` | [packages/warp-core](packages/warp-core) | warp's behaviour, tokens and CSS, with no framework |
 | `@weft-js/warp-icons` | [packages/warp-icons](packages/warp-icons) | weft's icon set |
 
-The other folders in `packages/` (payments, multiplayer, media, realtime transports, fonts and text) are add-ons that
-aren't released yet.
+The other top-level packages are private add-ons that aren't released yet. The release script also selects built compiler
+platform packages for core's native binding. See [1.0 package scope](docs/ARCHITECTURE.md#10-package-scope).
 
 ## Size
 

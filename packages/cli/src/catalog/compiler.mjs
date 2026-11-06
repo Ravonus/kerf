@@ -106,14 +106,14 @@ export const compilerDiagnostics = [
   {
     code: 'W007',
     severity: 'error',
-    by: 'compiler',
+    by: 'cli',
     catches: 'Assigning to a `Derived` (maps TS2540)',
     fix: 'Make it `state` or `state.linked`',
   },
   {
     code: 'W008',
     severity: 'error',
-    by: 'compiler',
+    by: 'cli',
     catches: 'Box/value mismatch at a prop (a `State<T>` where `T` is expected, or the reverse)',
     fix: 'Pass `count.value` / pass `count`',
   },
@@ -172,6 +172,14 @@ export const compilerDiagnostics = [
       "import { state } from '@weft-js/core'\nexport function A() { const n = state(0); return <p>{n}</p> }",
   },
   {
+    code: 'W016',
+    severity: 'warning',
+    by: 'compiler',
+    catches: 'A non-reactive call passed as a component prop runs again whenever the prop is read',
+    fix: 'Create the value once before JSX, unless the call must run again',
+    example: 'render(() => <App api={createFakeApi()} />, root)',
+  },
+  {
     code: 'W017',
     severity: 'warning',
     by: 'compiler',
@@ -205,15 +213,15 @@ export const compilerDiagnostics = [
     severity: 'error',
     by: 'compiler',
     catches:
-      'React-isms (W020–W029): `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`, custom `useX()` hooks, dependency arrays',
-    fix: '`state`, `watch`, `derived`, `ref={el}`, plain functions',
+      'React hook imports and unbound standard hook names; imported custom `useX()` calls in components and local wrappers with resolved hook calls in their bodies; dependency arrays on core `watch`, `derived`, or `memo`. Local names and parameters alone do not establish a hook',
+    fix: 'Use `state` and `.value`, `watch(source, callback)` with `onCleanup`, `derived` and `.value`, `ref={el}`, or plain functions. Core `memo` returns a callable: read `value()`. Reads track dependencies. Only an empty dependency array on `derived` or `memo` has a safe autofix',
     example:
       "import { useState } from 'react'\nexport function A() { const [n] = useState(0); return <p>{n}</p> }",
   },
   {
     code: 'W030',
     severity: 'error',
-    by: 'compiler',
+    by: 'cli',
     catches: 'Module-level `state` reachable from the server entry graph (leaks across requests)',
     fix: '`context`, or mark `state.global`',
   },

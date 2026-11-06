@@ -7,17 +7,9 @@
 // during hydration) a value is its declared `ssr` value and touches no browser global; hydrated readers switch to
 // the real value in the first flush after hydration. Outside an owner these throw in dev (W051).
 
-import {
-  Box,
-  DEV,
-  collect,
-  devComponent,
-  getOwner,
-  onCleanup,
-  rt,
-  type Derived,
-  type StandardSchema,
-} from './index'
+import { Box } from './index/state'
+import { DEV, collect, getOwner, onCleanup, type Derived, type StandardSchema } from './index'
+import { devComponent, rt } from './index/graph'
 import { keys } from './keys'
 import { valid } from './browser/validate'
 

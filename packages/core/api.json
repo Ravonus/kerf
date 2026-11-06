@@ -1,0 +1,49 @@
+{
+  "coverage": "Export paths and conditions only; not exported names or signatures.",
+  "exports": {
+    ".": "./src/full.ts",
+    "./internal": "./src/internal.ts",
+    "./keyed": "./src/keyed.ts",
+    "./jsx-runtime": "./src/jsx-runtime.ts",
+    "./dom": "./src/dom.ts",
+    "./ssr": "./src/ssr.ts",
+    "./head": "./src/head-client.ts",
+    "./test": "./src/test.ts",
+    "./test/plugins": "./src/test-plugins.ts",
+    "./persist": "./src/persist.ts",
+    "./history": "./src/history.ts",
+    "./sync": "./src/sync.ts",
+    "./interaction": "./src/interaction.ts",
+    "./browser": "./src/browser.ts",
+    "./style": "./src/style.ts",
+    "./ds": "./src/ds.ts",
+    "./media": "./src/media.tsx",
+    "./shape": "./src/shape.ts",
+    "./text": "./src/text.tsx",
+    "./surface": "./src/surface.tsx",
+    "./media-probe": "./media-probe.mjs",
+    "./client": {
+      "types": "./client.d.ts"
+    },
+    "./style/matrix": "./node/matrix.mjs",
+    "./hydration": "./node/hydration.mjs",
+    "./markup": {
+      "types": "./src/markup-shared.d.mts",
+      "default": "./src/markup-shared.mjs"
+    },
+    "./node-purge": "./node/purge.mjs",
+    "./hmr": "./src/hmr.ts",
+    "./plugin": {
+      "types": "./src/plugin.d.ts",
+      "default": "./src/plugin.mjs"
+    },
+    "./devtools": "./src/devtools.ts",
+    "./agent": "./src/agent.ts",
+    "./config": {
+      "types": "./src/config.d.ts",
+      "default": "./src/config.mjs"
+    },
+    "./vite": "./vite.mjs",
+    "./compiler": "./compiler.cjs"
+  }
+}

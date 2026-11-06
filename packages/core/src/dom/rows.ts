@@ -1,4 +1,6 @@
-import { NONE, type Box, type Computation, type Owner } from '../index'
+import { NONE } from '../index/graph'
+import { type Box } from '../index/state'
+import { type Computation, type Owner } from '../index'
 import { keys, under } from '../keys'
 
 /**

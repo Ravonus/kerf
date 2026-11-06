@@ -1,4 +1,4 @@
-import { rt } from '../index'
+import { rt } from '../index/graph'
 
 export function around(k: string) {
   const w = document.createTreeWalker(document.body, 128)

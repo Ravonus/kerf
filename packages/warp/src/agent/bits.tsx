@@ -2,7 +2,8 @@
 // held in a State or a plain prop, and the thin progress bar.
 import { type IconComponent } from '@weft-js/warp-icons'
 import { installSweep } from '@weft-js/warp-core'
-import { Box, onMount, state, untrack, type State } from '@weft-js/core'
+import { Box } from '@weft-js/core/internal'
+import { onMount, state, untrack, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import '@weft-js/warp-core/styles/app/tokens.css'
 import '@weft-js/warp-core/styles/app/base.css'

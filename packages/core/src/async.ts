@@ -10,7 +10,8 @@
 // side the server rendered. Both take a key where they're created (research 19 §2.4); a boundary's content and
 // fallback render in two fixed scopes under it (`<key>c/`, `<key>f/`), so the keys line up either way.
 
-import { effect, onCleanup, rt, state, untrack, type State } from './index'
+import { effect, onCleanup, state, untrack, type State } from './index'
+import { rt } from './index/graph'
 import { keys, nextKey } from './keys'
 import { boundaries } from './async/shared'
 import type { Resource, ResourceOptions } from './async/types'

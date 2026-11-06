@@ -11,7 +11,8 @@ import {
   type BoardCard,
   type BoardColumn,
 } from '@weft-js/warp-core'
-import { Box, derived, flush, state, untrack, watch, type State } from '@weft-js/core'
+import { Box } from '@weft-js/core/internal'
+import { derived, flush, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from '../Button'
 import { Drawer } from '../Drawer'
 import { Input } from '../Field'

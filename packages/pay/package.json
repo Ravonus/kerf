@@ -1,5 +1,6 @@
 {
   "name": "@weft-js/pay",
+  "private": true,
   "version": "0.1.1",
   "description": "@weft-js/pay: products, one ledger for every rail, and entitlements. weft's reference plugin: read it to build your own",
   "license": "MIT",

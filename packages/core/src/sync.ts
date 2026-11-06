@@ -7,7 +7,8 @@
 // tab's copy doesn't hold this tab's keys. The merged value must pass the box's schema, because a tab can be an older
 // deploy. New tabs read `persist`, so a box without it, or in `session`, can't sync (S008).
 
-import { DEV, type Box, type StandardSchema } from './index'
+import { DEV, type StandardSchema } from './index'
+import { type Box } from './index/state'
 import { StateError, features, report, type Instance } from './scope'
 
 /** `s`: scope.box. `a`: stamps. `p`: key → value, `d`: keys gone; or `v`: the whole value. */

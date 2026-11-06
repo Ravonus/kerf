@@ -3,29 +3,19 @@
 // These need to know which imports are queries, so they read the server modules; the compiler sees one file at a time. TypeScript's parser only, no type checking, and a name's taint lasts for the
 // function it was declared in, so a same-named primitive elsewhere isn't flagged.
 
-import { existsSync, readFileSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import ts from 'typescript'
-import { local } from './alias.mjs'
 import { diagnostic, positions } from './diag.mjs'
 import { discover } from './files.mjs'
 import { scan } from './state-checks/scan.mjs'
+import { isServerModule, moduleFile } from './state-checks/modules.mjs'
 
-const isServerModule = (rel) => rel.startsWith('src/server/') || /\.server\.[cm]?[jt]sx?$/.test(rel)
 /** `export const name = query(` in a module: the names of its queries. */
 const queriesOf = (text) =>
   new Set(
     [...text.matchAll(/export\s+const\s+([A-Za-z_$][\w$]*)\s*=\s*query\s*\(/g)].map((m) => m[1]),
   )
-
-function moduleFile(root, from, spec) {
-  const abs = local(join(root, from), spec)
-  if (!abs) return undefined
-  const base = relative(root, abs).split('\\').join('/').replace(/\.js$/, '')
-  return ['', '.ts', '.tsx', '.mts', '.js', '/index.ts']
-    .map((x) => base + x)
-    .find((f) => /\.[cm]?[jt]sx?$/.test(f) && existsSync(join(root, f)))
-}
 
 /** Local names of the queries `sf` imports from server modules. */
 function importedQueries(root, rel, sf, cache) {

@@ -1,5 +1,5 @@
 import { DEV, rt } from '../index/graph'
-import type { Box } from '../index'
+import type { Box } from '../index/state'
 import type { App, Instance, features, owners, StateError } from '../scope'
 
 type Deps = {

@@ -1,5 +1,6 @@
 // Prop inference in `weft check` and `weft tsc` (research 44). `W080`–`W085` come from the engine; a `TS` code is the
 // compiler's own error, reported at the source position with the inferred types applied.
+// W007/W008 map proven core box errors.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -39,7 +40,7 @@ export function toDiagnostics(root, list, file) {
   )
 }
 
-/** The checks `weft check` adds. A project with nothing to infer parses its `.tsx` files once and starts nothing. */
+/** Prop inference and core box diagnostics; a project with no relevant source starts no checker. */
 export async function propChecks(root, config) {
   if (config.check?.props === false || !existsSync(join(root, 'tsconfig.json'))) return []
   const session = new Session(ts, root)

@@ -1,5 +1,5 @@
 import { expect } from 'vitest'
-import { stats } from '../index'
+import { stats } from '../index/graph'
 import { flush } from './flush'
 
 /** What `toTouchAtMost` counts a write's cost by. */

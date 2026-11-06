@@ -3,6 +3,9 @@
 // file overlay: `tsc --noEmit` of the source tree, with no files on disk and no plugin. `languageHost` reuses a language
 // service, which is what a tsserver plugin has, and what a project on TypeScript 6 gets.
 
+const { boxMismatch } = require('./box-props.cjs')
+const { derivedWrite } = require('./derived-writes.cjs')
+
 const NO_TRUNCATE = 1
 
 /** The node exactly on [start, end]: the deepest one, because `x` and `x;` can share an end but not a start. */
@@ -148,6 +151,7 @@ function languageHost(ts, service, sync = () => {}) {
         length: d.length ?? 0,
         code: d.code,
         text: ts.flattenDiagnosticMessageText(d.messageText, '\n'),
+        weft: derivedWrite(ts, s.getProgram(), d) ?? boxMismatch(ts, s.getProgram(), d),
       }))
     },
     close() {},

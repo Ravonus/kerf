@@ -18,7 +18,7 @@ export default function Notes() {
         {(form) => (
           <>
             <label>
-              Title <input {...form.field('title')} />
+              Title <input {...form.field('title', 'text')} />
             </label>
             <form.Error name="title" class="title-error" />
             <label>

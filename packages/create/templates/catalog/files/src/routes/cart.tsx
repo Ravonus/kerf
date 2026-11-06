@@ -4,7 +4,10 @@ import { Boundary } from '@weft-js/core'
 import { CartLines, CartLoading } from '#/components/CartLines'
 import { Failed } from '#/components/Failed'
 
-export const meta: Meta = { title: 'Your cart' }
+export const meta: Meta = {
+  title: 'Your cart',
+  description: 'Review the Mendwell goods in your cart.',
+}
 
 export default function Cart() {
   return (

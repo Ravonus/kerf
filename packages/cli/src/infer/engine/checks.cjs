@@ -129,17 +129,22 @@ function errors(host, file) {
     const start = map ? toSource(map, d.start) : d.start
     const end = map ? toSource(map, d.start + d.length) : d.start + d.length
     if (said.some((f) => overlaps([f.start, f.end], [start, Math.max(end, start + 1)]))) return []
-    return [{ code: `TS${d.code}`, start, end, why: d.text, help: 'Fix the type error' }]
+    return [{ code: `TS${d.code}`, start, end, why: d.text, help: 'Fix the type error', ...d.weft }]
   })
 }
 
 function affected() {
   const files = new Set(this.maps.keys())
+  const derived = this.derivedWritesNeeded()
+  if (derived || this.boxPropsNeeded())
+    for (const facts of this.facts.values())
+      if (derived || facts.sites.length) files.add(facts.file)
   for (const sites of this.lastSites?.values() ?? []) for (const s of sites) files.add(s.file)
   return files
 }
 
 function run(host, changed) {
+  if (this.typedChecksNeeded()) this.diags.clear()
   this.findings = new Map()
   const comps = this.comps()
   if (!this.needed()) {

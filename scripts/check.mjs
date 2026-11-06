@@ -9,7 +9,9 @@
 //   pnpm run check --require-tools a missing gitleaks or cargo-deny fails instead of skipping (CI does this)
 //   pnpm run check --jobs=4        how much to run at once (see scripts/jobs.mjs)
 import { repoRoot } from './lib/helpers.mjs'
-import { spawn, spawnSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
+import { run, allJobs } from './check/run.mjs'
+import { typeProblems } from './check/types.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { jobs, pool } from './jobs.mjs'
@@ -50,38 +52,7 @@ const has = (cmd) => spawnSync(cmd, ['--version'], { stdio: 'ignore', shell: win
 const hasCargo = (sub) =>
   spawnSync('cargo', [sub, '--version'], { stdio: 'ignore', shell: windows }).status === 0
 
-function run(cmd, args, cwd = '.', env = {}) {
-  return new Promise((ok) => {
-    const child = spawn(cmd, args, {
-      cwd: join(root, cwd),
-      env: { ...process.env, NO_COLOR: '1', ...env },
-      shell: windows,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
-    let out = '',
-      stdout = '',
-      stderr = ''
-    child.stdout.on('data', (d) => {
-      out += d
-      stdout += d
-    })
-    child.stderr.on('data', (d) => {
-      out += d
-      stderr += d
-    })
-    child.on('error', (e) => ok({ code: 1, out: String(e) }))
-    child.on('close', (code) => ok({ code, out, stdout, stderr }))
-  })
-}
-
-/** Runs each job, at most `limit` at once, and joins what the failures printed. */
-async function all(items, job) {
-  const results = await pool(items, limit, async (item) => ({ item, ...(await job(item)) }))
-  const failed = results.filter((r) => r.code !== 0)
-  return {
-    problems: failed.flatMap((r) => [`--- ${r.item}`, ...r.out.trim().split('\n').slice(-40)]),
-  }
-}
+const all = (items, job) => allJobs(items, job, limit)
 const lines = (r) => (r.code === 0 ? { problems: [] } : { problems: r.out.trim().split('\n') })
 let lengthResult
 const lengths = () => (lengthResult ??= checkLengths())
@@ -174,7 +145,8 @@ const STEPS = [
       const projects = ['.', 'site', ...PACKAGES].filter((d) =>
         existsSync(join(root, d, 'tsconfig.json')),
       )
-      const found = new Set()
+      const test = await run(process.execPath, ['--test', 'scripts/check/types.test.mjs'])
+      const found = new Set(lines(test).problems)
       await pool(projects, limit, async (dir) => {
         const r = await run(bin('tsc'), [
           '-p',
@@ -182,12 +154,32 @@ const STEPS = [
           '--pretty',
           'false',
         ])
-        // Tests import examples from evals/ and examples/ to prove they work, and text's gen/ is vendored code rewritten. Not held to this.
-        for (const line of r.out.split('\n'))
-          if (/error TS\d+/.test(line) && !/^(?:evals|examples|packages\/text\/gen)\//.test(line))
-            found.add(line)
+        for (const problem of typeProblems(dir, r)) found.add(problem)
       })
       return { problems: [...found].toSorted((a, b) => a.localeCompare(b)) }
+    },
+  },
+  {
+    id: 'api-snapshots',
+    covers: 'core and start export maps and reference coverage',
+    fix: 'Review export changes, update snapshots, and document each path.',
+    async run() {
+      const test = await run(process.execPath, ['--test', 'scripts/quality/api-snapshots.test.mjs'])
+      const check = await run(process.execPath, ['scripts/quality/api-snapshots.mjs'])
+      return { problems: [...lines(test).problems, ...lines(check).problems] }
+    },
+  },
+  {
+    id: 'diagnostic-catalog',
+    covers: 'compiler diagnostic catalog, emit sites and compile test assertions',
+    fix: 'Resolve catalog coverage gaps or update the temporary baseline.',
+    async run() {
+      const test = await run(process.execPath, [
+        '--test',
+        'scripts/quality/diagnostic-catalog.test.mjs',
+      ])
+      const check = await run(process.execPath, ['scripts/quality/diagnostic-catalog.mjs'])
+      return { problems: [...lines(test).problems, ...lines(check).problems] }
     },
   },
   {
@@ -337,7 +329,8 @@ const STEPS = [
         PACKAGES.filter(
           (d) => JSON.parse(readFileSync(join(root, d, 'package.json'), 'utf8')).scripts?.test,
         ),
-        (d) => run('pnpm', ['test'], d),
+        // The outer pool owns the budget; independent Vitest pools must not multiply it.
+        (d) => run('pnpm', ['test', '--maxWorkers=1'], d),
       ),
   },
 ]

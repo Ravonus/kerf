@@ -7,7 +7,10 @@ import { Featured } from '#/components/Featured'
 import { ProductArt } from '#/components/ProductArt'
 import { ProductGridLoading } from '#/components/ProductCard'
 
-export const meta: Meta = { title: 'Goods made to be mended' }
+export const meta: Meta = {
+  title: 'Goods made to be mended',
+  description: 'Explore everyday goods made to be repaired and used for years.',
+}
 
 export default function Home() {
   return (

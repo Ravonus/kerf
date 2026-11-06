@@ -6,6 +6,7 @@ const { createRequire } = require('node:module')
 const { dirname, join } = require('node:path')
 const { Engine } = require('./engine.cjs')
 const { languageHost, tsgoHost } = require('./hosts.cjs')
+const { withBoxProps } = require('./box-props.cjs')
 
 /** The project's TypeScript when it can be driven without a plugin (7's API), else ours. */
 function projectTypescript(root) {
@@ -69,7 +70,7 @@ class Session {
     this.host = null
     this.overlay = new Map()
     this.errors = new Map()
-    for (const f of this.parsed.fileNames) if (f.endsWith('.tsx')) this.engine.set(f)
+    for (const f of this.parsed.fileNames) if (/\.(?:[cm]?ts|tsx)$/.test(f)) this.engine.set(f)
   }
 
   async start() {
@@ -83,6 +84,10 @@ class Session {
           overlay: this.overlay,
         })
       : memoryHost(this.ts, this.root, this.config, this.parsed, this.overlay)
+    if (dir)
+      this.host = withBoxProps(this.host, () =>
+        memoryHost(this.ts, this.root, this.config, this.parsed, this.overlay),
+      )
     return this.host
   }
 
@@ -99,7 +104,10 @@ class Session {
     const fresh = !this.host
     const host = await this.start()
     const findings = this.engine.run(host, fresh ? undefined : changed)
-    const redo = fresh || !changed ? this.engine.affected() : this.engine.touched
+    const redo =
+      fresh || !changed || this.engine.typedChecksNeeded()
+        ? this.engine.affected()
+        : this.engine.touched
     for (const file of redo) {
       if (!this.engine.facts.has(file)) {
         this.errors.delete(file)
@@ -133,6 +141,7 @@ class Session {
               end: d.start + d.length,
               why: d.text,
               help: 'Fix the type error',
+              ...d.weft,
             })),
         )
         continue

@@ -1,13 +1,23 @@
 // `weft browser` end to end: a Vite dev server with the weft() plugin, a headless Chrome as a plain host page (no
 // automation library), and every command relayed through the dev server to @weft-js/core/agent in the page.
-import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import {
+  chmodSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
+import { createServer as httpServer } from 'node:http'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createServer } from 'vite'
+import { createLogger, createServer } from 'vite'
 import weft from '@weft-js/core/vite'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { browser, cliParams } from '../src/browser/commands.mjs'
-import { findChrome } from '../src/browser/client.mjs'
+import { findChrome, launch } from '../src/browser/client.mjs'
 
 const evals = fileURLToPath(new URL('../../../evals/', import.meta.url))
 const tmpRoot = fileURLToPath(new URL('./.tmp/', import.meta.url))
@@ -41,6 +51,56 @@ describe('cli words', () => {
   })
 })
 
+// These child fixtures use POSIX shell permissions and syntax.
+describe.skipIf(process.platform === 'win32')('browser launch failures', () => {
+  it('only accepts known launch options', () => {
+    const acceptsWrongOption: 'wrong' extends keyof NonNullable<Parameters<typeof launch>[2]>
+      ? true
+      : false = false
+    expect(acceptsWrongOption).toBe(false)
+  })
+  it.each([
+    ['bad executable', 'not an executable', false, 0, /spawn:/],
+    [
+      'early exit',
+      '#!/bin/sh\necho launch-failed >&2\nexit 7\n',
+      true,
+      0,
+      /exit: 7.*launch-failed/s,
+    ],
+    ['exit during request', '#!/bin/sh\nexit 7\n', true, 300, /exit: 7/],
+  ])(
+    '%s reports the child failure and cleans state',
+    async (_name, contents, executable, delay, message) => {
+      const root = mkdtempSync(join(tmpdir(), 'weft-launch-'))
+      const exe = join(root, 'chrome')
+      writeFileSync(exe, contents)
+      chmodSync(exe, executable ? 0o755 : 0o644)
+      const old = process.env.WEFT_CHROME
+      process.env.WEFT_CHROME = exe
+      const server = httpServer((_req, res) => {
+        setTimeout(() => res.end(JSON.stringify({ agent: true, tabs: delay ? [{}] : [] })), delay)
+      })
+      await new Promise<void>((resolve) => {
+        server.listen(0, '127.0.0.1', resolve)
+      })
+      try {
+        const address = server.address()
+        if (!address || typeof address === 'string') throw new Error('no server address')
+        await expect(
+          launch(root, '/', { url: `http://127.0.0.1:${address.port}` }),
+        ).rejects.toThrow(message)
+        expect(existsSync(join(root, '.weft/browser/chrome.json'))).toBe(false)
+      } finally {
+        if (old === undefined) delete process.env.WEFT_CHROME
+        else process.env.WEFT_CHROME = old
+        server.close()
+        rmSync(root, { recursive: true, force: true })
+      }
+    },
+  )
+})
+
 type Run = (cmd: string, p?: Record<string, unknown>) => ReturnType<typeof browser>
 
 const chrome = findChrome()
@@ -56,18 +116,48 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
     cpSync(join(evals, 'reference-v3/weft/src'), join(root, 'src'), { recursive: true })
     cpSync(join(evals, 'tasks-v3/shop/starter/weft/index.html'), join(root, 'index.html'))
     writeFileSync(join(root, 'package.json'), '{ "type": "module", "private": true }')
+    const events: string[] = []
+    const record = (event: string) => {
+      events.push(event.slice(0, 500))
+      if (events.length > 20) events.shift()
+    }
+    const logger = createLogger()
+    logger.info = () => {}
+    logger.error = (message) => record(`vite error: ${message}`)
+    logger.warn = (message) => record(`vite warning: ${message}`)
     server = await createServer({
       root,
       configFile: false,
-      logLevel: 'silent',
-      plugins: [weft()],
+      customLogger: logger,
+      plugins: [
+        {
+          name: 'browser-test-evidence',
+          configureServer(vite) {
+            vite.middlewares.use((req, res, next) => {
+              res.on('finish', () => record(`${req.method} ${req.url} ${res.statusCode}`))
+              next()
+            })
+          },
+        },
+        weft(),
+      ],
       server: { port: 0, strictPort: false },
     })
     await server.listen()
     await new Promise((r) => {
       setTimeout(r, 100)
     }) // .weft/dev.json is written on 'listening'
-    await run('launch', { route: '/' })
+    try {
+      await run('launch', { route: '/' })
+    } catch (error) {
+      console.error('browser launch evidence:', {
+        chrome,
+        address: server.httpServer?.address(),
+        wsClients: server.ws.clients.size,
+        events,
+      })
+      throw error
+    }
   }, 60_000)
 
   afterAll(async () => {

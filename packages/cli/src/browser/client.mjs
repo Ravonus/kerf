@@ -59,15 +59,18 @@ export async function tabs(root, { url } = {}) {
 }
 
 /** Wait until a tab is connected (after `launch` or `navigate`). */
-export async function waitForTab(root, { url, ms = 15_000 } = {}) {
+export async function waitForTab(root, { url, ms = 15_000, check } = {}) {
   const until = Date.now() + ms
   for (;;) {
+    check?.()
+    let connected
     try {
-      const t = await tabs(root, { url })
-      if (t.tabs.length) return t
+      connected = await tabs(root, { url })
     } catch (e) {
       if (Date.now() > until) throw e
     }
+    check?.()
+    if (connected?.tabs.length) return connected
     if (Date.now() > until) throw fail('E_NO_TAB', 'no tab connected in time')
     await new Promise((r) => {
       setTimeout(r, 150)
@@ -104,7 +107,12 @@ export function findChrome() {
 
 const stateFile = (root) => join(root, '.weft', 'browser', 'chrome.json')
 
-/** Start a headless Chrome on `route` (a plain page; @weft-js/core/agent in it connects back to the dev server). */
+/**
+ * Start a headless Chrome on `route` (a plain page; @weft-js/core/agent connects back to the dev server).
+ * @param {string} root
+ * @param {string} [route]
+ * @param {{ url?: string | undefined, headed?: boolean | undefined }} [options]
+ */
 export async function launch(root, route = '/', { url, headed = false } = {}) {
   const exe = findChrome()
   if (!exe)
@@ -129,11 +137,35 @@ export async function launch(root, route = '/', { url, headed = false } = {}) {
       : []) /* Chrome won't start as root with its sandbox: a container, CI */,
     `${base}${route.startsWith('/') ? route : `/${route}`}`,
   ]
-  const child = spawn(exe, args, { detached: true, stdio: 'ignore' })
+  const child = spawn(exe, args, { detached: true, stdio: ['ignore', 'ignore', 'pipe'] })
+  let stderr = '',
+    failure = null
+  child.stderr.on('data', (chunk) => {
+    stderr = (stderr + chunk.toString()).slice(-4096)
+  })
+  child.on('error', (error) => {
+    failure = `spawn: ${error.message}`
+  })
+  child.on('exit', (code, signal) => {
+    failure = `exit: ${code}, signal: ${signal}`
+  })
   child.unref()
+  child.stderr.unref?.()
   writeFileSync(stateFile(root), JSON.stringify({ pid: child.pid, profile, exe }))
-  const t = await waitForTab(root, { url })
-  return { launched: true, pid: child.pid, headless: !headed, ...t }
+  try {
+    const t = await waitForTab(root, {
+      url,
+      check: () => {
+        if (failure) throw fail('E_CHROME', `Chrome ${failure}; stderr: ${stderr}`)
+      },
+    })
+    return { launched: true, pid: child.pid, headless: !headed, ...t }
+  } catch (error) {
+    close(root)
+    child.stderr.destroy()
+    error.message += ` (Chrome ${failure ?? 'still running'}; stderr: ${stderr})`
+    throw error
+  }
 }
 
 export function close(root) {
