@@ -353,6 +353,13 @@ The accepted Table state changes at `85f7078e` measure 52,488 B (29,814 B JS +
 22,674 B CSS), a 197 B reduction from that control. All six stack builds pass and
 the other stacks retain their byte totals. At least 1,289 B of recovery remains.
 
+The private cell helper change at `546a6065` measures 52,464 B (29,790 B JS +
+22,674 B CSS), another 24 B reduction. Same-setup production runs exit 0 with all
+54 parity steps passing and 1,590 sampled warp nodes in both. Task times are
+222/159 ms for control warp/Solid and 240/172 ms for candidate warp/Solid; the
+unchanged stacks also slow in the later run, so no speedup is claimed. Warp
+long-list `heightMoved` stays 0. At least 1,265 B of size recovery remains.
+
 **Deferred until after 1.0 by the owner:**
 
 - Firefox text preparation: confirm or fix the S3 paired-median increase.
