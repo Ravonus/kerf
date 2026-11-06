@@ -15,7 +15,6 @@ test('shape group edits and deletion invalidate only current dependents', (t) =>
   const calls = []
   const watched = []
   const tracker = shapeWatch((file) => calls.push(['forget', file]))
-  const ctx = { addWatchFile: (file) => watched.push(file) }
   const shapeA = `${join(root, 'a.tsx')}?weft-shape`
   const shapeB = `${join(root, 'b.tsx')}?weft-shape`
   const modA = { id: shapeA }
@@ -26,6 +25,7 @@ test('shape group edits and deletion invalidate only current dependents', (t) =>
     invalidateModule: (mod) => calls.push(['invalidate', mod.id]),
   }
   const vite = { environment: { moduleGraph: graph } }
+  const ctx = { environment: vite.environment, addWatchFile: (file) => watched.push(file) }
   tracker.replace(shapeA, [group], ctx)
   tracker.replace(shapeB, [group], ctx)
   assert.deepEqual(watched, [group, group])
@@ -282,8 +282,6 @@ test('extensionless index candidates invalidate each environment and remove stal
   tracker.attach({ watcher: { add: (dir) => dirs.push(dir) } })
   const deps = new Set()
   tracker.candidate(candidate, deps)
-  tracker.replace(id, deps, { addWatchFile: () => assert.fail('missing file is not a module') })
-  assert.deepEqual(dirs, [root])
   for (const name of ['client', 'server']) {
     const mod = { id, name }
     const invalidated = []
@@ -291,12 +289,76 @@ test('extensionless index candidates invalidate each environment and remove stal
       getModuleById: () => mod,
       invalidateModule: (value) => invalidated.push(value),
     } } }
+    tracker.replace(id, deps, {
+      environment: context.environment,
+      addWatchFile: () => assert.fail('missing file is not a module'),
+    })
     assert.deepEqual(tracker.hotUpdate.call(context, { file: created, modules: [] }), [mod])
     assert.deepEqual(invalidated, [mod])
   }
-  tracker.replace(id, [], { addWatchFile: () => assert.fail('no dependencies') })
+  assert.deepEqual(dirs, [root, root])
   const context = {
     environment: { moduleGraph: { getModuleById: () => assert.fail('stale edge') } },
   }
+  tracker.replace(id, [], {
+    environment: context.environment, addWatchFile: () => assert.fail('no dependencies'),
+  })
   assert.equal(tracker.hotUpdate.call(context, { file: created, modules: [] }), undefined)
+})
+
+test('environment ownership keeps divergent dependencies and deletion separate', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'weft-shape-env-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const clientFile = join(root, 'client.ts')
+  const serverFile = join(root, 'server.ts')
+  for (const file of [clientFile, serverFile]) writeFileSync(file, 'export const x = 1')
+  const id = `${join(root, 'page.tsx')}?weft-shape`
+  const tracker = shapeWatch(() => {})
+  const clientMod = { id, env: 'client' }
+  const serverMod = { id, env: 'server' }
+  const env = (mod) => ({ moduleGraph: { getModuleById: () => mod, invalidateModule() {} } })
+  const client = env(clientMod)
+  const server = env(serverMod)
+  const ctx = (environment) => ({ environment, addWatchFile() {} })
+  tracker.replace(id, [clientFile], ctx(client))
+  tracker.replace(id, [serverFile], ctx(server))
+  assert.deepEqual(tracker.hotUpdate.call({ environment: client }, {
+    file: clientFile, modules: [],
+  }), [clientMod])
+  assert.deepEqual(tracker.hotUpdate.call({ environment: server }, {
+    file: serverFile, modules: [],
+  }), [serverMod])
+  assert.equal(tracker.hotUpdate.call({ environment: client }, {
+    file: serverFile, modules: [],
+  }), undefined)
+  tracker.hotUpdate.call({ environment: client }, {
+    file: join(root, 'page.tsx'), modules: [], type: 'delete',
+  })
+  assert.deepEqual(tracker.hotUpdate.call({ environment: server }, {
+    file: serverFile, modules: [],
+  }), [serverMod])
+})
+
+test('close and restart clears shape ownership from the previous server', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'weft-shape-restart-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const file = join(root, 'group.ts')
+  writeFileSync(file, 'export const card = 1')
+  const id = `${join(root, 'page.tsx')}?weft-shape`
+  const mod = { id }
+  const environment = { moduleGraph: { getModuleById: () => mod, invalidateModule() {} } }
+  const tracker = shapeWatch(() => {})
+  let closed = 0
+  const server = { watcher: { add() {} }, async close() { closed++ } }
+  tracker.attach(server)
+  tracker.replace(id, [file], { environment, addWatchFile() {} })
+  assert.deepEqual(tracker.hotUpdate.call({ environment }, { file, modules: [] }), [mod])
+  await server.close()
+  assert.equal(closed, 1)
+  tracker.attach({ watcher: { add() {} }, async close() {} })
+  assert.equal(tracker.hotUpdate.call({ environment }, { file, modules: [] }), undefined)
+  tracker.replace(id, [file], { environment, addWatchFile() {} })
+  assert.deepEqual(tracker.hotUpdate.call({ environment }, { file, modules: [] }), [mod])
+  await server.close()
+  assert.deepEqual(tracker.hotUpdate.call({ environment }, { file, modules: [] }), [mod])
 })

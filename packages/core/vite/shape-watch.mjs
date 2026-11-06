@@ -1,29 +1,57 @@
 import { existsSync, statSync } from 'node:fs'
 import { dirname } from 'node:path'
 
+const key = (file) => file.replace(/\\/g, '/')
+
+function remove({ byShape, byFile }, id) {
+  for (const old of byShape.get(id) ?? []) {
+    const shapes = byFile.get(old)
+    shapes?.delete(id)
+    if (!shapes?.size) byFile.delete(old)
+  }
+  byShape.delete(id)
+}
+
 /** Track group files that shape modules use without importing them into the client. */
 export function shapeWatch(forget) {
-  const byShape = new Map()
-  const byFile = new Map()
+  let environments = new WeakMap()
+  let activeServer
   let watcher
-  const key = (file) => file.replace(/\\/g, '/')
-  const remove = (id) => {
-    for (const old of byShape.get(id) ?? []) {
-      const shapes = byFile.get(old)
-      shapes?.delete(id)
-      if (!shapes?.size) byFile.delete(old)
+  const stateFor = (environment) => {
+    let state = environments.get(environment)
+    if (!state) {
+      state = { byShape: new Map(), byFile: new Map() }
+      environments.set(environment, state)
     }
-    byShape.delete(id)
+    return state
   }
   return {
     attach(server) {
+      if (activeServer === server) return
+      environments = new WeakMap()
+      activeServer = server
       watcher = server.watcher
+      if (typeof server.close !== 'function') return
+      const close = server.close
+      server.close = async function (...args) {
+        try {
+          return await close.apply(this, args)
+        } finally {
+          if (activeServer === server) {
+            environments = new WeakMap()
+            activeServer = undefined
+            watcher = undefined
+          }
+        }
+      }
     },
     candidate(file, dependencies) {
       dependencies.add(key(file))
     },
     replace(id, dependencies, ctx) {
-      remove(id)
+      const state = stateFor(ctx.environment)
+      const { byShape, byFile } = state
+      remove(state, id)
       const files = new Set([...dependencies].map(key))
       byShape.set(id, files)
       for (const file of files) {
@@ -38,9 +66,12 @@ export function shapeWatch(forget) {
       }
     },
     hotUpdate({ file, modules, type }) {
+      const state = environments.get(this.environment)
+      if (!state) return
+      const { byShape, byFile } = state
       if (type === 'delete') {
         for (const id of byShape.keys()) {
-          if (key(id.replace(/\?weft-shape$/, '')) === key(file)) remove(id)
+          if (key(id.replace(/\?weft-shape$/, '')) === key(file)) remove(state, id)
         }
       }
       const path = key(file)
