@@ -5,6 +5,7 @@ import { readMigrations } from '../migrations.mjs'
 import { routeTypes } from '../routes.mjs'
 import { assetsOnly } from './assets.mjs'
 import { entryCss, watchEntryCandidates } from './shape-entry-css.mjs'
+import { shapeOverride } from './shape-override.mjs'
 import {
   clientRoutes, serverRoutes, devStyles, markLinks, skeletonExport,
 } from './route-modules.mjs'
@@ -47,7 +48,8 @@ export const resolveId = (s) => ({
       return
     }
     const base = source.replace(/\?.*$/, '')
-    if (Object.values(V).includes(base) || base.startsWith(ISLAND)) return s.id(source)
+    if (Object.values(V).includes(base) || base.startsWith(ISLAND) ||
+      base.startsWith('virtual:weft/shape-override/')) return s.id(source)
   },
 })
 
@@ -58,6 +60,17 @@ export const load = (s) => ({
     if (/[?&]assets\b/.test(raw)) return
     const which = raw.slice(1).replace(/\?.*$/, '')
     const client = this.environment?.config.consumer === 'client'
+    if (which.startsWith('virtual:weft/shape-override/')) {
+      if (!client || !which.endsWith('.tsx')) this.error('Invalid skeleton override request')
+      const file = decodeURIComponent(which.slice('virtual:weft/shape-override/'.length, -4))
+      const levels = [...s.manifest.layouts, ...s.manifest.routes]
+      if (!levels.some((level) => s.abs(level.file) === file))
+        this.error('Unknown skeleton override')
+      const code = shapeOverride(file)
+      if (!code) this.error(`Unsafe or missing skeleton override: ${file}`)
+      this.addWatchFile(file)
+      return code
+    }
     if (which.startsWith(ISLAND)) {
       const { islands } = await s.hydration(this)
       const i = islands[Number(which.slice(ISLAND.length))]
@@ -71,7 +84,8 @@ export const load = (s) => ({
         const entryFile = entry.startsWith('virtual:') ? join(here, 'client.tsx') : entry
         const levels = [...s.manifest.layouts, ...s.manifest.routes]
         const files = [...new Set(levels.map((r) => s.abs(r.file)))]
-          .filter((file) => /\.[jt]sx$/.test(file) && skeletonExport(file) === 'generated')
+          .filter((file) => /\.[jt]sx$/.test(file) &&
+            ['generated', 'custom'].includes(skeletonExport(file)))
         const root = s.root ?? dirname(entryFile)
         const sources = await Promise.all(files.map((file) => entryCss(this, file, root)))
         const shared = await entryCss(this, entryFile, root)

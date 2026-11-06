@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { createServer } from 'vite'
 import { clientRoutes, shapeCssSources, shapeSignature } from '../../src/vite/route-modules.mjs'
 import { shapeHotUpdate } from '../../src/vite.mjs'
-import { load as moduleLoad } from '../../src/vite/module-hooks.mjs'
+import { load as moduleLoad, resolveId as moduleResolve } from '../../src/vite/module-hooks.mjs'
 import { parse } from '../../src/vite/syntax.mjs'
 import { shapeGroupCss } from '../../../core/vite/shape-styles.mjs'
 import { tokens } from '../../../core/vite/config-plugins.mjs'
@@ -23,7 +23,7 @@ async function manifestModule(source, missing = [], groupCss = '') {
     const file = JSON.parse(specifier)
     return missing.some((name) => file.endsWith(`${name}?weft-shape`))
       ? `const shape${index} = {}`
-      : `const shape${index} = { 'default$shape': function Shape() {}, ` +
+      : `const shape${index} = { default: function Custom() {}, 'default$shape': function Shape() {}, ` +
         `'NotFoundPage$shape': function NotFound() {}, 'ErrorPage$shape': function Error() {}, ` +
         `${JSON.stringify('$weftShapeCss')}: ${JSON.stringify(groupCss)} }`
   })
@@ -130,6 +130,93 @@ test('built-in error shapes retain nested levels and yield to authored overrides
   const both = clientRoutes({ layouts, routes: [page, override, error] }, f.abs)
   assert.ok(!both.includes('builtin.tsx?weft-shape'))
   assert.equal((await manifestModule(both)).shapes.error.kind, 'disabled')
+})
+
+test('a static local override is isolated and unsafe closures stay unavailable', async (t) => {
+  const f = fixture(t)
+  const source = `import { secret } from './private.server';
+    const setup = sideEffect();
+    const Waiting = () => <section class="waiting"><span>custom marker</span></section>;
+    export const skeleton = Waiting;
+    export default () => <main>{secret}{setup}</main>`
+  f.write('page.tsx', source)
+  const levels = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
+  const output = clientRoutes(levels, f.abs)
+  const request = `virtual:weft/shape-override/${encodeURIComponent(f.abs('page.tsx'))}.tsx`
+  assert.ok(output.includes(JSON.stringify(request)))
+  assert.ok(output.includes(`() => import(${JSON.stringify(f.abs('page.tsx'))})`))
+  const watched = []
+  const context = { addWatchFile: (file) => watched.push(file), error: (msg) => { throw Error(msg) },
+    environment: { config: { consumer: 'client' } } }
+  const state = { manifest: levels, abs: f.abs }
+  const id = moduleResolve({ id: (value) => `\0${value}` }).handler(request)
+  const extracted = await moduleLoad(state).handler.call(context, id)
+  assert.ok(extracted.includes('custom marker'))
+  assert.ok(!extracted.includes('sideEffect'))
+  assert.ok(!extracted.includes('private.server'))
+  assert.deepEqual(watched, [f.abs('page.tsx')])
+  const other = `\0virtual:weft/shape-override/${encodeURIComponent(f.abs('other.tsx'))}.tsx`
+  await assert.rejects(() => moduleLoad(state).handler.call(context, other), /Unknown/)
+  const result = await manifestModule(output)
+  assert.equal(result.shapes['/'].component.name, 'Custom')
+  const before = shapeSignature(f.abs('page.tsx'))
+  const invalidated = []
+  const graph = { getModuleById: () => 'routes', invalidateModule: (m) => invalidated.push(m) }
+  const update = shapeHotUpdate({ root: f.root, manifest: levels }, new Map([['page.tsx', before]]),
+    async () => ['unchanged'])
+  f.write('page.tsx', source.replace('custom marker', 'changed marker'))
+  assert.notEqual(shapeSignature(f.abs('page.tsx')), before)
+  const hot = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
+  assert.deepEqual(await update.call(hot, { file: f.abs('page.tsx'), modules: [] }), [])
+  assert.deepEqual(invalidated, ['routes'])
+  for (const expression of [
+    '<div>{secret}</div>', '<div onClick={sideEffect}>bad</div>', '<Widget />',
+    '<custom-widget />', '<script>bad</script>', '<div {...secret} />',
+  ]) {
+    f.write('page.tsx', source.replace('<section class="waiting"><span>custom marker</span></section>',
+      expression))
+    const route = await manifestModule(clientRoutes(levels, f.abs))
+    assert.equal(route.shapes['/'].kind, 'unavailable', expression)
+    await assert.rejects(() => moduleLoad(state).handler.call(context, id), /Unsafe or missing/)
+  }
+  f.write('page.tsx', "import Waiting from './waiting'; export const skeleton = Waiting")
+  assert.equal((await manifestModule(clientRoutes(levels, f.abs))).shapes['/'].kind, 'unavailable')
+  f.write('page.tsx', 'const Waiting = () => { sideEffect(); return <div /> }; export const skeleton = Waiting')
+  assert.equal((await manifestModule(clientRoutes(levels, f.abs))).shapes['/'].kind, 'unavailable')
+  f.write('page.tsx', 'export const skeleton = false')
+  assert.equal((await manifestModule(clientRoutes(levels, f.abs))).shapes['/'].kind, 'disabled')
+})
+
+test('Vite loads the isolated override as TSX through the plugin pipeline', async (t) => {
+  const f = fixture(t)
+  f.write('page.tsx', `const Waiting = () => <div>custom marker</div>;
+    export const skeleton = Waiting; throw Error('route setup ran')`)
+  const request = `virtual:weft/shape-override/${encodeURIComponent(f.abs('page.tsx'))}.tsx`
+  const seen = []
+  const plugin = {
+    name: 'shape-override-test', resolveId: moduleResolve({ id: (id) => `\0${id}` }),
+    load: moduleLoad({ manifest: { layouts: [], routes: [{ file: 'page.tsx' }] }, abs: f.abs }),
+    transform(code, id) {
+      if (!id.includes('shape-override/')) return
+      seen.push(code)
+      return 'export default function Skeleton() {}'
+    },
+  }
+  const server = await createServer({
+    root: f.root, configFile: false, logLevel: 'silent', plugins: [plugin],
+    server: { middlewareMode: true }, appType: 'custom',
+  })
+  try {
+    const resolved = await server.environments.client.pluginContainer.resolveId(request)
+    assert.equal(resolved.id, `\0${request}`)
+    const result = await server.environments.client.transformRequest(request)
+    assert.ok(result?.code.includes('function Skeleton'))
+    assert.equal(seen.length, 1)
+    assert.ok(seen[0].includes('custom marker'))
+    assert.ok(!seen[0].includes('route setup ran'))
+  } finally {
+    await server.close()
+  }
 })
 
 test('metadata edits invalidate and reload only the client route module', async (t) => {

@@ -3,6 +3,7 @@ import { isAbsolute, join } from 'node:path'
 import { isCSSRequest } from 'vite'
 import { here, ASSETS, SHEET } from './shared.mjs'
 import { parse } from './syntax.mjs'
+import { shapeOverride } from './shape-override.mjs'
 
 /**
  * `dev`: the stylesheets from `devStyles`; a build asks Nitro's manifest instead (the plugin's expression reads up to
@@ -148,7 +149,7 @@ export function skeletonExport(file) {
       exported = !node.source && constants.get(local) ? 'disabled' : 'unavailable'
     }
   }
-  return exported ?? 'generated'
+  return exported === 'unavailable' && shapeOverride(file) ? 'custom' : (exported ?? 'generated')
 }
 
 /** Whether a source specifier can name a non-module stylesheet or token sheet. */
@@ -186,7 +187,8 @@ export async function shapeCssSources(ctx, file) {
 
 /** The route facts embedded in the client shape manifest. */
 export function shapeSignature(file) {
-  return JSON.stringify([skeletonExport(file), styleImports(file)])
+  const kind = skeletonExport(file)
+  return JSON.stringify([kind, styleImports(file), kind === 'custom' ? shapeOverride(file) : null])
 }
 
 export function clientRoutes(manifest, abs, plan, css = {}) {
@@ -197,14 +199,14 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
   const isStatic = (r) => plan?.statics.has(abs(r.file))
   const shapeFiles = new Map()
   const styleFiles = new Map()
-  const shape = (file, name = 'default$shape') => {
-    if (!shapeFiles.has(file)) shapeFiles.set(file, shapeFiles.size)
+  const shape = (file, name = 'default$shape', request = file + '?weft-shape') => {
+    if (!shapeFiles.has(request)) shapeFiles.set(request, shapeFiles.size)
     const sources = [...(css.entry ?? []), ...(css.levels?.get(file) ?? [])]
     const styles = [...new Set(sources)].map((style) => {
       if (!styleFiles.has(style)) styleFiles.set(style, styleFiles.size)
       return `style${styleFiles.get(style)}`
     })
-    return `shapeEntry(shape${shapeFiles.get(file)}, [${styles.join(', ')}], ${JSON.stringify(name)})`
+    return `shapeEntry(shape${shapeFiles.get(request)}, [${styles.join(', ')}], ${JSON.stringify(name)})`
   }
   const shapes = levels.map((r) => {
     const file = abs(r.file)
@@ -215,6 +217,10 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
       return `${id}: { kind: 'unavailable', reason: 'unresolved-export', css: null, bytes: null }`
     if (!/\.[jt]sx$/.test(file))
       return `${id}: { kind: 'unavailable', reason: 'unsupported-file', css: null, bytes: null }`
+    if (kind === 'custom') {
+      const request = `virtual:weft/shape-override/${encodeURIComponent(file)}.tsx`
+      return `${id}: ${shape(file, 'default', request)}`
+    }
     return `${id}: ${shape(file)}`
   })
   for (const [id, name] of [['404', 'NotFoundPage$shape'], ['error', 'ErrorPage$shape']]) {
@@ -222,7 +228,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
       shapes.push(`${JSON.stringify(id)}: ${shape(join(here, 'builtin.tsx'), name)}`)
   }
   const shapeImports = [...shapeFiles].map(
-    ([file, i]) => `import * as shape${i} from ${JSON.stringify(file + '?weft-shape')}`,
+    ([request, i]) => `import * as shape${i} from ${JSON.stringify(request)}`,
   )
   const styleImports = [...styleFiles].map(
     ([file, i]) => `import style${i} from ${JSON.stringify(file + '?inline')}`,
