@@ -73,9 +73,17 @@ export default function weft({
         const ssr = mode ? mode === 'ssr' : !!options?.ssr
         const hydrating = hydratable || !!mode
         const dependencies = new Set()
-        const groups = await style.options(this, code, id.replace(/\?.*$/, ''), (file) => {
-          if (standalone) dependencies.add(file)
-        })
+        const groups = await style.options(
+          this,
+          code,
+          id.replace(/\?.*$/, ''),
+          (file) => {
+            if (standalone) dependencies.add(file)
+          },
+          (file) => {
+            if (standalone) watching.retain(id, file, dependencies)
+          },
+        )
         if (standalone) watching.replace(id, dependencies, this)
         const shapes = standalone ? {} : await importedShapes(this, code, id.replace(/\?.*$/, ''))
         const islands =

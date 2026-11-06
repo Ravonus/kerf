@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs'
+
 /** Track group files that shape modules use without importing them into the client. */
 export function shapeWatch(forget) {
   const byShape = new Map()
@@ -12,6 +14,13 @@ export function shapeWatch(forget) {
     byShape.delete(id)
   }
   return {
+    retain(id, candidate, dependencies) {
+      const base = key(candidate).replace(/\.[cm]?[jt]sx?$/, '')
+      for (const file of byShape.get(id) ?? []) {
+        const stem = file.replace(/\.[cm]?[jt]sx?$/, '')
+        if (stem === base || stem === `${base}/index`) dependencies.add(file)
+      }
+    },
     replace(id, dependencies, ctx) {
       remove(id)
       const files = new Set([...dependencies].map(key))
@@ -19,7 +28,7 @@ export function shapeWatch(forget) {
       for (const file of files) {
         if (!byFile.has(file)) byFile.set(file, new Set())
         byFile.get(file).add(id)
-        ctx.addWatchFile(file)
+        if (existsSync(file)) ctx.addWatchFile(file)
       }
     },
     hotUpdate({ file, modules, type }) {

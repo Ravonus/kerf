@@ -46,6 +46,12 @@ test('shape group edits and deletion invalidate only current dependents', (t) =>
     ['forget', group], ['invalidate', shapeA], ['invalidate', shapeB],
   ])
   calls.length = 0
+  const retained = new Set()
+  tracker.retain(shapeA, group.replace(/\.ts$/, ''), retained)
+  tracker.retain(shapeA, unrelated, retained)
+  assert.deepEqual([...retained], [group])
+  tracker.replace(shapeA, retained, ctx)
+  assert.equal(watched.filter((file) => file === group).length, 2)
   tracker.replace(shapeA, [replacement], ctx)
   tracker.replace(shapeB, [], ctx)
   assert.equal(tracker.hotUpdate.call(vite, { file: group, modules: [] }), undefined)
@@ -91,10 +97,99 @@ test('Vite retransforms an affected shape module after a group edit', async (t) 
     const mod = env.moduleGraph.getModuleById(shapeId)
     assert.ok(mod)
     writeFileSync(dep, 'export const value = 2')
-    assert.deepEqual(tracker.hotUpdate.call({ environment: env }, { file: dep, modules: [] }), [mod])
+    assert.deepEqual(
+      tracker.hotUpdate.call({ environment: env }, { file: dep, modules: [] }), [mod],
+    )
     assert.ok(await env.transformRequest(url))
     assert.equal(count, 2)
     assert.deepEqual(forgotten, [dep])
+  } finally {
+    await server.close()
+  }
+})
+
+test('Vite watcher handles group edit, deletion, recreation and owner deletion', async (t) => {
+  const { createServer } = await import('vite')
+  const { existsSync, realpathSync } = await import('node:fs')
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-shape-events-')))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const dep = join(root, 'group.ts')
+  const route = join(root, 'page.js')
+  writeFileSync(dep, 'export const value = 1')
+  writeFileSync(route, '// GROUP\nexport default 1')
+  const tracker = shapeWatch(() => {})
+  const events = []
+  const server = await createServer({
+    root, configFile: false, logLevel: 'silent',
+    server: { middlewareMode: true }, appType: 'custom',
+    plugins: [{
+      name: 'shape-watcher-test',
+      transform(code, id) {
+        if (!id.endsWith('?weft-shape')) return
+        const deps = new Set()
+        if (code.includes('GROUP')) {
+          if (existsSync(dep)) deps.add(dep)
+          else tracker.retain?.(id, dep, deps)
+        }
+        tracker.replace(id, deps, this)
+        return code
+      },
+      hotUpdate(update) {
+        const result = tracker.hotUpdate.call(this, update)
+        if (this.environment.config.consumer === 'client')
+          events.push({ file: update.file, type: update.type, affected: result?.length ?? 0 })
+        return result
+      },
+    }],
+  })
+  const wait = async (condition, label) => {
+    const deadline = Date.now() + 5000
+    while (!condition()) {
+      if (Date.now() > deadline)
+        assert.fail(`Timed out waiting for ${label}: ${JSON.stringify(events)}`)
+      await new Promise((done) => setTimeout(done, 25))
+    }
+  }
+  const event = (file, type, from) =>
+    events.slice(from).find((e) => e.file === file && e.type === type)
+  try {
+    const env = server.environments.client
+    const url = '/page.js?weft-shape'
+    assert.ok(await env.transformRequest(url))
+    await wait(() => (server.watcher.getWatched()[root] ?? []).includes('group.ts'), 'watcher')
+    let from = events.length
+    writeFileSync(dep, 'export const value = 2')
+    await wait(() => event(dep, 'update', from), 'group edit')
+    assert.ok(event(dep, 'update', from).affected > 0)
+    from = events.length
+    unlinkSync(dep)
+    await wait(() => event(dep, 'delete', from), 'group deletion')
+    assert.ok(event(dep, 'delete', from).affected > 0)
+    assert.ok(await env.transformRequest(url))
+    from = events.length
+    writeFileSync(dep, 'export const value = 3')
+    await wait(() => event(dep, 'create', from), 'group recreation')
+    assert.ok(event(dep, 'create', from).affected > 0, 'recreated group must invalidate the shape')
+    assert.ok(await env.transformRequest(url))
+    from = events.length
+    writeFileSync(route, '// no dependency\nexport default 1')
+    await wait(() => event(route, 'update', from), 'import removal')
+    assert.ok(await env.transformRequest(url))
+    from = events.length
+    writeFileSync(dep, 'export const value = 4')
+    await wait(() => event(dep, 'update', from), 'edit after import removal')
+    assert.equal(event(dep, 'update', from).affected, 0)
+    from = events.length
+    writeFileSync(route, '// GROUP\nexport default 1')
+    await wait(() => event(route, 'update', from), 'import restoration')
+    assert.ok(await env.transformRequest(url))
+    from = events.length
+    unlinkSync(route)
+    await wait(() => event(route, 'delete', from), 'owner deletion')
+    from = events.length
+    writeFileSync(dep, 'export const value = 5')
+    await wait(() => event(dep, 'update', from), 'edit after owner deletion')
+    assert.equal(event(dep, 'update', from).affected, 0)
   } finally {
     await server.close()
   }
