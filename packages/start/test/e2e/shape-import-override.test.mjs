@@ -75,11 +75,12 @@ test('Vite resolves direct default and named overrides without running setup', a
     assert.match(p.transformed[0], /named marker/)
     assert.doesNotMatch(p.transformed[0], /setup|throw/)
     const calls = []
-    const graph = { getModuleById: () => 'routes', invalidateModule: (id) => calls.push(id) }
+    const graph = { getModuleById: (id) => id.includes('shape-override/') ? 'asset' : 'routes',
+      invalidateModule: (id) => calls.push(id) }
     const handler = shapeHotUpdate(p.state, new Map(), async () => ['unchanged'])
     const ctx = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
     assert.deepEqual(await handler.call(ctx, { file: p.file('waiting.tsx'), type: 'update' }), [])
-    assert.deepEqual(calls, ['routes'])
+    assert.deepEqual(calls, ['asset', 'routes'])
   } finally {
     await p.server.close()
   }

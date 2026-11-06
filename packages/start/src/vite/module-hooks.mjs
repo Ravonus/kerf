@@ -1,10 +1,10 @@
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { dirname, join, relative } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { readMigrations } from '../migrations.mjs'
 import { routeTypes } from '../routes.mjs'
 import { assetsOnly } from './assets.mjs'
-import { entryCss, watchEntryCandidates } from './shape-entry-css.mjs'
+import { entryCss, projectParent, watchEntryCandidates } from './shape-entry-css.mjs'
 import { resolveImportedOverride, shapeOverride } from './shape-override.mjs'
 import {
   clientRoutes, serverRoutes, devStyles, markLinks, skeletonExport,
@@ -88,11 +88,23 @@ export const load = (s) => ({
         const all = [...new Set(levels.map((r) => s.abs(r.file)))]
         const root = s.root ?? dirname(entryFile)
         const overrides = new Map()
-        const dependencies = new Set()
+        const dependencies = new Map()
+        const missing = new Set()
+        const depend = (target, file) => {
+          if (!dependencies.has(target)) dependencies.set(target, new Set())
+          dependencies.get(target).add(file)
+        }
         for (const file of all) {
           if (!/\.[jt]sx$/.test(file) || skeletonExport(file) !== 'unavailable') continue
-          const found = await resolveImportedOverride(this, file, root)
-          if (found?.file) dependencies.add(found.file)
+          const found = await resolveImportedOverride(this, file, root, (spec) => {
+            const candidate = resolve(dirname(file), spec)
+            if (projectParent(root, candidate)) {
+              const path = candidate.replace(/\\/g, '/')
+              missing.add(path)
+              depend(path, file)
+            }
+          })
+          if (found?.file) depend(found.file, file)
           if (found?.code) overrides.set(file, found.code)
         }
         const files = all.filter((file) => /\.[jt]sx$/.test(file) &&
@@ -105,6 +117,10 @@ export const load = (s) => ({
           for (const [file, signature] of source.signatures) shared.signatures.set(file, signature)
           for (const file of source.candidates) shared.candidates.add(file)
           for (const file of source.missing) shared.missing.add(file)
+        }
+        for (const file of missing) {
+          shared.candidates.add(file)
+          shared.missing.add(file)
         }
         s.shapeEntrySignatures = shared.signatures
         s.shapeEntryCandidates = shared.candidates

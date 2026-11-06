@@ -97,11 +97,12 @@ function dedicated(file, name) {
 }
 
 /** Resolve a direct dedicated source through Vite, bounded to non-server project files. */
-export async function resolveImportedOverride(ctx, file, root) {
+export async function resolveImportedOverride(ctx, file, root, onMissing) {
   const requested = importedOverride(file)
   if (!requested || /[?#]/.test(requested.spec) || /^(?:[a-z][\w+.-]*:|\/\/)/i.test(requested.spec))
     return
   const found = await ctx.resolve(requested.spec, file, { skipSelf: true })
+  if (!found && /^\.{1,2}\//.test(requested.spec)) onMissing?.(requested.spec)
   if (!found || found.external || !isAbsolute(found.id) || !/\.[jt]sx$/.test(found.id)) return
   const blocked = (base, target) => {
     const rel = relative(base, target).replace(/\\/g, '/')

@@ -3,7 +3,7 @@ import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { shapeBody, shapeCssSource, shapeStyleSpecifier } from './route-modules.mjs'
 
 // Follow existing ancestors so a symlink cannot turn an in-project watch into an outside watch.
-function projectParent(root, file) {
+export function projectParent(root, file) {
   try {
     const project = realpathSync(root)
     let dir = dirname(file)

@@ -50,8 +50,19 @@ export { here as startDir } from './vite/shared.mjs'
 export function shapeHotUpdate(state, modes, next) {
   return async function (update) {
     if (this.environment.config.consumer === 'client') {
-      if (state.shapeOverrideDependencies?.has(update.file)) {
+      const owners = [...(state.shapeOverrideDependencies ?? [])].flatMap(([file, routes]) =>
+        entryCandidate(new Set([file]), update.file) ? [...routes] : [],
+      )
+      if (owners.length) {
+        if (update.type === 'update' && entryCandidate(state.shapeEntryMissing, update.file) &&
+            existsSync(update.file))
+          await this.environment.pluginContainer.watchChange(update.file, { event: 'create' })
         const graph = this.environment.moduleGraph
+        for (const file of owners) {
+          const id = `\0virtual:weft/shape-override/${encodeURIComponent(file)}.tsx`
+          const asset = graph.getModuleById(id)
+          if (asset) graph.invalidateModule(asset)
+        }
         const mod = graph.getModuleById('\0' + V.routes)
         if (mod) graph.invalidateModule(mod)
         state.vite?.ws.send({ type: 'full-reload' })
