@@ -3,7 +3,7 @@
 import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createServer } from 'vite'
+import { createLogger, createServer } from 'vite'
 import weft from '@weft-js/core/vite'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { browser, cliParams } from '../src/browser/commands.mjs'
@@ -56,18 +56,48 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
     cpSync(join(evals, 'reference-v3/weft/src'), join(root, 'src'), { recursive: true })
     cpSync(join(evals, 'tasks-v3/shop/starter/weft/index.html'), join(root, 'index.html'))
     writeFileSync(join(root, 'package.json'), '{ "type": "module", "private": true }')
+    const events: string[] = []
+    const record = (event: string) => {
+      events.push(event.slice(0, 500))
+      if (events.length > 20) events.shift()
+    }
+    const logger = createLogger()
+    logger.info = () => {}
+    logger.error = (message) => record(`vite error: ${message}`)
+    logger.warn = (message) => record(`vite warning: ${message}`)
     server = await createServer({
       root,
       configFile: false,
-      logLevel: 'silent',
-      plugins: [weft()],
+      customLogger: logger,
+      plugins: [
+        {
+          name: 'browser-test-evidence',
+          configureServer(vite) {
+            vite.middlewares.use((req, res, next) => {
+              res.on('finish', () => record(`${req.method} ${req.url} ${res.statusCode}`))
+              next()
+            })
+          },
+        },
+        weft(),
+      ],
       server: { port: 0, strictPort: false },
     })
     await server.listen()
     await new Promise((r) => {
       setTimeout(r, 100)
     }) // .weft/dev.json is written on 'listening'
-    await run('launch', { route: '/' })
+    try {
+      await run('launch', { route: '/' })
+    } catch (error) {
+      console.error('browser launch evidence:', {
+        chrome,
+        address: server.httpServer?.address(),
+        wsClients: server.ws.clients.size,
+        events,
+      })
+      throw error
+    }
   }, 60_000)
 
   afterAll(async () => {

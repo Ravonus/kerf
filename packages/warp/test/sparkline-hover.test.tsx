@@ -1,3 +1,4 @@
+import { onTestFailed } from 'vitest'
 import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { fireEvent } from '@testing-library/dom'
 import { flush, render } from '@weft-js/core/test'
@@ -61,9 +62,21 @@ describe('Sparkline hover', () => {
     expect(svg.querySelector('text')!.textContent).toBe('0.44%')
   })
   test("the site's error-rate sparkline carries its headline's unit", async () => {
+    const start = performance.now()
+    const phases: Record<string, number> = { start: 0 }
+    let phase = 'import'
+    onTestFailed(() => {
+      console.error('site sparkline timing:', { phase, elapsed: performance.now() - start, phases })
+    })
     const { SparklineColors } = await import('../../../site/src/toolkit/examples/charts')
+    phases.import = performance.now() - start
+    phase = 'render'
     const { container: c } = render(() => <SparklineColors />)
+    phases.render = performance.now() - start
+    phase = 'settle'
     await settle()
+    phases.settle = performance.now() - start
+    phase = 'assert'
     const svg = c.querySelector<SVGSVGElement>('svg[data-part="spark"]')!
     svg.getBoundingClientRect = () =>
       ({ left: 0, width: 208, top: 0, height: 36, right: 208, bottom: 36, x: 0, y: 0 }) as DOMRect
