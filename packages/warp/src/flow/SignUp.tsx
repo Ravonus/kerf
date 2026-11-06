@@ -94,7 +94,7 @@ export function SignUp(p: SignUpProps) {
         </Title>
         {p.lede !== undefined && <p data-part="lede">{p.lede}</p>}
       </div>
-      {p.providers?.length && <SsoButtons providers={p.providers} onProvider={p.onProvider} />}
+      {!!(p.providers?.length) && <SsoButtons providers={p.providers} onProvider={p.onProvider} />}
       {p.providers?.length && <div data-part="divider">or with email</div>}
       <FormError ctl={ctl} />
       <Input
