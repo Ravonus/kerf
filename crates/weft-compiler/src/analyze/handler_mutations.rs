@@ -191,8 +191,6 @@ impl<'a> Visit<'a> for Scan<'_, '_> {
             walk::walk_function(scan, it, flags);
             if let Some(body) = &it.body {
                 scan.output_dependencies(&body.statements);
-                let refreshes = refresh::writes(&body.statements, scan.a, &scan.states);
-                scan.uses().refreshes = refreshes;
             }
         });
     }
@@ -203,8 +201,6 @@ impl<'a> Visit<'a> for Scan<'_, '_> {
             walk::walk_arrow_function_expression(scan, it);
             if let ArrowFunctionBody::FunctionBody(body) = &it.body {
                 scan.output_dependencies(&body.statements);
-                let refreshes = refresh::writes(&body.statements, scan.a, &scan.states);
-                scan.uses().refreshes = refreshes;
             }
         });
     }
@@ -334,6 +330,7 @@ impl Analyzer<'_> {
             scan.visit_statement(statement);
         }
         scan.output_dependencies(statements);
+        scan.refreshes(statements);
         let mut reads = scan.root.reads.clone();
         let mut handlers = scan.root.handlers.clone();
         for uses in scan.reachable(&scan.root.renders, true) {

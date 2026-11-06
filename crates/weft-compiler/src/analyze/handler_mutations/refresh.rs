@@ -1,13 +1,17 @@
 //! A plain local can refresh through a changing predicate, but only in that predicate's JSX.
 
+mod effects;
+
 use std::collections::{HashMap, HashSet};
 
 use oxc_ast::ast::{
-    ArrowFunctionExpression, AssignmentTarget, BindingPattern, ConditionalExpression, Expression,
-    Function, IdentifierReference, SimpleAssignmentTarget, Statement, VariableDeclarator,
+    ArrowFunctionBody, ArrowFunctionExpression, AssignmentTarget, BindingPattern,
+    ConditionalExpression, Expression, Function, IdentifierReference, SimpleAssignmentTarget,
+    Statement, VariableDeclarator,
 };
 use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::SymbolId;
+use oxc_span::GetSpan;
 use oxc_syntax::{operator::LogicalOperator, operator::UnaryOperator, scope::ScopeFlags};
 
 use super::super::react::imported_value;
@@ -47,6 +51,30 @@ fn predicate(
 }
 
 impl Scan<'_, '_> {
+    pub(super) fn refreshes(&mut self, statements: &[Statement<'_>]) {
+        let effects = effects::collect(statements, self.a, &self.states);
+        let recursive = self
+            .functions
+            .iter()
+            .filter(|(_, uses)| {
+                self.reachable(&uses.calls, false)
+                    .iter()
+                    .any(|callee| std::ptr::eq(*callee, *uses))
+            })
+            .map(|(&span, _)| span)
+            .collect();
+        let mut rescan = Rescan {
+            a: self.a,
+            states: &self.states,
+            effects: &effects,
+            recursive: &recursive,
+            functions: &mut self.functions,
+        };
+        for statement in statements {
+            rescan.visit_statement(statement);
+        }
+    }
+
     pub(super) fn define_state(&mut self, it: &VariableDeclarator<'_>) {
         let (BindingPattern::BindingIdentifier(id), Some(init)) = (&it.id, &it.init) else {
             return;
@@ -147,6 +175,7 @@ impl<'a> Visit<'a> for Facts<'_, '_> {
 
 struct Proof<'x, 's> {
     facts: Facts<'x, 's>,
+    effects: &'x effects::Effects,
     covered: HashSet<SpanKey>,
     gates: HashMap<SymbolId, Gates>,
 }
@@ -241,9 +270,11 @@ impl Proof<'_, '_> {
                 let toggles = predicate(&assign.right, self.facts.a, self.facts.states)
                     == Some((gate, false));
                 let changes = matches!(assign.right.get_inner_expression(), Expression::BooleanLiteral(v)
-                    if facts.get(&gate) == Some(&!v.value));
+                    if facts.get(&gate).is_some_and(|&before| before != v.value
+                        && self.effects.preserves(gate, before, key(assign.left.span()))));
                 if self.facts.state_writes.get(&gate) == Some(&1)
-                    && (toggles || changes)
+                    && ((toggles && self.effects.only_writer(gate, key(assign.left.span())))
+                        || changes)
                     && assign.operator == oxc_syntax::operator::AssignmentOperator::Assign
                 {
                     after.insert(gate);
@@ -273,10 +304,11 @@ impl Proof<'_, '_> {
     }
 }
 
-pub(super) fn writes(
+fn writes(
     statements: &[Statement<'_>],
     a: &Analyzer<'_>,
     states: &States,
+    effects: &effects::Effects,
 ) -> HashMap<SymbolId, Gates> {
     let mut facts = Facts {
         a,
@@ -289,6 +321,7 @@ pub(super) fn writes(
     }
     let mut proof = Proof {
         facts,
+        effects,
         covered: HashSet::new(),
         gates: HashMap::new(),
     };
@@ -302,4 +335,37 @@ pub(super) fn writes(
                 .is_some_and(|writes| writes.is_subset(&proof.covered))
     });
     proof.gates
+}
+
+struct Rescan<'x, 's> {
+    a: &'x Analyzer<'s>,
+    states: &'x States,
+    effects: &'x effects::Effects,
+    recursive: &'x HashSet<SpanKey>,
+    functions: &'x mut HashMap<SpanKey, Uses>,
+}
+
+impl Rescan<'_, '_> {
+    fn body(&mut self, span: SpanKey, statements: &[Statement<'_>]) {
+        if !self.recursive.contains(&span) {
+            self.functions.entry(span).or_default().refreshes =
+                writes(statements, self.a, self.states, self.effects);
+        }
+    }
+}
+
+impl<'a> Visit<'a> for Rescan<'_, '_> {
+    fn visit_function(&mut self, it: &Function<'a>, flags: ScopeFlags) {
+        if let Some(body) = &it.body {
+            self.body(key(it.span), &body.statements);
+        }
+        walk::walk_function(self, it, flags);
+    }
+
+    fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
+        if let ArrowFunctionBody::FunctionBody(body) = &it.body {
+            self.body(key(it.span), &body.statements);
+        }
+        walk::walk_arrow_function_expression(self, it);
+    }
 }

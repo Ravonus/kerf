@@ -12,8 +12,9 @@ fn w041_canonical_stream_and_cell_snapshots_refresh_through_their_predicates() {
          const c = untrack(() => p.col); const editing = state(false); const problem = state(''); \
          let seed = ''; const begin = () => { if (c.edit && !editing.value) { \
          seed = String(untrack(() => p.value) ?? ''); problem.value = ''; editing.value = true } }; \
+         const done = () => { problem.value = ''; editing.value = false }; \
          return <td onDblClick={begin} onKeyDown={() => begin()}>\
-         {editing.value ? <Editor start={seed} /> : <Shown />}</td> }",
+         {editing.value ? <Editor start={seed} onDone={done} /> : <Shown />}</td> }",
     ] {
         let (code, diagnostics) = run(source);
         assert!(diagnostics.is_empty(), "{source}: {diagnostics:?}");
@@ -178,5 +179,99 @@ fn w041_ordinary_objects_and_partially_refreshed_handlers_remain_errors() {
             1,
             "{source}: {diagnostics:?}"
         );
+    }
+}
+
+#[test]
+fn w041_condition_and_rhs_mutators_invalidate_entry_truthiness() {
+    for (setup, handler) in [
+        (
+            "function mutate() { gate.value = true; return 1 }",
+            "if (!gate.value && mutate()) { n = 1; gate.value = true }",
+        ),
+        (
+            "function mutate() { gate.value = true; return 1 }",
+            "if (!gate.value) { n = mutate(); gate.value = true }",
+        ),
+        (
+            "const alias = gate; const mutate = () => { alias['value'] = true; return 1 }; const call = mutate",
+            "if (!alias['value'] && call()) { n = 1; gate.value = true }",
+        ),
+        (
+            "const alias = gate; const mutate = () => { alias.value = true; return 1 }; const call = mutate",
+            "if (!gate.value) { n = call(); alias.value = true }",
+        ),
+        (
+            "const model = { get read() { gate.value = true; return 1 } }",
+            "if (!gate.value && model.read) { n = 1; gate.value = true }",
+        ),
+        (
+            "const alias = gate; const model = { get read() { alias.value = true; return 1 } }",
+            "if (!gate.value) { n = model.read; gate.value = true }",
+        ),
+        (
+            "const model = { valueOf() { gate.value = true; return 1 } }",
+            "if (!gate.value) { n = +model; gate.value = true }",
+        ),
+        (
+            "function mutate() { ({ value: gate.value } = { value: true }); return 1 }",
+            "if (!gate.value) { n = mutate(); gate.value = true }",
+        ),
+        (
+            "const alias = gate; function mutate() { [alias.value] = [true]; return 1 }",
+            "if (!gate.value) { n = mutate(); gate.value = true }",
+        ),
+    ] {
+        assert_handler_stale(setup, handler, "gate.value ? n : 0");
+    }
+}
+
+#[test]
+fn w041_unknown_code_cannot_rely_on_an_escaped_gate_fact() {
+    for (setup, handler) in [
+        (
+            "",
+            "if (!gate.value && external(gate)) { n = 1; gate.value = true }",
+        ),
+        (
+            "const alias = gate",
+            "if (!gate.value) { n = external(alias); gate.value = true }",
+        ),
+        (
+            "const holder = { box: gate }",
+            "if (!gate.value) { n = external(holder); gate.value = true }",
+        ),
+        (
+            "const publish = () => gate; external(publish)",
+            "if (!gate.value) { n = external(); gate.value = true }",
+        ),
+    ] {
+        assert_handler_stale(setup, handler, "gate.value ? n : 0");
+    }
+    assert_handler_stale(
+        "function mutate() { gate.value = true; return 1 }",
+        "n = mutate(); gate.value = !gate.value",
+        "gate.value ? 0 : n",
+    );
+}
+
+#[test]
+fn w041_late_and_recursive_mutators_do_not_prove_a_refresh() {
+    for source in [
+        "import { state } from '@weft-js/core'; export function A() { \
+         const gate = state(false); let n = 0; \
+         const click = () => { if (!gate.value) { n = mutate(); gate.value = true } }; \
+         return <button onClick={click}>{gate.value ? n : 0}</button>; \
+         function mutate() { gate.value = true; return 1 } }",
+        "import { state } from '@weft-js/core'; export function A() { \
+         const gate = state(false); let n = 0; let entered = false; \
+         function mutate() { if (!entered) { entered = true; click() } return 1 } \
+         const click = () => { if (!gate.value) { n = mutate(); gate.value = true } }; \
+         return <button onClick={click}>{gate.value ? n : 0}</button> }",
+    ] {
+        let (_, diagnostics) = run(source);
+        let errors = handler_mutation_errors(&diagnostics);
+        assert_eq!(errors.len(), 1, "{source}: {diagnostics:?}");
+        assert!(errors[0].message.starts_with("`n`"));
     }
 }
