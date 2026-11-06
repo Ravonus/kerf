@@ -360,6 +360,14 @@ The private cell helper change at `546a6065` measures 52,464 B (29,790 B JS +
 unchanged stacks also slow in the later run, so no speedup is claimed. Warp
 long-list `heightMoved` stays 0. At least 1,265 B of size recovery remains.
 
+The private Row/Fields/Editor/Sheet helper change at `47af9980` measures 52,411 B
+(29,737 B JS + 22,674 B CSS), 53 B below the fresh `97a2eaa0` control. It still
+needs 1,212 B to be strictly below 51,200 B. Both canonical comparison runs pass
+54 parity steps; warp keeps 1,590 sampled nodes and its design checks. Task time
+is 236→240 ms against Solid's 173→169 ms; these ordered runs do not isolate a
+speed effect. Warp's long-list heightMoved remains zero, so scrolling is not
+proven. Full source-labeled evidence: S5 `manager-size-35/size-receipts.tar.gz`.
+
 **Deferred until after 1.0 by the owner:**
 
 - Firefox text preparation: confirm or fix the S3 paired-median increase.
