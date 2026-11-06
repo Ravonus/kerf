@@ -1,5 +1,7 @@
 // W041 requires the same local binding to reach a handler write and a rendered read.
 
+include!("handler_mutations/refresh.rs");
+
 fn handler_mutation_errors(diagnostics: &[Diagnostic]) -> Vec<&Diagnostic> {
     diagnostics.iter().filter(|d| d.code == "W041").collect()
 }

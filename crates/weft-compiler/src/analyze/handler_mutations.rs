@@ -1,12 +1,15 @@
 //! Join rendered reads with writes reachable from event handlers, using binding identities.
 
+mod refresh;
+
 use std::collections::{HashMap, HashSet};
 
 use oxc_ast::ast::{
-    ArrowFunctionBody, ArrowFunctionExpression, BindingPattern, CallExpression, Expression,
-    FormalParameters, Function, IdentifierReference, JSXAttribute, JSXAttributeName,
-    JSXAttributeValue, JSXElementName, JSXExpressionContainer, JSXOpeningElement, ReturnStatement,
-    Statement, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
+    ArrowFunctionBody, ArrowFunctionExpression, BindingPattern, CallExpression,
+    ConditionalExpression, Expression, FormalParameters, Function, IdentifierReference,
+    JSXAttribute, JSXAttributeName, JSXAttributeValue, JSXElementName, JSXExpressionContainer,
+    JSXOpeningElement, ReturnStatement, Statement, VariableDeclaration, VariableDeclarationKind,
+    VariableDeclarator,
 };
 use oxc_ast_visit::{Visit, walk};
 use oxc_semantic::SymbolId;
@@ -30,6 +33,7 @@ struct Uses {
     calls: Vec<Target>,
     renders: Vec<Target>,
     handlers: Vec<Target>,
+    refreshes: HashMap<SymbolId, HashSet<SymbolId>>,
 }
 
 struct Scan<'x, 's> {
@@ -42,6 +46,9 @@ struct Scan<'x, 's> {
     current: Option<SpanKey>,
     reading: bool,
     event: bool,
+    states: HashMap<SymbolId, SymbolId>,
+    gates: Vec<SymbolId>,
+    read_gates: HashMap<SymbolId, HashSet<SymbolId>>,
 }
 
 impl Scan<'_, '_> {
@@ -81,11 +88,13 @@ impl Scan<'_, '_> {
 
     fn function(&mut self, span: Span, reading: bool, visit: impl FnOnce(&mut Self)) {
         let previous = (self.current, self.reading);
+        let gates = std::mem::take(&mut self.gates);
         self.current = Some(key(span));
         self.reading = reading;
         self.uses();
         visit(self);
         (self.current, self.reading) = previous;
+        self.gates = gates;
     }
 
     fn output_dependencies(&mut self, statements: &[Statement<'_>]) {
@@ -164,6 +173,7 @@ impl<'a> Visit<'a> for Scan<'_, '_> {
     }
 
     fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
+        self.define_state(it);
         if let (BindingPattern::BindingIdentifier(id), Some(init)) = (&it.id, &it.init)
             && let Some(sym) = binding_symbol(id)
             && let [target] = self.targets(init).as_slice()
@@ -181,6 +191,8 @@ impl<'a> Visit<'a> for Scan<'_, '_> {
             walk::walk_function(scan, it, flags);
             if let Some(body) = &it.body {
                 scan.output_dependencies(&body.statements);
+                let refreshes = refresh::writes(&body.statements, scan.a, &scan.states);
+                scan.uses().refreshes = refreshes;
             }
         });
     }
@@ -191,6 +203,8 @@ impl<'a> Visit<'a> for Scan<'_, '_> {
             walk::walk_arrow_function_expression(scan, it);
             if let ArrowFunctionBody::FunctionBody(body) = &it.body {
                 scan.output_dependencies(&body.statements);
+                let refreshes = refresh::writes(&body.statements, scan.a, &scan.states);
+                scan.uses().refreshes = refreshes;
             }
         });
     }
@@ -258,12 +272,17 @@ impl<'a> Visit<'a> for Scan<'_, '_> {
             return;
         };
         let (read, write) = (reference.is_read(), reference.is_write());
+        self.guard_read(sym, read);
         if write {
             self.uses().writes.entry(sym).or_insert(it.span);
         }
         if read && self.reading && !self.event {
             self.uses().reads.insert(sym);
         }
+    }
+
+    fn visit_conditional_expression(&mut self, it: &ConditionalExpression<'a>) {
+        self.conditional(it);
     }
 
     fn visit_call_expression(&mut self, it: &CallExpression<'a>) {
@@ -307,6 +326,9 @@ impl Analyzer<'_> {
             current: None,
             reading: false,
             event: false,
+            states: HashMap::new(),
+            gates: Vec::new(),
+            read_gates: HashMap::new(),
         };
         for statement in statements {
             scan.visit_statement(statement);
@@ -321,6 +343,9 @@ impl Analyzer<'_> {
         let mut writes: HashMap<SymbolId, Span> = HashMap::new();
         for uses in scan.reachable(&handlers, false) {
             for (&sym, &span) in &uses.writes {
+                if scan.refreshed(uses, sym) {
+                    continue;
+                }
                 let first = writes.entry(sym).or_insert(span);
                 if span.start < first.start {
                     *first = span;
