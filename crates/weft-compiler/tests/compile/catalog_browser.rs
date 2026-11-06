@@ -1,6 +1,17 @@
 // Exercise reported diagnostics and their repaired forms through the compiler.
 #[test]
 fn catalog_browser_diagnostics_have_quiet_repairs() {
+    fn covered(case: (&str, &str, &str), code: &str) -> bool {
+        let (_, bad, repaired) = case;
+        let options = Options {
+            filename: "App.tsx".into(),
+            check_only: true,
+            ..Default::default()
+        };
+        let found = compile(bad, &options).diagnostics;
+        let quiet = compile(repaired, &options).diagnostics;
+        codes(&found).contains(&code) && !codes(&quiet).contains(&code)
+    }
     let cases = [
         (
             "W050",
@@ -43,17 +54,6 @@ fn catalog_browser_diagnostics_have_quiet_repairs() {
             "import { group } from '@weft-js/core/style'; const card = group('card', { axes: { status: { open: {}, late: {} } } }); export function X() { return <article {...card({ status: 'late' })} /> }",
         ),
     ];
-    fn covered(case: (&str, &str, &str), code: &str) -> bool {
-        let (_, bad, repaired) = case;
-        let options = Options {
-            filename: "App.tsx".into(),
-            check_only: true,
-            ..Default::default()
-        };
-        let found = compile(bad, &options).diagnostics;
-        let quiet = compile(repaired, &options).diagnostics;
-        codes(&found).contains(&code) && !codes(&quiet).contains(&code)
-    }
     assert!(covered(cases[0], "W050"));
     assert!(covered(cases[1], "W051"));
     assert!(covered(cases[2], "W052"));

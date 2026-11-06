@@ -14,7 +14,13 @@ fn numeric_property_case(fields: &str, property: &str, expected: usize) {
         assert_eq!(errors.len(), expected, "{source}: {diagnostics:?}");
         if let Some(error) = errors.first() {
             assert_eq!(error.severity, Severity::Error);
-            assert!(error.fix.as_ref().unwrap().safe);
+            assert!(
+                error
+                    .fix
+                    .as_ref()
+                    .expect("numeric diagnostic has a fix")
+                    .safe
+            );
             let repaired = apply_fix(&source, error);
             assert!(run(&repaired).1.is_empty(), "{repaired}");
         }
@@ -49,8 +55,8 @@ fn w011_known_alias_spreads_and_unknown_overwrites_follow_write_order() {
             (format!("{property}: false, ...numeric"), 1),
             (format!("{property}: false, ...alias"), 1),
             (format!("{property}: 0, ...boolean"), 0),
-            (format!("...numeric, ...boolean"), 0),
-            (format!("...boolean, ...numeric"), 1),
+            ("...numeric, ...boolean".to_string(), 0),
+            ("...boolean, ...numeric".to_string(), 1),
             (format!("...numeric, {property}: false"), 0),
             (format!("{property}: 0, ...other"), 0),
             (format!("{property}: false, ...other"), 0),

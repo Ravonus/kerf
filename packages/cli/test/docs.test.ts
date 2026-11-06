@@ -99,7 +99,12 @@ describe('docs', () => {
     expect((await docs(fixture, 'w014')).text).toMatch(
       new RegExp(`^# W014 \\(error\\)[\\s\\S]*Status in weft@${at}:\\*\\* reported\\.`),
     )
-    expect((await docs(fixture, 'W011')).text).toContain('not reported by this weft yet')
+    const numeric = (await docs(fixture, 'W011')).text
+    expect(numeric).toMatch(new RegExp(`Status in weft@${at}:\\*\\* reported, safe autofix\\.`))
+    expect(numeric).toContain('`cond > 0 &&`')
+    const unreported = Object.entries(status).find(([, value]) => !value.implemented)?.[0]
+    if (!unreported) throw new Error('expected an unreported compiler catalog entry')
+    expect((await docs(fixture, unreported)).text).toContain('not reported by this weft yet')
     expect((await docs(fixture, 'P004')).text).toContain('reported by weft check')
     expect((await docs(fixture, 'W054')).text).toMatch(
       new RegExp(`Status in weft@${at}:\\*\\* reported, suggested edit\\.`),
