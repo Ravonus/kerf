@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os'
 import { createServer } from 'vite'
 import { clientRoutes, shapeSignature } from '../../src/vite/route-modules.mjs'
 import { shapeHotUpdate } from '../../src/vite.mjs'
+import { parse } from '../../src/vite/syntax.mjs'
 
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'weft-route-shapes-'))
@@ -184,4 +185,49 @@ test('changing direct stylesheet imports invalidates shape metadata', async (t) 
   f.write('page.tsx', "import './two.css'; export default () => <main />")
   assert.deepEqual(await handler.call(context, { file, modules: [] }), [])
   assert.deepEqual(calls, ['routes', { type: 'full-reload' }])
+})
+
+test('recovered parser errors cannot classify a malformed route', (t) => {
+  const f = fixture(t)
+  const levels = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
+  for (const source of [
+    'export const skeleton = ;',
+    'export const skeleton = false; const broken = ;',
+    'export default () => <main>',
+  ]) {
+    f.write('page.tsx', source)
+    const parsed = parse(f.abs('page.tsx'), source)
+    assert.ok(parsed.errors.length > 0, source)
+    assert.throws(() => clientRoutes(levels, f.abs), /page\.tsx.*syntax/i)
+    assert.throws(() => shapeSignature(f.abs('page.tsx')), /page\.tsx.*syntax/i)
+  }
+})
+
+test('malformed edits invalidate metadata and a repaired route recovers', async (t) => {
+  const f = fixture(t)
+  const file = f.abs('page.tsx')
+  f.write('page.tsx', 'export default () => <main />')
+  const modes = new Map([['page.tsx', shapeSignature(file)]])
+  const calls = []
+  const graph = {
+    getModuleById: () => 'routes',
+    invalidateModule: (value) => calls.push(value),
+  }
+  const state = {
+    root: f.root, manifest: { routes: [{ id: '/', file: 'page.tsx', kind: 'page' }], layouts: [] },
+    vite: { ws: { send: (value) => calls.push(value) } },
+  }
+  const handler = shapeHotUpdate(state, modes, async () => ['unchanged'])
+  const context = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
+  f.write('page.tsx', 'export const skeleton = ;')
+  assert.deepEqual(await handler.call(context, { file, modules: [] }), [])
+  assert.equal(modes.get('page.tsx'), 'invalid')
+  assert.deepEqual(calls, ['routes', { type: 'full-reload' }])
+  calls.length = 0
+  f.write('page.tsx', 'export const skeleton = false')
+  assert.deepEqual(await handler.call(context, { file, modules: [] }), [])
+  assert.equal(modes.get('page.tsx'), shapeSignature(file))
+  assert.deepEqual(calls, ['routes', { type: 'full-reload' }])
+  const routes = await manifestModule(clientRoutes(state.manifest, f.abs))
+  assert.equal(routes.shapes['/'].kind, 'disabled')
 })

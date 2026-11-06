@@ -99,9 +99,19 @@ export const markLinks = (
 })
 `
 
+// Recovered ASTs can omit broken exports, so never classify them as valid routes.
+function shapeBody(file) {
+  const result = parse(file, readFileSync(file, 'utf8'))
+  if (result.errors.length) {
+    const message = result.errors[0]?.message ?? 'invalid source'
+    throw new SyntaxError(`${file}: syntax error: ${message}`)
+  }
+  return result.program.body
+}
+
 /** Classify a route skeleton export without evaluating the route. */
 export function skeletonExport(file) {
-  const body = parse(file, readFileSync(file, 'utf8')).program.body
+  const body = shapeBody(file)
   const constants = new Map()
   const bindings = (decl) => {
     if (decl?.type !== 'VariableDeclaration' || decl.kind !== 'const') return
@@ -143,7 +153,7 @@ export function skeletonExport(file) {
 
 // Inline CSS is data until a consumer applies it. Other dependencies remain unproven.
 function shapeStyles(file) {
-  const body = parse(file, readFileSync(file, 'utf8')).program.body
+  const body = shapeBody(file)
   const styles = body
     .filter((node) => node.type === 'ImportDeclaration' && !node.specifiers.length)
     .map((node) => node.source.value)
