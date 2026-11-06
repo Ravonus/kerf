@@ -1,13 +1,18 @@
 // The table's loading, row and empty-state body.
 import { Button } from './Button'
 import { Row } from './Table-rows'
-import type { tableModel } from './Table-model'
+import type { TableModel } from './Table-model'
 
 const SKELETON_ROWS = 6
 
 /** Render the current table body under the table's owner. */
-export function tableBody<T>(m: ReturnType<typeof tableModel<T>>) {
-  const { base, source, details, notice, input } = m
+export function tableBody<T>(
+  input: TableModel<T>['input'],
+  base: TableModel<T>['base'],
+  source: TableModel<T>['source'],
+  details: TableModel<T>['details'],
+  notice: TableModel<T>['notice'],
+) {
   const { sel, cols, keyOf, level, typed } = base
   return (
     <>

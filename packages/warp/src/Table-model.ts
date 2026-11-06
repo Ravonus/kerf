@@ -14,8 +14,38 @@ import type { Column, TableProps } from './Table-types'
 export type TableInput<T> = TableProps<T>
 type Refs = { el: HTMLDivElement | undefined; columnsButton: HTMLElement | undefined }
 
-/** Create the table model under its existing owner. */
-export function tableModel<T>(input: TableInput<T>) {
+/** The table's private state, shared by its concern helpers. */
+export type TableModel<T> = {
+  input: TableInput<T>
+  refs: Refs
+  base: ReturnType<typeof tableBase<T>>
+  source: ReturnType<typeof tableSource<T>>
+  selection: ReturnType<typeof tableSelection<T>>
+  details: ReturnType<typeof tableDetails<T>>
+  paging: ReturnType<typeof tablePaging<T>>
+  notice: ReturnType<typeof tableNotice<T>>
+  toolbar: { readonly value: boolean }
+  hideable: { readonly value: Column<T>[] }
+  flip: (column: Column<T>, show: boolean) => void
+}
+
+/** Render directly from private state instead of packing a second controller record. */
+export type TableRender = <T>(
+  input: TableModel<T>['input'],
+  refs: TableModel<T>['refs'],
+  base: TableModel<T>['base'],
+  source: TableModel<T>['source'],
+  selection: TableModel<T>['selection'],
+  details: TableModel<T>['details'],
+  paging: TableModel<T>['paging'],
+  notice: TableModel<T>['notice'],
+  toolbar: TableModel<T>['toolbar'],
+  hideable: TableModel<T>['hideable'],
+  flip: TableModel<T>['flip'],
+) => unknown
+
+/** Create private state and render it under the table's existing owner. */
+export function tableModel<T>(input: TableInput<T>, render: TableRender) {
   const refs: Refs = { el: undefined, columnsButton: undefined }
   const base = tableBase(input)
   const { cols, keyOf, read, typed, order, sel, at } = base
@@ -47,5 +77,17 @@ export function tableModel<T>(input: TableInput<T>) {
   const flip = (c: Column<T>, show: boolean) => {
     hidden.value = show ? hidden.value.filter((x) => x !== c.id) : [...hidden.value, c.id]
   }
-  return { input, refs, base, source, selection, details, paging, notice, toolbar, hideable, flip }
+  return render(
+    input,
+    refs,
+    base,
+    source,
+    selection,
+    details,
+    paging,
+    notice,
+    toolbar,
+    hideable,
+    flip,
+  )
 }

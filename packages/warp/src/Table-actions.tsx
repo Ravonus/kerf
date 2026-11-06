@@ -3,21 +3,16 @@ import type { TableProps } from './Table-types'
 import { Button } from './Button'
 
 /** Render actions for the current selection. */
-export function tableBulk(ctx: {
-  chosen: () => string[]
-  write: (next: Record<string, boolean>) => void
-  props: Pick<TableProps<unknown>, 'bulk'>
-}) {
+export function tableBulk(
+  chosen: () => string[],
+  write: (next: Record<string, boolean>) => void,
+  props: Pick<TableProps<unknown>, 'bulk'>,
+) {
   return (
-    <div
-      data-part="bulk"
-      hidden={ctx.chosen().length === 0}
-      role="region"
-      aria-label="Bulk actions"
-    >
-      <b>{ctx.chosen().length} selected</b>
-      {ctx.props.bulk?.(ctx.chosen())}
-      <Button emphasis="ghost" onClick={() => ctx.write({})}>
+    <div data-part="bulk" hidden={chosen().length === 0} role="region" aria-label="Bulk actions">
+      <b>{chosen().length} selected</b>
+      {props.bulk?.(chosen())}
+      <Button emphasis="ghost" onClick={() => write({})}>
         Clear
       </Button>
     </div>

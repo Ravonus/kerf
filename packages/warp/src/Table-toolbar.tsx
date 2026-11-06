@@ -3,13 +3,19 @@ import { ColumnsIcon } from '@weft-js/warp-icons'
 import { Button } from './Button'
 import { Search } from './Field'
 import { ColumnsPanel } from './Table-columns'
-import type { tableModel } from './Table-model'
+import type { TableModel } from './Table-model'
 
 /** The column chooser icon. */
 export const columnsIcon = () => <ColumnsIcon />
 /** Render the toolbar in the table's existing owner. */
-export function tableToolbar<T>(m: ReturnType<typeof tableModel<T>>) {
-  const { input, refs, base, paging, hideable, flip } = m
+export function tableToolbar<T>(
+  input: TableModel<T>['input'],
+  refs: TableModel<T>['refs'],
+  base: TableModel<T>['base'],
+  paging: TableModel<T>['paging'],
+  hideable: TableModel<T>['hideable'],
+  flip: TableModel<T>['flip'],
+) {
   const { typed, picking, picked, id, hidden } = base
   return (
     <div data-part="toolbar">
