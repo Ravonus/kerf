@@ -1,9 +1,10 @@
 import { existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { join, relative } from 'node:path'
+import { dirname, join, relative } from 'node:path'
 import { readMigrations } from '../migrations.mjs'
 import { routeTypes } from '../routes.mjs'
 import { assetsOnly } from './assets.mjs'
+import { entryCss } from './shape-entry-css.mjs'
 import {
   clientRoutes, serverRoutes, devStyles, markLinks, shapeCssSources, skeletonExport,
 } from './route-modules.mjs'
@@ -71,8 +72,10 @@ export const load = (s) => ({
         const files = [...new Set(levels.map((r) => s.abs(r.file)))]
           .filter((file) => /\.[jt]sx$/.test(file) && skeletonExport(file) === 'generated')
         const sources = await Promise.all(files.map((file) => shapeCssSources(this, file)))
+        const shared = await entryCss(this, entryFile, s.root ?? dirname(entryFile))
+        s.shapeEntrySignatures = shared.signatures
         const css = {
-          entry: await shapeCssSources(this, entryFile),
+          entry: shared.styles,
           levels: new Map(files.map((file, i) => [file, sources[i]])),
         }
         return clientRoutes(s.manifest, s.abs, p, css)

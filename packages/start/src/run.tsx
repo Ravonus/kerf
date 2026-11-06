@@ -21,8 +21,8 @@ type Hot = ImportMeta & {
 /**
  * Synchronous shape metadata from separately compiled modules. CSS and emitted
  * asset bytes are null until known; consumers must not treat them as available
- * or free. cssText holds generated groups and direct entry and level styles,
- * including resolved token sheets. cssStatus remains partial for other styles.
+ * or free. cssText holds generated groups, resolved static entry styles and
+ * direct level styles, including tokens. cssStatus remains partial.
  * Unavailable covers unproven overrides and unsupported route files.
  */
 export type RouteShape =

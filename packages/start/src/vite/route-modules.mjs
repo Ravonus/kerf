@@ -99,8 +99,8 @@ export const markLinks = (
 })
 `
 
-// Recovered ASTs can omit broken exports, so never classify them as valid routes.
-function shapeBody(file) {
+/** Read a route or entry module only when its parsed syntax is valid. */
+export function shapeBody(file) {
   const result = parse(file, readFileSync(file, 'utf8'))
   if (result.errors.length) {
     const message = result.errors[0]?.message ?? 'invalid source'
@@ -166,18 +166,22 @@ function shapeStyles(file) {
   return [...new Set(local)]
 }
 
+/** Resolve a stylesheet or token import without evaluating its importing module. */
+export async function shapeCssSource(ctx, file, spec) {
+  if (!/(?<!\.module)\.css$/.test(spec) && !/^weft:tokens\/[\w/-]+$/.test(spec)) return
+  if (/^\.{1,2}\//.test(spec)) return resolve(dirname(file), spec)
+  if (/^(https?:|\/\/)/.test(spec) || spec.includes('..')) return
+  const found = await ctx.resolve(spec, file, { skipSelf: true })
+  if (!found?.external && found?.id && isAbsolute(found.id) && /\.css$/.test(found.id))
+    return found.id
+}
+
 /** Resolve only direct stylesheet and token imports, without evaluating their importing module. */
 export async function shapeCssSources(ctx, file) {
   const styles = []
   for (const spec of styleImports(file)) {
-    if (/^\.{1,2}\//.test(spec)) {
-      styles.push(resolve(dirname(file), spec))
-      continue
-    }
-    if (/^(https?:|\/\/)/.test(spec) || spec.includes('..')) continue
-    const found = await ctx.resolve(spec, file, { skipSelf: true })
-    if (!found?.external && found?.id && isAbsolute(found.id) && /\.css$/.test(found.id))
-      styles.push(found.id)
+    const style = await shapeCssSource(ctx, file, spec)
+    if (style) styles.push(style)
   }
   return [...new Set(styles)]
 }
