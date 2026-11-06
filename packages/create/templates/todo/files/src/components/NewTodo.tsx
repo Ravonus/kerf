@@ -11,7 +11,7 @@ export function NewTodo() {
         <>
           <input type="hidden" name="id" value={id.value} />
           <div class="new-todo-row">
-            <Input label="New todo" autocomplete="off" required {...form.field('title')} />
+            <Input label="New todo" autocomplete="off" required {...form.field('title', 'text')} />
             <Button type="submit">Add</Button>
           </div>
           <form.Error name="title" class="form-error" />

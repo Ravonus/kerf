@@ -28,7 +28,7 @@ export default function Login() {
               type="email"
               autocomplete="username"
               required
-              {...form.field('email')}
+              {...form.field('email', 'email')}
             />
             <form.Error name="email" class="form-error" />
             <Input

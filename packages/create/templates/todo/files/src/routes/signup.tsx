@@ -20,14 +20,14 @@ export default function Signup() {
                 {form.message.value}
               </Alert>
             )}
-            <Input label="Name" autocomplete="name" required {...form.field('name')} />
+            <Input label="Name" autocomplete="name" required {...form.field('name', 'text')} />
             <form.Error name="name" class="form-error" />
             <Input
               label="Email"
               type="email"
               autocomplete="username"
               required
-              {...form.field('email')}
+              {...form.field('email', 'email')}
             />
             <form.Error name="email" class="form-error" />
             <Input
