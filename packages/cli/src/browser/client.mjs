@@ -59,9 +59,10 @@ export async function tabs(root, { url } = {}) {
 }
 
 /** Wait until a tab is connected (after `launch` or `navigate`). */
-export async function waitForTab(root, { url, ms = 15_000 } = {}) {
+export async function waitForTab(root, { url, ms = 15_000, check } = {}) {
   const until = Date.now() + ms
   for (;;) {
+    check?.()
     try {
       const t = await tabs(root, { url })
       if (t.tabs.length) return t
@@ -129,11 +130,35 @@ export async function launch(root, route = '/', { url, headed = false } = {}) {
       : []) /* Chrome won't start as root with its sandbox: a container, CI */,
     `${base}${route.startsWith('/') ? route : `/${route}`}`,
   ]
-  const child = spawn(exe, args, { detached: true, stdio: 'ignore' })
+  const child = spawn(exe, args, { detached: true, stdio: ['ignore', 'ignore', 'pipe'] })
+  let stderr = '',
+    failure = null
+  child.stderr.on('data', (chunk) => {
+    stderr = (stderr + chunk.toString()).slice(-4096)
+  })
+  child.on('error', (error) => {
+    failure = `spawn: ${error.message}`
+  })
+  child.on('exit', (code, signal) => {
+    failure = `exit: ${code}, signal: ${signal}`
+  })
   child.unref()
+  child.stderr.unref?.()
   writeFileSync(stateFile(root), JSON.stringify({ pid: child.pid, profile, exe }))
-  const t = await waitForTab(root, { url })
-  return { launched: true, pid: child.pid, headless: !headed, ...t }
+  try {
+    const t = await waitForTab(root, {
+      url,
+      check: () => {
+        if (failure) throw fail('E_CHROME', `Chrome ${failure}; stderr: ${stderr}`)
+      },
+    })
+    return { launched: true, pid: child.pid, headless: !headed, ...t }
+  } catch (error) {
+    close(root)
+    child.stderr.destroy()
+    error.message += ` (Chrome ${failure ?? 'still running'}; stderr: ${stderr})`
+    throw error
+  }
 }
 
 export function close(root) {

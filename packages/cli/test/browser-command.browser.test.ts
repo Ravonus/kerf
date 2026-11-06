@@ -1,13 +1,23 @@
 // `weft browser` end to end: a Vite dev server with the weft() plugin, a headless Chrome as a plain host page (no
 // automation library), and every command relayed through the dev server to @weft-js/core/agent in the page.
-import { cpSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import {
+  chmodSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
+import { createServer as httpServer } from 'node:http'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createLogger, createServer } from 'vite'
 import weft from '@weft-js/core/vite'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { browser, cliParams } from '../src/browser/commands.mjs'
-import { findChrome } from '../src/browser/client.mjs'
+import { findChrome, launch } from '../src/browser/client.mjs'
 
 const evals = fileURLToPath(new URL('../../../evals/', import.meta.url))
 const tmpRoot = fileURLToPath(new URL('./.tmp/', import.meta.url))
@@ -39,6 +49,41 @@ describe('cli words', () => {
     expect(cliParams('set', ['Cart.qty', '3'], {})).toEqual({ name: 'Cart.qty', value: 3 })
     expect(() => cliParams('act', ['button', 'x', 'smash'], {})).toThrow(/unknown action smash/)
   })
+})
+
+// These child fixtures use POSIX shell permissions and syntax.
+describe.skipIf(process.platform === 'win32')('browser launch failures', () => {
+  it.each([
+    ['bad executable', 'not an executable', false, /spawn:/],
+    ['early exit', '#!/bin/sh\necho launch-failed >&2\nexit 7\n', true, /exit: 7.*launch-failed/s],
+  ])(
+    '%s reports the child failure and cleans state',
+    async (_name, contents, executable, message) => {
+      const root = mkdtempSync(join(tmpdir(), 'weft-launch-'))
+      const exe = join(root, 'chrome')
+      writeFileSync(exe, contents)
+      chmodSync(exe, executable ? 0o755 : 0o644)
+      const old = process.env.WEFT_CHROME
+      process.env.WEFT_CHROME = exe
+      const server = httpServer((_req, res) => res.end(JSON.stringify({ agent: true, tabs: [] })))
+      await new Promise<void>((resolve) => {
+        server.listen(0, '127.0.0.1', resolve)
+      })
+      try {
+        const address = server.address()
+        if (!address || typeof address === 'string') throw new Error('no server address')
+        await expect(
+          launch(root, '/', { url: `http://127.0.0.1:${address.port}` }),
+        ).rejects.toThrow(message)
+        expect(existsSync(join(root, '.weft/browser/chrome.json'))).toBe(false)
+      } finally {
+        if (old === undefined) delete process.env.WEFT_CHROME
+        else process.env.WEFT_CHROME = old
+        server.close()
+        rmSync(root, { recursive: true, force: true })
+      }
+    },
+  )
 })
 
 type Run = (cmd: string, p?: Record<string, unknown>) => ReturnType<typeof browser>
