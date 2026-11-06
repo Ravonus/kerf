@@ -81,7 +81,7 @@ export default function weft({
             if (standalone) dependencies.add(file)
           },
           (file) => {
-            if (standalone) watching.retain(id, file, dependencies)
+            if (standalone) watching.candidate(file, dependencies)
           },
         )
         if (standalone) watching.replace(id, dependencies, this)
@@ -121,7 +121,10 @@ export default function weft({
         }
       },
     },
-    configureServer: watchChanges,
+    configureServer(server) {
+      watching.attach(server)
+      return watchChanges(server)
+    },
     hotUpdate: watching.hotUpdate,
     /** `islands(ctx, id)`: a framework's project view of the file (node/hydration.mjs). */
     api: {},

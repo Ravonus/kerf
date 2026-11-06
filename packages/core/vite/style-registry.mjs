@@ -30,7 +30,7 @@ export async function importedGroups(s, ctx, code, id, onDependency, onCandidate
       ? await ctx.resolve(spec, id, { skipSelf: true })
       : { id: resolvePath(dirname(id), spec) }
     const file = hit?.id?.replace(/\?.*$/, '')
-    onCandidate?.(file ?? resolvePath(dirname(id), spec))
+    if (!file || EXT.test(file)) onCandidate?.(file ?? resolvePath(dirname(id), spec))
     if (!file || !EXT.test(file)) continue
     const found = defsOf(s, file).filter((g) => g.exported)
     if (!found.length) continue

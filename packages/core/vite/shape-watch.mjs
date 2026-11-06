@@ -1,9 +1,11 @@
-import { existsSync } from 'node:fs'
+import { existsSync, statSync } from 'node:fs'
+import { dirname } from 'node:path'
 
 /** Track group files that shape modules use without importing them into the client. */
 export function shapeWatch(forget) {
   const byShape = new Map()
   const byFile = new Map()
+  let watcher
   const key = (file) => file.replace(/\\/g, '/')
   const remove = (id) => {
     for (const old of byShape.get(id) ?? []) {
@@ -14,12 +16,11 @@ export function shapeWatch(forget) {
     byShape.delete(id)
   }
   return {
-    retain(id, candidate, dependencies) {
-      const base = key(candidate).replace(/\.[cm]?[jt]sx?$/, '')
-      for (const file of byShape.get(id) ?? []) {
-        const stem = file.replace(/\.[cm]?[jt]sx?$/, '')
-        if (stem === base || stem === `${base}/index`) dependencies.add(file)
-      }
+    attach(server) {
+      watcher = server.watcher
+    },
+    candidate(file, dependencies) {
+      dependencies.add(key(file))
     },
     replace(id, dependencies, ctx) {
       remove(id)
@@ -28,7 +29,12 @@ export function shapeWatch(forget) {
       for (const file of files) {
         if (!byFile.has(file)) byFile.set(file, new Set())
         byFile.get(file).add(id)
-        if (existsSync(file)) ctx.addWatchFile(file)
+        if (statSync(file, { throwIfNoEntry: false })?.isFile()) ctx.addWatchFile(file)
+        else if (watcher) {
+          let dir = dirname(file)
+          while (!existsSync(dir) && dirname(dir) !== dir) dir = dirname(dir)
+          watcher.add(dir)
+        }
       }
     },
     hotUpdate({ file, modules, type }) {
@@ -37,8 +43,12 @@ export function shapeWatch(forget) {
           if (key(id.replace(/\?weft-shape$/, '')) === key(file)) remove(id)
         }
       }
-      const shapes = byFile.get(key(file))
-      if (!shapes?.size) return
+      const path = key(file)
+      const stem = path.replace(/\.[cm]?[jt]sx?$/, '')
+      const candidates = [path, stem]
+      if (stem.endsWith('/index')) candidates.push(stem.slice(0, -'/index'.length))
+      const shapes = new Set(candidates.flatMap((name) => [...(byFile.get(name) ?? [])]))
+      if (!shapes.size) return
       forget(key(file))
       const graph = this.environment.moduleGraph
       const affected = []
