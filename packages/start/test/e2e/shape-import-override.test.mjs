@@ -95,7 +95,6 @@ test('unsafe and ambiguous imported sources remain unavailable', async (t) => {
       'export default () => <div>{danger()}</div>',
       'export default () => { sideEffect(); return <div /> }',
       'export default () => <Widget />',
-      'export default function Waiting() { return <div /> }',
     ]) {
       p.write('waiting.tsx', source)
       const manifest = await p.routes()

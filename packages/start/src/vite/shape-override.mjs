@@ -20,6 +20,22 @@ function inert(node) {
   return node.children.every(inert)
 }
 
+// A function declaration has a mutable binding. Reject every other occurrence,
+// including shadowed names, rather than guessing whether a write is reachable.
+function isolated(body, declaration, reference) {
+  const name = declaration.id?.name
+  if (!name) return true
+  const allowed = new Set([declaration.id, reference])
+  const safe = (node) => {
+    if (!node || typeof node !== 'object') return true
+    if (Array.isArray(node)) return node.every(safe)
+    if (node.type === 'Identifier' && node.name === 'eval') return false
+    if (node.type === 'Identifier' && node.name === name && !allowed.has(node)) return false
+    return Object.values(node).every(safe)
+  }
+  return safe(body)
+}
+
 /** Extract only a closed, static local override. Never evaluate the source module. */
 export function shapeOverride(file) {
   const source = readFileSync(file, 'utf8')
@@ -36,17 +52,26 @@ export function shapeOverride(file) {
       (s.exported.name ?? s.exported.value) === 'skeleton')))) return
   const name = declarations[0].init.name
   const candidates = body.flatMap((n) => {
-    const decl = n.type === 'ExportNamedDeclaration' ? n.declaration : n
-    return decl?.type === 'VariableDeclaration' && decl.kind === 'const'
-      ? decl.declarations.filter((d) => d.id.type === 'Identifier' && d.id.name === name)
-      : []
+    const decl = n.type === 'ExportNamedDeclaration' || n.type === 'ExportDefaultDeclaration'
+      ? n.declaration : n
+    if (decl?.type === 'FunctionDeclaration' && decl.id?.name === name) return [decl]
+    if (decl?.type === 'VariableDeclaration' && decl.kind === 'const')
+      return decl.declarations.filter((d) => d.id.type === 'Identifier' && d.id.name === name)
+    return []
   })
   if (candidates.length !== 1) return
-  return component(source, candidates[0].init)
+  const candidate = candidates[0]
+  if (candidate.type === 'FunctionDeclaration') {
+    if (!isolated(body, candidate, declarations[0].init)) return
+    return component(source, candidate)
+  }
+  return component(source, candidate.init)
 }
 
 function component(source, fn) {
-  if (!fn || fn.type !== 'ArrowFunctionExpression' || fn.async || fn.params.length) return
+  while (fn?.type === 'ParenthesizedExpression') fn = fn.expression
+  if (!fn || !['ArrowFunctionExpression', 'FunctionExpression', 'FunctionDeclaration']
+    .includes(fn.type) || fn.async || fn.generator || fn.params.length) return
   const body = fn.body.type === 'BlockStatement' && fn.body.body.length === 1 &&
     fn.body.body[0].type === 'ReturnStatement' ? fn.body.body[0].argument : fn.body
   if (!body || !inert(body)) return
@@ -87,12 +112,17 @@ function dedicated(file, name) {
     if (name === 'default' && node.type === 'ExportDefaultDeclaration')
       matches.push(node.declaration)
     if (node.type === 'ExportNamedDeclaration' &&
+        node.declaration?.type === 'FunctionDeclaration' && node.declaration.id?.name === name)
+      matches.push(node.declaration)
+    if (node.type === 'ExportNamedDeclaration' &&
         node.declaration?.type === 'VariableDeclaration' && node.declaration.kind === 'const') {
       for (const item of node.declaration.declarations)
         if (item.id.type === 'Identifier' && item.id.name === name) matches.push(item.init)
     }
   }
   if (matches.length !== 1) return
+  if (matches[0].type === 'FunctionDeclaration' && !isolated(parsed.program.body, matches[0]))
+    return
   return component(source, matches[0])
 }
 
