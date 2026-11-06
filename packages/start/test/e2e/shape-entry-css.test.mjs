@@ -1,15 +1,16 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { createServer } from 'vite'
 import { tokens } from '../../../core/vite/config-plugins.mjs'
 import { entryCss } from '../../src/vite/shape-entry-css.mjs'
+import { shapeCssSources } from '../../src/vite/route-modules.mjs'
 import { shapeHotUpdate } from '../../src/vite.mjs'
 import { load as moduleLoad } from '../../src/vite/module-hooks.mjs'
 
-async function project(t) {
+async function project(t, plugins = []) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-entry-closure-')))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = (name) => join(root, name)
@@ -27,7 +28,7 @@ async function project(t) {
   for (const name of ['a', 'b', 'nested', 'deep', 'server', 'dynamic']) write(`${name}.css`, '')
   write('page.tsx', 'export default () => <main />')
   const server = await createServer({
-    root, configFile: false, logLevel: 'silent', plugins: [tokens()],
+    root, configFile: false, logLevel: 'silent', plugins: [...plugins, tokens()],
     server: { middlewareMode: true }, appType: 'custom',
   })
   const ctx = {
@@ -94,6 +95,42 @@ test('changed nested entry imports invalidate metadata but other edits do not', 
     p.write('deep.js', "import './changed.css'; export const value = 2")
     assert.deepEqual(await handler.call(context, { file: p.file('deep.js') }), [])
     assert.deepEqual(calls, ['routes', { type: 'full-reload' }])
+  } finally {
+    await p.server.close()
+  }
+})
+
+
+test('relative CSS uses Vite redirects and rejects external, virtual and JS results', async (t) => {
+  const redirect = {
+    name: 'css-resolution-test',
+    enforce: 'pre',
+    resolveId(source, importer) {
+      if (source === './alias.css') return join(dirname(importer), 'theme.css')
+      if (source === './external.css')
+        return { id: 'https://example.com/theme.css', external: true }
+      if (source === './virtual.css') return '\0virtual:theme'
+      if (source === './script.css') return join(dirname(importer), 'unsafe.js')
+    },
+  }
+  const p = await project(t, [redirect])
+  try {
+    p.write('theme.css', '.target { width: 5px }')
+    p.write('unsafe.js', "throw Error('JS must not run')")
+    mkdirSync(p.file('inner'))
+    p.write('inner/entry.js', "import '../theme.css'")
+    const imports = `
+      import './alias.css'; import './external.css';
+      import './virtual.css'; import './script.css'; import './absent.css';
+    `
+    p.write('entry.js', `${imports} import './nested.js'`)
+    p.write('nested.js', `${imports} export const value = 1`)
+    p.write('page.tsx', `${imports} export default () => <main />`)
+    assert.deepEqual(await shapeCssSources(p.ctx, p.file('page.tsx')), [p.file('theme.css')])
+    assert.deepEqual(await shapeCssSources(p.ctx, p.file('inner/entry.js')), [p.file('theme.css')])
+    const result = await entryCss(p.ctx, p.file('entry.js'), p.root)
+    assert.deepEqual(result.styles, [p.file('theme.css')])
+    assert.deepEqual([...result.signatures.keys()], [p.file('entry.js'), p.file('nested.js')])
   } finally {
     await p.server.close()
   }

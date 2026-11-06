@@ -1,5 +1,5 @@
 import { isAbsolute, relative } from 'node:path'
-import { shapeBody, shapeCssSource } from './route-modules.mjs'
+import { shapeBody, shapeCssSource, shapeStyleSpecifier } from './route-modules.mjs'
 
 // Only static runtime import/export edges can lead to a stylesheet here.
 function sources(file) {
@@ -36,12 +36,12 @@ export async function entryCss(ctx, entry, root) {
     signatures.set(file, signature(nodes))
     for (const node of nodes) {
       const spec = node.source.value
-      if (node.type === 'ImportDeclaration' && !node.specifiers.length) {
+      if (
+        node.type === 'ImportDeclaration' && !node.specifiers.length && shapeStyleSpecifier(spec)
+      ) {
         const css = await shapeCssSource(ctx, file, spec)
-        if (css) {
-          styles.add(css)
-          continue
-        }
+        if (css) styles.add(css)
+        continue
       }
       if (!/^\.{1,2}\//.test(spec) || /[?#]/.test(spec)) continue
       const found = await ctx.resolve(spec, file, { skipSelf: true })

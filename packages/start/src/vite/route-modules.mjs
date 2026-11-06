@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { dirname, isAbsolute, join, resolve } from 'node:path'
+import { isAbsolute, join } from 'node:path'
 import { isCSSRequest } from 'vite'
 import { here, ASSETS, SHEET } from './shared.mjs'
 import { parse } from './syntax.mjs'
@@ -151,26 +151,23 @@ export function skeletonExport(file) {
   return exported ?? 'generated'
 }
 
+/** Whether a source specifier can name a non-module stylesheet or token sheet. */
+export function shapeStyleSpecifier(spec) {
+  return /(?<!\.module)\.css$/.test(spec) || /^weft:tokens\/[\w/-]+$/.test(spec)
+}
+
 // Inline CSS is data until a consumer applies it. Other dependencies remain unproven.
 function styleImports(file) {
   return shapeBody(file)
     .filter((node) => node.type === 'ImportDeclaration' && !node.specifiers.length)
     .map((node) => node.source.value)
-    .filter((spec) => /(?<!\.module)\.css$/.test(spec) || /^weft:tokens\/[\w/-]+$/.test(spec))
-}
-
-function shapeStyles(file) {
-  const local = styleImports(file)
-    .filter((spec) => /^\.{1,2}\//.test(spec))
-    .map((spec) => resolve(dirname(file), spec))
-  return [...new Set(local)]
+    .filter(shapeStyleSpecifier)
 }
 
 /** Resolve a stylesheet or token import without evaluating its importing module. */
 export async function shapeCssSource(ctx, file, spec) {
-  if (!/(?<!\.module)\.css$/.test(spec) && !/^weft:tokens\/[\w/-]+$/.test(spec)) return
-  if (/^\.{1,2}\//.test(spec)) return resolve(dirname(file), spec)
-  if (/^(https?:|\/\/)/.test(spec) || spec.includes('..')) return
+  if (!shapeStyleSpecifier(spec) || /^(https?:|\/\/)/.test(spec)) return
+  if (!/^\.{1,2}\//.test(spec) && spec.includes('..')) return
   const found = await ctx.resolve(spec, file, { skipSelf: true })
   if (!found?.external && found?.id && isAbsolute(found.id) && /\.css$/.test(found.id))
     return found.id
@@ -209,7 +206,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
     if (!/\.[jt]sx$/.test(file))
       return `${id}: { kind: 'unavailable', reason: 'unsupported-file', css: null, bytes: null }`
     if (!shapeFiles.has(file)) shapeFiles.set(file, shapeFiles.size)
-    const sources = [...(css.entry ?? []), ...(css.levels?.get(file) ?? shapeStyles(file))]
+    const sources = [...(css.entry ?? []), ...(css.levels?.get(file) ?? [])]
     const styles = [...new Set(sources)].map((style) => {
       if (!styleFiles.has(style)) styleFiles.set(style, styleFiles.size)
       return `style${styleFiles.get(style)}`

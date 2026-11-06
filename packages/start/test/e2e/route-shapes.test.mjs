@@ -140,7 +140,10 @@ test('direct sizing CSS travels as partial data without importing route code', a
     export default () => <main class="panel" />
   `)
   const levels = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
-  const source = clientRoutes(levels, f.abs)
+  const ctx = { resolve: async (spec) => ({ id: f.abs(spec) }) }
+  const levelStyles = await shapeCssSources(ctx, f.abs('page.tsx'))
+  const css = { levels: new Map([[f.abs('page.tsx'), levelStyles]]) }
+  const source = clientRoutes(levels, f.abs, undefined, css)
   assert.equal((source.match(/import style\d+ from/g) ?? []).length, 2)
   assert.ok(!source.includes('private.module.css?inline'))
   assert.ok(!source.includes('server.js?inline'))
@@ -275,6 +278,7 @@ test('entry and token styles join route shape CSS without running entry code', a
   const calls = []
   const ctx = { resolve: async (spec) => {
     calls.push(spec)
+    if (spec === './app.css') return { id: f.abs('app.css') }
     if (spec === 'weft:tokens/warp') return { id: token }
     if (spec === 'weft:tokens/missing') return { id: '\0weft:tokens-empty' }
     if (spec === '@kit/tokens.css') return { id: kit }
@@ -362,6 +366,7 @@ test('client virtual routes collect entry and route styles through the Vite hook
     environment: { config: { consumer: 'client' } },
     resolve: async (spec) => {
       if (spec === '@bad/disabled.css') throw new Error('disabled CSS was resolved')
+      if (spec === './app.css') return { id: f.abs('app.css') }
       return spec === 'weft:tokens/warp' ? { id: f.abs('token.css') } : null
     },
   }
