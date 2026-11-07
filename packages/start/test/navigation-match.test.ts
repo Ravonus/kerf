@@ -1,9 +1,11 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { createMemoryHistory } from '@tanstack/history'
-import { RouterCore, createNonReactiveMutableStore, createNonReactiveReadonlyStore } from '@tanstack/router-core'
+import { RouterCore, createNonReactiveMutableStore, createNonReactiveReadonlyStore, notFound } from '@tanstack/router-core'
 import { expect, it, vi } from 'vitest'
 import { routeTree } from '../src/server/routes'
-import type { Manifest } from '../src/server/types'
+import type { Manifest, RouteModule } from '../src/server/types'
+import { redirect } from '../src/data'
+import type { Scope } from '../src/exec'
 import type { ClientRoutes } from '../src/run'
 import { guess } from '../src/run/helpers'
 import { createRouteState } from '../src/router'
@@ -23,7 +25,7 @@ const manifest: Manifest = { dir: 'src/routes', layouts: [
 const routes: ClientRoutes = { table: manifest.routes.map(({ id, pattern, layouts }) =>
   ({ id, pattern, layouts })), load: {} }
 
-async function serverMatch(path: string): Promise<string[]> {
+function serverRouter(path: string) {
   const tree = routeTree(manifest, {}, new AsyncLocalStorage())
   const router = new RouterCore({ routeTree: tree, history: createMemoryHistory({ initialEntries: [path] }),
     isServer: true, context: {} } as never, () => ({
@@ -31,6 +33,11 @@ async function serverMatch(path: string): Promise<string[]> {
     createReadonlyStore: createNonReactiveReadonlyStore,
     batch: (fn: () => void) => fn(),
   }))
+  return router
+}
+
+async function serverMatch(path: string): Promise<string[]> {
+  const router = serverRouter(path)
   const [branch, params, found] = router.getMatchedRoutes(router.latestLocation.pathname)
   const entry = found?.options as { weft?: { kind?: string } } | undefined
   if (params['**'] || entry?.weft?.kind !== 'page') return []
@@ -40,11 +47,11 @@ async function serverMatch(path: string): Promise<string[]> {
   })
 }
 
-it.each(['/users/new', '/users/NEW', '/users/alice', '/users/alice/', '/files/a/b',
-  '/files/a%2Fb', '/files/a//b', '/files/', '/caf%C3%A9', '/CAF%C3%89', '/users/%XX',
+it.each(['/users/new', '/users/NEW', '/users/alice', '/files/a/b',
+  '/files/a%2Fb', '/files/a//b', '/caf%C3%A9', '/CAF%C3%89', '/users/%XX',
   '/users/%E2%98%83', '/users/a%2Fb', '/users/%252F', '/users/%25', '/files/%E2',
   '/users//alice', '/missing', '/'])(
-  'matches the server for %s', async (path) => {
+  'matches the pre-load server trie for %s', async (path) => {
     expect(guess(routes, path)).toEqual(await serverMatch(path))
   },
 )
@@ -81,4 +88,54 @@ it('prepares the server-selected static shape at the navigation boundary', async
     nav.dispose()
     vi.unstubAllGlobals()
   }
+})
+
+async function finalResolution(path: string, modules: Record<string, RouteModule> = {}) {
+  const { resolveRoute } = await import('../src/server/resolver')
+  const als = new AsyncLocalStorage<Scope>()
+  const options = { manifest, modules }
+  return resolveRoute({ als, scopeOptions: {}, tree: routeTree(manifest, modules, als), site: {},
+    manifest, byId: new Map(manifest.routes.map((route) => [route.id, route])),
+    mod: (file) => file ? modules[file] : undefined, comps: {}, options, originOf: () => undefined,
+  }, path, new Request(`http://localhost${path}`))
+}
+
+it.each(['/users/new', '/users/NEW', '/users/alice', '/users/alice/', '/users//alice',
+  '/missing', '/files/a%2Fb', '/files/', '/users/%XX', '/'])('agrees with final resolver for %s', async (path) => {
+  const resolved = await finalResolution(path)
+  expect(guess(routes, path)).toEqual(resolved.status === 200 ? resolved.levels.map((level) => level.id) : [])
+})
+
+
+it('keeps a trailing-slash trie match provisional when the final resolver returns 404', async () => {
+  expect(await serverMatch('/users/alice/')).toEqual(['layout:', 'layout:users', '/users/$id'])
+  const router = serverRouter('/users/alice/')
+  await router.load()
+  expect(router._serverResult?.type).toBe('redirect')
+  if (router._serverResult?.type !== 'redirect') throw new Error('expected canonical redirect')
+  expect(router._serverResult.redirect.headers.get('location')).toBe('/users/alice')
+  const final = await finalResolution('/users/alice/')
+  expect(final.status).toBe(404)
+  expect(final.levels.map((level) => level.id)).toEqual(['404'])
+  expect(guess(routes, '/users/alice/')).toEqual([])
+})
+
+
+it('reports a loader redirect after the pre-load route match', async () => {
+  const result = await finalResolution('/users/new', {
+    '/users/new': { load: () => redirect('/users/alice') },
+  })
+  expect(result.status).toBe(307)
+  expect(result.redirect?.href).toBe('/users/alice')
+  expect(result.levels).toEqual([])
+  expect(guess(routes, '/users/new')).toEqual(['layout:', 'layout:users', '/users/new'])
+})
+
+it('reports a loader not-found after the pre-load route match', async () => {
+  const result = await finalResolution('/users/new', {
+    '/users/new': { load: () => { throw notFound() } },
+  })
+  expect(result.status).toBe(404)
+  expect(result.levels.at(-1)?.id).toBe('404')
+  expect(guess(routes, '/users/new')).toEqual(['layout:', 'layout:users', '/users/new'])
 })

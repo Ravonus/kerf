@@ -74,6 +74,8 @@ export function revive(m: Match): Match {
 
 /** The route ids `pathname` probably needs (its layouts and page), from the table; the server's answer decides. */
 export function guess(routes: ClientRoutes, pathname: string): string[] {
+  // A server load canonicalizes trailing slashes before it has a page match.
+  if (pathname.length > 1 && pathname.endsWith('/')) return []
   let parts: string[]
   try {
     const path = pathname.replace(/^\/+|\/+$/g, '')
