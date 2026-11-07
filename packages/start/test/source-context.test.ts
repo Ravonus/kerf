@@ -84,4 +84,39 @@ describe('retained source URL context', () => {
     context.release()
     expect(form.hasAttribute('action')).toBe(false)
   })
+
+  it('keeps post-capture handler mutations on the source through activation', () => {
+    history.replaceState(null, '', '/dir/old')
+    document.body.innerHTML = '<div id="app"><a href="child">go</a><form></form></div>'
+    const anchor = document.querySelector('a')!
+    const form = document.querySelector('form')!
+    const context = retainSourceContext(document, location.href, document.baseURI)!
+    history.pushState(null, '', '/elsewhere/new')
+    anchor.addEventListener('click', () => {
+      anchor.href = 'property'
+      expect(anchor.href).toBe('http://localhost/dir/property')
+      anchor.setAttributeNS(null, 'href', 'last-link')
+    })
+    form.addEventListener('submit', () => {
+      form.action = 'property'
+      expect(form.action).toBe('http://localhost/dir/property')
+      form.setAttribute('action', 'last-submit')
+    })
+    let link = '', action = ''
+    document.addEventListener('click', (event) => {
+      link = anchor.href
+      event.preventDefault()
+    }, { once: true })
+    document.addEventListener('submit', (event) => {
+      action = form.action
+      event.preventDefault()
+    }, { once: true })
+    anchor.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }))
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    expect(link).toBe('http://localhost/dir/last-link')
+    expect(action).toBe('http://localhost/dir/last-submit')
+    context.release()
+    expect(anchor.getAttribute('href')).toBe('last-link')
+    expect(form.getAttribute('action')).toBe('last-submit')
+  })
 })

@@ -68,28 +68,46 @@ export class Navigation {
   }
 
   apply(next: RoutePayload, url: URL, path: string, since: number, scroll: boolean) {
-    this.at = path
-    if (next.c) client.seed ? client.seed(next.c, since) : (client.seeds ??= []).push(...next.c)
-    this.tags = next.m.map((m) => m.t ?? [])
-    this.route.assetBytes = matchingRouteAssets(next.a, this.routes.build)
-    this.setBag(next.b)
+    const owner = this.current
+    const current = () => this.current === owner && !owner?.signal.aborted
     return () => {
+      if (!current()) return
+      this.at = path
+      if (next.c) client.seed ? client.seed(next.c, since) : (client.seeds ??= []).push(...next.c)
+      if (!current()) return
+      this.tags = next.m.map((m) => m.t ?? [])
+      this.route.assetBytes = matchingRouteAssets(next.a, this.routes.build)
+      this.setBag(next.b)
+      if (!current()) return
       const source = this.source
       this.source = undefined
       source?.stop()
       const old = this.detachShape()
+      const previousURL = this.committedURL
+      const previousBase = this.committedBase
+      this.committedURL = url.href
+      this.committedBase = document.baseURI
       try {
         applyMatches(this.route, next.m.map(revive), path, next.s)
+        if (!current()) return
         if (next.m.some((m) => m.s)) current_(url.pathname)
+        if (!current()) return
         if (next.h) setHead(next.h, url.pathname)
+        if (!current()) return
         this.release()
+        if (!current()) return
         flush()
+      } catch (error) {
+        if (current()) {
+          this.committedURL = previousURL
+          this.committedBase = previousBase
+        }
+        throw error
       } finally {
         old?.forEach((lease) => lease.release())
         source?.release()
       }
-      this.committedURL = url.href
-      this.committedBase = document.baseURI
+      if (!current()) return
       if (scroll) {
         const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)))
         target ? target.scrollIntoView() : window.scrollTo(0, 0)

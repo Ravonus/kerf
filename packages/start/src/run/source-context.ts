@@ -17,26 +17,36 @@ export function retainSourceContext(
   doc: Document, source: string, base: string,
 ): SourceContext | null {
   const root = doc.getElementById('app') ?? doc.body
-  const prototype = doc.defaultView?.HTMLFormElement.prototype
-  if (!root || !prototype || active.has(doc)) return null
-  const descriptors = ['submit', 'requestSubmit'].map((name) =>
-    [name, Object.getOwnPropertyDescriptor(prototype, name)] as const)
-  if (descriptors.some(([, desc]) => !desc?.configurable || typeof desc.value !== 'function'))
-    return null
+  const win = doc.defaultView
+  if (!root || !win || active.has(doc)) return null
   const saved = new Map<Element, Map<Name, Saved>>()
-  const patch = (item: Element, name: Name) => {
-    const raw = item.getAttribute(name)
+  const nativeSet = win.Element.prototype.setAttribute
+  const nativeRemove = win.Element.prototype.removeAttribute
+  let stopped = false
+  const relevant = (item: Element, name: string): name is Name =>
+    (item.localName === 'a' && name === 'href') ||
+    (item.localName === 'form' && name === 'action') ||
+    ((item.localName === 'button' || item.localName === 'input') && name === 'formaction')
+  const pin = (item: Element, name: Name, raw: string | null, force = false): string | null => {
     const records = saved.get(item)
-    if (records?.get(name)?.installed === raw) return
-    if (raw === null && name !== 'action') { records?.delete(name); return }
+    if (!force && records?.get(name)?.installed === raw) return raw
+    if (raw === null && name !== 'action') { records?.delete(name); return null }
     let resolved: string
     try { resolved = name !== 'href' && !raw ? source : new URL(raw ?? '', base).href }
-    catch { records?.delete(name); return }
-    if (raw === resolved) { records?.delete(name); return }
+    catch { records?.delete(name); return raw }
+    if (raw === resolved) { records?.delete(name); return raw }
     const own = records ?? new Map<Name, Saved>()
     saved.set(item, own)
     own.set(name, { original: raw, installed: resolved })
-    item.setAttribute(name, resolved)
+    return resolved
+  }
+  const patch = (item: Element, name: Name) => {
+    const raw = item.getAttribute(name)
+    const resolved = pin(item, name, raw)
+    if (resolved !== raw) {
+      if (resolved === null) Reflect.apply(nativeRemove, item, [name])
+      else Reflect.apply(nativeSet, item, [name, resolved])
+    }
   }
   const patchItem = (item: Element) => {
     if (item.localName === 'a') patch(item, 'href')
@@ -47,24 +57,70 @@ export function retainSourceContext(
   const scan = (parent: ParentNode) => {
     for (const item of parent.querySelectorAll(selector)) patchItem(item)
   }
-  let stopped = false
-  const wrappers: { name: string; descriptor: PropertyDescriptor;
-    wrapper: (this: HTMLFormElement, ...args: unknown[]) => unknown }[] = []
+  const wrappers: { target: object; name: string; descriptor: PropertyDescriptor;
+    replacement: PropertyDescriptor }[] = []
+  const install = (target: object, name: string, make: (d: PropertyDescriptor) => PropertyDescriptor,
+    required = true) => {
+    const descriptor = Object.getOwnPropertyDescriptor(target, name)
+    if (!descriptor) { if (required) throw new Error('Missing control hook'); return }
+    if (!descriptor.configurable) throw new Error('Locked control hook')
+    const replacement = make(descriptor)
+    Object.defineProperty(target, name, replacement)
+    wrappers.push({ target, name, descriptor, replacement })
+  }
+  const restore = () => {
+    for (const { target, name, descriptor, replacement } of wrappers.reverse()) {
+      const now = Object.getOwnPropertyDescriptor(target, name)
+      if (now?.value === replacement.value && now?.set === replacement.set)
+        Object.defineProperty(target, name, descriptor)
+    }
+  }
   try {
-    for (const [name, descriptor] of descriptors) {
-      const original = descriptor!.value as (...args: unknown[]) => unknown
-      const wrapper = function (this: HTMLFormElement, ...args: unknown[]) {
-        if (!stopped && root.contains(this)) {
-          patchItem(this)
-          if (args[0] instanceof Element && root.contains(args[0])) patchItem(args[0])
-        }
-        return Reflect.apply(original, this, args)
-      }
-      Object.defineProperty(prototype, name, { ...descriptor, value: wrapper })
-      wrappers.push({ name, descriptor: descriptor!, wrapper })
+    for (const name of ['setAttribute', 'removeAttribute', 'setAttributeNS', 'removeAttributeNS']) {
+      install(win.Element.prototype, name, (descriptor) => {
+        const original = descriptor.value as (...args: unknown[]) => unknown
+        return { ...descriptor, value: function (this: Element, ...args: unknown[]) {
+          const namespaced = name.endsWith('NS')
+          const key = String(args[namespaced ? 1 : 0])
+          const attr = key.toLowerCase()
+          const local = !namespaced || args[0] === null || args[0] === ''
+          if (!stopped && local && root.contains(this) && relevant(this, attr)) {
+            const raw = name.startsWith('remove') ? null : String(args[namespaced ? 2 : 1])
+            const value = pin(this, attr, raw, true)
+            if (value === null) return Reflect.apply(nativeRemove, this, [key])
+            return Reflect.apply(nativeSet, this, [key, value])
+          }
+          return Reflect.apply(original, this, args)
+        } }
+      })
+    }
+    for (const [prototype, property, attr] of [
+      [win.HTMLAnchorElement.prototype, 'href', 'href'],
+      [win.HTMLFormElement.prototype, 'action', 'action'],
+      [win.HTMLButtonElement.prototype, 'formAction', 'formaction'],
+      [win.HTMLInputElement.prototype, 'formAction', 'formaction'],
+    ] as const) {
+      install(prototype, property, (descriptor) => ({ ...descriptor,
+        set: function (this: Element, value: string) {
+          const next = !stopped && root.contains(this) ? pin(this, attr, String(value), true) : value
+          Reflect.apply(descriptor.set!, this, [next])
+        },
+      }), false)
+    }
+    for (const name of ['submit', 'requestSubmit']) {
+      install(win.HTMLFormElement.prototype, name, (descriptor) => {
+        const original = descriptor.value as (...args: unknown[]) => unknown
+        return { ...descriptor, value: function (this: HTMLFormElement, ...args: unknown[]) {
+          if (!stopped && root.contains(this)) {
+            patchItem(this)
+            if (args[0] instanceof Element && root.contains(args[0])) patchItem(args[0])
+          }
+          return Reflect.apply(original, this, args)
+        } }
+      })
     }
   } catch {
-    for (const { name, descriptor } of wrappers) Object.defineProperty(prototype, name, descriptor)
+    restore()
     return null
   }
   active.add(doc)
@@ -79,10 +135,10 @@ export function retainSourceContext(
   }
   for (const type of ['pointerdown', 'click', 'auxclick', 'submit'])
     doc.addEventListener(type, activate, true)
+  for (const type of ['click', 'auxclick', 'submit']) doc.addEventListener(type, activate)
   const observer = new MutationObserver((records) => {
     for (const record of records) {
-      if (record.type === 'attributes' && record.target instanceof Element &&
-          root.contains(record.target))
+      if (record.type === 'attributes' && record.target instanceof Element && root.contains(record.target))
         patchItem(record.target)
       for (const node of record.addedNodes) {
         if (!(node instanceof Element) || !root.contains(node)) continue
@@ -100,9 +156,8 @@ export function retainSourceContext(
     observer.disconnect()
     for (const type of ['pointerdown', 'click', 'auxclick', 'submit'])
       doc.removeEventListener(type, activate, true)
-    for (const { name, descriptor, wrapper } of wrappers)
-      if (Object.getOwnPropertyDescriptor(prototype, name)?.value === wrapper)
-        Object.defineProperty(prototype, name, descriptor)
+    for (const type of ['click', 'auxclick', 'submit']) doc.removeEventListener(type, activate)
+    restore()
   }
   let released = false
   return { stop, release() {

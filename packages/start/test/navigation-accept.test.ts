@@ -15,6 +15,7 @@ vi.mock('../src/run/helpers', () => ({
 import { Navigation } from '../src/run/navigation'
 import { ask, current_, guess } from '../src/run/helpers'
 import { applyMatches } from '../src/router'
+import { flush } from '@weft-js/core'
 
 beforeEach(() => {
   history.replaceState(null, '', '/from')
@@ -216,5 +217,35 @@ describe('navigation acceptance', () => {
     expect(HTMLFormElement.prototype.submit).toBe(original)
     expect(document.querySelector('a')!.getAttribute('href')).toBe('child')
     vi.mocked(guess).mockReturnValue([])
+  })
+
+  it('uses the newly committed URL when incoming setup reenters navigation', async () => {
+    history.replaceState(null, '', '/dir/from')
+    document.body.innerHTML = '<div id="app"></div>'
+    const routes: ClientRoutes = { table: [], load: {} }
+    const old = { id: { value: 'old' }, shape: { value: undefined } }
+    const page = { route: { path: { value: '/dir/from' }, levels: [old], prepareShape: () => null },
+      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    vi.mocked(guess).mockReturnValue([])
+    vi.mocked(ask).mockResolvedValueOnce(new Response(JSON.stringify({
+      m: [{ id: '/first', params: {} }], p: '/first', s: 200,
+    })))
+    const nav = new Navigation(
+      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+    )
+    let nested: Promise<void> | undefined
+    vi.mocked(applyMatches).mockImplementationOnce(() => {
+      vi.mocked(flush).mockImplementationOnce(() => { nested = nav.go('/second', { scroll: false }) })
+    })
+    await nav.go('/first', { scroll: false })
+    expect(nav.current?.signal.aborted).toBe(false)
+    expect(page.route.path.value).toBe('/second')
+    expect(nav.committedURL).toBe('http://localhost/first')
+    const form = document.createElement('form')
+    document.querySelector('#app')!.append(form)
+    await Promise.resolve()
+    expect(form.action).toBe('http://localhost/first')
+    nav.current?.abort()
+    await nested
   })
 })
