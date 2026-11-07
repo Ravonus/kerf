@@ -101,6 +101,7 @@ export function routeTree(
     parent.children.push(route)
     nodes.set(l.id, { route, children: [], dir: l.dir })
   }
+  const splats = new Set(manifest.routes.filter((r) => r.splat).map((r) => r.pattern))
   for (const r of manifest.routes) {
     if (r.kind !== 'page') continue
     const parent = at(r.layouts.at(-1))
@@ -109,10 +110,13 @@ export function routeTree(
       .split('/')
       .slice(parent.dir ? parent.dir.split('/').length : 0)
       .join('/')
+    // A splat beside it (`docs/[...slug]` next to `docs/index`) also matches `/docs`, and router-core ranks the
+    // splat first unless the page is its index route, written with the slash.
+    const index = rel && splats.has(`${r.pattern}/$`) ? `${rel}/` : rel
     parent.children.push(
       new BaseRoute({
         getParentRoute: () => parent.route,
-        path: rel || '/',
+        path: index || '/',
         loader: loader(r.file, r.splat),
         weft: r,
       } as never),
