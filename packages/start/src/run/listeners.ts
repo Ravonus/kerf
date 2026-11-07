@@ -10,6 +10,8 @@ export function listeners(nav: Navigation, hot: () => Hot | undefined) {
   addEventListener('online', nav.owing)
   addEventListener('focus', nav.owing)
   addEventListener('pagehide', nav.dispose)
+  // A page restored from the back/forward cache was disposed on the way out: let it prefetch again.
+  addEventListener('pageshow', (e) => e.persisted && nav.prefetch.resume())
   if (hot()) hot()!.on('weft:refresh', (changed) => void nav.reloaded(changed))
   client.invalidated = nav.invalidated
   client.sessionChanged = nav.dispose

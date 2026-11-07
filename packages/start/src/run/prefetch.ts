@@ -116,6 +116,11 @@ export class Prefetch {
     this.cancel(true)
   }
 
+  /** Schedule again after stop(): the page came back from the back/forward cache. */
+  resume() {
+    this.stopped = false
+  }
+
   /** Cancel pending speculation, optionally including work promoted to demand. */
   cancel(all = false) {
     for (const job of this.jobs.values()) if (all || !job.promoted) job.ctrl.abort()

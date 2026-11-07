@@ -600,6 +600,31 @@ test('an island whose code never comes reloads once, then says so instead of sta
   await context.close()
 })
 
+test('an island left while its code is retried does not reload the page it is no longer on', async () => {
+  const context = await browser.newContext()
+  await context.addInitScript(() =>
+    Object.defineProperty(navigator, 'connection', { value: { saveData: true } }),
+  )
+  const page = await context.newPage()
+  await page.route('**/components/lazy.tsx*', (r) => r.abort())
+  let loads = 0
+  page.on('load', () => loads++)
+  await page.goto(url + '/lazy')
+  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.click('.tap[data-id=far]') // the first load fails; the retry waits 800 ms
+  await page.evaluate(() => {
+    const a = Object.assign(document.createElement('a'), { href: '/about' })
+    document.body.append(a)
+    a.click()
+  })
+  await page.waitForFunction(() => location.pathname === '/about')
+  await page.waitForTimeout(1500) // past the retry and its failure
+  expect(loads).toBe(1)
+  expect(await page.$('[data-weft-stale]')).toBeNull()
+  expect(await page.evaluate(() => sessionStorage.length)).toBe(0)
+  await context.close()
+})
+
 test('running late moves nothing: no layout shift, and the same element under the pointer', async () => {
   const { page, errors, release, close } = await stalled()
   await page.evaluate(() => {

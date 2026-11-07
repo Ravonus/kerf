@@ -312,7 +312,9 @@ function sync() {
     if (!subs.size) return conn?.ac.abort()
     if (!running) return void run()
     const live = conn
-    if (!live?.k) return
+    // Between connections the loop sleeps: a changed set wakes it, as the sleep promises.
+    if (!live) return nudge?.()
+    if (!live.k) return
     const add = [...byN.values()].filter((s) => !live.sent.has(s.n))
     const gone = [...live.sent].filter((n) => !byN.has(n))
     if (!add.length && !gone.length) return

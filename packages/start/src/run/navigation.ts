@@ -197,6 +197,8 @@ export class Navigation {
 
   /** No navigation is out any more: what it left owed is for the page now showing. */
   settle() {
+    // Every way a navigation ends comes through here, so its cached-presentation timer stops here too.
+    if (this.current) this.presentation.stop(this.current)
     this.clearShape()
     if (this.source && this.current?.signal.aborted) {
       history.replaceState(history.state, '', this.committedURL)

@@ -113,11 +113,14 @@ function queuedCampaign(
     l.request(
       lockName,
       steal ? { steal: true } : { signal: ctl.signal },
+      // A grant that comes after stop() (a steal can't be aborted) is handed straight back.
       () =>
-        new Promise<void>((ok) => {
-          release = ok
-          hold()
-        }),
+        state.on
+          ? new Promise<void>((ok) => {
+              release = ok
+              hold()
+            })
+          : undefined,
     ).catch(() => {
       if (!state.on || abort !== ctl) return // this tab left the queue on purpose
       if (state.leads) {

@@ -196,29 +196,38 @@ function feedHandle(
   cancel: () => void,
   barrier: number,
 ): Feed {
+  // stopped → starting → running → stopped. A start that resolves after stop() (its turn has passed) is stopped at
+  // once, so a listener can't outlive the feed.
+  let phase: 'stopped' | 'starting' | 'running' = 'stopped'
+  let turn = 0
   let stopping: (() => unknown) | undefined
-  let running = false
   return {
     get running() {
-      return running
+      return phase !== 'stopped'
     },
     covers(tag) {
       const at = tag.indexOf(':')
       return known.has(at < 0 ? tag : tag.slice(0, at))
     },
     async start(probe) {
-      if (running) return
-      running = true
+      if (phase !== 'stopped') return
+      phase = 'starting'
+      const mine = ++turn
+      let stop: (() => unknown) | undefined
       try {
-        stopping = await source.start(sink, probe)
+        stop = await source.start(sink, probe)
       } catch (e) {
-        running = false
+        if (turn === mine) phase = 'stopped'
         throw e
       }
+      if (turn !== mine) return void (await stop?.())
+      stopping = stop
+      phase = 'running'
     },
     async stop() {
       cancel()
-      running = false
+      turn++
+      phase = 'stopped'
       const stop = stopping
       stopping = undefined
       await stop?.()

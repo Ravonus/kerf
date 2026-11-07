@@ -29,6 +29,8 @@ interface Later {
   wait: () => Promise<unknown>
   mount(): void
   running?: Promise<void>
+  /** The element the viewport observer watches for it, until it runs or is disposed. */
+  el?: Element
 }
 const later = new Map<string, Later>()
 /** What `capture.mjs` left: see there for the fields. */
@@ -97,6 +99,8 @@ const run = (r: Later) =>
         }
       },
       () => {
+        // Disposed while it retried (the user moved on): nothing is left to call stale.
+        if (later.get(r.key) !== r) return
         later.delete(r.key)
         stale()
       },
@@ -182,6 +186,7 @@ function watch(r: Later, c: Comment) {
     { rootMargin: '600px' },
   )
   watched.set(el, r)
+  r.el = el
   near.observe(el)
 }
 
@@ -245,6 +250,7 @@ function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<
     onCleanup(() => {
       if (later.get(key) !== r) return
       later.delete(key)
+      if (r.el) near?.unobserve(r.el)
       if (top) drop(c, close!)
     })
     // No capture script (a strict CSP, say): nothing would ever wake it, so it doesn't wait.

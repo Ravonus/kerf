@@ -202,6 +202,24 @@ it('aborts speculative work on production invalidation and disposal', async () =
   }
 })
 
+it('prefetches again after a back/forward cache restore', async () => {
+  const routes: ClientRoutes = { build: 'build', table: [], load: {} }
+  const route = createRouteState({ p: '/from', s: 200, m: [{ id: '/from', params: {} }] }, {})
+  const page = { route, chunk: vi.fn(), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+  const nav = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
+  try {
+    nav.dispose() // pagehide
+    await seed(nav.cache, '/a')
+    nav.prefetch.start(target('/a'), 'focus', { effectiveType: '4g' }, true)
+    expect(nav.prefetch.size).toBe(0)
+    nav.prefetch.resume() // pageshow, persisted
+    nav.prefetch.start(target('/a'), 'focus', { effectiveType: '4g' }, true)
+    expect(nav.prefetch.size).toBe(1)
+  } finally {
+    nav.dispose()
+  }
+})
+
 it('charges the rolling allowance even after cancellation and recovers after 30 seconds', async () => {
   const clock = vi.spyOn(performance, 'now').mockReturnValue(0)
   const cache = new RouteCache('build')
