@@ -19,7 +19,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fnId, inlineSheets, sheetPieces } from '../src/vite.mjs'
 import { INLINE_CSS_MAX } from '../src/inline.mjs'
-import { fixture, site } from './dev-server.setup.mjs'
+import { bindProviders, fixture, site } from './dev-server.setup.mjs'
 
 type Server = { url: string; stop: () => boolean }
 type GetServer = () => Server
@@ -45,6 +45,7 @@ declare global {
 
 // Each build runs in its own node process, as `weft build` does: Nitro's build stalls inside vitest's module runner.
 function build({ preset, ...rest }: { preset: string; [key: string]: unknown }) {
+  bindProviders() // the fixture's media route needs its media.server slot
   const opts = JSON.stringify({ ...rest, preset, logLevel: 'error' })
   const r = spawnSync(process.execPath, [join(import.meta.dirname, 'build-app.mjs'), opts], {
     encoding: 'utf8',

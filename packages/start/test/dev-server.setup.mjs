@@ -17,8 +17,11 @@ export const site = {
   twitter: { card: 'summary_large_image', site: '@acme' },
 }
 
-/** Bind a font.build provider the way `weft plugins sync` does, so the head carries font preloads. */
-function bindFonts() {
+/**
+ * Bind the fixture's providers the way `weft plugins sync` does: font.build, so the head carries font preloads, and
+ * media.server. build.test.ts binds them too, so it doesn't depend on this setup having run first.
+ */
+export function bindProviders() {
   const dir = join(fixture, '.weft', 'slots')
   mkdirSync(dir, { recursive: true })
   const module = fileURLToPath(new URL('./fixtures/font-provider.mjs', import.meta.url))
@@ -36,7 +39,7 @@ function bindFonts() {
 }
 
 export default async function setup({ provide }) {
-  const unbind = bindFonts()
+  const unbind = bindProviders()
   const server = await dev({ root: fixture, site, port: await freePort(), logLevel: 'error' })
   provide('url', server.resolvedUrls.local[0].replace(/\/$/, ''))
   return async () => {
