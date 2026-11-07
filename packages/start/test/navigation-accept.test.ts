@@ -248,4 +248,66 @@ describe('navigation acceptance', () => {
     nav.current?.abort()
     await nested
   })
+
+  it('presents changed params and queries at their first affected outlet', async () => {
+    history.replaceState(null, '', '/users/1/posts/one?q=1')
+    const routes: ClientRoutes = { table: [{ id: '/users/$id/posts/$post',
+      pattern: '/users/$id/posts/$post', layouts: ['layout:', 'layout:users/[id]'] }], load: {} }
+    const levels = ['layout:', 'layout:users/[id]', '/users/$id/posts/$post'].map((id) => ({
+      id: { value: id }, params: { value: { id: '1', post: 'one' } }, shape: { value: undefined },
+    }))
+    const release = vi.fn()
+    const prepareShape = vi.fn(() => ({ kind: 'generated', ready: true,
+      completeness: 'partial', component: () => null, release }))
+    const page = { route: { path: { value: location.pathname + location.search }, levels, prepareShape },
+      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    const real = await vi.importActual<typeof import('../src/run/helpers')>('../src/run/helpers')
+    vi.mocked(guess).mockImplementation(real.guess)
+    const nav = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
+    const first = nav.go('/users/2/posts/one?q=1')
+    expect(levels[0]!.shape.value).toBeUndefined()
+    expect(levels[1]!.shape.value).toHaveLength(2)
+    expect(levels[1]!.params.value.id).toBe('1')
+    const second = nav.go('/users/1/posts/two?q=1')
+    await first
+    expect(levels[1]!.shape.value).toBeUndefined()
+    expect(levels[2]!.shape.value).toHaveLength(1)
+    const third = nav.go('/users/1/posts/one?q=2')
+    await second
+    expect(levels[2]!.shape.value).toHaveLength(1)
+    expect(release).toHaveBeenCalledTimes(3)
+    const back = nav.go('/users/1/posts/one?q=1#section')
+    await third
+    expect(levels[2]!.shape.value).toBeUndefined()
+    expect(release).toHaveBeenCalledTimes(4)
+    nav.current?.abort()
+    await back
+    vi.mocked(guess).mockReturnValue([])
+  })
+
+  it('does not present a same-path or hash change and honors a disabled leaf', async () => {
+    history.replaceState(null, '', '/users/1?q=1')
+    const routes: ClientRoutes = { table: [{ id: '/users/$id', pattern: '/users/$id',
+      layouts: ['layout:'] }], load: {} }
+    const levels = ['layout:', '/users/$id'].map((id) => ({
+      id: { value: id }, shape: { value: undefined },
+    }))
+    const prepareShape = vi.fn(() => null)
+    const page = { route: { path: { value: '/users/1?q=1' }, levels, prepareShape },
+      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    vi.mocked(guess).mockReturnValue(levels.map((item) => item.id.value))
+    const nav = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
+    await nav.go('/users/1?q=1')
+    expect(prepareShape).not.toHaveBeenCalled()
+    const hash = nav.go('/users/1?q=1#part')
+    expect(prepareShape).not.toHaveBeenCalled()
+    const next = nav.go('/users/2?q=1')
+    await hash
+    expect(prepareShape).toHaveBeenCalledOnce()
+    expect(levels[1]!.shape.value).toBeUndefined()
+    nav.current?.abort()
+    await next
+    vi.mocked(guess).mockReturnValue([])
+  })
+
 })

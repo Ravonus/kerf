@@ -115,10 +115,38 @@ export class Navigation {
     }
   }
 
+  /** Find the first layout containing a changed parameter, or the leaf for a changed query. */
+  changedParams(ids: string[], url: URL) {
+    const from = new URL(this.committedURL)
+    if (from.pathname === url.pathname && from.search === url.search) return -1
+    const route = this.routes.table.find((item) => item.id === ids.at(-1))
+    if (!route || guess(this.routes, from.pathname).join('\0') !== ids.join('\0')) return -1
+    try {
+      const before = from.pathname.split('/').filter(Boolean).map(decodeURIComponent)
+      const after = url.pathname.split('/').filter(Boolean).map(decodeURIComponent)
+      const parts = route.pattern.split('/').filter(Boolean)
+      const changed = parts.findIndex((part, index) => part.startsWith('$') &&
+        (part === '$' ? JSON.stringify(before.slice(index)) !== JSON.stringify(after.slice(index)) :
+          before[index] !== after[index]))
+      if (changed >= 0) {
+        const layout = ids.findIndex((id, depth) => depth < ids.length - 1 &&
+          id.startsWith('layout:') && id.slice(7).split('/').filter(Boolean).length > changed)
+        return layout < 0 ? ids.length - 1 : layout
+      }
+      return from.search !== url.search ? ids.length - 1 : -1
+    } catch { return -1 }
+  }
+
   /** Prepare all changed levels before replacing the current outlet. */
-  present(ids: string[]) {
-    const first = ids.findIndex((id, depth) => this.route.levels[depth]?.id.value !== id)
-    if (first < 0 || !this.route.prepareShape) return false
+  present(ids: string[], url: URL) {
+    let first = ids.findIndex((id, depth) => this.route.levels[depth]?.id.value !== id)
+    if (first < 0) first = this.changedParams(ids, url)
+    if (first < 0) {
+      const committed = new URL(this.committedURL)
+      if (url.pathname === committed.pathname && url.search === committed.search) this.clearShape()
+      return false
+    }
+    if (!this.route.prepareShape) return false
     const leases: PreparedRouteShape[] = []
     try {
       for (const id of ids.slice(first)) {
@@ -205,7 +233,7 @@ export class Navigation {
       this.route.path.value = path
       current_(url.pathname)
       flush()
-      this.present(guess(this.routes, url.pathname))
+      this.present(guess(this.routes, url.pathname), url)
       await this.travel(url, ctrl, opts)
     } finally {
       if (this.current === ctrl) this.settle()
