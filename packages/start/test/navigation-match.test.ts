@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+// @vitest-environment-options {"url":"http://localhost/"}
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { createMemoryHistory } from '@tanstack/history'
 import {

@@ -41,6 +41,11 @@ export function retainSourceContext(
       records?.delete(name)
       return null
     }
+    // Absolute and root-relative URLs resolve the same from any path: leave them alone.
+    if (raw && raw !== records?.get(name)?.installed && /^(?:[a-z][a-z\d+.-]*:|\/)/i.test(raw)) {
+      records?.delete(name)
+      return raw
+    }
     let resolved: string
     try {
       resolved = name !== 'href' && !raw ? source : new URL(raw ?? '', base).href

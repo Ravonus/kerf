@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+// @vitest-environment-options {"url":"http://localhost/"}
 import { afterEach, expect, it, vi } from 'vitest'
 import type { ClientRoutes } from '../src/run'
 import type { Navigation } from '../src/run/navigation'

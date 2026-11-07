@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+// @vitest-environment-options {"url":"http://localhost/"}
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { retainSourceContext } from '../src/run/source-context'
 import { current_ } from '../src/run/helpers'
@@ -29,7 +31,7 @@ describe('retained source URL context', () => {
     current_('/elsewhere/new')
     expect(
       document
-        .querySelector('a[href="http://localhost/elsewhere/new"]')
+        .querySelector('a[href="/elsewhere/new"]')
         ?.getAttribute('aria-current'),
     ).toBe('page')
     expect(missing.action).toBe(source)

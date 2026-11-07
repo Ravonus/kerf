@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+// @vitest-environment-options {"url":"http://localhost/"}
 import { afterEach, expect, it, vi } from 'vitest'
 import { retainSourceContext } from '../src/run/source-context'
 
