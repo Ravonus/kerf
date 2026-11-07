@@ -1,0 +1,14 @@
+diff --git a/lib/coreBundle.js b/lib/coreBundle.js
+index 6893f1cf133efec2c5dccc35c77cc7a53870ccbc..eeb4ce6d345971a90edf53dd469a158402999408 100644
+--- a/lib/coreBundle.js
++++ b/lib/coreBundle.js
+@@ -48320,7 +48320,8 @@ var init_wkPage = __esm({
+         promises2.push(session.send("Page.overrideSetting", { setting: "InputTypeMonthEnabled", value: contextOptions.isMobile }));
+         promises2.push(session.send("Page.overrideSetting", { setting: "InputTypeWeekEnabled", value: contextOptions.isMobile }));
+         promises2.push(session.send("Page.overrideSetting", { setting: "FixedBackgroundsPaintRelativeToDocument", value: contextOptions.isMobile }));
+-        promises2.push(session.send("Page.overrideSetting", { setting: "PushAPIEnabled", value: !contextOptions.isMobile }));
++        // weft: the frozen macOS 14 WebKit build predates this setting and rejects it, which fails every new page.
++        promises2.push(session.send("Page.overrideSetting", { setting: "PushAPIEnabled", value: !contextOptions.isMobile }).catch(() => {}));
+         await Promise.all(promises2);
+       }
+       _initializeFrameSessions(frame, promises2) {

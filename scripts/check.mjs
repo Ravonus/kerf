@@ -37,11 +37,15 @@ const only = argv
 const fast = argv.includes('--fast'),
   release = argv.includes('--release'),
   requireTools = argv.includes('--require-tools')
-// --release adds WebKit where it can open a page; elsewhere its tests would only wait out their timeouts.
+// --release tests WebKit too. A WebKit that can't open a page fails the check here, with the reason, rather than
+// letting each of its tests wait out a timeout.
 if (release && !argv.includes('--list')) {
   const webkit = await webkitWorks(root)
-  if (webkit.ok) process.env.WEFT_WEBKIT = '1'
-  else console.log(`webkit      skipped: ${webkit.reason}`)
+  if (!webkit.ok) {
+    console.error(`webkit      FAIL: ${webkit.reason}`)
+    process.exit(1)
+  }
+  process.env.WEFT_WEBKIT = '1'
 }
 // --changed=<ref>: test only the packages a change since <ref> touches, and those that depend on them.
 const changedSince = argv.find((a) => a.startsWith('--changed='))?.slice(10)

@@ -50,7 +50,4 @@ packages are never published.
 - Instant navigation shows its skeleton in about 15-30 ms on 3G, but the
   layout still shifts by about 0.20 between skeleton and content. The
   target is 0; the check fails above 0.25.
-- `--release` runs WebKit only where it can open a page, and prints `webkit skipped: <reason>`
-  where it can't. Playwright's WebKit for macOS 14 can't be driven by the current
-  playwright-core, so Safari coverage needs a macOS 15 or later machine.
 - Changesets is not set up. Versions are set by hand before each release.

@@ -1,6 +1,7 @@
-// Whether this machine's WebKit can open a page. Playwright's WebKit for an older macOS is a frozen build that the
-// current playwright-core can't drive (macOS 14: "Unknown setting: PushAPIEnabled"), and a WebKit test there only
-// waits out its timeout. The release gate asks first, and leaves WebKit out with the reason when the answer is no.
+// Whether this machine's WebKit can open a page. A WebKit that can't (a missing install, or a frozen build for an
+// older macOS that rejects what the current playwright-core sends) makes every WebKit test wait out its timeout, so
+// the release check asks first and fails at once with the reason. patches/playwright-core@*.patch keeps the macOS 14
+// build working.
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
