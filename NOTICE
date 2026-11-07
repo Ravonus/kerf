@@ -1,0 +1,7 @@
+Third-party notices
+
+Pretext (@chenglou/pretext 1.0.0), by Cheng Lou and contributors, is included in packages/text/vendor/pretext. Copyright (c) 2026 Pretext contributors. Its MIT license and the full notices for Chromium, WebKit, ICU and ICU4X are in packages/text/vendor/pretext/LICENSE. Retain those notices when redistributing the applicable material.
+
+Figtree: Copyright 2022 The Figtree Project Authors (https://github.com/erikdkennedy/figtree). Fraunces: Copyright 2020 The Fraunces Project Authors (github.com/undercasetype/Fraunces). Both are licensed under the SIL Open Font License 1.1. The complete license and copyright notices accompany the fonts in examples/lemonstand/solid/src/assets/fonts/LICENSE-figtree.txt and LICENSE-fraunces.txt. Other Figtree copies carry their own license files.
+
+alien-signals 3.2.1 is a comparison dependency in benchmarks/speed/package.json. The tracked repository does not contain an upstream license or provenance notice for an incorporated alien-signals algorithm; this entry does not assert that code was copied into the runtime.
