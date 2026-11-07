@@ -116,9 +116,7 @@ export const load = (s) => ({
                 depend(path, file)
               }
             })
-            if (found?.file) depend(found.file, file)
-            if (found?.code) overrides.set(file, found.code)
-            else if (!found?.file) unusableSkeleton(this, s, root, file)
+            took(this, { s, root, file, found, depend, overrides })
           }
           const files = all.filter(
             (file) =>
@@ -255,6 +253,13 @@ export const api = (s) => ({
   types: () => routeTypes(s.manifest ?? s.scan()),
   serverModules: () => (s.manifest ?? s.scan(), s.serverModules),
 })
+
+/** What a route's imported skeleton gave: a file to watch, an override to use, or nothing (said so). */
+function took(ctx, { s, root, file, found, depend, overrides }) {
+  if (found?.file) depend(found.file, file)
+  if (found?.code) overrides.set(file, found.code)
+  else if (!found?.file) unusableSkeleton(ctx, s, root, file)
+}
 
 /** A route that exports `skeleton` in a form navigation can't use gets none at all: say so once, with what works. */
 function unusableSkeleton(ctx, s, root, file) {
