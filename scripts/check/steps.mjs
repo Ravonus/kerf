@@ -1,0 +1,54 @@
+// Runs the chosen steps of scripts/check.mjs and prints what failed and how to fix it. Returns the exit code.
+
+/** Run every step at once; report each in list order, then the failures. */
+export async function runSteps(chosen, { requireTools, failOn }) {
+  // The steps are independent: they run at once, and each reports in list order as the ones before it finish.
+  const timed = async (step) => {
+    const started = performance.now()
+    let result
+    try {
+      result = await step.run()
+    } catch (e) {
+      result = { problems: [String(e?.stack ?? e)] }
+    }
+    return { result, seconds: ((performance.now() - started) / 1000).toFixed(1) }
+  }
+  const running = chosen.map((step) => timed(step))
+  const results = []
+  for (const [i, step] of chosen.entries()) {
+    const { result, seconds } = await running[i]
+    const count = result.problems?.length ?? 0
+    console.log(
+      `${step.id.padEnd(11)} ${
+        result.skipped
+          ? `skipped: ${result.skipped}`
+          : count
+            ? `${count} problem(s), ${seconds}s`
+            : `ok, ${seconds}s${result.detail ? `; ${result.detail}` : ''}`
+      }`,
+    )
+    results.push({ step, ...result })
+  }
+
+  const failed = results.filter((r) => r.problems?.length)
+  const skipped = results.filter((r) => r.skipped)
+  for (const { step, problems } of failed) {
+    console.log(`\n${step.id}: ${problems.length} problem(s)`)
+    for (const line of problems.slice(0, 60)) console.log(`  ${line}`)
+    if (problems.length > 60)
+      console.log(`  ... and ${problems.length - 60} more: pnpm run check --only=${step.id}`)
+    console.log(`  how to fix: ${step.fix}`)
+  }
+  for (const { step, skipped: why } of skipped)
+    console.log(`\n${step.id} did not run: ${why}. Install it: ${step.install}`)
+  const missed = requireTools ? skipped.length : 0
+  console.log(
+    failed.length || missed
+      ? `\npnpm run check: ${failed
+          .map((r) => r.step.id)
+          .concat(requireTools ? skipped.map((r) => r.step.id) : [])
+          .join(', ')} failed`
+      : `\npnpm run check: all passed${skipped.length ? `, ${skipped.length} skipped` : ''}`,
+  )
+  return failOn && (failed.length || missed) ? 1 : 0
+}

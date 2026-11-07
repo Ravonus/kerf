@@ -2,8 +2,9 @@
 // One command for every rule on the framework's own code: `pnpm run check`. It says what failed and how to fix it, and it's what
 // CI runs. `weft check` is something else: the rules an app gets.
 //
-//   pnpm run check                 everything
-//   pnpm run check --fast          everything but the test suites
+//   pnpm run check                 every step a merge needs (all at once)
+//   pnpm run check --fast          without the test suites
+//   pnpm run check --release       also the release-only steps (the 3G navigation e2e) and WebKit
 //   pnpm run check --only=lint,types
 //   pnpm run check --list          the steps, and what each covers
 //   pnpm run check --require-tools a missing gitleaks or cargo-deny fails instead of skipping (CI does this)
@@ -11,6 +12,7 @@
 import { repoRoot } from './lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
 import { run, allJobs } from './check/run.mjs'
+import { runSteps } from './check/steps.mjs'
 import { typeProblems } from './check/types.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -30,10 +32,13 @@ const only = argv
   ?.slice(7)
   .split(',')
 const fast = argv.includes('--fast'),
+  release = argv.includes('--release'),
   requireTools = argv.includes('--require-tools')
+if (release) process.env.WEFT_WEBKIT = '1'
 const limit = jobs()
 const windows = process.platform === 'win32'
 const bin = (name) => join(root, 'node_modules', '.bin', windows ? `${name}.cmd` : name)
+const LONG = ['packages/create', 'packages/cli', 'packages/warp', 'packages/start']
 const CRATES = ['crates/weft-compiler', 'crates/weft-layout', 'crates/weft']
 const PACKAGES = readdirSync(join(root, 'packages'))
   .filter((d) => existsSync(join(root, 'packages', d, 'package.json')))
@@ -316,6 +321,7 @@ const STEPS = [
     id: 'instant-navigation',
     covers: 'landing scaffold navigation on Fast and Slow 3G',
     slow: true,
+    release: true,
     fix: 'Run `pnpm --filter @weft-js/create test:e2e` and inspect the failures.',
     run: async () => lines(await run('pnpm', ['--filter', '@weft-js/create', 'test:e2e'])),
   },
@@ -333,18 +339,20 @@ const STEPS = [
     fix: 'Run the failing package on its own: `pnpm --filter <name> test`.',
     run: () =>
       all(
+        // The longest suites start first; each gets a few workers rather than the whole machine.
         PACKAGES.filter(
           (d) => JSON.parse(readFileSync(join(root, d, 'package.json'), 'utf8')).scripts?.test,
-        ),
-        // The outer pool owns the budget; independent Vitest pools must not multiply it.
-        (d) => run('pnpm', ['test', '--maxWorkers=1'], d),
+        ).sort((a, b) => LONG.indexOf(b) - LONG.indexOf(a)),
+        (d) => run('pnpm', ['test', '--maxWorkers=4'], d),
       ),
   },
 ]
 
 if (argv.includes('--list')) {
   for (const s of STEPS)
-    console.log(`${s.id.padEnd(11)} ${s.covers}${s.slow ? ' (not with --fast)' : ''}`)
+    console.log(
+      `${s.id.padEnd(11)} ${s.covers}${s.release ? ' (only with --release)' : s.slow ? ' (not with --fast)' : ''}`,
+    )
   process.exit(0)
 }
 if (only)
@@ -354,47 +362,7 @@ if (only)
       process.exit(2)
     }
 
-const chosen = STEPS.filter((s) => (only ? only.includes(s.id) : !(fast && s.slow)))
-const results = []
-for (const step of chosen) {
-  const started = performance.now()
-  process.stdout.write(`${step.id.padEnd(11)} `)
-  let result
-  try {
-    result = await step.run()
-  } catch (e) {
-    result = { problems: [String(e?.stack ?? e)] }
-  }
-  const seconds = ((performance.now() - started) / 1000).toFixed(1)
-  const count = result.problems?.length ?? 0
-  console.log(
-    result.skipped
-      ? `skipped: ${result.skipped}`
-      : count
-        ? `${count} problem(s), ${seconds}s`
-        : `ok, ${seconds}s${result.detail ? `; ${result.detail}` : ''}`,
-  )
-  results.push({ step, ...result })
-}
-
-const failed = results.filter((r) => r.problems?.length)
-const skipped = results.filter((r) => r.skipped)
-for (const { step, problems } of failed) {
-  console.log(`\n${step.id}: ${problems.length} problem(s)`)
-  for (const line of problems.slice(0, 60)) console.log(`  ${line}`)
-  if (problems.length > 60)
-    console.log(`  ... and ${problems.length - 60} more: pnpm run check --only=${step.id}`)
-  console.log(`  how to fix: ${step.fix}`)
-}
-for (const { step, skipped: why } of skipped)
-  console.log(`\n${step.id} did not run: ${why}. Install it: ${step.install}`)
-const missed = requireTools ? skipped.length : 0
-console.log(
-  failed.length || missed
-    ? `\npnpm run check: ${failed
-        .map((r) => r.step.id)
-        .concat(requireTools ? skipped.map((r) => r.step.id) : [])
-        .join(', ')} failed`
-    : `\npnpm run check: all passed${skipped.length ? `, ${skipped.length} skipped` : ''}`,
+const chosen = STEPS.filter((s) =>
+  only ? only.includes(s.id) : !(fast && s.slow) && (release || !s.release),
 )
-process.exit(LEVEL === 'error' && (failed.length || missed) ? 1 : 0)
+process.exit(await runSteps(chosen, { requireTools, failOn: LEVEL === 'error' }))
