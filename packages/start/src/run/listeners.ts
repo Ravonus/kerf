@@ -1,8 +1,7 @@
 import { drain, wake } from '@weft-js/core/dom'
 import type { Held } from '../boot'
 import { client, peers } from '../router'
-import { ours } from './helpers'
-import { routeClicks } from './admission'
+import { admitLink, routeClicks } from './admission'
 import type { Navigation } from './navigation'
 
 type Hot = { on(event: string, on: (data: { queries: boolean }) => unknown): void }
@@ -57,18 +56,19 @@ function clicks(nav: Navigation) {
 }
 
 // Only known-cost intent can start a bounded data request; no page module runs here.
-function preload(nav: Navigation) {
+export function preload(nav: Navigation) {
   let pending: ReturnType<typeof setTimeout> | undefined
   const network = (navigator as Navigator & { connection?: {
     saveData?: boolean; effectiveType?: string
     addEventListener?: (type: string, fn: () => void) => void
+    removeEventListener?: (type: string, fn: () => void) => void
   } }).connection
   const cancel = () => { clearTimeout(pending); nav.prefetch.cancel() }
   const intent = (e: Event) => {
     clearTimeout(pending)
     const target = e.target as Element | null
-    const url = ours(target)
-    if (!url || !target || target.closest('[data-preload="off"]') ||
+    const admitted = admitLink(e, nav.routes)
+    if (!admitted || admitted.noop || !target || target.closest('[data-preload="off"]') ||
       target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"])')
     ) return
     pending = setTimeout(() => {
@@ -76,17 +76,30 @@ function preload(nav: Navigation) {
       const version = nav.cache.version
       nav.cache.setBuild(nav.routes.build)
       if (version !== nav.cache.version) nav.prefetch.cancel(true)
-      nav.prefetch.start(url, e.type === 'focusin' ? 'focus' : 'hover', network, navigator.onLine)
+      nav.prefetch.start(admitted.url, e.type === 'focusin' ? 'focus' : 'hover', network,
+        navigator.onLine)
     }, e.type === 'focusin' ? 0 : 80)
   }
   document.addEventListener('pointerover', intent)
   document.addEventListener('focusin', intent)
   document.addEventListener('pointerout', cancel)
   document.addEventListener('focusout', cancel)
-  document.addEventListener('visibilitychange', () => { if (document.hidden) cancel() })
+  const visibility = () => { if (document.hidden) cancel() }
+  document.addEventListener('visibilitychange', visibility)
   addEventListener('offline', cancel)
   addEventListener('pagehide', cancel)
   network?.addEventListener?.('change', cancel)
+  return () => {
+    cancel()
+    document.removeEventListener('pointerover', intent)
+    document.removeEventListener('focusin', intent)
+    document.removeEventListener('pointerout', cancel)
+    document.removeEventListener('focusout', cancel)
+    document.removeEventListener('visibilitychange', visibility)
+    removeEventListener('offline', cancel)
+    removeEventListener('pagehide', cancel)
+    network?.removeEventListener?.('change', cancel)
+  }
 }
 
 // An in-page anchor fires popstate too; only a changed path needs a navigation.

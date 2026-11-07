@@ -2,10 +2,12 @@ import type { ClientRoutes } from '../run'
 import { guess, ours } from './helpers'
 
 /** Admit a link only after the app's own event handlers have run. */
-export function admitLink(event: MouseEvent | PointerEvent, routes: ClientRoutes) {
-  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey ||
-      event.shiftKey || event.altKey ||
-      (event.type === 'pointerdown' && 'isPrimary' in event && !event.isPrimary)) return
+export function admitLink(event: Event, routes: ClientRoutes) {
+  if (event.defaultPrevented) return
+  if (event instanceof MouseEvent && (event.metaKey || event.ctrlKey || event.shiftKey ||
+      event.altKey || ((event.type === 'pointerdown' || event.type === 'click') &&
+      event.button !== 0))) return
+  if (event.type === 'pointerdown' && 'isPrimary' in event && !event.isPrimary) return
   const path = event.composedPath()
   const anchor = path.find((item) => item instanceof HTMLAnchorElement) as
     HTMLAnchorElement | undefined

@@ -141,3 +141,89 @@ it('aborts speculative work on production invalidation and disposal', async () =
     await vi.waitFor(() => expect(nav.prefetch.size).toBe(0))
   } finally { nav.dispose() }
 })
+
+it('charges the rolling allowance even after cancellation and recovers after 30 seconds', async () => {
+  const clock = vi.spyOn(performance, 'now').mockReturnValue(0)
+  const cache = new RouteCache('build')
+  await seed(cache, '/a')
+  const spec = new Prefetch(cache, () => 1, () => true)
+  try {
+    for (let i = 0; i < 3; i++) {
+      spec.start(target('/a'), 'focus', { effectiveType: '3g' }, true)
+      spec.cancel()
+      await vi.waitFor(() => expect(spec.size).toBe(0))
+    }
+    expect(requests).toHaveLength(3)
+    spec.start(target('/a'), 'focus', { effectiveType: '3g' }, true)
+    expect(requests).toHaveLength(3)
+    clock.mockReturnValue(30_000)
+    spec.start(target('/a'), 'focus', { effectiveType: '3g' }, true)
+    expect(requests).toHaveLength(4)
+  } finally { spec.stop(); clock.mockRestore() }
+})
+
+it('listener network events cancel speculation without cancelling promoted demand', async () => {
+  const { preload } = await import('../src/run/listeners')
+  const network = Object.assign(new EventTarget(), { effectiveType: '4g', saveData: false })
+  vi.stubGlobal('navigator', { connection: network, onLine: true })
+  const cache = new RouteCache('build')
+  await seed(cache, '/a')
+  await seed(cache, '/b')
+  const spec = new Prefetch(cache, () => 1, () => true)
+  const routes: ClientRoutes = { build: 'build', table: [], load: {} }
+  const stop = preload({ routes, cache, prefetch: spec } as unknown as Navigation)
+  try {
+    spec.start(target('/a'), 'focus', network, true)
+    spec.start(target('/b'), 'focus', network, true)
+    const claimed = spec.claim(target('/a'), new AbortController().signal)!
+    network.saveData = true
+    network.dispatchEvent(new Event('change'))
+    expect(requests[0]!.signal.aborted).toBe(false)
+    expect(requests[1]!.signal.aborted).toBe(true)
+    await vi.waitFor(() => expect(spec.size).toBe(1))
+    network.saveData = false
+    spec.start(target('/b'), 'focus', network, true)
+    network.effectiveType = '3g'
+    network.dispatchEvent(new Event('change'))
+    expect(requests[2]!.signal.aborted).toBe(true)
+    expect(requests[0]!.signal.aborted).toBe(false)
+    await vi.waitFor(() => expect(spec.size).toBe(1))
+    network.effectiveType = '4g'
+    spec.start(target('/b'), 'focus', network, true)
+    dispatchEvent(new Event('offline'))
+    expect(requests[3]!.signal.aborted).toBe(true)
+    expect(requests[0]!.signal.aborted).toBe(false)
+    await vi.waitFor(() => expect(spec.size).toBe(1))
+    spec.start(target('/b'), 'focus', network, true)
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true })
+    document.dispatchEvent(new Event('visibilitychange'))
+    expect(requests[4]!.signal.aborted).toBe(true)
+    expect(requests[0]!.signal.aborted).toBe(false)
+    requests[0]!.resolve(new Response(null, { status: 304, headers }))
+    expect((await claimed)?.next.p).toBe('/a')
+  } finally {
+    delete (document as unknown as { hidden?: boolean }).hidden
+    stop(); spec.stop()
+  }
+})
+
+it('does not restrict demand navigation when speculation is ineligible', async () => {
+  history.replaceState(null, '', '/from')
+  vi.stubGlobal('requestAnimationFrame', () => 0)
+  const routes: ClientRoutes = {
+    build: 'build', table: [{ id: '/a', pattern: '/a', layouts: [] }], load: {},
+  }
+  const route = createRouteState({ p: '/from', s: 200, m: [{ id: '/from', params: {} }] }, {})
+  const page = { route, chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(),
+    initialTags: [] }
+  const nav = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
+  try {
+    nav.prefetch.start(target('/a'), 'focus', { saveData: true }, false)
+    expect(requests).toHaveLength(0)
+    const demand = nav.go('/a', { scroll: false })
+    expect(requests).toHaveLength(1)
+    requests[0]!.resolve(new Response(JSON.stringify(payload('/a')), { headers }))
+    await demand
+    expect(route.levels[0]!.id.value).toBe('/a')
+  } finally { nav.dispose() }
+})
