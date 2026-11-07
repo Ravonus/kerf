@@ -64,3 +64,17 @@ export function withHeaders(res: Response, scope: Scope): Response {
   for (const [k, v] of scope.headers) res.headers.append(k, v)
   return res
 }
+
+/** Merge scope headers, then replace metadata for the redirect's new response body. */
+export function redirectBody(res: Response, scope: Scope, type: string, location?: string): Response {
+  withHeaders(res, scope)
+  for (const name of [
+    'content-length', 'content-encoding', 'content-range', 'content-location',
+    'content-language', 'content-disposition', 'transfer-encoding', 'trailer', 'accept-ranges',
+    'etag', 'last-modified', 'digest', 'content-digest', 'repr-digest', 'content-md5',
+  ]) res.headers.delete(name)
+  res.headers.set('content-type', type)
+  if (location === undefined) res.headers.delete('location')
+  else res.headers.set('location', location)
+  return res
+}

@@ -3,7 +3,7 @@ import { keptSheets, sheetId } from '../inline.mjs'
 import type { Scope } from '../exec'
 import { payloadOf } from './payload'
 import { saveData } from './render'
-import { withHeaders } from './request'
+import { redirectBody } from './request'
 import { esc, moved } from './text'
 import { coldPage } from './page-cold'
 import { leftToPage } from './head'
@@ -18,10 +18,10 @@ export function makePage(deps: PageDeps) {
     if (r.redirect) {
       const headers = new Headers(r.redirectHeaders)
       headers.set('location', r.redirect.href)
-      if (!headers.has('content-type')) headers.set('content-type', 'text/html; charset=utf-8')
       if (!headers.has('cache-control')) headers.set('cache-control', 'no-cache')
-      return withHeaders(
+      return redirectBody(
         new Response(moved(r.redirect.href), { status: r.redirect.status, headers }), scope,
+        'text/html; charset=utf-8', r.redirect.href,
       )
     }
     scope.started = true // from here a redirect can't change the status (Q007)

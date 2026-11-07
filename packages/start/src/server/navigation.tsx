@@ -7,7 +7,7 @@ import { App } from '../view'
 import { withLevels } from './render'
 import { payloadOf, wire } from './payload'
 import { noRetention, validateNavigation } from './navigation-cache'
-import { cookieJar, withHeaders } from './request'
+import { cookieJar, redirectBody, withHeaders } from './request'
 import type { HandlerOptions, Resolved } from './types'
 export function makeNavigation(
   resolve: (path: string, request: Request) => Promise<Resolved>,
@@ -25,12 +25,12 @@ export function makeNavigation(
       headers.delete('location')
       headers.set('cache-control', 'no-store')
       return noRetention(
-        withHeaders(
+        redirectBody(
           Response.json(
             { m: [], p: path, s: r.redirect.status, r: r.redirect.href } satisfies RoutePayload,
             { headers },
           ),
-          scope,
+          scope, 'application/json',
         ),
       )
     }

@@ -213,3 +213,50 @@ it('delivers router redirect headers and request-scope headers on both response 
   expect(canonicalResponse.status).toBe(307)
   expect(canonicalResponse.headers.get('location')).toBe('/users/alice?tab=posts')
 })
+
+it.each(['page', 'navigation'] as const)(
+  'normalizes replacement %s body headers after merging scope headers', async (kind) => {
+    const { makePage } = await import('../src/server/page')
+    const { makeNavigation } = await import('../src/server/navigation')
+    const { createScope } = await import('../src/exec')
+    const native = new Headers([
+      ['content-length', '0'], ['content-encoding', 'gzip'], ['content-type', 'application/pdf'],
+      ['etag', '"old"'], ['digest', 'sha-256=old'], ['content-digest', 'sha-256=:old:'],
+      ['content-md5', 'old'], ['content-range', 'bytes 0-0/1'],
+      ['last-modified', 'Wed, 21 Oct 2015 07:28:00 GMT'],
+      ['set-cookie', 'native-a=1; Path=/'], ['set-cookie', 'native-b=2; Path=/'],
+      ['x-route', 'yes'], ['cache-control', 'private'],
+    ])
+    const result = await finalResolution('/users/new', {
+      '/users/new': { load: () => {
+        throw routerRedirect({ href: '/users/alice', statusCode: 302, headers: native })
+      } },
+    })
+    const request = new Request('http://localhost/users/new')
+    const scope = createScope(request)
+    scope.headers.append('set-cookie', 'scope-a=3; Path=/')
+    scope.headers.append('set-cookie', 'scope-b=4; Path=/')
+    scope.headers.set('content-length', '0')
+    scope.headers.set('content-encoding', 'br')
+    scope.headers.set('content-type', 'text/plain')
+    scope.headers.set('etag', '"scope"')
+    scope.headers.set('location', '/scope-target')
+    const resolve = async () => result
+    const response = kind === 'page'
+      ? await makePage({ resolve } as never)(new URL(request.url), request, scope)
+      : await makeNavigation(resolve, (() => {}) as never, new Set(), (() => {}) as never,
+        1, { manifest, modules: {} })('/users/new', request, scope)
+    expect(response.status).toBe(kind === 'page' ? 302 : 200)
+    expect.soft(response.headers.get('location')).toBe(kind === 'page' ? '/users/alice' : null)
+    expect.soft(response.headers.get('content-type')).toBe(kind === 'page'
+      ? 'text/html; charset=utf-8' : 'application/json')
+    for (const name of ['content-length', 'content-encoding', 'etag', 'digest', 'content-digest',
+      'content-md5', 'content-range', 'last-modified']) expect.soft(response.headers.get(name)).toBeNull()
+    expect(response.headers.get('x-route')).toBe('yes')
+    expect(response.headers.get('cache-control')).toBe(kind === 'page' ? 'private' : 'no-store')
+    expect(response.headers.getSetCookie()).toEqual([
+      'native-a=1; Path=/', 'native-b=2; Path=/', 'scope-a=3; Path=/', 'scope-b=4; Path=/',
+    ])
+    expect((await response.text()).length).toBeGreaterThan(0)
+  },
+)
