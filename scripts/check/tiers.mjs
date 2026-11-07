@@ -17,7 +17,8 @@ export const RELEASE_TESTS = {
   ],
   'packages/core': ['test/oracle.test.tsx', 'test/compiler-parity.test.ts', 'test/hmr.test.ts'],
   'packages/create': ['test/scaffold.test.ts', 'test/templates.test.ts'],
-  'packages/start': ['test/build.test.ts'],
+  // ui-state: multi-tab hover over real sockets, with real grace periods (51 s).
+  'packages/start': ['test/build.test.ts', 'test/ui-state.browser.test.ts'],
   'packages/warp': [
     'test/critical.browser.test.tsx',
     'test/field-text-css.browser.test.ts',
