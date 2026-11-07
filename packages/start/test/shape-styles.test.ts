@@ -122,3 +122,21 @@ describe('route shape style preparation', () => {
     }
   })
 })
+
+describe('thin generated shapes', () => {
+  it('stand in a page outline for a page and pass through for a layout', async () => {
+    const { PageSkeleton, PassThroughSkeleton } = await import('../src/run/page-skeleton')
+    const f = fixture()
+    try {
+      const thin = { ...f.routes.shapes!['/generated']!, thin: true } as RouteShape
+      f.routes.shapes = { ...f.routes.shapes, '/thin': thin, 'layout:/docs': thin }
+      expect(prepareRouteShape(f.routes, '/thin', f.doc)!.component).toBe(PageSkeleton)
+      expect(prepareRouteShape(f.routes, 'layout:/docs', f.doc)!.component).toBe(
+        PassThroughSkeleton,
+      )
+      expect(prepareRouteShape(f.routes, '/generated', f.doc)!.component).toBe(f.component)
+    } finally {
+      f.dom.window.close()
+    }
+  })
+})

@@ -95,3 +95,19 @@ export function Link({
     </a>
   )
 }
+
+/**
+ * The current page's path, without its search or hash: the request's on the server, and on the client the accepted
+ * destination from the moment a navigation starts. Reading it is reactive.
+ *
+ * Use it to keep shared chrome mounted across sections: one layout above them renders the sidebar and picks its items
+ * from the path, so moving between sections swaps the items and the page, and the sidebar stays. A layout per section
+ * would be replaced, sidebar and all, on every move between them.
+ *
+ * What reads it runs in the browser, since it changes there: a static level's HTML would be swapped whole on each move.
+ *
+ * @weft client
+ */
+export function currentPath(): string {
+  return active.route?.path.value.replace(/[?#].*/, '') ?? '/'
+}

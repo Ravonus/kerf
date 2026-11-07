@@ -23,7 +23,7 @@ import { jobs, pool } from './jobs.mjs'
 import { leakPlaces } from './quality/leak-places.mjs'
 import { packageProblems } from './quality/package-folders.mjs'
 import { checkLengths } from './quality/lengths.mjs'
-import { conventionsStep } from './quality/conventions.mjs'
+import { conventionsStep, importantStep } from './quality/conventions.mjs'
 import { clippyProblems, lintProblems } from './quality/length-diagnostics.mjs'
 
 // While a new rule beds in this is 'warn': everything is reported and nothing fails. Otherwise 'error'.
@@ -97,6 +97,7 @@ const STEPS = [
       return { problems, detail: `${PACKAGES.length} packages checked` }
     },
   },
+  importantStep(run, lines),
   {
     id: 'format',
     covers: 'oxfmt source formatting at 100 columns, with a checked-file count',

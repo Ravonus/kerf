@@ -9,7 +9,7 @@
 [data-site="you-will-learn"] p { margin: 0; }
 
 [data-site="doc"] [data-scope="prose"] [data-site="challenge"] { margin-block: var(--warp-space-group); }
-[data-site="challenge"] h3 { margin: 0 0 var(--warp-space-related) !important; }
+[data-site="challenge"] h3, [data-site="doc"] [data-scope="prose"] [data-site="challenge"] h3 { margin: 0 0 var(--warp-space-related); }
 [data-site="challenge"] > p { margin-block: 0 var(--warp-space-related); }
 [data-site="challenge"] details { margin-block-start: var(--warp-space-related); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); padding-block-start: var(--warp-space-related); }
 [data-site="challenge"] summary { cursor: pointer; inline-size: fit-content; font-weight: 500; color: var(--warp-color-accent-text); }

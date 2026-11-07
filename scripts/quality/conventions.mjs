@@ -120,3 +120,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   for (const problem of problems) console.error(problem)
   if (problems.length) process.exitCode = 1
 }
+
+/** The check step for important.test.mjs: `!important` only where a user setting or a must-win state overrides every template. */
+export const importantStep = (run, lines) => ({
+  id: 'css-important',
+  covers: '!important only where a user setting or a must-win state overrides every template',
+  fix: 'Settle the cascade with source order, a layer or a selector; see scripts/quality/important.test.mjs.',
+  async run() {
+    return lines(await run(process.execPath, ['--test', 'scripts/quality/important.test.mjs']))
+  },
+})

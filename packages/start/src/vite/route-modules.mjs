@@ -212,8 +212,9 @@ ${accept}const shapeEntry = (module, sheets, name, kind) => {
   const component = Reflect.get(module, name)
   const groupCss = Reflect.get(module, '$weftShapeCss')
   const lead = typeof groupCss === 'string' && groupCss ? [groupCss] : []
+  const thin = kind === 'generated' && Reflect.get(module, '$weftShapeThin') === true
   return typeof component === 'function'
-    ? { kind, component, css: null, get cssText() { return [...lead, ...sheets.map((i) => styles[i])] }, cssStatus: 'partial', bytes: null }
+    ? { kind, component, css: null, get cssText() { return [...lead, ...sheets.map((i) => styles[i])] }, cssStatus: 'partial', bytes: null, thin }
     : { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null }
 }`
 }

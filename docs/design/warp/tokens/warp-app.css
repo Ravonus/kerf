@@ -610,7 +610,7 @@
   :where([data-scope="call-controls"]) { justify-content: space-between; gap: 4px; }
   :where([data-scope="call-controls"] [data-part="end"]) { position: static; }
   :where([data-scope="call-controls"] [data-part="group"]) { background: transparent; box-shadow: none; padding: 0; }
-  :where([data-scope="room"] [data-part="stage"][data-layout="gallery"]) { --_cols: 2 !important; }
+  :where([data-scope="room"] [data-part="stage"][data-layout="gallery"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* the stage's own --_cols is inline */
 }
 /* sidebar: chat / people; a column on desktop, a sheet below 1000 */
 :where([data-scope="room"] [data-part="sidebar"]) {

@@ -236,6 +236,66 @@ So weft never re-renders a page to find out what changed. It knows from the rout
 what is different. A level with no client code at all (a layout that is only markup) arrives as HTML and is swapped in.
 :::
 
+### One sidebar across sections
+
+A layout is kept only while its route is kept. Two sections with a `_layout.tsx` each, `/components/_layout.tsx` and
+`/blocks/_layout.tsx`, are two different levels: going from one to the other replaces the first, sidebar and all, even
+when both render the same sidebar. The sidebar flashes, loses its scroll and its filter, and is built again.
+
+When sections share chrome, put that chrome in the one layout above them and let it follow the URL with
+`currentPath()`:
+
+```tsx
+// src/routes/_layout.tsx
+import { currentPath, type RouteProps } from '@weft-js/start'
+import { derived } from '@weft-js/core'
+import { SideNav } from '@weft-js/warp'
+import { sectionsFor } from '../lib/sections'
+
+export default function Root(props: RouteProps) {
+  const path = derived(currentPath)
+  // '/components/button' -> 'components'
+  const section = derived(() => path.value.split('/')[1] ?? '')
+  const sections = derived(() => sectionsFor(section.value))
+  return (
+    <main>
+      {sections.value && (
+        <SideNav
+          label="Docs"
+          sections={sections.value}
+          current={path.value}
+        />
+      )}
+      {props.children}
+    </main>
+  )
+}
+```
+
+Now `/components` to `/blocks` keeps the root layout: the sidebar stays mounted and only its items and the page change.
+Keep `{props.children}` in the same place on every page, here always the last child of `<main>`. A page outlet that moves
+to a different parent is rebuilt. A section-only `_layout.tsx` is still the right tool for a guard or for data that only
+that section loads.
+
+### What shows while the next page loads
+
+A click answers at once. The URL and every `<Link>`'s `aria-current` change right away, the layouts that stay keep
+showing, and the level that changes shows a skeleton until its data and code arrive. weft makes that skeleton from the
+route's own markup at build time, so it has the page's headings, rows and panels in the right places.
+
+When a page's markup is mostly one component the compiler can't see into, such as a Markdown body, weft shows a
+generic page outline instead. To show something that fits better, export your own:
+
+```tsx
+// src/routes/orders/index.tsx
+import { Shape } from '@weft-js/warp'
+
+export const skeleton = () => <Shape kind="table" rows={8} />
+```
+
+`export const skeleton = false` keeps the old page up until the new one is ready, for a page that loads fast enough
+that a skeleton would only flash.
+
 ### Layouts with data
 
 A layout can export `load` too. Its data arrives as its own `props.data`, separate from the page's. A layout's `load`

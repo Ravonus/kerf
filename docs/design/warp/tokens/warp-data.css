@@ -411,7 +411,7 @@
   :where([data-scope="table"][data-phone="cards"] tbody tr > th) {
     display: flex; justify-content: space-between; align-items: baseline; gap: var(--warp-space-group);
     block-size: auto; min-block-size: 0; padding: 3px 0; border: 0; background: none; grid-column: 1 / -1; white-space: normal;
-    position: static; text-align: end; box-shadow: none !important;
+    position: static; text-align: end; box-shadow: none;
   }
   :where([data-scope="table"][data-phone="cards"] tbody tr > td[data-label])::before,
   :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-label])::before {
@@ -1354,6 +1354,8 @@
 :where([data-scope="table"][data-tree] tbody tr > th:first-child) { box-shadow: inset calc(var(--warp-border-emphasis) * var(--warp-table-tree-tint)) 0 0 var(--_bc, transparent); }
 :where([data-scope="table"][data-tree] tbody tr > td:first-child:dir(rtl)),
 :where([data-scope="table"][data-tree] tbody tr > th:first-child:dir(rtl)) { box-shadow: inset calc(var(--warp-border-emphasis) * var(--warp-table-tree-tint) * -1) 0 0 var(--_bc, transparent); }
+/* a phone card has its own edge: the branch stripe is for rows */
+@container (max-width: 599.98px) { :where([data-scope="table"][data-phone="cards"][data-tree] tbody tr > th:first-child) { box-shadow: none; } }
 /* parents: name in medium weight; aggregates (sum of descendants) in the subtle ink so leaf values read first */
 :where([data-scope="table"][data-tree] tr[aria-expanded] [data-part="primary"]) { font-weight: 600; }
 :where([data-scope="table"][data-tree] tr[aria-expanded] td[data-numeric]) { color: var(--warp-color-text-subtle); font-weight: 500; }

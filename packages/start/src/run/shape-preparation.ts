@@ -1,6 +1,7 @@
 import type { Component } from '../router'
 import type { ClientRoutes, RouteShape } from '../run'
 import { acquireShapeStyles } from './shape-styles'
+import { PageSkeleton, PassThroughSkeleton } from './page-skeleton'
 
 export interface PreparedRouteShape {
   kind: 'generated' | 'override'
@@ -21,6 +22,17 @@ export function prepareRouteShape(
 ): PreparedRouteShape | null {
   const shape = routes.shapes?.[id]
   if (!shape || (shape.kind !== 'generated' && shape.kind !== 'override')) return null
+  // A shape with no structure of its own would leave the outlet blank: a page's outline stands in, and a layout's
+  // place goes to its page's.
+  if (shape.thin)
+    return prepare(
+      {
+        ...shape,
+        component: id.startsWith('layout:') ? PassThroughSkeleton : PageSkeleton,
+      },
+      routes.build,
+      doc,
+    )
   return prepare(shape, routes.build, doc)
 }
 

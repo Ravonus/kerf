@@ -93,6 +93,12 @@ function bindSideNav(
     if (k && collapsible) collapsed.value = readCollapsed(`${k}:collapsed`)
     reveal()
   })
+  // A sidebar kept across sections can change its key with them: each section's folds are its own.
+  watch(key, (k, was) => {
+    if (was === undefined || k === was) return // the first run is onMount's
+    chosen.value = k ? readFolds(k) : {}
+    reveal()
+  })
   watch(
     () => props.current,
     () => {

@@ -40,3 +40,18 @@ export async function importedShapes(ctx, code, id) {
   }
   return out
 }
+
+const TEMPLATE = /tpl\(\s*("(?:[^"\\]|\\.)*")/g
+const SCOPE = /<div data-scope="skeleton-scope"[^>]*>/g
+const BAR = /<span data-skeleton[^>]*><\/span>/g
+
+/**
+ * Whether a compiled shape variant has no structure of its own: no element but its loading scope and placeholder
+ * bars. A route whose markup is one component the compiler can't see into compiles to that, a single bar, which on
+ * screen is an empty page. The router shows a page skeleton instead (`$weftShapeThin`).
+ */
+export function thinShape(code) {
+  for (const [, quoted] of code.matchAll(TEMPLATE))
+    if (/<[a-z]/i.test(JSON.parse(quoted).replace(SCOPE, '').replace(BAR, ''))) return false
+  return true
+}

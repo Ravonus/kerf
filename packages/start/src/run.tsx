@@ -41,6 +41,8 @@ export type RouteShape =
       cssText: string[]
       cssStatus: 'partial'
       bytes: number | null
+      /** A generated shape with no structure of its own (`$weftShapeThin`): the router stands in for it. */
+      thin?: boolean
     }
 
 /** Shape entries are keyed by level id, including layouts and error routes. */

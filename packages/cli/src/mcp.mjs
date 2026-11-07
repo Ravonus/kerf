@@ -193,7 +193,7 @@ export async function handle(root, msg) {
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: 'weft', version: '0.1.1' },
         instructions:
-          'weft is a fine-grained reactive TSX framework, not React. Read `docs` topic `rules` first, and run `check` after every edit. Every page sets `meta` from its own context as part of building it (`docs` topic `meta`). Style with groups from @weft-js/core/style, not class lists: `style_find` before you write one. Verify behavior in the running app with the browser_* tools (or `__weft__.agent` in your own browser), and run `test_gate` before you call a change done.',
+          'weft is a fine-grained reactive TSX framework, not React. Read `docs` topic `rules` first, and run `check` after every edit. Every page sets `meta` from its own context as part of building it (`docs` topic `meta`). Chrome shared across route sections (a sidebar) goes in one layout above them that follows `currentPath()`, never a layout per section (`docs` topic `start`). Style with groups from @weft-js/core/style, not class lists: `style_find` before you write one. Verify behavior in the running app with the browser_* tools (or `__weft__.agent` in your own browser), and run `test_gate` before you call a change done.',
       })
     }
     case 'ping':

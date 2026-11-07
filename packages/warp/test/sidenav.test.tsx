@@ -88,6 +88,23 @@ test('a fold toggles and is remembered under the key; the current section reopen
   two.unmount()
 })
 
+test("a sidebar kept across sections reads each section's folds when its key changes", async () => {
+  localStorage.setItem('a', JSON.stringify({ Advanced: true }))
+  localStorage.setItem('b', JSON.stringify({ Advanced: false }))
+  const key = state('a')
+  const { container: c } = render(() => (
+    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember={key.value} />
+  ))
+  await flush()
+  const advanced = () => folds(c)[1]!
+  expect(advanced().getAttribute('aria-expanded')).toBe('true')
+  const nav = rail(c)
+  key.value = 'b'
+  await flush()
+  expect(rail(c)).toBe(nav) // the same sidebar, not a new one
+  expect(advanced().getAttribute('aria-expanded')).toBe('false')
+})
+
 test('blocked storage: folds still work for the visit', async () => {
   const blocked = () => {
     throw new Error('blocked')

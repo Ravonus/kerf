@@ -52,6 +52,14 @@ Set `meta` on every page as part of building it: a title and one plain sentence 
 route build it from `data` and `params`. `weft docs meta` has the rest.
 Links are `<Link href>`; code navigates with `navigate(href)`.
 
+Navigation is instant: the URL and `aria-current` change on click, kept layouts stay, and the level that changes shows a
+skeleton made from its markup until its data arrives. A route can export `skeleton` (a component) to draw its own, or
+`skeleton = false` to keep the old page up instead. Never build a loading state for a route change yourself.
+
+Chrome shared by several sections (a sidebar, section tabs) goes in the one layout above them, following the URL with
+`currentPath()` from `@weft-js/start`. A `_layout.tsx` per section is replaced, chrome and all, whenever you move
+between sections, so the sidebar flashes and is rebuilt. Keep `{props.children}` in the same parent on every page.
+
 ## Server functions
 
 ```ts

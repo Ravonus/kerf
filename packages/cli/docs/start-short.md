@@ -5,4 +5,5 @@
 - **Database:** Drizzle; `await` every statement. Schema change: `weft db generate` (Q015). Inputs: `schemas.todos.insert.pick({ title: true })`.
 - **Auth:** `ctx.user` is the user or `null`; `auth: 'user'` refuses anyone else (A002). A guard is `redirect('/login')` in a layout's `load`. `run` must still check who owns a row. Login is a database session: a signed cookie caches it for pages for 5 minutes, and mutations read the database (`session.cookieCache` in `createAuth`). JWTs are API-only (`api: { functions }`).
 - **Never** copy query results into `state`, import `db` from a component (Q012), `fetch` `/_weft/*`, or poll (`todos.live()`; rooms: `channel`).
+- **Navigation:** chrome shared across sections (sidebar, tabs) lives in the one layout above them, following `currentPath()`; a `_layout.tsx` per section is replaced on every move between sections. Route changes show a skeleton from the page's markup; `export const skeleton` overrides it.
 - **Every page sets `meta` as you build it**, from `data` and `params`: `weft docs meta`.

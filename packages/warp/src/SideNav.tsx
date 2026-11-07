@@ -48,26 +48,20 @@ export interface SideNavProps {
  * slim strip down the left edge; pressing it brings the panel over the page, full height, with focus kept inside, and
  * the bar, Escape, the backdrop or a link closing it. Links are plain anchors, so a router that handles `<a>` clicks
  * navigates as usual.
+ *
+ * It is chrome that outlives a page: a view transition leaves it in place (`data-vt="side"`) rather than fading it
+ * with the page. Keep it mounted across pages by rendering it in a layout above them all and
+ * passing `sections` and `current` for where the reader is (`currentPath()` in `@weft-js/start`).
  */
 export function SideNav(props: SideNavProps) {
-  const {
-    id,
-    query,
-    open,
-    collapsible,
-    collapsed,
-    refs,
-    words,
-    shown,
-    holds,
-    unfolded,
-    toggle,
-    filterText,
-  } = sideNavState(untrack(() => props))
+  const nav = sideNavState(untrack(() => props))
+  const { id, query, open, collapsible, collapsed, refs, words, shown } = nav
+  const { holds, unfolded, toggle, filterText } = nav
   return (
     <div
       ref={(n) => (refs.root = n)}
       data-scope="sidenav"
+      data-vt="side"
       data-open={open.value ? '' : undefined}
       data-collapsible={collapsible ? '' : undefined}
       data-collapsed={collapsible && collapsed.value ? '' : undefined}

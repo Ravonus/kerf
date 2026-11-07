@@ -11,7 +11,7 @@
 import type { Merged, Meta as MetaObject, Site } from '@weft-js/core/ssr'
 import type { Context } from './data'
 
-export { Link } from './view'
+export { Link, currentPath } from './view'
 export { Form, type FormApi, type FormProps } from './form'
 export { navigate, type NavigateOptions } from './router'
 export {

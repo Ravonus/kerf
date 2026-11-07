@@ -9,7 +9,7 @@ import {
   slots,
   tokens,
 } from './vite/config-plugins.mjs'
-import { importedShapes } from './vite/shapes.mjs'
+import { importedShapes, thinShape } from './vite/shapes.mjs'
 import { purgeCss } from './vite/purge.mjs'
 import { styleGroups } from './vite/style-groups.mjs'
 import { shapeGroupCss } from './vite/shape-styles.mjs'
@@ -115,7 +115,7 @@ export default function weft({
           : ''
         return {
           code: standalone
-            ? `${out.code}\nexport const $weftShapeCss = ${JSON.stringify(generated)};${
+            ? `${out.code}\nexport const $weftShapeCss = ${JSON.stringify(generated)};\nexport const $weftShapeThin = ${thinShape(out.code)};${
                 // A route edit changes its shape too: taking the update here keeps the page instead of reloading it.
                 isDev && !ssr ? '\nif (import.meta.hot) import.meta.hot.accept();' : ''
               }`
