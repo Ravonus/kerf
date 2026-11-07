@@ -326,78 +326,77 @@ The archived plan's §11 questions have these dispositions:
 - Names: weft is the framework; warp is its default UI toolkit.
 - warp-core: framework-independent behavior and CSS; the `/weft` binding imports weft.
 
-### Sprint 5: prove it (cheap agents, benchmarks, size)
+### Sprint 5: prove it (size and load time)
 
-Test the bet with agents that have nothing going for them.
+**Status:** in progress. Final owner scope, 2026-11-05: T01, T02 and T05.
 
-**Scope trimmed 2026-11-05** after the first week's Codex usage ran out in a day and a half. The
-cheap-agent gauntlet is one small run, not a matrix: weft + warp only, the 6 tasks, 1 sample each,
-on `gpt-6-luna`, with the friction pass on 5 Learn pages instead of 20. The matrix against the
-React stacks waits for a later release. Size, load time and js-framework-benchmark stay in scope.
+- [ ] Get the comparison dashboard's weft + warp JS+CSS Brotli total below 51,200 B.
+      Recover S3's growth from 51,397 B to 53,081 B without changing the UI or behavior.
+- [x] Run `benchmarks/compare/measure.mjs` once on Yuna against Solid + Kobalte and
+      record the first-load numbers.
+- [x] `benchmarks/README.md` explains machines, runs, medians, measurements and
+      reproduction. The site's numbers link to it.
 
-**Cheap-agent gauntlet** (`evals/agent-eval`, pre-registered in research 42):
+S5 measurement (Yuna M3 Pro, Node 26.13.0, source `1b397bf4`): first-load task
+time is 215 ms for weft + warp and 150 ms for Solid + Kobalte; FCP is 204 ms and
+132 ms. Style time is 70 ms and 3 ms. The six-stack command exits 0 and all nine
+parity steps pass for each stack. Warp long-list `heightMoved` is 0 despite an
+empty error list, so scrolling acceptance remains unverified. Dashboard JS+CSS
+Brotli remains 52,700 B. The owner requires recording this comparison, not closing
+the load-time gap, for 1.0.
 
-- [ ] Run the matrix of weft + warp against Next + shadcn and Vite + React, on all 6 tasks, with a
-      small model and a mid model, 5 samples each, on yuna-mbp. Cold start, so each agent has only
-      AGENTS.md, `weft docs` and the MCP server. Record pass@1, the diagnostics hit, tokens, wall
-      time and "had to read source".
-- [ ] Friction pass. Give a small-model agent 20 Learn pages, one at a time: "build what this page
-      teaches, without reading the framework's source". It logs every step where it got stuck,
-      guessed, or found a doc that was wrong. Each friction item is a bug against the docs or the
-      diagnostics.
-- [ ] Fix what the runs find, then run the matrix again. Publish both runs.
+After merging main at `bb77d2da`, a source-matched dashboard size build measures
+52,685 B (30,011 B JS + 22,674 B CSS). The two Listbox event alternatives measure
+52,866 B and 52,861 B and are rejected. The 51,200 B size exit remains unmet.
 
-**Size and speed** (decide by benchmark, speed over bytes, 50 KB ceiling):
+The accepted Table state changes at `85f7078e` measure 52,488 B (29,814 B JS +
+22,674 B CSS), a 197 B reduction from that control. All six stack builds pass and
+the other stacks retain their byte totals. At least 1,289 B of recovery remains.
 
-- [ ] Get weft + warp back under 50 KB. Bisect the growth from 40.8 to 53.0 KB between `10-31` and
-      `37ad91b7`. CSS is about 24.7 KB of it, so look at warp's CSS first. Recover S3's +1,684 B
-      warp growth (51,397 to 53,081 B) on the way under 50 KB.
-- [ ] Firefox text preparation +8.5% paired median in S3: confirm or fix.
-- [ ] Find what makes weft + warp's first load (210 ms) slower than Solid + Kobalte (155 ms),
-      when weft alone is 113 ms. Profile the warp mount path in `benchmarks/compare`.
-- [ ] Submit weft as a keyed implementation to
-      [js-framework-benchmark](https://github.com/krausest/js-framework-benchmark): idiomatic, no
-      hand-written DOM, versions pinned. Its numbers are the ones outsiders trust.
-- [ ] `benchmarks/README.md` explains the method: machines, runs, medians, what's measured and how
-      to reproduce it. The site's numbers link to it.
+The private cell helper change at `546a6065` measures 52,464 B (29,790 B JS +
+22,674 B CSS), another 24 B reduction. Same-setup production runs exit 0 with all
+54 parity steps passing and 1,590 sampled warp nodes in both. Task times are
+222/159 ms for control warp/Solid and 240/172 ms for candidate warp/Solid; the
+unchanged stacks also slow in the later run, so no speedup is claimed. Warp
+long-list `heightMoved` stays 0. At least 1,265 B of size recovery remains.
 
-**Exit:** weft + warp is at or under 50 KB. Load time is no worse than Solid + Kobalte, or the
-reason is written down. The agent eval results are published, with weft's pass@1 at or above both
-React stacks.
+The private Row/Fields/Editor/Sheet helper change at `47af9980` measures 52,411 B
+(29,737 B JS + 22,674 B CSS), 53 B below the fresh `97a2eaa0` control. It still
+needs 1,212 B to be strictly below 51,200 B. Both canonical comparison runs pass
+54 parity steps; warp keeps 1,590 sampled nodes and its design checks. Task time
+is 236→240 ms against Solid's 173→169 ms; these ordered runs do not isolate a
+speed effect. Warp's long-list heightMoved remains zero, so scrolling is not
+proven. Full source-labeled evidence: S5 `manager-size-35/size-receipts.tar.gz`.
 
-### Sprint 7: instant navigation
+The Select private state and Item helper changes at `721fde60` measure 52,333 B
+(29,659 B JS + 22,674 B CSS), 78 B below the fresh `ce1c4ccb` control. Tuples alone
+measure 52,407 B. All other stacks retain identical sizes. Both canonical runs
+pass 54 parity steps; warp retains 1,590 sampled nodes and its design checks.
+Task time is 225→238 ms against Solid's 173→168 ms; style is 70→77 ms despite
+identical CSS. No isolated code speed effect is inferred. Long-list heightMoved
+remains zero. At least 1,134 B of recovery remains before the strict ceiling.
+Full source-labeled evidence: S5 `manager-size-36/size-receipts.tar.gz`.
 
-**Added 2026-11-06 (owner).** On a 3G throttle weft loads fast, but a click on a nav item still
-waits before anything moves. Every navigation should respond on the click, by default, with no
-code from the app author.
+The equivalent Unicode-alias change at `5f9b1f44` measures 52,308 B (29,634 B JS +
+22,674 B CSS), 25 B below the fresh `f1738f86` control. All other stack sizes and
+emitted CSS match; emitted dashboard JS differs only in that regex. Exhaustive
+Node 26 comparison checks 1,114,112 code points with zero mismatches. Both
+canonical runs pass 54 parity steps; warp retains 1,590 sampled nodes and its
+design checks. Task time is 239→235 ms against Solid's 170→172 ms; no isolated
+speedup is claimed. Long-list heightMoved remains zero. At least 1,109 B of
+recovery remains. Full evidence: S5 `manager-size-44/size-receipts.tar.gz`.
 
-Build on what exists: `<Boundary pending="shape">` already reserves a compiler-made placeholder,
-and `resource` already tracks `pending`.
+**Deferred until after 1.0 by the owner:**
 
-- [ ] **Respond on the click.** On pointerdown, update the URL, the active nav state and any shared
-      layout at once, and swap the outgoing route's content for the incoming route's skeleton.
-      The old page stays interactive until the new one can render. Back and forward are instant
-      from the client route cache.
-- [ ] **Skeletons by default.** Every route gets one with no code: the compiler's shape for the
-      route's static structure, refined by the last real render of that route when there is one.
-      Per route: `skeleton: false` turns it off, `skeleton: Component` replaces it. Document both.
-- [ ] **Prefetch by intent and cost.** Prefetch a route's code and data on hover, focus,
-      pointerdown and, for small routes, on entering the viewport. The route manifest records each
-      route's byte size. Respect `navigator.connection` (`saveData`, `effectiveType`): on slow
-      networks prefetch only on strong intent and only small payloads.
-- [ ] **Smart server caching.** Route data responses carry ETags and `stale-while-revalidate`.
-      The client keeps a bounded route-payload cache; a revisit renders from cache and revalidates
-      in the background. Mutations invalidate the routes they touch.
-- [ ] **Optimistic by default.** Actions and form submits update the UI first and roll back on
-      failure, with an opt-out per action. Reuse the existing mutation layer; don't add a second.
-- [ ] **Prove it.** A Playwright test under CDP 3G throttling (Fast 3G and Slow 3G) on the
-      scaffolded app: first visual response to a nav click under 50 ms, skeleton under 100 ms,
-      and no layout shift when content replaces the skeleton (CLS 0). Add it to `pnpm run check`.
-- [ ] A Learn page: "Navigation feels instant", with the defaults, the opt-outs and a custom
-      skeleton. Samples follow S1's widths and patterns.
+- Firefox text preparation: confirm or fix the S3 paired-median increase.
+- Submit the keyed js-framework-benchmark entry upstream. The existing local
+  implementation remains in the repo; submission is the owner's later action.
+- Cheap-agent evaluations, the React comparison matrix, and Learn-page friction
+  runs, including fixes and reruns. T03, T04 and T06 are cancelled for this sprint.
 
-**Exit:** the tasks above are on main, the 3G test passes in the gate, and warp stays under the
-50 KB ceiling.
+**Exit:** dashboard JS+CSS Brotli is below 51,200 B, the load comparison and method
+are recorded, and the sprint branch passes `weft-orchestra/bin/gate` before it
+merges to main. No eval or upstream benchmark submission is required for 1.0.
 
 ### Sprint 6: open-source release
 

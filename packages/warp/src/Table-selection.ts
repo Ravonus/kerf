@@ -52,5 +52,5 @@ export function tableSelection<T>(
   }
   const sortable = derived(() => cols.value.filter((c) => c.sort))
 
-  return { keys, chosen, write, pick, headerCheck, pickAll, askSort, sortChoices: sortable }
+  return [keys, chosen, write, pick, headerCheck, pickAll, askSort, sortable] as const
 }

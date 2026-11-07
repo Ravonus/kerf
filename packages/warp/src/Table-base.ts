@@ -48,7 +48,7 @@ export function tableBase<T>(input: TableProps<T>) {
         : input.phone,
   )
 
-  return {
+  return [
     id,
     level,
     cols,
@@ -66,5 +66,5 @@ export function tableBase<T>(input: TableProps<T>) {
     picked,
     width,
     shape,
-  }
+  ] as const
 }

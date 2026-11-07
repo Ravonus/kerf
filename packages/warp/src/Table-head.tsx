@@ -1,5 +1,5 @@
 // Render the table's column header cells.
-import type { tableModel } from './Table-model'
+import type { TableModel } from './Table-model'
 
 /** The sort direction icon. */
 export const sortIcon = () => (
@@ -9,9 +9,9 @@ export const sortIcon = () => (
 )
 
 /** Render the current column headings. */
-export function tableHead<T>(m: ReturnType<typeof tableModel<T>>) {
-  const { cols, order } = m.base
-  const { selection } = m
+export function tableHead<T>(base: TableModel<T>['base'], selection: TableModel<T>['selection']) {
+  const [, , cols, , , , , order] = base
+  const [, , , , , , askSort] = selection
   return (
     <>
       {cols.value.map((c) => (
@@ -26,7 +26,7 @@ export function tableHead<T>(m: ReturnType<typeof tableModel<T>>) {
           aria-sort={order.value?.id === c.id ? order.value.dir : undefined}
         >
           {c.sort ? (
-            <button type="button" data-part="sort" onClick={() => selection.askSort(c)}>
+            <button type="button" data-part="sort" onClick={() => askSort(c)}>
               {c.header}
               {sortIcon()}
             </button>

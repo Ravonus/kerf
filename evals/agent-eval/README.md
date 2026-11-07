@@ -1,18 +1,65 @@
 # agent-eval
 
-Does an agent with no prior weft knowledge do better, and cheaper, on weft than on React? The design, metrics and pass
-criteria are pre-registered in [docs/research/42-agent-eval.md](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/research/42-agent-eval.md). Read that first.
+The original comparative study and hypotheses are in the archived
+[pre-registration](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/research/42-agent-eval.md).
+
+## S5 amendment 1
+
+The current owner instruction replaces the proposed comparison with one sample on
+weft + warp for each of six tasks, using `gpt-6-luna`. Smoke is a calibration
+check; report it separately from the five substantive tasks. Five Learn pages
+are planned for the friction pass. This smaller run cannot test the archived
+comparative hypotheses or their five-sample thresholds. Keep the archived
+hypotheses unchanged and do not claim a comparison from these results.
+
+The S5 run waits for S4 PASS and merge, verified isolation with AGENTS.md,
+weft docs and MCP, and a reliable way to record framework-source reads. The
+entrypoint dispatches to Codex and the weft scaffold path uses pnpm with a
+standalone age policy. M4 verified the packed-current medium-shop reference and
+45 mutants on candidate `9f5436f4`; its source hashes are recorded in
+`tasks/medium-shop/verification.json`. The edit-shop reference and mutants
+are prepared but not browser-calibrated. Bugfix and large-live remain partial.
+The execution guard remains in place: the Codex sandbox, authentication and
+source isolation still need verification.
+
+After those gaps are resolved, build artifacts from the merged candidate, run
+sandbox and request-leak controls, and prove reference and mutant coverage for
+each task before any evaluation. Then run the six-job plan and separately run
+five Learn pages without reading framework source. The current code has no
+friction command. Do not report a dry-run or matrix result until it actually
+runs and sanitized receipts are checked.
 
 ```bash
-npm install                     # here, and `npm ci` in ../apps for Lighthouse
-node run.mjs pack               # weft's tarballs (build:native in packages/core first)
-node run.mjs golden             # one scaffold per stack
-node run.mjs probe              # no model: what the box blocks and allows
-node run.mjs canary             # about $0.01: nothing of the owner's reaches a request
-node run.mjs reference --task small-todo && node run.mjs mutants --task small-todo
-node run.mjs run --task smoke --stack vite-react --model haiku --effort low --force-continuation --name smoke
-node run.mjs plan               # the randomised order, and everything still blocking the matrix
+node --test evals/agent-eval/test/*.test.mjs
 ```
 
-`run` refuses anything but the smoke task without `--approved`, and `matrix` refuses until `plan` lists nothing. Goldens,
-tarballs and raw transcripts live in `/private/tmp/aeval`, and each run's box in `/private/tmp/projects`.
+The archived raw transcripts and boxes live under `/private/tmp`; they are not
+safe to publish without review and sanitization.
+
+## Task calibration
+
+`node evals/agent-eval/run.mjs calibrate medium-shop reference` grades the
+checked-in medium-shop reference. Use `edit-shop reference` for the edit task. `node evals/agent-eval/run.mjs calibrate mutant 'wrong
+stock'` applies that named checked-in mutant and exits 1 only when its named
+check fails; exit 2 means it was not caught or calibration could not run. No agent is launched. The
+command requires a policy-safe, owned golden at
+`/private/tmp/aeval/golden/weft-warp/app` and local harness dependencies.
+Do not infer calibration success from fixture tests or use calibration results
+as an agent evaluation.
+
+For the combined S5 checkout, M4 can run the prepared manager script after
+checking Node 26, the cached pnpm entry, compiler stamps, available disk and
+Chromium. Set `WEFT_T06_PNPM_ENTRY` to the cached pnpm 12.15.0 `bin/pnpm.mjs`:
+
+```bash
+WEFT_T06_PNPM_ENTRY="$HOME/.cache/node/corepack/v1/pnpm/12.15.0/bin/pnpm.mjs" \
+  bash "$HOME/work/weft-S5-verify/repo/evals/agent-eval/evidence/T06/yuna-calibrate.sh"
+```
+
+Set `WEFT_T06_TASK=edit-shop` for the edit reference and its named mutants.
+The default remains medium-shop for existing callers.
+
+The script prints its receipt directory and writes progress to `setup.log`.
+It packs the combined checkout into an owned staging directory, checks installed
+package bytes against those tarballs, then runs the reference before mutants.
+Its fixture tests are not evidence of a completed manager run.

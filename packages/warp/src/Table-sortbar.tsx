@@ -1,12 +1,15 @@
 // The phone card sorting controls.
 import { Button } from './Button'
 import { Select } from './Select'
-import type { tableModel } from './Table-model'
+import type { TableModel } from './Table-model'
 
 /** Render the sort controls under the table's owner. */
-export function tableSortbar<T>(m: ReturnType<typeof tableModel<T>>) {
-  const { order, cols } = m.base
-  const { sortChoices, askSort } = m.selection
+export function tableSortbar<T>(
+  base: TableModel<T>['base'],
+  selection: TableModel<T>['selection'],
+) {
+  const [, , cols, , , , , order] = base
+  const [, , , , , , askSort, sortChoices] = selection
   return (
     <div data-part="sortbar">
       <Select

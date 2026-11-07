@@ -35,5 +35,5 @@ export function tableNotice<T>(
     return typed.value ? 'Try a shorter term, or clear the filter.' : props.empty?.text
   })
 
-  return { retry, clear, noticeTitle, noticeText }
+  return [retry, clear, noticeTitle, noticeText] as const
 }

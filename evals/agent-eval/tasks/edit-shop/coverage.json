@@ -1,0 +1,100 @@
+{
+  "inherits": {
+    "task": "medium-shop",
+    "manifest": "../medium-shop/coverage.json",
+    "immutableMutantsSha256": "40d518f14bbb69b11313f2d47f548d8a1d2cd997d6b73769d9c7c2c6cdd42931",
+    "note": "Inherited checks run in edit-shop; medium mutations are separately calibrated, not automatically applied to this reference."
+  },
+  "requirements": [
+    {
+      "id": "product_live_price",
+      "check": "live prices update products, cart lines and totals",
+      "mutant": "product price stays static"
+    },
+    {
+      "id": "cart_live_price",
+      "check": "live prices update products, cart lines and totals",
+      "mutant": "cart line price stays static"
+    },
+    {
+      "id": "total_live_price",
+      "check": "live prices update products, cart lines and totals",
+      "mutant": "cart total stays static"
+    },
+    {
+      "id": "subscribe_updates",
+      "check": "live prices update products, cart lines and totals",
+      "mutant": "ignore price event"
+    },
+    {
+      "id": "flash_starts",
+      "check": "price flash expires and a later update starts it again",
+      "mutant": "no flash"
+    },
+    {
+      "id": "flash_expires",
+      "check": "price flash expires and a later update starts it again",
+      "mutant": "flash never expires"
+    },
+    {
+      "id": "favourite_aria",
+      "check": "favourites toggle, filter and survive reload",
+      "mutant": "favourite aria never updates"
+    },
+    {
+      "id": "favourite_filter",
+      "check": "favourites toggle, filter and survive reload",
+      "mutant": "favourite filter ignored"
+    },
+    {
+      "id": "favourite_persistence",
+      "check": "favourites toggle, filter and survive reload",
+      "mutant": "favourites not persisted"
+    },
+    {
+      "id": "favourite_toggle",
+      "check": "favourites toggle, filter and survive reload",
+      "mutant": "favourite cannot be removed"
+    },
+    {
+      "id": "price_rise_warning",
+      "check": "price increase compares with the price at first add",
+      "mutant": "price increase warning omitted"
+    },
+    {
+      "id": "price_drop_no_warning",
+      "check": "price increase compares with the price at first add",
+      "mutant": "price decrease wrongly warned"
+    },
+    {
+      "id": "new_cart_baseline",
+      "check": "price increase compares with the price at first add",
+      "mutant": "addition baseline stays original"
+    },
+    {
+      "id": "live_price_sort",
+      "check": "price sorting follows live updates",
+      "mutant": "price sort ignores updates"
+    },
+    {
+      "id": "unchanged_no_flash",
+      "check": "price flash expires and a later update starts it again",
+      "mutant": "unchanged price flashes"
+    },
+    {
+      "id": "flash_duration",
+      "check": "price flash expires and a later update starts it again",
+      "mutant": "flash expires too early"
+    },
+    {
+      "id": "flash_near_one_second",
+      "check": "price flash expires and a later update starts it again",
+      "mutant": "flash expires after 600ms"
+    },
+    {
+      "id": "flash_overlap_resets",
+      "check": "price flash expires and a later update starts it again",
+      "mutant": "overlapping flash timer not cleared"
+    }
+  ]
+}

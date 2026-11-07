@@ -1,0 +1,25 @@
+{
+  "name": "js-framework-benchmark-weft",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "js-framework-benchmark": {
+    "frameworkVersionFromPackage": "@weft-js/core",
+    "frameworkHomeURL": "https://github.com/Ravonus/weft",
+    "repoURL": "https://github.com/Ravonus/weft",
+    "language": "TypeScript"
+  },
+  "scripts": {
+    "build-prod": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@weft-js/core": "0.1.1"
+  },
+  "devDependencies": {
+    "oxfmt": "0.75.0",
+    "oxlint": "1.90.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.5"
+  }
+}

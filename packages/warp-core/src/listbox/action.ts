@@ -107,8 +107,10 @@ export class ListboxAction {
     this.#empty = this.#el('p', 'empty', this.#box)
     this.#empty.textContent = 'No match'
     this.#empty.hidden = true
-    const rowAt = (e: Event) =>
-      this.#rows.findIndex((r) => r.el === (e.target as Element).closest?.('[role="option"]'))
+    const rowAt = (e: Event) => {
+      const target = (e.target as Element).closest?.('[role="option"]')
+      return this.#rows.findIndex((r) => r.el === target)
+    }
     this.#list.onpointermove = (e) => {
       if (e.pointerType === 'touch') return
       const i = rowAt(e)

@@ -277,3 +277,9 @@ test('share cards get warp`s colours, in both schemes, readable, and the theme d
     expect(contrast(c.accent, c.background)).toBeGreaterThan(3)
   }
 })
+
+test('selective choice mirrors do not duplicate configured classic rules', () => {
+  const css = run({ fields: 'classic' }).tokens.css
+  // The one canonical rule has hover and classic selectors.
+  expect(css.match(/\[data-part="value"\]:empty/g)).toHaveLength(2)
+})

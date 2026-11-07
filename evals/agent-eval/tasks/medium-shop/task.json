@@ -1,1 +1,1 @@
-{ "size": "medium", "budgetUsd": 10, "wallMinutes": 45, "gradeable": false, "source": "Product data and behaviour from evals/tasks-v3/shop tickets 1 and 3 and its hidden tests, ported to a browser. The checkout form is new." }
+{ "size": "medium", "budgetUsd": 10, "wallMinutes": 45, "gradeable": true, "source": "Product data and behaviour from evals/tasks-v3/shop tickets 1 and 3 and its hidden tests, ported to a browser. The checkout form is new." }
