@@ -150,3 +150,85 @@ it('clears protected validators on authorization refusal', async () => {
   await cache.read(url('/a'), signal(), fetcher, () => 3, () => true)
   expect(fetcher.mock.calls.map((args) => args[2])).toEqual([undefined, '"one"', undefined])
 })
+
+it('limits immediate use to explicit current freshness permission', async () => {
+  let now = 100
+  const clock = vi.spyOn(performance, 'now').mockImplementation(() => now)
+  try {
+    for (const policy of [
+      'private, max-age=0', 'private, max-age=0, stale-while-revalidate=30, must-revalidate',
+      'private, max-age=0, stale-while-revalidate=30, no-cache',
+      'private, max-age=0, stale-while-revalidate="30"',
+    ]) {
+      const cache = new RouteCache('build')
+      await cache.read(url('/a'), signal(), async () => response(body('/a'),
+        { 'cache-control': policy }), () => 1, () => true)
+      expect(cache.peek(url('/a'), true)).toBeUndefined()
+    }
+    const cache = new RouteCache('build')
+    await cache.read(url('/a'), signal(), async () => response(body('/a'),
+      { 'cache-control': 'private, max-age=0, stale-while-revalidate=2' }), () => 1, () => true)
+    expect(cache.peek(url('/a'), true)?.since).toBe(1)
+    now += 2001
+    expect(cache.peek(url('/a'), true)).toBeUndefined()
+  } finally { clock.mockRestore() }
+})
+
+it('requires loaded client components and islands before immediate rendering', async () => {
+  const { routeCodeReady } = await import('../src/run/helpers')
+  const next = { p: '/a', s: 200, m: [{ id: 'layout', params: {}, s: 1 as const },
+    { id: 'page', params: {} }], i: ['island'] }
+  const component = () => null
+  expect(routeCodeReady(next, {}, {})).toBe(false)
+  expect(routeCodeReady(next, { page: component }, {})).toBe(false)
+  expect(routeCodeReady(next, { page: component }, { island: component })).toBe(true)
+})
+
+it('honors response age and renews permission only after a valid 304', async () => {
+  let now = 100
+  const clock = vi.spyOn(performance, 'now').mockImplementation(() => now)
+  try {
+    const old = new RouteCache('build')
+    await old.read(url('/a'), signal(), async () => response(body('/a'), {
+      'cache-control': 'private, max-age=0, stale-while-revalidate=2', age: '3',
+    }), () => 1, () => true)
+    expect(old.peek(url('/a'), true)).toBeUndefined()
+    const cache = new RouteCache('build')
+    const fresh = { ...headers, 'cache-control': 'private, max-age=0, stale-while-revalidate=2' }
+    const fetcher = vi.fn().mockResolvedValueOnce(response(body('/a'), fresh))
+      .mockResolvedValueOnce(new Response(null, { status: 304, headers: fresh }))
+    await cache.read(url('/a'), signal(), fetcher, () => 1, () => true)
+    now += 1500
+    await cache.read(url('/a'), signal(), fetcher, () => 2, () => true)
+    now += 1000
+    expect(cache.peek(url('/a'), true)?.since).toBe(1)
+    now += 1001
+    expect(cache.peek(url('/a'), true)).toBeUndefined()
+  } finally { clock.mockRestore() }
+})
+
+it('counts response and prefetch delay against the allowed window', async () => {
+  let now = 100
+  const clock = vi.spyOn(performance, 'now').mockImplementation(() => now)
+  try {
+    const cache = new RouteCache('build')
+    let finish!: (value: string) => void
+    const delayed = response(body('/a'), {
+      'cache-control': 'private, max-age=0, stale-while-revalidate=2',
+    })
+    vi.spyOn(delayed, 'text').mockImplementation(() => new Promise((resolve) => { finish = resolve }))
+    const read = cache.read(url('/a'), signal(), async () => delayed, () => 1, () => true)
+    await Promise.resolve()
+    now += 2001
+    finish(body('/a'))
+    await read
+    expect(cache.peek(url('/a'), true)).toBeUndefined()
+    const prefetched = new RouteCache('build')
+    const candidate = { at: 100, since: 1, version: prefetched.version,
+      res: Promise.resolve(response(body('/a'), {
+        'cache-control': 'private, max-age=0, stale-while-revalidate=2',
+      })) }
+    await prefetched.read(url('/a'), signal(), vi.fn(), () => 2, () => true, candidate)
+    expect(prefetched.peek(url('/a'), true)).toBeUndefined()
+  } finally { clock.mockRestore() }
+})

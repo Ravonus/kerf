@@ -4,7 +4,7 @@ import { App } from '../view'
 import { ErrorPage, NotFoundPage } from '../builtin'
 import { matchingRouteAssets } from '../asset-receipt.mjs'
 import type { ClientRoutes } from '../run'
-import { deferred } from './helpers'
+import { deferred, routeCodeReady } from './helpers'
 
 /** What the stream's scripts leave on `globalThis`: each chunk's data as it lands, and what a held Boundary builds with. */
 export const streamed = globalThis as typeof globalThis & {
@@ -108,6 +108,7 @@ export function mount({
     route,
     chunk,
     island,
+    ready: (next: RoutePayload) => routeCodeReady(next, comps, islands),
     initialTags: tags,
     setBag: (next: RoutePayload['b']) => (bag = next),
   }

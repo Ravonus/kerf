@@ -2,12 +2,13 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { client, createRouteState, type RoutePayload } from '../src/router'
 import type { ClientRoutes } from '../src/run'
 
-const requests = vi.hoisted(() => [] as { tag: string | undefined; resolve: (r: Response) => void }[])
+const requests = vi.hoisted(() => [] as { tag: string | undefined; resolve: (r: Response) => void;
+  reject: (error: Error) => void }[])
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/run/helpers', async (load) => ({
   ...await load<typeof import('../src/run/helpers')>(),
-  ask: (_url: URL, _signal: AbortSignal, tag?: string) => new Promise<Response>((resolve) => {
-    requests.push({ tag, resolve })
+  ask: (_url: URL, _signal: AbortSignal, tag?: string) => new Promise<Response>((resolve, reject) => {
+    requests.push({ tag, resolve, reject })
   }),
 }))
 import { Navigation } from '../src/run/navigation'
@@ -19,13 +20,14 @@ function answer(index: number, path: string, value: number, tags: string[] = ['p
     c: [['q', null, value, tags]] }
   requests[index]!.resolve(new Response(JSON.stringify(payload), { headers }))
 }
-function setup() {
+function setup(ready = false) {
   history.replaceState(null, '', '/from')
   vi.stubGlobal('requestAnimationFrame', () => 0)
   const routes: ClientRoutes = { build: 'build', table: ['/from', '/target', '/private', '/other'].map((id) =>
     ({ id, pattern: id, layouts: [] })), load: {} }
   const route = createRouteState({ p: '/from', s: 200, m: [{ id: '/from', params: {} }] }, {})
-  const page = { route, chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+  const page = { route, chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(),
+    ready: () => ready, initialTags: [] }
   const nav = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
   return { nav, route }
 }

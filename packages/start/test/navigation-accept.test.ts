@@ -6,7 +6,8 @@ vi.mock('@weft-js/core/head', () => ({ setHead: vi.fn() }))
 vi.mock('../src/router', () => ({ client: {}, applyMatches: vi.fn(),
   level: (route: { levels: unknown[] }, depth: number) => route.levels[depth] }))
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
-vi.mock('../src/run/helpers', () => ({
+vi.mock('../src/run/helpers', async (load) => ({
+  ...await load<typeof import('../src/run/helpers')>(),
   ask: vi.fn((_url: URL, signal?: AbortSignal) => new Promise((_resolve, reject) => {
     signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true })
   })), current_: vi.fn(), guess: vi.fn((): string[] => []),

@@ -3,10 +3,10 @@ import type { RoutePayload } from '../router'
 const LIMIT = 32
 const BYTES = 4 * 1024 * 1024
 
-type Entry = { body: string; bytes: number; tag: string; tags: string[]; since: number }
-type Read = { next: RoutePayload; since: number; version: number }
+type Entry = { body: string; bytes: number; tag: string; tags: string[]; since: number; until: number }
+type Read = { next: RoutePayload; since: number; version: number; notModified?: boolean; until?: number }
 type FetchRoute = (url: URL, signal: AbortSignal, tag?: string) => Promise<Response>
-export type Candidate = { res: Promise<Response>; since: number; version: number }
+export type Candidate = { res: Promise<Response>; since: number; version: number; at: number }
 
 /** Bounded route bodies for conditional validation; never serves unvalidated content. */
 export class RouteCache {
@@ -58,8 +58,40 @@ export class RouteCache {
       vary.every((v) => ['accept', 'cookie', 'authorization'].includes(v))
   }
 
+  private until(response: Response, started: number) {
+    if (!this.allowed(response)) return 0
+    const parts = (response.headers.get('cache-control') ?? '').split(',').map((s) => s.trim().toLowerCase())
+    if (parts.some((s) => /^(?:no-cache|must-revalidate|proxy-revalidate)(?:\s*=|$)/.test(s))) return 0
+    const max = parts.filter((s) => /^max-age=\d+$/.test(s))
+    const stale = parts.filter((s) => /^stale-while-revalidate=\d+$/.test(s))
+    if (max.length !== 1 || stale.length > 1 || parts.some((s) =>
+      /^(?:max-age|stale-while-revalidate)\s*=/.test(s) &&
+      !/^(?:max-age|stale-while-revalidate)=\d+$/.test(s))) return 0
+    const age = response.headers.get('age')
+    if (age !== null && !/^\d+$/.test(age)) return 0
+    const date = response.headers.get('date')
+    const sent = date === null ? Date.now() : Date.parse(date)
+    if (!Number.isFinite(sent)) return 0
+    const seconds = Number(max[0]!.slice(8)) + Math.min(30, Number(stale[0]?.split('=')[1] ?? 0))
+    const now = performance.now()
+    const transit = Math.max(0, now - started)
+    const elapsed = Math.max(Number(age ?? 0) * 1000 + transit, Date.now() - sent, transit)
+    return now + Math.max(0, Math.min(30_000, seconds * 1000 - elapsed))
+  }
+
+  /** Read only a still-permitted body; callers must also prove its code is loaded. */
+  peek(url: URL, canSeed: boolean): Read | undefined {
+    const key = this.key(url), entry = key && this.entries.get(key)
+    if (!key || !entry || performance.now() >= entry.until) return undefined
+    const next = JSON.parse(entry.body) as RoutePayload
+    if (next.c?.length && !canSeed) return undefined
+    this.entries.delete(key)
+    this.entries.set(key, entry)
+    return { next, since: entry.since, version: this.version, until: entry.until }
+  }
+
   private store(key: string | undefined, response: Response, body: string, next: RoutePayload,
-    since: number, canSeed: boolean) {
+    since: number, canSeed: boolean, started: number) {
     if (!key) return
     this.remove(key)
     const tag = response.headers.get('etag')
@@ -67,14 +99,14 @@ export class RouteCache {
     if (response.status !== 200 || next.s !== 200 || next.r || !tag || !this.allowed(response) ||
       (next.c?.length && !canSeed) || bytes > BYTES) return
     const tags = [...new Set(next.m.flatMap((match) => match.t ?? []))]
-    this.entries.set(key, { body, bytes, tag, tags, since })
+    this.entries.set(key, { body, bytes, tag, tags, since, until: this.until(response, started) })
     this.bytes += bytes
     while (this.entries.size > LIMIT || this.bytes > BYTES) this.remove(this.entries.keys().next().value!)
   }
 
   /** Fetch or validate a body against the current generation before returning it. */
   async read(url: URL, signal: AbortSignal, fetchRoute: FetchRoute, now: () => number,
-    canSeed: () => boolean, candidate?: Candidate): Promise<Read> {
+    canSeed: () => boolean, candidate?: Candidate, onForget?: () => void): Promise<Read> {
     let allowTag = true
     for (;;) {
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
@@ -83,11 +115,13 @@ export class RouteCache {
       const held = candidate?.version === version ? candidate : undefined
       candidate = undefined
       let since = held?.since ?? now()
+      const started = held?.at ?? performance.now()
       const response = await (held?.res ?? fetchRoute(url, signal, cached?.tag))
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
       if (version !== this.version) continue
       if (response.status === 401 || response.status === 403) {
         this.clear()
+        onForget?.()
         throw new Error('Route authorization failed')
       }
       let body: string
@@ -95,12 +129,14 @@ export class RouteCache {
         if (!cached || held || !key || !this.allowed(response) || response.headers.get('etag') !== cached.tag ||
           this.entries.get(key) !== cached) {
           if (key) this.remove(key)
+          onForget?.()
           if (!allowTag) throw new Error('Unexpected route 304')
           allowTag = false
           continue
         }
         body = cached.body
         since = cached.since
+        cached.until = this.until(response, started)
         this.entries.delete(key)
         this.entries.set(key, cached)
       } else {
@@ -115,14 +151,16 @@ export class RouteCache {
       }
       if (response.status === 304 && next.c?.length && !canSeed()) {
         if (key) this.remove(key)
+        onForget?.()
         allowTag = false
         continue
       }
       if (response.status !== 304) {
         if (next.p !== url.pathname + url.search && key) this.remove(key)
-        else this.store(key, response, body, next, since, canSeed())
+        else this.store(key, response, body, next, since, canSeed(), started)
+        if (!next.r && !this.peek(url, canSeed())) onForget?.()
       }
-      return { next, since, version }
+      return { next, since, version, notModified: response.status === 304 }
     }
   }
 }

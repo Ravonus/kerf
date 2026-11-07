@@ -1,6 +1,6 @@
 import { flush } from '@weft-js/core'
 import { rt } from '@weft-js/core/internal'
-import type { Match, RoutePayload } from '../router'
+import type { Component, Match, RoutePayload } from '../router'
 import type { ClientRoutes } from '../run'
 
 /**
@@ -33,6 +33,12 @@ export const ask = (url: URL, signal?: AbortSignal, tag?: string) =>
     cache: 'no-cache',
     headers: { accept: 'application/json', ...(tag && { 'if-none-match': tag }) },
   })
+
+/** Whether every client component and island required by a route is already loaded. */
+export function routeCodeReady(next: RoutePayload, comps: Record<string, Component>,
+  islands: Record<string, Component>) {
+  return next.m.every((m) => m.s || !!comps[m.id]) && (next.i ?? []).every((id) => !!islands[id])
+}
 
 /** The URL a client navigation would take from this event's link, or nothing for a link the browser should follow. */
 export function ours(target: EventTarget | null) {
@@ -97,4 +103,30 @@ export function guess(routes: ClientRoutes, pathname: string): string[] {
       return [...r.layouts, r.id]
   }
   return []
+}
+
+/** Find the outlet whose route parameter changed against the committed URL. */
+export function changedRouteParams(routes: ClientRoutes, committedURL: string, ids: string[], url: URL) {
+    const from = new URL(committedURL)
+    if (from.pathname === url.pathname && from.search === url.search) return -1
+    const route = routes.table.find((item) => item.id === ids.at(-1))
+    if (!route || guess(routes, from.pathname).join('\0') !== ids.join('\0')) return -1
+    try {
+      const partsOf = (path: string) => {
+        const trimmed = path.replace(/^\/+|\/+$/g, '')
+        return trimmed ? trimmed.split('/').map(decodeURIComponent) : []
+      }
+      const before = partsOf(from.pathname)
+      const after = partsOf(url.pathname)
+      const parts = route.pattern.split('/').filter(Boolean)
+      const changed = parts.findIndex((part, index) => part.startsWith('$') &&
+        (part === '$' ? JSON.stringify(before.slice(index)) !== JSON.stringify(after.slice(index)) :
+          before[index] !== after[index]))
+      if (changed >= 0) {
+        const layout = ids.findIndex((id, depth) => depth < ids.length - 1 &&
+          id.startsWith('layout:') && id.slice(7).split('/').filter(Boolean).length > changed)
+        return layout < 0 ? ids.length - 1 : layout
+      }
+      return from.search !== url.search ? ids.length - 1 : -1
+    } catch { return -1 }
 }

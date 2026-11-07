@@ -4,10 +4,11 @@ import { applyMatches, client, level, type Level, type NavigateOptions, type Rou
 import type { ClientRoutes } from '../run'
 import { streamed, type mount } from './boot'
 import { matchingRouteAssets } from '../asset-receipt.mjs'
-import { ask, current_, guess, revive } from './helpers'
+import { ask, changedRouteParams, current_, guess, revive } from './helpers'
 import type { PreparedRouteShape } from './shape-preparation'
 import { retainSourceContext, type SourceContext } from './source-context'
 import { RouteCache, type Candidate } from './cache'
+import { CachePresentation, retryDelay } from './cache-presentation'
 
 const SLOW_FADE = 100
 const RETRY = 1000,
@@ -22,6 +23,7 @@ export class Navigation {
   chunk: Page['chunk']
   island: Page['island']
   setBag: Page['setBag']
+  ready: Page['ready']
   tags: Page['initialTags']
   current: AbortController | undefined
   refreshing: { ctrl: AbortController; tags: string[] } | undefined
@@ -31,6 +33,7 @@ export class Navigation {
   tries = 0
   warm: Warm | undefined
   cache: RouteCache
+  presentation = new CachePresentation()
   // A fade pictures the whole page twice, and the picture holds up every frame. Where that's slow, the page just changes.
   fades = !(navigator.hardwareConcurrency <= 4)
   fading: ViewTransition | undefined
@@ -46,6 +49,7 @@ export class Navigation {
     page: Page,
   ) {
     this.cache = new RouteCache(routes.build)
+    this.ready = page.ready
     this.route = page.route
     this.chunk = page.chunk
     this.island = page.island
@@ -120,34 +124,13 @@ export class Navigation {
 
   /** Find the first layout containing a changed parameter, or the leaf for a changed query. */
   changedParams(ids: string[], url: URL) {
-    const from = new URL(this.committedURL)
-    if (from.pathname === url.pathname && from.search === url.search) return -1
-    const route = this.routes.table.find((item) => item.id === ids.at(-1))
-    if (!route || guess(this.routes, from.pathname).join('\0') !== ids.join('\0')) return -1
-    try {
-      const partsOf = (path: string) => {
-        const trimmed = path.replace(/^\/+|\/+$/g, '')
-        return trimmed ? trimmed.split('/').map(decodeURIComponent) : []
-      }
-      const before = partsOf(from.pathname)
-      const after = partsOf(url.pathname)
-      const parts = route.pattern.split('/').filter(Boolean)
-      const changed = parts.findIndex((part, index) => part.startsWith('$') &&
-        (part === '$' ? JSON.stringify(before.slice(index)) !== JSON.stringify(after.slice(index)) :
-          before[index] !== after[index]))
-      if (changed >= 0) {
-        const layout = ids.findIndex((id, depth) => depth < ids.length - 1 &&
-          id.startsWith('layout:') && id.slice(7).split('/').filter(Boolean).length > changed)
-        return layout < 0 ? ids.length - 1 : layout
-      }
-      return from.search !== url.search ? ids.length - 1 : -1
-    } catch { return -1 }
+    return changedRouteParams(this.routes, this.committedURL, ids, url)
   }
 
   /** Prepare all changed levels before replacing the current outlet. */
-  present(ids: string[], url: URL) {
+  present(ids: string[], url: URL, force = false) {
     let first = ids.findIndex((id, depth) => this.route.levels[depth]?.id.value !== id)
-    if (first < 0) first = this.changedParams(ids, url)
+    if (first < 0) first = force ? ids.length - 1 : this.changedParams(ids, url)
     if (first < 0) {
       const committed = new URL(this.committedURL)
       if (url.pathname === committed.pathname && url.search === committed.search) this.clearShape()
@@ -218,6 +201,7 @@ export class Navigation {
   dispose = () => {
     this.cache.clear()
     this.warm = undefined
+    if (this.current) this.presentation.stop(this.current)
     this.current?.abort()
     this.current = undefined
     this.refreshing?.ctrl.abort()
@@ -234,6 +218,7 @@ export class Navigation {
     if (url.origin !== location.origin) return location.assign(url.href)
     if (!opts.pop && url.href === location.href) return
     this.cache.setBuild(this.routes.build)
+    if (this.current) this.presentation.stop(this.current)
     this.current?.abort()
     if (this.refreshing) {
       this.refreshing.ctrl.abort()
@@ -252,25 +237,31 @@ export class Navigation {
       this.route.path.value = path
       current_(url.pathname)
       flush()
-      this.present(guess(this.routes, url.pathname), url)
-      await this.travel(url, ctrl, opts)
+      const cached = opts.pop ? this.cache.peek(url, !!client.seed) : undefined
+      const shown = this.presentation.show(this, ctrl, url, cached)
+      if (ctrl.signal.aborted || this.current !== ctrl) return
+      if (!shown) this.present(guess(this.routes, url.pathname), url)
+      await this.travel(url, ctrl, opts, shown)
     } finally {
+      this.presentation.stop(ctrl)
       if (this.current === ctrl) this.settle()
     }
   }
 
-  async travel(url: URL, ctrl: AbortController, opts: Options) {
+  async travel(url: URL, ctrl: AbortController, opts: Options, shown = false) {
     const path = url.pathname + url.search
     for (const id of guess(this.routes, url.pathname)) void this.chunk(id).catch(() => {})
     let next: RoutePayload
     let since: number
     let version: number
+    let retries = 0
     for (;;) {
       try {
         const held = this.warm?.path === path && performance.now() - this.warm.at < 10_000
           ? this.warm : undefined
         this.warm = undefined
-        const read = await this.cache.read(url, ctrl.signal, ask, this.now, () => !!client.seed, held)
+        const read = await this.cache.read(url, ctrl.signal, ask, this.now, () => !!client.seed, held,
+          shown ? () => this.presentation.check(this) : undefined)
         this.cache.setBuild(this.routes.build)
         if (ctrl.signal.aborted) return
         if (read.version !== this.cache.version) continue
@@ -282,14 +273,27 @@ export class Navigation {
           const hops = (opts.hops ?? 0) + 1
           return hops > 5 ? location.replace(next.r) : this.go(next.r, { replace: true, hops })
         }
+        if (shown && (next.s === 401 || next.s === 403)) {
+          if (this.ready?.(next)) { this.apply(next, url, path, since, false)(); return }
+          this.presentation.check(this)
+          if (ctrl.signal.aborted) return
+        }
         await this.needs(next)
         this.cache.setBuild(this.routes.build)
         if (ctrl.signal.aborted) return
         if (read.version !== this.cache.version) continue
+        if (shown && read.notModified) return
         break
       } catch {
-        if (!ctrl.signal.aborted) location.replace(url.href)
-        return
+        if (ctrl.signal.aborted) return
+        if (!shown) return location.replace(url.href)
+        if (!this.cache.peek(url, !!client.seed)) {
+          this.current = undefined
+          ctrl.abort()
+          return location.replace(url.href)
+        }
+        await retryDelay(ctrl.signal, Math.min(RETRIES, RETRY * 2 ** retries++))
+        continue
       }
     }
     const swap = () => {
@@ -320,7 +324,7 @@ export class Navigation {
       await fade.updateCallbackDone
     } else swap()
     if (!ctrl.signal.aborted && this.current === ctrl && this.cache.version !== version)
-      await this.travel(url, ctrl, opts)
+      await this.travel(url, ctrl, opts, shown)
   }
 
   /** Fetch the page's data again in place, retrying a failed refresh. */
@@ -360,7 +364,7 @@ export class Navigation {
     this.cache.clear()
     this.warm = undefined
     const url = new URL(location.href),
-      since = this.now()
+      since = this.now(), started = performance.now()
     let version = this.cache.version
     const res = await ask(url)
     if (version !== this.cache.version || !res.ok) return
@@ -376,7 +380,7 @@ export class Navigation {
     if (version !== this.cache.version) return
     this.warm = {
       path: url.pathname + url.search,
-      at: performance.now(),
+      at: started,
       since,
       version,
       res: Promise.resolve(res),
@@ -386,6 +390,7 @@ export class Navigation {
 
   invalidated = (t: string[]) => {
     this.cache.invalidate(t)
+    this.presentation.check(this)
     this.warm = undefined
     if (this.current) this.owed.push(...t)
     else if (this.reads(t)) void this.refresh(t)
