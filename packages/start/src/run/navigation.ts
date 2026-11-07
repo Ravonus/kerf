@@ -161,7 +161,12 @@ export class Navigation {
       leases.forEach((item) => item.release())
       return false
     }
-    const outlet = level(this.route, first)
+    // A same-id layout stays mounted; its existing child outlet owns the presentation.
+    let depth = first
+    while (depth < ids.length - 1 && this.route.levels[depth]?.id.value === ids[depth]) depth++
+    const retained = leases.splice(0, depth - first)
+    retained.forEach((lease) => lease.release())
+    const outlet = level(this.route, depth)
     const old = this.detachShape()
     outlet.shape.value = leases
     this.shape = { outlet, leases }

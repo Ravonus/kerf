@@ -266,7 +266,8 @@ describe('navigation acceptance', () => {
     const nav = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
     const first = nav.go('/users/2/posts/one?q=1')
     expect(levels[0]!.shape.value).toBeUndefined()
-    expect(levels[1]!.shape.value).toHaveLength(2)
+    expect(levels[1]!.shape.value).toBeUndefined()
+    expect(levels[2]!.shape.value).toHaveLength(1)
     expect(levels[1]!.params.value.id).toBe('1')
     const second = nav.go('/users/1/posts/two?q=1')
     await first
