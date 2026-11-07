@@ -19,6 +19,8 @@ await test('packed policy merges tarballs into its inherited security overrides'
     assert.equal(policy.match(/^overrides:$/gm)?.length, 1)
     assert.ok(policy.includes(inherited))
     assert.match(policy, /"@weft-js\/packed-test": "file:\/packed.tgz"/)
+    assert.doesNotMatch(policy, /patchedDependencies/)
+    assert.match(policy, /^minimumReleaseAge:/m)
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

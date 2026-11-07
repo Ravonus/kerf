@@ -6,12 +6,14 @@ import { fileURLToPath } from 'node:url'
 
 export const pkgs = fileURLToPath(new URL('../../', import.meta.url))
 
-/** Write the install policy and tarball overrides for a fresh pnpm workspace. */
+/**
+ * Write the install policy and tarball overrides for a fresh pnpm workspace. weft's own dependency patches stay
+ * behind: their files live in this repo, not in the app.
+ */
 export function writePackedPolicy(dir, tarballs = {}, packages = []) {
-  const policy = readFileSync(
-    new URL('../../../pnpm-workspace.yaml', import.meta.url),
-    'utf8',
-  ).replace(/^packages:\n(?:[ \t].*\n)*/m, '')
+  const policy = readFileSync(new URL('../../../pnpm-workspace.yaml', import.meta.url), 'utf8')
+    .replace(/^packages:\n(?:[ \t].*\n)*/m, '')
+    .replace(/^(?:#.*\n)*patchedDependencies:\n(?:[ \t].*\n)*/m, '')
   const overrides = Object.entries(tarballs)
     .map(([name, spec]) => `  ${JSON.stringify(name)}: ${JSON.stringify(spec)}\n`)
     .join('')
