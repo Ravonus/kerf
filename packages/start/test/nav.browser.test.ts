@@ -47,7 +47,9 @@ async function hold(page: Playwright.Page, match: string) {
     release = ok
   })
   await page.route(match, async (r) => {
-    const reply = await r.fetch()
+    // The test may close the page while this reply is held: the request is gone, which is fine.
+    const reply = await r.fetch().catch(() => undefined)
+    if (!reply) return
     await gate
     await r.fulfill({ response: reply }).catch(() => {})
   })

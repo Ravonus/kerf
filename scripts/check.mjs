@@ -326,6 +326,20 @@ const STEPS = [
     run: async () => lines(await run('pnpm', ['--filter', '@weft-js/create', 'test:e2e'])),
   },
   {
+    id: 'guardrails',
+    covers: 'the tests of the check scripts and eval gates themselves',
+    slow: true,
+    fix: 'Run them: `node --test scripts/quality/*.test.mjs evals/gates/*.test.mjs`.',
+    run: async () => {
+      const tests = ['scripts/quality', 'evals/gates'].flatMap((d) =>
+        readdirSync(join(root, d))
+          .filter((f) => f.endsWith('.test.mjs'))
+          .map((f) => `${d}/${f}`),
+      )
+      return lines(await run(process.execPath, ['--test', ...tests]))
+    },
+  },
+  {
     id: 'rust-tests',
     covers: 'cargo test in each crate',
     slow: true,

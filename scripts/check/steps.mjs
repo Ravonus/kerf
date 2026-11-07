@@ -13,7 +13,17 @@ export async function runSteps(chosen, { requireTools, failOn }) {
     }
     return { result, seconds: ((performance.now() - started) / 1000).toFixed(1) }
   }
-  const running = chosen.map((step) => timed(step))
+  // Two waves: the static steps read the tree while test suites write temporary files into it (Vite's config
+  // timestamps, scaffolds), so the suites start once the static steps are done.
+  const first = chosen.filter((step) => !step.slow).map((step) => [step, timed(step)])
+  const second = (async () => {
+    await Promise.all(first.map(([, run]) => run))
+    return new Map(chosen.filter((step) => step.slow).map((step) => [step, timed(step)]))
+  })()
+  const firstRuns = new Map(first)
+  const running = chosen.map(async (step) =>
+    firstRuns.has(step) ? firstRuns.get(step) : (await second).get(step),
+  )
   const results = []
   for (const [i, step] of chosen.entries()) {
     const { result, seconds } = await running[i]

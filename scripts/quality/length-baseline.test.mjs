@@ -12,8 +12,9 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { basename, join } from 'node:path'
+import { join } from 'node:path'
 import { compareLengths } from './length-baseline.mjs'
+import { packageProblems } from './package-folders.mjs'
 import { clippyProblems, lintProblems } from './length-diagnostics.mjs'
 import { fileLimit, lineCount } from './length-metrics.mjs'
 import { rustFindings } from './length-rust.mjs'
@@ -48,27 +49,20 @@ await test('new and worsened findings fail, while removal and shrinkage pass', (
   assert.match(compareLengths(entry(file, 450), {}, base).join('\n'), /new length offender/)
 })
 
+// In a scratch tree, not the repository: the other check steps run at the same time and would see the folder.
 await test('package folder check rejects a mismatched name', () => {
-  const dir = mkdtempSync(join(root, 'packages/folder-check-'))
+  const scratch = mkdtempSync(join(tmpdir(), 'weft-folder-check-'))
   try {
-    const manifest = join(dir, 'package.json')
-    const env = { ...process.env }
-    delete env.NODE_TEST_CONTEXT
-    const check = () =>
-      spawnSync(process.execPath, ['scripts/check.mjs', '--only=package-folders'], {
-        cwd: root,
-        env,
-        encoding: 'utf8',
-      })
-    writeFileSync(manifest, JSON.stringify({ name: `@weft-js/${basename(dir)}` }))
-    const checked = check()
-    assert.equal(checked.status, 0, checked.stdout + checked.stderr)
+    mkdirSync(join(scratch, 'packages/right'), { recursive: true })
+    const manifest = join(scratch, 'packages/right/package.json')
+    writeFileSync(manifest, JSON.stringify({ name: '@weft-js/right' }))
+    assert.deepEqual(packageProblems(scratch, ['packages/right']), [])
     writeFileSync(manifest, JSON.stringify({ name: '@weft-js/wrong' }))
-    const result = check()
-    assert.equal(result.status, 1)
-    assert.ok(result.stdout.includes(`packages/${basename(dir)}: package name @weft-js/wrong`))
+    assert.deepEqual(packageProblems(scratch, ['packages/right']), [
+      'packages/right: package name @weft-js/wrong requires packages/wrong',
+    ])
   } finally {
-    rmSync(dir, { recursive: true, force: true })
+    rmSync(scratch, { recursive: true, force: true })
   }
 })
 
