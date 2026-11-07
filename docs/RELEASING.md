@@ -4,9 +4,10 @@ Only the owner publishes. Publishing runs on the owner's machine, never in CI.
 
 ## Before a release
 
-1. Make sure `main` passes the full gate: `pnpm run check --require-tools`, the scaffold and
-   runtime-matrix checks, and the packed-install check
-   (`node packages/create/scripts/packed.mjs <dir>`).
+1. Make sure `main` passes the full gate: `pnpm run check --require-tools --release`, then the
+   scaffold and runtime-matrix checks and the packed-install check
+   (`node packages/create/scripts/packed.mjs <dir>`). Run the app builds after the check, not
+   beside it: the browser tests' timings don't hold on a machine that is also building apps.
 2. Set the version in each public package's `package.json` (for the first release candidate,
    `1.0.0-rc.0`) and commit.
 
@@ -49,4 +50,7 @@ packages are never published.
 - Instant navigation shows its skeleton in about 15-30 ms on 3G, but the
   layout still shifts by about 0.20 between skeleton and content. The
   target is 0; the check fails above 0.25.
+- `--release` runs WebKit only where it can open a page, and prints `webkit skipped: <reason>`
+  where it can't. Playwright's WebKit for macOS 14 can't be driven by the current
+  playwright-core, so Safari coverage needs a macOS 15 or later machine.
 - Changesets is not set up. Versions are set by hand before each release.

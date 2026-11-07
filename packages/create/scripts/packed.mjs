@@ -23,6 +23,8 @@ import { jobs, pool } from '../../../scripts/jobs.mjs'
 if (!process.argv[2]) throw new Error('usage: packed.mjs <empty-dir> [app]')
 const root = resolve(process.argv.slice(2).find((a) => !a.startsWith('--')))
 if (existsSync(root) && readdirSync(root).length) throw new Error(`${root} is not empty`)
+// One build id for every app: the native and WASM builds of one app have to come out byte for byte the same.
+process.env.WEFT_BUILD_ID ??= 'packed00'
 const run = (cmd, args, cwd, env) =>
   promisify(execFile)(cmd, args, { cwd, env, encoding: 'utf8', maxBuffer: 1 << 26 })
 const shell = (cmd, args, cwd) => run(cmd, args, cwd, process.env)

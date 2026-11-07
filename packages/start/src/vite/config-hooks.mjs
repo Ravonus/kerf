@@ -145,7 +145,14 @@ export const renderChunk = (s) => ({
 
 export const configResolved = (s) =>
   function (config) {
-    s.build = createHash('sha256').update(String(Date.now())).digest('hex').slice(0, 8)
+    // Each build is its own version, unless it's pinned: instances built apart that serve one deploy, or a
+    // reproducible build (SOURCE_DATE_EPOCH), have to agree on it.
+    s.build =
+      process.env.WEFT_BUILD_ID ||
+      createHash('sha256')
+        .update(process.env.SOURCE_DATE_EPOCH || String(Date.now()))
+        .digest('hex')
+        .slice(0, 8)
     if (s.dev) s.build = 'dev'
     s.root = config.root
     const main = config.plugins.find((p) => p.name === 'weft')

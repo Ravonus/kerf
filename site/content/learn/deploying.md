@@ -113,6 +113,7 @@ The variables weft itself reads:
 | `PORT`, `HOST` | Where the built server listens. |
 | `DATABASE_URL` | The database, read by the scaffold's `src/db/index.server.ts`. |
 | `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` | Sign-in. `BETTER_AUTH_URL` must match where the app is served, or sign-in answers `INVALID_ORIGIN`. |
+| `WEFT_BUILD_ID` | At build time: pins the build's version. Set it when instances built separately serve one deploy, so they agree on it. `SOURCE_DATE_EPOCH` also works. |
 | `WEFT_SITE_URL` | The site's address, when `site.url` isn't set ([Metadata and share images](/learn/metadata-and-share-images)). |
 | `WEFT_MEDIA_DIR` | Where uploads are stored ([Uploads and media](/learn/uploads-and-media)). |
 | `REDIS_URL`, `NATS_URL` | A realtime bus, with `@weft-js/realtime-redis` or `-nats`. |
