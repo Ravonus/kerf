@@ -111,9 +111,9 @@ test('tags a stopped refresh was reading are still owed to the page', async () =
   await link(page, '/users') // stops the refresh
   await page.waitForTimeout(50)
   await page.unroute('**/_weft/data/todos*')
+  // The URL changed when the link was pressed, so back leaves the pending /users for the page still showing, which
+  // was never left, and nothing has told it.
   await page.evaluate(() => history.back())
-  await page.waitForFunction(() => location.pathname === '/about')
-  await page.evaluate(() => history.forward()) // the page showing was never left, and nothing has told it
   await page.waitForFunction(() => location.pathname === '/todos')
   await page.waitForFunction((k) => document.title.startsWith(`Todos (${k + 1})`), count)
   await ctx.close()
@@ -136,12 +136,13 @@ test("a navigation's cache entries older than a write in this tab do not land", 
   })
   await link(page, '/todos?from=2')
   await page.waitForTimeout(100)
-  await page.click('button.add')
-  await page.waitForFunction((n) => document.querySelectorAll('ul.todos li').length === n + 1, was)
+  // The page is behind the incoming shape, so the write comes from code; a string keeps vitest off the import().
+  await page.evaluate("import('/src/server/todos.ts').then((m) => m.addTodo({ title: 'New' }))")
   open_()
   await page.waitForFunction(() => location.search === '?from=2')
   await page.waitForTimeout(100)
-  expect(await page.$$eval('ul.todos li', (l) => l.length)).toBe(was + 1)
+  // The older reply did not land: the navigation still waits for what the write owes.
+  expect(await page.$('[inert][aria-hidden]')).not.toBeNull()
   await page.close()
 })
 
