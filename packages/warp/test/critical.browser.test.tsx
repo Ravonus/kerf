@@ -89,7 +89,10 @@ async function take(doc: string, width: number) {
       : r.abort(),
   )
   await page.goto('http://app.test/')
-  const out = await page.evaluate(dump)
+  // One JSON string back, not the object: Playwright's own serializer takes three times as long on this many styles.
+  const out = JSON.parse(
+    await page.evaluate<string>(`JSON.stringify((${dump.toString()})())`),
+  ) as ReturnType<typeof dump>
   await context.close()
   return out
 }
