@@ -284,14 +284,31 @@ showing, and the level that changes shows a skeleton until its data and code arr
 route's own markup at build time, so it has the page's headings, rows and panels in the right places.
 
 When a page's markup is mostly one component the compiler can't see into, such as a Markdown body, weft shows a
-generic page outline instead. To show something that fits better, export your own:
+generic page outline instead. To show something that fits better, name your own:
 
 ```tsx
 // src/routes/orders/index.tsx
-import { Shape } from '@weft-js/warp'
+function OrdersSkeleton() {
+  return (
+    <section data-part="orders">
+      <h1>Orders</h1>
+      <ul>
+        <li data-skeleton></li>
+        <li data-skeleton></li>
+        <li data-skeleton></li>
+      </ul>
+    </section>
+  )
+}
 
-export const skeleton = () => <Shape kind="table" rows={8} />
+export const skeleton = OrdersSkeleton
 ```
+
+It is drawn before any of the page's code has loaded, so it is plain markup only: `div`, `span`, `section`,
+`article`, `main`, `header`, `footer`, `p`, `h1` to `h6`, `ul`, `ol` and `li`, with string `class` and `data-*`
+attributes, and text. Real headings and labels read better than grey bars, so put in what you already know. The
+function can also live in its own file and be imported. Anything else is a build warning, and the route shows no
+skeleton.
 
 `export const skeleton = false` keeps the old page up until the new one is ready, for a page that loads fast enough
 that a skeleton would only flash.

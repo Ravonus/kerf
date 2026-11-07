@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, relative, resolve } from 'node:path'
 import { readMigrations } from '../migrations.mjs'
@@ -118,6 +118,7 @@ export const load = (s) => ({
             })
             if (found?.file) depend(found.file, file)
             if (found?.code) overrides.set(file, found.code)
+            else if (!found?.file) unusableSkeleton(this, s, root, file)
           }
           const files = all.filter(
             (file) =>
@@ -254,3 +255,17 @@ export const api = (s) => ({
   types: () => routeTypes(s.manifest ?? s.scan()),
   serverModules: () => (s.manifest ?? s.scan(), s.serverModules),
 })
+
+/** A route that exports `skeleton` in a form navigation can't use gets none at all: say so once, with what works. */
+function unusableSkeleton(ctx, s, root, file) {
+  if (!/export\s+const\s+skeleton\b/.test(readFileSync(file, 'utf8'))) return
+  const warned = (s.skeletonWarned ??= new Set())
+  if (warned.has(file)) return
+  warned.add(file)
+  ctx.warn(
+    `${relative(root, file)}: \`export const skeleton\` can't be used, so this route shows no skeleton. ` +
+      'Name a function in this file (or one imported from its own file) whose JSX is plain markup: div, span, section, ' +
+      'article, main, header, footer, p, h1-h6, ul, ol, li, with only string class and data-* attributes. ' +
+      '`export const skeleton = false` turns it off. `weft docs start` has an example.',
+  )
+}

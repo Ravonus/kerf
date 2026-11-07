@@ -31,6 +31,33 @@ const FILES = [
   ['src/db/schema.ts', 'your tables'],
 ]
 
+/**
+ * What a move to the home page shows until it arrives: the hero's own words on its poster, so the swap moves nothing.
+ * Navigation draws it before any of this page's code loads, so it is plain markup; keep its words in step with hero().
+ */
+function HomeSkeleton() {
+  return (
+    <section data-site="hero">
+      <div data-part="poster"></div>
+      <div data-part="say">
+        <h1>The TypeScript framework for fast web apps.</h1>
+        <p>
+          Write components in TSX, as you would in React. weft compiles them into small, direct page
+          updates, and comes with routing, data, a UI kit and errors your coding agent can act on.
+        </p>
+        <div data-part="next">
+          <span data-scope="button" data-size="lg">
+            Get started
+          </span>
+          <span data-part="quiet">See examples</span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export const skeleton = HomeSkeleton
+
 export default function Home() {
   return (
     <>

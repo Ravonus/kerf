@@ -53,8 +53,24 @@ route build it from `data` and `params`. `weft docs meta` has the rest.
 Links are `<Link href>`; code navigates with `navigate(href)`.
 
 Navigation is instant: the URL and `aria-current` change on click, kept layouts stay, and the level that changes shows a
-skeleton made from its markup until its data arrives. A route can export `skeleton` (a component) to draw its own, or
-`skeleton = false` to keep the old page up instead. Never build a loading state for a route change yourself.
+skeleton made from its markup until its data arrives. Never build a loading state for a route change yourself. When the
+made one doesn't fit (a page that is one big component, a hero), name a function of plain markup and export it:
+
+```tsx
+function HomeSkeleton() {
+  return (
+    <section data-site="hero">
+      <h1>Your headline</h1>
+      <p data-skeleton></p>
+    </section>
+  )
+}
+export const skeleton = HomeSkeleton
+```
+
+It runs before the page's code loads, so only `div span section article main header footer p h1-h6 ul ol li`, string
+`class`/`data-*` attributes and text; anything else warns and leaves no skeleton. `export const skeleton = false` keeps
+the old page up instead.
 
 Chrome shared by several sections (a sidebar, section tabs) goes in the one layout above them, following the URL with
 `currentPath()` from `@weft-js/start`. A `_layout.tsx` per section is replaced, chrome and all, whenever you move
