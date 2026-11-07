@@ -140,7 +140,7 @@ describe('docs', () => {
 })
 
 describe('AGENTS.md', () => {
-  it('is generated from the installed weft and stays under 8 KB', async () => {
+  it('is generated from the installed weft and stays under 9 KB', async () => {
     const { text, bytes, overLimit } = await agentsMd(fixture)
     expect(bytes).toBeLessThan(limit)
     expect(overLimit).toBe(false)
