@@ -4,6 +4,7 @@ import { sideNavState } from './SideNav/state'
 import { SideNavLead, SideNavSections } from './SideNav/sections'
 import './styles'
 import '@weft-js/warp-core/styles/components/button.css' // the close button, without a bar
+import '@weft-js/warp-core/styles/layout/tokens.css' // the bar height, the view's height and the safe areas, without a Shell
 import '@weft-js/warp-core/styles/layout/navlist.css'
 import '@weft-js/warp-core/styles/layout/sidenav.css'
 
