@@ -97,7 +97,7 @@
     [data-part="files"] dd { margin-block-end: var(--warp-space-tight); padding-inline-start: 2ch; }
     [data-part="files"] dd:last-child { margin-block-end: 0; }
   }
-  [data-site="page"] > h1, [data-part="reading"] h1 { font-family: var(--warp-text-display-font); font-weight: var(--warp-text-display-weight); font-size: clamp(calc(2.125 * var(--warp-rem)), calc(1.2 * var(--warp-rem)) + 2vw, calc(2.75 * var(--warp-rem))); line-height: 1.1; letter-spacing: var(--warp-text-display-tracking); color: var(--warp-color-text); text-box: normal; }
+  [data-site="page"] > h1, [data-part="reading"] h1 { font-family: var(--warp-text-display-font); font-weight: var(--warp-text-display-weight); font-size: clamp(calc(2.125 * var(--warp-rem)), calc(1.2 * var(--warp-rem)) + 2vw, calc(2.75 * var(--warp-rem))); line-height: 1.1; letter-spacing: var(--warp-text-display-tracking); color: var(--warp-color-text); text-box: normal; --warp-trim-k: 0; }
 
   [data-site="arena"] [data-part="actions"] { display: flex; flex-wrap: wrap; gap: var(--warp-space-related); align-items: center; margin-block-end: var(--warp-space-group); }
   [data-site="arena"] [data-part="stage"] { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: var(--warp-space-group); }

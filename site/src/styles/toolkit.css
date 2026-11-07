@@ -103,8 +103,8 @@
 [data-site="related"] > span { font-size: var(--doc-small); color: var(--dim); }
 [data-site="moved"] { padding: 64px var(--warp-space-page); }
 [data-site="tk-section"] { margin-block-start: 64px; scroll-margin-block-start: 88px; }
-[data-site="tk-section"] > h2 { margin: 0 0 var(--warp-space-related); font: 600 var(--doc-h2)/1.25 var(--doc-sans); letter-spacing: -0.015em; text-transform: none; color: var(--ink); text-box: normal; }
-[data-site="tk-section"] h3 { margin: 0 0 var(--warp-space-tight); font-family: var(--doc-sans); font-weight: 600; font-size: var(--doc-h3); line-height: 1.35; letter-spacing: -0.01em; color: var(--ink); text-box: normal; }
+[data-site="tk-section"] > h2 { margin: 0 0 var(--warp-space-related); font: 600 var(--doc-h2)/1.25 var(--doc-sans); letter-spacing: -0.015em; text-transform: none; color: var(--ink); text-box: normal; --warp-trim-k: 0; }
+[data-site="tk-section"] h3 { margin: 0 0 var(--warp-space-tight); font-family: var(--doc-sans); font-weight: 600; font-size: var(--doc-h3); line-height: 1.35; letter-spacing: -0.01em; color: var(--ink); text-box: normal; --warp-trim-k: 0; }
 [data-site="tk-section"] [data-site="ex"] + [data-site="ex"], [data-site="tk-section"] [data-part="note"] + [data-site="ex"] { margin-block-start: 40px; }
 [data-site="ex"] { scroll-margin-block-start: 128px; }
 [data-site="ex"] > [data-part="note"], [data-site="tk-section"] [data-part="note"] { max-inline-size: 68ch; margin-block: 0 var(--warp-space-related); font-size: var(--doc-body); line-height: 1.6; color: var(--dim); }
@@ -171,7 +171,7 @@
 [data-tk="group"] { margin-block-end: 48px; scroll-margin-block-start: 128px; }
 [data-tk="group"][hidden] { display: none; }
 [data-tk="group"] > header { display: grid; gap: var(--warp-space-tight); margin-block-end: var(--warp-space-group); }
-[data-tk="group"] h2 { font: 600 var(--doc-h2)/1.25 var(--doc-sans); letter-spacing: -0.015em; text-transform: none; color: var(--ink); text-box: normal; }
+[data-tk="group"] h2 { font: 600 var(--doc-h2)/1.25 var(--doc-sans); letter-spacing: -0.015em; text-transform: none; color: var(--ink); text-box: normal; --warp-trim-k: 0; }
 [data-tk="group"] > header p { max-inline-size: 68ch; color: var(--dim); font-size: var(--doc-small); line-height: 1.5; }
 /* A desktop hub is three cards to a row (two on a narrower window), each picture about 300px wide: four to a row drew
    them at 150 to 220px, where an example's words were specks. Its picture is 3:2 (a chart's 4:3, since a chart always

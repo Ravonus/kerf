@@ -108,3 +108,37 @@ await test('the scan sees declarations inside nested at-rules', () => {
     { decl: 'color: red !important', context: '@media (forced-colors: active) { :where(a)' },
   ])
 })
+
+/** Rules (innermost blocks) that turn the trim off and don't zero warp's font-swap fix with it. */
+export function untrimmed(css) {
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, ' ')
+  const bad = []
+  for (const [, prelude, body] of text.matchAll(/([^{};]*)\{([^{}]*)\}/g))
+    if (
+      /(^|;)\s*text-box(-trim)?\s*:\s*(normal|none)\b/.test(body) &&
+      !/--warp-trim-k\s*:\s*0\b/.test(body)
+    )
+      bad.push(prelude.trim())
+  return bad
+}
+
+// warp pads a trimmed heading by (brand cap − fallback cap) while the fallback face renders, so the box keeps its
+// height at the swap. CSS can't read an element's text-box, so `--warp-trim-k` says whether it's trimmed: a rule that
+// takes the trim off and leaves k at 1 gets the padding with no trim to cancel, and the page moves when the font
+// lands (CLS).
+await test('a rule that takes a heading trim off zeroes the swap fix too', () => {
+  const dirs = ['docs/design/warp/tokens', 'site/src', 'examples', 'packages/create/templates']
+  const bad = []
+  for (const dir of dirs)
+    for (const file of cssFiles(join(root, dir)))
+      for (const rule of untrimmed(readFileSync(file, 'utf8')))
+        bad.push(`${relative(root, file)}: ${rule}`)
+  assert.deepEqual(bad, [], 'Add `--warp-trim-k: 0;` beside `text-box: normal`')
+})
+
+await test('the trim scan pairs the two in one rule', () => {
+  assert.deepEqual(
+    untrimmed('h1 { text-box: normal; color: red } h2 { text-box: normal; --warp-trim-k: 0 }'),
+    ['h1'],
+  )
+})

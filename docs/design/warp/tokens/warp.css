@@ -868,7 +868,9 @@
        0 once the web font renders, so the loaded layout is exactly the text-box one. Display text trims at
        vivid only: the hero title, and any element marked data-trim="display", reads the display switch.
        An element that sets text-box: var(--warp-text-display-trim) itself sets data-trim="display" too, and a
-       heading laid out as flex or grid (text-box only trims block containers) sets --warp-trim-k: 0. */
+       heading laid out as flex or grid (text-box only trims block containers) sets --warp-trim-k: 0. So does any rule
+       that takes the trim off (text-box: normal): CSS can't read text-box, and a k of 1 there pads an untrimmed
+       heading while the fallback renders, then drops it at the swap (scripts/quality/css-rules.test.mjs). */
     :where(h1),
     :where(h2),
     :where(h3),

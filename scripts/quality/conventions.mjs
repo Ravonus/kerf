@@ -121,12 +121,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   if (problems.length) process.exitCode = 1
 }
 
-/** The check step for important.test.mjs: `!important` only where a user setting or a must-win state overrides every template. */
+/** The check step for css-rules.test.mjs: `!important` only where a user setting or a must-win state overrides every template, and an untrimmed heading zeroes the font-swap fix. */
 export const importantStep = (run, lines) => ({
   id: 'css-important',
-  covers: '!important only where a user setting or a must-win state overrides every template',
-  fix: 'Settle the cascade with source order, a layer or a selector; see scripts/quality/important.test.mjs.',
+  covers:
+    '!important only where a user setting or a must-win state overrides every template; an untrimmed heading zeroes the font-swap fix',
+  fix: 'Settle the cascade with source order, a layer or a selector; see scripts/quality/css-rules.test.mjs.',
   async run() {
-    return lines(await run(process.execPath, ['--test', 'scripts/quality/important.test.mjs']))
+    return lines(await run(process.execPath, ['--test', 'scripts/quality/css-rules.test.mjs']))
   },
 })
