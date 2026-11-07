@@ -122,8 +122,12 @@ export class Navigation {
     const route = this.routes.table.find((item) => item.id === ids.at(-1))
     if (!route || guess(this.routes, from.pathname).join('\0') !== ids.join('\0')) return -1
     try {
-      const before = from.pathname.split('/').filter(Boolean).map(decodeURIComponent)
-      const after = url.pathname.split('/').filter(Boolean).map(decodeURIComponent)
+      const partsOf = (path: string) => {
+        const trimmed = path.replace(/^\/+|\/+$/g, '')
+        return trimmed ? trimmed.split('/').map(decodeURIComponent) : []
+      }
+      const before = partsOf(from.pathname)
+      const after = partsOf(url.pathname)
       const parts = route.pattern.split('/').filter(Boolean)
       const changed = parts.findIndex((part, index) => part.startsWith('$') &&
         (part === '$' ? JSON.stringify(before.slice(index)) !== JSON.stringify(after.slice(index)) :

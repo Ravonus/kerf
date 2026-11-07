@@ -122,6 +122,9 @@ it('compares decoded splat segments and rejects malformed route guesses', async 
     expect(ids).toEqual(['layout:', '/files/$'])
     expect(nav.changedParams(ids, new URL('/files/a/b', location.href))).toBe(1)
     expect(nav.changedParams(ids, new URL('/files/a%2fb', location.href))).toBe(-1)
+    history.replaceState(null, '', '/files/a/b')
+    const fromPlain = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
+    expect(fromPlain.changedParams(ids, new URL('/files/a//b', location.href))).toBe(1)
     expect(guess(routes, '/files/%XX')).toEqual([])
     expect(nav.changedParams(ids, new URL('/files/%XX', location.href))).toBe(-1)
   } finally { vi.unstubAllGlobals() }

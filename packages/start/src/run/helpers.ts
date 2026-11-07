@@ -76,7 +76,8 @@ export function revive(m: Match): Match {
 export function guess(routes: ClientRoutes, pathname: string): string[] {
   let parts: string[]
   try {
-    parts = pathname.split('/').filter(Boolean).map(decodeURIComponent)
+    const path = pathname.replace(/^\/+|\/+$/g, '')
+    parts = path ? path.split('/').map(decodeURIComponent) : []
   } catch {
     return []
   }
@@ -86,7 +87,8 @@ export function guess(routes: ClientRoutes, pathname: string): string[] {
     if (splat ? parts.length < segs.length - 1 : parts.length !== segs.length) continue
     if (
       segs.every(
-        (s, i) => s === '$' || s.startsWith('$') || s === parts[i],
+        (s, i) => s === '$' || (s.startsWith('$') ? !!parts[i] :
+          s.toLowerCase() === parts[i]?.toLowerCase()),
       )
     )
       return [...r.layouts, r.id]
