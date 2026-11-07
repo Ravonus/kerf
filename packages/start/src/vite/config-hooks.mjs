@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { join, resolve } from 'node:path'
+import { isAbsolute, join, relative, resolve, sep, win32 } from 'node:path'
 import { searchForWorkspaceRoot } from 'vite'
 import { INLINE_CSS_MAX } from '../inline.mjs'
 import { packageDirs } from './dev.mjs'
@@ -50,13 +50,30 @@ export const configHook = (s) =>
     }
   }
 
+function emittedReader(dir) {
+  const root = realpathSync(dir)
+  const inside = (path) => {
+    const rel = relative(root, path)
+    return rel !== '' && rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel)
+  }
+  return (file) => {
+    if (typeof file !== 'string' || !file || isAbsolute(file) || win32.parse(file).root ||
+        file.includes('\\') || file.split('/').includes('..')) throw new Error('Invalid asset path')
+    const path = resolve(root, file)
+    if (!inside(path)) throw new Error('Asset outside output')
+    const real = realpathSync(path)
+    if (!inside(real)) throw new Error('Asset outside output')
+    return readFileSync(real)
+  }
+}
+
 export const writeBundle = (s) => ({
   order: 'post',
   async handler(out, bundle) {
     if (!s.dev && this.environment?.config.consumer === 'client' && out.dir) {
       const name = 'weft-route-assets.json'
       if (bundle[name]) throw new Error(`Cannot overwrite emitted ${name}`)
-      const bytes = assetBytes(bundle, (file) => readFileSync(join(out.dir, file)),
+      const bytes = assetBytes(bundle, emittedReader(out.dir),
         s.manifest ?? s.scan(), s.abs)
       bytes.build = s.build || null
       writeFileSync(join(out.dir, name), JSON.stringify(bytes))

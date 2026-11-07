@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { basename, dirname, join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { assetBytes } from '../../src/vite/asset-bytes.mjs'
 import { renderChunk, writeBundle } from '../../src/vite/config-hooks.mjs'
@@ -85,6 +85,45 @@ test('client writeBundle emits the byte manifest independent of CSS options', as
   const collision = { ...f.bundle, 'weft-route-assets.json': { type: 'asset', source: '{}' } }
   await assert.rejects(() => writeBundle(state).handler.call(context, { dir: f.root }, collision),
     /Cannot overwrite/)
+})
+
+test('emitted byte reads stay inside the output directory and preserve binary bytes', async (t) => {
+  const f = fixture(t)
+  const outside = join(dirname(f.root), `${basename(f.root)}-outside.bin`)
+  const outsideDir = `${outside}-dir`
+  t.after(() => rmSync(outside, { force: true }))
+  t.after(() => rmSync(outsideDir, { recursive: true, force: true }))
+  writeFileSync(outside, Buffer.from([0, 255, 128, 42, 9]))
+  mkdirSync(outsideDir)
+  writeFileSync(join(outsideDir, 'nested.bin'), Buffer.from([0, 255, 128]))
+  writeFileSync(join(f.root, 'binary.bin'), Buffer.from([0, 255, 128, 42]))
+  symlinkSync(outside, join(f.root, 'linked.bin'))
+  symlinkSync(outsideDir, join(f.root, 'escaped-dir'))
+  symlinkSync(join(f.root, 'binary.bin'), join(f.root, 'inside.bin'))
+  mkdirSync(join(f.root, 'C:'))
+  writeFileSync(join(f.root, 'C:', 'binary.bin'), Buffer.from([1]))
+  writeFileSync(join(f.root, '..\\binary.bin'), Buffer.from([1]))
+  const traversal = `../${basename(outside)}`
+  const mirrored = join(f.root, outside)
+  mkdirSync(dirname(mirrored), { recursive: true })
+  writeFileSync(mirrored, Buffer.from([1, 2, 3]))
+  for (const name of [traversal, outside, 'linked.bin', 'escaped-dir/nested.bin',
+    'C:/binary.bin', '..\\binary.bin',
+    'binary.bin', 'inside.bin']) {
+    f.bundle[name] = { type: 'asset', source: Buffer.from([1]) }
+    f.bundle['a.js'].viteMetadata.importedAssets.add(name)
+  }
+  const state = { dev: false, build: 'build-a', options: { site: { criticalCss: false } },
+    manifest: f.manifest, abs: f.abs }
+  const context = { environment: { config: { consumer: 'client' } } }
+  await writeBundle(state).handler.call(context, { dir: f.root }, f.bundle)
+  const receipt = JSON.parse(readFileSync(join(f.root, 'weft-route-assets.json'), 'utf8'))
+  const unsafe = [traversal, outside, 'linked.bin', 'escaped-dir/nested.bin',
+    'C:/binary.bin', '..\\binary.bin']
+  assert.deepEqual(unsafe.map((name) => receipt.files[name].bytes), unsafe.map(() => null))
+  assert.equal(receipt.files['binary.bin'].bytes, 4)
+  assert.equal(receipt.files['inside.bin'].bytes, 4)
+  assert.equal(receipt.routes['/a'].bytes, null)
 })
 
 test('same-build receipt selects levels and deduplicates their emitted files', (t) => {
