@@ -30,7 +30,8 @@ export function makeNavigation(
             { m: [], p: path, s: r.redirect.status, r: r.redirect.href } satisfies RoutePayload,
             { headers },
           ),
-          scope, 'application/json',
+          scope,
+          'application/json',
         ),
       )
     }

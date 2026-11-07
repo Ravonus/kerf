@@ -8,35 +8,52 @@ afterEach(() => {
 })
 
 it.each(['setAttributeNode', 'setAttributeNodeNS'] as const)(
-  'pins %s before click or submit propagation and restores authored attributes', (method) => {
+  'pins %s before click or submit propagation and restores authored attributes',
+  (method) => {
     history.replaceState(null, '', '/dir/old')
-    document.body.innerHTML = '<div id="app"><a href="x">go</a>' +
+    document.body.innerHTML =
+      '<div id="app"><a href="x">go</a>' +
       '<form action="x"><button formaction="x">send</button></form></div>'
-    const items = [document.querySelector('a')!, document.querySelector('form')!,
-      document.querySelector('button')!]
+    const items = [
+      document.querySelector('a')!,
+      document.querySelector('form')!,
+      document.querySelector('button')!,
+    ]
     const names = ['href', 'action', 'formaction']
     const context = retainSourceContext(document, location.href, document.baseURI)!
     history.pushState(null, '', '/other/new')
     try {
       for (let i = 0; i < items.length; i++) {
-        const item = items[i]!, name = names[i]!, old = item.getAttributeNode(name)!
+        const item = items[i]!,
+          name = names[i]!,
+          old = item.getAttributeNode(name)!
         const added = document.createAttribute(name)
         added.value = `changed-${i}`
         let observed: string | null = null
         let returned: Attr | null = null
         const type = name === 'action' ? 'submit' : 'click'
-        item.addEventListener(type, (event) => {
-          returned = item[method](added)
-          observed = name === 'href' ? (item as HTMLAnchorElement).href :
-            name === 'action' ? (item as HTMLFormElement).action : item.getAttribute(name)
-          event.preventDefault()
-          event.stopPropagation()
-        }, { once: true })
+        item.addEventListener(
+          type,
+          (event) => {
+            returned = item[method](added)
+            observed =
+              name === 'href'
+                ? (item as HTMLAnchorElement).href
+                : name === 'action'
+                  ? (item as HTMLFormElement).action
+                  : item.getAttribute(name)
+            event.preventDefault()
+            event.stopPropagation()
+          },
+          { once: true },
+        )
         item.dispatchEvent(new Event(type, { bubbles: true, cancelable: true }))
         expect(returned).toBe(old)
         expect(observed).toBe(`http://localhost/dir/changed-${i}`)
       }
-    } finally { context.release() }
+    } finally {
+      context.release()
+    }
     for (let i = 0; i < items.length; i++)
       expect(items[i]!.getAttribute(names[i]!)).toBe(`changed-${i}`)
   },
@@ -50,20 +67,27 @@ it('pins a missing form action after removeAttributeNode and preserves return/er
   history.pushState(null, '', '/other/new')
   try {
     const original = form.getAttributeNode('action')!
-    let removed: Attr | null = null, observed = ''
-    form.addEventListener('submit', (event) => {
-      removed = form.removeAttributeNode(original)
-      observed = form.action
-      event.preventDefault()
-      event.stopPropagation()
-    }, { once: true })
+    let removed: Attr | null = null,
+      observed = ''
+    form.addEventListener(
+      'submit',
+      (event) => {
+        removed = form.removeAttributeNode(original)
+        observed = form.action
+        event.preventDefault()
+        event.stopPropagation()
+      },
+      { once: true },
+    )
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
     expect(removed).toBe(original)
     expect(observed).toBe('http://localhost/dir/old')
     expect(() => form.removeAttributeNode(original)).toThrowError(
       expect.objectContaining({ name: 'NotFoundError' }),
     )
-  } finally { context.release() }
+  } finally {
+    context.release()
+  }
   expect(form.hasAttribute('action')).toBe(false)
 })
 
@@ -81,7 +105,9 @@ it('pins a pre-captured detached map immediately after insertion', () => {
     attr.value = 'changed'
     expect(map.setNamedItem(attr)?.name).toBe('href')
     expect(anchor.href).toBe('http://localhost/dir/changed')
-  } finally { context.release() }
+  } finally {
+    context.release()
+  }
   expect(anchor.getAttribute('href')).toBe('changed')
 })
 
@@ -98,7 +124,9 @@ it('resolves a pre-captured detached form map before removal', () => {
     const removed = map.removeNamedItemNS(null, 'action')
     expect(removed.value).toBe('initial')
     expect(form.action).toBe('http://localhost/dir/old')
-  } finally { context.release() }
+  } finally {
+    context.release()
+  }
   expect(form.hasAttribute('action')).toBe(false)
 })
 
@@ -123,7 +151,9 @@ it('preserves foreign namespaces, native in-use errors and same-attribute return
     )
     expect(taken.value).toBe('foreign')
     expect(anchor.removeAttributeNode(foreign)).toBe(foreign)
-  } finally { context.release() }
+  } finally {
+    context.release()
+  }
   expect(anchor.getAttribute('href')).toBe('child')
 })
 
@@ -135,7 +165,7 @@ it('keeps foreign node-method wrappers and honors the next source context', () =
   const first = retainSourceContext(document, location.href, document.baseURI)!
   const installed = Element.prototype.setAttributeNode
   const foreign = function (this: Element, attr: Attr) {
-    return Reflect.apply(installed, this, [attr]) as Attr | null
+    return Reflect.apply(installed, this, [attr])
   }
   Object.defineProperty(Element.prototype, 'setAttributeNode', { ...before, value: foreign })
   try {
@@ -149,7 +179,9 @@ it('keeps foreign node-method wrappers and honors the next source context', () =
       attr.value = 'later'
       anchor.setAttributeNode(attr)
       expect(anchor.href).toBe('http://localhost/other/later')
-    } finally { second.release() }
+    } finally {
+      second.release()
+    }
     expect(Element.prototype.setAttributeNode).toBe(foreign)
     expect(anchor.getAttribute('href')).toBe('later')
   } finally {
@@ -157,7 +189,6 @@ it('keeps foreign node-method wrappers and honors the next source context', () =
     Object.defineProperty(Element.prototype, 'setAttributeNode', before)
   }
 })
-
 
 it('rolls back installed hooks if an attribute-node method cannot be wrapped', () => {
   document.body.innerHTML = '<div id="app"><a href="x">go</a></div>'
@@ -172,7 +203,9 @@ it('rolls back installed hooks if an attribute-node method cannot be wrapped', (
     expect(retainSourceContext(document, location.href, document.baseURI)).toBeNull()
     expect(Object.getOwnPropertyDescriptor(Element.prototype, 'setAttributeNode')).toEqual(element)
     expect(Object.getOwnPropertyDescriptor(NamedNodeMap.prototype, 'setNamedItem')).toEqual(map)
-  } finally { spy.mockRestore() }
+  } finally {
+    spy.mockRestore()
+  }
   const context = retainSourceContext(document, location.href, document.baseURI)
   expect(context).not.toBeNull()
   context?.release()

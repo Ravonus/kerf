@@ -2,8 +2,25 @@ import { readFileSync, realpathSync } from 'node:fs'
 import { isAbsolute, relative } from 'node:path'
 import { parse } from './syntax.mjs'
 
-const TAGS = new Set(['div', 'span', 'main', 'section', 'article', 'header', 'footer', 'p',
-  'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li'])
+const TAGS = new Set([
+  'div',
+  'span',
+  'main',
+  'section',
+  'article',
+  'header',
+  'footer',
+  'p',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'ul',
+  'ol',
+  'li',
+])
 
 function inert(node) {
   if (node.type === 'JSXText') return true
@@ -11,12 +28,19 @@ function inert(node) {
   if (node.type !== 'JSXElement') return false
   const open = node.openingElement
   if (open.name.type !== 'JSXIdentifier' || !TAGS.has(open.name.name)) return false
-  if (!open.attributes.every((attr) =>
-    attr.type === 'JSXAttribute' && attr.name.type === 'JSXIdentifier' &&
-    (attr.name.name === 'class' || attr.name.name === 'className' ||
-      /^data-[a-z0-9-]+$/.test(attr.name.name)) &&
-    attr.value?.type === 'Literal' && typeof attr.value.value === 'string',
-  )) return false
+  if (
+    !open.attributes.every(
+      (attr) =>
+        attr.type === 'JSXAttribute' &&
+        attr.name.type === 'JSXIdentifier' &&
+        (attr.name.name === 'class' ||
+          attr.name.name === 'className' ||
+          /^data-[a-z0-9-]+$/.test(attr.name.name)) &&
+        attr.value?.type === 'Literal' &&
+        typeof attr.value.value === 'string',
+    )
+  )
+    return false
   return node.children.every(inert)
 }
 
@@ -42,18 +66,31 @@ export function shapeOverride(file) {
   const parsed = parse(file, source)
   if (parsed.errors.length) return
   const body = parsed.program.body
-  const exports = body.filter((n) => n.type === 'ExportNamedDeclaration' &&
-    n.declaration?.type === 'VariableDeclaration' && n.declaration.kind === 'const')
-  const declarations = exports.flatMap((n) => n.declaration.declarations)
+  const exports = body.filter(
+    (n) =>
+      n.type === 'ExportNamedDeclaration' &&
+      n.declaration?.type === 'VariableDeclaration' &&
+      n.declaration.kind === 'const',
+  )
+  const declarations = exports
+    .flatMap((n) => n.declaration.declarations)
     .filter((d) => d.id.type === 'Identifier' && d.id.name === 'skeleton')
   if (declarations.length !== 1 || declarations[0].init?.type !== 'Identifier') return
-  if (body.some((n) => n.type === 'ExportAllDeclaration' ||
-    (n.type === 'ExportNamedDeclaration' && n.specifiers.some((s) =>
-      (s.exported.name ?? s.exported.value) === 'skeleton')))) return
+  if (
+    body.some(
+      (n) =>
+        n.type === 'ExportAllDeclaration' ||
+        (n.type === 'ExportNamedDeclaration' &&
+          n.specifiers.some((s) => (s.exported.name ?? s.exported.value) === 'skeleton')),
+    )
+  )
+    return
   const name = declarations[0].init.name
   const candidates = body.flatMap((n) => {
-    const decl = n.type === 'ExportNamedDeclaration' || n.type === 'ExportDefaultDeclaration'
-      ? n.declaration : n
+    const decl =
+      n.type === 'ExportNamedDeclaration' || n.type === 'ExportDefaultDeclaration'
+        ? n.declaration
+        : n
     if (decl?.type === 'FunctionDeclaration' && decl.id?.name === name) return [decl]
     if (decl?.type === 'VariableDeclaration' && decl.kind === 'const')
       return decl.declarations.filter((d) => d.id.type === 'Identifier' && d.id.name === name)
@@ -70,10 +107,20 @@ export function shapeOverride(file) {
 
 function component(source, fn) {
   while (fn?.type === 'ParenthesizedExpression') fn = fn.expression
-  if (!fn || !['ArrowFunctionExpression', 'FunctionExpression', 'FunctionDeclaration']
-    .includes(fn.type) || fn.async || fn.generator || fn.params.length) return
-  const body = fn.body.type === 'BlockStatement' && fn.body.body.length === 1 &&
-    fn.body.body[0].type === 'ReturnStatement' ? fn.body.body[0].argument : fn.body
+  if (
+    !fn ||
+    !['ArrowFunctionExpression', 'FunctionExpression', 'FunctionDeclaration'].includes(fn.type) ||
+    fn.async ||
+    fn.generator ||
+    fn.params.length
+  )
+    return
+  const body =
+    fn.body.type === 'BlockStatement' &&
+    fn.body.body.length === 1 &&
+    fn.body.body[0].type === 'ReturnStatement'
+      ? fn.body.body[0].argument
+      : fn.body
   if (!body || !inert(body)) return
   const jsx = source.slice(body.start, body.end)
   return `export default function Skeleton() { return (${jsx}); }`
@@ -84,17 +131,33 @@ export function importedOverride(file) {
   const parsed = parse(file, readFileSync(file, 'utf8'))
   if (parsed.errors.length) return
   const body = parsed.program.body
-  const declarations = body.flatMap((n) => n.type === 'ExportNamedDeclaration' &&
-    n.declaration?.type === 'VariableDeclaration' && n.declaration.kind === 'const'
-    ? n.declaration.declarations : []).filter((d) => d.id.name === 'skeleton')
+  const declarations = body
+    .flatMap((n) =>
+      n.type === 'ExportNamedDeclaration' &&
+      n.declaration?.type === 'VariableDeclaration' &&
+      n.declaration.kind === 'const'
+        ? n.declaration.declarations
+        : [],
+    )
+    .filter((d) => d.id.name === 'skeleton')
   if (declarations.length !== 1 || declarations[0].init?.type !== 'Identifier') return
-  if (body.some((n) => n.type === 'ExportAllDeclaration' ||
-    (n.type === 'ExportNamedDeclaration' && n.specifiers.some((s) =>
-      (s.exported.name ?? s.exported.value) === 'skeleton')))) return
+  if (
+    body.some(
+      (n) =>
+        n.type === 'ExportAllDeclaration' ||
+        (n.type === 'ExportNamedDeclaration' &&
+          n.specifiers.some((s) => (s.exported.name ?? s.exported.value) === 'skeleton')),
+    )
+  )
+    return
   const name = declarations[0].init.name
-  const matches = body.flatMap((n) => n.type === 'ImportDeclaration' && n.importKind !== 'type'
-    ? n.specifiers.filter((s) => s.local.name === name && s.importKind !== 'type')
-      .map((s) => ({ spec: n.source.value, binding: s })) : [])
+  const matches = body.flatMap((n) =>
+    n.type === 'ImportDeclaration' && n.importKind !== 'type'
+      ? n.specifiers
+          .filter((s) => s.local.name === name && s.importKind !== 'type')
+          .map((s) => ({ spec: n.source.value, binding: s }))
+      : [],
+  )
   if (matches.length !== 1) return
   const { spec, binding } = matches[0]
   if (binding.type === 'ImportDefaultSpecifier') return { spec, name: 'default' }
@@ -107,15 +170,24 @@ function dedicated(file, name) {
   if (parsed.errors.length) return
   const matches = []
   for (const node of parsed.program.body) {
-    if (node.type === 'ExportAllDeclaration' ||
-        (node.type === 'ExportNamedDeclaration' && node.source)) return
+    if (
+      node.type === 'ExportAllDeclaration' ||
+      (node.type === 'ExportNamedDeclaration' && node.source)
+    )
+      return
     if (name === 'default' && node.type === 'ExportDefaultDeclaration')
       matches.push(node.declaration)
-    if (node.type === 'ExportNamedDeclaration' &&
-        node.declaration?.type === 'FunctionDeclaration' && node.declaration.id?.name === name)
+    if (
+      node.type === 'ExportNamedDeclaration' &&
+      node.declaration?.type === 'FunctionDeclaration' &&
+      node.declaration.id?.name === name
+    )
       matches.push(node.declaration)
-    if (node.type === 'ExportNamedDeclaration' &&
-        node.declaration?.type === 'VariableDeclaration' && node.declaration.kind === 'const') {
+    if (
+      node.type === 'ExportNamedDeclaration' &&
+      node.declaration?.type === 'VariableDeclaration' &&
+      node.declaration.kind === 'const'
+    ) {
       for (const item of node.declaration.declarations)
         if (item.id.type === 'Identifier' && item.id.name === name) matches.push(item.init)
     }
@@ -136,9 +208,14 @@ export async function resolveImportedOverride(ctx, file, root, onMissing) {
   if (!found || found.external || !isAbsolute(found.id) || !/\.[jt]sx$/.test(found.id)) return
   const blocked = (base, target) => {
     const rel = relative(base, target).replace(/\\/g, '/')
-    return rel === '..' || rel.startsWith('../') || isAbsolute(rel) ||
-      /(^|\/)node_modules\//.test(rel) || /(^|\/)server\//.test(rel) ||
+    return (
+      rel === '..' ||
+      rel.startsWith('../') ||
+      isAbsolute(rel) ||
+      /(^|\/)node_modules\//.test(rel) ||
+      /(^|\/)server\//.test(rel) ||
       /\.server\.[jt]sx$/.test(rel)
+    )
   }
   try {
     if (blocked(root, found.id) || blocked(realpathSync(root), realpathSync(found.id))) return

@@ -11,39 +11,56 @@ async function setup(t) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-entry-watch-')))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = (name) => join(root, name)
-  writeFileSync(file('entry.js'), `
+  writeFileSync(
+    file('entry.js'),
+    `
     import './nested/late'; import './nested/later.css';
     import './alias.css'; import './external.css';
     throw Error('entry must not run');
-  `)
+  `,
+  )
   writeFileSync(file('page.tsx'), 'export default () => <main />')
   writeFileSync(file('redirect.css'), '.redirect { width: 8px }')
   writeFileSync(file('other.js'), 'export const x = 1')
   const state = {
-    root, abs: file, dev: true, clientEntry: () => file('entry.js'),
+    root,
+    abs: file,
+    dev: true,
+    clientEntry: () => file('entry.js'),
     manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
     hydration: async () => undefined,
   }
   const events = []
   const hot = shapeHotUpdate(state, new Map(), async () => undefined)
   const server = await createServer({
-    root, configFile: false, logLevel: 'silent',
-    server: { middlewareMode: true }, appType: 'custom',
-    plugins: [{
-      name: 'entry-watch-test',
-      enforce: 'pre',
-      resolveId(spec) {
-        if (spec === './alias.css') return file('redirect.css')
-        if (spec === './external.css') return { id: 'https://example.com/a.css', external: true }
+    root,
+    configFile: false,
+    logLevel: 'silent',
+    server: { middlewareMode: true },
+    appType: 'custom',
+    plugins: [
+      {
+        name: 'entry-watch-test',
+        enforce: 'pre',
+        resolveId(spec) {
+          if (spec === './alias.css') return file('redirect.css')
+          if (spec === './external.css') return { id: 'https://example.com/a.css', external: true }
+        },
+        configureServer(server) {
+          state.vite = server
+        },
+        async hotUpdate(update) {
+          const result = await hot.call(this, update)
+          if (this.environment.config.consumer === 'client')
+            events.push({
+              file: update.file,
+              type: update.type,
+              invalidated: Array.isArray(result),
+            })
+          return result
+        },
       },
-      configureServer(server) { state.vite = server },
-      async hotUpdate(update) {
-        const result = await hot.call(this, update)
-        if (this.environment.config.consumer === 'client')
-          events.push({ file: update.file, type: update.type, invalidated: Array.isArray(result) })
-        return result
-      },
-    }],
+    ],
   })
   const ctx = {
     environment: { config: { consumer: 'client' } },
@@ -66,8 +83,10 @@ function event(events, file, type, from) {
 }
 
 async function cssTextInManifest(p, source) {
-  let code = source.replace(/^import \* as shape(\d+) from .+$/gm,
-    (_, index) => `const shape${index} = { 'default$shape': function Shape() {} }`)
+  let code = source.replace(
+    /^import \* as shape(\d+) from .+$/gm,
+    (_, index) => `const shape${index} = { 'default$shape': function Shape() {} }`,
+  )
   for (const match of source.matchAll(/^import style(\d+) from (.+)$/gm)) {
     const [, index, specifier] = match
     const url = '/' + relative(p.root, JSON.parse(specifier))
@@ -87,8 +106,11 @@ test('Vite watcher refreshes missing entry imports and drops removed edges', asy
     assert.ok(initial.includes(JSON.stringify(`${p.file('redirect.css')}?inline`)))
     assert.ok(!initial.includes('external.css?inline'))
     assert.ok(!initial.includes('https://example.com/a.css'))
-    await waitFor(() => (p.server.watcher.getWatched()[p.root] ?? []).includes('other.js'),
-      'watcher', p.events)
+    await waitFor(
+      () => (p.server.watcher.getWatched()[p.root] ?? []).includes('other.js'),
+      'watcher',
+      p.events,
+    )
     let from = p.events.length
     writeFileSync(p.file('other.js'), 'export const x = 2')
     await waitFor(() => event(p.events, p.file('other.js'), 'update', from), 'unrelated', p.events)
@@ -97,13 +119,16 @@ test('Vite watcher refreshes missing entry imports and drops removed edges', asy
     from = p.events.length
     writeFileSync(p.file('nested/late.js'), "import './module.css'; throw Error('never run')")
     await waitFor(
-      () => event(p.events, p.file('nested/late.js'), 'create', from), 'module', p.events,
+      () => event(p.events, p.file('nested/late.js'), 'create', from),
+      'module',
+      p.events,
     )
     assert.equal(event(p.events, p.file('nested/late.js'), 'create', from).invalidated, true)
     await p.refresh()
     from = p.events.length
     writeFileSync(p.file('nested/later.css'), '.x { height: 5px }')
-    const cssChange = () => event(p.events, p.file('nested/later.css'), 'create', from) ??
+    const cssChange = () =>
+      event(p.events, p.file('nested/later.css'), 'create', from) ??
       event(p.events, p.file('nested/later.css'), 'update', from)
     await waitFor(cssChange, 'css', p.events)
     assert.equal(cssChange().invalidated, true)
@@ -118,7 +143,9 @@ test('Vite watcher refreshes missing entry imports and drops removed edges', asy
     from = p.events.length
     unlinkSync(p.file('nested/later.css'))
     await waitFor(
-      () => event(p.events, p.file('nested/later.css'), 'delete', from), 'delete', p.events,
+      () => event(p.events, p.file('nested/later.css'), 'delete', from),
+      'delete',
+      p.events,
     )
     assert.equal(event(p.events, p.file('nested/later.css'), 'delete', from).invalidated, true)
     assert.ok(!(await p.refresh()).includes(JSON.stringify(`${p.file('nested/later.css')}?inline`)))
@@ -136,20 +163,26 @@ test('Vite watcher refreshes missing entry imports and drops removed edges', asy
     from = p.events.length
     writeFileSync(p.file('entry.js'), 'export const x = 1')
     await waitFor(
-      () => event(p.events, p.file('entry.js'), 'update', from), 'remove import', p.events,
+      () => event(p.events, p.file('entry.js'), 'update', from),
+      'remove import',
+      p.events,
     )
     assert.equal(event(p.events, p.file('entry.js'), 'update', from).invalidated, true)
     await p.refresh()
     from = p.events.length
     writeFileSync(p.file('nested/late.js'), 'export const x = 2')
     await waitFor(
-      () => event(p.events, p.file('nested/late.js'), 'update', from), 'removed', p.events,
+      () => event(p.events, p.file('nested/late.js'), 'update', from),
+      'removed',
+      p.events,
     )
     assert.equal(event(p.events, p.file('nested/late.js'), 'update', from).invalidated, false)
     from = p.events.length
     unlinkSync(p.file('nested/later.css'))
     await waitFor(
-      () => event(p.events, p.file('nested/later.css'), 'delete', from), 'removed CSS', p.events,
+      () => event(p.events, p.file('nested/later.css'), 'delete', from),
+      'removed CSS',
+      p.events,
     )
     assert.equal(event(p.events, p.file('nested/later.css'), 'delete', from).invalidated, false)
   } finally {

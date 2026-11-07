@@ -12,7 +12,8 @@ afterEach(() => {
 describe('retained source URL context', () => {
   it('pins retained controls but never the document base or incoming resources', () => {
     history.replaceState(null, '', '/dir/old?x=1')
-    document.body.innerHTML = '<div id="app"><a href="child">go</a>' +
+    document.body.innerHTML =
+      '<div id="app"><a href="child">go</a>' +
       '<a href="/elsewhere/new">next</a><form id="missing"></form>' +
       '<form id="relative" action="submit"><button formaction="">go</button></form></div>'
     const anchor = document.querySelector('a')!
@@ -26,8 +27,11 @@ describe('retained source URL context', () => {
     expect(document.baseURI).toBe(location.href)
     expect(anchor.href).toBe(new URL('child', source).href)
     current_('/elsewhere/new')
-    expect(document.querySelector('a[href="http://localhost/elsewhere/new"]')
-      ?.getAttribute('aria-current')).toBe('page')
+    expect(
+      document
+        .querySelector('a[href="http://localhost/elsewhere/new"]')
+        ?.getAttribute('aria-current'),
+    ).toBe('page')
     expect(missing.action).toBe(source)
     expect(form.action).toBe(new URL('submit', source).href)
     expect(button.getAttribute('formaction')).toBe(source)
@@ -67,10 +71,16 @@ describe('retained source URL context', () => {
     history.replaceState(null, '', '/dir/old')
     document.body.innerHTML = '<div id="app"></div>'
     const seen: string[] = []
-    vi.spyOn(HTMLFormElement.prototype, 'submit')
-      .mockImplementation(function (this: HTMLFormElement) { seen.push(this.action) })
-    vi.spyOn(HTMLFormElement.prototype, 'requestSubmit')
-      .mockImplementation(function (this: HTMLFormElement) { seen.push(this.action) })
+    vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(function (
+      this: HTMLFormElement,
+    ) {
+      seen.push(this.action)
+    })
+    vi.spyOn(HTMLFormElement.prototype, 'requestSubmit').mockImplementation(function (
+      this: HTMLFormElement,
+    ) {
+      seen.push(this.action)
+    })
     const original = HTMLFormElement.prototype.submit
     const context = retainSourceContext(document, location.href, document.baseURI)!
     history.pushState(null, '', '/elsewhere/new')
@@ -102,16 +112,27 @@ describe('retained source URL context', () => {
       expect(form.action).toBe('http://localhost/dir/property')
       form.setAttribute('action', 'last-submit')
     })
-    let link = '', action = ''
-    document.addEventListener('click', (event) => {
-      link = anchor.href
-      event.preventDefault()
-    }, { once: true })
-    document.addEventListener('submit', (event) => {
-      action = form.action
-      event.preventDefault()
-    }, { once: true })
-    anchor.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }))
+    let link = '',
+      action = ''
+    document.addEventListener(
+      'click',
+      (event) => {
+        link = anchor.href
+        event.preventDefault()
+      },
+      { once: true },
+    )
+    document.addEventListener(
+      'submit',
+      (event) => {
+        action = form.action
+        event.preventDefault()
+      },
+      { once: true },
+    )
+    anchor.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }),
+    )
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
     expect(link).toBe('http://localhost/dir/last-link')
     expect(action).toBe('http://localhost/dir/last-submit')
@@ -138,13 +159,17 @@ describe('retained source URL context', () => {
     try {
       Object.defineProperty(anchor, 'href', { ...installedHref, get: getter })
       Object.defineProperty(element, 'setAttribute', {
-        ...installedSet, enumerable: !installedSet.enumerable, writable: !installedSet.writable,
+        ...installedSet,
+        enumerable: !installedSet.enumerable,
+        writable: !installedSet.writable,
       })
       Object.defineProperty(element, 'removeAttribute', { ...installedRemove, value: method })
       context.release()
       expect(Object.getOwnPropertyDescriptor(anchor, 'href')!.get).toBe(getter)
       expect(Object.getOwnPropertyDescriptor(element, 'setAttribute')).toEqual({
-        ...installedSet, enumerable: !installedSet.enumerable, writable: !installedSet.writable,
+        ...installedSet,
+        enumerable: !installedSet.enumerable,
+        writable: !installedSet.writable,
       })
       expect(Object.getOwnPropertyDescriptor(element, 'removeAttribute')!.value).toBe(method)
     } finally {
@@ -161,7 +186,11 @@ describe('retained source URL context', () => {
     const before = Object.getOwnPropertyDescriptor(proto, 'setAttribute')!
     const context = retainSourceContext(document, location.href, document.baseURI)!
     const installed = Object.getOwnPropertyDescriptor(proto, 'setAttribute')!
-    const foreign = { ...installed, enumerable: !installed.enumerable, writable: !installed.writable }
+    const foreign = {
+      ...installed,
+      enumerable: !installed.enumerable,
+      writable: !installed.writable,
+    }
     try {
       Object.defineProperty(proto, 'setAttribute', foreign)
       context.release()
@@ -178,11 +207,15 @@ describe('retained source URL context', () => {
     const proto = HTMLFormElement.prototype
     const original = Object.getOwnPropertyDescriptor(proto, 'submit')!
     const seen: string[] = []
-    const before = function (this: HTMLFormElement) { seen.push(this.action) }
+    const before = function (this: HTMLFormElement) {
+      seen.push(this.action)
+    }
     Object.defineProperty(proto, 'submit', { ...original, value: before })
     const context = retainSourceContext(document, location.href, document.baseURI)!
     const installed = proto.submit
-    const after = function (this: HTMLFormElement) { Reflect.apply(installed, this, []) }
+    const after = function (this: HTMLFormElement) {
+      Reflect.apply(installed, this, [])
+    }
     try {
       Object.defineProperty(proto, 'submit', { ...original, value: after })
       history.pushState(null, '', '/elsewhere/new')
@@ -209,12 +242,13 @@ describe('retained source URL context', () => {
     try {
       expect(retainSourceContext(document, location.href, document.baseURI)).toBeNull()
       expect(Object.getOwnPropertyDescriptor(Element.prototype, 'setAttribute')).toEqual(before)
-    } finally { spy.mockRestore() }
+    } finally {
+      spy.mockRestore()
+    }
     const context = retainSourceContext(document, location.href, document.baseURI)
     expect(context).not.toBeNull()
     context?.release()
   })
-
 
   it('preserves a foreign hook during installation rollback', () => {
     document.body.innerHTML = '<div id="app"></div>'

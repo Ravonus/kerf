@@ -25,19 +25,32 @@ async function project(t) {
   write('dynamic.js', "import './dynamic.css'; throw Error('dynamic')")
   write('alias.js', "import './alias.css'; import './entry.js'; throw Error('alias')")
   write('bare.js', "import './bare.css'; throw Error('bare')")
-  for (const name of ['first', 'alias', 'bare', 'last', 'non-source',
-    'outside', 'server', 'dynamic']) write(`${name}.css`, '')
+  for (const name of [
+    'first',
+    'alias',
+    'bare',
+    'last',
+    'non-source',
+    'outside',
+    'server',
+    'dynamic',
+  ])
+    write(`${name}.css`, '')
   write('page.tsx', 'export default () => <main />')
-  write('entry.js', `
+  write(
+    'entry.js',
+    `
     import './first.css'; import '@local'; import 'bare-local';
     import 'external-js'; import 'virtual-js'; import 'not-source';
     import 'escape-local'; import 'server-local'; import 'evil';
     import './last.css'; import('./dynamic.js'); throw Error('entry');
-  `)
+  `,
+  )
   let hot
   const events = []
   const plugin = {
-    name: 'bare-local-test', enforce: 'pre',
+    name: 'bare-local-test',
+    enforce: 'pre',
     resolveId(id) {
       if (id === 'bare-local') return file('bare.js')
       if (id === 'escape-local') return file('escape.js')
@@ -55,8 +68,12 @@ async function project(t) {
     },
   }
   const server = await createServer({
-    root, configFile: false, logLevel: 'silent', appType: 'custom',
-    server: { middlewareMode: true }, optimizeDeps: { noDiscovery: true, include: [] },
+    root,
+    configFile: false,
+    logLevel: 'silent',
+    appType: 'custom',
+    server: { middlewareMode: true },
+    optimizeDeps: { noDiscovery: true, include: [] },
     resolve: { alias: [{ find: '@local', replacement: file('alias.js') }], preserveSymlinks: true },
     plugins: [plugin],
   })
@@ -80,13 +97,19 @@ test('entry CSS follows resolved local aliases and bare modules only', async (t)
     assert.equal(escaped?.id, p.file('escape.js'))
     const result = await entryCss(p.ctx, p.file('entry.js'), p.root)
     assert.deepEqual(result.styles, [
-      p.file('first.css'), p.file('alias.css'), p.file('bare.css'), p.file('last.css'),
+      p.file('first.css'),
+      p.file('alias.css'),
+      p.file('bare.css'),
+      p.file('last.css'),
     ])
-    assert.deepEqual([...result.signatures.keys()], [
-      p.file('entry.js'), p.file('alias.js'), p.file('bare.js'),
-    ])
+    assert.deepEqual(
+      [...result.signatures.keys()],
+      [p.file('entry.js'), p.file('alias.js'), p.file('bare.js')],
+    )
     const state = {
-      root: p.root, abs: p.file, clientEntry: () => p.file('entry.js'),
+      root: p.root,
+      abs: p.file,
+      clientEntry: () => p.file('entry.js'),
       manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
       hydration: async () => undefined,
     }
@@ -112,7 +135,9 @@ test('edits to a resolved alias dependency invalidate entry shape metadata', asy
   try {
     const result = await entryCss(p.ctx, p.file('entry.js'), p.root)
     const state = {
-      root: p.root, manifest: { routes: [], layouts: [] }, shapeEntrySignatures: result.signatures,
+      root: p.root,
+      manifest: { routes: [], layouts: [] },
+      shapeEntrySignatures: result.signatures,
     }
     p.watch(state)
     const until = async (condition) => {

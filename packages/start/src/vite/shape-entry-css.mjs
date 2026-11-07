@@ -21,9 +21,14 @@ export function projectParent(root, file) {
 function appSource(root, file) {
   const blocked = (base, path) => {
     const rel = relative(base, path).replace(/\\/g, '/')
-    return rel === '..' || rel.startsWith('../') || isAbsolute(rel) ||
-      /(^|\/)node_modules\//.test(rel) || /(^|\/)server\//.test(rel) ||
+    return (
+      rel === '..' ||
+      rel.startsWith('../') ||
+      isAbsolute(rel) ||
+      /(^|\/)node_modules\//.test(rel) ||
+      /(^|\/)server\//.test(rel) ||
       /\.server\.[cm]?[jt]sx?$/.test(rel)
+    )
   }
   try {
     return !blocked(root, file) && !blocked(realpathSync(root), realpathSync(file))
@@ -36,18 +41,27 @@ function appSource(root, file) {
 function sources(file) {
   return shapeBody(file).filter((node) => {
     if (node.type === 'ImportDeclaration') {
-      return node.importKind !== 'type' &&
+      return (
+        node.importKind !== 'type' &&
         (!node.specifiers.length || node.specifiers.some((item) => item.importKind !== 'type'))
+      )
     }
-    return (node.type === 'ExportNamedDeclaration' || node.type === 'ExportAllDeclaration') &&
-      node.exportKind !== 'type' && node.source
+    return (
+      (node.type === 'ExportNamedDeclaration' || node.type === 'ExportAllDeclaration') &&
+      node.exportKind !== 'type' &&
+      node.source
+    )
   })
 }
 
 function signature(nodes) {
-  return JSON.stringify(nodes.map((node) => [
-    node.type, node.source.value, node.type === 'ImportDeclaration' && !node.specifiers.length,
-  ]))
+  return JSON.stringify(
+    nodes.map((node) => [
+      node.type,
+      node.source.value,
+      node.type === 'ImportDeclaration' && !node.specifiers.length,
+    ]),
+  )
 }
 
 /** Signature of the static dependency edges relevant to entry styles. */
@@ -71,7 +85,9 @@ export async function entryCss(ctx, entry, root) {
     for (const node of nodes) {
       const spec = node.source.value
       if (
-        node.type === 'ImportDeclaration' && !node.specifiers.length && shapeStyleSpecifier(spec)
+        node.type === 'ImportDeclaration' &&
+        !node.specifiers.length &&
+        shapeStyleSpecifier(spec)
       ) {
         const css = await shapeCssSource(ctx, file, spec, () => {
           if (/^\.{1,2}\//.test(spec)) {
@@ -94,9 +110,15 @@ export async function entryCss(ctx, entry, root) {
       const target = found?.id ?? (!found && local ? resolve(dirname(file), spec) : undefined)
       if (found?.external || !target || !isAbsolute(target)) continue
       const rel = relative(root, target).replace(/\\/g, '/')
-      if (rel === '..' || rel.startsWith('../') || isAbsolute(rel) ||
-          /(^|\/)node_modules\//.test(rel) || /(^|\/)server\//.test(rel) ||
-          /\.server(?:\.[cm]?[jt]sx?)?$/.test(rel)) continue
+      if (
+        rel === '..' ||
+        rel.startsWith('../') ||
+        isAbsolute(rel) ||
+        /(^|\/)node_modules\//.test(rel) ||
+        /(^|\/)server\//.test(rel) ||
+        /\.server(?:\.[cm]?[jt]sx?)?$/.test(rel)
+      )
+        continue
       if (!found) {
         if (projectParent(root, target)) {
           candidates.add(key(target))
@@ -156,6 +178,10 @@ export function entryWatchLifecycle(state, server, modes) {
 export function entryCandidate(candidates, file) {
   const path = file.replace(/\\/g, '/')
   const stem = path.replace(/\.[cm]?[jt]sx?$/, '')
-  return candidates?.has(path) || candidates?.has(stem) ||
-    (stem.endsWith('/index') && candidates?.has(stem.slice(0, -'/index'.length))) || false
+  return (
+    candidates?.has(path) ||
+    candidates?.has(stem) ||
+    (stem.endsWith('/index') && candidates?.has(stem.slice(0, -'/index'.length))) ||
+    false
+  )
 }

@@ -12,7 +12,10 @@ function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'weft-emitted-bytes-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const chunk = (code, modules, imports = [], css = [], assets = []) => ({
-    type: 'chunk', code, modules: Object.fromEntries(modules.map((id) => [id, {}])), imports,
+    type: 'chunk',
+    code,
+    modules: Object.fromEntries(modules.map((id) => [id, {}])),
+    imports,
     viteMetadata: { importedCss: new Set(css), importedAssets: new Set(assets) },
   })
   const bundle = {
@@ -20,15 +23,21 @@ function fixture(t) {
     'b.js': chunk('bbb', ['/app/b.tsx?weft-assets'], ['shared.js'], ['b.css'], ['icon.svg']),
     'shared.js': chunk('shared', ['/app/shared.ts'], [], ['shared.css']),
     'eager.js': chunk('shapes', ['\0virtual:weft/routes'], ['shared.js']),
-    'a.css': { type: 'asset', source: '€' }, 'b.css': { type: 'asset', source: 'bb' },
-    'shared.css': { type: 'asset', source: 'c' }, 'icon.svg': { type: 'asset', source: '🔥' },
+    'a.css': { type: 'asset', source: '€' },
+    'b.css': { type: 'asset', source: 'bb' },
+    'shared.css': { type: 'asset', source: 'c' },
+    'icon.svg': { type: 'asset', source: '🔥' },
   }
   for (const [name, item] of Object.entries(bundle))
     writeFileSync(join(root, name), item.type === 'chunk' ? item.code : item.source)
-  const manifest = { layouts: [], routes: [
-    { id: '/a', file: 'a.tsx' }, { id: '/b', file: 'b.tsx' },
-    { id: '/missing', file: 'missing.tsx' },
-  ] }
+  const manifest = {
+    layouts: [],
+    routes: [
+      { id: '/a', file: 'a.tsx' },
+      { id: '/b', file: 'b.tsx' },
+      { id: '/missing', file: 'missing.tsx' },
+    ],
+  }
   const abs = (file) => `/app/${file}`
   return { root, bundle, manifest, abs }
 }
@@ -43,15 +52,21 @@ test('emitted bytes preserve shared graph ownership and UTF-8 lengths', (t) => {
   assert.deepEqual(result.shared, ['icon.svg', 'shared.css', 'shared.js'])
   assert.deepEqual(result.routes['/a'], {
     files: ['a.css', 'a.js', 'icon.svg', 'shared.css', 'shared.js'],
-    bytes: 16, uniqueBytes: 5, sharedBytes: 11,
+    bytes: 16,
+    uniqueBytes: 5,
+    sharedBytes: 11,
   })
   assert.equal(result.routes['/b'].bytes, 16)
   assert.equal(result.routes['/missing'], null)
   assert.equal(result.eager.bytes, 13)
   assert.equal(result.scope, 'vite-static-closure')
   rmSync(join(f.root, 'shared.css'))
-  const missing = assetBytes(f.bundle, (file) => readFileSync(join(f.root, file)),
-    f.manifest, f.abs)
+  const missing = assetBytes(
+    f.bundle,
+    (file) => readFileSync(join(f.root, file)),
+    f.manifest,
+    f.abs,
+  )
   assert.equal(missing.files['shared.css'].bytes, null)
   assert.equal(missing.routes['/a'].bytes, null)
   assert.equal(missing.eager.sharedBytes, null)
@@ -73,8 +88,13 @@ test('unknown graph metadata and external imports do not become zero cost', (t) 
 
 test('client writeBundle emits the byte manifest independent of CSS options', async (t) => {
   const f = fixture(t)
-  const state = { dev: false, build: 'build-a', options: { site: { criticalCss: false } },
-    manifest: f.manifest, abs: f.abs }
+  const state = {
+    dev: false,
+    build: 'build-a',
+    options: { site: { criticalCss: false } },
+    manifest: f.manifest,
+    abs: f.abs,
+  }
   const context = { environment: { config: { consumer: 'client' } } }
   await writeBundle(state).handler.call(context, { dir: f.root }, f.bundle)
   const saved = JSON.parse(readFileSync(join(f.root, 'weft-route-assets.json'), 'utf8'))
@@ -83,8 +103,10 @@ test('client writeBundle emits the byte manifest independent of CSS options', as
   assert.equal(saved.eager.bytes, 13)
   assert.equal(state.routeAssetBytes.routes['/b'].bytes, 16)
   const collision = { ...f.bundle, 'weft-route-assets.json': { type: 'asset', source: '{}' } }
-  await assert.rejects(() => writeBundle(state).handler.call(context, { dir: f.root }, collision),
-    /Cannot overwrite/)
+  await assert.rejects(
+    () => writeBundle(state).handler.call(context, { dir: f.root }, collision),
+    /Cannot overwrite/,
+  )
 })
 
 test('emitted byte reads stay inside the output directory and preserve binary bytes', async (t) => {
@@ -107,20 +129,41 @@ test('emitted byte reads stay inside the output directory and preserve binary by
   const mirrored = join(f.root, outside)
   mkdirSync(dirname(mirrored), { recursive: true })
   writeFileSync(mirrored, Buffer.from([1, 2, 3]))
-  for (const name of [traversal, outside, 'linked.bin', 'escaped-dir/nested.bin',
-    'C:/binary.bin', '..\\binary.bin',
-    'binary.bin', 'inside.bin']) {
+  for (const name of [
+    traversal,
+    outside,
+    'linked.bin',
+    'escaped-dir/nested.bin',
+    'C:/binary.bin',
+    '..\\binary.bin',
+    'binary.bin',
+    'inside.bin',
+  ]) {
     f.bundle[name] = { type: 'asset', source: Buffer.from([1]) }
     f.bundle['a.js'].viteMetadata.importedAssets.add(name)
   }
-  const state = { dev: false, build: 'build-a', options: { site: { criticalCss: false } },
-    manifest: f.manifest, abs: f.abs }
+  const state = {
+    dev: false,
+    build: 'build-a',
+    options: { site: { criticalCss: false } },
+    manifest: f.manifest,
+    abs: f.abs,
+  }
   const context = { environment: { config: { consumer: 'client' } } }
   await writeBundle(state).handler.call(context, { dir: f.root }, f.bundle)
   const receipt = JSON.parse(readFileSync(join(f.root, 'weft-route-assets.json'), 'utf8'))
-  const unsafe = [traversal, outside, 'linked.bin', 'escaped-dir/nested.bin',
-    'C:/binary.bin', '..\\binary.bin']
-  assert.deepEqual(unsafe.map((name) => receipt.files[name].bytes), unsafe.map(() => null))
+  const unsafe = [
+    traversal,
+    outside,
+    'linked.bin',
+    'escaped-dir/nested.bin',
+    'C:/binary.bin',
+    '..\\binary.bin',
+  ]
+  assert.deepEqual(
+    unsafe.map((name) => receipt.files[name].bytes),
+    unsafe.map(() => null),
+  )
   assert.equal(receipt.files['binary.bin'].bytes, 4)
   assert.equal(receipt.files['inside.bin'].bytes, 4)
   assert.equal(receipt.routes['/a'].bytes, null)
@@ -128,10 +171,15 @@ test('emitted byte reads stay inside the output directory and preserve binary by
 
 test('same-build receipt selects levels and deduplicates their emitted files', (t) => {
   const f = fixture(t)
-  const receipt = { ...assetBytes(f.bundle, (file) => readFileSync(join(f.root, file)),
-    f.manifest, f.abs), build: 'build-a' }
+  const receipt = {
+    ...assetBytes(f.bundle, (file) => readFileSync(join(f.root, file)), f.manifest, f.abs),
+    build: 'build-a',
+  }
   const selected = selectRouteAssets(receipt, 'build-a', ['/a', '/b'])
-  assert.deepEqual(selected.levels, [{ id: '/a', bytes: 16 }, { id: '/b', bytes: 16 }])
+  assert.deepEqual(selected.levels, [
+    { id: '/a', bytes: 16 },
+    { id: '/b', bytes: 16 },
+  ])
   assert.equal(selected.routeBytes, 21)
   assert.equal(selected.eagerBytes, 13)
   assert.equal(selected.combinedBytes, 27)
@@ -149,13 +197,23 @@ test('same-build receipt selects levels and deduplicates their emitted files', (
 
 test('server chunk embeds only a same-build emitted receipt', async (t) => {
   const f = fixture(t)
-  const state = { root: f.root, dev: false, build: 'build-a',
-    options: { site: { criticalCss: false } }, manifest: f.manifest, abs: f.abs }
+  const state = {
+    root: f.root,
+    dev: false,
+    build: 'build-a',
+    options: { site: { criticalCss: false } },
+    manifest: f.manifest,
+    abs: f.abs,
+  }
   const client = { environment: { config: { consumer: 'client' } } }
   await writeBundle(state).handler.call(client, { dir: f.root }, f.bundle)
-  const context = { environment: { getTopLevelConfig: () => ({
-    environments: { client: { build: { outDir: f.root } } },
-  }) } }
+  const context = {
+    environment: {
+      getTopLevelConfig: () => ({
+        environments: { client: { build: { outDir: f.root } } },
+      }),
+    },
+  }
   const input = `const receipt = '${ROUTE_ASSET_BYTES}'`
   const emitted = renderChunk(state).handler.call(context, input).code
   assert.ok(emitted.includes('"build":"build-a"'))

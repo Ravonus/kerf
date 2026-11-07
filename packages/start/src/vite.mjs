@@ -50,15 +50,18 @@ export { here as startDir } from './vite/shared.mjs'
 export function shapeHotUpdate(state, modes, next) {
   return async function (update) {
     if (this.environment.config.consumer === 'client') {
-      const pending = state.shapeScanActive === state.shapeScanGeneration &&
-        state.shapeScanActive !== undefined
+      const pending =
+        state.shapeScanActive === state.shapeScanGeneration && state.shapeScanActive !== undefined
       if (pending) state.shapeScanGeneration++
       const owners = [...(state.shapeOverrideDependencies ?? [])].flatMap(([file, routes]) =>
         entryCandidate(new Set([file]), update.file) ? [...routes] : [],
       )
       if (owners.length) {
-        if (update.type === 'update' && entryCandidate(state.shapeEntryMissing, update.file) &&
-            existsSync(update.file))
+        if (
+          update.type === 'update' &&
+          entryCandidate(state.shapeEntryMissing, update.file) &&
+          existsSync(update.file)
+        )
           await this.environment.pluginContainer.watchChange(update.file, { event: 'create' })
         const graph = this.environment.moduleGraph
         for (const file of owners) {
@@ -90,10 +93,11 @@ export function shapeHotUpdate(state, modes, next) {
           return []
         }
       }
-      const candidateEvent = (update.type === 'create' || update.type === 'delete') &&
+      const candidateEvent =
+        (update.type === 'create' || update.type === 'delete') &&
         entryCandidate(state.shapeEntryCandidates, update.file)
-      const missingUpdate = update.type === 'update' &&
-        entryCandidate(state.shapeEntryMissing, update.file)
+      const missingUpdate =
+        update.type === 'update' && entryCandidate(state.shapeEntryMissing, update.file)
       if (candidateEvent || missingUpdate) {
         // A watched missing path may arrive as an update; Vite clears negative resolution on create.
         if (missingUpdate && existsSync(update.file))

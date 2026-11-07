@@ -9,7 +9,9 @@ export function retainRouteView(view: () => unknown, pending: () => unknown | un
   let dispose = () => {}
   createRoot((end) => {
     dispose = end
-    hole(view, (value) => { content.value = value })
+    hole(view, (value) => {
+      content.value = value
+    })
   }, parent)
   onCleanup(() => dispose())
   return () => pending() ?? content.value

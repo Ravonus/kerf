@@ -13,25 +13,42 @@ function setup(t) {
   const file = (name) => join(root, name)
   const write = (name, source) => writeFileSync(file(name), source)
   write('entry.js', '')
-  for (const name of ['old', 'new'])
-    write(`${name}.tsx`, `export default () => <div>${name}</div>`)
-  const page = (name) => write('page.tsx', `import Waiting from './${name}.tsx';
-    import './${name}.css'; export const skeleton = Waiting`)
+  for (const name of ['old', 'new']) write(`${name}.tsx`, `export default () => <div>${name}</div>`)
+  const page = (name) =>
+    write(
+      'page.tsx',
+      `import Waiting from './${name}.tsx';
+    import './${name}.css'; export const skeleton = Waiting`,
+    )
   page('old')
-  const state = { root, abs: file, clientEntry: () => file('entry.js'),
+  const state = {
+    root,
+    abs: file,
+    clientEntry: () => file('entry.js'),
     manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
-    hydration: async () => undefined }
+    hydration: async () => undefined,
+  }
   const server = { watcher: { add() {} }, ws: { send() {} }, async close() {} }
   state.vite = server
   entryWatchLifecycle(state, server, new Map())
   let release, reject, started
-  const waiting = new Promise((done) => { started = done })
-  const pending = new Promise((done, fail) => { release = done; reject = fail })
-  const context = (slow = false) => ({ environment: { config: { consumer: 'client' } },
+  const waiting = new Promise((done) => {
+    started = done
+  })
+  const pending = new Promise((done, fail) => {
+    release = done
+    reject = fail
+  })
+  const context = (slow = false) => ({
+    environment: { config: { consumer: 'client' } },
     resolve: async (spec) => {
-      if (slow && spec === './old.tsx') { started(); return pending }
+      if (slow && spec === './old.tsx') {
+        started()
+        return pending
+      }
       return { id: file(spec.slice(2)) }
-    } })
+    },
+  })
   const load = (ctx) => moduleLoad(state).handler.call(ctx, '\0virtual:weft/routes')
   return { root, file, page, state, server, release, reject, waiting, context, load }
 }
@@ -60,7 +77,7 @@ test('an older failed scan cannot disturb a newer success', async (t) => {
   await p.waiting
   p.page('new')
   await p.load(p.context())
-  p.reject(Error('old resolver failure'))
+  p.reject(new Error('old resolver failure'))
   await oldResult
   assert.ok(p.state.shapeOverrideDependencies.has(p.file('new.tsx')))
   await p.server.close()
@@ -73,7 +90,9 @@ test('a newer failed scan still prevents an older scan publishing', async (t) =>
   await p.waiting
   p.page('new')
   const broken = p.context()
-  broken.resolve = async () => { throw Error('new resolver failure') }
+  broken.resolve = async () => {
+    throw new Error('new resolver failure')
+  }
   await assert.rejects(p.load(broken), /new resolver failure/)
   p.release({ id: p.file('old.tsx') })
   await oldResult
@@ -117,7 +136,9 @@ test('server replacement fences an older scan without clearing the new owner', a
 test('closing fences an in-flight scan before the close promise settles', async (t) => {
   const p = setup(t)
   let finishClose
-  const close = new Promise((done) => { finishClose = done })
+  const close = new Promise((done) => {
+    finishClose = done
+  })
   const next = { watcher: { add() {} }, close: () => close }
   entryWatchLifecycle(p.state, next, new Map())
   const old = p.load(p.context(true))

@@ -57,8 +57,15 @@ function emittedReader(dir) {
     return rel !== '' && rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel)
   }
   return (file) => {
-    if (typeof file !== 'string' || !file || isAbsolute(file) || win32.parse(file).root ||
-        file.includes('\\') || file.split('/').includes('..')) throw new Error('Invalid asset path')
+    if (
+      typeof file !== 'string' ||
+      !file ||
+      isAbsolute(file) ||
+      win32.parse(file).root ||
+      file.includes('\\') ||
+      file.split('/').includes('..')
+    )
+      throw new Error('Invalid asset path')
     const path = resolve(root, file)
     if (!inside(path)) throw new Error('Asset outside output')
     const real = realpathSync(path)
@@ -73,8 +80,7 @@ export const writeBundle = (s) => ({
     if (!s.dev && this.environment?.config.consumer === 'client' && out.dir) {
       const name = 'weft-route-assets.json'
       if (bundle[name]) throw new Error(`Cannot overwrite emitted ${name}`)
-      const bytes = assetBytes(bundle, emittedReader(out.dir),
-        s.manifest ?? s.scan(), s.abs)
+      const bytes = assetBytes(bundle, emittedReader(out.dir), s.manifest ?? s.scan(), s.abs)
       bytes.build = s.build || null
       writeFileSync(join(out.dir, name), JSON.stringify(bytes))
       s.routeAssetBytes = bytes
@@ -109,7 +115,9 @@ export const renderChunk = (s) => ({
         const client = resolve(s.root, top.environments.client.build.outDir)
         const saved = JSON.parse(readFileSync(join(client, 'weft-route-assets.json'), 'utf8'))
         if (s.build && saved.build === s.build) receipt = saved
-      } catch { /* no matching client receipt */ }
+      } catch {
+        /* no matching client receipt */
+      }
       code = code.replace(receiptToken, () => JSON.stringify(receipt))
     }
     const token = new RegExp(`["'\`]${INLINE_SHEETS}["'\`]`)

@@ -13,7 +13,8 @@ const receipt: AssetReceipt = {
 
 const selected: RouteAssetCosts | null = selectRouteAssets(receipt, 'build-a', ['/'])
 export const bootCosts: RouteAssetCosts | null = matchingRouteAssets(
-  selected ?? undefined, 'build-a',
+  selected ?? undefined,
+  'build-a',
 )
 export const payload: RoutePayload = {
   m: [{ id: '/', params: {} }],
@@ -22,8 +23,14 @@ export const payload: RoutePayload = {
   ...(selected && { a: selected }),
 }
 export const shapes: Record<string, RouteShape> = {
-  '/': { kind: 'override', component: () => null, css: null, cssText: [],
-    cssStatus: 'partial', bytes: null },
+  '/': {
+    kind: 'override',
+    component: () => null,
+    css: null,
+    cssText: [],
+    cssStatus: 'partial',
+    bytes: null,
+  },
   '/disabled': { kind: 'disabled', css: null, bytes: null },
   '/unknown': { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null },
 }

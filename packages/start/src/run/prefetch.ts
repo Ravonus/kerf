@@ -9,9 +9,12 @@ type Job = { ctrl: AbortController; promise: Promise<Read | undefined>; promoted
 async function limited(response: Response, limit: number, signal: AbortSignal): Promise<Response> {
   if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
   if (!response.body) return response
-  const reader = response.body.getReader(), chunks: Uint8Array[] = []
+  const reader = response.body.getReader(),
+    chunks: Uint8Array[] = []
   let bytes = 0
-  const abort = () => { void reader.cancel().catch(() => {}) }
+  const abort = () => {
+    void reader.cancel().catch(() => {})
+  }
   signal.addEventListener('abort', abort, { once: true })
   try {
     for (;;) {
@@ -19,7 +22,10 @@ async function limited(response: Response, limit: number, signal: AbortSignal): 
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
       if (item.done) break
       bytes += item.value.byteLength
-      if (bytes > limit) { abort(); throw new Error('Prefetch reservation exceeded') }
+      if (bytes > limit) {
+        abort()
+        throw new Error('Prefetch reservation exceeded')
+      }
       chunks.push(item.value)
     }
   } finally {
@@ -28,9 +34,15 @@ async function limited(response: Response, limit: number, signal: AbortSignal): 
   }
   const body = new Uint8Array(bytes)
   let offset = 0
-  for (const chunk of chunks) { body.set(chunk, offset); offset += chunk.byteLength }
-  return new Response(body, { status: response.status, statusText: response.statusText,
-    headers: response.headers })
+  for (const chunk of chunks) {
+    body.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new Response(body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  })
 }
 
 /** Admit and deduplicate bounded route-data speculation without evaluating route modules. */
@@ -40,18 +52,25 @@ export class Prefetch {
   private used: { at: number; bytes: number }[] = []
 
   constructor(
-    private cache: RouteCache, private now: () => number, private canSeed: () => boolean,
+    private cache: RouteCache,
+    private now: () => number,
+    private canSeed: () => boolean,
   ) {}
 
-  get size() { return this.jobs.size }
-  private key(url: URL) { return url.pathname + url.search }
+  get size() {
+    return this.jobs.size
+  }
+  private key(url: URL) {
+    return url.pathname + url.search
+  }
 
   start(url: URL, intent: Intent, network: Network | undefined, online: boolean) {
     const key = this.key(url)
     if (this.stopped || this.jobs.has(key)) return
     if (!online || network?.saveData) return
     const kind = network?.effectiveType
-    const fast = kind === '4g', slow = kind === '2g' || kind === 'slow-2g'
+    const fast = kind === '4g',
+      slow = kind === '2g' || kind === 'slow-2g'
     if (!fast && intent === 'hover') return
     const cap = (fast ? 64 : slow ? 8 : 16) * 1024
     const allowance = (fast ? 256 : slow ? 16 : 32) * 1024
@@ -69,10 +88,15 @@ export class Prefetch {
       if (version !== this.cache.version) throw new DOMException('Aborted', 'AbortError')
       return limited(await ask(target, signal, tag), cost.data, signal)
     }
-    job.promise = this.cache.read(url, ctrl.signal, fetchRoute, this.now, this.canSeed)
-      .then((result) => ctrl.signal.aborted || version !== this.cache.version ? undefined : result)
+    job.promise = this.cache
+      .read(url, ctrl.signal, fetchRoute, this.now, this.canSeed)
+      .then((result) =>
+        ctrl.signal.aborted || version !== this.cache.version ? undefined : result,
+      )
       .catch(() => undefined)
-      .finally(() => { if (this.jobs.get(key) === job) this.jobs.delete(key) })
+      .finally(() => {
+        if (this.jobs.get(key) === job) this.jobs.delete(key)
+      })
   }
 
   /** Promote an in-flight speculative request to demand without a second fetch. */
@@ -87,7 +111,10 @@ export class Prefetch {
   }
 
   /** Stop this owner's pending speculation and prevent further scheduling. */
-  stop() { this.stopped = true; this.cancel(true) }
+  stop() {
+    this.stopped = true
+    this.cancel(true)
+  }
 
   /** Cancel pending speculation, optionally including work promoted to demand. */
   cancel(all = false) {

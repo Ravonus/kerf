@@ -28,9 +28,15 @@ test('missing CSS and watches stay within the configured root, including symlink
   assert.ok(!result.missing.has(join(root, 'link/c.css')))
   const watched = []
   const watcher = { add: (path) => watched.push(path), unwatch: () => assert.fail('unwatch') }
-  entryStyles.watchEntryCandidates({ watcher }, new Set([
-    join(root, 'nested/a.css'), join(outside, 'missing/x.css'), join(root, 'link/missing/x.css'),
-  ]), root)
+  entryStyles.watchEntryCandidates(
+    { watcher },
+    new Set([
+      join(root, 'nested/a.css'),
+      join(outside, 'missing/x.css'),
+      join(root, 'link/missing/x.css'),
+    ]),
+    root,
+  )
   assert.deepEqual(watched, [root])
 })
 
@@ -47,13 +53,17 @@ test('resolved CSS outside the project remains a Vite-controlled stylesheet', as
 test('closing a server clears only its entry state and never unwatches shared paths', async () => {
   const state = {
     shapeEntrySignatures: new Map([['entry', 'signature']]),
-    shapeEntryCandidates: new Set(['candidate']), shapeEntryMissing: new Set(['missing']),
+    shapeEntryCandidates: new Set(['candidate']),
+    shapeEntryMissing: new Set(['missing']),
   }
   const modes = new Map([['route', 'mode']])
   let closes = 0
   const server = () => ({
     watcher: { unwatch: () => assert.fail('unwatch') },
-    async close() { closes++; return 'closed' },
+    async close() {
+      closes++
+      return 'closed'
+    },
   })
   const old = server()
   const current = server()
@@ -73,24 +83,35 @@ test('closing a server clears only its entry state and never unwatches shared pa
   assert.equal(modes.size, 0)
 })
 
-
 test('an entry scan finishing after server close cannot restore stale state', async (t) => {
   const { root } = fixture(t)
   const entry = join(root, 'entry.js')
   writeFileSync(entry, "import './pending.css'")
   let release
   let started
-  const waiting = new Promise((done) => { started = done })
-  const pending = new Promise((done) => { release = done })
+  const waiting = new Promise((done) => {
+    started = done
+  })
+  const pending = new Promise((done) => {
+    release = done
+  })
   const server = { watcher: { add: () => assert.fail('watch after close') }, async close() {} }
   const state = {
-    root, abs: (file) => join(root, file), clientEntry: () => entry, dev: true, vite: server,
-    manifest: { layouts: [], routes: [] }, hydration: async () => undefined,
+    root,
+    abs: (file) => join(root, file),
+    clientEntry: () => entry,
+    dev: true,
+    vite: server,
+    manifest: { layouts: [], routes: [] },
+    hydration: async () => undefined,
   }
   entryStyles.entryWatchLifecycle(state, server, new Map())
   const context = {
     environment: { config: { consumer: 'client' } },
-    resolve: () => { started(); return pending },
+    resolve: () => {
+      started()
+      return pending
+    },
   }
   const loading = moduleLoad(state).handler.call(context, '\0virtual:weft/routes')
   await waiting
@@ -101,21 +122,25 @@ test('an entry scan finishing after server close cannot restore stale state', as
   assert.equal(state.shapeEntrySignatures, undefined)
 })
 
-
 test('a real Vite middleware close clears the registered entry state', async (t) => {
   const { root } = fixture(t)
   const state = { shapeEntryCandidates: new Set(['pending']) }
   const modes = new Map([['entry', 'signature']])
   const server = await createServer({
-    root, configFile: false, logLevel: 'silent', appType: 'custom',
+    root,
+    configFile: false,
+    logLevel: 'silent',
+    appType: 'custom',
     server: { middlewareMode: true },
-    plugins: [{
-      name: 'entry-lifecycle-test',
-      configureServer(server) {
-        state.vite = server
-        entryStyles.entryWatchLifecycle(state, server, modes)
+    plugins: [
+      {
+        name: 'entry-lifecycle-test',
+        configureServer(server) {
+          state.vite = server
+          entryStyles.entryWatchLifecycle(state, server, modes)
+        },
       },
-    }],
+    ],
   })
   try {
     assert.ok(state.shapeEntryOwner)
@@ -135,18 +160,29 @@ test('a route style scan finishing after close cannot restore entry state', asyn
   writeFileSync(join(root, 'page.tsx'), "import './pending.css'; export default () => <main />")
   let release
   let started
-  const waiting = new Promise((done) => { started = done })
-  const pending = new Promise((done) => { release = done })
+  const waiting = new Promise((done) => {
+    started = done
+  })
+  const pending = new Promise((done) => {
+    release = done
+  })
   const server = { watcher: { add: () => assert.fail('watch after close') }, async close() {} }
   const state = {
-    root, abs: (file) => join(root, file), clientEntry: () => entry, dev: true, vite: server,
+    root,
+    abs: (file) => join(root, file),
+    clientEntry: () => entry,
+    dev: true,
+    vite: server,
     manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
     hydration: async () => undefined,
   }
   entryStyles.entryWatchLifecycle(state, server, new Map())
   const context = {
     environment: { config: { consumer: 'client' } },
-    resolve: () => { started(); return pending },
+    resolve: () => {
+      started()
+      return pending
+    },
   }
   const loading = moduleLoad(state).handler.call(context, '\0virtual:weft/routes')
   await waiting

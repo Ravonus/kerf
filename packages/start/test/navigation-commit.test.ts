@@ -8,8 +8,11 @@ import { retainRouteView } from '../src/run/retain-view'
 const requests = vi.hoisted(() => [] as { resolve: (response: Response) => void }[])
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/run/helpers', async (load) => ({
-  ...await load<typeof import('../src/run/helpers')>(),
-  ask: () => new Promise<Response>((resolve) => { requests.push({ resolve }) }),
+  ...(await load<typeof import('../src/run/helpers')>()),
+  ask: () =>
+    new Promise<Response>((resolve) => {
+      requests.push({ resolve })
+    }),
 }))
 import { Navigation } from '../src/run/navigation'
 
@@ -22,37 +25,66 @@ afterEach(() => {
 function fixture(onDispose?: (id: string) => void, onSetup?: (id: string) => void) {
   history.replaceState(null, '', '/users/1')
   vi.stubGlobal('requestAnimationFrame', () => 0)
-  const routes: ClientRoutes = { table: [
-    { id: '/users/$id', pattern: '/users/$id', layouts: [] },
-    { id: '/other', pattern: '/other', layouts: [] },
-    { id: '/third', pattern: '/third', layouts: [] },
-  ], load: {} }
-  const route = createRouteState({ p: '/users/1', s: 200, m: [
-    { id: '/users/$id', params: { id: '1' }, data: { n: 1 } },
-  ] }, {})
+  const routes: ClientRoutes = {
+    table: [
+      { id: '/users/$id', pattern: '/users/$id', layouts: [] },
+      { id: '/other', pattern: '/other', layouts: [] },
+      { id: '/third', pattern: '/third', layouts: [] },
+    ],
+    load: {},
+  }
+  const route = createRouteState(
+    { p: '/users/1', s: 200, m: [{ id: '/users/$id', params: { id: '1' }, data: { n: 1 } }] },
+    {},
+  )
   const release = vi.fn()
-  route.prepareShape = () => ({ kind: 'generated', ready: true, completeness: 'partial',
-    component: () => null, release })
+  route.prepareShape = () => ({
+    kind: 'generated',
+    ready: true,
+    completeness: 'partial',
+    component: () => null,
+    release,
+  })
   const cleanups: string[] = []
   const dispose = render(() => {
     const app = document.createElement('main')
     app.id = 'app'
-    insert(app, retainRouteView(() => {
-      const id = route.levels[0]!.id.value!
-      onCleanup(() => { cleanups.push(id); onDispose?.(id) })
-      onSetup?.(id)
-      const button = document.createElement('button')
-      button.dataset.route = id
-      let count = 0
-      button.addEventListener('click', () => { button.dataset.count = String(++count) })
-      insert(button, () => `${route.levels[0]!.params.value.id ?? id}:` +
-        String((route.levels[0]!.data.value as { n: number }).n))
-      return button
-    }, () => route.levels[0]!.shape.value ? 'pending' : undefined))
+    insert(
+      app,
+      retainRouteView(
+        () => {
+          const id = route.levels[0]!.id.value!
+          onCleanup(() => {
+            cleanups.push(id)
+            onDispose?.(id)
+          })
+          onSetup?.(id)
+          const button = document.createElement('button')
+          button.dataset.route = id
+          let count = 0
+          button.addEventListener('click', () => {
+            button.dataset.count = String(++count)
+          })
+          insert(
+            button,
+            () =>
+              `${route.levels[0]!.params.value.id ?? id}:` +
+              String((route.levels[0]!.data.value as { n: number }).n),
+          )
+          return button
+        },
+        () => (route.levels[0]!.shape.value ? 'pending' : undefined),
+      ),
+    )
     return app
   }, document.body)
-  const page = { route, chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(),
-    initialTags: [] }
+  const page = {
+    route,
+    chunk: vi.fn(async () => {}),
+    island: vi.fn(),
+    setBag: vi.fn(),
+    initialTags: [],
+  }
   const nav = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
   return { nav, route, dispose, cleanups, release }
 }
@@ -141,7 +173,6 @@ it('keeps a reentrant navigation from cleanup during a real commit', async () =>
   f.nav.dispose()
   f.dispose()
 })
-
 
 it('keeps a reentrant navigation from setup during a real commit', async () => {
   let nested: Promise<void> | undefined

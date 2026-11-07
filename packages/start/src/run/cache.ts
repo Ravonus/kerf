@@ -3,9 +3,20 @@ import type { RoutePayload } from '../router'
 const LIMIT = 32
 const BYTES = 4 * 1024 * 1024
 
-type Entry = { body: string; bytes: number; tag: string; tags: string[]; since: number; until: number }
+type Entry = {
+  body: string
+  bytes: number
+  tag: string
+  tags: string[]
+  since: number
+  until: number
+}
 export type Read = {
-  next: RoutePayload; since: number; version: number; notModified?: boolean; until?: number
+  next: RoutePayload
+  since: number
+  version: number
+  notModified?: boolean
+  until?: number
 }
 type FetchRoute = (url: URL, signal: AbortSignal, tag?: string) => Promise<Response>
 
@@ -26,7 +37,9 @@ export class RouteCache {
   }
 
   private key(url: URL) {
-    return this.build ? JSON.stringify([this.build, this.epoch, url.pathname + url.search]) : undefined
+    return this.build
+      ? JSON.stringify([this.build, this.epoch, url.pathname + url.search])
+      : undefined
   }
 
   private remove(key: string) {
@@ -53,21 +66,37 @@ export class RouteCache {
   private allowed(response: Response) {
     const policy = response.headers.get('cache-control') ?? ''
     const directives = policy.split(',').map((part) => part.trim().toLowerCase())
-    const vary = (response.headers.get('vary') ?? '').split(',').map((part) => part.trim().toLowerCase())
-    return directives.includes('private') && !directives.some((part) => /^no-store(?:\s*=|$)/.test(part)) &&
-      !response.headers.has('set-cookie') && ['accept', 'cookie', 'authorization'].every((v) => vary.includes(v)) &&
+    const vary = (response.headers.get('vary') ?? '')
+      .split(',')
+      .map((part) => part.trim().toLowerCase())
+    return (
+      directives.includes('private') &&
+      !directives.some((part) => /^no-store(?:\s*=|$)/.test(part)) &&
+      !response.headers.has('set-cookie') &&
+      ['accept', 'cookie', 'authorization'].every((v) => vary.includes(v)) &&
       vary.every((v) => ['accept', 'cookie', 'authorization'].includes(v))
+    )
   }
 
   private until(response: Response, started: number) {
     if (!this.allowed(response)) return 0
-    const parts = (response.headers.get('cache-control') ?? '').split(',').map((s) => s.trim().toLowerCase())
-    if (parts.some((s) => /^(?:no-cache|must-revalidate|proxy-revalidate)(?:\s*=|$)/.test(s))) return 0
+    const parts = (response.headers.get('cache-control') ?? '')
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+    if (parts.some((s) => /^(?:no-cache|must-revalidate|proxy-revalidate)(?:\s*=|$)/.test(s)))
+      return 0
     const max = parts.filter((s) => /^max-age=\d+$/.test(s))
     const stale = parts.filter((s) => /^stale-while-revalidate=\d+$/.test(s))
-    if (max.length !== 1 || stale.length > 1 || parts.some((s) =>
-      /^(?:max-age|stale-while-revalidate)\s*=/.test(s) &&
-      !/^(?:max-age|stale-while-revalidate)=\d+$/.test(s))) return 0
+    if (
+      max.length !== 1 ||
+      stale.length > 1 ||
+      parts.some(
+        (s) =>
+          /^(?:max-age|stale-while-revalidate)\s*=/.test(s) &&
+          !/^(?:max-age|stale-while-revalidate)=\d+$/.test(s),
+      )
+    )
+      return 0
     const age = response.headers.get('age')
     if (age !== null && !/^\d+$/.test(age)) return 0
     const date = response.headers.get('date')
@@ -82,7 +111,8 @@ export class RouteCache {
 
   /** Read only a still-permitted body; callers must also prove its code is loaded. */
   peek(url: URL, canSeed: boolean): Read | undefined {
-    const key = this.key(url), entry = key && this.entries.get(key)
+    const key = this.key(url),
+      entry = key && this.entries.get(key)
     if (!key || !entry || performance.now() >= entry.until) return undefined
     const next = JSON.parse(entry.body) as RoutePayload
     if (next.c?.length && !canSeed) return undefined
@@ -93,39 +123,69 @@ export class RouteCache {
 
   /** Conservative known route cost; unknown or mismatched receipts cannot be speculated. */
   estimate(url: URL) {
-    const key = this.key(url), entry = key && this.entries.get(key)
+    const key = this.key(url),
+      entry = key && this.entries.get(key)
     if (!entry) return undefined
     const next = JSON.parse(entry.body) as RoutePayload
     const cost = next.a
-    if (!cost || cost.build !== this.build || cost.scope !== 'vite-static-closure' ||
-      typeof cost.routeBytes !== 'number' || !Number.isSafeInteger(cost.routeBytes) ||
-      cost.routeBytes < 0) return undefined
+    if (
+      !cost ||
+      cost.build !== this.build ||
+      cost.scope !== 'vite-static-closure' ||
+      typeof cost.routeBytes !== 'number' ||
+      !Number.isSafeInteger(cost.routeBytes) ||
+      cost.routeBytes < 0
+    )
+      return undefined
     const data = Math.max(entry.bytes, 8 * 1024)
     const total = data + cost.routeBytes
     return Number.isSafeInteger(total) ? { data, total } : undefined
   }
 
-  private store(key: string | undefined, response: Response, body: string, next: RoutePayload,
-    since: number, canSeed: boolean, started: number) {
+  private store(
+    key: string | undefined,
+    response: Response,
+    body: string,
+    next: RoutePayload,
+    since: number,
+    canSeed: boolean,
+    started: number,
+  ) {
     if (!key) return
     this.remove(key)
     const tag = response.headers.get('etag')
     const bytes = new TextEncoder().encode(body).byteLength
-    if (response.status !== 200 || next.s !== 200 || next.r || !tag || !this.allowed(response) ||
-      (next.c?.length && !canSeed) || bytes > BYTES) return
+    if (
+      response.status !== 200 ||
+      next.s !== 200 ||
+      next.r ||
+      !tag ||
+      !this.allowed(response) ||
+      (next.c?.length && !canSeed) ||
+      bytes > BYTES
+    )
+      return
     const tags = [...new Set(next.m.flatMap((match) => match.t ?? []))]
     this.entries.set(key, { body, bytes, tag, tags, since, until: this.until(response, started) })
     this.bytes += bytes
-    while (this.entries.size > LIMIT || this.bytes > BYTES) this.remove(this.entries.keys().next().value!)
+    while (this.entries.size > LIMIT || this.bytes > BYTES)
+      this.remove(this.entries.keys().next().value!)
   }
 
   /** Fetch or validate a body against the current generation before returning it. */
-  async read(url: URL, signal: AbortSignal, fetchRoute: FetchRoute, now: () => number,
-    canSeed: () => boolean, onForget?: () => void): Promise<Read> {
+  async read(
+    url: URL,
+    signal: AbortSignal,
+    fetchRoute: FetchRoute,
+    now: () => number,
+    canSeed: () => boolean,
+    onForget?: () => void,
+  ): Promise<Read> {
     let allowTag = true
     for (;;) {
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
-      const version = this.version, key = this.key(url)
+      const version = this.version,
+        key = this.key(url)
       const cached = key && allowTag ? this.entries.get(key) : undefined
       let since = now()
       const started = performance.now()
@@ -139,8 +199,13 @@ export class RouteCache {
       }
       let body: string
       if (response.status === 304) {
-        if (!cached || !key || !this.allowed(response) || response.headers.get('etag') !== cached.tag ||
-          this.entries.get(key) !== cached) {
+        if (
+          !cached ||
+          !key ||
+          !this.allowed(response) ||
+          response.headers.get('etag') !== cached.tag ||
+          this.entries.get(key) !== cached
+        ) {
           if (key) this.remove(key)
           onForget?.()
           if (!allowTag) throw new Error('Unexpected route 304')

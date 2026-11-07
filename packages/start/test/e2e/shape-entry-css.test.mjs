@@ -18,18 +18,25 @@ async function project(t, plugins = []) {
   mkdirSync(file('.weft/tokens'), { recursive: true })
   write('.weft/tokens/warp.css', ':root { --size: 4px }')
   write('entry.js', "import './a.css'; import './nested.js'; import './b.css'; throw Error('run')")
-  write('nested.js', `
+  write(
+    'nested.js',
+    `
     import './nested.css'; import './entry.js'; import 'weft:tokens/warp';
     export { value } from './deep.js'; import('./dynamic.js');
-  `)
+  `,
+  )
   write('deep.js', "import './deep.css'; import './bad.server.js'; export const value = 1")
   write('bad.server.js', "import './server.css'; throw Error('server ran')")
   write('dynamic.js', "import './dynamic.css'; throw Error('dynamic ran')")
   for (const name of ['a', 'b', 'nested', 'deep', 'server', 'dynamic']) write(`${name}.css`, '')
   write('page.tsx', 'export default () => <main />')
   const server = await createServer({
-    root, configFile: false, logLevel: 'silent', plugins: [...plugins, tokens()],
-    server: { middlewareMode: true }, appType: 'custom',
+    root,
+    configFile: false,
+    logLevel: 'silent',
+    plugins: [...plugins, tokens()],
+    server: { middlewareMode: true },
+    appType: 'custom',
   })
   const ctx = {
     environment: { config: { consumer: 'client' } },
@@ -43,14 +50,20 @@ test('entry closure follows static CSS in order through cycles without running J
   try {
     const result = await entryCss(p.ctx, p.file('entry.js'), p.root)
     assert.deepEqual(result.styles, [
-      p.file('a.css'), p.file('nested.css'), p.file('.weft/tokens/warp.css'),
-      p.file('deep.css'), p.file('b.css'),
+      p.file('a.css'),
+      p.file('nested.css'),
+      p.file('.weft/tokens/warp.css'),
+      p.file('deep.css'),
+      p.file('b.css'),
     ])
-    assert.deepEqual([...result.signatures.keys()], [
-      p.file('entry.js'), p.file('nested.js'), p.file('deep.js'),
-    ])
+    assert.deepEqual(
+      [...result.signatures.keys()],
+      [p.file('entry.js'), p.file('nested.js'), p.file('deep.js')],
+    )
     const state = {
-      root: p.root, abs: p.file, clientEntry: () => p.file('entry.js'),
+      root: p.root,
+      abs: p.file,
+      clientEntry: () => p.file('entry.js'),
       manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
       hydration: async () => undefined,
     }
@@ -63,9 +76,10 @@ test('entry closure follows static CSS in order through cycles without running J
     }
     assert.ok(!source.includes('server.css?inline'))
     assert.ok(!source.includes('dynamic.css?inline'))
-    assert.deepEqual([...state.shapeEntrySignatures.keys()], [
-      p.file('entry.js'), p.file('nested.js'), p.file('deep.js'), p.file('page.tsx'),
-    ])
+    assert.deepEqual(
+      [...state.shapeEntrySignatures.keys()],
+      [p.file('entry.js'), p.file('nested.js'), p.file('deep.js'), p.file('page.tsx')],
+    )
   } finally {
     await p.server.close()
   }
@@ -81,7 +95,8 @@ test('changed nested entry imports invalidate metadata but other edits do not', 
       invalidateModule: (value) => calls.push(value),
     }
     const state = {
-      root: p.root, manifest: { routes: [], layouts: [] },
+      root: p.root,
+      manifest: { routes: [], layouts: [] },
       shapeEntrySignatures: result.signatures,
       vite: { ws: { send: (value) => calls.push(value) } },
     }
@@ -101,7 +116,6 @@ test('changed nested entry imports invalidate metadata but other edits do not', 
     await p.server.close()
   }
 })
-
 
 test('relative CSS uses Vite redirects and rejects external, virtual and JS results', async (t) => {
   const redirect = {

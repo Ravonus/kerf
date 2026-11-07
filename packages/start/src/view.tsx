@@ -12,7 +12,11 @@ function ShapeTree(props: { shapes: PreparedRouteShape[]; depth: number }): unkn
   const item = props.shapes[props.depth]
   if (!item) return null
   const Shape = item.component as (props: { children: unknown }) => unknown
-  return <Shape><ShapeTree shapes={props.shapes} depth={props.depth + 1} /></Shape>
+  return (
+    <Shape>
+      <ShapeTree shapes={props.shapes} depth={props.depth + 1} />
+    </Shape>
+  )
 }
 
 // The route state travels as a prop, not a context: a level's view runs later, in the hole that shows it, under that
@@ -58,9 +62,11 @@ export function Level(props: { route: RouteState; depth: number }) {
   }
   const display = retainRouteView(view, () => {
     const shape = lv.shape.value
-    return shape ? <div inert aria-hidden="true" style="display:contents">
-      <ShapeTree shapes={shape} depth={0} />
-    </div> : undefined
+    return shape ? (
+      <div inert aria-hidden="true" style="display:contents">
+        <ShapeTree shapes={shape} depth={0} />
+      </div>
+    ) : undefined
   })
   return <>{display()}</>
 }

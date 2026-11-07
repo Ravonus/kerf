@@ -10,7 +10,10 @@ function pointer(type: string, options: MouseEventInit = {}, id = 7) {
   return event
 }
 
-afterEach(() => { document.body.innerHTML = ''; history.replaceState(null, '', '/from') })
+afterEach(() => {
+  document.body.innerHTML = ''
+  history.replaceState(null, '', '/from')
+})
 
 describe('navigation pointer admission', () => {
   it('accepts pointerdown once and suppresses the matching click after anchor removal', () => {
@@ -28,7 +31,9 @@ describe('navigation pointer admission', () => {
       document.documentElement.dispatchEvent(click)
       expect(click.defaultPrevented).toBe(true)
       expect(go).toHaveBeenCalledOnce()
-    } finally { dispose() }
+    } finally {
+      dispose()
+    }
   })
 
   it('preserves excluded links and admits keyboard clicks independently', () => {
@@ -62,7 +67,9 @@ describe('navigation pointer admission', () => {
       anchor.dispatchEvent(keyboard)
       expect(keyboard.defaultPrevented).toBe(true)
       expect(go).toHaveBeenCalledOnce()
-    } finally { dispose() }
+    } finally {
+      dispose()
+    }
   })
 
   it('does not consume a later independent modified gesture after a drag', () => {
@@ -77,7 +84,9 @@ describe('navigation pointer admission', () => {
       anchor.dispatchEvent(click)
       expect(click.defaultPrevented).toBe(false)
       expect(go).toHaveBeenCalledOnce()
-    } finally { dispose() }
+    } finally {
+      dispose()
+    }
   })
 
   it('suppresses the matching click after completion, then accepts a new gesture', async () => {
@@ -99,7 +108,9 @@ describe('navigation pointer admission', () => {
       other!.dispatchEvent(next)
       expect(next.defaultPrevented).toBe(true)
       expect(go).toHaveBeenCalledTimes(2)
-    } finally { dispose() }
+    } finally {
+      dispose()
+    }
   })
 
   it('clears pointer cancellation and honors prevented pointerdown', () => {
@@ -117,6 +128,8 @@ describe('navigation pointer admission', () => {
       const click = pointer('click', { detail: 1 })
       anchor.dispatchEvent(click)
       expect(go).toHaveBeenCalledTimes(2)
-    } finally { dispose() }
+    } finally {
+      dispose()
+    }
   })
 })

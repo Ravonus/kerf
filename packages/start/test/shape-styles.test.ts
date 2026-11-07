@@ -4,21 +4,33 @@ import type { ClientRoutes, RouteShape } from '../src/run'
 import { prepareRouteShape } from '../src/run/shape-preparation'
 
 function fixture() {
-  const dom = new JSDOM('<!doctype html><head><meta property="csp-nonce" nonce="secret">' +
-    '<style id="app">.box { min-height: 12px }</style></head>' +
-    '<body><div class="box"></div><div class="other"></div></body>')
+  const dom = new JSDOM(
+    '<!doctype html><head><meta property="csp-nonce" nonce="secret">' +
+      '<style id="app">.box { min-height: 12px }</style></head>' +
+      '<body><div class="box"></div><div class="other"></div></body>',
+  )
   const doc = dom.window.document
   const component = () => null
   const shape = (kind: 'generated' | 'override', cssText: string[]): RouteShape => ({
-    kind, component, css: null, cssText, cssStatus: 'partial', bytes: null,
+    kind,
+    component,
+    css: null,
+    cssText,
+    cssStatus: 'partial',
+    bytes: null,
   })
-  const routes: ClientRoutes = { build: 'build-a', table: [], load: {}, shapes: {
-    '/generated': shape('generated', ['.box { min-height: 4px }']),
-    '/custom': shape('override', ['.box { min-height: 4px }']),
-    '/other': shape('override', ['.other { width: 8px }']),
-    '/disabled': { kind: 'disabled', css: null, bytes: null },
-    '/unknown': { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null },
-  } }
+  const routes: ClientRoutes = {
+    build: 'build-a',
+    table: [],
+    load: {},
+    shapes: {
+      '/generated': shape('generated', ['.box { min-height: 4px }']),
+      '/custom': shape('override', ['.box { min-height: 4px }']),
+      '/other': shape('override', ['.other { width: 8px }']),
+      '/disabled': { kind: 'disabled', css: null, bytes: null },
+      '/unknown': { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null },
+    },
+  }
   return { dom, doc, component, routes }
 }
 
@@ -50,21 +62,28 @@ describe('route shape style preparation', () => {
       expect(f.doc.head.querySelectorAll('style')).toHaveLength(2)
       other.release()
       expect([...f.doc.head.querySelectorAll('style')].map((style) => style.id)).toEqual(['app'])
-    } finally { f.dom.window.close() }
+    } finally {
+      f.dom.window.close()
+    }
   })
 
   it('does not mark a blocked stylesheet ready', () => {
     const f = fixture()
     try {
       const create = f.doc.createElement.bind(f.doc)
-      Object.defineProperty(f.doc, 'createElement', { configurable: true, value: (name: string) => {
-        const element = create(name)
-        if (name === 'style') Object.defineProperty(element, 'sheet', { value: null })
-        return element
-      } })
+      Object.defineProperty(f.doc, 'createElement', {
+        configurable: true,
+        value: (name: string) => {
+          const element = create(name)
+          if (name === 'style') Object.defineProperty(element, 'sheet', { value: null })
+          return element
+        },
+      })
       expect(prepareRouteShape(f.routes, '/generated', f.doc)).toBeNull()
       expect([...f.doc.head.querySelectorAll('style')].map((style) => style.id)).toEqual(['app'])
-    } finally { f.dom.window.close() }
+    } finally {
+      f.dom.window.close()
+    }
   })
 
   it('refuses unavailable shapes and styles with unresolved imports', () => {
@@ -78,7 +97,9 @@ describe('route shape style preparation', () => {
       shape.cssText = ['@import url("/late.css"); .box { width: 1px }']
       expect(prepareRouteShape(f.routes, '/generated', f.doc)).toBeNull()
       expect([...f.doc.head.querySelectorAll('style')].map((style) => style.id)).toEqual(['app'])
-    } finally { f.dom.window.close() }
+    } finally {
+      f.dom.window.close()
+    }
   })
 
   it('does not share sheets across build identities and releases only owned sheets', () => {
@@ -96,6 +117,8 @@ describe('route shape style preparation', () => {
       second.release()
       expect(f.doc.querySelector('#app')).not.toBeNull()
       expect(foreign.isConnected).toBe(true)
-    } finally { f.dom.window.close() }
+    } finally {
+      f.dom.window.close()
+    }
   })
 })

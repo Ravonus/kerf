@@ -26,9 +26,11 @@ function hover(anchor: Element, options: MouseEventInit = {}) {
   vi.advanceTimersByTime(81)
 }
 afterEach(() => {
-  stop?.(); stop = undefined
+  stop?.()
+  stop = undefined
   document.body.innerHTML = ''
-  vi.useRealTimers(); vi.unstubAllGlobals()
+  vi.useRealTimers()
+  vi.unstubAllGlobals()
   network.saveData = false
   network.effectiveType = '4g'
   history.replaceState(null, '', '/from')
@@ -38,10 +40,16 @@ it('uses navigation admission for native and opted-out links on hover and focus'
   history.replaceState(null, '', '/from')
   const prefetch = setup()
   for (const [href, attrs] of [
-    ['/to', { target: '_blank' }], ['/to', { download: '' }],
-    ['/to', { rel: 'external' }], ['/to', { 'data-navigation': 'off' }],
-    ['/to', { 'data-preload': 'off' }], ['https://example.org/to', {}],
-    ['/from#section', {}], ['/from', {}], ['mailto:test@example.org', {}], ['/unknown', {}],
+    ['/to', { target: '_blank' }],
+    ['/to', { download: '' }],
+    ['/to', { rel: 'external' }],
+    ['/to', { 'data-navigation': 'off' }],
+    ['/to', { 'data-preload': 'off' }],
+    ['https://example.org/to', {}],
+    ['/from#section', {}],
+    ['/from', {}],
+    ['mailto:test@example.org', {}],
+    ['/unknown', {}],
   ] as [string, Record<string, string>][]) {
     const anchor = link(href, attrs)
     hover(anchor)

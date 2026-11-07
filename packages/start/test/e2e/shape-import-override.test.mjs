@@ -14,27 +14,47 @@ async function project(t) {
   const write = (name, source) => writeFileSync(file(name), source)
   write('entry.js', '')
   const manifest = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
-  const state = { root, manifest, abs: file, clientEntry: () => file('entry.js'),
-    hydration: async () => undefined }
+  const state = {
+    root,
+    manifest,
+    abs: file,
+    clientEntry: () => file('entry.js'),
+    hydration: async () => undefined,
+  }
   const transformed = []
-  const plugin = { name: 'override-test', resolveId: moduleResolve({ id: (id) => `\0${id}` }),
-    load: moduleLoad(state), transform(code, id) {
+  const plugin = {
+    name: 'override-test',
+    resolveId: moduleResolve({ id: (id) => `\0${id}` }),
+    load: moduleLoad(state),
+    transform(code, id) {
       if (!id.includes('shape-override/')) return
       transformed.push(code)
       return 'export default function Skeleton() {}'
-    } }
-  const redirects = { name: 'override-redirects', resolveId(spec) {
-    if (spec === '@waiting') return file('waiting.tsx')
-    if (spec === './external.tsx') return { id: file('waiting.tsx'), external: true }
-  } }
-  const server = await createServer({ root, configFile: false, logLevel: 'silent',
-    plugins: [redirects, plugin], server: { middlewareMode: true }, appType: 'custom' })
+    },
+  }
+  const redirects = {
+    name: 'override-redirects',
+    resolveId(spec) {
+      if (spec === '@waiting') return file('waiting.tsx')
+      if (spec === './external.tsx') return { id: file('waiting.tsx'), external: true }
+    },
+  }
+  const server = await createServer({
+    root,
+    configFile: false,
+    logLevel: 'silent',
+    plugins: [redirects, plugin],
+    server: { middlewareMode: true },
+    appType: 'custom',
+  })
   const watched = []
   const context = {
     environment: { config: { consumer: 'client' } },
     resolve: (...args) => server.environments.client.pluginContainer.resolveId(...args),
     addWatchFile: (path) => watched.push(path),
-    error: (msg) => { throw Error(msg) },
+    error: (msg) => {
+      throw new Error(msg)
+    },
   }
   const load = (id) => moduleLoad(state).handler.call(context, id)
   const routes = () => load('\0virtual:weft/routes')
@@ -50,14 +70,19 @@ test('Vite resolves direct default and named overrides without running setup', a
       ['Waiting', 'export default () => <div>default marker</div>'],
       ['{ Card as Waiting }', 'export const Card = () => <span>named marker</span>'],
     ]) {
-      p.write('page.tsx', `import ${binding} from './waiting.tsx';
-        throw Error('route setup'); export const skeleton = Waiting`)
+      p.write(
+        'page.tsx',
+        `import ${binding} from './waiting.tsx';
+        throw Error('route setup'); export const skeleton = Waiting`,
+      )
       p.write('waiting.tsx', `throw Error('component setup'); ${exportSource}`)
       const source = await p.routes()
       assert.ok(source.includes('virtual:weft/shape-override/'))
       assert.ok(source.includes(`() => import(${JSON.stringify(p.file('page.tsx'))})`))
-      const stubbed = source.replace(/^import \* as shape(\d+) from .+$/gm,
-        (_, index) => `const shape${index} = { default() {} }`)
+      const stubbed = source.replace(
+        /^import \* as shape(\d+) from .+$/gm,
+        (_, index) => `const shape${index} = { default() {} }`,
+      )
       const metadata = await import(`data:text/javascript,${encodeURIComponent(stubbed)}`)
       assert.equal(metadata.shapes['/'].kind, 'override')
       const isolated = await p.override()
@@ -66,8 +91,11 @@ test('Vite resolves direct default and named overrides without running setup', a
       assert.ok(p.watched.includes(p.file('waiting.tsx')))
       assert.ok(p.state.shapeOverrideDependencies.has(p.file('waiting.tsx')))
     }
-    p.write('page.tsx', `import { Card as Waiting } from '@waiting';
-      export const skeleton = Waiting`)
+    p.write(
+      'page.tsx',
+      `import { Card as Waiting } from '@waiting';
+      export const skeleton = Waiting`,
+    )
     assert.ok((await p.routes()).includes('virtual:weft/shape-override/'))
     const request = `virtual:weft/shape-override/${encodeURIComponent(p.file('page.tsx'))}.tsx`
     const output = await p.server.environments.client.transformRequest(request)
@@ -75,8 +103,10 @@ test('Vite resolves direct default and named overrides without running setup', a
     assert.match(p.transformed[0], /named marker/)
     assert.doesNotMatch(p.transformed[0], /setup|throw/)
     const calls = []
-    const graph = { getModuleById: (id) => id.includes('shape-override/') ? 'asset' : 'routes',
-      invalidateModule: (id) => calls.push(id) }
+    const graph = {
+      getModuleById: (id) => (id.includes('shape-override/') ? 'asset' : 'routes'),
+      invalidateModule: (id) => calls.push(id),
+    }
     const handler = shapeHotUpdate(p.state, new Map(), async () => ['unchanged'])
     const ctx = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
     assert.deepEqual(await handler.call(ctx, { file: p.file('waiting.tsx'), type: 'update' }), [])

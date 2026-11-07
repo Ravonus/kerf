@@ -21,7 +21,11 @@ test('shape group edits and deletion invalidate only current dependents', (t) =>
   const modB = { id: shapeB }
   const existing = { id: 'other-module' }
   const graph = {
-    getModuleById: (id) => new Map([[shapeA, modA], [shapeB, modB]]).get(id),
+    getModuleById: (id) =>
+      new Map([
+        [shapeA, modA],
+        [shapeB, modB],
+      ]).get(id),
     invalidateModule: (mod) => calls.push(['invalidate', mod.id]),
   }
   const vite = { environment: { moduleGraph: graph } }
@@ -31,10 +35,14 @@ test('shape group edits and deletion invalidate only current dependents', (t) =>
   assert.deepEqual(watched, [group, group])
   writeFileSync(group, 'export const x = 2')
   assert.deepEqual(tracker.hotUpdate.call(vite, { file: group, modules: [existing] }), [
-    existing, modA, modB,
+    existing,
+    modA,
+    modB,
   ])
   assert.deepEqual(calls, [
-    ['forget', group], ['invalidate', shapeA], ['invalidate', shapeB],
+    ['forget', group],
+    ['invalidate', shapeA],
+    ['invalidate', shapeB],
   ])
   calls.length = 0
   writeFileSync(unrelated, 'export const x = 3')
@@ -43,7 +51,9 @@ test('shape group edits and deletion invalidate only current dependents', (t) =>
   unlinkSync(group)
   assert.deepEqual(tracker.hotUpdate.call(vite, { file: group, modules: [] }), [modA, modB])
   assert.deepEqual(calls, [
-    ['forget', group], ['invalidate', shapeA], ['invalidate', shapeB],
+    ['forget', group],
+    ['invalidate', shapeA],
+    ['invalidate', shapeB],
   ])
   calls.length = 0
   const retained = new Set()
@@ -55,7 +65,10 @@ test('shape group edits and deletion invalidate only current dependents', (t) =>
   tracker.replace(shapeB, [], ctx)
   assert.equal(tracker.hotUpdate.call(vite, { file: group, modules: [] }), undefined)
   assert.deepEqual(tracker.hotUpdate.call(vite, { file: replacement, modules: [] }), [modA])
-  assert.deepEqual(calls, [['forget', replacement], ['invalidate', shapeA]])
+  assert.deepEqual(calls, [
+    ['forget', replacement],
+    ['invalidate', shapeA],
+  ])
   calls.length = 0
   tracker.hotUpdate.call(vite, { file: join(root, 'a.tsx'), modules: [], type: 'delete' })
   assert.equal(tracker.hotUpdate.call(vite, { file: replacement, modules: [] }), undefined)
@@ -75,18 +88,23 @@ test('Vite retransforms an affected shape module after a group edit', async (t) 
   const forgotten = []
   const tracker = shapeWatch((file) => forgotten.push(file))
   const server = await createServer({
-    root, configFile: false, logLevel: 'silent',
-    server: { middlewareMode: true }, appType: 'custom',
-    plugins: [{
-      name: 'shape-watch-test',
-      transform(code, id) {
-        if (!id.endsWith('?weft-shape')) return
-        count++
-        shapeId = id
-        tracker.replace(id, [dep], this)
-        return code
+    root,
+    configFile: false,
+    logLevel: 'silent',
+    server: { middlewareMode: true },
+    appType: 'custom',
+    plugins: [
+      {
+        name: 'shape-watch-test',
+        transform(code, id) {
+          if (!id.endsWith('?weft-shape')) return
+          count++
+          shapeId = id
+          tracker.replace(id, [dep], this)
+          return code
+        },
       },
-    }],
+    ],
   })
   try {
     const env = server.environments.client
@@ -96,9 +114,9 @@ test('Vite retransforms an affected shape module after a group edit', async (t) 
     const mod = env.moduleGraph.getModuleById(shapeId)
     assert.ok(mod)
     writeFileSync(dep, 'export const value = 2')
-    assert.deepEqual(
-      tracker.hotUpdate.call({ environment: env }, { file: dep, modules: [] }), [mod],
-    )
+    assert.deepEqual(tracker.hotUpdate.call({ environment: env }, { file: dep, modules: [] }), [
+      mod,
+    ])
     assert.ok(await env.transformRequest(url))
     assert.equal(count, 2)
     assert.deepEqual(forgotten, [dep])
@@ -119,27 +137,32 @@ test('Vite watcher handles group edit, deletion, recreation and owner deletion',
   const tracker = shapeWatch(() => {})
   const events = []
   const server = await createServer({
-    root, configFile: false, logLevel: 'silent',
-    server: { middlewareMode: true }, appType: 'custom',
-    plugins: [{
-      name: 'shape-watcher-test',
-      transform(code, id) {
-        if (!id.endsWith('?weft-shape')) return
-        const deps = new Set()
-        if (code.includes('GROUP')) {
-          if (existsSync(dep)) deps.add(dep)
-          else tracker.candidate(dep, deps)
-        }
-        tracker.replace(id, deps, this)
-        return code
+    root,
+    configFile: false,
+    logLevel: 'silent',
+    server: { middlewareMode: true },
+    appType: 'custom',
+    plugins: [
+      {
+        name: 'shape-watcher-test',
+        transform(code, id) {
+          if (!id.endsWith('?weft-shape')) return
+          const deps = new Set()
+          if (code.includes('GROUP')) {
+            if (existsSync(dep)) deps.add(dep)
+            else tracker.candidate(dep, deps)
+          }
+          tracker.replace(id, deps, this)
+          return code
+        },
+        hotUpdate(update) {
+          const result = tracker.hotUpdate.call(this, update)
+          if (this.environment.config.consumer === 'client')
+            events.push({ file: update.file, type: update.type, affected: result?.length ?? 0 })
+          return result
+        },
       },
-      hotUpdate(update) {
-        const result = tracker.hotUpdate.call(this, update)
-        if (this.environment.config.consumer === 'client')
-          events.push({ file: update.file, type: update.type, affected: result?.length ?? 0 })
-        return result
-      },
-    }],
+    ],
   })
   const wait = async (condition, label) => {
     const deadline = Date.now() + 5000
@@ -209,29 +232,36 @@ for (const initial of ['nongroup', 'missing']) {
     const tracker = shapeWatch(() => {})
     const events = []
     const server = await createServer({
-      root, configFile: false, logLevel: 'silent',
-      server: { middlewareMode: true }, appType: 'custom',
-      plugins: [{
-        name: 'candidate-watch-test',
-        configureServer(server) { tracker.attach(server) },
-        async transform(code, id) {
-          if (!id.endsWith('?weft-shape')) return
-          const deps = new Set()
-          if (code.includes("from './group'")) {
-            const hit = await this.resolve('./group', route, { skipSelf: true })
-            const candidate = hit?.id ?? join(root, 'group')
-            tracker.candidate(candidate, deps)
-          }
-          tracker.replace(id, deps, this)
-          return 'export default 1'
+      root,
+      configFile: false,
+      logLevel: 'silent',
+      server: { middlewareMode: true },
+      appType: 'custom',
+      plugins: [
+        {
+          name: 'candidate-watch-test',
+          configureServer(server) {
+            tracker.attach(server)
+          },
+          async transform(code, id) {
+            if (!id.endsWith('?weft-shape')) return
+            const deps = new Set()
+            if (code.includes("from './group'")) {
+              const hit = await this.resolve('./group', route, { skipSelf: true })
+              const candidate = hit?.id ?? join(root, 'group')
+              tracker.candidate(candidate, deps)
+            }
+            tracker.replace(id, deps, this)
+            return 'export default 1'
+          },
+          hotUpdate(update) {
+            const result = tracker.hotUpdate.call(this, update)
+            if (this.environment.config.consumer === 'client')
+              events.push({ file: update.file, type: update.type, affected: result?.length ?? 0 })
+            return result
+          },
         },
-        hotUpdate(update) {
-          const result = tracker.hotUpdate.call(this, update)
-          if (this.environment.config.consumer === 'client')
-            events.push({ file: update.file, type: update.type, affected: result?.length ?? 0 })
-          return result
-        },
-      }],
+      ],
     })
     const wait = async (condition, label) => {
       const deadline = Date.now() + 5000
@@ -285,10 +315,14 @@ test('extensionless index candidates invalidate each environment and remove stal
   for (const name of ['client', 'server']) {
     const mod = { id, name }
     const invalidated = []
-    const context = { environment: { moduleGraph: {
-      getModuleById: () => mod,
-      invalidateModule: (value) => invalidated.push(value),
-    } } }
+    const context = {
+      environment: {
+        moduleGraph: {
+          getModuleById: () => mod,
+          invalidateModule: (value) => invalidated.push(value),
+        },
+      },
+    }
     tracker.replace(id, deps, {
       environment: context.environment,
       addWatchFile: () => assert.fail('missing file is not a module'),
@@ -301,7 +335,8 @@ test('extensionless index candidates invalidate each environment and remove stal
     environment: { moduleGraph: { getModuleById: () => assert.fail('stale edge') } },
   }
   tracker.replace(id, [], {
-    environment: context.environment, addWatchFile: () => assert.fail('no dependencies'),
+    environment: context.environment,
+    addWatchFile: () => assert.fail('no dependencies'),
   })
   assert.equal(tracker.hotUpdate.call(context, { file: created, modules: [] }), undefined)
 })
@@ -322,21 +357,54 @@ test('environment ownership keeps divergent dependencies and deletion separate',
   const ctx = (environment) => ({ environment, addWatchFile() {} })
   tracker.replace(id, [clientFile], ctx(client))
   tracker.replace(id, [serverFile], ctx(server))
-  assert.deepEqual(tracker.hotUpdate.call({ environment: client }, {
-    file: clientFile, modules: [],
-  }), [clientMod])
-  assert.deepEqual(tracker.hotUpdate.call({ environment: server }, {
-    file: serverFile, modules: [],
-  }), [serverMod])
-  assert.equal(tracker.hotUpdate.call({ environment: client }, {
-    file: serverFile, modules: [],
-  }), undefined)
-  tracker.hotUpdate.call({ environment: client }, {
-    file: join(root, 'page.tsx'), modules: [], type: 'delete',
-  })
-  assert.deepEqual(tracker.hotUpdate.call({ environment: server }, {
-    file: serverFile, modules: [],
-  }), [serverMod])
+  assert.deepEqual(
+    tracker.hotUpdate.call(
+      { environment: client },
+      {
+        file: clientFile,
+        modules: [],
+      },
+    ),
+    [clientMod],
+  )
+  assert.deepEqual(
+    tracker.hotUpdate.call(
+      { environment: server },
+      {
+        file: serverFile,
+        modules: [],
+      },
+    ),
+    [serverMod],
+  )
+  assert.equal(
+    tracker.hotUpdate.call(
+      { environment: client },
+      {
+        file: serverFile,
+        modules: [],
+      },
+    ),
+    undefined,
+  )
+  tracker.hotUpdate.call(
+    { environment: client },
+    {
+      file: join(root, 'page.tsx'),
+      modules: [],
+      type: 'delete',
+    },
+  )
+  assert.deepEqual(
+    tracker.hotUpdate.call(
+      { environment: server },
+      {
+        file: serverFile,
+        modules: [],
+      },
+    ),
+    [serverMod],
+  )
 })
 
 test('close and restart clears shape ownership from the previous server', async (t) => {
@@ -349,7 +417,12 @@ test('close and restart clears shape ownership from the previous server', async 
   const environment = { moduleGraph: { getModuleById: () => mod, invalidateModule() {} } }
   const tracker = shapeWatch(() => {})
   let closed = 0
-  const server = { watcher: { add() {} }, async close() { closed++ } }
+  const server = {
+    watcher: { add() {} },
+    async close() {
+      closed++
+    },
+  }
   tracker.attach(server)
   tracker.replace(id, [file], { environment, addWatchFile() {} })
   assert.deepEqual(tracker.hotUpdate.call({ environment }, { file, modules: [] }), [mod])

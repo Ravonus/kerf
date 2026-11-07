@@ -20,8 +20,10 @@ export function makePage(deps: PageDeps) {
       headers.set('location', r.redirect.href)
       if (!headers.has('cache-control')) headers.set('cache-control', 'no-cache')
       return redirectBody(
-        new Response(moved(r.redirect.href), { status: r.redirect.status, headers }), scope,
-        'text/html; charset=utf-8', r.redirect.href,
+        new Response(moved(r.redirect.href), { status: r.redirect.status, headers }),
+        scope,
+        'text/html; charset=utf-8',
+        r.redirect.href,
       )
     }
     scope.started = true // from here a redirect can't change the status (Q007)

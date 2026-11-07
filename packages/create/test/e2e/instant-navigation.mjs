@@ -18,14 +18,19 @@ const profiles = [
   { name: 'Slow 3G', latency: 400, downloadThroughput: 400000 / 8, uploadThroughput: 400000 / 8 },
 ]
 
-
 function command(bin, args, cwd) {
   execFileSync(bin, args, { cwd, stdio: 'inherit' })
 }
 
 function checkEntries() {
-  const tracked = execFileSync('git', ['ls-files', '--', 'packages/create/test/e2e/*-navigation.mjs'],
-    { cwd: root, encoding: 'utf8' }).trim().split('\n').filter(Boolean)
+  const tracked = execFileSync(
+    'git',
+    ['ls-files', '--', 'packages/create/test/e2e/*-navigation.mjs'],
+    { cwd: root, encoding: 'utf8' },
+  )
+    .trim()
+    .split('\n')
+    .filter(Boolean)
   const selected = [entry]
   console.log(`entrypoints: ${selected.length} selected, ${tracked.length} tracked`)
   if (!tracked.length || tracked.length !== selected.length || tracked[0] !== entry)
@@ -37,9 +42,23 @@ function prepare(dir) {
   const app = join(dir, 'app')
   const tarballs = packWithAddon(tgz)
   writeFileSync(join(tgz, 'tarballs.json'), JSON.stringify(tarballs))
-  command(process.execPath, [join(root, 'packages/create/bin/create-weft.mjs'), app,
-    '--template', 'landing', '--pm', 'pnpm', '--no-install', '--no-git', '--yes',
-    '--tarballs', tgz], root)
+  command(
+    process.execPath,
+    [
+      join(root, 'packages/create/bin/create-weft.mjs'),
+      app,
+      '--template',
+      'landing',
+      '--pm',
+      'pnpm',
+      '--no-install',
+      '--no-git',
+      '--yes',
+      '--tarballs',
+      tgz,
+    ],
+    root,
+  )
   writePackedPolicy(app, tarballs)
   command('pnpm', ['install', '--no-frozen-lockfile'], app)
   command('pnpm', ['run', 'build'], app)
@@ -71,7 +90,9 @@ async function cold(context, settings, url) {
     }
   })
   await page.goto(url, { waitUntil: 'networkidle' })
-  await page.waitForFunction(() => window.__clickListenerInstalled === true, null, { timeout: 5000 })
+  await page.waitForFunction(() => window.__clickListenerInstalled === true, null, {
+    timeout: 5000,
+  })
   await page.evaluate(() => document.fonts.ready)
   let held = 0
   await page.route('**/_weft/data/pricing*', async (route) => {
@@ -84,8 +105,18 @@ async function cold(context, settings, url) {
   const box = await link.boundingBox()
   if (!box) throw new Error('pricing link is not visible')
   const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
-  await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1 })
-  await cdp.send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', clickCount: 1 })
+  await cdp.send('Input.dispatchMouseEvent', {
+    type: 'mousePressed',
+    ...point,
+    button: 'left',
+    clickCount: 1,
+  })
+  await cdp.send('Input.dispatchMouseEvent', {
+    type: 'mouseReleased',
+    ...point,
+    button: 'left',
+    clickCount: 1,
+  })
   await page.waitForFunction(() => window.__navigation?.result.settled, null, { timeout: 10000 })
   await page.evaluate(async () => {
     await document.fonts.ready
@@ -100,7 +131,11 @@ async function cold(context, settings, url) {
 
 async function profile(browser, settings, url) {
   const context = await browser.newContext()
-  try { await cold(context, settings, url) } finally { await context.close() }
+  try {
+    await cold(context, settings, url)
+  } finally {
+    await context.close()
+  }
 }
 
 async function main() {
@@ -116,13 +151,19 @@ async function main() {
     const port = 5198
     const url = `http://127.0.0.1:${port}/`
     server = spawn(process.execPath, ['.output/server/index.mjs'], {
-      cwd: app, env: { ...process.env, PORT: String(port) }, stdio: 'inherit',
+      cwd: app,
+      env: { ...process.env, PORT: String(port) },
+      stdio: 'inherit',
     })
     await waitForServer(server, url)
     browser = await chromium.launch({ executablePath: chrome, headless: true })
     const failures = []
     for (const settings of profiles) {
-      try { await profile(browser, settings, url) } catch (error) { failures.push(error.message) }
+      try {
+        await profile(browser, settings, url)
+      } catch (error) {
+        failures.push(error.message)
+      }
     }
     failures.push('unimplemented: negative controls and remaining navigation cases')
     throw new Error(failures.join('\n'))
@@ -136,4 +177,7 @@ async function main() {
   }
 }
 
-main().catch((error) => { console.error(error); process.exitCode = 1 })
+main().catch((error) => {
+  console.error(error)
+  process.exitCode = 1
+})

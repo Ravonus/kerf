@@ -57,15 +57,24 @@ export function validateNavigation(
   headers.set('cache-control', kept.join(', '))
   const vary = headers.get('vary')
   if (vary !== '*') {
-    const names = (vary ?? '').split(',').map((name) => name.trim()).filter(Boolean)
+    const names = (vary ?? '')
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean)
     for (const name of ['Accept', 'Cookie', 'Authorization'])
       if (!names.some((existing) => existing.toLowerCase() === name.toLowerCase())) names.push(name)
     headers.set('vary', names.join(', '))
   }
-  const tag = `"${createHash('sha256').update(JSON.stringify([build ?? '', body])).digest('hex')}"`
+  const tag = `"${createHash('sha256')
+    .update(JSON.stringify([build ?? '', body]))
+    .digest('hex')}"`
   headers.set('etag', tag)
   const candidates = (request.headers.get('if-none-match') ?? '').split(',')
-  if (candidates.some((candidate) => candidate.trim().replace(/^W\//, '') === tag ||
-      candidate.trim() === '*')) return new Response(null, { status: 304, headers })
+  if (
+    candidates.some(
+      (candidate) => candidate.trim().replace(/^W\//, '') === tag || candidate.trim() === '*',
+    )
+  )
+    return new Response(null, { status: 304, headers })
   return response
 }

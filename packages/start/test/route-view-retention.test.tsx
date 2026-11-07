@@ -8,12 +8,16 @@ it('keeps the actual page owner through a pending shape and cancellation', () =>
   let cleanups = 0
   const Page = () => {
     const count = state(0)
-    onCleanup(() => { cleanups++ })
+    onCleanup(() => {
+      cleanups++
+    })
     return <button onClick={() => count.value++}>{count.value}</button>
   }
   const Shape = () => <p>pending</p>
-  const route = createRouteState({ p: '/one', s: 200, m: [{ id: '/one', params: {} }] },
-    { '/one': Page as Component })
+  const route = createRouteState(
+    { p: '/one', s: 200, m: [{ id: '/one', params: {} }] },
+    { '/one': Page },
+  )
   const container = document.createElement('div')
   document.body.append(container)
   const dispose = render(() => <App route={route} />, container)
@@ -21,8 +25,15 @@ it('keeps the actual page owner through a pending shape and cancellation', () =>
   button.click()
   flush()
   try {
-    route.levels[0]!.shape.value = [{ kind: 'generated', component: Shape as Component,
-      ready: true, completeness: 'partial', release: () => {} }]
+    route.levels[0]!.shape.value = [
+      {
+        kind: 'generated',
+        component: Shape,
+        ready: true,
+        completeness: 'partial',
+        release: () => {},
+      },
+    ]
     flush()
     expect(container.textContent).toBe('pending')
     expect(cleanups).toBe(0)

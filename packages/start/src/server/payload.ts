@@ -45,8 +45,11 @@ export function settledView(
 
 export function payloadOf(r: Resolved, withHead: boolean, options?: HandlerOptions): RoutePayload {
   const { jsonLd: _, ...head } = r.head // only a first response carries it (`metaTags`)
-  const assetBytes = selectRouteAssets(options?.routeAssetBytes, options?.build,
-    r.levels.map((level) => level.id))
+  const assetBytes = selectRouteAssets(
+    options?.routeAssetBytes,
+    options?.build,
+    r.levels.map((level) => level.id),
+  )
   return {
     m: r.levels.map(({ id, params, data, d, t }) => ({
       id,

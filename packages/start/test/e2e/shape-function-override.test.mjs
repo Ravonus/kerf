@@ -11,8 +11,13 @@ async function project(t) {
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = (name) => join(root, name)
   const write = (name, text) => writeFileSync(file(name), text)
-  const server = await createServer({ root, configFile: false, logLevel: 'silent',
-    server: { middlewareMode: true }, appType: 'custom' })
+  const server = await createServer({
+    root,
+    configFile: false,
+    logLevel: 'silent',
+    server: { middlewareMode: true },
+    appType: 'custom',
+  })
   const ctx = {
     resolve: (...args) => server.environments.client.pluginContainer.resolveId(...args),
   }
@@ -34,7 +39,9 @@ test('extracts closed local function declarations and expressions', async (t) =>
       assert.match(code ?? '', /local (declaration|expression)/, declaration)
       assert.doesNotMatch(code, /setup|throw/)
     }
-  } finally { await p.server.close() }
+  } finally {
+    await p.server.close()
+  }
 })
 
 test('extracts direct imported function declarations and expressions', async (t) => {
@@ -53,7 +60,9 @@ test('extracts direct imported function declarations and expressions', async (t)
       assert.match(found?.code ?? '', /(?:default|named)/, declaration)
       assert.doesNotMatch(found.code, /setup|throw/)
     }
-  } finally { await p.server.close() }
+  } finally {
+    await p.server.close()
+  }
 })
 
 test('rejects unsafe bodies, parameters, and mutable or shadowed declarations', async (t) => {
@@ -91,5 +100,7 @@ test('rejects unsafe bodies, parameters, and mutable or shadowed declarations', 
     p.write('waiting.tsx', 'export function Waiting() { return <div /> } Waiting = danger')
     const result = await resolveImportedOverride(p.ctx, p.file('page.tsx'), p.root)
     assert.equal(result?.code, undefined)
-  } finally { await p.server.close() }
+  } finally {
+    await p.server.close()
+  }
 })

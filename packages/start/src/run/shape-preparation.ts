@@ -31,6 +31,11 @@ function prepare(
 ): PreparedRouteShape | null {
   const lease = acquireShapeStyles(doc, build, shape.cssText)
   if (!lease) return null
-  return { kind: shape.kind, component: shape.component, ready: true,
-    completeness: shape.cssStatus, release: lease.release }
+  return {
+    kind: shape.kind,
+    component: shape.component,
+    ready: true,
+    completeness: shape.cssStatus,
+    release: lease.release,
+  }
 }

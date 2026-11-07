@@ -1,6 +1,13 @@
 import { flush } from '@weft-js/core'
 import { setHead } from '@weft-js/core/head'
-import { applyMatches, client, level, type Level, type NavigateOptions, type RoutePayload } from '../router'
+import {
+  applyMatches,
+  client,
+  level,
+  type Level,
+  type NavigateOptions,
+  type RoutePayload,
+} from '../router'
 import type { ClientRoutes } from '../run'
 import { streamed, type mount } from './boot'
 import { matchingRouteAssets } from '../asset-receipt.mjs'
@@ -161,7 +168,11 @@ export class Navigation {
     const old = this.detachShape()
     outlet.shape.value = leases
     this.shape = { outlet, leases }
-    try { flush() } finally { old?.forEach((lease) => lease.release()) }
+    try {
+      flush()
+    } finally {
+      old?.forEach((lease) => lease.release())
+    }
     return true
   }
 
@@ -176,7 +187,11 @@ export class Navigation {
   clearShape() {
     const leases = this.detachShape()
     if (leases) {
-      try { flush() } finally { leases.forEach((lease) => lease.release()) }
+      try {
+        flush()
+      } finally {
+        leases.forEach((lease) => lease.release())
+      }
     }
   }
 
@@ -231,8 +246,8 @@ export class Navigation {
     const ctrl = (this.current = new AbortController())
     const path = url.pathname + url.search
     try {
-      this.source ??= retainSourceContext(document, this.committedURL, this.committedBase) ??
-        undefined
+      this.source ??=
+        retainSourceContext(document, this.committedURL, this.committedBase) ?? undefined
       if (!this.source) return opts.pop ? location.replace(url.href) : location.assign(url.href)
       if (!opts.pop && url.href !== location.href)
         history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
@@ -253,8 +268,13 @@ export class Navigation {
     }
   }
 
-  async travel(url: URL, ctrl: AbortController, opts: Options, shown = false,
-    speculative?: Promise<Read | undefined>) {
+  async travel(
+    url: URL,
+    ctrl: AbortController,
+    opts: Options,
+    shown = false,
+    speculative?: Promise<Read | undefined>,
+  ) {
     const path = url.pathname + url.search
     for (const id of guess(this.routes, url.pathname)) void this.chunk(id).catch(() => {})
     let next: RoutePayload
@@ -265,9 +285,17 @@ export class Navigation {
       try {
         const shared = speculative ? await speculative : undefined
         speculative = undefined
-        const read = shared && (!shared.next.c?.length || client.seed) ? shared :
-          await this.cache.read(url, ctrl.signal, ask, this.now, () => !!client.seed,
-            shown ? () => this.presentation.check(this) : undefined)
+        const read =
+          shared && (!shared.next.c?.length || client.seed)
+            ? shared
+            : await this.cache.read(
+                url,
+                ctrl.signal,
+                ask,
+                this.now,
+                () => !!client.seed,
+                shown ? () => this.presentation.check(this) : undefined,
+              )
         this.cache.setBuild(this.routes.build)
         if (ctrl.signal.aborted) return
         if (read.version !== this.cache.version) continue
@@ -280,7 +308,10 @@ export class Navigation {
           return hops > 5 ? location.replace(next.r) : this.go(next.r, { replace: true, hops })
         }
         if (shown && (next.s === 401 || next.s === 403)) {
-          if (this.ready?.(next)) { this.apply(next, url, path, since, false)(); return }
+          if (this.ready?.(next)) {
+            this.apply(next, url, path, since, false)()
+            return
+          }
           this.presentation.check(this)
           if (ctrl.signal.aborted) return
         }
@@ -343,7 +374,10 @@ export class Navigation {
     try {
       const next: RoutePayload = await ask(url, self.ctrl.signal).then((r) => r.json())
       if (self.ctrl.signal.aborted) return
-      if (next.s === 401 || next.s === 403) { this.cache.clear(); this.prefetch.cancel(true) }
+      if (next.s === 401 || next.s === 403) {
+        this.cache.clear()
+        this.prefetch.cancel(true)
+      }
       if (next.r && !self.ctrl.signal.aborted) {
         this.refreshing = undefined
         return void this.go(next.r, { replace: true })
@@ -385,8 +419,8 @@ export class Navigation {
     if (queries) client.refreshed?.()
     this.cache.setBuild(this.routes.build)
     if (version !== this.cache.version || this.current !== owner) return
-    if (next.r) return void await this.go(next.r, { replace: true })
-    if (this.current) return void await this.go(url.href, { pop: true })
+    if (next.r) return await this.go(next.r, { replace: true })
+    if (this.current) return await this.go(url.href, { pop: true })
     await this.needs(next)
     this.cache.setBuild(this.routes.build)
     if (version !== this.cache.version || this.current !== owner) return

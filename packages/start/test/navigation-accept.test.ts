@@ -3,14 +3,22 @@ import type { ClientRoutes } from '../src/run'
 
 vi.mock('@weft-js/core', () => ({ flush: vi.fn() }))
 vi.mock('@weft-js/core/head', () => ({ setHead: vi.fn() }))
-vi.mock('../src/router', () => ({ client: {}, applyMatches: vi.fn(),
-  level: (route: { levels: unknown[] }, depth: number) => route.levels[depth] }))
+vi.mock('../src/router', () => ({
+  client: {},
+  applyMatches: vi.fn(),
+  level: (route: { levels: unknown[] }, depth: number) => route.levels[depth],
+}))
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/run/helpers', async (load) => ({
-  ...await load<typeof import('../src/run/helpers')>(),
-  ask: vi.fn((_url: URL, signal?: AbortSignal) => new Promise((_resolve, reject) => {
-    signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true })
-  })), current_: vi.fn(), guess: vi.fn((): string[] => []),
+  ...(await load<typeof import('../src/run/helpers')>()),
+  ask: vi.fn(
+    (_url: URL, signal?: AbortSignal) =>
+      new Promise((_resolve, reject) => {
+        signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true })
+      }),
+  ),
+  current_: vi.fn(),
+  guess: vi.fn((): string[] => []),
   revive: (value: unknown) => value,
 }))
 import { Navigation } from '../src/run/navigation'
@@ -22,20 +30,36 @@ beforeEach(() => {
   history.replaceState(null, '', '/from')
   vi.stubGlobal('requestAnimationFrame', () => 0)
 })
-afterEach(() => { document.body.innerHTML = '' })
+afterEach(() => {
+  document.body.innerHTML = ''
+})
 
 describe('navigation acceptance', () => {
   it('sets history and accepted path synchronously without changing committed levels', async () => {
     const routes: ClientRoutes = { table: [], load: {} }
-    const level = { id: { value: 'old' }, params: { value: { id: '1' } },
-      shape: { value: undefined } }
-    const prepareShape = () => ({ kind: 'generated', ready: true,
-      completeness: 'partial', component: () => null, release: () => {} })
-    const page = { route: { path: { value: '/from' }, levels: [level], prepareShape },
-      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    const level = {
+      id: { value: 'old' },
+      params: { value: { id: '1' } },
+      shape: { value: undefined },
+    }
+    const prepareShape = () => ({
+      kind: 'generated',
+      ready: true,
+      completeness: 'partial',
+      component: () => null,
+      release: () => {},
+    })
+    const page = {
+      route: { path: { value: '/from' }, levels: [level], prepareShape },
+      chunk: vi.fn(async () => {}),
+      island: vi.fn(),
+      setBag: vi.fn(),
+      initialTags: [],
+    }
     vi.mocked(guess).mockReturnValue(['/next'])
     const nav = new Navigation(
-      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+      routes,
+      page as unknown as ConstructorParameters<typeof Navigation>[1],
     )
     const pending = nav.go('/next?x=1')
     expect(location.pathname + location.search).toBe('/next?x=1')
@@ -54,13 +78,24 @@ describe('navigation acceptance', () => {
     const routes: ClientRoutes = { table: [], load: {} }
     const old = { id: { value: 'old' }, shape: { value: undefined } }
     const released: string[] = []
-    const prepareShape = (id: string) => ({ kind: 'generated', ready: true,
-      completeness: 'partial', component: () => null, release: () => released.push(id) })
-    const page = { route: { path: { value: '/from' }, levels: [old], prepareShape },
-      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    const prepareShape = (id: string) => ({
+      kind: 'generated',
+      ready: true,
+      completeness: 'partial',
+      component: () => null,
+      release: () => released.push(id),
+    })
+    const page = {
+      route: { path: { value: '/from' }, levels: [old], prepareShape },
+      chunk: vi.fn(async () => {}),
+      island: vi.fn(),
+      setBag: vi.fn(),
+      initialTags: [],
+    }
     vi.mocked(guess).mockImplementation((_routes, path) => [path])
     const nav = new Navigation(
-      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+      routes,
+      page as unknown as ConstructorParameters<typeof Navigation>[1],
     )
     const first = nav.go('/next')
     expect(old.shape.value).toHaveLength(1)
@@ -80,14 +115,27 @@ describe('navigation acceptance', () => {
     const routes: ClientRoutes = { table: [], load: {} }
     const old = { id: { value: 'old' }, shape: { value: undefined } }
     const release = vi.fn()
-    const prepareShape = (id: string) => id === '/layout'
-      ? { kind: 'generated', ready: true, completeness: 'partial', component: () => null, release }
-      : null
-    const page = { route: { path: { value: '/from' }, levels: [old], prepareShape },
-      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    const prepareShape = (id: string) =>
+      id === '/layout'
+        ? {
+            kind: 'generated',
+            ready: true,
+            completeness: 'partial',
+            component: () => null,
+            release,
+          }
+        : null
+    const page = {
+      route: { path: { value: '/from' }, levels: [old], prepareShape },
+      chunk: vi.fn(async () => {}),
+      island: vi.fn(),
+      setBag: vi.fn(),
+      initialTags: [],
+    }
     vi.mocked(guess).mockReturnValue(['/layout', '/disabled'])
     const nav = new Navigation(
-      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+      routes,
+      page as unknown as ConstructorParameters<typeof Navigation>[1],
     )
     const pending = nav.go('/next')
     expect(old.shape.value).toBeUndefined()
@@ -104,14 +152,27 @@ describe('navigation acceptance', () => {
     const routes: ClientRoutes = { table: [], load: {} }
     const outlet = { id: { value: 'old' }, shape: { value: undefined } }
     const release = vi.fn()
-    const prepareShape = (id: string) => id === '/next'
-      ? { kind: 'generated', ready: true, completeness: 'partial', component: () => null, release }
-      : null
-    const page = { route: { path: { value: '/from' }, levels: [outlet], prepareShape },
-      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    const prepareShape = (id: string) =>
+      id === '/next'
+        ? {
+            kind: 'generated',
+            ready: true,
+            completeness: 'partial',
+            component: () => null,
+            release,
+          }
+        : null
+    const page = {
+      route: { path: { value: '/from' }, levels: [outlet], prepareShape },
+      chunk: vi.fn(async () => {}),
+      island: vi.fn(),
+      setBag: vi.fn(),
+      initialTags: [],
+    }
     vi.mocked(guess).mockImplementation((_routes, path) => [path])
     const nav = new Navigation(
-      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+      routes,
+      page as unknown as ConstructorParameters<typeof Navigation>[1],
     )
     const first = nav.go('/next')
     const shown = outlet.shape.value
@@ -131,11 +192,17 @@ describe('navigation acceptance', () => {
     document.body.innerHTML = '<a href="child">go</a><form></form>'
     const routes: ClientRoutes = { table: [], load: {} }
     const old = { id: { value: 'old' }, shape: { value: undefined } }
-    const page = { route: { path: { value: '/dir/from' }, levels: [old], prepareShape: () => null },
-      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    const page = {
+      route: { path: { value: '/dir/from' }, levels: [old], prepareShape: () => null },
+      chunk: vi.fn(async () => {}),
+      island: vi.fn(),
+      setBag: vi.fn(),
+      initialTags: [],
+    }
     vi.mocked(guess).mockReturnValue(['/next'])
     const nav = new Navigation(
-      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+      routes,
+      page as unknown as ConstructorParameters<typeof Navigation>[1],
     )
     const pending = nav.go('/elsewhere/next')
     expect(location.pathname).toBe('/elsewhere/next')
@@ -156,19 +223,41 @@ describe('navigation acceptance', () => {
     const layout = { id: { value: 'layout' }, shape: { value: undefined } }
     const old = { id: { value: 'old' }, shape: { value: undefined } }
     const release = vi.fn()
-    const prepareShape = vi.fn(() => ({ kind: 'override', ready: true,
-      completeness: 'partial', component: () => null, release }))
-    const page = { route: { path: { value: '/from' }, levels: [layout, old], prepareShape },
-      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    const prepareShape = vi.fn(() => ({
+      kind: 'override',
+      ready: true,
+      completeness: 'partial',
+      component: () => null,
+      release,
+    }))
+    const page = {
+      route: { path: { value: '/from' }, levels: [layout, old], prepareShape },
+      chunk: vi.fn(async () => {}),
+      island: vi.fn(),
+      setBag: vi.fn(),
+      initialTags: [],
+    }
     vi.mocked(guess).mockReturnValue(['layout', '/next'])
-    vi.mocked(ask).mockResolvedValueOnce(new Response(JSON.stringify({
-      m: [{ id: 'layout', params: {} }, { id: '/next', params: {} }], p: '/next', s: 200,
-    })))
+    vi.mocked(ask).mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          m: [
+            { id: 'layout', params: {} },
+            { id: '/next', params: {} },
+          ],
+          p: '/next',
+          s: 200,
+        }),
+      ),
+    )
     let incoming = ''
     let retained = ''
     let submitted = ''
-    const submit = vi.spyOn(HTMLFormElement.prototype, 'submit')
-      .mockImplementation(function (this: HTMLFormElement) { submitted = this.action })
+    const submit = vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(function (
+      this: HTMLFormElement,
+    ) {
+      submitted = this.action
+    })
     vi.mocked(applyMatches).mockImplementationOnce(() => {
       retained = document.querySelector('a')!.href
       const image = document.createElement('img')
@@ -180,7 +269,8 @@ describe('navigation acceptance', () => {
       form.submit()
     })
     const nav = new Navigation(
-      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+      routes,
+      page as unknown as ConstructorParameters<typeof Navigation>[1],
     )
     const pending = nav.go('/elsewhere/next', { scroll: false })
     expect(layout.shape.value).toBeUndefined()
@@ -203,12 +293,18 @@ describe('navigation acceptance', () => {
     document.body.innerHTML = '<div id="app"><a href="child">old</a></div>'
     const routes: ClientRoutes = { table: [], load: {} }
     const old = { id: { value: 'old' }, shape: { value: undefined } }
-    const page = { route: { path: { value: '/from' }, levels: [old], prepareShape: () => null },
-      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    const page = {
+      route: { path: { value: '/from' }, levels: [old], prepareShape: () => null },
+      chunk: vi.fn(async () => {}),
+      island: vi.fn(),
+      setBag: vi.fn(),
+      initialTags: [],
+    }
     vi.mocked(guess).mockReturnValue(['/next'])
     const original = HTMLFormElement.prototype.submit
     const nav = new Navigation(
-      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+      routes,
+      page as unknown as ConstructorParameters<typeof Navigation>[1],
     )
     const pending = nav.go('/next')
     expect(HTMLFormElement.prototype.submit).not.toBe(original)
@@ -225,18 +321,32 @@ describe('navigation acceptance', () => {
     document.body.innerHTML = '<div id="app"></div>'
     const routes: ClientRoutes = { table: [], load: {} }
     const old = { id: { value: 'old' }, shape: { value: undefined } }
-    const page = { route: { path: { value: '/dir/from' }, levels: [old], prepareShape: () => null },
-      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    const page = {
+      route: { path: { value: '/dir/from' }, levels: [old], prepareShape: () => null },
+      chunk: vi.fn(async () => {}),
+      island: vi.fn(),
+      setBag: vi.fn(),
+      initialTags: [],
+    }
     vi.mocked(guess).mockReturnValue([])
-    vi.mocked(ask).mockResolvedValueOnce(new Response(JSON.stringify({
-      m: [{ id: '/first', params: {} }], p: '/first', s: 200,
-    })))
+    vi.mocked(ask).mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          m: [{ id: '/first', params: {} }],
+          p: '/first',
+          s: 200,
+        }),
+      ),
+    )
     const nav = new Navigation(
-      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+      routes,
+      page as unknown as ConstructorParameters<typeof Navigation>[1],
     )
     let nested: Promise<void> | undefined
     vi.mocked(applyMatches).mockImplementationOnce(() => {
-      vi.mocked(flush).mockImplementationOnce(() => { nested = nav.go('/second', { scroll: false }) })
+      vi.mocked(flush).mockImplementationOnce(() => {
+        nested = nav.go('/second', { scroll: false })
+      })
     })
     await nav.go('/first', { scroll: false })
     expect(nav.current?.signal.aborted).toBe(false)
@@ -252,19 +362,42 @@ describe('navigation acceptance', () => {
 
   it('presents changed params and queries at their first affected outlet', async () => {
     history.replaceState(null, '', '/users/1/posts/one?q=1')
-    const routes: ClientRoutes = { table: [{ id: '/users/$id/posts/$post',
-      pattern: '/users/$id/posts/$post', layouts: ['layout:', 'layout:users/[id]'] }], load: {} }
+    const routes: ClientRoutes = {
+      table: [
+        {
+          id: '/users/$id/posts/$post',
+          pattern: '/users/$id/posts/$post',
+          layouts: ['layout:', 'layout:users/[id]'],
+        },
+      ],
+      load: {},
+    }
     const levels = ['layout:', 'layout:users/[id]', '/users/$id/posts/$post'].map((id) => ({
-      id: { value: id }, params: { value: { id: '1', post: 'one' } }, shape: { value: undefined },
+      id: { value: id },
+      params: { value: { id: '1', post: 'one' } },
+      shape: { value: undefined },
     }))
     const release = vi.fn()
-    const prepareShape = vi.fn(() => ({ kind: 'generated', ready: true,
-      completeness: 'partial', component: () => null, release }))
-    const page = { route: { path: { value: location.pathname + location.search }, levels, prepareShape },
-      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    const prepareShape = vi.fn(() => ({
+      kind: 'generated',
+      ready: true,
+      completeness: 'partial',
+      component: () => null,
+      release,
+    }))
+    const page = {
+      route: { path: { value: location.pathname + location.search }, levels, prepareShape },
+      chunk: vi.fn(async () => {}),
+      island: vi.fn(),
+      setBag: vi.fn(),
+      initialTags: [],
+    }
     const real = await vi.importActual<typeof import('../src/run/helpers')>('../src/run/helpers')
     vi.mocked(guess).mockImplementation(real.guess)
-    const nav = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
+    const nav = new Navigation(
+      routes,
+      page as unknown as ConstructorParameters<typeof Navigation>[1],
+    )
     const first = nav.go('/users/2/posts/one?q=1')
     expect(levels[0]!.shape.value).toBeUndefined()
     expect(levels[1]!.shape.value).toBeUndefined()
@@ -289,16 +422,27 @@ describe('navigation acceptance', () => {
 
   it('does not present a same-path or hash change and honors a disabled leaf', async () => {
     history.replaceState(null, '', '/users/1?q=1')
-    const routes: ClientRoutes = { table: [{ id: '/users/$id', pattern: '/users/$id',
-      layouts: ['layout:'] }], load: {} }
+    const routes: ClientRoutes = {
+      table: [{ id: '/users/$id', pattern: '/users/$id', layouts: ['layout:'] }],
+      load: {},
+    }
     const levels = ['layout:', '/users/$id'].map((id) => ({
-      id: { value: id }, shape: { value: undefined },
+      id: { value: id },
+      shape: { value: undefined },
     }))
     const prepareShape = vi.fn(() => null)
-    const page = { route: { path: { value: '/users/1?q=1' }, levels, prepareShape },
-      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    const page = {
+      route: { path: { value: '/users/1?q=1' }, levels, prepareShape },
+      chunk: vi.fn(async () => {}),
+      island: vi.fn(),
+      setBag: vi.fn(),
+      initialTags: [],
+    }
     vi.mocked(guess).mockReturnValue(levels.map((item) => item.id.value))
-    const nav = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
+    const nav = new Navigation(
+      routes,
+      page as unknown as ConstructorParameters<typeof Navigation>[1],
+    )
     await nav.go('/users/1?q=1')
     expect(prepareShape).not.toHaveBeenCalled()
     const hash = nav.go('/users/1?q=1#part')
@@ -311,5 +455,4 @@ describe('navigation acceptance', () => {
     await next
     vi.mocked(guess).mockReturnValue([])
   })
-
 })

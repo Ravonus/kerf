@@ -24,8 +24,8 @@ async function manifestModule(source, missing = [], groupCss = '') {
     return missing.some((name) => file.endsWith(`${name}?weft-shape`))
       ? `const shape${index} = {}`
       : `const shape${index} = { default: function Custom() {}, 'default$shape': function Shape() {}, ` +
-        `'NotFoundPage$shape': function NotFound() {}, 'ErrorPage$shape': function Error() {}, ` +
-        `${JSON.stringify('$weftShapeCss')}: ${JSON.stringify(groupCss)} }`
+          `'NotFoundPage$shape': function NotFound() {}, 'ErrorPage$shape': function Error() {}, ` +
+          `${JSON.stringify('$weftShapeCss')}: ${JSON.stringify(groupCss)} }`
   })
   const withStyles = code.replace(
     /^import style(\d+) from (.+)$/gm,
@@ -45,7 +45,10 @@ test('eager shapes keep nested and static route loaders lazy', async (t) => {
     ],
     routes: [
       {
-        id: '/page', file: 'page.tsx', kind: 'page', pattern: '/page',
+        id: '/page',
+        file: 'page.tsx',
+        kind: 'page',
+        pattern: '/page',
         layouts: ['outer', 'inner'],
       },
       { id: '404', file: 'missing.tsx', kind: '404', layouts: ['outer'] },
@@ -69,7 +72,10 @@ test('eager shapes keep nested and static route loaders lazy', async (t) => {
     assert.equal(typeof routes.load[id], 'function')
   }
   assert.deepEqual(routes.shapes['404'], {
-    kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null,
+    kind: 'unavailable',
+    reason: 'missing-shape',
+    css: null,
+    bytes: null,
   })
 })
 
@@ -82,7 +88,10 @@ test('false exports disable shapes; unknown overrides do not import a route', as
   f.write('plain.ts', 'export default 1')
   const files = ['disabled', 'direct', 'override', 'barrel', 'plain']
   const routes = files.map((name) => ({
-    id: name, file: `${name}.${name === 'plain' ? 'ts' : 'tsx'}`, kind: 'page', layouts: [],
+    id: name,
+    file: `${name}.${name === 'plain' ? 'ts' : 'tsx'}`,
+    kind: 'page',
+    layouts: [],
   }))
   const source = clientRoutes({ layouts: [], routes }, f.abs)
   for (const route of routes) assert.ok(!source.includes(`${f.abs(route.file)}?weft-shape`))
@@ -99,9 +108,17 @@ test('built-in error shapes retain nested levels and yield to authored overrides
   f.write('inner.tsx', 'export default () => <section />')
   f.write('page.tsx', 'throw Error("route ran"); export default () => <p />')
   f.write('404.tsx', 'export const skeleton = false; export default () => <p />')
-  const layouts = [{ id: 'outer', file: 'outer.tsx' }, { id: 'inner', file: 'inner.tsx' }]
-  const page = { id: '/page', file: 'page.tsx', kind: 'page', pattern: '/page',
-    layouts: ['outer', 'inner'] }
+  const layouts = [
+    { id: 'outer', file: 'outer.tsx' },
+    { id: 'inner', file: 'inner.tsx' },
+  ]
+  const page = {
+    id: '/page',
+    file: 'page.tsx',
+    kind: 'page',
+    pattern: '/page',
+    layouts: ['outer', 'inner'],
+  }
   const source = clientRoutes({ layouts, routes: [page] }, f.abs, undefined, {
     entry: [f.abs('entry.css')],
   })
@@ -146,8 +163,13 @@ test('a static local override is isolated and unsafe closures stay unavailable',
   assert.ok(output.includes(JSON.stringify(request)))
   assert.ok(output.includes(`() => import(${JSON.stringify(f.abs('page.tsx'))})`))
   const watched = []
-  const context = { addWatchFile: (file) => watched.push(file), error: (msg) => { throw Error(msg) },
-    environment: { config: { consumer: 'client' } } }
+  const context = {
+    addWatchFile: (file) => watched.push(file),
+    error: (msg) => {
+      throw new Error(msg)
+    },
+    environment: { config: { consumer: 'client' } },
+  }
   const state = { manifest: levels, abs: f.abs }
   const id = moduleResolve({ id: (value) => `\0${value}` }).handler(request)
   const extracted = await moduleLoad(state).handler.call(context, id)
@@ -163,26 +185,38 @@ test('a static local override is isolated and unsafe closures stay unavailable',
   const before = shapeSignature(f.abs('page.tsx'))
   const invalidated = []
   const graph = { getModuleById: () => 'routes', invalidateModule: (m) => invalidated.push(m) }
-  const update = shapeHotUpdate({ root: f.root, manifest: levels }, new Map([['page.tsx', before]]),
-    async () => ['unchanged'])
+  const update = shapeHotUpdate(
+    { root: f.root, manifest: levels },
+    new Map([['page.tsx', before]]),
+    async () => ['unchanged'],
+  )
   f.write('page.tsx', source.replace('custom marker', 'changed marker'))
   assert.notEqual(shapeSignature(f.abs('page.tsx')), before)
   const hot = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
   assert.deepEqual(await update.call(hot, { file: f.abs('page.tsx'), modules: [] }), [])
   assert.deepEqual(invalidated, ['routes'])
   for (const expression of [
-    '<div>{secret}</div>', '<div onClick={sideEffect}>bad</div>', '<Widget />',
-    '<custom-widget />', '<script>bad</script>', '<div {...secret} />',
+    '<div>{secret}</div>',
+    '<div onClick={sideEffect}>bad</div>',
+    '<Widget />',
+    '<custom-widget />',
+    '<script>bad</script>',
+    '<div {...secret} />',
   ]) {
-    f.write('page.tsx', source.replace('<section class="waiting"><span>custom marker</span></section>',
-      expression))
+    f.write(
+      'page.tsx',
+      source.replace('<section class="waiting"><span>custom marker</span></section>', expression),
+    )
     const route = await manifestModule(clientRoutes(levels, f.abs))
     assert.equal(route.shapes['/'].kind, 'unavailable', expression)
     await assert.rejects(() => moduleLoad(state).handler.call(context, id), /Unsafe or missing/)
   }
   f.write('page.tsx', "import Waiting from './waiting'; export const skeleton = Waiting")
   assert.equal((await manifestModule(clientRoutes(levels, f.abs))).shapes['/'].kind, 'unavailable')
-  f.write('page.tsx', 'const Waiting = () => { sideEffect(); return <div /> }; export const skeleton = Waiting')
+  f.write(
+    'page.tsx',
+    'const Waiting = () => { sideEffect(); return <div /> }; export const skeleton = Waiting',
+  )
   assert.equal((await manifestModule(clientRoutes(levels, f.abs))).shapes['/'].kind, 'unavailable')
   f.write('page.tsx', 'export const skeleton = false')
   assert.equal((await manifestModule(clientRoutes(levels, f.abs))).shapes['/'].kind, 'disabled')
@@ -201,12 +235,16 @@ test('imported custom shape metadata uses the override discriminant', async (t) 
 
 test('Vite loads the isolated override as TSX through the plugin pipeline', async (t) => {
   const f = fixture(t)
-  f.write('page.tsx', `const Waiting = () => <div>custom marker</div>;
-    export const skeleton = Waiting; throw Error('route setup ran')`)
+  f.write(
+    'page.tsx',
+    `const Waiting = () => <div>custom marker</div>;
+    export const skeleton = Waiting; throw Error('route setup ran')`,
+  )
   const request = `virtual:weft/shape-override/${encodeURIComponent(f.abs('page.tsx'))}.tsx`
   const seen = []
   const plugin = {
-    name: 'shape-override-test', resolveId: moduleResolve({ id: (id) => `\0${id}` }),
+    name: 'shape-override-test',
+    resolveId: moduleResolve({ id: (id) => `\0${id}` }),
     load: moduleLoad({ manifest: { layouts: [], routes: [{ file: 'page.tsx' }] }, abs: f.abs }),
     transform(code, id) {
       if (!id.includes('shape-override/')) return
@@ -215,8 +253,12 @@ test('Vite loads the isolated override as TSX through the plugin pipeline', asyn
     },
   }
   const server = await createServer({
-    root: f.root, configFile: false, logLevel: 'silent', plugins: [plugin],
-    server: { middlewareMode: true }, appType: 'custom',
+    root: f.root,
+    configFile: false,
+    logLevel: 'silent',
+    plugins: [plugin],
+    server: { middlewareMode: true },
+    appType: 'custom',
   })
   try {
     const resolved = await server.environments.client.pluginContainer.resolveId(request)
@@ -238,15 +280,30 @@ test('metadata edits invalidate and reload only the client route module', async 
   const calls = []
   const mod = {}
   const graph = {
-    getModuleById(id) { calls.push(['lookup', id]); return mod },
-    invalidateModule(value) { calls.push(['invalidate', value]) },
+    getModuleById(id) {
+      calls.push(['lookup', id])
+      return mod
+    },
+    invalidateModule(value) {
+      calls.push(['invalidate', value])
+    },
   }
   const state = {
-    root: f.root, manifest: { routes: [{ file: 'page.tsx' }], layouts: [] },
-    vite: { ws: { send(message) { calls.push(['send', message]) } } },
+    root: f.root,
+    manifest: { routes: [{ file: 'page.tsx' }], layouts: [] },
+    vite: {
+      ws: {
+        send(message) {
+          calls.push(['send', message])
+        },
+      },
+    },
   }
   const modes = new Map([['page.tsx', shapeSignature(file)]])
-  const next = async () => { calls.push(['next']); return ['existing'] }
+  const next = async () => {
+    calls.push(['next'])
+    return ['existing']
+  }
   const handler = shapeHotUpdate(state, modes, next)
   const client = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
   assert.deepEqual(await handler.call(client, { file, modules: [] }), ['existing'])
@@ -255,7 +312,9 @@ test('metadata edits invalidate and reload only the client route module', async 
   f.write('page.tsx', 'export default () => <main />')
   assert.deepEqual(await handler.call(client, { file, modules: [] }), [])
   assert.deepEqual(calls, [
-    ['lookup', '\0virtual:weft/routes'], ['invalidate', mod], ['send', { type: 'full-reload' }],
+    ['lookup', '\0virtual:weft/routes'],
+    ['invalidate', mod],
+    ['send', { type: 'full-reload' }],
   ])
   calls.length = 0
   const server = { environment: { config: { consumer: 'server' }, moduleGraph: graph } }
@@ -264,12 +323,13 @@ test('metadata edits invalidate and reload only the client route module', async 
   assert.deepEqual(calls, [['next']])
 })
 
-
 test('direct sizing CSS travels as partial data without importing route code', async (t) => {
   const f = fixture(t)
   f.write('size.css', '.panel { min-height: 12rem }')
   f.write('global.css', '.panel { width: 50vw }')
-  f.write('page.tsx', `
+  f.write(
+    'page.tsx',
+    `
     import './size.css'
     import './global.css'
     import './size.css'
@@ -277,7 +337,8 @@ test('direct sizing CSS travels as partial data without importing route code', a
     import './server.js'
     throw new Error('route executed')
     export default () => <main class="panel" />
-  `)
+  `,
+  )
   const levels = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
   const ctx = { resolve: async (spec) => ({ id: f.abs(spec) }) }
   const levelStyles = await shapeCssSources(ctx, f.abs('page.tsx'))
@@ -288,7 +349,8 @@ test('direct sizing CSS travels as partial data without importing route code', a
   assert.ok(!source.includes('server.js?inline'))
   const routes = await manifestModule(source)
   assert.deepEqual(routes.shapes['/'].cssText, [
-    `${f.abs('size.css')}?inline`, `${f.abs('global.css')}?inline`,
+    `${f.abs('size.css')}?inline`,
+    `${f.abs('global.css')}?inline`,
   ])
   assert.equal(routes.shapes['/'].css, null)
   assert.equal(routes.shapes['/'].cssStatus, 'partial')
@@ -299,8 +361,11 @@ test('Vite transforms an inline CSS request to data without injecting a styleshe
   const f = fixture(t)
   f.write('size.css', '.panel { min-height: 12rem }')
   const server = await createServer({
-    root: f.root, configFile: false, logLevel: 'silent',
-    server: { middlewareMode: true }, appType: 'custom',
+    root: f.root,
+    configFile: false,
+    logLevel: 'silent',
+    server: { middlewareMode: true },
+    appType: 'custom',
   })
   try {
     const output = await server.transformRequest('/size.css?inline')
@@ -323,7 +388,8 @@ test('changing direct stylesheet imports invalidates shape metadata', async (t) 
     invalidateModule: (value) => calls.push(value),
   }
   const state = {
-    root: f.root, manifest: { routes: [{ file: 'page.tsx' }], layouts: [] },
+    root: f.root,
+    manifest: { routes: [{ file: 'page.tsx' }], layouts: [] },
     vite: { ws: { send: (value) => calls.push(value) } },
   }
   const handler = shapeHotUpdate(state, modes, async () => ['unchanged'])
@@ -360,7 +426,8 @@ test('malformed edits invalidate metadata and a repaired route recovers', async 
     invalidateModule: (value) => calls.push(value),
   }
   const state = {
-    root: f.root, manifest: { routes: [{ id: '/', file: 'page.tsx', kind: 'page' }], layouts: [] },
+    root: f.root,
+    manifest: { routes: [{ id: '/', file: 'page.tsx', kind: 'page' }], layouts: [] },
     vite: { ws: { send: (value) => calls.push(value) } },
   }
   const handler = shapeHotUpdate(state, modes, async () => ['unchanged'])
@@ -377,7 +444,6 @@ test('malformed edits invalidate metadata and a repaired route recovers', async 
   const routes = await manifestModule(clientRoutes(state.manifest, f.abs))
   assert.equal(routes.shapes['/'].kind, 'disabled')
 })
-
 
 test('static group facts produce CSS carried alongside the shape', async (t) => {
   const f = fixture(t)
@@ -399,10 +465,11 @@ test('static group facts produce CSS carried alongside the shape', async (t) => 
   assert.equal(routes.shapes['/'].css, null)
 })
 
-
 test('entry and token styles join route shape CSS without running entry code', async (t) => {
   const f = fixture(t)
-  f.write('entry.ts', `
+  f.write(
+    'entry.ts',
+    `
     import './app.css'
     import 'weft:tokens/warp'
     import 'weft:tokens/missing'
@@ -410,19 +477,22 @@ test('entry and token styles join route shape CSS without running entry code', a
     import '@kit/unsafe.css'
     import './entry-runtime.js'
     throw new Error('entry executed')
-  `)
+  `,
+  )
   f.write('page.tsx', "import './page.css'; export default () => <main />")
   const token = f.abs('token.css')
   const kit = f.abs('kit.css')
   const calls = []
-  const ctx = { resolve: async (spec) => {
-    calls.push(spec)
-    if (spec === './app.css') return { id: f.abs('app.css') }
-    if (spec === 'weft:tokens/warp') return { id: token }
-    if (spec === 'weft:tokens/missing') return { id: '\0weft:tokens-empty' }
-    if (spec === '@kit/tokens.css') return { id: kit }
-    if (spec === '@kit/unsafe.css') return { id: f.abs('unsafe.js') }
-  } }
+  const ctx = {
+    resolve: async (spec) => {
+      calls.push(spec)
+      if (spec === './app.css') return { id: f.abs('app.css') }
+      if (spec === 'weft:tokens/warp') return { id: token }
+      if (spec === 'weft:tokens/missing') return { id: '\0weft:tokens-empty' }
+      if (spec === '@kit/tokens.css') return { id: kit }
+      if (spec === '@kit/unsafe.css') return { id: f.abs('unsafe.js') }
+    },
+  }
   const entry = await shapeCssSources(ctx, f.abs('entry.ts'))
   assert.deepEqual(entry, [f.abs('app.css'), token, kit])
   assert.ok(!calls.includes('./entry-runtime.js'))
@@ -433,7 +503,10 @@ test('entry and token styles join route shape CSS without running entry code', a
   assert.ok(!source.includes('unsafe.js'))
   const routes = await manifestModule(source)
   assert.deepEqual(routes.shapes['/'].cssText, [
-    `${f.abs('app.css')}?inline`, `${token}?inline`, `${kit}?inline`, `${f.abs('page.css')}?inline`,
+    `${f.abs('app.css')}?inline`,
+    `${token}?inline`,
+    `${kit}?inline`,
+    `${f.abs('page.css')}?inline`,
   ])
   assert.equal(routes.shapes['/'].cssStatus, 'partial')
   assert.equal(routes.shapes['/'].css, null)
@@ -446,8 +519,12 @@ test('the token plugin resolves generated token CSS as an inert inline styleshee
   f.write('.weft/tokens/warp.css', ':root { --warp-space-group: 12px }')
   f.write('entry.ts', "import 'weft:tokens/warp'")
   const server = await createServer({
-    root: f.root, configFile: false, logLevel: 'silent', plugins: [tokens()],
-    server: { middlewareMode: true }, appType: 'custom',
+    root: f.root,
+    configFile: false,
+    logLevel: 'silent',
+    plugins: [tokens()],
+    server: { middlewareMode: true },
+    appType: 'custom',
   })
   try {
     const ctx = {
@@ -478,7 +555,9 @@ test('entry stylesheet import changes invalidate shape metadata', async (t) => {
     invalidateModule: (value) => calls.push(value),
   }
   const state = {
-    root: f.root, manifest: { routes: [], layouts: [] }, clientEntry: () => file,
+    root: f.root,
+    manifest: { routes: [], layouts: [] },
+    clientEntry: () => file,
     vite: { ws: { send: (value) => calls.push(value) } },
   }
   const handler = shapeHotUpdate(state, modes, async () => ['unchanged'])
@@ -488,18 +567,23 @@ test('entry stylesheet import changes invalidate shape metadata', async (t) => {
   assert.deepEqual(calls, ['routes', { type: 'full-reload' }])
 })
 
-
 test('client virtual routes collect entry and route styles through the Vite hook', async (t) => {
   const f = fixture(t)
   f.write('entry.ts', "import './app.css'; throw new Error('entry ran')")
   f.write('page.tsx', "import 'weft:tokens/warp'; export default () => <main />")
   f.write('disabled.tsx', "import '@bad/disabled.css'; export const skeleton = false")
-  const manifest = { layouts: [], routes: [
-    { id: '/', file: 'page.tsx', kind: 'page' },
-    { id: '/disabled', file: 'disabled.tsx', kind: 'page' },
-  ] }
+  const manifest = {
+    layouts: [],
+    routes: [
+      { id: '/', file: 'page.tsx', kind: 'page' },
+      { id: '/disabled', file: 'disabled.tsx', kind: 'page' },
+    ],
+  }
   const state = {
-    manifest, abs: f.abs, clientEntry: () => f.abs('entry.ts'), hydration: async () => undefined,
+    manifest,
+    abs: f.abs,
+    clientEntry: () => f.abs('entry.ts'),
+    hydration: async () => undefined,
   }
   const context = {
     environment: { config: { consumer: 'client' } },
@@ -512,7 +596,8 @@ test('client virtual routes collect entry and route styles through the Vite hook
   const source = await moduleLoad(state).handler.call(context, '\0virtual:weft/routes')
   const routes = await manifestModule(source)
   assert.deepEqual(routes.shapes['/'].cssText, [
-    `${f.abs('app.css')}?inline`, `${f.abs('token.css')}?inline`,
+    `${f.abs('app.css')}?inline`,
+    `${f.abs('token.css')}?inline`,
   ])
   assert.equal(routes.shapes['/'].cssStatus, 'partial')
 })

@@ -39,8 +39,10 @@ export function acquireShapeStyles(
     if (nonce) element.nonce = nonce
     element.textContent = text.join('\n')
     const owned = new Set<Element>([...entries.values()].map((item) => item.element))
-    const appStyle = [...doc.head.querySelectorAll('style,link[rel~="stylesheet"]')]
-      .find((item) => !owned.has(item)) ?? null
+    const appStyle =
+      [...doc.head.querySelectorAll('style,link[rel~="stylesheet"]')].find(
+        (item) => !owned.has(item),
+      ) ?? null
     try {
       doc.head.insertBefore(element, appStyle)
       if (!element.sheet || hasImports(element.sheet.cssRules)) {
@@ -57,12 +59,14 @@ export function acquireShapeStyles(
   entry.count++
   const owned = entry
   let released = false
-  return { release() {
-    if (released) return
-    released = true
-    if (--owned.count === 0) {
-      owned.element.remove()
-      if (entries.get(key) === owned) entries.delete(key)
-    }
-  } }
+  return {
+    release() {
+      if (released) return
+      released = true
+      if (--owned.count === 0) {
+        owned.element.remove()
+        if (entries.get(key) === owned) entries.delete(key)
+      }
+    },
+  }
 }

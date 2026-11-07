@@ -6,17 +6,32 @@
  * @returns {import('./router').RouteAssetCosts | null}
  */
 export function selectRouteAssets(receipt, build, ids) {
-  if (!build || !receipt || receipt.build !== build || receipt.version !== 1 ||
-      receipt.scope !== 'vite-static-closure' || !receipt.routes || !receipt.files || !ids.length)
+  if (
+    !build ||
+    !receipt ||
+    receipt.build !== build ||
+    receipt.version !== 1 ||
+    receipt.scope !== 'vite-static-closure' ||
+    !receipt.routes ||
+    !receipt.files ||
+    !ids.length
+  )
     return null
-  const levels = ids.map((id) => ({ id, entry: Object.hasOwn(receipt.routes, id)
-    ? receipt.routes[id] : null }))
+  const levels = ids.map((id) => ({
+    id,
+    entry: Object.hasOwn(receipt.routes, id) ? receipt.routes[id] : null,
+  }))
   const union = (entries) => {
     const names = new Set()
     for (const entry of entries) {
-      if (!entry || !Array.isArray(entry.files) || typeof entry.bytes !== 'number' ||
-          !Number.isSafeInteger(entry.bytes) ||
-          entry.bytes < 0) return null
+      if (
+        !entry ||
+        !Array.isArray(entry.files) ||
+        typeof entry.bytes !== 'number' ||
+        !Number.isSafeInteger(entry.bytes) ||
+        entry.bytes < 0
+      )
+        return null
       for (const file of entry.files) names.add(file)
     }
     let total = 0

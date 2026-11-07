@@ -121,9 +121,15 @@ export function skeletonExport(file) {
       let value = item.init
       while (
         value &&
-        ['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression',
-          'TSTypeAssertion', 'ParenthesizedExpression'].includes(value.type)
-      ) value = value.expression
+        [
+          'TSAsExpression',
+          'TSSatisfiesExpression',
+          'TSNonNullExpression',
+          'TSTypeAssertion',
+          'ParenthesizedExpression',
+        ].includes(value.type)
+      )
+        value = value.expression
       constants.set(
         item.id.name,
         value?.value === false && (value.type === 'Literal' || value.type === 'BooleanLiteral'),
@@ -171,7 +177,7 @@ export async function shapeCssSource(ctx, file, spec, onMissing) {
   if (!/^\.{1,2}\//.test(spec) && spec.includes('..')) return
   const found = await ctx.resolve(spec, file, { skipSelf: true })
   if (!found) onMissing?.()
-  if (!found?.external && found?.id && isAbsolute(found.id) && /\.css$/.test(found.id))
+  if (!found?.external && found?.id && isAbsolute(found.id) && found.id.endsWith('.css'))
     return found.id
 }
 
@@ -199,8 +205,12 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
   const isStatic = (r) => plan?.statics.has(abs(r.file))
   const shapeFiles = new Map()
   const styleFiles = new Map()
-  const shape = (file, name = 'default$shape', request = file + '?weft-shape',
-    kind = 'generated') => {
+  const shape = (
+    file,
+    name = 'default$shape',
+    request = file + '?weft-shape',
+    kind = 'generated',
+  ) => {
     if (!shapeFiles.has(request)) shapeFiles.set(request, shapeFiles.size)
     const sources = [...(css.entry ?? []), ...(css.levels?.get(file) ?? [])]
     const styles = [...new Set(sources)].map((style) => {
@@ -226,7 +236,10 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
     }
     return `${id}: ${shape(file)}`
   })
-  for (const [id, name] of [['404', 'NotFoundPage$shape'], ['error', 'ErrorPage$shape']]) {
+  for (const [id, name] of [
+    ['404', 'NotFoundPage$shape'],
+    ['error', 'ErrorPage$shape'],
+  ]) {
     if (!manifest.routes.some((route) => route.id === id))
       shapes.push(`${JSON.stringify(id)}: ${shape(join(here, 'builtin.tsx'), name)}`)
   }

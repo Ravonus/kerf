@@ -9,74 +9,108 @@ afterEach(() => {
 
 describe('retained source attribute mutations', () => {
   it.each(['value', 'nodeValue', 'textContent'] as const)(
-    'pins Attr.%s writes before event propagation', (property) => {
+    'pins Attr.%s writes before event propagation',
+    (property) => {
       history.replaceState(null, '', '/dir/old')
-      document.body.innerHTML = '<div id="app"><a href="x">go</a>' +
+      document.body.innerHTML =
+        '<div id="app"><a href="x">go</a>' +
         '<form action="x"><button formaction="x">send</button></form></div>'
-      const items = [document.querySelector('a')!, document.querySelector('form')!,
-        document.querySelector('button')!]
+      const items = [
+        document.querySelector('a')!,
+        document.querySelector('form')!,
+        document.querySelector('button')!,
+      ]
       const names = ['href', 'action', 'formaction']
       const context = retainSourceContext(document, location.href, document.baseURI)!
       history.pushState(null, '', '/other/new')
       try {
         for (let i = 0; i < items.length; i++) {
-          const item = items[i]!, name = names[i]!
+          const item = items[i]!,
+            name = names[i]!
           let observed: string | null = null
           const type = name === 'action' ? 'submit' : 'click'
-          item.addEventListener(type, (event) => {
-            item.getAttributeNode(name)![property] = `changed-${i}`
-            observed = name === 'href' ? (item as HTMLAnchorElement).href :
-              name === 'action' ? (item as HTMLFormElement).action : item.getAttribute(name)
-            event.preventDefault()
-            event.stopPropagation()
-          }, { once: true })
+          item.addEventListener(
+            type,
+            (event) => {
+              item.getAttributeNode(name)![property] = `changed-${i}`
+              observed =
+                name === 'href'
+                  ? (item as HTMLAnchorElement).href
+                  : name === 'action'
+                    ? (item as HTMLFormElement).action
+                    : item.getAttribute(name)
+              event.preventDefault()
+              event.stopPropagation()
+            },
+            { once: true },
+          )
           item.dispatchEvent(new Event(type, { bubbles: true, cancelable: true }))
           expect(observed).toBe(`http://localhost/dir/changed-${i}`)
         }
-      } finally { context.release() }
+      } finally {
+        context.release()
+      }
       for (let i = 0; i < items.length; i++)
         expect(items[i]!.getAttribute(names[i]!)).toBe(`changed-${i}`)
     },
   )
 
   it.each(['setNamedItem', 'setNamedItemNS'] as const)(
-    'pins NamedNodeMap.%s writes before event propagation', (method) => {
+    'pins NamedNodeMap.%s writes before event propagation',
+    (method) => {
       history.replaceState(null, '', '/dir/old')
-      document.body.innerHTML = '<div id="app"><a href="x">go</a>' +
+      document.body.innerHTML =
+        '<div id="app"><a href="x">go</a>' +
         '<form action="x"><button formaction="x">send</button></form></div>'
-      const items = [document.querySelector('a')!, document.querySelector('form')!,
-        document.querySelector('button')!]
+      const items = [
+        document.querySelector('a')!,
+        document.querySelector('form')!,
+        document.querySelector('button')!,
+      ]
       const maps = items.map((item) => item.attributes)
       const names = ['href', 'action', 'formaction']
       const context = retainSourceContext(document, location.href, document.baseURI)!
       history.pushState(null, '', '/other/new')
       try {
         for (let i = 0; i < items.length; i++) {
-          const item = items[i]!, name = names[i]!
+          const item = items[i]!,
+            name = names[i]!
           let observed: string | null = null
           const type = name === 'action' ? 'submit' : 'click'
-          item.addEventListener(type, (event) => {
-            const attr = document.createAttribute(name)
-            attr.value = `changed-${i}`
-            maps[i]![method](attr)
-            observed = name === 'href' ? (item as HTMLAnchorElement).href :
-              name === 'action' ? (item as HTMLFormElement).action : item.getAttribute(name)
-            event.preventDefault()
-            event.stopPropagation()
-          }, { once: true })
+          item.addEventListener(
+            type,
+            (event) => {
+              const attr = document.createAttribute(name)
+              attr.value = `changed-${i}`
+              maps[i]![method](attr)
+              observed =
+                name === 'href'
+                  ? (item as HTMLAnchorElement).href
+                  : name === 'action'
+                    ? (item as HTMLFormElement).action
+                    : item.getAttribute(name)
+              event.preventDefault()
+              event.stopPropagation()
+            },
+            { once: true },
+          )
           item.dispatchEvent(new Event(type, { bubbles: true, cancelable: true }))
           expect(observed).toBe(`http://localhost/dir/changed-${i}`)
         }
-      } finally { context.release() }
+      } finally {
+        context.release()
+      }
       for (let i = 0; i < items.length; i++)
         expect(items[i]!.getAttribute(names[i]!)).toBe(`changed-${i}`)
     },
   )
 
   it.each(['removeNamedItem', 'removeNamedItemNS'] as const)(
-    'keeps missing form action on the source after NamedNodeMap.%s', (method) => {
+    'keeps missing form action on the source after NamedNodeMap.%s',
+    (method) => {
       history.replaceState(null, '', '/dir/old')
-      document.body.innerHTML = '<div id="app"><a href="x">go</a>' +
+      document.body.innerHTML =
+        '<div id="app"><a href="x">go</a>' +
         '<form action="x"><button formaction="x">go</button></form></div>'
       const form = document.querySelector('form')!
       const anchor = document.querySelector('a')!
@@ -96,13 +130,14 @@ describe('retained source attribute mutations', () => {
         }
         expect(anchor.hasAttribute('href')).toBe(false)
         expect(button.hasAttribute('formaction')).toBe(false)
-      } finally { context.release() }
+      } finally {
+        context.release()
+      }
       expect(form.hasAttribute('action')).toBe(false)
       expect(anchor.hasAttribute('href')).toBe(false)
       expect(button.hasAttribute('formaction')).toBe(false)
     },
   )
-
 
   it('leaves namespaced and foreign attributes alone and preserves native errors', () => {
     history.replaceState(null, '', '/dir/old')
@@ -121,7 +156,9 @@ describe('retained source attribute mutations', () => {
       outside.attributes.setNamedItem(foreign)
       expect(() => anchor.attributes.setNamedItem(foreign)).toThrow()
       expect(foreign.value).toBe('foreign')
-    } finally { context.release() }
+    } finally {
+      context.release()
+    }
   })
 
   it('keeps newer contexts and foreign attribute hooks after the old context stops', () => {
@@ -131,7 +168,9 @@ describe('retained source attribute mutations', () => {
     const original = Object.getOwnPropertyDescriptor(Node.prototype, 'nodeValue')!
     const first = retainSourceContext(document, location.href, document.baseURI)!
     const installed = Object.getOwnPropertyDescriptor(Node.prototype, 'nodeValue')!
-    const getter = function (this: Node) { return Reflect.apply(installed.get!, this, []) }
+    const getter = function (this: Node) {
+      return Reflect.apply(installed.get!, this, [])
+    }
     Object.defineProperty(Node.prototype, 'nodeValue', { ...installed, get: getter })
     try {
       first.stop()
@@ -142,7 +181,9 @@ describe('retained source attribute mutations', () => {
         first.release()
         anchor.getAttributeNode('href')!.nodeValue = 'latest'
         expect(anchor.href).toBe('http://localhost/other/latest')
-      } finally { second.release() }
+      } finally {
+        second.release()
+      }
       expect(anchor.getAttribute('href')).toBe('latest')
     } finally {
       first.release()
@@ -157,7 +198,8 @@ describe('retained source attribute mutations', () => {
     const attrs = Object.getOwnPropertyDescriptor(Element.prototype, 'attributes')!
     const define = Object.defineProperty
     const spy = vi.spyOn(Object, 'defineProperty').mockImplementation((target, key, descriptor) => {
-      if (target === NamedNodeMap.prototype && key === 'removeNamedItemNS') throw new Error('locked')
+      if (target === NamedNodeMap.prototype && key === 'removeNamedItemNS')
+        throw new Error('locked')
       return define(target, key, descriptor)
     })
     try {
@@ -165,12 +207,13 @@ describe('retained source attribute mutations', () => {
       expect(Object.getOwnPropertyDescriptor(Node.prototype, 'nodeValue')).toEqual(node)
       expect(Object.getOwnPropertyDescriptor(Attr.prototype, 'value')).toEqual(attr)
       expect(Object.getOwnPropertyDescriptor(Element.prototype, 'attributes')).toEqual(attrs)
-    } finally { spy.mockRestore() }
+    } finally {
+      spy.mockRestore()
+    }
     const context = retainSourceContext(document, location.href, document.baseURI)
     expect(context).not.toBeNull()
     context?.release()
   })
-
 
   it('preserves the authored value when setting the already owned Attr again', () => {
     history.replaceState(null, '', '/dir/old')
@@ -181,10 +224,11 @@ describe('retained source attribute mutations', () => {
       const attr = anchor.getAttributeNode('href')!
       expect(anchor.attributes.setNamedItem(attr)).toBe(attr)
       expect(anchor.href).toBe('http://localhost/dir/child')
-    } finally { context.release() }
+    } finally {
+      context.release()
+    }
     expect(anchor.getAttribute('href')).toBe('child')
   })
-
 
   it('leaves a later map wrapper installed and inert after release', () => {
     history.replaceState(null, '', '/dir/old')
@@ -195,7 +239,7 @@ describe('retained source attribute mutations', () => {
     const context = retainSourceContext(document, location.href, document.baseURI)!
     const installed = proto.setNamedItem
     const foreign = function (this: NamedNodeMap, attr: Attr) {
-      return Reflect.apply(installed, this, [attr]) as Attr | null
+      return Reflect.apply(installed, this, [attr])
     }
     Object.defineProperty(proto, 'setNamedItem', { ...before, value: foreign })
     try {
@@ -211,5 +255,4 @@ describe('retained source attribute mutations', () => {
       Object.defineProperty(proto, 'setNamedItem', before)
     }
   })
-
 })

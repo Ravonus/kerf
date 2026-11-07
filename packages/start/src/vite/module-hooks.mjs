@@ -7,7 +7,11 @@ import { assetsOnly } from './assets.mjs'
 import { entryCss, projectParent, watchEntryCandidates } from './shape-entry-css.mjs'
 import { resolveImportedOverride, shapeOverride } from './shape-override.mjs'
 import {
-  clientRoutes, serverRoutes, devStyles, markLinks, skeletonExport,
+  clientRoutes,
+  serverRoutes,
+  devStyles,
+  markLinks,
+  skeletonExport,
 } from './route-modules.mjs'
 import {
   serverEntry,
@@ -48,8 +52,12 @@ export const resolveId = (s) => ({
       return
     }
     const base = source.replace(/\?.*$/, '')
-    if (Object.values(V).includes(base) || base.startsWith(ISLAND) ||
-      base.startsWith('virtual:weft/shape-override/')) return s.id(source)
+    if (
+      Object.values(V).includes(base) ||
+      base.startsWith(ISLAND) ||
+      base.startsWith('virtual:weft/shape-override/')
+    )
+      return s.id(source)
   },
 })
 
@@ -80,8 +88,7 @@ export const load = (s) => ({
     }
     if (which === V.routes) {
       const owner = s.shapeEntryOwner
-      if (client && s.shapeEntryClosed)
-        throw new Error('entry style scan outlived its server')
+      if (client && s.shapeEntryClosed) throw new Error('entry style scan outlived its server')
       const scan = client ? (s.shapeScanGeneration = (s.shapeScanGeneration ?? 0) + 1) : undefined
       if (client) s.shapeScanActive = scan
       try {
@@ -112,15 +119,19 @@ export const load = (s) => ({
             if (found?.file) depend(found.file, file)
             if (found?.code) overrides.set(file, found.code)
           }
-          const files = all.filter((file) => /\.[jt]sx$/.test(file) &&
-            (overrides.has(file) || ['generated', 'custom'].includes(skeletonExport(file))))
+          const files = all.filter(
+            (file) =>
+              /\.[jt]sx$/.test(file) &&
+              (overrides.has(file) || ['generated', 'custom'].includes(skeletonExport(file))),
+          )
           const sources = await Promise.all(files.map((file) => entryCss(this, file, root)))
           const shared = await entryCss(this, entryFile, root)
           if (owner && owner !== s.shapeEntryOwner)
             throw new Error('entry style scan outlived its server')
           if (scan !== s.shapeScanGeneration) throw new Error('entry style scan superseded')
           for (const source of sources) {
-            for (const [file, signature] of source.signatures) shared.signatures.set(file, signature)
+            for (const [file, signature] of source.signatures)
+              shared.signatures.set(file, signature)
             for (const file of source.candidates) shared.candidates.add(file)
             for (const file of source.missing) shared.missing.add(file)
           }

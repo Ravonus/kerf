@@ -47,7 +47,12 @@ test('adapter streams prompt and rejects malformed events without leaking stderr
     return child
   }
   const result = await runCodex({
-    command: 'fixture', cwd: '/', env: {}, prompt: 'test', timeoutMs: 1000, spawnProcess,
+    command: 'fixture',
+    cwd: '/',
+    env: {},
+    prompt: 'test',
+    timeoutMs: 1000,
+    spawnProcess,
   })
   assert.equal(result.ok, false)
   assert.equal(result.status, 'malformed-events')
@@ -71,7 +76,12 @@ test('adapter consumes a complete mocked turn', async () => {
     return child
   }
   const result = await runCodex({
-    command: 'fixture', cwd: '/', env: {}, prompt: 'test', timeoutMs: 1000, spawnProcess,
+    command: 'fixture',
+    cwd: '/',
+    env: {},
+    prompt: 'test',
+    timeoutMs: 1000,
+    spawnProcess,
   })
   assert.equal(result.ok, true)
   assert.equal(result.usage.output, 2)

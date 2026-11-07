@@ -51,14 +51,14 @@ fn check_reports_default_route_shape_aliases() {
 
 #[test]
 fn standalone_shape_drops_module_and_setup_evaluation() {
-    let source = r#"
+    let source = r"
         import { secret } from './server';
         const danger = sideEffect();
         export default function Page({ value = sideEffect() }) {
             const x = sideEffect();
             return <main class={danger} onClick={sideEffect}>{secret}{x}{value}</main>;
         }
-    "#;
+    ";
     let options = Options {
         filename: "page.tsx?weft-shape".into(),
         ..Default::default()
@@ -74,14 +74,14 @@ fn standalone_shape_drops_module_and_setup_evaluation() {
 #[test]
 fn standalone_layout_places_only_the_direct_children_outlet() {
     for source in [
-        r#"export default function Layout(props) {
+        r"export default function Layout(props) {
             return <main><header>Before</header><section>{props.children}</section>
                 <footer>After</footer>{props.secret.children}{other.children}{props.children()}</main>
-        }"#,
-        r#"export default function Layout({ children: outlet = unsafeDefault(), secret }) {
+        }",
+        r"export default function Layout({ children: outlet = unsafeDefault(), secret }) {
             return <main><header>Before</header><section>{outlet}</section>
                 <footer>After</footer>{secret.children}{other.children}{unsafeCall()}</main>
-        }"#,
+        }",
     ] {
         let options = Options {
             filename: "layout.tsx?weft-shape".into(),
@@ -102,10 +102,10 @@ fn standalone_layout_places_only_the_direct_children_outlet() {
 
 #[test]
 fn standalone_nested_layouts_keep_each_outlet() {
-    let source = r#"
+    let source = r"
         export function Inner({ children }) { return <article>{children}</article> }
         export default function Outer(props) { return <main><Inner>{props.children}</Inner></main> }
-    "#;
+    ";
     let options = Options {
         filename: "layout.tsx?weft-shape".into(),
         ..Default::default()
@@ -122,20 +122,20 @@ fn standalone_shapes_replace_recursive_edges() {
         filename: "tree.tsx?weft-shape".into(),
         ..Default::default()
     };
-    let tree = r#"export function Tree({ depth }) {
+    let tree = r"export function Tree({ depth }) {
         return depth > 0 ? <Tree depth={depth - 1} /> : <p>Leaf</p>
-    }"#;
+    }";
     let code = compile(tree, &options).code.expect("shape compiles");
     assert!(code.contains("function Tree$shape"), "{code}");
     assert!(!code.contains("(Tree$shape,"), "{code}");
     assert!(code.contains("data-skeleton"), "{code}");
     assert!(shaped(tree).contains("(Tree$shape,"));
 
-    let mutual = r#"
+    let mutual = r"
         export function A({ depth }) { return depth ? <B /> : <p>End</p> }
         function B() { return <A /> }
         export function Parent() { return <A /> }
-    "#;
+    ";
     let code = compile(mutual, &options).code.expect("shape compiles");
     let a = code.find("function A$shape").expect("A shape");
     let b = code.find("function B$shape").expect("B shape");
@@ -147,14 +147,14 @@ fn standalone_shapes_replace_recursive_edges() {
 
 #[test]
 fn standalone_shapes_drop_unsafe_elements_and_sizing() {
-    let source = r#"
+    let source = r"
         import Widget from './server-widget';
         const dimensions = dangerousSetup();
         export default function Page() {
             return <main><my-widget /><Widget /><div width={dangerousWidth()}
                 style={dimensions.style} class={dimensions.className} /></main>
         }
-    "#;
+    ";
     let options = Options {
         filename: "page.tsx?weft-shape".into(),
         ..Default::default()
@@ -174,11 +174,11 @@ fn standalone_shapes_drop_unsafe_elements_and_sizing() {
 
 #[test]
 fn standalone_shape_keeps_lowered_static_group_attributes() {
-    let source = r#"
+    let source = r"
         import { group } from '@weft-js/core/style';
         const card = group('card', { base: { pad: 'group' } });
         export default function Page() { return <main {...card()} /> }
-    "#;
+    ";
     let options = Options {
         filename: "page.tsx?weft-shape".into(),
         ..Default::default()
