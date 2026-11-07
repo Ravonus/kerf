@@ -2,6 +2,7 @@ import { enter, hydrate, hydration, level as staticLevel } from '@weft-js/core/d
 import { client, createRouteState, type Component, type RoutePayload } from '../router'
 import { App } from '../view'
 import { ErrorPage, NotFoundPage } from '../builtin'
+import { matchingRouteAssets } from '../asset-receipt.mjs'
 import type { ClientRoutes } from '../run'
 import { deferred } from './helpers'
 
@@ -38,7 +39,7 @@ export function prepare(routes: ClientRoutes, options: { container?: Element }) 
     ...page.m.filter((m) => !m.s).map((m) => chunk(m.id)),
     ...(page.i ?? []).map(island),
   ] as Promise<void>[]
-  return { container, page, data, tags, comps, chunk, islands, island, loads }
+  return { container, page, data, tags, comps, chunk, islands, island, loads, build: routes.build }
 }
 
 export function mount({
@@ -50,12 +51,14 @@ export function mount({
   chunk,
   islands,
   island,
+  build,
 }: ReturnType<typeof prepare>) {
   page.m.forEach((m, i) => {
     for (const k of m.d ?? [])
       if (!m.s) (m.data as Record<string, unknown>)[k] = deferred(page.p, i, k)
   })
   const route = createRouteState(page, comps)
+  route.assetBytes = matchingRouteAssets(page.a, build)
   let bag: RoutePayload['b']
   route.mount = (html, depth, next) =>
     staticLevel(

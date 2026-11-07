@@ -256,6 +256,7 @@ const shapeEntry = (module, cssText, name, kind) => {
     : { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null }
 }
 export const shapes = { ${shapes.join(', ')} }
+export const build = ${JSON.stringify(css.build ?? null)}
 export const table = ${JSON.stringify(table)}
 export const load = { ${loads.join(', ')} }
 export const islands = { ${islands.join(', ')} }

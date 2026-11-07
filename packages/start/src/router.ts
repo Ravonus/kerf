@@ -37,6 +37,25 @@ export interface Level {
 /** A route, layout or island: its props are its own, so nothing here can call one without a cast. */
 export type Component = (props: never) => unknown
 
+/** Sizes are emitted, uncompressed bytes in Vite's recorded static closure. */
+export interface RouteAssetCosts {
+  build: string
+  scope: 'vite-static-closure'
+  levels: { id: string; bytes: number | null }[]
+  routeBytes: number | null
+  eagerBytes: number | null
+  combinedBytes: number | null
+}
+
+export interface AssetReceipt {
+  build: string | null
+  version: 1
+  scope: 'vite-static-closure'
+  files: Record<string, { bytes: number | null; kind: string }>
+  routes: Record<string, { files: string[]; bytes: number | null } | null>
+  eager: { files: string[]; bytes: number | null } | null
+}
+
 export interface RouteState {
   levels: Level[]
   /** The current path (pathname + search). */
@@ -44,6 +63,8 @@ export interface RouteState {
   status: State<number>
   /** Loaded route components by id. */
   comps: Record<string, Component>
+  /** Cost of the current match, when the client and receipt are from the same build. */
+  assetBytes?: RouteAssetCosts | null
   /** Client: shows a static level's HTML, with the next level inside it. */
   mount?: (html: string, depth: number, next: () => unknown) => unknown
   /** Around a level's component, at the same point on both sides: the server's markers, the client's key scope. */
@@ -64,6 +85,8 @@ export interface RoutePayload {
   i?: string[]
   /** A navigation's page data, for those islands. */
   b?: SsrData | null
+  /** Emitted asset cost for these levels, when a matching build receipt exists. */
+  a?: RouteAssetCosts
 }
 
 /** The route state of the render in progress: a server pass sets it as it starts (passes are synchronous). */

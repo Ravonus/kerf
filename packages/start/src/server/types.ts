@@ -1,5 +1,5 @@
 import type { Site, Merged, Meta as MetaObject } from '@weft-js/core/ssr'
-import type { Component, Match } from '../router'
+import type { AssetReceipt, Component, Match } from '../router'
 import type { AuthProvider } from '../auth'
 import type { ExtensionEntry } from '../extension'
 import type { Context, Redirect } from '../data'
@@ -90,6 +90,8 @@ export interface HandlerOptions {
   }
   /** Changes with every build: part of each card's `?v=` hash. */
   build?: string
+  /** Build-matched emitted asset receipt; null until the client bundle is available. */
+  routeAssetBytes?: AssetReceipt | null
   dev?: boolean
   fonts?: Font[]
   /** Route and layout ids with no client code (PLAN §11): the server sends their HTML. */

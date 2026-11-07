@@ -3,6 +3,7 @@ import { setHead } from '@weft-js/core/head'
 import { applyMatches, client, type NavigateOptions, type RoutePayload } from '../router'
 import type { ClientRoutes } from '../run'
 import { streamed, type mount } from './boot'
+import { matchingRouteAssets } from '../asset-receipt.mjs'
 import { ask, current_, guess, revive } from './helpers'
 
 const SLOW_FADE = 100
@@ -64,6 +65,7 @@ export class Navigation {
     this.at = path
     if (next.c) client.seed ? client.seed(next.c, since) : (client.seeds ??= []).push(...next.c)
     this.tags = next.m.map((m) => m.t ?? [])
+    this.route.assetBytes = matchingRouteAssets(next.a, this.routes.build)
     this.setBag(next.b)
     return () => {
       applyMatches(this.route, next.m.map(revive), path, next.s)

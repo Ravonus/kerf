@@ -7,7 +7,7 @@ import { INLINE_CSS_MAX } from '../inline.mjs'
 import { packageDirs } from './dev.mjs'
 import { assetBytes } from './asset-bytes.mjs'
 import { combineSheets, sheetPieces, inlineSheets } from './sheets.mjs'
-import { here, V, KIT_CHUNKS, INLINE_SHEETS, SHEET_PIECES } from './shared.mjs'
+import { here, V, KIT_CHUNKS, INLINE_SHEETS, SHEET_PIECES, ROUTE_ASSET_BYTES } from './shared.mjs'
 
 export const configHook = (s) =>
   function (config, env) {
@@ -58,6 +58,7 @@ export const writeBundle = (s) => ({
       if (bundle[name]) throw new Error(`Cannot overwrite emitted ${name}`)
       const bytes = assetBytes(bundle, (file) => readFileSync(join(out.dir, file)),
         s.manifest ?? s.scan(), s.abs)
+      bytes.build = s.build || null
       writeFileSync(join(out.dir, name), JSON.stringify(bytes))
       s.routeAssetBytes = bytes
     }
@@ -82,8 +83,20 @@ export const writeBundle = (s) => ({
 export const renderChunk = (s) => ({
   order: 'post',
   handler(code) {
+    const receiptToken = new RegExp(`["'\`]${ROUTE_ASSET_BYTES}["'\`]`)
+    const hasReceipt = receiptToken.test(code)
+    if (hasReceipt) {
+      let receipt = null
+      try {
+        const top = this.environment.getTopLevelConfig()
+        const client = resolve(s.root, top.environments.client.build.outDir)
+        const saved = JSON.parse(readFileSync(join(client, 'weft-route-assets.json'), 'utf8'))
+        if (s.build && saved.build === s.build) receipt = saved
+      } catch { /* no matching client receipt */ }
+      code = code.replace(receiptToken, () => JSON.stringify(receipt))
+    }
     const token = new RegExp(`["'\`]${INLINE_SHEETS}["'\`]`)
-    if (!token.test(code)) return null
+    if (!token.test(code)) return hasReceipt ? { code, map: null } : null
     const top = this.environment.getTopLevelConfig()
     const client = resolve(s.root, top.environments.client.build.outDir)
     code = code.replace(new RegExp(`["'\`]${SHEET_PIECES}["'\`]`), () =>

@@ -108,7 +108,7 @@ export function createHandler(options: HandlerOptions) {
 
   const media = makeMedia(options, mediaServer)
 
-  const data = makeNavigation(resolve, finished, statics, stateOf, PASSES)
+  const data = makeNavigation(resolve, finished, statics, stateOf, PASSES, options)
 
   const og = makeCard(resolve, finished, mod, manifest, options, site, CARD)
 

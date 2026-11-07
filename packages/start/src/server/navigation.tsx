@@ -7,13 +7,14 @@ import { App } from '../view'
 import { withLevels } from './render'
 import { payloadOf, wire } from './payload'
 import { cookieJar, withHeaders } from './request'
-import type { Resolved } from './types'
+import type { HandlerOptions, Resolved } from './types'
 export function makeNavigation(
   resolve: (path: string, request: Request) => Promise<Resolved>,
   finished: (r: Resolved, request: Request) => Promise<Merged>,
   statics: Set<string>,
   stateOf: (r: Resolved, payload: RoutePayload) => ReturnType<typeof createRouteState>,
   PASSES: number,
+  options: HandlerOptions,
 ) {
   /** The route as JSON for client navigation: deferred fields awaited (no streaming on navigation yet). */
   return async function data(path: string, request: Request, scope: Scope): Promise<Response> {
@@ -38,7 +39,7 @@ export function makeNavigation(
         }
     await finished(r, request)
     const c = wire(scope)
-    let payload = payloadOf(r, true)
+    let payload = payloadOf(r, true, options)
     if (r.levels.some((lv) => statics.has(lv.id))) {
       const route = stateOf(r, payload)
       const out = await renderToStringAsync(() => <App route={route} />, {

@@ -47,6 +47,7 @@ export type RouteShapes = Record<string, RouteShape>
 
 /** The client half of `virtual:weft/routes`: the page routes in match order, and a chunk loader per route id. */
 export interface ClientRoutes {
+  build?: string | null
   table: { id: string; pattern: string; layouts: string[] }[]
   load: Record<string, () => Promise<{ default?: Component }>>
   /** Eager shape metadata, keyed by route or layout id. */

@@ -4,7 +4,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { assetBytes } from '../../src/vite/asset-bytes.mjs'
-import { writeBundle } from '../../src/vite/config-hooks.mjs'
+import { renderChunk, writeBundle } from '../../src/vite/config-hooks.mjs'
+import { matchingRouteAssets, selectRouteAssets } from '../../src/asset-receipt.mjs'
+import { ROUTE_ASSET_BYTES } from '../../src/vite/shared.mjs'
 
 function fixture(t) {
   const root = mkdtempSync(join(tmpdir(), 'weft-emitted-bytes-'))
@@ -71,15 +73,56 @@ test('unknown graph metadata and external imports do not become zero cost', (t) 
 
 test('client writeBundle emits the byte manifest independent of CSS options', async (t) => {
   const f = fixture(t)
-  const state = { dev: false, options: { site: { criticalCss: false } },
+  const state = { dev: false, build: 'build-a', options: { site: { criticalCss: false } },
     manifest: f.manifest, abs: f.abs }
   const context = { environment: { config: { consumer: 'client' } } }
   await writeBundle(state).handler.call(context, { dir: f.root }, f.bundle)
   const saved = JSON.parse(readFileSync(join(f.root, 'weft-route-assets.json'), 'utf8'))
   assert.equal(saved.routes['/a'].bytes, 16)
+  assert.equal(saved.build, 'build-a')
   assert.equal(saved.eager.bytes, 13)
   assert.equal(state.routeAssetBytes.routes['/b'].bytes, 16)
   const collision = { ...f.bundle, 'weft-route-assets.json': { type: 'asset', source: '{}' } }
   await assert.rejects(() => writeBundle(state).handler.call(context, { dir: f.root }, collision),
     /Cannot overwrite/)
+})
+
+test('same-build receipt selects levels and deduplicates their emitted files', (t) => {
+  const f = fixture(t)
+  const receipt = { ...assetBytes(f.bundle, (file) => readFileSync(join(f.root, file)),
+    f.manifest, f.abs), build: 'build-a' }
+  const selected = selectRouteAssets(receipt, 'build-a', ['/a', '/b'])
+  assert.deepEqual(selected.levels, [{ id: '/a', bytes: 16 }, { id: '/b', bytes: 16 }])
+  assert.equal(selected.routeBytes, 21)
+  assert.equal(selected.eagerBytes, 13)
+  assert.equal(selected.combinedBytes, 27)
+  assert.equal(matchingRouteAssets(selected, 'build-a'), selected)
+  assert.equal(matchingRouteAssets(selected, 'old-client'), null)
+  assert.equal(matchingRouteAssets(selected, undefined), null)
+  assert.equal(selectRouteAssets(receipt, 'other-build', ['/a']), null)
+  assert.equal(selectRouteAssets(receipt, undefined, ['/a']), null)
+  assert.equal(selectRouteAssets(null, 'build-a', ['/a']), null)
+  assert.equal(selectRouteAssets(receipt, 'build-a', ['/missing']).routeBytes, null)
+  assert.equal(selectRouteAssets(receipt, 'build-a', ['/missing']).combinedBytes, null)
+  receipt.files['icon.svg'].bytes = null
+  assert.equal(selectRouteAssets(receipt, 'build-a', ['/a']).routeBytes, null)
+})
+
+test('server chunk embeds only a same-build emitted receipt', async (t) => {
+  const f = fixture(t)
+  const state = { root: f.root, dev: false, build: 'build-a',
+    options: { site: { criticalCss: false } }, manifest: f.manifest, abs: f.abs }
+  const client = { environment: { config: { consumer: 'client' } } }
+  await writeBundle(state).handler.call(client, { dir: f.root }, f.bundle)
+  const context = { environment: { getTopLevelConfig: () => ({
+    environments: { client: { build: { outDir: f.root } } },
+  }) } }
+  const input = `const receipt = '${ROUTE_ASSET_BYTES}'`
+  const emitted = renderChunk(state).handler.call(context, input).code
+  assert.ok(emitted.includes('"build":"build-a"'))
+  assert.ok(!emitted.includes(ROUTE_ASSET_BYTES))
+  state.build = 'build-b'
+  assert.equal(renderChunk(state).handler.call(context, input).code, 'const receipt = null')
+  rmSync(join(f.root, 'weft-route-assets.json'))
+  assert.equal(renderChunk(state).handler.call(context, input).code, 'const receipt = null')
 })

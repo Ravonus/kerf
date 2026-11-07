@@ -132,6 +132,7 @@ export const load = (s) => ({
             entry: shared.styles,
             levels: new Map(files.map((file, i) => [file, sources[i].styles])),
             overrides,
+            build: s.build || null,
           }
           const output = clientRoutes(s.manifest, s.abs, p, css)
           s.shapeEntrySignatures = shared.signatures
