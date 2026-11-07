@@ -242,7 +242,7 @@ function send(tgz, name, version) {
       '--access',
       'public',
       '--tag',
-      'latest',
+      version.includes('-') ? 'next' : 'latest',
       '--registry',
       registry,
       '--ignore-scripts',
