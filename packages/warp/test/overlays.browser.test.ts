@@ -69,6 +69,28 @@ afterAll(() => {
   rmSync(dist, { recursive: true, force: true })
 })
 
+/**
+ * Where an element comes to rest: on a loaded machine a toast's slide-in can outlast a fixed wait. Its timer keeps
+ * animating, so the test is the element holding still for a few frames.
+ */
+const atRest = (el: Playwright.Locator) =>
+  el.evaluate(
+    (node) =>
+      new Promise<void>((done) => {
+        let last = '',
+          still = 0
+        const look = () => {
+          const r = node.getBoundingClientRect(),
+            now = `${r.x},${r.y}`
+          still = now === last ? still + 1 : 0
+          last = now
+          if (still >= 3) done()
+          else requestAnimationFrame(look)
+        }
+        requestAnimationFrame(look)
+      }),
+  )
+
 function toastTools() {
   const region = '[data-scope="toast"][data-part="region"]'
   const where = (page: Playwright.Page) =>
@@ -84,24 +106,7 @@ function toastTools() {
   // what the pointer would hit at the middle of Undo, and that it works
   const undo = async (page: Playwright.Page) => {
     const button = page.getByRole('button', { name: 'Undo' }).first()
-    // where the toast comes to rest: on a loaded machine its slide-in can outlast a fixed wait. Its timer keeps
-    // animating, so the test is the button holding still for a few frames.
-    await button.evaluate(
-      (el) =>
-        new Promise<void>((done) => {
-          let last = '',
-            still = 0
-          const look = () => {
-            const r = el.getBoundingClientRect(),
-              now = `${r.x},${r.y}`
-            still = now === last ? still + 1 : 0
-            last = now
-            if (still >= 3) done()
-            else requestAnimationFrame(look)
-          }
-          requestAnimationFrame(look)
-        }),
-    )
+    await atRest(button)
     const box = (await button.boundingBox())!
     if (box.x + box.width > 1100 || box.y + box.height > 700) {
       const evidence = await page.evaluate((selector) => {
