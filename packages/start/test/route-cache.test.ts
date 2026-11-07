@@ -10,7 +10,10 @@ const url = (path: string) => new URL(path, 'http://localhost')
 const body = (path: string, data: unknown = 'ok') =>
   JSON.stringify({ p: path, s: 200, m: [{ id: '/page', params: {}, data, t: ['posts'] }] })
 const response = (text: string, extra: HeadersInit = {}) =>
-  new Response(text, { status: 200, headers: { ...headers, ...extra } })
+  new Response(text, {
+    status: 200,
+    headers: { ...headers, ...Object.fromEntries(new Headers(extra)) },
+  })
 const notModified = () => new Response(null, { status: 304, headers })
 const signal = () => new AbortController().signal
 
@@ -50,6 +53,7 @@ it('validates keyed entries and retains the original query generation', async ()
 it('evicts by count and decoded UTF-8 bytes, including oversized responses', async () => {
   const cache = new RouteCache('build')
   const tags: (string | undefined)[] = []
+  // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
   const fetcher = async (target: URL, _signal: AbortSignal, tag?: string) => {
     tags.push(tag)
     return response(
@@ -169,6 +173,7 @@ it('rejects uncacheable, unknown-build and session-cleared bodies', async () => 
 it('evicts least-recently-used bodies when their combined bytes exceed the limit', async () => {
   const cache = new RouteCache('build')
   const tags: (string | undefined)[] = []
+  // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
   const fetcher = async (target: URL, _signal: AbortSignal, tag?: string) => {
     tags.push(tag)
     return response(body(target.pathname, 'x'.repeat(2_200_000)))
@@ -354,6 +359,7 @@ it('limits immediate use to explicit current freshness permission', async () => 
       await cache.read(
         url('/a'),
         signal(),
+        // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
         async () => response(body('/a'), { 'cache-control': policy }),
         () => 1,
         () => true,
@@ -364,6 +370,7 @@ it('limits immediate use to explicit current freshness permission', async () => 
     await cache.read(
       url('/a'),
       signal(),
+      // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
       async () =>
         response(body('/a'), { 'cache-control': 'private, max-age=0, stale-while-revalidate=2' }),
       () => 1,
@@ -402,6 +409,7 @@ it('honors response age and renews permission only after a valid 304', async () 
     await old.read(
       url('/a'),
       signal(),
+      // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
       async () =>
         response(body('/a'), {
           'cache-control': 'private, max-age=0, stale-while-revalidate=2',
@@ -459,6 +467,7 @@ it('counts response delay against the allowed window', async () => {
     const read = cache.read(
       url('/a'),
       signal(),
+      // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
       async () => delayed,
       () => 1,
       () => true,

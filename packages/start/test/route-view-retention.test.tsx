@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 import { flush, onCleanup, state } from '@weft-js/core'
 import { render } from '@weft-js/core/dom'
-import { createRouteState, type Component } from '../src/router'
+import { createRouteState } from '../src/router'
 import { App } from '../src/view'
 
 it('keeps the actual page owner through a pending shape and cancellation', () => {

@@ -18,11 +18,11 @@ function fixture(t) {
   return { root, outside }
 }
 
-test('missing CSS and watches stay within the configured root, including symlinks', async (t) => {
+void test('missing CSS and watches stay within the configured root, including symlinks', async (t) => {
   const { root, outside } = fixture(t)
   const entry = join(root, 'entry.js')
   writeFileSync(entry, "import './nested/a.css'; import '../outside/b.css'; import './link/c.css'")
-  const result = await entryStyles.entryCss({ resolve: async () => null }, entry, root)
+  const result = await entryStyles.entryCss({ resolve: () => null }, entry, root)
   assert.ok(result.missing.has(join(root, 'nested/a.css')))
   assert.ok(!result.missing.has(join(outside, 'b.css')))
   assert.ok(!result.missing.has(join(root, 'link/c.css')))
@@ -40,17 +40,17 @@ test('missing CSS and watches stay within the configured root, including symlink
   assert.deepEqual(watched, [root])
 })
 
-test('resolved CSS outside the project remains a Vite-controlled stylesheet', async (t) => {
+void test('resolved CSS outside the project remains a Vite-controlled stylesheet', async (t) => {
   const { root, outside } = fixture(t)
   const entry = join(root, 'entry.js')
   const css = join(outside, 'shared.css')
   writeFileSync(entry, "import '../outside/shared.css'")
   writeFileSync(css, '.x { width: 3px }')
-  const result = await entryStyles.entryCss({ resolve: async () => ({ id: css }) }, entry, root)
+  const result = await entryStyles.entryCss({ resolve: () => ({ id: css }) }, entry, root)
   assert.deepEqual(result.styles, [css])
 })
 
-test('closing a server clears only its entry state and never unwatches shared paths', async () => {
+void test('closing a server clears only its entry state and never unwatches shared paths', () => {
   const state = {
     shapeEntrySignatures: new Map([['entry', 'signature']]),
     shapeEntryCandidates: new Set(['candidate']),
@@ -60,7 +60,7 @@ test('closing a server clears only its entry state and never unwatches shared pa
   let closes = 0
   const server = () => ({
     watcher: { unwatch: () => assert.fail('unwatch') },
-    async close() {
+    close() {
       closes++
       return 'closed'
     },
@@ -71,10 +71,10 @@ test('closing a server clears only its entry state and never unwatches shared pa
   entryStyles.entryWatchLifecycle(state, old, modes)
   state.vite = current
   entryStyles.entryWatchLifecycle(state, current, modes)
-  assert.equal(await old.close(), 'closed')
+  assert.equal(old.close(), 'closed')
   assert.equal(state.shapeEntryCandidates.size, 1)
   assert.equal(modes.size, 1)
-  assert.equal(await current.close(), 'closed')
+  assert.equal(current.close(), 'closed')
   assert.equal(closes, 2)
   assert.equal(state.shapeEntrySignatures, undefined)
   assert.equal(state.shapeEntryCandidates, undefined)
@@ -83,7 +83,7 @@ test('closing a server clears only its entry state and never unwatches shared pa
   assert.equal(modes.size, 0)
 })
 
-test('an entry scan finishing after server close cannot restore stale state', async (t) => {
+void test('an entry scan finishing after server close cannot restore stale state', async (t) => {
   const { root } = fixture(t)
   const entry = join(root, 'entry.js')
   writeFileSync(entry, "import './pending.css'")
@@ -103,7 +103,7 @@ test('an entry scan finishing after server close cannot restore stale state', as
     dev: true,
     vite: server,
     manifest: { layouts: [], routes: [] },
-    hydration: async () => undefined,
+    hydration: () => undefined,
   }
   entryStyles.entryWatchLifecycle(state, server, new Map())
   const context = {
@@ -122,7 +122,7 @@ test('an entry scan finishing after server close cannot restore stale state', as
   assert.equal(state.shapeEntrySignatures, undefined)
 })
 
-test('a real Vite middleware close clears the registered entry state', async (t) => {
+void test('a real Vite middleware close clears the registered entry state', async (t) => {
   const { root } = fixture(t)
   const state = { shapeEntryCandidates: new Set(['pending']) }
   const modes = new Map([['entry', 'signature']])
@@ -135,9 +135,9 @@ test('a real Vite middleware close clears the registered entry state', async (t)
     plugins: [
       {
         name: 'entry-lifecycle-test',
-        configureServer(server) {
-          state.vite = server
-          entryStyles.entryWatchLifecycle(state, server, modes)
+        configureServer(dev) {
+          state.vite = dev
+          entryStyles.entryWatchLifecycle(state, dev, modes)
         },
       },
     ],
@@ -153,7 +153,7 @@ test('a real Vite middleware close clears the registered entry state', async (t)
   assert.equal(modes.size, 0)
 })
 
-test('a route style scan finishing after close cannot restore entry state', async (t) => {
+void test('a route style scan finishing after close cannot restore entry state', async (t) => {
   const { root } = fixture(t)
   const entry = join(root, 'entry.js')
   writeFileSync(entry, 'export const ready = true')
@@ -174,7 +174,7 @@ test('a route style scan finishing after close cannot restore entry state', asyn
     dev: true,
     vite: server,
     manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
-    hydration: async () => undefined,
+    hydration: () => undefined,
   }
   entryStyles.entryWatchLifecycle(state, server, new Map())
   const context = {

@@ -1,6 +1,11 @@
+import type * as ActualHelpers from '../src/run/helpers'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClientRoutes } from '../src/run'
 
+import { Navigation } from '../src/run/navigation'
+import { ask, current_, guess } from '../src/run/helpers'
+import { applyMatches } from '../src/router'
+import { flush } from '@weft-js/core'
 vi.mock('@weft-js/core', () => ({ flush: vi.fn() }))
 vi.mock('@weft-js/core/head', () => ({ setHead: vi.fn() }))
 vi.mock('../src/router', () => ({
@@ -10,7 +15,7 @@ vi.mock('../src/router', () => ({
 }))
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/run/helpers', async (load) => ({
-  ...(await load<typeof import('../src/run/helpers')>()),
+  ...(await load<typeof ActualHelpers>()),
   ask: vi.fn(
     (_url: URL, signal?: AbortSignal) =>
       new Promise((_resolve, reject) => {
@@ -21,10 +26,6 @@ vi.mock('../src/run/helpers', async (load) => ({
   guess: vi.fn((): string[] => []),
   revive: (value: unknown) => value,
 }))
-import { Navigation } from '../src/run/navigation'
-import { ask, current_, guess } from '../src/run/helpers'
-import { applyMatches } from '../src/router'
-import { flush } from '@weft-js/core'
 
 beforeEach(() => {
   history.replaceState(null, '', '/from')
@@ -301,16 +302,19 @@ describe('navigation acceptance', () => {
       initialTags: [],
     }
     vi.mocked(guess).mockReturnValue(['/next'])
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     const original = HTMLFormElement.prototype.submit
     const nav = new Navigation(
       routes,
       page as unknown as ConstructorParameters<typeof Navigation>[1],
     )
     const pending = nav.go('/next')
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     expect(HTMLFormElement.prototype.submit).not.toBe(original)
     nav.dispose()
     await pending
     expect(nav.source).toBeUndefined()
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     expect(HTMLFormElement.prototype.submit).toBe(original)
     expect(document.querySelector('a')!.getAttribute('href')).toBe('child')
     vi.mocked(guess).mockReturnValue([])
@@ -392,7 +396,7 @@ describe('navigation acceptance', () => {
       setBag: vi.fn(),
       initialTags: [],
     }
-    const real = await vi.importActual<typeof import('../src/run/helpers')>('../src/run/helpers')
+    const real = await vi.importActual<typeof ActualHelpers>('../src/run/helpers')
     vi.mocked(guess).mockImplementation(real.guess)
     const nav = new Navigation(
       routes,

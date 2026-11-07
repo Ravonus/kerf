@@ -1,9 +1,11 @@
+import type * as ActualHelpers from '../src/run/helpers'
 import { afterEach, expect, it, vi } from 'vitest'
 import { RouteCache } from '../src/run/cache'
 import { Prefetch } from '../src/run/prefetch'
 import { client, createRouteState, type RoutePayload } from '../src/router'
 import type { ClientRoutes } from '../src/run'
 
+import { Navigation } from '../src/run/navigation'
 const requests = vi.hoisted(
   () =>
     [] as {
@@ -15,7 +17,7 @@ const requests = vi.hoisted(
 )
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/run/helpers', async (load) => ({
-  ...(await load<typeof import('../src/run/helpers')>()),
+  ...(await load<typeof ActualHelpers>()),
   ask: (url: URL, signal: AbortSignal, tag?: string) =>
     new Promise<Response>((resolve, reject) => {
       requests.push({ path: url.pathname, signal, ...(tag ? { tag } : {}), resolve })
@@ -24,7 +26,6 @@ vi.mock('../src/run/helpers', async (load) => ({
       })
     }),
 }))
-import { Navigation } from '../src/run/navigation'
 
 const headers = {
   'cache-control': 'private, max-age=0, stale-while-revalidate=30',
@@ -51,6 +52,7 @@ async function seed(cache: RouteCache, path: string, code: number | null = 100) 
   await cache.read(
     target(path),
     new AbortController().signal,
+    // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
     async () => new Response(JSON.stringify(payload(path, code)), { headers }),
     () => 4,
     () => true,

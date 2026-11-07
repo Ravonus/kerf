@@ -1,7 +1,9 @@
+import type * as ActualHelpers from '../src/run/helpers'
 import { afterEach, expect, it, vi } from 'vitest'
 import { client, createRouteState, type RoutePayload } from '../src/router'
 import type { ClientRoutes } from '../src/run'
 
+import { Navigation } from '../src/run/navigation'
 const requests = vi.hoisted(
   () =>
     [] as {
@@ -12,13 +14,12 @@ const requests = vi.hoisted(
 )
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/run/helpers', async (load) => ({
-  ...(await load<typeof import('../src/run/helpers')>()),
+  ...(await load<typeof ActualHelpers>()),
   ask: (_url: URL, _signal: AbortSignal, tag?: string) =>
     new Promise<Response>((resolve, reject) => {
       requests.push({ tag, resolve, reject })
     }),
 }))
-import { Navigation } from '../src/run/navigation'
 
 const headers = {
   'cache-control': 'private, max-age=0, stale-while-revalidate=30',

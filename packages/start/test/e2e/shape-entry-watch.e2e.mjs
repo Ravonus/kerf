@@ -28,10 +28,10 @@ async function setup(t) {
     dev: true,
     clientEntry: () => file('entry.js'),
     manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
-    hydration: async () => undefined,
+    hydration: () => undefined,
   }
   const events = []
-  const hot = shapeHotUpdate(state, new Map(), async () => undefined)
+  const hot = shapeHotUpdate(state, new Map(), () => undefined)
   const server = await createServer({
     root,
     configFile: false,
@@ -46,8 +46,8 @@ async function setup(t) {
           if (spec === './alias.css') return file('redirect.css')
           if (spec === './external.css') return { id: 'https://example.com/a.css', external: true }
         },
-        configureServer(server) {
-          state.vite = server
+        configureServer(dev) {
+          state.vite = dev
         },
         async hotUpdate(update) {
           const result = await hot.call(this, update)
@@ -74,7 +74,9 @@ async function waitFor(condition, label, events) {
   const end = Date.now() + 5000
   while (!condition()) {
     if (Date.now() > end) assert.fail(`Waiting for ${label}: ${JSON.stringify(events)}`)
-    await new Promise((done) => setTimeout(done, 25))
+    await new Promise((done) => {
+      setTimeout(done, 25)
+    })
   }
 }
 
@@ -99,7 +101,7 @@ async function cssTextInManifest(p, source) {
   return manifest.shapes['/'].cssText
 }
 
-test('Vite watcher refreshes missing entry imports and drops removed edges', async (t) => {
+void test('Vite watcher refreshes missing entry imports and drops removed edges', async (t) => {
   const p = await setup(t)
   try {
     const initial = await p.refresh()

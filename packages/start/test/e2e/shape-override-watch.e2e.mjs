@@ -23,11 +23,11 @@ async function setup(t) {
     dev: true,
     clientEntry: () => file('entry.js'),
     manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
-    hydration: async () => undefined,
+    hydration: () => undefined,
   }
   const events = []
   const modes = new Map([['page.tsx', shapeSignature(file('page.tsx'))]])
-  const hot = shapeHotUpdate(state, modes, async () => undefined)
+  const hot = shapeHotUpdate(state, modes, () => undefined)
   const plugin = {
     name: 'override-watch-test',
     enforce: 'pre',
@@ -72,7 +72,9 @@ async function waitFor(condition, label, events) {
   const end = Date.now() + 5000
   while (!condition()) {
     if (Date.now() > end) assert.fail(`Waiting for ${label}: ${JSON.stringify(events)}`)
-    await new Promise((done) => setTimeout(done, 25))
+    await new Promise((done) => {
+      setTimeout(done, 25)
+    })
   }
 }
 
@@ -99,7 +101,7 @@ async function change(p, name, type, action) {
   return match()
 }
 
-test('Vite watcher refreshes missing and changing imported overrides', async (t) => {
+void test('Vite watcher refreshes missing and changing imported overrides', async (t) => {
   const p = await setup(t)
   try {
     assert.equal((await metadata(await p.refresh())).kind, 'unavailable')

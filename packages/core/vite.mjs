@@ -125,6 +125,7 @@ export default function weft({
       watching.attach(server)
       return watchChanges(server)
     },
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     hotUpdate: watching.hotUpdate,
     /** `islands(ctx, id)`: a framework's project view of the file (node/hydration.mjs). */
     api: {},

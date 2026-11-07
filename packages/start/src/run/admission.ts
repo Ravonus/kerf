@@ -31,7 +31,7 @@ export function admitLink(event: Event, routes: ClientRoutes) {
     if (!guess(routes, url.pathname).length) return
     return { anchor, url, noop: url.href === location.href }
   } catch {
-    return
+    return undefined
   }
 }
 
@@ -67,7 +67,7 @@ export function routeClicks(
     const target = admitLink(event, routes)
     if (!target) return
     event.preventDefault()
-    if (!target.noop) go(target.url.href)
+    if (!target.noop) void go(target.url.href)
   }
   doc.addEventListener('pointerdown', down)
   doc.addEventListener('pointercancel', cancel)

@@ -34,7 +34,7 @@ async function manifestModule(source, missing = [], groupCss = '') {
   return import(`data:text/javascript,${encodeURIComponent(withStyles)}`)
 }
 
-test('eager shapes keep nested and static route loaders lazy', async (t) => {
+void test('eager shapes keep nested and static route loaders lazy', async (t) => {
   const f = fixture(t)
   for (const file of ['outer.tsx', 'inner.tsx', 'page.tsx', 'missing.tsx'])
     f.write(file, 'throw new Error("route executed"); export default () => <main />')
@@ -79,7 +79,7 @@ test('eager shapes keep nested and static route loaders lazy', async (t) => {
   })
 })
 
-test('false exports disable shapes; unknown overrides do not import a route', async (t) => {
+void test('false exports disable shapes; unknown overrides do not import a route', async (t) => {
   const f = fixture(t)
   f.write('disabled.tsx', 'const off = false as const; export { off as skeleton }')
   f.write('direct.tsx', 'export const skeleton = false')
@@ -102,7 +102,7 @@ test('false exports disable shapes; unknown overrides do not import a route', as
   assert.equal(result.shapes.plain.reason, 'unsupported-file')
 })
 
-test('built-in error shapes retain nested levels and yield to authored overrides', async (t) => {
+void test('built-in error shapes retain nested levels and yield to authored overrides', async (t) => {
   const f = fixture(t)
   f.write('outer.tsx', 'export default () => <main />')
   f.write('inner.tsx', 'export default () => <section />')
@@ -149,7 +149,7 @@ test('built-in error shapes retain nested levels and yield to authored overrides
   assert.equal((await manifestModule(both)).shapes.error.kind, 'disabled')
 })
 
-test('a static local override is isolated and unsafe closures stay unavailable', async (t) => {
+void test('a static local override is isolated and unsafe closures stay unavailable', async (t) => {
   const f = fixture(t)
   const source = `import { secret } from './private.server';
     const setup = sideEffect();
@@ -188,7 +188,7 @@ test('a static local override is isolated and unsafe closures stay unavailable',
   const update = shapeHotUpdate(
     { root: f.root, manifest: levels },
     new Map([['page.tsx', before]]),
-    async () => ['unchanged'],
+    () => ['unchanged'],
   )
   f.write('page.tsx', source.replace('custom marker', 'changed marker'))
   assert.notEqual(shapeSignature(f.abs('page.tsx')), before)
@@ -222,7 +222,7 @@ test('a static local override is isolated and unsafe closures stay unavailable',
   assert.equal((await manifestModule(clientRoutes(levels, f.abs))).shapes['/'].kind, 'disabled')
 })
 
-test('imported custom shape metadata uses the override discriminant', async (t) => {
+void test('imported custom shape metadata uses the override discriminant', async (t) => {
   const f = fixture(t)
   f.write('page.tsx', "import Waiting from './waiting'; export const skeleton = Waiting")
   const manifest = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
@@ -233,7 +233,7 @@ test('imported custom shape metadata uses the override discriminant', async (t) 
   assert.equal(routes.shapes.error.kind, 'generated')
 })
 
-test('Vite loads the isolated override as TSX through the plugin pipeline', async (t) => {
+void test('Vite loads the isolated override as TSX through the plugin pipeline', async (t) => {
   const f = fixture(t)
   f.write(
     'page.tsx',
@@ -273,7 +273,7 @@ test('Vite loads the isolated override as TSX through the plugin pipeline', asyn
   }
 })
 
-test('metadata edits invalidate and reload only the client route module', async (t) => {
+void test('metadata edits invalidate and reload only the client route module', async (t) => {
   const f = fixture(t)
   const file = f.abs('page.tsx')
   f.write('page.tsx', 'export const skeleton = false')
@@ -300,7 +300,7 @@ test('metadata edits invalidate and reload only the client route module', async 
     },
   }
   const modes = new Map([['page.tsx', shapeSignature(file)]])
-  const next = async () => {
+  const next = () => {
     calls.push(['next'])
     return ['existing']
   }
@@ -323,7 +323,7 @@ test('metadata edits invalidate and reload only the client route module', async 
   assert.deepEqual(calls, [['next']])
 })
 
-test('direct sizing CSS travels as partial data without importing route code', async (t) => {
+void test('direct sizing CSS travels as partial data without importing route code', async (t) => {
   const f = fixture(t)
   f.write('size.css', '.panel { min-height: 12rem }')
   f.write('global.css', '.panel { width: 50vw }')
@@ -340,7 +340,7 @@ test('direct sizing CSS travels as partial data without importing route code', a
   `,
   )
   const levels = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
-  const ctx = { resolve: async (spec) => ({ id: f.abs(spec) }) }
+  const ctx = { resolve: (spec) => ({ id: f.abs(spec) }) }
   const levelStyles = await shapeCssSources(ctx, f.abs('page.tsx'))
   const css = { levels: new Map([[f.abs('page.tsx'), levelStyles]]) }
   const source = clientRoutes(levels, f.abs, undefined, css)
@@ -357,7 +357,7 @@ test('direct sizing CSS travels as partial data without importing route code', a
   assert.equal(routes.shapes['/'].bytes, null)
 })
 
-test('Vite transforms an inline CSS request to data without injecting a stylesheet', async (t) => {
+void test('Vite transforms an inline CSS request to data without injecting a stylesheet', async (t) => {
   const f = fixture(t)
   f.write('size.css', '.panel { min-height: 12rem }')
   const server = await createServer({
@@ -377,7 +377,7 @@ test('Vite transforms an inline CSS request to data without injecting a styleshe
   }
 })
 
-test('changing direct stylesheet imports invalidates shape metadata', async (t) => {
+void test('changing direct stylesheet imports invalidates shape metadata', async (t) => {
   const f = fixture(t)
   const file = f.abs('page.tsx')
   f.write('page.tsx', "import './one.css'; export default () => <main />")
@@ -392,14 +392,14 @@ test('changing direct stylesheet imports invalidates shape metadata', async (t) 
     manifest: { routes: [{ file: 'page.tsx' }], layouts: [] },
     vite: { ws: { send: (value) => calls.push(value) } },
   }
-  const handler = shapeHotUpdate(state, modes, async () => ['unchanged'])
+  const handler = shapeHotUpdate(state, modes, () => ['unchanged'])
   const context = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
   f.write('page.tsx', "import './two.css'; export default () => <main />")
   assert.deepEqual(await handler.call(context, { file, modules: [] }), [])
   assert.deepEqual(calls, ['routes', { type: 'full-reload' }])
 })
 
-test('recovered parser errors cannot classify a malformed route', (t) => {
+void test('recovered parser errors cannot classify a malformed route', (t) => {
   const f = fixture(t)
   const levels = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
   for (const source of [
@@ -415,7 +415,7 @@ test('recovered parser errors cannot classify a malformed route', (t) => {
   }
 })
 
-test('malformed edits invalidate metadata and a repaired route recovers', async (t) => {
+void test('malformed edits invalidate metadata and a repaired route recovers', async (t) => {
   const f = fixture(t)
   const file = f.abs('page.tsx')
   f.write('page.tsx', 'export default () => <main />')
@@ -430,7 +430,7 @@ test('malformed edits invalidate metadata and a repaired route recovers', async 
     manifest: { routes: [{ id: '/', file: 'page.tsx', kind: 'page' }], layouts: [] },
     vite: { ws: { send: (value) => calls.push(value) } },
   }
-  const handler = shapeHotUpdate(state, modes, async () => ['unchanged'])
+  const handler = shapeHotUpdate(state, modes, () => ['unchanged'])
   const context = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
   f.write('page.tsx', 'export const skeleton = ;')
   assert.deepEqual(await handler.call(context, { file, modules: [] }), [])
@@ -445,7 +445,7 @@ test('malformed edits invalidate metadata and a repaired route recovers', async 
   assert.equal(routes.shapes['/'].kind, 'disabled')
 })
 
-test('static group facts produce CSS carried alongside the shape', async (t) => {
+void test('static group facts produce CSS carried alongside the shape', async (t) => {
   const f = fixture(t)
   f.write('page.tsx', 'export default () => <main />')
   const facts = {
@@ -465,7 +465,7 @@ test('static group facts produce CSS carried alongside the shape', async (t) => 
   assert.equal(routes.shapes['/'].css, null)
 })
 
-test('entry and token styles join route shape CSS without running entry code', async (t) => {
+void test('entry and token styles join route shape CSS without running entry code', async (t) => {
   const f = fixture(t)
   f.write(
     'entry.ts',
@@ -484,7 +484,7 @@ test('entry and token styles join route shape CSS without running entry code', a
   const kit = f.abs('kit.css')
   const calls = []
   const ctx = {
-    resolve: async (spec) => {
+    resolve: (spec) => {
       calls.push(spec)
       if (spec === './app.css') return { id: f.abs('app.css') }
       if (spec === 'weft:tokens/warp') return { id: token }
@@ -513,7 +513,7 @@ test('entry and token styles join route shape CSS without running entry code', a
   assert.equal(routes.shapes['/'].bytes, null)
 })
 
-test('the token plugin resolves generated token CSS as an inert inline stylesheet', async (t) => {
+void test('the token plugin resolves generated token CSS as an inert inline stylesheet', async (t) => {
   const f = fixture(t)
   mkdirSync(join(f.root, '.weft', 'tokens'), { recursive: true })
   f.write('.weft/tokens/warp.css', ':root { --warp-space-group: 12px }')
@@ -544,7 +544,7 @@ test('the token plugin resolves generated token CSS as an inert inline styleshee
   }
 })
 
-test('entry stylesheet import changes invalidate shape metadata', async (t) => {
+void test('entry stylesheet import changes invalidate shape metadata', async (t) => {
   const f = fixture(t)
   const file = f.abs('entry.ts')
   f.write('entry.ts', "import './one.css'")
@@ -560,14 +560,14 @@ test('entry stylesheet import changes invalidate shape metadata', async (t) => {
     clientEntry: () => file,
     vite: { ws: { send: (value) => calls.push(value) } },
   }
-  const handler = shapeHotUpdate(state, modes, async () => ['unchanged'])
+  const handler = shapeHotUpdate(state, modes, () => ['unchanged'])
   const context = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
   f.write('entry.ts', "import './two.css'")
   assert.deepEqual(await handler.call(context, { file, modules: [] }), [])
   assert.deepEqual(calls, ['routes', { type: 'full-reload' }])
 })
 
-test('client virtual routes collect entry and route styles through the Vite hook', async (t) => {
+void test('client virtual routes collect entry and route styles through the Vite hook', async (t) => {
   const f = fixture(t)
   f.write('entry.ts', "import './app.css'; throw new Error('entry ran')")
   f.write('page.tsx', "import 'weft:tokens/warp'; export default () => <main />")
@@ -583,11 +583,11 @@ test('client virtual routes collect entry and route styles through the Vite hook
     manifest,
     abs: f.abs,
     clientEntry: () => f.abs('entry.ts'),
-    hydration: async () => undefined,
+    hydration: () => undefined,
   }
   const context = {
     environment: { config: { consumer: 'client' } },
-    resolve: async (spec) => {
+    resolve: (spec) => {
       if (spec === '@bad/disabled.css') throw new Error('disabled CSS was resolved')
       if (spec === './app.css') return { id: f.abs('app.css') }
       return spec === 'weft:tokens/warp' ? { id: f.abs('token.css') } : null

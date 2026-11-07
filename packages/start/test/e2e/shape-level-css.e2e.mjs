@@ -49,7 +49,7 @@ async function project(t) {
   write('disabled.tsx', "import './disabled.css'; export const skeleton = false")
   write('custom.tsx', "import './custom.css'; export const skeleton = Widget")
   const events = []
-  let hot
+  let hot = undefined
   const plugin = {
     name: 'level-watch-test',
     enforce: 'pre',
@@ -79,7 +79,7 @@ async function project(t) {
     root,
     abs: file,
     clientEntry: () => file('entry.js'),
-    hydration: async () => plan,
+    hydration: () => plan,
     manifest: {
       layouts: [{ id: 'layout', file: 'layout.tsx' }],
       routes: [
@@ -90,7 +90,7 @@ async function project(t) {
     },
     vite: server,
   }
-  hot = shapeHotUpdate(state, new Map(), async () => undefined)
+  hot = shapeHotUpdate(state, new Map(), () => undefined)
   const ctx = {
     environment: { config: { consumer: 'client' } },
     resolve: (...args) => server.environments.client.pluginContainer.resolveId(...args),
@@ -111,7 +111,7 @@ async function inspect(source) {
   return import(`data:text/javascript,${encodeURIComponent(code)}`)
 }
 
-test('generated levels include ordered nested styles without loading routes', async (t) => {
+void test('generated levels include ordered nested styles without loading routes', async (t) => {
   const p = await project(t)
   try {
     const source = await p.refresh()
@@ -146,7 +146,7 @@ test('generated levels include ordered nested styles without loading routes', as
   }
 })
 
-test('a real component edit refreshes its level stylesheet metadata', async (t) => {
+void test('a real component edit refreshes its level stylesheet metadata', async (t) => {
   const p = await project(t)
   try {
     await p.refresh()
@@ -154,7 +154,9 @@ test('a real component edit refreshes its level stylesheet metadata', async (t) 
       const deadline = Date.now() + 5000
       while (!condition()) {
         if (Date.now() > deadline) assert.fail(`watcher timed out: ${JSON.stringify(p.events)}`)
-        await new Promise((done) => setTimeout(done, 25))
+        await new Promise((done) => {
+          setTimeout(done, 25)
+        })
       }
     }
     await until(() => (p.server.watcher.getWatched()[p.root] ?? []).includes('component.js'))

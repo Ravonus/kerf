@@ -45,7 +45,7 @@ async function project(t, plugins = []) {
   return { root, file, write, server, ctx }
 }
 
-test('entry closure follows static CSS in order through cycles without running JS', async (t) => {
+void test('entry closure follows static CSS in order through cycles without running JS', async (t) => {
   const p = await project(t)
   try {
     const result = await entryCss(p.ctx, p.file('entry.js'), p.root)
@@ -65,7 +65,7 @@ test('entry closure follows static CSS in order through cycles without running J
       abs: p.file,
       clientEntry: () => p.file('entry.js'),
       manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
-      hydration: async () => undefined,
+      hydration: () => undefined,
     }
     const source = await moduleLoad(state).handler.call(p.ctx, '\0virtual:weft/routes')
     let before = -1
@@ -85,7 +85,7 @@ test('entry closure follows static CSS in order through cycles without running J
   }
 })
 
-test('changed nested entry imports invalidate metadata but other edits do not', async (t) => {
+void test('changed nested entry imports invalidate metadata but other edits do not', async (t) => {
   const p = await project(t)
   try {
     const result = await entryCss(p.ctx, p.file('entry.js'), p.root)
@@ -100,7 +100,7 @@ test('changed nested entry imports invalidate metadata but other edits do not', 
       shapeEntrySignatures: result.signatures,
       vite: { ws: { send: (value) => calls.push(value) } },
     }
-    const handler = shapeHotUpdate(state, new Map(), async () => ['existing'])
+    const handler = shapeHotUpdate(state, new Map(), () => ['existing'])
     const context = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
     p.write('deep.js', "import './deep.css'; import './bad.server.js'; export const value = 2")
     assert.deepEqual(await handler.call(context, { file: p.file('deep.js') }), ['existing'])
@@ -117,7 +117,7 @@ test('changed nested entry imports invalidate metadata but other edits do not', 
   }
 })
 
-test('relative CSS uses Vite redirects and rejects external, virtual and JS results', async (t) => {
+void test('relative CSS uses Vite redirects and rejects external, virtual and JS results', async (t) => {
   const redirect = {
     name: 'css-resolution-test',
     enforce: 'pre',

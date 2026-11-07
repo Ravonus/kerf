@@ -246,7 +246,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
   const shapeImports = [...shapeFiles].map(
     ([request, i]) => `import * as shape${i} from ${JSON.stringify(request)}`,
   )
-  const styleImports = [...styleFiles].map(
+  const styleLines = [...styleFiles].map(
     ([file, i]) => `import style${i} from ${JSON.stringify(file + '?inline')}`,
   )
   // A static route loads only what its module imports that isn't code: its stylesheets, for a navigation to it.
@@ -259,7 +259,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
     (i) =>
       `${JSON.stringify(i.id)}: () => import(${JSON.stringify(i.file)}).then(({ $i${i.index}: d }) => ({ default: d }))`,
   )
-  return `${[...shapeImports, ...styleImports].join('\n')}
+  return `${[...shapeImports, ...styleLines].join('\n')}
 const shapeEntry = (module, cssText, name, kind) => {
   const component = Reflect.get(module, name)
   const groupCss = Reflect.get(module, '$weftShapeCss')

@@ -81,6 +81,7 @@ describe('retained source URL context', () => {
     ) {
       seen.push(this.action)
     })
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     const original = HTMLFormElement.prototype.submit
     const context = retainSourceContext(document, location.href, document.baseURI)!
     history.pushState(null, '', '/elsewhere/new')
@@ -90,6 +91,7 @@ describe('retained source URL context', () => {
     form.requestSubmit()
     expect(seen).toEqual(['http://localhost/dir/old', 'http://localhost/dir/old'])
     context.stop()
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     expect(HTMLFormElement.prototype.submit).toBe(original)
     context.release()
     expect(form.hasAttribute('action')).toBe(false)
@@ -165,6 +167,7 @@ describe('retained source URL context', () => {
       })
       Object.defineProperty(element, 'removeAttribute', { ...installedRemove, value: method })
       context.release()
+      // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
       expect(Object.getOwnPropertyDescriptor(anchor, 'href')!.get).toBe(getter)
       expect(Object.getOwnPropertyDescriptor(element, 'setAttribute')).toEqual({
         ...installedSet,
@@ -212,6 +215,7 @@ describe('retained source URL context', () => {
     }
     Object.defineProperty(proto, 'submit', { ...original, value: before })
     const context = retainSourceContext(document, location.href, document.baseURI)!
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     const installed = proto.submit
     const after = function (this: HTMLFormElement) {
       Reflect.apply(installed, this, [])
@@ -222,6 +226,7 @@ describe('retained source URL context', () => {
       const form = document.querySelector('form')!
       form.submit()
       context.release()
+      // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
       expect(proto.submit).toBe(after)
       form.submit()
       expect(seen).toEqual(['http://localhost/dir/old', 'http://localhost/elsewhere/new'])
@@ -266,6 +271,7 @@ describe('retained source URL context', () => {
     })
     try {
       expect(retainSourceContext(document, location.href, document.baseURI)).toBeNull()
+      // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
       expect(Object.getOwnPropertyDescriptor(proto, 'href')!.get).toBe(getter)
     } finally {
       spy.mockRestore()

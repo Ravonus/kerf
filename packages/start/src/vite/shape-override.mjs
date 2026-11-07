@@ -220,7 +220,5 @@ export async function resolveImportedOverride(ctx, file, root, onMissing) {
   try {
     if (blocked(root, found.id) || blocked(realpathSync(root), realpathSync(found.id))) return
     return { file: found.id, code: dedicated(found.id, requested.name) }
-  } catch {
-    return
-  }
+  } catch {}
 }

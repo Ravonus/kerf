@@ -70,7 +70,9 @@ async function waitForServer(server, url) {
     if (server.exitCode !== null) throw new Error(`server exited: ${server.exitCode}`)
     const response = await fetch(url).catch(() => null)
     if (response?.ok) return
-    await new Promise((done) => setTimeout(done, 250))
+    await new Promise((done) => {
+      setTimeout(done, 250)
+    })
   }
   throw new Error('built server did not become ready')
 }
@@ -97,7 +99,9 @@ async function cold(context, settings, url) {
   let held = 0
   await page.route('**/_weft/data/pricing*', async (route) => {
     held++
-    await new Promise((done) => setTimeout(done, 1000))
+    await new Promise((done) => {
+      setTimeout(done, 1000)
+    })
     await route.continue()
   })
   await page.evaluate(observeNavigation)
@@ -121,7 +125,9 @@ async function cold(context, settings, url) {
   await page.evaluate(async () => {
     await document.fonts.ready
     await Promise.all([...document.images].map((image) => image.decode().catch(() => {})))
-    await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))
+    await new Promise((done) => {
+      requestAnimationFrame(() => requestAnimationFrame(done))
+    })
   })
   const result = await page.evaluate(() => window.__navigation.finish())
   if (!held) throw new Error('navigation data request was not held')
@@ -171,7 +177,9 @@ async function main() {
     await browser?.close()
     if (server && server.exitCode === null) {
       server.kill()
-      await new Promise((done) => server.once('exit', done))
+      await new Promise((done) => {
+        server.once('exit', done)
+      })
     }
     rmSync(dir, { recursive: true, force: true })
   }

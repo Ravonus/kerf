@@ -145,6 +145,11 @@ export function toBaseline(findings) {
 export function checkLengths(cwd = root, baseRef = 'origin/main') {
   const findings = collect(cwd),
     current = toBaseline(findings)
+  // Reviewed exceptions: limits are targets. Each entry names its size and why; it may not grow.
+  const allowancePath = join(cwd, 'scripts/quality/length-allowance.json')
+  const allowance = existsSync(allowancePath) ? JSON.parse(readFileSync(allowancePath, 'utf8')) : {}
+  for (const [id, value] of Object.entries(allowance))
+    if (current[id] && current[id].lines <= value.lines) delete current[id]
   const baseline = readBaseline(readFileSync(join(cwd, baselinePath), 'utf8'))
   const base = gitBaseline(cwd, baseRef)
   return {

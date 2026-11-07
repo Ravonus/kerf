@@ -19,7 +19,7 @@ async function project(t) {
     manifest,
     abs: file,
     clientEntry: () => file('entry.js'),
-    hydration: async () => undefined,
+    hydration: () => undefined,
   }
   const transformed = []
   const plugin = {
@@ -63,7 +63,7 @@ async function project(t) {
   return { root, file, write, state, server, watched, routes, override, transformed }
 }
 
-test('Vite resolves direct default and named overrides without running setup', async (t) => {
+void test('Vite resolves direct default and named overrides without running setup', async (t) => {
   const p = await project(t)
   try {
     for (const [binding, exportSource] of [
@@ -107,7 +107,7 @@ test('Vite resolves direct default and named overrides without running setup', a
       getModuleById: (id) => (id.includes('shape-override/') ? 'asset' : 'routes'),
       invalidateModule: (id) => calls.push(id),
     }
-    const handler = shapeHotUpdate(p.state, new Map(), async () => ['unchanged'])
+    const handler = shapeHotUpdate(p.state, new Map(), () => ['unchanged'])
     const ctx = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
     assert.deepEqual(await handler.call(ctx, { file: p.file('waiting.tsx'), type: 'update' }), [])
     assert.deepEqual(calls, ['asset', 'routes'])
@@ -116,7 +116,7 @@ test('Vite resolves direct default and named overrides without running setup', a
   }
 })
 
-test('unsafe and ambiguous imported sources remain unavailable', async (t) => {
+void test('unsafe and ambiguous imported sources remain unavailable', async (t) => {
   const p = await project(t)
   try {
     p.write('page.tsx', "import Waiting from './waiting.tsx'; export const skeleton = Waiting")
@@ -133,7 +133,7 @@ test('unsafe and ambiguous imported sources remain unavailable', async (t) => {
       await assert.rejects(() => p.override(), /Unsafe or missing/)
     }
     const graph = { getModuleById: () => 'routes', invalidateModule: () => {} }
-    const handler = shapeHotUpdate(p.state, new Map(), async () => ['unchanged'])
+    const handler = shapeHotUpdate(p.state, new Map(), () => ['unchanged'])
     const ctx = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
     p.write('waiting.tsx', 'export default () => <div>repaired</div>')
     assert.deepEqual(await handler.call(ctx, { file: p.file('waiting.tsx'), type: 'update' }), [])

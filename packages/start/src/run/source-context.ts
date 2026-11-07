@@ -23,8 +23,11 @@ export function retainSourceContext(
   if (!root || !win || active.has(doc)) return null
   const saved = new Map<Element, Map<Name, Saved>>()
   const owners = new WeakMap<NamedNodeMap, Element>()
+  // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
   const nativeSet = win.Element.prototype.setAttribute
+  // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
   const nativeRemove = win.Element.prototype.removeAttribute
+  // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
   const attrValue = Object.getOwnPropertyDescriptor(win.Attr.prototype, 'value')?.set
   let stopped = false
   const relevant = (item: Element, name: string): name is Name =>
@@ -146,6 +149,7 @@ export function retainSourceContext(
     install(win.Element.prototype, 'attributes', (descriptor) => ({
       ...descriptor,
       get(this: Element) {
+        // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
         const map = Reflect.apply(descriptor.get!, this, []) as NamedNodeMap
         if (!stopped) owners.set(map, this)
         return map
@@ -163,10 +167,12 @@ export function retainSourceContext(
             const item = this.ownerElement,
               name = this.localName.toLowerCase()
             if (item && root.contains(item) && relevant(item, name)) {
-              const raw = property === 'value' ? String(value) : String(value ?? '')
+              // oxlint-disable-next-line typescript/no-unnecessary-type-conversion -- a DOM setter can receive null at runtime
+              const raw = property === 'value' ? value : String(value ?? '')
               value = pin(item, name, raw, true)
             }
           }
+          // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
           Reflect.apply(descriptor.set!, this, [value])
         },
       }))
@@ -240,8 +246,8 @@ export function retainSourceContext(
         (descriptor) => ({
           ...descriptor,
           set(this: Element, value: string) {
-            const next =
-              !stopped && root.contains(this) ? pin(this, attr, String(value), true) : value
+            const next = !stopped && root.contains(this) ? pin(this, attr, value, true) : value
+            // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
             Reflect.apply(descriptor.set!, this, [next])
           },
         }),

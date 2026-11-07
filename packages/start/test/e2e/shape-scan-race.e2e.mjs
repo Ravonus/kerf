@@ -26,7 +26,7 @@ function setup(t) {
     abs: file,
     clientEntry: () => file('entry.js'),
     manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
-    hydration: async () => undefined,
+    hydration: () => undefined,
   }
   const server = { watcher: { add() {} }, ws: { send() {} }, async close() {} }
   state.vite = server
@@ -53,7 +53,7 @@ function setup(t) {
   return { root, file, page, state, server, release, reject, waiting, context, load }
 }
 
-test('older delayed scan cannot replace newer metadata or ownership', async (t) => {
+void test('older delayed scan cannot replace newer metadata or ownership', async (t) => {
   const p = setup(t)
   const old = p.load(p.context(true))
   const oldResult = assert.rejects(old, /superseded/)
@@ -70,7 +70,7 @@ test('older delayed scan cannot replace newer metadata or ownership', async (t) 
   await p.server.close()
 })
 
-test('an older failed scan cannot disturb a newer success', async (t) => {
+void test('an older failed scan cannot disturb a newer success', async (t) => {
   const p = setup(t)
   const old = p.load(p.context(true))
   const oldResult = assert.rejects(old, /old resolver failure/)
@@ -83,14 +83,14 @@ test('an older failed scan cannot disturb a newer success', async (t) => {
   await p.server.close()
 })
 
-test('a newer failed scan still prevents an older scan publishing', async (t) => {
+void test('a newer failed scan still prevents an older scan publishing', async (t) => {
   const p = setup(t)
   const old = p.load(p.context(true))
   const oldResult = assert.rejects(old, /superseded/)
   await p.waiting
   p.page('new')
   const broken = p.context()
-  broken.resolve = async () => {
+  broken.resolve = () => {
     throw new Error('new resolver failure')
   }
   await assert.rejects(p.load(broken), /new resolver failure/)
@@ -100,14 +100,14 @@ test('a newer failed scan still prevents an older scan publishing', async (t) =>
   await p.server.close()
 })
 
-test('a client edit invalidates a scan even before its dependencies are published', async (t) => {
+void test('a client edit invalidates a scan even before its dependencies are published', async (t) => {
   const p = setup(t)
   const old = p.load(p.context(true))
   const oldResult = assert.rejects(old, /superseded/)
   await p.waiting
   const calls = []
   const graph = { getModuleById: () => 'routes', invalidateModule: (m) => calls.push(m) }
-  const handler = shapeHotUpdate(p.state, new Map(), async () => ['unchanged'])
+  const handler = shapeHotUpdate(p.state, new Map(), () => ['unchanged'])
   const context = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
   await handler.call(context, { file: p.file('old.tsx'), type: 'update' })
   p.release({ id: p.file('old.tsx') })
@@ -117,7 +117,7 @@ test('a client edit invalidates a scan even before its dependencies are publishe
   await p.server.close()
 })
 
-test('server replacement fences an older scan without clearing the new owner', async (t) => {
+void test('server replacement fences an older scan without clearing the new owner', async (t) => {
   const p = setup(t)
   const old = p.load(p.context(true))
   const oldResult = assert.rejects(old, /outlived its server/)
@@ -133,7 +133,7 @@ test('server replacement fences an older scan without clearing the new owner', a
   await next.close()
 })
 
-test('closing fences an in-flight scan before the close promise settles', async (t) => {
+void test('closing fences an in-flight scan before the close promise settles', async (t) => {
   const p = setup(t)
   let finishClose
   const close = new Promise((done) => {

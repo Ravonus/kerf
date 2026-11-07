@@ -1,3 +1,5 @@
+const byText = (a, b) => (a < b ? -1 : a > b ? 1 : 0)
+
 // A closure names emitted files, so callers can union routes without counting a shared file twice.
 function closure(bundle, roots) {
   const seen = new Set()
@@ -18,7 +20,7 @@ function closure(bundle, roots) {
     for (const dep of item.viteMetadata?.importedAssets ?? []) visit(dep)
   }
   for (const file of roots) visit(file)
-  return { files: [...seen].sort(), complete }
+  return { files: [...seen].sort(byText), complete }
 }
 
 function chunkFor(bundle, ids) {
@@ -48,10 +50,10 @@ export function assetBytes(bundle, read, manifest, abs) {
   const shared = [...owners]
     .filter(([, count]) => count > 1)
     .map(([file]) => file)
-    .sort()
+    .sort(byText)
   const sharedSet = new Set(shared)
   const files = Object.fromEntries(
-    [...owners.keys()].sort().map((file) => {
+    [...owners.keys()].sort(byText).map((file) => {
       const item = bundle[file]
       let bytes = null
       if (item) {

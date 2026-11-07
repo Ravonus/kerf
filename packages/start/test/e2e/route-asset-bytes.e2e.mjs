@@ -42,7 +42,7 @@ function fixture(t) {
   return { root, bundle, manifest, abs }
 }
 
-test('emitted bytes preserve shared graph ownership and UTF-8 lengths', (t) => {
+void test('emitted bytes preserve shared graph ownership and UTF-8 lengths', (t) => {
   const f = fixture(t)
   const result = assetBytes(f.bundle, (file) => readFileSync(join(f.root, file)), f.manifest, f.abs)
   assert.equal(result.files['a.js'].bytes, 2)
@@ -72,7 +72,7 @@ test('emitted bytes preserve shared graph ownership and UTF-8 lengths', (t) => {
   assert.equal(missing.eager.sharedBytes, null)
 })
 
-test('unknown graph metadata and external imports do not become zero cost', (t) => {
+void test('unknown graph metadata and external imports do not become zero cost', (t) => {
   const f = fixture(t)
   delete f.bundle['a.js'].viteMetadata
   f.bundle['b.js'].imports.push('external-package')
@@ -86,7 +86,7 @@ test('unknown graph metadata and external imports do not become zero cost', (t) 
   assert.equal(ambiguous.routes['/a'], null)
 })
 
-test('client writeBundle emits the byte manifest independent of CSS options', async (t) => {
+void test('client writeBundle emits the byte manifest independent of CSS options', async (t) => {
   const f = fixture(t)
   const state = {
     dev: false,
@@ -109,7 +109,7 @@ test('client writeBundle emits the byte manifest independent of CSS options', as
   )
 })
 
-test('emitted byte reads stay inside the output directory and preserve binary bytes', async (t) => {
+void test('emitted byte reads stay inside the output directory and preserve binary bytes', async (t) => {
   const f = fixture(t)
   const outside = join(dirname(f.root), `${basename(f.root)}-outside.bin`)
   const outsideDir = `${outside}-dir`
@@ -169,7 +169,7 @@ test('emitted byte reads stay inside the output directory and preserve binary by
   assert.equal(receipt.routes['/a'].bytes, null)
 })
 
-test('same-build receipt selects levels and deduplicates their emitted files', (t) => {
+void test('same-build receipt selects levels and deduplicates their emitted files', (t) => {
   const f = fixture(t)
   const receipt = {
     ...assetBytes(f.bundle, (file) => readFileSync(join(f.root, file)), f.manifest, f.abs),
@@ -195,7 +195,7 @@ test('same-build receipt selects levels and deduplicates their emitted files', (
   assert.equal(selectRouteAssets(receipt, 'build-a', ['/a']).routeBytes, null)
 })
 
-test('server chunk embeds only a same-build emitted receipt', async (t) => {
+void test('server chunk embeds only a same-build emitted receipt', async (t) => {
   const f = fixture(t)
   const state = {
     root: f.root,

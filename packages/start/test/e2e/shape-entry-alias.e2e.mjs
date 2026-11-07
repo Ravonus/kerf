@@ -83,12 +83,12 @@ async function project(t) {
   }
   const watch = (state) => {
     state.vite = server
-    hot = shapeHotUpdate(state, new Map(), async () => undefined)
+    hot = shapeHotUpdate(state, new Map(), () => undefined)
   }
   return { root, file, write, server, ctx, events, watch }
 }
 
-test('entry CSS follows resolved local aliases and bare modules only', async (t) => {
+void test('entry CSS follows resolved local aliases and bare modules only', async (t) => {
   const p = await project(t)
   try {
     const pkg = await p.ctx.resolve('evil', p.file('entry.js'))
@@ -111,7 +111,7 @@ test('entry CSS follows resolved local aliases and bare modules only', async (t)
       abs: p.file,
       clientEntry: () => p.file('entry.js'),
       manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
-      hydration: async () => undefined,
+      hydration: () => undefined,
     }
     const source = await moduleLoad(state).handler.call(p.ctx, '\0virtual:weft/routes')
     let before = -1
@@ -130,7 +130,7 @@ test('entry CSS follows resolved local aliases and bare modules only', async (t)
   }
 })
 
-test('edits to a resolved alias dependency invalidate entry shape metadata', async (t) => {
+void test('edits to a resolved alias dependency invalidate entry shape metadata', async (t) => {
   const p = await project(t)
   try {
     const result = await entryCss(p.ctx, p.file('entry.js'), p.root)
@@ -144,7 +144,9 @@ test('edits to a resolved alias dependency invalidate entry shape metadata', asy
       const deadline = Date.now() + 5000
       while (!condition()) {
         if (Date.now() > deadline) assert.fail(`watcher timed out: ${JSON.stringify(p.events)}`)
-        await new Promise((done) => setTimeout(done, 25))
+        await new Promise((done) => {
+          setTimeout(done, 25)
+        })
       }
     }
     await until(() => (p.server.watcher.getWatched()[p.root] ?? []).includes('alias.js'))

@@ -36,6 +36,7 @@ function prepare(
     component: shape.component,
     ready: true,
     completeness: shape.cssStatus,
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     release: lease.release,
   }
 }

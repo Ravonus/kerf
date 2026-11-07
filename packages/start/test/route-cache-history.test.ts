@@ -1,7 +1,9 @@
+import type * as ActualHelpers from '../src/run/helpers'
 import { afterEach, expect, it, vi } from 'vitest'
 import { client, createRouteState, type RoutePayload } from '../src/router'
 import type { ClientRoutes } from '../src/run'
 
+import { Navigation } from '../src/run/navigation'
 const requests = vi.hoisted(
   () =>
     [] as {
@@ -12,13 +14,12 @@ const requests = vi.hoisted(
 )
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/run/helpers', async (load) => ({
-  ...(await load<typeof import('../src/run/helpers')>()),
+  ...(await load<typeof ActualHelpers>()),
   ask: (_url: URL, _signal: AbortSignal, tag?: string) =>
     new Promise<Response>((resolve, reject) => {
       requests.push({ tag, resolve, reject })
     }),
 }))
-import { Navigation } from '../src/run/navigation'
 
 const headers = {
   'cache-control': 'private, max-age=0, stale-while-revalidate=30',
@@ -218,7 +219,9 @@ it('retains permitted cached content and retries a failed validation', async () 
     history.pushState(null, '', '/target')
     const back = nav.go('/target', { pop: true, scroll: false })
     requests[2]!.reject(new Error('offline'))
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0)
+    })
     expect(route.levels[0]!.id.value).toBe('/target')
     await vi.waitFor(() => expect(requests).toHaveLength(4), { timeout: 2000 })
     requests[3]!.resolve(new Response(null, { status: 304, headers }))
@@ -378,7 +381,9 @@ it('cancels a failed-validation retry when a newer navigation starts', async () 
     history.pushState(null, '', '/target')
     const back = nav.go('/target', { pop: true, scroll: false })
     requests[2]!.reject(new Error('offline'))
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0)
+    })
     const newer = nav.go('/other', { scroll: false })
     await back
     answer(3, '/other', 4, [])

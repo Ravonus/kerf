@@ -24,7 +24,7 @@ async function project(t) {
   return { root, file, write, server, ctx }
 }
 
-test('extracts closed local function declarations and expressions', async (t) => {
+void test('extracts closed local function declarations and expressions', async (t) => {
   const p = await project(t)
   try {
     for (const declaration of [
@@ -44,7 +44,7 @@ test('extracts closed local function declarations and expressions', async (t) =>
   }
 })
 
-test('extracts direct imported function declarations and expressions', async (t) => {
+void test('extracts direct imported function declarations and expressions', async (t) => {
   const p = await project(t)
   try {
     for (const [binding, declaration] of [
@@ -65,7 +65,7 @@ test('extracts direct imported function declarations and expressions', async (t)
   }
 })
 
-test('rejects unsafe bodies, parameters, and mutable or shadowed declarations', async (t) => {
+void test('rejects unsafe bodies, parameters, and mutable or shadowed declarations', async (t) => {
   const p = await project(t)
   try {
     for (const declaration of [

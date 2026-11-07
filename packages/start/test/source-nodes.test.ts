@@ -163,6 +163,7 @@ it('keeps foreign node-method wrappers and honors the next source context', () =
   const anchor = document.querySelector('a')!
   const before = Object.getOwnPropertyDescriptor(Element.prototype, 'setAttributeNode')!
   const first = retainSourceContext(document, location.href, document.baseURI)!
+  // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
   const installed = Element.prototype.setAttributeNode
   const foreign = function (this: Element, attr: Attr) {
     return Reflect.apply(installed, this, [attr])
@@ -170,6 +171,7 @@ it('keeps foreign node-method wrappers and honors the next source context', () =
   Object.defineProperty(Element.prototype, 'setAttributeNode', { ...before, value: foreign })
   try {
     first.stop()
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     expect(Element.prototype.setAttributeNode).toBe(foreign)
     history.pushState(null, '', '/other/new')
     const second = retainSourceContext(document, location.href, document.baseURI)!
@@ -182,6 +184,7 @@ it('keeps foreign node-method wrappers and honors the next source context', () =
     } finally {
       second.release()
     }
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     expect(Element.prototype.setAttributeNode).toBe(foreign)
     expect(anchor.getAttribute('href')).toBe('later')
   } finally {

@@ -15,12 +15,12 @@ import type { Scope } from '../src/exec'
 import type { ClientRoutes } from '../src/run'
 import { guess } from '../src/run/helpers'
 import { createRouteState } from '../src/router'
+import { Navigation } from '../src/run/navigation'
 
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/server/page-cold', () => ({ coldPage: vi.fn() }))
 vi.mock('../src/server/page-warm', () => ({ warmPage: vi.fn() }))
 vi.mock('../src/view', () => ({ App: vi.fn() }))
-import { Navigation } from '../src/run/navigation'
 
 const patterns = ['/users/new', '/users/$id', '/files/$', '/café', '/']
 const manifest: Manifest = {
@@ -61,6 +61,7 @@ function serverRouter(path: string) {
   return router
 }
 
+// oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
 async function serverMatch(path: string): Promise<string[]> {
   const router = serverRouter(path)
   const [branch, params, found] = router.getMatchedRoutes(router.latestLocation.pathname)
@@ -218,6 +219,7 @@ it('reports a loader not-found after the pre-load route match', async () => {
   const result = await finalResolution('/users/new', {
     '/users/new': {
       load: () => {
+        // oxlint-disable-next-line typescript/only-throw-error -- loaders throw weft's notFound()/redirect() results by design
         throw notFound()
       },
     },
@@ -240,6 +242,7 @@ it('preserves router redirect status and headers from a loader', async () => {
   const result = await finalResolution('/users/new', {
     '/users/new': {
       load: () => {
+        // oxlint-disable-next-line typescript/only-throw-error -- loaders throw weft's notFound()/redirect() results by design
         throw routerRedirect({
           href: '/users/alice',
           statusCode: 302,
@@ -267,6 +270,7 @@ it('delivers router redirect headers and request-scope headers on both response 
   const result = await finalResolution('/users/new', {
     '/users/new': {
       load: () => {
+        // oxlint-disable-next-line typescript/only-throw-error -- loaders throw weft's notFound()/redirect() results by design
         throw routerRedirect({
           href: '/users/alice',
           statusCode: 302,
@@ -278,6 +282,7 @@ it('delivers router redirect headers and request-scope headers on both response 
   const request = new Request('http://localhost/users/new')
   const scope = createScope(request)
   scope.headers.append('set-cookie', 'session=ok; Path=/')
+  // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
   const resolve = async () => result
   const page = makePage({ resolve } as never)
   const pageResponse = await page(new URL(request.url), request, scope)
@@ -302,12 +307,14 @@ it('delivers router redirect headers and request-scope headers on both response 
   const explicit = await finalResolution('/users/new', {
     '/users/new': { load: () => redirect('/users/alice', 308) },
   })
+  // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
   const explicitPage = makePage({ resolve: async () => explicit } as never)
   const explicitResponse = await explicitPage(new URL(request.url), request, scope)
   expect(explicitResponse.status).toBe(308)
   expect(explicitResponse.headers.get('location')).toBe('/users/alice')
   expect(explicitResponse.headers.get('set-cookie')).toBe('session=ok; Path=/')
   const canonical = await finalResolution('/users/alice/?tab=posts')
+  // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
   const canonicalPage = makePage({ resolve: async () => canonical } as never)
   const canonicalResponse = await canonicalPage(new URL(request.url), request, scope)
   expect(canonicalResponse.status).toBe(307)
@@ -338,6 +345,7 @@ it.each(['page', 'navigation'] as const)(
     const result = await finalResolution('/users/new', {
       '/users/new': {
         load: () => {
+          // oxlint-disable-next-line typescript/only-throw-error -- loaders throw weft's notFound()/redirect() results by design
           throw routerRedirect({ href: '/users/alice', statusCode: 302, headers: native })
         },
       },
@@ -351,6 +359,7 @@ it.each(['page', 'navigation'] as const)(
     scope.headers.set('content-type', 'text/plain')
     scope.headers.set('etag', '"scope"')
     scope.headers.set('location', '/scope-target')
+    // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
     const resolve = async () => result
     const response =
       kind === 'page'

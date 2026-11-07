@@ -120,6 +120,7 @@ describe('route response validators', () => {
     let value = 1
     let calls = 0
     let mode = 'normal'
+    // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
     const resolve = async (_path: string, req: Request) => {
       calls++
       const session = req.headers.get('cookie')
@@ -142,6 +143,7 @@ describe('route response validators', () => {
     }
     const data = makeNavigation(
       resolve as unknown as Parameters<typeof makeNavigation>[0],
+      // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
       async () => ({ title: '', og: {}, twitter: {}, extra: [] }),
       new Set(),
       () => {

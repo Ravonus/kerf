@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { shapeWatch } from '../../vite/shape-watch.mjs'
 
-test('shape group edits and deletion invalidate only current dependents', (t) => {
+void test('shape group edits and deletion invalidate only current dependents', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'weft-shape-watch-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const group = join(root, 'group.ts')
@@ -75,7 +75,7 @@ test('shape group edits and deletion invalidate only current dependents', (t) =>
   assert.deepEqual(calls, [])
 })
 
-test('Vite retransforms an affected shape module after a group edit', async (t) => {
+void test('Vite retransforms an affected shape module after a group edit', async (t) => {
   const { createServer } = await import('vite')
   const root = mkdtempSync(join(tmpdir(), 'weft-shape-graph-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
@@ -125,7 +125,7 @@ test('Vite retransforms an affected shape module after a group edit', async (t) 
   }
 })
 
-test('Vite watcher handles group edit, deletion, recreation and owner deletion', async (t) => {
+void test('Vite watcher handles group edit, deletion, recreation and owner deletion', async (t) => {
   const { createServer } = await import('vite')
   const { existsSync, realpathSync } = await import('node:fs')
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-shape-events-')))
@@ -169,7 +169,9 @@ test('Vite watcher handles group edit, deletion, recreation and owner deletion',
     while (!condition()) {
       if (Date.now() > deadline)
         assert.fail(`Timed out waiting for ${label}: ${JSON.stringify(events)}`)
-      await new Promise((done) => setTimeout(done, 25))
+      await new Promise((done) => {
+        setTimeout(done, 25)
+      })
     }
   }
   const event = (file, type, from) =>
@@ -218,7 +220,7 @@ test('Vite watcher handles group edit, deletion, recreation and owner deletion',
 })
 
 for (const initial of ['nongroup', 'missing']) {
-  test(`Vite watcher tracks an initially ${initial} group candidate`, async (t) => {
+  void test(`Vite watcher tracks an initially ${initial} group candidate`, async (t) => {
     const { createServer } = await import('vite')
     const { realpathSync } = await import('node:fs')
     const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-shape-candidate-')))
@@ -240,8 +242,8 @@ for (const initial of ['nongroup', 'missing']) {
       plugins: [
         {
           name: 'candidate-watch-test',
-          configureServer(server) {
-            tracker.attach(server)
+          configureServer(dev) {
+            tracker.attach(dev)
           },
           async transform(code, id) {
             if (!id.endsWith('?weft-shape')) return
@@ -267,7 +269,9 @@ for (const initial of ['nongroup', 'missing']) {
       const deadline = Date.now() + 5000
       while (!condition()) {
         if (Date.now() > deadline) assert.fail(`Waiting for ${label}: ${JSON.stringify(events)}`)
-        await new Promise((done) => setTimeout(done, 25))
+        await new Promise((done) => {
+          setTimeout(done, 25)
+        })
       }
     }
     const event = (path, type, from) =>
@@ -301,7 +305,7 @@ for (const initial of ['nongroup', 'missing']) {
   })
 }
 
-test('extensionless index candidates invalidate each environment and remove stale edges', (t) => {
+void test('extensionless index candidates invalidate each environment and remove stale edges', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'weft-shape-index-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const candidate = join(root, 'missing')
@@ -341,7 +345,7 @@ test('extensionless index candidates invalidate each environment and remove stal
   assert.equal(tracker.hotUpdate.call(context, { file: created, modules: [] }), undefined)
 })
 
-test('environment ownership keeps divergent dependencies and deletion separate', (t) => {
+void test('environment ownership keeps divergent dependencies and deletion separate', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'weft-shape-env-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const clientFile = join(root, 'client.ts')
@@ -407,7 +411,7 @@ test('environment ownership keeps divergent dependencies and deletion separate',
   )
 })
 
-test('close and restart clears shape ownership from the previous server', async (t) => {
+void test('close and restart clears shape ownership from the previous server', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'weft-shape-restart-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = join(root, 'group.ts')
@@ -419,19 +423,19 @@ test('close and restart clears shape ownership from the previous server', async 
   let closed = 0
   const server = {
     watcher: { add() {} },
-    async close() {
+    close() {
       closed++
     },
   }
   tracker.attach(server)
   tracker.replace(id, [file], { environment, addWatchFile() {} })
   assert.deepEqual(tracker.hotUpdate.call({ environment }, { file, modules: [] }), [mod])
-  await server.close()
+  server.close()
   assert.equal(closed, 1)
   tracker.attach({ watcher: { add() {} }, async close() {} })
   assert.equal(tracker.hotUpdate.call({ environment }, { file, modules: [] }), undefined)
   tracker.replace(id, [file], { environment, addWatchFile() {} })
   assert.deepEqual(tracker.hotUpdate.call({ environment }, { file, modules: [] }), [mod])
-  await server.close()
+  server.close()
   assert.deepEqual(tracker.hotUpdate.call({ environment }, { file, modules: [] }), [mod])
 })

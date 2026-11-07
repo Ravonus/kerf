@@ -1,3 +1,4 @@
+import type * as ActualHelpers from '../src/run/helpers'
 import { afterEach, expect, it, vi } from 'vitest'
 import { flush, onCleanup, state } from '@weft-js/core'
 import { insert, render } from '@weft-js/core/dom'
@@ -5,15 +6,15 @@ import { createRouteState } from '../src/router'
 import type { ClientRoutes } from '../src/run'
 import { retainRouteView } from '../src/run/retain-view'
 
+import { Navigation } from '../src/run/navigation'
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/run/helpers', async (load) => ({
-  ...(await load<typeof import('../src/run/helpers')>()),
+  ...(await load<typeof ActualHelpers>()),
   ask: (_url: URL, signal?: AbortSignal) =>
     new Promise((_resolve, reject) => {
       signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true })
     }),
 }))
-import { Navigation } from '../src/run/navigation'
 
 afterEach(() => {
   document.body.innerHTML = ''

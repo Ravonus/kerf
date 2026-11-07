@@ -169,11 +169,13 @@ describe('retained source attribute mutations', () => {
     const first = retainSourceContext(document, location.href, document.baseURI)!
     const installed = Object.getOwnPropertyDescriptor(Node.prototype, 'nodeValue')!
     const getter = function (this: Node) {
+      // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
       return Reflect.apply(installed.get!, this, [])
     }
     Object.defineProperty(Node.prototype, 'nodeValue', { ...installed, get: getter })
     try {
       first.stop()
+      // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
       expect(Object.getOwnPropertyDescriptor(Node.prototype, 'nodeValue')!.get).toBe(getter)
       history.pushState(null, '', '/other/new')
       const second = retainSourceContext(document, location.href, document.baseURI)!
@@ -237,6 +239,7 @@ describe('retained source attribute mutations', () => {
     const proto = NamedNodeMap.prototype
     const before = Object.getOwnPropertyDescriptor(proto, 'setNamedItem')!
     const context = retainSourceContext(document, location.href, document.baseURI)!
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     const installed = proto.setNamedItem
     const foreign = function (this: NamedNodeMap, attr: Attr) {
       return Reflect.apply(installed, this, [attr])
@@ -244,6 +247,7 @@ describe('retained source attribute mutations', () => {
     Object.defineProperty(proto, 'setNamedItem', { ...before, value: foreign })
     try {
       context.release()
+      // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
       expect(proto.setNamedItem).toBe(foreign)
       history.pushState(null, '', '/other/new')
       const attr = document.createAttribute('href')
