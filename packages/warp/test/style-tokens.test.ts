@@ -7,7 +7,8 @@ import { join } from 'node:path'
 const src = join(__dirname, '../src')
 const styles = join(__dirname, '../../warp-core/styles')
 const read = (f: string) => readFileSync(join(styles, f), 'utf8')
-const defined = (css: string) => new Set([...css.matchAll(/(--warp-[\w-]+)\s*:/g)].map((m) => m[1]!))
+const defined = (css: string) =>
+  new Set([...css.matchAll(/(--warp-[\w-]+)\s*:/g)].map((m) => m[1]!))
 /** var(--x) with no fallback of its own. */
 const reads = (css: string) => [...css.matchAll(/var\((--warp-[\w-]+)\)/g)].map((m) => m[1]!)
 const global = defined(read('warp.css'))
@@ -31,7 +32,8 @@ test('a component imports the tokens file its family CSS reads from', () => {
       const used = reads(read(`${family}/${name}.css`)).filter(
         (v) => theirs.has(v) && !global.has(v) && !own.has(v),
       )
-      if (used.length) missing.push(`${file}: ${family}/${name}.css reads ${[...new Set(used)].join(', ')}`)
+      if (used.length)
+        missing.push(`${file}: ${family}/${name}.css reads ${[...new Set(used)].join(', ')}`)
     }
   }
   expect(missing).toEqual([])
