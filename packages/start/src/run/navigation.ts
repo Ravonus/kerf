@@ -275,6 +275,7 @@ export class Navigation {
         if (ctrl.signal.aborted) return
         if (read.version !== this.cache.version) continue
         next = read.next
+        if (next.s === 401 || next.s === 403) this.warm = undefined
         since = read.since
         version = read.version
         if (next.r) {
@@ -331,6 +332,8 @@ export class Navigation {
       since = this.now()
     try {
       const next: RoutePayload = await ask(url, self.ctrl.signal).then((r) => r.json())
+      if (self.ctrl.signal.aborted) return
+      if (next.s === 401 || next.s === 403) { this.cache.clear(); this.warm = undefined }
       if (next.r && !self.ctrl.signal.aborted) {
         this.refreshing = undefined
         return void this.go(next.r, { replace: true })
@@ -357,10 +360,19 @@ export class Navigation {
     this.cache.clear()
     this.warm = undefined
     const url = new URL(location.href),
-      since = this.now(), version = this.cache.version
+      since = this.now()
+    let version = this.cache.version
     const res = await ask(url)
-    if (version !== this.cache.version || !res.ok || (await res.clone().json()).s >= 500) return
+    if (version !== this.cache.version || !res.ok) return
+    const next: RoutePayload = await res.clone().json()
+    this.cache.setBuild(this.routes.build)
+    if (version !== this.cache.version || next.s >= 500) return
+    if (next.s === 401 || next.s === 403) {
+      this.cache.clear()
+      version = this.cache.version
+    }
     if (queries) client.refreshed?.()
+    if (version !== this.cache.version) return
     this.warm = {
       path: url.pathname + url.search,
       at: performance.now(),

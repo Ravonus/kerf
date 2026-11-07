@@ -22,7 +22,7 @@ function answer(index: number, path: string, value: number, tags: string[] = ['p
 function setup() {
   history.replaceState(null, '', '/from')
   vi.stubGlobal('requestAnimationFrame', () => 0)
-  const routes: ClientRoutes = { build: 'build', table: ['/from', '/target'].map((id) =>
+  const routes: ClientRoutes = { build: 'build', table: ['/from', '/target', '/private', '/other'].map((id) =>
     ({ id, pattern: id, layouts: [] })), load: {} }
   const route = createRouteState({ p: '/from', s: 200, m: [{ id: '/from', params: {} }] }, {})
   const page = { route, chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
@@ -34,6 +34,8 @@ afterEach(() => {
   document.body.innerHTML = ''
   delete client.now
   delete client.seed
+  delete client.refreshed
+  delete client.sessionChanged
   vi.unstubAllGlobals()
 })
 
@@ -187,4 +189,125 @@ it('aborts a pending refresh when its session is disposed', async () => {
   answer(0, '/from', 9)
   await refresh
   expect(client.seed).not.toHaveBeenCalled()
+})
+
+
+it.each([401, 403])('clears other protected validators for a 200/%s auth envelope', async (status) => {
+  client.now = () => 1
+  client.seed = vi.fn()
+  const { nav, route } = setup()
+  const first = nav.go('/target', { scroll: false })
+  answer(0, '/target', 1)
+  await first
+  const second = nav.go('/private', { scroll: false })
+  answer(1, '/private', 2)
+  await second
+  const cachedFirst = nav.go('/target', { scroll: false })
+  expect(requests[2]!.tag).toBe('"one"')
+  requests[2]!.resolve(new Response(null, { status: 304, headers }))
+  await cachedFirst
+  const cachedSecond = nav.go('/private', { scroll: false })
+  expect(requests[3]!.tag).toBe('"one"')
+  requests[3]!.resolve(new Response(null, { status: 304, headers }))
+  await cachedSecond
+  const forbidden = nav.go('/other', { scroll: false })
+  const payload: RoutePayload = { p: '/other', s: status,
+    m: [{ id: '/other', params: {}, data: 'denied' }] }
+  requests[4]!.resolve(new Response(JSON.stringify(payload), { status: 200,
+    headers: { 'cache-control': 'no-store' } }))
+  await forbidden
+  expect(route.status.value).toBe(status)
+  expect(route.levels[0]!.data.value).toBe('denied')
+  const revisitFirst = nav.go('/target', { scroll: false })
+  expect(requests[5]!.tag).toBeUndefined()
+  answer(5, '/target', 3)
+  await revisitFirst
+  const revisitSecond = nav.go('/private', { scroll: false })
+  expect(requests[6]!.tag).toBeUndefined()
+  answer(6, '/private', 4)
+  await revisitSecond
+  nav.dispose()
+})
+
+it.each(['dispose', 'session', 'invalidation', 'hmr'] as const)(
+  'does not publish a reloaded response invalidated during JSON parsing: %s', async (reason) => {
+    const { nav } = setup()
+    client.refreshed = vi.fn()
+    const go = vi.spyOn(nav, 'go').mockResolvedValue()
+    let resolveBody!: (value: { s: number }) => void
+    const body = new Promise<{ s: number }>((resolve) => { resolveBody = resolve })
+    const response = new Response('{}')
+    const clone = vi.spyOn(response, 'clone').mockReturnValue({ json: () => body } as Response)
+    const pending = nav.reloaded({ queries: true })
+    requests[0]!.resolve(response)
+    await vi.waitFor(() => expect(clone).toHaveBeenCalledOnce())
+    let newer: Promise<void> | undefined
+    if (reason === 'dispose') nav.dispose()
+    else if (reason === 'session') { client.sessionChanged = nav.dispose; client.sessionChanged() }
+    else if (reason === 'invalidation') nav.invalidated(['other'])
+    else {
+      newer = nav.reloaded({ queries: true })
+      requests[1]!.resolve(new Response(null, { status: 500 }))
+      await newer
+    }
+    resolveBody({ s: 200 })
+    await pending
+    expect(client.refreshed).not.toHaveBeenCalled()
+    expect(nav.warm).toBeUndefined()
+    expect(go).not.toHaveBeenCalled()
+    nav.dispose()
+  },
+)
+
+
+it('renders a reloaded authorization envelope after clearing its validators', async () => {
+  const { nav, route } = setup()
+  client.refreshed = vi.fn()
+  const pending = nav.reloaded({ queries: true })
+  const payload: RoutePayload = { p: '/from', s: 403,
+    m: [{ id: '/from', params: {}, data: 'denied' }] }
+  requests[0]!.resolve(new Response(JSON.stringify(payload), { status: 200,
+    headers: { 'cache-control': 'no-store' } }))
+  await pending
+  expect(route.status.value).toBe(403)
+  expect(route.levels[0]!.data.value).toBe('denied')
+  expect(requests).toHaveLength(1)
+  nav.dispose()
+})
+
+it('clears cached validators and renders a refresh authorization envelope', async () => {
+  client.now = () => 1
+  client.seed = vi.fn()
+  const { nav, route } = setup()
+  try {
+    const first = nav.go('/target', { scroll: false })
+    answer(0, '/target', 1)
+    await first
+    const second = nav.go('/private', { scroll: false })
+    answer(1, '/private', 2)
+    await second
+    const refresh = nav.refresh(['posts'])
+    const payload: RoutePayload = { p: '/private', s: 403,
+      m: [{ id: '/private', params: {}, data: 'denied' }] }
+    requests[2]!.resolve(new Response(JSON.stringify(payload), { status: 200,
+      headers: { 'cache-control': 'no-store' } }))
+    await refresh
+    expect(route.status.value).toBe(403)
+    expect(route.levels[0]!.data.value).toBe('denied')
+    const revisit = nav.go('/target', { scroll: false })
+    expect(requests[3]!.tag).toBeUndefined()
+    answer(3, '/target', 3)
+    await revisit
+  } finally { nav.dispose() }
+})
+
+it('does not publish HMR warm state after a reentrant refresh callback clears it', async () => {
+  const { nav } = setup()
+  const go = vi.spyOn(nav, 'go').mockResolvedValue()
+  client.refreshed = () => nav.dispose()
+  const pending = nav.reloaded({ queries: true })
+  requests[0]!.resolve(new Response(JSON.stringify({ p: '/from', s: 200, m: [] })))
+  await pending
+  expect(nav.warm).toBeUndefined()
+  expect(go).not.toHaveBeenCalled()
 })

@@ -109,6 +109,10 @@ export class RouteCache {
         if (version !== this.version) continue
       }
       const next = JSON.parse(body) as RoutePayload
+      if (next.s === 401 || next.s === 403) {
+        this.clear()
+        return { next, since, version: this.version }
+      }
       if (response.status === 304 && next.c?.length && !canSeed()) {
         if (key) this.remove(key)
         allowTag = false
