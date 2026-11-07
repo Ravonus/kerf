@@ -13,11 +13,12 @@ export function listeners(nav: Navigation, hot: () => Hot | undefined) {
   addEventListener('pagehide', nav.dispose)
   if (hot()) hot()!.on('weft:refresh', (changed) => void nav.reloaded(changed))
   client.invalidated = nav.invalidated
+  client.sessionChanged = nav.dispose
   clicks(nav)
   preload(nav)
   history(nav)
   peers?.addEventListener('message', (m) => {
-    if (!m.data) location.reload()
+    if (!m.data) { nav.dispose(); location.reload() }
   })
   const q = (window as Window & { __wq?: Held }).__wq
   if (q) {
@@ -72,7 +73,8 @@ function preload(nav: Navigation) {
     pending = setTimeout(
       () => {
         for (const id of guess(nav.routes, url.pathname)) void nav.chunk(id).catch(() => {})
-        nav.warm = { path: path!, at: performance.now(), since: nav.now(), res: ask(url) }
+        nav.warm = { path: path!, at: performance.now(), since: nav.now(),
+          version: nav.cache.version, res: ask(url) }
         nav.warm.res.catch(() => {
           nav.warm = undefined
         })

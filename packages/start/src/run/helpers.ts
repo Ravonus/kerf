@@ -27,10 +27,11 @@ export function deferred(path: string, level: number, key: string): PromiseLike<
   } as PromiseLike<unknown>
 }
 
-export const ask = (url: URL, signal?: AbortSignal) =>
+export const ask = (url: URL, signal?: AbortSignal, tag?: string) =>
   fetch(`/_weft/data${url.pathname === '/' ? '' : url.pathname}${url.search}`, {
     signal: signal ?? null,
-    headers: { accept: 'application/json' },
+    cache: 'no-cache',
+    headers: { accept: 'application/json', ...(tag && { 'if-none-match': tag }) },
   })
 
 /** The URL a client navigation would take from this event's link, or nothing for a link the browser should follow. */

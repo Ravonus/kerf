@@ -7,6 +7,7 @@ import { matchingRouteAssets } from '../asset-receipt.mjs'
 import { ask, current_, guess, revive } from './helpers'
 import type { PreparedRouteShape } from './shape-preparation'
 import { retainSourceContext, type SourceContext } from './source-context'
+import { RouteCache, type Candidate } from './cache'
 
 const SLOW_FADE = 100
 const RETRY = 1000,
@@ -14,7 +15,7 @@ const RETRY = 1000,
 
 type Options = NavigateOptions & { pop?: boolean; hops?: number }
 type Page = ReturnType<typeof mount>
-type Warm = { path: string; at: number; since: number; res: Promise<Response> }
+type Warm = Candidate & { path: string; at: number }
 
 export class Navigation {
   route: Page['route']
@@ -29,6 +30,7 @@ export class Navigation {
   again: ReturnType<typeof setTimeout> | undefined
   tries = 0
   warm: Warm | undefined
+  cache: RouteCache
   // A fade pictures the whole page twice, and the picture holds up every frame. Where that's slow, the page just changes.
   fades = !(navigator.hardwareConcurrency <= 4)
   fading: ViewTransition | undefined
@@ -43,6 +45,7 @@ export class Navigation {
     readonly routes: ClientRoutes,
     page: Page,
   ) {
+    this.cache = new RouteCache(routes.build)
     this.route = page.route
     this.chunk = page.chunk
     this.island = page.island
@@ -213,8 +216,14 @@ export class Navigation {
   }
 
   dispose = () => {
+    this.cache.clear()
+    this.warm = undefined
     this.current?.abort()
     this.current = undefined
+    this.refreshing?.ctrl.abort()
+    this.refreshing = undefined
+    clearTimeout(this.again)
+    this.owed = []
     this.clearShape()
     this.source?.release()
     this.source = undefined
@@ -224,6 +233,7 @@ export class Navigation {
     const url = new URL(href, location.href)
     if (url.origin !== location.origin) return location.assign(url.href)
     if (!opts.pop && url.href === location.href) return
+    this.cache.setBuild(this.routes.build)
     this.current?.abort()
     if (this.refreshing) {
       this.refreshing.ctrl.abort()
@@ -253,35 +263,37 @@ export class Navigation {
     const path = url.pathname + url.search
     for (const id of guess(this.routes, url.pathname)) void this.chunk(id).catch(() => {})
     let next: RoutePayload
-    let since = this.now()
-    try {
-      const held =
-        this.warm?.path === path && performance.now() - this.warm.at < 10_000
-          ? this.warm
-          : undefined
-      this.warm = undefined
-      if (held) since = held.since
-      next = await (held?.res ?? ask(url, ctrl.signal)).then((r) => r.clone().json())
-    } catch (e) {
-      if (ctrl.signal.aborted) return
-      return location.replace(url.href)
+    let since: number
+    let version: number
+    for (;;) {
+      try {
+        const held = this.warm?.path === path && performance.now() - this.warm.at < 10_000
+          ? this.warm : undefined
+        this.warm = undefined
+        const read = await this.cache.read(url, ctrl.signal, ask, this.now, () => !!client.seed, held)
+        this.cache.setBuild(this.routes.build)
+        if (ctrl.signal.aborted) return
+        if (read.version !== this.cache.version) continue
+        next = read.next
+        since = read.since
+        version = read.version
+        if (next.r) {
+          const hops = (opts.hops ?? 0) + 1
+          return hops > 5 ? location.replace(next.r) : this.go(next.r, { replace: true, hops })
+        }
+        await this.needs(next)
+        this.cache.setBuild(this.routes.build)
+        if (ctrl.signal.aborted) return
+        if (read.version !== this.cache.version) continue
+        break
+      } catch {
+        if (!ctrl.signal.aborted) location.replace(url.href)
+        return
+      }
     }
-    if (ctrl.signal.aborted) return
-    if (next.r) {
-      const hops = (opts.hops ?? 0) + 1
-      return hops > 5
-        ? location.replace(next.r)
-        : this.go(next.r, { replace: true, hops })
-    }
-    try {
-      await this.needs(next)
-    } catch {
-      if (!ctrl.signal.aborted) location.replace(url.href)
-      return
-    }
-    if (ctrl.signal.aborted) return
     const swap = () => {
-      if (ctrl.signal.aborted || this.current !== ctrl) return
+      this.cache.setBuild(this.routes.build)
+      if (ctrl.signal.aborted || this.current !== ctrl || this.cache.version !== version) return
       this.apply(next, url, path, since, opts.scroll !== false && !opts.pop)()
     }
     if (
@@ -306,6 +318,8 @@ export class Navigation {
       void fade.finished.catch(() => {})
       await fade.updateCallbackDone
     } else swap()
+    if (!ctrl.signal.aborted && this.current === ctrl && this.cache.version !== version)
+      await this.travel(url, ctrl, opts)
   }
 
   /** Fetch the page's data again in place, retrying a failed refresh. */
@@ -340,21 +354,25 @@ export class Navigation {
   }
 
   reloaded = async ({ queries }: { queries: boolean }) => {
+    this.cache.clear()
+    this.warm = undefined
     const url = new URL(location.href),
-      since = this.now()
+      since = this.now(), version = this.cache.version
     const res = await ask(url)
-    if (!res.ok || (await res.clone().json()).s >= 500) return
+    if (version !== this.cache.version || !res.ok || (await res.clone().json()).s >= 500) return
     if (queries) client.refreshed?.()
     this.warm = {
       path: url.pathname + url.search,
       at: performance.now(),
       since,
+      version,
       res: Promise.resolve(res),
     }
     await this.go(url.href, { pop: true })
   }
 
   invalidated = (t: string[]) => {
+    this.cache.invalidate(t)
     this.warm = undefined
     if (this.current) this.owed.push(...t)
     else if (this.reads(t)) void this.refresh(t)

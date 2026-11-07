@@ -1,5 +1,5 @@
 import { DEV, flush, untrack, type State } from '@weft-js/core'
-import { peers } from '../router'
+import { client, peers } from '../router'
 import { entries, entry, setBase, staleTags, relieve, cache, type Entry, type Layer } from './cache'
 import { fnOf, fns, go, runtime, server } from './foundation'
 import { FnError } from './primitives'
@@ -33,6 +33,7 @@ export async function mutate(
     if (!open++) run++
     overlap = run
     const a = await settled(() => transport().mutate(fn.$id, input, refresh, form))
+    if (a.x) client.sessionChanged?.()
     const out = applyResult(fn, a, touched, m, overlap, error, drop, wait)
     if (a.t?.length) peers?.postMessage(a.t)
     if (a.x) peers?.postMessage(0)

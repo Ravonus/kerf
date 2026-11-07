@@ -171,6 +171,8 @@ export const client: {
   seeds?: Wire[] | undefined
   now?: () => number
   invalidated?: (tags: string[]) => void
+  /** Clear navigation state before a session-changing reload. */
+  sessionChanged?: () => void
   /** Dev: server code changed, so whatever a query read may have too. */
   refreshed?: () => void
 } = {}
