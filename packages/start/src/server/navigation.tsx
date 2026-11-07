@@ -6,6 +6,7 @@ import type { Scope } from '../exec'
 import { App } from '../view'
 import { withLevels } from './render'
 import { payloadOf, wire } from './payload'
+import { noRetention, validateNavigation } from './navigation-cache'
 import { cookieJar, withHeaders } from './request'
 import type { HandlerOptions, Resolved } from './types'
 export function makeNavigation(
@@ -16,16 +17,18 @@ export function makeNavigation(
   PASSES: number,
   options: HandlerOptions,
 ) {
-  /** The route as JSON for client navigation: deferred fields awaited (no streaming on navigation yet). */
+  /** The route as JSON for client navigation, with deferred fields awaited. */
   return async function data(path: string, request: Request, scope: Scope): Promise<Response> {
     const r = await resolve(path, request)
     if (r.redirect)
-      return withHeaders(
-        Response.json(
-          { m: [], p: path, s: r.redirect.status, r: r.redirect.href } satisfies RoutePayload,
-          { headers: { 'cache-control': 'no-cache' } },
+      return noRetention(
+        withHeaders(
+          Response.json(
+            { m: [], p: path, s: r.redirect.status, r: r.redirect.href } satisfies RoutePayload,
+            { headers: { 'cache-control': 'no-store' } },
+          ),
+          scope,
         ),
-        scope,
       )
     for (const lv of r.levels)
       if (lv.d?.length)
@@ -60,12 +63,11 @@ export function makeNavigation(
         }),
       }
     }
-    return withHeaders(
-      Response.json(
-        { ...payload, ...(c.length && { c }) },
-        { status: 200, headers: { 'cache-control': 'no-cache' } },
-      ),
+    const body = JSON.stringify({ ...payload, ...(c.length && { c }) })
+    const response = withHeaders(
+      new Response(body, { headers: { 'content-type': 'application/json' } }),
       scope,
     )
+    return validateNavigation(response, request, body, options.build, r.error ? 500 : r.status)
   }
 }
