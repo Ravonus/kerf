@@ -52,14 +52,18 @@ test('the Vite transform requests route and layout variants without a Boundary',
   }
   // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
   const context = { resolve: async () => null }
-  for (const [file, source] of [
-    ['/app/src/routes/index.tsx', 'export default function Page() { return <main>Page</main> }'],
-    [
-      '/app/src/routes/_layout.tsx',
-      'export default function Layout(p) { return <main>{p.children}</main> }',
-    ],
-  ]) {
-    const output = await hook.handler.call(context, source!, file!, {})
-    expect(output.code).toContain('as default$shape')
-  }
+  const page = await hook.handler.call(
+    context,
+    'export default function Page() { return <main>Page</main> }',
+    '/app/src/routes/index.tsx',
+    {},
+  )
+  const layout = await hook.handler.call(
+    context,
+    'export default function Layout(p) { return <main>{p.children}</main> }',
+    '/app/src/routes/_layout.tsx',
+    {},
+  )
+  expect(page.code).toContain('as default$shape')
+  expect(layout.code).toContain('as default$shape')
 })

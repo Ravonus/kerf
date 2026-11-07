@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+// @vitest-environment-options {"url":"http://localhost/"}
 import { expect, it, vi } from 'vitest'
 import { RouteCache } from '../src/run/cache'
 
