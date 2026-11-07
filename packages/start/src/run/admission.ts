@@ -21,14 +21,17 @@ export function admitLink(event: MouseEvent | PointerEvent, routes: ClientRoutes
 }
 
 /** Pointer admission and its click fallback; the returned disposer removes only these listeners. */
-export function routeClicks(doc: Document, routes: ClientRoutes, go: (href: string) => void) {
-  let accepted: { id: number; anchor: HTMLAnchorElement; until: number } | undefined
+export function routeClicks(
+  doc: Document, routes: ClientRoutes, go: (href: string) => void | Promise<void>,
+) {
+  let accepted: { id: number; anchor: HTMLAnchorElement } | undefined
   const down = (event: PointerEvent) => {
     accepted = undefined
     const target = admitLink(event, routes)
     if (!target) return
-    accepted = { id: event.pointerId, anchor: target.anchor, until: Date.now() + 2000 }
-    if (!target.noop) go(target.url.href)
+    const record = (accepted = { id: event.pointerId, anchor: target.anchor })
+    const finish = () => { if (accepted === record) accepted = undefined }
+    Promise.resolve(target.noop ? undefined : go(target.url.href)).then(finish, finish)
   }
   const cancel = (event: PointerEvent) => {
     if (accepted?.id === event.pointerId) accepted = undefined
@@ -37,7 +40,7 @@ export function routeClicks(doc: Document, routes: ClientRoutes, go: (href: stri
     const record = accepted
     accepted = undefined
     const pointer = event as PointerEvent
-    if (record && Date.now() <= record.until && event.detail > 0 &&
+    if (record && event.detail > 0 &&
         (pointer.pointerId === record.id || event.composedPath().includes(record.anchor))) {
       event.preventDefault()
       return

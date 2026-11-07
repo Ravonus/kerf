@@ -28,7 +28,7 @@ export function listeners(nav: Navigation, hot: () => Hot | undefined) {
 
 // A fade can intercept a click; replay it on the element underneath once the picture is gone.
 function clicks(nav: Navigation) {
-  routeClicks(document, nav.routes, (href) => void nav.go(href))
+  routeClicks(document, nav.routes, (href) => nav.go(href))
   let ended: Promise<unknown> | undefined
   document.addEventListener(
     'pointerdown',

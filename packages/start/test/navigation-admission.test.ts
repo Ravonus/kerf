@@ -80,6 +80,21 @@ describe('navigation pointer admission', () => {
     } finally { dispose() }
   })
 
+  it('clears a completed gesture before a later independent click', async () => {
+    document.body.innerHTML = '<a href="/next">go</a><a href="/unknown">other</a>'
+    const [anchor, other] = [...document.querySelectorAll('a')]
+    const go = vi.fn(async () => {})
+    const dispose = routeClicks(document, routes, go)
+    try {
+      anchor!.dispatchEvent(pointer('pointerdown'))
+      await Promise.resolve()
+      const click = pointer('click', { detail: 1 })
+      other!.dispatchEvent(click)
+      expect(click.defaultPrevented).toBe(false)
+      expect(go).toHaveBeenCalledOnce()
+    } finally { dispose() }
+  })
+
   it('clears pointer cancellation and honors prevented pointerdown', () => {
     document.body.innerHTML = '<a href="/next">go</a>'
     const anchor = document.querySelector('a')!

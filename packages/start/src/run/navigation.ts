@@ -6,6 +6,7 @@ import { streamed, type mount } from './boot'
 import { matchingRouteAssets } from '../asset-receipt.mjs'
 import { ask, current_, guess, revive } from './helpers'
 import type { PreparedRouteShape } from './shape-preparation'
+import { retainSourceContext } from './source-context'
 
 const SLOW_FADE = 100
 const RETRY = 1000,
@@ -34,6 +35,9 @@ export class Navigation {
   painted = false
   at!: string
   shape: { outlet: Level; leases: PreparedRouteShape[] } | undefined
+  source: (() => void) | undefined
+  committedURL = location.href
+  committedBase = document.baseURI
 
   constructor(
     readonly routes: ClientRoutes,
@@ -80,6 +84,10 @@ export class Navigation {
       } finally {
         old?.forEach((lease) => lease.release())
       }
+      this.source?.()
+      this.source = undefined
+      this.committedURL = url.href
+      this.committedBase = document.baseURI
       if (scroll) {
         const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)))
         target ? target.scrollIntoView() : window.scrollTo(0, 0)
@@ -90,21 +98,19 @@ export class Navigation {
   /** Prepare all changed levels before replacing the current outlet. */
   present(ids: string[]) {
     const first = ids.findIndex((id, depth) => this.route.levels[depth]?.id.value !== id)
-    if (first < 0 || !this.route.prepareShape) { this.clearShape(); return false }
+    if (first < 0 || !this.route.prepareShape) return false
     const leases: PreparedRouteShape[] = []
     try {
       for (const id of ids.slice(first)) {
         const lease = this.route.prepareShape(id)
         if (!lease) {
           leases.forEach((item) => item.release())
-          this.clearShape()
           return false
         }
         leases.push(lease)
       }
     } catch {
       leases.forEach((item) => item.release())
-      this.clearShape()
       return false
     }
     const outlet = level(this.route, first)
@@ -152,23 +158,22 @@ export class Navigation {
     const ctrl = (this.current = new AbortController())
     const path = url.pathname + url.search
     try {
-      const presented = this.present(guess(this.routes, url.pathname))
-      const accepted = presented || !!opts.pop
-      if (accepted) {
-        if (!opts.pop && url.href !== location.href)
-          history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
-        this.at = path
-        this.route.path.value = path
-        current_(url.pathname)
-        flush()
-      }
-      await this.travel(url, ctrl, opts, accepted)
+      this.source ??= retainSourceContext(document, this.committedURL, this.committedBase)
+      if (!opts.pop && url.href !== location.href)
+        history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
+      if (document.baseURI !== this.committedBase) return location.replace(url.href)
+      this.at = path
+      this.route.path.value = path
+      current_(url.pathname)
+      flush()
+      this.present(guess(this.routes, url.pathname))
+      await this.travel(url, ctrl, opts)
     } finally {
       if (this.current === ctrl) this.settle()
     }
   }
 
-  async travel(url: URL, ctrl: AbortController, opts: Options, accepted: boolean) {
+  async travel(url: URL, ctrl: AbortController, opts: Options) {
     const path = url.pathname + url.search
     for (const id of guess(this.routes, url.pathname)) void this.chunk(id).catch(() => {})
     let next: RoutePayload
@@ -183,25 +188,22 @@ export class Navigation {
       next = await (held?.res ?? ask(url, ctrl.signal)).then((r) => r.clone().json())
     } catch (e) {
       if (ctrl.signal.aborted) return
-      return accepted ? location.replace(url.href) : location.assign(url.href)
+      return location.replace(url.href)
     }
     if (ctrl.signal.aborted) return
     if (next.r) {
       const hops = (opts.hops ?? 0) + 1
       return hops > 5
-        ? (accepted ? location.replace(next.r) : location.assign(next.r))
-        : this.go(next.r, { replace: accepted || opts.replace, hops })
+        ? location.replace(next.r)
+        : this.go(next.r, { replace: true, hops })
     }
     try {
       await this.needs(next)
     } catch {
-      if (!ctrl.signal.aborted)
-        accepted ? location.replace(url.href) : location.assign(url.href)
+      if (!ctrl.signal.aborted) location.replace(url.href)
       return
     }
     if (ctrl.signal.aborted) return
-    if (!accepted && !opts.pop)
-      history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
     const swap = () => {
       if (ctrl.signal.aborted || this.current !== ctrl) return
       this.apply(next, url, path, since, opts.scroll !== false && !opts.pop)()

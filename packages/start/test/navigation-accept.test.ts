@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClientRoutes } from '../src/run'
 
 vi.mock('@weft-js/core', () => ({ flush: vi.fn() }))
@@ -18,6 +18,9 @@ import { ask, current_, guess } from '../src/run/helpers'
 beforeEach(() => {
   history.replaceState(null, '', '/from')
   vi.stubGlobal('requestAnimationFrame', () => 0)
+})
+afterEach(() => {
+  document.querySelectorAll('[data-weft-source-base]').forEach((item) => item.remove())
 })
 
 describe('navigation acceptance', () => {
@@ -40,6 +43,7 @@ describe('navigation acceptance', () => {
     expect(level.params.value).toEqual({ id: '1' })
     expect(current_).toHaveBeenCalledWith('/next')
     nav.current?.abort()
+    nav.source?.()
     vi.mocked(guess).mockReturnValue([])
   })
 
@@ -65,6 +69,7 @@ describe('navigation acceptance', () => {
     await second
     expect(released).toEqual(['/next', '/other'])
     expect(old.shape.value).toBeUndefined()
+    nav.source?.()
     vi.mocked(guess).mockReturnValue([])
   })
 
@@ -83,10 +88,61 @@ describe('navigation acceptance', () => {
     )
     const pending = nav.go('/next')
     expect(old.shape.value).toBeUndefined()
-    expect(location.pathname).toBe('/from')
+    expect(location.pathname).toBe('/next')
+    expect(page.route.path.value).toBe('/next')
     expect(release).toHaveBeenCalledOnce()
     nav.current?.abort()
     await pending
+    nav.source?.()
+    vi.mocked(guess).mockReturnValue([])
+  })
+
+  it('does not clear an existing presentation for an unavailable replacement', async () => {
+    const routes: ClientRoutes = { table: [], load: {} }
+    const outlet = { id: { value: 'old' }, shape: { value: undefined } }
+    const release = vi.fn()
+    const prepareShape = (id: string) => id === '/next'
+      ? { kind: 'generated', ready: true, completeness: 'partial', component: () => null, release }
+      : null
+    const page = { route: { path: { value: '/from' }, levels: [outlet], prepareShape },
+      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    vi.mocked(guess).mockImplementation((_routes, path) => [path])
+    const nav = new Navigation(
+      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+    )
+    const first = nav.go('/next')
+    const shown = outlet.shape.value
+    const second = nav.go('/unavailable')
+    await first
+    expect(outlet.shape.value).toBe(shown)
+    expect(release).not.toHaveBeenCalled()
+    nav.current?.abort()
+    await second
+    expect(release).toHaveBeenCalledOnce()
+    nav.source?.()
+    vi.mocked(guess).mockReturnValue([])
+  })
+
+  it('accepts without a shape while retained controls use their source URL', async () => {
+    history.replaceState(null, '', '/dir/from')
+    document.body.innerHTML = '<a href="child">go</a><form></form>'
+    const routes: ClientRoutes = { table: [], load: {} }
+    const old = { id: { value: 'old' }, shape: { value: undefined } }
+    const page = { route: { path: { value: '/dir/from' }, levels: [old], prepareShape: () => null },
+      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    vi.mocked(guess).mockReturnValue(['/next'])
+    const nav = new Navigation(
+      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+    )
+    const pending = nav.go('/elsewhere/next')
+    expect(location.pathname).toBe('/elsewhere/next')
+    expect(page.route.path.value).toBe('/elsewhere/next')
+    expect(document.querySelector('a')!.href).toBe('http://localhost/dir/child')
+    expect(document.querySelector('form')!.action).toBe('http://localhost/dir/from')
+    nav.current?.abort()
+    await pending
+    nav.source?.()
+    document.body.innerHTML = ''
     vi.mocked(guess).mockReturnValue([])
   })
 
