@@ -16,6 +16,7 @@ import { run, allJobs } from './check/run.mjs'
 import { runSteps } from './check/steps.mjs'
 import { affected, mergeArgs } from './check/tiers.mjs'
 import { typeProblems } from './check/types.mjs'
+import { webkitWorks } from './check/webkit.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { jobs, pool } from './jobs.mjs'
@@ -36,7 +37,12 @@ const only = argv
 const fast = argv.includes('--fast'),
   release = argv.includes('--release'),
   requireTools = argv.includes('--require-tools')
-if (release) process.env.WEFT_WEBKIT = '1'
+// --release adds WebKit where it can open a page; elsewhere its tests would only wait out their timeouts.
+if (release && !argv.includes('--list')) {
+  const webkit = await webkitWorks(root)
+  if (webkit.ok) process.env.WEFT_WEBKIT = '1'
+  else console.log(`webkit      skipped: ${webkit.reason}`)
+}
 // --changed=<ref>: test only the packages a change since <ref> touches, and those that depend on them.
 const changedSince = argv.find((a) => a.startsWith('--changed='))?.slice(10)
 const limit = jobs()

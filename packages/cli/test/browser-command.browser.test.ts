@@ -68,7 +68,8 @@ describe.skipIf(process.platform === 'win32')('browser launch failures', () => {
       0,
       /exit: 7.*launch-failed/s,
     ],
-    ['exit during request', '#!/bin/sh\nexit 7\n', true, 300, /exit: 7/],
+    // The answer waits for the child to have exited, however slowly the machine spawns it.
+    ['exit during request', '#!/bin/sh\ntouch "$0.exited"\nexit 7\n', true, 'exit', /exit: 7/],
   ])(
     '%s reports the child failure and cleans state',
     async (_name, contents, executable, delay, message) => {
@@ -79,7 +80,16 @@ describe.skipIf(process.platform === 'win32')('browser launch failures', () => {
       const old = process.env.WEFT_CHROME
       process.env.WEFT_CHROME = exe
       const server = httpServer((_req, res) => {
-        setTimeout(() => res.end(JSON.stringify({ agent: true, tabs: delay ? [{}] : [] })), delay)
+        const answer = () => res.end(JSON.stringify({ agent: true, tabs: [] }))
+        if (delay !== 'exit') {
+          answer()
+          return
+        }
+        const wait = setInterval(() => {
+          if (!existsSync(`${exe}.exited`)) return
+          clearInterval(wait)
+          setTimeout(answer, 50)
+        }, 20)
       })
       await new Promise<void>((resolve) => {
         server.listen(0, '127.0.0.1', resolve)

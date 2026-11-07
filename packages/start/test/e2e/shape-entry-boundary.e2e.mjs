@@ -50,7 +50,7 @@ void test('resolved CSS outside the project remains a Vite-controlled stylesheet
   assert.deepEqual(result.styles, [css])
 })
 
-void test('closing a server clears only its entry state and never unwatches shared paths', () => {
+void test('closing a server clears only its entry state and never unwatches shared paths', async () => {
   const state = {
     shapeEntrySignatures: new Map([['entry', 'signature']]),
     shapeEntryCandidates: new Set(['candidate']),
@@ -71,10 +71,10 @@ void test('closing a server clears only its entry state and never unwatches shar
   entryStyles.entryWatchLifecycle(state, old, modes)
   state.vite = current
   entryStyles.entryWatchLifecycle(state, current, modes)
-  assert.equal(old.close(), 'closed')
+  assert.equal(await Promise.resolve(old.close()), 'closed')
   assert.equal(state.shapeEntryCandidates.size, 1)
   assert.equal(modes.size, 1)
-  assert.equal(current.close(), 'closed')
+  assert.equal(await Promise.resolve(current.close()), 'closed')
   assert.equal(closes, 2)
   assert.equal(state.shapeEntrySignatures, undefined)
   assert.equal(state.shapeEntryCandidates, undefined)

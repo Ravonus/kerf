@@ -197,6 +197,27 @@ export function shapeSignature(file) {
   return JSON.stringify([kind, styleImports(file), kind === 'custom' ? shapeOverride(file) : null])
 }
 
+/**
+ * The routes table's stylesheets and `shapeEntry`. A stylesheet edit in `weft dev` lands here instead of reloading the
+ * page: a shape reads its CSS when it's shown.
+ */
+function shapeStyles(files) {
+  const requests = files.map((file) => JSON.stringify(file + '?inline'))
+  const accept = requests.length
+    ? `if (import.meta.hot) import.meta.hot.accept([${requests.join(', ')}], (mods) => mods.forEach((m, i) => { if (m) styles[i] = m.default }))\n`
+    : ''
+  return `${requests.map((request, i) => `import style${i} from ${request}`).join('\n')}
+const styles = [${requests.map((_, i) => `style${i}`).join(', ')}]
+${accept}const shapeEntry = (module, sheets, name, kind) => {
+  const component = Reflect.get(module, name)
+  const groupCss = Reflect.get(module, '$weftShapeCss')
+  const lead = typeof groupCss === 'string' && groupCss ? [groupCss] : []
+  return typeof component === 'function'
+    ? { kind, component, css: null, get cssText() { return [...lead, ...sheets.map((i) => styles[i])] }, cssStatus: 'partial', bytes: null }
+    : { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null }
+}`
+}
+
 export function clientRoutes(manifest, abs, plan, css = {}) {
   const table = manifest.routes
     .filter((r) => r.kind === 'page')
@@ -215,7 +236,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
     const sources = [...(css.entry ?? []), ...(css.levels?.get(file) ?? [])]
     const styles = [...new Set(sources)].map((style) => {
       if (!styleFiles.has(style)) styleFiles.set(style, styleFiles.size)
-      return `style${styleFiles.get(style)}`
+      return styleFiles.get(style)
     })
     const args = [JSON.stringify(name), JSON.stringify(kind)].join(', ')
     return `shapeEntry(shape${shapeFiles.get(request)}, [${styles.join(', ')}], ${args})`
@@ -246,9 +267,6 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
   const shapeImports = [...shapeFiles].map(
     ([request, i]) => `import * as shape${i} from ${JSON.stringify(request)}`,
   )
-  const styleLines = [...styleFiles].map(
-    ([file, i]) => `import style${i} from ${JSON.stringify(file + '?inline')}`,
-  )
   // A static route loads only what its module imports that isn't code: its stylesheets, for a navigation to it.
   const loads = levels.map(
     (r) =>
@@ -259,15 +277,8 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
     (i) =>
       `${JSON.stringify(i.id)}: () => import(${JSON.stringify(i.file)}).then(({ $i${i.index}: d }) => ({ default: d }))`,
   )
-  return `${[...shapeImports, ...styleLines].join('\n')}
-const shapeEntry = (module, cssText, name, kind) => {
-  const component = Reflect.get(module, name)
-  const groupCss = Reflect.get(module, '$weftShapeCss')
-  if (typeof groupCss === 'string' && groupCss) cssText = [groupCss, ...cssText]
-  return typeof component === 'function'
-    ? { kind, component, css: null, cssText, cssStatus: 'partial', bytes: null }
-    : { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null }
-}
+  return `${shapeImports.join('\n')}
+${shapeStyles([...styleFiles.keys()])}
 export const shapes = { ${shapes.join(', ')} }
 export const build = ${JSON.stringify(css.build ?? null)}
 export const table = ${JSON.stringify(table)}
