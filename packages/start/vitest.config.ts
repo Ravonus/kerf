@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs'
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 import weft from '@weft-js/core/vite'
 
 // Files that drive the shared fixture dev server run one at a time: a file's mutation shows up in another's
@@ -37,7 +37,7 @@ export default defineConfig({
           ...base,
           name: 'unit',
           include: ['test/**/*.test.{mjs,ts,tsx}'],
-          exclude: shared,
+          exclude: [...configDefaults.exclude, ...shared],
         },
       },
     ],
