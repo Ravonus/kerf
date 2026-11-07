@@ -5,8 +5,11 @@
 name: compiler-release
 on:
   workflow_dispatch:
+permissions: {}
 jobs:
   addon:
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -21,8 +24,8 @@ jobs:
           - { name: win32-arm64, target: aarch64-pc-windows-msvc, os: windows-latest }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 26 }
       - run: rustup target add ${{ matrix.target }}
         working-directory: crates/weft-compiler
@@ -31,29 +34,33 @@ jobs:
           python3 -m pip install ziglang
           cargo install cargo-zigbuild --locked
       - run: node packages/core/scripts/build-platform.mjs --target ${{ matrix.name }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ matrix.name }}
           path: packages/core/dist/platform/${{ matrix.name }}
   wasm:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 26 }
       - run: node packages/core/scripts/build-wasm.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: wasm
           path: packages/core/native/weft-compiler.wasm*
   verify:
+    permissions:
+      contents: read
     needs: [addon, wasm]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 26 }
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with: { path: artifacts }
       - run: |
           mkdir -p packages/core/native packages/core/dist/platform
