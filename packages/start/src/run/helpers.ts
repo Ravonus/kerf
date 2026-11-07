@@ -38,9 +38,9 @@ export function ours(target: EventTarget | null) {
   const a = (target as Element | null)?.closest?.('a')
   if (
     !a ||
-    (a.target && a.target !== '_self') ||
+    (a.target && a.target.toLowerCase() !== '_self') ||
     a.hasAttribute('download') ||
-    a.getAttribute('rel')?.includes('external')
+    [...a.relList].some((token) => token.toLowerCase() === 'external')
   )
     return
   const url = new URL(a.href, location.href)
@@ -69,14 +69,19 @@ export function revive(m: Match): Match {
 
 /** The route ids `pathname` probably needs (its layouts and page), from the table; the server's answer decides. */
 export function guess(routes: ClientRoutes, pathname: string): string[] {
-  const parts = pathname.split('/').filter(Boolean)
+  let parts: string[]
+  try {
+    parts = pathname.split('/').filter(Boolean).map(decodeURIComponent)
+  } catch {
+    return []
+  }
   for (const r of routes.table) {
     const segs = r.pattern.split('/').filter(Boolean)
     const splat = segs.at(-1) === '$'
     if (splat ? parts.length < segs.length - 1 : parts.length !== segs.length) continue
     if (
       segs.every(
-        (s, i) => s === '$' || s.startsWith('$') || s === decodeURIComponent(parts[i] ?? ''),
+        (s, i) => s === '$' || s.startsWith('$') || s === parts[i],
       )
     )
       return [...r.layouts, r.id]

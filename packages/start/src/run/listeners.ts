@@ -2,6 +2,7 @@ import { drain, wake } from '@weft-js/core/dom'
 import type { Held } from '../boot'
 import { client, peers } from '../router'
 import { ask, guess, ours } from './helpers'
+import { routeClicks } from './admission'
 import type { Navigation } from './navigation'
 
 type Hot = { on(event: string, on: (data: { queries: boolean }) => unknown): void }
@@ -27,14 +28,7 @@ export function listeners(nav: Navigation, hot: () => Hot | undefined) {
 
 // A fade can intercept a click; replay it on the element underneath once the picture is gone.
 function clicks(nav: Navigation) {
-  document.addEventListener('click', (e) => {
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
-      return
-    const url = ours(e.target)
-    if (!url) return
-    e.preventDefault()
-    void nav.go(url.href)
-  })
+  routeClicks(document, nav.routes, (href) => void nav.go(href))
   let ended: Promise<unknown> | undefined
   document.addEventListener(
     'pointerdown',

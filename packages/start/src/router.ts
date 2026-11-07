@@ -32,6 +32,8 @@ export interface Level {
   data: State<unknown>
   /** A static level's HTML: empty for the page's own; undefined for a level with client code. */
   html: State<string | undefined>
+  /** A temporary incoming shape for this outlet, while its route is pending. */
+  shape: State<PreparedRouteShape[] | undefined>
   x?: string | undefined
 }
 
@@ -118,6 +120,7 @@ export function level(r: RouteState, d: number): Level {
     params: state({}),
     data: state<unknown>(undefined),
     html: state<string | undefined>(undefined),
+    shape: state<PreparedRouteShape[] | undefined>(undefined),
   })
 }
 

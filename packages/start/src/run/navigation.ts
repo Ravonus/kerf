@@ -1,10 +1,11 @@
 import { flush } from '@weft-js/core'
 import { setHead } from '@weft-js/core/head'
-import { applyMatches, client, type NavigateOptions, type RoutePayload } from '../router'
+import { applyMatches, client, level, type Level, type NavigateOptions, type RoutePayload } from '../router'
 import type { ClientRoutes } from '../run'
 import { streamed, type mount } from './boot'
 import { matchingRouteAssets } from '../asset-receipt.mjs'
 import { ask, current_, guess, revive } from './helpers'
+import type { PreparedRouteShape } from './shape-preparation'
 
 const SLOW_FADE = 100
 const RETRY = 1000,
@@ -32,6 +33,7 @@ export class Navigation {
   fading: ViewTransition | undefined
   painted = false
   at!: string
+  shape: { outlet: Level; leases: PreparedRouteShape[] } | undefined
 
   constructor(
     readonly routes: ClientRoutes,
@@ -68,11 +70,16 @@ export class Navigation {
     this.route.assetBytes = matchingRouteAssets(next.a, this.routes.build)
     this.setBag(next.b)
     return () => {
-      applyMatches(this.route, next.m.map(revive), path, next.s)
-      if (next.m.some((m) => m.s)) current_(url.pathname)
-      if (next.h) setHead(next.h, url.pathname)
-      this.release()
-      flush()
+      const old = this.detachShape()
+      try {
+        applyMatches(this.route, next.m.map(revive), path, next.s)
+        if (next.m.some((m) => m.s)) current_(url.pathname)
+        if (next.h) setHead(next.h, url.pathname)
+        this.release()
+        flush()
+      } finally {
+        old?.forEach((lease) => lease.release())
+      }
       if (scroll) {
         const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)))
         target ? target.scrollIntoView() : window.scrollTo(0, 0)
@@ -80,8 +87,52 @@ export class Navigation {
     }
   }
 
+  /** Prepare all changed levels before replacing the current outlet. */
+  present(ids: string[]) {
+    const first = ids.findIndex((id, depth) => this.route.levels[depth]?.id.value !== id)
+    if (first < 0 || !this.route.prepareShape) { this.clearShape(); return false }
+    const leases: PreparedRouteShape[] = []
+    try {
+      for (const id of ids.slice(first)) {
+        const lease = this.route.prepareShape(id)
+        if (!lease) {
+          leases.forEach((item) => item.release())
+          this.clearShape()
+          return false
+        }
+        leases.push(lease)
+      }
+    } catch {
+      leases.forEach((item) => item.release())
+      this.clearShape()
+      return false
+    }
+    const outlet = level(this.route, first)
+    const old = this.detachShape()
+    outlet.shape.value = leases
+    this.shape = { outlet, leases }
+    try { flush() } finally { old?.forEach((lease) => lease.release()) }
+    return true
+  }
+
+  detachShape() {
+    const shape = this.shape
+    if (!shape) return
+    this.shape = undefined
+    shape.outlet.shape.value = undefined
+    return shape.leases
+  }
+
+  clearShape() {
+    const leases = this.detachShape()
+    if (leases) {
+      try { flush() } finally { leases.forEach((lease) => lease.release()) }
+    }
+  }
+
   /** No navigation is out any more: what it left owed is for the page now showing. */
   settle() {
+    this.clearShape()
     this.current = undefined
     const t = this.owed
     this.owed = []
@@ -91,6 +142,7 @@ export class Navigation {
   go = async (href: string, opts: Options = {}) => {
     const url = new URL(href, location.href)
     if (url.origin !== location.origin) return location.assign(url.href)
+    if (!opts.pop && url.href === location.href) return
     this.current?.abort()
     if (this.refreshing) {
       this.refreshing.ctrl.abort()
@@ -98,14 +150,25 @@ export class Navigation {
       this.refreshing = undefined
     }
     const ctrl = (this.current = new AbortController())
+    const path = url.pathname + url.search
     try {
-      await this.travel(url, ctrl, opts)
+      const presented = this.present(guess(this.routes, url.pathname))
+      const accepted = presented || !!opts.pop
+      if (accepted) {
+        if (!opts.pop && url.href !== location.href)
+          history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
+        this.at = path
+        this.route.path.value = path
+        current_(url.pathname)
+        flush()
+      }
+      await this.travel(url, ctrl, opts, accepted)
     } finally {
       if (this.current === ctrl) this.settle()
     }
   }
 
-  async travel(url: URL, ctrl: AbortController, opts: Options) {
+  async travel(url: URL, ctrl: AbortController, opts: Options, accepted: boolean) {
     const path = url.pathname + url.search
     for (const id of guess(this.routes, url.pathname)) void this.chunk(id).catch(() => {})
     let next: RoutePayload
@@ -120,24 +183,29 @@ export class Navigation {
       next = await (held?.res ?? ask(url, ctrl.signal)).then((r) => r.clone().json())
     } catch (e) {
       if (ctrl.signal.aborted) return
-      return location.assign(url.href)
+      return accepted ? location.replace(url.href) : location.assign(url.href)
     }
     if (ctrl.signal.aborted) return
     if (next.r) {
       const hops = (opts.hops ?? 0) + 1
       return hops > 5
-        ? location.assign(next.r)
-        : this.go(next.r, { replace: opts.pop || opts.replace, hops })
+        ? (accepted ? location.replace(next.r) : location.assign(next.r))
+        : this.go(next.r, { replace: accepted || opts.replace, hops })
     }
     try {
       await this.needs(next)
     } catch {
-      if (!ctrl.signal.aborted) location.assign(url.href)
+      if (!ctrl.signal.aborted)
+        accepted ? location.replace(url.href) : location.assign(url.href)
       return
     }
     if (ctrl.signal.aborted) return
-    if (!opts.pop) history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
-    const swap = this.apply(next, url, path, since, opts.scroll !== false && !opts.pop)
+    if (!accepted && !opts.pop)
+      history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
+    const swap = () => {
+      if (ctrl.signal.aborted || this.current !== ctrl) return
+      this.apply(next, url, path, since, opts.scroll !== false && !opts.pop)()
+    }
     if (
       this.fades &&
       this.painted &&
