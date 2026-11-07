@@ -86,10 +86,18 @@ function overlayAMenuFollowsItsTrigger({
     await opened(page, 'ScrollMenu')
     const a = await boxes(page, 'scrolled')
     await page.evaluate(() => scrollBy(0, 40))
-    await page.waitForTimeout(150)
-    const b = await boxes(page, 'scrolled')
+    // It moves on the next frame, which a busy machine delays: wait for it rather than a fixed time.
+    let b = a
+    await expect
+      .poll(
+        async () => {
+          b = await boxes(page, 'scrolled')
+          return Math.abs(b.top - b.tBottom - (a.top - a.tBottom))
+        },
+        { timeout: 2000 },
+      )
+      .toBeLessThanOrEqual(2) // place() rounds
     expect(b.tTop).not.toBe(a.tTop)
-    expect(Math.abs(b.top - b.tBottom - (a.top - a.tBottom))).toBeLessThanOrEqual(2) // place() rounds
     await page.close()
   }
 }
