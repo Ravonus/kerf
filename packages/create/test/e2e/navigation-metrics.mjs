@@ -40,10 +40,10 @@ export function observeNavigation() {
     const real = main.textContent.includes('Simple pricing that grows with your team')
     if (result.response === null && location.pathname === '/pricing' && active && visible)
       result.response = now - result.input
+    // A generated shape keeps the route's static text, so it is found by its inert wrapper, not by missing words.
     const shape = main.querySelector('[inert], [data-skeleton]')
-    if (result.skeleton === null && changed && visible && !real && shape)
-      result.skeleton = now - result.input
-    if (real && changed) result.settled = true
+    if (result.skeleton === null && visible && shape) result.skeleton = now - result.input
+    if (real && changed && !shape) result.settled = true
     result.layout = document.querySelector('.site-head') === layout
     if (now - result.input < 5000) requestAnimationFrame(sample)
   }
