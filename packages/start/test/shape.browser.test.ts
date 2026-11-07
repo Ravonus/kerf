@@ -118,7 +118,9 @@ test('naive bars shift the page: the baseline', async () => {
   const r = await swap(page, '#one', '.bars')
   process.stdout.write(`shape: naive ${JSON.stringify(r)}\n`)
   expect(r.moved).toBeGreaterThan(100)
-  expect(r.shownCls).toBeGreaterThan(0)
+  // Showing the bars and then the content both shift; on a busy machine the bars' entry can land before the count
+  // starts, so the baseline counts the whole swap.
+  expect(r.shownCls + r.cls).toBeGreaterThan(0)
   await page.close()
 })
 
