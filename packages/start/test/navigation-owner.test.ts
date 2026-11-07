@@ -1,8 +1,9 @@
 import { afterEach, expect, it, vi } from 'vitest'
-import { flush, onCleanup } from '@weft-js/core'
+import { flush, onCleanup, state } from '@weft-js/core'
 import { insert, render } from '@weft-js/core/dom'
 import { createRouteState } from '../src/router'
 import type { ClientRoutes } from '../src/run'
+import { retainRouteView } from '../src/run/retain-view'
 
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
 vi.mock('../src/run/helpers', async (load) => ({
@@ -44,8 +45,8 @@ it('keeps mounted layout and page owners through replacements and cancellation',
       layout.append(button)
       const outlet = document.createElement('div')
       layout.append(outlet)
-      insert(outlet, () => {
-        if (route.levels[2]!.shape.value) return 'page shape'
+      insert(outlet, retainRouteView(() => {
+        void route.levels[2]!.id.value
         pageMounts++
         onCleanup(() => { pageCleanups++ })
         const pageButton = document.createElement('button')
@@ -55,7 +56,7 @@ it('keeps mounted layout and page owners through replacements and cancellation',
           pageButton.textContent = `page ${++pageCount}`
         })
         return pageButton
-      })
+      }, () => route.levels[2]!.shape.value ? 'page shape' : undefined))
       return layout
     })
     return app
@@ -71,14 +72,13 @@ it('keeps mounted layout and page owners through replacements and cancellation',
     const first = nav.go('/users/2?q=1')
     expect(document.querySelector('button')).toBe(button)
     expect(button.textContent).toBe('1')
-    expect(document.querySelector('section div button')).toBe(pageButton)
+    expect(document.querySelector('section div')!.textContent).toBe('page shape')
     expect(pageCleanups).toBe(0)
     expect(pageButton.textContent).toBe('page 1')
     const next = nav.go('/users/1?q=2')
     await first
     expect(document.querySelector('button')).toBe(button)
-    pageButton.click()
-    expect(pageButton.textContent).toBe('page 2')
+    expect(pageButton.textContent).toBe('page 1')
     button.click()
     expect(button.textContent).toBe('2')
     nav.current?.abort()
@@ -89,6 +89,10 @@ it('keeps mounted layout and page owners through replacements and cancellation',
     expect([mounts, cleanups, pageMounts, pageCleanups]).toEqual([1, 0, 1, 0])
     const changed = nav.go('/other')
     expect(document.querySelector('section div')!.textContent).toBe('page shape')
+    expect(pageCleanups).toBe(0)
+    route.levels[2]!.id.value = '/other'
+    nav.clearShape()
+    flush()
     expect(pageCleanups).toBe(1)
     nav.current?.abort()
     await changed
@@ -121,4 +125,52 @@ it('compares decoded splat segments and rejects malformed route guesses', async 
     expect(guess(routes, '/files/%XX')).toEqual([])
     expect(nav.changedParams(ids, new URL('/files/%XX', location.href))).toBe(-1)
   } finally { vi.unstubAllGlobals() }
+})
+
+it('retains a lazy root returned by the page view', () => {
+  const pending = state(false)
+  let cleanups = 0
+  let button!: HTMLButtonElement
+  const dispose = render(() => {
+    const app = document.createElement('main')
+    insert(app, retainRouteView(() => () => {
+      onCleanup(() => { cleanups++ })
+      button = document.createElement('button')
+      return button
+    }, () => pending.value ? 'shape' : undefined))
+    return app
+  }, document.body)
+  const original = button
+  try {
+    pending.value = true
+    flush()
+    expect(cleanups).toBe(0)
+    pending.value = false
+    flush()
+    expect(document.querySelector('button')).toBe(original)
+  } finally { dispose() }
+})
+
+it('retains lazy fragment children and disposes them with the outlet', () => {
+  const pending = state(false)
+  let cleanups = 0
+  const dispose = render(() => {
+    const app = document.createElement('main')
+    insert(app, retainRouteView(() => [0, 1].map((index) => () => {
+      onCleanup(() => { cleanups++ })
+      const node = document.createElement('b')
+      node.textContent = String(index)
+      return node
+    }), () => pending.value ? 'shape' : undefined))
+    return app
+  }, document.body)
+  const nodes = [...document.querySelectorAll('b')]
+  pending.value = true
+  flush()
+  expect(cleanups).toBe(0)
+  pending.value = false
+  flush()
+  expect([...document.querySelectorAll('b')]).toEqual(nodes)
+  dispose()
+  expect(cleanups).toBe(2)
 })

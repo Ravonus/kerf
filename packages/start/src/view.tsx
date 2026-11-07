@@ -6,6 +6,7 @@
 import { untrack } from '@weft-js/core'
 import { active, level, type RouteState } from './router'
 import type { PreparedRouteShape } from './run/shape-preparation'
+import { retainRouteView } from './run/retain-view'
 
 function ShapeTree(props: { shapes: PreparedRouteShape[]; depth: number }): unknown {
   const item = props.shapes[props.depth]
@@ -29,10 +30,6 @@ export function Level(props: { route: RouteState; depth: number }) {
   )
   const next = untrack(() => props.depth) + 1
   const view = () => {
-    const shape = lv.shape.value
-    if (shape) return <div inert aria-hidden="true" style="display:contents">
-      <ShapeTree shapes={shape} depth={0} />
-    </div>
     const id = lv.id.value
     if (id === undefined) return null
     const html = route.mount ? lv.html.value : undefined
@@ -59,7 +56,13 @@ export function Level(props: { route: RouteState; depth: number }) {
         )
       : body()
   }
-  return <>{view()}</>
+  const display = retainRouteView(view, () => {
+    const shape = lv.shape.value
+    return shape ? <div inert aria-hidden="true" style="display:contents">
+      <ShapeTree shapes={shape} depth={0} />
+    </div> : undefined
+  })
+  return <>{display()}</>
 }
 
 /**
