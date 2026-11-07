@@ -20,16 +20,20 @@ export function makeNavigation(
   /** The route as JSON for client navigation, with deferred fields awaited. */
   return async function data(path: string, request: Request, scope: Scope): Promise<Response> {
     const r = await resolve(path, request)
-    if (r.redirect)
+    if (r.redirect) {
+      const headers = new Headers(r.redirectHeaders)
+      headers.delete('location')
+      headers.set('cache-control', 'no-store')
       return noRetention(
         withHeaders(
           Response.json(
             { m: [], p: path, s: r.redirect.status, r: r.redirect.href } satisfies RoutePayload,
-            { headers: { 'cache-control': 'no-store' } },
+            { headers },
           ),
           scope,
         ),
       )
+    }
     for (const lv of r.levels)
       if (lv.d?.length)
         lv.data = {

@@ -15,18 +15,15 @@ export function makePage(deps: PageDeps) {
   return async function page(url: URL, request: Request, scope: Scope): Promise<Response> {
     const path = url.pathname + url.search
     const r = await deps.resolve(path, request)
-    if (r.redirect)
+    if (r.redirect) {
+      const headers = new Headers(r.redirectHeaders)
+      headers.set('location', r.redirect.href)
+      if (!headers.has('content-type')) headers.set('content-type', 'text/html; charset=utf-8')
+      if (!headers.has('cache-control')) headers.set('cache-control', 'no-cache')
       return withHeaders(
-        new Response(moved(r.redirect.href), {
-          status: r.redirect.status,
-          headers: {
-            location: r.redirect.href,
-            'content-type': 'text/html; charset=utf-8',
-            'cache-control': 'no-cache',
-          },
-        }),
-        scope,
+        new Response(moved(r.redirect.href), { status: r.redirect.status, headers }), scope,
       )
+    }
     scope.started = true // from here a redirect can't change the status (Q007)
     // The render reads raw deferred data; the page carries the settled part.
     const route = deps.stateOf(r, payloadOf(r, false))

@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { createMemoryHistory } from '@tanstack/history'
-import { RouterCore, createNonReactiveMutableStore, createNonReactiveReadonlyStore, notFound } from '@tanstack/router-core'
+import { RouterCore, createNonReactiveMutableStore, createNonReactiveReadonlyStore, notFound, redirect as routerRedirect } from '@tanstack/router-core'
 import { expect, it, vi } from 'vitest'
 import { routeTree } from '../src/server/routes'
 import type { Manifest, RouteModule } from '../src/server/types'
@@ -11,6 +11,9 @@ import { guess } from '../src/run/helpers'
 import { createRouteState } from '../src/router'
 
 vi.mock('../src/run/boot', () => ({ streamed: {} }))
+vi.mock('../src/server/page-cold', () => ({ coldPage: vi.fn() }))
+vi.mock('../src/server/page-warm', () => ({ warmPage: vi.fn() }))
+vi.mock('../src/view', () => ({ App: vi.fn() }))
 import { Navigation } from '../src/run/navigation'
 
 const patterns = ['/users/new', '/users/$id', '/files/$', '/café', '/']
@@ -100,14 +103,14 @@ async function finalResolution(path: string, modules: Record<string, RouteModule
   }, path, new Request(`http://localhost${path}`))
 }
 
-it.each(['/users/new', '/users/NEW', '/users/alice', '/users/alice/', '/users//alice',
-  '/missing', '/files/a%2Fb', '/files/', '/users/%XX', '/'])('agrees with final resolver for %s', async (path) => {
+it.each(['/users/new', '/users/NEW', '/users/alice', '/users//alice',
+  '/missing', '/files/a%2Fb', '/users/%XX', '/'])('agrees with final resolver for %s', async (path) => {
   const resolved = await finalResolution(path)
   expect(guess(routes, path)).toEqual(resolved.status === 200 ? resolved.levels.map((level) => level.id) : [])
 })
 
 
-it('keeps a trailing-slash trie match provisional when the final resolver returns 404', async () => {
+it('returns the canonical redirect instead of a trailing-slash 404', async () => {
   expect(await serverMatch('/users/alice/')).toEqual(['layout:', 'layout:users', '/users/$id'])
   const router = serverRouter('/users/alice/')
   await router.load()
@@ -115,8 +118,9 @@ it('keeps a trailing-slash trie match provisional when the final resolver return
   if (router._serverResult?.type !== 'redirect') throw new Error('expected canonical redirect')
   expect(router._serverResult.redirect.headers.get('location')).toBe('/users/alice')
   const final = await finalResolution('/users/alice/')
-  expect(final.status).toBe(404)
-  expect(final.levels.map((level) => level.id)).toEqual(['404'])
+  expect(final.status).toBe(307)
+  expect(final.redirect?.href).toBe('/users/alice')
+  expect(final.levels).toEqual([])
   expect(guess(routes, '/users/alice/')).toEqual([])
 })
 
@@ -138,4 +142,74 @@ it('reports a loader not-found after the pre-load route match', async () => {
   expect(result.status).toBe(404)
   expect(result.levels.at(-1)?.id).toBe('404')
   expect(guess(routes, '/users/new')).toEqual(['layout:', 'layout:users', '/users/new'])
+})
+
+
+it.each([
+  ['/users/alice/?tab=posts', '/users/alice?tab=posts'],
+  ['/users/alice/?tab=posts#section', '/users/alice?tab=posts#section'],
+])('keeps query and hash in canonical redirect from %s', async (path, destination) => {
+  const final = await finalResolution(path)
+  expect(final.status).toBe(307)
+  expect(final.redirect?.href).toBe(destination)
+})
+
+it('preserves router redirect status and headers from a loader', async () => {
+  const result = await finalResolution('/users/new', {
+    '/users/new': { load: () => {
+      throw routerRedirect({ href: '/users/alice', statusCode: 302, headers: { 'x-route': 'yes' } })
+    } },
+  })
+  expect(result.status).toBe(302)
+  expect(result.redirect?.href).toBe('/users/alice')
+  expect(result.redirectHeaders?.get('x-route')).toBe('yes')
+})
+
+it('keeps a genuine unknown path as not found', async () => {
+  const result = await finalResolution('/missing')
+  expect(result.status).toBe(404)
+  expect(result.redirect).toBeUndefined()
+  expect(result.levels.at(-1)?.id).toBe('404')
+})
+
+it('delivers router redirect headers and request-scope headers on both response paths', async () => {
+  const { makePage } = await import('../src/server/page')
+  const { makeNavigation } = await import('../src/server/navigation')
+  const { createScope } = await import('../src/exec')
+  const result = await finalResolution('/users/new', {
+    '/users/new': { load: () => {
+      throw routerRedirect({ href: '/users/alice', statusCode: 302, headers: { 'x-route': 'yes' } })
+    } },
+  })
+  const request = new Request('http://localhost/users/new')
+  const scope = createScope(request)
+  scope.headers.append('set-cookie', 'session=ok; Path=/')
+  const resolve = async () => result
+  const page = makePage({ resolve } as never)
+  const pageResponse = await page(new URL(request.url), request, scope)
+  expect(pageResponse.status).toBe(302)
+  expect(pageResponse.headers.get('location')).toBe('/users/alice')
+  expect(pageResponse.headers.get('x-route')).toBe('yes')
+  expect(pageResponse.headers.get('set-cookie')).toBe('session=ok; Path=/')
+  const navigation = makeNavigation(resolve, (() => {}) as never, new Set(), (() => {}) as never,
+    1, { manifest, modules: {} })
+  const dataResponse = await navigation('/users/new', request, scope)
+  expect(dataResponse.status).toBe(200)
+  expect(dataResponse.headers.get('location')).toBeNull()
+  expect(dataResponse.headers.get('x-route')).toBe('yes')
+  expect(dataResponse.headers.get('set-cookie')).toBe('session=ok; Path=/')
+  expect(await dataResponse.json()).toMatchObject({ r: '/users/alice', s: 302 })
+  const explicit = await finalResolution('/users/new', {
+    '/users/new': { load: () => redirect('/users/alice', 308) },
+  })
+  const explicitPage = makePage({ resolve: async () => explicit } as never)
+  const explicitResponse = await explicitPage(new URL(request.url), request, scope)
+  expect(explicitResponse.status).toBe(308)
+  expect(explicitResponse.headers.get('location')).toBe('/users/alice')
+  expect(explicitResponse.headers.get('set-cookie')).toBe('session=ok; Path=/')
+  const canonical = await finalResolution('/users/alice/?tab=posts')
+  const canonicalPage = makePage({ resolve: async () => canonical } as never)
+  const canonicalResponse = await canonicalPage(new URL(request.url), request, scope)
+  expect(canonicalResponse.status).toBe(307)
+  expect(canonicalResponse.headers.get('location')).toBe('/users/alice?tab=posts')
 })

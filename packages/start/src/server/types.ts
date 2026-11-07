@@ -150,6 +150,8 @@ export interface Resolved {
   error?: unknown
   /** A loader called `redirect()`: nothing renders. */
   redirect?: Redirect
+  /** Headers supplied by a router-core redirect. */
+  redirectHeaders?: Headers
   /** The metas the head is merged from, until `complete` has finished it. */
   metas?: MetaObject[] | undefined
   source?: MetaSource
