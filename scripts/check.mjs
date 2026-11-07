@@ -4,7 +4,8 @@
 //
 //   pnpm run check                 every step a merge needs (all at once)
 //   pnpm run check --fast          without the test suites
-//   pnpm run check --release       also the release-only steps (the 3G navigation e2e) and WebKit
+//   pnpm run check --release       also the release-only steps and test files (scripts/check/tiers.mjs), and WebKit
+//   pnpm run check --changed=main  test only the packages changed since main, and those that depend on them
 //   pnpm run check --only=lint,types
 //   pnpm run check --list          the steps, and what each covers
 //   pnpm run check --require-tools a missing gitleaks or cargo-deny fails instead of skipping (CI does this)
@@ -13,6 +14,7 @@ import { repoRoot } from './lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
 import { run, allJobs } from './check/run.mjs'
 import { runSteps } from './check/steps.mjs'
+import { affected, mergeArgs } from './check/tiers.mjs'
 import { typeProblems } from './check/types.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -35,6 +37,8 @@ const fast = argv.includes('--fast'),
   release = argv.includes('--release'),
   requireTools = argv.includes('--require-tools')
 if (release) process.env.WEFT_WEBKIT = '1'
+// --changed=<ref>: test only the packages a change since <ref> touches, and those that depend on them.
+const changedSince = argv.find((a) => a.startsWith('--changed='))?.slice(10)
 const limit = jobs()
 const windows = process.platform === 'win32'
 const bin = (name) => join(root, 'node_modules', '.bin', windows ? `${name}.cmd` : name)
@@ -43,6 +47,7 @@ const CRATES = ['crates/weft-compiler', 'crates/weft-layout', 'crates/weft']
 const PACKAGES = readdirSync(join(root, 'packages'))
   .filter((d) => existsSync(join(root, 'packages', d, 'package.json')))
   .map((d) => `packages/${d}`)
+const testable = changedSince ? affected(root, PACKAGES, changedSince) : PACKAGES
 const LINT_PATHS = [
   'packages',
   'scripts',
@@ -356,8 +361,10 @@ const STEPS = [
         // The longest suites start first; each gets a few workers rather than the whole machine.
         PACKAGES.filter(
           (d) => JSON.parse(readFileSync(join(root, d, 'package.json'), 'utf8')).scripts?.test,
-        ).sort((a, b) => LONG.indexOf(b) - LONG.indexOf(a)),
-        (d) => run('pnpm', ['test', '--maxWorkers=4'], d),
+        )
+          .filter((d) => !changedSince || testable.includes(d))
+          .sort((a, b) => LONG.indexOf(b) - LONG.indexOf(a)),
+        (d) => run('pnpm', ['test', '--maxWorkers=4', ...(release ? [] : mergeArgs(d))], d),
       ),
   },
 ]
