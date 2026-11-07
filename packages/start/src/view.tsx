@@ -9,7 +9,8 @@ import type { PreparedRouteShape } from './run/shape-preparation'
 import { retainRouteView } from './run/retain-view'
 
 function ShapeTree(props: { shapes: PreparedRouteShape[]; depth: number }): unknown {
-  const item = props.shapes[props.depth]
+  // A skeleton is a snapshot: the outlet swaps the whole tree when its shapes change.
+  const item = untrack(() => props.shapes[props.depth])
   if (!item) return null
   const Shape = item.component as (props: { children: unknown }) => unknown
   return (
