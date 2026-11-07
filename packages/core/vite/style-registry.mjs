@@ -23,13 +23,14 @@ export function defsOf(s, file) {
 }
 
 /** The exported groups brought in by one file's relative imports. */
-export async function importedGroups(s, ctx, code, id) {
+export async function importedGroups(s, ctx, code, id, onDependency, onCandidate) {
   const out = {}
   for (const [, names, spec] of code.matchAll(IMPORTS)) {
     const hit = ctx
       ? await ctx.resolve(spec, id, { skipSelf: true })
       : { id: resolvePath(dirname(id), spec) }
     const file = hit?.id?.replace(/\?.*$/, '')
+    if (!file || EXT.test(file)) onCandidate?.(file ?? resolvePath(dirname(id), spec))
     if (!file || !EXT.test(file)) continue
     const found = defsOf(s, file).filter((g) => g.exported)
     if (!found.length) continue
@@ -40,7 +41,10 @@ export async function importedGroups(s, ctx, code, id) {
         .replace(/^type\s+/, '')
         .split(/\s+as\s+/)[0]
       const g = found.find((x) => x.binding === imported)
-      if (g) out[`${key}#${imported}`] = { name: g.name, def: g.def }
+      if (g) {
+        out[`${key}#${imported}`] = { name: g.name, def: g.def }
+        onDependency?.(file)
+      }
     }
   }
   return out

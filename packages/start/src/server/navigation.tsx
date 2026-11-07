@@ -6,26 +6,35 @@ import type { Scope } from '../exec'
 import { App } from '../view'
 import { withLevels } from './render'
 import { payloadOf, wire } from './payload'
-import { cookieJar, withHeaders } from './request'
-import type { Resolved } from './types'
+import { noRetention, validateNavigation } from './navigation-cache'
+import { cookieJar, redirectBody, withHeaders } from './request'
+import type { HandlerOptions, Resolved } from './types'
 export function makeNavigation(
   resolve: (path: string, request: Request) => Promise<Resolved>,
   finished: (r: Resolved, request: Request) => Promise<Merged>,
   statics: Set<string>,
   stateOf: (r: Resolved, payload: RoutePayload) => ReturnType<typeof createRouteState>,
   PASSES: number,
+  options: HandlerOptions,
 ) {
-  /** The route as JSON for client navigation: deferred fields awaited (no streaming on navigation yet). */
+  /** The route as JSON for client navigation, with deferred fields awaited. */
   return async function data(path: string, request: Request, scope: Scope): Promise<Response> {
     const r = await resolve(path, request)
-    if (r.redirect)
-      return withHeaders(
-        Response.json(
-          { m: [], p: path, s: r.redirect.status, r: r.redirect.href } satisfies RoutePayload,
-          { headers: { 'cache-control': 'no-cache' } },
+    if (r.redirect) {
+      const headers = new Headers(r.redirectHeaders)
+      headers.delete('location')
+      headers.set('cache-control', 'no-store')
+      return noRetention(
+        redirectBody(
+          Response.json(
+            { m: [], p: path, s: r.redirect.status, r: r.redirect.href } satisfies RoutePayload,
+            { headers },
+          ),
+          scope,
+          'application/json',
         ),
-        scope,
       )
+    }
     for (const lv of r.levels)
       if (lv.d?.length)
         lv.data = {
@@ -38,7 +47,7 @@ export function makeNavigation(
         }
     await finished(r, request)
     const c = wire(scope)
-    let payload = payloadOf(r, true)
+    let payload = payloadOf(r, true, options)
     if (r.levels.some((lv) => statics.has(lv.id))) {
       const route = stateOf(r, payload)
       const out = await renderToStringAsync(() => <App route={route} />, {
@@ -59,12 +68,11 @@ export function makeNavigation(
         }),
       }
     }
-    return withHeaders(
-      Response.json(
-        { ...payload, ...(c.length && { c }) },
-        { status: 200, headers: { 'cache-control': 'no-cache' } },
-      ),
+    const body = JSON.stringify({ ...payload, ...(c.length && { c }) })
+    const response = withHeaders(
+      new Response(body, { headers: { 'content-type': 'application/json' } }),
       scope,
     )
+    return validateNavigation(response, request, body, options.build, r.error ? 500 : r.status)
   }
 }

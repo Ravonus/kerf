@@ -13,15 +13,46 @@ import { client, type Component } from './router'
 import { mount, prepare } from './run/boot'
 import { listeners } from './run/listeners'
 import { Navigation } from './run/navigation'
+import { prepareRouteShape } from './run/shape-preparation'
 
 type Hot = ImportMeta & {
   hot?: { on(event: string, on: (data: { queries: boolean }) => unknown): void }
 }
 
+/**
+ * Synchronous shape metadata from separately compiled modules. CSS and emitted
+ * asset bytes are null until known; consumers must not treat them as available
+ * or free. cssText holds generated groups and resolved static entry and level
+ * styles, including tokens. cssStatus remains partial.
+ * Unavailable covers unproven overrides and unsupported route files.
+ */
+export type RouteShape =
+  | { kind: 'disabled'; css: string[] | null; bytes: number | null }
+  | {
+      kind: 'unavailable'
+      reason: 'unresolved-export' | 'unsupported-file' | 'missing-shape'
+      css: null
+      bytes: null
+    }
+  | {
+      kind: 'generated' | 'override'
+      component: Component
+      css: string[] | null
+      cssText: string[]
+      cssStatus: 'partial'
+      bytes: number | null
+    }
+
+/** Shape entries are keyed by level id, including layouts and error routes. */
+export type RouteShapes = Record<string, RouteShape>
+
 /** The client half of `virtual:weft/routes`: the page routes in match order, and a chunk loader per route id. */
 export interface ClientRoutes {
+  build?: string | null
   table: { id: string; pattern: string; layouts: string[] }[]
   load: Record<string, () => Promise<{ default?: Component }>>
+  /** Eager shape metadata, keyed by route or layout id. */
+  shapes?: RouteShapes
   /** Each island's code, by id: all a static level loads (PLAN §11). */
   islands?: Record<string, () => Promise<{ default: Component }>>
 }
@@ -31,6 +62,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   const prepared = prepare(routes, options)
   await Promise.all(prepared.loads)
   const page = mount(prepared)
+  page.route.prepareShape = (id) => prepareRouteShape(routes, id, document)
   const navigation = new Navigation(routes, page)
   client.navigate = navigation.go
   listeners(navigation, () => (import.meta as Hot).hot)

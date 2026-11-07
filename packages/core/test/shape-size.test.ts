@@ -43,3 +43,27 @@ test('a pending="shape" page pays for what it uses, within the budget', async ()
   const used = brotliCompressSync(code).length
   expect(used - none).toBeLessThan(650)
 }, 60_000)
+
+test('the Vite transform requests route and layout variants without a Boundary', async () => {
+  const main = weft({ hmr: false }).find((plugin) => plugin.name === 'weft')
+  if (!main) throw new Error('weft transform missing')
+  const hook = (main as { transform?: unknown }).transform as {
+    handler: (this: object, code: string, id: string, options: object) => Promise<{ code: string }>
+  }
+  // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
+  const context = { resolve: async () => null }
+  const page = await hook.handler.call(
+    context,
+    'export default function Page() { return <main>Page</main> }',
+    '/app/src/routes/index.tsx',
+    {},
+  )
+  const layout = await hook.handler.call(
+    context,
+    'export default function Layout(p) { return <main>{p.children}</main> }',
+    '/app/src/routes/_layout.tsx',
+    {},
+  )
+  expect(page.code).toContain('as default$shape')
+  expect(layout.code).toContain('as default$shape')
+})

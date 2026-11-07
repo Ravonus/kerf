@@ -82,8 +82,21 @@ async function resolvedMatches(
   request: Request,
 ): Promise<Resolved> {
   const { site, manifest, byId, mod, comps, options } = deps
-  const goes = hold.out.redirect
-  if (goes) return { status: goes.status, path, levels: [], head: mergeMeta(site), redirect: goes }
+  const native =
+    router._serverResult?.type === 'redirect' ? router._serverResult.redirect : undefined
+  const href = native?.headers.get('location')
+  const goes =
+    hold.out.redirect ??
+    (native && href ? { isRedirect: true as const, href, status: native.status } : undefined)
+  if (goes)
+    return {
+      status: goes.status,
+      path,
+      levels: [],
+      head: mergeMeta(site),
+      redirect: goes,
+      ...(!hold.out.redirect && native ? { redirectHeaders: native.headers } : {}),
+    }
   const matches = router.state.matches.map((m) => ({
     m,
     weft: (router.routesById as Record<string, { options: { weft?: RouteEntry | LayoutEntry } }>)[

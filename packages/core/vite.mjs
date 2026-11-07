@@ -12,6 +12,8 @@ import {
 import { importedShapes } from './vite/shapes.mjs'
 import { purgeCss } from './vite/purge.mjs'
 import { styleGroups } from './vite/style-groups.mjs'
+import { shapeGroupCss } from './vite/shape-styles.mjs'
+import { shapeWatch } from './vite/shape-watch.mjs'
 import { icons } from './vite/icons.mjs'
 import { agent } from './vite/agent.mjs'
 import { watchChanges } from './vite/watch.mjs'
@@ -47,6 +49,7 @@ export default function weft({
   let isDev = false
   let isHot = false
   const style = styleGroups(styleOptions)
+  const watching = shapeWatch((file) => style.forget(file))
   const main = {
     name: 'weft',
     enforce: 'pre',
@@ -63,22 +66,36 @@ export default function weft({
       return await modeHooks.resolveId.call(this, source, importer)
     },
     transform: {
-      filter: { id: /\.[jt]sx(\?weft-(ssr|hydrate))?$/ },
+      filter: { id: /\.[jt]sx(\?weft-(ssr|hydrate|shape))?$/ },
       async handler(code, id, options) {
+        const standalone = id.endsWith('?weft-shape')
         const mode = MODE.exec(id)?.[1]
         const ssr = mode ? mode === 'ssr' : !!options?.ssr
         const hydrating = hydratable || !!mode
-        const groups = await style.options(this, code, id.replace(/\?.*$/, ''))
-        const shapes = await importedShapes(this, code, id.replace(/\?.*$/, ''))
-        const islands = hydrating && !mode ? await main.api.islands?.(this, id) : undefined
+        const dependencies = new Set()
+        const groups = await style.options(
+          this,
+          code,
+          id.replace(/\?.*$/, ''),
+          (file) => {
+            if (standalone) dependencies.add(file)
+          },
+          (file) => {
+            if (standalone) watching.candidate(file, dependencies)
+          },
+        )
+        if (standalone) watching.replace(id, dependencies, this)
+        const shapes = standalone ? {} : await importedShapes(this, code, id.replace(/\?.*$/, ''))
+        const islands =
+          hydrating && !mode && !standalone ? await main.api.islands?.(this, id) : undefined
         const out = transform(code, {
-          filename: id.replace(/\?.*$/, ''),
+          filename: standalone ? id : id.replace(/\?.*$/, ''),
           islands,
           dev: isDev,
           sourceMap: true,
           generate: ssr ? 'ssr' : 'dom',
           hydratable: hydrating,
-          hmr: isDev && isHot && !ssr,
+          hmr: !standalone && isDev && isHot && !ssr,
           groups,
           shapes,
           taggedParts: !!styleOptions?.taggedParts,
@@ -90,10 +107,26 @@ export default function weft({
           else this.warn({ message: text, loc })
         }
         if (!out.code) return null
-        return { code: style.record(this, id, out.facts, out.code, ssr), map: out.map }
+        const generated = standalone
+          ? shapeGroupCss(out.facts, groups, id.replace(/\?.*$/, ''), {
+              dev: isDev,
+              taggedParts: !!styleOptions?.taggedParts,
+            })
+          : ''
+        return {
+          code: standalone
+            ? `${out.code}\nexport const $weftShapeCss = ${JSON.stringify(generated)};`
+            : style.record(this, id, out.facts, out.code, ssr),
+          map: out.map,
+        }
       },
     },
-    configureServer: watchChanges,
+    configureServer(server) {
+      watching.attach(server)
+      return watchChanges(server)
+    },
+    // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
+    hotUpdate: watching.hotUpdate,
     /** `islands(ctx, id)`: a framework's project view of the file (node/hydration.mjs). */
     api: {},
   }

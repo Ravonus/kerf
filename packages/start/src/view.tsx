@@ -5,6 +5,20 @@
 
 import { untrack } from '@weft-js/core'
 import { active, level, type RouteState } from './router'
+import type { PreparedRouteShape } from './run/shape-preparation'
+import { retainRouteView } from './run/retain-view'
+
+function ShapeTree(props: { shapes: PreparedRouteShape[]; depth: number }): unknown {
+  // A skeleton is a snapshot: the outlet swaps the whole tree when its shapes change.
+  const item = untrack(() => props.shapes[props.depth])
+  if (!item) return null
+  const Shape = item.component as (props: { children: unknown }) => unknown
+  return (
+    <Shape>
+      <ShapeTree shapes={props.shapes} depth={props.depth + 1} />
+    </Shape>
+  )
+}
 
 // The route state travels as a prop, not a context: a level's view runs later, in the hole that shows it, under that
 // hole's owner. `active.route` is the state of the render in progress (a server pass is synchronous; the client has one).
@@ -47,7 +61,15 @@ export function Level(props: { route: RouteState; depth: number }) {
         )
       : body()
   }
-  return <>{view()}</>
+  const display = retainRouteView(view, () => {
+    const shape = lv.shape.value
+    return shape ? (
+      <div inert aria-hidden="true" style="display:contents">
+        <ShapeTree shapes={shape} depth={0} />
+      </div>
+    ) : undefined
+  })
+  return <>{display()}</>
 }
 
 /**

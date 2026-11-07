@@ -199,8 +199,10 @@ test('client navigation into a static route: its HTML, with islands running', as
   expect((await count(page)).wk).toBe(0)
   await page.goBack()
   await page.waitForFunction(() => !document.querySelector('.islands'))
+  await page.waitForFunction(() => !document.querySelector('[inert][aria-hidden]')) // the shape gave way to the page
   await page.goForward()
   await page.waitForSelector('.islands')
+  await page.waitForFunction(() => !document.querySelector('[inert][aria-hidden]')) // the shape gave way to the page
   expect(await page.textContent('.counter[data-label=a]')).toBe('a: 1') // a new page, fresh state
   expect(errors).toEqual([])
   await page.close()
@@ -218,6 +220,7 @@ test("an island at a level's top takes its own nodes with it", async () => {
   await page.waitForSelector('.many')
   await page.click('a[href="/about"]')
   await page.waitForFunction(() => !document.querySelector('.top-note'))
+  await page.waitForFunction(() => !document.querySelector('[inert][aria-hidden]')) // the shape gave way to the page
   expect(await page.$('.many')).toBeNull()
   expect(await page.$('.many-toggle')).toBeNull()
   expect(errors).toEqual([])

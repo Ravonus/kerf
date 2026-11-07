@@ -62,7 +62,8 @@
     "test": "vitest run",
     "test:e2e": "node scripts/runtime-matrix.mjs",
     "prepack": "node scripts/crate.mjs",
-    "postpack": "node scripts/crate.mjs --clean"
+    "postpack": "node scripts/crate.mjs --clean",
+    "test:shapes": "node --test test/e2e/*.e2e.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",

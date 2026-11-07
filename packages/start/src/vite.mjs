@@ -30,7 +30,12 @@
 // document fits the first flight, else the rules the page's HTML reaches, with the sheets behind them as links that
 // don't hold the paint. `site: { inlineCss: false }` keeps plain links.
 
+import { existsSync } from 'node:fs'
+import { relative } from 'node:path'
 import { createState } from './vite/state.mjs'
+import { shapeSignature } from './vite/route-modules.mjs'
+import { entryCandidate, entryCssSignature, entryWatchLifecycle } from './vite/shape-entry-css.mjs'
+import { V } from './vite/shared.mjs'
 import { configHook, writeBundle, renderChunk, configResolved } from './vite/config-hooks.mjs'
 import { configureServer, hotUpdate } from './vite/dev-hooks.mjs'
 import { resolveId, load, transform, api } from './vite/module-hooks.mjs'
@@ -41,11 +46,105 @@ export { isServerModule, fnId, withIds, clientStubs } from './vite/server-functi
 export { scanRoutes, routeTypes } from './routes.mjs'
 export { here as startDir } from './vite/shared.mjs'
 
+/** Reload when an edit changes shape metadata embedded in the client route module. */
+export function shapeHotUpdate(state, modes, next) {
+  return async function (update) {
+    if (this.environment.config.consumer === 'client') {
+      const pending =
+        state.shapeScanActive === state.shapeScanGeneration && state.shapeScanActive !== undefined
+      if (pending) state.shapeScanGeneration++
+      const owners = [...(state.shapeOverrideDependencies ?? [])].flatMap(([file, routes]) =>
+        entryCandidate(new Set([file]), update.file) ? [...routes] : [],
+      )
+      if (owners.length) {
+        if (
+          update.type === 'update' &&
+          entryCandidate(state.shapeEntryMissing, update.file) &&
+          existsSync(update.file)
+        )
+          await this.environment.pluginContainer.watchChange(update.file, { event: 'create' })
+        const graph = this.environment.moduleGraph
+        for (const file of owners) {
+          const id = `\0virtual:weft/shape-override/${encodeURIComponent(file)}.tsx`
+          const asset = graph.getModuleById(id)
+          if (asset) graph.invalidateModule(asset)
+        }
+        const mod = graph.getModuleById('\0' + V.routes)
+        if (mod) graph.invalidateModule(mod)
+        state.vite?.ws.send({ type: 'full-reload' })
+        return []
+      }
+      const rel = relative(state.root, update.file).split('\\').join('/')
+      const entrySignatures = state.shapeEntrySignatures
+      if (entrySignatures?.has(update.file)) {
+        let signature
+        try {
+          signature = entryCssSignature(update.file)
+        } catch {
+          signature = 'invalid'
+        }
+        const previous = entrySignatures.get(update.file)
+        entrySignatures.set(update.file, signature)
+        if (previous !== signature) {
+          const graph = this.environment.moduleGraph
+          const mod = graph.getModuleById('\0' + V.routes)
+          if (mod) graph.invalidateModule(mod)
+          state.vite?.ws.send({ type: 'full-reload' })
+          return []
+        }
+      }
+      const candidateEvent =
+        (update.type === 'create' || update.type === 'delete') &&
+        entryCandidate(state.shapeEntryCandidates, update.file)
+      const missingUpdate =
+        update.type === 'update' && entryCandidate(state.shapeEntryMissing, update.file)
+      if (candidateEvent || missingUpdate) {
+        // A watched missing path may arrive as an update; Vite clears negative resolution on create.
+        if (missingUpdate && existsSync(update.file))
+          await this.environment.pluginContainer.watchChange(update.file, { event: 'create' })
+        const graph = this.environment.moduleGraph
+        const mod = graph.getModuleById('\0' + V.routes)
+        if (mod) graph.invalidateModule(mod)
+        state.vite?.ws.send({ type: 'full-reload' })
+        return []
+      }
+      const levels = [...state.manifest.routes, ...state.manifest.layouts]
+      if (levels.some((level) => level.file === rel) || state.clientEntry?.() === update.file) {
+        let mode
+        try {
+          mode = shapeSignature(update.file)
+        } catch {
+          mode = 'invalid'
+        }
+        const before = modes.get(rel)
+        modes.set(rel, mode)
+        if (before !== mode) {
+          const graph = this.environment.moduleGraph
+          const mod = graph.getModuleById('\0' + V.routes)
+          if (mod) graph.invalidateModule(mod)
+          state.vite?.ws.send({ type: 'full-reload' })
+          return []
+        }
+      }
+      if (pending) {
+        const graph = this.environment.moduleGraph
+        const mod = graph.getModuleById('\0' + V.routes)
+        if (mod) graph.invalidateModule(mod)
+        state.vite?.ws.send({ type: 'full-reload' })
+        return []
+      }
+    }
+    return next.call(this, update)
+  }
+}
+
 /**
  * @param {{ root?: string, site?: import('@weft-js/core/ssr').Site, routesDir?: string, timeout?: number, hold?: number, fonts?: string[], hydration?: 'lazy' | 'partial' | 'full' }} [options]
  */
 export default function weftStart(options = {}) {
   const state = createState(options)
+  const modes = new Map()
+  const configure = configureServer(state)
   return [
     {
       name: 'weft:start',
@@ -63,8 +162,28 @@ export default function weftStart(options = {}) {
     {
       name: 'weft:start:dev',
       enforce: 'pre',
-      configureServer: configureServer(state),
-      hotUpdate: hotUpdate(state),
+      configureServer(server) {
+        for (const level of [...state.manifest.routes, ...state.manifest.layouts]) {
+          try {
+            modes.set(level.file, shapeSignature(state.abs(level.file)))
+          } catch {
+            modes.set(level.file, 'invalid')
+          }
+        }
+        const entry = state.clientEntry()
+        if (!entry.startsWith('virtual:')) {
+          const rel = relative(state.root, entry).split('\\').join('/')
+          try {
+            modes.set(rel, shapeSignature(entry))
+          } catch {
+            modes.set(rel, 'invalid')
+          }
+        }
+        const configured = configure(server)
+        entryWatchLifecycle(state, server, modes)
+        return configured
+      },
+      hotUpdate: shapeHotUpdate(state, modes, hotUpdate(state)),
     },
     {
       name: 'weft:start:modules',

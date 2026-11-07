@@ -71,8 +71,14 @@ export function styleGroups({ taggedParts = false, matrix = !process.env.VITEST 
   }
   return {
     /** Before compiling: the groups option. After: record the facts; a module that defines groups imports the CSS. */
-    async options(ctx, code, id) {
-      return code.includes('{...') ? await importedGroups(s, ctx, code, id) : {}
+    async options(ctx, code, id, onDependency, onCandidate) {
+      return code.includes('{...')
+        ? await importedGroups(s, ctx, code, id, onDependency, onCandidate)
+        : {}
+    },
+    forget(file) {
+      s.scanned.delete(file)
+      s.defs.delete(file)
     },
     record(ctx, id, facts, out, ssr) {
       const file = id.replace(/\?.*$/, '')

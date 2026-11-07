@@ -193,10 +193,14 @@ test('navigating between users keeps both layouts and writes only what changed',
   const take = await record(page)
   await page.click('a[href="/users/2"]')
   await page.waitForFunction(() => document.querySelector('h2')?.textContent === 'Grace Hopper')
-  // The detail route is static, so the server's HTML replaces it; aria-current moves from one link to the other; nothing else.
+  await page.waitForFunction(() => !document.querySelector('[inert][aria-hidden]')) // the shape gave way to the page
+  // The detail's shape shows first, then the server's HTML replaces it; aria-current moves from one link to the
+  // other; nothing else.
   expect((await take()).sort()).toEqual([
     'attributes:A.aria-current',
     'attributes:A.aria-current',
+    'childList:DIV',
+    'childList:DIV',
     'childList:DIV',
     'childList:DIV',
   ])
@@ -246,6 +250,7 @@ test('leaving the users layout replaces it; back and forward restore', async () 
   const { page, errors } = await open('/users/1')
   await page.click('a[href="/about"]')
   await page.waitForFunction(() => document.querySelector('h1')?.textContent === 'About us')
+  await page.waitForFunction(() => !document.querySelector('[inert][aria-hidden]')) // the shape gave way to the page
   expect(await page.$('section.users')).toBeNull()
   expect(await page.title()).toBe('About · Acme')
   expect(await page.getAttribute('a[href="/about"]', 'aria-current')).toBe('page')

@@ -1,0 +1,98 @@
+{
+  "file:crates/weft-compiler/src/shape.rs": {
+    "lines": 470,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "file:packages/start/src/run/navigation.ts": {
+    "lines": 437,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:crates/weft-compiler/src/shape.rs:apply": {
+    "lines": 112,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/core/test/e2e/shape-watch.e2e.mjs:test(Vite watcher handles group edit, deletion, recreation and owner deletion)": {
+    "lines": 93,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/core/test/e2e/shape-watch.e2e.mjs:test(callback)": {
+    "lines": 83,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/core/vite.mjs:weft": {
+    "lines": 109,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/src/run/navigation.ts:Navigation.travel": {
+    "lines": 95,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/src/run/source-context.ts:retainSourceContext": {
+    "lines": 325,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/src/server/resolver.ts:resolvedMatches": {
+    "lines": 87,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/src/vite.mjs:shapeHotUpdate/anonymous": {
+    "lines": 88,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/src/vite.mjs:shapeHotUpdate": {
+    "lines": 90,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/src/vite/module-hooks.mjs:load/handler": {
+    "lines": 139,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/src/vite/module-hooks.mjs:load": {
+    "lines": 142,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/test/e2e/shape-entry-watch.e2e.mjs:test(Vite watcher refreshes missing entry imports and drops removed edges)": {
+    "lines": 90,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/test/e2e/shape-level-css.e2e.mjs:project": {
+    "lines": 90,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/test/e2e/shape-override-watch.e2e.mjs:test(Vite watcher refreshes missing and changing imported overrides)": {
+    "lines": 82,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/test/navigation-accept.test.ts:describe(navigation acceptance)": {
+    "lines": 425,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/test/navigation-admission.test.ts:describe(navigation pointer admission)": {
+    "lines": 118,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/test/navigation-cache.test.ts:describe(route response validators)/it(runs authorization and loaders before comparing session and mutation results)": {
+    "lines": 91,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/test/navigation-cache.test.ts:describe(route response validators)": {
+    "lines": 197,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/test/navigation-owner.test.ts:it(keeps mounted layout and page owners through replacements and cancellation)": {
+    "lines": 125,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/test/shape-styles.test.ts:describe(route shape style preparation)": {
+    "lines": 88,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/test/source-attributes.test.ts:describe(retained source attribute mutations)": {
+    "lines": 253,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  },
+  "function:packages/start/test/source-context.test.ts:describe(retained source URL context)": {
+    "lines": 270,
+    "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
+  }
+}

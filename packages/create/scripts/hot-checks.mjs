@@ -190,8 +190,12 @@ async function checkRecovery({ read, write, route, base, page, chrome, kept, pas
 }
 
 function duplicateUrls(loaded) {
-  return loaded
-    .filter((u) => /\.[jt]sx?(\?|$)/.test(u))
-    .map((u) => u.replace(/\?.*$/, ''))
-    .filter((u, i, all) => all.indexOf(u) !== i)
+  return (
+    loaded
+      .filter((u) => /\.[jt]sx?(\?|$)/.test(u))
+      // A route's instant-navigation shape is its own module, compiled from the same file.
+      .filter((u) => !/[?&]weft-shape\b/.test(u))
+      .map((u) => u.replace(/\?.*$/, ''))
+      .filter((u, i, all) => all.indexOf(u) !== i)
+  )
 }

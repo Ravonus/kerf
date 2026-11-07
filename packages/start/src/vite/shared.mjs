@@ -26,6 +26,7 @@ export const PRELOAD =
   'Per page, from the HTML: an island that loads with the page, or a lazy one in about the first 900px, is modulepreloaded (fetched, not run). The rest load when needed. Save-Data: lazy ones are not preloaded, and wait for interaction.'
 export const NOT_ASSET = /\.[cm]?[jt]sx?$/
 export const INLINE_SHEETS = '__WEFT_INLINE_SHEETS__'
+export const ROUTE_ASSET_BYTES = '__WEFT_ROUTE_ASSET_BYTES__'
 // A page's critical CSS with `criticalCss: false` uses the build's own reachability rules.
 export const purgeFile = createRequire(join(here, 'vite.mjs'))
   .resolve('@weft-js/core/node-purge')
