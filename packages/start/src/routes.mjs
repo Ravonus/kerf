@@ -157,8 +157,10 @@ function chain(d, layoutOf) {
 
 function cmpRank(a, b) {
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
-    if (a[i] === undefined) return 1 // shorter after: `/users/new` is tried before `/users/$id/edit`… only on ties
-    if (b[i] === undefined) return -1
+    // Shorter after: `/users/new` is tried before `/users/$id/edit`… only on ties. But a splat also matches nothing, so
+    // the route it would extend comes first: `/docs` before `/docs/$`, or the splat takes `/docs` itself.
+    if (a[i] === undefined) return b[i] === 0 && b.length === i + 1 ? -1 : 1
+    if (b[i] === undefined) return a[i] === 0 && a.length === i + 1 ? 1 : -1
     if (a[i] !== b[i]) return b[i] - a[i]
   }
   return 0

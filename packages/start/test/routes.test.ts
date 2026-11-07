@@ -63,6 +63,8 @@ test('params, splats and bad names', () => {
   expect(m.routes.map((r) => [r.id, r.params, r.splat ?? null])).toEqual([
     ['/docs/$section/intro', ['section'], null],
     ['/docs/$section', ['section'], null],
+    // the section's own page before the splat beside it, which would match `/docs` too
+    ['/docs', [], null],
     ['/docs/$', ['rest'], 'rest'],
   ])
   expect(m.problems.map((p) => p.file)).toEqual(['routes/bad[x].tsx'])
