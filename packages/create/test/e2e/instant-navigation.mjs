@@ -159,7 +159,12 @@ async function main() {
     const url = `http://127.0.0.1:${port}/`
     server = spawn(process.execPath, ['.output/server/index.mjs'], {
       cwd: app,
-      env: { ...process.env, PORT: String(port) },
+      // The env check wants a database URL; the landing pages never connect to it.
+      env: {
+        ...process.env,
+        PORT: String(port),
+        DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://weft@127.0.0.1:5432/weft',
+      },
       stdio: 'inherit',
     })
     await waitForServer(server, url)
