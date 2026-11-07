@@ -313,6 +313,13 @@ const STEPS = [
     run: async () => lines(await run(process.execPath, ['scripts/quality/commits.mjs'])),
   },
   {
+    id: 'instant-navigation',
+    covers: 'landing scaffold navigation on Fast and Slow 3G',
+    slow: true,
+    fix: 'Run `pnpm --filter @weft-js/create test:e2e` and inspect the failures.',
+    run: async () => lines(await run('pnpm', ['--filter', '@weft-js/create', 'test:e2e'])),
+  },
+  {
     id: 'rust-tests',
     covers: 'cargo test in each crate',
     slow: true,
