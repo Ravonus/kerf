@@ -22,7 +22,11 @@ export function summarize(events, exitCode, timedOut = false) {
     ok: exitCode === 0 && !timedOut && !failed && !!completed,
     status: timedOut
       ? 'timeout'
-      : failed || exitCode !== 0 ? 'failed' : completed ? 'completed' : 'incomplete',
+      : failed || exitCode !== 0
+        ? 'failed'
+        : completed
+          ? 'completed'
+          : 'incomplete',
     exitCode,
     usage: validUsage
       ? {
@@ -38,4 +42,3 @@ export function summarize(events, exitCode, timedOut = false) {
     commandEvents: commands.length,
   }
 }
-

@@ -6,13 +6,27 @@ import { summarize } from './codex-events.mjs'
 
 /** Run an isolated, externally sandboxed Codex process. The caller owns its environment and box. */
 export async function runCodex({
-  command, prefix = [], cwd, env, prompt, timeoutMs, spawnProcess = spawn,
+  command,
+  prefix = [],
+  cwd,
+  env,
+  prompt,
+  timeoutMs,
+  spawnProcess = spawn,
 }) {
   if (!command || !cwd || !env || !Number.isFinite(timeoutMs) || timeoutMs <= 0)
     throw new Error('Codex needs an isolated command, cwd, environment and timeout')
   const args = [
-    ...prefix, 'exec', '--json', '--ephemeral', '--skip-git-repo-check',
-    '--model', 'gpt-6-luna', '--sandbox', 'workspace-write', '-',
+    ...prefix,
+    'exec',
+    '--json',
+    '--ephemeral',
+    '--skip-git-repo-check',
+    '--model',
+    'gpt-6-luna',
+    '--sandbox',
+    'workspace-write',
+    '-',
   ]
   const child = spawnProcess(command, args, { cwd, env, stdio: ['pipe', 'pipe', 'pipe'] })
   const events = []
@@ -26,7 +40,11 @@ export async function runCodex({
   const lines = createInterface({ input: child.stdout })
   lines.on('line', (line) => {
     bytes += Buffer.byteLength(line)
-    if (bytes > 4 * 1024 * 1024) { malformed = true; child.kill('SIGKILL'); return }
+    if (bytes > 4 * 1024 * 1024) {
+      malformed = true
+      child.kill('SIGKILL')
+      return
+    }
     try {
       events.push(JSON.parse(line))
     } catch {
@@ -36,10 +54,17 @@ export async function runCodex({
   child.stderr.resume()
   child.stdin.on('error', () => {})
   child.stdin.end(prompt)
-  let exitCode = null, spawnFailed = false
+  let exitCode = null,
+    spawnFailed = false
   await new Promise((resolve) => {
-    child.once('error', () => { spawnFailed = true; resolve() })
-    child.once('close', (code) => { exitCode = code; resolve() })
+    child.once('error', () => {
+      spawnFailed = true
+      resolve()
+    })
+    child.once('close', (code) => {
+      exitCode = code
+      resolve()
+    })
   })
   clearTimeout(timer)
   const result = summarize(events, exitCode, timedOut)

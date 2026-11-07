@@ -51,7 +51,6 @@ test.each(['tsx', 'jsx', 'ts', 'js', 'mjs', 'jsonc'])(
     const source = 'const View = <Button title="<&">42</Button>\n/* return\n  false */'
     const box = document.createElement('div')
     const html = highlight(source, language)
-    // oxlint-disable-next-line weft/no-html-sink -- highlight escapes the source under test
     box.innerHTML = html
     const spans = [...box.querySelectorAll('span[class]')].map((span) => [
       span.className,

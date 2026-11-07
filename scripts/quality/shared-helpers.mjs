@@ -13,6 +13,12 @@ const distinct = new Set([
   'scripts/release-e2e.mjs:freePort',
   // The site walker filters and returns an array; its poller has its own timeout and error behavior.
   'site/scripts/sample-width.mjs:walk',
+  // Self-contained eval and watcher-test scripts with their own walkers and pollers.
+  'evals/agent-eval/evidence/T06/verify-packages.mjs:walk',
+  'evals/agent-eval/run/calibrate.mjs:walk',
+  'evals/agent-eval/test/task-readiness.test.mjs:walk',
+  'packages/start/test/e2e/shape-entry-alias.e2e.mjs:until',
+  'packages/start/test/e2e/shape-level-css.e2e.mjs:until',
   'site/test/controls.mjs:until',
   'examples/lib/serve.mjs:freePort',
   'evals/agent-eval/lib/grade.mjs:freePort',

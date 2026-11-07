@@ -16,9 +16,10 @@ test('the S5 plan includes every task definition exactly once', () => {
   assert.deepEqual([...matrix.tasks].sort(), tasks)
   assert.equal(new Set(matrix.tasks).size, tasks.length)
   assert.equal(matrix.reps, 1)
-  assert.deepEqual(matrix.cells.map(({ stack, model }) => [stack, model]), [
-    ['weft-warp', 'gpt-6-luna'],
-  ])
+  assert.deepEqual(
+    matrix.cells.map(({ stack, model }) => [stack, model]),
+    [['weft-warp', 'gpt-6-luna']],
+  )
   for (const task of tasks) {
     const definition = JSON.parse(readFileSync(join(root.pathname, 'tasks', task, 'task.json')))
     assert.ok(definition.wallMinutes > 0 && definition.budgetUsd > 0)

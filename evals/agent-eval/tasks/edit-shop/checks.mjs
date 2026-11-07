@@ -34,7 +34,7 @@ function sampleFlash(apple, overlap) {
       window.dispatchEvent(new CustomEvent('weft-price-update', { detail: { id: 'apple', price } }))
     const wait = (ms) =>
       new Promise((resolve) => {
-        setTimeout(resolve, ms)
+        window.setTimeout(resolve, ms)
       })
     const first = performance.now()
     send(isOverlap ? 125 : 75)
