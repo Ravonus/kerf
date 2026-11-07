@@ -14,17 +14,16 @@ vi.mock('../src/run/helpers', () => ({
 }))
 import { Navigation } from '../src/run/navigation'
 import { ask, current_, guess } from '../src/run/helpers'
+import { applyMatches } from '../src/router'
 
 beforeEach(() => {
   history.replaceState(null, '', '/from')
   vi.stubGlobal('requestAnimationFrame', () => 0)
 })
-afterEach(() => {
-  document.querySelectorAll('[data-weft-source-base]').forEach((item) => item.remove())
-})
+afterEach(() => { document.body.innerHTML = '' })
 
 describe('navigation acceptance', () => {
-  it('sets history and accepted path synchronously without changing committed levels', () => {
+  it('sets history and accepted path synchronously without changing committed levels', async () => {
     const routes: ClientRoutes = { table: [], load: {} }
     const level = { id: { value: 'old' }, params: { value: { id: '1' } },
       shape: { value: undefined } }
@@ -36,14 +35,16 @@ describe('navigation acceptance', () => {
     const nav = new Navigation(
       routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
     )
-    void nav.go('/next?x=1')
+    const pending = nav.go('/next?x=1')
     expect(location.pathname + location.search).toBe('/next?x=1')
     expect(page.route.path.value).toBe('/next?x=1')
     expect(level.id.value).toBe('old')
     expect(level.params.value).toEqual({ id: '1' })
     expect(current_).toHaveBeenCalledWith('/next')
     nav.current?.abort()
-    nav.source?.()
+    await pending
+    expect(nav.source).toBeUndefined()
+    expect(location.pathname).toBe('/from')
     vi.mocked(guess).mockReturnValue([])
   })
 
@@ -69,7 +70,7 @@ describe('navigation acceptance', () => {
     await second
     expect(released).toEqual(['/next', '/other'])
     expect(old.shape.value).toBeUndefined()
-    nav.source?.()
+    expect(nav.source).toBeUndefined()
     vi.mocked(guess).mockReturnValue([])
   })
 
@@ -93,7 +94,7 @@ describe('navigation acceptance', () => {
     expect(release).toHaveBeenCalledOnce()
     nav.current?.abort()
     await pending
-    nav.source?.()
+    expect(nav.source).toBeUndefined()
     vi.mocked(guess).mockReturnValue([])
   })
 
@@ -119,7 +120,7 @@ describe('navigation acceptance', () => {
     nav.current?.abort()
     await second
     expect(release).toHaveBeenCalledOnce()
-    nav.source?.()
+    expect(nav.source).toBeUndefined()
     vi.mocked(guess).mockReturnValue([])
   })
 
@@ -141,12 +142,14 @@ describe('navigation acceptance', () => {
     expect(document.querySelector('form')!.action).toBe('http://localhost/dir/from')
     nav.current?.abort()
     await pending
-    nav.source?.()
+    expect(nav.source).toBeUndefined()
     document.body.innerHTML = ''
     vi.mocked(guess).mockReturnValue([])
   })
 
   it('keeps shared layout state and releases the shape after real content commits', async () => {
+    history.replaceState(null, '', '/dir/from')
+    document.body.innerHTML = '<div id="app"><a href="child">outgoing</a></div>'
     const routes: ClientRoutes = { table: [], load: {} }
     const layout = { id: { value: 'layout' }, shape: { value: undefined } }
     const old = { id: { value: 'old' }, shape: { value: undefined } }
@@ -159,17 +162,59 @@ describe('navigation acceptance', () => {
     vi.mocked(ask).mockResolvedValueOnce(new Response(JSON.stringify({
       m: [{ id: 'layout', params: {} }, { id: '/next', params: {} }], p: '/next', s: 200,
     })))
+    let incoming = ''
+    let retained = ''
+    let submitted = ''
+    const submit = vi.spyOn(HTMLFormElement.prototype, 'submit')
+      .mockImplementation(function (this: HTMLFormElement) { submitted = this.action })
+    vi.mocked(applyMatches).mockImplementationOnce(() => {
+      retained = document.querySelector('a')!.href
+      const image = document.createElement('img')
+      image.src = 'photo.png'
+      incoming = image.src
+      const form = document.createElement('form')
+      document.querySelector('#app')!.append(form)
+      expect(form.getAttribute('action')).toBeNull()
+      form.submit()
+    })
     const nav = new Navigation(
       routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
     )
-    const pending = nav.go('/next', { scroll: false })
+    const pending = nav.go('/elsewhere/next', { scroll: false })
     expect(layout.shape.value).toBeUndefined()
     expect(layout.id.value).toBe('layout')
     expect(prepareShape).toHaveBeenCalledExactlyOnceWith('/next')
     expect(old.shape.value).toHaveLength(1)
     await pending
+    expect(retained).toBe('http://localhost/dir/child')
+    expect(incoming).toBe('http://localhost/elsewhere/photo.png')
+    expect(submitted).toBe('http://localhost/elsewhere/next')
+    expect(document.querySelector('a')!.getAttribute('href')).toBe('child')
+    expect(nav.source).toBeUndefined()
     expect(release).toHaveBeenCalledOnce()
     expect(old.shape.value).toBeUndefined()
+    submit.mockRestore()
+    vi.mocked(guess).mockReturnValue([])
+  })
+
+  it('tears down pending control ownership and form wrappers', async () => {
+    document.body.innerHTML = '<div id="app"><a href="child">old</a></div>'
+    const routes: ClientRoutes = { table: [], load: {} }
+    const old = { id: { value: 'old' }, shape: { value: undefined } }
+    const page = { route: { path: { value: '/from' }, levels: [old], prepareShape: () => null },
+      chunk: vi.fn(async () => {}), island: vi.fn(), setBag: vi.fn(), initialTags: [] }
+    vi.mocked(guess).mockReturnValue(['/next'])
+    const original = HTMLFormElement.prototype.submit
+    const nav = new Navigation(
+      routes, page as unknown as ConstructorParameters<typeof Navigation>[1],
+    )
+    const pending = nav.go('/next')
+    expect(HTMLFormElement.prototype.submit).not.toBe(original)
+    nav.dispose()
+    await pending
+    expect(nav.source).toBeUndefined()
+    expect(HTMLFormElement.prototype.submit).toBe(original)
+    expect(document.querySelector('a')!.getAttribute('href')).toBe('child')
     vi.mocked(guess).mockReturnValue([])
   })
 })

@@ -10,6 +10,7 @@ type Hot = { on(event: string, on: (data: { queries: boolean }) => unknown): voi
 export function listeners(nav: Navigation, hot: () => Hot | undefined) {
   addEventListener('online', nav.owing)
   addEventListener('focus', nav.owing)
+  addEventListener('pagehide', nav.dispose)
   if (hot()) hot()!.on('weft:refresh', (changed) => void nav.reloaded(changed))
   client.invalidated = nav.invalidated
   clicks(nav)

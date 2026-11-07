@@ -29,9 +29,8 @@ export function routeClicks(
     accepted = undefined
     const target = admitLink(event, routes)
     if (!target) return
-    const record = (accepted = { id: event.pointerId, anchor: target.anchor })
-    const finish = () => { if (accepted === record) accepted = undefined }
-    Promise.resolve(target.noop ? undefined : go(target.url.href)).then(finish, finish)
+    accepted = { id: event.pointerId, anchor: target.anchor }
+    if (!target.noop) void Promise.resolve(go(target.url.href)).catch(() => {})
   }
   const cancel = (event: PointerEvent) => {
     if (accepted?.id === event.pointerId) accepted = undefined

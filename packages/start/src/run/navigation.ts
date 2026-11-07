@@ -6,7 +6,7 @@ import { streamed, type mount } from './boot'
 import { matchingRouteAssets } from '../asset-receipt.mjs'
 import { ask, current_, guess, revive } from './helpers'
 import type { PreparedRouteShape } from './shape-preparation'
-import { retainSourceContext } from './source-context'
+import { retainSourceContext, type SourceContext } from './source-context'
 
 const SLOW_FADE = 100
 const RETRY = 1000,
@@ -35,7 +35,7 @@ export class Navigation {
   painted = false
   at!: string
   shape: { outlet: Level; leases: PreparedRouteShape[] } | undefined
-  source: (() => void) | undefined
+  source: SourceContext | undefined
   committedURL = location.href
   committedBase = document.baseURI
 
@@ -74,6 +74,9 @@ export class Navigation {
     this.route.assetBytes = matchingRouteAssets(next.a, this.routes.build)
     this.setBag(next.b)
     return () => {
+      const source = this.source
+      this.source = undefined
+      source?.stop()
       const old = this.detachShape()
       try {
         applyMatches(this.route, next.m.map(revive), path, next.s)
@@ -83,9 +86,8 @@ export class Navigation {
         flush()
       } finally {
         old?.forEach((lease) => lease.release())
+        source?.release()
       }
-      this.source?.()
-      this.source = undefined
       this.committedURL = url.href
       this.committedBase = document.baseURI
       if (scroll) {
@@ -139,10 +141,28 @@ export class Navigation {
   /** No navigation is out any more: what it left owed is for the page now showing. */
   settle() {
     this.clearShape()
+    if (this.source && this.current?.signal.aborted) {
+      history.replaceState(history.state, '', this.committedURL)
+      const url = new URL(this.committedURL)
+      this.at = url.pathname + url.search
+      this.route.path.value = this.at
+      current_(url.pathname)
+      flush()
+    }
+    this.source?.release()
+    this.source = undefined
     this.current = undefined
     const t = this.owed
     this.owed = []
     if (this.reads(t)) void this.refresh(t)
+  }
+
+  dispose = () => {
+    this.current?.abort()
+    this.current = undefined
+    this.clearShape()
+    this.source?.release()
+    this.source = undefined
   }
 
   go = async (href: string, opts: Options = {}) => {
@@ -158,10 +178,11 @@ export class Navigation {
     const ctrl = (this.current = new AbortController())
     const path = url.pathname + url.search
     try {
-      this.source ??= retainSourceContext(document, this.committedURL, this.committedBase)
+      this.source ??= retainSourceContext(document, this.committedURL, this.committedBase) ??
+        undefined
+      if (!this.source) return opts.pop ? location.replace(url.href) : location.assign(url.href)
       if (!opts.pop && url.href !== location.href)
         history[opts.replace ? 'replaceState' : 'pushState'](null, '', url.href)
-      if (document.baseURI !== this.committedBase) return location.replace(url.href)
       this.at = path
       this.route.path.value = path
       current_(url.pathname)

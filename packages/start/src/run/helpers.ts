@@ -53,10 +53,15 @@ export function ours(target: EventTarget | null) {
 /** A kept static level has no binding for its links' current-page state: the same rule as `Link`, after the swap. */
 export function current_(path: string) {
   flush()
-  for (const a of document.querySelectorAll('a[aria-current="page"]'))
-    if (a.getAttribute('href') !== path) a.removeAttribute('aria-current')
-  for (const a of document.querySelectorAll(`a[href="${CSS.escape(path)}"]:not([aria-current])`))
-    a.setAttribute('aria-current', 'page')
+  for (const a of document.querySelectorAll<HTMLAnchorElement>('a[href]')) {
+    let match = false
+    try {
+      const url = new URL(a.href)
+      match = url.origin === location.origin && url.pathname === path && !url.search && !url.hash
+    } catch { /* malformed links cannot match */ }
+    if (match && !a.hasAttribute('aria-current')) a.setAttribute('aria-current', 'page')
+    else if (!match && a.getAttribute('aria-current') === 'page') a.removeAttribute('aria-current')
+  }
 }
 
 /** Deferred fields arrive resolved on navigation: they become settled promises again, so resources read them alike. */
