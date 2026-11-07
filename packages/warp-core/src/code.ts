@@ -32,14 +32,9 @@ export interface CodeSpan {
   end: number
 }
 
-const KEYWORDS =
-  'import|from|export|default|const|let|var|function|return|if|else|for|while|class|new|await|async|type|interface|select|where|insert|update|delete|join|order|group|by|true|false|null|undefined'
 const RULES: Record<string, RegExp> = {
   json: /("(?:[^"\\\n]|\\.)*")(\s*:)?|(-?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b)|\b(true|false|null)\b/g,
-  code: new RegExp(
-    `((?:"(?:[^"\\\\\\n]|\\\\.)*"|'(?:[^'\\\\\\n]|\\\\.)*'|\`(?:[^\`\\\\]|\\\\.)*\`))()|(\\b\\d+(?:\\.\\d+)?\\b)|\\b(${KEYWORDS})\\b|(\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/|^\\s*#[^\\n]*|--[^\\n]*)`,
-    'gim',
-  ),
+  code: /((?:"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`))()|(\b\d+(?:\.\d+)?\b)|\b(import|from|export|default|const|let|var|function|return|if|else|for|while|class|new|await|async|type|interface|select|where|insert|update|delete|join|order|group|by|true|false|null|undefined)\b|(\/\/[^\n]*|\/\*[\s\S]*?\*\/|^\s*#[^\n]*|--[^\n]*)/gim,
 }
 
 /** The spans to colour. Keys of a JSON object stay plain, so its values read first. */
@@ -64,17 +59,9 @@ export function tokenize(text: string, language = 'code') {
 }
 
 const esc = (s: string) => escapeHtml(s, 'text')
-const TSX_KEYWORDS =
-  'import|from|export|default|const|let|var|function|return|if|else|for|of|in|while|class|extends|new|await|async|type|interface|typeof|keyof|as|try|catch|throw|yield'
 const SHELL = /(#[^\n]*)|("[^"\n]*"|'[^'\n]*')|(?<![\w-])(--?[\w-]+)|^(\s*\w[\w-]*)/gm
-const TSX = new RegExp(
-  '(\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/)' + // comment
-    '|("(?:[^"\\\\\\n]|\\\\.)*"|\'(?:[^\'\\\\\\n]|\\\\.)*\'|`(?:[^`\\\\]|\\\\.)*`)' + // string
-    '|\\b(\\d+(?:\\.\\d+)?)\\b' + // number
-    `|\\b(${TSX_KEYWORDS}|true|false|null|undefined)\\b` + // keyword
-    '|(?<=<\\/?)([A-Za-z][\\w.-]*)|\\b([A-Z]\\w*)\\b', // tag, then a capitalised name
-  'g',
-)
+const TSX =
+  /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)|\b(\d+(?:\.\d+)?)\b|\b(import|from|export|default|const|let|var|function|return|if|else|for|of|in|while|class|extends|new|await|async|type|interface|typeof|keyof|as|try|catch|throw|yield|true|false|null|undefined)\b|(?<=<\/?)([A-Za-z][\w.-]*)|\b([A-Z]\w*)\b/g
 
 /**
  * Code as HTML, for a build or a server render: spans `.c` comment, `.s` string, `.n` number, `.k` keyword and `.t` type or

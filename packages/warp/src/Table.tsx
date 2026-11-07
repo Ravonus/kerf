@@ -24,5 +24,8 @@ export { columnsIcon } from './Table-toolbar'
  * server and reports what was asked. Queries its own width, never the window.
  */
 export function Table<T>(props: TableProps<T>) {
-  return tableView(tableModel(untrack(() => props)))
+  return tableModel(
+    untrack(() => props),
+    tableView,
+  )
 }

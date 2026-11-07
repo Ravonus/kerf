@@ -1,0 +1,60 @@
+{
+  "inherits": {
+    "task": "medium-shop",
+    "manifest": "../medium-shop/coverage.json",
+    "immutableMutantsSha256": "40d518f14bbb69b11313f2d47f548d8a1d2cd997d6b73769d9c7c2c6cdd42931",
+    "note": "Prepared suite runs inherited checks; medium mutations are not automatically applied to this reference."
+  },
+  "requirements": [
+    {
+      "id": "filtered_product_identity",
+      "check": "search and return preserve product identity",
+      "mutant": "filtered product becomes apple"
+    },
+    {
+      "id": "post_cart_identity",
+      "check": "search and return preserve product identity",
+      "mutant": "first displayed product used"
+    },
+    {
+      "id": "sorted_product_identity",
+      "check": "search and return preserve product identity",
+      "mutant": "last displayed product used"
+    },
+    {
+      "id": "total_after_add",
+      "check": "cart totals follow each quantity change",
+      "mutant": "stale total snapshot"
+    },
+    {
+      "id": "total_after_increase",
+      "check": "cart totals follow each quantity change",
+      "mutant": "quantities ignored in total"
+    },
+    {
+      "id": "line_quantity",
+      "check": "cart totals follow each quantity change",
+      "mutant": "wrong quantity displayed"
+    },
+    {
+      "id": "line_subtotal",
+      "check": "cart totals follow each quantity change",
+      "mutant": "wrong line subtotal"
+    },
+    {
+      "id": "line_removal",
+      "check": "cart totals follow each quantity change",
+      "mutant": "line never removed"
+    },
+    {
+      "id": "total_after_decrease",
+      "check": "cart totals follow each quantity change",
+      "mutant": "stale total snapshot"
+    },
+    {
+      "id": "empty_total",
+      "check": "cart totals follow each quantity change",
+      "mutant": "stale total snapshot"
+    }
+  ]
+}

@@ -1,0 +1,222 @@
+[
+  {
+    "requirement": "stock_apple",
+    "check": "stock boundary for Apple",
+    "mutant": "stock Apple"
+  },
+  {
+    "requirement": "stock_banana",
+    "check": "stock boundary for Banana",
+    "mutant": "stock Banana"
+  },
+  {
+    "requirement": "stock_bagel",
+    "check": "stock boundary for Bagel",
+    "mutant": "stock Bagel"
+  },
+  {
+    "requirement": "stock_brioche",
+    "check": "stock boundary for Brioche",
+    "mutant": "stock Brioche"
+  },
+  {
+    "requirement": "stock_milk",
+    "check": "stock boundary for Milk",
+    "mutant": "stock Milk"
+  },
+  {
+    "requirement": "stock_yogurt",
+    "check": "stock boundary for Yogurt",
+    "mutant": "stock Yogurt"
+  },
+  {
+    "requirement": "product_prices",
+    "check": "products show names, prices, stock and default order",
+    "mutant": "product price"
+  },
+  {
+    "requirement": "product_list",
+    "check": "products show names, prices, stock and default order",
+    "mutant": "product list label"
+  },
+  {
+    "requirement": "product_add_labels",
+    "check": "products show names, prices, stock and default order",
+    "mutant": "product add label"
+  },
+  {
+    "requirement": "default_name_sort",
+    "check": "products show names, prices, stock and default order",
+    "mutant": "wrong default sort"
+  },
+  {
+    "requirement": "case_insensitive_search",
+    "check": "search and category filter, count and sort products",
+    "mutant": "case sensitive search"
+  },
+  {
+    "requirement": "category_filter",
+    "check": "search and category filter, count and sort products",
+    "mutant": "category ignored"
+  },
+  {
+    "requirement": "price_sort",
+    "check": "search and category filter, count and sort products",
+    "mutant": "wrong price sort"
+  },
+  {
+    "requirement": "product_count_plural",
+    "check": "search and category filter, count and sort products",
+    "mutant": "bad count plural"
+  },
+  {
+    "requirement": "tab_search_state",
+    "check": "switching tabs preserves filters and cart",
+    "mutant": "search lost on tab"
+  },
+  {
+    "requirement": "tab_category_state",
+    "check": "switching tabs preserves filters and cart",
+    "mutant": "category lost on tab"
+  },
+  {
+    "requirement": "tab_sort_state",
+    "check": "switching tabs preserves filters and cart",
+    "mutant": "sort lost on tab"
+  },
+  {
+    "requirement": "tab_cart_state",
+    "check": "cart quantities, totals and removal follow stock",
+    "mutant": "cart count wrong"
+  },
+  {
+    "requirement": "cart_quantity",
+    "check": "cart quantities, totals and removal follow stock",
+    "mutant": "cart quantity wrong"
+  },
+  {
+    "requirement": "cart_line_total",
+    "check": "cart quantities, totals and removal follow stock",
+    "mutant": "line total wrong"
+  },
+  {
+    "requirement": "cart_total",
+    "check": "cart quantities, totals and removal follow stock",
+    "mutant": "wrong total"
+  },
+  {
+    "requirement": "cart_increase",
+    "check": "cart quantities, totals and removal follow stock",
+    "mutant": "increase ignored"
+  },
+  {
+    "requirement": "cart_decrease",
+    "check": "cart quantities, totals and removal follow stock",
+    "mutant": "decrease ignored"
+  },
+  {
+    "requirement": "cart_stock_limit",
+    "check": "cart quantities, totals and removal follow stock",
+    "mutant": "increase stock unlocked"
+  },
+  {
+    "requirement": "cart_remove",
+    "check": "cart quantities, totals and removal follow stock",
+    "mutant": "cart never removes"
+  },
+  {
+    "requirement": "cart_empty",
+    "check": "cart quantities, totals and removal follow stock",
+    "mutant": "empty cart wording"
+  },
+  {
+    "requirement": "name_required",
+    "check": "checkout reports invalid fields and preserves inputs",
+    "mutant": "name optional"
+  },
+  {
+    "requirement": "email_required_and_valid",
+    "check": "checkout reports invalid fields and preserves inputs",
+    "mutant": "accept invalid email"
+  },
+  {
+    "requirement": "card_required_and_digits",
+    "check": "checkout reports invalid fields and preserves inputs",
+    "mutant": "card optional"
+  },
+  {
+    "requirement": "name_description",
+    "check": "checkout reports invalid fields and preserves inputs",
+    "mutant": "name description missing"
+  },
+  {
+    "requirement": "email_description",
+    "check": "checkout reports invalid fields and preserves inputs",
+    "mutant": "email description missing"
+  },
+  {
+    "requirement": "card_description",
+    "check": "checkout reports invalid fields and preserves inputs",
+    "mutant": "card description missing"
+  },
+  {
+    "requirement": "name_invalid_flag",
+    "check": "checkout reports invalid fields and preserves inputs",
+    "mutant": "name invalid flag missing"
+  },
+  {
+    "requirement": "email_invalid_flag",
+    "check": "checkout reports invalid fields and preserves inputs",
+    "mutant": "email invalid flag missing"
+  },
+  {
+    "requirement": "card_invalid_flag",
+    "check": "checkout reports invalid fields and preserves inputs",
+    "mutant": "card invalid flag missing"
+  },
+  {
+    "requirement": "first_invalid_focus",
+    "check": "checkout reports invalid fields and preserves inputs",
+    "mutant": "invalid field loses focus"
+  },
+  {
+    "requirement": "invalid_keeps_input",
+    "check": "checkout reports invalid fields and preserves inputs",
+    "mutant": "invalid submission loses input"
+  },
+  {
+    "requirement": "valid_card_spaces",
+    "check": "valid checkout accepts spaces, empties cart and thanks buyer",
+    "mutant": "reject spaced card"
+  },
+  {
+    "requirement": "valid_order_clears",
+    "check": "valid checkout accepts spaces, empties cart and thanks buyer",
+    "mutant": "checkout retains cart"
+  },
+  {
+    "requirement": "valid_order_thanks",
+    "check": "valid checkout accepts spaces, empties cart and thanks buyer",
+    "mutant": "checkout omits thanks"
+  },
+  {
+    "requirement": "cart_list",
+    "check": "cart quantities, totals and removal follow stock",
+    "mutant": "cart list label"
+  },
+  {
+    "requirement": "category_options",
+    "check": "search and category filter, count and sort products",
+    "mutant": "category option missing"
+  },
+  {
+    "requirement": "sort_options",
+    "check": "search and category filter, count and sort products",
+    "mutant": "sort option missing"
+  },
+  {
+    "requirement": "product_count_zero",
+    "check": "search and category filter, count and sort products",
+    "mutant": "product count wrong"
+  }
+]

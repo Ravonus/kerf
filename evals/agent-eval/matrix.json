@@ -1,7 +1,8 @@
 {
   "seed": 42,
-  "reps": 5,
+  "reps": 1,
   "tasks": [
+    "smoke",
     "small-todo",
     "medium-shop",
     "large-live",
@@ -11,44 +12,9 @@
   "cells": [
     {
       "stack": "weft-warp",
-      "model": "sonnet",
+      "model": "gpt-6-luna",
       "effort": "medium",
-      "group": "primary",
-      "budgetScale": 1
-    },
-    {
-      "stack": "next-shadcn",
-      "model": "sonnet",
-      "effort": "medium",
-      "group": "primary",
-      "budgetScale": 1
-    },
-    {
-      "stack": "vite-react",
-      "model": "sonnet",
-      "effort": "medium",
-      "group": "primary",
-      "budgetScale": 1
-    },
-    {
-      "stack": "weft-warp",
-      "model": "haiku",
-      "effort": "medium",
-      "group": "tier",
-      "budgetScale": 1
-    },
-    {
-      "stack": "next-shadcn",
-      "model": "haiku",
-      "effort": "medium",
-      "group": "tier",
-      "budgetScale": 1
-    },
-    {
-      "stack": "next-shadcn",
-      "model": "opus",
-      "effort": "medium",
-      "group": "tier",
+      "group": "s5",
       "budgetScale": 1
     }
   ]

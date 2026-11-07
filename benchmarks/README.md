@@ -10,4 +10,10 @@ history and the chart go to `evals/results/compare-history.jsonl` and `evals/res
 
 `speed` contains the row and reactive benchmarks. `arena` contains the apps built for the site's interactive comparison.
 From `benchmarks/speed`, run `node build.mjs` and `node measure.mjs` to compare the row and reactive workloads.
-`node lab.mjs` compares weft speed paths and writes `lab.json` and `lab.html`. New performance claims are deferred to S5.
+`node lab.mjs` compares weft speed paths and writes `lab.json` and `lab.html`. See the [keyed benchmark entry](./js-framework-benchmark/README.md) for its pinned upstream workload and validation limits.
+
+Record the machine, OS, browser version, source revision and dirty state,
+compiler binary and matching source stamp, Node, pnpm and dependency lockfile
+with each run. Compare results only with their conditions and inputs visible.
+S5 local candidate measurements are scoped experiments, not the future combined
+Yuna measurement or proof of runtime speed.

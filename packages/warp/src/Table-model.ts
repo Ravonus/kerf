@@ -14,47 +14,58 @@ import type { Column, TableProps } from './Table-types'
 export type TableInput<T> = TableProps<T>
 type Refs = { el: HTMLDivElement | undefined; columnsButton: HTMLElement | undefined }
 
-function tableCore<T>(input: TableInput<T>, refs: Refs) {
+/** The table's private state, shared by its concern helpers. */
+export type TableModel<T> = {
+  input: TableInput<T>
+  refs: Refs
+  base: ReturnType<typeof tableBase<T>>
+  source: ReturnType<typeof tableSource<T>>
+  selection: ReturnType<typeof tableSelection<T>>
+  details: ReturnType<typeof tableDetails<T>>
+  paging: ReturnType<typeof tablePaging<T>>
+  notice: ReturnType<typeof tableNotice<T>>
+  toolbar: { readonly value: boolean }
+  hideable: { readonly value: Column<T>[] }
+  flip: (column: Column<T>, show: boolean) => void
+}
+
+/** Render directly from private state instead of packing a second controller record. */
+export type TableRender = <T>(
+  input: TableModel<T>['input'],
+  refs: TableModel<T>['refs'],
+  base: TableModel<T>['base'],
+  source: TableModel<T>['source'],
+  selection: TableModel<T>['selection'],
+  details: TableModel<T>['details'],
+  paging: TableModel<T>['paging'],
+  notice: TableModel<T>['notice'],
+  toolbar: TableModel<T>['toolbar'],
+  hideable: TableModel<T>['hideable'],
+  flip: TableModel<T>['flip'],
+) => unknown
+
+/** Create private state and render it under the table's existing owner. */
+export function tableModel<T>(input: TableInput<T>, render: TableRender) {
+  const refs: Refs = { el: undefined, columnsButton: undefined }
   const base = tableBase(input)
-  const { id, level, cols, keyOf, read, title, typed, order, sel, open, at, sheet } = base
+  const [, , cols, keyOf, read, , typed, order, sel, , hidden, at, sheet, , , width] = base
   const source = tableSource(input, cols, typed, order, at, read)
+  const [, , , , , visible, phase] = source
   watch(
     () => typed.value,
     (_, was) => {
       if (was !== undefined) at.value = 0
     },
   )
-  const selection = tableSelection(sel, source.visible, keyOf, cols, order, input)
-  const details = tableDetails({
-    id,
-    level,
-    cols,
-    keyOf,
-    read,
-    sel,
-    open,
-    title,
-    pick: selection.pick,
-    sheet,
-    columns: () => input.columns,
-    props: input,
-    details: () => input.details,
-    element: () => refs.el,
-  })
-  return { base, source, selection, details }
-}
-
-/** Create the table model under its existing owner. */
-export function tableModel<T>(input: TableInput<T>) {
-  const refs: Refs = { el: undefined, columnsButton: undefined }
-  const { base, source, selection, details } = tableCore(input, refs)
-  const { cols, typed, hidden, at, sheet, width } = base
+  const selection = tableSelection(sel, visible, keyOf, cols, order, input)
+  const [, , , pick] = selection
+  const details = tableDetails(input, base, pick, () => refs.el)
   const paging = tablePaging(input, source, at)
-  const notice = tableNotice(input, source.phase, typed)
+  const notice = tableNotice(input, phase, typed)
   use(
     table,
     () => refs.el,
-    () => ({ hidden: hidden.value, rows: source.visible.value, onWidth: (w) => (width.value = w) }),
+    () => ({ hidden: hidden.value, rows: visible.value, onWidth: (w) => (width.value = w) }),
   )
   onCleanup(() => (sheet.value = undefined))
   const toolbar = derived(
@@ -67,5 +78,17 @@ export function tableModel<T>(input: TableInput<T>) {
   const flip = (c: Column<T>, show: boolean) => {
     hidden.value = show ? hidden.value.filter((x) => x !== c.id) : [...hidden.value, c.id]
   }
-  return { input, refs, base, source, selection, details, paging, notice, toolbar, hideable, flip }
+  return render(
+    input,
+    refs,
+    base,
+    source,
+    selection,
+    details,
+    paging,
+    notice,
+    toolbar,
+    hideable,
+    flip,
+  )
 }

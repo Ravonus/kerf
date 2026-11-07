@@ -1,0 +1,272 @@
+[
+  {
+    "name": "wrong stock",
+    "find": "name: 'Banana', category: 'fruit', price: 25, stock: 3",
+    "replace": "name: 'Banana', category: 'fruit', price: 25, stock: 4",
+    "mustFail": "products show names, prices, stock and default order"
+  },
+  {
+    "name": "wrong price sort",
+    "find": "? a.price - b.price",
+    "replace": "? b.price - a.price",
+    "mustFail": "search and category filter, count and sort products"
+  },
+  {
+    "name": "wrong total",
+    "find": "n + p.price * (cart.value[p.name] ?? 0)",
+    "replace": "n + p.price",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "accept invalid email",
+    "find": "!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.value)",
+    "replace": "false",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "reject spaced card",
+    "find": "card.value.replaceAll(' ', '')",
+    "replace": "card.value",
+    "mustFail": "valid checkout accepts spaces, empties cart and thanks buyer"
+  },
+  {
+    "name": "stock Apple",
+    "find": "name: 'Apple', category: 'fruit', price: 50, stock: 20",
+    "replace": "name: 'Apple', category: 'fruit', price: 50, stock: 21",
+    "mustFail": "stock boundary for Apple"
+  },
+  {
+    "name": "stock Banana",
+    "find": "name: 'Banana', category: 'fruit', price: 25, stock: 3",
+    "replace": "name: 'Banana', category: 'fruit', price: 25, stock: 4",
+    "mustFail": "stock boundary for Banana"
+  },
+  {
+    "name": "stock Bagel",
+    "find": "name: 'Bagel', category: 'bakery', price: 120, stock: 6",
+    "replace": "name: 'Bagel', category: 'bakery', price: 120, stock: 7",
+    "mustFail": "stock boundary for Bagel"
+  },
+  {
+    "name": "stock Brioche",
+    "find": "name: 'Brioche', category: 'bakery', price: 350, stock: 1",
+    "replace": "name: 'Brioche', category: 'bakery', price: 350, stock: 2",
+    "mustFail": "stock boundary for Brioche"
+  },
+  {
+    "name": "stock Milk",
+    "find": "name: 'Milk', category: 'dairy', price: 110, stock: 10",
+    "replace": "name: 'Milk', category: 'dairy', price: 110, stock: 11",
+    "mustFail": "stock boundary for Milk"
+  },
+  {
+    "name": "stock Yogurt",
+    "find": "name: 'Yogurt', category: 'dairy', price: 90, stock: 0",
+    "replace": "name: 'Yogurt', category: 'dairy', price: 90, stock: 1",
+    "mustFail": "stock boundary for Yogurt"
+  },
+  {
+    "name": "product price",
+    "find": "name: 'Apple', category: 'fruit', price: 50",
+    "replace": "name: 'Apple', category: 'fruit', price: 51",
+    "mustFail": "products show names, prices, stock and default order"
+  },
+  {
+    "name": "product list label",
+    "find": "aria-label=\"Products\"",
+    "replace": "aria-label=\"Items\"",
+    "mustFail": "products show names, prices, stock and default order"
+  },
+  {
+    "name": "product add label",
+    "find": "Add {p.name}",
+    "replace": "Put {p.name}",
+    "mustFail": "products show names, prices, stock and default order"
+  },
+  {
+    "name": "case sensitive search",
+    "find": "search.value.toLowerCase()",
+    "replace": "search.value",
+    "mustFail": "search and category filter, count and sort products"
+  },
+  {
+    "name": "category ignored",
+    "find": "(category.value === 'All' || category.value === p.category)",
+    "replace": "true",
+    "mustFail": "search and category filter, count and sort products"
+  },
+  {
+    "name": "wrong default sort",
+    "find": "const sort = state('Name')",
+    "replace": "const sort = state('Price: low to high')",
+    "mustFail": "products show names, prices, stock and default order"
+  },
+  {
+    "name": "bad count plural",
+    "find": "=== 1 ? 'product' : 'products'",
+    "replace": "=== 1 ? 'products' : 'products'",
+    "mustFail": "search and category filter, count and sort products"
+  },
+  {
+    "name": "search lost on tab",
+    "find": "m.tab.value = 'Cart'",
+    "replace": "m.search.value = ''; m.tab.value = 'Cart'",
+    "mustFail": "switching tabs preserves filters and cart"
+  },
+  {
+    "name": "category lost on tab",
+    "find": "m.tab.value = 'Cart'",
+    "replace": "m.category.value = 'All'; m.tab.value = 'Cart'",
+    "mustFail": "switching tabs preserves filters and cart"
+  },
+  {
+    "name": "sort lost on tab",
+    "find": "m.tab.value = 'Cart'",
+    "replace": "m.sort.value = 'Name'; m.tab.value = 'Cart'",
+    "mustFail": "switching tabs preserves filters and cart"
+  },
+  {
+    "name": "cart count wrong",
+    "find": "(a, b) => a + b",
+    "replace": "(a, b) => a + 1",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "cart quantity wrong",
+    "find": "<span>{m.cart.value[p.name]}</span>",
+    "replace": "<span>1</span>",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "line total wrong",
+    "find": "money(p.price * (m.cart.value[p.name] ?? 0))",
+    "replace": "money(p.price)",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "increase ignored",
+    "find": "disabled={(m.cart.value[p.name] ?? 0) >= p.stock}\n                  onClick={() => m.change(p, 1)}",
+    "replace": "disabled={(m.cart.value[p.name] ?? 0) >= p.stock}\n                  onClick={() => m.change(p, 0)}",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "decrease ignored",
+    "find": "onClick={() => m.change(p, -1)}",
+    "replace": "onClick={() => m.change(p, 0)}",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "increase stock unlocked",
+    "find": "disabled={(m.cart.value[p.name] ?? 0) >= p.stock}",
+    "replace": "disabled={false}",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "cart never removes",
+    "find": "Math.max(0, Math.min(p.stock",
+    "replace": "Math.max(1, Math.min(p.stock",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "empty cart wording",
+    "find": "Your cart is empty",
+    "replace": "Cart is empty",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "name optional",
+    "find": "!name.value.trim()",
+    "replace": "false",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "card optional",
+    "find": "!/^\\d{16}$/.test(card.value.replaceAll(' ', ''))",
+    "replace": "false",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "name description missing",
+    "find": "aria-describedby={m.errors.value[i] ? `${f.id}-error` : undefined}",
+    "replace": "aria-describedby={f.id === 'name' ? undefined : m.errors.value[i] ? `${f.id}-error` : undefined}",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "name invalid flag missing",
+    "find": "aria-invalid={!!m.errors.value[i]}",
+    "replace": "aria-invalid={f.id === 'name' ? false : !!m.errors.value[i]}",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "email description missing",
+    "find": "aria-describedby={m.errors.value[i] ? `${f.id}-error` : undefined}",
+    "replace": "aria-describedby={f.id === 'email' ? undefined : m.errors.value[i] ? `${f.id}-error` : undefined}",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "email invalid flag missing",
+    "find": "aria-invalid={!!m.errors.value[i]}",
+    "replace": "aria-invalid={f.id === 'email' ? false : !!m.errors.value[i]}",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "card description missing",
+    "find": "aria-describedby={m.errors.value[i] ? `${f.id}-error` : undefined}",
+    "replace": "aria-describedby={f.id === 'card' ? undefined : m.errors.value[i] ? `${f.id}-error` : undefined}",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "card invalid flag missing",
+    "find": "aria-invalid={!!m.errors.value[i]}",
+    "replace": "aria-invalid={f.id === 'card' ? false : !!m.errors.value[i]}",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "invalid field loses focus",
+    "find": "?.focus()",
+    "replace": "?.blur()",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "invalid submission loses input",
+    "find": "event.preventDefault()",
+    "replace": "event.preventDefault(); name.value = ''",
+    "mustFail": "checkout reports invalid fields and preserves inputs"
+  },
+  {
+    "name": "checkout retains cart",
+    "find": "cart.value = {}",
+    "replace": "cart.value = { Apple: 1 }",
+    "mustFail": "valid checkout accepts spaces, empties cart and thanks buyer"
+  },
+  {
+    "name": "checkout omits thanks",
+    "find": "thanks.value = name.value.trim()",
+    "replace": "thanks.value = ''",
+    "mustFail": "valid checkout accepts spaces, empties cart and thanks buyer"
+  },
+  {
+    "name": "cart list label",
+    "find": "aria-label=\"Cart\"",
+    "replace": "aria-label=\"Basket\"",
+    "mustFail": "cart quantities, totals and removal follow stock"
+  },
+  {
+    "name": "category option missing",
+    "find": "['All', 'fruit', 'bakery', 'dairy']",
+    "replace": "['All', 'fruit', 'bakery']",
+    "mustFail": "search and category filter, count and sort products"
+  },
+  {
+    "name": "sort option missing",
+    "find": "['Name', 'Price: low to high', 'Price: high to low']",
+    "replace": "['Name', 'Price: low to high']",
+    "mustFail": "search and category filter, count and sort products"
+  },
+  {
+    "name": "product count wrong",
+    "find": "{m.shown.value.length} {m.shown.value.length === 1",
+    "replace": "{m.shown.value.length + 1} {m.shown.value.length === 1",
+    "mustFail": "search and category filter, count and sort products"
+  }
+]

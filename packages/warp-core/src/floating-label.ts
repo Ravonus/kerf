@@ -13,8 +13,7 @@ import { installSweep } from './sweep'
 
 // One span per grapheme cluster (emoji, combining marks, Indic conjuncts stay whole), or per word in joining
 // scripts, where splitting letters would break the joins. Code points are the fallback without Intl.Segmenter.
-const JOINING =
-  /[\p{Script=Arabic}\p{Script=Syriac}\p{Script=Nko}\p{Script=Mongolian}\p{Script=Adlam}\p{Script=Hanifi_Rohingya}\p{Script=Mandaic}]/u
+const JOINING = /[\p{sc=Arab}\p{sc=Syrc}\p{sc=Nkoo}\p{sc=Mong}\p{sc=Adlm}\p{sc=Rohg}\p{sc=Mand}]/u
 
 /** The label's letters, as the anatomy renders them (one `<span data-char data-c>` each). */
 export function labelChars(text: string): string[] {

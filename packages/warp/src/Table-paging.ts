@@ -12,7 +12,7 @@ export function tablePaging<T>(
   source: ReturnType<typeof tableSource<T>>,
   at: State<number>,
 ) {
-  const { remote, list, envelope, shown, paged, visible, phase } = source
+  const [remote, list, envelope, shown, paged, visible, phase] = source
   const go = (reason: 'next' | 'prev') => {
     if (remote.value)
       return props.onPageChange?.(
@@ -46,5 +46,5 @@ export function tablePaging<T>(
   )
   const footer = derived(() => props.page !== undefined || isResource(props.rows))
 
-  return { go, hasPrev, hasNext, range, count, footer }
+  return [go, hasPrev, hasNext, range, count, footer] as const
 }

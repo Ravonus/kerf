@@ -1,0 +1,38 @@
+{
+  "archiveSha256": "9a897f97a708f4f53bfb083866f7a90be7638b60a817edbfbd248b1d078c0e08",
+  "member": "profile-e1ea0c29102aa5134bf94d9d533fe0c4ef78abda/weft-warp-0.cpuprofile.gz",
+  "gzipSha256": "15bba4f29c944f9d8ff26cbe06407b3925116e4a6d092b7ac8db30525234b3df",
+  "jsonSha256": "6f1bed120a4e89ca6c25077475c8b29860c67e2f607edba069a05680bc42af9c",
+  "samples": 476,
+  "negativeDeltas": [
+    {
+      "index": 188,
+      "deltaUs": -59
+    },
+    {
+      "index": 193,
+      "deltaUs": -4
+    },
+    {
+      "index": 238,
+      "deltaUs": -365
+    }
+  ],
+  "cutoffUs": 277167528029,
+  "startUs": 277166891525,
+  "sourceCommit": "e1ea0c29102aa5134bf94d9d533fe0c4ef78abda",
+  "browser": "156.0.8078.4",
+  "references": {
+    "devtoolsCommit": "326f8bf2db4df56a857d6b5b254f97a5ee798f7d",
+    "devtoolsSource": "https://chromium.googlesource.com/devtools/devtools-frontend/+/326f8bf2db4df56a857d6b5b254f97a5ee798f7d/front_end/models/cpu_profile/CPUProfileDataModel.ts",
+    "sourceSha256": "741a14e5ea226eb34f98fbde8c47c4b575a77ca6a16ad18a7ac63c0e0d27c863",
+    "functions": ["#convertTimeDeltas", "#sortSamples", "#normalizeTimestamps"],
+    "note": "Independent reconstruction/sorting; do not adopt DevTools tail extrapolation or missing-sample substitution.",
+    "v8Commit": "41b0e42f7f004cdf8a17d10bc085792efbf9cfd4",
+    "v8Source": "https://chromium.googlesource.com/v8/v8/+/41b0e42f7f004cdf8a17d10bc085792efbf9cfd4/src/inspector/v8-profiler-agent-impl.cc",
+    "v8Sha256": "104930851184f62a6c4efd456a15f87211d463f94918e46dd4c560bdf3bacd8e",
+    "protocolCommit": "b0d96c6cdf39e5583e67a3762b2815a33154455b",
+    "protocolSource": "https://raw.githubusercontent.com/ChromeDevTools/devtools-protocol/b0d96c6cdf39e5583e67a3762b2815a33154455b/pdl/js_protocol.pdl",
+    "protocolSha256": "6356f2d1ac0c1ef22524677b4f7ffbfa5a6e88c14cc80f11e18142a61c184c9d"
+  }
+}
