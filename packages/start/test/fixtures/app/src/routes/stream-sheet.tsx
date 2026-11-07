@@ -5,7 +5,8 @@ import './stream-sheet.css'
 
 // `?x`: the shell reaches a rule an earlier render of the route didn't, after that render's head was kept.
 export const load = async ({ request }: { request: Request }) => ({
-  n: later(40, 7),
+  // Well after the shell's 10ms, so the head has gone out first even on a loaded machine.
+  n: later(400, 7),
   x: new URL(request.url).searchParams.has('x'),
 })
 
