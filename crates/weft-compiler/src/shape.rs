@@ -25,7 +25,8 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     ArrowFunctionBody, ArrowFunctionExpression, BindingIdentifier, Expression, FormalParameters,
     IdentifierReference, ImportDeclarationSpecifier, JSXAttribute, JSXAttributeItem,
-    JSXAttributeName, JSXAttributeValue, JSXElement, JSXFragment, Program, Statement,
+    JSXAttributeName, JSXAttributeValue, JSXElement, JSXElementName, JSXFragment, Program,
+    Statement,
 };
 use oxc_ast_visit::{Visit, VisitMut, walk, walk_mut};
 use oxc_parser::Parser;
@@ -164,6 +165,75 @@ struct Gen<'s> {
     /// Imported variants actually used.
     used: BTreeSet<SymbolId>,
     imports: HashMap<SymbolId, String>,
+    standalone: bool,
+    outlet_props: Option<SymbolId>,
+    outlet_children: HashSet<SymbolId>,
+    current: Option<SymbolId>,
+    recursive: HashSet<(SymbolId, SymbolId)>,
+}
+
+// Over-approximate local JSX calls so every edge in a cycle becomes a placeholder.
+struct ShapeCalls<'s> {
+    scoping: &'s Scoping,
+    variants: &'s HashMap<SymbolId, String>,
+    calls: HashSet<SymbolId>,
+}
+
+impl<'a> Visit<'a> for ShapeCalls<'_> {
+    fn visit_jsx_element(&mut self, el: &JSXElement<'a>) {
+        if let JSXElementName::IdentifierReference(id) = &el.opening_element.name
+            && let Some(sym) = id
+                .reference_id
+                .get()
+                .and_then(|r| self.scoping.get_reference(r).symbol_id())
+            && self.variants.contains_key(&sym)
+        {
+            self.calls.insert(sym);
+        }
+        walk::walk_jsx_element(self, el);
+    }
+}
+
+fn recursive_edges(
+    comps: &[Comp<'_, '_>],
+    scoping: &Scoping,
+    variants: &HashMap<SymbolId, String>,
+) -> HashSet<(SymbolId, SymbolId)> {
+    let mut graph = HashMap::new();
+    for comp in comps {
+        let Some(sym) = scoping.get_root_binding(comp.local.as_str().into()) else {
+            continue;
+        };
+        let Some(ret) = returned(comp.statements, comp.expression) else {
+            continue;
+        };
+        let mut scan = ShapeCalls {
+            scoping,
+            variants,
+            calls: HashSet::new(),
+        };
+        scan.visit_expression(ret);
+        graph.insert(sym, scan.calls);
+    }
+    let mut recursive = HashSet::new();
+    for (&from, targets) in &graph {
+        for &target in targets {
+            let mut stack = vec![target];
+            let mut seen = HashSet::new();
+            while let Some(node) = stack.pop() {
+                if node == from {
+                    recursive.insert((from, target));
+                    break;
+                }
+                if seen.insert(node)
+                    && let Some(next) = graph.get(&node)
+                {
+                    stack.extend(next.iter().copied());
+                }
+            }
+        }
+    }
+    recursive
 }
 
 struct Sites {
@@ -241,7 +311,8 @@ pub fn apply<'a>(
     filename: &str,
     known: Option<&HashMap<String, bool>>,
 ) -> Shapes {
-    let wanted = known.is_some() || source.contains("pending=\"shape\"");
+    let standalone = filename.ends_with("?weft-shape");
+    let wanted = standalone || known.is_some() || source.contains("pending=\"shape\"");
     if !wanted {
         return Shapes::default();
     }
@@ -253,8 +324,17 @@ pub fn apply<'a>(
         weft: HashMap::new(),
         used: BTreeSet::new(),
         imports: HashMap::new(),
+        standalone,
+        outlet_props: None,
+        outlet_children: HashSet::new(),
+        current: None,
+        recursive: HashSet::new(),
     };
-    let import_lines = imported_variants(&mut g, program, filename, known);
+    let import_lines = if standalone {
+        HashMap::new()
+    } else {
+        imported_variants(&mut g, program, filename, known)
+    };
 
     let mut code = String::new();
     let mut exports = Vec::new();
@@ -264,7 +344,11 @@ pub fn apply<'a>(
             g.variants.insert(sym, format!("{}$shape", c.local));
         }
     }
+    if standalone {
+        g.recursive = recursive_edges(&comps, scoping, &g.variants);
+    }
     for c in &comps {
+        g.current = scoping.get_root_binding(c.local.as_str().into());
         let mut b = Bindings::default();
         b.visit_formal_parameters(c.params);
         let mut allowed: HashSet<SymbolId> = b.0.into_iter().collect();
@@ -274,6 +358,14 @@ pub fn apply<'a>(
             .first()
             .map(|p| g.pattern(&p.pattern))
             .unwrap_or_default();
+        if standalone {
+            g.outlet_params(c.params);
+        }
+        let param = if standalone {
+            "$$shapeProps = {}".into()
+        } else {
+            param
+        };
         let Some(body) = g.body(c.statements, c.expression, &mut allowed) else {
             continue;
         };
@@ -282,6 +374,16 @@ pub fn apply<'a>(
             let _ = writeln!(code, "export {{ {}$shape as {e}$shape }};", c.local);
             exports.push(e.clone());
         }
+    }
+    if standalone {
+        drop(comps);
+        program.body.clear();
+        return Shapes {
+            code: format!(
+                "import {{ shapeAny as $$sa, shapeRead as $$sr, shapeText as $$st }} from \"@weft-js/core/shape\";\n{code}"
+            ),
+            exports,
+        };
     }
     let mut find = FindSites {
         g: &mut g,

@@ -8,6 +8,7 @@
 import { state, untrack, type State, type SsrData } from '@weft-js/core'
 import type { Merged } from '@weft-js/core/ssr'
 import type { Wire } from './data'
+import type { PreparedRouteShape } from './run/shape-preparation'
 
 /**
  * One level as the server sends it: `d` lists the data's deferred fields (promises on the server, research 25 §4),
@@ -31,11 +32,32 @@ export interface Level {
   data: State<unknown>
   /** A static level's HTML: empty for the page's own; undefined for a level with client code. */
   html: State<string | undefined>
+  /** A temporary incoming shape for this outlet, while its route is pending. */
+  shape: State<PreparedRouteShape[] | undefined>
   x?: string | undefined
 }
 
 /** A route, layout or island: its props are its own, so nothing here can call one without a cast. */
 export type Component = (props: never) => unknown
+
+/** Sizes are emitted, uncompressed bytes in Vite's recorded static closure. */
+export interface RouteAssetCosts {
+  build: string
+  scope: 'vite-static-closure'
+  levels: { id: string; bytes: number | null }[]
+  routeBytes: number | null
+  eagerBytes: number | null
+  combinedBytes: number | null
+}
+
+export interface AssetReceipt {
+  build: string | null
+  version: 1
+  scope: 'vite-static-closure'
+  files: Record<string, { bytes: number | null; kind: string }>
+  routes: Record<string, { files: string[]; bytes: number | null } | null>
+  eager: { files: string[]; bytes: number | null } | null
+}
 
 export interface RouteState {
   levels: Level[]
@@ -44,6 +66,10 @@ export interface RouteState {
   status: State<number>
   /** Loaded route components by id. */
   comps: Record<string, Component>
+  /** Cost of the current match, when the client and receipt are from the same build. */
+  assetBytes?: RouteAssetCosts | null
+  /** Prepare a route's provided shape CSS until the caller releases it. */
+  prepareShape?: (id: string) => PreparedRouteShape | null
   /** Client: shows a static level's HTML, with the next level inside it. */
   mount?: (html: string, depth: number, next: () => unknown) => unknown
   /** Around a level's component, at the same point on both sides: the server's markers, the client's key scope. */
@@ -64,6 +90,8 @@ export interface RoutePayload {
   i?: string[]
   /** A navigation's page data, for those islands. */
   b?: SsrData | null
+  /** Emitted asset cost for these levels, when a matching build receipt exists. */
+  a?: RouteAssetCosts
 }
 
 /** The route state of the render in progress: a server pass sets it as it starts (passes are synchronous). */
@@ -92,6 +120,7 @@ export function level(r: RouteState, d: number): Level {
     params: state({}),
     data: state<unknown>(undefined),
     html: state<string | undefined>(undefined),
+    shape: state<PreparedRouteShape[] | undefined>(undefined),
   })
 }
 
@@ -142,6 +171,8 @@ export const client: {
   seeds?: Wire[] | undefined
   now?: () => number
   invalidated?: (tags: string[]) => void
+  /** Clear navigation state before a session-changing reload. */
+  sessionChanged?: () => void
   /** Dev: server code changed, so whatever a query read may have too. */
   refreshed?: () => void
 } = {}

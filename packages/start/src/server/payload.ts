@@ -3,6 +3,7 @@ import type { RoutePayload } from '../router'
 import type { Wire } from '../data'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
+import { selectRouteAssets } from '../asset-receipt.mjs'
 import { json, thenable } from './text'
 import type { HandlerOptions, Resolved } from './types'
 
@@ -42,8 +43,10 @@ export function settledView(
   })
 }
 
-export function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
+export function payloadOf(r: Resolved, withHead: boolean, options?: HandlerOptions): RoutePayload {
   const { jsonLd: _, ...head } = r.head // only a first response carries it (`metaTags`)
+  const assetBytes = selectRouteAssets(options?.routeAssetBytes, options?.build,
+    r.levels.map((level) => level.id))
   return {
     m: r.levels.map(({ id, params, data, d, t }) => ({
       id,
@@ -54,6 +57,7 @@ export function payloadOf(r: Resolved, withHead: boolean): RoutePayload {
     })),
     p: r.path,
     s: r.status,
+    ...(assetBytes && { a: assetBytes }),
     ...(withHead && { h: head }),
   }
 }

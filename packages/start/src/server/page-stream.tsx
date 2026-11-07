@@ -79,7 +79,7 @@ export function top(p: PageState) {
 
 /** What this render's head needs, from its HTML. */
 export function shaped(p: PageState) {
-  const payload = withLevels(payloadOf(p.r, false), p.stream.shell, p.statics, false)
+  const payload = withLevels(payloadOf(p.r, false, p.options), p.stream.shell, p.statics, false)
   const parts = islandsOf(p.stream.shell)
   // A Boundary is waiting: the client starts now, not at the last byte.
   const streaming = Object.values(p.stream.data()?.b ?? {}).includes('p')

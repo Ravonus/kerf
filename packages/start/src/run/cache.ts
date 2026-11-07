@@ -1,0 +1,179 @@
+import type { RoutePayload } from '../router'
+
+const LIMIT = 32
+const BYTES = 4 * 1024 * 1024
+
+type Entry = { body: string; bytes: number; tag: string; tags: string[]; since: number; until: number }
+export type Read = {
+  next: RoutePayload; since: number; version: number; notModified?: boolean; until?: number
+}
+type FetchRoute = (url: URL, signal: AbortSignal, tag?: string) => Promise<Response>
+
+/** Bounded route bodies for conditional validation; never serves unvalidated content. */
+export class RouteCache {
+  private entries = new Map<string, Entry>()
+  private bytes = 0
+  private epoch = 0
+  version = 0
+
+  constructor(private build: string | null | undefined) {}
+
+  /** Drop old validators when the client build identity changes. */
+  setBuild(build: string | null | undefined) {
+    if (this.build === build) return
+    this.clear()
+    this.build = build
+  }
+
+  private key(url: URL) {
+    return this.build ? JSON.stringify([this.build, this.epoch, url.pathname + url.search]) : undefined
+  }
+
+  private remove(key: string) {
+    const old = this.entries.get(key)
+    if (old) this.bytes -= old.bytes
+    this.entries.delete(key)
+  }
+
+  /** Forget affected loader data and invalidate every request already in flight. */
+  invalidate(tags: string[]) {
+    this.version++
+    for (const [key, value] of this.entries)
+      if (value.tags.some((tag) => tags.includes(tag))) this.remove(key)
+  }
+
+  /** Drop all build/session-dependent bodies and validators. */
+  clear() {
+    this.version++
+    this.epoch++
+    this.entries.clear()
+    this.bytes = 0
+  }
+
+  private allowed(response: Response) {
+    const policy = response.headers.get('cache-control') ?? ''
+    const directives = policy.split(',').map((part) => part.trim().toLowerCase())
+    const vary = (response.headers.get('vary') ?? '').split(',').map((part) => part.trim().toLowerCase())
+    return directives.includes('private') && !directives.some((part) => /^no-store(?:\s*=|$)/.test(part)) &&
+      !response.headers.has('set-cookie') && ['accept', 'cookie', 'authorization'].every((v) => vary.includes(v)) &&
+      vary.every((v) => ['accept', 'cookie', 'authorization'].includes(v))
+  }
+
+  private until(response: Response, started: number) {
+    if (!this.allowed(response)) return 0
+    const parts = (response.headers.get('cache-control') ?? '').split(',').map((s) => s.trim().toLowerCase())
+    if (parts.some((s) => /^(?:no-cache|must-revalidate|proxy-revalidate)(?:\s*=|$)/.test(s))) return 0
+    const max = parts.filter((s) => /^max-age=\d+$/.test(s))
+    const stale = parts.filter((s) => /^stale-while-revalidate=\d+$/.test(s))
+    if (max.length !== 1 || stale.length > 1 || parts.some((s) =>
+      /^(?:max-age|stale-while-revalidate)\s*=/.test(s) &&
+      !/^(?:max-age|stale-while-revalidate)=\d+$/.test(s))) return 0
+    const age = response.headers.get('age')
+    if (age !== null && !/^\d+$/.test(age)) return 0
+    const date = response.headers.get('date')
+    const sent = date === null ? Date.now() : Date.parse(date)
+    if (!Number.isFinite(sent)) return 0
+    const seconds = Number(max[0]!.slice(8)) + Math.min(30, Number(stale[0]?.split('=')[1] ?? 0))
+    const now = performance.now()
+    const transit = Math.max(0, now - started)
+    const elapsed = Math.max(Number(age ?? 0) * 1000 + transit, Date.now() - sent, transit)
+    return now + Math.max(0, Math.min(30_000, seconds * 1000 - elapsed))
+  }
+
+  /** Read only a still-permitted body; callers must also prove its code is loaded. */
+  peek(url: URL, canSeed: boolean): Read | undefined {
+    const key = this.key(url), entry = key && this.entries.get(key)
+    if (!key || !entry || performance.now() >= entry.until) return undefined
+    const next = JSON.parse(entry.body) as RoutePayload
+    if (next.c?.length && !canSeed) return undefined
+    this.entries.delete(key)
+    this.entries.set(key, entry)
+    return { next, since: entry.since, version: this.version, until: entry.until }
+  }
+
+  /** Conservative known route cost; unknown or mismatched receipts cannot be speculated. */
+  estimate(url: URL) {
+    const key = this.key(url), entry = key && this.entries.get(key)
+    if (!entry) return undefined
+    const next = JSON.parse(entry.body) as RoutePayload
+    const cost = next.a
+    if (!cost || cost.build !== this.build || cost.scope !== 'vite-static-closure' ||
+      typeof cost.routeBytes !== 'number' || !Number.isSafeInteger(cost.routeBytes) ||
+      cost.routeBytes < 0) return undefined
+    const data = Math.max(entry.bytes, 8 * 1024)
+    const total = data + cost.routeBytes
+    return Number.isSafeInteger(total) ? { data, total } : undefined
+  }
+
+  private store(key: string | undefined, response: Response, body: string, next: RoutePayload,
+    since: number, canSeed: boolean, started: number) {
+    if (!key) return
+    this.remove(key)
+    const tag = response.headers.get('etag')
+    const bytes = new TextEncoder().encode(body).byteLength
+    if (response.status !== 200 || next.s !== 200 || next.r || !tag || !this.allowed(response) ||
+      (next.c?.length && !canSeed) || bytes > BYTES) return
+    const tags = [...new Set(next.m.flatMap((match) => match.t ?? []))]
+    this.entries.set(key, { body, bytes, tag, tags, since, until: this.until(response, started) })
+    this.bytes += bytes
+    while (this.entries.size > LIMIT || this.bytes > BYTES) this.remove(this.entries.keys().next().value!)
+  }
+
+  /** Fetch or validate a body against the current generation before returning it. */
+  async read(url: URL, signal: AbortSignal, fetchRoute: FetchRoute, now: () => number,
+    canSeed: () => boolean, onForget?: () => void): Promise<Read> {
+    let allowTag = true
+    for (;;) {
+      if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
+      const version = this.version, key = this.key(url)
+      const cached = key && allowTag ? this.entries.get(key) : undefined
+      let since = now()
+      const started = performance.now()
+      const response = await fetchRoute(url, signal, cached?.tag)
+      if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
+      if (version !== this.version) continue
+      if (response.status === 401 || response.status === 403) {
+        this.clear()
+        onForget?.()
+        throw new Error('Route authorization failed')
+      }
+      let body: string
+      if (response.status === 304) {
+        if (!cached || !key || !this.allowed(response) || response.headers.get('etag') !== cached.tag ||
+          this.entries.get(key) !== cached) {
+          if (key) this.remove(key)
+          onForget?.()
+          if (!allowTag) throw new Error('Unexpected route 304')
+          allowTag = false
+          continue
+        }
+        body = cached.body
+        since = cached.since
+        cached.until = this.until(response, started)
+        this.entries.delete(key)
+        this.entries.set(key, cached)
+      } else {
+        body = await response.text()
+        if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
+        if (version !== this.version) continue
+      }
+      const next = JSON.parse(body) as RoutePayload
+      if (next.s === 401 || next.s === 403) {
+        this.clear()
+        return { next, since, version: this.version }
+      }
+      if (response.status === 304 && next.c?.length && !canSeed()) {
+        if (key) this.remove(key)
+        onForget?.()
+        allowTag = false
+        continue
+      }
+      if (response.status !== 304) {
+        if (next.p !== url.pathname + url.search && key) this.remove(key)
+        else this.store(key, response, body, next, since, canSeed(), started)
+        if (!next.r && !this.peek(url, canSeed())) onForget?.()
+      }
+      return { next, since, version, notModified: response.status === 304 }
+    }
+  }
+}

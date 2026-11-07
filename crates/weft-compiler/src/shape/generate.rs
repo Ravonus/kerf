@@ -3,7 +3,8 @@
 use std::collections::HashSet;
 
 use oxc_ast::ast::{
-    Argument, BindingPattern, CallExpression, ChainElement, Expression, LogicalOperator, Statement,
+    Argument, BindingPattern, CallExpression, ChainElement, Expression, FormalParameters,
+    IdentifierReference, LogicalOperator, Statement,
 };
 use oxc_ast_visit::Visit;
 use oxc_semantic::SymbolId;
@@ -12,6 +13,54 @@ use oxc_span::GetSpan;
 use super::{BAR, Bindings, Gen, Reads, arrow_body, has_jsx, returned, strip};
 
 impl Gen<'_> {
+    /// Only the first parameter's direct children binding can receive the supplied inert outlet.
+    pub(super) fn outlet_params(&mut self, params: &FormalParameters<'_>) {
+        self.outlet_props = None;
+        self.outlet_children.clear();
+        let Some(param) = params.items.first() else {
+            return;
+        };
+        match &param.pattern {
+            BindingPattern::BindingIdentifier(id) => self.outlet_props = id.symbol_id.get(),
+            BindingPattern::ObjectPattern(obj) => {
+                for prop in &obj.properties {
+                    if prop.computed || prop.key.static_name().as_deref() != Some("children") {
+                        continue;
+                    }
+                    let binding = match &prop.value {
+                        BindingPattern::AssignmentPattern(a) => &a.left,
+                        other => other,
+                    };
+                    if let BindingPattern::BindingIdentifier(id) = binding
+                        && let Some(sym) = id.symbol_id.get()
+                    {
+                        self.outlet_children.insert(sym);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn outlet_symbol(&self, id: &IdentifierReference<'_>) -> Option<SymbolId> {
+        id.reference_id
+            .get()
+            .and_then(|r| self.scoping.get_reference(r).symbol_id())
+    }
+
+    fn is_outlet(&self, e: &Expression<'_>) -> bool {
+        match strip(e) {
+            Expression::Identifier(id) => self
+                .outlet_symbol(id)
+                .is_some_and(|sym| self.outlet_children.contains(&sym)),
+            Expression::StaticMemberExpression(member) if member.property.name == "children" => {
+                matches!(strip(&member.object), Expression::Identifier(id)
+                    if self.outlet_symbol(id).is_some_and(|sym| Some(sym) == self.outlet_props))
+            }
+            _ => false,
+        }
+    }
+
     pub(super) fn reads(&self, e: &Expression<'_>) -> Vec<SymbolId> {
         let mut v = Reads {
             scoping: self.scoping,
@@ -24,6 +73,15 @@ impl Gen<'_> {
 
     /// Everything `e` reads is kept: placeholders, module scope, or a global.
     pub(super) fn ok(&self, e: &Expression<'_>, allowed: &HashSet<SymbolId>) -> bool {
+        if self.standalone {
+            return matches!(
+                strip(e),
+                Expression::StringLiteral(_)
+                    | Expression::NumericLiteral(_)
+                    | Expression::BooleanLiteral(_)
+                    | Expression::NullLiteral(_)
+            );
+        }
         let root = self.scoping.root_scope_id();
         self.reads(e)
             .iter()
@@ -102,6 +160,13 @@ impl Gen<'_> {
     }
 
     pub(super) fn text(&self, e: &Expression<'_>, allowed: &HashSet<SymbolId>) -> String {
+        if self.standalone {
+            return if self.is_outlet(e) {
+                "$$shapeProps.children".into()
+            } else {
+                Self::bar(None)
+            };
+        }
         let ok = self.ok(e, allowed);
         let children = match e {
             Expression::Identifier(i) => i.name == "children",
@@ -122,6 +187,9 @@ impl Gen<'_> {
         whole: &Expression<'_>,
         allowed: &HashSet<SymbolId>,
     ) -> String {
+        if self.standalone {
+            return Self::bar(None);
+        }
         let list = match &call.callee {
             Expression::StaticMemberExpression(m) if m.property.name == "map" => Some(&m.object),
             _ => None,
@@ -175,6 +243,10 @@ impl Gen<'_> {
         allowed: &mut HashSet<SymbolId>,
     ) -> Option<String> {
         let ret = returned(statements, expression)?;
+        if self.standalone {
+            let value = self.value(ret, &HashSet::new());
+            return Some(format!("return {}{{{value}}}</div>;", super::WRAP));
+        }
         // Which locals the result needs, back to front.
         let mut needed: HashSet<SymbolId> = self.reads(ret).into_iter().collect();
         let mut keep = vec![false; statements.len()];

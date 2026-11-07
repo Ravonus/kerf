@@ -128,6 +128,13 @@ impl Gen<'_> {
         let name = &el.opening_element.name;
         if let JSXElementName::Identifier(i) = name {
             let tag = i.name.as_str();
+            if self.standalone
+                && (tag.contains('-')
+                    || ["script", "style", "link", "object", "embed", "base", "meta"]
+                        .contains(&tag))
+            {
+                return Self::bar(None);
+            }
             if MEDIA.contains(&tag) {
                 return format!(
                     "<{tag}{} data-skeleton />",
@@ -161,6 +168,13 @@ impl Gen<'_> {
             return format!("<{tag}{attrs}>{kids}</{tag}>");
         }
         if let Some((sym, tag)) = sym.and_then(|s| Some((s, self.variants.get(&s)?.clone()))) {
+            if self.standalone
+                && self
+                    .current
+                    .is_some_and(|from| self.recursive.contains(&(from, sym)))
+            {
+                return Self::bar(None);
+            }
             if self.imports.contains_key(&sym) {
                 self.used.insert(sym);
             }

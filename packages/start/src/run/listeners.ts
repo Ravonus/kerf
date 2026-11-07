@@ -1,7 +1,7 @@
 import { drain, wake } from '@weft-js/core/dom'
 import type { Held } from '../boot'
 import { client, peers } from '../router'
-import { ask, guess, ours } from './helpers'
+import { admitLink, routeClicks } from './admission'
 import type { Navigation } from './navigation'
 
 type Hot = { on(event: string, on: (data: { queries: boolean }) => unknown): void }
@@ -9,13 +9,15 @@ type Hot = { on(event: string, on: (data: { queries: boolean }) => unknown): voi
 export function listeners(nav: Navigation, hot: () => Hot | undefined) {
   addEventListener('online', nav.owing)
   addEventListener('focus', nav.owing)
+  addEventListener('pagehide', nav.dispose)
   if (hot()) hot()!.on('weft:refresh', (changed) => void nav.reloaded(changed))
   client.invalidated = nav.invalidated
+  client.sessionChanged = nav.dispose
   clicks(nav)
   preload(nav)
   history(nav)
   peers?.addEventListener('message', (m) => {
-    if (!m.data) location.reload()
+    if (!m.data) { nav.dispose(); location.reload() }
   })
   const q = (window as Window & { __wq?: Held }).__wq
   if (q) {
@@ -27,14 +29,7 @@ export function listeners(nav: Navigation, hot: () => Hot | undefined) {
 
 // A fade can intercept a click; replay it on the element underneath once the picture is gone.
 function clicks(nav: Navigation) {
-  document.addEventListener('click', (e) => {
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
-      return
-    const url = ours(e.target)
-    if (!url) return
-    e.preventDefault()
-    void nav.go(url.href)
-  })
+  routeClicks(document, nav.routes, (href) => nav.go(href))
   let ended: Promise<unknown> | undefined
   document.addEventListener(
     'pointerdown',
@@ -60,33 +55,51 @@ function clicks(nav: Navigation) {
   )
 }
 
-// A hovered or focused link can load its chunks and data before it is pressed.
-function preload(nav: Navigation) {
+// Only known-cost intent can start a bounded data request; no page module runs here.
+export function preload(nav: Navigation) {
   let pending: ReturnType<typeof setTimeout> | undefined
+  const network = (navigator as Navigator & { connection?: {
+    saveData?: boolean; effectiveType?: string
+    addEventListener?: (type: string, fn: () => void) => void
+    removeEventListener?: (type: string, fn: () => void) => void
+  } }).connection
+  const cancel = () => { clearTimeout(pending); nav.prefetch.cancel() }
   const intent = (e: Event) => {
     clearTimeout(pending)
-    const url = ours(e.target)
-    const path = url && url.pathname + url.search
-    if (
-      !url ||
-      nav.warm?.path === path ||
-      (e.target as Element).closest('[data-preload="off"]') ||
-      (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData
-    )
-      return
-    pending = setTimeout(
-      () => {
-        for (const id of guess(nav.routes, url.pathname)) void nav.chunk(id).catch(() => {})
-        nav.warm = { path: path!, at: performance.now(), since: nav.now(), res: ask(url) }
-        nav.warm.res.catch(() => {
-          nav.warm = undefined
-        })
-      },
-      e.type === 'focusin' ? 0 : 80,
-    )
+    const target = e.target as Element | null
+    const admitted = admitLink(e, nav.routes)
+    if (!admitted || admitted.noop || !target || target.closest('[data-preload="off"]') ||
+      target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"])')
+    ) return
+    pending = setTimeout(() => {
+      if (document.hidden) return
+      const version = nav.cache.version
+      nav.cache.setBuild(nav.routes.build)
+      if (version !== nav.cache.version) nav.prefetch.cancel(true)
+      nav.prefetch.start(admitted.url, e.type === 'focusin' ? 'focus' : 'hover', network,
+        navigator.onLine)
+    }, e.type === 'focusin' ? 0 : 80)
   }
   document.addEventListener('pointerover', intent)
   document.addEventListener('focusin', intent)
+  document.addEventListener('pointerout', cancel)
+  document.addEventListener('focusout', cancel)
+  const visibility = () => { if (document.hidden) cancel() }
+  document.addEventListener('visibilitychange', visibility)
+  addEventListener('offline', cancel)
+  addEventListener('pagehide', cancel)
+  network?.addEventListener?.('change', cancel)
+  return () => {
+    cancel()
+    document.removeEventListener('pointerover', intent)
+    document.removeEventListener('focusin', intent)
+    document.removeEventListener('pointerout', cancel)
+    document.removeEventListener('focusout', cancel)
+    document.removeEventListener('visibilitychange', visibility)
+    removeEventListener('offline', cancel)
+    removeEventListener('pagehide', cancel)
+    network?.removeEventListener?.('change', cancel)
+  }
 }
 
 // An in-page anchor fires popstate too; only a changed path needs a navigation.
