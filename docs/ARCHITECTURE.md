@@ -22,3 +22,12 @@ test are out of 1.0. All other top-level add-on packages, including web pay, rem
 private until ready. Their code remains in the repository. `scripts/release.mjs` selects non-private
 top-level packages and any built compiler platform packages; it does not use this document as a
 package allowlist.
+
+## Repository map
+
+- [packages](../packages/) contains the runtime, CLI, app framework, UI toolkit and optional integrations.
+- [crates](../crates/) contains the Rust compiler, layout engine and command-line crate.
+- [site](../site/) contains the site and learning material; [examples](../examples/) contains example applications.
+- [benchmarks](../benchmarks/) compares implementations; [evals](../evals/) holds evaluation results and tools.
+- [scripts](../scripts/) contains repository setup and quality checks; [.github](../.github/) contains workflows and templates.
+- [docs](./) contains architecture, decisions and the roadmap.
