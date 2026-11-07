@@ -377,6 +377,15 @@ identical CSS. No isolated code speed effect is inferred. Long-list heightMoved
 remains zero. At least 1,134 B of recovery remains before the strict ceiling.
 Full source-labeled evidence: S5 `manager-size-36/size-receipts.tar.gz`.
 
+The equivalent Unicode-alias change at `5f9b1f44` measures 52,308 B (29,634 B JS +
+22,674 B CSS), 25 B below the fresh `f1738f86` control. All other stack sizes and
+emitted CSS match; emitted dashboard JS differs only in that regex. Exhaustive
+Node 26 comparison checks 1,114,112 code points with zero mismatches. Both
+canonical runs pass 54 parity steps; warp retains 1,590 sampled nodes and its
+design checks. Task time is 239→235 ms against Solid's 170→172 ms; no isolated
+speedup is claimed. Long-list heightMoved remains zero. At least 1,109 B of
+recovery remains. Full evidence: S5 `manager-size-44/size-receipts.tar.gz`.
+
 **Deferred until after 1.0 by the owner:**
 
 - Firefox text preparation: confirm or fix the S3 paired-median increase.
