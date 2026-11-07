@@ -373,6 +373,10 @@ function registerBuildAStreamedBoundaryComesAfterTheSheet(page: ReadPage) {
   test("a streamed Boundary comes after the sheet's link, with only the styles not yet sent", async () => {
     const { html } = await page('/slow')
     const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]!)
+    // Layers rank by first mention: warp's whole order comes before any sheet's own statement.
+    expect(
+      styles[0]!.startsWith('@layer warp,app,theme,base,components,utilities;@layer warp.tokens,'),
+    ).toBe(true)
     const link = html.indexOf('<link rel="stylesheet" href=')
     const swap = html.indexOf('<template')
     if (swap > 0) expect(link).toBeLessThan(swap)

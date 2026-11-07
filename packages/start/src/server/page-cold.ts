@@ -1,5 +1,5 @@
 // Render first when no remembered head can be sent yet.
-import { pageStyles, type keptSheets } from '../inline.mjs'
+import { LAYER_ORDER, pageStyles, type keptSheets } from '../inline.mjs'
 import { capture } from '../capture'
 import { whole } from './compression'
 import { withHeaders } from './request'
@@ -25,7 +25,9 @@ function coldHead(
     (p.assets.entry && shape.streaming
       ? `<link rel="modulepreload" href="${esc(p.assets.entry)}">\n`
       : '') +
-    (t ? `<style>${p.assets.pieces!.layers}${t.rules(p.stream.shell)}</style>\n` : styles!.head) +
+    (t
+      ? `<style>${LAYER_ORDER}${p.assets.pieces!.layers}${t.rules(p.stream.shell)}</style>\n`
+      : styles!.head) +
     (capturing ? `<script>${capture(shape.now)}</script>\n` : '') +
     p.dev +
     (p.assets.entry && !shape.streaming

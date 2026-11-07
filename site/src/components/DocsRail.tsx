@@ -13,6 +13,7 @@ import {
   SITE_LINKS,
   toolkitSections,
 } from '../lib/sections'
+import { ROOM_TITLES } from '../toolkit/art/shared'
 import { FrameTools } from './FrameTools'
 import '../styles/docs.css'
 import '../styles/learn.css'
@@ -31,6 +32,16 @@ interface Rail {
 
 const TOOLKIT = new Set<string>(['components', 'blocks', 'charts'])
 const rails = new Map<string, Rail>()
+
+/** The toolkit's rail, then the rooms on the art page. */
+const artSections = (): SideNavSection[] => [
+  ...toolkitSections('art'),
+  {
+    title: 'Rooms',
+    pinned: true,
+    items: ROOM_TITLES.map(([kind, label]) => ({ href: `/art#${kind}`, label })),
+  },
+]
 
 /** The rail for a top-level section, made once: moving inside a section hands SideNav the same sections. */
 function railFor(section: string): Rail | undefined {
@@ -52,15 +63,22 @@ function railFor(section: string): Rail | undefined {
             filter: true,
             remember: 'weft:site:reference',
           }
-        : TOOLKIT.has(section)
+        : section === 'icons' || section === 'art'
           ? {
-              label: AREA_LABEL[section as Area],
-              sections: toolkitSections(section as Area),
-              filter: true,
+              label: section === 'icons' ? 'Icons' : 'Art',
+              sections: section === 'icons' ? toolkitSections('icons') : artSections(),
+              filter: false,
               remember: 'weft:site:toolkit',
-              tools: true,
             }
-          : undefined
+          : TOOLKIT.has(section)
+            ? {
+                label: AREA_LABEL[section as Area],
+                sections: toolkitSections(section as Area),
+                filter: true,
+                remember: 'weft:site:toolkit',
+                tools: true,
+              }
+            : undefined
   if (rail) rails.set(section, rail)
   return rail
 }

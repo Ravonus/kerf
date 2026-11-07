@@ -1,5 +1,5 @@
 // A known head can go out before the new render finishes.
-import { pageStyles, type keptSheets } from '../inline.mjs'
+import { LAYER_ORDER, pageStyles, type keptSheets } from '../inline.mjs'
 import { capture } from '../capture'
 import { withHeaders } from './request'
 import { esc } from './text'
@@ -93,7 +93,7 @@ export async function warmPage(
     top(p) +
     known.preloads +
     (p.assets.entry ? `<link rel="modulepreload" href="${esc(p.assets.entry)}">\n` : '') +
-    (styles ? styles.head : `<style>${p.assets.pieces!.layers}</style>\n`) +
+    (styles ? styles.head : `<style>${LAYER_ORDER}${p.assets.pieces!.layers}</style>\n`) +
     (known.capture ? `<script>${capture(known.now)}</script>\n` : '') +
     p.dev +
     '</head>\n<body>\n'

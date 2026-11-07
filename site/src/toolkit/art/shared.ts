@@ -1,6 +1,15 @@
 // What the art pieces share: their metadata, their inks, a little noise, and the rule that only three move at once.
 export type Kind = 'field' | 'generative' | 'shader' | 'data' | 'pointer'
 
+/** The rooms in gallery order, with their titles: light enough for the site's rail to import. */
+export const ROOM_TITLES: [Kind, string][] = [
+  ['field', 'Dither fields'],
+  ['generative', 'Generative'],
+  ['shader', 'Shaders on whole cells'],
+  ['data', 'Data as cloth'],
+  ['pointer', 'For your hand'],
+]
+
 export interface Meta {
   name: string
   description: string

@@ -27,7 +27,9 @@ import { meta as socketTide } from './socket-tide'
 import { meta as pluck } from './pluck'
 import { meta as filings } from './filings'
 import { meta as sandTable } from './sand-table'
-import type { Kind, Meta } from './shared'
+import { ROOM_TITLES, type Kind, type Meta } from './shared'
+
+const title = (k: Kind) => ROOM_TITLES.find(([kind]) => kind === k)![1]
 
 export const ROOMS: {
   kind: Kind
@@ -37,7 +39,7 @@ export const ROOMS: {
 }[] = [
   {
     kind: 'field',
-    title: 'Dither fields',
+    title: title('field'),
     intro: 'Tones and a few inks. The picture is whatever the threshold leaves behind.',
     pieces: [
       ['warp-beam', warpBeam],
@@ -52,7 +54,7 @@ export const ROOMS: {
   },
   {
     kind: 'generative',
-    title: 'Generative',
+    title: title('generative'),
     intro: 'Rules, a seed and hairlines. Each of these could be printed and hung.',
     pieces: [
       ['shuttle', shuttle],
@@ -67,7 +69,7 @@ export const ROOMS: {
   },
   {
     kind: 'shader',
-    title: 'Shaders on whole cells',
+    title: title('shader'),
     intro:
       'Per-pixel work, at a resolution small enough to stay cheap and big enough to read as ink.',
     pieces: [
@@ -79,7 +81,7 @@ export const ROOMS: {
   },
   {
     kind: 'data',
-    title: 'Data as cloth',
+    title: title('data'),
     intro: 'Figures you could read in a table, and can: each piece carries one for screen readers.',
     pieces: [
       ['commit-weave', commitWeave],
@@ -91,7 +93,7 @@ export const ROOMS: {
   },
   {
     kind: 'pointer',
-    title: 'For your hand',
+    title: title('pointer'),
     intro: 'Nothing happens until you touch them, and they cost nothing until you do.',
     pieces: [
       ['pluck', pluck],
