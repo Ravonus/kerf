@@ -20,8 +20,10 @@ export function retainSourceContext(
   const win = doc.defaultView
   if (!root || !win || active.has(doc)) return null
   const saved = new Map<Element, Map<Name, Saved>>()
+  const owners = new WeakMap<NamedNodeMap, Element>()
   const nativeSet = win.Element.prototype.setAttribute
   const nativeRemove = win.Element.prototype.removeAttribute
+  const attrValue = Object.getOwnPropertyDescriptor(win.Attr.prototype, 'value')?.set
   let stopped = false
   const relevant = (item: Element, name: string): name is Name =>
     (item.localName === 'a' && name === 'href') ||
@@ -49,6 +51,7 @@ export function retainSourceContext(
     }
   }
   const patchItem = (item: Element) => {
+    void item.attributes // Register maps captured before this context began.
     if (item.localName === 'a') patch(item, 'href')
     if (item.localName === 'form') patch(item, 'action')
     if (item.localName === 'button' || item.localName === 'input') patch(item, 'formaction')
@@ -78,6 +81,52 @@ export function retainSourceContext(
     }
   }
   try {
+    install(win.Element.prototype, 'attributes', (descriptor) => ({ ...descriptor,
+      get: function (this: Element) {
+        const map = Reflect.apply(descriptor.get!, this, []) as NamedNodeMap
+        if (!stopped) owners.set(map, this)
+        return map
+      },
+    }))
+    for (const [prototype, property] of [
+      [win.Attr.prototype, 'value'], [win.Node.prototype, 'nodeValue'],
+      [win.Node.prototype, 'textContent'],
+    ] as const) {
+      install(prototype, property, (descriptor) => ({ ...descriptor,
+        set: function (this: Node, value: string | null) {
+          if (!stopped && this instanceof win.Attr && this.namespaceURI === null) {
+            const item = this.ownerElement, name = this.localName.toLowerCase()
+            if (item && root.contains(item) && relevant(item, name)) {
+              const raw = property === 'value' ? String(value) : String(value ?? '')
+              value = pin(item, name, raw, true)
+            }
+          }
+          Reflect.apply(descriptor.set!, this, [value])
+        },
+      }))
+    }
+    for (const method of ['setNamedItem', 'setNamedItemNS', 'removeNamedItem', 'removeNamedItemNS']) {
+      install(win.NamedNodeMap.prototype, method, (descriptor) => {
+        const original = descriptor.value as (...args: unknown[]) => unknown
+        return { ...descriptor, value: function (this: NamedNodeMap, ...args: unknown[]) {
+          const result = Reflect.apply(original, this, args) as Attr | null
+          const item = owners.get(this)
+          const attr = method.startsWith('set') ? args[0] : result
+          if (!stopped && item && root.contains(item) && attr instanceof win.Attr &&
+            attr.namespaceURI === null && relevant(item, attr.localName.toLowerCase())) {
+            const name = attr.localName.toLowerCase() as Name
+            if (method.startsWith('set')) {
+              const raw = attr.value, value = pin(item, name, raw, result !== attr)
+              if (value !== raw) Reflect.apply(attrValue!, attr, [value])
+            } else {
+              const value = pin(item, name, null, true)
+              if (value !== null) Reflect.apply(nativeSet, item, [name, value])
+            }
+          }
+          return result
+        } }
+      })
+    }
     for (const name of ['setAttribute', 'removeAttribute', 'setAttributeNS', 'removeAttributeNS']) {
       install(win.Element.prototype, name, (descriptor) => {
         const original = descriptor.value as (...args: unknown[]) => unknown

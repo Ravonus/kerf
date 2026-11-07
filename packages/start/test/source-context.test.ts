@@ -238,5 +238,4 @@ describe('retained source URL context', () => {
       Object.defineProperty(proto, 'href', before)
     }
   })
-
 })
