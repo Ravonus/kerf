@@ -15,10 +15,11 @@ import { Navigation } from '../src/run/navigation'
 
 afterEach(() => { document.body.innerHTML = '' })
 
-it('keeps a mounted layout owner through pending replacements and cancellation', async () => {
+it('keeps mounted layout and page owners through replacements and cancellation', async () => {
   history.replaceState(null, '', '/users/1?q=1')
   vi.stubGlobal('requestAnimationFrame', () => 0)
   const routes: ClientRoutes = { table: [{ id: '/users/$id', pattern: '/users/$id',
+    layouts: ['layout:', 'layout:users/[id]'] }, { id: '/other', pattern: '/other',
     layouts: ['layout:', 'layout:users/[id]'] }], load: {} }
   const route = createRouteState({ p: '/users/1?q=1', s: 200, m: [
     { id: 'layout:', params: {} }, { id: 'layout:users/[id]', params: { id: '1' } },
@@ -27,7 +28,7 @@ it('keeps a mounted layout owner through pending replacements and cancellation',
   const release = vi.fn()
   route.prepareShape = () => ({ kind: 'generated', ready: true, completeness: 'partial',
     component: () => null, release })
-  let mounts = 0, cleanups = 0
+  let mounts = 0, cleanups = 0, pageMounts = 0, pageCleanups = 0
   const dispose = render(() => {
     const app = document.createElement('main')
     app.id = 'app'
@@ -43,7 +44,18 @@ it('keeps a mounted layout owner through pending replacements and cancellation',
       layout.append(button)
       const outlet = document.createElement('div')
       layout.append(outlet)
-      insert(outlet, () => route.levels[2]!.shape.value ? 'page shape' : 'page')
+      insert(outlet, () => {
+        if (route.levels[2]!.shape.value) return 'page shape'
+        pageMounts++
+        onCleanup(() => { pageCleanups++ })
+        const pageButton = document.createElement('button')
+        let pageCount = 0
+        pageButton.textContent = 'page 0'
+        pageButton.addEventListener('click', () => {
+          pageButton.textContent = `page ${++pageCount}`
+        })
+        return pageButton
+      })
       return layout
     })
     return app
@@ -53,28 +65,40 @@ it('keeps a mounted layout owner through pending replacements and cancellation',
   const nav = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
   const button = document.querySelector('button')!
   button.click()
+  const pageButton = document.querySelector<HTMLButtonElement>('section div button')!
+  pageButton.click()
   try {
     const first = nav.go('/users/2?q=1')
     expect(document.querySelector('button')).toBe(button)
     expect(button.textContent).toBe('1')
-    expect(document.querySelector('section div')!.textContent).toBe('page shape')
+    expect(document.querySelector('section div button')).toBe(pageButton)
+    expect(pageCleanups).toBe(0)
+    expect(pageButton.textContent).toBe('page 1')
     const next = nav.go('/users/1?q=2')
     await first
     expect(document.querySelector('button')).toBe(button)
+    pageButton.click()
+    expect(pageButton.textContent).toBe('page 2')
     button.click()
     expect(button.textContent).toBe('2')
     nav.current?.abort()
     await next
     flush()
     expect(document.querySelector('button')).toBe(button)
-    expect(document.querySelector('section div')!.textContent).toBe('page')
-    expect([mounts, cleanups]).toEqual([1, 0])
+    expect(document.querySelector('section div button')).toBe(pageButton)
+    expect([mounts, cleanups, pageMounts, pageCleanups]).toEqual([1, 0, 1, 0])
+    const changed = nav.go('/other')
+    expect(document.querySelector('section div')!.textContent).toBe('page shape')
+    expect(pageCleanups).toBe(1)
+    nav.current?.abort()
+    await changed
   } finally {
     nav.dispose()
     dispose()
     vi.unstubAllGlobals()
   }
   expect(cleanups).toBe(1)
+  expect(pageCleanups).toBe(2)
 })
 
 it('compares decoded splat segments and rejects malformed route guesses', async () => {

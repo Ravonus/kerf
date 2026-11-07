@@ -139,11 +139,11 @@ export class Navigation {
 
   /** Prepare all changed levels before replacing the current outlet. */
   present(ids: string[], url: URL) {
-    let first = ids.findIndex((id, depth) => this.route.levels[depth]?.id.value !== id)
-    if (first < 0) first = this.changedParams(ids, url)
+    const first = ids.findIndex((id, depth) => this.route.levels[depth]?.id.value !== id)
     if (first < 0) {
       const committed = new URL(this.committedURL)
-      if (url.pathname === committed.pathname && url.search === committed.search) this.clearShape()
+      if (this.changedParams(ids, url) >= 0 ||
+        (url.pathname === committed.pathname && url.search === committed.search)) this.clearShape()
       return false
     }
     if (!this.route.prepareShape) return false

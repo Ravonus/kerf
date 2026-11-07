@@ -249,7 +249,7 @@ describe('navigation acceptance', () => {
     await nested
   })
 
-  it('presents changed params and queries at their first affected outlet', async () => {
+  it('keeps same-ID outlets through params, query and replacement', async () => {
     history.replaceState(null, '', '/users/1/posts/one?q=1')
     const routes: ClientRoutes = { table: [{ id: '/users/$id/posts/$post',
       pattern: '/users/$id/posts/$post', layouts: ['layout:', 'layout:users/[id]'] }], load: {} }
@@ -267,20 +267,20 @@ describe('navigation acceptance', () => {
     const first = nav.go('/users/2/posts/one?q=1')
     expect(levels[0]!.shape.value).toBeUndefined()
     expect(levels[1]!.shape.value).toBeUndefined()
-    expect(levels[2]!.shape.value).toHaveLength(1)
+    expect(levels[2]!.shape.value).toBeUndefined()
     expect(levels[1]!.params.value.id).toBe('1')
     const second = nav.go('/users/1/posts/two?q=1')
     await first
     expect(levels[1]!.shape.value).toBeUndefined()
-    expect(levels[2]!.shape.value).toHaveLength(1)
+    expect(levels[2]!.shape.value).toBeUndefined()
     const third = nav.go('/users/1/posts/one?q=2')
     await second
-    expect(levels[2]!.shape.value).toHaveLength(1)
-    expect(release).toHaveBeenCalledTimes(3)
+    expect(levels[2]!.shape.value).toBeUndefined()
+    expect(release).not.toHaveBeenCalled()
     const back = nav.go('/users/1/posts/one?q=1#section')
     await third
     expect(levels[2]!.shape.value).toBeUndefined()
-    expect(release).toHaveBeenCalledTimes(4)
+    expect(release).not.toHaveBeenCalled()
     nav.current?.abort()
     await back
     vi.mocked(guess).mockReturnValue([])
@@ -304,7 +304,7 @@ describe('navigation acceptance', () => {
     expect(prepareShape).not.toHaveBeenCalled()
     const next = nav.go('/users/2?q=1')
     await hash
-    expect(prepareShape).toHaveBeenCalledOnce()
+    expect(prepareShape).not.toHaveBeenCalled()
     expect(levels[1]!.shape.value).toBeUndefined()
     nav.current?.abort()
     await next
