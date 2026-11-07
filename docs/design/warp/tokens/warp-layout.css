@@ -1030,9 +1030,10 @@
 :where([data-scope="sidenav"][data-open] [data-part="bar"]) { box-shadow: none; }
 :where([data-scope="sidenav"][data-open] [data-part="bar-label"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); }
 @media (min-width: 900px) {
+  /* Docked, it runs from under the header to the bottom of the view however short its list, so its edge does too. */
   :where([data-scope="sidenav"]) { display: block; min-inline-size: 0; position: sticky; inset-block-start: var(--warp-sidenav-top, 0px); align-self: start; }
   :where([data-scope="sidenav"] > [data-part="panel"]) {
-    position: static; z-index: auto; inline-size: auto; max-block-size: calc(var(--warp-viewport-block) - var(--warp-sidenav-top, 0px));
+    position: static; z-index: auto; inline-size: auto; block-size: calc(var(--warp-viewport-block) - var(--warp-sidenav-top, 0px));
     padding: 0; background: none; border: 0; box-shadow: none; transform: none; visibility: visible; transition: none;
   }
   :where([data-scope="sidenav"] > [data-part="backdrop"]),

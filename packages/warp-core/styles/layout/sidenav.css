@@ -91,7 +91,7 @@
 @media (min-width: 900px) {
 :where([data-scope="sidenav"]) { display: block; min-inline-size: 0; position: sticky; inset-block-start: var(--warp-sidenav-top, 0px); align-self: start; }
 :where([data-scope="sidenav"] > [data-part="panel"]) {
-    position: static; z-index: auto; inline-size: auto; max-block-size: calc(var(--warp-viewport-block) - var(--warp-sidenav-top, 0px));
+    position: static; z-index: auto; inline-size: auto; block-size: calc(var(--warp-viewport-block) - var(--warp-sidenav-top, 0px));
     padding: 0; background: none; border: 0; box-shadow: none; transform: none; visibility: visible; transition: none;
   }
 :where([data-scope="sidenav"] > [data-part="backdrop"]),
