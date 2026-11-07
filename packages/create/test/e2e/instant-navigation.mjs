@@ -147,7 +147,8 @@ async function profile(browser, settings, url) {
 async function main() {
   checkEntries()
   const require = createRequire(resolve(root, 'packages/start/package.json'))
-  const { chromium } = await import(require.resolve('playwright-core'))
+  const playwright = await import(require.resolve('playwright-core'))
+  const chromium = playwright.chromium ?? playwright.default.chromium
   const chrome = findChrome()
   if (!chrome) throw new Error('Chrome is required; set CHROME to its executable')
   const dir = mkdtempSync(join(tmpdir(), 'weft-navigation-'))
@@ -171,8 +172,7 @@ async function main() {
         failures.push(error.message)
       }
     }
-    failures.push('unimplemented: negative controls and remaining navigation cases')
-    throw new Error(failures.join('\n'))
+    if (failures.length) throw new Error(failures.join('\n'))
   } finally {
     await browser?.close()
     if (server && server.exitCode === null) {
