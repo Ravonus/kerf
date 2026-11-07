@@ -13,6 +13,7 @@ import { client, type Component } from './router'
 import { mount, prepare } from './run/boot'
 import { listeners } from './run/listeners'
 import { Navigation } from './run/navigation'
+import { prepareRouteShape } from './run/shape-preparation'
 
 type Hot = ImportMeta & {
   hot?: { on(event: string, on: (data: { queries: boolean }) => unknown): void }
@@ -61,6 +62,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   const prepared = prepare(routes, options)
   await Promise.all(prepared.loads)
   const page = mount(prepared)
+  page.route.prepareShape = (id) => prepareRouteShape(routes, id, document)
   const navigation = new Navigation(routes, page)
   client.navigate = navigation.go
   listeners(navigation, () => (import.meta as Hot).hot)

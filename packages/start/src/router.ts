@@ -8,6 +8,7 @@
 import { state, untrack, type State, type SsrData } from '@weft-js/core'
 import type { Merged } from '@weft-js/core/ssr'
 import type { Wire } from './data'
+import type { PreparedRouteShape } from './run/shape-preparation'
 
 /**
  * One level as the server sends it: `d` lists the data's deferred fields (promises on the server, research 25 §4),
@@ -65,6 +66,8 @@ export interface RouteState {
   comps: Record<string, Component>
   /** Cost of the current match, when the client and receipt are from the same build. */
   assetBytes?: RouteAssetCosts | null
+  /** Prepare a route's provided shape CSS until the caller releases it. */
+  prepareShape?: (id: string) => PreparedRouteShape | null
   /** Client: shows a static level's HTML, with the next level inside it. */
   mount?: (html: string, depth: number, next: () => unknown) => unknown
   /** Around a level's component, at the same point on both sides: the server's markers, the client's key scope. */
