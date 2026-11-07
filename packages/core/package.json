@@ -87,7 +87,8 @@
     "parity": "node scripts/parity.mjs",
     "test": "node --no-warnings scripts/node-style.mjs --check && vitest run",
     "bench": "node scripts/bench.mjs",
-    "size": "node scripts/size.mjs"
+    "size": "node scripts/size.mjs",
+    "test:shapes": "node --test test/e2e/*.e2e.mjs"
   },
   "dependencies": {
     "dom-accessibility-api": "0.7.1"
