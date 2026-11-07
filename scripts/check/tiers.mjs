@@ -10,7 +10,11 @@ import { join } from 'node:path'
  * install and runtime matrix build the same apps again.
  */
 export const RELEASE_TESTS = {
-  'packages/cli': ['test/gate.test.ts', 'test/audit.browser.test.ts', 'test/audit-indexing.browser.test.ts'],
+  'packages/cli': [
+    'test/gate.test.ts',
+    'test/audit.browser.test.ts',
+    'test/audit-indexing.browser.test.ts',
+  ],
   'packages/core': ['test/oracle.test.tsx', 'test/compiler-parity.test.ts', 'test/hmr.test.ts'],
   'packages/create': ['test/scaffold.test.ts', 'test/templates.test.ts'],
   'packages/start': ['test/build.test.ts'],
@@ -46,7 +50,11 @@ export function affected(root, packages, base) {
   const users = new Map(packages.map((dir) => [dir, []]))
   for (const dir of packages) {
     const m = manifest(dir)
-    for (const dep of Object.keys({ ...m.dependencies, ...m.devDependencies, ...m.peerDependencies }))
+    for (const dep of Object.keys({
+      ...m.dependencies,
+      ...m.devDependencies,
+      ...m.peerDependencies,
+    }))
       if (dirOf.has(dep)) users.get(dirOf.get(dep)).push(dir)
   }
   const out = new Set()

@@ -30,12 +30,20 @@ export function run(cmd, args, cwd = '.', env = {}) {
 
 /** Run jobs with bounded concurrency and join their failures. */
 export async function allJobs(items, job, limit) {
-  const results = await pool(items, limit, async (item) => ({ item, ...(await job(item)) }))
+  const results = await pool(items, limit, async (item) => {
+    const started = performance.now()
+    return { item, ...(await job(item)), seconds: (performance.now() - started) / 1000 }
+  })
   const failed = results.filter((r) => r.code !== 0)
   for (const r of failed) {
     process.stderr.write(`--- ${r.item} ---\n${r.out}${r.out.endsWith('\n') ? '' : '\n'}`)
   }
+  const slowest = results
+    .toSorted((a, b) => b.seconds - a.seconds)
+    .slice(0, 3)
+    .map((r) => `${r.item.replace(/^packages\//, '')} ${r.seconds.toFixed(0)}s`)
   return {
     problems: failed.flatMap((r) => [`--- ${r.item}`, ...r.out.trim().split('\n').slice(-40)]),
+    detail: `${results.length} run; slowest ${slowest.join(', ')}`,
   }
 }
