@@ -183,7 +183,10 @@ function registerGateAStreamedBoundaryWaitsForTheSheet(
 }
 
 function registerStyleGates(getServer: GetServer) {
-  const browsers = ['chromium', 'firefox', 'webkit'] as const
+  // WebKit runs with WEFT_WEBKIT=1 (the release gate).
+  const browsers = process.env.WEFT_WEBKIT
+    ? (['chromium', 'firefox', 'webkit'] as const)
+    : (['chromium', 'firefox'] as const)
   for (const name of browsers)
     describe(`style gate in ${name}`, () => {
       const pw = createRequire(import.meta.url)('playwright-core') as typeof Playwright
