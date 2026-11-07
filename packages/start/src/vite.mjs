@@ -46,7 +46,6 @@ export { isServerModule, fnId, withIds, clientStubs } from './vite/server-functi
 export { scanRoutes, routeTypes } from './routes.mjs'
 export { here as startDir } from './vite/shared.mjs'
 
-/** Reload when an edit changes shape metadata embedded in the client route module. */
 /**
  * A signature of what a save means for the shapes, or undefined when it doesn't parse. A broken save takes ordinary HMR
  * and its overlay: reloading onto it would leave the tab on the server's error page, which no fix reaches.
@@ -59,6 +58,7 @@ const parsed = (signature, file) => {
   }
 }
 
+/** Reload when an edit changes shape metadata embedded in the client route module. */
 export function shapeHotUpdate(state, modes, next) {
   return async function (update) {
     if (this.environment.config.consumer === 'client') {
