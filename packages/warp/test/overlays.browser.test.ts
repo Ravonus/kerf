@@ -84,14 +84,23 @@ function toastTools() {
   // what the pointer would hit at the middle of Undo, and that it works
   const undo = async (page: Playwright.Page) => {
     const button = page.getByRole('button', { name: 'Undo' }).first()
-    // where the toast comes to rest: on a loaded machine its slide-in can outlast a fixed wait
-    await page.waitForFunction(
-      (r) =>
-        document
-          .querySelector(r)
-          ?.getAnimations({ subtree: true })
-          .every((a) => a.playState !== 'running') ?? false,
-      region,
+    // where the toast comes to rest: on a loaded machine its slide-in can outlast a fixed wait. Its timer keeps
+    // animating, so the test is the button holding still for a few frames.
+    await button.evaluate(
+      (el) =>
+        new Promise<void>((done) => {
+          let last = '',
+            still = 0
+          const look = () => {
+            const r = el.getBoundingClientRect(),
+              now = `${r.x},${r.y}`
+            still = now === last ? still + 1 : 0
+            last = now
+            if (still >= 3) done()
+            else requestAnimationFrame(look)
+          }
+          requestAnimationFrame(look)
+        }),
     )
     const box = (await button.boundingBox())!
     if (box.x + box.width > 1100 || box.y + box.height > 700) {

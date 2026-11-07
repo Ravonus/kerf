@@ -448,11 +448,15 @@ function registerBuildARouteThatRenderedBeforeSendsIts(getServer: GetServer) {
   test('a route that rendered before sends its head first, and brings what this render reaches beyond it', async () => {
     const plain = await (await fetch(getServer().url + '/stream-sheet')).text()
     const again = await (await fetch(getServer().url + '/stream-sheet')).text()
+    // The late card (40 ms) is inlined when a render is slow enough for it, and streamed after a skeleton when not:
+    // a cold or busy server does the first, so what the boundary holds isn't compared.
     const app = (html: string) =>
-      html.slice(
-        html.indexOf('<div id="app">'),
-        html.indexOf('<script type="application/json" id="weft-route">'),
-      )
+      html
+        .slice(
+          html.indexOf('<div id="app">'),
+          html.indexOf('<script type="application/json" id="weft-route">'),
+        )
+        .replace(/<!--\[-->[\s\S]*?<!--\]-->/, '<!--[--><!--]-->')
     expect(app(again)).toBe(app(plain))
     // With the build's first-paint table, a head sent first has only the layer order: the shell's rules come just before it.
     const head = again.slice(0, again.indexOf('<div id="app">'))
