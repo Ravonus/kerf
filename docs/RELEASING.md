@@ -27,7 +27,9 @@ node scripts/release.mjs --publish --otp
 ```
 
 You approve the publish; one authenticator code covers every package. A publish that stops part
-way is safe to run again: versions already on the registry are skipped. Xwith the `next` dist-tag so `latest` stays on the last stable version.
+way is safe to run again: versions already on the registry are skipped. A prerelease version
+(such as `1.0.0-rc.0`) is published under the `next` dist-tag, so `latest` stays on the last
+stable version.
 
 To rehearse against a local registry first:
 
