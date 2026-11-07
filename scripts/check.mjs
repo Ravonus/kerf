@@ -355,24 +355,30 @@ if (only)
     }
 
 const chosen = STEPS.filter((s) => (only ? only.includes(s.id) : !(fast && s.slow)))
-const results = []
-for (const step of chosen) {
+// The steps are independent: they run at once, and each reports in list order as the ones before it finish.
+const timed = async (step) => {
   const started = performance.now()
-  process.stdout.write(`${step.id.padEnd(11)} `)
   let result
   try {
     result = await step.run()
   } catch (e) {
     result = { problems: [String(e?.stack ?? e)] }
   }
-  const seconds = ((performance.now() - started) / 1000).toFixed(1)
+  return { result, seconds: ((performance.now() - started) / 1000).toFixed(1) }
+}
+const running = chosen.map((step) => timed(step))
+const results = []
+for (const [i, step] of chosen.entries()) {
+  const { result, seconds } = await running[i]
   const count = result.problems?.length ?? 0
   console.log(
-    result.skipped
-      ? `skipped: ${result.skipped}`
-      : count
-        ? `${count} problem(s), ${seconds}s`
-        : `ok, ${seconds}s${result.detail ? `; ${result.detail}` : ''}`,
+    `${step.id.padEnd(11)} ${
+      result.skipped
+        ? `skipped: ${result.skipped}`
+        : count
+          ? `${count} problem(s), ${seconds}s`
+          : `ok, ${seconds}s${result.detail ? `; ${result.detail}` : ''}`
+    }`,
   )
   results.push({ step, ...result })
 }

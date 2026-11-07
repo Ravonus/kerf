@@ -131,7 +131,8 @@ const compare = async (rootAttrs: string, width: number, head?: string) => {
   expect(diffs.slice(0, 30)).toEqual([])
 }
 
-describe.each([390, 1320])('at %i px', (width) => {
+// Each comparison is two independent pages: they run side by side.
+describe.concurrent.each([390, 1320])('at %i px', (width) => {
   test('the critical rules paint what all the rules paint', () => compare('', width))
   // What `dialScript` puts on <html> before the first paint: only the head can say so.
   test.each([

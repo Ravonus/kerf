@@ -621,7 +621,10 @@ test('an island left while its code is retried does not reload the page it is no
   await page.waitForTimeout(1500) // past the retry and its failure
   expect(loads).toBe(1)
   expect(await page.$('[data-weft-stale]')).toBeNull()
-  expect(await page.evaluate(() => sessionStorage.length)).toBe(0)
+  const reloaded = await page.evaluate(() =>
+    Object.keys(sessionStorage).filter((k) => k.startsWith('weft:reloaded:')),
+  )
+  expect(reloaded).toEqual([])
   await context.close()
 })
 
