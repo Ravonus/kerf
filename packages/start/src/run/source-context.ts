@@ -71,7 +71,9 @@ export function retainSourceContext(
   const restore = () => {
     for (const { target, name, descriptor, replacement } of wrappers.reverse()) {
       const now = Object.getOwnPropertyDescriptor(target, name)
-      if (now?.value === replacement.value && now?.set === replacement.set)
+      if (now && now.get === replacement.get && now.set === replacement.set &&
+        now.value === replacement.value && now.writable === replacement.writable &&
+        now.enumerable === replacement.enumerable && now.configurable === replacement.configurable)
         Object.defineProperty(target, name, descriptor)
     }
   }
