@@ -372,6 +372,7 @@ export class Navigation {
       version = this.cache.version
     }
     if (queries) client.refreshed?.()
+    this.cache.setBuild(this.routes.build)
     if (version !== this.cache.version) return
     this.warm = {
       path: url.pathname + url.search,

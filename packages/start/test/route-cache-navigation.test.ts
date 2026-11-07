@@ -311,3 +311,15 @@ it('does not publish HMR warm state after a reentrant refresh callback clears it
   expect(nav.warm).toBeUndefined()
   expect(go).not.toHaveBeenCalled()
 })
+
+it('does not publish warm state when the refresh callback changes only the build', async () => {
+  const { nav } = setup()
+  const go = vi.spyOn(nav, 'go').mockResolvedValue()
+  client.refreshed = () => { nav.routes.build = 'new-build' }
+  const pending = nav.reloaded({ queries: true })
+  requests[0]!.resolve(new Response(JSON.stringify({ p: '/from', s: 200, m: [] })))
+  await pending
+  expect(nav.warm).toBeUndefined()
+  expect(go).not.toHaveBeenCalled()
+  nav.dispose()
+})
