@@ -10,7 +10,8 @@ export async function webkitWorks(root, ms = 30_000) {
   let browser
   const attempt = (async () => {
     const from = createRequire(join(root, 'packages/start/package.json'))
-    const { webkit } = await import(pathToFileURL(from.resolve('playwright-core')).href)
+    const pw = await import(pathToFileURL(from.resolve('playwright-core')).href)
+    const webkit = pw.webkit ?? pw.default?.webkit
     browser = await webkit.launch()
     const page = await browser.newPage()
     await page.setContent('<p>ok</p>')

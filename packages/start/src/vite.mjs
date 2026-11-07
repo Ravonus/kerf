@@ -47,6 +47,18 @@ export { scanRoutes, routeTypes } from './routes.mjs'
 export { here as startDir } from './vite/shared.mjs'
 
 /** Reload when an edit changes shape metadata embedded in the client route module. */
+/**
+ * A signature of what a save means for the shapes, or undefined when it doesn't parse. A broken save takes ordinary HMR
+ * and its overlay: reloading onto it would leave the tab on the server's error page, which no fix reaches.
+ */
+const parsed = (signature, file) => {
+  try {
+    return signature(file)
+  } catch {
+    return undefined
+  }
+}
+
 export function shapeHotUpdate(state, modes, next) {
   return async function (update) {
     if (this.environment.config.consumer === 'client') {
@@ -77,15 +89,10 @@ export function shapeHotUpdate(state, modes, next) {
       const rel = relative(state.root, update.file).split('\\').join('/')
       const entrySignatures = state.shapeEntrySignatures
       if (entrySignatures?.has(update.file)) {
-        let signature
-        try {
-          signature = entryCssSignature(update.file)
-        } catch {
-          signature = 'invalid'
-        }
+        const signature = parsed(entryCssSignature, update.file)
         const previous = entrySignatures.get(update.file)
-        entrySignatures.set(update.file, signature)
-        if (previous !== signature) {
+        if (signature !== undefined) entrySignatures.set(update.file, signature)
+        if (signature !== undefined && previous !== signature) {
           const graph = this.environment.moduleGraph
           const mod = graph.getModuleById('\0' + V.routes)
           if (mod) graph.invalidateModule(mod)
@@ -110,15 +117,10 @@ export function shapeHotUpdate(state, modes, next) {
       }
       const levels = [...state.manifest.routes, ...state.manifest.layouts]
       if (levels.some((level) => level.file === rel) || state.clientEntry?.() === update.file) {
-        let mode
-        try {
-          mode = shapeSignature(update.file)
-        } catch {
-          mode = 'invalid'
-        }
+        const mode = parsed(shapeSignature, update.file)
         const before = modes.get(rel)
-        modes.set(rel, mode)
-        if (before !== mode) {
+        if (mode !== undefined) modes.set(rel, mode)
+        if (mode !== undefined && before !== mode) {
           const graph = this.environment.moduleGraph
           const mod = graph.getModuleById('\0' + V.routes)
           if (mod) graph.invalidateModule(mod)

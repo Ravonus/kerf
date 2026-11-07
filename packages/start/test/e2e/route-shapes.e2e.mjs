@@ -415,7 +415,7 @@ void test('recovered parser errors cannot classify a malformed route', (t) => {
   }
 })
 
-void test('malformed edits invalidate metadata and a repaired route recovers', async (t) => {
+void test('a malformed edit takes ordinary HMR, and a repair that changes the shape reloads', async (t) => {
   const f = fixture(t)
   const file = f.abs('page.tsx')
   f.write('page.tsx', 'export default () => <main />')
@@ -432,11 +432,12 @@ void test('malformed edits invalidate metadata and a repaired route recovers', a
   }
   const handler = shapeHotUpdate(state, modes, () => ['unchanged'])
   const context = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
+  const before = modes.get('page.tsx')
+  // A reload here would leave the tab on the server's error page, where no fix reaches it.
   f.write('page.tsx', 'export const skeleton = ;')
-  assert.deepEqual(await handler.call(context, { file, modules: [] }), [])
-  assert.equal(modes.get('page.tsx'), 'invalid')
-  assert.deepEqual(calls, ['routes', { type: 'full-reload' }])
-  calls.length = 0
+  assert.deepEqual(await handler.call(context, { file, modules: [] }), ['unchanged'])
+  assert.equal(modes.get('page.tsx'), before)
+  assert.deepEqual(calls, [])
   f.write('page.tsx', 'export const skeleton = false')
   assert.deepEqual(await handler.call(context, { file, modules: [] }), [])
   assert.equal(modes.get('page.tsx'), shapeSignature(file))
