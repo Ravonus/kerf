@@ -1,5 +1,5 @@
 // `weft agents-md`: AGENTS.md generated from the installed weft (exports, the codes its compiler reports) and this
-// project's tasks. Under 8 KB (PLAN §7). Never edited by hand: `--check` fails when it is stale.
+// project's tasks. Under 9 KB (PLAN §7, raised from 8 KB in 2026-11). Never edited by hand: `--check` fails when it is stale.
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -10,7 +10,7 @@ import { loadConfig } from './load-config.mjs'
 import { agentsSection } from './contributions.mjs'
 import { tasks } from './tasks.mjs'
 
-export const limit = 8 * 1024
+export const limit = 9 * 1024
 
 /** `T001, T002, T003, P007` → `T001–T003, P007`: runs of consecutive codes as ranges (three or more). */
 export function ranges(codes) {

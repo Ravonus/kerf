@@ -1,6 +1,6 @@
 // Table rows, editable cells and the detail sheet.
 import { pushLayer } from '@weft-js/warp-core'
-import { onCleanup, onMount, state, untrack, watch, type State } from '@weft-js/core'
+import { derived, onCleanup, onMount, state, untrack, watch, type State } from '@weft-js/core'
 import { Button } from './Button'
 import { tableEditor } from './Table-editor'
 
@@ -35,9 +35,10 @@ export function Fields<T>(props: { row: T; ctx: Ctx<T> }) {
 
 /** Render row fields under the detail owner. */
 export function tableFields<T>(row: () => T, ctx: () => Ctx<T>) {
+  const columns = derived(() => ctx().cols())
   return (
     <dl data-scope="desc">
-      <For each={ctx().cols()} by={(column) => column.id}>
+      <For each={columns.value} by={(column) => column.id}>
         {(column) => (
           <div>
             <dt>{column().header}</dt>
@@ -179,6 +180,7 @@ export function tableRow<T>(row: () => T, ctx: () => Ctx<T>) {
   })
   const click = rowClick(row, ctx)
   const renderCell = (column: () => Column<T>) => untrack(() => cell(row, column, ctx))
+  const columns = derived(() => ctx().cols())
   return (
     <>
       <tr
@@ -218,7 +220,7 @@ export function tableRow<T>(row: () => T, ctx: () => Ctx<T>) {
             </button>
           </td>
         )}
-        <For each={ctx().cols()} by={(column) => column.id}>
+        <For each={columns.value} by={(column) => column.id}>
           {renderCell}
         </For>
       </tr>

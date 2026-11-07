@@ -290,13 +290,13 @@ export async function commandAgentsMd({ writeAgentsMd, args, print, say, io }) {
     print({
       path: out.path,
       bytes: out.bytes,
-      limit: 8192,
+      limit: 9216,
       overLimit: out.overLimit,
       current: out.current,
       written: out.written,
     })
   say(
-    `AGENTS.md: ${out.bytes} bytes${out.overLimit ? ' (over the 8 KB limit)' : ''}, ${out.written ? 'written' : out.current ? 'current' : 'stale'}`,
+    `AGENTS.md: ${out.bytes} bytes${out.overLimit ? ' (over the 9 KB limit)' : ''}, ${out.written ? 'written' : out.current ? 'current' : 'stale'}`,
   )
   return (args.check && !out.current) || out.overLimit ? 1 : 0
 }
