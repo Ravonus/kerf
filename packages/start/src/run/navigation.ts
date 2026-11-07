@@ -335,7 +335,9 @@ export class Navigation {
         continue
       }
     }
+    let swapped = false
     const swap = () => {
+      swapped = true
       this.cache.setBuild(this.routes.build)
       if (ctrl.signal.aborted || this.current !== ctrl || this.cache.version !== version) return
       this.apply(next, url, path, since, opts.scroll !== false && !opts.pop)()
@@ -360,7 +362,8 @@ export class Navigation {
         })
       // A transition the browser aborts rejects `finished`: the page already swapped.
       void fade.finished.catch(() => {})
-      await fade.updateCallbackDone
+      // Aborted before its update ran ("invalid state"): swap without the fade.
+      await fade.updateCallbackDone.catch(() => swapped || swap())
     } else swap()
     if (!ctrl.signal.aborted && this.current === ctrl && this.cache.version !== version)
       await this.travel(url, ctrl, opts, shown)

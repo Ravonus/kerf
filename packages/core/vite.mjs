@@ -115,7 +115,10 @@ export default function weft({
           : ''
         return {
           code: standalone
-            ? `${out.code}\nexport const $weftShapeCss = ${JSON.stringify(generated)};`
+            ? `${out.code}\nexport const $weftShapeCss = ${JSON.stringify(generated)};${
+                // A route edit changes its shape too: taking the update here keeps the page instead of reloading it.
+                isDev && !ssr ? '\nif (import.meta.hot) import.meta.hot.accept();' : ''
+              }`
             : style.record(this, id, out.facts, out.code, ssr),
           map: out.map,
         }

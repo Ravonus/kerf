@@ -4,7 +4,7 @@
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },
   "file:packages/start/src/run/navigation.ts": {
-    "lines": 439,
+    "lines": 443,
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },
   "function:crates/weft-compiler/src/shape.rs:apply": {
@@ -20,11 +20,11 @@
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },
   "function:packages/core/vite.mjs:weft": {
-    "lines": 109,
+    "lines": 112,
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },
   "function:packages/start/src/run/navigation.ts:Navigation.travel": {
-    "lines": 95,
+    "lines": 98,
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },
   "function:packages/start/src/run/source-context.ts:retainSourceContext": {
