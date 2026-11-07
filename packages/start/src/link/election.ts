@@ -139,6 +139,8 @@ function queuedCampaign(
 
 let tabHeld = false
 let tabFree: (() => void) | undefined
+/** Bumped by freeTab(): a grant for an earlier turn is handed straight back. */
+let tabTurn = 0
 const whenHeld: (() => void)[] = []
 
 /** Held before the tab says anything, so a sibling that queues on it can't read a live tab as dead. */
@@ -146,22 +148,27 @@ export function holdTab(then: () => void) {
   if (tabHeld || !locks()) return then()
   whenHeld.push(then)
   if (whenHeld.length > 1) return
+  const turn = tabTurn
   locks()!
-    .request(
-      `${NAME}:tab:${tab}`,
-      () =>
-        new Promise<void>((ok) => {
-          tabFree = ok
-          tabHeld = true
-          for (const f of whenHeld.splice(0)) f()
-        }),
-    )
-    .catch(() => {})
+    .request(`${NAME}:tab:${tab}`, () => {
+      if (turn !== tabTurn) return undefined // freed while it was asked for
+      return new Promise<void>((ok) => {
+        tabFree = ok
+        tabHeld = true
+        for (const f of whenHeld.splice(0)) f()
+      })
+    })
+    // No lock after all: go on without one rather than leave the callers (and every later one) waiting.
+    .catch(() => {
+      for (const f of whenHeld.splice(0)) f()
+    })
 }
 
 /** Comes through when that tab is gone, crash included. */
 export function freeTab() {
+  tabTurn++
   tabHeld = false
+  whenHeld.length = 0
   tabFree?.()
   tabFree = undefined
 }

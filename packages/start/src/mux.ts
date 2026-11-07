@@ -195,7 +195,19 @@ export async function muxed(
   }, 100)
   ;(drain as { unref?(): void }).unref?.()
 
-  peer.send(`h:${await sessionOf(ctx)}`)
+  const release = () => {
+    clearInterval(drain)
+    if (user === undefined) return
+    const n = (users.get(user) ?? 1) - 1
+    if (n) users.set(user, n)
+    else users.delete(user)
+  }
+  try {
+    peer.send(`h:${await sessionOf(ctx)}`)
+  } catch (e) {
+    release() // the caller never gets a close() for a socket that failed to open
+    throw e
+  }
   const message = messages(peer, request, scope, h, lines, allowed, end, shut, openC, openR)
   return {
     message(text) {
@@ -204,13 +216,8 @@ export async function muxed(
     close() {
       if (closed) return
       closed = true
-      clearInterval(drain)
       for (const [id, line] of Array.from(lines)) shut(id, line)
-      if (user !== undefined) {
-        const n = (users.get(user) ?? 1) - 1
-        if (n) users.set(user, n)
-        else users.delete(user)
-      }
+      release()
     },
   }
 }

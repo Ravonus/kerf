@@ -347,3 +347,24 @@ test("a plugin's bus waits for its first use, and only then loads", async () => 
   expect(got).toEqual(['x'])
   expect(loads).toBe(1)
 })
+
+test('a muxed socket that fails to open gives its connection back', async () => {
+  configure({ limits: { connections: 1 } })
+  const { muxed } = await import('../src/mux')
+  const r = new Request('http://app.test/_weft/mux')
+  const scope = () => createScope(r, { context: () => ({ user: { id: 'u' } }) })
+  let closed = 0
+  const broken = {
+    send() {
+      throw new Error('gone')
+    },
+    close() {},
+    backlog: () => 0,
+  }
+  await expect(muxed(broken, r, scope())).rejects.toThrow('gone')
+  const peer = { send() {}, close: (c: number) => void (closed = c), backlog: () => 0 }
+  const ok = await muxed(peer, r, scope())
+  expect(closed).toBe(0) // not refused as a second socket
+  ok.close()
+  await resetHub()
+})

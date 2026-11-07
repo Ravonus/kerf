@@ -391,29 +391,6 @@ function dedupeBarrierTests() {
     expect(of(a.s, 'p')).toHaveLength(2)
   })
 
-  test('a feed stopped while its source is still starting stops that source when it comes up', async () => {
-    let up!: () => void
-    const source = fakeSource({
-      start() {
-        source.starts++
-        return new Promise((ok) => {
-          up = () =>
-            ok(() => {
-              source.stops++
-            })
-        })
-      },
-    })
-    const feed = createFeed(source, { emit() {}, status() {} })
-    const starting = feed.start({ mode: 'feed', via: 'x' })
-    await feed.stop()
-    expect(feed.running).toBe(false)
-    up()
-    await starting
-    expect(source.stops).toBe(1)
-    expect(feed.running).toBe(false)
-  })
-
   test("a change after the barrier isn't mistaken for one it covered, however close", async () => {
     const seen: Poke[] = []
     const source = fakeSource()
@@ -589,3 +566,26 @@ function modeListenerTests(quiet: () => void) {
     ).rejects.toThrow(/R015/)
   })
 }
+
+test('a feed stopped while its source is still starting stops that source when it comes up', async () => {
+  let up!: () => void
+  const source = fakeSource({
+    start() {
+      source.starts++
+      return new Promise((ok) => {
+        up = () =>
+          ok(() => {
+            source.stops++
+          })
+      })
+    },
+  })
+  const feed = createFeed(source, { emit() {}, status() {} })
+  const starting = feed.start({ mode: 'feed', via: 'x' })
+  await feed.stop()
+  expect(feed.running).toBe(false)
+  up()
+  await starting
+  expect(source.stops).toBe(1)
+  expect(feed.running).toBe(false)
+})

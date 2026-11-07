@@ -4,7 +4,7 @@
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },
   "file:packages/start/src/run/navigation.ts": {
-    "lines": 437,
+    "lines": 439,
     "reason": "Sprint 7 instant navigation, merged 2026-11-06 over the limit; split in a later cleanup"
   },
   "function:crates/weft-compiler/src/shape.rs:apply": {

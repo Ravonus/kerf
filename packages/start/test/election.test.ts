@@ -32,3 +32,22 @@ it('a steal granted after stop() is handed back, and the stopped tab does not le
   expect(won).not.toHaveBeenCalled()
   expect(election.leading()).toBe(false)
 })
+
+it('holdTab goes on without the lock when the request fails, and keeps working after', async () => {
+  vi.resetModules()
+  let fail = true
+  vi.stubGlobal('navigator', {
+    locks: {
+      request: (_name: string, grant: Grant) =>
+        fail ? Promise.reject(new Error('no locks here')) : Promise.resolve(grant()),
+    },
+  })
+  const { holdTab } = await import('../src/link/election')
+  const first = vi.fn()
+  holdTab(first)
+  await vi.waitFor(() => expect(first).toHaveBeenCalled())
+  fail = false
+  const second = vi.fn()
+  holdTab(second)
+  await vi.waitFor(() => expect(second).toHaveBeenCalled())
+})

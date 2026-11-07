@@ -31,3 +31,10 @@ package allowlist.
 - [benchmarks](../benchmarks/) compares implementations; [evals](../evals/) holds evaluation results and tools.
 - [scripts](../scripts/) contains repository setup and quality checks; [.github](../.github/) contains workflows and templates.
 - [docs](./) contains architecture, decisions and the roadmap.
+
+## Runtime state machines
+
+Navigation, live queries, leader election, lazy islands and the change
+feed each keep a lifecycle spread across several fields.
+[STATE-MACHINES.md](STATE-MACHINES.md) lists their states, where they
+change and the rule each one follows.
