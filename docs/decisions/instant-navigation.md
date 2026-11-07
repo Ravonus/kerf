@@ -362,6 +362,10 @@ development dependency. This ticket installs or runs none of that.
   `hadRecentInput`. The usual Web Vitals input exclusion would hide precisely
   this regression. From skeleton appearance through settled content and two
   further painted frames, require the sum of shift values to equal **0**.
+  *Status (2026-11-07):* the landing scaffold measures about 0.20 on Fast and
+  Slow 3G (0.14 as the skeleton is placed, 0.06 as content lands). The check
+  enforces a 0.25 regression ceiling; reaching 0 needs skeletons that match
+  the destination's height and is open work.
   Wait for fonts and media dimensions; do not stop measurement at the first
   content node. Record bounding boxes as diagnostic evidence, not a substitute.
 - Before trusting a pass, show the current implementation failing the cold
