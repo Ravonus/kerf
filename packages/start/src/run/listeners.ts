@@ -1,7 +1,7 @@
 import { drain, wake } from '@weft-js/core/dom'
 import type { Held } from '../boot'
 import { client, peers } from '../router'
-import { ask, guess, ours } from './helpers'
+import { ours } from './helpers'
 import { routeClicks } from './admission'
 import type { Navigation } from './navigation'
 
@@ -56,34 +56,37 @@ function clicks(nav: Navigation) {
   )
 }
 
-// A hovered or focused link can load its chunks and data before it is pressed.
+// Only known-cost intent can start a bounded data request; no page module runs here.
 function preload(nav: Navigation) {
   let pending: ReturnType<typeof setTimeout> | undefined
+  const network = (navigator as Navigator & { connection?: {
+    saveData?: boolean; effectiveType?: string
+    addEventListener?: (type: string, fn: () => void) => void
+  } }).connection
+  const cancel = () => { clearTimeout(pending); nav.prefetch.cancel() }
   const intent = (e: Event) => {
     clearTimeout(pending)
-    const url = ours(e.target)
-    const path = url && url.pathname + url.search
-    if (
-      !url ||
-      nav.warm?.path === path ||
-      (e.target as Element).closest('[data-preload="off"]') ||
-      (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData
-    )
-      return
-    pending = setTimeout(
-      () => {
-        for (const id of guess(nav.routes, url.pathname)) void nav.chunk(id).catch(() => {})
-        nav.warm = { path: path!, at: performance.now(), since: nav.now(),
-          version: nav.cache.version, res: ask(url) }
-        nav.warm.res.catch(() => {
-          nav.warm = undefined
-        })
-      },
-      e.type === 'focusin' ? 0 : 80,
-    )
+    const target = e.target as Element | null
+    const url = ours(target)
+    if (!url || !target || target.closest('[data-preload="off"]') ||
+      target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"])')
+    ) return
+    pending = setTimeout(() => {
+      if (document.hidden) return
+      const version = nav.cache.version
+      nav.cache.setBuild(nav.routes.build)
+      if (version !== nav.cache.version) nav.prefetch.cancel(true)
+      nav.prefetch.start(url, e.type === 'focusin' ? 'focus' : 'hover', network, navigator.onLine)
+    }, e.type === 'focusin' ? 0 : 80)
   }
   document.addEventListener('pointerover', intent)
   document.addEventListener('focusin', intent)
+  document.addEventListener('pointerout', cancel)
+  document.addEventListener('focusout', cancel)
+  document.addEventListener('visibilitychange', () => { if (document.hidden) cancel() })
+  addEventListener('offline', cancel)
+  addEventListener('pagehide', cancel)
+  network?.addEventListener?.('change', cancel)
 }
 
 // An in-page anchor fires popstate too; only a changed path needs a navigation.

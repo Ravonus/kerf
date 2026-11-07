@@ -255,7 +255,7 @@ it.each(['dispose', 'session', 'invalidation', 'hmr'] as const)(
     resolveBody({ s: 200 })
     await pending
     expect(client.refreshed).not.toHaveBeenCalled()
-    expect(nav.warm).toBeUndefined()
+    expect(nav.prefetch.size).toBe(0)
     expect(go).not.toHaveBeenCalled()
     nav.dispose()
   },
@@ -310,7 +310,7 @@ it('does not publish HMR warm state after a reentrant refresh callback clears it
   const pending = nav.reloaded({ queries: true })
   requests[0]!.resolve(new Response(JSON.stringify({ p: '/from', s: 200, m: [] })))
   await pending
-  expect(nav.warm).toBeUndefined()
+  expect(nav.prefetch.size).toBe(0)
   expect(go).not.toHaveBeenCalled()
 })
 
@@ -321,7 +321,7 @@ it('does not publish warm state when the refresh callback changes only the build
   const pending = nav.reloaded({ queries: true })
   requests[0]!.resolve(new Response(JSON.stringify({ p: '/from', s: 200, m: [] })))
   await pending
-  expect(nav.warm).toBeUndefined()
+  expect(nav.prefetch.size).toBe(0)
   expect(go).not.toHaveBeenCalled()
   nav.dispose()
 })

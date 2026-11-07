@@ -13,7 +13,6 @@ export class CachePresentation {
     if (!cached || !nav.ready?.(cached.next)) return false
     nav.cache.setBuild(nav.routes.build)
     if (cached.version !== nav.cache.version || ctrl.signal.aborted || nav.current !== ctrl) return false
-    nav.warm = undefined
     nav.apply(cached.next, url, url.pathname + url.search, cached.since, false)()
     nav.cache.setBuild(nav.routes.build)
     if (ctrl.signal.aborted || nav.current !== ctrl) return false

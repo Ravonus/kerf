@@ -207,7 +207,7 @@ it('honors response age and renews permission only after a valid 304', async () 
   } finally { clock.mockRestore() }
 })
 
-it('counts response and prefetch delay against the allowed window', async () => {
+it('counts response delay against the allowed window', async () => {
   let now = 100
   const clock = vi.spyOn(performance, 'now').mockImplementation(() => now)
   try {
@@ -223,12 +223,6 @@ it('counts response and prefetch delay against the allowed window', async () => 
     finish(body('/a'))
     await read
     expect(cache.peek(url('/a'), true)).toBeUndefined()
-    const prefetched = new RouteCache('build')
-    const candidate = { at: 100, since: 1, version: prefetched.version,
-      res: Promise.resolve(response(body('/a'), {
-        'cache-control': 'private, max-age=0, stale-while-revalidate=2',
-      })) }
-    await prefetched.read(url('/a'), signal(), vi.fn(), () => 2, () => true, candidate)
-    expect(prefetched.peek(url('/a'), true)).toBeUndefined()
+
   } finally { clock.mockRestore() }
 })

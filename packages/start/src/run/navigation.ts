@@ -7,7 +7,8 @@ import { matchingRouteAssets } from '../asset-receipt.mjs'
 import { ask, changedRouteParams, current_, guess, revive } from './helpers'
 import type { PreparedRouteShape } from './shape-preparation'
 import { retainSourceContext, type SourceContext } from './source-context'
-import { RouteCache, type Candidate } from './cache'
+import { RouteCache, type Read } from './cache'
+import { Prefetch } from './prefetch'
 import { CachePresentation, retryDelay } from './cache-presentation'
 
 const SLOW_FADE = 100
@@ -16,7 +17,6 @@ const RETRY = 1000,
 
 type Options = NavigateOptions & { pop?: boolean; hops?: number }
 type Page = ReturnType<typeof mount>
-type Warm = Candidate & { path: string; at: number }
 
 export class Navigation {
   route: Page['route']
@@ -31,7 +31,7 @@ export class Navigation {
   owed: string[] = []
   again: ReturnType<typeof setTimeout> | undefined
   tries = 0
-  warm: Warm | undefined
+  prefetch: Prefetch
   cache: RouteCache
   presentation = new CachePresentation()
   // A fade pictures the whole page twice, and the picture holds up every frame. Where that's slow, the page just changes.
@@ -49,6 +49,7 @@ export class Navigation {
     page: Page,
   ) {
     this.cache = new RouteCache(routes.build)
+    this.prefetch = new Prefetch(this.cache, this.now, () => !!client.seed)
     this.ready = page.ready
     this.route = page.route
     this.chunk = page.chunk
@@ -200,7 +201,7 @@ export class Navigation {
 
   dispose = () => {
     this.cache.clear()
-    this.warm = undefined
+    this.prefetch.stop()
     if (this.current) this.presentation.stop(this.current)
     this.current?.abort()
     this.current = undefined
@@ -217,7 +218,9 @@ export class Navigation {
     const url = new URL(href, location.href)
     if (url.origin !== location.origin) return location.assign(url.href)
     if (!opts.pop && url.href === location.href) return
+    const buildVersion = this.cache.version
     this.cache.setBuild(this.routes.build)
+    if (buildVersion !== this.cache.version) this.prefetch.cancel(true)
     if (this.current) this.presentation.stop(this.current)
     this.current?.abort()
     if (this.refreshing) {
@@ -237,18 +240,21 @@ export class Navigation {
       this.route.path.value = path
       current_(url.pathname)
       flush()
+      const speculative = this.prefetch.claim(url, ctrl.signal)
+      this.prefetch.cancel()
       const cached = opts.pop ? this.cache.peek(url, !!client.seed) : undefined
       const shown = this.presentation.show(this, ctrl, url, cached)
       if (ctrl.signal.aborted || this.current !== ctrl) return
       if (!shown) this.present(guess(this.routes, url.pathname), url)
-      await this.travel(url, ctrl, opts, shown)
+      await this.travel(url, ctrl, opts, shown, speculative)
     } finally {
       this.presentation.stop(ctrl)
       if (this.current === ctrl) this.settle()
     }
   }
 
-  async travel(url: URL, ctrl: AbortController, opts: Options, shown = false) {
+  async travel(url: URL, ctrl: AbortController, opts: Options, shown = false,
+    speculative?: Promise<Read | undefined>) {
     const path = url.pathname + url.search
     for (const id of guess(this.routes, url.pathname)) void this.chunk(id).catch(() => {})
     let next: RoutePayload
@@ -257,16 +263,16 @@ export class Navigation {
     let retries = 0
     for (;;) {
       try {
-        const held = this.warm?.path === path && performance.now() - this.warm.at < 10_000
-          ? this.warm : undefined
-        this.warm = undefined
-        const read = await this.cache.read(url, ctrl.signal, ask, this.now, () => !!client.seed, held,
-          shown ? () => this.presentation.check(this) : undefined)
+        const shared = speculative ? await speculative : undefined
+        speculative = undefined
+        const read = shared && (!shared.next.c?.length || client.seed) ? shared :
+          await this.cache.read(url, ctrl.signal, ask, this.now, () => !!client.seed,
+            shown ? () => this.presentation.check(this) : undefined)
         this.cache.setBuild(this.routes.build)
         if (ctrl.signal.aborted) return
         if (read.version !== this.cache.version) continue
         next = read.next
-        if (next.s === 401 || next.s === 403) this.warm = undefined
+        if (next.s === 401 || next.s === 403) this.prefetch.cancel(true)
         since = read.since
         version = read.version
         if (next.r) {
@@ -337,7 +343,7 @@ export class Navigation {
     try {
       const next: RoutePayload = await ask(url, self.ctrl.signal).then((r) => r.json())
       if (self.ctrl.signal.aborted) return
-      if (next.s === 401 || next.s === 403) { this.cache.clear(); this.warm = undefined }
+      if (next.s === 401 || next.s === 403) { this.cache.clear(); this.prefetch.cancel(true) }
       if (next.r && !self.ctrl.signal.aborted) {
         this.refreshing = undefined
         return void this.go(next.r, { replace: true })
@@ -361,10 +367,11 @@ export class Navigation {
   }
 
   reloaded = async ({ queries }: { queries: boolean }) => {
+    const owner = this.current
     this.cache.clear()
-    this.warm = undefined
+    this.prefetch.cancel(true)
     const url = new URL(location.href),
-      since = this.now(), started = performance.now()
+      since = this.now()
     let version = this.cache.version
     const res = await ask(url)
     if (version !== this.cache.version || !res.ok) return
@@ -377,21 +384,19 @@ export class Navigation {
     }
     if (queries) client.refreshed?.()
     this.cache.setBuild(this.routes.build)
-    if (version !== this.cache.version) return
-    this.warm = {
-      path: url.pathname + url.search,
-      at: started,
-      since,
-      version,
-      res: Promise.resolve(res),
-    }
-    await this.go(url.href, { pop: true })
+    if (version !== this.cache.version || this.current !== owner) return
+    if (next.r) return void await this.go(next.r, { replace: true })
+    if (this.current) return void await this.go(url.href, { pop: true })
+    await this.needs(next)
+    this.cache.setBuild(this.routes.build)
+    if (version !== this.cache.version || this.current !== owner) return
+    this.apply(next, url, url.pathname + url.search, since, false)()
   }
 
   invalidated = (t: string[]) => {
     this.cache.invalidate(t)
     this.presentation.check(this)
-    this.warm = undefined
+    this.prefetch.cancel(true)
     if (this.current) this.owed.push(...t)
     else if (this.reads(t)) void this.refresh(t)
   }

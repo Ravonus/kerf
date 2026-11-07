@@ -4,9 +4,10 @@ const LIMIT = 32
 const BYTES = 4 * 1024 * 1024
 
 type Entry = { body: string; bytes: number; tag: string; tags: string[]; since: number; until: number }
-type Read = { next: RoutePayload; since: number; version: number; notModified?: boolean; until?: number }
+export type Read = {
+  next: RoutePayload; since: number; version: number; notModified?: boolean; until?: number
+}
 type FetchRoute = (url: URL, signal: AbortSignal, tag?: string) => Promise<Response>
-export type Candidate = { res: Promise<Response>; since: number; version: number; at: number }
 
 /** Bounded route bodies for conditional validation; never serves unvalidated content. */
 export class RouteCache {
@@ -90,6 +91,20 @@ export class RouteCache {
     return { next, since: entry.since, version: this.version, until: entry.until }
   }
 
+  /** Conservative known route cost; unknown or mismatched receipts cannot be speculated. */
+  estimate(url: URL) {
+    const key = this.key(url), entry = key && this.entries.get(key)
+    if (!entry) return undefined
+    const next = JSON.parse(entry.body) as RoutePayload
+    const cost = next.a
+    if (!cost || cost.build !== this.build || cost.scope !== 'vite-static-closure' ||
+      typeof cost.routeBytes !== 'number' || !Number.isSafeInteger(cost.routeBytes) ||
+      cost.routeBytes < 0) return undefined
+    const data = Math.max(entry.bytes, 8 * 1024)
+    const total = data + cost.routeBytes
+    return Number.isSafeInteger(total) ? { data, total } : undefined
+  }
+
   private store(key: string | undefined, response: Response, body: string, next: RoutePayload,
     since: number, canSeed: boolean, started: number) {
     if (!key) return
@@ -106,17 +121,15 @@ export class RouteCache {
 
   /** Fetch or validate a body against the current generation before returning it. */
   async read(url: URL, signal: AbortSignal, fetchRoute: FetchRoute, now: () => number,
-    canSeed: () => boolean, candidate?: Candidate, onForget?: () => void): Promise<Read> {
+    canSeed: () => boolean, onForget?: () => void): Promise<Read> {
     let allowTag = true
     for (;;) {
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
       const version = this.version, key = this.key(url)
       const cached = key && allowTag ? this.entries.get(key) : undefined
-      const held = candidate?.version === version ? candidate : undefined
-      candidate = undefined
-      let since = held?.since ?? now()
-      const started = held?.at ?? performance.now()
-      const response = await (held?.res ?? fetchRoute(url, signal, cached?.tag))
+      let since = now()
+      const started = performance.now()
+      const response = await fetchRoute(url, signal, cached?.tag)
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
       if (version !== this.version) continue
       if (response.status === 401 || response.status === 403) {
@@ -126,7 +139,7 @@ export class RouteCache {
       }
       let body: string
       if (response.status === 304) {
-        if (!cached || held || !key || !this.allowed(response) || response.headers.get('etag') !== cached.tag ||
+        if (!cached || !key || !this.allowed(response) || response.headers.get('etag') !== cached.tag ||
           this.entries.get(key) !== cached) {
           if (key) this.remove(key)
           onForget?.()
