@@ -271,14 +271,32 @@ describe('secondary token entries', () => {
       '/* Generated from weft.config.ts (kit). Do not edit. */\n@theme {}',
     )
     for (const cssEntries of [{ '../bad': 'x' }, { valid: 1 }, null, []]) {
-      expect(() => sync(dir, { ...loaded, contributions: [{ name: 'kit', manifest: {
-        tokens: { namespace: 'kit', cssEntries },
-      } }] })).toThrow()
+      expect(() =>
+        sync(dir, {
+          ...loaded,
+          contributions: [
+            {
+              name: 'kit',
+              manifest: {
+                tokens: { namespace: 'kit', cssEntries },
+              },
+            },
+          ],
+        }),
+      ).toThrow()
       expect(existsSync(entry)).toBe(true)
     }
-    sync(dir, { ...loaded, contributions: [{ name: 'kit', manifest: {
-      tokens: { namespace: 'kit' },
-    } }] })
+    sync(dir, {
+      ...loaded,
+      contributions: [
+        {
+          name: 'kit',
+          manifest: {
+            tokens: { namespace: 'kit' },
+          },
+        },
+      ],
+    })
     expect(existsSync(entry)).toBe(false)
   })
 })
