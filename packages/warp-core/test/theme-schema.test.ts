@@ -363,3 +363,32 @@ test('does not infer Button ownership from a negative selector', async () => {
   expect(rows).toHaveLength(1)
   expect(rows[0].classification).toBe('excluded negative or query-only scope')
 })
+
+test('closed coverage fixture passes and rejects missing or unmapped evidence', () => {
+  fixture = mkdtempSync(resolve(tmpdir(), 'warp-coverage-'))
+  const file = resolve(fixture, 'coverage.json')
+  const good = {
+    sources: ['a.css'], trackedSources: ['a.css'], discovered: ['a:rule:color:0'],
+    sites: [{ id: 'a:rule:color:0', source: 'a.css', fallback: 'red',
+      classification: 'binding', group: 'link.rest.text' }],
+    groups: [{ id: 'link.rest.text', token: '--warp-link-text', domain: 'color',
+      units: 'forbidden', status: 'complete' }],
+  }
+  const run = (value: unknown) => {
+    writeFileSync(file, JSON.stringify(value))
+    return spawnSync(process.execPath, [script, '--coverage-fixture', file], { encoding: 'utf8' })
+  }
+  expect(run(good).status).toBe(0)
+  const bad = [
+    { ...good, sites: [] },
+    { ...good, sites: [{ ...good.sites[0], classification: 'unknown' }] },
+    { ...good, sites: [{ ...good.sites[0], fallback: '' }] },
+    { ...good, sites: [{ ...good.sites[0], group: 'missing' }] },
+    { ...good, trackedSources: ['a.css', 'missing.css'] },
+    { ...good, groups: [{ ...good.groups[0], units: 'bad' }] },
+    { ...good, groups: [{ ...good.groups[0], domain: 'bad' }] },
+    { ...good, sources: ['a.css', 'extra.css'] },
+    { ...good, groups: [good.groups[0], good.groups[0]] },
+  ]
+  for (const value of bad) expect(run(value).status).toBe(1)
+})

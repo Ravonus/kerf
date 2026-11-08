@@ -1,5 +1,5 @@
 {
-  "digest": "146674af052f9ef9811757867582267c7ccc28fd26c8ddddb14436286ccb7ba7",
+  "digest": "ab821eb62dec979f72856e2d7086b764b2b0887148368076d18a4ee8bf7a1b14",
   "status": "partial",
   "sources": [
     "docs/design/warp/tokens/warp-app.css",
@@ -9251,5 +9251,555 @@
       "classification": "generic button element candidate",
       "reason": "An HTML button may be a Button host; scope and cascade require review."
     }
-  ]
+  ],
+  "registry": {
+    "status": "partial",
+    "unresolvedGroups": [
+      "button.rest.bg",
+      "button.rest.text",
+      "button.rest.border",
+      "button.rest.highlight",
+      "button.hover.bg",
+      "button.hover.text",
+      "button.hover.border",
+      "button.hover.highlight",
+      "button.focus.bg",
+      "button.focus.text",
+      "button.focus.border",
+      "button.focus.highlight",
+      "button.press.bg",
+      "button.press.text",
+      "button.press.border",
+      "button.press.highlight",
+      "button.disabled.bg",
+      "button.disabled.text",
+      "button.disabled.border",
+      "button.disabled.highlight",
+      "sweep.rest.stroke",
+      "sweep.rest.base",
+      "sweep.rest.label",
+      "sweep.rest.text",
+      "sweep.invalid.stroke",
+      "sweep.invalid.label",
+      "sweep.invalid.text",
+      "nav.rest.text",
+      "nav.rest.underline",
+      "nav.hover.text",
+      "nav.hover.underline",
+      "nav.focus.text",
+      "nav.focus.underline",
+      "nav.active.text",
+      "nav.active.underline",
+      "nav.disabled.text",
+      "nav.disabled.underline",
+      "tabs.rest.text",
+      "tabs.rest.underline",
+      "tabs.hover.text",
+      "tabs.hover.underline",
+      "tabs.focus.text",
+      "tabs.focus.underline",
+      "tabs.active.text",
+      "tabs.active.underline",
+      "tabs.disabled.text",
+      "tabs.disabled.underline",
+      "link.rest.text",
+      "link.rest.underline",
+      "link.hover.text",
+      "link.hover.underline",
+      "link.focus.text",
+      "link.focus.underline",
+      "link.press.text",
+      "link.press.underline",
+      "link.disabled.text",
+      "link.disabled.underline",
+      "pill.rest.bg",
+      "pill.rest.text",
+      "pill.rest.border",
+      "pill.hover.bg",
+      "pill.hover.text",
+      "pill.hover.border",
+      "pill.focus.bg",
+      "pill.focus.text",
+      "pill.focus.border",
+      "pill.active.bg",
+      "pill.active.text",
+      "pill.active.border",
+      "pill.disabled.bg",
+      "pill.disabled.text",
+      "pill.disabled.border",
+      "badge.rest.bg",
+      "badge.rest.text",
+      "badge.rest.border",
+      "field.rest.label",
+      "field.rest.bg",
+      "field.floated.label",
+      "field.hover.label",
+      "field.hover.bg",
+      "field.focus.label",
+      "field.focus.bg",
+      "field.invalid.label",
+      "field.invalid.bg",
+      "field.focus.ring",
+      "field.invalid.ring",
+      "field.disabled.label",
+      "field.disabled.bg",
+      "field.readonly.label",
+      "field.readonly.bg",
+      "focus.rest.ring"
+    ],
+    "sourceIndex": [
+      {
+        "source": "docs/design/warp/tokens/warp-app.css",
+        "tokenReaders": 992,
+        "matchedReaders": 0,
+        "missingReaders": 992,
+        "status": "unindexed"
+      },
+      {
+        "source": "docs/design/warp/tokens/warp-canvas.css",
+        "tokenReaders": 35,
+        "matchedReaders": 0,
+        "missingReaders": 35,
+        "status": "unindexed"
+      },
+      {
+        "source": "docs/design/warp/tokens/warp-components.css",
+        "tokenReaders": 1033,
+        "matchedReaders": 95,
+        "missingReaders": 938,
+        "status": "unindexed"
+      },
+      {
+        "source": "docs/design/warp/tokens/warp-data.css",
+        "tokenReaders": 786,
+        "matchedReaders": 0,
+        "missingReaders": 786,
+        "status": "unindexed"
+      },
+      {
+        "source": "docs/design/warp/tokens/warp-flows.css",
+        "tokenReaders": 342,
+        "matchedReaders": 0,
+        "missingReaders": 342,
+        "status": "unindexed"
+      },
+      {
+        "source": "docs/design/warp/tokens/warp-inputs-rich.css",
+        "tokenReaders": 622,
+        "matchedReaders": 0,
+        "missingReaders": 622,
+        "status": "unindexed"
+      },
+      {
+        "source": "docs/design/warp/tokens/warp-inputs.css",
+        "tokenReaders": 629,
+        "matchedReaders": 0,
+        "missingReaders": 629,
+        "status": "unindexed"
+      },
+      {
+        "source": "docs/design/warp/tokens/warp-layout.css",
+        "tokenReaders": 728,
+        "matchedReaders": 0,
+        "missingReaders": 728,
+        "status": "unindexed"
+      },
+      {
+        "source": "docs/design/warp/tokens/warp-marketing.css",
+        "tokenReaders": 1018,
+        "matchedReaders": 0,
+        "missingReaders": 1018,
+        "status": "unindexed"
+      },
+      {
+        "source": "docs/design/warp/tokens/warp.css",
+        "tokenReaders": 554,
+        "matchedReaders": 9,
+        "missingReaders": 545,
+        "status": "unindexed"
+      },
+      {
+        "source": "packages/warp/src/links.css",
+        "tokenReaders": 2,
+        "matchedReaders": 2,
+        "missingReaders": 0,
+        "status": "matched-awaiting-identities"
+      },
+      {
+        "source": "packages/warp/src/type.css",
+        "tokenReaders": 38,
+        "matchedReaders": 38,
+        "missingReaders": 0,
+        "status": "matched-awaiting-identities"
+      },
+      {
+        "source": "packages/warp/src/layout.css",
+        "tokenReaders": 1,
+        "matchedReaders": 1,
+        "missingReaders": 0,
+        "status": "matched-awaiting-identities"
+      }
+    ],
+    "propertyTable": [
+      [
+        "bg",
+        "background/background-color fill channels",
+        "color",
+        "forbidden"
+      ],
+      [
+        "text,label,highlight,stroke,base,shadowColor",
+        "corresponding paint/label/outline/shadow colour sites",
+        "color",
+        "forbidden"
+      ],
+      [
+        "underline",
+        "scalar colour or object color,width,offset",
+        "underline-role",
+        "width/offset px"
+      ],
+      [
+        "border",
+        "border shorthand; none is valid",
+        "border",
+        "px width only"
+      ],
+      [
+        "borderColor and actual logical border colour longhands",
+        "border-color and inventory matches",
+        "color",
+        "forbidden"
+      ],
+      [
+        "borderWidth and actual logical border width longhands",
+        "border-width and inventory matches",
+        "width",
+        "px"
+      ],
+      [
+        "radius and actual logical corner radius longhands",
+        "border-radius and inventory matches",
+        "radius",
+        "px"
+      ],
+      [
+        "padding and actual logical padding longhands",
+        "padding and inventory matches",
+        "space",
+        "px"
+      ],
+      [
+        "margin and actual logical margin longhands",
+        "margin and inventory matches",
+        "margin",
+        "px"
+      ],
+      [
+        "gap,rowGap,columnGap",
+        "gap,row-gap,column-gap",
+        "space",
+        "px"
+      ],
+      [
+        "height,width,minHeight,maxHeight,minWidth,maxWidth",
+        "block-size,inline-size,min/max logical sizes",
+        "length",
+        "px"
+      ],
+      [
+        "actual inset longhands",
+        "inset,inset-block/inline and start/end variants",
+        "position",
+        "px"
+      ],
+      [
+        "font.family",
+        "font-family or family component of font",
+        "family",
+        "forbidden"
+      ],
+      [
+        "font.size",
+        "font-size or size component of font",
+        "font-size",
+        "px"
+      ],
+      [
+        "font.weight",
+        "font-weight or weight component of font",
+        "weight",
+        "unitless"
+      ],
+      [
+        "font.lineHeight",
+        "line-height or leading component of font",
+        "leading",
+        "unitless"
+      ],
+      [
+        "font.letterSpacing",
+        "letter-spacing",
+        "tracking",
+        "px"
+      ],
+      [
+        "font.transform",
+        "text-transform",
+        "transform-case",
+        "forbidden"
+      ],
+      [
+        "font.style,font.variantNumeric,font.variation",
+        "font-style,font-variant-numeric,font-variation-settings",
+        "matching CSS grammar",
+        "forbidden"
+      ],
+      [
+        "font.css",
+        "original complete font shorthand",
+        "font-shorthand",
+        "forbidden"
+      ],
+      [
+        "shadow",
+        "box-shadow; named elevation or raw list",
+        "shadow",
+        "forbidden"
+      ],
+      [
+        "ring.color,ring.width,ring.offset",
+        "outline/sweep focus indicator components",
+        "color,width,position",
+        "width/offset px"
+      ],
+      [
+        "duration,easing,stagger",
+        "existing transition/animation/sweep time/ease/delay components",
+        "time,easing,time",
+        "ms for times"
+      ],
+      [
+        "hoverDuration,pressDuration,enterDuration,exitDuration",
+        "corresponding recorded motion channel, not a whole transition string",
+        "time",
+        "ms"
+      ],
+      [
+        "animation",
+        "false disables recorded visual motion; true restores source motion",
+        "boolean",
+        "forbidden"
+      ],
+      [
+        "scale,opacity",
+        "scale,opacity at corresponding state",
+        "scalar",
+        "unitless"
+      ],
+      [
+        "translate,rotate",
+        "existing translate/rotate components",
+        "position,angle",
+        "px,deg"
+      ],
+      [
+        "backgroundImage",
+        "existing gradient image sites",
+        "gradient",
+        "forbidden"
+      ],
+      [
+        "backgroundSize,scrollMarginBlock,scrollPaddingInline",
+        "exact existing consumer grammar",
+        "length-list",
+        "px"
+      ],
+      [
+        "fill,caretColor,accentColor,outlineColor,textDecorationColor,scrollbarColor",
+        "actual matching colour consumers",
+        "color or colour-list",
+        "forbidden"
+      ],
+      [
+        "strokeWidth,textDecorationThickness",
+        "actual stroke/underline thickness",
+        "width",
+        "px"
+      ],
+      [
+        "blur",
+        "blur component of existing filter/backdrop-filter",
+        "length",
+        "px"
+      ],
+      [
+        "depth",
+        "z-index consumer where it is a public depth token",
+        "integer",
+        "unitless"
+      ]
+    ],
+    "systemTable": [
+      [
+        "space",
+        "hair,tight,related,group,section,page; user keys",
+        "space",
+        "--warp-space-<key>; numeric key 2 is a name, not a multiplier"
+      ],
+      [
+        "radius",
+        "control,surface,card,mark,round,pill; user keys",
+        "radius",
+        "card aliases surface; pill aliases round; reject both aliases set differently"
+      ],
+      [
+        "font",
+        "body,display,mono; user keys",
+        "family",
+        "body aliases --warp-font-sans; other existing keys keep --warp-font-<key>"
+      ],
+      [
+        "text",
+        "display,title,heading,body,prose,label,eyebrow,caption,code,control,button; user keys",
+        "text-role",
+        "existing --warp-text-<role>-*; only fields with a real role consumer"
+      ],
+      [
+        "shadow",
+        "none,sm,md,lg; user keys",
+        "shadow",
+        "none/sm/md/lg alias --warp-elevation-0/1/2/3"
+      ],
+      [
+        "border",
+        "hairline,emphasis",
+        "width",
+        "--warp-border-hairline/emphasis"
+      ],
+      [
+        "focus",
+        "width,offset,color",
+        "focus-role",
+        "--warp-focus-width/offset and --warp-color-focus"
+      ],
+      [
+        "padding",
+        "control,surface",
+        "space",
+        "--warp-pad-control/surface"
+      ],
+      [
+        "control",
+        "sm,md,lg",
+        "length",
+        "--warp-control-sm/md/lg; preserve existing hit-area floor in final size"
+      ],
+      [
+        "field",
+        "height",
+        "length",
+        "--warp-field-height; preserve existing target-min floor"
+      ],
+      [
+        "density",
+        "compact,cozy,comfortable",
+        "density-role",
+        "factor -> --warp-density-k; control.sm/md/lg -> --warp-ref-control-* at that stop"
+      ],
+      [
+        "motion.duration",
+        "every actual --warp-duration-* and --warp-*-duration token",
+        "time",
+        "token basename is key; instant/fast/base/slow plus fill,spring,touch-out,sweep,frame,label-float,label-char,message and declared family durations"
+      ],
+      [
+        "motion.easing",
+        "every actual --warp-ease-* plus sweep,sweep-in,label-float",
+        "easing",
+        "exact existing ease/sweep-ease/label-float-ease token"
+      ],
+      [
+        "motion",
+        "scale,press,stagger,stagger-max,distance,scale-from",
+        "motion-role",
+        "existing motion-scale,press,stagger,stagger-max,motion-distance,motion-scale-from; reduction still wins"
+      ],
+      [
+        "layout",
+        "bar,tabbar,rail,sidebar,list,aside,measure,narrow,content,wide",
+        "length",
+        "--warp-layout-<key>"
+      ],
+      [
+        "breakpoint",
+        "each existing width query, keyed by source family/container/operator/default threshold",
+        "build-length",
+        "rewrite only that recorded query; never substitute all equal numbers"
+      ],
+      [
+        "color",
+        "every existing --warp-color-* token suffix",
+        "color",
+        "existing semantic colour scale; same checks as tokens; colors is the named dictionary"
+      ]
+    ],
+    "stateTable": [
+      [
+        "disabled",
+        ":disabled,aria-disabled=true,data-disabled",
+        "1"
+      ],
+      [
+        "invalid",
+        "data-invalid,aria-invalid=true",
+        "2"
+      ],
+      [
+        "press",
+        ":active,data-press",
+        "3"
+      ],
+      [
+        "active",
+        "aria-current,aria-selected=true,aria-pressed=true,data-active,data-state=active",
+        "4"
+      ],
+      [
+        "open",
+        "aria-expanded=true,data-state=open,data-open,:popover-open,dialog open",
+        "5"
+      ],
+      [
+        "checked",
+        ":checked,data-on,aria-checked=true",
+        "6"
+      ],
+      [
+        "focus",
+        ":focus-visible,:focus-within,:has(:focus-visible)",
+        "7"
+      ],
+      [
+        "hover",
+        ":hover with its original pointer guard",
+        "8"
+      ],
+      [
+        "floated",
+        "field data-filled/date/lift and existing non-placeholder selectors",
+        "9"
+      ],
+      [
+        "readonly",
+        "data-readonly,:read-only",
+        "10"
+      ],
+      [
+        "rest",
+        "original unqualified/variant rules",
+        "11"
+      ]
+    ]
+  }
 }

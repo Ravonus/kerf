@@ -12,6 +12,15 @@ import { classifyButtonVariants } from './theme-schema-button-variants.mjs'
 import { buttonRadius, foundationsPath } from './theme-schema-button-radius.mjs'
 import { buttonRadiusJoins } from './theme-schema-button-radius-joins.mjs'
 import { auditButtonRadius } from './theme-schema-radius-audit.mjs'
+import { coverage } from './theme-schema-coverage.mjs'
+
+const fixtureFlag = process.argv.indexOf('--coverage-fixture')
+if (fixtureFlag !== -1) {
+  const result = coverage(JSON.parse(readFileSync(process.argv[fixtureFlag + 1], 'utf8')))
+  console.log(`Coverage: ${result.status}`)
+  for (const issue of result.issues) console.error(issue)
+  process.exit(result.status === 'complete' ? 0 : 1)
+}
 
 const repoRoot = new URL('../../../', import.meta.url)
 const root = process.env.WARP_SCHEMA_FIXTURE ? pathToFileURL(`${process.env.WARP_SCHEMA_FIXTURE}/`) : repoRoot
@@ -38,7 +47,7 @@ function tables(design) {
     return lines.slice(start + 2, lines.findIndex((line, i) => i > start + 1 && !line.startsWith('|')))
         .map(cells)
   }
-  return { parts: rows('Part'), properties: rows('config path'), sources: rows('source'), system: rows('system path'), inventory: rows('scope or standalone part') }
+  return { parts: rows('Part'), properties: rows('config path'), sources: rows('source'), system: rows('system path'), states: rows('state'), inventory: rows('scope or standalone part') }
 }
 
 function entries(parts) {
@@ -93,7 +102,39 @@ function generate(design, template, bindings, radiusAudit) {
     const keys = scale === 'text' ? textScale[1] : spaceScale[1]
     if (!keys.split(';')[0].split(',').includes(key)) throw new Error(`Unknown system key: ${row.path}`)
   }
-  const digest = createHash('sha256').update(JSON.stringify({ records, sources, bindings, system, radiusAudit, properties: table.properties })).digest('hex')
+  const stateNames = table.states.map((row) => row[0])
+  for (const row of records) {
+    if (!stateNames.includes(row.state)) throw new Error(`Unknown state: ${row.state}`)
+  }
+  const unresolved = records.filter((row) => row.binding !== 'classified')
+    .map((row) => `${row.part}.${row.state}.${row.path}`)
+  const index = sources.map((source) => {
+    const text = read(source)
+    const direct = consumers(source, text).filter((row) =>
+      row.reads.some((name) => name.startsWith('--warp-') || name.startsWith('--_')))
+    const remaining = direct.map((row) => `${row.property}:${row.reads.join(',')}`)
+    const spans = new Set()
+    for (const row of bindings.filter((item) => item.source === source)) {
+      const [start, end] = row.fallbackSpan ?? []
+      if (!Number.isInteger(start) || !Number.isInteger(end) || spans.has(start) ||
+          text.slice(start, end) !== row.fallback) continue
+      const prefix = text.slice(Math.max(0, start - row.property.length - 8), start)
+      if (!prefix.endsWith(`${row.property}: `) && !prefix.endsWith(`${row.property}:`)) continue
+      const reads = [...new Set([...row.fallback.matchAll(/var\(\s*(--[\w-]+)/g)]
+        .map((match) => match[1]))].sort()
+      const key = `${row.property}:${reads.join(',')}`
+      const match = remaining.indexOf(key)
+      if (match >= 0) { remaining.splice(match, 1); spans.add(start) }
+    }
+    return { source, tokenReaders: direct.length, matchedReaders: direct.length - remaining.length,
+      missingReaders: remaining.length, status: remaining.length ? 'unindexed' :
+        direct.length ? 'matched-awaiting-identities' : 'closed' }
+  })
+  const status = unresolved.length || index.some((row) => row.status !== 'closed')
+    ? 'partial' : 'complete'
+  const registry = { status, unresolvedGroups: unresolved, sourceIndex: index,
+    propertyTable: table.properties, systemTable: table.system, stateTable: table.states }
+  const digest = createHash('sha256').update(JSON.stringify({ records, sources, bindings, system, radiusAudit, registry })).digest('hex')
   const shape = (rows, indent = '    ') => rows.map((row) => `${indent}${row.path}?: ${['underline', 'ring'].includes(row.path) ? 'string | { color?: string; width?: number | string; offset?: number | string }' : row.path === 'border' ? 'string | { color?: string; width?: number | string; style?: string }' : 'string'}`).join('\n')
   const types = [...new Set(records.filter((row) => !row.part.startsWith('text/') && row.part !== 'status-light').map((row) => row.part))].map((part) => {
     const rows = records.filter((row) => row.part === part)
@@ -116,7 +157,7 @@ function generate(design, template, bindings, radiusAudit) {
   const typeText = `/** Explicit overrides; canonical sheet bindings remain under classification. */\nexport interface ThemeParts {\n${types}\n${roles}\n${componentTypes}\n}\n\n/** The classified system scales; other scales remain under classification. */\nexport interface ThemeSystem {\n  space?: Record<string, number | string>\n  text?: Record<string, { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string } | undefined> & {\n${systemRoles}\n  }\n}`
   const doc = records.map((row) => `| ${row.part} | ${row.state} | ${row.path} | ${row.token} | ${row.domain} | ${row.binding} |`).join('\n')
   return [
-    `${JSON.stringify({ digest, status: 'partial', sources, records, system, bindings, radiusAudit }, null, 2)}\n`,
+    `${JSON.stringify({ digest, status, sources, records, system, bindings, radiusAudit, registry }, null, 2)}\n`,
     `// Theme schema digest: ${digest}\n${template.replace('/* THEME_TYPES */', typeText)}`,
     `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n\n## Explicit Button radius selector audit\n\n| Source | Line | Selector | Properties | Review |\n| --- | --- | --- | --- | --- |\n${radiusAudit.map((row) => `| ${row.source} | ${row.line} | \`${row.selector.replaceAll('\n', ' ')}\` | ${row.properties.join(', ')} | ${row.classification} |`).join('\n')}\n\n## Reviewed declarations\n\n| Path | Variant | States | Selector | At-rules | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | ${b.variant ?? '—'} | ${(b.states ?? [b.state ?? '—']).join(', ')} | \`${b.selector.replaceAll('\n', ' ')}\` | \`${b.atRules.join('; ')}\` | ${b.property} | \`${b.fallback.replaceAll('\n', '<br>')}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
   ]
@@ -181,11 +222,17 @@ for (const source of sources) {
 }
 const extra = tracked.filter((path) => !sources.includes(path))
 if (extra.length) { console.error(`Uninventoried sources: ${extra.join(', ')}`); failed = true }
-console.log(`Tracked sources: ${sources.filter((path) => tracked.includes(path)).length}/${sources.length}; reviewed records: ${bindings.length}; unresolved sources: ${sources.filter((path) => path.startsWith('docs/design/')).length}`)
+console.log(`Tracked sources: ${sources.filter((path) => tracked.includes(path)).length}/${sources.length}; reviewed records: ${bindings.length}; canonical sources: ${sources.filter((path) => path.startsWith('docs/design/')).length}`)
 console.log(`Button radius selector audit: ${sourcePaths.length} sources; ${radiusAudit.length} selector rules`)
 const variants = bindings.filter((row) => row.variant)
 const completedButton = JSON.parse(generated[0]).records.filter((row) =>
   row.part === 'button' && row.binding === 'classified')
 console.log(`Button variant declarations unresolved: ${variants.filter((row) => row.classification === 'variant declaration unresolved').length}; partial property sites: ${variants.filter((row) => row.classification === 'partial property binding').length}; complete properties: ${completedButton.length}`)
-console.error('Incomplete: CSS declaration ownership, transitive inputs, exclusions and fallbacks are unresolved')
-process.exitCode = 1
+const registry = JSON.parse(generated[0]).registry
+console.log(`Coverage: ${registry.status}; unresolved groups: ${registry.unresolvedGroups.length}; unindexed sources: ${registry.sourceIndex.filter((row) => row.status !== 'closed').length}`)
+if (registry.unresolvedGroups.length) console.log(`Unresolved groups: ${registry.unresolvedGroups.join(', ')}`)
+if (registry.status !== 'complete') {
+  console.error('Incomplete: CSS declaration ownership, transitive inputs, exclusions and fallbacks are unresolved')
+  failed = true
+}
+process.exitCode = failed ? 1 : 0

@@ -1,4 +1,4 @@
-// Theme schema digest: 146674af052f9ef9811757867582267c7ccc28fd26c8ddddb14436286ccb7ba7
+// Theme schema digest: ab821eb62dec979f72856e2d7086b764b2b0887148368076d18a4ee8bf7a1b14
 import type { PluginInstance } from '@weft-js/core/plugin'
 
 /** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
