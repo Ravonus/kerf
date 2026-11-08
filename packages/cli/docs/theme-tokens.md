@@ -1,8 +1,8 @@
 # Theme tokens (partial)
 
-Schema digest: 6c0f6008ca641595c55ab487255a8ae82cb0b730de25b369958798ca9ebb022d
+Schema digest: 3a6b4b5193a4894120271f6cc2e1faa90d208d011d7048d88ac66f5fb43ca488
 
-Bindings and fallback expressions are unresolved.
+Bare-anchor bindings are classified below. All other bindings remain unresolved.
 
 | Part | State | Path | Candidate token | Domain | Binding |
 | --- | --- | --- | --- | --- | --- |
@@ -97,3 +97,11 @@ Bindings and fallback expressions are unresolved.
 | field | readonly | label | --warp-field-label-readonly | color | unresolved |
 | field | readonly | bg | --warp-field-bg-readonly | color | unresolved |
 | focus | rest | ring | --warp-focus-ring | ring-role | unresolved |
+
+## Classified bare anchors
+
+| Path | Selector | Property | Fallback | Source |
+| --- | --- | --- | --- | --- |
+| text | `:where(a:any-link)` | color | `var(--warp-color-accent-text)` | packages/warp/src/links.css:203-232 |
+| underline.width | `:where(a:any-link)` | text-decoration-thickness | `var(--warp-border-hairline)` | packages/warp/src/links.css:261-288 |
+| underline.offset | `:where(a:any-link)` | text-underline-offset | `0.22em` | packages/warp/src/links.css:313-319 |

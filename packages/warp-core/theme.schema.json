@@ -1,5 +1,5 @@
 {
-  "digest": "6c0f6008ca641595c55ab487255a8ae82cb0b730de25b369958798ca9ebb022d",
+  "digest": "3a6b4b5193a4894120271f6cc2e1faa90d208d011d7048d88ac66f5fb43ca488",
   "status": "partial",
   "sources": [
     "docs/design/warp/tokens/warp-app.css",
@@ -835,6 +835,81 @@
       "domain": "ring-role",
       "units": "forbidden",
       "binding": "unresolved"
+    }
+  ],
+  "bindings": [
+    {
+      "part": "link",
+      "state": "rest",
+      "path": "text",
+      "domain": "color",
+      "selector": ":where(a:any-link)",
+      "atRules": [
+        "@layer warp.base"
+      ],
+      "source": "packages/warp/src/links.css",
+      "property": "color",
+      "fallback": "var(--warp-color-accent-text)",
+      "inputs": [
+        {
+          "token": "--warp-color-accent-text",
+          "classification": "system input"
+        }
+      ],
+      "token": "--warp-link-text",
+      "units": "forbidden",
+      "fallbackSpan": [
+        203,
+        232
+      ],
+      "classification": "binding"
+    },
+    {
+      "part": "link",
+      "state": "rest",
+      "path": "underline.width",
+      "domain": "width",
+      "selector": ":where(a:any-link)",
+      "atRules": [
+        "@layer warp.base"
+      ],
+      "source": "packages/warp/src/links.css",
+      "property": "text-decoration-thickness",
+      "fallback": "var(--warp-border-hairline)",
+      "inputs": [
+        {
+          "token": "--warp-border-hairline",
+          "classification": "system input"
+        }
+      ],
+      "token": "--warp-link-underline-width",
+      "units": "px",
+      "fallbackSpan": [
+        261,
+        288
+      ],
+      "classification": "binding"
+    },
+    {
+      "part": "link",
+      "state": "rest",
+      "path": "underline.offset",
+      "domain": "position",
+      "selector": ":where(a:any-link)",
+      "atRules": [
+        "@layer warp.base"
+      ],
+      "source": "packages/warp/src/links.css",
+      "property": "text-underline-offset",
+      "fallback": "0.22em",
+      "inputs": [],
+      "token": "--warp-link-underline-offset",
+      "units": "px",
+      "fallbackSpan": [
+        313,
+        319
+      ],
+      "classification": "binding"
     }
   ]
 }

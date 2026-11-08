@@ -2,8 +2,11 @@
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
+import { classifyLinks } from './theme-schema-links.mjs'
 
-const root = new URL('../../../', import.meta.url)
+const repoRoot = new URL('../../../', import.meta.url)
+const root = process.env.WARP_SCHEMA_FIXTURE ? pathToFileURL(`${process.env.WARP_SCHEMA_FIXTURE}/`) : repoRoot
 const read = (path) => readFileSync(new URL(path, root), 'utf8')
 const designPath = 'docs/decisions/theming.md'
 const templatePath = 'packages/warp/plugin.template.d.mts'
@@ -54,7 +57,7 @@ function entries(parts) {
   return result
 }
 
-function generate(design, template) {
+function generate(design, template, bindings) {
   const table = tables(design)
   const allowedUnits = new Set(['forbidden', 'width/offset px', 'px width only', 'px', 'unitless', 'ms for times', 'ms', 'px,deg'])
   for (const row of table.properties) {
@@ -63,7 +66,7 @@ function generate(design, template) {
   const records = entries(table.parts)
   const sources = table.sources.filter((row) => row[0].startsWith('`')).map((row) => unquote(row[0])[0])
   if (sources.length !== 13 || new Set(sources).size !== 13) throw new Error('Expected 13 inventory sources')
-  const digest = createHash('sha256').update(JSON.stringify({ records, sources, properties: table.properties })).digest('hex')
+  const digest = createHash('sha256').update(JSON.stringify({ records, sources, bindings, properties: table.properties })).digest('hex')
   const shape = (rows, indent = '    ') => rows.map((row) => `${indent}${row.path}?: ${['underline', 'ring'].includes(row.path) ? 'string | { color?: string; width?: number | string; offset?: number | string }' : row.path === 'border' ? 'string | { color?: string; width?: number | string; style?: string }' : 'string'}`).join('\n')
   const types = [...new Set(records.map((row) => row.part))].map((part) => {
     const rows = records.filter((row) => row.part === part)
@@ -75,9 +78,9 @@ function generate(design, template) {
   const typeText = `/** Explicit colour overrides; CSS bindings remain under classification. */\nexport interface ThemeParts {\n${types}\n}`
   const doc = records.map((row) => `| ${row.part} | ${row.state} | ${row.path} | ${row.token} | ${row.domain} | unresolved |`).join('\n')
   return [
-    `${JSON.stringify({ digest, status: 'partial', sources, records }, null, 2)}\n`,
+    `${JSON.stringify({ digest, status: 'partial', sources, records, bindings }, null, 2)}\n`,
     `// Theme schema digest: ${digest}\n${template.replace('/* THEME_TYPES */', typeText)}`,
-    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBindings and fallback expressions are unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n`,
+    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor bindings are classified below. All other bindings remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n\n## Classified bare anchors\n\n| Path | Selector | Property | Fallback | Source |\n| --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path} | \`${b.selector}\` | ${b.property} | \`${b.fallback}\` | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
   ]
 }
 
@@ -87,15 +90,17 @@ function drift(expected, actual) {
 
 const design = read(designPath)
 const template = read(templatePath)
-const generated = generate(design, template)
+const linksPath = 'packages/warp/src/links.css'
+const bindings = classifyLinks(linksPath, read(linksPath))
+const generated = generate(design, template, bindings)
 if (process.argv.includes('--negative-test')) {
   const invalid = design.replace('| forbidden |', '| bad-unit |')
-  try { generate(invalid, template); throw new Error('Bad unit passed') } catch (error) {
+  try { generate(invalid, template, bindings); throw new Error('Bad unit passed') } catch (error) {
     if (error.message === 'Bad unit passed') throw error
     console.log(`negative bad unit: ${error.message}`)
   }
   const changedTable = design.replace('`highlight` | `hover`', '`highlight`, `extra` | `hover`')
-  if (!drift(generate(changedTable, template), generated).length) throw new Error('Table mutation passed')
+  if (!drift(generate(changedTable, template, bindings), generated).length) throw new Error('Table mutation passed')
   console.log('negative table: drift detected')
   for (const index of [1, 2]) {
     const actual = [...generated]
@@ -114,16 +119,17 @@ if (!process.argv.includes('--check')) {
 let failed = false
 const mismatches = drift(generated, outputs.map(read))
 for (const path of mismatches) { console.error(`Drift: ${path}`); failed = true }
-const tracked = execFileSync('git', ['ls-files', '--', 'docs/design/warp/tokens/*.css', 'packages/warp/src/links.css', 'packages/warp/src/type.css', 'packages/warp/src/layout.css'], { cwd: root, encoding: 'utf8' }).trim().split('\n')
+const tracked = execFileSync('git', ['ls-files', '--', 'docs/design/warp/tokens/*.css', 'packages/warp/src/links.css', 'packages/warp/src/type.css', 'packages/warp/src/layout.css'], { cwd: repoRoot, encoding: 'utf8' }).trim().split('\n')
 const sources = JSON.parse(generated[0]).sources
 for (const source of sources) {
   if (!tracked.includes(source)) { console.error(`Missing tracked source: ${source}`); failed = true; continue }
   const content = read(source)
   const reads = (content.match(/var\(\s*--warp-/g) || []).length
-  console.log(`${source}: ${reads} direct token references, bindings unresolved`)
+  const classified = source === linksPath ? 2 : 0
+  console.log(`${source}: ${reads} direct token references, ${classified} classified`)
 }
 const extra = tracked.filter((path) => !sources.includes(path))
 if (extra.length) { console.error(`Uninventoried sources: ${extra.join(', ')}`); failed = true }
-console.log(`Tracked sources: ${sources.filter((path) => tracked.includes(path)).length}/${sources.length}; classified bindings: 0`)
+console.log(`Tracked sources: ${sources.filter((path) => tracked.includes(path)).length}/${sources.length}; classified declarations: ${bindings.length} (2 direct token reads)`)
 console.error('Incomplete: CSS declaration ownership, transitive inputs, exclusions and fallbacks are unresolved')
 process.exitCode = 1
