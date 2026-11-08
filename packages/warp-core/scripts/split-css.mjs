@@ -210,6 +210,22 @@ export function build() {
       1,
     ) + '\n',
   )
+  // The first themed sheet is opt-in; legacy output remains the canonical source bytes.
+  const button = files.get('components/button.css')
+  const paint = [
+    ['--warp-button-bg', 'var(--warp-tone-fill, var(--_fill))'],
+    ['--warp-button-text', 'var(--warp-tone-ink, var(--_ink))'],
+  ]
+  let themedButton = button
+  for (const [token, fallback] of paint) {
+    if (themedButton.split(fallback).length !== 2)
+      throw new Error(`Expected one Button ${token} site`)
+    themedButton = themedButton.replace(
+      fallback,
+      `var(${token},var(--warp-config-part-${token.slice(7)},${fallback}))`,
+    )
+  }
+  files.set('themed/components/button.css', themedButton)
   return { files, parts, routed }
 }
 
