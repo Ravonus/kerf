@@ -16,6 +16,9 @@ const template = templateSource as (
 ) => Record<string, string>
 
 const tmp = fileURLToPath(new URL('./.tmp/', import.meta.url))
+// A check plus a dev server: a few seconds alone, but the release run has every package's tests going at once, and
+// the first app (warp, the largest) pays the cold start at seven to ten times that.
+const serves = { timeout: 180_000 }
 const pkgs = fileURLToPath(new URL('../../', import.meta.url))
 afterAll(() => rmSync(tmp, { recursive: true, force: true }))
 
@@ -51,7 +54,7 @@ describe.each([
     /<button type="button">Clicked <!--\[-->0<!--\]--> times/,
   ],
 ])('--ui %s', (ui, card, button) => {
-  it('weft check is clean, and / server-renders', async () => {
+  it('weft check is clean, and / server-renders', serves, async () => {
     const dir = app(ui)
     const r = await check(dir)
     expect(r.diagnostics.filter((d) => d.severity === 'error')).toEqual([])
@@ -82,7 +85,7 @@ describe.each([
   })
 })
 
-it("the alias is the app's: a tsconfig edit is all it takes to use its own", async () => {
+it("the alias is the app's: a tsconfig edit is all it takes to use its own", serves, async () => {
   const dir = app('none')
   const file = join(dir, 'tsconfig.json')
   writeFileSync(file, readFileSync(file, 'utf8').replace('"#/*"', '"~/*"'))
@@ -117,25 +120,29 @@ it('AGENTS.md for the biggest scaffold stays under the limit, plugin sections in
   expect(bytes).toBeLessThan(limit)
 })
 
-it.each(['json', 'yaml'])('a %s config gives the same app as TypeScript', async (format) => {
-  const dir = app('warp', { config: format })
-  const r = await check(dir)
-  expect(r.diagnostics.map((d) => d.code)).toEqual(['H001'])
-  expect(
-    spawnSync(join(pkgs, 'core/node_modules/.bin/tsc'), ['--noEmit'], {
-      cwd: dir,
-      encoding: 'utf8',
-    }).stdout,
-  ).toBe('')
-  const server = await devCommand(dir, { port: await freePort() })
-  try {
-    const html = await (await fetch(server.resolvedUrls.local[0])).text()
-    expect(html).toMatch(/data-scope="surface"/)
-    expect(html).toMatch(/<title[^>]*>App Warp<\/title>/)
-  } finally {
-    await server.close()
-  }
-})
+it.each(['json', 'yaml'])(
+  'a %s config gives the same app as TypeScript',
+  serves,
+  async (format) => {
+    const dir = app('warp', { config: format })
+    const r = await check(dir)
+    expect(r.diagnostics.map((d) => d.code)).toEqual(['H001'])
+    expect(
+      spawnSync(join(pkgs, 'core/node_modules/.bin/tsc'), ['--noEmit'], {
+        cwd: dir,
+        encoding: 'utf8',
+      }).stdout,
+    ).toBe('')
+    const server = await devCommand(dir, { port: await freePort() })
+    try {
+      const html = await (await fetch(server.resolvedUrls.local[0])).text()
+      expect(html).toMatch(/data-scope="surface"/)
+      expect(html).toMatch(/<title[^>]*>App Warp<\/title>/)
+    } finally {
+      await server.close()
+    }
+  },
+)
 
 it('the template: warp() only for warp, a stylesheet otherwise, and only weft scripts', () => {
   const warp = template({ ui: 'warp', name: 'shop' })

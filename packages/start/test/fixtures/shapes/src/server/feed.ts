@@ -28,7 +28,8 @@ export const listPosts = query({
     }),
   ),
   run: async ({ input }) => {
-    if (input.v === 9) await new Promise((ok) => setTimeout(ok, 300)) // a streamed page's slow query
+    // A streamed page's slow query: well after hydration even on a loaded machine, so the swap isn't counted as a write.
+    if (input.v === 9) await new Promise((ok) => setTimeout(ok, 1500))
     return posts(input)
   },
 })
