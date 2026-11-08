@@ -56,6 +56,8 @@ export interface Contributions {
   tokens?: {
     namespace: string
     css?: string
+    /** Additional CSS entries written beside the primary token stylesheet. */
+    cssEntries?: Record<string, string>
     values?: Record<string, unknown>
     /** Module ids the build resolves to another id, written to `.weft/tokens/<namespace>.alias.json`: one variant compiled in. */
     alias?: Record<string, string>

@@ -124,6 +124,16 @@ export function generated(root, loaded) {
     if (t?.css)
       files[`.weft/tokens/${t.namespace}.css`] =
         `/* Generated from weft.config.ts (${c.name}). Do not edit. */\n${t.css}`
+    if (t?.cssEntries !== undefined) {
+      if (!t.cssEntries || typeof t.cssEntries !== 'object' || Array.isArray(t.cssEntries))
+        throw new TypeError('tokens.cssEntries must be an object')
+      for (const [name, css] of Object.entries(t.cssEntries)) {
+        if (!/^[a-z][a-z0-9-]*$/.test(name) || typeof css !== 'string')
+          throw new TypeError(`Invalid tokens.cssEntries entry: ${name}`)
+        files[`.weft/tokens/${t.namespace}.${name}.css`] =
+          `/* Generated from weft.config.ts (${c.name}). Do not edit. */\n${css}`
+      }
+    }
     if (t?.alias)
       files[`.weft/tokens/${t.namespace}.alias.json`] = `${JSON.stringify(t.alias, null, 2)}\n`
   }
