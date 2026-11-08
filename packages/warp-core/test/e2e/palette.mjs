@@ -21,13 +21,18 @@ const html = `<!doctype html><style>
 let browser, server, origin
 before(async () => {
   server = createServer((_, response) => response.end(html))
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
+  await new Promise((resolve) => {
+    server.listen(0, '127.0.0.1', resolve)
+  })
   origin = `http://127.0.0.1:${server.address().port}`
   browser = await chromium.launch()
 })
 after(async () => {
   await browser?.close()
-  if (server) await new Promise((resolve) => server.close(resolve))
+  if (server)
+    await new Promise((resolve) => {
+      server.close(resolve)
+    })
 })
 
 async function fixture() {
@@ -40,7 +45,7 @@ async function fixture() {
   return { page, context }
 }
 
-test('switches synchronously and respects inherited nested boundaries', async () => {
+void test('switches synchronously and respects inherited nested boundaries', async () => {
   const { page, context } = await fixture()
   try {
     const result = await page.evaluate(() => {
@@ -85,7 +90,7 @@ test('switches synchronously and respects inherited nested boundaries', async ()
   }
 })
 
-test('rejects invalid writes atomically and handles URL, storage and no metadata', async () => {
+void test('rejects invalid writes atomically and handles URL, storage and no metadata', async () => {
   const { page, context } = await fixture()
   try {
     const result = await page.evaluate(() => {
@@ -106,7 +111,7 @@ test('rejects invalid writes atomically and handles URL, storage and no metadata
           failures.push(error instanceof RangeError)
         }
       }
-      const before = [
+      const initial = [
         document.documentElement.getAttribute('data-palette'),
         child.getAttribute('data-palette'),
         localStorage.getItem('warp:dials'),
@@ -135,10 +140,10 @@ test('rejects invalid writes atomically and handles URL, storage and no metadata
         rejects = error instanceof RangeError
       }
       setDial('palette', 'default')
-      return { failures, before, saved, reset, fromUrl, rejects, noConfig: getDial('palette') }
+      return { failures, initial, saved, reset, fromUrl, rejects, noConfig: getDial('palette') }
     })
     assert.deepEqual(result.failures, [true, true, true])
-    assert.deepEqual(result.before, [null, null, null, '', 0])
+    assert.deepEqual(result.initial, [null, null, null, '', 0])
     assert.deepEqual(result.saved, ['ocean', 'ocean', '?palette=ocean'])
     assert.deepEqual(result.reset, [false, null, ''])
     assert.equal(result.fromUrl, 'sunset')

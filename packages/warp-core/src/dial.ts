@@ -127,6 +127,6 @@ export function dialsFromUrl(
         ? paletteNames(root).has(v)
         : (DIALS[name].values as readonly string[]).includes(v))
     )
-      setDial(name, v as DialValue<typeof name>, { root })
+      setDial(name, v, { root })
   }
 }
