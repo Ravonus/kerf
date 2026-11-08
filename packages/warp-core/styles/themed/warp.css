@@ -1301,7 +1301,7 @@
   :where([data-sweep]:has(> [data-part="sweep-outline"])) { --warp-sweep-duration: var(--warp-frame-duration); }
   :where([data-part="frame-corners"]),
   :where([data-part="sweep-corners"]) {
-    position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--warp-frame-track);
+    position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--warp-sweep-base,var(--warp-config-part-sweep-base,var(--warp-frame-track)));
   }
   :where([data-part="frame-corners"], [data-part="sweep-corners"]) > i {
     position: absolute; inline-size: var(--warp-frame-corner); block-size: var(--warp-frame-corner);
@@ -1313,7 +1313,7 @@
   :where([data-part$="corners"]) > i:nth-child(4) { inset-block-end: 0;   inset-inline-end: 0;   border-block-end-width: var(--warp-frame-weight);   border-inline-end-width: var(--warp-frame-weight); }
   :where([data-part="sweep-corners"]),
   :where([data-part="sweep-content"]) {
-    color: var(--_tone, var(--warp-color-sweep)); opacity: var(--_on);
+    color: var(--warp-sweep-stroke,var(--warp-config-part-sweep-stroke,var(--_tone, var(--warp-color-sweep)))); opacity: var(--_on);
     clip-path: inset(0 var(--_sr) 0 var(--_sl));
   }
   :where([data-part="sweep-outline"]) {
@@ -1327,7 +1327,7 @@
     --_L: calc(100cqw + 100cqh); --_s: calc(var(--warp-frame-stroke) * 1px);
     --_u0: clamp(0px, calc(var(--warp-frame-tail) * var(--_L) - var(--_o)), var(--_n));
     --_u1: clamp(0px, calc(var(--warp-frame-head) * var(--_L) - var(--_o)), var(--_n));
-    position: absolute; background: var(--_tone, var(--warp-color-sweep));
+    position: absolute; background: var(--warp-sweep-stroke,var(--warp-config-part-sweep-stroke,var(--_tone, var(--warp-color-sweep))));
   }
   :where([data-part="sweep-outline"]) > i:nth-child(-n+3) { --_o: 0px; --_n: 50cqh; }
   :where([data-part="sweep-outline"]) > i:is(:nth-child(2)),
@@ -1476,16 +1476,16 @@
      The spans are INLINE: an inline-block per letter makes Chrome compute the label's accessible name
      (and innerText, copy, find) as "F I R S T  N A M E". Colour transitions need no box. */
   :where([data-scope="field"] [data-part="label"] [data-char]) {
-    display: inline; white-space: pre; color: var(--warp-color-label);
+    display: inline; white-space: pre; color: var(--warp-field-label,var(--warp-config-part-field-label,var(--warp-color-label)));
     transition: color var(--warp-label-char-duration) linear;
     transition-delay: calc(var(--d, 0ms) * var(--warp-label-stagger));
   }
   :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-char]),
   :where([data-scope="field"] > [data-part="control"]:is([data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-char]) {
-    color: var(--warp-color-label-rest);
+    color: var(--warp-field-label-floated,var(--warp-config-part-field-label-floated,var(--warp-color-label-rest)));
   }
-  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-char]) { color: var(--warp-color-label-active); }
-  :where([data-scope="field"][data-invalid] [data-char]) { color: var(--warp-color-critical-text); }
+  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-char]) { color: var(--warp-field-label-interaction,var(--warp-config-part-field-label-interaction,var(--warp-color-label-active))); }
+  :where([data-scope="field"][data-invalid] [data-char]) { color: var(--warp-field-label-invalid,var(--warp-config-part-field-label-invalid,var(--warp-color-critical-text))); }
   /* -- classic fields (SIGNATURE §2.5): data-fields="classic" on any ancestor,
      or data-variant="classic" on the field. Label above the box as plain text:
      no float, no notch, no overlap. The sweep border and icon sweep stay;

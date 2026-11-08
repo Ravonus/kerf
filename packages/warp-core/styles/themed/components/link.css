@@ -4,9 +4,9 @@
 :where(a[data-scope="link"]) {
   color: var(--warp-link-text,var(--warp-config-part-link-text,var(--warp-color-accent-text))); font-weight: 500; border-radius: var(--warp-radius-mark);
   text-decoration: underline; text-decoration-thickness: var(--warp-border-hairline); text-underline-offset: 0.22em;
-  text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+  text-decoration-color: color-mix(in oklab, var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor)) 40%, transparent);
   /* the sweep: an emphasis-weight underline draws L→R and leaves through the right */
-  background: linear-gradient(currentColor, currentColor) no-repeat right 0 bottom 0 / 0% var(--warp-border-emphasis);
+  background: linear-gradient(var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor)), var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor))) no-repeat right 0 bottom 0 / 0% var(--warp-border-emphasis);
   transition: background-size var(--warp-sweep-duration) var(--warp-sweep-ease), text-decoration-color var(--warp-duration-fast);
 }
 :where(a[data-scope="link"]:hover),
