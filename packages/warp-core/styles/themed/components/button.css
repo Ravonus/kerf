@@ -93,17 +93,17 @@
   --_fb: calc(var(--_fr) * (107% - var(--_x)) * var(--warp-lead-b, 1));
   --_fu: calc(var(--_fb) * 0.1 + var(--_fr) * 5%);
   /* the under-layer rises with the blobs, so nothing shows between them mid-frame */
-  background-color: color-mix(in oklab, var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-layer, var(--_layer)))) calc((1 - var(--warp-btn-fill)) * 100%), color-mix(in oklab, var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))) calc((1 - var(--_fo) * var(--_ptr)) * 100%), transparent));
+  background-color: color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-layer, var(--_layer)))))))) calc((1 - var(--warp-btn-fill)) * 100%), color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))))))) calc((1 - var(--_fo) * var(--_ptr)) * 100%), transparent));
   opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a));
   transform: scaleX(calc(var(--warp-btn-fill) * var(--_ptr))); transform-origin: right center;
   background-origin: border-box;
   background-image:
     radial-gradient(ellipse calc(var(--_fb) * 0.44) 95% at calc(var(--_x) + var(--_fb) * 0.44 + var(--_fo) * var(--_fb)) calc(var(--_y) - 42% + (var(--_y) - 50%) * 0.35),
-      var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))) 0 58%, color-mix(in oklab, var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))) 50%, transparent) 80%, transparent 100%),
+      var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))))))) 0 58%, color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))))))) 50%, transparent) 80%, transparent 100%),
     radial-gradient(ellipse calc(var(--_fb) * 0.5) 185% at calc(var(--_x) + var(--_fb) * 0.5 + var(--_fo) * var(--_fb)) var(--_y),
-      var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))) 0 62%, color-mix(in oklab, var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))) 50%, transparent) 82%, transparent 100%),
+      var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))))))) 0 62%, color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))))))) 50%, transparent) 82%, transparent 100%),
     radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),
-      var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))) 0 66%, color-mix(in oklab, var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))) 50%, transparent) 84%, transparent 100%);
+      var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))))))) 0 66%, color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))))))) 50%, transparent) 84%, transparent 100%);
   transition:
     transform var(--warp-sweep-duration) var(--warp-sweep-ease),     /* the wipe runs on the stroke's clock, both ways */
     --_fo var(--_D) var(--warp-sweep-ease-in),                 /* both ways: the exit is the enter */
@@ -242,5 +242,21 @@
 :where([data-scope="button"][data-loading] > :not([data-part="spinner"])) { opacity: 0; scale: 0.96; }   /* opacity, not visibility: the label stays the accessible name (review 03 M3) */
 :where([data-scope="button"] > [data-part="label"]) { transition: opacity var(--warp-duration-fast) var(--warp-ease-out), scale var(--warp-duration-fast) var(--warp-ease-out); }
 :where([data-scope="button"] > [data-part="spinner"]) { position: absolute; inset: 0; margin: auto; color: var(--_ink); border-color: color-mix(in oklab, var(--_ink) 30%, transparent); border-block-start-color: var(--_ink); }
+/* warp-theme-only:start */
+@property --_warp-button-bg-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-bg-focus { syntax: "*"; inherits: false; }
+@property --_warp-button-bg-press { syntax: "*"; inherits: false; }
+@property --_warp-button-bg-disabled { syntax: "*"; inherits: false; }
+@property --_warp-button-text-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-text-focus { syntax: "*"; inherits: false; }
+@property --_warp-button-text-press { syntax: "*"; inherits: false; }
+@property --_warp-button-text-disabled { syntax: "*"; inherits: false; }
+:where([data-scope="button"]) { background-color: var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-fill, var(--_fill)))))))); color: var(--_warp-button-text-disabled,var(--_warp-button-text-press,var(--_warp-button-text-focus,var(--_warp-button-text-hover,var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-tone-ink, var(--_ink)))))))); }
+:where([data-scope="button"]:hover) { --_warp-button-bg-hover: var(--warp-button-bg-hover,var(--warp-config-part-button-bg-hover)); --_warp-button-text-hover: var(--warp-button-text-hover,var(--warp-config-part-button-text-hover)); }
+:where([data-scope="button"]:focus-visible) { --_warp-button-bg-focus: var(--warp-button-bg-focus,var(--warp-config-part-button-bg-focus)); --_warp-button-text-focus: var(--warp-button-text-focus,var(--warp-config-part-button-text-focus)); }
+:where([data-scope="button"]:is(:active,[data-press])) { --_warp-button-bg-press: var(--warp-button-bg-press,var(--warp-config-part-button-bg-press)); --_warp-button-text-press: var(--warp-button-text-press,var(--warp-config-part-button-text-press)); }
+:where([data-scope="button"]:is(:disabled,[aria-disabled="true"])) { --_warp-button-bg-disabled: var(--warp-button-bg-disabled,var(--warp-config-part-button-bg-disabled)); --_warp-button-text-disabled: var(--warp-button-text-disabled,var(--warp-config-part-button-text-disabled)); }
+:where([data-scope="button"])::before { --_warp-button-bg-hover: inherit; --_warp-button-bg-focus: inherit; --_warp-button-bg-press: inherit; --_warp-button-bg-disabled: inherit; }
+/* warp-theme-only:end */
 :where([data-scope="button"] > [data-part="label"]) { display: inline-flex; align-items: center; gap: inherit; }
 }

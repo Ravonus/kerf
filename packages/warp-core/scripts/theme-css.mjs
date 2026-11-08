@@ -1,5 +1,13 @@
 /** Theme wrappers understood by the legacy lowering pass. */
 export const themeNames = [
+  '--_warp-button-bg-hover',
+  '--_warp-button-bg-focus',
+  '--_warp-button-bg-press',
+  '--_warp-button-bg-disabled',
+  '--_warp-button-text-hover',
+  '--_warp-button-text-focus',
+  '--_warp-button-text-press',
+  '--_warp-button-text-disabled',
   '--warp-button-bg',
   '--warp-config-part-button-bg',
   '--warp-button-text',
@@ -62,6 +70,15 @@ export const themeNames = [
 
 // Lower only explicitly named theme wrappers, preserving every byte of their fallbacks.
 export function lowerTheme(css, names) {
+  const startMarker = '/* warp-theme-only:start */'
+  const endMarker = '/* warp-theme-only:end */\n'
+  while (css.includes(startMarker)) {
+    const start = css.indexOf(startMarker)
+    const end = css.indexOf(endMarker, start + startMarker.length)
+    if (end < 0) throw new Error('Unclosed theme-only block')
+    css = css.slice(0, start) + css.slice(end + endMarker.length)
+  }
+  if (css.includes(endMarker)) throw new Error('Unexpected theme-only end')
   const allowed = new Set(names)
   function lower(start, end) {
     let result = ''
