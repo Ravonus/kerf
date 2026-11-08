@@ -1,6 +1,8 @@
 // @vitest-environment node
 // The warp plugin: seed → tokens (gated by the spec's own contrast checker), classic fields, catalog and AGENTS text.
 import { readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { parseAst } from 'vite'
 import * as plugin from '../plugin.mjs'
 import type { WarpOptions } from '../plugin.mjs'
@@ -307,7 +309,6 @@ test('unsupported theme features and unsafe colours are rejected', () => {
     { colors: null },
     { colors: { brand: 'oklch(0.5 0.1 20)' } },
     { colors: { brand: { hue: 120, chroma: 0.1 } } },
-    { parts: { button: { bg: '#ffffff', text: '#000000' } } },
     { themes: { ocean: {} } },
     { system: { space: { group: 2 } } },
   ])
@@ -334,15 +335,70 @@ test('Button candidate uses schema, resolves aliases and checks the actual resti
       } as WarpOptions),
     ),
   ).toBe('D010')
-  expect(() =>
+  try {
     run({
-      colors: { ink: '#ffffff' },
-      parts: {
-        button: {
-          bg: '#000000',
-          text: 'ink',
-        },
-      },
-    } as WarpOptions),
-  ).toThrow(/unsupported until Button animation and sweep contrast coverage/)
+      colors: { ink: '#ffffff' }, parts: { button: { bg: '#000000', text: 'ink' } },
+    } as WarpOptions)
+    throw new Error('expected rejection')
+  } catch (error) {
+    const failure = error as { code: string; path: string; failures: {
+      combo: string; fg: string; fgHex: string; bgHex: string; ratio: number; site: string
+    }[] }
+    expect(failure).toMatchObject({ code: 'D010', path: 'parts.button.bg' })
+    expect(failure.failures).toContainEqual(expect.objectContaining({
+      combo: 'light/quiet', fg: '--warp-color-accent-text', fgHex: '#376444',
+      bgHex: '#000000', site: 'text-unfilled', ratio: expect.closeTo(3.07, 2),
+    }))
+  }
+})
+
+test('a white Button fill fails the existing dark frame label despite a valid host pair', () => {
+  try {
+    run({ parts: { button: { bg: '#ffffff', text: '#000000' } } } as WarpOptions)
+    throw new Error('expected rejection')
+  } catch (error) {
+    const failure = error as { code: string; path: string; failures: {
+      combo: string; fg: string; fgHex: string; bgHex: string; ratio: number
+    }[] }
+    expect(failure).toMatchObject({ code: 'D010', path: 'parts.button.bg' })
+    expect(failure.failures).toContainEqual(expect.objectContaining({
+      combo: 'dark/balanced', fg: '--warp-color-accent-text', fgHex: '#82d399',
+      bgHex: '#ffffff', ratio: expect.closeTo(1.79, 2),
+    }))
+  }
+})
+
+test('default neutral frame labels leave no shared opaque background across modes', async () => {
+  const { fromSrgb, luminance, ratio } = await import(
+    '../../warp-core/scripts/contrast-check-colors.mjs'
+  )
+  const checker = fileURLToPath(
+    new URL('../../warp-core/scripts/contrast-check.mjs', import.meta.url),
+  )
+  const css = fileURLToPath(new URL('../../warp-core/styles/warp.css', import.meta.url))
+  const report = JSON.parse(execFileSync(process.execPath, [checker, css, '--json'], {
+    encoding: 'utf8', maxBuffer: 8 * 1024 * 1024,
+  }))
+  expect(report.resolved['light/quiet'].text).toBe('#191f26')
+  expect(report.resolved['dark/vivid'].text).toBe('#ede9e1')
+  const light = luminance(fromSrgb([0x19 / 255, 0x1f / 255, 0x26 / 255]).lin)
+  const dark = luminance(fromSrgb([0xed / 255, 0xe9 / 255, 0xe1 / 255]).lin)
+  expect(ratio(light, 0)).toBeLessThan(4.5)
+  expect(ratio(dark, 1)).toBeLessThan(4.5)
+  expect(4.5 * (light + 0.05) - 0.05).toBeGreaterThan((dark + 0.05) / 4.5 - 0.05)
+})
+
+test('Button frame checks include modes reachable under a local theme override', () => {
+  try {
+    run({
+      dials: { theme: 'light' }, parts: { button: { bg: '#ffffff', text: '#000000' } },
+    } as WarpOptions)
+    throw new Error('expected rejection')
+  } catch (error) {
+    const failure = error as { code: string; failures: { combo: string; fg: string }[] }
+    expect(failure.code).toBe('D010')
+    expect(failure.failures).toContainEqual(expect.objectContaining({
+      combo: 'dark/balanced', fg: '--warp-color-accent-text',
+    }))
+  }
 })

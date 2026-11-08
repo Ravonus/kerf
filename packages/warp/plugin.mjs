@@ -253,24 +253,32 @@ function contrast(seed, declarations) {
   }
 }
 
-// Check the known resting pair; full Button paint coverage is not available yet.
-function checkButtonCandidate(button) {
+// Check host paint and the existing frame label before admitting Button overrides.
+function checkButtonCandidate(button, resolved) {
   const dir = mkdtempSync(join(tmpdir(), 'warp-seed-'))
   try {
     const file = join(dir, 'theme-pairs.json')
     const pairs = ['light', 'dark'].flatMap((theme) =>
-      ['quiet', 'balanced', 'vivid'].map((expression) => ({
-        palette: 'default',
-        theme,
-        expression,
-        part: 'button',
-        state: 'rest',
-        emphasis: 'solid',
-        site: 'base',
-        path: 'parts.button.text',
-        fg: { token: '--warp-button-text', value: button.text },
-        bg: { token: '--warp-button-bg', value: button.bg },
-      })),
+      ['quiet', 'balanced', 'vivid'].flatMap((expression) => {
+        const colors = resolved[`${theme}/${expression}`]
+        const common = { palette: 'default', theme, expression, state: 'rest' }
+        const host = {
+          ...common, part: 'button', emphasis: 'solid', site: 'base',
+          path: 'parts.button.text', fg: { token: '--warp-button-text', value: button.text },
+          bg: { token: '--warp-button-bg', value: button.bg },
+        }
+        const tones = ['accent', 'neutral', 'positive', 'caution', 'critical', 'info']
+        const labels = tones.map((tone) => {
+          const key = tone === 'neutral' ? 'text' : `${tone}-text`
+          if (!colors?.[key]) throw bad('parts.button.bg', `cannot resolve frame label ${key}`)
+          return {
+            ...common, part: 'sweep', emphasis: 'frame', site: 'text-unfilled',
+            path: 'parts.button.bg', fg: { token: `--warp-color-${key}`, value: colors[key] },
+            bg: { token: '--warp-button-bg', value: button.bg },
+          }
+        })
+        return [host, ...labels]
+      }),
     )
     writeFileSync(file, JSON.stringify(pairs))
     let output
@@ -290,18 +298,20 @@ function checkButtonCandidate(button) {
       output = error.stdout
     }
     const failures = JSON.parse(output).results.filter((row) => !row.pass)
-    if (failures.length)
+    if (failures.length) {
+      const path = failures[0].path ?? 'parts.button.text'
       throw Object.assign(
         new Error(
-          `D010 parts.button.text: ${failures
+          `D010 ${path}: ${failures
             .map(
               (row) =>
                 `${row.combo} ${row.fg} on ${row.bg} is ${row.ratio.toFixed(2)}:1, needs ${row.min}:1`,
             )
             .join('; ')}`,
         ),
-        { code: 'D010', path: 'parts.button.text', failures },
+        { code: 'D010', path, failures },
       )
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -492,8 +502,13 @@ export const warp = definePlugin({
     spawn: ['node'],
   },
   contribute(o, env) {
+    const seed = o.seed ?? DEFAULT
+    const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma
+    let declarations = overrides(o)
+    if (custom) declarations = fitSeed(seed, declarations, o.dials)
+    else if (declarations) checkSeed(seed, declarations, o.dials)
     if (o.buttonCandidate) {
-      checkButtonCandidate(o.buttonCandidate)
+      checkButtonCandidate(o.buttonCandidate, contrast(seed, declarations).resolved)
       throw Object.assign(
         bad(
           'parts.button',
@@ -502,11 +517,6 @@ export const warp = definePlugin({
         { code: 'P115' },
       )
     }
-    const seed = o.seed ?? DEFAULT
-    const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma
-    let declarations = overrides(o)
-    if (custom) declarations = fitSeed(seed, declarations, o.dials) // throws { code: 'D010' }
-    else if (declarations) checkSeed(seed, declarations, o.dials)
     const note = o.asked && landed(seed, declarations, o.asked)
     const dials = Object.entries(o.dials ?? {})
       .map(([dial, value]) => dialCss(dial, value))
