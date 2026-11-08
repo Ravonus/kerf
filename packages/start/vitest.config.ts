@@ -20,6 +20,7 @@ export default defineConfig({
   // .tsx tests (the server-function cache under @weft-js/core/test, jsdom) compile with weft's plugin.
   plugins: [weft()],
   test: {
+    fsModuleCachePath: 'node_modules/.vitest-cache-start',
     projects: [
       {
         extends: true,
