@@ -1,18 +1,21 @@
 import { readFileSync } from 'node:fs'
 import { expect, it } from 'vitest'
-import { lowerTheme } from '../scripts/theme-css.mjs'
+import { lowerTheme, themeNames } from '../scripts/theme-css.mjs'
 
-it('lowers the opt-in button sheet byte for byte', () => {
-  const names = [
-    '--warp-button-bg',
-    '--warp-config-part-button-bg',
-    '--warp-button-text',
-    '--warp-config-part-button-text',
-  ]
-  const themed = readFileSync('styles/themed/components/button.css', 'utf8')
-  const legacy = readFileSync('styles/components/button.css', 'utf8')
-  expect(lowerTheme(themed, names)).toBe(legacy)
-  expect(themed).not.toBe(legacy)
+it('lowers each opt-in sheet byte for byte', () => {
+  for (const path of [
+    'warp.css',
+    'components/button.css',
+    'components/nav.css',
+    'components/tabs.css',
+    'components/link.css',
+    'components/pill.css',
+  ]) {
+    const themed = readFileSync(`styles/themed/${path}`, 'utf8')
+    const legacy = readFileSync(`styles/${path}`, 'utf8')
+    expect(lowerTheme(themed, themeNames)).toBe(legacy)
+    expect(themed).not.toBe(legacy)
+  }
 })
 
 it('keeps existing variables and rejects missing fallbacks', () => {

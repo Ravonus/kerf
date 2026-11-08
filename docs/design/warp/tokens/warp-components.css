@@ -171,7 +171,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   position: relative; isolation: isolate;
   display: inline-flex; align-items: center; justify-content: center; gap: var(--warp-space-related);
   block-size: var(--warp-control-md); padding-inline: calc(var(--warp-pad-control) + 2px); margin: 0;
-  border: var(--warp-border-hairline) solid var(--warp-tone-edge, var(--_edge)); border-radius: var(--warp-radius-control);
+  border: var(--warp-border-hairline) solid var(--warp-button-border,var(--warp-config-part-button-border,var(--warp-tone-edge, var(--_edge)))); border-radius: var(--warp-radius-control);
   background: var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-fill, var(--_fill)))); color: var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-tone-ink, var(--_ink))));
   font-family: var(--warp-text-button-font); font-size: var(--warp-text-button-size);
   font-weight: var(--warp-text-button-weight); letter-spacing: var(--warp-text-button-tracking);
@@ -192,29 +192,29 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"]) {
   --_x: var(--warp-mx, 50%); --_y: var(--warp-my, 50%); --_ptr: 0;
   --_pa: var(--_solid-hover);
-  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 9%, var(--_solid-hover));
+  --_pb: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 9%, var(--_solid-hover));
   /* the hard offset: the page's opposite (--warp-offset-color), so the pull-out reads on any ground */
   --_off: var(--warp-offset-color);
 }
 :where([data-scope="button"][data-follow]) { --_ptr: 1; }
-:where([data-scope="button"][data-tone="neutral"]) { --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 5%, var(--_solid-hover)); }
+:where([data-scope="button"][data-tone="neutral"]) { --_pb: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 5%, var(--_solid-hover)); }
 /* a solid's fill is lighter, brighter ink than its rest, spreading from the hand: the hover shade (darker in light) next to
    the rest read as nothing happening. The fill leans to the highlight, and on light its lightness stops at 0.53, where the
    on-solid ink still has 4.5:1 (on dark the lift only adds contrast). Without relative colour, a smaller safe mix. Only
    vivid draws it (--warp-btn-fill). */
 :where([data-scope="button"]:not([data-emphasis])) {
-  --_pa: color-mix(in oklab, var(--warp-color-highlight-solid) 8%, var(--_solid));
-  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 11%, var(--_solid));
+  --_pa: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 8%, var(--_solid));
+  --_pb: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 11%, var(--_solid));
 }
 @supports (color: oklch(from red l c h)) {
   :where([data-scope="button"]:not([data-emphasis])) {
-    --_pa: light-dark(oklch(from color-mix(in oklab, var(--warp-color-highlight-solid) 30%, var(--_solid)) min(l, 0.53) c h), color-mix(in oklab, var(--warp-color-highlight-solid) 30%, var(--_solid)));
-    --_pb: light-dark(oklch(from color-mix(in oklab, var(--warp-color-highlight-solid) 48%, var(--_solid)) min(l, 0.53) calc(c * 1.1) h), color-mix(in oklab, var(--warp-color-highlight-solid) 48%, var(--_solid)));
+    --_pa: light-dark(oklch(from color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 30%, var(--_solid)) min(l, 0.53) c h), color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 30%, var(--_solid)));
+    --_pb: light-dark(oklch(from color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 48%, var(--_solid)) min(l, 0.53) calc(c * 1.1) h), color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 48%, var(--_solid)));
   }
 }
 :where([data-scope="button"][data-tone="neutral"]:not([data-emphasis])) {
   --_pa: color-mix(in oklab, white 10%, var(--_solid));
-  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 6%, color-mix(in oklab, white 16%, var(--_solid)));
+  --_pb: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 6%, color-mix(in oklab, white 16%, var(--_solid)));
 }
 /* the primary action reads the stop's primary, which is ink at quiet */
 :where([data-scope="button"]:not([data-emphasis], [data-tone])) {
@@ -230,7 +230,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"]:is([data-emphasis="outline"])),
 :where([data-scope="button"]:is([data-emphasis="ghost"])) {
   --_pa: color-mix(in oklab, var(--_solid) 22%, var(--warp-color-surface));
-  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 10%, var(--_pa));
+  --_pb: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 10%, var(--_pa));
 }
 :where([data-scope="button"]:is([data-emphasis="frame"])),
 :where([data-scope="button"]:is([data-emphasis="link"])),
@@ -1118,17 +1118,17 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]) {
   position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; scroll-snap-align: start;
   block-size: var(--warp-control-md); padding-inline: var(--warp-space-related); margin: 0; border: 0; background: transparent;
-  color: var(--warp-color-text-subtle); font: 500 var(--warp-text-body-size)/1 var(--warp-text-body-font); white-space: nowrap;
+  color: var(--warp-tabs-text,var(--warp-config-part-tabs-text,var(--warp-color-text-subtle))); font: 500 var(--warp-text-body-size)/1 var(--warp-text-body-font); white-space: nowrap;
   cursor: pointer; border-radius: var(--warp-radius-control) var(--warp-radius-control) 0 0; -webkit-tap-highlight-color: transparent;
   transition: color var(--warp-duration-fast) var(--warp-ease-out);
 }
-:where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]:hover) { color: var(--warp-color-text); }
-:where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) { color: var(--warp-color-text); }
+:where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]:hover) { color: var(--warp-tabs-text-hover,var(--warp-config-part-tabs-text-hover,var(--warp-color-text))); }
+:where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) { color: var(--warp-tabs-text-active,var(--warp-config-part-tabs-text-active,var(--warp-color-text))); }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]:focus-visible) { outline-offset: -2px; }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"] [data-scope="badge"]) { block-size: 18px; padding-inline: 6px; }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]) {
   position: absolute; inset-block-end: 0; inset-inline-start: 0; block-size: var(--warp-border-emphasis);
-  background: var(--warp-color-accent-solid); pointer-events: none;
+  background: var(--warp-tabs-underline,var(--warp-config-part-tabs-underline,var(--warp-color-accent-solid))); pointer-events: none;
 }
 :where([data-scope="tabs"] > [data-part="content"]) { min-inline-size: 0; }
 :where([data-scope="tabs"] > [data-part="content"]:focus-visible) { outline-offset: 4px; border-radius: var(--warp-radius-control); }
@@ -1314,7 +1314,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 
 /* -- Link ------------------------------------------------------------------------- */
 :where(a[data-scope="link"]) {
-  color: var(--warp-color-accent-text); font-weight: 500; border-radius: var(--warp-radius-mark);
+  color: var(--warp-link-text,var(--warp-config-part-link-text,var(--warp-color-accent-text))); font-weight: 500; border-radius: var(--warp-radius-mark);
   text-decoration: underline; text-decoration-thickness: var(--warp-border-hairline); text-underline-offset: 0.22em;
   text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
   /* the sweep: an emphasis-weight underline draws L→R and leaves through the right */
@@ -1625,16 +1625,16 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 /* -- Pill (and PillLink): rounded, selectable; sweeps while hovered or active -- */
 :where([data-scope="pill"]) {
   position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 6px; block-size: 30px; padding-inline: 12px;
-  border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-round); --warp-sweep-radius: var(--warp-radius-round);
-  background: var(--warp-color-surface-raised); color: var(--warp-color-text-subtle); font: 500 var(--warp-text-caption-size)/1 var(--warp-text-body-font);
+  border: var(--warp-border-hairline) solid var(--warp-pill-border,var(--warp-config-part-pill-border,var(--warp-color-border))); border-radius: var(--warp-radius-round); --warp-sweep-radius: var(--warp-radius-round);
+  background: var(--warp-pill-bg,var(--warp-config-part-pill-bg,var(--warp-color-surface-raised))); color: var(--warp-pill-text,var(--warp-config-part-pill-text,var(--warp-color-text-subtle))); font: 500 var(--warp-text-caption-size)/1 var(--warp-text-body-font);
   text-decoration: none; cursor: pointer;
   transition: color var(--warp-duration-fast), background-color var(--warp-duration-fast), border-color var(--warp-duration-fast);
 }
-:where([data-scope="pill"]:hover) { color: var(--warp-color-text); }
+:where([data-scope="pill"]:hover) { color: var(--warp-pill-text-hover,var(--warp-config-part-pill-text-hover,var(--warp-color-text))); }
 :where([data-scope="pill"][aria-current]),
 :where([data-scope="pill"][aria-selected="true"]),
 :where([data-scope="pill"][aria-pressed="true"]) {
-  background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); border-color: var(--warp-color-accent-border);
+  background: var(--warp-pill-bg-active,var(--warp-config-part-pill-bg-active,var(--warp-color-accent-soft))); color: var(--warp-pill-text-active,var(--warp-config-part-pill-text-active,var(--warp-color-accent-text))); border-color: var(--warp-pill-border-active,var(--warp-config-part-pill-border-active,var(--warp-color-accent-border)));
 }
 :where([data-scope="pill"] [data-part="count"]) { font: 500 11px/1 var(--warp-font-mono); }   /* full ink: 0.75 opacity fell to 3.6:1 (review 03 m12) */
 
@@ -1981,13 +1981,13 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="nav"]) { position: relative; --_bar: var(--warp-sweep-width); display: flex; gap: var(--warp-space-group); align-self: start; inline-size: fit-content; }
 :where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--warp-space-tight); }
 :where([data-scope="nav"][data-axis="x"] a) { padding-block: var(--warp-space-tight); }
-:where([data-scope="nav"] a) { color: var(--warp-color-text-subtle); text-decoration: none; transition: color var(--warp-duration-fast) var(--warp-ease-out); }
+:where([data-scope="nav"] a) { color: var(--warp-nav-text,var(--warp-config-part-nav-text,var(--warp-color-text-subtle))); text-decoration: none; transition: color var(--warp-duration-fast) var(--warp-ease-out); }
 :where([data-scope="nav"] a:hover),
 :where([data-scope="nav"] a:focus-visible),
 :where([data-scope="nav"] a[aria-current]) { color: var(--warp-color-text); }
 :where([data-scope="nav"] > [data-part="indicator"]) {
   position: absolute; inset-block-start: 0; inset-inline-start: 0; pointer-events: none;
-  background: var(--warp-color-accent-solid); transform-origin: 0 0; transform: scaleX(0); opacity: 0;
+  background: var(--warp-nav-underline,var(--warp-config-part-nav-underline,var(--warp-color-accent-solid))); transform-origin: 0 0; transform: scaleX(0); opacity: 0;
   transition: transform calc(var(--warp-sweep-duration) * 0.68) var(--warp-sweep-ease);
 }
 :where([data-scope="nav"][data-ready] > [data-part="indicator"]) { opacity: 1; }
@@ -1995,8 +1995,8 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="nav"][data-axis="x"] > [data-part="indicator"]) { inset-block-start: auto; inset-block-end: 0; inline-size: 1px; block-size: var(--_bar); view-transition-name: warp-nav-x; }
 :where([data-scope="nav"][data-axis="y"] > [data-part="indicator"]) { inline-size: var(--_bar); block-size: 1px; transform: scaleY(0); }
 :where([data-scope="nav"]:not([data-ready]) a[aria-current]) { position: relative; }
-:where([data-scope="nav"]:not([data-ready])[data-axis="x"] a[aria-current])::after { content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; block-size: var(--_bar); background: var(--warp-color-accent-solid); }
-:where([data-scope="nav"]:not([data-ready])[data-axis="y"] a[aria-current])::after { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: var(--_bar); background: var(--warp-color-accent-solid); }
+:where([data-scope="nav"]:not([data-ready])[data-axis="x"] a[aria-current])::after { content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; block-size: var(--_bar); background: var(--warp-nav-underline,var(--warp-config-part-nav-underline,var(--warp-color-accent-solid))); }
+:where([data-scope="nav"]:not([data-ready])[data-axis="y"] a[aria-current])::after { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: var(--_bar); background: var(--warp-nav-underline,var(--warp-config-part-nav-underline,var(--warp-color-accent-solid))); }
 
 /* -- Reduced motion (review 02 M6, review 03 M11). warp.base stops every loop under reduce
    (skeletons go still, spinners and indeterminate bars pulse in opacity only). Components add

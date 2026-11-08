@@ -171,7 +171,9 @@ function render({ layer, family, files, shared }) {
 }
 
 export function build() {
-  const files = new Map([['warp.css', readFileSync(join(spec, 'warp.css'), 'utf8')]])
+  const foundation = readFileSync(join(spec, 'warp.css'), 'utf8')
+  const files = new Map([['warp.css', lowerTheme(foundation, themeNames)]])
+  if (files.get('warp.css') !== foundation) files.set('themed/warp.css', foundation)
   const canonical = readFileSync(join(spec, 'warp-components.css'), 'utf8')
   const themed = split(spec, 'warp-components.css', 'components')
   const temporary = mkdtempSync(join(tmpdir(), 'warp-lower-'))
@@ -222,7 +224,9 @@ export function build() {
       1,
     ) + '\n',
   )
-  files.set('themed/components/button.css', render(themed).get('components/button.css'))
+  for (const [path, content] of render(themed)) {
+    if (files.get(path) !== content) files.set(`themed/${path}`, content)
+  }
   return { files, parts, routed }
 }
 
