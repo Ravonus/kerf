@@ -1,6 +1,6 @@
 # Theme tokens (partial)
 
-Schema digest: ab821eb62dec979f72856e2d7086b764b2b0887148368076d18a4ee8bf7a1b14
+Schema digest: 50653e4d634b4b15883a980fbe7e36e521e5549d31049badc8d5e8dc47b2180a
 
 Bare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.
 

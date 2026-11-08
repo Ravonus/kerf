@@ -392,3 +392,60 @@ test('closed coverage fixture passes and rejects missing or unmapped evidence', 
   ]
   for (const value of bad) expect(run(value).status).toBe(1)
 })
+
+test('indexes tracked source token reads with spans and reconciles each AST census', () => {
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    sources: string[]
+    registry: { sourceIndex: { source: string; astCount: number; indexedCount: number;
+      astOnly: string[]; sourceOnly: string[] }[]; sites: { id: string; source: string;
+      fallback: string; fallbackSpan: number[]; classification: string;
+      role?: { part: string; path: string } }[] }
+  }
+  expect(schema.registry.sites.filter((site) => site.classification === 'binding')).toHaveLength(38)
+  expect(schema.registry.sites.some((site) => site.role?.part === 'link' && site.role.path === 'text')).toBe(true)
+  expect(schema.registry.sourceIndex.map((row) => row.source).toSorted()).toEqual(schema.sources.toSorted())
+  expect(schema.registry.sites).toHaveLength(6780)
+  expect(new Set(schema.registry.sites.map((site) => site.id)).size).toBe(6780)
+  for (const row of schema.registry.sourceIndex) {
+    expect(row.indexedCount).toBe(row.astCount)
+    expect(row.astOnly).toEqual([])
+    expect(row.sourceOnly).toEqual([])
+  }
+  const sources = new Map(schema.sources.map((source) => [source, readFileSync(resolve(root, source), 'utf8')]))
+  for (const site of schema.registry.sites) {
+    const [start, end] = site.fallbackSpan
+    expect(sources.get(site.source)?.slice(start, end)).toBe(site.fallback)
+    expect(['unresolved', 'binding']).toContain(site.classification)
+  }
+})
+
+test('keeps semantic site identity across preceding comments and detects changed reads', async () => {
+  const { sourceIndex } = await import('../scripts/theme-schema-index.mjs')
+  const css = '@layer warp.test { @media (hover: hover) { :where([data-scope="x"]) { color: var(--warp-a); } } }'
+  const first = sourceIndex('fixture.css', css)[0]
+  const commented = sourceIndex('fixture.css', `/* preceding */\n${css}`)[0]
+  const changed = sourceIndex('fixture.css', css.replace('--warp-a', '--warp-b'))[0]
+  expect(commented.id).toBe(first.id)
+  expect(changed.id).toBe(first.id)
+  expect(changed.reads).not.toEqual(first.reads)
+  expect(first.atRules).toEqual(['@layer warp.test', '@media (hover: hover)'])
+  expect(first.selectors).toEqual([':where([data-scope="x"])'])
+})
+
+test('detects a new token reader and changed input outside the hashed sheets', () => {
+  setup()
+  const source = 'docs/design/warp/tokens/warp-data.css'
+  const path = resolve(fixture, source)
+  const original = readFileSync(path, 'utf8')
+  writeFileSync(path, `${original}\n:where([data-scope="table"]) { padding: var(--warp-space-page); }\n`)
+  expect(check()).toContain('Source index drift')
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    registry: { sites: { source: string; fallback: string; fallbackSpan: number[] }[] }
+  }
+  const site = schema.registry.sites.find((item) => item.source === source && item.fallback.includes('--warp-'))
+  expect(site).toBeDefined()
+  const [start, end] = site!.fallbackSpan
+  const changed = site!.fallback.replace('--warp-', '--warp-changed-')
+  writeFileSync(path, original.slice(0, start) + changed + original.slice(end))
+  expect(check()).toContain('Source index drift')
+})

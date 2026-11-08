@@ -13,6 +13,7 @@ import { buttonRadius, foundationsPath } from './theme-schema-button-radius.mjs'
 import { buttonRadiusJoins } from './theme-schema-button-radius-joins.mjs'
 import { auditButtonRadius } from './theme-schema-radius-audit.mjs'
 import { coverage } from './theme-schema-coverage.mjs'
+import { sourceIndex, reconcile } from './theme-schema-index.mjs'
 
 const fixtureFlag = process.argv.indexOf('--coverage-fixture')
 if (fixtureFlag !== -1) {
@@ -47,7 +48,11 @@ function tables(design) {
     return lines.slice(start + 2, lines.findIndex((line, i) => i > start + 1 && !line.startsWith('|')))
         .map(cells)
   }
-  return { parts: rows('Part'), properties: rows('config path'), sources: rows('source'), system: rows('system path'), states: rows('state'), inventory: rows('scope or standalone part') }
+  const expansion = marked.match(/```json\s*([\s\S]*?)```/)
+  if (!expansion) throw new Error('Missing property expansion rules')
+  return { parts: rows('Part'), properties: rows('config path'), sources: rows('source'),
+    system: rows('system path'), states: rows('state'), inventory: rows('scope or standalone part'),
+    expansion: JSON.parse(expansion[1]) }
 }
 
 function entries(parts) {
@@ -102,38 +107,50 @@ function generate(design, template, bindings, radiusAudit) {
     const keys = scale === 'text' ? textScale[1] : spaceScale[1]
     if (!keys.split(';')[0].split(',').includes(key)) throw new Error(`Unknown system key: ${row.path}`)
   }
-  const stateNames = table.states.map((row) => row[0])
+  const propertyRules = table.properties.map(([path, binding, domain, units]) => ({
+    paths: path.split(',').map((value) => value.trim()), binding, domain, units,
+  }))
+  const systemRules = table.system.map(([path, keys, domain, binding]) => ({ path, keys, domain, binding }))
+  const stateRules = table.states.map(([name, predicate, precedence]) => ({
+    name, predicate, precedence: Number(precedence),
+  }))
+  if (stateRules.some((row) => !Number.isInteger(row.precedence)) ||
+      new Set(stateRules.map((row) => row.name)).size !== stateRules.length ||
+      table.expansion.version !== 1) throw new Error('Invalid expansion or state rules')
+  const stateNames = stateRules.map((row) => row.name)
   for (const row of records) {
     if (!stateNames.includes(row.state)) throw new Error(`Unknown state: ${row.state}`)
   }
   const unresolved = records.filter((row) => row.binding !== 'classified')
     .map((row) => `${row.part}.${row.state}.${row.path}`)
+  const sites = []
   const index = sources.map((source) => {
     const text = read(source)
-    const direct = consumers(source, text).filter((row) =>
-      row.reads.some((name) => name.startsWith('--warp-') || name.startsWith('--_')))
-    const remaining = direct.map((row) => `${row.property}:${row.reads.join(',')}`)
-    const spans = new Set()
-    for (const row of bindings.filter((item) => item.source === source)) {
-      const [start, end] = row.fallbackSpan ?? []
-      if (!Number.isInteger(start) || !Number.isInteger(end) || spans.has(start) ||
-          text.slice(start, end) !== row.fallback) continue
-      const prefix = text.slice(Math.max(0, start - row.property.length - 8), start)
-      if (!prefix.endsWith(`${row.property}: `) && !prefix.endsWith(`${row.property}:`)) continue
-      const reads = [...new Set([...row.fallback.matchAll(/var\(\s*(--[\w-]+)/g)]
-        .map((match) => match[1]))].sort()
-      const key = `${row.property}:${reads.join(',')}`
-      const match = remaining.indexOf(key)
-      if (match >= 0) { remaining.splice(match, 1); spans.add(start) }
+    const found = sourceIndex(source, text)
+    const comparison = reconcile(source, text, found)
+    for (const site of found) {
+      const matches = bindings.filter((row) => row.source === source && row.classification === 'binding' &&
+        row.property === site.property && row.fallbackSpan?.[0] === site.fallbackSpan[0] &&
+        row.fallbackSpan?.[1] === site.fallbackSpan[1] && row.fallback === site.fallback &&
+        row.selector === site.selectors.at(-1))
+      if (matches.length > 1) throw new Error(`Duplicate binding for site: ${site.id}`)
+      if (matches.length === 1) {
+        const { part, state, path, token, domain, units } = matches[0]
+        site.classification = 'binding'
+        site.role = { part, state, path, token, domain, units }
+        site.reason = 'The reviewed binding matches the source site and selector.'
+      }
     }
-    return { source, tokenReaders: direct.length, matchedReaders: direct.length - remaining.length,
-      missingReaders: remaining.length, status: remaining.length ? 'unindexed' :
-        direct.length ? 'matched-awaiting-identities' : 'closed' }
+    sites.push(...found)
+    return { source, ...comparison, status: comparison.astOnly.length || comparison.sourceOnly.length
+      ? 'discrepant' : 'indexed' }
   })
-  const status = unresolved.length || index.some((row) => row.status !== 'closed')
+  const unresolvedSites = sites.filter((site) => site.classification === 'unresolved').map((site) => site.id)
+  const status = unresolved.length || unresolvedSites.length || index.some((row) => row.status !== 'indexed')
     ? 'partial' : 'complete'
-  const registry = { status, unresolvedGroups: unresolved, sourceIndex: index,
-    propertyTable: table.properties, systemTable: table.system, stateTable: table.states }
+  const registry = { status, unresolvedGroups: unresolved, unresolvedSites, sites, sourceIndex: index,
+    propertyTable: table.properties, systemTable: table.system, stateTable: table.states,
+    propertyRules, systemRules, stateRules, expansion: table.expansion }
   const digest = createHash('sha256').update(JSON.stringify({ records, sources, bindings, system, radiusAudit, registry })).digest('hex')
   const shape = (rows, indent = '    ') => rows.map((row) => `${indent}${row.path}?: ${['underline', 'ring'].includes(row.path) ? 'string | { color?: string; width?: number | string; offset?: number | string }' : row.path === 'border' ? 'string | { color?: string; width?: number | string; style?: string }' : 'string'}`).join('\n')
   const types = [...new Set(records.filter((row) => !row.part.startsWith('text/') && row.part !== 'status-light').map((row) => row.part))].map((part) => {
@@ -202,6 +219,10 @@ if (!process.argv.includes('--check')) {
 }
 let failed = false
 const priorSchema = JSON.parse(read(outputs[0]))
+if (JSON.stringify(priorSchema.registry?.sites) !== JSON.stringify(JSON.parse(generated[0]).registry.sites)) {
+  console.error('Source index drift')
+  failed = true
+}
 if (JSON.stringify(priorSchema.radiusAudit) !== JSON.stringify(radiusAudit)) {
   console.error('Button radius selector audit drift')
   failed = true
@@ -229,7 +250,8 @@ const completedButton = JSON.parse(generated[0]).records.filter((row) =>
   row.part === 'button' && row.binding === 'classified')
 console.log(`Button variant declarations unresolved: ${variants.filter((row) => row.classification === 'variant declaration unresolved').length}; partial property sites: ${variants.filter((row) => row.classification === 'partial property binding').length}; complete properties: ${completedButton.length}`)
 const registry = JSON.parse(generated[0]).registry
-console.log(`Coverage: ${registry.status}; unresolved groups: ${registry.unresolvedGroups.length}; unindexed sources: ${registry.sourceIndex.filter((row) => row.status !== 'closed').length}`)
+console.log(`Coverage: ${registry.status}; unresolved groups: ${registry.unresolvedGroups.length}; discrepant sources: ${registry.sourceIndex.filter((row) => row.status !== 'indexed').length}`)
+console.log(`Source sites: ${registry.sites.length}; unresolved sites: ${registry.unresolvedSites.length}`)
 if (registry.unresolvedGroups.length) console.log(`Unresolved groups: ${registry.unresolvedGroups.join(', ')}`)
 if (registry.status !== 'complete') {
   console.error('Incomplete: CSS declaration ownership, transitive inputs, exclusions and fallbacks are unresolved')
