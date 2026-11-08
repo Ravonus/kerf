@@ -18,14 +18,14 @@ const pair = (part: string, site: string, foreground = '#ffffff') => ({
   fg: { token: '--warp-button-text', value: foreground },
   bg: { token: '--warp-button-bg', value: '#000000' },
 })
-function run(pairs?: object[]) {
+function run(pairs?: object[], checker = script) {
   const dir = mkdtempSync(join(tmpdir(), 'weft-theme-contrast-'))
   try {
     const file = join(dir, 'pairs.json')
     if (pairs) writeFileSync(file, JSON.stringify(pairs))
     return spawnSync(
       process.execPath,
-      [script, css, '--json', ...(pairs ? [`--theme-pairs=${file}`] : [])],
+      [checker, css, '--json', ...(pairs ? [`--theme-pairs=${file}`] : [])],
       { encoding: 'utf8' },
     )
   } finally {
@@ -122,4 +122,33 @@ test('keeps light and dark expression results distinct', () => {
     'dark/balanced',
     'dark/vivid',
   ])
+})
+
+test('both checkers reject transparent mixes and malformed colour components', () => {
+  const checkers = [script, resolve('../../docs/design/warp/scripts/contrast-check.mjs')]
+  const invalid = [
+    'color-mix(in oklab, oklch(1 0 0 / 0) 50%, oklch(1 0 0 / 0))',
+    'color-mix(in oklab, oklch(1 0 0) 25%, oklch(1 0 0) 25%)',
+    'oklch(1 0 0 99)',
+    'oklch(1 0 0 /)',
+    'oklch(1 0 0 / 1 / 1)',
+    'color-mix(in oklab, oklch(1 0 0),, oklch(1 0 0))',
+    'color-mix(in oklab, oklch(1 0 0), oklch(1 0 0), oklch(1 0 0))',
+  ]
+  for (const checker of checkers) {
+    for (const value of invalid) {
+      const candidate = { ...pair('button', 'base', '#000000'), bg: { token: '--bg', value } }
+      const result = run([candidate], checker)
+      expect(result.status, `${checker}: ${value}`).toBe(1)
+      expect(result.stderr).toContain('D010 themes.ocean.parts.button.hover.text')
+    }
+    const opaque = {
+      ...pair('button', 'base', '#000000'),
+      bg: {
+        token: '--bg',
+        value: 'color-mix(in oklab, oklch(1 0 0) 50%, oklch(1 0 0))',
+      },
+    }
+    expect(run([opaque], checker).status).toBe(0)
+  }
 })
