@@ -283,3 +283,33 @@ test('selective choice mirrors do not duplicate configured classic rules', () =>
   // The one canonical rule has hover and classic selectors.
   expect(css.match(/\[data-part="value"\]:empty/g)).toHaveLength(2)
 })
+
+test('named hex colours produce an app-local Tailwind entry; empty dictionaries keep default bytes', () => {
+  const plain = run()
+  const empty = run({ colors: {}, system: {}, parts: {}, themes: {} })
+  expect(empty.tokens).toEqual(plain.tokens)
+  const result = warp({ colors: { brand: 'ink', ink: '#123456' } }).contribute({
+    command: 'build',
+    mode: 'production',
+    root: '/tmp/theme-app',
+  }) as unknown as {
+    tokens: { css: string; cssEntries: { tailwind: string }; alias: Record<string, string> }
+  }
+  expect(result.tokens.css).toContain('--warp-named-brand:#123456;--warp-named-ink:#123456')
+  expect(result.tokens.cssEntries.tailwind).toContain('--color-brand: var(--warp-named-brand)')
+  expect(result.tokens.alias['@weft-js/warp/tailwind.css']).toBe(
+    '/tmp/theme-app/.weft/tokens/warp.tailwind.css',
+  )
+})
+
+test('unsupported theme features and unsafe colours are rejected', () => {
+  for (const input of [
+    { colors: null },
+    { colors: { brand: 'oklch(0.5 0.1 20)' } },
+    { colors: { brand: { hue: 120, chroma: 0.1 } } },
+    { parts: { button: { bg: '#ffffff', text: '#000000' } } },
+    { themes: { ocean: {} } },
+    { system: { space: { group: 2 } } },
+  ])
+    expect(code(() => run(input as WarpOptions))).toBe('P115')
+})

@@ -5,12 +5,14 @@
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { definePlugin } from '@weft-js/core/plugin'
 import { fromHex, hex, luminance, toLinear } from './tokens/color.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
+import { resolveThemes } from './src/plugin/themes.mjs'
+import { tailwindTheme } from './src/plugin/tailwind.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
 const DEFAULT = { hue: 152, chroma: 0.115 }
@@ -55,11 +57,62 @@ function normalizeSeed(seed) {
   return neutral === undefined ? out : { ...out, neutral: hueOf(neutral, 'neutral') }
 }
 
+function namedColors(input) {
+  for (const key of ['system', 'parts', 'themes']) {
+    if (input[key] === undefined) continue
+    const value = input[key]
+    if (
+      !value ||
+      typeof value !== 'object' ||
+      Array.isArray(value) ||
+      (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null)
+    )
+      throw bad(key, 'must be a plain object')
+    const first = Object.keys(value)[0]
+    if (first)
+      throw bad(`${key}.${first}`, 'not supported until theme contrast validation is available')
+  }
+  if (input.colors === undefined) return undefined
+  if (
+    !input.colors ||
+    typeof input.colors !== 'object' ||
+    Array.isArray(input.colors) ||
+    (Object.getPrototypeOf(input.colors) !== Object.prototype &&
+      Object.getPrototypeOf(input.colors) !== null)
+  )
+    throw bad('colors', 'must be a plain object')
+  const resolved = resolveThemes({ colors: input.colors }).default.colors
+  const entries = Object.keys(input.colors)
+    .sort()
+    .map((name) => {
+      const value = resolved[name]
+      if (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value))
+        throw bad(`colors.${name}`, 'only hex colours and aliases to hex are supported yet')
+      return [name, value]
+    })
+  return entries.length ? Object.fromEntries(entries) : undefined
+}
+
 function options(input) {
   const out = {}
   for (const key of Object.keys(input))
-    if (!['seed', 'fields', 'dials', 'radius', 'fonts', 'tokens'].includes(key))
+    if (
+      ![
+        'seed',
+        'fields',
+        'dials',
+        'radius',
+        'fonts',
+        'tokens',
+        'system',
+        'colors',
+        'parts',
+        'themes',
+      ].includes(key)
+    )
       throw Object.assign(new Error(`unknown option \`${key}\``), { path: key })
+  const colors = namedColors(input)
+  if (colors) out.namedColors = colors
   if (input.fields !== undefined && input.fields !== 'floating' && input.fields !== 'classic')
     throw Object.assign(new Error(`must be 'floating' or 'classic'`), { path: 'fields' })
   if (input.seed !== undefined) {
@@ -343,7 +396,7 @@ export const warp = definePlugin({
     fs: { read: ['node_modules/@weft-js/warp-core/**'], write: ['$TMPDIR/warp-seed-*'] },
     spawn: ['node'],
   },
-  contribute(o) {
+  contribute(o, env) {
     const seed = o.seed ?? DEFAULT
     const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma
     let declarations = overrides(o)
@@ -357,11 +410,22 @@ export const warp = definePlugin({
       (custom ? seedCss(seed) : '') +
       (o.fields === 'classic' ? classicCss() : '') +
       dials +
-      overrideCss(declarations)
+      overrideCss(declarations) +
+      (o.namedColors
+        ? `@layer warp.tokens{:root{${Object.entries(o.namedColors)
+            .map(([name, value]) => `--warp-named-${name}:${value}`)
+            .join(';')}}}\n`
+        : '')
     return {
       tokens: {
         namespace: 'warp',
         ...(css && { css }),
+        ...(o.namedColors && {
+          cssEntries: { tailwind: tailwindTheme({ colors: o.namedColors }) },
+          alias: {
+            '@weft-js/warp/tailwind.css': join(resolve(env.root), '.weft/tokens/warp.tailwind.css'),
+          },
+        }),
         values: {
           seed: { hue: seed.hue, chroma: seed.chroma },
           fields: o.fields ?? 'floating',
