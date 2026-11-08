@@ -41,7 +41,7 @@ test('an imported skeleton returned in parentheses is used', async () => {
     'src/routes/doc.tsx',
     `import { DocSkeleton } from '../components/DocSkeleton'\n\nexport const skeleton = DocSkeleton\n\nexport default function Doc() {\n  return <p>doc</p>\n}\n`,
   )
-  const ctx = { resolve: async () => ({ id: shared, external: false }) }
+  const ctx = { resolve: () => Promise.resolve({ id: shared, external: false }) }
   const found = await resolveImportedOverride(ctx, file, root)
   expect(found?.file).toBe(shared)
   expect(found?.code).toContain('<section data-site="hero">')
