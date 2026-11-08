@@ -415,7 +415,7 @@ test('indexes tracked source token reads with spans and reconciles each AST cens
   for (const site of schema.registry.sites) {
     const [start, end] = site.fallbackSpan
     expect(sources.get(site.source)?.slice(start, end)).toBe(site.fallback)
-    expect(['unresolved', 'binding']).toContain(site.classification)
+    expect(['unresolved', 'binding', 'partial binding']).toContain(site.classification)
   }
 })
 
@@ -475,4 +475,58 @@ test('detects a new declared system colour even without a token read', () => {
   const output = check()
   expect(output).toContain('Drift: packages/warp/plugin.d.mts')
   expect(output).toContain('Drift: packages/warp-core/theme.schema.json')
+})
+
+test('normalizes finite groups from simple-scope consumers without closing them', async () => {
+  const { partTypes } = await import('../scripts/theme-schema-types.mjs')
+  expect(() => partTypes([{ part: 'x', state: 'rest', path: 'width', domain: 'unknown' }]))
+    .toThrow('Unknown theme domain: unknown')
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    registry: { groups: { id: string; token: string; domain: string; units: string;
+      binding: string; siteIds: string[] }[]; sites: { id: string; fallback: string;
+        selectors: string[]; classification: string }[] }
+  }
+  const radius = schema.registry.groups.find((row) => row.id === 'button.rest.radius')
+  expect(radius).toMatchObject({ token: '--warp-button-radius', domain: 'radius', units: 'px', binding: 'partial' })
+  expect(radius?.siteIds.length).toBeGreaterThan(0)
+  const site = schema.registry.sites.find((row) => row.id === radius?.siteIds[0])
+  expect(site).toMatchObject({ fallback: 'var(--warp-radius-control)', classification: 'partial binding' })
+  expect(schema.registry.groups.find((row) => row.id === 'button.rest.border')?.units).toBe('px width only')
+  expect(new Set(schema.registry.groups.map((row) => row.token)).size).toBe(schema.registry.groups.length)
+})
+
+test('records finite system names, aliases, units and unresolved families', () => {
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    registry: { systemScales: { path: string; status: string; allowCustom?: boolean;
+      entries: { key: string; token?: string; aliasOf?: string; unit?: string; status: string }[] }[] }
+  }
+  const radius = schema.registry.systemScales.find((row) => row.path === 'radius')
+  expect(radius?.allowCustom).toBe(true)
+  expect(radius?.entries.find((row) => row.key === 'card')).toMatchObject({
+    token: '--warp-radius-surface', aliasOf: 'surface', unit: 'px', status: 'declared-input',
+  })
+  const focus = schema.registry.systemScales.find((row) => row.path === 'focus')
+  expect(focus?.entries.find((row) => row.key === 'color')).toMatchObject({
+    token: '--warp-color-focus', unit: 'forbidden',
+  })
+  expect(schema.registry.systemScales.find((row) => row.path === 'breakpoint')?.status).toBe('unresolved')
+})
+
+test('rejects a state not in the marked state table', () => {
+  setup()
+  const path = resolve(fixture, 'docs/decisions/theming.md')
+  const original = readFileSync(path, 'utf8')
+  const before = '`hover`, `focus`, `press`, `disabled`: `bg`, `text`, `border`, `highlight`'
+  expect(original).toContain(before)
+  writeFileSync(path, original.replace(before, before.replace('`press`', '`pressed`')))
+  expect(check()).toContain('Unknown state: pressed')
+})
+
+test('rejects a change to a normalized system alias rule', () => {
+  setup()
+  const path = resolve(fixture, 'docs/decisions/theming.md')
+  const original = readFileSync(path, 'utf8')
+  expect(original).toContain('card aliases surface')
+  writeFileSync(path, original.replace('card aliases surface', 'card aliases mark'))
+  expect(check()).toContain('Changed system alias rule: radius')
 })

@@ -15,6 +15,8 @@ import { auditButtonRadius } from './theme-schema-radius-audit.mjs'
 import { coverage } from './theme-schema-coverage.mjs'
 import { sourceIndex, reconcile } from './theme-schema-index.mjs'
 import { partTypes, systemTypes } from './theme-schema-types.mjs'
+import { normalizeSite } from './theme-schema-normalize.mjs'
+import { systemScales } from './theme-schema-system.mjs'
 
 const fixtureFlag = process.argv.indexOf('--coverage-fixture')
 if (fixtureFlag !== -1) {
@@ -60,7 +62,7 @@ function entries(parts) {
   const result = []
   const add = (part, state, property) => {
     const token = `--warp-${part}-${property}${state === 'rest' ? '' : `-${state}`}`
-    result.push({ part, state, path: property, token, domain: ({ underline: 'underline-role', border: 'border', ring: 'ring-role' })[property] ?? 'color', units: 'forbidden', binding: 'unresolved' })
+    result.push({ part, state, path: property, token, domain: ({ underline: 'underline-role', border: 'border', ring: 'ring-role' })[property] ?? 'color', units: ({ underline: 'width/offset px', border: 'px width only', ring: 'width/offset px' })[property] ?? 'forbidden', binding: 'unresolved' })
   }
   for (const [name, rest, states] of parts) {
     const part = unquote(name)[0]
@@ -128,8 +130,9 @@ function generate(design, template, bindings, radiusAudit) {
   for (const row of records) {
     if (!stateNames.includes(row.state)) throw new Error(`Unknown state: ${row.state}`)
   }
-  const unresolved = records.filter((row) => row.binding !== 'classified')
-    .map((row) => `${row.part}.${row.state}.${row.path}`)
+  const tokens = [...new Set(sources.flatMap((source) => declaredTokens(source, read(source))))].sort()
+  const declared = new Set(tokens)
+  const inventory = new Set(table.inventory.flatMap((row) => unquote(row[0])))
   const sites = []
   const index = sources.map((source) => {
     const text = read(source)
@@ -146,12 +149,27 @@ function generate(design, template, bindings, radiusAudit) {
         site.classification = 'binding'
         site.role = { part, state, path, token, domain, units }
         site.reason = 'The reviewed binding matches the source site and selector.'
+      } else {
+        const candidate = normalizeSite(site, table.properties, inventory, declared)
+        if (candidate) {
+          const existing = records.find((row) => row.part === candidate.part &&
+            row.state === candidate.state && row.path === candidate.path)
+          if (existing) {
+            candidate.token = existing.token
+            if (existing.binding === 'unresolved') existing.binding = 'partial'
+          } else records.push({ ...candidate, binding: 'partial' })
+          site.classification = 'partial binding'
+          site.role = candidate
+          site.reason = 'The simple-scope consumer maps to the property table; other sites remain unresolved.'
+        }
       }
     }
     sites.push(...found)
     return { source, ...comparison, status: comparison.astOnly.length || comparison.sourceOnly.length
       ? 'discrepant' : 'indexed' }
   })
+  const unresolved = records.filter((row) => row.binding !== 'classified')
+    .map((row) => `${row.part}.${row.state}.${row.path}`)
   const groups = records.map((row) => {
     const matching = bindings.filter((binding) => binding.classification === 'binding' &&
       binding.part === row.part && binding.state === row.state && binding.path === row.path)
@@ -162,11 +180,10 @@ function generate(design, template, bindings, radiusAudit) {
   })
   if (new Set(groups.map((row) => row.id)).size !== groups.length ||
       new Set(groups.map((row) => row.token)).size !== groups.length) throw new Error('Duplicate normalized group or token')
-  const unresolvedSites = sites.filter((site) => site.classification === 'unresolved').map((site) => site.id)
+  const unresolvedSites = sites.filter((site) => !['binding', 'raw-only', 'excluded'].includes(site.classification)).map((site) => site.id)
   const status = unresolved.length || unresolvedSites.length || index.some((row) => row.status !== 'indexed')
     ? 'partial' : 'complete'
-  const tokens = [...new Set(sources.flatMap((source) => declaredTokens(source, read(source))))].sort()
-  const registry = { status, declaredTokens: tokens, groups, unresolvedGroups: unresolved, unresolvedSites, sites, sourceIndex: index,
+  const registry = { status, declaredTokens: tokens, systemScales: systemScales(systemRules, tokens), groups, unresolvedGroups: unresolved, unresolvedSites, sites, sourceIndex: index,
     propertyTable: table.properties, systemTable: table.system, stateTable: table.states,
     propertyRules, systemRules, stateRules, expansion: table.expansion }
   const digest = createHash('sha256').update(JSON.stringify({ records, sources, bindings, system, radiusAudit, registry })).digest('hex')
