@@ -68,3 +68,14 @@ const wrongPart: WarpOptions = { parts: {
   imaginary: {},
 } }
 void wrongPart
+
+const buttonGeometry: WarpOptions = { parts: { button: {
+  radius: 6, paddingInline: '1rem', gap: 2, font: { family: 'Inter', size: 14 },
+} } }
+void buttonGeometry
+
+const invalidButton: WarpOptions = { parts: { button: {
+  // @ts-expect-error Button uses press, not pressed.
+  pressed: { bg: '#fff' },
+} } }
+void invalidButton

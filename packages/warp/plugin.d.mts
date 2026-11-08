@@ -1,4 +1,4 @@
-// Theme schema digest: cf9fe17b37bd7c8a2ca81200d1e38cdb638f77b275882e5ea4af94d43f626012
+// Theme schema digest: b1eaaae44fb9f57ad2e3d899eac6e2e7b24194e9ad8dd7a22f22e050c76721bb
 import type { PluginInstance } from '@weft-js/core/plugin'
 
 /** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
@@ -11,6 +11,17 @@ export interface ThemeParts {
     text?: string
     border?: string | { color?: string; width?: number | string; style?: string }
     highlight?: string
+    gap?: number | string
+    height?: number | string
+    paddingInline?: number | string
+    radius?: number | string
+    font?: string | {
+      family?: string
+      size?: number | string
+      weight?: number | string
+      letterSpacing?: number | string
+      transform?: string
+    }
     hover?: {
       bg?: string
       text?: string
@@ -50,6 +61,7 @@ export interface ThemeParts {
   nav?: {
     text?: string
     underline?: string | { color?: string; width?: number | string; offset?: number | string }
+    gap?: number | string
     hover?: {
       text?: string
       underline?: string | { color?: string; width?: number | string; offset?: number | string }
@@ -111,6 +123,10 @@ export interface ThemeParts {
     bg?: string
     text?: string
     border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    font?: string | {
+      css?: string
+    }
     hover?: {
       bg?: string
       text?: string
@@ -136,6 +152,13 @@ export interface ThemeParts {
     bg?: string
     text?: string
     border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    font?: string | {
+      family?: string
+      size?: number | string
+      letterSpacing?: number | string
+      transform?: string
+    }
   }
   field?: {
     label?: string
@@ -240,6 +263,1000 @@ export interface ThemeParts {
     font?: string | {
       size?: number | string
     }
+  }
+  avatar?: {
+    width?: number | string
+    height?: number | string
+    radius?: number | string
+    text?: string
+    font?: string | {
+      css?: string
+    }
+    shadow?: string
+  }
+  "event-card"?: {
+    gap?: number | string
+  }
+  tile?: {
+    radius?: number | string
+    shadow?: string
+    gap?: number | string
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    text?: string
+  }
+  pip?: {
+    radius?: number | string
+    shadow?: string
+  }
+  "call-controls"?: {
+    gap?: number | string
+    padding?: number | string
+  }
+  notification?: {
+    padding?: number | string
+  }
+  "push-ask"?: {
+    padding?: number | string
+    radius?: number | string
+    shadow?: string
+  }
+  receipts?: {
+    text?: string
+  }
+  typing?: {
+    paddingInline?: number | string
+    text?: string
+  }
+  composer?: {
+    margin?: number | string
+    radius?: number | string
+  }
+  suggest?: {
+    radius?: number | string
+    shadow?: string
+  }
+  cite?: {
+    radius?: number | string
+    shadow?: string
+    font?: string | {
+      css?: string
+    }
+    text?: string
+  }
+  "tool-call"?: {
+    radius?: number | string
+    shadow?: string
+    font?: string | {
+      size?: number | string
+    }
+  }
+  cursor?: {
+    text?: string
+  }
+  lock?: {
+    radius?: number | string
+    text?: string
+    shadow?: string
+  }
+  sync?: {
+    text?: string
+  }
+  reasoning?: {
+    radius?: number | string
+    font?: string | {
+      size?: number | string
+    }
+  }
+  branch?: {
+    font?: string | {
+      css?: string
+    }
+    text?: string
+  }
+  "context-meter"?: {
+    font?: string | {
+      css?: string
+    }
+    text?: string
+  }
+  trace?: {
+    font?: string | {
+      css?: string
+    }
+  }
+  question?: {
+    radius?: number | string
+    shadow?: string
+  }
+  checkpoint?: {
+    font?: string | {
+      css?: string
+    }
+    text?: string
+  }
+  commit?: {
+    radius?: number | string
+    shadow?: string
+  }
+  "thread-replies"?: {
+    text?: string
+  }
+  "comment-thread"?: {
+    radius?: number | string
+    shadow?: string
+  }
+  "follow-flag"?: {
+    radius?: number | string
+    text?: string
+    font?: string | {
+      css?: string
+    }
+  }
+  "viewport-rail"?: {
+    radius?: number | string
+    shadow?: string
+  }
+  "click-ripple"?: {
+    shadow?: string
+  }
+  artifact?: {
+    radius?: number | string
+    shadow?: string
+  }
+  availability?: {
+    gap?: number | string
+  }
+  "auto-track"?: {
+    font?: string | {
+      size?: number | string
+    }
+    text?: string
+  }
+  year?: {
+    gap?: number | string
+  }
+  "prefs-matrix"?: {
+    gap?: number | string
+  }
+  transport?: {
+    gap?: number | string
+  }
+  message?: {
+    radius?: number | string
+  }
+  "system-page"?: {
+    padding?: number | string
+  }
+  "button-group"?: {
+    gap?: number | string
+  }
+  toggle?: {
+    gap?: number | string
+    height?: number | string
+    minWidth?: number | string
+    paddingInline?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    text?: string
+    font?: string | {
+      css?: string
+    }
+  }
+  "toggle-group"?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  chip?: {
+    gap?: number | string
+    height?: number | string
+    paddingInline?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    text?: string
+    font?: string | {
+      css?: string
+      size?: number | string
+    }
+  }
+  surface?: {
+    gap?: number | string
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+    text?: string
+    font?: string | {
+      lineHeight?: number | string
+    }
+  }
+  fab?: {
+    insetBlockEnd?: number | string
+    insetInlineEnd?: number | string
+    gap?: number | string
+    radius?: number | string
+    text?: string
+    font?: string | {
+      family?: string
+      size?: number | string
+      weight?: number | string
+      letterSpacing?: number | string
+      transform?: string
+    }
+    shadow?: string
+  }
+  alert?: {
+    gap?: number | string
+    padding?: number | string
+    paddingInlineEnd?: number | string
+    text?: string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+  }
+  banner?: {
+    gap?: number | string
+    padding?: number | string
+    text?: string
+    font?: string | {
+      size?: number | string
+    }
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  callout?: {
+    gap?: number | string
+    padding?: number | string
+    radius?: number | string
+  }
+  spinner?: {
+    width?: number | string
+    height?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  skeleton?: {
+    radius?: number | string
+  }
+  "empty-state"?: {
+    gap?: number | string
+    padding?: number | string
+  }
+  "status-dot"?: {
+    shadow?: string
+  }
+  "live-status"?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    text?: string
+    font?: string | {
+      css?: string
+    }
+  }
+  toolbar?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  logo?: {
+    text?: string
+  }
+  tag?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    text?: string
+    font?: string | {
+      size?: number | string
+    }
+  }
+  image?: {
+    radius?: number | string
+  }
+  item?: {
+    gap?: number | string
+    padding?: number | string
+    radius?: number | string
+  }
+  "section-message"?: {
+    padding?: number | string
+    text?: string
+  }
+  menubar?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  "selection-toolbar"?: {
+    radius?: number | string
+    text?: string
+    shadow?: string
+  }
+  "ai-label"?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    text?: string
+    font?: string | {
+      css?: string
+    }
+  }
+  qr?: {
+    gap?: number | string
+  }
+  panel?: {
+    gap?: number | string
+    padding?: number | string
+    radius?: number | string
+    shadow?: string
+  }
+  table?: {
+    gap?: number | string
+  }
+  delta?: {
+    font?: string | {
+      size?: number | string
+    }
+    text?: string
+  }
+  "stat-row"?: {
+    gap?: number | string
+  }
+  stat?: {
+    padding?: number | string
+    radius?: number | string
+  }
+  chart?: {
+    gap?: number | string
+  }
+  list?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  tree?: {
+    font?: string | {
+      size?: number | string
+    }
+  }
+  "card-grid"?: {
+    gap?: number | string
+  }
+  card?: {
+    padding?: number | string
+    radius?: number | string
+    shadow?: string
+  }
+  kanban?: {
+    gap?: number | string
+  }
+  virtual?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  "scroll-grid"?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    font?: string | {
+      size?: number | string
+    }
+  }
+  pagination?: {
+    font?: string | {
+      size?: number | string
+    }
+    text?: string
+  }
+  "load-more"?: {
+    font?: string | {
+      size?: number | string
+    }
+    text?: string
+  }
+  "bar-list"?: {
+    font?: string | {
+      size?: number | string
+    }
+  }
+  map?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  flow?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  sso?: {
+    gap?: number | string
+  }
+  gate?: {
+    radius?: number | string
+  }
+  checklist?: {
+    gap?: number | string
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+  }
+  "setting-row"?: {
+    gap?: number | string
+  }
+  "save-bar"?: {
+    gap?: number | string
+    radius?: number | string
+    text?: string
+    shadow?: string
+    font?: string | {
+      size?: number | string
+    }
+  }
+  confirm?: {
+    gap?: number | string
+  }
+  plans?: {
+    gap?: number | string
+  }
+  "plan-card"?: {
+    radius?: number | string
+  }
+  lines?: {
+    font?: string | {
+      size?: number | string
+    }
+  }
+  conn?: {
+    font?: string | {
+      size?: number | string
+    }
+    text?: string
+  }
+  qty?: {
+    height?: number | string
+    radius?: number | string
+    shadow?: string
+  }
+  "pay-frame"?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  confirmation?: {
+    gap?: number | string
+  }
+  shortcuts?: {
+    gap?: number | string
+  }
+  "bulk-bar"?: {
+    gap?: number | string
+    radius?: number | string
+    text?: string
+    font?: string | {
+      size?: number | string
+    }
+  }
+  integrations?: {
+    gap?: number | string
+  }
+  integration?: {
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  calendar?: {
+    gap?: number | string
+  }
+  "range-panel"?: {
+    gap?: number | string
+  }
+  wheels?: {
+    gap?: number | string
+    height?: number | string
+  }
+  rte?: {
+    gap?: number | string
+  }
+  kv?: {
+    gap?: number | string
+  }
+  "md-editor"?: {
+    gap?: number | string
+  }
+  code?: {
+    font?: string | {
+      css?: string
+    }
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  codeblock?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  markdown?: {
+    font?: string | {
+      size?: number | string
+    }
+  }
+  prose?: {
+    font?: string | {
+      size?: number | string
+      lineHeight?: number | string
+    }
+  }
+  snippet?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    font?: string | {
+      css?: string
+    }
+  }
+  jsontree?: {
+    font?: string | {
+      css?: string
+    }
+    radius?: number | string
+  }
+  diff?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  tests?: {
+    font?: string | {
+      size?: number | string
+    }
+  }
+  props?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  linkcard?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  embed?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  strength?: {
+    font?: string | {
+      size?: number | string
+    }
+  }
+  quantity?: {
+    height?: number | string
+    radius?: number | string
+  }
+  otp?: {
+    gap?: number | string
+  }
+  editable?: {
+    gap?: number | string
+    minHeight?: number | string
+  }
+  group?: {
+    gap?: number | string
+  }
+  "choice-card"?: {
+    gap?: number | string
+    padding?: number | string
+    radius?: number | string
+  }
+  segmented?: {
+    radius?: number | string
+    shadow?: string
+  }
+  popup?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+    font?: string | {
+      family?: string
+    }
+  }
+  transfer?: {
+    gap?: number | string
+  }
+  slider?: {
+    height?: number | string
+  }
+  "range-head"?: {
+    gap?: number | string
+  }
+  color?: {
+    gap?: number | string
+  }
+  dropzone?: {
+    gap?: number | string
+    padding?: number | string
+    radius?: number | string
+    text?: string
+  }
+  cropper?: {
+    radius?: number | string
+  }
+  form?: {
+    gap?: number | string
+  }
+  "error-summary"?: {
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    text?: string
+  }
+  setting?: {
+    gap?: number | string
+    paddingBlock?: number | string
+  }
+  rules?: {
+    font?: string | {
+      size?: number | string
+    }
+    text?: string
+  }
+  "knob-row"?: {
+    gap?: number | string
+  }
+  "xy-pad"?: {
+    radius?: number | string
+  }
+  gradient?: {
+    gap?: number | string
+  }
+  "icon-tile"?: {
+    radius?: number | string
+  }
+  "hover-scope"?: {
+    gap?: number | string
+    radius?: number | string
+  }
+  autosave?: {
+    font?: string | {
+      size?: number | string
+    }
+    text?: string
+  }
+  stack?: {
+    gap?: number | string
+  }
+  row?: {
+    gap?: number | string
+  }
+  grid?: {
+    gap?: number | string
+  }
+  split?: {
+    gap?: number | string
+  }
+  center?: {
+    maxWidth?: number | string
+  }
+  cover?: {
+    gap?: number | string
+    minHeight?: number | string
+    paddingBlock?: number | string
+  }
+  "master-detail"?: {
+    height?: number | string
+    insetBlockStart?: number | string
+  }
+  section?: {
+    gap?: number | string
+    paddingBlock?: number | string
+  }
+  "page-header"?: {
+    gap?: number | string
+  }
+  masonry?: {
+    columnGap?: number | string
+    gap?: number | string
+  }
+  "split-pane"?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  "float-panel"?: {
+    insetBlockStart?: number | string
+    insetInlineStart?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+    inset?: number | string
+    paddingBlockEnd?: number | string
+  }
+  navlist?: {
+    gap?: number | string
+  }
+  sidenav?: {
+    font?: string | {
+      size?: number | string
+    }
+    insetBlockStart?: number | string
+  }
+  docs?: {
+    minHeight?: number | string
+  }
+  "anchor-nav"?: {
+    font?: string | {
+      size?: number | string
+    }
+  }
+  topnav?: {
+    gap?: number | string
+    minHeight?: number | string
+    padding?: number | string
+  }
+  "sticky-bar"?: {
+    insetBlockEnd?: number | string
+    gap?: number | string
+    padding?: number | string
+  }
+  announcement?: {
+    gap?: number | string
+    padding?: number | string
+    text?: string
+    font?: string | {
+      size?: number | string
+    }
+  }
+  consent?: {
+    insetInlineStart?: number | string
+    insetBlockEnd?: number | string
+    width?: number | string
+    gap?: number | string
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+    paddingBlockEnd?: number | string
+  }
+  "doc-tabs"?: {
+    paddingInline?: number | string
+  }
+  "status-bar"?: {
+    paddingInline?: number | string
+    paddingBlockEnd?: number | string
+    font?: string | {
+      css?: string
+    }
+    text?: string
+  }
+  board?: {
+    gap?: number | string
+  }
+  canvas?: {
+    backgroundImage?: string
+  }
+  "back-to-top"?: {
+    insetBlockEnd?: number | string
+    marginInlineEnd?: number | string
+    width?: number | string
+    height?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    shadow?: string
+    text?: string
+  }
+  pager?: {
+    gap?: number | string
+    marginBlockStart?: number | string
+  }
+  inset?: {
+    padding?: number | string
+    radius?: number | string
+  }
+  landing?: {
+    text?: string
+  }
+  block?: {
+    paddingBlock?: number | string
+    paddingInline?: number | string
+  }
+  announce?: {
+    gap?: number | string
+    padding?: number | string
+    text?: string
+    font?: string | {
+      size?: number | string
+    }
+  }
+  topbar?: {
+    gap?: number | string
+    paddingInline?: number | string
+  }
+  hero?: {
+    padding?: number | string
+  }
+  mock?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    shadow?: string
+  }
+  logos?: {
+    gap?: number | string
+  }
+  marquee?: {
+    gap?: number | string
+  }
+  stats?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  bento?: {
+    gap?: number | string
+  }
+  story?: {
+    gap?: number | string
+  }
+  carousel?: {
+    gap?: number | string
+  }
+  quote?: {
+    gap?: number | string
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+  }
+  gallery?: {
+    gap?: number | string
+  }
+  "selection-bar"?: {
+    insetBlockStart?: number | string
+    gap?: number | string
+    marginBlockEnd?: number | string
+    minHeight?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  compare?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  pricing?: {
+    gap?: number | string
+  }
+  plan?: {
+    gap?: number | string
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+  }
+  "compare-table"?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  product?: {
+    gap?: number | string
+  }
+  zoom?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  thumbs?: {
+    gap?: number | string
+  }
+  variant?: {
+    gap?: number | string
+  }
+  lobby?: {
+    gap?: number | string
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  facts?: {
+    gap?: number | string
+    padding?: number | string
+    radius?: number | string
+  }
+  cta?: {
+    gap?: number | string
+    padding?: number | string
+    radius?: number | string
+    text?: string
+  }
+  newsletter?: {
+    gap?: number | string
+  }
+  footer?: {
+    padding?: number | string
+  }
+  scene?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  "live-room"?: {
+    gap?: number | string
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+  }
+  "event-log"?: {
+    font?: string | {
+      css?: string
+    }
+    text?: string
+  }
+  "stat-strip"?: {
+    margin?: number | string
+  }
+  market?: {
+    gap?: number | string
+  }
+  listing?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+  }
+  "player-notes"?: {
+    gap?: number | string
+    marginBlockStart?: number | string
+  }
+  transcript?: {
+    marginBlockStart?: number | string
+    paddingBlockStart?: number | string
+  }
+  reviews?: {
+    gap?: number | string
+    marginBlockStart?: number | string
+  }
+  review?: {
+    gap?: number | string
+    paddingBlock?: number | string
+  }
+  backdrops?: {
+    gap?: number | string
+  }
+  backdrop?: {
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  "scroll-progress"?: {
+    inset?: number | string
+    height?: number | string
+  }
+  "container-scroll"?: {
+    gap?: number | string
+  }
+  "fancy-stage"?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
+  "fancy-presets"?: {
+    gap?: number | string
+  }
+  "motion-cards"?: {
+    gap?: number | string
+  }
+  "motion-card"?: {
+    gap?: number | string
+    padding?: number | string
+    text?: string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+  }
+  wall?: {
+    gap?: number | string
+  }
+  team?: {
+    gap?: number | string
+  }
+  blog?: {
+    gap?: number | string
+  }
+  post?: {
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+  }
+  "blog-foot"?: {
+    marginBlockStart?: number | string
+  }
+  contact?: {
+    gap?: number | string
+  }
+  waitlist?: {
+    gap?: number | string
+    padding?: number | string
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
   }
 }
 

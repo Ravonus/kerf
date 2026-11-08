@@ -15,6 +15,8 @@ import { auditButtonRadius } from './theme-schema-radius-audit.mjs'
 import { coverage } from './theme-schema-coverage.mjs'
 import { sourceIndex, reconcile } from './theme-schema-index.mjs'
 import { partTypes, systemTypes } from './theme-schema-types.mjs'
+import { normalizeSite } from './theme-schema-normalize.mjs'
+import { systemScales } from './theme-schema-system.mjs'
 
 const fixtureFlag = process.argv.indexOf('--coverage-fixture')
 if (fixtureFlag !== -1) {
@@ -33,6 +35,7 @@ const outputs = [
   'packages/warp-core/theme.schema.json',
   'packages/warp/plugin.d.mts',
   'packages/cli/docs/theme-tokens.md',
+  'packages/warp-core/scripts/theme-schema-registry.mjs',
 ]
 const unquote = (text) => [...text.matchAll(/`([^`]+)`/g)].map((match) => match[1])
 const cells = (line) => line.slice(1, -1).split('|').map((cell) => cell.trim())
@@ -60,7 +63,7 @@ function entries(parts) {
   const result = []
   const add = (part, state, property) => {
     const token = `--warp-${part}-${property}${state === 'rest' ? '' : `-${state}`}`
-    result.push({ part, state, path: property, token, domain: ({ underline: 'underline-role', border: 'border', ring: 'ring-role' })[property] ?? 'color', units: 'forbidden', binding: 'unresolved' })
+    result.push({ part, state, path: property, token, domain: ({ underline: 'underline-role', border: 'border', ring: 'ring-role' })[property] ?? 'color', units: ({ underline: 'width/offset px', border: 'px width only', ring: 'width/offset px' })[property] ?? 'forbidden', binding: 'unresolved' })
   }
   for (const [name, rest, states] of parts) {
     const part = unquote(name)[0]
@@ -128,8 +131,9 @@ function generate(design, template, bindings, radiusAudit) {
   for (const row of records) {
     if (!stateNames.includes(row.state)) throw new Error(`Unknown state: ${row.state}`)
   }
-  const unresolved = records.filter((row) => row.binding !== 'classified')
-    .map((row) => `${row.part}.${row.state}.${row.path}`)
+  const tokens = [...new Set(sources.flatMap((source) => declaredTokens(source, read(source))))].sort()
+  const declared = new Set(tokens)
+  const inventory = new Set(table.inventory.flatMap((row) => unquote(row[0])))
   const sites = []
   const index = sources.map((source) => {
     const text = read(source)
@@ -146,12 +150,27 @@ function generate(design, template, bindings, radiusAudit) {
         site.classification = 'binding'
         site.role = { part, state, path, token, domain, units }
         site.reason = 'The reviewed binding matches the source site and selector.'
+      } else {
+        const candidate = normalizeSite(site, table.properties, inventory, declared)
+        if (candidate) {
+          const existing = records.find((row) => row.part === candidate.part &&
+            row.state === candidate.state && row.path === candidate.path)
+          if (existing) {
+            candidate.token = existing.token
+            if (existing.binding === 'unresolved') existing.binding = 'partial'
+          } else records.push({ ...candidate, binding: 'partial' })
+          site.classification = 'partial binding'
+          site.role = candidate
+          site.reason = 'The simple-scope consumer maps to the property table; other sites remain unresolved.'
+        }
       }
     }
     sites.push(...found)
     return { source, ...comparison, status: comparison.astOnly.length || comparison.sourceOnly.length
       ? 'discrepant' : 'indexed' }
   })
+  const unresolved = records.filter((row) => row.binding !== 'classified')
+    .map((row) => `${row.part}.${row.state}.${row.path}`)
   const groups = records.map((row) => {
     const matching = bindings.filter((binding) => binding.classification === 'binding' &&
       binding.part === row.part && binding.state === row.state && binding.path === row.path)
@@ -162,11 +181,10 @@ function generate(design, template, bindings, radiusAudit) {
   })
   if (new Set(groups.map((row) => row.id)).size !== groups.length ||
       new Set(groups.map((row) => row.token)).size !== groups.length) throw new Error('Duplicate normalized group or token')
-  const unresolvedSites = sites.filter((site) => site.classification === 'unresolved').map((site) => site.id)
+  const unresolvedSites = sites.filter((site) => !['binding', 'raw-only', 'excluded'].includes(site.classification)).map((site) => site.id)
   const status = unresolved.length || unresolvedSites.length || index.some((row) => row.status !== 'indexed')
     ? 'partial' : 'complete'
-  const tokens = [...new Set(sources.flatMap((source) => declaredTokens(source, read(source))))].sort()
-  const registry = { status, declaredTokens: tokens, groups, unresolvedGroups: unresolved, unresolvedSites, sites, sourceIndex: index,
+  const registry = { status, declaredTokens: tokens, systemScales: systemScales(systemRules, tokens), groups, unresolvedGroups: unresolved, unresolvedSites, sites, sourceIndex: index,
     propertyTable: table.properties, systemTable: table.system, stateTable: table.states,
     propertyRules, systemRules, stateRules, expansion: table.expansion }
   const digest = createHash('sha256').update(JSON.stringify({ records, sources, bindings, system, radiusAudit, registry })).digest('hex')
@@ -178,10 +196,17 @@ function generate(design, template, bindings, radiusAudit) {
   }).join('\n')
   const typeText = `/** Explicit overrides; canonical sheet bindings remain under classification. */\nexport interface ThemeParts {\n${partTypes(records)}\n}\n\n/** A system density stop. */\nexport interface ThemeDensity { factor?: number; control?: { sm?: number | string; md?: number | string; lg?: number | string } }\n/** A custom text role. */\nexport interface ThemeTextRole { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string }\n/** System scale types; bindings remain under classification. */\nexport interface ThemeSystem {\n${systemTypes(systemRules, textRoles, tokens)}\n}`
   const doc = groups.map((row) => `| ${row.part} | ${row.state} | ${row.path} | ${row.token} | ${row.domain} | ${row.binding} | ${row.bindingRefs.length} |`).join('\n')
+  const compact = { version: 1, digest, status, groups: groups.map((row) => ({
+    id: row.id, part: row.part, state: row.state, path: row.path, token: row.token,
+    domain: row.domain, units: row.units,
+    status: row.binding === 'raw-only' ? 'raw-only' : 'candidate', evidence: row.binding,
+  })), systemScales: registry.systemScales, states: stateRules,
+    propertyRules, expansion: table.expansion }
   return [
     `${JSON.stringify({ digest, status, sources, records, system, bindings, radiusAudit, registry }, null, 2)}\n`,
     `// Theme schema digest: ${digest}\n${template.replace('/* THEME_TYPES */', typeText)}`,
-    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding | Reviewed sites |\n| --- | --- | --- | --- | --- | --- | --- |\n${doc}\n\nThe table lists partial and unresolved groups as design candidates. No additional raw-only part overrides have been classified; the existing \`tokens\` escape hatch remains available.\n\n## System scale types\n\n${systemRules.map((row) => `- \`${row.path}\`: ${row.keys}; ${row.domain}.`).join('\n')}\n\nBreakpoint query keys are still unresolved and are not included in the generated type.\n\n## Explicit Button radius selector audit\n\n| Source | Line | Selector | Properties | Review |\n| --- | --- | --- | --- | --- |\n${radiusAudit.map((row) => `| ${row.source} | ${row.line} | \`${row.selector.replaceAll('\n', ' ')}\` | ${row.properties.join(', ')} | ${row.classification} |`).join('\n')}\n\n## Reviewed declarations\n\n| Path | Variant | States | Selector | At-rules | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | ${b.variant ?? '—'} | ${(b.states ?? [b.state ?? '—']).join(', ')} | \`${b.selector.replaceAll('\n', ' ')}\` | \`${b.atRules.join('; ')}\` | ${b.property} | \`${b.fallback.replaceAll('\n', '<br>')}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
+    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding | Reviewed sites |\n| --- | --- | --- | --- | --- | --- | --- |\n${doc}\n\nThe table lists partial and unresolved groups as design candidates. No additional raw-only part overrides have been classified; the existing \`tokens\` escape hatch remains available.\n\nThe \`@weft-js/warp-core/theme-schema\` module exports \`themeSchema\` and a default export of the same compact registry. Group \`status: candidate\` is not a supported config promise; \`evidence\` describes current source review. System \`declared-inputs\` means tokens exist, not that lowering or config support is complete.\n\n## System scale types\n\n${systemRules.map((row) => `- \`${row.path}\`: ${row.keys}; ${row.domain}.`).join('\n')}\n\nBreakpoint query keys are still unresolved and are not included in the generated type.\n\n## Explicit Button radius selector audit\n\n| Source | Line | Selector | Properties | Review |\n| --- | --- | --- | --- | --- |\n${radiusAudit.map((row) => `| ${row.source} | ${row.line} | \`${row.selector.replaceAll('\n', ' ')}\` | ${row.properties.join(', ')} | ${row.classification} |`).join('\n')}\n\n## Reviewed declarations\n\n| Path | Variant | States | Selector | At-rules | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | ${b.variant ?? '—'} | ${(b.states ?? [b.state ?? '—']).join(', ')} | \`${b.selector.replaceAll('\n', ' ')}\` | \`${b.atRules.join('; ')}\` | ${b.property} | \`${b.fallback.replaceAll('\n', '<br>')}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
+    `// Generated theme schema digest: ${digest}\n/** Finite schema candidates; status identifies unresolved coverage. */\nexport const themeSchema = ${JSON.stringify(compact, null, 2)}\nexport default themeSchema\n`,
   ]
 }
 

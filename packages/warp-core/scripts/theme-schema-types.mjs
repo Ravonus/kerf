@@ -6,7 +6,9 @@ const scalar = (domain) => {
   if (['width', 'radius', 'space', 'margin', 'length', 'position', 'font-size', 'tracking', 'time', 'angle'].includes(domain)) return 'number | string'
   if (['underline-role', 'ring-role'].includes(domain)) return 'string | { color?: string; width?: number | string; offset?: number | string }'
   if (domain === 'border') return 'string | { color?: string; width?: number | string; style?: string }'
-  return 'string'
+  if (['color', 'family', 'shadow', 'font-shorthand', 'transform-case', 'easing', 'gradient',
+    'color or colour-list', 'matching CSS grammar', 'length-list'].includes(domain)) return 'string'
+  throw new Error(`Unknown theme domain: ${domain}`)
 }
 
 function fields(rows, indent) {
