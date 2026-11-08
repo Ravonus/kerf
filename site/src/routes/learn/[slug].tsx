@@ -4,6 +4,7 @@ import { LearnDemo } from '../../components/LearnDemo'
 import { Toc } from '../../components/Toc'
 import moved from '../../generated/learn-moved.json'
 import pages from '../../generated/learn.json'
+import { DocSkeleton } from '../../components/DocSkeleton'
 
 type Block = { html: string } | { demo: string }
 type Page = {
@@ -54,6 +55,9 @@ export const meta: Meta<typeof load> = ({ data }) => ({
   description: data.description,
 })
 export const prerender = () => Object.keys(all).map((slug) => ({ slug }))
+
+/** Between pages, the doc article's outline, so the page lands where its bars were. */
+export const skeleton = DocSkeleton
 
 export default function LearnPage(props: RouteProps<typeof load, '/learn/[slug]'>) {
   return (

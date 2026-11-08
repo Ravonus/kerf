@@ -3,6 +3,7 @@ import { Button } from '@weft-js/warp'
 import { PageExample } from '../../components/PageExample'
 import { Toc } from '../../components/Toc'
 import pages from '../../generated/reference.json'
+import { DocSkeleton } from '../../components/DocSkeleton'
 
 const all = pages as unknown as Record<
   string,
@@ -44,6 +45,9 @@ export const meta: Meta<typeof load> = ({ data }) => ({
   description: data.description,
 })
 export const prerender = () => Object.keys(all).map((slug) => ({ slug }))
+
+/** Between pages, the doc article's outline, so the page lands where its bars were. */
+export const skeleton = DocSkeleton
 
 export default function ReferencePage(props: RouteProps<typeof load, '/reference/[...slug]'>) {
   return (

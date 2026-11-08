@@ -14,7 +14,7 @@
   font-family: var(--doc-sans);
   display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 48px; box-sizing: border-box; padding-inline: var(--warp-space-page); background: var(--warp-color-page); color: var(--ink);
 }
-[data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: auto minmax(0, 1fr) 208px; }
+[data-site="docs"]:has(> [data-site="toc"], [data-site="doc-skeleton"] > [data-site="toc"]) { grid-template-columns: auto minmax(0, 1fr) 208px; }
 
 /* -- sidebar and contents -- */
 /* The section's SideNav (warp): docked on the left on wide screens, in an `auto` column that follows it when its bar
@@ -49,6 +49,25 @@
 [data-site="doc"] [data-part="lede"], [data-site="doc"] > [data-part="lead"] { max-inline-size: 60ch; margin: 0; font-size: var(--doc-lede); line-height: 1.5; color: var(--dim); }
 [data-site="doc"] > [data-part="lead"] { margin-block-end: var(--warp-space-group); }
 [data-site="doc"] [data-part="actions"] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-tight) var(--warp-space-related); margin-block-end: 32px; }
+
+/* -- the skeleton between docs pages (components/DocSkeleton.tsx): warp's skeleton bars in the article's own places,
+   sized to what they stand for, so the page that arrives lands where they were -- */
+[data-site="doc-skeleton"] { display: contents; }
+[data-site="doc-skeleton"] [data-scope="skeleton"] { block-size: 1em; margin-block-end: 0.6em; }
+[data-site="doc-skeleton"] h1 { margin: 0; }
+[data-site="doc-skeleton"] [data-bar="crumb"] { inline-size: 9ch; margin: 0; }
+[data-site="doc-skeleton"] [data-bar="title"] { inline-size: min(14ch, 70%); block-size: 1.15em; margin: 0; }
+[data-site="doc-skeleton"] [data-part="lead"] { display: block; margin-block-end: var(--warp-space-group); font-size: var(--doc-lede); line-height: 1.5; }
+[data-site="doc-skeleton"] [data-bar="lede"] { inline-size: min(60ch, 100%); }
+[data-site="doc-skeleton"] [data-bar="lede-end"] { inline-size: min(38ch, 70%); }
+[data-site="doc-skeleton"] [data-bar="button"] { inline-size: 168px; block-size: 32px; margin: 0; border-radius: var(--warp-radius-control); }
+[data-site="doc-skeleton"] [data-part="body"] { font-size: var(--doc-body); line-height: 1.7; }
+[data-site="doc-skeleton"] [data-bar="line"] { inline-size: min(68ch, 100%); }
+[data-site="doc-skeleton"] [data-bar="line-end"] { inline-size: min(44ch, 66%); margin-block-end: var(--warp-space-group); }
+[data-site="doc-skeleton"] [data-bar="code"] { block-size: 9em; margin-block: var(--warp-space-group) 64px; border-radius: var(--warp-radius-control); }
+[data-site="doc-skeleton"] [data-bar="heading"] { inline-size: min(24ch, 50%); block-size: 1.4em; margin-block-end: var(--warp-space-related); }
+[data-site="doc-skeleton"] [data-bar="toc-label"] { inline-size: 10ch; margin-block-end: var(--warp-space-related); }
+[data-site="doc-skeleton"] [data-bar="toc"] { inline-size: 70%; block-size: 0.8em; margin-block: 0 calc(28px - 0.8em); }
 
 /* -- prose -- */
 [data-site="doc"] [data-scope="prose"] { display: block; max-inline-size: none; color: var(--dim); font-size: var(--doc-body); line-height: 1.7; }
@@ -95,7 +114,7 @@
 [data-part="pager"] span { font: 400 var(--doc-micro)/1.4 var(--doc-sans); color: var(--dim); }
 [data-part="pager"] .next { grid-column: 2; text-align: end; }
 
-@media (max-width: 1239.98px) { [data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: auto minmax(0, 1fr); } [data-site="toc"] { display: none; } }
+@media (max-width: 1239.98px) { [data-site="docs"]:has(> [data-site="toc"], [data-site="doc-skeleton"] > [data-site="toc"]) { grid-template-columns: auto minmax(0, 1fr); } [data-site="toc"] { display: none; } }
 @media (max-width: 899.98px) {
   [data-site="docs"], [data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: minmax(0, 1fr); padding-inline: var(--warp-space-page); }
   /* The page starts past the SideNav's bar, which stays down the left edge. */
