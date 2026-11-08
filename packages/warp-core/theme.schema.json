@@ -1,5 +1,5 @@
 {
-  "digest": "0933fdefc65ba902b96e66cae002ba3727a4e57f96e5c4988e297524b2978d6f",
+  "digest": "7370327dbc323d88fa7a56b4fbb9a08e7010f7ff79a9f0280c6aca7d88b628c1",
   "status": "partial",
   "sources": [
     "docs/design/warp/tokens/warp-app.css",
@@ -2873,6 +2873,1000 @@
           "reason": "The system text role and its transitive inputs remain unresolved."
         }
       ]
+    },
+    {
+      "part": "button",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-button-border",
+      "selector": ":where([data-scope=\"button\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border",
+      "fallback": "var(--warp-border-hairline) solid var(--warp-tone-edge, var(--_edge))",
+      "fallbackSpan": [
+        10591,
+        10660
+      ],
+      "domain": "border",
+      "units": "px width only",
+      "inputs": [
+        {
+          "token": "--_edge",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-border-hairline",
+          "classification": "system or legacy tone input"
+        },
+        {
+          "token": "--warp-tone-edge",
+          "classification": "system or legacy tone input"
+        }
+      ],
+      "classification": "partial binding",
+      "reason": "Other Button paint sites and local-channel assignments remain unresolved."
+    },
+    {
+      "part": "button",
+      "state": "rest",
+      "path": "bg",
+      "token": "--warp-button-bg",
+      "selector": ":where([data-scope=\"button\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "background",
+      "fallback": "var(--warp-tone-fill, var(--_fill))",
+      "fallbackSpan": [
+        10719,
+        10754
+      ],
+      "domain": "color",
+      "units": "forbidden",
+      "inputs": [
+        {
+          "token": "--_fill",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-tone-fill",
+          "classification": "system or legacy tone input"
+        }
+      ],
+      "classification": "partial binding",
+      "reason": "Other Button paint sites and local-channel assignments remain unresolved."
+    },
+    {
+      "part": "button",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-button-text",
+      "selector": ":where([data-scope=\"button\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "color",
+      "fallback": "var(--warp-tone-ink, var(--_ink))",
+      "fallbackSpan": [
+        10763,
+        10796
+      ],
+      "domain": "color",
+      "units": "forbidden",
+      "inputs": [
+        {
+          "token": "--_ink",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-tone-ink",
+          "classification": "system or legacy tone input"
+        }
+      ],
+      "classification": "partial binding",
+      "reason": "Other Button paint sites and local-channel assignments remain unresolved."
+    },
+    {
+      "part": "button",
+      "state": "rest",
+      "selector": ":where([data-scope=\"button\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_fill",
+      "fallback": "var(--_solid)",
+      "fallbackSpan": [
+        10226,
+        10239
+      ],
+      "inputs": [
+        {
+          "token": "--_solid",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "partial channel dependency",
+      "reason": "The default channel assignment is replaced by Button variant selectors."
+    },
+    {
+      "part": "button",
+      "state": "rest",
+      "selector": ":where([data-scope=\"button\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink",
+      "fallback": "var(--_ink-on)",
+      "fallbackSpan": [
+        10249,
+        10263
+      ],
+      "inputs": [
+        {
+          "token": "--_ink-on",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "partial channel dependency",
+      "reason": "The default channel assignment is replaced by Button variant selectors."
+    },
+    {
+      "part": "button",
+      "state": "rest",
+      "selector": ":where([data-scope=\"button\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_edge",
+      "fallback": "transparent",
+      "fallbackSpan": [
+        10274,
+        10285
+      ],
+      "inputs": [],
+      "classification": "partial channel dependency",
+      "reason": "The default channel assignment is replaced by Button variant selectors."
+    },
+    {
+      "part": "button",
+      "state": "rest",
+      "selector": ":where([data-scope=\"button\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer",
+      "fallback": "var(--_solid-hover)",
+      "fallbackSpan": [
+        10299,
+        10318
+      ],
+      "inputs": [
+        {
+          "token": "--_solid-hover",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "partial channel dependency",
+      "reason": "The default channel assignment is replaced by Button variant selectors."
+    },
+    {
+      "part": "button",
+      "state": "rest",
+      "selector": ":where([data-scope=\"button\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer-a",
+      "fallback": "1",
+      "fallbackSpan": [
+        10332,
+        10333
+      ],
+      "inputs": [],
+      "classification": "partial channel dependency",
+      "reason": "The default channel assignment is replaced by Button variant selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-scope])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid",
+      "fallback": "var(--warp-color-accent-solid)",
+      "fallbackSpan": [
+        3073,
+        3103
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-accent-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-scope])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid-hover",
+      "fallback": "var(--warp-color-accent-solid-hover)",
+      "fallbackSpan": [
+        3121,
+        3157
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-accent-solid-hover",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-scope])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink-on",
+      "fallback": "var(--warp-color-accent-on-solid)",
+      "fallbackSpan": [
+        3172,
+        3205
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-accent-on-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-scope])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_soft",
+      "fallback": "var(--warp-color-accent-soft)",
+      "fallbackSpan": [
+        3216,
+        3245
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-accent-soft",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-scope])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_text",
+      "fallback": "var(--warp-color-accent-text)",
+      "fallbackSpan": [
+        3258,
+        3287
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-accent-text",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-scope])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_border",
+      "fallback": "var(--warp-color-accent-border)",
+      "fallbackSpan": [
+        3302,
+        3333
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-accent-border",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"neutral\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid",
+      "fallback": "var(--warp-color-neutral-solid)",
+      "fallbackSpan": [
+        3381,
+        3412
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-neutral-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"neutral\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid-hover",
+      "fallback": "var(--warp-color-neutral-solid-hover)",
+      "fallbackSpan": [
+        3430,
+        3467
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-neutral-solid-hover",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"neutral\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink-on",
+      "fallback": "var(--warp-color-neutral-on-solid)",
+      "fallbackSpan": [
+        3482,
+        3516
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-neutral-on-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"neutral\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_soft",
+      "fallback": "var(--warp-color-neutral-soft)",
+      "fallbackSpan": [
+        3527,
+        3557
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-neutral-soft",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"neutral\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_text",
+      "fallback": "var(--warp-color-neutral-text)",
+      "fallbackSpan": [
+        3570,
+        3600
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-neutral-text",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"neutral\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_border",
+      "fallback": "var(--warp-color-neutral-border)",
+      "fallbackSpan": [
+        3615,
+        3647
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-neutral-border",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"positive\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid",
+      "fallback": "var(--warp-color-positive-solid)",
+      "fallbackSpan": [
+        3696,
+        3728
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-positive-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"positive\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid-hover",
+      "fallback": "var(--warp-color-positive-solid-hover)",
+      "fallbackSpan": [
+        3746,
+        3784
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-positive-solid-hover",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"positive\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink-on",
+      "fallback": "var(--warp-color-positive-on-solid)",
+      "fallbackSpan": [
+        3799,
+        3834
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-positive-on-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"positive\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_soft",
+      "fallback": "var(--warp-color-positive-soft)",
+      "fallbackSpan": [
+        3845,
+        3876
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-positive-soft",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"positive\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_text",
+      "fallback": "var(--warp-color-positive-text)",
+      "fallbackSpan": [
+        3889,
+        3920
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-positive-text",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"positive\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_border",
+      "fallback": "var(--warp-color-positive-border)",
+      "fallbackSpan": [
+        3935,
+        3968
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-positive-border",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"caution\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid",
+      "fallback": "var(--warp-color-caution-solid)",
+      "fallbackSpan": [
+        4016,
+        4047
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-caution-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"caution\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid-hover",
+      "fallback": "var(--warp-color-caution-solid-hover)",
+      "fallbackSpan": [
+        4065,
+        4102
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-caution-solid-hover",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"caution\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink-on",
+      "fallback": "var(--warp-color-caution-on-solid)",
+      "fallbackSpan": [
+        4117,
+        4151
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-caution-on-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"caution\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_soft",
+      "fallback": "var(--warp-color-caution-soft)",
+      "fallbackSpan": [
+        4162,
+        4192
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-caution-soft",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"caution\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_text",
+      "fallback": "var(--warp-color-caution-text)",
+      "fallbackSpan": [
+        4205,
+        4235
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-caution-text",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"caution\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_border",
+      "fallback": "var(--warp-color-caution-border)",
+      "fallbackSpan": [
+        4250,
+        4282
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-caution-border",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"critical\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid",
+      "fallback": "var(--warp-color-critical-solid)",
+      "fallbackSpan": [
+        4331,
+        4363
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-critical-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"critical\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid-hover",
+      "fallback": "var(--warp-color-critical-solid-hover)",
+      "fallbackSpan": [
+        4381,
+        4419
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-critical-solid-hover",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"critical\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink-on",
+      "fallback": "var(--warp-color-critical-on-solid)",
+      "fallbackSpan": [
+        4434,
+        4469
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-critical-on-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"critical\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_soft",
+      "fallback": "var(--warp-color-critical-soft)",
+      "fallbackSpan": [
+        4480,
+        4511
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-critical-soft",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"critical\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_text",
+      "fallback": "var(--warp-color-critical-text)",
+      "fallbackSpan": [
+        4524,
+        4555
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-critical-text",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"critical\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_border",
+      "fallback": "var(--warp-color-critical-border)",
+      "fallbackSpan": [
+        4570,
+        4603
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-critical-border",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"info\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid",
+      "fallback": "var(--warp-color-info-solid)",
+      "fallbackSpan": [
+        4648,
+        4676
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-info-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"info\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid-hover",
+      "fallback": "var(--warp-color-info-solid-hover)",
+      "fallbackSpan": [
+        4694,
+        4728
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-info-solid-hover",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"info\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink-on",
+      "fallback": "var(--warp-color-info-on-solid)",
+      "fallbackSpan": [
+        4743,
+        4774
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-info-on-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"info\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_soft",
+      "fallback": "var(--warp-color-info-soft)",
+      "fallbackSpan": [
+        4785,
+        4812
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-info-soft",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"info\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_text",
+      "fallback": "var(--warp-color-info-text)",
+      "fallbackSpan": [
+        4825,
+        4852
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-info-text",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "selector": ":where([data-tone=\"info\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_border",
+      "fallback": "var(--warp-color-info-border)",
+      "fallbackSpan": [
+        4867,
+        4896
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-info-border",
+          "classification": "system input"
+        }
+      ],
+      "classification": "shared channel dependency",
+      "reason": "Shared tone input; Button can replace it in its own selectors."
     }
   ]
 }

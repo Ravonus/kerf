@@ -7,6 +7,7 @@ import { classifyLinks } from './theme-schema-links.mjs'
 import { consumers } from './theme-schema-consumers.mjs'
 import { classifyShim } from './theme-schema-shims.mjs'
 import { classifyComponents, componentsPath } from './theme-schema-components.mjs'
+import { classifyButton } from './theme-schema-button.mjs'
 
 const repoRoot = new URL('../../../', import.meta.url)
 const root = process.env.WARP_SCHEMA_FIXTURE ? pathToFileURL(`${process.env.WARP_SCHEMA_FIXTURE}/`) : repoRoot
@@ -113,7 +114,7 @@ function generate(design, template, bindings) {
   return [
     `${JSON.stringify({ digest, status: 'partial', sources, records, system, bindings }, null, 2)}\n`,
     `// Theme schema digest: ${digest}\n${template.replace('/* THEME_TYPES */', typeText)}`,
-    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations and the status-light rule are classified below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n\n## Reviewed declarations\n\n| Path | Selector | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | \`${b.selector}\` | ${b.property} | \`${b.fallback}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
+    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n\n## Reviewed declarations\n\n| Path | Selector | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | \`${b.selector}\` | ${b.property} | \`${b.fallback}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
   ]
 }
 
@@ -125,7 +126,7 @@ const design = read(designPath)
 const template = read(templatePath)
 const linksPath = 'packages/warp/src/links.css'
 const shimPaths = ['packages/warp/src/type.css', 'packages/warp/src/layout.css']
-const bindings = [...classifyLinks(linksPath, read(linksPath)), ...shimPaths.flatMap((path) => classifyShim(path, read(path))), ...classifyComponents(read(componentsPath))]
+const bindings = [...classifyLinks(linksPath, read(linksPath)), ...shimPaths.flatMap((path) => classifyShim(path, read(path))), ...classifyComponents(read(componentsPath)), ...classifyButton(read(componentsPath))]
 const generated = generate(design, template, bindings)
 if (process.argv.includes('--negative-test')) {
   const invalid = design.replace('| forbidden |', '| bad-unit |')
@@ -163,10 +164,10 @@ for (const source of sources) {
   const local = declarations.filter((row) => row.reads.some((name) => name.startsWith('--_')))
   const reads = (content.match(/var\(\s*--warp-/g) || []).length
   const classified = bindings.filter((row) => row.source === source).length
-  console.log(`${source}: ${reads} direct token references, ${direct.length} declarations, ${local.length} local-channel readers, ${classified} classified`)
+  console.log(`${source}: ${reads} direct token references, ${direct.length} declarations, ${local.length} local-channel readers, ${classified} reviewed records`)
 }
 const extra = tracked.filter((path) => !sources.includes(path))
 if (extra.length) { console.error(`Uninventoried sources: ${extra.join(', ')}`); failed = true }
-console.log(`Tracked sources: ${sources.filter((path) => tracked.includes(path)).length}/${sources.length}; classified declarations: ${bindings.length}; unresolved sources: ${sources.filter((path) => path.startsWith('docs/design/')).length}`)
+console.log(`Tracked sources: ${sources.filter((path) => tracked.includes(path)).length}/${sources.length}; reviewed records: ${bindings.length}; unresolved sources: ${sources.filter((path) => path.startsWith('docs/design/')).length}`)
 console.error('Incomplete: CSS declaration ownership, transitive inputs, exclusions and fallbacks are unresolved')
 process.exitCode = 1

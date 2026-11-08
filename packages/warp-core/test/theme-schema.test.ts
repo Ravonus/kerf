@@ -39,7 +39,7 @@ function check() {
 
 test('rejects filesystem changes while reporting the unresolved baseline', () => {
   setup()
-  expect(check()).toContain('classified declarations: 47')
+  expect(check()).toContain('reviewed records: 91')
   expect(check()).toContain('Incomplete:')
   const path = resolve(fixture, link)
   const original = readFileSync(path, 'utf8')
@@ -136,4 +136,35 @@ test('records the status-light rule and exact source spans', () => {
     const [start, end] = row.fallbackSpan
     expect(text.slice(start, end)).toBe(row.fallback)
   }
+})
+
+
+test('records partial Button paint and shared tone fallback spans', () => {
+  const source = 'docs/design/warp/tokens/warp-components.css'
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    bindings: { part?: string; classification: string; fallback: string; fallbackSpan: number[] }[]
+  }
+  const rows = schema.bindings.filter((row) => row.part === 'button')
+  expect(rows.filter((row) => row.classification === 'partial binding')).toHaveLength(3)
+  expect(rows.filter((row) => row.classification === 'shared channel dependency')).toHaveLength(36)
+  expect(rows.filter((row) => row.classification === 'partial channel dependency')).toHaveLength(5)
+  const text = readFileSync(resolve(root, source), 'utf8')
+  for (const row of rows) {
+    const [start, end] = row.fallbackSpan
+    expect(text.slice(start, end)).toBe(row.fallback)
+  }
+})
+
+test('rejects changed and added Button consumers', () => {
+  setup()
+  const source = 'docs/design/warp/tokens/warp-components.css'
+  const path = resolve(fixture, source)
+  const original = readFileSync(path, 'utf8')
+  const paint = 'background: var(--warp-tone-fill, var(--_fill))'
+  expect(original).toContain(paint)
+  writeFileSync(path, original.replace(paint, 'background: var(--warp-color-page)'))
+  expect(check()).toContain(`${source}: unreviewed source change`)
+  const host = ':where([data-scope="button"]) {'
+  writeFileSync(path, original.replace(host, `${host} padding: var(--warp-space-page);`))
+  expect(check()).toContain(`${source}: unreviewed source change`)
 })
