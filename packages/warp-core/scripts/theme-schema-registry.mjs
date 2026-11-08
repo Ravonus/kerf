@@ -1,0 +1,8346 @@
+// Generated theme schema digest: b1eaaae44fb9f57ad2e3d899eac6e2e7b24194e9ad8dd7a22f22e050c76721bb
+/** Finite schema candidates; status identifies unresolved coverage. */
+export const themeSchema = {
+  "version": 1,
+  "digest": "b1eaaae44fb9f57ad2e3d899eac6e2e7b24194e9ad8dd7a22f22e050c76721bb",
+  "status": "partial",
+  "groups": [
+    {
+      "id": "button.rest.bg",
+      "part": "button",
+      "state": "rest",
+      "path": "bg",
+      "token": "--warp-button-bg",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.rest.text",
+      "part": "button",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-button-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button.rest.border",
+      "part": "button",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-button-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button.rest.highlight",
+      "part": "button",
+      "state": "rest",
+      "path": "highlight",
+      "token": "--warp-button-highlight",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.hover.bg",
+      "part": "button",
+      "state": "hover",
+      "path": "bg",
+      "token": "--warp-button-bg-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.hover.text",
+      "part": "button",
+      "state": "hover",
+      "path": "text",
+      "token": "--warp-button-text-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.hover.border",
+      "part": "button",
+      "state": "hover",
+      "path": "border",
+      "token": "--warp-button-border-hover",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.hover.highlight",
+      "part": "button",
+      "state": "hover",
+      "path": "highlight",
+      "token": "--warp-button-highlight-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.focus.bg",
+      "part": "button",
+      "state": "focus",
+      "path": "bg",
+      "token": "--warp-button-bg-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.focus.text",
+      "part": "button",
+      "state": "focus",
+      "path": "text",
+      "token": "--warp-button-text-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.focus.border",
+      "part": "button",
+      "state": "focus",
+      "path": "border",
+      "token": "--warp-button-border-focus",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.focus.highlight",
+      "part": "button",
+      "state": "focus",
+      "path": "highlight",
+      "token": "--warp-button-highlight-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.press.bg",
+      "part": "button",
+      "state": "press",
+      "path": "bg",
+      "token": "--warp-button-bg-press",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.press.text",
+      "part": "button",
+      "state": "press",
+      "path": "text",
+      "token": "--warp-button-text-press",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.press.border",
+      "part": "button",
+      "state": "press",
+      "path": "border",
+      "token": "--warp-button-border-press",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.press.highlight",
+      "part": "button",
+      "state": "press",
+      "path": "highlight",
+      "token": "--warp-button-highlight-press",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.disabled.bg",
+      "part": "button",
+      "state": "disabled",
+      "path": "bg",
+      "token": "--warp-button-bg-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.disabled.text",
+      "part": "button",
+      "state": "disabled",
+      "path": "text",
+      "token": "--warp-button-text-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.disabled.border",
+      "part": "button",
+      "state": "disabled",
+      "path": "border",
+      "token": "--warp-button-border-disabled",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "button.disabled.highlight",
+      "part": "button",
+      "state": "disabled",
+      "path": "highlight",
+      "token": "--warp-button-highlight-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "sweep.rest.stroke",
+      "part": "sweep",
+      "state": "rest",
+      "path": "stroke",
+      "token": "--warp-sweep-stroke",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "sweep.rest.base",
+      "part": "sweep",
+      "state": "rest",
+      "path": "base",
+      "token": "--warp-sweep-base",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "sweep.rest.label",
+      "part": "sweep",
+      "state": "rest",
+      "path": "label",
+      "token": "--warp-sweep-label",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "sweep.rest.text",
+      "part": "sweep",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-sweep-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "sweep.invalid.stroke",
+      "part": "sweep",
+      "state": "invalid",
+      "path": "stroke",
+      "token": "--warp-sweep-stroke-invalid",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "sweep.invalid.label",
+      "part": "sweep",
+      "state": "invalid",
+      "path": "label",
+      "token": "--warp-sweep-label-invalid",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "sweep.invalid.text",
+      "part": "sweep",
+      "state": "invalid",
+      "path": "text",
+      "token": "--warp-sweep-text-invalid",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "nav.rest.text",
+      "part": "nav",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-nav-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "nav.rest.underline",
+      "part": "nav",
+      "state": "rest",
+      "path": "underline",
+      "token": "--warp-nav-underline",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "nav.hover.text",
+      "part": "nav",
+      "state": "hover",
+      "path": "text",
+      "token": "--warp-nav-text-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "nav.hover.underline",
+      "part": "nav",
+      "state": "hover",
+      "path": "underline",
+      "token": "--warp-nav-underline-hover",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "nav.focus.text",
+      "part": "nav",
+      "state": "focus",
+      "path": "text",
+      "token": "--warp-nav-text-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "nav.focus.underline",
+      "part": "nav",
+      "state": "focus",
+      "path": "underline",
+      "token": "--warp-nav-underline-focus",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "nav.active.text",
+      "part": "nav",
+      "state": "active",
+      "path": "text",
+      "token": "--warp-nav-text-active",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "nav.active.underline",
+      "part": "nav",
+      "state": "active",
+      "path": "underline",
+      "token": "--warp-nav-underline-active",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "nav.disabled.text",
+      "part": "nav",
+      "state": "disabled",
+      "path": "text",
+      "token": "--warp-nav-text-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "nav.disabled.underline",
+      "part": "nav",
+      "state": "disabled",
+      "path": "underline",
+      "token": "--warp-nav-underline-disabled",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "tabs.rest.text",
+      "part": "tabs",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-tabs-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "tabs.rest.underline",
+      "part": "tabs",
+      "state": "rest",
+      "path": "underline",
+      "token": "--warp-tabs-underline",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "tabs.hover.text",
+      "part": "tabs",
+      "state": "hover",
+      "path": "text",
+      "token": "--warp-tabs-text-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "tabs.hover.underline",
+      "part": "tabs",
+      "state": "hover",
+      "path": "underline",
+      "token": "--warp-tabs-underline-hover",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "tabs.focus.text",
+      "part": "tabs",
+      "state": "focus",
+      "path": "text",
+      "token": "--warp-tabs-text-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "tabs.focus.underline",
+      "part": "tabs",
+      "state": "focus",
+      "path": "underline",
+      "token": "--warp-tabs-underline-focus",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "tabs.active.text",
+      "part": "tabs",
+      "state": "active",
+      "path": "text",
+      "token": "--warp-tabs-text-active",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "tabs.active.underline",
+      "part": "tabs",
+      "state": "active",
+      "path": "underline",
+      "token": "--warp-tabs-underline-active",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "tabs.disabled.text",
+      "part": "tabs",
+      "state": "disabled",
+      "path": "text",
+      "token": "--warp-tabs-text-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "tabs.disabled.underline",
+      "part": "tabs",
+      "state": "disabled",
+      "path": "underline",
+      "token": "--warp-tabs-underline-disabled",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "link.rest.text",
+      "part": "link",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-link-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "link.rest.underline",
+      "part": "link",
+      "state": "rest",
+      "path": "underline",
+      "token": "--warp-link-underline",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "link.hover.text",
+      "part": "link",
+      "state": "hover",
+      "path": "text",
+      "token": "--warp-link-text-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "link.hover.underline",
+      "part": "link",
+      "state": "hover",
+      "path": "underline",
+      "token": "--warp-link-underline-hover",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "link.focus.text",
+      "part": "link",
+      "state": "focus",
+      "path": "text",
+      "token": "--warp-link-text-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "link.focus.underline",
+      "part": "link",
+      "state": "focus",
+      "path": "underline",
+      "token": "--warp-link-underline-focus",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "link.press.text",
+      "part": "link",
+      "state": "press",
+      "path": "text",
+      "token": "--warp-link-text-press",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "link.press.underline",
+      "part": "link",
+      "state": "press",
+      "path": "underline",
+      "token": "--warp-link-underline-press",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "link.disabled.text",
+      "part": "link",
+      "state": "disabled",
+      "path": "text",
+      "token": "--warp-link-text-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "link.disabled.underline",
+      "part": "link",
+      "state": "disabled",
+      "path": "underline",
+      "token": "--warp-link-underline-disabled",
+      "domain": "underline-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.rest.bg",
+      "part": "pill",
+      "state": "rest",
+      "path": "bg",
+      "token": "--warp-pill-bg",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.rest.text",
+      "part": "pill",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-pill-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pill.rest.border",
+      "part": "pill",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-pill-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pill.hover.bg",
+      "part": "pill",
+      "state": "hover",
+      "path": "bg",
+      "token": "--warp-pill-bg-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.hover.text",
+      "part": "pill",
+      "state": "hover",
+      "path": "text",
+      "token": "--warp-pill-text-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.hover.border",
+      "part": "pill",
+      "state": "hover",
+      "path": "border",
+      "token": "--warp-pill-border-hover",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.focus.bg",
+      "part": "pill",
+      "state": "focus",
+      "path": "bg",
+      "token": "--warp-pill-bg-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.focus.text",
+      "part": "pill",
+      "state": "focus",
+      "path": "text",
+      "token": "--warp-pill-text-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.focus.border",
+      "part": "pill",
+      "state": "focus",
+      "path": "border",
+      "token": "--warp-pill-border-focus",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.active.bg",
+      "part": "pill",
+      "state": "active",
+      "path": "bg",
+      "token": "--warp-pill-bg-active",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.active.text",
+      "part": "pill",
+      "state": "active",
+      "path": "text",
+      "token": "--warp-pill-text-active",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.active.border",
+      "part": "pill",
+      "state": "active",
+      "path": "border",
+      "token": "--warp-pill-border-active",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.disabled.bg",
+      "part": "pill",
+      "state": "disabled",
+      "path": "bg",
+      "token": "--warp-pill-bg-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.disabled.text",
+      "part": "pill",
+      "state": "disabled",
+      "path": "text",
+      "token": "--warp-pill-text-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "pill.disabled.border",
+      "part": "pill",
+      "state": "disabled",
+      "path": "border",
+      "token": "--warp-pill-border-disabled",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "badge.rest.bg",
+      "part": "badge",
+      "state": "rest",
+      "path": "bg",
+      "token": "--warp-badge-bg",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "badge.rest.text",
+      "part": "badge",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-badge-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "badge.rest.border",
+      "part": "badge",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-badge-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "field.rest.label",
+      "part": "field",
+      "state": "rest",
+      "path": "label",
+      "token": "--warp-field-label",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.rest.bg",
+      "part": "field",
+      "state": "rest",
+      "path": "bg",
+      "token": "--warp-field-bg",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.floated.label",
+      "part": "field",
+      "state": "floated",
+      "path": "label",
+      "token": "--warp-field-label-floated",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.hover.label",
+      "part": "field",
+      "state": "hover",
+      "path": "label",
+      "token": "--warp-field-label-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.hover.bg",
+      "part": "field",
+      "state": "hover",
+      "path": "bg",
+      "token": "--warp-field-bg-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.focus.label",
+      "part": "field",
+      "state": "focus",
+      "path": "label",
+      "token": "--warp-field-label-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.focus.bg",
+      "part": "field",
+      "state": "focus",
+      "path": "bg",
+      "token": "--warp-field-bg-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.invalid.label",
+      "part": "field",
+      "state": "invalid",
+      "path": "label",
+      "token": "--warp-field-label-invalid",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.invalid.bg",
+      "part": "field",
+      "state": "invalid",
+      "path": "bg",
+      "token": "--warp-field-bg-invalid",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.focus.ring",
+      "part": "field",
+      "state": "focus",
+      "path": "ring",
+      "token": "--warp-field-ring-focus",
+      "domain": "ring-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.invalid.ring",
+      "part": "field",
+      "state": "invalid",
+      "path": "ring",
+      "token": "--warp-field-ring-invalid",
+      "domain": "ring-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.disabled.label",
+      "part": "field",
+      "state": "disabled",
+      "path": "label",
+      "token": "--warp-field-label-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.disabled.bg",
+      "part": "field",
+      "state": "disabled",
+      "path": "bg",
+      "token": "--warp-field-bg-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.readonly.label",
+      "part": "field",
+      "state": "readonly",
+      "path": "label",
+      "token": "--warp-field-label-readonly",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "field.readonly.bg",
+      "part": "field",
+      "state": "readonly",
+      "path": "bg",
+      "token": "--warp-field-bg-readonly",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "focus.rest.ring",
+      "part": "focus",
+      "state": "rest",
+      "path": "ring",
+      "token": "--warp-focus-ring",
+      "domain": "ring-role",
+      "units": "width/offset px",
+      "status": "candidate",
+      "evidence": "unresolved"
+    },
+    {
+      "id": "text/display.rest.font.family",
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--display-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/display.rest.font.size",
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--display-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/display.rest.font.lineHeight",
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--display-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/display.rest.font.weight",
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--display-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/display.rest.font.letterSpacing",
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--display-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/title.rest.font.family",
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--title-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/title.rest.font.size",
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--title-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/title.rest.font.lineHeight",
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--title-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/title.rest.font.weight",
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--title-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/title.rest.font.letterSpacing",
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--title-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/heading.rest.font.family",
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--heading-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/heading.rest.font.size",
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--heading-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/heading.rest.font.lineHeight",
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--heading-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/heading.rest.font.weight",
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--heading-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/heading.rest.font.letterSpacing",
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--heading-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/body.rest.font.family",
+      "part": "text/body",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--body-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/body.rest.font.size",
+      "part": "text/body",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--body-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/body.rest.font.lineHeight",
+      "part": "text/body",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--body-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/label.rest.font.family",
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--label-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/label.rest.font.size",
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--label-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/label.rest.font.lineHeight",
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--label-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/label.rest.font.weight",
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--label-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/label.rest.font.letterSpacing",
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--label-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/label.rest.font.transform",
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.transform",
+      "token": "--warp-text--label-font-transform",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/caption.rest.font.family",
+      "part": "text/caption",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--caption-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/caption.rest.font.size",
+      "part": "text/caption",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--caption-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/caption.rest.font.lineHeight",
+      "part": "text/caption",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--caption-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/eyebrow.rest.font.family",
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--eyebrow-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/eyebrow.rest.font.size",
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--eyebrow-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/eyebrow.rest.font.lineHeight",
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--eyebrow-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/eyebrow.rest.font.weight",
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--eyebrow-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/eyebrow.rest.font.letterSpacing",
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--eyebrow-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/eyebrow.rest.font.transform",
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.transform",
+      "token": "--warp-text--eyebrow-font-transform",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/code.rest.font.family",
+      "part": "text/code",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--code-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "text/code.rest.font.size",
+      "part": "text/code",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--code-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "status-light.rest.font.size",
+      "part": "status-light",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-status-light-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "classified"
+    },
+    {
+      "id": "link.rest.underline.width",
+      "part": "link",
+      "state": "rest",
+      "path": "underline.width",
+      "token": "--warp-link-underline-width",
+      "domain": "width",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "link.rest.underline.offset",
+      "part": "link",
+      "state": "rest",
+      "path": "underline.offset",
+      "token": "--warp-link-underline-offset",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "avatar.rest.width",
+      "part": "avatar",
+      "state": "rest",
+      "path": "width",
+      "token": "--warp-avatar-width",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "avatar.rest.height",
+      "part": "avatar",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-avatar-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "avatar.rest.radius",
+      "part": "avatar",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-avatar-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "avatar.rest.text",
+      "part": "avatar",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-avatar-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "avatar.rest.font.css",
+      "part": "avatar",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-avatar-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "avatar.rest.shadow",
+      "part": "avatar",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-avatar-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "event-card.rest.gap",
+      "part": "event-card",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-event-card-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tile.rest.radius",
+      "part": "tile",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-tile-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tile.rest.shadow",
+      "part": "tile",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-tile-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pip.rest.radius",
+      "part": "pip",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-pip-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pip.rest.shadow",
+      "part": "pip",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-pip-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "call-controls.rest.gap",
+      "part": "call-controls",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-call-controls-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "call-controls.rest.padding",
+      "part": "call-controls",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-call-controls-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "notification.rest.padding",
+      "part": "notification",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-notification-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "push-ask.rest.padding",
+      "part": "push-ask",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-push-ask-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "push-ask.rest.radius",
+      "part": "push-ask",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-push-ask-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "push-ask.rest.shadow",
+      "part": "push-ask",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-push-ask-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "receipts.rest.text",
+      "part": "receipts",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-receipts-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "typing.rest.paddingInline",
+      "part": "typing",
+      "state": "rest",
+      "path": "paddingInline",
+      "token": "--warp-typing-padding-inline",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "typing.rest.text",
+      "part": "typing",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-typing-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "composer.rest.margin",
+      "part": "composer",
+      "state": "rest",
+      "path": "margin",
+      "token": "--warp-composer-margin",
+      "domain": "margin",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "composer.rest.radius",
+      "part": "composer",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-composer-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "suggest.rest.radius",
+      "part": "suggest",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-suggest-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "suggest.rest.shadow",
+      "part": "suggest",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-suggest-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cite.rest.radius",
+      "part": "cite",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-cite-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cite.rest.shadow",
+      "part": "cite",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-cite-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cite.rest.font.css",
+      "part": "cite",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-cite-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cite.rest.text",
+      "part": "cite",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-cite-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tool-call.rest.radius",
+      "part": "tool-call",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-tool-call-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tool-call.rest.shadow",
+      "part": "tool-call",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-tool-call-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tool-call.rest.font.size",
+      "part": "tool-call",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-tool-call-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cursor.rest.text",
+      "part": "cursor",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-cursor-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "lock.rest.radius",
+      "part": "lock",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-lock-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "lock.rest.text",
+      "part": "lock",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-lock-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "lock.rest.shadow",
+      "part": "lock",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-lock-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "sync.rest.text",
+      "part": "sync",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-sync-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "reasoning.rest.radius",
+      "part": "reasoning",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-reasoning-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "reasoning.rest.font.size",
+      "part": "reasoning",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-reasoning-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "branch.rest.font.css",
+      "part": "branch",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-branch-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "branch.rest.text",
+      "part": "branch",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-branch-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "context-meter.rest.font.css",
+      "part": "context-meter",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-context-meter-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "context-meter.rest.text",
+      "part": "context-meter",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-context-meter-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "trace.rest.font.css",
+      "part": "trace",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-trace-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "question.rest.radius",
+      "part": "question",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-question-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "question.rest.shadow",
+      "part": "question",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-question-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "checkpoint.rest.font.css",
+      "part": "checkpoint",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-checkpoint-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "checkpoint.rest.text",
+      "part": "checkpoint",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-checkpoint-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "commit.rest.radius",
+      "part": "commit",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-commit-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "commit.rest.shadow",
+      "part": "commit",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-commit-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "thread-replies.rest.text",
+      "part": "thread-replies",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-thread-replies-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "comment-thread.rest.radius",
+      "part": "comment-thread",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-comment-thread-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "comment-thread.rest.shadow",
+      "part": "comment-thread",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-comment-thread-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "follow-flag.rest.radius",
+      "part": "follow-flag",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-follow-flag-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "follow-flag.rest.text",
+      "part": "follow-flag",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-follow-flag-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "follow-flag.rest.font.css",
+      "part": "follow-flag",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-follow-flag-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "viewport-rail.rest.radius",
+      "part": "viewport-rail",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-viewport-rail-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "viewport-rail.rest.shadow",
+      "part": "viewport-rail",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-viewport-rail-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "click-ripple.rest.shadow",
+      "part": "click-ripple",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-click-ripple-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "artifact.rest.radius",
+      "part": "artifact",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-artifact-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "artifact.rest.shadow",
+      "part": "artifact",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-artifact-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "availability.rest.gap",
+      "part": "availability",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-availability-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "auto-track.rest.font.size",
+      "part": "auto-track",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-auto-track-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "auto-track.rest.text",
+      "part": "auto-track",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-auto-track-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "year.rest.gap",
+      "part": "year",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-year-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "prefs-matrix.rest.gap",
+      "part": "prefs-matrix",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-prefs-matrix-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "transport.rest.gap",
+      "part": "transport",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-transport-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "message.rest.radius",
+      "part": "message",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-message-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "system-page.rest.padding",
+      "part": "system-page",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-system-page-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button.rest.gap",
+      "part": "button",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-button-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button.rest.height",
+      "part": "button",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-button-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button.rest.paddingInline",
+      "part": "button",
+      "state": "rest",
+      "path": "paddingInline",
+      "token": "--warp-button-padding-inline",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button.rest.radius",
+      "part": "button",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-button-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button.rest.font.family",
+      "part": "button",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-button-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button.rest.font.size",
+      "part": "button",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-button-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button.rest.font.weight",
+      "part": "button",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-button-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button.rest.font.letterSpacing",
+      "part": "button",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-button-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button.rest.font.transform",
+      "part": "button",
+      "state": "rest",
+      "path": "font.transform",
+      "token": "--warp-button-font-transform",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "button-group.rest.gap",
+      "part": "button-group",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-button-group-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toggle.rest.gap",
+      "part": "toggle",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-toggle-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toggle.rest.height",
+      "part": "toggle",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-toggle-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toggle.rest.minWidth",
+      "part": "toggle",
+      "state": "rest",
+      "path": "minWidth",
+      "token": "--warp-toggle-min-width",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toggle.rest.paddingInline",
+      "part": "toggle",
+      "state": "rest",
+      "path": "paddingInline",
+      "token": "--warp-toggle-padding-inline",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toggle.rest.border",
+      "part": "toggle",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-toggle-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toggle.rest.radius",
+      "part": "toggle",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-toggle-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toggle.rest.text",
+      "part": "toggle",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-toggle-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toggle.rest.font.css",
+      "part": "toggle",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-toggle-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toggle-group.rest.border",
+      "part": "toggle-group",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-toggle-group-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toggle-group.rest.radius",
+      "part": "toggle-group",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-toggle-group-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "chip.rest.gap",
+      "part": "chip",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-chip-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "chip.rest.height",
+      "part": "chip",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-chip-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "chip.rest.paddingInline",
+      "part": "chip",
+      "state": "rest",
+      "path": "paddingInline",
+      "token": "--warp-chip-padding-inline",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "chip.rest.border",
+      "part": "chip",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-chip-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "chip.rest.radius",
+      "part": "chip",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-chip-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "chip.rest.text",
+      "part": "chip",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-chip-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "chip.rest.font.css",
+      "part": "chip",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-chip-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "surface.rest.gap",
+      "part": "surface",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-surface-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "surface.rest.padding",
+      "part": "surface",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-surface-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "surface.rest.border",
+      "part": "surface",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-surface-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "surface.rest.radius",
+      "part": "surface",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-surface-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "surface.rest.shadow",
+      "part": "surface",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-surface-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "surface.rest.text",
+      "part": "surface",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-surface-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "surface.rest.font.lineHeight",
+      "part": "surface",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-surface-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fab.rest.insetBlockEnd",
+      "part": "fab",
+      "state": "rest",
+      "path": "insetBlockEnd",
+      "token": "--warp-fab-inset-block-end",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fab.rest.insetInlineEnd",
+      "part": "fab",
+      "state": "rest",
+      "path": "insetInlineEnd",
+      "token": "--warp-fab-inset-inline-end",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fab.rest.gap",
+      "part": "fab",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-fab-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fab.rest.radius",
+      "part": "fab",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-fab-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fab.rest.text",
+      "part": "fab",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-fab-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fab.rest.font.family",
+      "part": "fab",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-fab-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fab.rest.font.size",
+      "part": "fab",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-fab-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fab.rest.font.weight",
+      "part": "fab",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-fab-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fab.rest.font.letterSpacing",
+      "part": "fab",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-fab-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fab.rest.font.transform",
+      "part": "fab",
+      "state": "rest",
+      "path": "font.transform",
+      "token": "--warp-fab-font-transform",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fab.rest.shadow",
+      "part": "fab",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-fab-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "alert.rest.gap",
+      "part": "alert",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-alert-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "alert.rest.padding",
+      "part": "alert",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-alert-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "alert.rest.paddingInlineEnd",
+      "part": "alert",
+      "state": "rest",
+      "path": "paddingInlineEnd",
+      "token": "--warp-alert-padding-inline-end",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "alert.rest.text",
+      "part": "alert",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-alert-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "alert.rest.border",
+      "part": "alert",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-alert-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "alert.rest.radius",
+      "part": "alert",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-alert-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "alert.rest.shadow",
+      "part": "alert",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-alert-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "banner.rest.gap",
+      "part": "banner",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-banner-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "banner.rest.padding",
+      "part": "banner",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-banner-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "banner.rest.text",
+      "part": "banner",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-banner-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "banner.rest.font.size",
+      "part": "banner",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-banner-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "callout.rest.gap",
+      "part": "callout",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-callout-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "callout.rest.padding",
+      "part": "callout",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-callout-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "callout.rest.radius",
+      "part": "callout",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-callout-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "spinner.rest.width",
+      "part": "spinner",
+      "state": "rest",
+      "path": "width",
+      "token": "--warp-spinner-width",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "spinner.rest.height",
+      "part": "spinner",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-spinner-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "spinner.rest.border",
+      "part": "spinner",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-spinner-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "skeleton.rest.radius",
+      "part": "skeleton",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-skeleton-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "empty-state.rest.gap",
+      "part": "empty-state",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-empty-state-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "empty-state.rest.padding",
+      "part": "empty-state",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-empty-state-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "badge.rest.radius",
+      "part": "badge",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-badge-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "badge.rest.font.family",
+      "part": "badge",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-badge-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "badge.rest.font.size",
+      "part": "badge",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-badge-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "badge.rest.font.letterSpacing",
+      "part": "badge",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-badge-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "badge.rest.font.transform",
+      "part": "badge",
+      "state": "rest",
+      "path": "font.transform",
+      "token": "--warp-badge-font-transform",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "status-dot.rest.shadow",
+      "part": "status-dot",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-status-dot-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "live-status.rest.border",
+      "part": "live-status",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-live-status-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "live-status.rest.radius",
+      "part": "live-status",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-live-status-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "live-status.rest.text",
+      "part": "live-status",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-live-status-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "live-status.rest.font.css",
+      "part": "live-status",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-live-status-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toolbar.rest.border",
+      "part": "toolbar",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-toolbar-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "toolbar.rest.radius",
+      "part": "toolbar",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-toolbar-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "logo.rest.text",
+      "part": "logo",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-logo-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tag.rest.border",
+      "part": "tag",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-tag-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tag.rest.radius",
+      "part": "tag",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-tag-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tag.rest.text",
+      "part": "tag",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-tag-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tag.rest.font.size",
+      "part": "tag",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-tag-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pill.rest.radius",
+      "part": "pill",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-pill-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pill.rest.font.css",
+      "part": "pill",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-pill-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "image.rest.radius",
+      "part": "image",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-image-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "item.rest.gap",
+      "part": "item",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-item-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "item.rest.padding",
+      "part": "item",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-item-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "item.rest.radius",
+      "part": "item",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-item-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "section-message.rest.padding",
+      "part": "section-message",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-section-message-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "section-message.rest.text",
+      "part": "section-message",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-section-message-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "menubar.rest.border",
+      "part": "menubar",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-menubar-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "menubar.rest.radius",
+      "part": "menubar",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-menubar-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "selection-toolbar.rest.radius",
+      "part": "selection-toolbar",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-selection-toolbar-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "selection-toolbar.rest.text",
+      "part": "selection-toolbar",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-selection-toolbar-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "selection-toolbar.rest.shadow",
+      "part": "selection-toolbar",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-selection-toolbar-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "ai-label.rest.radius",
+      "part": "ai-label",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-ai-label-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "ai-label.rest.border",
+      "part": "ai-label",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-ai-label-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "ai-label.rest.text",
+      "part": "ai-label",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-ai-label-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "ai-label.rest.font.css",
+      "part": "ai-label",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-ai-label-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "qr.rest.gap",
+      "part": "qr",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-qr-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "nav.rest.gap",
+      "part": "nav",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-nav-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "panel.rest.gap",
+      "part": "panel",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-panel-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "panel.rest.padding",
+      "part": "panel",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-panel-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "panel.rest.radius",
+      "part": "panel",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-panel-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "panel.rest.shadow",
+      "part": "panel",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-panel-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "table.rest.gap",
+      "part": "table",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-table-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "delta.rest.font.size",
+      "part": "delta",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-delta-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "delta.rest.text",
+      "part": "delta",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-delta-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "stat-row.rest.gap",
+      "part": "stat-row",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-stat-row-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "stat.rest.padding",
+      "part": "stat",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-stat-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "stat.rest.radius",
+      "part": "stat",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-stat-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "chart.rest.gap",
+      "part": "chart",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-chart-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "list.rest.border",
+      "part": "list",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-list-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "list.rest.radius",
+      "part": "list",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-list-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tree.rest.font.size",
+      "part": "tree",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-tree-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "card-grid.rest.gap",
+      "part": "card-grid",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-card-grid-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "card.rest.padding",
+      "part": "card",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-card-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "card.rest.radius",
+      "part": "card",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-card-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "card.rest.shadow",
+      "part": "card",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-card-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "kanban.rest.gap",
+      "part": "kanban",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-kanban-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "virtual.rest.border",
+      "part": "virtual",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-virtual-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "virtual.rest.radius",
+      "part": "virtual",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-virtual-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "chip.rest.font.size",
+      "part": "chip",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-chip-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "scroll-grid.rest.border",
+      "part": "scroll-grid",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-scroll-grid-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "scroll-grid.rest.radius",
+      "part": "scroll-grid",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-scroll-grid-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "scroll-grid.rest.font.size",
+      "part": "scroll-grid",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-scroll-grid-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pagination.rest.font.size",
+      "part": "pagination",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-pagination-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pagination.rest.text",
+      "part": "pagination",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-pagination-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "load-more.rest.font.size",
+      "part": "load-more",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-load-more-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "load-more.rest.text",
+      "part": "load-more",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-load-more-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "bar-list.rest.font.size",
+      "part": "bar-list",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-bar-list-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "map.rest.radius",
+      "part": "map",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-map-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "map.rest.border",
+      "part": "map",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-map-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "flow.rest.radius",
+      "part": "flow",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-flow-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "flow.rest.border",
+      "part": "flow",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-flow-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "sso.rest.gap",
+      "part": "sso",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-sso-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "gate.rest.radius",
+      "part": "gate",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-gate-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "checklist.rest.gap",
+      "part": "checklist",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-checklist-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "checklist.rest.padding",
+      "part": "checklist",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-checklist-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "checklist.rest.border",
+      "part": "checklist",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-checklist-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "checklist.rest.radius",
+      "part": "checklist",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-checklist-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "checklist.rest.shadow",
+      "part": "checklist",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-checklist-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "setting-row.rest.gap",
+      "part": "setting-row",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-setting-row-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "save-bar.rest.gap",
+      "part": "save-bar",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-save-bar-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "save-bar.rest.radius",
+      "part": "save-bar",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-save-bar-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "save-bar.rest.text",
+      "part": "save-bar",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-save-bar-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "save-bar.rest.shadow",
+      "part": "save-bar",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-save-bar-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "confirm.rest.gap",
+      "part": "confirm",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-confirm-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "plans.rest.gap",
+      "part": "plans",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-plans-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "plan-card.rest.radius",
+      "part": "plan-card",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-plan-card-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "lines.rest.font.size",
+      "part": "lines",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-lines-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "conn.rest.font.size",
+      "part": "conn",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-conn-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "conn.rest.text",
+      "part": "conn",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-conn-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "qty.rest.height",
+      "part": "qty",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-qty-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "qty.rest.radius",
+      "part": "qty",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-qty-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "qty.rest.shadow",
+      "part": "qty",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-qty-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pay-frame.rest.radius",
+      "part": "pay-frame",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-pay-frame-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pay-frame.rest.border",
+      "part": "pay-frame",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-pay-frame-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "confirmation.rest.gap",
+      "part": "confirmation",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-confirmation-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "shortcuts.rest.gap",
+      "part": "shortcuts",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-shortcuts-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "bulk-bar.rest.gap",
+      "part": "bulk-bar",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-bulk-bar-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "bulk-bar.rest.radius",
+      "part": "bulk-bar",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-bulk-bar-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "bulk-bar.rest.text",
+      "part": "bulk-bar",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-bulk-bar-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "bulk-bar.rest.font.size",
+      "part": "bulk-bar",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-bulk-bar-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "integrations.rest.gap",
+      "part": "integrations",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-integrations-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "integration.rest.padding",
+      "part": "integration",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-integration-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "integration.rest.border",
+      "part": "integration",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-integration-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "integration.rest.radius",
+      "part": "integration",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-integration-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "calendar.rest.gap",
+      "part": "calendar",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-calendar-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "range-panel.rest.gap",
+      "part": "range-panel",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-range-panel-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "wheels.rest.gap",
+      "part": "wheels",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-wheels-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "wheels.rest.height",
+      "part": "wheels",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-wheels-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "rte.rest.gap",
+      "part": "rte",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-rte-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "kv.rest.gap",
+      "part": "kv",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-kv-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "md-editor.rest.gap",
+      "part": "md-editor",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-md-editor-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "code.rest.font.css",
+      "part": "code",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-code-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "code.rest.radius",
+      "part": "code",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-code-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "code.rest.border",
+      "part": "code",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-code-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "codeblock.rest.radius",
+      "part": "codeblock",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-codeblock-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "codeblock.rest.border",
+      "part": "codeblock",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-codeblock-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "markdown.rest.font.size",
+      "part": "markdown",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-markdown-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "prose.rest.font.size",
+      "part": "prose",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-prose-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "prose.rest.font.lineHeight",
+      "part": "prose",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-prose-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "snippet.rest.radius",
+      "part": "snippet",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-snippet-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "snippet.rest.border",
+      "part": "snippet",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-snippet-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "snippet.rest.font.css",
+      "part": "snippet",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-snippet-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "jsontree.rest.font.css",
+      "part": "jsontree",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-jsontree-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "jsontree.rest.radius",
+      "part": "jsontree",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-jsontree-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "diff.rest.border",
+      "part": "diff",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-diff-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "diff.rest.radius",
+      "part": "diff",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-diff-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tests.rest.font.size",
+      "part": "tests",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-tests-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "props.rest.border",
+      "part": "props",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-props-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "props.rest.radius",
+      "part": "props",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-props-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "linkcard.rest.radius",
+      "part": "linkcard",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-linkcard-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "linkcard.rest.border",
+      "part": "linkcard",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-linkcard-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "embed.rest.radius",
+      "part": "embed",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-embed-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "embed.rest.border",
+      "part": "embed",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-embed-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "strength.rest.font.size",
+      "part": "strength",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-strength-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "quantity.rest.height",
+      "part": "quantity",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-quantity-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "quantity.rest.radius",
+      "part": "quantity",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-quantity-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "otp.rest.gap",
+      "part": "otp",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-otp-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "editable.rest.gap",
+      "part": "editable",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-editable-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "editable.rest.minHeight",
+      "part": "editable",
+      "state": "rest",
+      "path": "minHeight",
+      "token": "--warp-editable-min-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "group.rest.gap",
+      "part": "group",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-group-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "choice-card.rest.gap",
+      "part": "choice-card",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-choice-card-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "choice-card.rest.padding",
+      "part": "choice-card",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-choice-card-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "choice-card.rest.radius",
+      "part": "choice-card",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-choice-card-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "segmented.rest.radius",
+      "part": "segmented",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-segmented-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "segmented.rest.shadow",
+      "part": "segmented",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-segmented-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "popup.rest.border",
+      "part": "popup",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-popup-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "popup.rest.radius",
+      "part": "popup",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-popup-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "popup.rest.shadow",
+      "part": "popup",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-popup-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "popup.rest.font.family",
+      "part": "popup",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-popup-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "transfer.rest.gap",
+      "part": "transfer",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-transfer-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "slider.rest.height",
+      "part": "slider",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-slider-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "range-head.rest.gap",
+      "part": "range-head",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-range-head-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "color.rest.gap",
+      "part": "color",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-color-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "dropzone.rest.gap",
+      "part": "dropzone",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-dropzone-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "dropzone.rest.padding",
+      "part": "dropzone",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-dropzone-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "dropzone.rest.radius",
+      "part": "dropzone",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-dropzone-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "dropzone.rest.text",
+      "part": "dropzone",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-dropzone-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cropper.rest.radius",
+      "part": "cropper",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-cropper-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "form.rest.gap",
+      "part": "form",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-form-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "error-summary.rest.padding",
+      "part": "error-summary",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-error-summary-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "error-summary.rest.border",
+      "part": "error-summary",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-error-summary-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "error-summary.rest.radius",
+      "part": "error-summary",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-error-summary-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "error-summary.rest.text",
+      "part": "error-summary",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-error-summary-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "setting.rest.gap",
+      "part": "setting",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-setting-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "setting.rest.paddingBlock",
+      "part": "setting",
+      "state": "rest",
+      "path": "paddingBlock",
+      "token": "--warp-setting-padding-block",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "rules.rest.font.size",
+      "part": "rules",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-rules-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "rules.rest.text",
+      "part": "rules",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-rules-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "knob-row.rest.gap",
+      "part": "knob-row",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-knob-row-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "xy-pad.rest.radius",
+      "part": "xy-pad",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-xy-pad-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "gradient.rest.gap",
+      "part": "gradient",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-gradient-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "icon-tile.rest.radius",
+      "part": "icon-tile",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-icon-tile-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "hover-scope.rest.gap",
+      "part": "hover-scope",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-hover-scope-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "hover-scope.rest.radius",
+      "part": "hover-scope",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-hover-scope-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "save-bar.rest.font.size",
+      "part": "save-bar",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-save-bar-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "autosave.rest.font.size",
+      "part": "autosave",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-autosave-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "autosave.rest.text",
+      "part": "autosave",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-autosave-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "stack.rest.gap",
+      "part": "stack",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-stack-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "row.rest.gap",
+      "part": "row",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-row-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "grid.rest.gap",
+      "part": "grid",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-grid-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "split.rest.gap",
+      "part": "split",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-split-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "center.rest.maxWidth",
+      "part": "center",
+      "state": "rest",
+      "path": "maxWidth",
+      "token": "--warp-center-max-width",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cover.rest.gap",
+      "part": "cover",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-cover-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cover.rest.minHeight",
+      "part": "cover",
+      "state": "rest",
+      "path": "minHeight",
+      "token": "--warp-cover-min-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cover.rest.paddingBlock",
+      "part": "cover",
+      "state": "rest",
+      "path": "paddingBlock",
+      "token": "--warp-cover-padding-block",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "master-detail.rest.height",
+      "part": "master-detail",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-master-detail-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "master-detail.rest.insetBlockStart",
+      "part": "master-detail",
+      "state": "rest",
+      "path": "insetBlockStart",
+      "token": "--warp-master-detail-inset-block-start",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "section.rest.gap",
+      "part": "section",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-section-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "section.rest.paddingBlock",
+      "part": "section",
+      "state": "rest",
+      "path": "paddingBlock",
+      "token": "--warp-section-padding-block",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "page-header.rest.gap",
+      "part": "page-header",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-page-header-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "masonry.rest.columnGap",
+      "part": "masonry",
+      "state": "rest",
+      "path": "columnGap",
+      "token": "--warp-masonry-column-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "masonry.rest.gap",
+      "part": "masonry",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-masonry-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "split-pane.rest.border",
+      "part": "split-pane",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-split-pane-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "split-pane.rest.radius",
+      "part": "split-pane",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-split-pane-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "float-panel.rest.insetBlockStart",
+      "part": "float-panel",
+      "state": "rest",
+      "path": "insetBlockStart",
+      "token": "--warp-float-panel-inset-block-start",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "float-panel.rest.insetInlineStart",
+      "part": "float-panel",
+      "state": "rest",
+      "path": "insetInlineStart",
+      "token": "--warp-float-panel-inset-inline-start",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "float-panel.rest.border",
+      "part": "float-panel",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-float-panel-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "float-panel.rest.radius",
+      "part": "float-panel",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-float-panel-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "float-panel.rest.shadow",
+      "part": "float-panel",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-float-panel-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "float-panel.rest.inset",
+      "part": "float-panel",
+      "state": "rest",
+      "path": "inset",
+      "token": "--warp-float-panel-inset",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "float-panel.rest.paddingBlockEnd",
+      "part": "float-panel",
+      "state": "rest",
+      "path": "paddingBlockEnd",
+      "token": "--warp-float-panel-padding-block-end",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "navlist.rest.gap",
+      "part": "navlist",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-navlist-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "sidenav.rest.font.size",
+      "part": "sidenav",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-sidenav-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "sidenav.rest.insetBlockStart",
+      "part": "sidenav",
+      "state": "rest",
+      "path": "insetBlockStart",
+      "token": "--warp-sidenav-inset-block-start",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "docs.rest.minHeight",
+      "part": "docs",
+      "state": "rest",
+      "path": "minHeight",
+      "token": "--warp-docs-min-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "anchor-nav.rest.font.size",
+      "part": "anchor-nav",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-anchor-nav-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "topnav.rest.gap",
+      "part": "topnav",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-topnav-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "topnav.rest.minHeight",
+      "part": "topnav",
+      "state": "rest",
+      "path": "minHeight",
+      "token": "--warp-topnav-min-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "topnav.rest.padding",
+      "part": "topnav",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-topnav-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "sticky-bar.rest.insetBlockEnd",
+      "part": "sticky-bar",
+      "state": "rest",
+      "path": "insetBlockEnd",
+      "token": "--warp-sticky-bar-inset-block-end",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "sticky-bar.rest.gap",
+      "part": "sticky-bar",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-sticky-bar-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "sticky-bar.rest.padding",
+      "part": "sticky-bar",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-sticky-bar-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "banner.rest.border",
+      "part": "banner",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-banner-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "banner.rest.radius",
+      "part": "banner",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-banner-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "announcement.rest.gap",
+      "part": "announcement",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-announcement-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "announcement.rest.padding",
+      "part": "announcement",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-announcement-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "announcement.rest.text",
+      "part": "announcement",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-announcement-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "announcement.rest.font.size",
+      "part": "announcement",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-announcement-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "consent.rest.insetInlineStart",
+      "part": "consent",
+      "state": "rest",
+      "path": "insetInlineStart",
+      "token": "--warp-consent-inset-inline-start",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "consent.rest.insetBlockEnd",
+      "part": "consent",
+      "state": "rest",
+      "path": "insetBlockEnd",
+      "token": "--warp-consent-inset-block-end",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "consent.rest.width",
+      "part": "consent",
+      "state": "rest",
+      "path": "width",
+      "token": "--warp-consent-width",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "consent.rest.gap",
+      "part": "consent",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-consent-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "consent.rest.padding",
+      "part": "consent",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-consent-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "consent.rest.border",
+      "part": "consent",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-consent-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "consent.rest.radius",
+      "part": "consent",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-consent-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "consent.rest.shadow",
+      "part": "consent",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-consent-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "consent.rest.paddingBlockEnd",
+      "part": "consent",
+      "state": "rest",
+      "path": "paddingBlockEnd",
+      "token": "--warp-consent-padding-block-end",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "doc-tabs.rest.paddingInline",
+      "part": "doc-tabs",
+      "state": "rest",
+      "path": "paddingInline",
+      "token": "--warp-doc-tabs-padding-inline",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "status-bar.rest.paddingInline",
+      "part": "status-bar",
+      "state": "rest",
+      "path": "paddingInline",
+      "token": "--warp-status-bar-padding-inline",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "status-bar.rest.paddingBlockEnd",
+      "part": "status-bar",
+      "state": "rest",
+      "path": "paddingBlockEnd",
+      "token": "--warp-status-bar-padding-block-end",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "status-bar.rest.font.css",
+      "part": "status-bar",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-status-bar-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "status-bar.rest.text",
+      "part": "status-bar",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-status-bar-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "board.rest.gap",
+      "part": "board",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-board-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "canvas.rest.backgroundImage",
+      "part": "canvas",
+      "state": "rest",
+      "path": "backgroundImage",
+      "token": "--warp-canvas-background-image",
+      "domain": "gradient",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "back-to-top.rest.insetBlockEnd",
+      "part": "back-to-top",
+      "state": "rest",
+      "path": "insetBlockEnd",
+      "token": "--warp-back-to-top-inset-block-end",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "back-to-top.rest.marginInlineEnd",
+      "part": "back-to-top",
+      "state": "rest",
+      "path": "marginInlineEnd",
+      "token": "--warp-back-to-top-margin-inline-end",
+      "domain": "margin",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "back-to-top.rest.width",
+      "part": "back-to-top",
+      "state": "rest",
+      "path": "width",
+      "token": "--warp-back-to-top-width",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "back-to-top.rest.height",
+      "part": "back-to-top",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-back-to-top-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "back-to-top.rest.border",
+      "part": "back-to-top",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-back-to-top-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "back-to-top.rest.shadow",
+      "part": "back-to-top",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-back-to-top-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "back-to-top.rest.text",
+      "part": "back-to-top",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-back-to-top-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pager.rest.gap",
+      "part": "pager",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-pager-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pager.rest.marginBlockStart",
+      "part": "pager",
+      "state": "rest",
+      "path": "marginBlockStart",
+      "token": "--warp-pager-margin-block-start",
+      "domain": "margin",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "inset.rest.padding",
+      "part": "inset",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-inset-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "inset.rest.radius",
+      "part": "inset",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-inset-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "landing.rest.text",
+      "part": "landing",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-landing-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "block.rest.paddingBlock",
+      "part": "block",
+      "state": "rest",
+      "path": "paddingBlock",
+      "token": "--warp-block-padding-block",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "block.rest.paddingInline",
+      "part": "block",
+      "state": "rest",
+      "path": "paddingInline",
+      "token": "--warp-block-padding-inline",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "announce.rest.gap",
+      "part": "announce",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-announce-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "announce.rest.padding",
+      "part": "announce",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-announce-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "announce.rest.text",
+      "part": "announce",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-announce-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "announce.rest.font.size",
+      "part": "announce",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-announce-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "topbar.rest.gap",
+      "part": "topbar",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-topbar-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "topbar.rest.paddingInline",
+      "part": "topbar",
+      "state": "rest",
+      "path": "paddingInline",
+      "token": "--warp-topbar-padding-inline",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "hero.rest.padding",
+      "part": "hero",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-hero-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "mock.rest.radius",
+      "part": "mock",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-mock-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "mock.rest.border",
+      "part": "mock",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-mock-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "mock.rest.shadow",
+      "part": "mock",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-mock-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "logos.rest.gap",
+      "part": "logos",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-logos-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "marquee.rest.gap",
+      "part": "marquee",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-marquee-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "stats.rest.border",
+      "part": "stats",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-stats-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "stats.rest.radius",
+      "part": "stats",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-stats-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "bento.rest.gap",
+      "part": "bento",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-bento-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tile.rest.gap",
+      "part": "tile",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-tile-local-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tile.rest.padding",
+      "part": "tile",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-tile-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tile.rest.border",
+      "part": "tile",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-tile-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "tile.rest.text",
+      "part": "tile",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-tile-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "story.rest.gap",
+      "part": "story",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-story-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "carousel.rest.gap",
+      "part": "carousel",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-carousel-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "quote.rest.gap",
+      "part": "quote",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-quote-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "quote.rest.padding",
+      "part": "quote",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-quote-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "quote.rest.border",
+      "part": "quote",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-quote-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "quote.rest.radius",
+      "part": "quote",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-quote-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "quote.rest.shadow",
+      "part": "quote",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-quote-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "gallery.rest.gap",
+      "part": "gallery",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-gallery-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "selection-bar.rest.insetBlockStart",
+      "part": "selection-bar",
+      "state": "rest",
+      "path": "insetBlockStart",
+      "token": "--warp-selection-bar-inset-block-start",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "selection-bar.rest.gap",
+      "part": "selection-bar",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-selection-bar-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "selection-bar.rest.marginBlockEnd",
+      "part": "selection-bar",
+      "state": "rest",
+      "path": "marginBlockEnd",
+      "token": "--warp-selection-bar-margin-block-end",
+      "domain": "margin",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "selection-bar.rest.minHeight",
+      "part": "selection-bar",
+      "state": "rest",
+      "path": "minHeight",
+      "token": "--warp-selection-bar-min-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "selection-bar.rest.border",
+      "part": "selection-bar",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-selection-bar-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "selection-bar.rest.radius",
+      "part": "selection-bar",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-selection-bar-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "compare.rest.radius",
+      "part": "compare",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-compare-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "compare.rest.border",
+      "part": "compare",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-compare-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pricing.rest.gap",
+      "part": "pricing",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-pricing-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "plan.rest.gap",
+      "part": "plan",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-plan-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "plan.rest.padding",
+      "part": "plan",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-plan-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "plan.rest.border",
+      "part": "plan",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-plan-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "plan.rest.radius",
+      "part": "plan",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-plan-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "plan.rest.shadow",
+      "part": "plan",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-plan-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "compare-table.rest.border",
+      "part": "compare-table",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-compare-table-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "compare-table.rest.radius",
+      "part": "compare-table",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-compare-table-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "product.rest.gap",
+      "part": "product",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-product-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "zoom.rest.radius",
+      "part": "zoom",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-zoom-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "zoom.rest.border",
+      "part": "zoom",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-zoom-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "thumbs.rest.gap",
+      "part": "thumbs",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-thumbs-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "variant.rest.gap",
+      "part": "variant",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-variant-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "lobby.rest.gap",
+      "part": "lobby",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-lobby-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "lobby.rest.padding",
+      "part": "lobby",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-lobby-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "lobby.rest.border",
+      "part": "lobby",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-lobby-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "lobby.rest.radius",
+      "part": "lobby",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-lobby-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "facts.rest.gap",
+      "part": "facts",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-facts-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "facts.rest.padding",
+      "part": "facts",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-facts-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "facts.rest.radius",
+      "part": "facts",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-facts-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cta.rest.gap",
+      "part": "cta",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-cta-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cta.rest.padding",
+      "part": "cta",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-cta-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cta.rest.radius",
+      "part": "cta",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-cta-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "cta.rest.text",
+      "part": "cta",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-cta-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "newsletter.rest.gap",
+      "part": "newsletter",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-newsletter-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "footer.rest.padding",
+      "part": "footer",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-footer-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "scene.rest.radius",
+      "part": "scene",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-scene-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "scene.rest.border",
+      "part": "scene",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-scene-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "live-room.rest.gap",
+      "part": "live-room",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-live-room-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "live-room.rest.padding",
+      "part": "live-room",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-live-room-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "live-room.rest.border",
+      "part": "live-room",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-live-room-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "live-room.rest.radius",
+      "part": "live-room",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-live-room-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "live-room.rest.shadow",
+      "part": "live-room",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-live-room-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "event-log.rest.font.css",
+      "part": "event-log",
+      "state": "rest",
+      "path": "font.css",
+      "token": "--warp-event-log-font-css",
+      "domain": "font-shorthand",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "event-log.rest.text",
+      "part": "event-log",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-event-log-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "stat-strip.rest.margin",
+      "part": "stat-strip",
+      "state": "rest",
+      "path": "margin",
+      "token": "--warp-stat-strip-margin",
+      "domain": "margin",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "market.rest.gap",
+      "part": "market",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-market-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "listing.rest.border",
+      "part": "listing",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-listing-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "listing.rest.radius",
+      "part": "listing",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-listing-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "listing.rest.shadow",
+      "part": "listing",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-listing-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "player-notes.rest.gap",
+      "part": "player-notes",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-player-notes-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "player-notes.rest.marginBlockStart",
+      "part": "player-notes",
+      "state": "rest",
+      "path": "marginBlockStart",
+      "token": "--warp-player-notes-margin-block-start",
+      "domain": "margin",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "transcript.rest.marginBlockStart",
+      "part": "transcript",
+      "state": "rest",
+      "path": "marginBlockStart",
+      "token": "--warp-transcript-margin-block-start",
+      "domain": "margin",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "transcript.rest.paddingBlockStart",
+      "part": "transcript",
+      "state": "rest",
+      "path": "paddingBlockStart",
+      "token": "--warp-transcript-padding-block-start",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "reviews.rest.gap",
+      "part": "reviews",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-reviews-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "reviews.rest.marginBlockStart",
+      "part": "reviews",
+      "state": "rest",
+      "path": "marginBlockStart",
+      "token": "--warp-reviews-margin-block-start",
+      "domain": "margin",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "review.rest.gap",
+      "part": "review",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-review-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "review.rest.paddingBlock",
+      "part": "review",
+      "state": "rest",
+      "path": "paddingBlock",
+      "token": "--warp-review-padding-block",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "backdrops.rest.gap",
+      "part": "backdrops",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-backdrops-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "backdrop.rest.padding",
+      "part": "backdrop",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-backdrop-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "backdrop.rest.border",
+      "part": "backdrop",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-backdrop-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "backdrop.rest.radius",
+      "part": "backdrop",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-backdrop-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "scroll-progress.rest.inset",
+      "part": "scroll-progress",
+      "state": "rest",
+      "path": "inset",
+      "token": "--warp-scroll-progress-inset",
+      "domain": "position",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "scroll-progress.rest.height",
+      "part": "scroll-progress",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-scroll-progress-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "container-scroll.rest.gap",
+      "part": "container-scroll",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-container-scroll-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fancy-stage.rest.border",
+      "part": "fancy-stage",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-fancy-stage-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fancy-stage.rest.radius",
+      "part": "fancy-stage",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-fancy-stage-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "fancy-presets.rest.gap",
+      "part": "fancy-presets",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-fancy-presets-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "motion-cards.rest.gap",
+      "part": "motion-cards",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-motion-cards-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "motion-card.rest.gap",
+      "part": "motion-card",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-motion-card-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "motion-card.rest.padding",
+      "part": "motion-card",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-motion-card-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "motion-card.rest.text",
+      "part": "motion-card",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-motion-card-text",
+      "domain": "color",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "motion-card.rest.border",
+      "part": "motion-card",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-motion-card-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "motion-card.rest.radius",
+      "part": "motion-card",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-motion-card-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "motion-card.rest.shadow",
+      "part": "motion-card",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-motion-card-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "wall.rest.gap",
+      "part": "wall",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-wall-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "team.rest.gap",
+      "part": "team",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-team-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "blog.rest.gap",
+      "part": "blog",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-blog-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "post.rest.border",
+      "part": "post",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-post-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "post.rest.radius",
+      "part": "post",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-post-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "post.rest.shadow",
+      "part": "post",
+      "state": "rest",
+      "path": "shadow",
+      "token": "--warp-post-shadow",
+      "domain": "shadow",
+      "units": "forbidden",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "blog-foot.rest.marginBlockStart",
+      "part": "blog-foot",
+      "state": "rest",
+      "path": "marginBlockStart",
+      "token": "--warp-blog-foot-margin-block-start",
+      "domain": "margin",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "contact.rest.gap",
+      "part": "contact",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-contact-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "waitlist.rest.gap",
+      "part": "waitlist",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-waitlist-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "waitlist.rest.padding",
+      "part": "waitlist",
+      "state": "rest",
+      "path": "padding",
+      "token": "--warp-waitlist-padding",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "waitlist.rest.radius",
+      "part": "waitlist",
+      "state": "rest",
+      "path": "radius",
+      "token": "--warp-waitlist-radius",
+      "domain": "radius",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "waitlist.rest.border",
+      "part": "waitlist",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-waitlist-border",
+      "domain": "border",
+      "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    }
+  ],
+  "systemScales": [
+    {
+      "path": "space",
+      "domain": "space",
+      "allowCustom": true,
+      "status": "declared-inputs",
+      "entries": [
+        {
+          "key": "hair",
+          "token": "--warp-space-hair",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "tight",
+          "token": "--warp-space-tight",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "related",
+          "token": "--warp-space-related",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "group",
+          "token": "--warp-space-group",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "section",
+          "token": "--warp-space-section",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "page",
+          "token": "--warp-space-page",
+          "unit": "px",
+          "status": "declared-input"
+        }
+      ]
+    },
+    {
+      "path": "radius",
+      "domain": "radius",
+      "allowCustom": true,
+      "status": "declared-inputs",
+      "entries": [
+        {
+          "key": "control",
+          "token": "--warp-radius-control",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "surface",
+          "token": "--warp-radius-surface",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "card",
+          "token": "--warp-radius-surface",
+          "aliasOf": "surface",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "mark",
+          "token": "--warp-radius-mark",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "round",
+          "token": "--warp-radius-round",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "pill",
+          "token": "--warp-radius-round",
+          "aliasOf": "round",
+          "unit": "px",
+          "status": "declared-input"
+        }
+      ]
+    },
+    {
+      "path": "font",
+      "domain": "family",
+      "allowCustom": true,
+      "status": "declared-inputs",
+      "entries": [
+        {
+          "key": "body",
+          "token": "--warp-font-sans",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "display",
+          "token": "--warp-font-display",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "mono",
+          "token": "--warp-font-mono",
+          "unit": "forbidden",
+          "status": "declared-input"
+        }
+      ]
+    },
+    {
+      "path": "text",
+      "domain": "text-role",
+      "allowCustom": true,
+      "status": "partial",
+      "entries": [
+        {
+          "key": "display",
+          "tokens": [
+            "--warp-text-display-canvas",
+            "--warp-text-display-font",
+            "--warp-text-display-leading",
+            "--warp-text-display-px",
+            "--warp-text-display-size",
+            "--warp-text-display-tracking",
+            "--warp-text-display-trim",
+            "--warp-text-display-trim-k",
+            "--warp-text-display-variation",
+            "--warp-text-display-weight"
+          ],
+          "unit": "role fields",
+          "status": "partial"
+        },
+        {
+          "key": "title",
+          "tokens": [
+            "--warp-text-title-canvas",
+            "--warp-text-title-font",
+            "--warp-text-title-leading",
+            "--warp-text-title-px",
+            "--warp-text-title-size",
+            "--warp-text-title-tracking",
+            "--warp-text-title-weight"
+          ],
+          "unit": "role fields",
+          "status": "partial"
+        },
+        {
+          "key": "heading",
+          "tokens": [
+            "--warp-text-heading-canvas",
+            "--warp-text-heading-font",
+            "--warp-text-heading-leading",
+            "--warp-text-heading-px",
+            "--warp-text-heading-size",
+            "--warp-text-heading-tracking",
+            "--warp-text-heading-trim",
+            "--warp-text-heading-trim-k",
+            "--warp-text-heading-weight",
+            "--warp-text-heading-wrap"
+          ],
+          "unit": "role fields",
+          "status": "partial"
+        },
+        {
+          "key": "body",
+          "tokens": [
+            "--warp-text-body-canvas",
+            "--warp-text-body-font",
+            "--warp-text-body-leading",
+            "--warp-text-body-px",
+            "--warp-text-body-size",
+            "--warp-text-body-weight"
+          ],
+          "unit": "role fields",
+          "status": "partial"
+        },
+        {
+          "key": "prose",
+          "tokens": [
+            "--warp-text-prose-canvas",
+            "--warp-text-prose-leading",
+            "--warp-text-prose-px",
+            "--warp-text-prose-size",
+            "--warp-text-prose-wrap"
+          ],
+          "unit": "role fields",
+          "status": "partial"
+        },
+        {
+          "key": "label",
+          "tokens": [
+            "--warp-text-label-canvas",
+            "--warp-text-label-case",
+            "--warp-text-label-font",
+            "--warp-text-label-leading",
+            "--warp-text-label-px",
+            "--warp-text-label-size",
+            "--warp-text-label-tracking",
+            "--warp-text-label-weight"
+          ],
+          "unit": "role fields",
+          "status": "partial"
+        },
+        {
+          "key": "eyebrow",
+          "tokens": [
+            "--warp-text-eyebrow-canvas",
+            "--warp-text-eyebrow-case",
+            "--warp-text-eyebrow-font",
+            "--warp-text-eyebrow-leading",
+            "--warp-text-eyebrow-px",
+            "--warp-text-eyebrow-size",
+            "--warp-text-eyebrow-tracking",
+            "--warp-text-eyebrow-weight"
+          ],
+          "unit": "role fields",
+          "status": "partial"
+        },
+        {
+          "key": "caption",
+          "tokens": [
+            "--warp-text-caption-canvas",
+            "--warp-text-caption-leading",
+            "--warp-text-caption-px",
+            "--warp-text-caption-size"
+          ],
+          "unit": "role fields",
+          "status": "partial"
+        },
+        {
+          "key": "code",
+          "tokens": [
+            "--warp-text-code-canvas",
+            "--warp-text-code-font",
+            "--warp-text-code-leading",
+            "--warp-text-code-px",
+            "--warp-text-code-size"
+          ],
+          "unit": "role fields",
+          "status": "partial"
+        },
+        {
+          "key": "control",
+          "tokens": [
+            "--warp-text-control-canvas",
+            "--warp-text-control-leading",
+            "--warp-text-control-px",
+            "--warp-text-control-size"
+          ],
+          "unit": "role fields",
+          "status": "partial"
+        },
+        {
+          "key": "button",
+          "tokens": [
+            "--warp-text-button-canvas",
+            "--warp-text-button-case",
+            "--warp-text-button-font",
+            "--warp-text-button-leading",
+            "--warp-text-button-px",
+            "--warp-text-button-size",
+            "--warp-text-button-tracking",
+            "--warp-text-button-weight"
+          ],
+          "unit": "role fields",
+          "status": "partial"
+        }
+      ]
+    },
+    {
+      "path": "shadow",
+      "domain": "shadow",
+      "allowCustom": true,
+      "status": "declared-inputs",
+      "entries": [
+        {
+          "key": "none",
+          "token": "--warp-elevation-0",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "sm",
+          "token": "--warp-elevation-1",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "md",
+          "token": "--warp-elevation-2",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "lg",
+          "token": "--warp-elevation-3",
+          "unit": "forbidden",
+          "status": "declared-input"
+        }
+      ]
+    },
+    {
+      "path": "border",
+      "domain": "width",
+      "allowCustom": false,
+      "status": "declared-inputs",
+      "entries": [
+        {
+          "key": "hairline",
+          "token": "--warp-border-hairline",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "emphasis",
+          "token": "--warp-border-emphasis",
+          "unit": "px",
+          "status": "declared-input"
+        }
+      ]
+    },
+    {
+      "path": "focus",
+      "domain": "focus-role",
+      "allowCustom": false,
+      "status": "declared-inputs",
+      "entries": [
+        {
+          "key": "width",
+          "token": "--warp-focus-width",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "offset",
+          "token": "--warp-focus-offset",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "color",
+          "token": "--warp-color-focus",
+          "unit": "forbidden",
+          "status": "declared-input"
+        }
+      ]
+    },
+    {
+      "path": "padding",
+      "domain": "space",
+      "allowCustom": false,
+      "status": "declared-inputs",
+      "entries": [
+        {
+          "key": "control",
+          "token": "--warp-pad-control",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "surface",
+          "token": "--warp-pad-surface",
+          "unit": "px",
+          "status": "declared-input"
+        }
+      ]
+    },
+    {
+      "path": "control",
+      "domain": "length",
+      "allowCustom": false,
+      "status": "declared-inputs",
+      "entries": [
+        {
+          "key": "sm",
+          "token": "--warp-control-sm",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "md",
+          "token": "--warp-control-md",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "lg",
+          "token": "--warp-control-lg",
+          "unit": "px",
+          "status": "declared-input"
+        }
+      ]
+    },
+    {
+      "path": "field",
+      "domain": "length",
+      "allowCustom": false,
+      "status": "declared-inputs",
+      "entries": [
+        {
+          "key": "height",
+          "token": "--warp-field-height",
+          "unit": "px",
+          "status": "declared-input"
+        }
+      ]
+    },
+    {
+      "path": "density",
+      "domain": "density-role",
+      "status": "unresolved",
+      "entries": []
+    },
+    {
+      "path": "motion.duration",
+      "domain": "time",
+      "status": "unresolved",
+      "entries": []
+    },
+    {
+      "path": "motion.easing",
+      "domain": "easing",
+      "status": "unresolved",
+      "entries": []
+    },
+    {
+      "path": "motion",
+      "domain": "motion-role",
+      "status": "unresolved",
+      "entries": []
+    },
+    {
+      "path": "layout",
+      "domain": "length",
+      "allowCustom": false,
+      "status": "declared-inputs",
+      "entries": [
+        {
+          "key": "bar",
+          "token": "--warp-layout-bar",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "tabbar",
+          "token": "--warp-layout-tabbar",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "rail",
+          "token": "--warp-layout-rail",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "sidebar",
+          "token": "--warp-layout-sidebar",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "list",
+          "token": "--warp-layout-list",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "aside",
+          "token": "--warp-layout-aside",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "measure",
+          "token": "--warp-layout-measure",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "narrow",
+          "token": "--warp-layout-narrow",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "content",
+          "token": "--warp-layout-content",
+          "unit": "px",
+          "status": "declared-input"
+        },
+        {
+          "key": "wide",
+          "token": "--warp-layout-wide",
+          "unit": "px",
+          "status": "declared-input"
+        }
+      ]
+    },
+    {
+      "path": "breakpoint",
+      "domain": "build-length",
+      "status": "unresolved",
+      "entries": []
+    },
+    {
+      "path": "color",
+      "domain": "color",
+      "allowCustom": false,
+      "status": "declared-inputs",
+      "entries": [
+        {
+          "key": "accent-border",
+          "token": "--warp-color-accent-border",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "accent-on-solid",
+          "token": "--warp-color-accent-on-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "accent-soft",
+          "token": "--warp-color-accent-soft",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "accent-solid",
+          "token": "--warp-color-accent-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "accent-solid-hover",
+          "token": "--warp-color-accent-solid-hover",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "accent-text",
+          "token": "--warp-color-accent-text",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "border",
+          "token": "--warp-color-border",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "border-control",
+          "token": "--warp-color-border-control",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "border-strong",
+          "token": "--warp-color-border-strong",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "caution-border",
+          "token": "--warp-color-caution-border",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "caution-on-solid",
+          "token": "--warp-color-caution-on-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "caution-soft",
+          "token": "--warp-color-caution-soft",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "caution-solid",
+          "token": "--warp-color-caution-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "caution-solid-hover",
+          "token": "--warp-color-caution-solid-hover",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "caution-text",
+          "token": "--warp-color-caution-text",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "critical-border",
+          "token": "--warp-color-critical-border",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "critical-on-solid",
+          "token": "--warp-color-critical-on-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "critical-soft",
+          "token": "--warp-color-critical-soft",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "critical-solid",
+          "token": "--warp-color-critical-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "critical-solid-hover",
+          "token": "--warp-color-critical-solid-hover",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "critical-text",
+          "token": "--warp-color-critical-text",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-1",
+          "token": "--warp-color-data-1",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-2",
+          "token": "--warp-color-data-2",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-3",
+          "token": "--warp-color-data-3",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-4",
+          "token": "--warp-color-data-4",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-5",
+          "token": "--warp-color-data-5",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-6",
+          "token": "--warp-color-data-6",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-7",
+          "token": "--warp-color-data-7",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-8",
+          "token": "--warp-color-data-8",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-axis",
+          "token": "--warp-color-data-axis",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-div-mid",
+          "token": "--warp-color-data-div-mid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-div-neg",
+          "token": "--warp-color-data-div-neg",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-div-pos",
+          "token": "--warp-color-data-div-pos",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-down",
+          "token": "--warp-color-data-down",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-down-flash",
+          "token": "--warp-color-data-down-flash",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-grid",
+          "token": "--warp-color-data-grid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-other",
+          "token": "--warp-color-data-other",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-seq-0",
+          "token": "--warp-color-data-seq-0",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-seq-1",
+          "token": "--warp-color-data-seq-1",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-seq-2",
+          "token": "--warp-color-data-seq-2",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-seq-3",
+          "token": "--warp-color-data-seq-3",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-seq-4",
+          "token": "--warp-color-data-seq-4",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-seq-5",
+          "token": "--warp-color-data-seq-5",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-up",
+          "token": "--warp-color-data-up",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "data-up-flash",
+          "token": "--warp-color-data-up-flash",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "field",
+          "token": "--warp-color-field",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "field-active",
+          "token": "--warp-color-field-active",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "field-invalid",
+          "token": "--warp-color-field-invalid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "focus",
+          "token": "--warp-color-focus",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "highlight-border",
+          "token": "--warp-color-highlight-border",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "highlight-on-solid",
+          "token": "--warp-color-highlight-on-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "highlight-soft",
+          "token": "--warp-color-highlight-soft",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "highlight-solid",
+          "token": "--warp-color-highlight-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "highlight-solid-hover",
+          "token": "--warp-color-highlight-solid-hover",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "highlight-text",
+          "token": "--warp-color-highlight-text",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "info-border",
+          "token": "--warp-color-info-border",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "info-on-solid",
+          "token": "--warp-color-info-on-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "info-soft",
+          "token": "--warp-color-info-soft",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "info-solid",
+          "token": "--warp-color-info-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "info-solid-hover",
+          "token": "--warp-color-info-solid-hover",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "info-text",
+          "token": "--warp-color-info-text",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "label",
+          "token": "--warp-color-label",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "label-active",
+          "token": "--warp-color-label-active",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "label-rest",
+          "token": "--warp-color-label-rest",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "neutral-border",
+          "token": "--warp-color-neutral-border",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "neutral-on-solid",
+          "token": "--warp-color-neutral-on-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "neutral-soft",
+          "token": "--warp-color-neutral-soft",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "neutral-solid",
+          "token": "--warp-color-neutral-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "neutral-solid-hover",
+          "token": "--warp-color-neutral-solid-hover",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "neutral-text",
+          "token": "--warp-color-neutral-text",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "on-inverse",
+          "token": "--warp-color-on-inverse",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "page",
+          "token": "--warp-color-page",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "positive-border",
+          "token": "--warp-color-positive-border",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "positive-on-solid",
+          "token": "--warp-color-positive-on-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "positive-soft",
+          "token": "--warp-color-positive-soft",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "positive-solid",
+          "token": "--warp-color-positive-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "positive-solid-hover",
+          "token": "--warp-color-positive-solid-hover",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "positive-text",
+          "token": "--warp-color-positive-text",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "primary-on-solid",
+          "token": "--warp-color-primary-on-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "primary-solid",
+          "token": "--warp-color-primary-solid",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "primary-solid-hover",
+          "token": "--warp-color-primary-solid-hover",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "scrim",
+          "token": "--warp-color-scrim",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "surface",
+          "token": "--warp-color-surface",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "surface-active",
+          "token": "--warp-color-surface-active",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "surface-hover",
+          "token": "--warp-color-surface-hover",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "surface-inverse",
+          "token": "--warp-color-surface-inverse",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "surface-line",
+          "token": "--warp-color-surface-line",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "surface-overlay",
+          "token": "--warp-color-surface-overlay",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "surface-raised",
+          "token": "--warp-color-surface-raised",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "surface-sunken",
+          "token": "--warp-color-surface-sunken",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "sweep",
+          "token": "--warp-color-sweep",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "sweep-base",
+          "token": "--warp-color-sweep-base",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "sweep-critical",
+          "token": "--warp-color-sweep-critical",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "text",
+          "token": "--warp-color-text",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "text-faint",
+          "token": "--warp-color-text-faint",
+          "unit": "forbidden",
+          "status": "declared-input"
+        },
+        {
+          "key": "text-subtle",
+          "token": "--warp-color-text-subtle",
+          "unit": "forbidden",
+          "status": "declared-input"
+        }
+      ]
+    }
+  ],
+  "states": [
+    {
+      "name": "disabled",
+      "predicate": ":disabled,aria-disabled=true,data-disabled",
+      "precedence": 1
+    },
+    {
+      "name": "invalid",
+      "predicate": "data-invalid,aria-invalid=true",
+      "precedence": 2
+    },
+    {
+      "name": "press",
+      "predicate": ":active,data-press",
+      "precedence": 3
+    },
+    {
+      "name": "active",
+      "predicate": "aria-current,aria-selected=true,aria-pressed=true,data-active,data-state=active",
+      "precedence": 4
+    },
+    {
+      "name": "open",
+      "predicate": "aria-expanded=true,data-state=open,data-open,:popover-open,dialog open",
+      "precedence": 5
+    },
+    {
+      "name": "checked",
+      "predicate": ":checked,data-on,aria-checked=true",
+      "precedence": 6
+    },
+    {
+      "name": "focus",
+      "predicate": ":focus-visible,:focus-within,:has(:focus-visible)",
+      "precedence": 7
+    },
+    {
+      "name": "hover",
+      "predicate": ":hover with its original pointer guard",
+      "precedence": 8
+    },
+    {
+      "name": "floated",
+      "predicate": "field data-filled/date/lift and existing non-placeholder selectors",
+      "precedence": 9
+    },
+    {
+      "name": "readonly",
+      "predicate": "data-readonly,:read-only",
+      "precedence": 10
+    },
+    {
+      "name": "rest",
+      "predicate": "original unqualified/variant rules",
+      "precedence": 11
+    }
+  ],
+  "propertyRules": [
+    {
+      "paths": [
+        "bg"
+      ],
+      "binding": "background/background-color fill channels",
+      "domain": "color",
+      "units": "forbidden"
+    },
+    {
+      "paths": [
+        "text",
+        "label",
+        "highlight",
+        "stroke",
+        "base",
+        "shadowColor"
+      ],
+      "binding": "corresponding paint/label/outline/shadow colour sites",
+      "domain": "color",
+      "units": "forbidden"
+    },
+    {
+      "paths": [
+        "underline"
+      ],
+      "binding": "scalar colour or object color,width,offset",
+      "domain": "underline-role",
+      "units": "width/offset px"
+    },
+    {
+      "paths": [
+        "border"
+      ],
+      "binding": "border shorthand; none is valid",
+      "domain": "border",
+      "units": "px width only"
+    },
+    {
+      "paths": [
+        "borderColor and actual logical border colour longhands"
+      ],
+      "binding": "border-color and inventory matches",
+      "domain": "color",
+      "units": "forbidden"
+    },
+    {
+      "paths": [
+        "borderWidth and actual logical border width longhands"
+      ],
+      "binding": "border-width and inventory matches",
+      "domain": "width",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "radius and actual logical corner radius longhands"
+      ],
+      "binding": "border-radius and inventory matches",
+      "domain": "radius",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "padding and actual logical padding longhands"
+      ],
+      "binding": "padding and inventory matches",
+      "domain": "space",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "margin and actual logical margin longhands"
+      ],
+      "binding": "margin and inventory matches",
+      "domain": "margin",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "gap",
+        "rowGap",
+        "columnGap"
+      ],
+      "binding": "gap,row-gap,column-gap",
+      "domain": "space",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "height",
+        "width",
+        "minHeight",
+        "maxHeight",
+        "minWidth",
+        "maxWidth"
+      ],
+      "binding": "block-size,inline-size,min/max logical sizes",
+      "domain": "length",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "actual inset longhands"
+      ],
+      "binding": "inset,inset-block/inline and start/end variants",
+      "domain": "position",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "font.family"
+      ],
+      "binding": "font-family or family component of font",
+      "domain": "family",
+      "units": "forbidden"
+    },
+    {
+      "paths": [
+        "font.size"
+      ],
+      "binding": "font-size or size component of font",
+      "domain": "font-size",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "font.weight"
+      ],
+      "binding": "font-weight or weight component of font",
+      "domain": "weight",
+      "units": "unitless"
+    },
+    {
+      "paths": [
+        "font.lineHeight"
+      ],
+      "binding": "line-height or leading component of font",
+      "domain": "leading",
+      "units": "unitless"
+    },
+    {
+      "paths": [
+        "font.letterSpacing"
+      ],
+      "binding": "letter-spacing",
+      "domain": "tracking",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "font.transform"
+      ],
+      "binding": "text-transform",
+      "domain": "transform-case",
+      "units": "forbidden"
+    },
+    {
+      "paths": [
+        "font.style",
+        "font.variantNumeric",
+        "font.variation"
+      ],
+      "binding": "font-style,font-variant-numeric,font-variation-settings",
+      "domain": "matching CSS grammar",
+      "units": "forbidden"
+    },
+    {
+      "paths": [
+        "font.css"
+      ],
+      "binding": "original complete font shorthand",
+      "domain": "font-shorthand",
+      "units": "forbidden"
+    },
+    {
+      "paths": [
+        "shadow"
+      ],
+      "binding": "box-shadow; named elevation or raw list",
+      "domain": "shadow",
+      "units": "forbidden"
+    },
+    {
+      "paths": [
+        "ring.color",
+        "ring.width",
+        "ring.offset"
+      ],
+      "binding": "outline/sweep focus indicator components",
+      "domain": "color,width,position",
+      "units": "width/offset px"
+    },
+    {
+      "paths": [
+        "duration",
+        "easing",
+        "stagger"
+      ],
+      "binding": "existing transition/animation/sweep time/ease/delay components",
+      "domain": "time,easing,time",
+      "units": "ms for times"
+    },
+    {
+      "paths": [
+        "hoverDuration",
+        "pressDuration",
+        "enterDuration",
+        "exitDuration"
+      ],
+      "binding": "corresponding recorded motion channel, not a whole transition string",
+      "domain": "time",
+      "units": "ms"
+    },
+    {
+      "paths": [
+        "animation"
+      ],
+      "binding": "false disables recorded visual motion; true restores source motion",
+      "domain": "boolean",
+      "units": "forbidden"
+    },
+    {
+      "paths": [
+        "scale",
+        "opacity"
+      ],
+      "binding": "scale,opacity at corresponding state",
+      "domain": "scalar",
+      "units": "unitless"
+    },
+    {
+      "paths": [
+        "translate",
+        "rotate"
+      ],
+      "binding": "existing translate/rotate components",
+      "domain": "position,angle",
+      "units": "px,deg"
+    },
+    {
+      "paths": [
+        "backgroundImage"
+      ],
+      "binding": "existing gradient image sites",
+      "domain": "gradient",
+      "units": "forbidden"
+    },
+    {
+      "paths": [
+        "backgroundSize",
+        "scrollMarginBlock",
+        "scrollPaddingInline"
+      ],
+      "binding": "exact existing consumer grammar",
+      "domain": "length-list",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "fill",
+        "caretColor",
+        "accentColor",
+        "outlineColor",
+        "textDecorationColor",
+        "scrollbarColor"
+      ],
+      "binding": "actual matching colour consumers",
+      "domain": "color or colour-list",
+      "units": "forbidden"
+    },
+    {
+      "paths": [
+        "strokeWidth",
+        "textDecorationThickness"
+      ],
+      "binding": "actual stroke/underline thickness",
+      "domain": "width",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "blur"
+      ],
+      "binding": "blur component of existing filter/backdrop-filter",
+      "domain": "length",
+      "units": "px"
+    },
+    {
+      "paths": [
+        "depth"
+      ],
+      "binding": "z-index consumer where it is a public depth token",
+      "domain": "integer",
+      "units": "unitless"
+    }
+  ],
+  "expansion": {
+    "version": 1,
+    "nativeNames": "kebab-to-camel",
+    "tokenNames": "camel-to-kebab-state-last",
+    "subpartSeparator": "--",
+    "existingTokenCollision": "insert-local-after-part",
+    "families": [
+      "padding-*",
+      "margin-*",
+      "inset-*",
+      "border-*-color",
+      "border-*-width",
+      "border-*-radius"
+    ],
+    "rename": {
+      "background-color": "bg",
+      "border-radius": "radius",
+      "box-shadow": "shadow",
+      "block-size": "height",
+      "inline-size": "width",
+      "min-block-size": "minHeight",
+      "max-block-size": "maxHeight",
+      "min-inline-size": "minWidth",
+      "max-inline-size": "maxWidth",
+      "font-family": "font.family",
+      "font-size": "font.size",
+      "font-weight": "font.weight",
+      "line-height": "font.lineHeight",
+      "letter-spacing": "font.letterSpacing",
+      "text-transform": "font.transform",
+      "font-style": "font.style",
+      "font-variant-numeric": "font.variantNumeric",
+      "font-variation-settings": "font.variation",
+      "font": "font.css"
+    },
+    "units": {
+      "length": "px",
+      "space": "px",
+      "margin": "px",
+      "width": "px",
+      "radius": "px",
+      "position": "px",
+      "font-size": "px",
+      "tracking": "px",
+      "time": "ms",
+      "angle": "deg",
+      "weight": "number",
+      "leading": "number",
+      "scalar": "number",
+      "integer": "number"
+    },
+    "stateKeys": [
+      "disabled",
+      "invalid",
+      "press",
+      "active",
+      "open",
+      "checked",
+      "focus",
+      "hover",
+      "floated",
+      "readonly"
+    ]
+  }
+}
+export default themeSchema

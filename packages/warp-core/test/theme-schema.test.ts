@@ -21,7 +21,7 @@ function setup() {
   const files = [
     ...schema.sources, 'docs/decisions/theming.md', 'packages/warp/plugin.template.d.mts',
     'packages/warp/plugin.d.mts', 'packages/warp-core/theme.schema.json',
-    'packages/cli/docs/theme-tokens.md',
+    'packages/cli/docs/theme-tokens.md', 'packages/warp-core/scripts/theme-schema-registry.mjs',
   ]
   for (const file of files) {
     mkdirSync(dirname(resolve(fixture, file)), { recursive: true })
@@ -529,4 +529,36 @@ test('rejects a change to a normalized system alias rule', () => {
   expect(original).toContain('card aliases surface')
   writeFileSync(path, original.replace('card aliases surface', 'card aliases mark'))
   expect(check()).toContain('Changed system alias rule: radius')
+})
+
+test('exports the compact schema through the package without source-site provenance', () => {
+  const packageRoot = resolve(root, 'packages/warp-core')
+  const result = execFileSync(process.execPath, ['--input-type=module', '-e',
+    'import schema, { themeSchema } from "@weft-js/warp-core/theme-schema"; ' +
+    'if (schema !== themeSchema) process.exit(2); process.stdout.write(JSON.stringify(schema))'], {
+    cwd: packageRoot, encoding: 'utf8',
+  })
+  const compact = JSON.parse(result) as { digest: string; status: string; groups: {
+    id: string; status: string; evidence: string; siteIds?: unknown }[]; sites?: unknown }
+  const full = JSON.parse(readFileSync(resolve(packageRoot, 'theme.schema.json'), 'utf8')) as {
+    digest: string; registry: { groups: { id: string; binding: string }[] }
+  }
+  const pkg = JSON.parse(readFileSync(resolve(packageRoot, 'package.json'), 'utf8')) as {
+    files: string[]; exports: Record<string, string>
+  }
+  expect(pkg.exports['./theme-schema']).toBe('./scripts/theme-schema-registry.mjs')
+  expect(pkg.files).toContain('scripts/theme-schema-registry.mjs')
+  expect(compact.digest).toBe(full.digest)
+  expect(compact.status).toBe('partial')
+  expect(compact.sites).toBeUndefined()
+  expect(compact.groups.map((row) => row.id)).toEqual(full.registry.groups.map((row) => row.id))
+  expect(compact.groups.every((row) => row.status === 'candidate' && row.siteIds === undefined)).toBe(true)
+  expect(compact.groups.find((row) => row.id === 'button.rest.radius')?.evidence).toBe('partial')
+})
+
+test('rejects compact schema drift', () => {
+  setup()
+  const file = resolve(fixture, 'packages/warp-core/scripts/theme-schema-registry.mjs')
+  writeFileSync(file, `${readFileSync(file, 'utf8')}\n// changed\n`)
+  expect(check()).toContain('Drift: packages/warp-core/scripts/theme-schema-registry.mjs')
 })

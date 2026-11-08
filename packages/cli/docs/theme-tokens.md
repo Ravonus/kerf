@@ -629,6 +629,8 @@ Bare-anchor, type and space-intent shim declarations the status-light rule, and 
 
 The table lists partial and unresolved groups as design candidates. No additional raw-only part overrides have been classified; the existing `tokens` escape hatch remains available.
 
+The `@weft-js/warp-core/theme-schema` module exports `themeSchema` and a default export of the same compact registry. Group `status: candidate` is not a supported config promise; `evidence` describes current source review. System `declared-inputs` means tokens exist, not that lowering or config support is complete.
+
 ## System scale types
 
 - `space`: hair,tight,related,group,section,page; user keys; space.
