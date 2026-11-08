@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { definePlugin } from '@weft-js/core/plugin'
+import { themeSchema } from '@weft-js/warp-core/theme-schema'
 import { fromHex, hex, luminance, toLinear } from './tokens/color.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
@@ -58,7 +59,7 @@ function normalizeSeed(seed) {
 }
 
 function namedColors(input) {
-  for (const key of ['system', 'parts', 'themes']) {
+  for (const key of ['system', 'themes']) {
     if (input[key] === undefined) continue
     const value = input[key]
     if (
@@ -93,6 +94,44 @@ function namedColors(input) {
   return entries.length ? Object.fromEntries(entries) : undefined
 }
 
+function buttonCandidate(input) {
+  if (input.parts === undefined) return undefined
+  const parts = input.parts
+  if (
+    !parts ||
+    typeof parts !== 'object' ||
+    Array.isArray(parts) ||
+    Object.getPrototypeOf(parts) !== Object.prototype
+  )
+    throw bad('parts', 'must be a plain object')
+  for (const part of Object.keys(parts))
+    if (part !== 'button') throw bad(`parts.${part}`, 'unsupported part')
+  if (!Object.hasOwn(parts, 'button')) return undefined
+  const button = parts.button
+  if (
+    !button ||
+    typeof button !== 'object' ||
+    Array.isArray(button) ||
+    Object.getPrototypeOf(button) !== Object.prototype
+  )
+    throw bad('parts.button', 'must be a plain object')
+  for (const key of Object.keys(button)) {
+    const group = themeSchema.groups.find((row) => row.id === `button.rest.${key}`)
+    if (!group) throw bad(`parts.button.${key}`, 'unknown property or unsupported state')
+    if (!['bg', 'text'].includes(key) || group.domain !== 'color')
+      throw bad(`parts.button.${key}`, 'unsupported Button property')
+  }
+  if (!Object.keys(button).length) return undefined
+  for (const key of ['bg', 'text'])
+    if (!Object.hasOwn(button, key))
+      throw bad(`parts.button.${key}`, 'both bg and text are required')
+  const resolved = resolveThemes({ colors: input.colors ?? {}, parts }).default.parts.button
+  for (const key of ['bg', 'text'])
+    if (typeof resolved[key] !== 'string' || !/^#[0-9a-f]{6}$/i.test(resolved[key]))
+      throw bad(`parts.button.${key}`, 'only hex colours or aliases to hex are supported yet')
+  return resolved
+}
+
 function options(input) {
   const out = {}
   for (const key of Object.keys(input))
@@ -113,6 +152,8 @@ function options(input) {
       throw Object.assign(new Error(`unknown option \`${key}\``), { path: key })
   const colors = namedColors(input)
   if (colors) out.namedColors = colors
+  const button = buttonCandidate(input)
+  if (button) out.buttonCandidate = button
   if (input.fields !== undefined && input.fields !== 'floating' && input.fields !== 'classic')
     throw Object.assign(new Error(`must be 'floating' or 'classic'`), { path: 'fields' })
   if (input.seed !== undefined) {
@@ -207,6 +248,60 @@ function contrast(seed, declarations) {
       out = e.stdout // exit 1 on failures; the JSON is still on stdout
     }
     return JSON.parse(out)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+// Check the known resting pair; full Button paint coverage is not available yet.
+function checkButtonCandidate(button) {
+  const dir = mkdtempSync(join(tmpdir(), 'warp-seed-'))
+  try {
+    const file = join(dir, 'theme-pairs.json')
+    const pairs = ['light', 'dark'].flatMap((theme) =>
+      ['quiet', 'balanced', 'vivid'].map((expression) => ({
+        palette: 'default',
+        theme,
+        expression,
+        part: 'button',
+        state: 'rest',
+        emphasis: 'solid',
+        site: 'base',
+        path: 'parts.button.text',
+        fg: { token: '--warp-button-text', value: button.text },
+        bg: { token: '--warp-button-bg', value: button.bg },
+      })),
+    )
+    writeFileSync(file, JSON.stringify(pairs))
+    let output
+    try {
+      output = execFileSync(
+        process.execPath,
+        [
+          fileURLToPath(new URL('scripts/contrast-check.mjs', core)),
+          fileURLToPath(new URL('styles/warp.css', core)),
+          '--json',
+          `--theme-pairs=${file}`,
+        ],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+      )
+    } catch (error) {
+      if (!error.stdout) throw error
+      output = error.stdout
+    }
+    const failures = JSON.parse(output).results.filter((row) => !row.pass)
+    if (failures.length)
+      throw Object.assign(
+        new Error(
+          `D010 parts.button.text: ${failures
+            .map(
+              (row) =>
+                `${row.combo} ${row.fg} on ${row.bg} is ${row.ratio.toFixed(2)}:1, needs ${row.min}:1`,
+            )
+            .join('; ')}`,
+        ),
+        { code: 'D010', path: 'parts.button.text', failures },
+      )
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -397,6 +492,16 @@ export const warp = definePlugin({
     spawn: ['node'],
   },
   contribute(o, env) {
+    if (o.buttonCandidate) {
+      checkButtonCandidate(o.buttonCandidate)
+      throw Object.assign(
+        bad(
+          'parts.button',
+          'unsupported until Button animation and sweep contrast coverage is complete',
+        ),
+        { code: 'P115' },
+      )
+    }
     const seed = o.seed ?? DEFAULT
     const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma
     let declarations = overrides(o)

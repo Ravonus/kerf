@@ -313,3 +313,36 @@ test('unsupported theme features and unsafe colours are rejected', () => {
   ])
     expect(code(() => run(input as WarpOptions))).toBe('P115')
 })
+
+test('Button candidate uses schema, resolves aliases and checks the actual resting pair', () => {
+  expect(() => run({ parts: { button: { mystery: '#000000' } } } as WarpOptions)).toThrow(
+    /unknown property or unsupported state/,
+  )
+  expect(() => run({ parts: { button: { hover: { bg: '#000000' } } } } as WarpOptions)).toThrow(
+    /unknown property or unsupported state/,
+  )
+  expect(
+    code(() =>
+      run({
+        colors: { ink: '#111111' },
+        parts: {
+          button: {
+            bg: '#000000',
+            text: 'ink',
+          },
+        },
+      } as WarpOptions),
+    ),
+  ).toBe('D010')
+  expect(() =>
+    run({
+      colors: { ink: '#ffffff' },
+      parts: {
+        button: {
+          bg: '#000000',
+          text: 'ink',
+        },
+      },
+    } as WarpOptions),
+  ).toThrow(/unsupported until Button animation and sweep contrast coverage/)
+})
