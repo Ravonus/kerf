@@ -31,7 +31,7 @@
   /* an app (or a section) may cap expression for effects only, keeping the type and shape of its stop */
   [data-fx-cap="quiet"]    { --warp-fx-cap: 0; }
   [data-fx-cap="balanced"] { --warp-fx-cap: 1; }
-  :root, [data-expression], [data-density], [data-form], [data-pointer], [data-motion], [data-flair], [data-warp] {
+  :root, [data-expression], [data-density], [data-form], [data-pointer], [data-motion], [data-flair], [data-theme], [data-warp] {
     --_mh: var(--warp-seed-accent-h);
     /* art colours: three hues around the accent. Light pages get airy pastels, dark ones deep glows */
     --warp-mk-art-1: light-dark(oklch(0.86 0.1 var(--_mh)), oklch(0.5 0.15 var(--_mh)));

@@ -45,3 +45,11 @@ test('the shared base brings the skeleton paint', () => {
   const base = readFileSync(join(src, 'styles.ts'), 'utf8')
   expect(base).toContain("'@weft-js/warp-core/styles/components/skeleton.css'")
 })
+
+// warp()'s token overrides land on every scope root, the themed ones included (warp-core/test/scopes.test.ts says why).
+test("warp()'s overrides land on every scope root, data-theme included", () => {
+  const plugin = readFileSync(join(__dirname, '../plugin.mjs'), 'utf8')
+  const scopes = /const SCOPES =\s*'([^']+)'/.exec(plugin)![1]!
+  for (const a of ['expression', 'density', 'form', 'pointer', 'motion', 'flair', 'theme', 'warp'])
+    expect(scopes).toContain(`[data-${a}]`)
+})

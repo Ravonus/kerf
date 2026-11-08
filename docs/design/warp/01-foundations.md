@@ -28,8 +28,11 @@ resolver over `scheme × expression × density`; springs live in `$extensions["d
 
 **Inputs vs derived.** Inputs (seed, dial, density, form, pointer, motion) are inherited custom properties.
 Sys tokens are re-declared on `:root, [data-expression], [data-density], [data-form], [data-pointer],
-[data-motion], [data-flair], [data-warp]` (`warp.css` §2, "SYS TOKENS"), so any island recomputes from its own inputs. Colours
-are `light-dark()` values, resolved where they're used, so a `data-theme` island needs no re-declaration at all.
+[data-motion], [data-flair], [data-theme], [data-warp]` (`warp.css` §2, "SYS TOKENS"), so any island recomputes from its own
+inputs. Colours are `light-dark()` values. Natively those resolve where they're used, but a build that targets browsers
+without `light-dark()` (LightningCSS, Vite's default) lowers each one to a pair of variables that pick light or dark where
+the token is declared. So a `data-theme` island re-declares the tokens too, or it keeps the page's colours under its own
+`color-scheme`. Every scope list carries `[data-theme]`; `warp-core/test/scopes.test.ts` checks it.
 
 ## 2. Scales
 

@@ -431,10 +431,13 @@
 /* ---------------------------------------------------------------------------
    2 · SYS TOKENS. Re-declared on every scope root so nested islands
    recompute from their own inputs. Components read only these.
+   [data-theme] is a scope root too: a build that lowers light-dark() picks
+   light or dark where a token is declared, so a themed island must declare
+   them again or it shows the page's colours (01-foundations.md §1).
    ------------------------------------------------------------------------ */
 
 :root, [data-expression], [data-density], [data-form], [data-pointer],
-[data-motion], [data-flair], [data-warp] {
+[data-motion], [data-flair], [data-theme], [data-warp] {
   /* private shorthands */
   --_h: var(--warp-ref-neutral-h);
   --_c: var(--warp-ref-neutral-c);

@@ -28,7 +28,7 @@ const FONTS = {
 }
 // The spec's scope roots (warp.css §2): every one recomputes the sys tokens, so an override has to land on each.
 const SCOPES =
-  ':root,[data-expression],[data-density],[data-form],[data-pointer],[data-motion],[data-flair],[data-warp]'
+  ':root,[data-expression],[data-density],[data-form],[data-pointer],[data-motion],[data-flair],[data-theme],[data-warp]'
 const safe = (value) => typeof value === 'string' && value !== '' && !/[;{}<]/.test(value)
 const bad = (path, message) => Object.assign(new Error(message), { path })
 

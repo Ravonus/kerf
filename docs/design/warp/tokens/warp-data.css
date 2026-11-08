@@ -55,7 +55,7 @@
 
 /* sys: re-declared on every scope root, exactly like warp.css §2 */
 :root, [data-expression], [data-density], [data-form], [data-pointer],
-[data-motion], [data-flair], [data-warp] {
+[data-motion], [data-flair], [data-theme], [data-warp] {
   /* -- categorical palette v0.2 (replaces warp.css v0.1 data-1…8) ---------
      Same eight families, re-stepped so ADJACENT slots differ in lightness as
      well as hue. Validated (Machado 2009 CVD sim, OKLab ΔE×100) in light and

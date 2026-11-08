@@ -46,7 +46,7 @@
 
   /* -- layout sys tokens (re-derived on every scope root, like warp.css) - */
   :root, [data-expression], [data-density], [data-form], [data-pointer],
-  [data-motion], [data-flair], [data-warp] {
+  [data-motion], [data-flair], [data-theme], [data-warp] {
     --warp-layout-bar: calc(var(--warp-control-md) + 12px);          /* header / top bar: 48 · 56 coarse */
     --warp-layout-tabbar: max(56px, calc(var(--warp-hit-min) + 12px)); /* bottom bar, before safe area */
     --warp-layout-rail: 80px;                                         /* icon + 12px label, 64px item */

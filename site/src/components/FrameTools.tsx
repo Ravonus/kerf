@@ -3,10 +3,16 @@ import { onMount } from '@weft-js/core'
 import { on } from '@weft-js/core/browser'
 
 const EXPRESSIONS = ['quiet', 'balanced', 'vivid']
-const THEMES = ['page', 'light', 'dark']
 const WIDTHS = ['full', 'tablet', 'phone']
 const next = (list: string[], at: string | null) =>
   list[(list.indexOf(at ?? list[0]!) + 1) % list.length]!
+
+/** The theme an element shows: its nearest `data-theme`, or the system's. */
+function shownTheme(el: Element) {
+  const set = el.closest('[data-theme]')?.getAttribute('data-theme')
+  if (set === 'light' || set === 'dark') return set
+  return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
 
 /** Sets one stage's width, which warp's scope attributes carry. */
 function width(stage: HTMLElement, v: string) {
@@ -33,8 +39,11 @@ export function FrameTools() {
         next(EXPRESSIONS, stage.getAttribute('data-expression') ?? getDial('expression')),
       )
     if (act === 'stage-theme') {
-      const t = next(THEMES, stage.getAttribute('data-theme') ?? 'page')
-      t === 'page' ? stage.removeAttribute('data-theme') : stage.setAttribute('data-theme', t)
+      // Always the other one of what the stage shows; the page's own one is the page again, so it follows the page.
+      const t = shownTheme(stage) === 'dark' ? 'light' : 'dark'
+      t === shownTheme(document.documentElement)
+        ? stage.removeAttribute('data-theme')
+        : stage.setAttribute('data-theme', t)
     }
     if (act === 'stage-width')
       width(stage, next(WIDTHS, stage.getAttribute('data-width') ?? 'full'))

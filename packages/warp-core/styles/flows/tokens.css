@@ -1,7 +1,7 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.tokens {
 :root, [data-expression], [data-density], [data-form], [data-pointer],
-  [data-motion], [data-flair], [data-warp] {
+  [data-motion], [data-flair], [data-theme], [data-warp] {
     --warp-flow-step: var(--warp-duration-slow);                         /* 272 · 320 · 384 */
     --warp-flow-distance: calc(var(--warp-motion-distance) * 2);         /* 8 · 16 · 24; 0 reduced */
     --warp-flow-cascade: calc(var(--warp-stagger) * 1.5);                /* OTP / order success cascade */
