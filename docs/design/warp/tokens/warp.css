@@ -77,6 +77,7 @@
 @property --_flow-sy  { syntax: "<number>"; inherits: false; initial-value: 1; }
 @property --_flow-rot { syntax: "<angle>";  inherits: false; initial-value: 0deg; }
 @property --_flow-scan { syntax: "<number>"; inherits: false; initial-value: 0; }   /* 1 while a code block waits below the fold for its scan */
+@property --_flow-settle-time { syntax: "<time>"; inherits: false; initial-value: 0s; }
 @property --warp-text-display-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
 @property --warp-text-title-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
 @property --warp-text-heading-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
@@ -1669,7 +1670,7 @@
   :where([role="button"]):active { transition-duration: var(--warp-duration-instant); }
 }
 
-/* warp.flow: automatic scroll choreography. Scrubbed on the compositor, stateless, nothing to hydrate. */
+/* warp.flow: compositor scroll choreography; interrupted arrivals finish when scrolling stops. */
 @layer warp.tokens {
   :root, [data-expression="balanced"] {
     --warp-ref-flow-reach: 20%;   --warp-ref-flow-out: 200px; --warp-ref-flow-step: 14px;   /* reach: a share of the view timeline's cover range, so the move is seen */
@@ -1793,6 +1794,7 @@
       --_flow-w: min(100%, max(var(--_flow-e), 45%));
       --_flow-t: var(--warp-flow-top, calc(var(--warp-control-md) + 12px));   /* warp's bar by default; a page with another header, or none, sets its own */
       --_flow-i: 0;
+      --_flow-settle-time: var(--warp-duration-slow);
       animation-name: var(--warp-flow-gate, var(--_flow-in)), var(--warp-flow-gate, var(--_flow-out));
       animation-timeline: view(), view();
       animation-duration: auto, auto;
@@ -1851,9 +1853,13 @@
       :where([data-scope="table"]:has(> [data-part="viewport"]) tbody > tr) { --_flow-i: min(calc(sibling-index() - 1), 12); }
     }
     :where([data-scope="stat"] [data-part="value"]) {
+      --_flow-settle-time: var(--warp-duration-slow);
       display: block; animation: var(--warp-flow-gate, warp-in-value) auto var(--warp-ref-flow-ease) backwards;
       animation-timeline: --warp-flow-host; animation-range: entry 0 cover var(--warp-ref-flow-reach);
     }
+    /* Only the arrival rests; the second animation keeps fading under the header. */
+    [data-flow-settled] { animation-name: none, var(--warp-flow-gate, var(--_flow-out)); }
+    :where([data-scope="stat"] [data-part="value"])[data-flow-settled] { animation-name: none; }
     :where([data-scope="codeblock"])::after,
     :where([data-flow="code"])::after {
       content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transform-origin: 100% 50%;
