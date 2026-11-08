@@ -25,3 +25,16 @@ export function consumers(source, text) {
   })
   return declarations
 }
+
+// Collect declared public token names, including literal-valued definitions.
+export function declaredTokens(source, text) {
+  const names = new Set()
+  transform({ filename: source, code: Buffer.from(text), visitor: {
+    Declaration(declaration) {
+      if (declaration.property === 'custom' && declaration.value.name.startsWith('--warp-')) {
+        names.add(declaration.value.name)
+      }
+    },
+  } })
+  return [...names].sort()
+}

@@ -1,5 +1,5 @@
 {
-  "digest": "50653e4d634b4b15883a980fbe7e36e521e5549d31049badc8d5e8dc47b2180a",
+  "digest": "cf9fe17b37bd7c8a2ca81200d1e38cdb638f77b275882e5ea4af94d43f626012",
   "status": "partial",
   "sources": [
     "docs/design/warp/tokens/warp-app.css",
@@ -447,7 +447,7 @@
       "token": "--warp-link-text",
       "domain": "color",
       "units": "forbidden",
-      "binding": "unresolved"
+      "binding": "partial"
     },
     {
       "part": "link",
@@ -1159,6 +1159,24 @@
       "domain": "font-size",
       "units": "px",
       "binding": "classified"
+    },
+    {
+      "part": "link",
+      "state": "rest",
+      "path": "underline.width",
+      "token": "--warp-link-underline-width",
+      "domain": "width",
+      "units": "px",
+      "binding": "partial"
+    },
+    {
+      "part": "link",
+      "state": "rest",
+      "path": "underline.offset",
+      "token": "--warp-link-underline-offset",
+      "domain": "position",
+      "units": "px",
+      "binding": "partial"
     }
   ],
   "system": [
@@ -9254,6 +9272,2427 @@
   ],
   "registry": {
     "status": "partial",
+    "declaredTokens": [
+      "--warp-arrive-duration",
+      "--warp-arrive-sweep",
+      "--warp-avatar-lg",
+      "--warp-avatar-md",
+      "--warp-avatar-sm",
+      "--warp-blur-overlay",
+      "--warp-border-emphasis",
+      "--warp-border-hairline",
+      "--warp-btn-fill",
+      "--warp-bubble-radius",
+      "--warp-cal-bar",
+      "--warp-cal-day-min",
+      "--warp-cal-gutter",
+      "--warp-cal-hour",
+      "--warp-cal-hour-w",
+      "--warp-cal-max-h",
+      "--warp-cal-tint",
+      "--warp-ch",
+      "--warp-color-accent-border",
+      "--warp-color-accent-on-solid",
+      "--warp-color-accent-soft",
+      "--warp-color-accent-solid",
+      "--warp-color-accent-solid-hover",
+      "--warp-color-accent-text",
+      "--warp-color-border",
+      "--warp-color-border-control",
+      "--warp-color-border-strong",
+      "--warp-color-caution-border",
+      "--warp-color-caution-on-solid",
+      "--warp-color-caution-soft",
+      "--warp-color-caution-solid",
+      "--warp-color-caution-solid-hover",
+      "--warp-color-caution-text",
+      "--warp-color-critical-border",
+      "--warp-color-critical-on-solid",
+      "--warp-color-critical-soft",
+      "--warp-color-critical-solid",
+      "--warp-color-critical-solid-hover",
+      "--warp-color-critical-text",
+      "--warp-color-data-1",
+      "--warp-color-data-2",
+      "--warp-color-data-3",
+      "--warp-color-data-4",
+      "--warp-color-data-5",
+      "--warp-color-data-6",
+      "--warp-color-data-7",
+      "--warp-color-data-8",
+      "--warp-color-data-axis",
+      "--warp-color-data-div-mid",
+      "--warp-color-data-div-neg",
+      "--warp-color-data-div-pos",
+      "--warp-color-data-down",
+      "--warp-color-data-down-flash",
+      "--warp-color-data-grid",
+      "--warp-color-data-other",
+      "--warp-color-data-seq-0",
+      "--warp-color-data-seq-1",
+      "--warp-color-data-seq-2",
+      "--warp-color-data-seq-3",
+      "--warp-color-data-seq-4",
+      "--warp-color-data-seq-5",
+      "--warp-color-data-up",
+      "--warp-color-data-up-flash",
+      "--warp-color-field",
+      "--warp-color-field-active",
+      "--warp-color-field-invalid",
+      "--warp-color-focus",
+      "--warp-color-highlight-border",
+      "--warp-color-highlight-on-solid",
+      "--warp-color-highlight-soft",
+      "--warp-color-highlight-solid",
+      "--warp-color-highlight-solid-hover",
+      "--warp-color-highlight-text",
+      "--warp-color-info-border",
+      "--warp-color-info-on-solid",
+      "--warp-color-info-soft",
+      "--warp-color-info-solid",
+      "--warp-color-info-solid-hover",
+      "--warp-color-info-text",
+      "--warp-color-label",
+      "--warp-color-label-active",
+      "--warp-color-label-rest",
+      "--warp-color-neutral-border",
+      "--warp-color-neutral-on-solid",
+      "--warp-color-neutral-soft",
+      "--warp-color-neutral-solid",
+      "--warp-color-neutral-solid-hover",
+      "--warp-color-neutral-text",
+      "--warp-color-on-inverse",
+      "--warp-color-page",
+      "--warp-color-positive-border",
+      "--warp-color-positive-on-solid",
+      "--warp-color-positive-soft",
+      "--warp-color-positive-solid",
+      "--warp-color-positive-solid-hover",
+      "--warp-color-positive-text",
+      "--warp-color-primary-on-solid",
+      "--warp-color-primary-solid",
+      "--warp-color-primary-solid-hover",
+      "--warp-color-scrim",
+      "--warp-color-surface",
+      "--warp-color-surface-active",
+      "--warp-color-surface-hover",
+      "--warp-color-surface-inverse",
+      "--warp-color-surface-line",
+      "--warp-color-surface-overlay",
+      "--warp-color-surface-raised",
+      "--warp-color-surface-sunken",
+      "--warp-color-sweep",
+      "--warp-color-sweep-base",
+      "--warp-color-sweep-critical",
+      "--warp-color-text",
+      "--warp-color-text-faint",
+      "--warp-color-text-subtle",
+      "--warp-control-lg",
+      "--warp-control-md",
+      "--warp-control-sm",
+      "--warp-data-area",
+      "--warp-data-draw",
+      "--warp-data-enter",
+      "--warp-data-fade",
+      "--warp-data-flash",
+      "--warp-data-line",
+      "--warp-data-num-font",
+      "--warp-data-rise",
+      "--warp-data-tween",
+      "--warp-density-k",
+      "--warp-duration-base",
+      "--warp-duration-exit-k",
+      "--warp-duration-fast",
+      "--warp-duration-instant",
+      "--warp-duration-push",
+      "--warp-duration-route",
+      "--warp-duration-sheet",
+      "--warp-duration-slow",
+      "--warp-ease-in",
+      "--warp-ease-in-out",
+      "--warp-ease-out",
+      "--warp-ease-pop",
+      "--warp-ease-sheet",
+      "--warp-ease-spring",
+      "--warp-edges-start",
+      "--warp-elevation-0",
+      "--warp-elevation-1",
+      "--warp-elevation-2",
+      "--warp-elevation-3",
+      "--warp-field-height",
+      "--warp-field-shake",
+      "--warp-fill-duration",
+      "--warp-flow-cascade",
+      "--warp-flow-distance",
+      "--warp-flow-gate",
+      "--warp-flow-panel",
+      "--warp-flow-rail",
+      "--warp-flow-reach",
+      "--warp-flow-step",
+      "--warp-flow-top",
+      "--warp-focus-offset",
+      "--warp-focus-width",
+      "--warp-font-display",
+      "--warp-font-mono",
+      "--warp-font-sans",
+      "--warp-frame-corner",
+      "--warp-frame-duration",
+      "--warp-frame-head",
+      "--warp-frame-stroke",
+      "--warp-frame-tail",
+      "--warp-frame-track",
+      "--warp-frame-weight",
+      "--warp-fx-cap",
+      "--warp-fx-k",
+      "--warp-fx-level",
+      "--warp-hit-min",
+      "--warp-icon-b",
+      "--warp-icon-fine",
+      "--warp-icon-lg",
+      "--warp-icon-md",
+      "--warp-icon-o",
+      "--warp-icon-q",
+      "--warp-icon-sm",
+      "--warp-icon-stroke",
+      "--warp-icon-v",
+      "--warp-icon-weft",
+      "--warp-input-font-min",
+      "--warp-keyboard",
+      "--warp-label-char-duration",
+      "--warp-label-fade",
+      "--warp-label-float-duration",
+      "--warp-label-float-ease",
+      "--warp-label-float-offset",
+      "--warp-label-float-size",
+      "--warp-label-float-tracking",
+      "--warp-label-float-weight",
+      "--warp-label-font",
+      "--warp-label-stagger",
+      "--warp-layout-aside",
+      "--warp-layout-bar",
+      "--warp-layout-content",
+      "--warp-layout-list",
+      "--warp-layout-measure",
+      "--warp-layout-narrow",
+      "--warp-layout-rail",
+      "--warp-layout-sidebar",
+      "--warp-layout-tabbar",
+      "--warp-layout-wide",
+      "--warp-loop-play",
+      "--warp-measure",
+      "--warp-message-duration",
+      "--warp-mk-art-1",
+      "--warp-mk-art-2",
+      "--warp-mk-art-3",
+      "--warp-mk-glow",
+      "--warp-mk-hero-k",
+      "--warp-mk-ink-1",
+      "--warp-mk-ink-2",
+      "--warp-mk-ink-3",
+      "--warp-mk-sticky-offset",
+      "--warp-mk-title-k",
+      "--warp-mk-title-size",
+      "--warp-motion-distance",
+      "--warp-motion-push",
+      "--warp-motion-scale",
+      "--warp-motion-scale-from",
+      "--warp-offset",
+      "--warp-offset-color",
+      "--warp-opacity-disabled",
+      "--warp-pad-control",
+      "--warp-pad-surface",
+      "--warp-press",
+      "--warp-radius-control",
+      "--warp-radius-mark",
+      "--warp-radius-round",
+      "--warp-radius-surface",
+      "--warp-ref-accent-k",
+      "--warp-ref-air",
+      "--warp-ref-body-leading",
+      "--warp-ref-button-adjust",
+      "--warp-ref-button-case",
+      "--warp-ref-button-font",
+      "--warp-ref-button-tracking",
+      "--warp-ref-button-weight",
+      "--warp-ref-ch",
+      "--warp-ref-control-lg",
+      "--warp-ref-control-md",
+      "--warp-ref-control-sm",
+      "--warp-ref-control-step",
+      "--warp-ref-data-area",
+      "--warp-ref-data-draw",
+      "--warp-ref-data-fade",
+      "--warp-ref-data-line",
+      "--warp-ref-data-num-font",
+      "--warp-ref-data-rise",
+      "--warp-ref-depth",
+      "--warp-ref-depth-rest",
+      "--warp-ref-display-b",
+      "--warp-ref-display-m",
+      "--warp-ref-display-max",
+      "--warp-ref-display-min",
+      "--warp-ref-display-tracking",
+      "--warp-ref-display-variation",
+      "--warp-ref-display-weight",
+      "--warp-ref-distance",
+      "--warp-ref-ease-out",
+      "--warp-ref-ease-pop",
+      "--warp-ref-editable-wrap",
+      "--warp-ref-em-k1",
+      "--warp-ref-em-k2",
+      "--warp-ref-em-k3",
+      "--warp-ref-emphasis-style",
+      "--warp-ref-eyebrow-adjust",
+      "--warp-ref-eyebrow-case",
+      "--warp-ref-eyebrow-font",
+      "--warp-ref-eyebrow-tracking",
+      "--warp-ref-field-fill",
+      "--warp-ref-field-fill-active",
+      "--warp-ref-float-font",
+      "--warp-ref-flow-clip",
+      "--warp-ref-flow-ease",
+      "--warp-ref-flow-floor",
+      "--warp-ref-flow-out",
+      "--warp-ref-flow-r",
+      "--warp-ref-flow-reach",
+      "--warp-ref-flow-s",
+      "--warp-ref-flow-step",
+      "--warp-ref-flow-x",
+      "--warp-ref-flow-y",
+      "--warp-ref-flow-z",
+      "--warp-ref-fluid-unit",
+      "--warp-ref-frame",
+      "--warp-ref-gutter",
+      "--warp-ref-hair",
+      "--warp-ref-heading-font",
+      "--warp-ref-heading-weight",
+      "--warp-ref-hm-k1",
+      "--warp-ref-hm-k2",
+      "--warp-ref-hm-k3",
+      "--warp-ref-label-adjust",
+      "--warp-ref-label-case",
+      "--warp-ref-label-font",
+      "--warp-ref-label-tracking",
+      "--warp-ref-measure",
+      "--warp-ref-motion-k",
+      "--warp-ref-neutral-c",
+      "--warp-ref-neutral-h",
+      "--warp-ref-numeric-font",
+      "--warp-ref-offset",
+      "--warp-ref-page",
+      "--warp-ref-press",
+      "--warp-ref-primary-on-solid",
+      "--warp-ref-primary-solid",
+      "--warp-ref-primary-solid-hover",
+      "--warp-ref-prose-wrap",
+      "--warp-ref-push",
+      "--warp-ref-radius-round",
+      "--warp-ref-rem-k",
+      "--warp-ref-rest-ambient",
+      "--warp-ref-root-size",
+      "--warp-ref-scale-from",
+      "--warp-ref-section",
+      "--warp-ref-shuttle-head",
+      "--warp-ref-shuttle-tail",
+      "--warp-ref-spring",
+      "--warp-ref-spring-ms",
+      "--warp-ref-stagger",
+      "--warp-ref-surface-line",
+      "--warp-ref-sweep",
+      "--warp-ref-sweep-base",
+      "--warp-ref-sweep-k",
+      "--warp-ref-title-b",
+      "--warp-ref-title-font",
+      "--warp-ref-title-m",
+      "--warp-ref-title-max",
+      "--warp-ref-title-min",
+      "--warp-ref-title-weight",
+      "--warp-ref-tone-k",
+      "--warp-ref-touch-out",
+      "--warp-ref-tree-guides",
+      "--warp-ref-tree-tint",
+      "--warp-ref-trim-display",
+      "--warp-ref-trim-display-k",
+      "--warp-ref-trim-heading",
+      "--warp-ref-trim-heading-k",
+      "--warp-ref-trim-swap",
+      "--warp-ref-type-body",
+      "--warp-ref-type-caption",
+      "--warp-ref-type-code",
+      "--warp-ref-type-heading",
+      "--warp-ref-type-label",
+      "--warp-ref-type-prose",
+      "--warp-rem",
+      "--warp-safe-bottom",
+      "--warp-safe-left",
+      "--warp-safe-right",
+      "--warp-safe-top",
+      "--warp-seed-accent-c",
+      "--warp-seed-accent-h",
+      "--warp-shuttle-head",
+      "--warp-shuttle-tail",
+      "--warp-space-group",
+      "--warp-space-hair",
+      "--warp-space-page",
+      "--warp-space-related",
+      "--warp-space-section",
+      "--warp-space-tight",
+      "--warp-spring-duration",
+      "--warp-stagger",
+      "--warp-stagger-max",
+      "--warp-state-hover",
+      "--warp-state-press",
+      "--warp-sweep-base-width",
+      "--warp-sweep-buttons",
+      "--warp-sweep-duration",
+      "--warp-sweep-ease",
+      "--warp-sweep-ease-in",
+      "--warp-sweep-fill",
+      "--warp-sweep-radius",
+      "--warp-sweep-surfaces",
+      "--warp-sweep-width",
+      "--warp-table-head",
+      "--warp-table-indent",
+      "--warp-table-pad-x",
+      "--warp-table-row",
+      "--warp-table-tree-guides",
+      "--warp-table-tree-tint",
+      "--warp-target-min",
+      "--warp-text-body-canvas",
+      "--warp-text-body-font",
+      "--warp-text-body-leading",
+      "--warp-text-body-px",
+      "--warp-text-body-size",
+      "--warp-text-body-weight",
+      "--warp-text-box-trim",
+      "--warp-text-button-canvas",
+      "--warp-text-button-case",
+      "--warp-text-button-font",
+      "--warp-text-button-leading",
+      "--warp-text-button-px",
+      "--warp-text-button-size",
+      "--warp-text-button-tracking",
+      "--warp-text-button-weight",
+      "--warp-text-caption-canvas",
+      "--warp-text-caption-leading",
+      "--warp-text-caption-px",
+      "--warp-text-caption-size",
+      "--warp-text-code-canvas",
+      "--warp-text-code-font",
+      "--warp-text-code-leading",
+      "--warp-text-code-px",
+      "--warp-text-code-size",
+      "--warp-text-control-canvas",
+      "--warp-text-control-leading",
+      "--warp-text-control-px",
+      "--warp-text-control-size",
+      "--warp-text-display-canvas",
+      "--warp-text-display-font",
+      "--warp-text-display-leading",
+      "--warp-text-display-px",
+      "--warp-text-display-size",
+      "--warp-text-display-tracking",
+      "--warp-text-display-trim",
+      "--warp-text-display-trim-k",
+      "--warp-text-display-variation",
+      "--warp-text-display-weight",
+      "--warp-text-editable-wrap",
+      "--warp-text-emphasis-color",
+      "--warp-text-emphasis-style",
+      "--warp-text-eyebrow-canvas",
+      "--warp-text-eyebrow-case",
+      "--warp-text-eyebrow-font",
+      "--warp-text-eyebrow-leading",
+      "--warp-text-eyebrow-px",
+      "--warp-text-eyebrow-size",
+      "--warp-text-eyebrow-tracking",
+      "--warp-text-eyebrow-weight",
+      "--warp-text-heading-canvas",
+      "--warp-text-heading-font",
+      "--warp-text-heading-leading",
+      "--warp-text-heading-px",
+      "--warp-text-heading-size",
+      "--warp-text-heading-tracking",
+      "--warp-text-heading-trim",
+      "--warp-text-heading-trim-k",
+      "--warp-text-heading-weight",
+      "--warp-text-heading-wrap",
+      "--warp-text-label-canvas",
+      "--warp-text-label-case",
+      "--warp-text-label-font",
+      "--warp-text-label-leading",
+      "--warp-text-label-px",
+      "--warp-text-label-size",
+      "--warp-text-label-tracking",
+      "--warp-text-label-weight",
+      "--warp-text-numeric-font",
+      "--warp-text-numeric-variant",
+      "--warp-text-prose-canvas",
+      "--warp-text-prose-leading",
+      "--warp-text-prose-px",
+      "--warp-text-prose-size",
+      "--warp-text-prose-wrap",
+      "--warp-text-title-canvas",
+      "--warp-text-title-font",
+      "--warp-text-title-leading",
+      "--warp-text-title-px",
+      "--warp-text-title-size",
+      "--warp-text-title-tracking",
+      "--warp-text-title-weight",
+      "--warp-tile-gap",
+      "--warp-touch-out",
+      "--warp-trim-fix",
+      "--warp-trim-k",
+      "--warp-viewport-block",
+      "--warp-x",
+      "--warp-z-base",
+      "--warp-z-dock",
+      "--warp-z-menu",
+      "--warp-z-modal",
+      "--warp-z-overlay",
+      "--warp-z-raised",
+      "--warp-z-sticky",
+      "--warp-z-toast",
+      "--warp-z-tooltip"
+    ],
+    "groups": [
+      {
+        "part": "button",
+        "state": "rest",
+        "path": "bg",
+        "token": "--warp-button-bg",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.rest.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "rest",
+        "path": "text",
+        "token": "--warp-button-text",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.rest.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "rest",
+        "path": "border",
+        "token": "--warp-button-border",
+        "domain": "border",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.rest.border",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "rest",
+        "path": "highlight",
+        "token": "--warp-button-highlight",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.rest.highlight",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "hover",
+        "path": "bg",
+        "token": "--warp-button-bg-hover",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.hover.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "hover",
+        "path": "text",
+        "token": "--warp-button-text-hover",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.hover.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "hover",
+        "path": "border",
+        "token": "--warp-button-border-hover",
+        "domain": "border",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.hover.border",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "hover",
+        "path": "highlight",
+        "token": "--warp-button-highlight-hover",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.hover.highlight",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "focus",
+        "path": "bg",
+        "token": "--warp-button-bg-focus",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.focus.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "focus",
+        "path": "text",
+        "token": "--warp-button-text-focus",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.focus.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "focus",
+        "path": "border",
+        "token": "--warp-button-border-focus",
+        "domain": "border",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.focus.border",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "focus",
+        "path": "highlight",
+        "token": "--warp-button-highlight-focus",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.focus.highlight",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "press",
+        "path": "bg",
+        "token": "--warp-button-bg-press",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.press.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "press",
+        "path": "text",
+        "token": "--warp-button-text-press",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.press.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "press",
+        "path": "border",
+        "token": "--warp-button-border-press",
+        "domain": "border",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.press.border",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "press",
+        "path": "highlight",
+        "token": "--warp-button-highlight-press",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.press.highlight",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "disabled",
+        "path": "bg",
+        "token": "--warp-button-bg-disabled",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.disabled.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "disabled",
+        "path": "text",
+        "token": "--warp-button-text-disabled",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.disabled.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "disabled",
+        "path": "border",
+        "token": "--warp-button-border-disabled",
+        "domain": "border",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.disabled.border",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "button",
+        "state": "disabled",
+        "path": "highlight",
+        "token": "--warp-button-highlight-disabled",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "button.disabled.highlight",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "sweep",
+        "state": "rest",
+        "path": "stroke",
+        "token": "--warp-sweep-stroke",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "sweep.rest.stroke",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "sweep",
+        "state": "rest",
+        "path": "base",
+        "token": "--warp-sweep-base",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "sweep.rest.base",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "sweep",
+        "state": "rest",
+        "path": "label",
+        "token": "--warp-sweep-label",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "sweep.rest.label",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "sweep",
+        "state": "rest",
+        "path": "text",
+        "token": "--warp-sweep-text",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "sweep.rest.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "sweep",
+        "state": "invalid",
+        "path": "stroke",
+        "token": "--warp-sweep-stroke-invalid",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "sweep.invalid.stroke",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "sweep",
+        "state": "invalid",
+        "path": "label",
+        "token": "--warp-sweep-label-invalid",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "sweep.invalid.label",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "sweep",
+        "state": "invalid",
+        "path": "text",
+        "token": "--warp-sweep-text-invalid",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "sweep.invalid.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "nav",
+        "state": "rest",
+        "path": "text",
+        "token": "--warp-nav-text",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "nav.rest.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "nav",
+        "state": "rest",
+        "path": "underline",
+        "token": "--warp-nav-underline",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "nav.rest.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "nav",
+        "state": "hover",
+        "path": "text",
+        "token": "--warp-nav-text-hover",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "nav.hover.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "nav",
+        "state": "hover",
+        "path": "underline",
+        "token": "--warp-nav-underline-hover",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "nav.hover.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "nav",
+        "state": "focus",
+        "path": "text",
+        "token": "--warp-nav-text-focus",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "nav.focus.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "nav",
+        "state": "focus",
+        "path": "underline",
+        "token": "--warp-nav-underline-focus",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "nav.focus.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "nav",
+        "state": "active",
+        "path": "text",
+        "token": "--warp-nav-text-active",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "nav.active.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "nav",
+        "state": "active",
+        "path": "underline",
+        "token": "--warp-nav-underline-active",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "nav.active.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "nav",
+        "state": "disabled",
+        "path": "text",
+        "token": "--warp-nav-text-disabled",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "nav.disabled.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "nav",
+        "state": "disabled",
+        "path": "underline",
+        "token": "--warp-nav-underline-disabled",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "nav.disabled.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "tabs",
+        "state": "rest",
+        "path": "text",
+        "token": "--warp-tabs-text",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "tabs.rest.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "tabs",
+        "state": "rest",
+        "path": "underline",
+        "token": "--warp-tabs-underline",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "tabs.rest.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "tabs",
+        "state": "hover",
+        "path": "text",
+        "token": "--warp-tabs-text-hover",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "tabs.hover.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "tabs",
+        "state": "hover",
+        "path": "underline",
+        "token": "--warp-tabs-underline-hover",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "tabs.hover.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "tabs",
+        "state": "focus",
+        "path": "text",
+        "token": "--warp-tabs-text-focus",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "tabs.focus.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "tabs",
+        "state": "focus",
+        "path": "underline",
+        "token": "--warp-tabs-underline-focus",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "tabs.focus.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "tabs",
+        "state": "active",
+        "path": "text",
+        "token": "--warp-tabs-text-active",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "tabs.active.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "tabs",
+        "state": "active",
+        "path": "underline",
+        "token": "--warp-tabs-underline-active",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "tabs.active.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "tabs",
+        "state": "disabled",
+        "path": "text",
+        "token": "--warp-tabs-text-disabled",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "tabs.disabled.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "tabs",
+        "state": "disabled",
+        "path": "underline",
+        "token": "--warp-tabs-underline-disabled",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "tabs.disabled.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "link",
+        "state": "rest",
+        "path": "text",
+        "token": "--warp-link-text",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "partial",
+        "id": "link.rest.text",
+        "siteIds": [
+          "c4c909401a0233385841171c47ee01fcdcccd832c627a9d939bb16773f4d9865"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/links.css",
+            "fallbackSpan": [
+              203,
+              232
+            ]
+          }
+        ]
+      },
+      {
+        "part": "link",
+        "state": "rest",
+        "path": "underline",
+        "token": "--warp-link-underline",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "link.rest.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "link",
+        "state": "hover",
+        "path": "text",
+        "token": "--warp-link-text-hover",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "link.hover.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "link",
+        "state": "hover",
+        "path": "underline",
+        "token": "--warp-link-underline-hover",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "link.hover.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "link",
+        "state": "focus",
+        "path": "text",
+        "token": "--warp-link-text-focus",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "link.focus.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "link",
+        "state": "focus",
+        "path": "underline",
+        "token": "--warp-link-underline-focus",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "link.focus.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "link",
+        "state": "press",
+        "path": "text",
+        "token": "--warp-link-text-press",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "link.press.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "link",
+        "state": "press",
+        "path": "underline",
+        "token": "--warp-link-underline-press",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "link.press.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "link",
+        "state": "disabled",
+        "path": "text",
+        "token": "--warp-link-text-disabled",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "link.disabled.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "link",
+        "state": "disabled",
+        "path": "underline",
+        "token": "--warp-link-underline-disabled",
+        "domain": "underline-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "link.disabled.underline",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "rest",
+        "path": "bg",
+        "token": "--warp-pill-bg",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.rest.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "rest",
+        "path": "text",
+        "token": "--warp-pill-text",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.rest.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "rest",
+        "path": "border",
+        "token": "--warp-pill-border",
+        "domain": "border",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.rest.border",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "hover",
+        "path": "bg",
+        "token": "--warp-pill-bg-hover",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.hover.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "hover",
+        "path": "text",
+        "token": "--warp-pill-text-hover",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.hover.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "hover",
+        "path": "border",
+        "token": "--warp-pill-border-hover",
+        "domain": "border",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.hover.border",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "focus",
+        "path": "bg",
+        "token": "--warp-pill-bg-focus",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.focus.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "focus",
+        "path": "text",
+        "token": "--warp-pill-text-focus",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.focus.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "focus",
+        "path": "border",
+        "token": "--warp-pill-border-focus",
+        "domain": "border",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.focus.border",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "active",
+        "path": "bg",
+        "token": "--warp-pill-bg-active",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.active.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "active",
+        "path": "text",
+        "token": "--warp-pill-text-active",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.active.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "active",
+        "path": "border",
+        "token": "--warp-pill-border-active",
+        "domain": "border",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.active.border",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "disabled",
+        "path": "bg",
+        "token": "--warp-pill-bg-disabled",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.disabled.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "disabled",
+        "path": "text",
+        "token": "--warp-pill-text-disabled",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.disabled.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "pill",
+        "state": "disabled",
+        "path": "border",
+        "token": "--warp-pill-border-disabled",
+        "domain": "border",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "pill.disabled.border",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "badge",
+        "state": "rest",
+        "path": "bg",
+        "token": "--warp-badge-bg",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "badge.rest.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "badge",
+        "state": "rest",
+        "path": "text",
+        "token": "--warp-badge-text",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "badge.rest.text",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "badge",
+        "state": "rest",
+        "path": "border",
+        "token": "--warp-badge-border",
+        "domain": "border",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "badge.rest.border",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "rest",
+        "path": "label",
+        "token": "--warp-field-label",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.rest.label",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "rest",
+        "path": "bg",
+        "token": "--warp-field-bg",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.rest.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "floated",
+        "path": "label",
+        "token": "--warp-field-label-floated",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.floated.label",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "hover",
+        "path": "label",
+        "token": "--warp-field-label-hover",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.hover.label",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "hover",
+        "path": "bg",
+        "token": "--warp-field-bg-hover",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.hover.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "focus",
+        "path": "label",
+        "token": "--warp-field-label-focus",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.focus.label",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "focus",
+        "path": "bg",
+        "token": "--warp-field-bg-focus",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.focus.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "invalid",
+        "path": "label",
+        "token": "--warp-field-label-invalid",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.invalid.label",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "invalid",
+        "path": "bg",
+        "token": "--warp-field-bg-invalid",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.invalid.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "focus",
+        "path": "ring",
+        "token": "--warp-field-ring-focus",
+        "domain": "ring-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.focus.ring",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "invalid",
+        "path": "ring",
+        "token": "--warp-field-ring-invalid",
+        "domain": "ring-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.invalid.ring",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "disabled",
+        "path": "label",
+        "token": "--warp-field-label-disabled",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.disabled.label",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "disabled",
+        "path": "bg",
+        "token": "--warp-field-bg-disabled",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.disabled.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "readonly",
+        "path": "label",
+        "token": "--warp-field-label-readonly",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.readonly.label",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "field",
+        "state": "readonly",
+        "path": "bg",
+        "token": "--warp-field-bg-readonly",
+        "domain": "color",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "field.readonly.bg",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "focus",
+        "state": "rest",
+        "path": "ring",
+        "token": "--warp-focus-ring",
+        "domain": "ring-role",
+        "units": "forbidden",
+        "binding": "unresolved",
+        "id": "focus.rest.ring",
+        "siteIds": [],
+        "bindingRefs": []
+      },
+      {
+        "part": "text/display",
+        "state": "rest",
+        "path": "font.family",
+        "token": "--warp-text--display-font-family",
+        "domain": "family",
+        "units": "forbidden",
+        "binding": "classified",
+        "id": "text/display.rest.font.family",
+        "siteIds": [
+          "9f844c3c00935cfdea111e9feeb384c8e27b112344ca5eafcb267ad3e60b80fd"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              245,
+              274
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/display",
+        "state": "rest",
+        "path": "font.size",
+        "token": "--warp-text--display-font-size",
+        "domain": "font-size",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/display.rest.font.size",
+        "siteIds": [
+          "6754c6769eaa3c932faaecbb3f4e8d2237a0de6d8c005a0164d541b97ee117ab"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              287,
+              316
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/display",
+        "state": "rest",
+        "path": "font.lineHeight",
+        "token": "--warp-text--display-font-line-height",
+        "domain": "leading",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/display.rest.font.lineHeight",
+        "siteIds": [
+          "5044f94ab294abcd1c3c65887a73fdda59a8461e06af541de4db248c84596f14"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              331,
+              363
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/display",
+        "state": "rest",
+        "path": "font.weight",
+        "token": "--warp-text--display-font-weight",
+        "domain": "weight",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/display.rest.font.weight",
+        "siteIds": [
+          "c70f59cdd8d3d693f2dcc0320adf914cdafc9f77707d751271e788e5cc6341b3"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              378,
+              409
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/display",
+        "state": "rest",
+        "path": "font.letterSpacing",
+        "token": "--warp-text--display-font-letter-spacing",
+        "domain": "tracking",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/display.rest.font.letterSpacing",
+        "siteIds": [
+          "4b74d034afc8d107a6db7479f2482b2e188a01f27645bc35bc0808e70486b896"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              427,
+              460
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/title",
+        "state": "rest",
+        "path": "font.family",
+        "token": "--warp-text--title-font-family",
+        "domain": "family",
+        "units": "forbidden",
+        "binding": "classified",
+        "id": "text/title.rest.font.family",
+        "siteIds": [
+          "24c5741ed42b785de45b9b054649a12e581ded93e8fb001685308f206b9a305b"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              526,
+              553
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/title",
+        "state": "rest",
+        "path": "font.size",
+        "token": "--warp-text--title-font-size",
+        "domain": "font-size",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/title.rest.font.size",
+        "siteIds": [
+          "60e0ffd5bd16efa7fbf6ded8339206613df34bc96ceb6f7de58b0c01dd9e358a"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              566,
+              593
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/title",
+        "state": "rest",
+        "path": "font.lineHeight",
+        "token": "--warp-text--title-font-line-height",
+        "domain": "leading",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/title.rest.font.lineHeight",
+        "siteIds": [
+          "3ca953b7cee390792da4408961618e7d43579fda8a50af29b946ec7d99908b12"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              608,
+              638
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/title",
+        "state": "rest",
+        "path": "font.weight",
+        "token": "--warp-text--title-font-weight",
+        "domain": "weight",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/title.rest.font.weight",
+        "siteIds": [
+          "30a0ee1be53ef591d54d489754b01f71a191b7930ed41891744463c6a3e5ed29"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              653,
+              682
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/title",
+        "state": "rest",
+        "path": "font.letterSpacing",
+        "token": "--warp-text--title-font-letter-spacing",
+        "domain": "tracking",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/title.rest.font.letterSpacing",
+        "siteIds": [
+          "79a8ae42aef27b2bb4a653a9063e968cbbae13905efeba2368394fb1f4cb2072"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              700,
+              731
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/heading",
+        "state": "rest",
+        "path": "font.family",
+        "token": "--warp-text--heading-font-family",
+        "domain": "family",
+        "units": "forbidden",
+        "binding": "classified",
+        "id": "text/heading.rest.font.family",
+        "siteIds": [
+          "91f3aeee0feb2808d17e0e84d62f108513337f7fc39bb16d3a195021a84565f1"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              799,
+              828
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/heading",
+        "state": "rest",
+        "path": "font.size",
+        "token": "--warp-text--heading-font-size",
+        "domain": "font-size",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/heading.rest.font.size",
+        "siteIds": [
+          "1f4d9e735d0f9a7e257ab1d0bfd99f3794dd45b8129bfe2e193204120a72bc66"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              841,
+              870
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/heading",
+        "state": "rest",
+        "path": "font.lineHeight",
+        "token": "--warp-text--heading-font-line-height",
+        "domain": "leading",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/heading.rest.font.lineHeight",
+        "siteIds": [
+          "19da5e09bf0b5f578038dff7b34c07955f383afa6bdfc5183c8b06d4c07a043e"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              885,
+              917
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/heading",
+        "state": "rest",
+        "path": "font.weight",
+        "token": "--warp-text--heading-font-weight",
+        "domain": "weight",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/heading.rest.font.weight",
+        "siteIds": [
+          "c46ede8750d965896db9dbe4d401142f26fdcd54878ea22c1dcabf81da06c7c0"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              932,
+              963
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/heading",
+        "state": "rest",
+        "path": "font.letterSpacing",
+        "token": "--warp-text--heading-font-letter-spacing",
+        "domain": "tracking",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/heading.rest.font.letterSpacing",
+        "siteIds": [
+          "42fe6a7fd444dc119af27b02bec826159c1efe6460bcc22dc695c6b25dbad02b"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              981,
+              1014
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/body",
+        "state": "rest",
+        "path": "font.family",
+        "token": "--warp-text--body-font-family",
+        "domain": "family",
+        "units": "forbidden",
+        "binding": "classified",
+        "id": "text/body.rest.font.family",
+        "siteIds": [
+          "de4c1c4f372e130b3eadf776105d6c4b2b42a3d8a6806155c81f4775a67a64a9"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1079,
+              1105
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/body",
+        "state": "rest",
+        "path": "font.size",
+        "token": "--warp-text--body-font-size",
+        "domain": "font-size",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/body.rest.font.size",
+        "siteIds": [
+          "5bed09a1dd7df0e439323e063d605b290535ab5cd71d6703fa5bd7287c1b98aa"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1118,
+              1144
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/body",
+        "state": "rest",
+        "path": "font.lineHeight",
+        "token": "--warp-text--body-font-line-height",
+        "domain": "leading",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/body.rest.font.lineHeight",
+        "siteIds": [
+          "4132d960465cf88d61550fab3cd6ddc790ba24fc228216939c623cd6a8dda4b6"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1159,
+              1188
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/label",
+        "state": "rest",
+        "path": "font.family",
+        "token": "--warp-text--label-font-family",
+        "domain": "family",
+        "units": "forbidden",
+        "binding": "classified",
+        "id": "text/label.rest.font.family",
+        "siteIds": [
+          "4136e76482c84161b54eb546c22aec77e6147959f4e8107a795535681a047fe9"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1254,
+              1281
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/label",
+        "state": "rest",
+        "path": "font.size",
+        "token": "--warp-text--label-font-size",
+        "domain": "font-size",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/label.rest.font.size",
+        "siteIds": [
+          "9f4577d1fe9d31b1eff8f084fd903041f51be11b5394c63a613b2a357d2ab3f3"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1294,
+              1321
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/label",
+        "state": "rest",
+        "path": "font.lineHeight",
+        "token": "--warp-text--label-font-line-height",
+        "domain": "leading",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/label.rest.font.lineHeight",
+        "siteIds": [
+          "020dbe03272b59ad07d42509bb823c0252f3a8b5801ac37eeec4084e1e5ddbfd"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1336,
+              1366
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/label",
+        "state": "rest",
+        "path": "font.weight",
+        "token": "--warp-text--label-font-weight",
+        "domain": "weight",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/label.rest.font.weight",
+        "siteIds": [
+          "d8b4938963b310e7afa878bf25e12cf73f0cab20b884947a725a2483f3002c75"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1381,
+              1410
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/label",
+        "state": "rest",
+        "path": "font.letterSpacing",
+        "token": "--warp-text--label-font-letter-spacing",
+        "domain": "tracking",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/label.rest.font.letterSpacing",
+        "siteIds": [
+          "488d13d3fa51ce895843b03fe24e517b69da97d941fd697518d500d871174cbd"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1428,
+              1459
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/label",
+        "state": "rest",
+        "path": "font.transform",
+        "token": "--warp-text--label-font-transform",
+        "domain": "transform-case",
+        "units": "forbidden",
+        "binding": "classified",
+        "id": "text/label.rest.font.transform",
+        "siteIds": [
+          "3cae2b6b85c13e23ab4a4948a8f710043977a29268ee84cd87973977b3c7823e"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1477,
+              1504
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/caption",
+        "state": "rest",
+        "path": "font.family",
+        "token": "--warp-text--caption-font-family",
+        "domain": "family",
+        "units": "forbidden",
+        "binding": "classified",
+        "id": "text/caption.rest.font.family",
+        "siteIds": [
+          "2cd692771fbed62a03cce107f54a5aeb474332c57577afa8a33ac7bfdf77025f"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1572,
+              1601
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/caption",
+        "state": "rest",
+        "path": "font.size",
+        "token": "--warp-text--caption-font-size",
+        "domain": "font-size",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/caption.rest.font.size",
+        "siteIds": [
+          "4c5edab8df2ae255344b2e889a543b6b37953c0f98250a3c9394c69a99e75ff5"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1614,
+              1643
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/caption",
+        "state": "rest",
+        "path": "font.lineHeight",
+        "token": "--warp-text--caption-font-line-height",
+        "domain": "leading",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/caption.rest.font.lineHeight",
+        "siteIds": [
+          "d86bb0b5aa5b4b1f599fdc27a1ab83852b1fb97b7f54c92fb82fa148df34c672"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1658,
+              1690
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/eyebrow",
+        "state": "rest",
+        "path": "font.family",
+        "token": "--warp-text--eyebrow-font-family",
+        "domain": "family",
+        "units": "forbidden",
+        "binding": "classified",
+        "id": "text/eyebrow.rest.font.family",
+        "siteIds": [
+          "bbbbdfde958157ef36f1acc3220ebb54289bc2f7783133659d3dce43196567a2"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1758,
+              1787
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/eyebrow",
+        "state": "rest",
+        "path": "font.size",
+        "token": "--warp-text--eyebrow-font-size",
+        "domain": "font-size",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/eyebrow.rest.font.size",
+        "siteIds": [
+          "10cfca7e8fffc48d2f8fce8054c7b88ba15c103a46d8738b17532396869fea5a"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1800,
+              1829
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/eyebrow",
+        "state": "rest",
+        "path": "font.lineHeight",
+        "token": "--warp-text--eyebrow-font-line-height",
+        "domain": "leading",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/eyebrow.rest.font.lineHeight",
+        "siteIds": [
+          "a67efea92cbff14738daa2b6188405e1f696aa5fa0d742d70a2256dd6e4f3c60"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1844,
+              1876
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/eyebrow",
+        "state": "rest",
+        "path": "font.weight",
+        "token": "--warp-text--eyebrow-font-weight",
+        "domain": "weight",
+        "units": "unitless",
+        "binding": "classified",
+        "id": "text/eyebrow.rest.font.weight",
+        "siteIds": [
+          "a8f4006e7fd5f8416de8bdfc063490702f20d90521c0e6c9100ec47219f77676"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1891,
+              1922
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/eyebrow",
+        "state": "rest",
+        "path": "font.letterSpacing",
+        "token": "--warp-text--eyebrow-font-letter-spacing",
+        "domain": "tracking",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/eyebrow.rest.font.letterSpacing",
+        "siteIds": [
+          "082a5439e1fe6b2c224df77b5ed939c2313be67d783ea973e3fd89af6e96c2ec"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1940,
+              1973
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/eyebrow",
+        "state": "rest",
+        "path": "font.transform",
+        "token": "--warp-text--eyebrow-font-transform",
+        "domain": "transform-case",
+        "units": "forbidden",
+        "binding": "classified",
+        "id": "text/eyebrow.rest.font.transform",
+        "siteIds": [
+          "32781e081b68223d5157051d7cfff3d1bb0ea6500d0a012f038c5ce23e04265f"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              1991,
+              2020
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/code",
+        "state": "rest",
+        "path": "font.family",
+        "token": "--warp-text--code-font-family",
+        "domain": "family",
+        "units": "forbidden",
+        "binding": "classified",
+        "id": "text/code.rest.font.family",
+        "siteIds": [
+          "6747075521428a3a7a95c709e88776be257849627b3a1ab0a6bedeb7239330a8"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              2085,
+              2111
+            ]
+          }
+        ]
+      },
+      {
+        "part": "text/code",
+        "state": "rest",
+        "path": "font.size",
+        "token": "--warp-text--code-font-size",
+        "domain": "font-size",
+        "units": "px",
+        "binding": "classified",
+        "id": "text/code.rest.font.size",
+        "siteIds": [
+          "1f01b2811cffebfec1d7e9dd6280120db96c475c04586b55a27e29f38f0f34fc"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/type.css",
+            "fallbackSpan": [
+              2124,
+              2150
+            ]
+          }
+        ]
+      },
+      {
+        "part": "status-light",
+        "state": "rest",
+        "path": "font.size",
+        "token": "--warp-status-light-font-size",
+        "domain": "font-size",
+        "units": "px",
+        "binding": "classified",
+        "id": "status-light.rest.font.size",
+        "siteIds": [
+          "77fa319b0c6810ab0e953805116608ba3708ebba8768550394d9974ff435128b"
+        ],
+        "bindingRefs": [
+          {
+            "source": "docs/design/warp/tokens/warp-components.css",
+            "fallbackSpan": [
+              155457,
+              155483
+            ]
+          }
+        ]
+      },
+      {
+        "part": "link",
+        "state": "rest",
+        "path": "underline.width",
+        "token": "--warp-link-underline-width",
+        "domain": "width",
+        "units": "px",
+        "binding": "partial",
+        "id": "link.rest.underline.width",
+        "siteIds": [
+          "f618abd51a14d7aecdf31cca75fb31968a79d930bdbe8b395b47518ba2c5b7f0"
+        ],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/links.css",
+            "fallbackSpan": [
+              261,
+              288
+            ]
+          }
+        ]
+      },
+      {
+        "part": "link",
+        "state": "rest",
+        "path": "underline.offset",
+        "token": "--warp-link-underline-offset",
+        "domain": "position",
+        "units": "px",
+        "binding": "partial",
+        "id": "link.rest.underline.offset",
+        "siteIds": [],
+        "bindingRefs": [
+          {
+            "source": "packages/warp/src/links.css",
+            "fallbackSpan": [
+              313,
+              319
+            ]
+          }
+        ]
+      }
+    ],
     "unresolvedGroups": [
       "button.rest.bg",
       "button.rest.text",
@@ -9345,7 +11784,9 @@
       "field.disabled.bg",
       "field.readonly.label",
       "field.readonly.bg",
-      "focus.rest.ring"
+      "focus.rest.ring",
+      "link.rest.underline.width",
+      "link.rest.underline.offset"
     ],
     "unresolvedSites": [
       "072f4adf0778e480d18a6b97aa71d8bf64f0e736bcad272f6b0dfcadc09ac2b3",

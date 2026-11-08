@@ -449,3 +449,30 @@ test('detects a new token reader and changed input outside the hashed sheets', (
   writeFileSync(path, original.slice(0, start) + changed + original.slice(end))
   expect(check()).toContain('Source index drift')
 })
+
+test('normalizes reviewed anchor bindings and preserves one schema digest', () => {
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    digest: string
+    registry: { groups: { id: string; binding: string; token: string; bindingRefs: unknown[] }[] }
+  }
+  const group = schema.registry.groups.find((row) => row.id === 'link.rest.text')
+  expect(group).toMatchObject({ binding: 'partial', token: '--warp-link-text' })
+  expect(group?.bindingRefs).toHaveLength(1)
+  expect(schema.registry.groups.find((row) => row.id === 'link.rest.underline.width')?.binding).toBe('partial')
+  const type = readFileSync(resolve(root, 'packages/warp/plugin.d.mts'), 'utf8')
+  const doc = readFileSync(resolve(root, 'packages/cli/docs/theme-tokens.md'), 'utf8')
+  expect(type).toContain(schema.digest)
+  expect(doc).toContain(schema.digest)
+  expect(doc).toContain('No additional raw-only part overrides have been classified')
+})
+
+test('detects a new declared system colour even without a token read', () => {
+  setup()
+  const source = 'docs/design/warp/tokens/warp-data.css'
+  const path = resolve(fixture, source)
+  const original = readFileSync(path, 'utf8')
+  writeFileSync(path, `${original}\n:root { --warp-color-new-example: #123456; }\n`)
+  const output = check()
+  expect(output).toContain('Drift: packages/warp/plugin.d.mts')
+  expect(output).toContain('Drift: packages/warp-core/theme.schema.json')
+})

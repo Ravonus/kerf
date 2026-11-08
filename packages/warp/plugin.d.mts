@@ -1,4 +1,4 @@
-// Theme schema digest: 50653e4d634b4b15883a980fbe7e36e521e5549d31049badc8d5e8dc47b2180a
+// Theme schema digest: cf9fe17b37bd7c8a2ca81200d1e38cdb638f77b275882e5ea4af94d43f626012
 import type { PluginInstance } from '@weft-js/core/plugin'
 
 /** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
@@ -136,7 +136,6 @@ export interface ThemeParts {
     bg?: string
     text?: string
     border?: string | { color?: string; width?: number | string; style?: string }
-
   }
   field?: {
     label?: string
@@ -169,66 +168,101 @@ export interface ThemeParts {
   }
   focus?: {
     ring?: string | { color?: string; width?: number | string; offset?: number | string }
-
   }
-  'text/display'?: { font?: {
+  "text/display"?: {
+    font?: string | {
       family?: string
       size?: number | string
       lineHeight?: number | string
       weight?: number | string
       letterSpacing?: number | string
-    } }
-  'text/title'?: { font?: {
+    }
+  }
+  "text/title"?: {
+    font?: string | {
       family?: string
       size?: number | string
       lineHeight?: number | string
       weight?: number | string
       letterSpacing?: number | string
-    } }
-  'text/heading'?: { font?: {
+    }
+  }
+  "text/heading"?: {
+    font?: string | {
       family?: string
       size?: number | string
       lineHeight?: number | string
       weight?: number | string
       letterSpacing?: number | string
-    } }
-  'text/body'?: { font?: {
+    }
+  }
+  "text/body"?: {
+    font?: string | {
       family?: string
       size?: number | string
       lineHeight?: number | string
-    } }
-  'text/label'?: { font?: {
-      family?: string
-      size?: number | string
-      lineHeight?: number | string
-      weight?: number | string
-      letterSpacing?: number | string
-      transform?: string
-    } }
-  'text/caption'?: { font?: {
-      family?: string
-      size?: number | string
-      lineHeight?: number | string
-    } }
-  'text/eyebrow'?: { font?: {
+    }
+  }
+  "text/label"?: {
+    font?: string | {
       family?: string
       size?: number | string
       lineHeight?: number | string
       weight?: number | string
       letterSpacing?: number | string
       transform?: string
-    } }
-  'text/code'?: { font?: {
+    }
+  }
+  "text/caption"?: {
+    font?: string | {
       family?: string
       size?: number | string
-    } }
-  'status-light'?: { font?: { size?: number | string } }
+      lineHeight?: number | string
+    }
+  }
+  "text/eyebrow"?: {
+    font?: string | {
+      family?: string
+      size?: number | string
+      lineHeight?: number | string
+      weight?: number | string
+      letterSpacing?: number | string
+      transform?: string
+    }
+  }
+  "text/code"?: {
+    font?: string | {
+      family?: string
+      size?: number | string
+    }
+  }
+  "status-light"?: {
+    font?: string | {
+      size?: number | string
+    }
+  }
 }
 
-/** The classified system scales; other scales remain under classification. */
+/** A system density stop. */
+export interface ThemeDensity { factor?: number; control?: { sm?: number | string; md?: number | string; lg?: number | string } }
+/** A custom text role. */
+export interface ThemeTextRole { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string }
+/** System scale types; bindings remain under classification. */
 export interface ThemeSystem {
   space?: Record<string, number | string>
-  text?: Record<string, { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string } | undefined> & {
+  radius?: Record<string, number | string>
+  font?: Record<string, string>
+  shadow?: Record<string, string>
+  border?: { hairline?: number | string; emphasis?: number | string }
+  padding?: { control?: number | string; surface?: number | string }
+  control?: { sm?: number | string; md?: number | string; lg?: number | string }
+  field?: { height?: number | string }
+  layout?: { bar?: number | string; tabbar?: number | string; rail?: number | string; sidebar?: number | string; list?: number | string; aside?: number | string; measure?: number | string; narrow?: number | string; content?: number | string; wide?: number | string }
+  focus?: { width?: number | string; offset?: number | string; color?: string }
+  density?: { compact?: ThemeDensity; cozy?: ThemeDensity; comfortable?: ThemeDensity }
+  motion?: { scale?: number; press?: number; stagger?: number | string; staggerMax?: number; distance?: number | string; scaleFrom?: number; duration?: { arrive?: number | string; base?: number | string; "exit-k"?: number | string; fast?: number | string; fill?: number | string; frame?: number | string; instant?: number | string; "label-char"?: number | string; "label-float"?: number | string; message?: number | string; push?: number | string; route?: number | string; sheet?: number | string; slow?: number | string; spring?: number | string; sweep?: number | string }; easing?: { in?: string; "in-out"?: string; "label-float"?: string; out?: string; pop?: string; sheet?: string; spring?: string; sweep?: string; "sweep-in"?: string } }
+  color?: { "accent-border"?: string; "accent-on-solid"?: string; "accent-soft"?: string; "accent-solid"?: string; "accent-solid-hover"?: string; "accent-text"?: string; border?: string; "border-control"?: string; "border-strong"?: string; "caution-border"?: string; "caution-on-solid"?: string; "caution-soft"?: string; "caution-solid"?: string; "caution-solid-hover"?: string; "caution-text"?: string; "critical-border"?: string; "critical-on-solid"?: string; "critical-soft"?: string; "critical-solid"?: string; "critical-solid-hover"?: string; "critical-text"?: string; "data-1"?: string; "data-2"?: string; "data-3"?: string; "data-4"?: string; "data-5"?: string; "data-6"?: string; "data-7"?: string; "data-8"?: string; "data-axis"?: string; "data-div-mid"?: string; "data-div-neg"?: string; "data-div-pos"?: string; "data-down"?: string; "data-down-flash"?: string; "data-grid"?: string; "data-other"?: string; "data-seq-0"?: string; "data-seq-1"?: string; "data-seq-2"?: string; "data-seq-3"?: string; "data-seq-4"?: string; "data-seq-5"?: string; "data-up"?: string; "data-up-flash"?: string; field?: string; "field-active"?: string; "field-invalid"?: string; focus?: string; "highlight-border"?: string; "highlight-on-solid"?: string; "highlight-soft"?: string; "highlight-solid"?: string; "highlight-solid-hover"?: string; "highlight-text"?: string; "info-border"?: string; "info-on-solid"?: string; "info-soft"?: string; "info-solid"?: string; "info-solid-hover"?: string; "info-text"?: string; label?: string; "label-active"?: string; "label-rest"?: string; "neutral-border"?: string; "neutral-on-solid"?: string; "neutral-soft"?: string; "neutral-solid"?: string; "neutral-solid-hover"?: string; "neutral-text"?: string; "on-inverse"?: string; page?: string; "positive-border"?: string; "positive-on-solid"?: string; "positive-soft"?: string; "positive-solid"?: string; "positive-solid-hover"?: string; "positive-text"?: string; "primary-on-solid"?: string; "primary-solid"?: string; "primary-solid-hover"?: string; scrim?: string; surface?: string; "surface-active"?: string; "surface-hover"?: string; "surface-inverse"?: string; "surface-line"?: string; "surface-overlay"?: string; "surface-raised"?: string; "surface-sunken"?: string; sweep?: string; "sweep-base"?: string; "sweep-critical"?: string; text?: string; "text-faint"?: string; "text-subtle"?: string }
+  text?: Record<string, ThemeTextRole | undefined> & {
     display?: { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string }
     title?: { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string }
     heading?: { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string }

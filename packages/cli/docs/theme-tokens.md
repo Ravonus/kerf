@@ -1,138 +1,164 @@
 # Theme tokens (partial)
 
-Schema digest: 50653e4d634b4b15883a980fbe7e36e521e5549d31049badc8d5e8dc47b2180a
+Schema digest: cf9fe17b37bd7c8a2ca81200d1e38cdb638f77b275882e5ea4af94d43f626012
 
 Bare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.
 
-| Part | State | Path | Candidate token | Domain | Binding |
-| --- | --- | --- | --- | --- | --- |
-| button | rest | bg | --warp-button-bg | color | unresolved |
-| button | rest | text | --warp-button-text | color | unresolved |
-| button | rest | border | --warp-button-border | border | unresolved |
-| button | rest | highlight | --warp-button-highlight | color | unresolved |
-| button | hover | bg | --warp-button-bg-hover | color | unresolved |
-| button | hover | text | --warp-button-text-hover | color | unresolved |
-| button | hover | border | --warp-button-border-hover | border | unresolved |
-| button | hover | highlight | --warp-button-highlight-hover | color | unresolved |
-| button | focus | bg | --warp-button-bg-focus | color | unresolved |
-| button | focus | text | --warp-button-text-focus | color | unresolved |
-| button | focus | border | --warp-button-border-focus | border | unresolved |
-| button | focus | highlight | --warp-button-highlight-focus | color | unresolved |
-| button | press | bg | --warp-button-bg-press | color | unresolved |
-| button | press | text | --warp-button-text-press | color | unresolved |
-| button | press | border | --warp-button-border-press | border | unresolved |
-| button | press | highlight | --warp-button-highlight-press | color | unresolved |
-| button | disabled | bg | --warp-button-bg-disabled | color | unresolved |
-| button | disabled | text | --warp-button-text-disabled | color | unresolved |
-| button | disabled | border | --warp-button-border-disabled | border | unresolved |
-| button | disabled | highlight | --warp-button-highlight-disabled | color | unresolved |
-| sweep | rest | stroke | --warp-sweep-stroke | color | unresolved |
-| sweep | rest | base | --warp-sweep-base | color | unresolved |
-| sweep | rest | label | --warp-sweep-label | color | unresolved |
-| sweep | rest | text | --warp-sweep-text | color | unresolved |
-| sweep | invalid | stroke | --warp-sweep-stroke-invalid | color | unresolved |
-| sweep | invalid | label | --warp-sweep-label-invalid | color | unresolved |
-| sweep | invalid | text | --warp-sweep-text-invalid | color | unresolved |
-| nav | rest | text | --warp-nav-text | color | unresolved |
-| nav | rest | underline | --warp-nav-underline | underline-role | unresolved |
-| nav | hover | text | --warp-nav-text-hover | color | unresolved |
-| nav | hover | underline | --warp-nav-underline-hover | underline-role | unresolved |
-| nav | focus | text | --warp-nav-text-focus | color | unresolved |
-| nav | focus | underline | --warp-nav-underline-focus | underline-role | unresolved |
-| nav | active | text | --warp-nav-text-active | color | unresolved |
-| nav | active | underline | --warp-nav-underline-active | underline-role | unresolved |
-| nav | disabled | text | --warp-nav-text-disabled | color | unresolved |
-| nav | disabled | underline | --warp-nav-underline-disabled | underline-role | unresolved |
-| tabs | rest | text | --warp-tabs-text | color | unresolved |
-| tabs | rest | underline | --warp-tabs-underline | underline-role | unresolved |
-| tabs | hover | text | --warp-tabs-text-hover | color | unresolved |
-| tabs | hover | underline | --warp-tabs-underline-hover | underline-role | unresolved |
-| tabs | focus | text | --warp-tabs-text-focus | color | unresolved |
-| tabs | focus | underline | --warp-tabs-underline-focus | underline-role | unresolved |
-| tabs | active | text | --warp-tabs-text-active | color | unresolved |
-| tabs | active | underline | --warp-tabs-underline-active | underline-role | unresolved |
-| tabs | disabled | text | --warp-tabs-text-disabled | color | unresolved |
-| tabs | disabled | underline | --warp-tabs-underline-disabled | underline-role | unresolved |
-| link | rest | text | --warp-link-text | color | unresolved |
-| link | rest | underline | --warp-link-underline | underline-role | unresolved |
-| link | hover | text | --warp-link-text-hover | color | unresolved |
-| link | hover | underline | --warp-link-underline-hover | underline-role | unresolved |
-| link | focus | text | --warp-link-text-focus | color | unresolved |
-| link | focus | underline | --warp-link-underline-focus | underline-role | unresolved |
-| link | press | text | --warp-link-text-press | color | unresolved |
-| link | press | underline | --warp-link-underline-press | underline-role | unresolved |
-| link | disabled | text | --warp-link-text-disabled | color | unresolved |
-| link | disabled | underline | --warp-link-underline-disabled | underline-role | unresolved |
-| pill | rest | bg | --warp-pill-bg | color | unresolved |
-| pill | rest | text | --warp-pill-text | color | unresolved |
-| pill | rest | border | --warp-pill-border | border | unresolved |
-| pill | hover | bg | --warp-pill-bg-hover | color | unresolved |
-| pill | hover | text | --warp-pill-text-hover | color | unresolved |
-| pill | hover | border | --warp-pill-border-hover | border | unresolved |
-| pill | focus | bg | --warp-pill-bg-focus | color | unresolved |
-| pill | focus | text | --warp-pill-text-focus | color | unresolved |
-| pill | focus | border | --warp-pill-border-focus | border | unresolved |
-| pill | active | bg | --warp-pill-bg-active | color | unresolved |
-| pill | active | text | --warp-pill-text-active | color | unresolved |
-| pill | active | border | --warp-pill-border-active | border | unresolved |
-| pill | disabled | bg | --warp-pill-bg-disabled | color | unresolved |
-| pill | disabled | text | --warp-pill-text-disabled | color | unresolved |
-| pill | disabled | border | --warp-pill-border-disabled | border | unresolved |
-| badge | rest | bg | --warp-badge-bg | color | unresolved |
-| badge | rest | text | --warp-badge-text | color | unresolved |
-| badge | rest | border | --warp-badge-border | border | unresolved |
-| field | rest | label | --warp-field-label | color | unresolved |
-| field | rest | bg | --warp-field-bg | color | unresolved |
-| field | floated | label | --warp-field-label-floated | color | unresolved |
-| field | hover | label | --warp-field-label-hover | color | unresolved |
-| field | hover | bg | --warp-field-bg-hover | color | unresolved |
-| field | focus | label | --warp-field-label-focus | color | unresolved |
-| field | focus | bg | --warp-field-bg-focus | color | unresolved |
-| field | invalid | label | --warp-field-label-invalid | color | unresolved |
-| field | invalid | bg | --warp-field-bg-invalid | color | unresolved |
-| field | focus | ring | --warp-field-ring-focus | ring-role | unresolved |
-| field | invalid | ring | --warp-field-ring-invalid | ring-role | unresolved |
-| field | disabled | label | --warp-field-label-disabled | color | unresolved |
-| field | disabled | bg | --warp-field-bg-disabled | color | unresolved |
-| field | readonly | label | --warp-field-label-readonly | color | unresolved |
-| field | readonly | bg | --warp-field-bg-readonly | color | unresolved |
-| focus | rest | ring | --warp-focus-ring | ring-role | unresolved |
-| text/display | rest | font.family | --warp-text--display-font-family | family | classified |
-| text/display | rest | font.size | --warp-text--display-font-size | font-size | classified |
-| text/display | rest | font.lineHeight | --warp-text--display-font-line-height | leading | classified |
-| text/display | rest | font.weight | --warp-text--display-font-weight | weight | classified |
-| text/display | rest | font.letterSpacing | --warp-text--display-font-letter-spacing | tracking | classified |
-| text/title | rest | font.family | --warp-text--title-font-family | family | classified |
-| text/title | rest | font.size | --warp-text--title-font-size | font-size | classified |
-| text/title | rest | font.lineHeight | --warp-text--title-font-line-height | leading | classified |
-| text/title | rest | font.weight | --warp-text--title-font-weight | weight | classified |
-| text/title | rest | font.letterSpacing | --warp-text--title-font-letter-spacing | tracking | classified |
-| text/heading | rest | font.family | --warp-text--heading-font-family | family | classified |
-| text/heading | rest | font.size | --warp-text--heading-font-size | font-size | classified |
-| text/heading | rest | font.lineHeight | --warp-text--heading-font-line-height | leading | classified |
-| text/heading | rest | font.weight | --warp-text--heading-font-weight | weight | classified |
-| text/heading | rest | font.letterSpacing | --warp-text--heading-font-letter-spacing | tracking | classified |
-| text/body | rest | font.family | --warp-text--body-font-family | family | classified |
-| text/body | rest | font.size | --warp-text--body-font-size | font-size | classified |
-| text/body | rest | font.lineHeight | --warp-text--body-font-line-height | leading | classified |
-| text/label | rest | font.family | --warp-text--label-font-family | family | classified |
-| text/label | rest | font.size | --warp-text--label-font-size | font-size | classified |
-| text/label | rest | font.lineHeight | --warp-text--label-font-line-height | leading | classified |
-| text/label | rest | font.weight | --warp-text--label-font-weight | weight | classified |
-| text/label | rest | font.letterSpacing | --warp-text--label-font-letter-spacing | tracking | classified |
-| text/label | rest | font.transform | --warp-text--label-font-transform | transform-case | classified |
-| text/caption | rest | font.family | --warp-text--caption-font-family | family | classified |
-| text/caption | rest | font.size | --warp-text--caption-font-size | font-size | classified |
-| text/caption | rest | font.lineHeight | --warp-text--caption-font-line-height | leading | classified |
-| text/eyebrow | rest | font.family | --warp-text--eyebrow-font-family | family | classified |
-| text/eyebrow | rest | font.size | --warp-text--eyebrow-font-size | font-size | classified |
-| text/eyebrow | rest | font.lineHeight | --warp-text--eyebrow-font-line-height | leading | classified |
-| text/eyebrow | rest | font.weight | --warp-text--eyebrow-font-weight | weight | classified |
-| text/eyebrow | rest | font.letterSpacing | --warp-text--eyebrow-font-letter-spacing | tracking | classified |
-| text/eyebrow | rest | font.transform | --warp-text--eyebrow-font-transform | transform-case | classified |
-| text/code | rest | font.family | --warp-text--code-font-family | family | classified |
-| text/code | rest | font.size | --warp-text--code-font-size | font-size | classified |
-| status-light | rest | font.size | --warp-status-light-font-size | font-size | classified |
+| Part | State | Path | Candidate token | Domain | Binding | Reviewed sites |
+| --- | --- | --- | --- | --- | --- | --- |
+| button | rest | bg | --warp-button-bg | color | unresolved | 0 |
+| button | rest | text | --warp-button-text | color | unresolved | 0 |
+| button | rest | border | --warp-button-border | border | unresolved | 0 |
+| button | rest | highlight | --warp-button-highlight | color | unresolved | 0 |
+| button | hover | bg | --warp-button-bg-hover | color | unresolved | 0 |
+| button | hover | text | --warp-button-text-hover | color | unresolved | 0 |
+| button | hover | border | --warp-button-border-hover | border | unresolved | 0 |
+| button | hover | highlight | --warp-button-highlight-hover | color | unresolved | 0 |
+| button | focus | bg | --warp-button-bg-focus | color | unresolved | 0 |
+| button | focus | text | --warp-button-text-focus | color | unresolved | 0 |
+| button | focus | border | --warp-button-border-focus | border | unresolved | 0 |
+| button | focus | highlight | --warp-button-highlight-focus | color | unresolved | 0 |
+| button | press | bg | --warp-button-bg-press | color | unresolved | 0 |
+| button | press | text | --warp-button-text-press | color | unresolved | 0 |
+| button | press | border | --warp-button-border-press | border | unresolved | 0 |
+| button | press | highlight | --warp-button-highlight-press | color | unresolved | 0 |
+| button | disabled | bg | --warp-button-bg-disabled | color | unresolved | 0 |
+| button | disabled | text | --warp-button-text-disabled | color | unresolved | 0 |
+| button | disabled | border | --warp-button-border-disabled | border | unresolved | 0 |
+| button | disabled | highlight | --warp-button-highlight-disabled | color | unresolved | 0 |
+| sweep | rest | stroke | --warp-sweep-stroke | color | unresolved | 0 |
+| sweep | rest | base | --warp-sweep-base | color | unresolved | 0 |
+| sweep | rest | label | --warp-sweep-label | color | unresolved | 0 |
+| sweep | rest | text | --warp-sweep-text | color | unresolved | 0 |
+| sweep | invalid | stroke | --warp-sweep-stroke-invalid | color | unresolved | 0 |
+| sweep | invalid | label | --warp-sweep-label-invalid | color | unresolved | 0 |
+| sweep | invalid | text | --warp-sweep-text-invalid | color | unresolved | 0 |
+| nav | rest | text | --warp-nav-text | color | unresolved | 0 |
+| nav | rest | underline | --warp-nav-underline | underline-role | unresolved | 0 |
+| nav | hover | text | --warp-nav-text-hover | color | unresolved | 0 |
+| nav | hover | underline | --warp-nav-underline-hover | underline-role | unresolved | 0 |
+| nav | focus | text | --warp-nav-text-focus | color | unresolved | 0 |
+| nav | focus | underline | --warp-nav-underline-focus | underline-role | unresolved | 0 |
+| nav | active | text | --warp-nav-text-active | color | unresolved | 0 |
+| nav | active | underline | --warp-nav-underline-active | underline-role | unresolved | 0 |
+| nav | disabled | text | --warp-nav-text-disabled | color | unresolved | 0 |
+| nav | disabled | underline | --warp-nav-underline-disabled | underline-role | unresolved | 0 |
+| tabs | rest | text | --warp-tabs-text | color | unresolved | 0 |
+| tabs | rest | underline | --warp-tabs-underline | underline-role | unresolved | 0 |
+| tabs | hover | text | --warp-tabs-text-hover | color | unresolved | 0 |
+| tabs | hover | underline | --warp-tabs-underline-hover | underline-role | unresolved | 0 |
+| tabs | focus | text | --warp-tabs-text-focus | color | unresolved | 0 |
+| tabs | focus | underline | --warp-tabs-underline-focus | underline-role | unresolved | 0 |
+| tabs | active | text | --warp-tabs-text-active | color | unresolved | 0 |
+| tabs | active | underline | --warp-tabs-underline-active | underline-role | unresolved | 0 |
+| tabs | disabled | text | --warp-tabs-text-disabled | color | unresolved | 0 |
+| tabs | disabled | underline | --warp-tabs-underline-disabled | underline-role | unresolved | 0 |
+| link | rest | text | --warp-link-text | color | partial | 1 |
+| link | rest | underline | --warp-link-underline | underline-role | unresolved | 0 |
+| link | hover | text | --warp-link-text-hover | color | unresolved | 0 |
+| link | hover | underline | --warp-link-underline-hover | underline-role | unresolved | 0 |
+| link | focus | text | --warp-link-text-focus | color | unresolved | 0 |
+| link | focus | underline | --warp-link-underline-focus | underline-role | unresolved | 0 |
+| link | press | text | --warp-link-text-press | color | unresolved | 0 |
+| link | press | underline | --warp-link-underline-press | underline-role | unresolved | 0 |
+| link | disabled | text | --warp-link-text-disabled | color | unresolved | 0 |
+| link | disabled | underline | --warp-link-underline-disabled | underline-role | unresolved | 0 |
+| pill | rest | bg | --warp-pill-bg | color | unresolved | 0 |
+| pill | rest | text | --warp-pill-text | color | unresolved | 0 |
+| pill | rest | border | --warp-pill-border | border | unresolved | 0 |
+| pill | hover | bg | --warp-pill-bg-hover | color | unresolved | 0 |
+| pill | hover | text | --warp-pill-text-hover | color | unresolved | 0 |
+| pill | hover | border | --warp-pill-border-hover | border | unresolved | 0 |
+| pill | focus | bg | --warp-pill-bg-focus | color | unresolved | 0 |
+| pill | focus | text | --warp-pill-text-focus | color | unresolved | 0 |
+| pill | focus | border | --warp-pill-border-focus | border | unresolved | 0 |
+| pill | active | bg | --warp-pill-bg-active | color | unresolved | 0 |
+| pill | active | text | --warp-pill-text-active | color | unresolved | 0 |
+| pill | active | border | --warp-pill-border-active | border | unresolved | 0 |
+| pill | disabled | bg | --warp-pill-bg-disabled | color | unresolved | 0 |
+| pill | disabled | text | --warp-pill-text-disabled | color | unresolved | 0 |
+| pill | disabled | border | --warp-pill-border-disabled | border | unresolved | 0 |
+| badge | rest | bg | --warp-badge-bg | color | unresolved | 0 |
+| badge | rest | text | --warp-badge-text | color | unresolved | 0 |
+| badge | rest | border | --warp-badge-border | border | unresolved | 0 |
+| field | rest | label | --warp-field-label | color | unresolved | 0 |
+| field | rest | bg | --warp-field-bg | color | unresolved | 0 |
+| field | floated | label | --warp-field-label-floated | color | unresolved | 0 |
+| field | hover | label | --warp-field-label-hover | color | unresolved | 0 |
+| field | hover | bg | --warp-field-bg-hover | color | unresolved | 0 |
+| field | focus | label | --warp-field-label-focus | color | unresolved | 0 |
+| field | focus | bg | --warp-field-bg-focus | color | unresolved | 0 |
+| field | invalid | label | --warp-field-label-invalid | color | unresolved | 0 |
+| field | invalid | bg | --warp-field-bg-invalid | color | unresolved | 0 |
+| field | focus | ring | --warp-field-ring-focus | ring-role | unresolved | 0 |
+| field | invalid | ring | --warp-field-ring-invalid | ring-role | unresolved | 0 |
+| field | disabled | label | --warp-field-label-disabled | color | unresolved | 0 |
+| field | disabled | bg | --warp-field-bg-disabled | color | unresolved | 0 |
+| field | readonly | label | --warp-field-label-readonly | color | unresolved | 0 |
+| field | readonly | bg | --warp-field-bg-readonly | color | unresolved | 0 |
+| focus | rest | ring | --warp-focus-ring | ring-role | unresolved | 0 |
+| text/display | rest | font.family | --warp-text--display-font-family | family | classified | 1 |
+| text/display | rest | font.size | --warp-text--display-font-size | font-size | classified | 1 |
+| text/display | rest | font.lineHeight | --warp-text--display-font-line-height | leading | classified | 1 |
+| text/display | rest | font.weight | --warp-text--display-font-weight | weight | classified | 1 |
+| text/display | rest | font.letterSpacing | --warp-text--display-font-letter-spacing | tracking | classified | 1 |
+| text/title | rest | font.family | --warp-text--title-font-family | family | classified | 1 |
+| text/title | rest | font.size | --warp-text--title-font-size | font-size | classified | 1 |
+| text/title | rest | font.lineHeight | --warp-text--title-font-line-height | leading | classified | 1 |
+| text/title | rest | font.weight | --warp-text--title-font-weight | weight | classified | 1 |
+| text/title | rest | font.letterSpacing | --warp-text--title-font-letter-spacing | tracking | classified | 1 |
+| text/heading | rest | font.family | --warp-text--heading-font-family | family | classified | 1 |
+| text/heading | rest | font.size | --warp-text--heading-font-size | font-size | classified | 1 |
+| text/heading | rest | font.lineHeight | --warp-text--heading-font-line-height | leading | classified | 1 |
+| text/heading | rest | font.weight | --warp-text--heading-font-weight | weight | classified | 1 |
+| text/heading | rest | font.letterSpacing | --warp-text--heading-font-letter-spacing | tracking | classified | 1 |
+| text/body | rest | font.family | --warp-text--body-font-family | family | classified | 1 |
+| text/body | rest | font.size | --warp-text--body-font-size | font-size | classified | 1 |
+| text/body | rest | font.lineHeight | --warp-text--body-font-line-height | leading | classified | 1 |
+| text/label | rest | font.family | --warp-text--label-font-family | family | classified | 1 |
+| text/label | rest | font.size | --warp-text--label-font-size | font-size | classified | 1 |
+| text/label | rest | font.lineHeight | --warp-text--label-font-line-height | leading | classified | 1 |
+| text/label | rest | font.weight | --warp-text--label-font-weight | weight | classified | 1 |
+| text/label | rest | font.letterSpacing | --warp-text--label-font-letter-spacing | tracking | classified | 1 |
+| text/label | rest | font.transform | --warp-text--label-font-transform | transform-case | classified | 1 |
+| text/caption | rest | font.family | --warp-text--caption-font-family | family | classified | 1 |
+| text/caption | rest | font.size | --warp-text--caption-font-size | font-size | classified | 1 |
+| text/caption | rest | font.lineHeight | --warp-text--caption-font-line-height | leading | classified | 1 |
+| text/eyebrow | rest | font.family | --warp-text--eyebrow-font-family | family | classified | 1 |
+| text/eyebrow | rest | font.size | --warp-text--eyebrow-font-size | font-size | classified | 1 |
+| text/eyebrow | rest | font.lineHeight | --warp-text--eyebrow-font-line-height | leading | classified | 1 |
+| text/eyebrow | rest | font.weight | --warp-text--eyebrow-font-weight | weight | classified | 1 |
+| text/eyebrow | rest | font.letterSpacing | --warp-text--eyebrow-font-letter-spacing | tracking | classified | 1 |
+| text/eyebrow | rest | font.transform | --warp-text--eyebrow-font-transform | transform-case | classified | 1 |
+| text/code | rest | font.family | --warp-text--code-font-family | family | classified | 1 |
+| text/code | rest | font.size | --warp-text--code-font-size | font-size | classified | 1 |
+| status-light | rest | font.size | --warp-status-light-font-size | font-size | classified | 1 |
+| link | rest | underline.width | --warp-link-underline-width | width | partial | 1 |
+| link | rest | underline.offset | --warp-link-underline-offset | position | partial | 1 |
+
+The table lists partial and unresolved groups as design candidates. No additional raw-only part overrides have been classified; the existing `tokens` escape hatch remains available.
+
+## System scale types
+
+- `space`: hair,tight,related,group,section,page; user keys; space.
+- `radius`: control,surface,card,mark,round,pill; user keys; radius.
+- `font`: body,display,mono; user keys; family.
+- `text`: display,title,heading,body,prose,label,eyebrow,caption,code,control,button; user keys; text-role.
+- `shadow`: none,sm,md,lg; user keys; shadow.
+- `border`: hairline,emphasis; width.
+- `focus`: width,offset,color; focus-role.
+- `padding`: control,surface; space.
+- `control`: sm,md,lg; length.
+- `field`: height; length.
+- `density`: compact,cozy,comfortable; density-role.
+- `motion.duration`: every actual --warp-duration-* and --warp-*-duration token; time.
+- `motion.easing`: every actual --warp-ease-* plus sweep,sweep-in,label-float; easing.
+- `motion`: scale,press,stagger,stagger-max,distance,scale-from; motion-role.
+- `layout`: bar,tabbar,rail,sidebar,list,aside,measure,narrow,content,wide; length.
+- `breakpoint`: each existing width query, keyed by source family/container/operator/default threshold; build-length.
+- `color`: every existing --warp-color-* token suffix; color.
+
+Breakpoint query keys are still unresolved and are not included in the generated type.
 
 ## Explicit Button radius selector audit
 

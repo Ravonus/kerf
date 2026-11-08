@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { classifyLinks } from './theme-schema-links.mjs'
-import { consumers } from './theme-schema-consumers.mjs'
+import { consumers, declaredTokens } from './theme-schema-consumers.mjs'
 import { classifyShim } from './theme-schema-shims.mjs'
 import { classifyComponents, componentsPath } from './theme-schema-components.mjs'
 import { classifyButton } from './theme-schema-button.mjs'
@@ -14,6 +14,7 @@ import { buttonRadiusJoins } from './theme-schema-button-radius-joins.mjs'
 import { auditButtonRadius } from './theme-schema-radius-audit.mjs'
 import { coverage } from './theme-schema-coverage.mjs'
 import { sourceIndex, reconcile } from './theme-schema-index.mjs'
+import { partTypes, systemTypes } from './theme-schema-types.mjs'
 
 const fixtureFlag = process.argv.indexOf('--coverage-fixture')
 if (fixtureFlag !== -1) {
@@ -93,6 +94,12 @@ function generate(design, template, bindings, radiusAudit) {
   const componentBindings = bindings.filter((row) => row.source === componentsPath && row.classification === 'binding')
   const classified = [...shimBindings, ...componentBindings]
   const records = [...entries(table.parts), ...classified.map(({ part, state, path, token, domain, units }) => ({ part, state, path, token, domain, units, binding: 'classified' }))]
+  for (const row of bindings.filter((item) => item.source.endsWith('/links.css') && item.classification === 'binding')) {
+    const existing = records.find((item) => item.part === row.part && item.state === row.state && item.path === row.path)
+    if (existing) existing.binding = 'partial'
+    else records.push({ part: row.part, state: row.state, path: row.path, token: row.token,
+      domain: row.domain, units: row.units, binding: 'partial' })
+  }
   const sources = table.sources.filter((row) => row[0].startsWith('`')).map((row) => unquote(row[0])[0])
   if (sources.length !== 13 || new Set(sources).size !== 13) throw new Error('Expected 13 inventory sources')
   const textScale = table.system.find((row) => row[0] === 'text')
@@ -145,38 +152,36 @@ function generate(design, template, bindings, radiusAudit) {
     return { source, ...comparison, status: comparison.astOnly.length || comparison.sourceOnly.length
       ? 'discrepant' : 'indexed' }
   })
+  const groups = records.map((row) => {
+    const matching = bindings.filter((binding) => binding.classification === 'binding' &&
+      binding.part === row.part && binding.state === row.state && binding.path === row.path)
+    const siteIds = sites.filter((site) => site.role?.part === row.part &&
+      site.role.state === row.state && site.role.path === row.path).map((site) => site.id)
+    return { ...row, id: `${row.part}.${row.state}.${row.path}`, siteIds,
+      bindingRefs: matching.map(({ source, fallbackSpan }) => ({ source, fallbackSpan })) }
+  })
+  if (new Set(groups.map((row) => row.id)).size !== groups.length ||
+      new Set(groups.map((row) => row.token)).size !== groups.length) throw new Error('Duplicate normalized group or token')
   const unresolvedSites = sites.filter((site) => site.classification === 'unresolved').map((site) => site.id)
   const status = unresolved.length || unresolvedSites.length || index.some((row) => row.status !== 'indexed')
     ? 'partial' : 'complete'
-  const registry = { status, unresolvedGroups: unresolved, unresolvedSites, sites, sourceIndex: index,
+  const tokens = [...new Set(sources.flatMap((source) => declaredTokens(source, read(source))))].sort()
+  const registry = { status, declaredTokens: tokens, groups, unresolvedGroups: unresolved, unresolvedSites, sites, sourceIndex: index,
     propertyTable: table.properties, systemTable: table.system, stateTable: table.states,
     propertyRules, systemRules, stateRules, expansion: table.expansion }
   const digest = createHash('sha256').update(JSON.stringify({ records, sources, bindings, system, radiusAudit, registry })).digest('hex')
-  const shape = (rows, indent = '    ') => rows.map((row) => `${indent}${row.path}?: ${['underline', 'ring'].includes(row.path) ? 'string | { color?: string; width?: number | string; offset?: number | string }' : row.path === 'border' ? 'string | { color?: string; width?: number | string; style?: string }' : 'string'}`).join('\n')
-  const types = [...new Set(records.filter((row) => !row.part.startsWith('text/') && row.part !== 'status-light').map((row) => row.part))].map((part) => {
-    const rows = records.filter((row) => row.part === part)
-    const stateTypes = [...new Set(rows.filter((row) => row.state !== 'rest').map((row) => row.state))]
-      .map((state) => `    ${state}?: {\n${shape(rows.filter((row) => row.state === state), '      ')}\n    }`).join('\n')
-    return `  ${part}?: {\n${shape(rows.filter((row) => row.state === 'rest'))}\n${stateTypes}\n  }`
-  }).join('\n')
-  const roles = [...new Set(shimBindings.map((row) => row.part))].map((part) => {
-    const fields = shimBindings.filter((row) => row.part === part).map((row) =>
-      `      ${row.path.slice(5)}?: ${['family', 'transform'].includes(row.path.slice(5)) ? 'string' : 'number | string'}`).join('\n')
-    return `  '${part}'?: { font?: {\n${fields}\n    } }`
-  }).join('\n')
-  const componentTypes = componentBindings.length ? `  'status-light'?: { font?: { size?: number | string } }` : ''
   if (!template.includes('/* THEME_TYPES */')) throw new Error('Missing type template marker')
-  const systemRoles = [...new Set(shimBindings.map((row) => row.part))].map((part) => {
+  const textRoles = [...new Set(shimBindings.map((row) => row.part))].map((part) => {
     const fields = shimBindings.filter((row) => row.part === part).map((row) =>
       `${row.path.slice(5)}?: ${['family', 'transform'].includes(row.path.slice(5)) ? 'string' : 'number | string'}`).join('; ')
     return `    ${part.slice(5)}?: { ${fields} }`
   }).join('\n')
-  const typeText = `/** Explicit overrides; canonical sheet bindings remain under classification. */\nexport interface ThemeParts {\n${types}\n${roles}\n${componentTypes}\n}\n\n/** The classified system scales; other scales remain under classification. */\nexport interface ThemeSystem {\n  space?: Record<string, number | string>\n  text?: Record<string, { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string } | undefined> & {\n${systemRoles}\n  }\n}`
-  const doc = records.map((row) => `| ${row.part} | ${row.state} | ${row.path} | ${row.token} | ${row.domain} | ${row.binding} |`).join('\n')
+  const typeText = `/** Explicit overrides; canonical sheet bindings remain under classification. */\nexport interface ThemeParts {\n${partTypes(records)}\n}\n\n/** A system density stop. */\nexport interface ThemeDensity { factor?: number; control?: { sm?: number | string; md?: number | string; lg?: number | string } }\n/** A custom text role. */\nexport interface ThemeTextRole { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string }\n/** System scale types; bindings remain under classification. */\nexport interface ThemeSystem {\n${systemTypes(systemRules, textRoles, tokens)}\n}`
+  const doc = groups.map((row) => `| ${row.part} | ${row.state} | ${row.path} | ${row.token} | ${row.domain} | ${row.binding} | ${row.bindingRefs.length} |`).join('\n')
   return [
     `${JSON.stringify({ digest, status, sources, records, system, bindings, radiusAudit, registry }, null, 2)}\n`,
     `// Theme schema digest: ${digest}\n${template.replace('/* THEME_TYPES */', typeText)}`,
-    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n\n## Explicit Button radius selector audit\n\n| Source | Line | Selector | Properties | Review |\n| --- | --- | --- | --- | --- |\n${radiusAudit.map((row) => `| ${row.source} | ${row.line} | \`${row.selector.replaceAll('\n', ' ')}\` | ${row.properties.join(', ')} | ${row.classification} |`).join('\n')}\n\n## Reviewed declarations\n\n| Path | Variant | States | Selector | At-rules | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | ${b.variant ?? '—'} | ${(b.states ?? [b.state ?? '—']).join(', ')} | \`${b.selector.replaceAll('\n', ' ')}\` | \`${b.atRules.join('; ')}\` | ${b.property} | \`${b.fallback.replaceAll('\n', '<br>')}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
+    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding | Reviewed sites |\n| --- | --- | --- | --- | --- | --- | --- |\n${doc}\n\nThe table lists partial and unresolved groups as design candidates. No additional raw-only part overrides have been classified; the existing \`tokens\` escape hatch remains available.\n\n## System scale types\n\n${systemRules.map((row) => `- \`${row.path}\`: ${row.keys}; ${row.domain}.`).join('\n')}\n\nBreakpoint query keys are still unresolved and are not included in the generated type.\n\n## Explicit Button radius selector audit\n\n| Source | Line | Selector | Properties | Review |\n| --- | --- | --- | --- | --- |\n${radiusAudit.map((row) => `| ${row.source} | ${row.line} | \`${row.selector.replaceAll('\n', ' ')}\` | ${row.properties.join(', ')} | ${row.classification} |`).join('\n')}\n\n## Reviewed declarations\n\n| Path | Variant | States | Selector | At-rules | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | ${b.variant ?? '—'} | ${(b.states ?? [b.state ?? '—']).join(', ')} | \`${b.selector.replaceAll('\n', ' ')}\` | \`${b.atRules.join('; ')}\` | ${b.property} | \`${b.fallback.replaceAll('\n', '<br>')}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
   ]
 }
 
@@ -250,6 +255,9 @@ const completedButton = JSON.parse(generated[0]).records.filter((row) =>
   row.part === 'button' && row.binding === 'classified')
 console.log(`Button variant declarations unresolved: ${variants.filter((row) => row.classification === 'variant declaration unresolved').length}; partial property sites: ${variants.filter((row) => row.classification === 'partial property binding').length}; complete properties: ${completedButton.length}`)
 const registry = JSON.parse(generated[0]).registry
+const groupCounts = ['classified', 'partial', 'unresolved', 'raw-only'].map((kind) =>
+  `${kind}: ${registry.groups.filter((row) => row.binding === kind).length}`).join('; ')
+console.log(`Normalized groups: ${registry.groups.length}; ${groupCounts}`)
 console.log(`Coverage: ${registry.status}; unresolved groups: ${registry.unresolvedGroups.length}; discrepant sources: ${registry.sourceIndex.filter((row) => row.status !== 'indexed').length}`)
 console.log(`Source sites: ${registry.sites.length}; unresolved sites: ${registry.unresolvedSites.length}`)
 if (registry.unresolvedGroups.length) console.log(`Unresolved groups: ${registry.unresolvedGroups.join(', ')}`)
