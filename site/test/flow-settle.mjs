@@ -142,7 +142,7 @@ function whole(value) {
   assert.ok(Math.abs(value.rotate) < 0.001, `rotation ${value.rotate}`)
 }
 
-test('the icon page finishes a half arrival within a second, without restarting', async () => {
+void test('the icon page finishes a half arrival within a second, without restarting', async () => {
   const { page, errors, close } = await open()
   try {
     const before = await arrive(page)
@@ -162,7 +162,7 @@ test('the icon page finishes a half arrival within a second, without restarting'
   }
 })
 
-test('scrolling matches the original scrub, and settled departures still scrub', async () => {
+void test('scrolling matches the original scrub, and settled departures still scrub', async () => {
   const candidate = await open()
   const control = await open({ control: true })
   try {
@@ -208,7 +208,7 @@ test('scrolling matches the original scrub, and settled departures still scrub',
   }
 })
 
-test('all named flow families finish, and a page without flow adds no scroll handlers', async () => {
+void test('all named flow families finish, and a page without flow adds no scroll handlers', async () => {
   for (const kind of [
     'card',
     'tile',
@@ -287,7 +287,7 @@ test('all named flow families finish, and a page without flow adds no scroll han
   }
 })
 
-test('the 150ms fallback and reduced motion keep their contracts', async () => {
+void test('the 150ms fallback and reduced motion keep their contracts', async () => {
   const fallback = await open({ fallback: true, fixture: true })
   const reduced = await open({ reduced: true, fixture: true })
   try {
@@ -304,7 +304,7 @@ test('the 150ms fallback and reduced motion keep their contracts', async () => {
   }
 })
 
-test('reduced motion interrupts an arrival already finishing', async () => {
+void test('reduced motion interrupts an arrival already finishing', async () => {
   const { page, close } = await open({ fixture: true })
   try {
     await arrive(page)
@@ -319,7 +319,7 @@ test('reduced motion interrupts an arrival already finishing', async () => {
   }
 })
 
-test('flow initialized with reduced motion settles after motion is enabled', async () => {
+void test('flow initialized with reduced motion settles after motion is enabled', async () => {
   for (const fallback of [false, true]) {
     for (const preference of [false, true]) {
       const { page, errors, close } = await open({ reduced: true, fallback, fixture: true })
@@ -345,7 +345,7 @@ test('flow initialized with reduced motion settles after motion is enabled', asy
   }
 })
 
-test('a fling during settling exposes the original departure immediately', async () => {
+void test('a fling during settling exposes the original departure immediately', async () => {
   const candidate = await open({ fixture: true })
   const control = await open({ control: true, fixture: true })
   try {
