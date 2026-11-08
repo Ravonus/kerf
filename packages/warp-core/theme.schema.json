@@ -1,5 +1,5 @@
 {
-  "digest": "7370327dbc323d88fa7a56b4fbb9a08e7010f7ff79a9f0280c6aca7d88b628c1",
+  "digest": "b096248c36d090c6adfdbbd9381db37393e239a02a67aa5a184a07269437de94",
   "status": "partial",
   "sources": [
     "docs/design/warp/tokens/warp-app.css",
@@ -3867,6 +3867,2398 @@
       ],
       "classification": "shared channel dependency",
       "reason": "Shared tone input; Button can replace it in its own selectors."
+    },
+    {
+      "part": "button",
+      "variant": "solid",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_pa",
+      "fallback": "color-mix(in oklab, var(--warp-color-highlight-solid) 8%, var(--_solid))",
+      "fallbackSpan": [
+        13447,
+        13519
+      ],
+      "inputs": [
+        {
+          "token": "--_solid",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-color-highlight-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "solid",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_pb",
+      "fallback": "color-mix(in oklab, var(--warp-color-highlight-solid) 11%, var(--_solid))",
+      "fallbackSpan": [
+        13530,
+        13603
+      ],
+      "inputs": [
+        {
+          "token": "--_solid",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-color-highlight-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "solid",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+      "atRules": [
+        "@layer warp.components",
+        "@supports (color: oklch(from red l c h))"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_pa",
+      "fallback": "light-dark(oklch(from color-mix(in oklab, var(--warp-color-highlight-solid) 30%, var(--_solid)) min(l, 0.53) c h), color-mix(in oklab, var(--warp-color-highlight-solid) 30%, var(--_solid)))",
+      "fallbackSpan": [
+        13716,
+        13905
+      ],
+      "inputs": [
+        {
+          "token": "--_solid",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-color-highlight-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "solid",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+      "atRules": [
+        "@layer warp.components",
+        "@supports (color: oklch(from red l c h))"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_pb",
+      "fallback": "light-dark(oklch(from color-mix(in oklab, var(--warp-color-highlight-solid) 48%, var(--_solid)) min(l, 0.53) calc(c * 1.1) h), color-mix(in oklab, var(--warp-color-highlight-solid) 48%, var(--_solid)))",
+      "fallbackSpan": [
+        13918,
+        14119
+      ],
+      "inputs": [
+        {
+          "token": "--_solid",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-color-highlight-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "solid",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-tone=\"neutral\"]:not([data-emphasis]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_pa",
+      "fallback": "color-mix(in oklab, white 10%, var(--_solid))",
+      "fallbackSpan": [
+        14210,
+        14255
+      ],
+      "inputs": [
+        {
+          "token": "--_solid",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "solid",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-tone=\"neutral\"]:not([data-emphasis]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_pb",
+      "fallback": "color-mix(in oklab, var(--warp-color-highlight-solid) 6%, color-mix(in oklab, white 16%, var(--_solid)))",
+      "fallbackSpan": [
+        14266,
+        14370
+      ],
+      "inputs": [
+        {
+          "token": "--_solid",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-color-highlight-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "solid",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid",
+      "fallback": "var(--warp-color-primary-solid)",
+      "fallbackSpan": [
+        14525,
+        14556
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-primary-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "solid",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_solid-hover",
+      "fallback": "var(--warp-color-primary-solid-hover)",
+      "fallbackSpan": [
+        14574,
+        14611
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-primary-solid-hover",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "solid",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink-on",
+      "fallback": "var(--warp-color-primary-on-solid)",
+      "fallbackSpan": [
+        14624,
+        14658
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-primary-on-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "soft",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"soft\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_fill",
+      "fallback": "var(--_soft)",
+      "fallbackSpan": [
+        23940,
+        23952
+      ],
+      "inputs": [
+        {
+          "token": "--_soft",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "soft",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"soft\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink",
+      "fallback": "var(--_text)",
+      "fallbackSpan": [
+        23962,
+        23974
+      ],
+      "inputs": [
+        {
+          "token": "--_text",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "soft",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"soft\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer",
+      "fallback": "currentColor",
+      "fallbackSpan": [
+        23986,
+        23998
+      ],
+      "inputs": [],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "soft",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"soft\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer-a",
+      "fallback": "var(--warp-state-hover)",
+      "fallbackSpan": [
+        24012,
+        24035
+      ],
+      "inputs": [
+        {
+          "token": "--warp-state-hover",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "outline",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"outline\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_fill",
+      "fallback": "transparent",
+      "fallbackSpan": [
+        24107,
+        24118
+      ],
+      "inputs": [],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "outline",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"outline\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink",
+      "fallback": "var(--_text)",
+      "fallbackSpan": [
+        24128,
+        24140
+      ],
+      "inputs": [
+        {
+          "token": "--_text",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "outline",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"outline\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_edge",
+      "fallback": "var(--warp-color-border-strong)",
+      "fallbackSpan": [
+        24151,
+        24182
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-border-strong",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "outline",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"outline\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer",
+      "fallback": "currentColor",
+      "fallbackSpan": [
+        24196,
+        24208
+      ],
+      "inputs": [],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "outline",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"outline\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer-a",
+      "fallback": "var(--warp-state-hover)",
+      "fallbackSpan": [
+        24222,
+        24245
+      ],
+      "inputs": [
+        {
+          "token": "--warp-state-hover",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "ghost",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"ghost\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_fill",
+      "fallback": "transparent",
+      "fallbackSpan": [
+        24423,
+        24434
+      ],
+      "inputs": [],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "ghost",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"ghost\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink",
+      "fallback": "var(--_text)",
+      "fallbackSpan": [
+        24444,
+        24456
+      ],
+      "inputs": [
+        {
+          "token": "--_text",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "ghost",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"ghost\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer",
+      "fallback": "currentColor",
+      "fallbackSpan": [
+        24468,
+        24480
+      ],
+      "inputs": [],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "ghost",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"ghost\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer-a",
+      "fallback": "var(--warp-state-hover)",
+      "fallbackSpan": [
+        24494,
+        24517
+      ],
+      "inputs": [
+        {
+          "token": "--warp-state-hover",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_fill",
+      "fallback": "transparent",
+      "fallbackSpan": [
+        20231,
+        20242
+      ],
+      "inputs": [],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink",
+      "fallback": "var(--warp-color-text)",
+      "fallbackSpan": [
+        20252,
+        20274
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-text",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer",
+      "fallback": "var(--warp-color-text)",
+      "fallbackSpan": [
+        20286,
+        20308
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-text",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer-a",
+      "fallback": "calc(var(--warp-state-hover) * (1 - var(--_on, 0)))",
+      "fallbackSpan": [
+        20419,
+        20470
+      ],
+      "inputs": [
+        {
+          "token": "--_on",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-state-hover",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_tone-ink",
+      "fallback": "var(--_ink-on)",
+      "fallbackSpan": [
+        20487,
+        20501
+      ],
+      "inputs": [
+        {
+          "token": "--_ink-on",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--warp-sweep-fill",
+      "fallback": "var(--_solid)",
+      "fallbackSpan": [
+        20522,
+        20535
+      ],
+      "inputs": [
+        {
+          "token": "--_solid",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--warp-sweep-radius",
+      "fallback": "0px",
+      "fallbackSpan": [
+        20558,
+        20561
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-color",
+      "fallback": "transparent",
+      "fallbackSpan": [
+        20652,
+        20663
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-radius",
+      "fallback": "min(var(--warp-radius-mark), 2px)",
+      "fallbackSpan": [
+        20680,
+        20713
+      ],
+      "inputs": [
+        {
+          "token": "--warp-radius-mark",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "overflow",
+      "fallback": "clip",
+      "fallbackSpan": [
+        20725,
+        20729
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_fill",
+      "fallback": "transparent",
+      "fallbackSpan": [
+        24775,
+        24786
+      ],
+      "inputs": [],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink",
+      "fallback": "var(--_text)",
+      "fallbackSpan": [
+        24796,
+        24808
+      ],
+      "inputs": [
+        {
+          "token": "--_text",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer",
+      "fallback": "transparent",
+      "fallbackSpan": [
+        24820,
+        24831
+      ],
+      "inputs": [],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_layer-a",
+      "fallback": "0",
+      "fallbackSpan": [
+        24845,
+        24846
+      ],
+      "inputs": [],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "block-size",
+      "fallback": "auto",
+      "fallbackSpan": [
+        24862,
+        24866
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "padding",
+      "fallback": "0",
+      "fallbackSpan": [
+        24877,
+        24878
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border",
+      "fallback": "0",
+      "fallbackSpan": [
+        24888,
+        24889
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-radius",
+      "fallback": "var(--warp-radius-mark)",
+      "fallbackSpan": [
+        24906,
+        24929
+      ],
+      "inputs": [
+        {
+          "token": "--warp-radius-mark",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "font-family",
+      "fallback": "var(--warp-text-body-font)",
+      "fallbackSpan": [
+        24946,
+        24972
+      ],
+      "inputs": [
+        {
+          "token": "--warp-text-body-font",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "font-size",
+      "fallback": "inherit",
+      "fallbackSpan": [
+        24985,
+        24992
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "letter-spacing",
+      "fallback": "0",
+      "fallbackSpan": [
+        25010,
+        25011
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "text-transform",
+      "fallback": "none",
+      "fallbackSpan": [
+        25029,
+        25033
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "font-weight",
+      "fallback": "500",
+      "fallbackSpan": [
+        25048,
+        25051
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "text-decoration",
+      "fallback": "underline",
+      "fallbackSpan": [
+        25072,
+        25081
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "text-decoration-thickness",
+      "fallback": "var(--warp-border-hairline)",
+      "fallbackSpan": [
+        25110,
+        25137
+      ],
+      "inputs": [
+        {
+          "token": "--warp-border-hairline",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "text-underline-offset",
+      "fallback": "0.22em",
+      "fallbackSpan": [
+        25162,
+        25168
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "text-decoration-color",
+      "fallback": "color-mix(in oklab, currentColor 45%, transparent)",
+      "fallbackSpan": [
+        25195,
+        25245
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "content",
+      "fallback": "\"\"",
+      "fallbackSpan": [
+        16639,
+        16641
+      ],
+      "inputs": [],
+      "classification": "mechanical exclusion",
+      "reason": "Structural or interaction behavior is not a writable theme token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "position",
+      "fallback": "absolute",
+      "fallbackSpan": [
+        16653,
+        16661
+      ],
+      "inputs": [],
+      "classification": "mechanical exclusion",
+      "reason": "Structural or interaction behavior is not a writable theme token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "inset",
+      "fallback": "0",
+      "fallbackSpan": [
+        16670,
+        16671
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "z-index",
+      "fallback": "-1",
+      "fallbackSpan": [
+        16682,
+        16684
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "pointer-events",
+      "fallback": "none",
+      "fallbackSpan": [
+        16702,
+        16706
+      ],
+      "inputs": [],
+      "classification": "mechanical exclusion",
+      "reason": "Structural or interaction behavior is not a writable theme token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-radius",
+      "fallback": "inherit",
+      "fallbackSpan": [
+        16723,
+        16730
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_D",
+      "fallback": "calc(var(--warp-fill-duration) * var(--warp-motion-scale))",
+      "fallbackSpan": [
+        16740,
+        16798
+      ],
+      "inputs": [
+        {
+          "token": "--warp-fill-duration",
+          "classification": "system input"
+        },
+        {
+          "token": "--warp-motion-scale",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_fo",
+      "fallback": "calc(1 - var(--_a, 0))",
+      "fallbackSpan": [
+        16809,
+        16831
+      ],
+      "inputs": [
+        {
+          "token": "--_a",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_fr",
+      "fallback": "calc(var(--_a, 0) * 1.3 * var(--warp-btn-fill) * var(--_ptr))",
+      "fallbackSpan": [
+        16842,
+        16903
+      ],
+      "inputs": [
+        {
+          "token": "--_a",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_ptr",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-btn-fill",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_fa",
+      "fallback": "calc(var(--_fr) * (var(--_x) + 7%) * var(--warp-lead-a, 1))",
+      "fallbackSpan": [
+        16914,
+        16973
+      ],
+      "inputs": [
+        {
+          "token": "--_fr",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_x",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-lead-a",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_fb",
+      "fallback": "calc(var(--_fr) * (107% - var(--_x)) * var(--warp-lead-b, 1))",
+      "fallbackSpan": [
+        16984,
+        17045
+      ],
+      "inputs": [
+        {
+          "token": "--_fr",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_x",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-lead-b",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_fu",
+      "fallback": "calc(var(--_fb) * 0.1 + var(--_fr) * 5%)",
+      "fallbackSpan": [
+        17056,
+        17096
+      ],
+      "inputs": [
+        {
+          "token": "--_fb",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_fr",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "background-color",
+      "fallback": "color-mix(in oklab, var(--warp-tone-layer, var(--_layer)) calc((1 - var(--warp-btn-fill)) * 100%), color-mix(in oklab, var(--_pa) calc((1 - var(--_fo) * var(--_ptr)) * 100%), transparent))",
+      "fallbackSpan": [
+        17204,
+        17392
+      ],
+      "inputs": [
+        {
+          "token": "--_fo",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_layer",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_pa",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_ptr",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-btn-fill",
+          "classification": "system input"
+        },
+        {
+          "token": "--warp-tone-layer",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "opacity",
+      "fallback": "calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a))",
+      "fallbackSpan": [
+        17405,
+        17478
+      ],
+      "inputs": [
+        {
+          "token": "--_layer-a",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-btn-fill",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "transform",
+      "fallback": "scaleX(calc(var(--warp-btn-fill) * var(--_ptr)))",
+      "fallbackSpan": [
+        17493,
+        17541
+      ],
+      "inputs": [
+        {
+          "token": "--_ptr",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-btn-fill",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "transform-origin",
+      "fallback": "right center",
+      "fallbackSpan": [
+        17561,
+        17573
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "background-origin",
+      "fallback": "border-box",
+      "fallbackSpan": [
+        17596,
+        17606
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "background-image",
+      "fallback": "radial-gradient(ellipse calc(var(--_fb) * 0.44) 95% at calc(var(--_x) + var(--_fb) * 0.44 + var(--_fo) * var(--_fb)) calc(var(--_y) - 42% + (var(--_y) - 50%) * 0.35),\n      var(--_pb) 0 58%, color-mix(in oklab, var(--_pb) 50%, transparent) 80%, transparent 100%),\n    radial-gradient(ellipse calc(var(--_fb) * 0.5) 185% at calc(var(--_x) + var(--_fb) * 0.5 + var(--_fo) * var(--_fb)) var(--_y),\n      var(--_pb) 0 62%, color-mix(in oklab, var(--_pb) 50%, transparent) 82%, transparent 100%),\n    radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),\n      var(--_pa) 0 66%, color-mix(in oklab, var(--_pa) 50%, transparent) 84%, transparent 100%)",
+      "fallbackSpan": [
+        17632,
+        18411
+      ],
+      "inputs": [
+        {
+          "token": "--_fa",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_fb",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_fo",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_fr",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_fu",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_pa",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_pb",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_x",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_y",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "transition",
+      "fallback": "transform var(--warp-sweep-duration) var(--warp-sweep-ease),     /* the wipe runs on the stroke's clock, both ways */\n    --_fo var(--_D) var(--warp-sweep-ease-in),                 /* both ways: the exit is the enter */\n    --_fr 1ms linear calc((1 - var(--_a, 0)) * var(--_D))",
+      "fallbackSpan": [
+        18431,
+        18708
+      ],
+      "inputs": [
+        {
+          "token": "--_D",
+          "classification": "local channel"
+        },
+        {
+          "token": "--_a",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-sweep-duration",
+          "classification": "system input"
+        },
+        {
+          "token": "--warp-sweep-ease",
+          "classification": "system input"
+        },
+        {
+          "token": "--warp-sweep-ease-in",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::after",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "content",
+      "fallback": "\"\"",
+      "fallbackSpan": [
+        21833,
+        21835
+      ],
+      "inputs": [],
+      "classification": "mechanical exclusion",
+      "reason": "Structural or interaction behavior is not a writable theme token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::after",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "position",
+      "fallback": "absolute",
+      "fallbackSpan": [
+        21847,
+        21855
+      ],
+      "inputs": [],
+      "classification": "mechanical exclusion",
+      "reason": "Structural or interaction behavior is not a writable theme token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::after",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "pointer-events",
+      "fallback": "auto",
+      "fallbackSpan": [
+        21873,
+        21877
+      ],
+      "inputs": [],
+      "classification": "mechanical exclusion",
+      "reason": "Structural or interaction behavior is not a writable theme token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"])::after",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "inset",
+      "fallback": "min(0px, calc((100% - var(--warp-hit-min)) / 2))",
+      "fallbackSpan": [
+        21888,
+        21936
+      ],
+      "inputs": [
+        {
+          "token": "--warp-hit-min",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "hover",
+        "focus",
+        "open"
+      ],
+      "selector": ":where([data-scope=\"button\"]:hover)::before,\n:where([data-scope=\"button\"]:focus-visible)::before,\n:where([data-scope=\"button\"][data-hold])::before,\n:where([data-scope=\"button\"][data-state=\"open\"])::before,\n:where([data-scope=\"button\"][aria-expanded=\"true\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "transform",
+      "fallback": "scaleX(1)",
+      "fallbackSpan": [
+        19045,
+        19054
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "hover",
+        "focus",
+        "open"
+      ],
+      "selector": ":where([data-scope=\"button\"]:hover)::before,\n:where([data-scope=\"button\"]:focus-visible)::before,\n:where([data-scope=\"button\"][data-hold])::before,\n:where([data-scope=\"button\"][data-state=\"open\"])::before,\n:where([data-scope=\"button\"][aria-expanded=\"true\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "transform-origin",
+      "fallback": "left center",
+      "fallbackSpan": [
+        19074,
+        19085
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "hover",
+        "focus",
+        "open"
+      ],
+      "selector": ":where([data-scope=\"button\"]:hover)::before,\n:where([data-scope=\"button\"]:focus-visible)::before,\n:where([data-scope=\"button\"][data-hold])::before,\n:where([data-scope=\"button\"][data-state=\"open\"])::before,\n:where([data-scope=\"button\"][aria-expanded=\"true\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "transition-duration",
+      "fallback": "var(--warp-sweep-duration), var(--_D), 1ms",
+      "fallbackSpan": [
+        19110,
+        19152
+      ],
+      "inputs": [
+        {
+          "token": "--_D",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-sweep-duration",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "disabled"
+      ],
+      "selector": ":where([data-scope=\"button\"]:is(:disabled)),\n:where([data-scope=\"button\"]:is([aria-disabled=\"true\"]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--warp-btn-fill",
+      "fallback": "0",
+      "fallbackSpan": [
+        15667,
+        15668
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "disabled"
+      ],
+      "selector": ":where([data-scope=\"button\"]:disabled),\n:where([data-scope=\"button\"][aria-disabled=\"true\"]:not([data-loading]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "opacity",
+      "fallback": "var(--warp-opacity-disabled)",
+      "fallbackSpan": [
+        29421,
+        29449
+      ],
+      "inputs": [
+        {
+          "token": "--warp-opacity-disabled",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "disabled"
+      ],
+      "selector": ":where([data-scope=\"button\"]:disabled),\n:where([data-scope=\"button\"][aria-disabled=\"true\"]:not([data-loading]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "cursor",
+      "fallback": "not-allowed",
+      "fallbackSpan": [
+        29459,
+        29470
+      ],
+      "inputs": [],
+      "classification": "mechanical exclusion",
+      "reason": "Structural or interaction behavior is not a writable theme token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "press"
+      ],
+      "selector": ":where([data-scope=\"button\"]:is(:active)),\n:where([data-scope=\"button\"]:is([data-press]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "scale",
+      "fallback": "var(--warp-press)",
+      "fallbackSpan": [
+        22119,
+        22136
+      ],
+      "inputs": [
+        {
+          "token": "--warp-press",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "press"
+      ],
+      "selector": ":where([data-scope=\"button\"]:is(:active)),\n:where([data-scope=\"button\"]:is([data-press]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "transition-duration",
+      "fallback": "0ms",
+      "fallbackSpan": [
+        22159,
+        22162
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "emphasis",
+      "states": [
+        "press"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis]:active)::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "opacity",
+      "fallback": "calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a) * 1.55)",
+      "fallbackSpan": [
+        23031,
+        23111
+      ],
+      "inputs": [
+        {
+          "token": "--_layer-a",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-btn-fill",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "solid",
+      "states": [
+        "press"
+      ],
+      "selector": ":where([data-scope=\"button\"]:not([data-emphasis]):active)::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "filter",
+      "fallback": "brightness(0.94)",
+      "fallbackSpan": [
+        22242,
+        22258
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "press"
+      ],
+      "selector": ":where([data-scope=\"button\"]:active)::before",
+      "atRules": [
+        "@layer warp.components",
+        "@media (hover: none)"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "transition-duration",
+      "fallback": "var(--warp-duration-base), 0ms, 1ms",
+      "fallbackSpan": [
+        19333,
+        19368
+      ],
+      "inputs": [
+        {
+          "token": "--warp-duration-base",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "all",
+      "states": [
+        "disabled"
+      ],
+      "selector": ":where([data-scope=\"button\"]:disabled)::before, :where([data-scope=\"button\"][aria-disabled=\"true\"])::before",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "opacity",
+      "fallback": "0",
+      "fallbackSpan": [
+        29593,
+        29594
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "outline",
+      "states": [
+        "hover"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"outline\"]:hover)",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_edge",
+      "fallback": "var(--warp-color-border-control)",
+      "fallbackSpan": [
+        24321,
+        24353
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-border-control",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "hover"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"]:hover)",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "text-decoration-color",
+      "fallback": "currentColor",
+      "fallbackSpan": [
+        25332,
+        25344
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "hover"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"]:hover)",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "text-decoration-thickness",
+      "fallback": "var(--warp-border-emphasis)",
+      "fallbackSpan": [
+        25373,
+        25400
+      ],
+      "inputs": [
+        {
+          "token": "--warp-border-emphasis",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "link",
+      "states": [
+        "press"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"]:active)",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "scale",
+      "fallback": "1",
+      "fallbackSpan": [
+        25472,
+        25473
+      ],
+      "inputs": [],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"][data-tone]:not([data-tone=\"accent\"]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_tone",
+      "fallback": "var(--_text)",
+      "fallbackSpan": [
+        20834,
+        20846
+      ],
+      "inputs": [
+        {
+          "token": "--_text",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"][data-tone=\"neutral\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_tone",
+      "fallback": "var(--warp-color-text)",
+      "fallbackSpan": [
+        20935,
+        20957
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-text",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "frame",
+      "states": [
+        "hover",
+        "focus"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"]:hover),\n:where([data-scope=\"button\"][data-emphasis=\"frame\"]:focus-visible)",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "color",
+      "fallback": "var(--_ink)",
+      "fallbackSpan": [
+        21097,
+        21108
+      ],
+      "inputs": [
+        {
+          "token": "--_ink",
+          "classification": "local channel"
+        }
+      ],
+      "classification": "variant declaration unresolved",
+      "reason": "This declaration needs property and ownership classification before exposing a part token."
+    },
+    {
+      "part": "button",
+      "variant": "ghost,outline",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"ghost\"][data-tone=\"neutral\"]),\n:where([data-scope=\"button\"][data-emphasis=\"outline\"][data-tone=\"neutral\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_ink",
+      "fallback": "var(--warp-color-text)",
+      "fallbackSpan": [
+        24684,
+        24706
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-text",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "soft,outline,ghost",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"]:is([data-emphasis=\"soft\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"outline\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"ghost\"]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_pa",
+      "fallback": "color-mix(in oklab, var(--_solid) 22%, var(--warp-color-surface))",
+      "fallbackSpan": [
+        15279,
+        15344
+      ],
+      "inputs": [
+        {
+          "token": "--_solid",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-color-surface",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+    },
+    {
+      "part": "button",
+      "variant": "soft,outline,ghost",
+      "states": [
+        "rest"
+      ],
+      "selector": ":where([data-scope=\"button\"]:is([data-emphasis=\"soft\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"outline\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"ghost\"]))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_pb",
+      "fallback": "color-mix(in oklab, var(--warp-color-highlight-solid) 10%, var(--_pa))",
+      "fallbackSpan": [
+        15355,
+        15425
+      ],
+      "inputs": [
+        {
+          "token": "--_pa",
+          "classification": "local channel"
+        },
+        {
+          "token": "--warp-color-highlight-solid",
+          "classification": "system input"
+        }
+      ],
+      "classification": "variant channel dependency",
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
     }
   ]
 }

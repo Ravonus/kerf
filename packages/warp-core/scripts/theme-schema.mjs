@@ -8,6 +8,7 @@ import { consumers } from './theme-schema-consumers.mjs'
 import { classifyShim } from './theme-schema-shims.mjs'
 import { classifyComponents, componentsPath } from './theme-schema-components.mjs'
 import { classifyButton } from './theme-schema-button.mjs'
+import { classifyButtonVariants } from './theme-schema-button-variants.mjs'
 
 const repoRoot = new URL('../../../', import.meta.url)
 const root = process.env.WARP_SCHEMA_FIXTURE ? pathToFileURL(`${process.env.WARP_SCHEMA_FIXTURE}/`) : repoRoot
@@ -114,7 +115,7 @@ function generate(design, template, bindings) {
   return [
     `${JSON.stringify({ digest, status: 'partial', sources, records, system, bindings }, null, 2)}\n`,
     `// Theme schema digest: ${digest}\n${template.replace('/* THEME_TYPES */', typeText)}`,
-    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n\n## Reviewed declarations\n\n| Path | Selector | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | \`${b.selector}\` | ${b.property} | \`${b.fallback}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
+    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n\n## Reviewed declarations\n\n| Path | Variant | States | Selector | At-rules | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | ${b.variant ?? '—'} | ${(b.states ?? [b.state ?? '—']).join(', ')} | \`${b.selector.replaceAll('\n', ' ')}\` | \`${b.atRules.join('; ')}\` | ${b.property} | \`${b.fallback.replaceAll('\n', '<br>')}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
   ]
 }
 
@@ -126,7 +127,7 @@ const design = read(designPath)
 const template = read(templatePath)
 const linksPath = 'packages/warp/src/links.css'
 const shimPaths = ['packages/warp/src/type.css', 'packages/warp/src/layout.css']
-const bindings = [...classifyLinks(linksPath, read(linksPath)), ...shimPaths.flatMap((path) => classifyShim(path, read(path))), ...classifyComponents(read(componentsPath)), ...classifyButton(read(componentsPath))]
+const bindings = [...classifyLinks(linksPath, read(linksPath)), ...shimPaths.flatMap((path) => classifyShim(path, read(path))), ...classifyComponents(read(componentsPath)), ...classifyButton(read(componentsPath)), ...classifyButtonVariants(read(componentsPath))]
 const generated = generate(design, template, bindings)
 if (process.argv.includes('--negative-test')) {
   const invalid = design.replace('| forbidden |', '| bad-unit |')

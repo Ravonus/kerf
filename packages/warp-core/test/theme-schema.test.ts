@@ -39,7 +39,7 @@ function check() {
 
 test('rejects filesystem changes while reporting the unresolved baseline', () => {
   setup()
-  expect(check()).toContain('reviewed records: 91')
+  expect(check()).toContain('reviewed records: 185')
   expect(check()).toContain('Incomplete:')
   const path = resolve(fixture, link)
   const original = readFileSync(path, 'utf8')
@@ -166,5 +166,39 @@ test('rejects changed and added Button consumers', () => {
   expect(check()).toContain(`${source}: unreviewed source change`)
   const host = ':where([data-scope="button"]) {'
   writeFileSync(path, original.replace(host, `${host} padding: var(--warp-space-page);`))
+  expect(check()).toContain(`${source}: unreviewed source change`)
+})
+
+
+test('records reviewed Button variant rules and exact fallbacks', () => {
+  const source = 'docs/design/warp/tokens/warp-components.css'
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    bindings: { variant?: string; fallback: string; fallbackSpan: number[]; classification: string }[]
+  }
+  const rows = schema.bindings.filter((row) => row.variant)
+  expect(rows).toHaveLength(94)
+  for (const variant of ['solid', 'soft', 'outline', 'ghost', 'frame', 'link']) {
+    expect(rows.some((row) => row.variant === variant)).toBe(true)
+  }
+  const text = readFileSync(resolve(root, source), 'utf8')
+  for (const row of rows) {
+    const [start, end] = row.fallbackSpan
+    expect(text.slice(start, end)).toBe(row.fallback)
+  }
+})
+
+test('rejects changed and added Button variant declarations', () => {
+  setup()
+  const source = 'docs/design/warp/tokens/warp-components.css'
+  const path = resolve(fixture, source)
+  const original = readFileSync(path, 'utf8')
+  const rule = ':where([data-scope="button"][data-emphasis="outline"]) {'
+  expect(original).toContain(rule)
+  const changed = original.replace('--_edge: var(--warp-color-border-strong)',
+    '--_edge: var(--warp-color-border-control)')
+  expect(changed).not.toBe(original)
+  writeFileSync(path, changed)
+  expect(check()).toContain(`${source}: unreviewed source change`)
+  writeFileSync(path, original.replace(rule, `${rule} padding: var(--warp-space-page);`))
   expect(check()).toContain(`${source}: unreviewed source change`)
 })
