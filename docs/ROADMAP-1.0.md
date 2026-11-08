@@ -444,6 +444,61 @@ templates. Add:
 **Exit:** GitHub's community profile is 100%. The Scorecard is 7 or higher. A fresh clone gets
 through the steps above with only the README. `1.0.0-rc.0` is published to the `next` tag.
 
+### Sprint 8: theme anything
+
+Added by the owner on 2026-11-08, before the public release. Today warp's look follows one accent hue, default 152
+(green). `warp({ seed })` moves the hue and `tokens` takes raw `--warp-*` names, but there's no plain way to recolour one
+part: a button's fill and its hover, the sweep stroke that animates over a control and the text colour while it runs, the
+nav and tabs underline, links. An app can't ship two named themes and switch between them either. The goal is a theme
+config as easy as Tailwind's: name colours once, use the names everywhere, and change everything at once or one part
+at a time.
+
+**Config** (`warp()` in `weft.config.ts`, typed in `plugin.d.mts`):
+
+```ts
+warp({
+  colors: { brand: '#e8590c', ink: '#1b1b1f', mint: { hue: 165, chroma: 0.12 } },  // named, like Tailwind
+  seed: { accent: 'brand' },                    // a name or a hex, everywhere a colour goes
+  parts: {                                      // per part, at rest and in each state
+    button: { bg: 'brand', text: 'white', hover: { bg: 'ink', text: 'brand' } },
+    sweep: { stroke: 'mint', text: 'mint', base: 'ink' },   // the animated overlay and the text while it runs
+    nav: { underline: 'brand', text: 'ink', active: { text: 'brand' } },
+    tabs: { underline: 'brand' },
+    link: { text: 'brand', hover: { text: 'ink' } },
+    field: { label: 'ink', focus: { label: 'brand' } },
+  },
+  themes: {                                     // named themes: each one is the same shape (seed, colors, parts, tokens)
+    ocean: { seed: { accent: '#0b7285' } },
+    sunset: { seed: { accent: '#e8590c' }, parts: { sweep: { stroke: '#ffd43b' } } },
+  },
+  dials: { palette: 'ocean' },                  // the default named theme
+})
+```
+
+- [ ] A design ticket first (sol-xhigh): write `docs/decisions/theming.md`. Pick the attribute for a named theme
+      (`data-theme` is already light/dark, so not that one), the token name for every part and state, and how parts
+      fall back: a part token defaults to today's value, so an app that sets nothing paints exactly as now.
+- [ ] Part tokens in `warp-core/styles`: every place a component reads accent, primary, highlight or sweep colour for
+      button, sweep (stroke, base, label and text while active), nav and tabs indicator, link, pill, field label and focus
+      ring reads a `--warp-<part>-<prop>[-<state>]` token instead, defaulting to the current value. No visual change by
+      default: the screenshot and contrast tests still pass untouched.
+- [ ] `warp()` accepts `colors`, `parts` and `themes`, resolves names, and emits each named theme under its attribute.
+      Unknown names and parts are errors with the path, like the options today. Every colour pair the config produces
+      goes through the same contrast check (D010) as `seed` and `tokens`, in light and dark.
+- [ ] Runtime: `setDial('palette', 'ocean', { persist: true })` switches named theme without a flash, the same way
+      the other dials do, and any element or subtree can take `data-<attr>="ocean"` to use a different one.
+- [ ] Per element: components take an optional `tone` (a name from `colors` or a theme) where a one-off colour makes
+      sense (Button, Badge, Pill, Link, Nav), so one button can be different with no CSS.
+- [ ] Tailwind: the warp Tailwind entry exposes the named colours as utilities (`bg-brand`, `text-brand/80`).
+- [ ] A toolkit page "Theming" on the site with a live editor: pick colours for each part and see buttons, the sweep,
+      nav and fields change, with the matching `warp({...})` config to copy. `weft docs design` documents the options.
+- [ ] Tests: config validation, name resolution, fallback (no config means identical CSS output), a named-theme switch
+      in a browser test, and contrast failures report the part and state.
+
+**Exit:** with no theme config, warp's CSS and screenshots are unchanged. With the config above, every listed part shows
+the configured colours at rest, on hover, and during the sweep, in light and dark, and switching to `ocean` at runtime
+changes all of them. Warp stays within its size budget (`size.mjs`), and `measure.mjs` shows no speed regression.
+
 ## Decisions to confirm
 
 Each has a default. The plan proceeds on the default unless the owner says otherwise.
@@ -467,3 +522,4 @@ Each has a default. The plan proceeds on the default unless the owner says other
 - Sprint 4: implemented
 - Sprint 5: not started
 - Sprint 6: not started
+- Sprint 8: not started
