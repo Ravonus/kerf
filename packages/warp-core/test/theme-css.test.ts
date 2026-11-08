@@ -44,3 +44,13 @@ it('keeps the added field, frame and link reads in the themed sheets', () => {
   expect(nav).toContain('var(--warp-nav-text-interaction,')
   expect(() => lowerTheme('var(--warp-field-label)', themeNames)).toThrow('Missing fallback')
 })
+
+it('routes the resting Button background through the animated paint sites', () => {
+  const themed = readFileSync('styles/themed/components/button.css', 'utf8')
+  const before = themed.split(':where([data-scope="button"])::before {')[1]?.split('\n}')[0]
+  expect(before).toBeDefined()
+  expect(before?.match(/var\(--warp-button-bg,/g)).toHaveLength(8)
+  expect(before).toContain(
+    'var(--warp-config-part-button-bg,var(--warp-tone-layer, var(--_layer)))',
+  )
+})
