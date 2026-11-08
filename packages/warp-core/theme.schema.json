@@ -1,0 +1,840 @@
+{
+  "digest": "6c0f6008ca641595c55ab487255a8ae82cb0b730de25b369958798ca9ebb022d",
+  "status": "partial",
+  "sources": [
+    "docs/design/warp/tokens/warp-app.css",
+    "docs/design/warp/tokens/warp-canvas.css",
+    "docs/design/warp/tokens/warp-components.css",
+    "docs/design/warp/tokens/warp-data.css",
+    "docs/design/warp/tokens/warp-flows.css",
+    "docs/design/warp/tokens/warp-inputs-rich.css",
+    "docs/design/warp/tokens/warp-inputs.css",
+    "docs/design/warp/tokens/warp-layout.css",
+    "docs/design/warp/tokens/warp-marketing.css",
+    "docs/design/warp/tokens/warp.css",
+    "packages/warp/src/links.css",
+    "packages/warp/src/type.css",
+    "packages/warp/src/layout.css"
+  ],
+  "records": [
+    {
+      "part": "button",
+      "state": "rest",
+      "path": "bg",
+      "token": "--warp-button-bg",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-button-text",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-button-border",
+      "domain": "border",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "rest",
+      "path": "highlight",
+      "token": "--warp-button-highlight",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "hover",
+      "path": "bg",
+      "token": "--warp-button-bg-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "hover",
+      "path": "text",
+      "token": "--warp-button-text-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "hover",
+      "path": "border",
+      "token": "--warp-button-border-hover",
+      "domain": "border",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "hover",
+      "path": "highlight",
+      "token": "--warp-button-highlight-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "focus",
+      "path": "bg",
+      "token": "--warp-button-bg-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "focus",
+      "path": "text",
+      "token": "--warp-button-text-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "focus",
+      "path": "border",
+      "token": "--warp-button-border-focus",
+      "domain": "border",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "focus",
+      "path": "highlight",
+      "token": "--warp-button-highlight-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "press",
+      "path": "bg",
+      "token": "--warp-button-bg-press",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "press",
+      "path": "text",
+      "token": "--warp-button-text-press",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "press",
+      "path": "border",
+      "token": "--warp-button-border-press",
+      "domain": "border",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "press",
+      "path": "highlight",
+      "token": "--warp-button-highlight-press",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "disabled",
+      "path": "bg",
+      "token": "--warp-button-bg-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "disabled",
+      "path": "text",
+      "token": "--warp-button-text-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "disabled",
+      "path": "border",
+      "token": "--warp-button-border-disabled",
+      "domain": "border",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "button",
+      "state": "disabled",
+      "path": "highlight",
+      "token": "--warp-button-highlight-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "sweep",
+      "state": "rest",
+      "path": "stroke",
+      "token": "--warp-sweep-stroke",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "sweep",
+      "state": "rest",
+      "path": "base",
+      "token": "--warp-sweep-base",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "sweep",
+      "state": "rest",
+      "path": "label",
+      "token": "--warp-sweep-label",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "sweep",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-sweep-text",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "sweep",
+      "state": "invalid",
+      "path": "stroke",
+      "token": "--warp-sweep-stroke-invalid",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "sweep",
+      "state": "invalid",
+      "path": "label",
+      "token": "--warp-sweep-label-invalid",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "sweep",
+      "state": "invalid",
+      "path": "text",
+      "token": "--warp-sweep-text-invalid",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "nav",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-nav-text",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "nav",
+      "state": "rest",
+      "path": "underline",
+      "token": "--warp-nav-underline",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "nav",
+      "state": "hover",
+      "path": "text",
+      "token": "--warp-nav-text-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "nav",
+      "state": "hover",
+      "path": "underline",
+      "token": "--warp-nav-underline-hover",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "nav",
+      "state": "focus",
+      "path": "text",
+      "token": "--warp-nav-text-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "nav",
+      "state": "focus",
+      "path": "underline",
+      "token": "--warp-nav-underline-focus",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "nav",
+      "state": "active",
+      "path": "text",
+      "token": "--warp-nav-text-active",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "nav",
+      "state": "active",
+      "path": "underline",
+      "token": "--warp-nav-underline-active",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "nav",
+      "state": "disabled",
+      "path": "text",
+      "token": "--warp-nav-text-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "nav",
+      "state": "disabled",
+      "path": "underline",
+      "token": "--warp-nav-underline-disabled",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "tabs",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-tabs-text",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "tabs",
+      "state": "rest",
+      "path": "underline",
+      "token": "--warp-tabs-underline",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "tabs",
+      "state": "hover",
+      "path": "text",
+      "token": "--warp-tabs-text-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "tabs",
+      "state": "hover",
+      "path": "underline",
+      "token": "--warp-tabs-underline-hover",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "tabs",
+      "state": "focus",
+      "path": "text",
+      "token": "--warp-tabs-text-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "tabs",
+      "state": "focus",
+      "path": "underline",
+      "token": "--warp-tabs-underline-focus",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "tabs",
+      "state": "active",
+      "path": "text",
+      "token": "--warp-tabs-text-active",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "tabs",
+      "state": "active",
+      "path": "underline",
+      "token": "--warp-tabs-underline-active",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "tabs",
+      "state": "disabled",
+      "path": "text",
+      "token": "--warp-tabs-text-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "tabs",
+      "state": "disabled",
+      "path": "underline",
+      "token": "--warp-tabs-underline-disabled",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "link",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-link-text",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "link",
+      "state": "rest",
+      "path": "underline",
+      "token": "--warp-link-underline",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "link",
+      "state": "hover",
+      "path": "text",
+      "token": "--warp-link-text-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "link",
+      "state": "hover",
+      "path": "underline",
+      "token": "--warp-link-underline-hover",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "link",
+      "state": "focus",
+      "path": "text",
+      "token": "--warp-link-text-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "link",
+      "state": "focus",
+      "path": "underline",
+      "token": "--warp-link-underline-focus",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "link",
+      "state": "press",
+      "path": "text",
+      "token": "--warp-link-text-press",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "link",
+      "state": "press",
+      "path": "underline",
+      "token": "--warp-link-underline-press",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "link",
+      "state": "disabled",
+      "path": "text",
+      "token": "--warp-link-text-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "link",
+      "state": "disabled",
+      "path": "underline",
+      "token": "--warp-link-underline-disabled",
+      "domain": "underline-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "rest",
+      "path": "bg",
+      "token": "--warp-pill-bg",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-pill-text",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-pill-border",
+      "domain": "border",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "hover",
+      "path": "bg",
+      "token": "--warp-pill-bg-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "hover",
+      "path": "text",
+      "token": "--warp-pill-text-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "hover",
+      "path": "border",
+      "token": "--warp-pill-border-hover",
+      "domain": "border",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "focus",
+      "path": "bg",
+      "token": "--warp-pill-bg-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "focus",
+      "path": "text",
+      "token": "--warp-pill-text-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "focus",
+      "path": "border",
+      "token": "--warp-pill-border-focus",
+      "domain": "border",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "active",
+      "path": "bg",
+      "token": "--warp-pill-bg-active",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "active",
+      "path": "text",
+      "token": "--warp-pill-text-active",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "active",
+      "path": "border",
+      "token": "--warp-pill-border-active",
+      "domain": "border",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "disabled",
+      "path": "bg",
+      "token": "--warp-pill-bg-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "disabled",
+      "path": "text",
+      "token": "--warp-pill-text-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "pill",
+      "state": "disabled",
+      "path": "border",
+      "token": "--warp-pill-border-disabled",
+      "domain": "border",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "badge",
+      "state": "rest",
+      "path": "bg",
+      "token": "--warp-badge-bg",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "badge",
+      "state": "rest",
+      "path": "text",
+      "token": "--warp-badge-text",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "badge",
+      "state": "rest",
+      "path": "border",
+      "token": "--warp-badge-border",
+      "domain": "border",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "rest",
+      "path": "label",
+      "token": "--warp-field-label",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "rest",
+      "path": "bg",
+      "token": "--warp-field-bg",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "floated",
+      "path": "label",
+      "token": "--warp-field-label-floated",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "hover",
+      "path": "label",
+      "token": "--warp-field-label-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "hover",
+      "path": "bg",
+      "token": "--warp-field-bg-hover",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "focus",
+      "path": "label",
+      "token": "--warp-field-label-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "focus",
+      "path": "bg",
+      "token": "--warp-field-bg-focus",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "invalid",
+      "path": "label",
+      "token": "--warp-field-label-invalid",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "invalid",
+      "path": "bg",
+      "token": "--warp-field-bg-invalid",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "focus",
+      "path": "ring",
+      "token": "--warp-field-ring-focus",
+      "domain": "ring-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "invalid",
+      "path": "ring",
+      "token": "--warp-field-ring-invalid",
+      "domain": "ring-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "disabled",
+      "path": "label",
+      "token": "--warp-field-label-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "disabled",
+      "path": "bg",
+      "token": "--warp-field-bg-disabled",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "readonly",
+      "path": "label",
+      "token": "--warp-field-label-readonly",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "field",
+      "state": "readonly",
+      "path": "bg",
+      "token": "--warp-field-bg-readonly",
+      "domain": "color",
+      "units": "forbidden",
+      "binding": "unresolved"
+    },
+    {
+      "part": "focus",
+      "state": "rest",
+      "path": "ring",
+      "token": "--warp-focus-ring",
+      "domain": "ring-role",
+      "units": "forbidden",
+      "binding": "unresolved"
+    }
+  ]
+}
