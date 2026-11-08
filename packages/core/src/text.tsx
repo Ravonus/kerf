@@ -126,7 +126,12 @@ export function Text(props: TextProps) {
   const content = () => {
     if (busy.value)
       return (
-        <span data-skeleton style="color:transparent">
+        // The text is hidden but keeps its colour, so the bar painted from it shows with no UI kit loaded (a
+        // navigation shape is this markup); a kit's skeleton styles repaint and shimmer it.
+        <span
+          data-skeleton
+          style="-webkit-text-fill-color:transparent;background:color-mix(in srgb,currentColor 9%,transparent);border-radius:0.375em"
+        >
           {sample()}
         </span>
       )

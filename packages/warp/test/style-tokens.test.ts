@@ -38,3 +38,10 @@ test('a component imports the tokens file its family CSS reads from', () => {
   }
   expect(missing).toEqual([])
 })
+
+// Navigation stands a route's generated shape in while it loads, on any page, so the paint for its placeholders can't
+// wait for a <Shape> or <Skeleton> to be imported somewhere: it comes with the base every component loads.
+test('the shared base brings the skeleton paint', () => {
+  const base = readFileSync(join(src, 'styles.ts'), 'utf8')
+  expect(base).toContain("'@weft-js/warp-core/styles/components/skeleton.css'")
+})

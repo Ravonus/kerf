@@ -124,6 +124,10 @@ test('<Text reserve>: a placeholder in the real element, then one swap', async (
   expect(el.getAttribute('data-scope')).toBe('skeleton-scope')
   expect(el.getAttribute('aria-busy')).toBe('true')
   expect(el.querySelector('[data-skeleton]')!.textContent).toBe('nnnnn nnnnn')
+  // A bar you can see with no UI kit loaded: its text is hidden, not its colour, and the bar is painted from that.
+  const bar = el.querySelector('[data-skeleton]')!.getAttribute('style')!
+  expect(bar).not.toMatch(/(^|;)color:/)
+  expect(bar).toMatch(/background:color-mix\(in srgb,currentColor/)
   text.value = 'Hello'
   await flush()
   expect(el.textContent).toBe('Hello')
