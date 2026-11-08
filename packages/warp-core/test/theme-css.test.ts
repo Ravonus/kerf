@@ -54,3 +54,9 @@ it('routes the resting Button background through the animated paint sites', () =
     'var(--warp-config-part-button-bg,var(--warp-tone-layer, var(--_layer)))',
   )
 })
+
+it('rejects an unclosed optional themed block', () => {
+  expect(() => lowerTheme('/* warp-theme-only:start */ x', themeNames)).toThrow(
+    'Unclosed theme-only block',
+  )
+})
