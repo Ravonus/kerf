@@ -61,6 +61,27 @@ function finishArrival(animation: Animation, win: Window) {
   return { el, played }
 }
 
+/** Reduced motion hides the animations, so wait for its gate to open only on pages with flow. */
+function waitForMotion(doc: Document) {
+  const selector = families(doc)
+  if (!selector || !doc.querySelector(selector)) return
+  const win = doc.defaultView!
+  const motion = win.matchMedia('(prefers-reduced-motion: reduce)')
+  const retry = () => {
+    if (!doc.getAnimations().some(arrival)) return
+    observer.disconnect()
+    motion.removeEventListener('change', retry)
+    settle(doc)
+  }
+  const observer = new win.MutationObserver(retry)
+  motion.addEventListener('change', retry)
+  observer.observe(doc.documentElement, {
+    attributes: true,
+    subtree: true,
+    attributeFilter: ['data-motion', 'data-flow', 'data-flow-seen'],
+  })
+}
+
 /** Finish an interrupted arrival on a clock; the departure still belongs to its scroll timeline. */
 function settle(doc: Document) {
   const win = doc.defaultView
@@ -70,7 +91,7 @@ function settle(doc: Document) {
     !win.IntersectionObserver
   )
     return
-  if (!doc.getAnimations().some(arrival)) return
+  if (!doc.getAnimations().some(arrival)) return waitForMotion(doc)
   const running = new Map<HTMLElement, Animation>()
   const offscreen = new win.IntersectionObserver((entries) => {
     for (const { target, isIntersecting } of entries) {

@@ -238,20 +238,50 @@ test('all named flow families finish, and a page without flow adds no scroll han
       await close()
     }
   }
-  const context = await browser.newContext()
+  const context = await browser.newContext({ reducedMotion: 'reduce' })
   try {
     const page = await context.newPage()
     await page.setContent(`<html data-flow-armed><style>${css}</style><p>Still</p>`)
     await page.evaluate(() => {
       window.flowListeners = []
+      window.flowMotionListeners = 0
+      window.flowObservers = 0
+      const Observer = window.MutationObserver
+      window.MutationObserver = class extends Observer {
+        constructor(...args) {
+          super(...args)
+          window.flowObservers++
+        }
+      }
+      const match = window.matchMedia.bind(window)
+      window.matchMedia = (query) => {
+        const media = match(query)
+        const listen = media.addEventListener.bind(media)
+        media.addEventListener = (name, ...args) => {
+          if (name === 'change') window.flowMotionListeners++
+          return listen(name, ...args)
+        }
+        return media
+      }
       const add = document.addEventListener.bind(document)
       document.addEventListener = (name, ...args) => {
         if (name === 'scroll' || name === 'scrollend') window.flowListeners.push(name)
         return add(name, ...args)
       }
     })
-    await page.addScriptTag({ content: `(() => {${script};flow(document)})()` })
+    await page.addScriptTag({
+      content: `(() => {${script};const count = window.flowObservers;
+        flow(document);window.flowInstalledObservers = window.flowObservers - count})()`,
+    })
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    await page.evaluate(() => {
+      document.documentElement.dataset.motion = 'full'
+    })
+    await frame(page)
     assert.deepEqual(await page.evaluate(() => window.flowListeners), [])
+    assert.equal(await page.evaluate(() => window.flowMotionListeners), 0)
+    // Count flow's existing code-scan observer, excluding later Playwright observers.
+    assert.equal(await page.evaluate(() => window.flowInstalledObservers), 1)
   } finally {
     await context.close()
   }
@@ -286,6 +316,32 @@ test('reduced motion interrupts an arrival already finishing', async () => {
     whole(await sample(page))
   } finally {
     await close()
+  }
+})
+
+test('flow initialized with reduced motion settles after motion is enabled', async () => {
+  for (const fallback of [false, true]) {
+    for (const preference of [false, true]) {
+      const { page, errors, close } = await open({ reduced: true, fallback, fixture: true })
+      try {
+        whole(await sample(page))
+        if (preference) await page.emulateMedia({ reducedMotion: 'no-preference' })
+        else
+          await page.evaluate(() => {
+            document.documentElement.dataset.motion = 'full'
+          })
+        await frame(page)
+        const before = await arrive(page)
+        assert.ok(before.opacity > 0 && before.opacity < 0.95, JSON.stringify(before))
+        assert.equal(before.settled, false, 'motion activation must preserve scrubbing')
+        await stop(page)
+        await page.waitForTimeout(850)
+        whole(await sample(page))
+        assert.deepEqual(errors, [])
+      } finally {
+        await close()
+      }
+    }
   }
 })
 
