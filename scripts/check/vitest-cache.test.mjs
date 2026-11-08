@@ -28,12 +28,18 @@ void test('package caches have separate roots and survive concurrent cleanup', a
       await mkdir(own, { recursive: true })
       await writeFile(own + '/marker', marker)
     `
-    const run = (index) => new Promise((done, reject) => {
-      const child = spawn(process.execPath, ['--input-type=module', '-e', script,
-        resolve(root, paths[index]), packages[index]])
-      child.on('error', reject)
-      child.on('close', done)
-    })
+    const run = (index) =>
+      new Promise((done, reject) => {
+        const child = spawn(process.execPath, [
+          '--input-type=module',
+          '-e',
+          script,
+          resolve(root, paths[index]),
+          packages[index],
+        ])
+        child.on('error', reject)
+        child.on('close', done)
+      })
     assert.deepEqual(await Promise.all([run(0), run(1)]), [0, 0])
     for (const [index, path] of paths.entries()) {
       assert.equal(readFileSync(resolve(root, path, 'marker'), 'utf8'), packages[index])
