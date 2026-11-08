@@ -39,7 +39,7 @@ function check() {
 
 test('rejects filesystem changes while reporting the unresolved baseline', () => {
   setup()
-  expect(check()).toContain('reviewed records: 192')
+  expect(check()).toContain('reviewed records: 229')
   expect(check()).toContain('Incomplete:')
   const path = resolve(fixture, link)
   const original = readFileSync(path, 'utf8')
@@ -262,4 +262,64 @@ test('preserves Button radius dependency fallback spans', () => {
     const [start, end] = row.fallbackSpan
     expect(readFileSync(resolve(root, row.source), 'utf8').slice(start, end)).toBe(row.fallback)
   }
+})
+
+
+test('records attached, joined, RTL and clip radius geometry with exact spans', () => {
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    bindings: { classification: string; owner?: string; selector: string; source: string;
+      fallback: string; fallbackSpan: number[] }[]
+  }
+  const rows = schema.bindings.filter((row) => row.classification === 'radius geometry dependency')
+  expect(rows).toHaveLength(37)
+  for (const [owner, count] of [
+    ['attached Button host', 4], ['attached sweep child', 13], ['joined sweep child', 13],
+    ['sweep child inherited radius', 1], ['sweep child LTR and RTL', 4], ['sweep child clip', 2],
+  ] as const) expect(rows.filter((row) => row.owner === owner)).toHaveLength(count)
+  expect(rows.some((row) => row.selector.includes(':dir(rtl)'))).toBe(true)
+  expect(rows.some((row) => row.selector.includes('aria-orientation="vertical"'))).toBe(true)
+  for (const row of rows) {
+    const [start, end] = row.fallbackSpan
+    expect(readFileSync(resolve(root, row.source), 'utf8').slice(start, end)).toBe(row.fallback)
+  }
+})
+
+test('rejects changed group corners and joined sweep clips', () => {
+  setup()
+  for (const [source, originalValue, changedValue] of [
+    ['docs/design/warp/tokens/warp-components.css', 'border-start-start-radius: 0;',
+      'border-start-start-radius: 1px;'],
+    ['docs/design/warp/tokens/warp.css', 'round var(--_round, var(--warp-sweep-radius))',
+      'round var(--warp-sweep-radius)'],
+  ]) {
+    const path = resolve(fixture, source)
+    const original = readFileSync(path, 'utf8')
+    const anchor = source.includes('warp-components.css')
+      ? ':where([data-scope="button-group"][data-attached] > [data-scope="button"]:not(:first-child))'
+      : '/* the base wipes away'
+    const start = original.indexOf(anchor)
+    const site = original.indexOf(originalValue, start)
+    expect(start).toBeGreaterThanOrEqual(0)
+    expect(site).toBeGreaterThan(start)
+    writeFileSync(path, original.slice(0, site) + changedValue + original.slice(site + originalValue.length))
+    expect(check()).toContain(source.includes('warp-components.css')
+      ? `${source}: unreviewed source change` : `${source}: unreviewed radius dependency change`)
+    writeFileSync(path, original)
+  }
+})
+
+
+test('retains frame, link and inherited Button radius fallbacks', () => {
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    bindings: { variant?: string; property: string; fallback: string; selector: string }[]
+  }
+  const rows = schema.bindings
+  expect(rows.some((row) => row.variant === 'frame' && row.property === 'border-radius' &&
+    row.fallback === 'min(var(--warp-radius-mark), 2px)')).toBe(true)
+  expect(rows.some((row) => row.variant === 'frame' && row.property === '--warp-sweep-radius' &&
+    row.fallback === '0px')).toBe(true)
+  expect(rows.some((row) => row.variant === 'link' && row.property === 'border-radius' &&
+    row.fallback === 'var(--warp-radius-mark)')).toBe(true)
+  expect(rows.some((row) => row.selector.includes('button"])::before') &&
+    row.property === 'border-radius' && row.fallback === 'inherit')).toBe(true)
 })

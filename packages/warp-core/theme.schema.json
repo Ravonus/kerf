@@ -1,5 +1,5 @@
 {
-  "digest": "8f6e5243df94c7dad2fd733d8113fc4ea6a409108266e82d02f8f7eec19ddb98",
+  "digest": "317ef04f4d63a91733a691f772f215ee13bbda1669ce26fe790ac2332e8e4143",
   "status": "partial",
   "sources": [
     "docs/design/warp/tokens/warp-app.css",
@@ -8067,6 +8067,801 @@
       ],
       "classification": "partial property binding",
       "reason": "The host uses the system control radius; group and sweep sites remain under review."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached Button host",
+      "selector": ":where([data-scope=\"button-group\"][data-attached] > [data-scope=\"button\"]:not(:first-child))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-start-start-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        31063,
+        31064
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached Button host",
+      "selector": ":where([data-scope=\"button-group\"][data-attached] > [data-scope=\"button\"]:not(:first-child))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-end-start-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        31091,
+        31092
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached Button host",
+      "selector": ":where([data-scope=\"button-group\"][data-attached] > [data-scope=\"button\"]:not(:last-child))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-start-end-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        31276,
+        31277
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached Button host",
+      "selector": ":where([data-scope=\"button-group\"][data-attached] > [data-scope=\"button\"]:not(:last-child))",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-end-end-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        31302,
+        31303
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_js",
+      "fallback": "0",
+      "fallbackSpan": [
+        32708,
+        32709
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-start-start-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        32768,
+        32769
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-end-start-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        32796,
+        32797
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_je",
+      "fallback": "0",
+      "fallbackSpan": [
+        33290,
+        33291
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-start-end-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        33346,
+        33347
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-end-end-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        33372,
+        33373
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_round",
+      "fallback": "var(--_rs) var(--_rs) var(--_re) var(--_re)",
+      "fallbackSpan": [
+        33759,
+        33802
+      ],
+      "inputs": [
+        {
+          "token": "--_re",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--_rs",
+          "classification": "radius geometry input"
+        }
+      ],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_js",
+      "fallback": "0",
+      "fallbackSpan": [
+        34273,
+        34274
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-start-start-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        34332,
+        34333
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-start-end-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        34360,
+        34361
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "--_je",
+      "fallback": "0",
+      "fallbackSpan": [
+        34842,
+        34843
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-end-start-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        34897,
+        34898
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "attached sweep child",
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-end-end-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        34923,
+        34924
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "sweep child inherited radius",
+      "selector": ":where([data-part=\"sweep\"]),\n  :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "border-radius",
+      "fallback": "inherit",
+      "fallbackSpan": [
+        86185,
+        86192
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "sweep child LTR and RTL",
+      "selector": ":where([data-part=\"sweep\"]),\n  :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--_rs",
+      "fallback": "calc(var(--warp-sweep-radius) * var(--_js, 1))",
+      "fallbackSpan": [
+        86692,
+        86738
+      ],
+      "inputs": [
+        {
+          "token": "--_js",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--warp-sweep-radius",
+          "classification": "radius geometry input"
+        }
+      ],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "sweep child LTR and RTL",
+      "selector": ":where([data-part=\"sweep\"]),\n  :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--_re",
+      "fallback": "calc(var(--warp-sweep-radius) * var(--_je, 1))",
+      "fallbackSpan": [
+        86747,
+        86793
+      ],
+      "inputs": [
+        {
+          "token": "--_je",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--warp-sweep-radius",
+          "classification": "radius geometry input"
+        }
+      ],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "sweep child LTR and RTL",
+      "selector": ":where([data-part=\"sweep\"]),\n  :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--_round",
+      "fallback": "var(--_rs) var(--_re) var(--_re) var(--_rs)",
+      "fallbackSpan": [
+        86809,
+        86852
+      ],
+      "inputs": [
+        {
+          "token": "--_re",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--_rs",
+          "classification": "radius geometry input"
+        }
+      ],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "sweep child LTR and RTL",
+      "selector": ":where([data-part=\"sweep\"]):where(:dir(rtl)),\n  :where([data-part=\"sweep-base\"]):where(:dir(rtl))",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--_round",
+      "fallback": "var(--_re) var(--_rs) var(--_rs) var(--_re)",
+      "fallbackSpan": [
+        86970,
+        87013
+      ],
+      "inputs": [
+        {
+          "token": "--_re",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--_rs",
+          "classification": "radius geometry input"
+        }
+      ],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--_js",
+      "fallback": "0",
+      "fallbackSpan": [
+        87830,
+        87831
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "border-start-start-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        87890,
+        87891
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "border-end-start-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        87918,
+        87919
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--_je",
+      "fallback": "0",
+      "fallbackSpan": [
+        88216,
+        88217
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "border-start-end-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        88272,
+        88273
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined]:not([data-joined=\"vertical\"]) > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "border-end-end-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        88298,
+        88299
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined=\"vertical\"] > [data-sweep]) > :where([data-part=\"sweep\"]),\n  :where([data-joined=\"vertical\"] > [data-sweep]) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--_round",
+      "fallback": "var(--_rs) var(--_rs) var(--_re) var(--_re)",
+      "fallbackSpan": [
+        88481,
+        88524
+      ],
+      "inputs": [
+        {
+          "token": "--_re",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--_rs",
+          "classification": "radius geometry input"
+        }
+      ],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--_js",
+      "fallback": "0",
+      "fallbackSpan": [
+        88773,
+        88774
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "border-start-start-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        88832,
+        88833
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "border-start-end-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        88860,
+        88861
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--_je",
+      "fallback": "0",
+      "fallbackSpan": [
+        89120,
+        89121
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "border-end-start-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        89175,
+        89176
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "joined sweep child",
+      "selector": ":where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep\"]),\n  :where([data-joined=\"vertical\"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "border-end-end-radius",
+      "fallback": "0",
+      "fallbackSpan": [
+        89201,
+        89202
+      ],
+      "inputs": [],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "sweep child clip",
+      "selector": ":where([data-part=\"sweep-base\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "clip-path",
+      "fallback": "inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--_round, var(--warp-sweep-radius)))",
+      "fallbackSpan": [
+        89399,
+        89514
+      ],
+      "inputs": [
+        {
+          "token": "--_a",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--_on",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--_round",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--_sr",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--warp-sweep-radius",
+          "classification": "radius geometry input"
+        }
+      ],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "owner": "sweep child clip",
+      "selector": ":where([data-part=\"sweep\"])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "clip-path",
+      "fallback": "inset(0 var(--_sr) 0 var(--_sl) round var(--_round, var(--warp-sweep-radius)))",
+      "fallbackSpan": [
+        89636,
+        89714
+      ],
+      "inputs": [
+        {
+          "token": "--_round",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--_sl",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--_sr",
+          "classification": "radius geometry input"
+        },
+        {
+          "token": "--warp-sweep-radius",
+          "classification": "radius geometry input"
+        }
+      ],
+      "classification": "radius geometry dependency",
+      "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
     }
   ]
 }
