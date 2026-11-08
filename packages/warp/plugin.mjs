@@ -13,6 +13,7 @@ import { fromHex, hex, luminance, toLinear } from './tokens/color.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
 import { resolveThemes } from './src/plugin/themes.mjs'
+import { buttonPairs } from './src/plugin/themes-contrast.mjs'
 import { tailwindTheme } from './src/plugin/tailwind.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
@@ -253,33 +254,12 @@ function contrast(seed, declarations) {
   }
 }
 
-// Check host paint and the existing frame label before admitting Button overrides.
-function checkButtonCandidate(button, resolved) {
+// Check configured frame text and visible sweep boundaries before admitting overrides.
+function checkButtonCandidate(button, resolved, tokens = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'warp-seed-'))
   try {
     const file = join(dir, 'theme-pairs.json')
-    const pairs = ['light', 'dark'].flatMap((theme) =>
-      ['quiet', 'balanced', 'vivid'].flatMap((expression) => {
-        const colors = resolved[`${theme}/${expression}`]
-        const common = { palette: 'default', theme, expression, state: 'rest' }
-        const host = {
-          ...common, part: 'button', emphasis: 'solid', site: 'base',
-          path: 'parts.button.text', fg: { token: '--warp-button-text', value: button.text },
-          bg: { token: '--warp-button-bg', value: button.bg },
-        }
-        const tones = ['accent', 'neutral', 'positive', 'caution', 'critical', 'info']
-        const labels = tones.map((tone) => {
-          const key = tone === 'neutral' ? 'text' : `${tone}-text`
-          if (!colors?.[key]) throw bad('parts.button.bg', `cannot resolve frame label ${key}`)
-          return {
-            ...common, part: 'sweep', emphasis: 'frame', site: 'text-unfilled',
-            path: 'parts.button.bg', fg: { token: `--warp-color-${key}`, value: colors[key] },
-            bg: { token: '--warp-button-bg', value: button.bg },
-          }
-        })
-        return [host, ...labels]
-      }),
-    )
+    const pairs = buttonPairs(button, resolved, tokens)
     writeFileSync(file, JSON.stringify(pairs))
     let output
     try {
@@ -508,7 +488,7 @@ export const warp = definePlugin({
     if (custom) declarations = fitSeed(seed, declarations, o.dials)
     else if (declarations) checkSeed(seed, declarations, o.dials)
     if (o.buttonCandidate) {
-      checkButtonCandidate(o.buttonCandidate, contrast(seed, declarations).resolved)
+      checkButtonCandidate(o.buttonCandidate, contrast(seed, declarations).resolved, o.tokens)
       throw Object.assign(
         bad(
           'parts.button',
