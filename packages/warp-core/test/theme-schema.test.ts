@@ -65,3 +65,15 @@ test('checks the tracked source inventory', () => {
   expect(schema.sources.toSorted()).toEqual(tracked.toSorted())
   expect(tracked).toHaveLength(13)
 })
+
+test('counts nested token reads and local-channel dependencies as declarations', async () => {
+  const { consumers } = await import('../scripts/theme-schema-consumers.mjs')
+  const css = '.a { --_paint: var(--warp-ink); color: var(--_paint, var(--warp-fallback)); }'
+  expect(consumers('fixture.css', css)).toEqual([
+    { property: '--_paint', reads: ['--warp-ink'] },
+    { property: 'color', reads: ['--_paint', '--warp-fallback'] },
+  ])
+  expect(consumers('fixture.css', css.replace('var(--warp-ink)', 'red'))).toEqual([
+    { property: 'color', reads: ['--_paint', '--warp-fallback'] },
+  ])
+})

@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { classifyLinks } from './theme-schema-links.mjs'
+import { consumers } from './theme-schema-consumers.mjs'
 
 const repoRoot = new URL('../../../', import.meta.url)
 const root = process.env.WARP_SCHEMA_FIXTURE ? pathToFileURL(`${process.env.WARP_SCHEMA_FIXTURE}/`) : repoRoot
@@ -124,9 +125,12 @@ const sources = JSON.parse(generated[0]).sources
 for (const source of sources) {
   if (!tracked.includes(source)) { console.error(`Missing tracked source: ${source}`); failed = true; continue }
   const content = read(source)
+  const declarations = consumers(source, content)
+  const direct = declarations.filter((row) => row.reads.some((name) => name.startsWith('--warp-')))
+  const local = declarations.filter((row) => row.reads.some((name) => name.startsWith('--_')))
   const reads = (content.match(/var\(\s*--warp-/g) || []).length
   const classified = source === linksPath ? 2 : 0
-  console.log(`${source}: ${reads} direct token references, ${classified} classified`)
+  console.log(`${source}: ${reads} direct token references, ${direct.length} declarations, ${local.length} local-channel readers, ${classified} classified`)
 }
 const extra = tracked.filter((path) => !sources.includes(path))
 if (extra.length) { console.error(`Uninventoried sources: ${extra.join(', ')}`); failed = true }
