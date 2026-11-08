@@ -457,21 +457,40 @@ at a time.
 
 ```ts
 warp({
-  colors: { brand: '#e8590c', ink: '#1b1b1f', mint: { hue: 165, chroma: 0.12 } },  // named, like Tailwind
-  seed: { accent: 'brand' },                    // a name or a hex, everywhere a colour goes
-  parts: {                                      // per part, at rest and in each state
-    button: { bg: 'brand', text: 'white', hover: { bg: 'ink', text: 'brand' } },
-    sweep: { stroke: 'mint', text: 'mint', base: 'ink' },   // the animated overlay and the text while it runs
-    nav: { underline: 'brand', text: 'ink', active: { text: 'brand' } },
+  // named, like Tailwind
+  colors: {
+    brand: '#e8590c',
+    ink: '#1b1b1f',
+    mint: { hue: 165, chroma: 0.12 },
+  },
+  // a name or a hex, everywhere a colour goes
+  seed: { accent: 'brand' },
+  // per part, at rest and in each state
+  parts: {
+    button: {
+      bg: 'brand', text: 'white',
+      hover: { bg: 'ink', text: 'brand' },
+    },
+    // the animated overlay and the text while it runs
+    sweep: { stroke: 'mint', text: 'mint', base: 'ink' },
+    nav: {
+      underline: 'brand', text: 'ink', active: { text: 'brand' },
+    },
     tabs: { underline: 'brand' },
     link: { text: 'brand', hover: { text: 'ink' } },
     field: { label: 'ink', focus: { label: 'brand' } },
   },
-  themes: {                                     // named themes: each one is the same shape (seed, colors, parts, tokens)
+  // named themes: each one is the same shape
+  // (seed, colors, parts, tokens)
+  themes: {
     ocean: { seed: { accent: '#0b7285' } },
-    sunset: { seed: { accent: '#e8590c' }, parts: { sweep: { stroke: '#ffd43b' } } },
+    sunset: {
+      seed: { accent: '#e8590c' },
+      parts: { sweep: { stroke: '#ffd43b' } },
+    },
   },
-  dials: { palette: 'ocean' },                  // the default named theme
+  // the default named theme
+  dials: { palette: 'ocean' },
 })
 ```
 
@@ -495,12 +514,21 @@ The same names work in `system` (the scale every part reads: `space`, `radius`, 
 
 ```ts
 warp({
-  system: { radius: { control: 6, card: 14 }, space: { 2: '6px' }, font: { body: 'Inter' } },
+  system: {
+    radius: { control: 6, card: 14 },
+    space: { 2: '6px' },
+    font: { body: 'Inter' },
+  },
   parts: {
-    button: { padding: '10px 18px', radius: 'pill', font: { weight: 600, transform: 'uppercase' },
-              hover: { bg: 'ink', shadow: 'lg' }, press: { scale: 0.98 } },
+    button: {
+      padding: '10px 18px', radius: 'pill',
+      font: { weight: 600, transform: 'uppercase' },
+      hover: { bg: 'ink', shadow: 'lg' }, press: { scale: 0.98 },
+    },
     sweep: { stroke: 'brand', width: 2, duration: 400 },
-    nav: { gap: 24, underline: { color: 'brand', width: 3, offset: 6 } },
+    nav: {
+      gap: 24, underline: { color: 'brand', width: 3, offset: 6 },
+    },
     card: { padding: 32, radius: 20, shadow: 'md', border: 'none' },
   },
 })
