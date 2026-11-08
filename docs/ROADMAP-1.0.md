@@ -457,21 +457,40 @@ at a time.
 
 ```ts
 warp({
-  colors: { brand: '#e8590c', ink: '#1b1b1f', mint: { hue: 165, chroma: 0.12 } },  // named, like Tailwind
-  seed: { accent: 'brand' },                    // a name or a hex, everywhere a colour goes
-  parts: {                                      // per part, at rest and in each state
-    button: { bg: 'brand', text: 'white', hover: { bg: 'ink', text: 'brand' } },
-    sweep: { stroke: 'mint', text: 'mint', base: 'ink' },   // the animated overlay and the text while it runs
-    nav: { underline: 'brand', text: 'ink', active: { text: 'brand' } },
+  // named, like Tailwind
+  colors: {
+    brand: '#e8590c',
+    ink: '#1b1b1f',
+    mint: { hue: 165, chroma: 0.12 },
+  },
+  // a name or a hex, everywhere a colour goes
+  seed: { accent: 'brand' },
+  // per part, at rest and in each state
+  parts: {
+    button: {
+      bg: 'brand', text: 'white',
+      hover: { bg: 'ink', text: 'brand' },
+    },
+    // the animated overlay and the text while it runs
+    sweep: { stroke: 'mint', text: 'mint', base: 'ink' },
+    nav: {
+      underline: 'brand', text: 'ink', active: { text: 'brand' },
+    },
     tabs: { underline: 'brand' },
     link: { text: 'brand', hover: { text: 'ink' } },
     field: { label: 'ink', focus: { label: 'brand' } },
   },
-  themes: {                                     // named themes: each one is the same shape (seed, colors, parts, tokens)
+  // named themes: each one is the same shape
+  // (seed, colors, parts, tokens)
+  themes: {
     ocean: { seed: { accent: '#0b7285' } },
-    sunset: { seed: { accent: '#e8590c' }, parts: { sweep: { stroke: '#ffd43b' } } },
+    sunset: {
+      seed: { accent: '#e8590c' },
+      parts: { sweep: { stroke: '#ffd43b' } },
+    },
   },
-  dials: { palette: 'ocean' },                  // the default named theme
+  // the default named theme
+  dials: { palette: 'ocean' },
 })
 ```
 
@@ -495,12 +514,21 @@ The same names work in `system` (the scale every part reads: `space`, `radius`, 
 
 ```ts
 warp({
-  system: { radius: { control: 6, card: 14 }, space: { 2: '6px' }, font: { body: 'Inter' } },
+  system: {
+    radius: { control: 6, card: 14 },
+    space: { 2: '6px' },
+    font: { body: 'Inter' },
+  },
   parts: {
-    button: { padding: '10px 18px', radius: 'pill', font: { weight: 600, transform: 'uppercase' },
-              hover: { bg: 'ink', shadow: 'lg' }, press: { scale: 0.98 } },
+    button: {
+      padding: '10px 18px', radius: 'pill',
+      font: { weight: 600, transform: 'uppercase' },
+      hover: { bg: 'ink', shadow: 'lg' }, press: { scale: 0.98 },
+    },
     sweep: { stroke: 'brand', width: 2, duration: 400 },
-    nav: { gap: 24, underline: { color: 'brand', width: 3, offset: 6 } },
+    nav: {
+      gap: 24, underline: { color: 'brand', width: 3, offset: 6 },
+    },
     card: { padding: 32, radius: 20, shadow: 'md', border: 'none' },
   },
 })
@@ -526,10 +554,37 @@ a number (px), or a name from `system`/`colors`. Per element, `class` and `style
 - [ ] Per element: components take an optional `tone` (a name from `colors` or a theme) where a one-off colour makes
       sense (Button, Badge, Pill, Link, Nav), so one button can be different with no CSS.
 - [ ] Tailwind: the warp Tailwind entry exposes the named colours as utilities (`bg-brand`, `text-brand/80`).
+- [ ] Component pages (`site/src/components/ComponentPage.tsx`, the per-component entries in `site/src/toolkit`):
+      each component's page gets a "Theming" section next to `PropsTable`, generated from the same parts table:
+      every part, property and state it exposes, its default, and the `warp({ parts })` key and `--warp-<part>-*`
+      property for it. A component with no themeable parts says so. A check fails the site build when a component's
+      parts table and its page disagree.
+- [ ] Sandboxes: `Playground` gets theme knobs beside the prop knobs (colour, padding, radius, font, shadow,
+      motion for that component's parts, plus the named-theme picker), applied live to the preview, and the printed
+      code shows both the JSX and the `warp({...})` config (or the per-element override) that reproduces it.
+      `FrameTools` and `ExampleFrame` get the named-theme switch next to light/dark, expression and width, so every
+      example on the site can be seen in each theme.
+- [ ] Docs: `packages/cli/docs/theme.md` and `design.md` (what `weft docs design` prints) document `colors`,
+      `system`, `parts`, `themes`, `tone` and per-element overrides, with the full parts table; `llms.txt` and
+      `llms-full.txt` are regenerated so agents see it; the learn docs get a short "theme your app" step.
 - [ ] A toolkit page "Theming" on the site with a live editor: pick colours for each part and see buttons, the sweep,
       nav and fields change, with the matching `warp({...})` config to copy. `weft docs design` documents the options.
 - [ ] Tests: config validation, name resolution, fallback (no config means identical CSS output), a named-theme switch
       in a browser test, and contrast failures report the part and state.
+
+**Flow settles when scrolling stops** (owner, 2026-11-08; not theming, but in this sprint). The scroll-in effect
+(warp.flow, `--_flow-in` in `warp-core/styles/warp.css`, script `warp-core/src/flow.ts`) is right and stays exactly as
+it looks while scrolling. But it's scrubbed, so if you stop with a row half in, e.g. the last row of icons on the site's
+icon page (`data-flow="icon"`), it stays tilted, shrunk and faded for as long as you sit there.
+
+- [ ] While scrolling, nothing changes. When scrolling stops (`scrollend`, or ~150 ms with no scroll where
+      `scrollend` isn't supported), every flowed element on screen whose arrival is part way plays the rest of it by
+      time, from where it is to rest, on the flow ease over about `--warp-duration-slow`. No jump back, no restart.
+      Settled elements stay whole until they leave the screen completely, then scrub again next time they arrive.
+      Departures under the header are left as they are. Same rule for every flow kind, not only icons. A Playwright
+      test scrolls the icon page to leave a row half in, stops, and checks that the row reaches full opacity and no
+      scale or rotate within a second, and that scrolling on still looks the same as today. No cost when a page has
+      no flowed elements. Reduced motion is unchanged.
 
 **Exit:** with no theme config, warp's CSS and screenshots are unchanged. With the config above, every listed part shows
 the configured colours at rest, on hover, and during the sweep, in light and dark, and switching to `ocean` at runtime
