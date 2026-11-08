@@ -526,6 +526,19 @@ a number (px), or a name from `system`/`colors`. Per element, `class` and `style
 - [ ] Per element: components take an optional `tone` (a name from `colors` or a theme) where a one-off colour makes
       sense (Button, Badge, Pill, Link, Nav), so one button can be different with no CSS.
 - [ ] Tailwind: the warp Tailwind entry exposes the named colours as utilities (`bg-brand`, `text-brand/80`).
+- [ ] Component pages (`site/src/components/ComponentPage.tsx`, the per-component entries in `site/src/toolkit`):
+      each component's page gets a "Theming" section next to `PropsTable`, generated from the same parts table:
+      every part, property and state it exposes, its default, and the `warp({ parts })` key and `--warp-<part>-*`
+      property for it. A component with no themeable parts says so. A check fails the site build when a component's
+      parts table and its page disagree.
+- [ ] Sandboxes: `Playground` gets theme knobs beside the prop knobs (colour, padding, radius, font, shadow,
+      motion for that component's parts, plus the named-theme picker), applied live to the preview, and the printed
+      code shows both the JSX and the `warp({...})` config (or the per-element override) that reproduces it.
+      `FrameTools` and `ExampleFrame` get the named-theme switch next to light/dark, expression and width, so every
+      example on the site can be seen in each theme.
+- [ ] Docs: `packages/cli/docs/theme.md` and `design.md` (what `weft docs design` prints) document `colors`,
+      `system`, `parts`, `themes`, `tone` and per-element overrides, with the full parts table; `llms.txt` and
+      `llms-full.txt` are regenerated so agents see it; the learn docs get a short "theme your app" step.
 - [ ] A toolkit page "Theming" on the site with a live editor: pick colours for each part and see buttons, the sweep,
       nav and fields change, with the matching `warp({...})` config to copy. `weft docs design` documents the options.
 - [ ] Tests: config validation, name resolution, fallback (no config means identical CSS output), a named-theme switch
