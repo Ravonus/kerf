@@ -7,6 +7,8 @@ export const dialScript: string
 
 /** What `warp()` takes in weft.config: the seed, the default dials, radius, fonts and any token. */
 export interface WarpOptions {
+  /** Type and space scales from the classified shim consumers. */
+  system?: ThemeSystem
   /** Part overrides from the explicit theme table. */
   parts?: ThemeParts
   /**

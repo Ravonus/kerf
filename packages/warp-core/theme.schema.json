@@ -1,5 +1,5 @@
 {
-  "digest": "3a6b4b5193a4894120271f6cc2e1faa90d208d011d7048d88ac66f5fb43ca488",
+  "digest": "8099838e53b79b0c45890d594ff1bc632e58a5a51d4cc823f929d36edb89e3e3",
   "status": "partial",
   "sources": [
     "docs/design/warp/tokens/warp-app.css",
@@ -835,6 +835,791 @@
       "domain": "ring-role",
       "units": "forbidden",
       "binding": "unresolved"
+    },
+    {
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--display-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "binding": "classified"
+    },
+    {
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--display-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--display-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--display-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--display-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--title-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "binding": "classified"
+    },
+    {
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--title-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--title-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--title-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--title-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--heading-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "binding": "classified"
+    },
+    {
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--heading-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--heading-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--heading-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--heading-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/body",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--body-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "binding": "classified"
+    },
+    {
+      "part": "text/body",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--body-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/body",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--body-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--label-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "binding": "classified"
+    },
+    {
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--label-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--label-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--label-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--label-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.transform",
+      "token": "--warp-text--label-font-transform",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "binding": "classified"
+    },
+    {
+      "part": "text/caption",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--caption-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "binding": "classified"
+    },
+    {
+      "part": "text/caption",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--caption-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/caption",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--caption-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--eyebrow-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "binding": "classified"
+    },
+    {
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--eyebrow-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--eyebrow-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--eyebrow-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "binding": "classified"
+    },
+    {
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--eyebrow-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.transform",
+      "token": "--warp-text--eyebrow-font-transform",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "binding": "classified"
+    },
+    {
+      "part": "text/code",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--code-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "binding": "classified"
+    },
+    {
+      "part": "text/code",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--code-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "binding": "classified"
+    }
+  ],
+  "system": [
+    {
+      "path": "text.display.family",
+      "token": "--warp-text-display-font",
+      "domain": "family",
+      "units": "forbidden",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"display\"])",
+      "property": "font-family",
+      "fallbackSpan": [
+        245,
+        274
+      ]
+    },
+    {
+      "path": "text.display.size",
+      "token": "--warp-text-display-size",
+      "domain": "font-size",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"display\"])",
+      "property": "font-size",
+      "fallbackSpan": [
+        287,
+        316
+      ]
+    },
+    {
+      "path": "text.display.lineHeight",
+      "token": "--warp-text-display-leading",
+      "domain": "leading",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"display\"])",
+      "property": "line-height",
+      "fallbackSpan": [
+        331,
+        363
+      ]
+    },
+    {
+      "path": "text.display.weight",
+      "token": "--warp-text-display-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"display\"])",
+      "property": "font-weight",
+      "fallbackSpan": [
+        378,
+        409
+      ]
+    },
+    {
+      "path": "text.display.letterSpacing",
+      "token": "--warp-text-display-tracking",
+      "domain": "tracking",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"display\"])",
+      "property": "letter-spacing",
+      "fallbackSpan": [
+        427,
+        460
+      ]
+    },
+    {
+      "path": "text.title.family",
+      "token": "--warp-text-title-font",
+      "domain": "family",
+      "units": "forbidden",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"title\"])",
+      "property": "font-family",
+      "fallbackSpan": [
+        526,
+        553
+      ]
+    },
+    {
+      "path": "text.title.size",
+      "token": "--warp-text-title-size",
+      "domain": "font-size",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"title\"])",
+      "property": "font-size",
+      "fallbackSpan": [
+        566,
+        593
+      ]
+    },
+    {
+      "path": "text.title.lineHeight",
+      "token": "--warp-text-title-leading",
+      "domain": "leading",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"title\"])",
+      "property": "line-height",
+      "fallbackSpan": [
+        608,
+        638
+      ]
+    },
+    {
+      "path": "text.title.weight",
+      "token": "--warp-text-title-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"title\"])",
+      "property": "font-weight",
+      "fallbackSpan": [
+        653,
+        682
+      ]
+    },
+    {
+      "path": "text.title.letterSpacing",
+      "token": "--warp-text-title-tracking",
+      "domain": "tracking",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"title\"])",
+      "property": "letter-spacing",
+      "fallbackSpan": [
+        700,
+        731
+      ]
+    },
+    {
+      "path": "text.heading.family",
+      "token": "--warp-text-heading-font",
+      "domain": "family",
+      "units": "forbidden",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"heading\"])",
+      "property": "font-family",
+      "fallbackSpan": [
+        799,
+        828
+      ]
+    },
+    {
+      "path": "text.heading.size",
+      "token": "--warp-text-heading-size",
+      "domain": "font-size",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"heading\"])",
+      "property": "font-size",
+      "fallbackSpan": [
+        841,
+        870
+      ]
+    },
+    {
+      "path": "text.heading.lineHeight",
+      "token": "--warp-text-heading-leading",
+      "domain": "leading",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"heading\"])",
+      "property": "line-height",
+      "fallbackSpan": [
+        885,
+        917
+      ]
+    },
+    {
+      "path": "text.heading.weight",
+      "token": "--warp-text-heading-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"heading\"])",
+      "property": "font-weight",
+      "fallbackSpan": [
+        932,
+        963
+      ]
+    },
+    {
+      "path": "text.heading.letterSpacing",
+      "token": "--warp-text-heading-tracking",
+      "domain": "tracking",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"heading\"])",
+      "property": "letter-spacing",
+      "fallbackSpan": [
+        981,
+        1014
+      ]
+    },
+    {
+      "path": "text.body.family",
+      "token": "--warp-text-body-font",
+      "domain": "family",
+      "units": "forbidden",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"body\"])",
+      "property": "font-family",
+      "fallbackSpan": [
+        1079,
+        1105
+      ]
+    },
+    {
+      "path": "text.body.size",
+      "token": "--warp-text-body-size",
+      "domain": "font-size",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"body\"])",
+      "property": "font-size",
+      "fallbackSpan": [
+        1118,
+        1144
+      ]
+    },
+    {
+      "path": "text.body.lineHeight",
+      "token": "--warp-text-body-leading",
+      "domain": "leading",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"body\"])",
+      "property": "line-height",
+      "fallbackSpan": [
+        1159,
+        1188
+      ]
+    },
+    {
+      "path": "text.label.family",
+      "token": "--warp-text-label-font",
+      "domain": "family",
+      "units": "forbidden",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "property": "font-family",
+      "fallbackSpan": [
+        1254,
+        1281
+      ]
+    },
+    {
+      "path": "text.label.size",
+      "token": "--warp-text-label-size",
+      "domain": "font-size",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "property": "font-size",
+      "fallbackSpan": [
+        1294,
+        1321
+      ]
+    },
+    {
+      "path": "text.label.lineHeight",
+      "token": "--warp-text-label-leading",
+      "domain": "leading",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "property": "line-height",
+      "fallbackSpan": [
+        1336,
+        1366
+      ]
+    },
+    {
+      "path": "text.label.weight",
+      "token": "--warp-text-label-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "property": "font-weight",
+      "fallbackSpan": [
+        1381,
+        1410
+      ]
+    },
+    {
+      "path": "text.label.letterSpacing",
+      "token": "--warp-text-label-tracking",
+      "domain": "tracking",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "property": "letter-spacing",
+      "fallbackSpan": [
+        1428,
+        1459
+      ]
+    },
+    {
+      "path": "text.label.transform",
+      "token": "--warp-text-label-case",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "property": "text-transform",
+      "fallbackSpan": [
+        1477,
+        1504
+      ]
+    },
+    {
+      "path": "text.caption.family",
+      "token": "--warp-text-caption-font",
+      "domain": "family",
+      "units": "forbidden",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"caption\"])",
+      "property": "font-family",
+      "fallbackSpan": [
+        1572,
+        1601
+      ]
+    },
+    {
+      "path": "text.caption.size",
+      "token": "--warp-text-caption-size",
+      "domain": "font-size",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"caption\"])",
+      "property": "font-size",
+      "fallbackSpan": [
+        1614,
+        1643
+      ]
+    },
+    {
+      "path": "text.caption.lineHeight",
+      "token": "--warp-text-caption-leading",
+      "domain": "leading",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"caption\"])",
+      "property": "line-height",
+      "fallbackSpan": [
+        1658,
+        1690
+      ]
+    },
+    {
+      "path": "text.eyebrow.family",
+      "token": "--warp-text-eyebrow-font",
+      "domain": "family",
+      "units": "forbidden",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "property": "font-family",
+      "fallbackSpan": [
+        1758,
+        1787
+      ]
+    },
+    {
+      "path": "text.eyebrow.size",
+      "token": "--warp-text-eyebrow-size",
+      "domain": "font-size",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "property": "font-size",
+      "fallbackSpan": [
+        1800,
+        1829
+      ]
+    },
+    {
+      "path": "text.eyebrow.lineHeight",
+      "token": "--warp-text-eyebrow-leading",
+      "domain": "leading",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "property": "line-height",
+      "fallbackSpan": [
+        1844,
+        1876
+      ]
+    },
+    {
+      "path": "text.eyebrow.weight",
+      "token": "--warp-text-eyebrow-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "property": "font-weight",
+      "fallbackSpan": [
+        1891,
+        1922
+      ]
+    },
+    {
+      "path": "text.eyebrow.letterSpacing",
+      "token": "--warp-text-eyebrow-tracking",
+      "domain": "tracking",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "property": "letter-spacing",
+      "fallbackSpan": [
+        1940,
+        1973
+      ]
+    },
+    {
+      "path": "text.eyebrow.transform",
+      "token": "--warp-text-eyebrow-case",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "property": "text-transform",
+      "fallbackSpan": [
+        1991,
+        2020
+      ]
+    },
+    {
+      "path": "text.code.family",
+      "token": "--warp-text-code-font",
+      "domain": "family",
+      "units": "forbidden",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"code\"])",
+      "property": "font-family",
+      "fallbackSpan": [
+        2085,
+        2111
+      ]
+    },
+    {
+      "path": "text.code.size",
+      "token": "--warp-text-code-size",
+      "domain": "font-size",
+      "units": "px",
+      "source": "packages/warp/src/type.css",
+      "selector": ":where([data-scope=\"text\"][data-role=\"code\"])",
+      "property": "font-size",
+      "fallbackSpan": [
+        2124,
+        2150
+      ]
+    },
+    {
+      "path": "space.page",
+      "token": "--warp-space-page",
+      "domain": "space",
+      "units": "px",
+      "source": "packages/warp/src/layout.css",
+      "selector": ":where([data-gap=\"page\"])",
+      "property": "--_gap",
+      "fallbackSpan": [
+        144,
+        166
+      ]
     }
   ],
   "bindings": [
@@ -910,6 +1695,1093 @@
         319
       ],
       "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "margin",
+      "fallback": "0",
+      "fallbackSpan": [
+        176,
+        177
+      ],
+      "inputs": [],
+      "classification": "excluded",
+      "reason": "Structural reset without a token input."
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"display\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-family",
+      "fallback": "var(--warp-text-display-font)",
+      "fallbackSpan": [
+        245,
+        274
+      ],
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--display-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "systemPath": "text.display.family",
+      "inputs": [
+        {
+          "token": "--warp-text-display-font",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"display\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-size",
+      "fallback": "var(--warp-text-display-size)",
+      "fallbackSpan": [
+        287,
+        316
+      ],
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--display-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "systemPath": "text.display.size",
+      "inputs": [
+        {
+          "token": "--warp-text-display-size",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"display\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "line-height",
+      "fallback": "var(--warp-text-display-leading)",
+      "fallbackSpan": [
+        331,
+        363
+      ],
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--display-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "systemPath": "text.display.lineHeight",
+      "inputs": [
+        {
+          "token": "--warp-text-display-leading",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"display\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-weight",
+      "fallback": "var(--warp-text-display-weight)",
+      "fallbackSpan": [
+        378,
+        409
+      ],
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--display-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "systemPath": "text.display.weight",
+      "inputs": [
+        {
+          "token": "--warp-text-display-weight",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"display\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "letter-spacing",
+      "fallback": "var(--warp-text-display-tracking)",
+      "fallbackSpan": [
+        427,
+        460
+      ],
+      "part": "text/display",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--display-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "systemPath": "text.display.letterSpacing",
+      "inputs": [
+        {
+          "token": "--warp-text-display-tracking",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"title\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-family",
+      "fallback": "var(--warp-text-title-font)",
+      "fallbackSpan": [
+        526,
+        553
+      ],
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--title-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "systemPath": "text.title.family",
+      "inputs": [
+        {
+          "token": "--warp-text-title-font",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"title\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-size",
+      "fallback": "var(--warp-text-title-size)",
+      "fallbackSpan": [
+        566,
+        593
+      ],
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--title-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "systemPath": "text.title.size",
+      "inputs": [
+        {
+          "token": "--warp-text-title-size",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"title\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "line-height",
+      "fallback": "var(--warp-text-title-leading)",
+      "fallbackSpan": [
+        608,
+        638
+      ],
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--title-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "systemPath": "text.title.lineHeight",
+      "inputs": [
+        {
+          "token": "--warp-text-title-leading",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"title\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-weight",
+      "fallback": "var(--warp-text-title-weight)",
+      "fallbackSpan": [
+        653,
+        682
+      ],
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--title-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "systemPath": "text.title.weight",
+      "inputs": [
+        {
+          "token": "--warp-text-title-weight",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"title\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "letter-spacing",
+      "fallback": "var(--warp-text-title-tracking)",
+      "fallbackSpan": [
+        700,
+        731
+      ],
+      "part": "text/title",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--title-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "systemPath": "text.title.letterSpacing",
+      "inputs": [
+        {
+          "token": "--warp-text-title-tracking",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"heading\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-family",
+      "fallback": "var(--warp-text-heading-font)",
+      "fallbackSpan": [
+        799,
+        828
+      ],
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--heading-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "systemPath": "text.heading.family",
+      "inputs": [
+        {
+          "token": "--warp-text-heading-font",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"heading\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-size",
+      "fallback": "var(--warp-text-heading-size)",
+      "fallbackSpan": [
+        841,
+        870
+      ],
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--heading-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "systemPath": "text.heading.size",
+      "inputs": [
+        {
+          "token": "--warp-text-heading-size",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"heading\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "line-height",
+      "fallback": "var(--warp-text-heading-leading)",
+      "fallbackSpan": [
+        885,
+        917
+      ],
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--heading-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "systemPath": "text.heading.lineHeight",
+      "inputs": [
+        {
+          "token": "--warp-text-heading-leading",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"heading\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-weight",
+      "fallback": "var(--warp-text-heading-weight)",
+      "fallbackSpan": [
+        932,
+        963
+      ],
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--heading-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "systemPath": "text.heading.weight",
+      "inputs": [
+        {
+          "token": "--warp-text-heading-weight",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"heading\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "letter-spacing",
+      "fallback": "var(--warp-text-heading-tracking)",
+      "fallbackSpan": [
+        981,
+        1014
+      ],
+      "part": "text/heading",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--heading-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "systemPath": "text.heading.letterSpacing",
+      "inputs": [
+        {
+          "token": "--warp-text-heading-tracking",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"body\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-family",
+      "fallback": "var(--warp-text-body-font)",
+      "fallbackSpan": [
+        1079,
+        1105
+      ],
+      "part": "text/body",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--body-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "systemPath": "text.body.family",
+      "inputs": [
+        {
+          "token": "--warp-text-body-font",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"body\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-size",
+      "fallback": "var(--warp-text-body-size)",
+      "fallbackSpan": [
+        1118,
+        1144
+      ],
+      "part": "text/body",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--body-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "systemPath": "text.body.size",
+      "inputs": [
+        {
+          "token": "--warp-text-body-size",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"body\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "line-height",
+      "fallback": "var(--warp-text-body-leading)",
+      "fallbackSpan": [
+        1159,
+        1188
+      ],
+      "part": "text/body",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--body-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "systemPath": "text.body.lineHeight",
+      "inputs": [
+        {
+          "token": "--warp-text-body-leading",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-family",
+      "fallback": "var(--warp-text-label-font)",
+      "fallbackSpan": [
+        1254,
+        1281
+      ],
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--label-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "systemPath": "text.label.family",
+      "inputs": [
+        {
+          "token": "--warp-text-label-font",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-size",
+      "fallback": "var(--warp-text-label-size)",
+      "fallbackSpan": [
+        1294,
+        1321
+      ],
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--label-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "systemPath": "text.label.size",
+      "inputs": [
+        {
+          "token": "--warp-text-label-size",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "line-height",
+      "fallback": "var(--warp-text-label-leading)",
+      "fallbackSpan": [
+        1336,
+        1366
+      ],
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--label-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "systemPath": "text.label.lineHeight",
+      "inputs": [
+        {
+          "token": "--warp-text-label-leading",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-weight",
+      "fallback": "var(--warp-text-label-weight)",
+      "fallbackSpan": [
+        1381,
+        1410
+      ],
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--label-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "systemPath": "text.label.weight",
+      "inputs": [
+        {
+          "token": "--warp-text-label-weight",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "letter-spacing",
+      "fallback": "var(--warp-text-label-tracking)",
+      "fallbackSpan": [
+        1428,
+        1459
+      ],
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--label-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "systemPath": "text.label.letterSpacing",
+      "inputs": [
+        {
+          "token": "--warp-text-label-tracking",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"label\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "text-transform",
+      "fallback": "var(--warp-text-label-case)",
+      "fallbackSpan": [
+        1477,
+        1504
+      ],
+      "part": "text/label",
+      "state": "rest",
+      "path": "font.transform",
+      "token": "--warp-text--label-font-transform",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "systemPath": "text.label.transform",
+      "inputs": [
+        {
+          "token": "--warp-text-label-case",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"caption\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-family",
+      "fallback": "var(--warp-text-caption-font)",
+      "fallbackSpan": [
+        1572,
+        1601
+      ],
+      "part": "text/caption",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--caption-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "systemPath": "text.caption.family",
+      "inputs": [
+        {
+          "token": "--warp-text-caption-font",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"caption\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-size",
+      "fallback": "var(--warp-text-caption-size)",
+      "fallbackSpan": [
+        1614,
+        1643
+      ],
+      "part": "text/caption",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--caption-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "systemPath": "text.caption.size",
+      "inputs": [
+        {
+          "token": "--warp-text-caption-size",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"caption\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "line-height",
+      "fallback": "var(--warp-text-caption-leading)",
+      "fallbackSpan": [
+        1658,
+        1690
+      ],
+      "part": "text/caption",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--caption-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "systemPath": "text.caption.lineHeight",
+      "inputs": [
+        {
+          "token": "--warp-text-caption-leading",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-family",
+      "fallback": "var(--warp-text-eyebrow-font)",
+      "fallbackSpan": [
+        1758,
+        1787
+      ],
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--eyebrow-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "systemPath": "text.eyebrow.family",
+      "inputs": [
+        {
+          "token": "--warp-text-eyebrow-font",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-size",
+      "fallback": "var(--warp-text-eyebrow-size)",
+      "fallbackSpan": [
+        1800,
+        1829
+      ],
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--eyebrow-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "systemPath": "text.eyebrow.size",
+      "inputs": [
+        {
+          "token": "--warp-text-eyebrow-size",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "line-height",
+      "fallback": "var(--warp-text-eyebrow-leading)",
+      "fallbackSpan": [
+        1844,
+        1876
+      ],
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.lineHeight",
+      "token": "--warp-text--eyebrow-font-line-height",
+      "domain": "leading",
+      "units": "unitless",
+      "systemPath": "text.eyebrow.lineHeight",
+      "inputs": [
+        {
+          "token": "--warp-text-eyebrow-leading",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-weight",
+      "fallback": "var(--warp-text-eyebrow-weight)",
+      "fallbackSpan": [
+        1891,
+        1922
+      ],
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.weight",
+      "token": "--warp-text--eyebrow-font-weight",
+      "domain": "weight",
+      "units": "unitless",
+      "systemPath": "text.eyebrow.weight",
+      "inputs": [
+        {
+          "token": "--warp-text-eyebrow-weight",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "letter-spacing",
+      "fallback": "var(--warp-text-eyebrow-tracking)",
+      "fallbackSpan": [
+        1940,
+        1973
+      ],
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.letterSpacing",
+      "token": "--warp-text--eyebrow-font-letter-spacing",
+      "domain": "tracking",
+      "units": "px",
+      "systemPath": "text.eyebrow.letterSpacing",
+      "inputs": [
+        {
+          "token": "--warp-text-eyebrow-tracking",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"eyebrow\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "text-transform",
+      "fallback": "var(--warp-text-eyebrow-case)",
+      "fallbackSpan": [
+        1991,
+        2020
+      ],
+      "part": "text/eyebrow",
+      "state": "rest",
+      "path": "font.transform",
+      "token": "--warp-text--eyebrow-font-transform",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "systemPath": "text.eyebrow.transform",
+      "inputs": [
+        {
+          "token": "--warp-text-eyebrow-case",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"code\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-family",
+      "fallback": "var(--warp-text-code-font)",
+      "fallbackSpan": [
+        2085,
+        2111
+      ],
+      "part": "text/code",
+      "state": "rest",
+      "path": "font.family",
+      "token": "--warp-text--code-font-family",
+      "domain": "family",
+      "units": "forbidden",
+      "systemPath": "text.code.family",
+      "inputs": [
+        {
+          "token": "--warp-text-code-font",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-role=\"code\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "font-size",
+      "fallback": "var(--warp-text-code-size)",
+      "fallbackSpan": [
+        2124,
+        2150
+      ],
+      "part": "text/code",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-text--code-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "systemPath": "text.code.size",
+      "inputs": [
+        {
+          "token": "--warp-text-code-size",
+          "classification": "system input"
+        }
+      ],
+      "classification": "binding"
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-ink=\"subtle\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "color",
+      "fallback": "var(--warp-color-text-subtle)",
+      "fallbackSpan": [
+        2210,
+        2239
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-text-subtle",
+          "classification": "system input"
+        }
+      ],
+      "classification": "system-driven",
+      "reason": "Ink variant uses an existing semantic colour."
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-ink=\"faint\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "color",
+      "fallback": "var(--warp-color-text-faint)",
+      "fallbackSpan": [
+        2298,
+        2326
+      ],
+      "inputs": [
+        {
+          "token": "--warp-color-text-faint",
+          "classification": "system input"
+        }
+      ],
+      "classification": "system-driven",
+      "reason": "Ink variant uses an existing semantic colour."
+    },
+    {
+      "selector": ":where([data-scope=\"text\"][data-tone])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/type.css",
+      "property": "color",
+      "fallback": "var(--_text)",
+      "fallbackSpan": [
+        2378,
+        2390
+      ],
+      "inputs": [
+        {
+          "token": "--_text",
+          "classification": "local channel",
+          "source": "docs/design/warp/tokens/warp-components.css",
+          "reason": "Tone channels supply this value; their transitive ownership remains unresolved."
+        }
+      ],
+      "classification": "external channel",
+      "reason": "Tone variants use the shared local text channel.",
+      "transitiveInputs": [
+        {
+          "token": "--warp-color-accent-text",
+          "classification": "unresolved canonical input",
+          "source": "docs/design/warp/tokens/warp-components.css"
+        },
+        {
+          "token": "--warp-color-neutral-text",
+          "classification": "unresolved canonical input",
+          "source": "docs/design/warp/tokens/warp-components.css"
+        },
+        {
+          "token": "--warp-color-positive-text",
+          "classification": "unresolved canonical input",
+          "source": "docs/design/warp/tokens/warp-components.css"
+        },
+        {
+          "token": "--warp-color-caution-text",
+          "classification": "unresolved canonical input",
+          "source": "docs/design/warp/tokens/warp-components.css"
+        },
+        {
+          "token": "--warp-color-critical-text",
+          "classification": "unresolved canonical input",
+          "source": "docs/design/warp/tokens/warp-components.css"
+        },
+        {
+          "token": "--warp-color-info-text",
+          "classification": "unresolved canonical input",
+          "source": "docs/design/warp/tokens/warp-components.css"
+        }
+      ]
+    },
+    {
+      "selector": ":where([data-gap=\"page\"])",
+      "atRules": [
+        "@layer warp.layout"
+      ],
+      "source": "packages/warp/src/layout.css",
+      "property": "--_gap",
+      "fallback": "var(--warp-space-page)",
+      "fallbackSpan": [
+        144,
+        166
+      ],
+      "systemPath": "space.page",
+      "domain": "space",
+      "units": "px",
+      "inputs": [
+        {
+          "token": "--warp-space-page",
+          "classification": "system input"
+        }
+      ],
+      "classification": "system binding",
+      "reason": "Space intent sets the shared local gap channel, not a component part.",
+      "downstream": {
+        "token": "--_gap",
+        "source": "docs/design/warp/tokens/warp-layout.css",
+        "classification": "unresolved canonical consumers"
+      }
     }
   ]
 }

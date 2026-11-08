@@ -1,10 +1,10 @@
-// Theme schema digest: 3a6b4b5193a4894120271f6cc2e1faa90d208d011d7048d88ac66f5fb43ca488
+// Theme schema digest: 8099838e53b79b0c45890d594ff1bc632e58a5a51d4cc823f929d36edb89e3e3
 import type { PluginInstance } from '@weft-js/core/plugin'
 
 /** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
 export const dialScript: string
 
-/** Explicit colour overrides; CSS bindings remain under classification. */
+/** Explicit overrides; canonical sheet bindings remain under classification. */
 export interface ThemeParts {
   button?: {
     bg?: string
@@ -171,10 +171,78 @@ export interface ThemeParts {
     ring?: string | { color?: string; width?: number | string; offset?: number | string }
 
   }
+  'text/display'?: { font?: {
+      family?: string
+      size?: number | string
+      lineHeight?: number | string
+      weight?: number | string
+      letterSpacing?: number | string
+    } }
+  'text/title'?: { font?: {
+      family?: string
+      size?: number | string
+      lineHeight?: number | string
+      weight?: number | string
+      letterSpacing?: number | string
+    } }
+  'text/heading'?: { font?: {
+      family?: string
+      size?: number | string
+      lineHeight?: number | string
+      weight?: number | string
+      letterSpacing?: number | string
+    } }
+  'text/body'?: { font?: {
+      family?: string
+      size?: number | string
+      lineHeight?: number | string
+    } }
+  'text/label'?: { font?: {
+      family?: string
+      size?: number | string
+      lineHeight?: number | string
+      weight?: number | string
+      letterSpacing?: number | string
+      transform?: string
+    } }
+  'text/caption'?: { font?: {
+      family?: string
+      size?: number | string
+      lineHeight?: number | string
+    } }
+  'text/eyebrow'?: { font?: {
+      family?: string
+      size?: number | string
+      lineHeight?: number | string
+      weight?: number | string
+      letterSpacing?: number | string
+      transform?: string
+    } }
+  'text/code'?: { font?: {
+      family?: string
+      size?: number | string
+    } }
+}
+
+/** The classified system scales; other scales remain under classification. */
+export interface ThemeSystem {
+  space?: Record<string, number | string>
+  text?: Record<string, { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string } | undefined> & {
+    display?: { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string }
+    title?: { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string }
+    heading?: { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string }
+    body?: { family?: string; size?: number | string; lineHeight?: number | string }
+    label?: { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string }
+    caption?: { family?: string; size?: number | string; lineHeight?: number | string }
+    eyebrow?: { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string }
+    code?: { family?: string; size?: number | string }
+  }
 }
 
 /** What `warp()` takes in weft.config: the seed, the default dials, radius, fonts and any token. */
 export interface WarpOptions {
+  /** Type and space scales from the classified shim consumers. */
+  system?: ThemeSystem
   /** Part overrides from the explicit theme table. */
   parts?: ThemeParts
   /**

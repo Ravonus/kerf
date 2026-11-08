@@ -39,7 +39,7 @@ function check() {
 
 test('rejects filesystem changes while reporting the unresolved baseline', () => {
   setup()
-  expect(check()).toContain('classified declarations: 3')
+  expect(check()).toContain('classified declarations: 43')
   expect(check()).toContain('Incomplete:')
   const path = resolve(fixture, link)
   const original = readFileSync(path, 'utf8')
@@ -76,4 +76,32 @@ test('counts nested token reads and local-channel dependencies as declarations',
   expect(consumers('fixture.css', css.replace('var(--warp-ink)', 'red'))).toEqual([
     { property: 'color', reads: ['--_paint', '--warp-fallback'] },
   ])
+})
+
+
+test('rejects changed and new consumers in both reviewed shims', () => {
+  setup()
+  for (const source of ['packages/warp/src/type.css', 'packages/warp/src/layout.css']) {
+    const path = resolve(fixture, source)
+    const original = readFileSync(path, 'utf8')
+    writeFileSync(path, original.replace('var(--warp-', 'var(--warp-changed-'))
+    expect(check()).toContain(`${source}: unreviewed source change`)
+    writeFileSync(path, original.replace('@layer warp.layout {',
+      '@layer warp.layout { :where(.new) { padding: var(--warp-space-page); }'))
+    expect(check()).toContain(`${source}: unreviewed source change`)
+    writeFileSync(path, original)
+  }
+})
+
+test('records source spans and accounts for both shims', () => {
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    bindings: { source: string; fallback: string; fallbackSpan: number[]; classification: string }[]
+  }
+  const rows = schema.bindings.filter((row) => /\/(type|layout)\.css$/.test(row.source))
+  expect(rows).toHaveLength(40)
+  expect(rows.filter((row) => row.classification === 'binding')).toHaveLength(35)
+  for (const row of rows) {
+    const [start, end] = row.fallbackSpan
+    expect(readFileSync(resolve(root, row.source), 'utf8').slice(start, end)).toBe(row.fallback)
+  }
 })
