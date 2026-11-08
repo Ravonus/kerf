@@ -1,3 +1,11 @@
+/** Theme wrappers understood by the legacy lowering pass. */
+export const themeNames = [
+  '--warp-button-bg',
+  '--warp-config-part-button-bg',
+  '--warp-button-text',
+  '--warp-config-part-button-text',
+]
+
 // Lower only explicitly named theme wrappers, preserving every byte of their fallbacks.
 export function lowerTheme(css, names) {
   const allowed = new Set(names)

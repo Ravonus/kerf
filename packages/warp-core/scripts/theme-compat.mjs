@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { lowerTheme, themeNames } from './theme-css.mjs'
 
 const baseline = process.argv[process.argv.indexOf('--baseline') + 1]
 if (!process.argv.includes('--baseline') || !baseline || baseline.startsWith('--')) {
@@ -40,6 +41,22 @@ const disk = readdirSync(styleRoot, { recursive: true, withFileTypes: true })
   .map((entry) => join(entry.parentPath, entry.name))
 for (const path of disk) {
   if (!tracked.includes(path)) errors.push(`Untracked style file: ${path}`)
+}
+for (const path of themed) {
+  const legacyPath = path.replace('/styles/themed/', '/styles/')
+  if (!current.has(legacyPath)) {
+    errors.push(`Missing legacy counterpart: ${legacyPath}`)
+    continue
+  }
+  try {
+    const source = readFileSync(path, 'utf8')
+    const candidate = process.argv.includes('--negative-themed') ? `${source}x` : source
+    const lowered = lowerTheme(candidate, themeNames)
+    if (lowered !== readFileSync(legacyPath, 'utf8'))
+      errors.push(`Themed lowering differs: ${path}`)
+  } catch (error) {
+    errors.push(`Themed lowering failed: ${path}: ${error.message}`)
+  }
 }
 let checked = 0
 const negative = process.argv.includes('--negative-control')

@@ -16,8 +16,10 @@
 // selectors (`[data-scope="table"] [data-scope="field"]` is the table's), an @container or @media block is split the
 // same way, and a rule that names no scope goes to the family's base. @keyframes go to each file that animates with
 // them. Their tokens layer ships whole as `data/tokens.css`, with any @property the spec declares beside it.
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { lowerTheme, themeNames } from './theme-css.mjs'
 import { fileURLToPath } from 'node:url'
 import { body, scopesOf } from './split-css/parse.mjs'
 import { split } from './split-css/sections.mjs'
@@ -170,8 +172,18 @@ function render({ layer, family, files, shared }) {
 
 export function build() {
   const files = new Map([['warp.css', readFileSync(join(spec, 'warp.css'), 'utf8')]])
+  const canonical = readFileSync(join(spec, 'warp-components.css'), 'utf8')
+  const themed = split(spec, 'warp-components.css', 'components')
+  const temporary = mkdtempSync(join(tmpdir(), 'warp-lower-'))
+  let components
+  try {
+    writeFileSync(join(temporary, 'warp-components.css'), lowerTheme(canonical, themeNames))
+    components = split(temporary, 'warp-components.css', 'components')
+  } finally {
+    rmSync(temporary, { recursive: true, force: true })
+  }
   const parts = {
-    components: split(spec, 'warp-components.css', 'components'),
+    components,
     inputs: split(spec, 'warp-inputs.css', 'inputs'),
     rich: split(spec, 'warp-inputs-rich.css', 'rich'),
   }
@@ -210,22 +222,7 @@ export function build() {
       1,
     ) + '\n',
   )
-  // The first themed sheet is opt-in; legacy output remains the canonical source bytes.
-  const button = files.get('components/button.css')
-  const paint = [
-    ['--warp-button-bg', 'var(--warp-tone-fill, var(--_fill))'],
-    ['--warp-button-text', 'var(--warp-tone-ink, var(--_ink))'],
-  ]
-  let themedButton = button
-  for (const [token, fallback] of paint) {
-    if (themedButton.split(fallback).length !== 2)
-      throw new Error(`Expected one Button ${token} site`)
-    themedButton = themedButton.replace(
-      fallback,
-      `var(${token},var(--warp-config-part-${token.slice(7)},${fallback}))`,
-    )
-  }
-  files.set('themed/components/button.css', themedButton)
+  files.set('themed/components/button.css', render(themed).get('components/button.css'))
   return { files, parts, routed }
 }
 

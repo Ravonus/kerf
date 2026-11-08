@@ -172,7 +172,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   display: inline-flex; align-items: center; justify-content: center; gap: var(--warp-space-related);
   block-size: var(--warp-control-md); padding-inline: calc(var(--warp-pad-control) + 2px); margin: 0;
   border: var(--warp-border-hairline) solid var(--warp-tone-edge, var(--_edge)); border-radius: var(--warp-radius-control);
-  background: var(--warp-tone-fill, var(--_fill)); color: var(--warp-tone-ink, var(--_ink));
+  background: var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-fill, var(--_fill)))); color: var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-tone-ink, var(--_ink))));
   font-family: var(--warp-text-button-font); font-size: var(--warp-text-button-size);
   font-weight: var(--warp-text-button-weight); letter-spacing: var(--warp-text-button-tracking);
   text-transform: var(--warp-text-button-case); line-height: 1; white-space: nowrap; text-decoration: none;
