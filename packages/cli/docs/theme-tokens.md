@@ -1,6 +1,6 @@
 # Theme tokens (partial)
 
-Schema digest: 317ef04f4d63a91733a691f772f215ee13bbda1669ce26fe790ac2332e8e4143
+Schema digest: 146674af052f9ef9811757867582267c7ccc28fd26c8ddddb14436286ccb7ba7
 
 Bare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.
 
@@ -133,6 +133,49 @@ Bare-anchor, type and space-intent shim declarations the status-light rule, and 
 | text/code | rest | font.family | --warp-text--code-font-family | family | classified |
 | text/code | rest | font.size | --warp-text--code-font-size | font-size | classified |
 | status-light | rest | font.size | --warp-status-light-font-size | font-size | classified |
+
+## Explicit Button radius selector audit
+
+| Source | Line | Selector | Properties | Review |
+| --- | --- | --- | --- | --- |
+| docs/design/warp/tokens/warp-app.css | 441 | `:where([data-scope="agenda"] [data-part="strip"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-app.css | 446 | `:where([data-scope="agenda"] [data-part="strip"] button b)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-app.css | 452 | `:where([data-scope="agenda"] [data-part="strip"] button i em)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-app.css | 788 | `:where([data-scope="reactions"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-app.css | 1040 | `:where([data-scope="branch"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-app.css | 1062 | `:where([data-scope="suggestions"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-app.css | 1069 | `:where([data-scope="suggestions"][data-variant="chips"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-canvas.css | 142 | `[data-scope="stage"] :where([data-skin="button"])` | border-radius | excluded canvas skin |
+| docs/design/warp/tokens/warp-components.css | 168 | `:where([data-scope="button"])` | border-radius | Button scope candidate |
+| docs/design/warp/tokens/warp-components.css | 251 | `:where([data-scope="button"])::before` | border-radius | Button pseudo-element |
+| docs/design/warp/tokens/warp-components.css | 295 | `:where([data-scope="button"][data-emphasis="frame"])` | border-radius | Button scope candidate |
+| docs/design/warp/tokens/warp-components.css | 355 | `:where([data-scope="button"][data-emphasis="link"])` | border-radius | Button scope candidate |
+| docs/design/warp/tokens/warp-components.css | 414 | `:where([data-scope="button-group"][data-attached] > [data-scope="button"]:not(:first-child))` | border-start-start-radius, border-end-start-radius | attached Button host |
+| docs/design/warp/tokens/warp-components.css | 417 | `:where([data-scope="button-group"][data-attached] > [data-scope="button"]:not(:last-child))` | border-start-end-radius, border-end-end-radius | attached Button host |
+| docs/design/warp/tokens/warp-components.css | 428 | `:where([data-scope="button-group"][data-attached]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="button"][data-sweep]:not(:nth-child(1 of [data-scope="button"]))) > :where([data-part="sweep"]), :where([data-scope="button-group"][data-attached]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="button"][data-sweep]:not(:nth-child(1 of [data-scope="button"]))) > :where([data-part="sweep-base"])` | border-start-start-radius, border-end-start-radius | attached sweep child |
+| docs/design/warp/tokens/warp-components.css | 430 | `:where([data-scope="button-group"][data-attached]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="button"][data-sweep]:not(:nth-last-child(1 of [data-scope="button"]))) > :where([data-part="sweep"]), :where([data-scope="button-group"][data-attached]:not(:is([data-orientation="vertical"], [aria-orientation="vertical"])) > [data-scope="button"][data-sweep]:not(:nth-last-child(1 of [data-scope="button"]))) > :where([data-part="sweep-base"])` | border-start-end-radius, border-end-end-radius | attached sweep child |
+| docs/design/warp/tokens/warp-components.css | 434 | `:where([data-scope="button-group"][data-attached]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="button"][data-sweep]:not(:nth-child(1 of [data-scope="button"]))) > :where([data-part="sweep"]), :where([data-scope="button-group"][data-attached]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="button"][data-sweep]:not(:nth-child(1 of [data-scope="button"]))) > :where([data-part="sweep-base"])` | border-start-start-radius, border-start-end-radius | attached sweep child |
+| docs/design/warp/tokens/warp-components.css | 436 | `:where([data-scope="button-group"][data-attached]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="button"][data-sweep]:not(:nth-last-child(1 of [data-scope="button"]))) > :where([data-part="sweep"]), :where([data-scope="button-group"][data-attached]:is([data-orientation="vertical"], [aria-orientation="vertical"]) > [data-scope="button"][data-sweep]:not(:nth-last-child(1 of [data-scope="button"]))) > :where([data-part="sweep-base"])` | border-end-start-radius, border-end-end-radius | attached sweep child |
+| docs/design/warp/tokens/warp-components.css | 1775 | `:where([data-scope="icon-grid"] > button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-components.css | 1907 | `:where([data-scope="speed-dial"] [data-part="action"] > button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-components.css | 1919 | `:where([data-scope="selection-toolbar"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-components.css | 1944 | `:where([data-scope="swatches"] > button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-data.css | 639 | `:where([data-scope="legend"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-data.css | 678 | `:where([data-part="view-toggle"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-data.css | 841 | `:where([data-scope="kanban"] [data-part="menu"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-data.css | 893 | `:where([data-scope="chip"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-data.css | 926 | `:where([data-scope="table"] tr[data-part="group"] button:focus-visible)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-data.css | 1213 | `:where([data-scope="map"] [data-part="controls"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-flows.css | 463 | `:where([data-scope="qty"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-inputs.css | 248 | `:where([data-scope="field"] [data-part="stepper"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-inputs.css | 283 | `:where([data-scope="quantity"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-inputs.css | 562 | `:where([data-scope="tag"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-marketing.css | 788 | `:where([data-scope="thumbs"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-marketing.css | 1189 | `:where([data-scope="player"] [data-part="controls"] button), :where([data-scope="player"] [data-part="tool"])` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-marketing.css | 1200 | `:where([data-scope="player"] [data-part="controls"] button[aria-pressed="true"])::after` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-marketing.css | 1260 | `:where([data-scope="player-notes"] [data-part="chapters"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-marketing.css | 1319 | `:where([data-scope="transcript"] button)` | border-radius | generic button element candidate |
+| docs/design/warp/tokens/warp-marketing.css | 1345 | `:where([data-scope="review"] [data-part="photos"] button)` | border-radius | generic button element candidate |
 
 ## Reviewed declarations
 

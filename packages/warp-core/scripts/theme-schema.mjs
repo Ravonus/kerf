@@ -11,6 +11,7 @@ import { classifyButton } from './theme-schema-button.mjs'
 import { classifyButtonVariants } from './theme-schema-button-variants.mjs'
 import { buttonRadius, foundationsPath } from './theme-schema-button-radius.mjs'
 import { buttonRadiusJoins } from './theme-schema-button-radius-joins.mjs'
+import { auditButtonRadius } from './theme-schema-radius-audit.mjs'
 
 const repoRoot = new URL('../../../', import.meta.url)
 const root = process.env.WARP_SCHEMA_FIXTURE ? pathToFileURL(`${process.env.WARP_SCHEMA_FIXTURE}/`) : repoRoot
@@ -64,7 +65,7 @@ function entries(parts) {
   return result
 }
 
-function generate(design, template, bindings) {
+function generate(design, template, bindings, radiusAudit) {
   const table = tables(design)
   const allowedUnits = new Set(['forbidden', 'width/offset px', 'px width only', 'px', 'unitless', 'ms for times', 'ms', 'px,deg'])
   for (const row of table.properties) {
@@ -92,7 +93,7 @@ function generate(design, template, bindings) {
     const keys = scale === 'text' ? textScale[1] : spaceScale[1]
     if (!keys.split(';')[0].split(',').includes(key)) throw new Error(`Unknown system key: ${row.path}`)
   }
-  const digest = createHash('sha256').update(JSON.stringify({ records, sources, bindings, system, properties: table.properties })).digest('hex')
+  const digest = createHash('sha256').update(JSON.stringify({ records, sources, bindings, system, radiusAudit, properties: table.properties })).digest('hex')
   const shape = (rows, indent = '    ') => rows.map((row) => `${indent}${row.path}?: ${['underline', 'ring'].includes(row.path) ? 'string | { color?: string; width?: number | string; offset?: number | string }' : row.path === 'border' ? 'string | { color?: string; width?: number | string; style?: string }' : 'string'}`).join('\n')
   const types = [...new Set(records.filter((row) => !row.part.startsWith('text/') && row.part !== 'status-light').map((row) => row.part))].map((part) => {
     const rows = records.filter((row) => row.part === part)
@@ -115,9 +116,9 @@ function generate(design, template, bindings) {
   const typeText = `/** Explicit overrides; canonical sheet bindings remain under classification. */\nexport interface ThemeParts {\n${types}\n${roles}\n${componentTypes}\n}\n\n/** The classified system scales; other scales remain under classification. */\nexport interface ThemeSystem {\n  space?: Record<string, number | string>\n  text?: Record<string, { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string } | undefined> & {\n${systemRoles}\n  }\n}`
   const doc = records.map((row) => `| ${row.part} | ${row.state} | ${row.path} | ${row.token} | ${row.domain} | ${row.binding} |`).join('\n')
   return [
-    `${JSON.stringify({ digest, status: 'partial', sources, records, system, bindings }, null, 2)}\n`,
+    `${JSON.stringify({ digest, status: 'partial', sources, records, system, bindings, radiusAudit }, null, 2)}\n`,
     `// Theme schema digest: ${digest}\n${template.replace('/* THEME_TYPES */', typeText)}`,
-    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n\n## Reviewed declarations\n\n| Path | Variant | States | Selector | At-rules | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | ${b.variant ?? '—'} | ${(b.states ?? [b.state ?? '—']).join(', ')} | \`${b.selector.replaceAll('\n', ' ')}\` | \`${b.atRules.join('; ')}\` | ${b.property} | \`${b.fallback.replaceAll('\n', '<br>')}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
+    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations the status-light rule, and partial Button paint and tone dependencies are reviewed below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n\n## Explicit Button radius selector audit\n\n| Source | Line | Selector | Properties | Review |\n| --- | --- | --- | --- | --- |\n${radiusAudit.map((row) => `| ${row.source} | ${row.line} | \`${row.selector.replaceAll('\n', ' ')}\` | ${row.properties.join(', ')} | ${row.classification} |`).join('\n')}\n\n## Reviewed declarations\n\n| Path | Variant | States | Selector | At-rules | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | ${b.variant ?? '—'} | ${(b.states ?? [b.state ?? '—']).join(', ')} | \`${b.selector.replaceAll('\n', ' ')}\` | \`${b.atRules.join('; ')}\` | ${b.property} | \`${b.fallback.replaceAll('\n', '<br>')}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
   ]
 }
 
@@ -132,15 +133,17 @@ const shimPaths = ['packages/warp/src/type.css', 'packages/warp/src/layout.css']
 const componentText = read(componentsPath)
 const buttonDefaults = classifyButton(componentText)
 const bindings = [...classifyLinks(linksPath, read(linksPath)), ...shimPaths.flatMap((path) => classifyShim(path, read(path))), ...classifyComponents(componentText), ...buttonDefaults, ...classifyButtonVariants(componentText, buttonDefaults), ...buttonRadius(componentText, read(foundationsPath)), ...buttonRadiusJoins(componentText, read(foundationsPath))]
-const generated = generate(design, template, bindings)
+const sourcePaths = tables(design).sources.filter((row) => row[0].startsWith('`')).map((row) => unquote(row[0])[0])
+const radiusAudit = auditButtonRadius(sourcePaths, read)
+const generated = generate(design, template, bindings, radiusAudit)
 if (process.argv.includes('--negative-test')) {
   const invalid = design.replace('| forbidden |', '| bad-unit |')
-  try { generate(invalid, template, bindings); throw new Error('Bad unit passed') } catch (error) {
+  try { generate(invalid, template, bindings, radiusAudit); throw new Error('Bad unit passed') } catch (error) {
     if (error.message === 'Bad unit passed') throw error
     console.log(`negative bad unit: ${error.message}`)
   }
   const changedTable = design.replace('`highlight` | `hover`', '`highlight`, `extra` | `hover`')
-  if (!drift(generate(changedTable, template, bindings), generated).length) throw new Error('Table mutation passed')
+  if (!drift(generate(changedTable, template, bindings, radiusAudit), generated).length) throw new Error('Table mutation passed')
   console.log('negative table: drift detected')
   for (const index of [1, 2]) {
     const actual = [...generated]
@@ -157,6 +160,11 @@ if (!process.argv.includes('--check')) {
   process.exit(0)
 }
 let failed = false
+const priorSchema = JSON.parse(read(outputs[0]))
+if (JSON.stringify(priorSchema.radiusAudit) !== JSON.stringify(radiusAudit)) {
+  console.error('Button radius selector audit drift')
+  failed = true
+}
 const mismatches = drift(generated, outputs.map(read))
 for (const path of mismatches) { console.error(`Drift: ${path}`); failed = true }
 const tracked = execFileSync('git', ['ls-files', '--', 'docs/design/warp/tokens/*.css', 'packages/warp/src/links.css', 'packages/warp/src/type.css', 'packages/warp/src/layout.css'], { cwd: repoRoot, encoding: 'utf8' }).trim().split('\n')
@@ -174,6 +182,7 @@ for (const source of sources) {
 const extra = tracked.filter((path) => !sources.includes(path))
 if (extra.length) { console.error(`Uninventoried sources: ${extra.join(', ')}`); failed = true }
 console.log(`Tracked sources: ${sources.filter((path) => tracked.includes(path)).length}/${sources.length}; reviewed records: ${bindings.length}; unresolved sources: ${sources.filter((path) => path.startsWith('docs/design/')).length}`)
+console.log(`Button radius selector audit: ${sourcePaths.length} sources; ${radiusAudit.length} selector rules`)
 const variants = bindings.filter((row) => row.variant)
 const completedButton = JSON.parse(generated[0]).records.filter((row) =>
   row.part === 'button' && row.binding === 'classified')

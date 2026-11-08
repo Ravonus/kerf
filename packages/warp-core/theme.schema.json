@@ -1,5 +1,5 @@
 {
-  "digest": "317ef04f4d63a91733a691f772f215ee13bbda1669ce26fe790ac2332e8e4143",
+  "digest": "146674af052f9ef9811757867582267c7ccc28fd26c8ddddb14436286ccb7ba7",
   "status": "partial",
   "sources": [
     "docs/design/warp/tokens/warp-app.css",
@@ -8862,6 +8862,394 @@
       ],
       "classification": "radius geometry dependency",
       "reason": "Preserve the original selector, corner masking and ownership in the local cascade."
+    }
+  ],
+  "radiusAudit": [
+    {
+      "source": "docs/design/warp/tokens/warp-app.css",
+      "line": 441,
+      "selector": ":where([data-scope=\"agenda\"] [data-part=\"strip\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-app.css",
+      "line": 446,
+      "selector": ":where([data-scope=\"agenda\"] [data-part=\"strip\"] button b)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-app.css",
+      "line": 452,
+      "selector": ":where([data-scope=\"agenda\"] [data-part=\"strip\"] button i em)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-app.css",
+      "line": 788,
+      "selector": ":where([data-scope=\"reactions\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-app.css",
+      "line": 1040,
+      "selector": ":where([data-scope=\"branch\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-app.css",
+      "line": 1062,
+      "selector": ":where([data-scope=\"suggestions\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-app.css",
+      "line": 1069,
+      "selector": ":where([data-scope=\"suggestions\"][data-variant=\"chips\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-canvas.css",
+      "line": 142,
+      "selector": "[data-scope=\"stage\"] :where([data-skin=\"button\"])",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "excluded canvas skin",
+      "reason": "data-skin identifies a stage skin, not a Button scope."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 168,
+      "selector": ":where([data-scope=\"button\"])",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "Button scope candidate",
+      "reason": "Requires positive styled-owner and cascade review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 251,
+      "selector": ":where([data-scope=\"button\"])::before",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "Button pseudo-element",
+      "reason": "The styled owner is the Button fill pseudo-element."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 295,
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "Button scope candidate",
+      "reason": "Requires positive styled-owner and cascade review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 355,
+      "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "Button scope candidate",
+      "reason": "Requires positive styled-owner and cascade review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 414,
+      "selector": ":where([data-scope=\"button-group\"][data-attached] > [data-scope=\"button\"]:not(:first-child))",
+      "properties": [
+        "border-start-start-radius",
+        "border-end-start-radius"
+      ],
+      "classification": "attached Button host",
+      "reason": "The styled owner is the attached Button, not the group ancestor."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 417,
+      "selector": ":where([data-scope=\"button-group\"][data-attached] > [data-scope=\"button\"]:not(:last-child))",
+      "properties": [
+        "border-start-end-radius",
+        "border-end-end-radius"
+      ],
+      "classification": "attached Button host",
+      "reason": "The styled owner is the attached Button, not the group ancestor."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 428,
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "properties": [
+        "border-start-start-radius",
+        "border-end-start-radius"
+      ],
+      "classification": "attached sweep child",
+      "reason": "The styled owner is the sweep child, with Button and group ancestors."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 430,
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:not(:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"])) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "properties": [
+        "border-start-end-radius",
+        "border-end-end-radius"
+      ],
+      "classification": "attached sweep child",
+      "reason": "The styled owner is the sweep child, with Button and group ancestors."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 434,
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "properties": [
+        "border-start-start-radius",
+        "border-start-end-radius"
+      ],
+      "classification": "attached sweep child",
+      "reason": "The styled owner is the sweep child, with Button and group ancestors."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 436,
+      "selector": ":where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep\"]),\n:where([data-scope=\"button-group\"][data-attached]:is([data-orientation=\"vertical\"], [aria-orientation=\"vertical\"]) > [data-scope=\"button\"][data-sweep]:not(:nth-last-child(1 of [data-scope=\"button\"]))) > :where([data-part=\"sweep-base\"])",
+      "properties": [
+        "border-end-start-radius",
+        "border-end-end-radius"
+      ],
+      "classification": "attached sweep child",
+      "reason": "The styled owner is the sweep child, with Button and group ancestors."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 1775,
+      "selector": ":where([data-scope=\"icon-grid\"] > button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 1907,
+      "selector": ":where([data-scope=\"speed-dial\"] [data-part=\"action\"] > button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 1919,
+      "selector": ":where([data-scope=\"selection-toolbar\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "line": 1944,
+      "selector": ":where([data-scope=\"swatches\"] > button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-data.css",
+      "line": 639,
+      "selector": ":where([data-scope=\"legend\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-data.css",
+      "line": 678,
+      "selector": ":where([data-part=\"view-toggle\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-data.css",
+      "line": 841,
+      "selector": ":where([data-scope=\"kanban\"] [data-part=\"menu\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-data.css",
+      "line": 893,
+      "selector": ":where([data-scope=\"chip\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-data.css",
+      "line": 926,
+      "selector": ":where([data-scope=\"table\"] tr[data-part=\"group\"] button:focus-visible)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-data.css",
+      "line": 1213,
+      "selector": ":where([data-scope=\"map\"] [data-part=\"controls\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-flows.css",
+      "line": 463,
+      "selector": ":where([data-scope=\"qty\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-inputs.css",
+      "line": 248,
+      "selector": ":where([data-scope=\"field\"] [data-part=\"stepper\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-inputs.css",
+      "line": 283,
+      "selector": ":where([data-scope=\"quantity\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-inputs.css",
+      "line": 562,
+      "selector": ":where([data-scope=\"tag\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-marketing.css",
+      "line": 788,
+      "selector": ":where([data-scope=\"thumbs\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-marketing.css",
+      "line": 1189,
+      "selector": ":where([data-scope=\"player\"] [data-part=\"controls\"] button),\n:where([data-scope=\"player\"] [data-part=\"tool\"])",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-marketing.css",
+      "line": 1200,
+      "selector": ":where([data-scope=\"player\"] [data-part=\"controls\"] button[aria-pressed=\"true\"])::after",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-marketing.css",
+      "line": 1260,
+      "selector": ":where([data-scope=\"player-notes\"] [data-part=\"chapters\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-marketing.css",
+      "line": 1319,
+      "selector": ":where([data-scope=\"transcript\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
+    },
+    {
+      "source": "docs/design/warp/tokens/warp-marketing.css",
+      "line": 1345,
+      "selector": ":where([data-scope=\"review\"] [data-part=\"photos\"] button)",
+      "properties": [
+        "border-radius"
+      ],
+      "classification": "generic button element candidate",
+      "reason": "An HTML button may be a Button host; scope and cascade require review."
     }
   ]
 }

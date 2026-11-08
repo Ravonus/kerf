@@ -323,3 +323,43 @@ test('retains frame, link and inherited Button radius fallbacks', () => {
   expect(rows.some((row) => row.selector.includes('button"])::before') &&
     row.property === 'border-radius' && row.fallback === 'inherit')).toBe(true)
 })
+
+test('audits the 13 tracked sources and distinguishes Button radius owners', () => {
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    sources: string[]
+    radiusAudit: { source: string; selector: string; classification: string }[]
+  }
+  expect(schema.sources).toHaveLength(13)
+  expect(schema.radiusAudit).toHaveLength(38)
+  for (const [classification, count] of [
+    ['Button scope candidate', 3], ['Button pseudo-element', 1], ['attached Button host', 2],
+    ['attached sweep child', 4], ['excluded canvas skin', 1],
+    ['generic button element candidate', 27],
+  ] as const) expect(schema.radiusAudit.filter((row) => row.classification === classification)).toHaveLength(count)
+  expect(schema.radiusAudit.find((row) => row.classification === 'excluded canvas skin')?.selector)
+    .toContain('[data-skin="button"]')
+  for (const row of schema.radiusAudit) {
+    expect(readFileSync(resolve(root, row.source), 'utf8')).toContain(row.selector)
+  }
+})
+
+test('detects a new Button radius rule in another canonical sheet', () => {
+  setup()
+  const source = 'docs/design/warp/tokens/warp-data.css'
+  const path = resolve(fixture, source)
+  const original = readFileSync(path, 'utf8')
+  writeFileSync(path, `${original}\n:where([data-scope="button"]) { border-radius: 3px; }\n`)
+  const output = check()
+  expect(output).toContain('Button radius selector audit drift')
+  expect(output).toContain('Drift: packages/warp-core/theme.schema.json')
+  writeFileSync(path, `${original}\nbutton { border-radius: 4px; }\n`)
+  expect(check()).toContain('Button radius selector audit drift')
+})
+
+test('does not infer Button ownership from a negative selector', async () => {
+  const { auditButtonRadius } = await import('../scripts/theme-schema-radius-audit.mjs')
+  const css = ':where([data-scope="card"]:not([data-scope="button"])) { border-radius: 2px; }'
+  const rows = auditButtonRadius(['fixture.css'], () => css)
+  expect(rows).toHaveLength(1)
+  expect(rows[0].classification).toBe('excluded negative or query-only scope')
+})
