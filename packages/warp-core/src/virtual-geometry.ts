@@ -39,7 +39,10 @@ export function virtualGeometry(v: VirtualState) {
     const at = v.sizes.offset(i) + head()
     if (at !== row.at) {
       row.at = at
-      row.el.style.transform = v.horizontal ? `translateX(${at}px)` : `translateY(${at}px)`
+      // A vertical row moves by its inset, not a transform: a view() timeline in it (warp's flow) reads its laid-out
+      // place, and every translated row would sit at the top of the window, past its exit.
+      if (v.horizontal) row.el.style.transform = `translateX(${at}px)`
+      else row.el.style.insetBlockStart = `${at}px`
     }
     if (!v.o.sized) return
     const size = v.sizes.get(i)! - gap()

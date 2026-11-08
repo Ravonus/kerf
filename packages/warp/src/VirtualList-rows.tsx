@@ -44,8 +44,7 @@ export function VirtualRow<T>(p: {
   })
   const pos = () => p.row.i
   const place = untrack(
-    () =>
-      `position:absolute;inset-inline:0;inset-block-start:0;transform:translateY(${pos() * (props.estimate ?? 48)}px)`,
+    () => `position:absolute;inset-inline:0;inset-block-start:${pos() * (props.estimate ?? 48)}px`,
   ) // the first paint; the virtualizer owns it after
   const attrs = () => ({
     ref: (n: HTMLElement) => (node = n),

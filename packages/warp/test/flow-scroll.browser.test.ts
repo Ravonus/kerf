@@ -573,3 +573,30 @@ test('the first scroll arms it: what was on screen stays put, what is below rise
   expect(await opacityOf(page, 'later')).toBe(1)
   await close()
 })
+
+// A virtual window's cells flow on the window's own timeline. view() reads where a row is laid out, not where a transform
+// draws it, so a row moved by translateY sits at the top of the window for its timeline: scrolled a row down, every cell
+// is past its exit and stays faded. warp's virtualizer places rows by inset (virtual-geometry.ts); this is why.
+test('a cell in a virtual row placed by its inset is shown once scrolled to; one placed by a transform is not', async () => {
+  const context = await browser.newContext({ viewport: { width: 800, height: 700 } })
+  const page = await context.newPage()
+  const row = (id: string, place: string) =>
+    `<div data-part="row" style="position:absolute;inset-inline:0;${place};block-size:80px"><button data-flow="icon" id="${id}" style="block-size:60px">x</button></div>`
+  const win = (id: string, place: string) =>
+    `<div data-scope="virtual" style="overflow:auto;block-size:300px;contain:strict"><div data-part="spacer" style="position:relative;block-size:4000px">${row(id, place)}</div></div>`
+  await page.setContent(
+    `<!doctype html><html data-expression="balanced" data-flow-armed><style>body{margin:0}</style><style>${css}</style><body>` +
+      win('inset', 'inset-block-start:2000px') +
+      win('moved', 'inset-block-start:0;transform:translateY(2000px)'),
+  )
+  await page.evaluate(() => {
+    for (const w of document.querySelectorAll<HTMLElement>('[data-scope="virtual"]'))
+      w.scrollTop = 1900
+  })
+  await page.waitForTimeout(100)
+  const opacity = (id: string) =>
+    page.evaluate((i) => Number(getComputedStyle(document.getElementById(i)!).opacity), id)
+  expect(await opacity('inset')).toBeGreaterThan(0.95)
+  expect(await opacity('moved')).toBeLessThan(0.5)
+  await context.close()
+})

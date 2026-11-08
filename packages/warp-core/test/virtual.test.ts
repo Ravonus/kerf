@@ -127,7 +127,7 @@ test('exact sizes from `size` put a row where the sum says, before anything rend
   expect(l.spacer.style.blockSize).toBe('30000px')
   const row = document.createElement('div')
   l.v.attach(row, 3)
-  expect(row.style.transform).toBe('translateY(100px)')
+  expect(row.style.insetBlockStart).toBe('100px')
 })
 
 test('a row above the viewport changes size: what is on screen stays put', () => {
@@ -161,7 +161,7 @@ test('rendered sizes stay with their key: prepending keeps the anchor on screen'
   l.v.update({ keys: ['a', 'b', ...keys] })
   expect(l.v.anchor()).toEqual({ index: anchor.index + 2, within: anchor.within })
   expect(l.top()).toBe(1100)
-  expect(row.style.transform).toBe('translateY(200px)')
+  expect(row.style.insetBlockStart).toBe('200px')
 })
 
 test('appending writes nothing above, and sticks when the user is at the end', () => {
