@@ -39,7 +39,7 @@ function check() {
 
 test('rejects filesystem changes while reporting the unresolved baseline', () => {
   setup()
-  expect(check()).toContain('reviewed records: 185')
+  expect(check()).toContain('reviewed records: 192')
   expect(check()).toContain('Incomplete:')
   const path = resolve(fixture, link)
   const original = readFileSync(path, 'utf8')
@@ -142,9 +142,9 @@ test('records the status-light rule and exact source spans', () => {
 test('records partial Button paint and shared tone fallback spans', () => {
   const source = 'docs/design/warp/tokens/warp-components.css'
   const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
-    bindings: { part?: string; classification: string; fallback: string; fallbackSpan: number[] }[]
+    bindings: { part?: string; source: string; classification: string; fallback: string; fallbackSpan: number[] }[]
   }
-  const rows = schema.bindings.filter((row) => row.part === 'button')
+  const rows = schema.bindings.filter((row) => row.part === 'button' && row.source === source)
   expect(rows.filter((row) => row.classification === 'partial binding')).toHaveLength(3)
   expect(rows.filter((row) => row.classification === 'shared channel dependency')).toHaveLength(36)
   expect(rows.filter((row) => row.classification === 'partial channel dependency')).toHaveLength(5)
@@ -222,4 +222,44 @@ test('classifies the reviewed Button sites without claiming complete properties'
         selector: ':where([data-scope="button"])',
       })]),
     })]))
+})
+
+
+test('checks Button radius source sites and upstream dependencies', () => {
+  setup()
+  const source = 'docs/design/warp/tokens/warp.css'
+  const path = resolve(fixture, source)
+  const original = readFileSync(path, 'utf8')
+  expect(original).toContain('--warp-radius-control: calc(2px + 8px')
+  writeFileSync(path, original.replace('--warp-radius-control: calc(2px + 8px',
+    '--warp-radius-control: calc(2px + 9px'))
+  expect(check()).toContain(`${source}: unreviewed radius dependency change`)
+  writeFileSync(path, original.replace('--warp-radius-mark:', '--warp-radius-removed:'))
+  expect(check()).toContain(`${source}: unreviewed radius dependency change`)
+  writeFileSync(path, original)
+  const component = 'docs/design/warp/tokens/warp-components.css'
+  const componentPath = resolve(fixture, component)
+  const componentText = readFileSync(componentPath, 'utf8')
+  const host = componentText.indexOf(':where([data-scope="button"]) {')
+  const site = componentText.indexOf('border-radius: var(--warp-radius-control);', host)
+  expect(site).toBeGreaterThan(host)
+  writeFileSync(componentPath, componentText.slice(0, site) +
+    componentText.slice(site + 'border-radius: var(--warp-radius-control);'.length))
+  expect(check()).toContain(`${component}: unreviewed source change`)
+})
+
+test('preserves Button radius dependency fallback spans', () => {
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    bindings: { part?: string; path?: string; source: string; fallback: string;
+      fallbackSpan: number[]; classification: string }[]
+  }
+  const rows = schema.bindings.filter((row) => row.path === 'radius' &&
+    (row.classification === 'radius dependency' || row.source.endsWith('warp-components.css') &&
+      row.classification === 'partial property binding' && row.part === 'button' &&
+      row.fallback === 'var(--warp-radius-control)'))
+  expect(rows).toHaveLength(7)
+  for (const row of rows) {
+    const [start, end] = row.fallbackSpan
+    expect(readFileSync(resolve(root, row.source), 'utf8').slice(start, end)).toBe(row.fallback)
+  }
 })

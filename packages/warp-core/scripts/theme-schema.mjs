@@ -9,6 +9,7 @@ import { classifyShim } from './theme-schema-shims.mjs'
 import { classifyComponents, componentsPath } from './theme-schema-components.mjs'
 import { classifyButton } from './theme-schema-button.mjs'
 import { classifyButtonVariants } from './theme-schema-button-variants.mjs'
+import { buttonRadius, foundationsPath } from './theme-schema-button-radius.mjs'
 
 const repoRoot = new URL('../../../', import.meta.url)
 const root = process.env.WARP_SCHEMA_FIXTURE ? pathToFileURL(`${process.env.WARP_SCHEMA_FIXTURE}/`) : repoRoot
@@ -129,7 +130,7 @@ const linksPath = 'packages/warp/src/links.css'
 const shimPaths = ['packages/warp/src/type.css', 'packages/warp/src/layout.css']
 const componentText = read(componentsPath)
 const buttonDefaults = classifyButton(componentText)
-const bindings = [...classifyLinks(linksPath, read(linksPath)), ...shimPaths.flatMap((path) => classifyShim(path, read(path))), ...classifyComponents(componentText), ...buttonDefaults, ...classifyButtonVariants(componentText, buttonDefaults)]
+const bindings = [...classifyLinks(linksPath, read(linksPath)), ...shimPaths.flatMap((path) => classifyShim(path, read(path))), ...classifyComponents(componentText), ...buttonDefaults, ...classifyButtonVariants(componentText, buttonDefaults), ...buttonRadius(componentText, read(foundationsPath))]
 const generated = generate(design, template, bindings)
 if (process.argv.includes('--negative-test')) {
   const invalid = design.replace('| forbidden |', '| bad-unit |')

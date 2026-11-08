@@ -1,5 +1,5 @@
 {
-  "digest": "96422e55fa5eada3452c0be23d60d81c09fb41b542403a8ca6c1bd65930c222d",
+  "digest": "8f6e5243df94c7dad2fd733d8113fc4ea6a409108266e82d02f8f7eec19ddb98",
   "status": "partial",
   "sources": [
     "docs/design/warp/tokens/warp-app.css",
@@ -7921,6 +7921,152 @@
           "status": "partial: other definitions and cascade conditions remain unresolved"
         }
       ]
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "selector": ":root, [data-expression=\"balanced\"]",
+      "atRules": [
+        "@layer warp.tokens"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--warp-x",
+      "fallback": "0.5",
+      "fallbackSpan": [
+        11212,
+        11215
+      ],
+      "inputs": [],
+      "classification": "radius dependency",
+      "reason": "Expression sets the radius input."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "selector": "[data-expression=\"quiet\"]",
+      "atRules": [
+        "@layer warp.tokens"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--warp-x",
+      "fallback": "0",
+      "fallbackSpan": [
+        16021,
+        16022
+      ],
+      "inputs": [],
+      "classification": "radius dependency",
+      "reason": "Expression sets the radius input."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "selector": "[data-expression=\"vivid\"]",
+      "atRules": [
+        "@layer warp.tokens"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--warp-x",
+      "fallback": "1",
+      "fallbackSpan": [
+        20412,
+        20413
+      ],
+      "inputs": [],
+      "classification": "radius dependency",
+      "reason": "Expression sets the radius input."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "selector": ":root, [data-expression], [data-density], [data-form], [data-pointer],\n[data-motion], [data-flair], [data-theme], [data-warp]",
+      "atRules": [
+        "@layer warp.tokens"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--warp-radius-control",
+      "fallback": "calc(2px + 8px * (1 - var(--warp-x)) * (1 - var(--warp-x)))",
+      "fallbackSpan": [
+        41585,
+        41644
+      ],
+      "inputs": [
+        {
+          "token": "--warp-x",
+          "classification": "system input"
+        }
+      ],
+      "classification": "radius dependency",
+      "reason": "The system radius derives from the local expression."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "selector": ":root, [data-expression], [data-density], [data-form], [data-pointer],\n[data-motion], [data-flair], [data-theme], [data-warp]",
+      "atRules": [
+        "@layer warp.tokens"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--warp-radius-mark",
+      "fallback": "calc(2px + 2px * (1 - var(--warp-x)) * (1 - var(--warp-x)))",
+      "fallbackSpan": [
+        41799,
+        41858
+      ],
+      "inputs": [
+        {
+          "token": "--warp-x",
+          "classification": "system input"
+        }
+      ],
+      "classification": "radius dependency",
+      "reason": "The system radius derives from the local expression."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "selector": ":where([data-sweep])",
+      "atRules": [
+        "@layer warp.signature"
+      ],
+      "source": "docs/design/warp/tokens/warp.css",
+      "property": "--warp-sweep-radius",
+      "fallback": "var(--warp-radius-control)",
+      "fallbackSpan": [
+        79953,
+        79979
+      ],
+      "inputs": [
+        {
+          "token": "--warp-radius-control",
+          "classification": "system input"
+        }
+      ],
+      "classification": "radius dependency",
+      "reason": "The sweep clip defaults to the control radius; attached-group adjustments remain unresolved."
+    },
+    {
+      "part": "button",
+      "path": "radius",
+      "selector": ":where([data-scope=\"button\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "border-radius",
+      "fallback": "var(--warp-radius-control)",
+      "fallbackSpan": [
+        10677,
+        10703
+      ],
+      "inputs": [
+        {
+          "token": "--warp-radius-control",
+          "classification": "system input"
+        }
+      ],
+      "classification": "partial property binding",
+      "reason": "The host uses the system control radius; group and sweep sites remain under review."
     }
   ]
 }
