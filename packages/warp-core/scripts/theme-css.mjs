@@ -1,6 +1,13 @@
 /** Theme wrappers understood by the legacy lowering pass. */
 export const themeNames = [
-  '--_warp-button-state-bg',
+  '--_warp-button-bg-hover',
+  '--_warp-button-bg-focus',
+  '--_warp-button-bg-press',
+  '--_warp-button-bg-disabled',
+  '--_warp-button-text-hover',
+  '--_warp-button-text-focus',
+  '--_warp-button-text-press',
+  '--_warp-button-text-disabled',
   '--warp-button-bg',
   '--warp-config-part-button-bg',
   '--warp-button-text',
