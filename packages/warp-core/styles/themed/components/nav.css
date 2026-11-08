@@ -8,7 +8,7 @@
 :where([data-scope="nav"] a) { color: var(--warp-nav-text,var(--warp-config-part-nav-text,var(--warp-color-text-subtle))); text-decoration: none; transition: color var(--warp-duration-fast) var(--warp-ease-out); }
 :where([data-scope="nav"] a:hover),
 :where([data-scope="nav"] a:focus-visible),
-:where([data-scope="nav"] a[aria-current]) { color: var(--warp-color-text); }
+:where([data-scope="nav"] a[aria-current]) { color: var(--warp-nav-text-interaction,var(--warp-config-part-nav-text-interaction,var(--warp-color-text))); }
 :where([data-scope="nav"] > [data-part="indicator"]) {
   position: absolute; inset-block-start: 0; inset-inline-start: 0; pointer-events: none;
   background: var(--warp-nav-underline,var(--warp-config-part-nav-underline,var(--warp-color-accent-solid))); transform-origin: 0 0; transform: scaleX(0); opacity: 0;

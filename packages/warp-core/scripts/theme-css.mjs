@@ -46,6 +46,18 @@ export const themeNames = [
   '--warp-config-part-sweep-label',
   '--warp-sweep-text',
   '--warp-config-part-sweep-text',
+  '--warp-field-label',
+  '--warp-config-part-field-label',
+  '--warp-field-label-floated',
+  '--warp-config-part-field-label-floated',
+  '--warp-field-label-interaction',
+  '--warp-config-part-field-label-interaction',
+  '--warp-field-label-invalid',
+  '--warp-config-part-field-label-invalid',
+  '--warp-link-underline',
+  '--warp-config-part-link-underline',
+  '--warp-nav-text-interaction',
+  '--warp-config-part-nav-text-interaction',
 ]
 
 // Lower only explicitly named theme wrappers, preserving every byte of their fallbacks.
