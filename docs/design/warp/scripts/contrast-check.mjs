@@ -18,6 +18,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import {
+  checkThemePairs,
   parseBlocks,
   splitTop,
   resolveEnv,
@@ -336,6 +337,16 @@ for (const theme of THEMES)
     }
   }
 
+const themePairArgs = args.filter(
+  (arg) => arg === '--theme-pairs' || arg.startsWith('--theme-pairs='),
+)
+if (themePairArgs.length > 1 || themePairArgs[0] === '--theme-pairs')
+  throw new Error('D010 use exactly one --theme-pairs=<file>')
+const themePairsArg = themePairArgs[0]
+if (themePairsArg) {
+  const file = themePairsArg.slice('--theme-pairs='.length)
+  results.push(...checkThemePairs(JSON.parse(readFileSync(file, 'utf8')), parseColor))
+}
 const fails = results.filter((r) => !r.pass)
 const fmt = (n) => n.toFixed(2)
 
@@ -378,7 +389,11 @@ if (flag('--json')) {
           `   ${r.pass ? 'ok  ' : 'FAIL'} ${fmt(r.ratio).padStart(6)}  ${r.fg} ${r.fgHex} on ${r.bg} ${r.bgHex}`,
         )
   }
-  for (const r of fails)
+  for (const r of fails.filter((entry) => entry.group === 'Theme part'))
+    console.log(
+      `D010 ${r.path}: ${r.palette}/${r.theme}/${r.expression} ${r.part} ${r.state} ${r.emphasis}/${r.site} ${r.fg} on ${r.bg} is ${fmt(r.ratio)}:1, needs ${r.min}:1`,
+    )
+  for (const r of fails.filter((entry) => entry.group !== 'Theme part'))
     console.log(
       `FAIL ${r.combo} ${r.fg} on ${r.bg}: ${fmt(r.ratio)} < ${r.min}  (try ${r.suggest})${r.where ? '  [' + r.where + ']' : ''}`,
     )
