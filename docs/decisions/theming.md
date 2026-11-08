@@ -60,8 +60,10 @@ valid only in `dials.palette`, `tone`, and palette attributes; it is not a colou
 defaults. Keep P115 and the exact offending path, for example:
 
 ```text
-parts.button.hover.bg: unknown colour `brnad`; use a colour name or #rrggbb
-themes.ocean.parts.nav.pressed: unknown state; use hover, focus, active, disabled
+parts.button.hover.bg: unknown colour `brnad`;
+  use a colour name or #rrggbb
+themes.ocean.parts.nav.pressed: unknown state;
+  use hover, focus, active, disabled
 colors.brand: colour cycle brand -> orange -> brand
 dials.palette: unknown theme `oceen`; use default, ocean, sunset
 ```
@@ -1097,8 +1099,10 @@ source config path (including an alias's defining path), foreground/background t
 ratio and threshold. For example:
 
 ```text
-D010 themes.ocean.parts.button.hover.text: ocean/dark/balanced button hover solid
---warp-button-text-hover on --warp-button-bg-hover is 2.10:1, needs 4.5:1
+D010 themes.ocean.parts.button.hover.text:
+  ocean/dark/balanced button hover solid
+--warp-button-text-hover on --warp-button-bg-hover
+  is 2.10:1, needs 4.5:1
 ```
 
 Do not silently alter an explicit part or raw-token colour to fix D010. The roadmap config is
@@ -1211,13 +1215,19 @@ edit another owner's schema/types/docs output to make its own tests pass.
 | Runtime | `packages/warp-core/src/dial.ts`, new `test/palette.test.ts`, new `packages/warp/test/palette.browser.test.tsx`. Own sync switches, URL/storage atomicity, nested system/theme overrides, element isolation and first-paint browser fixtures. Config owner alone edits `dialScript` text in plugin.mjs. |
 | Components | `packages/warp/src/Button.tsx`, `Badge.tsx`, `Type.tsx`, `Nav.tsx`, new `Pill.tsx`, new `theme-tone.ts`, `src/index.ts`; new `packages/warp/test/theme-tone.test.tsx`. Own only the five requested tone surfaces and Pill/PillLink over existing pill CSS. Do not widen unrelated semantic Tone users or alter existing anatomy/interactions. |
 | Tailwind/token writer | `packages/warp/tailwind.css`, new `tailwind.template.css`, new `src/plugin/tailwind.mjs`; `packages/core/src/plugin.d.ts`, `packages/cli/src/plugins.mjs`, `packages/cli/test/plugins.test.ts`; new `packages/warp/test/tailwind-theme.test.ts`, new `test/e2e/theme-entry.mjs` and new `test/e2e/theme-entry/` fixtures. Own extra generated CSS entries, strict entry-name tests, actual CSS alias/Tailwind processing and scale utilities. The existing Vite alias resolver needs no source change. Config owner calls the helper after this lands. |
-| Site/reference prose | `packages/cli/docs/design.md`, `site/content/learn/theming.md`; new `site/src/toolkit/Theming.tsx`, new `site/src/toolkit/docs/theming.ts`; `site/src/toolkit/docs/index.ts`, `site/src/routes/toolkit/[slug].tsx`, `site/src/styles/toolkit.css` only for the new page. Own config explanations, the link to generated theme-tokens reference, an editor for all value families/states, copyable config and D010 errors. Preserve other pages. |
+| T09: CLI/learn/agent docs | `packages/cli/docs/theme.md`, `packages/cli/docs/design.md`, `site/content/learn/theming.md`, generated `site/public/llms.txt` and `site/public/llms-full.txt`. Document system/colors/parts/themes/tone/local overrides, link/include the generated full table, add the short theme-your-app learn step, and regenerate agent docs through the existing generator. The full agent text must include the new API/table content, not stale descriptions. No edits to the schema owner's generated `theme-tokens.md`. |
+| T10: Theming editor | `site/src/toolkit/Theming.tsx`, `site/src/toolkit/docs/theming.ts`, `site/src/toolkit/docs/index.ts`, `site/src/routes/toolkit/[slug].tsx`, `site/src/styles/toolkit.css`. Own the live all-family part/state editor, checked preview retention, light/dark and copyable config. Preserve other pages. |
+| T11: Component-page coverage | `site/src/components/ComponentPage.tsx`, new `site/src/components/ThemingTable.tsx`, per-component entries under `site/src/toolkit/**` excluding the five T10 paths, new `site/scripts/theme-pages.mjs`, new `site/test/theme-pages.test.mjs`. Generate a Theming section next to PropsTable from the shared schema: part/property/state/default/config key/custom property. Components with no themeable parts say so. Check every component page against its schema records; missing, extra or stale rows fail. Serialize toolkit edits after T10 as its ticket requires. |
+| T12: Preview controls | `site/src/components/Playground.tsx`, `site/src/components/FrameTools.tsx`, `site/src/components/ExampleFrame.tsx`, new `site/src/components/ThemeControls.tsx`, new `site/test/theme-controls.test.tsx`. Add theme knobs beside prop knobs, the named-theme picker and live preview; printed output reproduces JSX plus warp config or local overrides. Add the palette switch beside existing frame controls. Preserve their placement, values and interactions. |
 
 Schema lands first; config/build follow its generated contract; Tailwind's writer/type extension
 lands before config emits secondary entries. Runtime/components follow metadata and style rules.
 Site work consumes the checked resolver and generated docs; it retains the last valid preview
-when an edit fails. No implementation ticket may treat a blank table row as permission to invent
-a token or expose measured geometry. Finish the schema classification first.
+when an edit fails. T11 consumes that same schema; T12 uses the resolver and palette dial rather
+than a second theme model. The manager owns the sole `site/scripts/content.mjs` integration hook
+that calls the T11 coverage check during site generation, keeping it outside parallel ownership.
+No implementation ticket may treat a blank table row as permission to invent a token or expose
+measured geometry. Finish the schema classification first.
 
 ## Verification contract
 
@@ -1234,19 +1244,27 @@ space. No screenshot baselines are updated for the no-config branch.
 
 ```sh
 node packages/warp-core/scripts/theme-schema.mjs --check
+node site/scripts/theme-pages.mjs --check
+node site/scripts/sample-width.mjs
 node packages/warp-core/scripts/split-css.mjs --check
 node packages/warp-core/scripts/theme-compat.mjs --baseline 90fbeee3
-pnpm --filter @weft-js/warp-core exec vitest run test/theme-schema.test.ts
-pnpm --filter @weft-js/warp-core exec vitest run test/theme-css.test.ts
+pnpm --filter @weft-js/warp-core exec vitest run \
+  test/theme-schema.test.ts
+pnpm --filter @weft-js/warp-core exec vitest run \
+  test/theme-css.test.ts
 pnpm --filter @weft-js/warp exec vitest run test/theme-types.test.ts
 pnpm --filter @weft-js/warp exec tsc \
   -p test/theme-types.tsconfig.json --noEmit
-pnpm --filter @weft-js/warp-core exec vitest run test/theme-contrast.test.ts
+pnpm --filter @weft-js/warp-core exec vitest run \
+  test/theme-contrast.test.ts
 pnpm --filter @weft-js/warp-core exec vitest run test/palette.test.ts
-pnpm --filter @weft-js/warp exec vitest run test/plugin.test.ts test/themes.test.ts
+pnpm --filter @weft-js/warp exec vitest run \
+  test/plugin.test.ts test/themes.test.ts
 pnpm --filter @weft-js/warp exec vitest run test/theme-tone.test.tsx
-pnpm --filter @weft-js/warp exec vitest run test/palette.browser.test.tsx
-pnpm --filter @weft-js/warp exec vitest run test/tailwind-theme.test.ts
+pnpm --filter @weft-js/warp exec vitest run \
+  test/palette.browser.test.tsx
+pnpm --filter @weft-js/warp exec vitest run \
+  test/tailwind-theme.test.ts
 node packages/warp/test/e2e/theme-entry.mjs --baseline 90fbeee3
 node packages/warp-core/scripts/contrast-check.mjs \
   packages/warp-core/styles/warp.css --json
@@ -1301,6 +1319,13 @@ local inline properties on one element against a sibling and a nested same-kind 
 Verify configured query thresholds on both sides, and reject inline variable breakpoint claims.
 Test a colours-only opt-in against unchanged computed non-colour properties. Existing no-config
 screenshots and interaction tests remain untouched and must pass.
+
+T11 proves its page coverage check fails on a missing component, a missing/extra property-state
+row and a changed default, then checks the full component-page count against the catalog. T12
+checks that each knob updates the preview and printed config together, and that a frame palette
+switch composes with light/dark, expression and width without resetting them. T09 verifies both
+regenerated llms outputs contain the new options and table. These are follow-up checks, not T01
+implementation evidence.
 
 The manager also runs the affected package tests, type/lint checks and integration gate. It
 commits the all-stack comparison history and regenerated chart once the integrated source is
