@@ -115,12 +115,14 @@ function component(source, fn) {
     fn.params.length
   )
     return
-  const body =
+  let body =
     fn.body.type === 'BlockStatement' &&
     fn.body.body.length === 1 &&
     fn.body.body[0].type === 'ReturnStatement'
       ? fn.body.body[0].argument
       : fn.body
+  // `return (` and a multi-line tree, as a formatter writes it.
+  while (body?.type === 'ParenthesizedExpression') body = body.expression
   if (!body || !inert(body)) return
   const jsx = source.slice(body.start, body.end)
   return `export default function Skeleton() { return (${jsx}); }`

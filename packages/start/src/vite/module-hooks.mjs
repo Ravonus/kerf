@@ -258,7 +258,8 @@ export const api = (s) => ({
 function took(ctx, { s, root, file, found, depend, overrides }) {
   if (found?.file) depend(found.file, file)
   if (found?.code) overrides.set(file, found.code)
-  else if (!found?.file) unusableSkeleton(ctx, s, root, file)
+  // An imported function that isn't plain markup is as unusable as a local one.
+  else unusableSkeleton(ctx, s, root, file)
 }
 
 /** A route that exports `skeleton` in a form navigation can't use gets none at all: say so once, with what works. */
