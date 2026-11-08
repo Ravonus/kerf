@@ -475,8 +475,44 @@ warp({
 })
 ```
 
+**Not just colour** (owner, 2026-11-08). warp keeps its locked default look, but it has to be as open as any UI
+system. Everything a component reads from a token that's reasonable to change is themeable, at every level: the
+system scale, one part, one state, one named theme, one element.
+
+- Colour: fill, text, border, ring, shadow colour, the sweep stroke, base and active text, and indicators.
+- Space: padding (block and inline), gap, margin between parts, control heights, field height, and the density
+  steps themselves.
+- Shape: radius per part (not only `sharp | soft | round`), border width, sweep stroke width, focus ring width and
+  offset.
+- Type: font family, size, weight, line height, letter spacing and text transform per part (button label, nav item,
+  field label, floated label, badge, eyebrow, headings).
+- Depth: shadows and elevation per part and state.
+- Motion: sweep duration and easing, hover, press and enter durations, stagger, and turning a part's animation off.
+- Layout: max widths, container padding, and breakpoints where warp has them.
+
+The same names work in `system` (the scale every part reads: `space`, `radius`, `font`, `text`, `shadow`,
+`motion`, like Tailwind's `theme`) and in `parts`, for example:
+
+```ts
+warp({
+  system: { radius: { control: 6, card: 14 }, space: { 2: '6px' }, font: { body: 'Inter' } },
+  parts: {
+    button: { padding: '10px 18px', radius: 'pill', font: { weight: 600, transform: 'uppercase' },
+              hover: { bg: 'ink', shadow: 'lg' }, press: { scale: 0.98 } },
+    sweep: { stroke: 'brand', width: 2, duration: 400 },
+    nav: { gap: 24, underline: { color: 'brand', width: 3, offset: 6 } },
+    card: { padding: 32, radius: 20, shadow: 'md', border: 'none' },
+  },
+})
+```
+
+The design ticket lists every part and every property it exposes, as a table in `docs/decisions/theming.md`; that
+table generates the types in `plugin.d.mts` and the docs page, so they can't drift. A value can be a raw CSS value,
+a number (px), or a name from `system`/`colors`. Per element, `class` and `style` keep working and a documented
+`--warp-<part>-*` custom property on any element overrides that one element.
+
 - [ ] A design ticket first (sol-xhigh): write `docs/decisions/theming.md`. Pick the attribute for a named theme
-      (`data-theme` is already light/dark, so not that one), the token name for every part and state, and how parts
+      (`data-theme` is already light/dark, so not that one), the token name for every part, property and state (colour, space, shape, type, depth, motion), and how parts
       fall back: a part token defaults to today's value, so an app that sets nothing paints exactly as now.
 - [ ] Part tokens in `warp-core/styles`: every place a component reads accent, primary, highlight or sweep colour for
       button, sweep (stroke, base, label and text while active), nav and tabs indicator, link, pill, field label and focus
