@@ -1,8 +1,8 @@
 # Theme tokens (partial)
 
-Schema digest: 8099838e53b79b0c45890d594ff1bc632e58a5a51d4cc823f929d36edb89e3e3
+Schema digest: 0933fdefc65ba902b96e66cae002ba3727a4e57f96e5c4988e297524b2978d6f
 
-Bare-anchor, type and space-intent shim declarations are classified below. Canonical sheets remain unresolved.
+Bare-anchor, type and space-intent shim declarations and the status-light rule are classified below. Canonical sheets remain unresolved.
 
 | Part | State | Path | Candidate token | Domain | Binding |
 | --- | --- | --- | --- | --- | --- |
@@ -132,8 +132,9 @@ Bare-anchor, type and space-intent shim declarations are classified below. Canon
 | text/eyebrow | rest | font.transform | --warp-text--eyebrow-font-transform | transform-case | classified |
 | text/code | rest | font.family | --warp-text--code-font-family | family | classified |
 | text/code | rest | font.size | --warp-text--code-font-size | font-size | classified |
+| status-light | rest | font.size | --warp-status-light-font-size | font-size | classified |
 
-## Classified shim declarations
+## Reviewed declarations
 
 | Path | Selector | Property | Fallback | Units | Classification | Reason | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -180,3 +181,7 @@ Bare-anchor, type and space-intent shim declarations are classified below. Canon
 | system-driven | `:where([data-scope="text"][data-ink="faint"])` | color | `var(--warp-color-text-faint)` | — | system-driven | Ink variant uses an existing semantic colour. | packages/warp/src/type.css:2298-2326 |
 | external channel | `:where([data-scope="text"][data-tone])` | color | `var(--_text)` | — | external channel | Tone variants use the shared local text channel. | packages/warp/src/type.css:2378-2390 |
 | space.page | `:where([data-gap="page"])` | --_gap | `var(--warp-space-page)` | px | system binding | Space intent sets the shared local gap channel, not a component part. | packages/warp/src/layout.css:144-166 |
+| excluded | `:where([data-scope="status-light"])` | display | `inline-flex` | — | excluded | Structural layout, not a token consumer. | docs/design/warp/tokens/warp-components.css:155402-155413 |
+| excluded | `:where([data-scope="status-light"])` | align-items | `center` | — | excluded | Structural alignment, not a token consumer. | docs/design/warp/tokens/warp-components.css:155428-155434 |
+| excluded | `:where([data-scope="status-light"])` | gap | `8px` | — | excluded | Literal value outside the recorded token consumer inventory. | docs/design/warp/tokens/warp-components.css:155441-155444 |
+| font.size | `:where([data-scope="status-light"])` | font-size | `var(--warp-text-body-size)` | px | binding | — | docs/design/warp/tokens/warp-components.css:155457-155483 |

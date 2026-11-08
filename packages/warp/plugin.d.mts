@@ -1,4 +1,4 @@
-// Theme schema digest: 8099838e53b79b0c45890d594ff1bc632e58a5a51d4cc823f929d36edb89e3e3
+// Theme schema digest: 0933fdefc65ba902b96e66cae002ba3727a4e57f96e5c4988e297524b2978d6f
 import type { PluginInstance } from '@weft-js/core/plugin'
 
 /** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
@@ -222,6 +222,7 @@ export interface ThemeParts {
       family?: string
       size?: number | string
     } }
+  'status-light'?: { font?: { size?: number | string } }
 }
 
 /** The classified system scales; other scales remain under classification. */

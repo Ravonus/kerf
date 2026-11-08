@@ -1,5 +1,5 @@
 {
-  "digest": "8099838e53b79b0c45890d594ff1bc632e58a5a51d4cc823f929d36edb89e3e3",
+  "digest": "0933fdefc65ba902b96e66cae002ba3727a4e57f96e5c4988e297524b2978d6f",
   "status": "partial",
   "sources": [
     "docs/design/warp/tokens/warp-app.css",
@@ -1147,6 +1147,15 @@
       "state": "rest",
       "path": "font.size",
       "token": "--warp-text--code-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "binding": "classified"
+    },
+    {
+      "part": "status-light",
+      "state": "rest",
+      "path": "font.size",
+      "token": "--warp-status-light-font-size",
       "domain": "font-size",
       "units": "px",
       "binding": "classified"
@@ -2782,6 +2791,88 @@
         "source": "docs/design/warp/tokens/warp-layout.css",
         "classification": "unresolved canonical consumers"
       }
+    },
+    {
+      "part": "status-light",
+      "state": "rest",
+      "selector": ":where([data-scope=\"status-light\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "display",
+      "fallback": "inline-flex",
+      "fallbackSpan": [
+        155402,
+        155413
+      ],
+      "inputs": [],
+      "classification": "excluded",
+      "reason": "Structural layout, not a token consumer."
+    },
+    {
+      "part": "status-light",
+      "state": "rest",
+      "selector": ":where([data-scope=\"status-light\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "align-items",
+      "fallback": "center",
+      "fallbackSpan": [
+        155428,
+        155434
+      ],
+      "inputs": [],
+      "classification": "excluded",
+      "reason": "Structural alignment, not a token consumer."
+    },
+    {
+      "part": "status-light",
+      "state": "rest",
+      "selector": ":where([data-scope=\"status-light\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "gap",
+      "fallback": "8px",
+      "fallbackSpan": [
+        155441,
+        155444
+      ],
+      "inputs": [],
+      "classification": "excluded",
+      "reason": "Literal value outside the recorded token consumer inventory."
+    },
+    {
+      "part": "status-light",
+      "state": "rest",
+      "selector": ":where([data-scope=\"status-light\"])",
+      "atRules": [
+        "@layer warp.components"
+      ],
+      "source": "docs/design/warp/tokens/warp-components.css",
+      "property": "font-size",
+      "fallback": "var(--warp-text-body-size)",
+      "fallbackSpan": [
+        155457,
+        155483
+      ],
+      "path": "font.size",
+      "token": "--warp-status-light-font-size",
+      "domain": "font-size",
+      "units": "px",
+      "classification": "binding",
+      "inputs": [
+        {
+          "token": "--warp-text-body-size",
+          "classification": "system input",
+          "source": "docs/design/warp/tokens/warp.css",
+          "reason": "The system text role and its transitive inputs remain unresolved."
+        }
+      ]
     }
   ]
 }

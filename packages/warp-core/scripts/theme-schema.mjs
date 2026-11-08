@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url'
 import { classifyLinks } from './theme-schema-links.mjs'
 import { consumers } from './theme-schema-consumers.mjs'
 import { classifyShim } from './theme-schema-shims.mjs'
+import { classifyComponents, componentsPath } from './theme-schema-components.mjs'
 
 const repoRoot = new URL('../../../', import.meta.url)
 const root = process.env.WARP_SCHEMA_FIXTURE ? pathToFileURL(`${process.env.WARP_SCHEMA_FIXTURE}/`) : repoRoot
@@ -32,7 +33,7 @@ function tables(design) {
     return lines.slice(start + 2, lines.findIndex((line, i) => i > start + 1 && !line.startsWith('|')))
         .map(cells)
   }
-  return { parts: rows('Part'), properties: rows('config path'), sources: rows('source'), system: rows('system path') }
+  return { parts: rows('Part'), properties: rows('config path'), sources: rows('source'), system: rows('system path'), inventory: rows('scope or standalone part') }
 }
 
 function entries(parts) {
@@ -66,7 +67,13 @@ function generate(design, template, bindings) {
     if (!allowedUnits.has(row[3])) throw new Error(`Unknown unit: ${row[3]}`)
   }
   const shimBindings = bindings.filter((row) => row.part?.startsWith('text/'))
-  const records = [...entries(table.parts), ...shimBindings.map(({ part, state, path, token, domain, units }) => ({ part, state, path, token, domain, units, binding: 'classified' }))]
+  const statusRow = table.inventory.find((row) => row[0] === '`status-light`')
+  if (!statusRow || statusRow[1] !== 'font-size' || !table.properties.some((row) => row[0] === 'font.size')) {
+    throw new Error('status-light: design inventory mismatch')
+  }
+  const componentBindings = bindings.filter((row) => row.source === componentsPath && row.classification === 'binding')
+  const classified = [...shimBindings, ...componentBindings]
+  const records = [...entries(table.parts), ...classified.map(({ part, state, path, token, domain, units }) => ({ part, state, path, token, domain, units, binding: 'classified' }))]
   const sources = table.sources.filter((row) => row[0].startsWith('`')).map((row) => unquote(row[0])[0])
   if (sources.length !== 13 || new Set(sources).size !== 13) throw new Error('Expected 13 inventory sources')
   const textScale = table.system.find((row) => row[0] === 'text')
@@ -83,7 +90,7 @@ function generate(design, template, bindings) {
   }
   const digest = createHash('sha256').update(JSON.stringify({ records, sources, bindings, system, properties: table.properties })).digest('hex')
   const shape = (rows, indent = '    ') => rows.map((row) => `${indent}${row.path}?: ${['underline', 'ring'].includes(row.path) ? 'string | { color?: string; width?: number | string; offset?: number | string }' : row.path === 'border' ? 'string | { color?: string; width?: number | string; style?: string }' : 'string'}`).join('\n')
-  const types = [...new Set(records.filter((row) => !row.part.startsWith('text/')).map((row) => row.part))].map((part) => {
+  const types = [...new Set(records.filter((row) => !row.part.startsWith('text/') && row.part !== 'status-light').map((row) => row.part))].map((part) => {
     const rows = records.filter((row) => row.part === part)
     const stateTypes = [...new Set(rows.filter((row) => row.state !== 'rest').map((row) => row.state))]
       .map((state) => `    ${state}?: {\n${shape(rows.filter((row) => row.state === state), '      ')}\n    }`).join('\n')
@@ -94,18 +101,19 @@ function generate(design, template, bindings) {
       `      ${row.path.slice(5)}?: ${['family', 'transform'].includes(row.path.slice(5)) ? 'string' : 'number | string'}`).join('\n')
     return `  '${part}'?: { font?: {\n${fields}\n    } }`
   }).join('\n')
+  const componentTypes = componentBindings.length ? `  'status-light'?: { font?: { size?: number | string } }` : ''
   if (!template.includes('/* THEME_TYPES */')) throw new Error('Missing type template marker')
   const systemRoles = [...new Set(shimBindings.map((row) => row.part))].map((part) => {
     const fields = shimBindings.filter((row) => row.part === part).map((row) =>
       `${row.path.slice(5)}?: ${['family', 'transform'].includes(row.path.slice(5)) ? 'string' : 'number | string'}`).join('; ')
     return `    ${part.slice(5)}?: { ${fields} }`
   }).join('\n')
-  const typeText = `/** Explicit overrides; canonical sheet bindings remain under classification. */\nexport interface ThemeParts {\n${types}\n${roles}\n}\n\n/** The classified system scales; other scales remain under classification. */\nexport interface ThemeSystem {\n  space?: Record<string, number | string>\n  text?: Record<string, { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string } | undefined> & {\n${systemRoles}\n  }\n}`
+  const typeText = `/** Explicit overrides; canonical sheet bindings remain under classification. */\nexport interface ThemeParts {\n${types}\n${roles}\n${componentTypes}\n}\n\n/** The classified system scales; other scales remain under classification. */\nexport interface ThemeSystem {\n  space?: Record<string, number | string>\n  text?: Record<string, { family?: string; size?: number | string; lineHeight?: number | string; weight?: number | string; letterSpacing?: number | string; transform?: string } | undefined> & {\n${systemRoles}\n  }\n}`
   const doc = records.map((row) => `| ${row.part} | ${row.state} | ${row.path} | ${row.token} | ${row.domain} | ${row.binding} |`).join('\n')
   return [
     `${JSON.stringify({ digest, status: 'partial', sources, records, system, bindings }, null, 2)}\n`,
     `// Theme schema digest: ${digest}\n${template.replace('/* THEME_TYPES */', typeText)}`,
-    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations are classified below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n\n## Classified shim declarations\n\n| Path | Selector | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | \`${b.selector}\` | ${b.property} | \`${b.fallback}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
+    `# Theme tokens (partial)\n\nSchema digest: ${digest}\n\nBare-anchor, type and space-intent shim declarations and the status-light rule are classified below. Canonical sheets remain unresolved.\n\n| Part | State | Path | Candidate token | Domain | Binding |\n| --- | --- | --- | --- | --- | --- |\n${doc}\n\n## Reviewed declarations\n\n| Path | Selector | Property | Fallback | Units | Classification | Reason | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n${bindings.map((b) => `| ${b.path ?? b.systemPath ?? b.classification} | \`${b.selector}\` | ${b.property} | \`${b.fallback}\` | ${b.units ?? '—'} | ${b.classification} | ${b.reason ?? '—'} | ${b.source}:${b.fallbackSpan.join('-')} |`).join('\n')}\n`,
   ]
 }
 
@@ -117,7 +125,7 @@ const design = read(designPath)
 const template = read(templatePath)
 const linksPath = 'packages/warp/src/links.css'
 const shimPaths = ['packages/warp/src/type.css', 'packages/warp/src/layout.css']
-const bindings = [...classifyLinks(linksPath, read(linksPath)), ...shimPaths.flatMap((path) => classifyShim(path, read(path)))]
+const bindings = [...classifyLinks(linksPath, read(linksPath)), ...shimPaths.flatMap((path) => classifyShim(path, read(path))), ...classifyComponents(read(componentsPath))]
 const generated = generate(design, template, bindings)
 if (process.argv.includes('--negative-test')) {
   const invalid = design.replace('| forbidden |', '| bad-unit |')

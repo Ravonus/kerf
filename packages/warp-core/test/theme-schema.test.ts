@@ -39,7 +39,7 @@ function check() {
 
 test('rejects filesystem changes while reporting the unresolved baseline', () => {
   setup()
-  expect(check()).toContain('classified declarations: 43')
+  expect(check()).toContain('classified declarations: 47')
   expect(check()).toContain('Incomplete:')
   const path = resolve(fixture, link)
   const original = readFileSync(path, 'utf8')
@@ -103,5 +103,37 @@ test('records source spans and accounts for both shims', () => {
   for (const row of rows) {
     const [start, end] = row.fallbackSpan
     expect(readFileSync(resolve(root, row.source), 'utf8').slice(start, end)).toBe(row.fallback)
+  }
+})
+
+
+test('rejects changed and added status-light consumers', () => {
+  setup()
+  const source = 'docs/design/warp/tokens/warp-components.css'
+  const path = resolve(fixture, source)
+  const original = readFileSync(path, 'utf8')
+  const statusRule = ':where([data-scope="status-light"]) { display: inline-flex; ' +
+    'align-items: center; gap: 8px; font-size: var(--warp-text-body-size); }'
+  expect(original).toContain(statusRule)
+  const changed = statusRule.replace('--warp-text-body-size', '--warp-text-caption-size')
+  writeFileSync(path, original.replace(statusRule, changed))
+  expect(check()).toContain(`${source}: unreviewed source change`)
+  writeFileSync(path, original.replace(':where([data-scope="status-light"]) {',
+    ':where([data-scope="status-light"]) { padding: var(--warp-space-page);'))
+  expect(check()).toContain(`${source}: unreviewed source change`)
+})
+
+test('records the status-light rule and exact source spans', () => {
+  const source = 'docs/design/warp/tokens/warp-components.css'
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    bindings: { part?: string; property: string; fallback: string; fallbackSpan: number[]; classification: string }[]
+  }
+  const rows = schema.bindings.filter((row) => row.part === 'status-light')
+  expect(rows.map((row) => row.property)).toEqual(['display', 'align-items', 'gap', 'font-size'])
+  expect(rows.filter((row) => row.classification === 'binding')).toHaveLength(1)
+  const text = readFileSync(resolve(root, source), 'utf8')
+  for (const row of rows) {
+    const [start, end] = row.fallbackSpan
+    expect(text.slice(start, end)).toBe(row.fallback)
   }
 })
