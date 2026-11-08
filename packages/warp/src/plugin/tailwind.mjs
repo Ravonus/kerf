@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 
-const template = readFileSync(new URL('../../tailwind.css', import.meta.url), 'utf8')
+const template = readFileSync(new URL('../../tailwind.template.css', import.meta.url), 'utf8')
 const aliases = {
   radius: { card: 'surface', pill: 'round' },
   font: { body: 'sans' },

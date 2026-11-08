@@ -2,15 +2,12 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
 import { createServer } from 'vite'
+import { compile } from 'tailwindcss'
 import { tokens } from '../../../core/vite/config-plugins.mjs'
 import { sync } from '../../../cli/src/plugins.mjs'
 import { tailwindTheme } from '../../src/plugin/tailwind.mjs'
 
-if (!process.env.TAILWIND_MODULE)
-  throw new Error('Set TAILWIND_MODULE to the Tailwind v4 module path')
-const { compile } = await import(pathToFileURL(process.env.TAILWIND_MODULE).href)
 const root = mkdtempSync(join(tmpdir(), 'weft-tailwind-'))
 let server
 try {
