@@ -544,6 +544,20 @@ a number (px), or a name from `system`/`colors`. Per element, `class` and `style
 - [ ] Tests: config validation, name resolution, fallback (no config means identical CSS output), a named-theme switch
       in a browser test, and contrast failures report the part and state.
 
+**Flow settles when scrolling stops** (owner, 2026-11-08; not theming, but in this sprint). The scroll-in effect
+(warp.flow, `--_flow-in` in `warp-core/styles/warp.css`, script `warp-core/src/flow.ts`) is right and stays exactly as
+it looks while scrolling. But it's scrubbed, so if you stop with a row half in, e.g. the last row of icons on the site's
+icon page (`data-flow="icon"`), it stays tilted, shrunk and faded for as long as you sit there.
+
+- [ ] While scrolling, nothing changes. When scrolling stops (`scrollend`, or ~150 ms with no scroll where
+      `scrollend` isn't supported), every flowed element on screen whose arrival is part way plays the rest of it by
+      time, from where it is to rest, on the flow ease over about `--warp-duration-slow`. No jump back, no restart.
+      Settled elements stay whole until they leave the screen completely, then scrub again next time they arrive.
+      Departures under the header are left as they are. Same rule for every flow kind, not only icons. A Playwright
+      test scrolls the icon page to leave a row half in, stops, and checks that the row reaches full opacity and no
+      scale or rotate within a second, and that scrolling on still looks the same as today. No cost when a page has
+      no flowed elements. Reduced motion is unchanged.
+
 **Exit:** with no theme config, warp's CSS and screenshots are unchanged. With the config above, every listed part shows
 the configured colours at rest, on hover, and during the sweep, in light and dark, and switching to `ocean` at runtime
 changes all of them. Warp stays within its size budget (`size.mjs`), and `measure.mjs` shows no speed regression.
