@@ -202,3 +202,24 @@ test('rejects changed and added Button variant declarations', () => {
   writeFileSync(path, original.replace(rule, `${rule} padding: var(--warp-space-page);`))
   expect(check()).toContain(`${source}: unreviewed source change`)
 })
+
+test('classifies the reviewed Button sites without claiming complete properties', async () => {
+  const { buttonProperty } = await import('../scripts/theme-schema-button-properties.mjs')
+  expect(() => buttonProperty('unrecognized-property', ':where([data-scope="button"])'))
+    .toThrow('button: unclassified property unrecognized-property')
+  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+    bindings: { variant?: string; classification: string; path?: string; property: string;
+      localDependencies?: { token: string; definitions: { selector: string }[] }[] }[]
+  }
+  const rows = schema.bindings.filter((row) => row.variant)
+  expect(rows.filter((row) => row.classification === 'variant declaration unresolved')).toHaveLength(0)
+  expect(rows.filter((row) => row.classification === 'partial property binding')).toHaveLength(19)
+  expect(rows.filter((row) => row.classification === 'external sweep dependency')).toHaveLength(2)
+  expect(rows.filter((row) => row.classification === 'mechanical exclusion')).toHaveLength(30)
+  expect(rows.find((row) => row.property === 'background-color')?.localDependencies)
+    .toEqual(expect.arrayContaining([expect.objectContaining({
+      token: '--_layer', definitions: expect.arrayContaining([expect.objectContaining({
+        selector: ':where([data-scope="button"])',
+      })]),
+    })]))
+})

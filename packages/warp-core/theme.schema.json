@@ -1,5 +1,5 @@
 {
-  "digest": "b096248c36d090c6adfdbbd9381db37393e239a02a67aa5a184a07269437de94",
+  "digest": "96422e55fa5eada3452c0be23d60d81c09fb41b542403a8ca6c1bd65930c222d",
   "status": "partial",
   "sources": [
     "docs/design/warp/tokens/warp-app.css",
@@ -3896,7 +3896,71 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_solid",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3073,
+                3103
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3381,
+                3412
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3696,
+                3728
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4016,
+                4047
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4331,
+                4363
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4648,
+                4676
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14525,
+                14556
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -3926,7 +3990,71 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_solid",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3073,
+                3103
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3381,
+                3412
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3696,
+                3728
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4016,
+                4047
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4331,
+                4363
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4648,
+                4676
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14525,
+                14556
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -3957,7 +4085,71 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_solid",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3073,
+                3103
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3381,
+                3412
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3696,
+                3728
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4016,
+                4047
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4331,
+                4363
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4648,
+                4676
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14525,
+                14556
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -3988,7 +4180,71 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_solid",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3073,
+                3103
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3381,
+                3412
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3696,
+                3728
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4016,
+                4047
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4331,
+                4363
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4648,
+                4676
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14525,
+                14556
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -4014,7 +4270,71 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_solid",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3073,
+                3103
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3381,
+                3412
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3696,
+                3728
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4016,
+                4047
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4331,
+                4363
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4648,
+                4676
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14525,
+                14556
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -4044,7 +4364,71 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_solid",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3073,
+                3103
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3381,
+                3412
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3696,
+                3728
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4016,
+                4047
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4331,
+                4363
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4648,
+                4676
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14525,
+                14556
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -4070,7 +4454,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4096,7 +4481,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4122,7 +4508,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4148,7 +4535,63 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_soft",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3216,
+                3245
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3527,
+                3557
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3845,
+                3876
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4162,
+                4192
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4480,
+                4511
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4785,
+                4812
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -4174,7 +4617,63 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_text",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3258,
+                3287
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3570,
+                3600
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3889,
+                3920
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4205,
+                4235
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4524,
+                4555
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4825,
+                4852
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -4195,7 +4694,8 @@
       ],
       "inputs": [],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4221,7 +4721,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4242,7 +4743,8 @@
       ],
       "inputs": [],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4268,7 +4770,63 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_text",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3258,
+                3287
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3570,
+                3600
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3889,
+                3920
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4205,
+                4235
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4524,
+                4555
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4825,
+                4852
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -4294,7 +4852,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4315,7 +4874,8 @@
       ],
       "inputs": [],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4341,7 +4901,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4362,7 +4923,8 @@
       ],
       "inputs": [],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4388,7 +4950,63 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_text",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3258,
+                3287
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3570,
+                3600
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3889,
+                3920
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4205,
+                4235
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4524,
+                4555
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4825,
+                4852
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -4409,7 +5027,8 @@
       ],
       "inputs": [],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4435,7 +5054,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4456,7 +5076,8 @@
       ],
       "inputs": [],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4482,7 +5103,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4508,7 +5130,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4538,7 +5161,14 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_on",
+          "definitions": [],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -4564,7 +5194,71 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_ink-on",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3172,
+                3205
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3482,
+                3516
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3799,
+                3834
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4117,
+                4151
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4434,
+                4469
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4743,
+                4774
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14624,
+                14658
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -4589,8 +5283,72 @@
           "classification": "local channel"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "external sweep dependency",
+      "reason": "The existing sweep token is consumed by the unresolved signature sheet.",
+      "localDependencies": [
+        {
+          "token": "--_solid",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3073,
+                3103
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3381,
+                3412
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3696,
+                3728
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4016,
+                4047
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4331,
+                4363
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4648,
+                4676
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14525,
+                14556
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -4610,8 +5368,9 @@
         20561
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "external sweep dependency",
+      "reason": "The existing sweep token is consumed by the unresolved signature sheet.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4631,8 +5390,12 @@
         20663
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "borderColor",
+      "domain": "color",
+      "units": "forbidden",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4657,8 +5420,12 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "radius",
+      "domain": "radius",
+      "units": "px",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4678,8 +5445,9 @@
         20729
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "Frame clipping confines the animated sweep to the host.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4700,7 +5468,8 @@
       ],
       "inputs": [],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4726,7 +5495,63 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_text",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3258,
+                3287
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3570,
+                3600
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3889,
+                3920
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4205,
+                4235
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4524,
+                4555
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4825,
+                4852
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -4747,7 +5572,8 @@
       ],
       "inputs": [],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4768,7 +5594,8 @@
       ],
       "inputs": [],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4788,8 +5615,12 @@
         24866
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "height",
+      "domain": "length",
+      "units": "px",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4809,8 +5640,12 @@
         24878
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "padding",
+      "domain": "space",
+      "units": "px",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4830,8 +5665,12 @@
         24889
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "border",
+      "domain": "border",
+      "units": "px width only",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4856,8 +5695,12 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "radius",
+      "domain": "radius",
+      "units": "px",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4882,8 +5725,12 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "font.family",
+      "domain": "family",
+      "units": "forbidden",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4903,8 +5750,12 @@
         24992
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "font.size",
+      "domain": "font-size",
+      "units": "px",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4924,8 +5775,12 @@
         25011
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "font.letterSpacing",
+      "domain": "tracking",
+      "units": "px",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4945,8 +5800,12 @@
         25033
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "font.transform",
+      "domain": "transform-case",
+      "units": "forbidden",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4966,8 +5825,12 @@
         25051
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "font.weight",
+      "domain": "weight",
+      "units": "unitless",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -4987,8 +5850,9 @@
         25081
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The link variant keeps its existing underline anatomy.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5013,8 +5877,12 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "textDecorationThickness",
+      "domain": "width",
+      "units": "px",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5034,8 +5902,9 @@
         25168
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The existing link-variant underline placement is not an inventoried Button role.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5055,8 +5924,12 @@
         25245
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "textDecorationColor",
+      "domain": "color",
+      "units": "forbidden",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5077,7 +5950,8 @@
       ],
       "inputs": [],
       "classification": "mechanical exclusion",
-      "reason": "Structural or interaction behavior is not a writable theme token."
+      "reason": "Structural or interaction behavior is not a writable theme token.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5098,7 +5972,8 @@
       ],
       "inputs": [],
       "classification": "mechanical exclusion",
-      "reason": "Structural or interaction behavior is not a writable theme token."
+      "reason": "Structural or interaction behavior is not a writable theme token.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5118,8 +5993,9 @@
         16671
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "Pseudo-element geometry covers the fill or preserves the minimum hit area.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5139,8 +6015,9 @@
         16684
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The negative pseudo-element stack is internal paint ordering, not a public depth token.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5161,7 +6038,8 @@
       ],
       "inputs": [],
       "classification": "mechanical exclusion",
-      "reason": "Structural or interaction behavior is not a writable theme token."
+      "reason": "Structural or interaction behavior is not a writable theme token.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5181,8 +6059,9 @@
         16730
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The fill inherits its host corner geometry.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5212,7 +6091,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5238,7 +6118,14 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_a",
+          "definitions": [],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5272,7 +6159,19 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_a",
+          "definitions": [],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_ptr",
+          "definitions": [],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5306,7 +6205,28 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_fr",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                16842,
+                16903
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_x",
+          "definitions": [],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5340,7 +6260,28 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_fr",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                16842,
+                16903
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_x",
+          "definitions": [],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5370,7 +6311,37 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_fb",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                16984,
+                17045
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_fr",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                16842,
+                16903
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5415,8 +6386,124 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "bg",
+      "domain": "color",
+      "units": "forbidden",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": [
+        {
+          "token": "--_fo",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                16809,
+                16831
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_layer",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                10299,
+                10318
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"soft\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                23986,
+                23998
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"outline\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24196,
+                24208
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"ghost\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24468,
+                24480
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                20286,
+                20308
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24820,
+                24831
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_pa",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                13447,
+                13519
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                13716,
+                13905
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-tone=\"neutral\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14210,
+                14255
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:is([data-emphasis=\"soft\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"outline\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"ghost\"]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                15279,
+                15344
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_ptr",
+          "definitions": [],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5445,8 +6532,64 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The fill animation or disabled visual treatment uses this computed opacity.",
+      "localDependencies": [
+        {
+          "token": "--_layer-a",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                10332,
+                10333
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"soft\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24012,
+                24035
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"outline\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24222,
+                24245
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"ghost\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24494,
+                24517
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                20419,
+                20470
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24845,
+                24846
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5475,8 +6618,15 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The transform drives the existing fill wipe, not a free transform control.",
+      "localDependencies": [
+        {
+          "token": "--_ptr",
+          "definitions": [],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5496,8 +6646,9 @@
         17573
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The fill wipe changes its origin with the existing state.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5517,8 +6668,9 @@
         17606
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The fill pseudo-element paints at its border box.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5575,8 +6727,166 @@
           "classification": "local channel"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The gradients use measured pointer and sweep geometry for the animated fill.",
+      "localDependencies": [
+        {
+          "token": "--_fa",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                16914,
+                16973
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_fb",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                16984,
+                17045
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_fo",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                16809,
+                16831
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_fr",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                16842,
+                16903
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_fu",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                17056,
+                17096
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_pa",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                13447,
+                13519
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                13716,
+                13905
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-tone=\"neutral\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14210,
+                14255
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:is([data-emphasis=\"soft\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"outline\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"ghost\"]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                15279,
+                15344
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_pb",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                13530,
+                13603
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                13918,
+                14119
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-tone=\"neutral\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14266,
+                14370
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:is([data-emphasis=\"soft\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"outline\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"ghost\"]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                15355,
+                15425
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_x",
+          "definitions": [],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_y",
+          "definitions": [],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5617,8 +6927,29 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The complete transition string controls existing sweep clocks and edges.",
+      "localDependencies": [
+        {
+          "token": "--_D",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                16740,
+                16798
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        },
+        {
+          "token": "--_a",
+          "definitions": [],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5639,7 +6970,8 @@
       ],
       "inputs": [],
       "classification": "mechanical exclusion",
-      "reason": "Structural or interaction behavior is not a writable theme token."
+      "reason": "Structural or interaction behavior is not a writable theme token.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5660,7 +6992,8 @@
       ],
       "inputs": [],
       "classification": "mechanical exclusion",
-      "reason": "Structural or interaction behavior is not a writable theme token."
+      "reason": "Structural or interaction behavior is not a writable theme token.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5681,7 +7014,8 @@
       ],
       "inputs": [],
       "classification": "mechanical exclusion",
-      "reason": "Structural or interaction behavior is not a writable theme token."
+      "reason": "Structural or interaction behavior is not a writable theme token.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5706,8 +7040,9 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "Pseudo-element geometry covers the fill or preserves the minimum hit area.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5729,8 +7064,9 @@
         19054
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The transform drives the existing fill wipe, not a free transform control.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5752,8 +7088,9 @@
         19085
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The fill wipe changes its origin with the existing state.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5784,8 +7121,24 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The multi-channel sweep timing is an existing mechanical clock.",
+      "localDependencies": [
+        {
+          "token": "--_D",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])::before",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                16740,
+                16798
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5805,8 +7158,9 @@
         15668
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The existing sweep gate selects the current emphasis and disabled behavior.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5831,8 +7185,9 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The fill animation or disabled visual treatment uses this computed opacity.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5853,7 +7208,8 @@
       ],
       "inputs": [],
       "classification": "mechanical exclusion",
-      "reason": "Structural or interaction behavior is not a writable theme token."
+      "reason": "Structural or interaction behavior is not a writable theme token.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5878,8 +7234,12 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "scale",
+      "domain": "scalar",
+      "units": "unitless",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5899,8 +7259,9 @@
         22162
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The multi-channel sweep timing is an existing mechanical clock.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5929,8 +7290,64 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The fill animation or disabled visual treatment uses this computed opacity.",
+      "localDependencies": [
+        {
+          "token": "--_layer-a",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                10332,
+                10333
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"soft\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24012,
+                24035
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"outline\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24222,
+                24245
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"ghost\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24494,
+                24517
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                20419,
+                20470
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24845,
+                24846
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -5950,8 +7367,9 @@
         22258
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The press brightness effect is part of the existing fill animation.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5977,8 +7395,9 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The multi-channel sweep timing is an existing mechanical clock.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -5998,8 +7417,9 @@
         29594
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "mechanical exclusion",
+      "reason": "The fill animation or disabled visual treatment uses this computed opacity.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -6025,7 +7445,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -6045,8 +7466,12 @@
         25344
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "textDecorationColor",
+      "domain": "color",
+      "units": "forbidden",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -6071,8 +7496,12 @@
           "classification": "system input"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "textDecorationThickness",
+      "domain": "width",
+      "units": "px",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -6092,8 +7521,12 @@
         25473
       ],
       "inputs": [],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "scale",
+      "domain": "scalar",
+      "units": "unitless",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -6119,7 +7552,63 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_text",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3258,
+                3287
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3570,
+                3600
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3889,
+                3920
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4205,
+                4235
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4524,
+                4555
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4825,
+                4852
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -6145,7 +7634,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -6171,8 +7661,75 @@
           "classification": "local channel"
         }
       ],
-      "classification": "variant declaration unresolved",
-      "reason": "This declaration needs property and ownership classification before exposing a part token."
+      "classification": "partial property binding",
+      "path": "text",
+      "domain": "color",
+      "units": "forbidden",
+      "reason": "This site matches the property table; other Button sites remain under review.",
+      "localDependencies": [
+        {
+          "token": "--_ink",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                10249,
+                10263
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"soft\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                23962,
+                23974
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"outline\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24128,
+                24140
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"ghost\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24444,
+                24456
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"frame\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                20252,
+                20274
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"link\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24796,
+                24808
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-emphasis=\"ghost\"][data-tone=\"neutral\"]),\n:where([data-scope=\"button\"][data-emphasis=\"outline\"][data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                24684,
+                24706
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -6198,7 +7755,8 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": []
     },
     {
       "part": "button",
@@ -6228,7 +7786,71 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_solid",
+          "definitions": [
+            {
+              "selector": ":where([data-scope])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3073,
+                3103
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"neutral\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3381,
+                3412
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"positive\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                3696,
+                3728
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"caution\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4016,
+                4047
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"critical\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4331,
+                4363
+              ]
+            },
+            {
+              "selector": ":where([data-tone=\"info\"])",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                4648,
+                4676
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis], [data-tone]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14525,
+                14556
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     },
     {
       "part": "button",
@@ -6258,7 +7880,47 @@
         }
       ],
       "classification": "variant channel dependency",
-      "reason": "This assignment feeds Button paint; its complete cascade remains under review."
+      "reason": "This assignment feeds Button paint; its complete cascade remains under review.",
+      "localDependencies": [
+        {
+          "token": "--_pa",
+          "definitions": [
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                13447,
+                13519
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                13716,
+                13905
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"][data-tone=\"neutral\"]:not([data-emphasis]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                14210,
+                14255
+              ]
+            },
+            {
+              "selector": ":where([data-scope=\"button\"]:is([data-emphasis=\"soft\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"outline\"])),\n:where([data-scope=\"button\"]:is([data-emphasis=\"ghost\"]))",
+              "source": "docs/design/warp/tokens/warp-components.css",
+              "fallbackSpan": [
+                15279,
+                15344
+              ]
+            }
+          ],
+          "status": "partial: other definitions and cascade conditions remain unresolved"
+        }
+      ]
     }
   ]
 }

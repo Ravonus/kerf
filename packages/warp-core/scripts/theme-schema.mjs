@@ -127,7 +127,9 @@ const design = read(designPath)
 const template = read(templatePath)
 const linksPath = 'packages/warp/src/links.css'
 const shimPaths = ['packages/warp/src/type.css', 'packages/warp/src/layout.css']
-const bindings = [...classifyLinks(linksPath, read(linksPath)), ...shimPaths.flatMap((path) => classifyShim(path, read(path))), ...classifyComponents(read(componentsPath)), ...classifyButton(read(componentsPath)), ...classifyButtonVariants(read(componentsPath))]
+const componentText = read(componentsPath)
+const buttonDefaults = classifyButton(componentText)
+const bindings = [...classifyLinks(linksPath, read(linksPath)), ...shimPaths.flatMap((path) => classifyShim(path, read(path))), ...classifyComponents(componentText), ...buttonDefaults, ...classifyButtonVariants(componentText, buttonDefaults)]
 const generated = generate(design, template, bindings)
 if (process.argv.includes('--negative-test')) {
   const invalid = design.replace('| forbidden |', '| bad-unit |')
@@ -170,5 +172,9 @@ for (const source of sources) {
 const extra = tracked.filter((path) => !sources.includes(path))
 if (extra.length) { console.error(`Uninventoried sources: ${extra.join(', ')}`); failed = true }
 console.log(`Tracked sources: ${sources.filter((path) => tracked.includes(path)).length}/${sources.length}; reviewed records: ${bindings.length}; unresolved sources: ${sources.filter((path) => path.startsWith('docs/design/')).length}`)
+const variants = bindings.filter((row) => row.variant)
+const completedButton = JSON.parse(generated[0]).records.filter((row) =>
+  row.part === 'button' && row.binding === 'classified')
+console.log(`Button variant declarations unresolved: ${variants.filter((row) => row.classification === 'variant declaration unresolved').length}; partial property sites: ${variants.filter((row) => row.classification === 'partial property binding').length}; complete properties: ${completedButton.length}`)
 console.error('Incomplete: CSS declaration ownership, transitive inputs, exclusions and fallbacks are unresolved')
 process.exitCode = 1
