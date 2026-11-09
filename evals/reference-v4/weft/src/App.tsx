@@ -28,45 +28,19 @@ function loadSaved(): Saved {
 export function App({ api }: { api: Api }) {
   const d = appState()
 
-  bindStocks({
-    api: () => api,
-    stocks: d.stocks,
-    holdings: d.holdings,
-    live: d.live,
-    favorites: d.favorites,
-  })
+  bindStocks({ api: () => api, ...d })
 
   bindSaved(d.tab, d.views)
 
   const { view, setView, favoritesOnly, sortBy } = createView(d.tab, d.views)
 
-  const { search, selectTab } = createSearch({
-    api: () => api,
-    initialTab: d.saved.tab,
-    tab: d.tab,
-    views: d.views,
-  })
+  const { search, selectTab } = createSearch({ api: () => api, initialTab: d.saved.tab, ...d })
 
-  const { shown, portfolio } = createResults({
-    stocks: d.stocks,
-    holdings: d.holdings,
-    live: d.live,
-    favorites: d.favorites,
-    tab: d.tab,
-    view,
-    search,
-    favoritesOnly,
-    sortBy,
-  })
+  const { shown, portfolio } = createResults({ ...d, view, search, favoritesOnly, sortBy })
 
   const toggle = favoriteActions(() => api, d.favorites, d.alert)
 
-  const { openDetails, closeDetails, opened, save, undo } = detailActions({
-    stocks: d.stocks,
-    openId: d.openId,
-    notes: d.notes,
-    saves: d.saves,
-  })
+  const { openDetails, closeDetails, opened, save, undo } = detailActions(d)
 
   return (
     <>
