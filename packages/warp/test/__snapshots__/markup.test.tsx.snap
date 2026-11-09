@@ -159,6 +159,16 @@ exports[`Alerts: client DOM after mount 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
 </button>
 </div>
 <div data-scope="alert" data-tone="info">
@@ -333,6 +343,16 @@ exports[`Alerts: server HTML 1`] = `
 </div>
 <button aria-label="Dismiss" data-dismiss="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-size="sm" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1918,6 +1938,16 @@ exports[`Overlays: client DOM after mount 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
 </button>
 </div>
 <div data-part="body">x</div>
@@ -1941,6 +1971,16 @@ exports[`Overlays: client DOM after mount 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
 </button>
 </div>
 <div data-part="body">y</div>
@@ -1953,6 +1993,16 @@ exports[`Overlays: client DOM after mount 1`] = `
 <p data-part="description" id="sheet-4-d">D</p>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -1987,6 +2037,16 @@ exports[`Overlays: client DOM after mount 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
 </button>
 </div>
 <div data-part="body">w</div>
@@ -1998,6 +2058,16 @@ exports[`Overlays: client DOM after mount 1`] = `
 <h2 data-part="title" id="sheet-6-t">Bottom</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2057,6 +2127,16 @@ exports[`Overlays: server HTML 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
 </button>
 </div>
 <div data-part="body">x</div>
@@ -2080,6 +2160,16 @@ exports[`Overlays: server HTML 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
 </button>
 </div>
 <div data-part="body">y</div>
@@ -2092,6 +2182,16 @@ exports[`Overlays: server HTML 1`] = `
 <p data-part="description" id="sheet-4-d">D</p>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
@@ -2126,6 +2226,16 @@ exports[`Overlays: server HTML 1`] = `
 <path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
 </path>
 </svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
 </button>
 </div>
 <div data-part="body">w</div>
@@ -2137,6 +2247,16 @@ exports[`Overlays: server HTML 1`] = `
 <h2 data-part="title" id="sheet-6-t">Bottom</h2>
 <button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
 <svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
+</path>
+<path d="M1 1h2v1h-2zM10 1h2v1h-2zM2 2h2v1h-2zM9 2h2v1h-2zM3 3h2v1h-2zM8 3h2v1h-2zM4 4h2v1h-2zM7 4h2v1h-2zM5 5h3v1h-3zM6 6h1v1h-1zM5 7h3v1h-3zM4 8h2v1h-2zM7 8h2v1h-2zM3 9h2v1h-2zM8 9h2v1h-2zM2 10h2v1h-2zM9 10h2v1h-2zM1 11h2v1h-2zM10 11h2v1h-2z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M12 2h1v1h-1zM11 3h1v1h-1zM13 3h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM9 5h1v1h-1zM11 5h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM6 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM2 12h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM3 13h1v1h-1zM13 13h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-qs="" data-t="q" data-w="">
 </path>
 <path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-bw="" data-t="b" data-w="">
