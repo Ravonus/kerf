@@ -8,17 +8,31 @@ const plain = (value) =>
   (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null)
 const properties = {
   button: ['gap', 'paddingInline', 'borderWidth', 'radius', 'font', 'shadow', 'duration'],
-  nav: ['gap', 'underline'],
-  tabs: ['gap', 'underline'],
-  link: ['underline'],
-  pill: ['gap', 'height', 'paddingInline', 'borderWidth', 'radius', 'font'],
-  field: ['gap', 'radius'],
+  sweep: ['width', 'duration'],
+  nav: ['gap', 'underline', 'paddingBlock', 'duration'],
+  tabs: ['gap', 'underline', 'height', 'paddingInline', 'radius', 'font', 'duration'],
+  link: ['underline', 'radius', 'font', 'duration'],
+  pill: ['gap', 'height', 'paddingInline', 'borderWidth', 'radius', 'font', 'duration'],
+  field: ['gap', 'radius', 'height', 'paddingInline', 'font', 'shadow', 'duration'],
   card: ['gap', 'padding', 'radius', 'shadow'],
 }
+const buttonState = ['gap', 'paddingInline', 'borderWidth', 'radius', 'font', 'shadow']
+const pillState = ['gap', 'height', 'paddingInline', 'borderWidth', 'radius', 'font', 'duration']
+const tabsState = ['height', 'paddingInline', 'radius', 'font']
+const linkState = ['radius', 'font']
 const states = {
-  button: { hover: ['shadow'], press: ['shadow', 'scale'] },
-  pill: { hover: ['gap'], active: ['gap'] },
-  card: { hover: ['shadow'] },
+  button: { hover: buttonState, press: [...buttonState, 'scale'] },
+  sweep: {
+    hover: ['width', 'duration'],
+    press: ['width', 'duration'],
+    active: ['width', 'duration'],
+  },
+  nav: { hover: ['gap'], active: ['gap'] },
+  tabs: { hover: tabsState, active: tabsState },
+  link: { hover: linkState, press: linkState },
+  pill: { hover: pillState, active: pillState },
+  field: { hover: ['gap', 'shadow'] },
+  card: { hover: ['gap', 'padding', 'radius', 'shadow'] },
 }
 const hyphen = (value) => value.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)
 
@@ -60,18 +74,19 @@ function leaves(part, values, system, state = 'rest') {
     if (!allowed.includes(key)) throw bad(path, 'unknown property or unsupported state')
     if (key === 'font' || key === 'underline') {
       if (!plain(value)) throw bad(path, 'must be a plain object')
+      const fonts = {
+        button: ['family', 'size', 'weight', 'letterSpacing'],
+        pill: ['family', 'size', 'weight', 'lineHeight'],
+        tabs: ['family', 'size', 'weight'],
+        link: ['weight'],
+        field: ['family', 'size', 'weight'],
+      }
       const fields =
-        key === 'font'
-          ? part === 'pill'
-            ? ['family', 'size', 'weight', 'lineHeight']
-            : ['family', 'size', 'weight', 'letterSpacing']
-          : part === 'link'
-            ? ['width', 'offset']
-            : ['width']
+        key === 'font' ? fonts[part] : part === 'link' ? ['width', 'offset'] : ['width']
       for (const [field, input] of Object.entries(value)) {
         if (!fields.includes(field)) throw bad(`${path}.${field}`, 'unsupported property')
         out.push(
-          `--warp-config-part-${part}-${hyphen(key)}-${hyphen(field)}:${scalar(input, `${path}.${field}`, field, system)}`,
+          `--warp-config-part-${part}-${hyphen(key)}-${hyphen(field)}${state === 'rest' ? '' : `-${state}`}:${scalar(input, `${path}.${field}`, field, system)}`,
         )
       }
     } else

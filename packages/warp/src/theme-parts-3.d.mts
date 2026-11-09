@@ -1,5 +1,19 @@
 /** Generated finite part overrides. */
 export interface ThemeParts3 {
+  toggle?: {
+    gap?: number | string
+    height?: number | string
+    minWidth?: number | string
+    paddingInline?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    text?: string
+    font?:
+      | string
+      | {
+          css?: string
+        }
+  }
   'toggle-group'?: {
     border?: string | { color?: string; width?: number | string; style?: string }
     radius?: number | string
@@ -192,6 +206,7 @@ export interface ThemeParts3 {
     gap?: number | string
   }
   card?: {
+    gap?: number | string
     padding?: number | string
     radius?: number | string
     shadow?: string
@@ -227,23 +242,5 @@ export interface ThemeParts3 {
           size?: number | string
         }
     text?: string
-  }
-  'bar-list'?: {
-    font?:
-      | string
-      | {
-          size?: number | string
-        }
-  }
-  map?: {
-    radius?: number | string
-    border?: string | { color?: string; width?: number | string; style?: string }
-  }
-  flow?: {
-    radius?: number | string
-    border?: string | { color?: string; width?: number | string; style?: string }
-  }
-  sso?: {
-    gap?: number | string
   }
 }

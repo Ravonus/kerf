@@ -335,12 +335,14 @@ test('checks Button radius source sites and upstream dependencies', () => {
   const source = 'docs/design/warp/tokens/warp.css'
   const path = resolve(fixture, source)
   const original = readFileSync(path, 'utf8')
-  expect(original).toContain('--warp-radius-control: calc(2px + 8px')
+  expect(original).toContain(
+    '--warp-radius-control: var(--warp-config-system-radius-control,calc(2px + 8px',
+  )
   writeFileSync(
     path,
     original.replace(
-      '--warp-radius-control: calc(2px + 8px',
-      '--warp-radius-control: calc(2px + 9px',
+      '--warp-radius-control: var(--warp-config-system-radius-control,calc(2px + 8px',
+      '--warp-radius-control: var(--warp-config-system-radius-control,calc(2px + 9px',
     ),
   )
   expect(check()).toMatch(
@@ -355,13 +357,10 @@ test('checks Button radius source sites and upstream dependencies', () => {
   const componentPath = resolve(fixture, component)
   const componentText = readFileSync(componentPath, 'utf8')
   const host = componentText.indexOf(':where([data-scope="button"]) {')
-  const site = componentText.indexOf('border-radius: var(--warp-radius-control);', host)
+  const site = componentText.indexOf('border-radius: var(--_warp-button-radius-press', host)
+  const end = componentText.indexOf(';', site) + 1
   expect(site).toBeGreaterThan(host)
-  writeFileSync(
-    componentPath,
-    componentText.slice(0, site) +
-      componentText.slice(site + 'border-radius: var(--warp-radius-control);'.length),
-  )
+  writeFileSync(componentPath, componentText.slice(0, site) + componentText.slice(end))
   expect(check()).toMatch(/Source index drift|button radius: missing/)
 })
 
@@ -385,7 +384,7 @@ test('preserves Button radius dependency fallback spans', () => {
         (row.source.endsWith('warp-components.css') &&
           row.classification === 'partial property binding' &&
           row.part === 'button' &&
-          row.fallback === 'var(--warp-radius-control)')),
+          row.fallback.includes('var(--warp-radius-control)'))),
   )
   expect(rows).toHaveLength(7)
   for (const row of rows) {

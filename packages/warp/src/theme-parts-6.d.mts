@@ -1,5 +1,23 @@
 /** Generated finite part overrides. */
 export interface ThemeParts6 {
+  quote?: {
+    gap?: number | string
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    shadow?: string
+  }
+  gallery?: {
+    gap?: number | string
+  }
+  'selection-bar'?: {
+    insetBlockStart?: number | string
+    gap?: number | string
+    marginBlockEnd?: number | string
+    minHeight?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+  }
   compare?: {
     radius?: number | string
     border?: string | { color?: string; width?: number | string; style?: string }

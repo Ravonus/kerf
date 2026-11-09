@@ -638,7 +638,7 @@ test('Button colours can be combined with bound layout and errors retain paths',
   for (const [config, path] of [
     [{ system: { motion: { duration: { sweep: -1 } } } }, 'system.motion.duration.sweep'],
     [{ parts: { button: { font: { size: 'missing' } } } }, 'parts.button.font.size'],
-    [{ parts: { field: { height: 32 } } }, 'parts.field.height'],
+    [{ parts: { field: { hover: { height: 32 } } } }, 'parts.field.hover.height'],
   ] as const) {
     try {
       warp(config as WarpOptions)
@@ -707,4 +707,74 @@ test('mapped parts and states emit exact contract inputs and seven themed aliase
     'data/card.css',
   ])
     expect(aliases[`@weft-js/warp-core/styles/${path}`]).toContain(`/styles/themed/${path}`)
+})
+
+test('new state inputs use exact suffixes and select every generated themed sheet', () => {
+  const result = run({
+    parts: {
+      sweep: {
+        width: 2,
+        duration: 90,
+        hover: { width: 3 },
+        press: { duration: 120 },
+        active: { width: 4 },
+      },
+      button: { hover: { gap: 10, font: { size: 19 } }, press: { paddingInline: 12 } },
+      nav: { paddingBlock: 8, duration: 100, active: { gap: 12 } },
+      tabs: {
+        height: 40,
+        font: { weight: 600 },
+        hover: { paddingInline: 15 },
+        active: { radius: 8 },
+      },
+      link: { font: { weight: 500 }, hover: { radius: 2 }, press: { font: { weight: 700 } } },
+      pill: { duration: 110, hover: { height: 40 }, active: { font: { lineHeight: 1.5 } } },
+      field: {
+        height: 62,
+        paddingInline: 20,
+        font: { size: 19 },
+        duration: 180,
+        hover: { gap: 23 },
+      },
+      card: { hover: { padding: 24, radius: 12 } },
+    },
+  })
+  for (const value of [
+    '--warp-config-part-sweep-width:2px',
+    '--warp-config-part-sweep-duration-press:120ms',
+    '--warp-config-part-button-font-size-hover:19px',
+    '--warp-config-part-nav-padding-block:8px',
+    '--warp-config-part-tabs-padding-inline-hover:15px',
+    '--warp-config-part-link-font-weight-press:700',
+    '--warp-config-part-pill-font-line-height-active:1.5',
+    '--warp-config-part-field-height:62px',
+    '--warp-config-part-field-gap-hover:23px',
+    '--warp-config-part-card-padding-hover:24px',
+  ])
+    expect(result.tokens.css).toContain(value)
+  const aliases = (result.tokens as unknown as { alias: Record<string, string> }).alias
+  const tracked = execFileSync(
+    'git',
+    ['ls-files', '--', 'packages/warp-core/styles/themed/*.css'],
+    {
+      encoding: 'utf8',
+      cwd: new URL('../../..', import.meta.url),
+    },
+  )
+    .trim()
+    .split('\n')
+    .map(
+      (path) =>
+        `@weft-js/warp-core/styles/${path.replace('packages/warp-core/styles/themed/', '')}`,
+    )
+    .sort()
+  expect(tracked).toHaveLength(25)
+  expect(Object.keys(aliases).sort()).toEqual(tracked)
+  expect(aliases['@weft-js/warp-core/styles/inputs/choice-checkbox.css']).toContain(
+    '/themed/inputs/choice-checkbox.css',
+  )
+  expect(aliases['@weft-js/warp-core/styles/inputs/field.css']).toContain(
+    '/themed/inputs/field.css',
+  )
+  expect(aliases['@weft-js/warp-core/styles/components/badge.css']).toBeUndefined()
 })

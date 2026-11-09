@@ -1,5 +1,18 @@
+import { readdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+function themedSheets(core, dir = '') {
+  return readdirSync(new URL(`styles/themed/${dir}`, core), { withFileTypes: true })
+    .flatMap((entry) =>
+      entry.isDirectory()
+        ? themedSheets(core, `${dir}${entry.name}/`)
+        : entry.name.endsWith('.css')
+          ? [`${dir}${entry.name}`]
+          : [],
+    )
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+}
 
 /** Resolve token and themed stylesheet aliases against the app and package roots. */
 export function themeAliases(options, env, core) {
@@ -9,15 +22,7 @@ export function themeAliases(options, env, core) {
     }),
     ...((options.buttonCandidate || options.systemInputs || options.partInputs) &&
       Object.fromEntries(
-        [
-          'warp.css',
-          'components/button.css',
-          'components/nav.css',
-          'components/tabs.css',
-          'components/link.css',
-          'components/pill.css',
-          'data/card.css',
-        ].map((path) => [
+        themedSheets(core).map((path) => [
           `@weft-js/warp-core/styles/${path}`,
           fileURLToPath(new URL(`styles/themed/${path}`, core)),
         ]),

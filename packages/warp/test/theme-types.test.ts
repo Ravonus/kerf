@@ -155,8 +155,8 @@ const unsupportedSystem: WarpOptions = {
 }
 const unsupportedPart: WarpOptions = {
   parts: {
-    // @ts-expect-error Sweep geometry is not yet supported.
-    sweep: { width: 2 },
+    // @ts-expect-error Badge non-colour overrides are not yet supported.
+    badge: { gap: 2 },
   },
 }
 const unsupportedHover: WarpOptions = {
@@ -266,3 +266,26 @@ const unsupportedCardState: WarpOptions = {
   },
 }
 void unsupportedCardState
+
+const extendedReaders: WarpOptions = {
+  parts: {
+    sweep: { width: 2, hover: { duration: 100 }, press: { width: 3 }, active: { duration: 140 } },
+    button: { hover: { gap: 10, font: { size: 19 } }, press: { radius: 4 } },
+    nav: { paddingBlock: 8, duration: 100, active: { gap: 12 } },
+    tabs: { height: 40, hover: { font: { family: 'Inter' } }, active: { paddingInline: 12 } },
+    link: { duration: 100, press: { font: { weight: 700 } } },
+    pill: { active: { height: 40, font: { lineHeight: 1.2 } } },
+    field: { height: 62, paddingInline: 20, hover: { shadow: 'none' } },
+    card: { hover: { padding: 24, radius: 12 } },
+  },
+}
+void extendedReaders
+const unboundSweep: WarpOptions = {
+  parts: {
+    sweep: {
+      // @ts-expect-error Sweep border width is not a mapped property.
+      borderWidth: 2,
+    },
+  },
+}
+void unboundSweep

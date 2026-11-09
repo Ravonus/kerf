@@ -1,4 +1,4 @@
-// Generated theme schema digest: 76b5e0def0bfee0b6848e3d4604cf29be82e13a0b39bab0ac49a767d0019aae6
+// Generated theme schema digest: 0fe7d087d0c6e4c93a107d2fcd64d9063a806124dcaaef9dce6a62a959c9c130
 import data from './theme-schema-registry.json' with { type: 'json' }
 /** Finite schema candidates; status identifies unresolved coverage. */
 export const themeSchema = data

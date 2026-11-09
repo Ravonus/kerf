@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "digest": "76b5e0def0bfee0b6848e3d4604cf29be82e13a0b39bab0ac49a767d0019aae6",
+  "digest": "0fe7d087d0c6e4c93a107d2fcd64d9063a806124dcaaef9dce6a62a959c9c130",
   "status": "partial",
   "groups": [
     {
@@ -3073,6 +3073,39 @@
       "evidence": "partial"
     },
     {
+      "id": "pill.rest.gap",
+      "part": "pill",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-pill-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pill.rest.height",
+      "part": "pill",
+      "state": "rest",
+      "path": "height",
+      "token": "--warp-pill-height",
+      "domain": "length",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "pill.rest.paddingInline",
+      "part": "pill",
+      "state": "rest",
+      "path": "paddingInline",
+      "token": "--warp-pill-padding-inline",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
       "id": "pill.rest.radius",
       "part": "pill",
       "state": "rest",
@@ -3441,6 +3474,17 @@
       "state": "rest",
       "path": "gap",
       "token": "--warp-card-grid-gap",
+      "domain": "space",
+      "units": "px",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "card.rest.gap",
+      "part": "card",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-card-gap",
       "domain": "space",
       "units": "px",
       "status": "candidate",
@@ -6820,6 +6864,17 @@
       "token": "--warp-waitlist-border",
       "domain": "border",
       "units": "px width only",
+      "status": "candidate",
+      "evidence": "partial"
+    },
+    {
+      "id": "field.rest.gap",
+      "part": "field",
+      "state": "rest",
+      "path": "gap",
+      "token": "--warp-field-gap",
+      "domain": "space",
+      "units": "px",
       "status": "candidate",
       "evidence": "partial"
     }

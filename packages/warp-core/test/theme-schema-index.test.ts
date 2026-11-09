@@ -34,8 +34,8 @@ test('indexes tracked source token reads with spans and reconciles each AST cens
   expect(schema.registry.sourceIndex.map((row) => row.source).toSorted()).toEqual(
     schema.sources.toSorted(),
   )
-  expect(schema.registry.sites).toHaveLength(6803)
-  expect(new Set(schema.registry.sites.map((site) => site.id)).size).toBe(6803)
+  expect(schema.registry.sites).toHaveLength(6936)
+  expect(new Set(schema.registry.sites.map((site) => site.id)).size).toBe(6936)
   for (const row of schema.registry.sourceIndex) {
     expect(row.indexedCount).toBe(row.astCount)
     expect(row.astOnly).toEqual([])
@@ -95,7 +95,8 @@ test('normalizes finite groups from simple-scope consumers without closing them'
   expect(radius?.siteIds.length).toBeGreaterThan(0)
   const site = schema.registry.sites.find((row) => row.id === radius?.siteIds[0])
   expect(site).toMatchObject({
-    fallback: 'var(--warp-radius-control)',
+    fallback:
+      'var(--_warp-button-radius-press,var(--_warp-button-radius-hover,var(--warp-button-radius,var(--warp-config-part-button-radius,var(--warp-radius-control)))))',
     classification: 'partial binding',
   })
   expect(schema.registry.groups.find((row) => row.id === 'button.rest.border')?.units).toBe(

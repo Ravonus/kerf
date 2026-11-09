@@ -1,5 +1,14 @@
 /** Generated finite part overrides. */
 export interface ThemeParts2 {
+  'text/body'?: {
+    font?:
+      | string
+      | {
+          family?: string
+          size?: number | string
+          lineHeight?: number | string
+        }
+  }
   'text/label'?: {
     font?:
       | string
@@ -234,19 +243,5 @@ export interface ThemeParts2 {
   }
   'button-group'?: {
     gap?: number | string
-  }
-  toggle?: {
-    gap?: number | string
-    height?: number | string
-    minWidth?: number | string
-    paddingInline?: number | string
-    border?: string | { color?: string; width?: number | string; style?: string }
-    radius?: number | string
-    text?: string
-    font?:
-      | string
-      | {
-          css?: string
-        }
   }
 }

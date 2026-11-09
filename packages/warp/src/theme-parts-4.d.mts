@@ -1,5 +1,23 @@
 /** Generated finite part overrides. */
 export interface ThemeParts4 {
+  'bar-list'?: {
+    font?:
+      | string
+      | {
+          size?: number | string
+        }
+  }
+  map?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  flow?: {
+    radius?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+  }
+  sso?: {
+    gap?: number | string
+  }
   gate?: {
     radius?: number | string
   }
@@ -225,21 +243,5 @@ export interface ThemeParts4 {
     padding?: number | string
     radius?: number | string
     text?: string
-  }
-  cropper?: {
-    radius?: number | string
-  }
-  form?: {
-    gap?: number | string
-  }
-  'error-summary'?: {
-    padding?: number | string
-    border?: string | { color?: string; width?: number | string; style?: string }
-    radius?: number | string
-    text?: string
-  }
-  setting?: {
-    gap?: number | string
-    paddingBlock?: number | string
   }
 }

@@ -1,5 +1,21 @@
 /** Generated finite part overrides. */
 export interface ThemeParts5 {
+  cropper?: {
+    radius?: number | string
+  }
+  form?: {
+    gap?: number | string
+  }
+  'error-summary'?: {
+    padding?: number | string
+    border?: string | { color?: string; width?: number | string; style?: string }
+    radius?: number | string
+    text?: string
+  }
+  setting?: {
+    gap?: number | string
+    paddingBlock?: number | string
+  }
   rules?: {
     font?:
       | string
@@ -215,23 +231,5 @@ export interface ThemeParts5 {
   }
   carousel?: {
     gap?: number | string
-  }
-  quote?: {
-    gap?: number | string
-    padding?: number | string
-    border?: string | { color?: string; width?: number | string; style?: string }
-    radius?: number | string
-    shadow?: string
-  }
-  gallery?: {
-    gap?: number | string
-  }
-  'selection-bar'?: {
-    insetBlockStart?: number | string
-    gap?: number | string
-    marginBlockEnd?: number | string
-    minHeight?: number | string
-    border?: string | { color?: string; width?: number | string; style?: string }
-    radius?: number | string
   }
 }

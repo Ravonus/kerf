@@ -119,6 +119,9 @@ export interface ThemeParts1 {
     bg?: string
     text?: string
     border?: string | { color?: string; width?: number | string; style?: string }
+    gap?: number | string
+    height?: number | string
+    paddingInline?: number | string
     radius?: number | string
     font?:
       | string
@@ -163,6 +166,7 @@ export interface ThemeParts1 {
   field?: {
     label?: string
     bg?: string
+    gap?: number | string
     floated?: {
       label?: string
     }
@@ -223,15 +227,6 @@ export interface ThemeParts1 {
           lineHeight?: number | string
           weight?: number | string
           letterSpacing?: number | string
-        }
-  }
-  'text/body'?: {
-    font?:
-      | string
-      | {
-          family?: string
-          size?: number | string
-          lineHeight?: number | string
         }
   }
 }

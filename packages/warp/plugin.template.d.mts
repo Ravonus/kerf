@@ -1,99 +1,18 @@
 import type { PluginInstance } from '@weft-js/core/plugin'
+import type {
+  WarpDials,
+  ButtonLayout,
+  TabsState,
+  LinkState,
+  PillState,
+  SweepState,
+  WarpCommonOptions,
+} from './src/theme-config.mjs'
 
 /* THEME_TYPES */
 
 /** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
 export const dialScript: string
-
-/** The dials supported by both configuration forms. */
-interface WarpDials {
-  expression?: 'quiet' | 'balanced' | 'vivid'
-  density?: 'compact' | 'cozy' | 'comfortable'
-  flair?: 'sweep' | 'none'
-  theme?: 'light' | 'dark'
-}
-
-/** The non-colour Button properties currently bound by the themed stylesheet. */
-interface ButtonLayout {
-  gap?: number | string
-  paddingInline?: number | string
-  borderWidth?: number | string
-  radius?: number | string
-  shadow?: string
-  duration?: number | string
-  hover?: { shadow?: string }
-  press?: { shadow?: string; scale?: number }
-  font?: {
-    family?: string
-    size?: number | string
-    weight?: number
-    letterSpacing?: number | string
-  }
-}
-
-/** Options shared by the base and named-palette configurations. */
-interface WarpCommonOptions {
-  /** Inherited space, radius and font scale inputs. */
-  system?: {
-    space?: Record<string, number | string>
-    radius?: Record<string, number | string>
-    font?: Record<string, string>
-    text?: {
-      display?: {
-        family?: string
-        size?: number | string
-        weight?: number
-        lineHeight?: number
-        letterSpacing?: number | string
-      }
-      title?: {
-        family?: string
-        size?: number | string
-        weight?: number
-        lineHeight?: number
-        letterSpacing?: number | string
-      }
-      heading?: {
-        family?: string
-        size?: number | string
-        weight?: number
-        lineHeight?: number
-        letterSpacing?: number | string
-      }
-      body?: { family?: string; size?: number | string; weight?: number; lineHeight?: number }
-      caption?: { size?: number | string; lineHeight?: number }
-      code?: { family?: string; size?: number | string; lineHeight?: number }
-      label?: {
-        family?: string
-        size?: number | string
-        weight?: number
-        lineHeight?: number
-        letterSpacing?: number | string
-        transform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
-      }
-      button?: {
-        family?: string
-        size?: number | string
-        weight?: number
-        lineHeight?: number
-        letterSpacing?: number | string
-        transform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
-      }
-    }
-    shadow?: { none?: string; sm?: string; md?: string; lg?: string }
-    motion?: {
-      duration?: { spring?: number | string; sweep?: number | string; frame?: number | string }
-    }
-  }
-  /** Named hex colours or aliases to other named colours. */
-  colors?: Record<string, string>
-  /** 'classic' makes classic fields the default. */
-  fields?: 'floating' | 'classic'
-  /** Replaces the radius each expression sets. */
-  radius?: 'sharp' | 'soft' | 'round'
-  /** A family name, or a full CSS font stack. */
-  fonts?: { body?: string; display?: string; mono?: string }
-}
 
 /** What warp() takes: base options or the bounded named-palette form. */
 export type WarpOptions = WarpCommonOptions &
@@ -104,26 +23,50 @@ export type WarpOptions = WarpCommonOptions &
         /** Resting Button colours are supported together; empty dictionaries are accepted. */
         parts?: {
           button?: ButtonLayout & ({ bg?: never; text?: never } | { bg: string; text: string })
-          nav?: { gap?: number | string; underline?: { width?: number | string } }
-          tabs?: { gap?: number | string; underline?: { width?: number | string } }
-          link?: { underline?: { width?: number | string; offset?: number | string } }
-          pill?: {
+          sweep?: SweepState & { hover?: SweepState; press?: SweepState; active?: SweepState }
+          nav?: {
             gap?: number | string
-            height?: number | string
-            paddingInline?: number | string
-            borderWidth?: number | string
-            radius?: number | string
-            font?: { family?: string; size?: number | string; weight?: number; lineHeight?: number }
+            paddingBlock?: number | string
+            duration?: number | string
+            underline?: { width?: number | string }
             hover?: { gap?: number | string }
             active?: { gap?: number | string }
           }
-          field?: { gap?: number | string; radius?: number | string }
+          tabs?: TabsState & {
+            gap?: number | string
+            duration?: number | string
+            underline?: { width?: number | string }
+            hover?: TabsState
+            active?: TabsState
+          }
+          link?: LinkState & {
+            duration?: number | string
+            underline?: { width?: number | string; offset?: number | string }
+            hover?: LinkState
+            press?: LinkState
+          }
+          pill?: PillState & { hover?: PillState; active?: PillState }
+          field?: {
+            gap?: number | string
+            radius?: number | string
+            height?: number | string
+            paddingInline?: number | string
+            font?: { family?: string; size?: number | string; weight?: number }
+            shadow?: string
+            duration?: number | string
+            hover?: { gap?: number | string; shadow?: string }
+          }
           card?: {
             gap?: number | string
             padding?: number | string
             radius?: number | string
             shadow?: string
-            hover?: { shadow?: string }
+            hover?: {
+              gap?: number | string
+              padding?: number | string
+              radius?: number | string
+              shadow?: string
+            }
           }
         }
         /**
