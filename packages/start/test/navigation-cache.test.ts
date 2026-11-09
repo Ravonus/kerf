@@ -141,22 +141,22 @@ describe('route response validators', () => {
       routes: { page: { files: ['page.js'], bytes: 10 } },
       eager: null,
     }
-    const data = makeNavigation(
-      resolve as unknown as Parameters<typeof makeNavigation>[0],
+    const data = makeNavigation({
+      resolve: resolve as unknown as Parameters<typeof makeNavigation>[0]['resolve'],
       // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
-      async () => ({ title: '', og: {}, twitter: {}, extra: [] }),
-      new Set(),
-      () => {
+      finished: async () => ({ title: '', og: {}, twitter: {}, extra: [] }),
+      statics: new Set(),
+      stateOf: () => {
         throw new Error('unexpected static render')
       },
-      1,
-      {
+      PASSES: 1,
+      options: {
         build: 'build',
         routeAssetBytes: receipt,
         manifest: { dir: '', routes: [], layouts: [] },
         modules: {},
       },
-    )
+    })
     const scope = () =>
       ({ headers: new Headers(), entries: new Map() }) as Parameters<typeof data>[2]
     const first = await data('/page', request({ cookie: 'session=a' }), scope())

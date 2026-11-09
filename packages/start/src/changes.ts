@@ -249,14 +249,17 @@ function feedHandle(
 
 function addChanges(
   list: Change[],
-  known: Set<string>,
-  source: Source,
-  pending: Set<string>,
-  covered: Set<string>,
-  prefixes: Set<string>,
-  out: FeedOut,
-  arm: () => void,
+  o: {
+    known: Set<string>
+    source: Source
+    pending: Set<string>
+    covered: Set<string>
+    prefixes: Set<string>
+    out: FeedOut
+    arm: () => void
+  },
 ) {
+  const { known, source, pending, covered, prefixes, out, arm } = o
   const seen: string[] = []
   for (const c of list) {
     if (!known.has(c.table)) continue
@@ -310,7 +313,7 @@ export function createFeed(
   }
 
   const sink: Sink = {
-    changes: (list) => addChanges(list, known, source, pending, covered, prefixes, out, arm),
+    changes: (list) => addChanges(list, { known, source, pending, covered, prefixes, out, arm }),
     settled(tags) {
       for (const t of tags) {
         if (pending.delete(t)) covered.add(t)

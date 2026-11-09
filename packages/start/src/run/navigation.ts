@@ -290,14 +290,14 @@ export class Navigation {
         const read =
           shared && (!shared.next.c?.length || client.seed)
             ? shared
-            : await this.cache.read(
+            : await this.cache.load({
                 url,
-                ctrl.signal,
-                ask,
-                this.now,
-                () => !!client.seed,
-                shown ? () => this.presentation.check(this) : undefined,
-              )
+                signal: ctrl.signal,
+                fetchRoute: ask,
+                now: this.now,
+                canSeed: () => !!client.seed,
+                onForget: shown ? () => this.presentation.check(this) : undefined,
+              })
         this.cache.setBuild(this.routes.build)
         if (ctrl.signal.aborted) return
         if (read.version !== this.cache.version) continue

@@ -10,19 +10,8 @@ function place(from, to) {
   renameSync(`${to}.tmp`, to)
 }
 
-export function devBuilder(
-  root,
-  rust,
-  secret,
-  log,
-  say,
-  overlay,
-  states,
-  nativeDir,
-  publish,
-  contract,
-  closed,
-) {
+export function devBuilder(deps) {
+  const { log, states, contract, closed } = deps
   async function rebuild(service) {
     const s = states.get(service)
     if (s.building) return void (s.again = true)
@@ -30,20 +19,7 @@ export function devBuilder(
     try {
       do {
         s.again = false
-        await once(
-          service,
-          s,
-          root,
-          rust,
-          secret,
-          log,
-          say,
-          overlay,
-          nativeDir,
-          publish,
-          contract,
-          exited,
-        )
+        await once(service, s, deps, exited)
       } while (s.again && !closed())
     } finally {
       s.building = false
@@ -64,20 +40,8 @@ export function devBuilder(
   return rebuild
 }
 
-export async function once(
-  service,
-  s,
-  root,
-  rust,
-  secret,
-  log,
-  say,
-  overlay,
-  nativeDir,
-  publish,
-  contract,
-  exited,
-) {
+export async function once(service, s, deps, exited) {
+  const { root, rust, secret, log, say, overlay, nativeDir, publish, contract } = deps
   const hash = contract().services?.[service]?.hash
   if (!hash) return
   const dir = crateDir(root, rust, service)

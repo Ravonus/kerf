@@ -66,7 +66,12 @@ const send = (c: Sock, out: unknown[]) => {
 const refuse = (c: Sock, n: number, e: { code?: string | undefined; message: string }) =>
   send(c, ['e', n, { code: e.code, message: e.message }])
 
-async function join(h: Hub, c: Sock, n: number, id: string, params: unknown, cursor?: string) {
+async function join(
+  h: Hub,
+  c: Sock,
+  want: { n: number; id: string; params: unknown; cursor?: string | undefined },
+) {
+  const { n, id, params, cursor } = want
   const st = stateOf(h)
   if (c.joins.has(n) || typeof n !== 'number') return
   const fn = id === SHARE ? shareChannel(h) : fns.get(id)
@@ -191,7 +196,8 @@ const known = (
 }
 
 /** A message from the client: validated, its handler run in a fresh scope, the ack sent. In order within a join. */
-async function run(h: Hub, c: Sock, j: Join, ack: number, name: string, msg: unknown) {
+async function run(h: Hub, c: Sock, j: Join, call: { ack: number; name: string; msg: unknown }) {
+  const { ack, name, msg } = call
   const fn = j.fn
   try {
     if (fn.kind === 'shared') {
@@ -239,6 +245,15 @@ async function run(h: Hub, c: Sock, j: Join, ack: number, name: string, msg: unk
   }
 }
 
+function slow(h: Hub, c: Sock, what: string) {
+  c.options.onDiagnostic?.({
+    code: 'R008',
+    severity: 'error',
+    message: `R008: a client sent over ${what}`,
+  })
+  return gone(h, c, 1008, 'rate limit')
+}
+
 function frame(h: Hub, c: Sock, text: string) {
   if (!stateOf(h).socks.has(c)) return // closing: what was already on the wire
   c.last = Date.now()
@@ -259,29 +274,24 @@ function frame(h: Hub, c: Sock, text: string) {
   if (!Array.isArray(f)) return gone(h, c, 1007, 'not a frame')
   if (f[0] === 'p') return send(c, ['p'])
   if (!take(c.bucket, h.limits.perSecond, h.limits.burst)) {
-    c.options.onDiagnostic?.({
-      code: 'R008',
-      severity: 'error',
-      message: `R008: a client sent over ${h.limits.perSecond} messages a second`,
-    })
-    return gone(h, c, 1008, 'rate limit')
+    return slow(h, c, `${h.limits.perSecond} messages a second`)
   }
   if (f[0] === 'j' && typeof f[2] === 'string')
-    return void join(h, c, f[1], f[2], f[3], typeof f[4] === 'string' ? f[4] : undefined)
+    return void join(h, c, {
+      n: f[1],
+      id: f[2],
+      params: f[3],
+      cursor: typeof f[4] === 'string' ? f[4] : undefined,
+    })
   const j = c.joins.get(f[1])
   if (f[0] === 'l') return j && leave(h, c, j)
   if (f[0] !== 'm' || typeof f[2] !== 'number' || typeof f[3] !== 'string') return
   if (!j) return send(c, ['a', f[1], f[2], { code: 'Q009', message: 'not joined' }])
   const per = j.fn.def.limits?.perSecond
   if (per && !take(j.bucket, per, per * 2)) {
-    c.options.onDiagnostic?.({
-      code: 'R008',
-      severity: 'error',
-      message: `R008: a client sent over ${per} messages a second to \`${j.fn.$id}\``,
-    })
-    return gone(h, c, 1008, 'rate limit')
+    return slow(h, c, `${per} messages a second to \`${j.fn.$id}\``)
   }
-  j.chain = j.chain.then(() => run(h, c, j, f[2], f[3], f[4]))
+  j.chain = j.chain.then(() => run(h, c, j, { ack: f[2], name: f[3], msg: f[4] }))
 }
 
 function gone(h: Hub, c: Sock, code: number, reason?: string) {

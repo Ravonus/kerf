@@ -55,15 +55,11 @@ export async function coldPage(
   const t = table(p, shape)
   const styles = t
     ? undefined
-    : pageStyles(
-        p.assets,
-        shape.sheets,
-        p.stream.shell,
-        p.site.head,
-        undefined,
-        kept,
-        p.request.headers.has('cookie'),
-      )
+    : pageStyles(p.assets, shape.sheets, p.stream.shell, {
+        head: p.site.head,
+        have: kept,
+        keep: p.request.headers.has('cookie'),
+      })
   const capturing = !!p.options.lazy || shape.streaming
   if (known !== null && !p.options.dev)
     p.remember(styles?.links ? cold + ' w' : cold, {
@@ -92,7 +88,7 @@ export async function coldPage(
   const body = new ReadableStream<Uint8Array>({
     async start(controller) {
       controller.enqueue(p.enc.encode(head))
-      await rest(p, controller, t || styles!, true)
+      await rest(p, { controller, styles: t || styles!, streaming: true })
     },
   })
   return withHeaders(new Response(body, init), p.scope)

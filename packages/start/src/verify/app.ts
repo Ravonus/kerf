@@ -1,13 +1,14 @@
 import { Broke, subscribe, type Hello } from './support'
 
-export async function openApp(
-  url: string,
-  id: string,
-  input: unknown,
-  cookie: string | undefined,
-  signal: AbortSignal,
-  timeout: number,
-) {
+export async function openApp(o: {
+  url: string
+  id: string
+  input: unknown
+  cookie: string | undefined
+  signal: AbortSignal
+  timeout: number
+}) {
+  const { url, id, input, cookie, signal, timeout } = o
   const a = await subscribe(url, id, input, cookie, signal)
   const hi = await a.until((f) => f[0] === 'h', timeout)
   if (!hi) throw new Broke('app', 'the app accepted the connection and said nothing')

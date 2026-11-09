@@ -48,12 +48,9 @@ interface Options {
 async function startWatcher(
   sink: Sink,
   how: Probe,
-  path: string,
-  open: Options['open'],
-  tables: string[],
-  interval: number,
-  set: (tick?: () => void, out?: Sink) => void,
+  o: Required<Options> & { set: (tick?: () => void, out?: Sink) => void },
 ) {
+  const { path, open, tables, interval, set } = o
   if (how.mode === 'off') return () => {}
   const c = await open(path)
   const version = () => (c.query('pragma data_version', [], 'values') as number[][])[0]![0]!
@@ -166,9 +163,15 @@ export function sqliteChanges({ path, open, tables, interval = 100 }: Options) {
   return {
     probe,
     start: (sink: Sink, how: Probe) =>
-      startWatcher(sink, how, path, open, tables, interval, (next, target) => {
-        tick = next
-        out = target
+      startWatcher(sink, how, {
+        path,
+        open,
+        tables,
+        interval,
+        set: (next, target) => {
+          tick = next
+          out = target
+        },
       }),
     /** In this process, so the barrier needs no trip: read what's committed now, and let the hub drop what the poke covers. */
     settle(tags: string[]) {

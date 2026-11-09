@@ -81,7 +81,7 @@ export function createHandler(options: HandlerOptions) {
   const timing = options.timeout === undefined ? {} : { timeout: options.timeout }
   const complete = makeComplete(options, manifest, site, mod, CARD)
 
-  const { finished, inspect } = makePreview(
+  const { finished, inspect } = makePreview({
     als,
     scopeOptions,
     resolve,
@@ -89,7 +89,7 @@ export function createHandler(options: HandlerOptions) {
     timing,
     complete,
     PASSES,
-  )
+  })
 
   const page = makePage({
     options,
@@ -108,9 +108,9 @@ export function createHandler(options: HandlerOptions) {
 
   const media = makeMedia(options, mediaServer)
 
-  const data = makeNavigation(resolve, finished, statics, stateOf, PASSES, options)
+  const data = makeNavigation({ resolve, finished, statics, stateOf, PASSES, options })
 
-  const og = makeCard(resolve, finished, mod, manifest, options, site, CARD)
+  const og = makeCard({ resolve, finished, mod, manifest, options, site, CARD })
 
   const prerenderList = makePrerender(manifest, mod, resolve, finished)
 

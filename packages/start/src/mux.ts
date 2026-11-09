@@ -33,12 +33,16 @@ const byUser = (h: Hub) => {
   return m
 }
 
+interface Socket {
+  peer: Physical
+  request: Request
+  scope: Scope
+  h: Hub
+  lines: Map<string, Open>
+}
+
 function openLines(
-  peer: Physical,
-  request: Request,
-  scope: Scope,
-  h: Hub,
-  lines: Map<string, Open>,
+  { peer, request, scope, h, lines }: Socket,
   end: (id: string, code: number, reason?: string) => void,
 ) {
   function openC(id: string) {
@@ -89,16 +93,20 @@ function openLines(
 }
 
 function messages(
-  peer: Physical,
-  request: Request,
-  scope: Scope,
-  h: Hub,
-  lines: Map<string, Open>,
-  allowed: () => boolean,
-  end: (id: string, code: number, reason?: string) => void,
-  shut: (id: string, line: Open) => void,
-  openC: (id: string) => void,
-  openR: (id: string, hello: string) => void,
+  { peer, request, scope, h, lines }: Socket,
+  {
+    allowed,
+    end,
+    shut,
+    openC,
+    openR,
+  }: {
+    allowed: () => boolean
+    end: (id: string, code: number, reason?: string) => void
+    shut: (id: string, line: Open) => void
+    openC: (id: string) => void
+    openR: (id: string, hello: string) => void
+  },
 ) {
   return (text: string) => {
     if (text === 'p') return peer.send('p')
@@ -165,6 +173,7 @@ export async function muxed(
     users.set(user, (users.get(user) ?? 0) + 1)
   }
   const lines = new Map<string, Open>()
+  const socket = { peer, request, scope, h, lines }
   const bucket = { tokens: h.limits.burst * 8, at: Date.now() }
   let closed = false
 
@@ -181,7 +190,7 @@ export async function muxed(
     peer.send(`x:${id}:${code}:${reason}`)
   }
 
-  const { openC, openR } = openLines(peer, request, scope, h, lines, end)
+  const { openC, openR } = openLines(socket, end)
 
   function shut(id: string, line: Open) {
     lines.delete(id)
@@ -208,7 +217,7 @@ export async function muxed(
     release() // the caller never gets a close() for a socket that failed to open
     throw e
   }
-  const message = messages(peer, request, scope, h, lines, allowed, end, shut, openC, openR)
+  const message = messages(socket, { allowed, end, shut, openC, openR })
   return {
     message(text) {
       return message(text)

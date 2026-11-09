@@ -55,12 +55,9 @@ async function recheck(deps: Dependencies, c: Conn) {
 
 async function connect(
   deps: Dependencies,
-  request: Request,
-  scope: Scope,
-  body: Body,
-  sink: Sink,
-  line = false,
+  a: { request: Request; scope: Scope; body: Body; sink: Sink; line: boolean },
 ) {
+  const { request, scope, body, sink, line } = a
   const {
     conns,
     limits,
@@ -144,6 +141,7 @@ export function createConnections(deps: Dependencies) {
   return {
     bye: (c: Conn, retry: number) => bye(deps, c, retry),
     close: (c: Conn) => close(deps, c),
-    connect: connect.bind(null, deps),
+    connect: (request: Request, scope: Scope, body: Body, sink: Sink, line = false) =>
+      connect(deps, { request, scope, body, sink, line }),
   }
 }

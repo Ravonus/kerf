@@ -78,11 +78,10 @@ export async function roundTrip({
   options,
   env,
 }: RoundTrip): Promise<VerifyResult> {
-  const timeout = options.timeout ?? 5000
+  const { input, timeout = 5000 } = options
   const marker = `weft-verify-${crypto.randomUUID()}` // concurrent builds never touch each other's row
   const ms: VerifyResult['ms'] = {}
   const untested: VerifyResult['untested'] = []
-  const input = options.input
   const cookie = env[options.cookie ?? 'WEFT_STAGING_COOKIE']
   const other = env[options.otherCookie ?? 'WEFT_STAGING_OTHER_COOKIE']
   const timed = timer(ms)
@@ -108,7 +107,9 @@ export async function roundTrip({
       )
 
     const live = url
-      ? await timed('app', () => openApp(url, fn.$id, input, cookie, ac.signal, timeout))
+      ? await timed('app', () =>
+          openApp({ url, id: fn.$id, input, cookie, signal: ac.signal, timeout }),
+        )
       : undefined
     skipWithoutUrl(url, sql, skip)
 
@@ -127,25 +128,25 @@ export async function roundTrip({
       waitNotice(heard, table, row!.id, timeout, (wake) => (hearing = wake)),
     )
     if (live)
-      await checkLive(
+      await checkLive({
         live,
         denied,
         timed,
         skip,
-        url!,
-        fn.$id,
+        url: url!,
+        id: fn.$id,
         input,
         cookie,
         other,
         marker,
         timeout,
         options,
-      )
+      })
     return { ok: true, ms, untested }
   } catch (e) {
     const b = e instanceof Broke ? e : new Broke('trigger', clean(e))
     return { ok: false, broke: { link: b.link, why: clean(b.message) }, ms, untested }
   } finally {
-    await cleanup(ac, row, ms, sql, listener, marker)
+    await cleanup({ ac, row, ms, sql, listener, marker })
   }
 }

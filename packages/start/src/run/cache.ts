@@ -147,10 +147,9 @@ export class RouteCache {
     response: Response,
     body: string,
     next: RoutePayload,
-    since: number,
-    canSeed: boolean,
-    started: number,
+    seed: { since: number; canSeed: boolean; started: number },
   ) {
+    const { since, canSeed, started } = seed
     if (!key) return
     this.remove(key)
     const tag = response.headers.get('etag')
@@ -172,15 +171,26 @@ export class RouteCache {
       this.remove(this.entries.keys().next().value!)
   }
 
-  /** Fetch or validate a body against the current generation before returning it. */
-  async read(
+  read(
     url: URL,
     signal: AbortSignal,
     fetchRoute: FetchRoute,
     now: () => number,
     canSeed: () => boolean,
-    onForget?: () => void,
   ): Promise<Read> {
+    return this.load({ url, signal, fetchRoute, now, canSeed })
+  }
+
+  /** Fetch or validate a body against the current generation before returning it. */
+  async load(o: {
+    url: URL
+    signal: AbortSignal
+    fetchRoute: FetchRoute
+    now: () => number
+    canSeed: () => boolean
+    onForget?: (() => void) | undefined
+  }): Promise<Read> {
+    const { url, signal, fetchRoute, now, canSeed, onForget } = o
     let allowTag = true
     for (;;) {
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError')
@@ -235,7 +245,7 @@ export class RouteCache {
       }
       if (response.status !== 304) {
         if (next.p !== url.pathname + url.search && key) this.remove(key)
-        else this.store(key, response, body, next, since, canSeed(), started)
+        else this.store(key, response, body, next, { since, canSeed: canSeed(), started })
         if (!next.r && !this.peek(url, canSeed())) onForget?.()
       }
       return { next, since, version, notModified: response.status === 304 }

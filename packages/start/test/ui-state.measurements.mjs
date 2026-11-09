@@ -86,15 +86,8 @@ export function registerLatencyPerRouteAndSocketsPerClient(getBrowser, open, mea
   )
 }
 
-export function registerTabsWithShareChannelAndLiveOne(
-  getBrowser,
-  together,
-  label,
-  socketsOpen,
-  hitsOf,
-  say,
-  heard,
-) {
+export function registerTabsWithShareChannelAndLiveOne(getBrowser, helpers) {
+  const { together, label, socketsOpen, hitsOf, say, heard } = helpers
   test('8 tabs with share, channel and live: one socket, and all three work from every tab', async () => {
     const ctx = await getBrowser().newContext()
     const pages = await together(ctx, 8)
@@ -112,15 +105,8 @@ export function registerTabsWithShareChannelAndLiveOne(
   }, 90_000)
 }
 
-export function registerTheLeaderClosesOneNewSocketAnd(
-  getBrowser,
-  together,
-  label,
-  socketsOpen,
-  hitsOf,
-  say,
-  heard,
-) {
+export function registerTheLeaderClosesOneNewSocketAnd(getBrowser, helpers) {
+  const { together, label, socketsOpen, hitsOf, say, heard } = helpers
   test('the leader closes: one new socket, and channel and live carry on in every tab', async () => {
     const ctx = await getBrowser().newContext()
     const pages = await together(ctx, 4)
@@ -146,14 +132,8 @@ export function registerTheLeaderClosesOneNewSocketAnd(
   }, 60_000)
 }
 
-export function registerTheSocketDiesChannelAndLiveReconnect(
-  getBrowser,
-  together,
-  label,
-  socketsOpen,
-  say,
-  heard,
-) {
+export function registerTheSocketDiesChannelAndLiveReconnect(getBrowser, helpers) {
+  const { together, label, socketsOpen, say, heard } = helpers
   test('the socket dies: channel and live reconnect on one new socket', async () => {
     const ctx = await getBrowser().newContext()
     const pages = await together(ctx, 3)
@@ -215,14 +195,8 @@ export function registerATabHiddenPastTheParkLimit(getBrowser, open, label) {
   }, 40_000)
 }
 
-export function registerATabSignsInAfterTheSocket(
-  getBrowser,
-  open,
-  together,
-  label,
-  socketsOpen,
-  url,
-) {
+export function registerATabSignsInAfterTheSocket(getBrowser, helpers) {
+  const { open, together, label, socketsOpen, url } = helpers
   test('a tab signs in after the socket opened: the leader dials again, as the new user', async () => {
     const ctx = await getBrowser().newContext()
     const a = await together(ctx, 1)

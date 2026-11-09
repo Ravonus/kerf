@@ -98,14 +98,17 @@ const at = (values: Record<string, unknown> | undefined, name: string) =>
 
 function createSubmit<O>(
   m: { [SUBMIT]: (input: unknown, form: true | FormData) => Promise<O> },
-  calls: State<number>,
-  errors: State<Record<string, string>>,
-  message: State<string | undefined>,
-  result: State<O | undefined>,
-  reset: () => boolean | undefined,
-  onSuccess: () => ((result: O) => void) | undefined,
-  onError: () => ((error: unknown) => void) | undefined,
+  o: {
+    calls: State<number>
+    errors: State<Record<string, string>>
+    message: State<string | undefined>
+    result: State<O | undefined>
+    reset: () => boolean | undefined
+    onSuccess: () => ((result: O) => void) | undefined
+    onError: () => ((error: unknown) => void) | undefined
+  },
 ) {
+  const { calls, errors, message, result, reset, onSuccess, onError } = o
   return async function submit(e: SubmitEvent) {
     e.preventDefault()
     if (calls.value) return
@@ -193,16 +196,15 @@ export function Form<I, O>({
     ),
   }
 
-  const submit = createSubmit(
-    m,
+  const submit = createSubmit(m, {
     calls,
     errors,
     message,
     result,
-    () => reset,
-    () => onSuccess,
-    () => onError,
-  )
+    reset: () => reset,
+    onSuccess: () => onSuccess,
+    onError: () => onError,
+  })
 
   return (
     <form

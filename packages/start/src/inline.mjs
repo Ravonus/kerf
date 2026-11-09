@@ -286,7 +286,8 @@ const blocking = (href) => `<link rel="stylesheet" href="${esc(href)}">\n`
  * browser says it has (`keptSheets`). With all of the page's, it gets links (`links`): nothing to inline, or to look for.
  * `keep`: the request has cookies, so the page may list the sheets it loads in one more.
  */
-export function pageStyles(assets, css = [], html = '', head, seen, have, keep = false) {
+export function pageStyles(assets, css = [], html = '', extra = {}) {
+  const { head, seen, have, keep = false } = extra
   const first = `<style>${LAYER_ORDER}</style>\n`
   if (have && css.length && css.every((c) => have.has(sheetId(c.href)))) {
     const carried = new Set(css.map((c) => c.href))

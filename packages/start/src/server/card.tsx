@@ -4,15 +4,23 @@ import { DefaultCard } from '../og/DefaultCard'
 import { renderCard } from '../og/index.mjs'
 import { settledView } from './payload'
 import type { HandlerOptions, Manifest, Resolved, RouteModule } from './types'
-export function makeCard(
-  resolve: (path: string, request: Request) => Promise<Resolved>,
-  finished: (r: Resolved, request: Request) => Promise<Merged>,
-  mod: (file?: string) => RouteModule | undefined,
-  manifest: Manifest,
-  options: HandlerOptions,
-  site: NonNullable<HandlerOptions['site']>,
-  CARD: { width: number; height: number },
-) {
+export function makeCard({
+  resolve,
+  finished,
+  mod,
+  manifest,
+  options,
+  site,
+  CARD,
+}: {
+  resolve: (path: string, request: Request) => Promise<Resolved>
+  finished: (r: Resolved, request: Request) => Promise<Merged>
+  mod: (file?: string) => RouteModule | undefined
+  manifest: Manifest
+  options: HandlerOptions
+  site: NonNullable<HandlerOptions['site']>
+  CARD: { width: number; height: number }
+}) {
   return async function og(url: URL, request: Request): Promise<Response> {
     const path =
       '/' +

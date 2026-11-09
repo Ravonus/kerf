@@ -79,19 +79,28 @@ export async function serverFunction(
       })
     return out(answer)
   } catch (e) {
-    return functionError(e, fromForm, scope, options, id, out, fail)
+    return functionError(e, { fromForm, scope, options, id, out, fail })
   }
 }
 
 function functionError(
   e: unknown,
-  fromForm: boolean,
-  scope: Scope,
-  options: HandlerOptions,
-  id: string,
-  out: (body: unknown, status?: number) => Response,
-  fail: (code: string, message: string, status: number, extra?: object, sent?: unknown) => Response,
+  c: {
+    fromForm: boolean
+    scope: Scope
+    options: HandlerOptions
+    id: string
+    out: (body: unknown, status?: number) => Response
+    fail: (
+      code: string,
+      message: string,
+      status: number,
+      extra?: object,
+      sent?: unknown,
+    ) => Response
+  },
 ): Response {
+  const { fromForm, scope, options, id, out, fail } = c
   // The session changed: a full load, so nothing cached for the last user survives in the tab (research 28 §3).
   if (isRedirect(e)) return out({ r: e.href, ...(sessionChanged(scope.headers) && { x: 1 }) })
   if (e instanceof FnError) return out({ e: { code: e.code, message: e.message } }, e.status)

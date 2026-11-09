@@ -104,7 +104,7 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
     process.env.WEFT_NATIVE_DIR = nativeDir
   }
 
-  const rebuild = devBuilder(
+  const rebuild = devBuilder({
     root,
     rust,
     secret,
@@ -114,15 +114,15 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
     states,
     nativeDir,
     publish,
-    () => contract,
-    () => closed,
-  )
+    contract: () => contract,
+    closed: () => closed,
+  })
 
-  const watchers = await watchServices(
+  const watchers = await watchServices({
     root,
     rust,
-    () => contract,
-    (next) => (contract = next),
+    contract: () => contract,
+    setContract: (next) => (contract = next),
     first,
     states,
     proxy,
@@ -131,7 +131,7 @@ export async function devSidecars({ root, site, rust, log = console.log }) {
     refresh,
     overlay,
     log,
-  )
+  })
 
   const killAll = () => {
     closed = true

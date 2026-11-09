@@ -157,9 +157,9 @@ let idle: ReturnType<typeof setTimeout> | undefined
 const upstream = (key: string) => upstreamOf(key, locks())
 const wanted = () => wantedKeys(locks())
 
-const net = network(
-  () => conn,
-  () => open,
+const net = network({
+  connection: () => conn,
+  isOpen: () => open,
   sent,
   refused,
   dirtyNet,
@@ -169,7 +169,7 @@ const net = network(
   shareStats,
   GAP_NET,
   BATCH,
-)
+})
 const netSoon = net.netSoon
 
 /** Whatever changed in `tabs`, the socket follows. Nothing wanted for a while, no socket: a page left its rows behind. */
@@ -342,7 +342,7 @@ function halt() {
   clients.clear()
 }
 
-const receive = receiver(
+const receive = receiver({
   dropClients,
   watch,
   reconcile,
@@ -352,7 +352,7 @@ const receive = receiver(
   announce,
   dropTab,
   link,
-)
+})
 
 if (typeof window !== 'undefined') {
   addEventListener('pagehide', halt)

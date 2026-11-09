@@ -105,7 +105,7 @@ const compare = async (rootAttrs: string, width: number, head?: string) => {
     { inline, critical: { parse, purge } },
     files.map((f) => ({ href: `/${f}` })),
     html,
-    head,
+    { head },
   ).head
   expect(styles).toContain('data-late')
   const page = (css: string) =>

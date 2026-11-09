@@ -10,17 +10,27 @@ import {
 } from './state'
 import { hear, render, renderAll } from './display'
 
-export function receiver(
-  dropClients: (test: (e: Client, id: string) => boolean) => void,
-  watch: (tab: string) => void,
-  reconcile: () => void,
-  wakeIfLeading: () => void,
-  leading: () => boolean,
-  post: (msg: Msg) => void,
-  announce: () => void,
-  dropTab: (tab: string) => void,
-  link: (up: boolean) => void,
-) {
+export function receiver({
+  dropClients,
+  watch,
+  reconcile,
+  wakeIfLeading,
+  leading,
+  post,
+  announce,
+  dropTab,
+  link,
+}: {
+  dropClients: (test: (e: Client, id: string) => boolean) => void
+  watch: (tab: string) => void
+  reconcile: () => void
+  wakeIfLeading: () => void
+  leading: () => boolean
+  post: (msg: Msg) => void
+  announce: () => void
+  dropTab: (tab: string) => void
+  link: (up: boolean) => void
+}) {
   return (m: Msg) => {
     if (m.t === 'tab') {
       tabs.set(m.tab, new Map(m.keys))
