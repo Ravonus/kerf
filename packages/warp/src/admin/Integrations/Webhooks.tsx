@@ -72,16 +72,25 @@ function webhookColumns(test: (h: Webhook) => Promise<void>): Column<Webhook>[] 
   ]
 }
 
-function webhookForm(
-  events: () => string[],
-  url: State<string>,
-  picked: State<string[]>,
-  urlError: State<string>,
-  eventError: State<string>,
-  tried: State<boolean>,
-  check: () => void,
-  save: () => Promise<void>,
-) {
+function webhookForm({
+  events,
+  url,
+  picked,
+  urlError,
+  eventError,
+  tried,
+  check,
+  save,
+}: {
+  events: () => string[]
+  url: State<string>
+  picked: State<string[]>
+  urlError: State<string>
+  eventError: State<string>
+  tried: State<boolean>
+  check: () => void
+  save: () => Promise<void>
+}) {
   const live = {
     get events() {
       return events()
@@ -153,13 +162,19 @@ function webhookTester(onTest: WebhooksProps['onTest']) {
   return test
 }
 
-function webhookFooter(
-  secret: State<string>,
-  seen: State<boolean>,
-  dialog: State<boolean>,
-  busy: State<boolean>,
-  save: () => Promise<void>,
-) {
+function webhookFooter({
+  secret,
+  seen,
+  dialog,
+  busy,
+  save,
+}: {
+  secret: State<string>
+  seen: State<boolean>
+  dialog: State<boolean>
+  busy: State<boolean>
+  save: () => Promise<void>
+}) {
   return derived(() =>
     secret.value ? (
       <Button disabled={!seen.value} onClick={() => (dialog.value = false)}>
@@ -178,16 +193,25 @@ function webhookFooter(
   )
 }
 
-function webhookSaver(
-  onAdd: () => Promise<string>,
-  busy: State<boolean>,
-  tried: State<boolean>,
-  check: () => void,
-  eventError: State<string>,
-  picked: State<string[]>,
-  urlError: State<string>,
-  secret: State<string>,
-) {
+function webhookSaver({
+  onAdd,
+  busy,
+  tried,
+  check,
+  eventError,
+  picked,
+  urlError,
+  secret,
+}: {
+  onAdd: () => Promise<string>
+  busy: State<boolean>
+  tried: State<boolean>
+  check: () => void
+  eventError: State<string>
+  picked: State<string[]>
+  urlError: State<string>
+  secret: State<string>
+}) {
   const save = async () => {
     if (busy.value) return
     tried.value = true
@@ -218,23 +242,35 @@ function validateUrl(url: State<string>, urlError: State<string>) {
       : 'Use a full https:// URL.'
 }
 
+function webhookFields() {
+  const url = state('')
+  const picked = state<string[]>([])
+  const urlError = state('')
+  const eventError = state('')
+  const tried = state(false)
+  const reset = (events: string[]) => {
+    url.value = ''
+    picked.value = events.slice(0, 2)
+    urlError.value = ''
+    eventError.value = ''
+    tried.value = false
+  }
+  return { url, picked, urlError, eventError, tried, reset }
+}
+
 /** Webhooks (09 §4.6): a DataTable of endpoints. Send test reports the code and time; a new signing secret is shown once. */
 export function Webhooks(props: WebhooksProps) {
   const adding = state(false)
   const armed = latch(adding)
   const { secret, seen } = useReveal(adding)
   const dialog = guarded(adding, () => !secret.value || seen.value)
-  const url = state('')
-  const picked = state<string[]>([])
-  const urlError = state('')
-  const eventError = state('')
-  const tried = state(false)
+  const { url, picked, urlError, eventError, tried, reset } = webhookFields()
   const busy = state(false)
   const list = derived(() => read(props.hooks))
   const check = () => validateUrl(url, urlError)
   const test = webhookTester((hook) => props.onTest(hook))
-  const save = webhookSaver(
-    () => props.onAdd(url.value.trim(), picked.value),
+  const save = webhookSaver({
+    onAdd: () => props.onAdd(url.value.trim(), picked.value),
     busy,
     tried,
     check,
@@ -242,13 +278,9 @@ export function Webhooks(props: WebhooksProps) {
     picked,
     urlError,
     secret,
-  )
+  })
   const open = () => {
-    url.value = ''
-    picked.value = props.events.slice(0, 2)
-    urlError.value = ''
-    eventError.value = ''
-    tried.value = false
+    reset(props.events)
     adding.value = true
   }
   const columns = webhookColumns(test)
@@ -257,7 +289,7 @@ export function Webhooks(props: WebhooksProps) {
       Add endpoint
     </Button>
   )) // one build: Table reads the prop twice
-  const footer = webhookFooter(secret, seen, dialog, busy, save)
+  const footer = webhookFooter({ secret, seen, dialog, busy, save })
   return (
     <div data-scope="stack">
       <Table
@@ -291,7 +323,16 @@ export function Webhooks(props: WebhooksProps) {
               ack="I’ve saved this secret somewhere safe"
             />
           ) : (
-            webhookForm(() => props.events, url, picked, urlError, eventError, tried, check, save)
+            webhookForm({
+              events: () => props.events,
+              url,
+              picked,
+              urlError,
+              eventError,
+              tried,
+              check,
+              save,
+            })
           )}
         </Modal>
       )}

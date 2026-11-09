@@ -65,16 +65,16 @@ export function SaveBar<T extends Record<string, unknown>>({
         ? `Fix ${plural(fixes.value, 'field')} to save`
         : 'You have unsaved changes',
   )
-  const { save, discard, leave } = saveActions(
-    { box, base, phase, fixes, leaving, dirty, refs },
-    () => errors,
-    (now) => validate?.(now),
-    (now) => onSave(now),
-    () => onDiscard?.(),
-    () => onLeave,
-    () => onLeave!(refs.target),
-  )
-  bindSaveBar(refs, dirty, leaving, save)
+  const { save, discard, leave } = saveActions({
+    d: { box, base, phase, fixes, leaving, dirty, refs },
+    errors: () => errors,
+    validate: (now) => validate?.(now),
+    onSave: (now) => onSave(now),
+    onDiscard: () => onDiscard?.(),
+    hasLeave: () => onLeave,
+    onLeave: () => onLeave!(refs.target),
+  })
+  bindSaveBar({ refs, dirty, leaving, save })
   return (
     <>
       <div
@@ -116,12 +116,17 @@ export function SaveBar<T extends Record<string, unknown>>({
   )
 }
 
-function bindSaveBar(
-  refs: { target: string; el?: HTMLDivElement | undefined },
-  dirty: { readonly value: boolean },
-  leaving: State<boolean>,
-  save: () => Promise<void>,
-) {
+function bindSaveBar({
+  refs,
+  dirty,
+  leaving,
+  save,
+}: {
+  refs: { target: string; el?: HTMLDivElement | undefined }
+  dirty: { readonly value: boolean }
+  leaving: State<boolean>
+  save: () => Promise<void>
+}) {
   use(
     leaveGuard,
     () => refs.el,

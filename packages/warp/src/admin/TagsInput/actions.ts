@@ -2,14 +2,21 @@ import { addTags, announce } from '@weft-js/warp-core'
 import type { State } from '@weft-js/core'
 import { afterFlush } from '../atoms'
 
-export function tagActions(
-  value: () => State<string[]>,
-  draft: State<string>,
-  armed: State<boolean>,
-  refs: { host?: HTMLElement | undefined },
-  onEdit: () => void,
-  onSubmit: () => void,
-) {
+export function tagActions({
+  value,
+  draft,
+  armed,
+  refs,
+  onEdit,
+  onSubmit,
+}: {
+  value: () => State<string[]>
+  draft: State<string>
+  armed: State<boolean>
+  refs: { host?: HTMLElement | undefined }
+  onEdit: () => void
+  onSubmit: () => void
+}) {
   const say = (text: string) => {
     if (refs.host) announce(refs.host.ownerDocument, text)
   }

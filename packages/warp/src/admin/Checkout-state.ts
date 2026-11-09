@@ -29,17 +29,6 @@ export function checkoutState(input: CheckoutInput) {
   const id = uid('co')
   const step = state<CheckoutStep>('cart')
   const dir = state<'back' | undefined>(undefined)
-  const name = state('')
-  const email = state('')
-  const phone = state('')
-  const address = state<Address | null>(null)
-  const billing = state<Address | null>(null)
-  const sameBilling = state(true)
-  const nameError = state('')
-  const emailError = state('')
-  const addressErrors = state<Partial<Record<AddressPart, string>>>({})
-  const billingErrors = state<Partial<Record<AddressPart, string>>>({})
-  const addressAlert = state('')
   const ship = state(untrack(() => input.shipping()[0]?.id ?? ''))
   const code = state('')
   const codeError = state('')
@@ -65,17 +54,6 @@ export function checkoutState(input: CheckoutInput) {
     id,
     step,
     dir,
-    name,
-    email,
-    phone,
-    address,
-    billing,
-    sameBilling,
-    nameError,
-    emailError,
-    addressErrors,
-    billingErrors,
-    addressAlert,
     ship,
     code,
     codeError,
@@ -88,7 +66,35 @@ export function checkoutState(input: CheckoutInput) {
     placed,
     paySlot,
     refs,
+    ...contactState(),
     ...pricing,
+  }
+}
+
+function contactState() {
+  const name = state('')
+  const email = state('')
+  const phone = state('')
+  const address = state<Address | null>(null)
+  const billing = state<Address | null>(null)
+  const sameBilling = state(true)
+  const nameError = state('')
+  const emailError = state('')
+  const addressErrors = state<Partial<Record<AddressPart, string>>>({})
+  const billingErrors = state<Partial<Record<AddressPart, string>>>({})
+  const addressAlert = state('')
+  return {
+    name,
+    email,
+    phone,
+    address,
+    billing,
+    sameBilling,
+    nameError,
+    emailError,
+    addressErrors,
+    billingErrors,
+    addressAlert,
   }
 }
 

@@ -11,12 +11,12 @@ import {
   type ImportIssue,
   type ImportTarget,
 } from '@weft-js/warp-core'
-import { derived, state, untrack, type State } from '@weft-js/core'
+import { derived, state, untrack } from '@weft-js/core'
 import { Alert } from '../Alert'
 import { Button } from '../Button'
 import { Progress } from '../Progress'
 import { PlainTable } from './PlainTable'
-import { csvLoading, csvRun, type Stage } from './CsvImport-actions'
+import { csvLoading, csvPreview, csvRun, type Stage } from './CsvImport-actions'
 import { StepBar } from './StepBar'
 import { InlineSelect, Sweep, afterFlush } from './atoms'
 import '../styles'
@@ -58,29 +58,8 @@ const SAY: Record<Stage, string> = {
   done: 'importing',
 }
 const ORDER: Stage[] = ['upload', 'map', 'review', 'done']
-const PREVIEW_ROWS = 50
 
 type CsvRefs = { headingElement?: HTMLElement | undefined }
-
-function csvPreview(
-  props: CsvImportProps,
-  table: State<CsvTable>,
-  map: State<string[]>,
-  issues: { readonly value: ImportIssue[] },
-) {
-  const cellIssue = (row: number, target: string) =>
-    issues.value.find((x) => x.row === row && x.path === target)
-  const preview = derived(() =>
-    table.value.rows.slice(0, PREVIEW_ROWS).map((cells, row) => ({ row, cells })),
-  )
-  const columns = derived(() =>
-    table.value.headers.map((h, col) => ({ h, col, target: map.value[col] })),
-  )
-  const kept = derived(() => columns.value.filter((c) => c.target !== SKIP_COLUMN))
-  const titleOf = (target: string) => props.targets.find((t) => t.id === target)?.label ?? target
-
-  return { cellIssue, preview, columns, kept, titleOf }
-}
 
 function announceCsvStep(refs: CsvRefs, s: Stage) {
   if (refs.headingElement)
@@ -124,15 +103,15 @@ function csvModel(props: CsvImportProps) {
     announceCsvStep(refs, next)
     afterFlush(() => refs.headingElement?.focus())
   }
-  const { load, take } = csvLoading(props, table, map, file, issue, go)
-  const run = csvRun(props, table, map, issues, percent, finished, count, go)
+  const { load, take } = csvLoading({ props, table, map, file, issue, go })
+  const run = csvRun({ props, table, map, issues, percent, finished, count, go })
   const again = () => {
     table.value = { headers: [], rows: [] }
     map.value = []
     file.value = ''
     go('upload')
   }
-  const { cellIssue, preview, columns, kept, titleOf } = csvPreview(props, table, map, issues)
+  const { cellIssue, preview, columns, kept, titleOf } = csvPreview({ props, table, map, issues })
 
   return {
     refs,
