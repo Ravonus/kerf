@@ -189,3 +189,41 @@ void unsupportedHover
 void unsupportedBorder
 void missingText
 void missingBg
+
+const paletteEmptyOverrides: WarpOptions = {
+  themes: { ocean: {} },
+  seed: {},
+  tokens: {},
+  parts: {},
+  dials: { palette: 'auto' },
+}
+const ordinarySeedAndButton: WarpOptions = {
+  themes: {},
+  seed: { hue: 152, chroma: 0.1 },
+  tokens: { '--warp-example': 'red' },
+  parts: { button: { bg: '#000000', text: '#ffffff' } },
+}
+void paletteEmptyOverrides
+void ordinarySeedAndButton
+
+// @ts-expect-error Named palettes cannot be combined with a root Button override.
+const paletteWithButton: WarpOptions = {
+  themes: { ocean: {} },
+  parts: { button: { bg: '#000000', text: '#ffffff' } },
+}
+// @ts-expect-error Named palettes cannot be combined with a root seed.
+const paletteWithSeed: WarpOptions = { themes: { ocean: {} }, seed: { hue: 120, chroma: 0.1 } }
+// @ts-expect-error Named palettes cannot be combined with root token overrides.
+const paletteWithTokens: WarpOptions = {
+  themes: { ocean: {} },
+  tokens: { '--warp-example': 'red' },
+}
+// @ts-expect-error A palette dial also activates the bounded palette form.
+const paletteDialWithSeed: WarpOptions = {
+  dials: { palette: 'auto' },
+  seed: { hue: 120, chroma: 0.1 },
+}
+void paletteWithButton
+void paletteWithSeed
+void paletteWithTokens
+void paletteDialWithSeed
