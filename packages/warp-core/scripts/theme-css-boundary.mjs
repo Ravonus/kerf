@@ -51,6 +51,19 @@ async function render(
   })
 }
 
+function contrast(first, second) {
+  const luminance = (color) => {
+    const values = color.match(/\d+/g).map(Number).slice(0, 3)
+    const linear = values.map((value) => {
+      const c = value / 255
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+    })
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+  }
+  const [a, b] = [luminance(first), luminance(second)].sort((x, y) => y - x)
+  return (a + 0.05) / (b + 0.05)
+}
+
 void test('frame and soft boundaries respect Button inputs and explicit sweep overrides', async () => {
   const page = await browser.newPage()
   try {
@@ -71,12 +84,16 @@ void test('frame and soft boundaries respect Button inputs and explicit sweep ov
               const expectedBg = bg === 'black' ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)'
               const expectedInk = ink === 'black' ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)'
               assert.equal(paint.bg, expectedBg)
-              for (const key of ['base', 'stroke', 'track', 'corners', 'segment'])
+              for (const key of ['stroke', 'corners', 'segment'])
                 assert.equal(
                   paint[key],
                   expectedInk,
                   `${mode}/${expression}/${emphasis}/${tone}/${key}`,
                 )
+              assert.equal(paint.base, expectedBg)
+              assert.equal(paint.track, expectedBg)
+              assert.ok(contrast(paint.stroke, paint.base) >= 3)
+              assert.equal(contrast(paint.stroke, paint.base), 21)
               const explicit = await render(page, {
                 ...common,
                 bg,
@@ -87,8 +104,6 @@ void test('frame and soft boundaries respect Button inputs and explicit sweep ov
               assert.equal(explicit.track, 'rgb(0, 128, 0)')
               for (const key of ['stroke', 'corners', 'segment'])
                 assert.equal(explicit[key], 'rgb(0, 0, 255)')
-              // Both boundaries intentionally resolve to the same input; 3:1 between them is not established.
-              assert.equal(paint.base, paint.stroke)
               assert.equal(paint.ambient, 'rgb(255, 255, 255)')
             }
           }
@@ -102,13 +117,17 @@ void test('nested buttons do not inherit a parent private state boundary', async
   const page = await browser.newPage()
   try {
     await page.setContent(`<style>${read('themed/warp.css')}\n${read('themed/components/button.css')}</style>
-      <div data-scope="button" data-sweep data-press style="--warp-button-text-press:white">
-        <i data-part="sweep"></i><div data-scope="button" data-sweep data-press style="--warp-button-text-press:black">
-        <i data-part="sweep"></i></div></div>`)
+      <div data-scope="button" data-sweep data-press style="--warp-button-text-press:white;--warp-button-bg-press:black">
+        <i data-part="sweep-base"></i><i data-part="sweep"></i><div data-scope="button" data-sweep data-press style="--warp-button-text-press:black;--warp-button-bg-press:white">
+        <i data-part="sweep-base"></i><i data-part="sweep"></i></div></div>`)
     const colors = await page
       .locator('[data-part=sweep]')
       .evaluateAll((nodes) => nodes.map((el) => getComputedStyle(el).color))
     assert.deepEqual(colors, ['rgb(255, 255, 255)', 'rgb(0, 0, 0)'])
+    const bases = await page
+      .locator('[data-part=sweep-base]')
+      .evaluateAll((nodes) => nodes.map((el) => getComputedStyle(el).color))
+    assert.deepEqual(bases, ['rgb(0, 0, 0)', 'rgb(255, 255, 255)'])
   } finally {
     await page.close()
   }
