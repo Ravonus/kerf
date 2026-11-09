@@ -13,7 +13,9 @@
     "bindings",
     "scripts/contrast-check.mjs",
     "scripts/contrast-check-colors.mjs",
+    "scripts/contrast-check-parser.mjs",
     "scripts/theme-schema-registry.mjs",
+    "scripts/theme-schema-registry.json",
     "README.md",
     "LICENSE"
   ],

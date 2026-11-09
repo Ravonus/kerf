@@ -9,6 +9,8 @@ export const dialScript: string
 export interface WarpOptions {
   /** Type and space scales from the classified shim consumers. */
   system?: ThemeSystem
+  /** Named hex colours or aliases to other named colours. */
+  colors?: Record<string, string>
   /** Part overrides from the explicit theme table. */
   parts?: ThemeParts
   /**
