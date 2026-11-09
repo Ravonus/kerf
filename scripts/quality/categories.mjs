@@ -1,20 +1,16 @@
-// First-match limits for source categories.
-const rows = [
-  ['util', /(?:^|\/)(?:utils|lib)\//, 150, 40, 3],
-  ['hook', /(?:^|\/)(?:use-[^/]+|[^/]+-state)\.ts$/, 200, 60, 3],
-  ['component', /(?:^|\/)src\/.*\.tsx$/, 400, 80, 3],
-  ['module', /(?:^|\/)src\/.*\.(?:ts|tsx|js|mjs|cjs)$/, 400, 80, 4],
-  ['script', /(?:^|\/)(?:scripts|bin)\/|(?:^|\/)[^/]*config\.[^/]+$/, 400, 80, 4],
-  ['test', /(?:^|\/)test\/|\.(?:test|e2e)\./, 750, 120, 4],
-  ['types', /(?:\.d\.(?:ts|mts)|(?:^|\/)types\.ts)$|(?:^|\/)types\//, 1000, null, null],
-  ['table', /(?:^|\/)(?:generated|__generated__)\/|(?:^|\/)tokens?[^/]*\.css$|^crates\/.*\/tests\//, 1000, null, null],
-  ['rust', /^crates\/.*\/src\/.*\.rs$/, 400, 80, 5],
-]
-
+// The order is the roadmap's first-match precedence, including overlaps.
 /** Ordered category patterns and limits. */
-export const categories = rows.map(([name, pattern, file, fn, params]) => ({
-  name, pattern, file, function: fn, params,
-}))
+export const categories = [
+  { name: 'util', pattern: /(?:^|\/)(?:utils|lib)\//, file: 150, function: 40, params: 3 },
+  { name: 'hook', pattern: /(?:^|\/)(?:use-[^/]+|[^/]+-state)\.ts$/, file: 200, function: 60, params: 3 },
+  { name: 'component', pattern: /(?:^|\/)src\/.*\.tsx$/, file: 400, function: 80, params: 3 },
+  { name: 'module', pattern: /(?:^|\/)src\/.*\.(?:ts|tsx|js|jsx|mjs|cjs)$/, file: 400, function: 80, params: 4 },
+  { name: 'script', pattern: /(?:^|\/)(?:scripts|bin)\/|(?:^|\/)[^/]*config(?:\.[^/]+)+$/, file: 400, function: 80, params: 4 },
+  { name: 'test', pattern: /(?:^|\/)test\/|\.(?:test|e2e)\./, file: 750, function: 120, params: 4 },
+  { name: 'types', pattern: /(?:\.d\.(?:ts|mts)|(?:^|\/)types\.ts)$|(?:^|\/)types\//, file: 1000, function: null, params: null },
+  { name: 'table', pattern: /(?:^|\/)(?:generated|__generated__)\/|(?:^|\/)tokens?[^/]*\.css$|^crates\/.*\/tests\//, file: 1000, function: null, params: null },
+  { name: 'rust', pattern: /^crates\/.*\/src\/.*\.rs$/, file: 400, function: 80, params: 5 },
+]
 
 /** Return the first matching category, or undefined for an unclassified path. */
 export function classify(path) {

@@ -2,13 +2,22 @@ import { test } from 'node:test'
 import { strict as assert } from 'node:assert'
 import { structure } from './structure.mjs'
 
-test('reports bad paths and index content, and accepts good fixtures', () => {
-  const good = ['packages/a/src/Alpha.tsx', 'packages/a/src/foo.ts', 'packages/a/src/index.ts']
-  assert.deepEqual(structure(good, () => "export { foo } from './foo'\n").warnings, [])
-  const bad = [...Array.from({ length: 13 }, (_, i) => `packages/a/src/file-${i}.ts`), 'packages/a/src/Bad_name.ts', 'packages/a/src/index.ts', 'packages/a/src/small/x.ts']
-  const warnings = structure(bad, () => 'export const x = 1') .warnings
-  assert.ok(warnings.some((s) => s.includes('maximum 12')))
-  assert.ok(warnings.some((s) => s.includes('minimum 3')))
-  assert.ok(warnings.some((s) => s.includes('kebab-case')))
-  assert.ok(warnings.some((s) => s.includes('only re-export')))
+test('accepts good source, mirrors and parsed re-exports', () => {
+  const files = ['packages/a/src/Alpha.tsx', 'packages/a/src/foo.ts', 'packages/a/src/index.ts', 'packages/a/test/foo.test.ts', 'site/src/One.tsx', 'crates/a/src/lib.rs']
+  const result = structure(files, () => "/* comment */\nexport type { Foo } from './foo';\nexport * as all from './foo'\n")
+  assert.deepEqual(result.warnings, [])
+  assert.deepEqual([result.source, result.folders, result.tests], [5, 3, 1])
+})
+
+test('reports bad names, counts, test mirrors and non-reexports', () => {
+  const files = [...Array.from({ length: 13 }, (_, i) => `packages/a/src/file-${i}.ts`), 'packages/a/src/Bad_name.ts', 'packages/a/src/index.ts', 'site/src/small/bad-name.tsx', 'crates/a/src/small/x.rs', 'packages/a/test/missing.test.ts']
+  const result = structure(files, () => 'export const x = 1')
+  for (const text of ['maximum 12', 'site/src/small: 1', 'crates/a/src/small: 1', 'kebab-case', 'PascalCase', 'only re-export', 'test mirror'])
+    assert.ok(result.warnings.some((warning) => warning.includes(text)), text)
+})
+
+test('rejects local exports and malformed index syntax', () => {
+  for (const text of ['export { x }', 'export { from']) {
+    assert.ok(structure(['site/src/index.ts'], () => text).warnings.some((warning) => warning.includes('only re-export')))
+  }
 })
