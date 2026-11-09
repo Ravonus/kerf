@@ -1,10 +1,9 @@
-// media.build@1 (research 15 §2–4, research 26 §2.4): one source file in, a MediaAsset and its files out.
 //   probe (sharp, EXIF orientation) → width ladder → per-format quality search at the largest width (SSIMULACRA2,
 //   the libjxl tool) → encode every width → dominant colour + 16 px WebP placeholder. SVG: refuse unsafe files
 //   (M012), then SVGO. With a media.encode@1 provider (@weft-js/plugin-media-ffmpeg), src/video.mjs takes video, audio
 //   and animated GIFs; without one, a GIF stays as it is and video is P101.
 // Cached by content hash under `cacheDir`, so dev restarts and rebuilds don't re-encode. With `encoder: 'server'` the
-// build only stores the original: the variants are media.server@1's to encode (research 29 §6).
+// build only stores the original: the variants are media.server@1's to encode.
 import { execFile, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'

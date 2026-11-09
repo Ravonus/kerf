@@ -1,5 +1,4 @@
-// media.server@1 (research 15 §5.4, research 29 §6): uploads, CMS images and `encoder: 'server'`. `ingest` stores an
-// original under its hash and returns the record `z.media()` validates; `serve` answers `/_weft/m/<hash>/<w>.<fmt>`,
+// `ingest` stores an original under its hash and returns a `z.media()` record; `serve` answers `/_weft/m/<hash>/<w>.<fmt>`,
 // encoding each variant once and keeping it next to the original. `auto` negotiates on `Accept`. Only widths on the
 // ladder and formats in the config are served, so a URL can't ask for unbounded work. Video, audio and animated GIFs go
 // through src/upload.mjs when media.encode@1 is bound.

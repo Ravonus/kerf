@@ -10,7 +10,7 @@ export const DEFAULTS = {
   gifLimit: 256 * 1024,
   video: { codecs: ['av1'], widths: [640, 960, 1280, 1920] },
 }
-/** Encoder settings without a scorer (research 26 §2.4). */
+/** Encoder settings without a scorer. */
 export const FIXED = { avif: 50, webp: 75, jpeg: 78 }
 /** Content types of the formats this package writes. */
 export const MIME = {
