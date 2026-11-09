@@ -1,5 +1,7 @@
 // The drawing language: art/*.mjs entries become SVG path data. Outline coordinates are 16-pixel units, where u is the
 // centre of pixel u at 16px, so every straight stroke lands on one pixel row at warp's default size (10-icons §2).
+import { shut } from './shape.mjs'
+
 const X = (u) => +(1.5 * u + 0.75).toFixed(2)
 const R = (u) => +(1.5 * u).toFixed(2)
 // gap is measured between stroke ends, and the round caps eat one stroke width of it.
@@ -157,7 +159,8 @@ const parts = (s, t) =>
 /** `body / weft` → { body, weft } for one outline tier. */
 export function outline(spec, tier) {
   const [body = '', weft = ''] = spec.split('/')
-  return { body: parts(body, TIERS[tier]), weft: parts(weft, TIERS[tier]) }
+  // the outline tiers draw every body whole: the notch is the pixel tier's alone
+  return { body: parts(shut(body, weft), TIERS[tier]), weft: parts(weft, TIERS[tier]) }
 }
 
 /** Rows of `.`, `#` (ink) and `+` (shade), on 16×16: { ink, shade } as merged rect paths on the pixel grid. */

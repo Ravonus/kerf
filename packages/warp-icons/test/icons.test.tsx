@@ -21,7 +21,9 @@ test('decorative by default; label names it', () => {
 test('three tiers in one svg, no wrapper: outline and pixel paths are direct children', () => {
   const { container } = render(() => <CheckIcon />)
   const svg = container.querySelector('svg')!
-  expect([...svg.children].every((c) => c.tagName.toLowerCase() === 'path')).toBe(true)
+  // an open mark's hollow is masked down its middle: the mask sits beside the paths, never round them
+  expect([...svg.children].every((c) => ['path', 'mask'].includes(c.tagName.toLowerCase()))).toBe(true)
+  expect(svg.querySelector('mask')?.id).toBe('wi-check-q')
   const pixels = svg.querySelector('[data-t="v"]')!
   expect(pixels.hasAttribute('data-p')).toBe(true)
   expect(svg.querySelector('[data-w]')).not.toBeNull()

@@ -57,7 +57,7 @@ export function fromHand(art, name) {
 /** The same legend from an outline spec, for the icons with no hand master. */
 export function auto(spec) {
   const r = rasterize(spec),
-    inner = enclosed(r.body)
+    inner = interior(r.body)
   const g = r.grid.map((row, y) =>
     row.map((c, x) => (r.weft[y][x] === '#' ? 'w' : c === '#' ? '#' : inner[y][x] ? ':' : '.')),
   )
@@ -199,3 +199,137 @@ export const litCells = (g) =>
         const t = tone(g, x, y, c)
         return t < 0.16 || (t < 0.36 && checker(x, y)) ? '#' : '.'
       })
+
+/** Pieces of a grid: connected ink (any neighbour) and connected clear (side neighbours, the outside counting as one). */
+function topology(grid) {
+  // a clear ring round the grid, so all of the outside is one piece
+  const on = [Array(18).fill(false), ...grid.map((r) => [false, ...r, false]), Array(18).fill(false)]
+  const seen = on.map((r) => r.map(() => false))
+  const fill = (x0, y0, want, eight) => {
+    const stack = [[x0, y0]]
+    while (stack.length) {
+      const [x, y] = stack.pop()
+      if (x < 0 || y < 0 || x > 17 || y > 17 || seen[y][x] || on[y][x] !== want) continue
+      seen[y][x] = true
+      for (let i = -1; i <= 1; i++)
+        for (let j = -1; j <= 1; j++) if ((i || j) && (eight || !i || !j)) stack.push([x + i, y + j])
+    }
+  }
+  let ink = 0,
+    clear = 0
+  for (let y = 0; y < 18; y++)
+    for (let x = 0; x < 18; x++) {
+      if (seen[y][x]) continue
+      if (on[y][x]) ink++
+      else clear++
+      fill(x, y, on[y][x], on[y][x])
+    }
+  return `${ink}:${clear}`
+}
+
+const SQUARE = [-1, 0, 1].flatMap((i) => [-1, 0, 1].map((j) => [i, j]))
+const CORNER = [
+  [0, 0],
+  [1, 0],
+  [0, 1],
+  [1, 1],
+]
+
+/** An open mark in pixels, as an object: every stroke grown a cell each way. Solid is the grown shape; hollow is its rim,
+ *  the stroke itself left clear down the middle. Where growing would run two parts together or close a gap (a menu's bars,
+ *  a refresh arc's break), that cell stays clear, so a tight mark grows as far as it can. The weft stays weft. */
+export function thick(g, form) {
+  const ink = (c) => c === '#' || c === 'w'
+  const lines = g.map((r) => r.map((c) => (ink(c) ? c : '.')))
+  const shape = (h) => topology(h.map((r) => r.map((c) => c !== '.')))
+  const before = shape(lines)
+  // art drawn two cells wide grows a cell down and right, no more: three wide reads as filled in solid, and in hollow its
+  // walls stay one cell round a one-cell core
+  const cells = lines.flat().filter((c) => c !== '.').length
+  const blocky = lines.flatMap((r, y) =>
+    r.map((c, x) => c !== '.' && [[0, 0], [-1, 0], [0, -1], [-1, -1]].some(([i, j]) =>
+      [[0, 0], [1, 0], [0, 1], [1, 1]].every(([a, b]) => ink(g[y + j + b]?.[x + i + a])))),
+  ).filter(Boolean).length
+  const by = form === 'solid' || blocky > 0.6 * cells ? CORNER : SQUARE
+  const near = (x, y) => {
+    let weft = false,
+      any = false
+    for (const [i, j] of by)
+      if (ink(g[y - j]?.[x - i])) {
+        any = true
+        if (g[y - j][x - i] === 'w') weft = true
+      }
+    return any ? (weft ? 'w' : '#') : '.'
+  }
+  let grown = each(lines, (c, x, y) => (c !== '.' ? c : near(x, y)))
+  if (shape(grown) !== before) {
+    grown = lines.map((r) => r.slice())
+    for (let y = 0; y < 16; y++)
+      for (let x = 0; x < 16; x++) {
+        const c = grown[y][x] === '.' ? near(x, y) : '.'
+        if (c === '.') continue
+        grown[y][x] = c
+        if (shape(grown) !== before) grown[y][x] = '.'
+      }
+  }
+  const on = (x, y) => grown[y]?.[x] !== undefined && grown[y][x] !== '.'
+  const sides = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+  const sides4 = sides
+  const inner = (x, y) => on(x, y) && sides.every(([i, j]) => on(x + i, y + j))
+  // the grown mark as a body the shaders know: its edge ink, its middle an inside to shade along the light
+  const weft = (h) => each(h, (c, x, y) => (c === '#' && grown[y][x] === 'w' ? 'w' : c))
+  if (form === 'solid')
+    // lit: the side toward the light breaks into checker and clear, the far end stays ink
+    return weft((solid(each(grown, (c, x, y) => (c === '.' ? '.' : inner(x, y) ? ':' : '#')))))
+  const rim = each(grown, (c, x, y) => (c !== '.' && !inner(x, y) ? c : '.'))
+  // smoothing: a rim cell that only makes an elbow (a step on a diagonal, the corner of a turn) goes, the way a stepped
+  // frame drops its corner cell, so long as the rim keeps its pieces and its middle stays shut off from the outside
+  // a dot is too small to lose a corner: it would turn into a broken diamond
+  const piece = (x0, y0) => {
+    const seen = new Set(),
+      stack = [[x0, y0]]
+    while (stack.length) {
+      const [x, y] = stack.pop()
+      if (!on(x, y) || seen.has(`${x},${y}`)) continue
+      seen.add(`${x},${y}`)
+      for (const [i, j] of SQUARE) stack.push([x + i, y + j])
+    }
+    return seen.size
+  }
+  const keep = shape(rim),
+    at = (x, y) => rim[y]?.[x] !== undefined && rim[y][x] !== '.'
+  for (let y = 0; y < 16; y++)
+    for (let x = 0; x < 16; x++) {
+      if (!at(x, y)) continue
+      const h = at(x - 1, y) || at(x + 1, y),
+        v = at(x, y - 1) || at(x, y + 1)
+      const sides = sides4.filter(([i, j]) => at(x + i, y + j)).length
+      if (!(h && v && sides === 2) || piece(x, y) <= 9) continue
+      const c = rim[y][x]
+      rim[y][x] = '.'
+      if (shape(rim) !== keep) rim[y][x] = c
+    }
+  // depth: the clear middle takes dither on its shadow side, walked along the light, as a body's inside does. A cast
+  // shadow under the strokes was tried: under a bar it reads as a serrated edge.
+  const base = each(rim, (c, x, y) => (c !== '.' ? '#' : inner(x, y) ? ':' : '.'))
+  return weft(hollow(base, false, '+'))
+}
+
+/** The inside mark of a body thinned to one cell, so the outer line is the heavier one. A cell on the bottom or right of a
+ *  two-cell stroke goes when the weft keeps its pieces without it. */
+export function slim(g) {
+  const out = g.map((r) => r.slice())
+  const isW = (x, y) => out[y]?.[x] === 'w'
+  const layer = () => topology(out.map((r) => r.map((c) => c === 'w')))
+  const keep = layer()
+  for (let y = 0; y < 16; y++)
+    for (let x = 0; x < 16; x++) {
+      if (!isW(x, y)) continue
+      const right = isW(x - 1, y) && !isW(x + 1, y),
+        bottom = isW(x, y - 1) && !isW(x, y + 1)
+      if (!right && !bottom) continue
+      out[y][x] = '.'
+      if (layer() !== keep) out[y][x] = 'w'
+    }
+  return out
+}

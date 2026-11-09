@@ -45,7 +45,7 @@ One scheme, generated from the art with its types:
 | `BellIconSolid` | `Icons.BellSolid` | `solid` | the solid form |
 | `BellIconAction` | `Icons.BellAction` | `action` | has a built-in animation |
 
-The tier is a prop, never a name. An open mark, like an arrow, has a notched badge as its solid, with the mark cut out. Pick it on the sheet: `npm run sheet` in the package writes `contact-sheet.html`, with tier, variant, size, theme and search. `dither-sheet.html` compares the treatments.
+The tier is a prop, never a name. Hollow and solid describe the object: an open mark like an arrow is an outlined arrow in hollow and a filled one in solid, never a badge. Pick it on the sheet: `npm run sheet` in the package writes `contact-sheet.html`, with tier, variant, size, theme and search. `dither-sheet.html` compares the treatments.
 
 ## A wrong name
 

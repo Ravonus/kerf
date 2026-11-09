@@ -78,7 +78,7 @@ figcaption { font: 10px/1.2 ui-monospace, monospace; color: var(--mute); max-inl
 <script>
 const { groups, data } = JSON.parse(document.getElementById('data').textContent)
 const main = document.getElementById('main'), value = n => document.querySelector('input[name="' + n + '"]:checked').value
-const svg = (html, size, cls) => '<svg data-icon viewBox="0 0 24 24" aria-hidden="true"' + (cls ? ' class="' + cls + '"' : ' style="width:' + size + 'px;height:' + size + 'px"') + ' data-act="hover focus press">' + html + '</svg>'
+const svg = (html, size, cls) => '<svg data-icon' + (/ data-d=/.test(html) ? ' data-dither' : '') + ' viewBox="0 0 24 24" aria-hidden="true"' + (cls ? ' class="' + cls + '"' : ' style="width:' + size + 'px;height:' + size + 'px"') + ' data-act="hover focus press">' + html + '</svg>'
 function draw() {
   const q = document.getElementById('q').value.trim().toLowerCase(), v = value('variant'), size = value('size')
   document.body.dataset.tier = value('tier')

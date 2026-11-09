@@ -30,7 +30,7 @@ test('icon declarations match the independent pre-split artwork reference', asyn
       text.split('\n').filter((line) => /^export (const |\{ (?!iconSet))/.test(line)),
     )
   const digest = (lines: string[]) => createHash('sha256').update(lines.join('\n')).digest('hex')
-  const reference = 'fd020d848726f48a096da1c89c6f8cad738beb31dc953beb636cf70e0a83dde8'
+  const reference = 'd6704260e9fc91481aa63f33615e5874d647b198c87fda1d9bd7dbda5fb76080'
   expect(declarations.filter((line) => /^export const .*?Icon =/.test(line))).toHaveLength(651)
   expect(declarations).toHaveLength(1958)
   expect(digest(declarations)).toBe(reference)
@@ -80,7 +80,7 @@ test('the generator check rejects every missing and stale icon module', async ()
 
 test('pack cost covers every generated drawing in canonical order', async () => {
   const { packCost } = await import('../compile.mjs')
-  expect(packCost()).toBe(146113)
+  expect(packCost()).toBe(166909)
 })
 
 test('pack cost reads changed and missing graph modules on every call', async () => {
@@ -90,7 +90,7 @@ test('pack cost reads changed and missing graph modules on every call', async ()
     cpSync(join(root, 'src/compile-catalog.mjs'), join(dir, 'compile-catalog.mjs'))
     const { packCost } = await import(pathToFileURL(join(dir, 'compile-catalog.mjs')).href)
     const baseline = packCost()
-    expect(baseline).toBe(146113)
+    expect(baseline).toBe(166909)
     const file = join(dir, 'gen/all-cake-cursor.tsx')
     writeFileSync(file, readFileSync(file, 'utf8') + '\n' + 'changed '.repeat(1000))
     expect(packCost()).not.toBe(baseline)
@@ -121,7 +121,7 @@ test('the Vite icon transform covers generated modules only', async () => {
       expect(transformed).toContain('\\u0000weft:icon/')
       expect(transformed).not.toContain('data-t=')
       const virtual = await plugins.resolve.load.handler('\0weft:icon/CakeIcon')
-      expect(virtual.code).toContain('data-bw=')
+      expect(virtual.code).toContain('data-bi=')
       expect(virtual.code).not.toContain('data-qs=')
       expect(virtual.code).not.toContain('data-t=')
     }
@@ -134,7 +134,7 @@ test('the Vite icon transform covers generated modules only', async () => {
     await handler(group, '/project/node_modules/@weft-js/warp-icons/src/gen/all-cake-cursor.tsx')
     const vivid = await plugins.resolve.load.handler('\0weft:icon/CakeIcon')
     expect(vivid.code).toContain('data-p=')
-    expect(vivid.code).not.toContain('data-bw=')
+    expect(vivid.code).not.toContain('data-bi=')
     const moduleId = '\0weft:icon/TestIcon'
     const sampleId = '/project/node_modules/@weft-js/warp-icons/src/gen/all-test.tsx'
     const drawing = (shape: string) => `export const TestIcon = /*#__PURE__*/ icon('${shape}')`

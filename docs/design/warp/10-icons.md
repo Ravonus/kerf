@@ -34,9 +34,10 @@ The tiers are the expression stops (00 §3). Same names, same meaning, same box.
 
 ## 4. The two signatures
 
-1. **The notch.** Warp's floated label sits in a gap in the field's top border. Every closed outer container in the set
-   (box, ring, document, device) leaves that same gap in its top edge, near the left corner; on a ring, at about 10
-   o'clock. Containers under 6 cells across keep their line, since the gap would read as damage.
+1. **The notch.** Warp's floated label sits in a gap in the field's top border. The pixel tier keeps that gap in every
+   closed outer container (box, ring, document, device), in its top edge near the left corner. The outline tiers, quiet
+   and balanced, draw every container whole: at line weight the gap reads as a break, not a signature.
+   `scripts/shape.mjs` closes it from the same spec, so one drawing serves all three tiers.
 2. **The weft.** warp threads run one way and the weft crosses them in accent. Every icon that has a container and a
    meaning separates them: the container is Warp, and the one stroke that says what the icon means (the check inside the
    shield, the hands of the clock) is the Weft. It carries the emphasis weight (1.5 / 2, like the emphasis line), and
@@ -63,8 +64,13 @@ An icon has two forms, hollow (the default) and solid, and each is its own drawi
 fill switched on. Dither is depth, not a form: checker cells on the shadow side of a form, walked along the light from the top
 left, in clear, checker and solid steps snapped to cells. Checker holds an even mid-tone at 16 and 24 px. Quiet is thin and
 unshaded. Balanced is heavier, with a shaded crescent in hollow and, in solid, a broken lit side, a cut highlight and an
-offset shade. Vivid is the pixel set. A mark with little inside to fill, like an arrow, has a notched badge as its solid with
-the mark cut out, and throws a dithered shadow in vivid hollow. `scripts/distinct.mjs` scores every icon on rendered pixels at
+offset shade. Vivid is the pixel set. Hollow and solid are about the object, never a frame round it.
+An icon with a body (a cart, a file, a house) is that body drawn round in hollow and filled in solid. An open mark (an
+arrow, a check, a menu) is its strokes thickened into a shape of their own: hollow draws a line round that shape, so an
+arrow is an outlined arrow, and solid fills it, a little narrower so it never turns to a slab. The closed parts of an
+open mark (a chart's bars, a slider's knob) are outlined in hollow and filled in solid. In vivid the mark grows a cell
+(three cells wide), solid is the grown shape, hollow is its one-cell rim with a dithered drop shadow, and a cell that
+would run two parts together or close a gap is left clear. `scripts/distinct.mjs` scores every icon on rendered pixels at
 16 and 24 px, and a test holds it. Forced colours drop only the offset shade: everything else is ink.
 
 ## 6. Optical sizes

@@ -82,8 +82,8 @@ Names are kebab-case in `<Icon name>` and PascalCase in exports. Each icon has t
 | `BellIconAction` | `Icons.BellAction` | `name="bell" action` | animated (five icons have one) |
 
 Solid is a second drawing, not the outline filled in. Use it for the "on" state of something, like a favourite that's
-set, or a selected tab's icon. An open mark like an arrow gets a notched badge as its solid, with the arrow cut out of
-it.
+set, or a selected tab's icon. An open mark like an arrow is drawn as an object: hollow outlines
+the arrow's shape, and solid fills it.
 
 ## Decorative or named
 

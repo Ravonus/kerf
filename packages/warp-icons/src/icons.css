@@ -8,6 +8,8 @@
   :where(svg[data-icon] [data-qs]) { stroke-width: 1; }
   :where(svg[data-icon] [data-bs]) { stroke-width: 2; }
   :where(svg[data-icon] [data-bw]) { stroke-width: 2.5; }
+  /* hollow's inside mark: lighter than the body round it */
+  :where(svg[data-icon] [data-bi]) { stroke-width: 1.5; }
   /* the weft, the stroke that says what the icon means: colour it with --warp-icon-weft-color */
   :where(svg[data-icon] [data-w]) { stroke: var(--warp-icon-weft-color, currentColor); }
   /* pixels: a 16 grid in the 24 box. In forced colours currentColor is the system's, so these follow it. */
@@ -18,15 +20,23 @@
      Only an icon that has dither measures itself: a size container is a layout of its own, and a list of 200 rows with
      an icon each spent 70 ms (4x CPU) laying them out. */
   :where(svg[data-icon][data-dither]) { container-type: size; }
+  /* A hollow mark measures itself too: under 20 px its gap widens (forms.mjs), or it would close up and read as solid. */
+  :where(svg[data-icon]:has(> mask)) { container-type: size; }
+  :where(svg[data-icon] [data-m]) { display: none; }
+  @container (max-width: 19.5px) { :where(svg[data-icon] [data-m]) { display: inline; } }
   :where(svg[data-icon] [data-d]) { opacity: 0; }
   @container (min-width: 20px) { :where(svg[data-icon] [data-d]) { opacity: 1; } }
   /* solid: a filled body, its offset shade, and what's cut from it */
   :where(svg[data-icon] [data-s]) { fill: currentColor; stroke: none; }
   :where(svg[data-icon] [data-sh]) { stroke: currentColor; stroke-width: 1.5; }
+  /* an open mark's closed shapes, filled in solid */
+  :where(svg[data-icon] [data-f]) { fill: currentColor; }
+  :where(svg[data-icon] [data-f][data-w]) { fill: var(--warp-icon-weft-color, currentColor); }
   :where(svg[data-icon] [data-so]) { fill: currentColor; fill-opacity: .3; stroke: none; }
   :where(svg[data-icon] [data-k]) { stroke: var(--warp-icon-knock, Canvas); stroke-width: 2.5; }
   :where(svg[data-icon] [data-k][data-qs]) { stroke-width: 1.5; }
   :where(svg[data-icon] [data-hi]) { stroke-width: 1.25; }
   :where(svg[data-icon] [data-c]) { fill: var(--warp-icon-knock, Canvas); }
-  @media (forced-colors: active) { :where(svg[data-icon] [data-so]) { display: none; } }
+  :where(svg[data-icon] [data-sx]) { stroke-opacity: .3; }
+  @media (forced-colors: active) { :where(svg[data-icon] [data-so], svg[data-icon] [data-sx]) { display: none; } }
 }
