@@ -72,24 +72,43 @@ export function Level(props: { route: RouteState; depth: number }) {
   return <>{display()}</>
 }
 
+/** True when `path` is `href`, or with `section`, any page under it (a top link for `/components` on `/components/modal`). */
+export function isCurrent(path: string, href: string, section = false) {
+  if (path === href) return true
+  return section && href !== '/' && path.startsWith(`${href.replace(/\/$/, '')}/`)
+}
+
 /**
- * `<a>` with `aria-current="page"` while its path is the current one. Any same-origin `<a href>` navigates on the
- * client (start() listens for clicks); Link only adds the current-page state. In a static level the server writes it
- * and start() updates it after a navigation, so a Link needs no code there.
+ * `<a>` with `aria-current="page"` while its path is the current one, or with `match="section"` any page under it, as a
+ * site's top links want. Any same-origin `<a href>` navigates on the client (start() listens for clicks); Link only
+ * adds the current-page state. In a static level the server writes it and start() updates it after a navigation, so a
+ * Link needs no code there.
  *
  * @weft static
  */
 export function Link({
   href,
+  match,
   children,
   ...rest
-}: Record<string, unknown> & { href: string; class?: string; rel?: string; children?: unknown }) {
+}: Record<string, unknown> & {
+  href: string
+  match?: 'page' | 'section'
+  class?: string
+  rel?: string
+  children?: unknown
+}) {
   const route = active.route
   return (
     <a
       {...rest}
       href={href}
-      aria-current={route && route.path.value.replace(/[?#].*/, '') === href ? 'page' : undefined}
+      data-match={match === 'section' ? 'section' : undefined}
+      aria-current={
+        route && isCurrent(route.path.value.replace(/[?#].*/, ''), href, match === 'section')
+          ? 'page'
+          : undefined
+      }
     >
       {children}
     </a>

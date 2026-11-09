@@ -93,8 +93,8 @@
     padding: 0; background: none; border: 0; box-shadow: none; transform: none; visibility: visible; transition: none;
   }
 :where([data-scope="sidenav"] > [data-part="backdrop"]),
-  :where([data-scope="sidenav"] [data-part="head"]),
-  :where([data-scope="sidenav"] [data-part="scroll"]) { padding: var(--warp-space-group) var(--warp-space-tight) var(--warp-space-group) 0; }
+  :where([data-scope="sidenav"] [data-part="head"]) { display: none; }
+:where([data-scope="sidenav"] [data-part="scroll"]) { padding: var(--warp-space-group) var(--warp-space-tight) var(--warp-space-group) 0; }
 :where([data-scope="sidenav"] [data-part="scroll"] > [data-part="filter"]) { position: sticky; inset-block-start: 0; z-index: 1; }
 :where([data-scope="sidenav"][data-collapsible]) {
     inline-size: var(--warp-sidenav-width, 240px); transition: inline-size var(--warp-duration-base) var(--warp-ease-out);

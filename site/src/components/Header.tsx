@@ -17,7 +17,7 @@ export function Header() {
         <BrandTitle />
         <Nav label="Main" data-site="top-nav">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href}>
+            <Link key={n.href} href={n.href} match="section">
               {n.label}
             </Link>
           ))}
