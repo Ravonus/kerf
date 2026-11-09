@@ -215,6 +215,8 @@
   animation: warp-field-pop var(--warp-duration-base) var(--warp-ease-pop);
 }
 :where([data-scope="tag"] > span) { overflow: clip; text-overflow: ellipsis; }
+/* the 2px end is room for the remove button: a tag without one is padded evenly, so its label sits in the middle */
+:where([data-scope="tag"]:not(:has(button))) { padding-inline-end: 8px; }
 :where([data-scope="tag"] button) {
   position: relative; display: grid; place-items: center; inline-size: 18px; block-size: 18px; padding: 0; border: 0; border-radius: 2px;
   background: transparent; color: inherit; opacity: 0.75; cursor: pointer;

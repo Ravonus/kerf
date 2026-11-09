@@ -136,6 +136,8 @@
 /* tag (inside tags input / multi-combobox) */
 
 
+/* the 2px end is room for the remove button: a tag without one is padded evenly, so its label sits in the middle */
+
 
 
 

@@ -6,7 +6,7 @@ import {
   type ToastInput,
   type ToastPromise,
 } from '@weft-js/warp-core'
-import { onCleanup, state } from '@weft-js/core'
+import { derived, onCleanup, state, untrack, watch } from '@weft-js/core'
 import { Icon, toneIcon } from './Icon'
 import { use } from '@weft-js/warp-core/weft'
 import './styles'
@@ -16,6 +16,12 @@ import '@weft-js/warp-core/styles/components/toast.css'
 
 let store: ReturnType<typeof toastStore> | undefined
 const toasts = () => (store ??= toastStore())
+
+// The Toasters mounted, oldest first. They share one list, so only the newest shows it: a page that mounts more
+// than one (a layout's and a demo's) still shows each toast once. One whose corner changes is the one in use, and
+// comes to the front.
+const mounted = state<object[]>([])
+const toFront = (list: object[], me: object) => [...list.filter((k) => k !== me), me]
 
 /**
  * Show a toast from anywhere (05 §5): `toast.show({ title, description, tone, action })`. Needs one <Toaster />.
@@ -43,9 +49,21 @@ type ToasterProps = {
  * root. While a modal is open they move into it, or it would make them inert. Newest first; three stack, collapsed, and fan out on hover or focus (which pauses every timer); swipe or
  * Dismiss removes one; F8 focuses the newest.
  */
-export function Toaster({ position }: ToasterProps = {}) {
+export function Toaster(props: ToasterProps = {}) {
   const list = state<Toast[]>(toasts().get())
   onCleanup(toasts().subscribe((v) => (list.value = v)))
+  const me = {}
+  watch(
+    () => props.position,
+    () => {
+      mounted.value = toFront(
+        untrack(() => mounted.value),
+        me,
+      )
+    },
+  )
+  onCleanup(() => (mounted.value = mounted.value.filter((k) => k !== me)))
+  const shown = derived(() => (mounted.value.at(-1) === me ? list.value : []))
   let region: HTMLElement | undefined
   use(
     toaster,
@@ -58,11 +76,11 @@ export function Toaster({ position }: ToasterProps = {}) {
         ref={(n) => (region = n)}
         data-scope="toast"
         data-part="region"
-        data-position={position === 'bottom-right' ? undefined : position}
+        data-position={props.position === 'bottom-right' ? undefined : props.position}
         aria-label="Notifications (F8)"
         tabindex="-1"
       >
-        {list.value.map((t) => (
+        {shown.value.map((t) => (
           <div
             key={t.id}
             data-scope="toast"

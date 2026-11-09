@@ -120,7 +120,7 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
   observer.observe(region, {
     childList: true,
     attributes: true,
-    attributeFilter: ['data-state'],
+    attributeFilter: ['data-state', 'data-position'],
     subtree: false,
   })
   const unsubscribe = toasts.subscribe(() => win.queueMicrotask(render))
@@ -167,6 +167,7 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
     [region, 'pointercancel', onUp],
   ]
   for (const [t, type, fn] of on) t.addEventListener(type, fn as EventListener)
+  raise(region)
   render()
   return {
     update: render,
@@ -306,10 +307,11 @@ function toastFollow(
   onHover: () => void,
   clearOver: () => void,
 ) {
-  // showModal makes everything outside the dialog inert, top layer or not, so while a modal is open the region and the
-  // live regions live inside the topmost one, a popover there so the dialog's box neither clips nor positions it. A
-  // comment holds their place. data-moving stops the toasts replaying their entrance; their timers are Animations,
-  // which don't notice.
+  // The region is a manual popover wherever it is, so it sits in the top layer: no stacking context it is mounted in
+  // (a demo, a z-indexed column) and no sticky rail beside it can cover it. showModal makes everything outside the
+  // dialog inert, top layer or not, so while a modal is open the region and the live regions live inside the topmost
+  // one, a popover there too, so the dialog's box neither clips nor positions it. A comment holds their place.
+  // data-moving stops the toasts replaying their entrance; their timers are Animations, which don't notice.
   let home: Comment | null = null
   const follow = (top: HTMLElement | null) => {
     const live = doc.querySelectorAll('[data-scope="announcer"]')
@@ -320,10 +322,8 @@ function toastFollow(
     if (top) {
       if (!home) region.before((home = doc.createComment('')))
       top.append(region, ...live)
-      region.setAttribute('popover', 'manual')
-      region.showPopover?.()
+      raise(region)
     } else if (home) {
-      region.removeAttribute('popover')
       if (home.parentNode) home.replaceWith(region, ...live)
       else {
         region.remove()
@@ -331,6 +331,7 @@ function toastFollow(
       } // the Toaster went while it was away
       home = null
     }
+    if (!top) raise(region)
     focused?.focus({ preventScroll: true })
     win.requestAnimationFrame(() => region.removeAttribute('data-moving'))
     if (hovered)
@@ -345,6 +346,13 @@ function toastFollow(
     else onHover()
   }
   return follow
+}
+
+/** Puts the region in the top layer, where the browser can: a manual popover, shown. */
+function raise(region: HTMLElement) {
+  if (!region.showPopover || !region.isConnected) return
+  region.setAttribute('popover', 'manual')
+  if (!region.matches(':popover-open')) region.showPopover()
 }
 
 function toastItems(region: HTMLElement) {

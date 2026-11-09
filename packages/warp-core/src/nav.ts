@@ -12,9 +12,25 @@ export interface NavIndicatorOptions {
 
 type Phase = 'idle' | 'in' | 'out'
 
+// The nearest box around the nav that scrolls on its own: a sticky contents column taller than the screen.
+function scroller(nav: HTMLElement, win: Window) {
+  for (
+    let el = nav as HTMLElement | null;
+    el && el !== nav.ownerDocument.body;
+    el = el.parentElement
+  )
+    if (
+      /auto|scroll/.test(win.getComputedStyle(el).overflowY) &&
+      el.scrollHeight > el.clientHeight + 1
+    )
+      return el
+  return undefined
+}
+
 // The last heading past the top of the reading band, or the last of all once the page cannot scroll further.
-// Read on scroll, since a jump can pass a heading without crossing the band.
-function spy(win: Window, doc: Document, links: () => HTMLAnchorElement[]) {
+// Read on scroll, since a jump can pass a heading without crossing the band. A contents column taller than the
+// screen scrolls along with the page, the same share of its own overflow, so the lit heading stays in view.
+function spy(win: Window, doc: Document, nav: HTMLElement, links: () => HTMLAnchorElement[]) {
   const byTarget = new Map<Element, HTMLAnchorElement>()
   for (const a of links()) {
     const el = doc.getElementById(decodeURIComponent(a.hash.slice(1)))
@@ -22,8 +38,15 @@ function spy(win: Window, doc: Document, links: () => HTMLAnchorElement[]) {
   }
   const order = [...byTarget.keys()]
   let queued = 0
+  const follow = () => {
+    const box = scroller(nav, win)
+    if (!box) return
+    const room = doc.documentElement.scrollHeight - win.innerHeight
+    box.scrollTop = room > 0 ? (win.scrollY / room) * (box.scrollHeight - box.clientHeight) : 0
+  }
   const mark = () => {
     queued = 0
+    follow()
     const root = doc.documentElement
     const atEnd = win.scrollY > 0 && win.scrollY + win.innerHeight >= root.scrollHeight - 2
     const last = atEnd
@@ -216,7 +239,7 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
     })
   doc.addEventListener('warp:dial', onDial)
 
-  const unspy = opts.spy ? spy(win, doc, links) : undefined
+  const unspy = opts.spy ? spy(win, doc, nav, links) : undefined
 
   return {
     update() {

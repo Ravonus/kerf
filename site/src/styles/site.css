@@ -126,6 +126,16 @@ p {
   margin-inline-start: var(--warp-space-group);
   --_bar: 2px;
 }
+/* Beside an open section sidebar the brand spans to the sidebar's edge, so the first link starts at the corner where the
+   bar's line begins and its marker meets that line. Folded or on a phone the brand keeps its own width. */
+@media (min-width: 900px) {
+  :root:has([data-site='docs'] > [data-scope='sidenav']:not([data-collapsed])) [data-site='bar'] > .brand {
+    min-inline-size: calc(var(--_edge) - var(--warp-space-page) - var(--warp-space-related));
+  }
+  :root:has([data-site='docs'] > [data-scope='sidenav']:not([data-collapsed])) [data-site='top-nav'] {
+    margin-inline-start: 0;
+  }
+}
 [data-site='top-nav'] a {
   color: var(--warp-color-text-subtle);
   display: flex;
@@ -151,18 +161,58 @@ p {
   stroke: var(--warp-color-accent-solid);
   stroke-width: 2;
 }
+/* Search is a quiet field, not a button: a sunken ground and a hairline, no sweep or fill. Its shortcut is one small
+   line of mono at the end, out of sight until the hand or the keyboard comes to the field. */
 [data-site='search'] {
-  inline-size: 240px;
+  inline-size: 220px;
+  block-size: 30px;
   justify-content: flex-start;
+  gap: var(--warp-space-related);
+  padding-inline: 10px 8px;
+  background: color-mix(in oklab, var(--warp-color-text) 4%, var(--warp-color-page));
+  border-color: color-mix(in oklab, var(--warp-color-border) 70%, transparent);
+  color: var(--warp-color-text-subtle);
+  font-size: calc(0.8125 * var(--warp-rem));
+  font-weight: 400;
+  letter-spacing: 0;
+  transition: border-color var(--warp-duration-fast) var(--warp-ease-out), color var(--warp-duration-fast) var(--warp-ease-out);
+}
+[data-site='search']::before,
+[data-site='search'] > [data-part='sweep'] {
+  display: none;
+}
+[data-site='search'] > svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+[data-site='search']:is(:hover, :focus-visible) {
+  border-color: var(--warp-color-border-strong, var(--warp-color-border));
+  color: var(--warp-color-text);
+  translate: none;
+  box-shadow: none;
+}
+/* the label (text and shortcut) sits in Button's collapse wrapper, which hides it at tablet width */
+[data-site='search'] > [data-part='collapse'] {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--warp-space-related);
 }
 [data-site='search'] [data-part='text'] {
   flex: 1;
-  color: var(--warp-color-text-subtle);
   text-align: start;
 }
 [data-site='search'] [data-part='keys'] {
-  display: inline-flex;
-  gap: var(--warp-space-hair);
+  font: 500 calc(0.6875 * var(--warp-rem)) / 1 var(--warp-font-mono);
+  letter-spacing: 0.04em;
+  color: var(--warp-color-text-subtle);
+  opacity: 0;
+  translate: 3px 0;
+  transition: opacity var(--warp-duration-fast) var(--warp-ease-out), translate var(--warp-duration-fast) var(--warp-ease-out);
+}
+[data-site='search']:is(:hover, :focus-visible) [data-part='keys'] {
+  opacity: 1;
+  translate: 0 0;
 }
 [data-site='menu'] {
   display: none;
