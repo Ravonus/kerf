@@ -2,8 +2,8 @@
 @layer warp.components {
 /* -- Nav: links with the sliding bar. One face, moved by transform only: the phase machine (warp-core nav.ts) grows it in
    from an item's edge and out through the far edge. Before script the current link draws the same bar itself. */
-:where([data-scope="nav"]) { position: relative; --_bar: var(--warp-sweep-width); display: flex; gap: var(--warp-space-group); align-self: start; inline-size: fit-content; }
-:where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--warp-space-tight); }
+:where([data-scope="nav"]) { position: relative; --_bar: var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width,var(--warp-sweep-width))); display: flex; gap: var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-group))); align-self: start; inline-size: fit-content; }
+:where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-tight))); }
 :where([data-scope="nav"][data-axis="x"] a) { padding-block: var(--warp-space-tight); }
 :where([data-scope="nav"] a) { color: var(--warp-nav-text,var(--warp-config-part-nav-text,var(--warp-color-text-subtle))); text-decoration: none; transition: color var(--warp-duration-fast) var(--warp-ease-out); }
 :where([data-scope="nav"] a:hover),

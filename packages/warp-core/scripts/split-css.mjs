@@ -56,8 +56,7 @@ function homes(rule) {
 }
 
 /** One rule-routed family: `tokens` (the tokens blocks whole) and a file per scope. */
-function route(file, family) {
-  const css = readFileSync(join(spec, file), 'utf8')
+function route(file, family, css = readFileSync(join(spec, file), 'utf8')) {
   const files = new Map(),
     tokens = [],
     frames = []
@@ -194,8 +193,10 @@ export function build() {
   for (const [k, v] of render({ ...parts.inputs, files: choiceFiles, shared: [] })) files.set(k, v)
   const textFiles = new Map([['text-field', textFields(parts.inputs.files.get('text'))]])
   for (const [k, v] of render({ ...parts.inputs, files: textFiles, shared: [] })) files.set(k, v)
+  const themedData = route('warp-data.css', 'data')
+  const dataCss = readFileSync(join(spec, 'warp-data.css'), 'utf8')
   const routed = {
-    data: route('warp-data.css', 'data'),
+    data: route('warp-data.css', 'data', lowerTheme(dataCss, themeNames)),
     layout: route('warp-layout.css', 'layout'),
     app: route('warp-app.css', 'app'),
     flows: route('warp-flows.css', 'flows'),
@@ -224,6 +225,9 @@ export function build() {
       1,
     ) + '\n',
   )
+  for (const [path, content] of renderRouted(themedData)) {
+    if (files.get(path) !== content) files.set(`themed/${path}`, content)
+  }
   for (const [path, content] of render(themed)) {
     if (files.get(path) !== content) files.set(`themed/${path}`, content)
   }

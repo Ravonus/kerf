@@ -144,6 +144,39 @@ themeNames.push(
   ]),
 )
 
+const partProperties = {
+  button: ['shadow', 'shadow-hover', 'shadow-press', 'duration', 'scale-press'],
+  nav: ['gap', 'underline-width'],
+  tabs: ['gap', 'underline-width'],
+  link: ['underline-width', 'underline-offset'],
+  pill: [
+    'gap',
+    'gap-hover',
+    'gap-active',
+    'height',
+    'padding-inline',
+    'border-width',
+    'radius',
+    'font-family',
+    'font-size',
+    'font-weight',
+    'font-line-height',
+  ],
+  field: ['gap', 'radius'],
+  card: ['gap', 'padding', 'radius', 'shadow', 'shadow-hover'],
+}
+themeNames.push(
+  ...Object.entries(partProperties).flatMap(([part, names]) =>
+    names.flatMap((name) => [`--warp-${part}-${name}`, `--warp-config-part-${part}-${name}`]),
+  ),
+  '--_warp-button-duration',
+  '--_warp-button-shadow-press',
+  '--_warp-field-radius',
+  '--_warp-tabs-underline-width',
+  '--_warp-pill-gap-hover',
+  '--_warp-pill-gap-active',
+)
+
 // Lower only explicitly named theme wrappers, preserving every byte of their fallbacks.
 export function lowerTheme(css, names) {
   const startMarker = '/* warp-theme-only:start */'

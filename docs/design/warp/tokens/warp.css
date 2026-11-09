@@ -1,4 +1,33 @@
 /* warp-theme-only:start */
+@property --warp-button-shadow { syntax: "*"; inherits: false; }
+@property --warp-button-shadow-hover { syntax: "*"; inherits: false; }
+@property --warp-button-shadow-press { syntax: "*"; inherits: false; }
+@property --warp-button-duration { syntax: "*"; inherits: false; }
+@property --warp-button-scale-press { syntax: "*"; inherits: false; }
+@property --warp-nav-gap { syntax: "*"; inherits: false; }
+@property --warp-nav-underline-width { syntax: "*"; inherits: false; }
+@property --warp-tabs-gap { syntax: "*"; inherits: false; }
+@property --warp-tabs-underline-width { syntax: "*"; inherits: false; }
+@property --warp-link-underline-width { syntax: "*"; inherits: false; }
+@property --warp-link-underline-offset { syntax: "*"; inherits: false; }
+@property --warp-pill-gap { syntax: "*"; inherits: false; }
+@property --warp-pill-gap-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-gap-active { syntax: "*"; inherits: false; }
+@property --warp-pill-height { syntax: "*"; inherits: false; }
+@property --warp-pill-padding-inline { syntax: "*"; inherits: false; }
+@property --warp-pill-border-width { syntax: "*"; inherits: false; }
+@property --warp-pill-radius { syntax: "*"; inherits: false; }
+@property --warp-pill-font-family { syntax: "*"; inherits: false; }
+@property --warp-pill-font-size { syntax: "*"; inherits: false; }
+@property --warp-pill-font-weight { syntax: "*"; inherits: false; }
+@property --warp-pill-font-line-height { syntax: "*"; inherits: false; }
+@property --warp-field-gap { syntax: "*"; inherits: false; }
+@property --warp-field-radius { syntax: "*"; inherits: false; }
+@property --warp-card-gap { syntax: "*"; inherits: false; }
+@property --warp-card-padding { syntax: "*"; inherits: false; }
+@property --warp-card-radius { syntax: "*"; inherits: false; }
+@property --warp-card-shadow { syntax: "*"; inherits: false; }
+@property --warp-card-shadow-hover { syntax: "*"; inherits: false; }
 @property --warp-button-gap { syntax: "*"; inherits: false; }
 @property --warp-button-padding-inline { syntax: "*"; inherits: false; }
 @property --warp-button-border-width { syntax: "*"; inherits: false; }
@@ -1404,12 +1433,15 @@
   }
 
   /* -- 2 · the floating border field ------------------------------------ */
-  :where([data-scope="field"]) { display: grid; gap: 0; min-inline-size: 0; }
+  :where([data-scope="field"]) { display: grid; gap: var(--warp-field-gap,var(--warp-config-part-field-gap,0)); min-inline-size: 0; }
+/* warp-theme-only:start */
+  :where([data-scope="field"]) { --_warp-field-radius: var(--warp-field-radius,var(--warp-config-part-field-radius)); }
+/* warp-theme-only:end */
   :where([data-scope="field"] > [data-part="control"]) {
     --_lead: var(--warp-pad-control);
     position: relative; display: block; min-inline-size: 0;
     block-size: var(--warp-field-height);
-    border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control);
+    border-radius: var(--_warp-field-radius,var(--warp-radius-control)); --warp-sweep-radius: var(--_warp-field-radius,var(--warp-radius-control));
     background: var(--warp-color-field);
     font-family: var(--warp-label-font);
     transition: background-color var(--warp-duration-base) var(--warp-ease-out);

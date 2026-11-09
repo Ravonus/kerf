@@ -10,6 +10,7 @@ it('lowers each opt-in sheet byte for byte', () => {
     'components/tabs.css',
     'components/link.css',
     'components/pill.css',
+    'data/card.css',
   ]) {
     const themed = readFileSync(`styles/themed/${path}`, 'utf8')
     const legacy = readFileSync(`styles/${path}`, 'utf8')

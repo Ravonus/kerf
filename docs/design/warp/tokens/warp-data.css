@@ -783,10 +783,13 @@
 /* card + card grid (a card sweeps only when it opts in) */
 :where([data-scope="card-grid"]) { display: grid; gap: var(--warp-space-group); grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); list-style: none; margin: 0; padding: 0; }
 :where([data-scope="card"]) {
-  position: relative; display: grid; gap: 8px; align-content: start; padding: var(--warp-pad-surface);
-  background: var(--warp-color-surface-raised); border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-1);
+  position: relative; display: grid; gap: var(--warp-card-gap,var(--warp-config-part-card-gap,8px)); align-content: start; padding: var(--warp-card-padding,var(--warp-config-part-card-padding,var(--warp-pad-surface)));
+  background: var(--warp-color-surface-raised); border-radius: var(--warp-card-radius,var(--warp-config-part-card-radius,var(--warp-radius-surface))); box-shadow: var(--warp-card-shadow,var(--warp-config-part-card-shadow,var(--warp-elevation-1)));
   color: inherit; text-decoration: none;
 }
+/* warp-theme-only:start */
+:where([data-scope="card"]:hover) { box-shadow: var(--warp-card-shadow-hover,var(--warp-config-part-card-shadow-hover,var(--warp-card-shadow,var(--warp-config-part-card-shadow,var(--warp-elevation-1))))); }
+/* warp-theme-only:end */
 :where([data-scope="card"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
 :where([data-scope="card"] :is(h3)),
 :where([data-scope="card"] :is(h4)) { margin: 0; font-size: calc(var(--warp-text-body-size) + 1px); font-weight: 600; }

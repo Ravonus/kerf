@@ -2,9 +2,9 @@
 @layer warp.components {
 /* -- Pill (and PillLink): rounded, selectable; sweeps while hovered or active -- */
 :where([data-scope="pill"]) {
-  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 6px; block-size: 30px; padding-inline: 12px;
-  border: var(--warp-border-hairline) solid var(--warp-pill-border,var(--warp-config-part-pill-border,var(--warp-color-border))); border-radius: var(--warp-radius-round); --warp-sweep-radius: var(--warp-radius-round);
-  background: var(--warp-pill-bg,var(--warp-config-part-pill-bg,var(--warp-color-surface-raised))); color: var(--warp-pill-text,var(--warp-config-part-pill-text,var(--warp-color-text-subtle))); font: 500 var(--warp-text-caption-size)/1 var(--warp-text-body-font);
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: var(--_warp-pill-gap-active,var(--_warp-pill-gap-hover,var(--warp-pill-gap,var(--warp-config-part-pill-gap,6px)))); block-size: var(--warp-pill-height,var(--warp-config-part-pill-height,30px)); padding-inline: var(--warp-pill-padding-inline,var(--warp-config-part-pill-padding-inline,12px));
+  border: var(--warp-pill-border-width,var(--warp-config-part-pill-border-width,var(--warp-border-hairline))) solid var(--warp-pill-border,var(--warp-config-part-pill-border,var(--warp-color-border))); border-radius: var(--warp-pill-radius,var(--warp-config-part-pill-radius,var(--warp-radius-round))); --warp-sweep-radius: var(--warp-pill-radius,var(--warp-config-part-pill-radius,var(--warp-radius-round)));
+  background: var(--warp-pill-bg,var(--warp-config-part-pill-bg,var(--warp-color-surface-raised))); color: var(--warp-pill-text,var(--warp-config-part-pill-text,var(--warp-color-text-subtle))); font: var(--warp-pill-font-weight,var(--warp-config-part-pill-font-weight,500)) var(--warp-pill-font-size,var(--warp-config-part-pill-font-size,var(--warp-text-caption-size)))/var(--warp-pill-font-line-height,var(--warp-config-part-pill-font-line-height,1)) var(--warp-pill-font-family,var(--warp-config-part-pill-font-family,var(--warp-text-body-font)));
   text-decoration: none; cursor: pointer;
   transition: color var(--warp-duration-fast), background-color var(--warp-duration-fast), border-color var(--warp-duration-fast);
 }
@@ -16,6 +16,12 @@
 }
 :where([data-scope="pill"] [data-part="count"]) { font: 500 11px/1 var(--warp-font-mono); }   /* full ink: 0.75 opacity fell to 3.6:1 (review 03 m12) */
 
+/* warp-theme-only:start */
+@property --_warp-pill-gap-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-gap-active { syntax: "*"; inherits: false; }
+:where([data-scope="pill"]:hover) { --_warp-pill-gap-hover: var(--warp-pill-gap-hover,var(--warp-config-part-pill-gap-hover)); }
+:where([data-scope="pill"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"])) { --_warp-pill-gap-active: var(--warp-pill-gap-active,var(--warp-config-part-pill-gap-active)); }
+/* warp-theme-only:end */
 
 
 /* pills and menubar items sit in a row with room above and below: block axis only */
