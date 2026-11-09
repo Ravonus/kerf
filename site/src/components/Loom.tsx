@@ -1,5 +1,6 @@
 import { flush, onCleanup, onMount, state, watch } from '@weft-js/core'
-import { COLOURS, threads, weaver } from '../lib/loom'
+import { weaver } from '../lib/loom/weaver'
+import { COLOURS, threads } from '../lib/loom/threads'
 
 const low = () => {
   const n = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } }
@@ -16,15 +17,18 @@ type LoomRun = { raf: number; dead: boolean; stops: (() => void)[] }
 const later = (fn: (d?: IdleDeadline) => void) =>
   'requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 400 }) : setTimeout(fn, 16)
 
-function animateLoom(
-  canvas: HTMLCanvasElement,
-  hero: HTMLElement,
-  cloth: ReturnType<typeof weaver>,
-  cols: number,
-  rows: number,
-  cells: ReturnType<typeof state<number>>[],
-  run: LoomRun,
-) {
+type LoomScene = {
+  canvas: HTMLCanvasElement
+  hero: HTMLElement
+  cloth: ReturnType<typeof weaver>
+  cols: number
+  rows: number
+  cells: ReturnType<typeof state<number>>[]
+  run: LoomRun
+}
+
+function animateLoom(scene: LoomScene) {
+  const { canvas, hero, cloth, cols, rows, cells, run } = scene
   const start = performance.now()
   let row = 0,
     last = 0,
@@ -132,7 +136,7 @@ function buildLoom(getBox: () => HTMLCanvasElement, run: LoomRun) {
     canvas.dataset.live = ''
     begin()
   }
-  const begin = () => animateLoom(canvas, hero, cloth, cols, rows, cells, run)
+  const begin = () => animateLoom({ canvas, hero, cloth, cols, rows, cells, run })
   later(slice)
 }
 

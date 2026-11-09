@@ -63,19 +63,19 @@ export function Fix() {
       stop()
     }
   })
-  return renderFix(step, count, go, play, (el) => (box = el))
+  return renderFix({ step, count, go, play, setBox: (el) => (box = el) })
 }
 
-type FixRenderer = (
-  step: ReturnType<typeof state<number>>,
-  count: ReturnType<typeof state<number>>,
-  go: (n: number) => void,
-  play: () => void,
-  setBox: (el: HTMLElement) => void,
-) => unknown
+type FixView = {
+  step: ReturnType<typeof state<number>>
+  count: ReturnType<typeof state<number>>
+  go: (n: number) => void
+  play: () => void
+  setBox: (el: HTMLElement) => void
+}
 
-const renderFix: FixRenderer = (step, count, go, play, setBox) => (
-  <section data-site="fix" data-step={step.value} ref={setBox}>
+const renderFix = (o: FixView) => (
+  <section data-site="fix" data-step={o.step.value} ref={o.setBox}>
     <h2>When your agent makes a mistake, Weft catches it</h2>
     <p data-part="intro">
       The compiler stops the mistake before it ships and says how to fix it, in words your agent can
@@ -87,8 +87,8 @@ const renderFix: FixRenderer = (step, count, go, play, setBox) => (
           <Button
             emphasis="ghost"
             tone="neutral"
-            aria-current={step.value === n ? 'step' : undefined}
-            onClick={() => go(n)}
+            aria-current={o.step.value === n ? 'step' : undefined}
+            onClick={() => o.go(n)}
           >
             <span>{n + 1}</span>
             {title}
@@ -98,7 +98,7 @@ const renderFix: FixRenderer = (step, count, go, play, setBox) => (
     </ol>
     <div data-part="stage">
       <div data-part="code">
-        <p data-part="say">{SAY[step.value]}</p>
+        <p data-part="say">{SAY[o.step.value]}</p>
         <div data-part="panels">
           <div
             data-show="0"
@@ -127,15 +127,15 @@ const renderFix: FixRenderer = (step, count, go, play, setBox) => (
         </div>
       </div>
       <div data-part="play">
-        <output aria-live="polite">{fixTotal(step, count)}</output>
-        <p data-part="amount">Count {count.value}</p>
-        <Button size="lg" onClick={() => count.value++}>
+        <output aria-live="polite">{fixTotal(o.step, o.count)}</output>
+        <p data-part="amount">Count {o.count.value}</p>
+        <Button size="lg" onClick={() => o.count.value++}>
           +1
         </Button>
-        <Button size="lg" emphasis="ghost" tone="neutral" onClick={play}>
+        <Button size="lg" emphasis="ghost" tone="neutral" onClick={o.play}>
           Replay
         </Button>
-        <p data-part="hint">{HINT[step.value]}</p>
+        <p data-part="hint">{HINT[o.step.value]}</p>
       </div>
     </div>
     <dl>
