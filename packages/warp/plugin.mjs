@@ -19,6 +19,7 @@ import { namedToneCss } from './src/plugin/themes-tones.mjs'
 import { themeAliases } from './src/plugin/themes-aliases.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
+const checks = new WeakMap() // Each options object owns checks for its exact inputs.
 // The spec's scope roots (warp.css §2): every one recomputes the sys tokens, so an override has to land on each.
 const SCOPES =
   ':root,[data-expression],[data-density],[data-form],[data-pointer],[data-motion],[data-flair],[data-theme],[data-warp]'
@@ -54,13 +55,16 @@ const seedCss = (s) =>
   `@layer warp.tokens{:root{--warp-seed-accent-h:${s.hue};--warp-seed-accent-c:${s.chroma}}}\n`
 
 /** The spec checker's report on warp.css with the seed and any token overrides applied. */
-function contrast(seed, declarations) {
+function contrast(seed, declarations, cache) {
+  const source = readFileSync(new URL('styles/warp.css', core), 'utf8')
+  const key = JSON.stringify([seed, declarations, source])
+  if (cache?.reports.has(key)) return cache.reports.get(key)
   const dir = mkdtempSync(join(tmpdir(), 'warp-seed-'))
   try {
     const css = join(dir, 'warp.css')
     writeFileSync(
       css,
-      readFileSync(new URL('styles/warp.css', core), 'utf8') +
+      source +
         `\n:root{--warp-seed-accent-h:${seed.hue};--warp-seed-accent-c:${seed.chroma}}\n${declarations && `${SCOPES}{${declarations}}\n`}`,
     )
     let out
@@ -73,18 +77,23 @@ function contrast(seed, declarations) {
     } catch (e) {
       out = e.stdout // exit 1 on failures; the JSON is still on stdout
     }
-    return JSON.parse(out)
+    const report = JSON.parse(out)
+    cache?.reports.set(key, report)
+    return report
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
 }
 
 // Check configured frame text and visible sweep boundaries before admitting overrides.
-function checkButtonCandidate(button, resolved, tokens = {}) {
+function checkButtonCandidate(button, resolved, tokens = {}, cache) {
+  const pairs = buttonPairs(button, resolved, tokens)
+  const source = readFileSync(new URL('styles/warp.css', core), 'utf8')
+  const key = JSON.stringify([pairs, source])
+  if (cache?.buttons.has(key)) return
   const dir = mkdtempSync(join(tmpdir(), 'warp-seed-'))
   try {
     const file = join(dir, 'theme-pairs.json')
-    const pairs = buttonPairs(button, resolved, tokens)
     writeFileSync(file, JSON.stringify(pairs))
     let output
     try {
@@ -117,6 +126,7 @@ function checkButtonCandidate(button, resolved, tokens = {}) {
         { code: 'D010', path, failures },
       )
     }
+    cache?.buttons.add(key)
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -130,8 +140,8 @@ const renders =
     (!dials.expression || r.expression === dials.expression)
 
 /** D010 with every failing pair, at the stops `dials` leave. Returns how many pairs passed. */
-export function checkSeed(seed, declarations = '', dials) {
-  const results = contrast(seed, declarations).results.filter(renders(dials))
+export function checkSeed(seed, declarations = '', dials, cache) {
+  const results = contrast(seed, declarations, cache).results.filter(renders(dials))
   const failed = results.filter((r) => !r.pass)
   const failures = failed.map(
     (r) => `${r.combo}: ${r.fg} on ${r.bg} is ${r.ratio.toFixed(2)}:1, needs ${r.min}:1`,
@@ -151,8 +161,8 @@ export function checkSeed(seed, declarations = '', dials) {
 }
 
 /** Where a seed's accent lands: a seed sets the hue family, and each theme solves its own lightness for contrast. */
-function landed(seed, declarations, asked) {
-  const { resolved } = contrast(seed, declarations)
+function landed(seed, declarations, asked, cache) {
+  const { resolved } = contrast(seed, declarations, cache)
   const light = resolved['light/balanced']?.['accent-solid'],
     dark = resolved['dark/balanced']?.['accent-solid']
   return light === asked && dark === asked
@@ -207,9 +217,9 @@ function fitted(seed) {
 }
 
 /** `declarations` plus whatever a custom seed needs to pass, or D010. A token set in the config beats a fitted one. */
-function fitSeed(seed, declarations, dials) {
+function fitSeed(seed, declarations, dials, cache) {
   try {
-    checkSeed(seed, declarations, dials)
+    checkSeed(seed, declarations, dials, cache)
     return declarations
   } catch (error) {
     if (error.code !== 'D010') throw error
@@ -218,7 +228,7 @@ function fitSeed(seed, declarations, dials) {
     .filter(([token]) => !declarations.includes(`${token}:`))
     .map(([k, v]) => `${k}:${v}`)
   const merged = [...fit, ...(declarations ? [declarations] : [])].join(';')
-  checkSeed(seed, merged, dials)
+  checkSeed(seed, merged, dials, cache)
   return merged
 }
 
@@ -307,16 +317,23 @@ export const warp = definePlugin({
     spawn: ['node'],
   },
   contribute(o, env) {
+    if (!checks.has(o)) checks.set(o, { reports: new Map(), buttons: new Set() })
+    const cache = checks.get(o)
     const seed = o.seed ?? DEFAULT
     const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma
     let declarations = overrides(o)
-    if (custom) declarations = fitSeed(seed, declarations, o.dials)
-    else if (declarations) checkSeed(seed, declarations, o.dials)
+    if (custom) declarations = fitSeed(seed, declarations, o.dials, cache)
+    else if (declarations) checkSeed(seed, declarations, o.dials, cache)
     if (o.buttonCandidate) {
-      checkButtonCandidate(o.buttonCandidate, contrast(seed, declarations).resolved, o.tokens)
+      checkButtonCandidate(
+        o.buttonCandidate,
+        contrast(seed, declarations, cache).resolved,
+        o.tokens,
+        cache,
+      )
       declarations += `${declarations ? ';' : ''}--warp-config-part-button-bg:${o.buttonCandidate.bg};--warp-config-part-button-text:${o.buttonCandidate.text}`
     }
-    const note = o.asked && landed(seed, declarations, o.asked)
+    const note = o.asked && landed(seed, declarations, o.asked, cache)
     const dials = Object.entries(o.dials ?? {})
       .filter(([dial]) => dial !== 'palette')
       .map(([dial, value]) => dialCss(dial, value))
@@ -330,9 +347,10 @@ export const warp = definePlugin({
       (o.namedColors
         ? namedToneCss(o, {
             overrides,
-            fitSeed,
-            checkButtonCandidate,
-            contrast,
+            fitSeed: (candidate, values, stops) => fitSeed(candidate, values, stops, cache),
+            checkButtonCandidate: (button, resolved, tokens) =>
+              checkButtonCandidate(button, resolved, tokens, cache),
+            contrast: (candidate, values) => contrast(candidate, values, cache),
             source: () => readFileSync(new URL('styles/warp.css', core), 'utf8'),
           })
         : '') +

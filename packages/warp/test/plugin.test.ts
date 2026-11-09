@@ -1,5 +1,6 @@
 // @vitest-environment node
 // The warp plugin: seed → tokens (gated by the spec's own contrast checker), classic fields, catalog and AGENTS text.
+import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { parseAst } from 'vite'
 import * as plugin from '../plugin.mjs'
@@ -482,4 +483,50 @@ test('named tones retain full seed channels without colliding with named utility
   for (const channel of ['solid', 'solid-hover', 'ink-on', 'soft', 'text', 'border'])
     expect(css).toContain(`--_${channel}:light-dark(`)
   expect(css).not.toContain('[data-tone="unknown"]')
+})
+
+test('reuses exact contrast checks only within a plugin instance', () => {
+  const script = `
+    import child from 'node:child_process'
+    import { syncBuiltinESMExports } from 'node:module'
+    const original = child.execFileSync
+    let calls = 0
+    child.execFileSync = function (...args) { calls++; return original.apply(this, args) }
+    syncBuiltinESMExports()
+    const { warp } = await import(${JSON.stringify(new URL('../plugin.mjs', import.meta.url).href)})
+    const env = { command: 'build', mode: 'production', root: '/tmp/theme-app' }
+    const tokens = {}
+    const first = warp({ colors: { brand: '#112233' }, tokens })
+    const initial = calls
+    const firstCss = first.contribute(env).tokens.css
+    const afterFirst = calls
+    tokens['--warp-color-accent-on-solid'] = '#111111'
+    let invalid
+    try { first.contribute(env) } catch (error) { invalid = error.code }
+    const afterInvalid = calls
+    const second = warp({ colors: { brand: '#445566' } })
+    const afterSecond = calls
+    const secondCss = second.contribute(env).tokens.css
+    console.log(JSON.stringify({ initial, afterFirst, afterInvalid, invalid, afterSecond, final: calls, different: firstCss !== secondCss }))
+  `
+  const result = JSON.parse(
+    execFileSync(process.execPath, ['--input-type=module', '-e', script], {
+      encoding: 'utf8',
+    }),
+  ) as {
+    initial: number
+    afterFirst: number
+    afterInvalid: number
+    invalid: string
+    afterSecond: number
+    final: number
+    different: boolean
+  }
+  expect(result.initial).toBeGreaterThan(0)
+  expect(result.afterFirst).toBe(result.initial)
+  expect(result.invalid).toBe('D010')
+  expect(result.afterInvalid).toBeGreaterThan(result.afterFirst)
+  expect(result.afterSecond).toBeGreaterThan(result.afterInvalid)
+  expect(result.final).toBe(result.afterSecond)
+  expect(result.different).toBe(true)
 })
