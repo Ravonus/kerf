@@ -36,14 +36,10 @@ const day = (() => {
 const scale = 1800,
   count = (i: number) => Math.round(day[i]! * scale)
 
-function tideRings(
-  ctx: CanvasRenderingContext2D,
-  c: ReturnType<typeof colours>,
-  cx: number,
-  cy: number,
-  inner: number,
-  span: number,
-) {
+type Ring = { cx: number; cy: number; inner: number; span: number }
+
+function tideRings(ctx: CanvasRenderingContext2D, c: ReturnType<typeof colours>, ring: Ring) {
+  const { cx, cy, inner, span } = ring
   ctx.lineWidth = 1
   ctx.strokeStyle = c.rule
   ctx.beginPath()
@@ -54,13 +50,8 @@ function tideRings(
   ctx.stroke()
 }
 
-function tideHours(
-  ctx: CanvasRenderingContext2D,
-  c: ReturnType<typeof colours>,
-  cx: number,
-  cy: number,
-  inner: number,
-) {
+function tideHours(ctx: CanvasRenderingContext2D, c: ReturnType<typeof colours>, ring: Ring) {
+  const { cx, cy, inner } = ring
   ctx.fillStyle = c.label
   ctx.font = '11px var(--warp-font-mono, monospace)'
   ctx.textAlign = 'center'
@@ -85,6 +76,7 @@ export default function SocketTide({ live = true }: ArtProps) {
       inner = outer * 0.36,
       span = outer - inner,
       t = still ? 2 : time
+    const ring = { cx, cy, inner, span }
     const dx = pointer.x - cx,
       dy = pointer.y - cy,
       at =
@@ -92,7 +84,7 @@ export default function SocketTide({ live = true }: ArtProps) {
           ? Math.floor((((Math.atan2(dy, dx) + Math.PI / 2 + TAU) % TAU) / TAU) * SLOTS)
           : -1
     ctx.clearRect(0, 0, width, height)
-    tideRings(ctx, c, cx, cy, inner, span)
+    tideRings(ctx, c, ring)
     for (let pass = 0; pass < 2; pass++) {
       ctx.strokeStyle = pass ? c.high : c.low
       ctx.lineWidth = pass ? 1.4 : 1
@@ -108,7 +100,7 @@ export default function SocketTide({ live = true }: ArtProps) {
       }
       ctx.stroke()
     }
-    tideHours(ctx, c, cx, cy, inner)
+    tideHours(ctx, c, ring)
     const hand = at >= 0 ? at : (0.4 * SLOTS + t * 0.5) % SLOTS,
       a = (hand / SLOTS) * TAU - Math.PI / 2
     ctx.strokeStyle = c.hand

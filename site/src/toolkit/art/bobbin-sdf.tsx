@@ -19,7 +19,9 @@ const R = 1,
   EYE = 3.4
 const SCREEN = tile('bayer4')
 
-function shade(px: number, py: number, dw: number, ca: number, sa: number, cb: number, sb: number) {
+type Ray = { px: number; py: number; dw: number; ca: number; sa: number; cb: number; sb: number }
+
+function shade({ px, py, dw, ca, sa, cb, sb }: Ray) {
   // a ray through this pixel, in the ring's own frame
   const ox = 0,
     oy = 0,
@@ -121,7 +123,15 @@ function drawBobbin(state: BobbinState, { ctx, width, height, dt, tier, still, p
   const all = fresh || !turning
   for (let y = all ? 0 : state.parity; y < height; y += all ? 1 : 2)
     for (let x = 0, i = y * width; x < width; x++, i++)
-      state.tones[i] = shade((x - cx) * scale, (y - cy) * scale, 2.6, ca, sa, cb, sb)
+      state.tones[i] = shade({
+        px: (x - cx) * scale,
+        py: (y - cy) * scale,
+        dw: 2.6,
+        ca,
+        sa,
+        cb,
+        sb,
+      })
   state.parity ^= 1
   quantize(state.tones, width, height, SCREEN, state.cells, state.out)
   ctx.putImageData(state.image, 0, 0)

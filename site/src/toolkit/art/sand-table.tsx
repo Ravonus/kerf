@@ -35,7 +35,7 @@ export default function SandTable(_: ArtProps) {
 
   const garden = (x: number, y: number, t: number) => {
     if (!built) {
-      buildGarden(rake, sand, rock, shade)
+      buildGarden({ rake, sand, rock, shade })
       built = true
     }
     if (x > aspect) aspect = x
@@ -53,8 +53,10 @@ export default function SandTable(_: ArtProps) {
       steps = lx < 0 ? 1 : Math.max(1, Math.hypot(x - lx, y - ly) | 0)
     for (let n = 1; n <= steps; n++)
       plough(
-        lx < 0 ? x : Math.round(lx + ((x - lx) * n) / steps),
-        lx < 0 ? y : Math.round(ly + ((y - ly) * n) / steps),
+        {
+          x: lx < 0 ? x : Math.round(lx + ((x - lx) * n) / steps),
+          y: lx < 0 ? y : Math.round(ly + ((y - ly) * n) / steps),
+        },
         rock,
         sand,
       )
@@ -106,7 +108,7 @@ function settle(rake: Float32Array, sand: Float32Array) {
   return moved
 }
 
-function plough(px: number, py: number, rock: Uint8Array, sand: Float32Array) {
+function plough({ x: px, y: py }: { x: number; y: number }, rock: Uint8Array, sand: Float32Array) {
   for (let dy = -5; dy <= 5; dy++)
     for (let dx = -5; dx <= 5; dx++) {
       const X = px + dx,
@@ -118,12 +120,9 @@ function plough(px: number, py: number, rock: Uint8Array, sand: Float32Array) {
     }
 }
 
-function buildGarden(
-  rake: Float32Array,
-  sand: Float32Array,
-  rock: Uint8Array,
-  shade: Float32Array,
-) {
+type Garden = { rake: Float32Array; sand: Float32Array; rock: Uint8Array; shade: Float32Array }
+
+function buildGarden({ rake, sand, rock, shade }: Garden) {
   for (let y = 0, i = 0; y < H; y++)
     for (let x = 0; x < W; x++, i++) {
       const u = (x / W) * 1.6,
