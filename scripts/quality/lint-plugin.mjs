@@ -113,9 +113,14 @@ export default {
       create(context) {
         return {
           Program(node) {
-            for (const warning of analyzeComments(context.sourceCode.text, context.filename).warnings) {
+            for (const warning of analyzeComments(context.sourceCode.text, context.filename)
+              .warnings) {
               const position = { line: warning.line, column: 0 }
-              context.report({ node, loc: { start: position, end: position }, message: warning.message })
+              context.report({
+                node,
+                loc: { start: position, end: position },
+                message: warning.message,
+              })
             }
           },
         }

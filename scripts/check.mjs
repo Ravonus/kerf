@@ -25,7 +25,7 @@ import { packageProblems } from './quality/package-folders.mjs'
 import { checkLengths } from './quality/lengths.mjs'
 import { conventionsStep, importantStep } from './quality/conventions.mjs'
 import { clippyProblems, lintProblems } from './quality/length-diagnostics.mjs'
-import { inventoryStep, splitCommentWarnings } from './quality/s9-warnings.mjs'
+import { inventoryStep, reportCommentWarnings } from './quality/s9-warnings.mjs'
 
 // While a new rule beds in this is 'warn': everything is reported and nothing fails. Otherwise 'error'.
 const LEVEL = 'error'
@@ -72,7 +72,6 @@ const LINT_PATHS = [
 const has = (cmd) => spawnSync(cmd, ['--version'], { stdio: 'ignore', shell: windows }).status === 0
 const hasCargo = (sub) =>
   spawnSync('cargo', [sub, '--version'], { stdio: 'ignore', shell: windows }).status === 0
-
 const all = (items, job) => allJobs(items, job, limit)
 const lines = (r) => (r.code === 0 ? { problems: [] } : { problems: r.out.trim().split('\n') })
 let lengthResult
@@ -137,10 +136,9 @@ const STEPS = [
       } catch {
         return lines({ code: 1, out: r.out })
       }
-      const { warnings, rest } = splitCommentWarnings(report.diagnostics)
-      if (warnings.length) console.log(`\ncomment-budget lint warnings:\n${warnings.join('\n')}`)
-      const problems = lintProblems({ ...report, diagnostics: rest }, lengths())
-      if (r.code !== 0 && !rest.length)
+      report = reportCommentWarnings(report)
+      const problems = lintProblems(report, lengths())
+      if (r.code !== 0 && !report.diagnostics.length)
         problems.push(r.out.trim() || 'Oxlint failed without error diagnostics')
       return { problems }
     },
@@ -383,7 +381,6 @@ const STEPS = [
       ),
   },
 ]
-
 if (argv.includes('--list')) {
   for (const s of STEPS)
     console.log(
@@ -397,7 +394,6 @@ if (only)
       console.error(`no step called ${id}: --list shows them`)
       process.exit(2)
     }
-
 const chosen = STEPS.filter((s) =>
   only ? only.includes(s.id) : !(fast && s.slow) && (release || !s.release),
 )

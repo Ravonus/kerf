@@ -17,11 +17,21 @@ export function inventoryStep(name, run, print = console.log) {
 
 /** Separate comment budget warnings without suppressing other diagnostics. */
 export function splitCommentWarnings(diagnostics) {
-  const warnings = [], rest = []
+  const warnings = [],
+    rest = []
   for (const diagnostic of diagnostics) {
     if (diagnostic.code === 'weft(comment-budget)' && diagnostic.severity === 'warning')
-      warnings.push(`${diagnostic.filename}:${diagnostic.labels?.[0]?.span.line ?? 0} ${diagnostic.message}`)
+      warnings.push(
+        `${diagnostic.filename}:${diagnostic.labels?.[0]?.span.line ?? 0} ${diagnostic.message}`,
+      )
     else rest.push(diagnostic)
   }
   return { warnings, rest }
+}
+
+/** Print warning diagnostics and leave errors for the existing lint check. */
+export function reportCommentWarnings(report, print = console.log) {
+  const { warnings, rest } = splitCommentWarnings(report.diagnostics)
+  if (warnings.length) print(`\ncomment-budget lint warnings:\n${warnings.join('\n')}`)
+  return { ...report, diagnostics: rest }
 }
