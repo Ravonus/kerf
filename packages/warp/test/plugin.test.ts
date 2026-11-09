@@ -283,3 +283,147 @@ test('selective choice mirrors do not duplicate configured classic rules', () =>
   // The one canonical rule has hover and classic selectors.
   expect(css.match(/\[data-part="value"\]:empty/g)).toHaveLength(2)
 })
+
+test('named hex colours produce an app-local Tailwind entry; empty dictionaries keep default bytes', () => {
+  const plain = run()
+  const empty = run({ colors: {}, system: {}, parts: {}, themes: {} })
+  expect(empty.tokens).toEqual(plain.tokens)
+  const result = warp({ colors: { brand: 'ink', ink: '#123456' } }).contribute({
+    command: 'build',
+    mode: 'production',
+    root: '/tmp/theme-app',
+  }) as unknown as {
+    tokens: { css: string; cssEntries: { tailwind: string }; alias: Record<string, string> }
+  }
+  expect(result.tokens.css).toContain('--warp-named-brand:#123456;--warp-named-ink:#123456')
+  expect(result.tokens.cssEntries.tailwind).toContain('--color-brand: var(--warp-named-brand)')
+  expect(result.tokens.alias['@weft-js/warp/tailwind.css']).toBe(
+    '/tmp/theme-app/.weft/tokens/warp.tailwind.css',
+  )
+})
+
+test('unsupported theme features and unsafe colours are rejected', () => {
+  for (const input of [
+    { colors: null },
+    { colors: { brand: 'oklch(0.5 0.1 20)' } },
+    { colors: { brand: { hue: 120, chroma: 0.1 } } },
+    { themes: { ocean: {} } },
+    { system: { space: { group: 2 } } },
+  ])
+    expect(code(() => run(input as WarpOptions))).toBe('P115')
+})
+
+test('Button candidate rejects unsupported properties and low-contrast text', () => {
+  expect(() => run({ parts: { button: { mystery: '#000000' } } } as WarpOptions)).toThrow(
+    /unknown property or unsupported state/,
+  )
+  // @ts-expect-error -- JavaScript callers still receive a diagnostic for unsupported states.
+  expect(() => run({ parts: { button: { hover: { bg: '#000000' } } } })).toThrow(
+    /unknown property or unsupported state/,
+  )
+  expect(
+    code(() =>
+      run({
+        colors: { ink: '#111111' },
+        parts: { button: { bg: '#000000', text: 'ink' } },
+      }),
+    ),
+  ).toBe('D010')
+})
+
+test('accepts checked Button colours and emits themed CSS aliases', () => {
+  const result = warp({
+    colors: { ink: '#ffffff', shade: '#757575' },
+    parts: { button: { bg: 'shade', text: 'ink' } },
+  }).contribute({ command: 'build', mode: 'production', root: '/tmp/theme-app' }) as unknown as {
+    tokens: { css: string; alias: Record<string, string> }
+  }
+  expect(result.tokens.css).toContain('--warp-config-part-button-bg:#757575')
+  expect(result.tokens.css).toContain('--warp-config-part-button-text:#ffffff')
+  expect(result.tokens.alias['@weft-js/warp/tailwind.css']).toBe(
+    '/tmp/theme-app/.weft/tokens/warp.tailwind.css',
+  )
+  for (const [name, part] of [
+    ['@weft-js/warp-core/styles/warp.css', 'warp.css'],
+    ['@weft-js/warp-core/styles/components/button.css', 'components/button.css'],
+  ] as const) {
+    const target = result.tokens.alias[name]
+    expect(target).toBeDefined()
+    if (target === undefined) throw new Error(`missing alias: ${name}`)
+    expect(target).toContain(`/styles/themed/${part}`)
+    expect(readFileSync(target, 'utf8')).toContain('--warp-config-part-')
+  }
+  expect(code(() => run({ parts: { button: { bg: '#757575', text: '#757575' } } }))).toBe('D010')
+  expect(
+    code(() =>
+      run({
+        parts: { button: { bg: '#757575', text: '#ffffff' } },
+        tokens: { '--warp-button-bg-hover': '#ffffff' },
+      }),
+    ),
+  ).toBe('P115')
+})
+
+test('explicit sweep values take precedence and are checked against their actual neighbors', () => {
+  try {
+    run({
+      parts: { button: { bg: '#757575', text: '#ffffff' } },
+      tokens: { '--warp-sweep-stroke': '#757575', '--warp-config-part-sweep-stroke': '#ffffff' },
+    })
+    throw new Error('expected rejection')
+  } catch (error) {
+    const failure = error as {
+      code: string
+      failures: { path: string; fg: string; site: string }[]
+    }
+    expect(failure.code).toBe('D010')
+    expect(failure.failures).toContainEqual(
+      expect.objectContaining({
+        path: 'tokens.--warp-sweep-stroke',
+        fg: '--warp-sweep-stroke',
+        site: 'stroke-base',
+      }),
+    )
+    expect(failure.failures.some((row) => row.fg === '--warp-config-part-sweep-stroke')).toBe(false)
+  }
+})
+
+test('Button sweep checks include modes reachable under a local theme override', () => {
+  try {
+    run({ dials: { theme: 'light' }, parts: { button: { bg: '#ffffff', text: '#000000' } } })
+    throw new Error('expected rejection')
+  } catch (error) {
+    const failure = error as { code: string; failures: { combo: string; site: string }[] }
+    expect(failure.code).toBe('D010')
+    expect(failure.failures).toContainEqual(
+      expect.objectContaining({
+        combo: 'light/quiet',
+        site: 'base-surface',
+      }),
+    )
+    expect(failure.failures).toContainEqual(
+      expect.objectContaining({
+        combo: 'dark/balanced',
+        site: 'stroke-base',
+      }),
+    )
+  }
+})
+
+test.each(['label', 'text', 'base'])('checks configured sweep %s overrides', (name) => {
+  const token = `--warp-config-part-sweep-${name}`
+  const value = name === 'base' ? '#ffffff' : '#757575'
+  try {
+    run({
+      parts: { button: { bg: '#757575', text: '#ffffff' } },
+      tokens: { [token]: value },
+    })
+    throw new Error('expected rejection')
+  } catch (error) {
+    const failure = error as { code: string; failures: { path: string; fg: string }[] }
+    expect(failure.code).toBe('D010')
+    expect(failure.failures).toContainEqual(
+      expect.objectContaining({ path: `tokens.${token}`, fg: token }),
+    )
+  }
+})

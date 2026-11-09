@@ -161,7 +161,110 @@ function suggest(fg, bg, min) {
   return 'flip ink direction'
 }
 
+function readThemeColor(side, label, parseColor, fail) {
+  if (
+    !side ||
+    typeof side.token !== 'string' ||
+    !/^--[a-zA-Z0-9-]+$/.test(side.token) ||
+    typeof side.value !== 'string'
+  )
+    fail(`invalid ${label} token or value`)
+  let parsed
+  try {
+    parsed = parseColor(side.value)
+  } catch (error) {
+    fail(`unsupported ${label} colour ${side.value}: ${error.message}`)
+  }
+  const lin = parsed.lin ?? toLinearSrgb(parsed).rgb
+  if (
+    !lin.every(Number.isFinite) ||
+    !Number.isFinite(parsed.alpha) ||
+    parsed.alpha < 0 ||
+    parsed.alpha > 1
+  )
+    fail(`invalid ${label} colour ${side.value}`)
+  return { ...parsed, lin }
+}
+
+// The caller enumerates effective paints; this does not infer CSS states or paint coverage.
+function checkThemePairs(pairs, parseColor) {
+  if (!Array.isArray(pairs) || pairs.length === 0)
+    throw new Error('D010 theme pairs must be a nonempty array')
+  const sites = {
+    button: {
+      base: 4.5,
+      'fill-start': 4.5,
+      'fill-end': 4.5,
+      'fill-fallback': 4.5,
+      'fill-relative': 4.5,
+      border: 3,
+    },
+    sweep: {
+      'text-filled': 4.5,
+      'text-unfilled': 4.5,
+      'stroke-base': 3,
+      'stroke-surface': 3,
+      'base-surface': 3,
+    },
+  }
+  const states = [
+    'rest',
+    'hover',
+    'focus',
+    'press',
+    'active',
+    'selected',
+    'floated',
+    'invalid',
+    'open',
+    'checked',
+  ]
+  const emphases = ['solid', 'soft', 'outline', 'ghost', 'link', 'frame']
+  return pairs.map((pair, index) => {
+    const path = typeof pair?.path === 'string' && pair.path ? pair.path : `pairs[${index}]`
+    const fail = (message) => {
+      throw new Error(`D010 ${path}: ${message}`)
+    }
+    if (!pair || typeof pair !== 'object' || Array.isArray(pair)) fail('expected a pair')
+    const { palette, theme, expression, part, state, emphasis, site, fg, bg } = pair
+    if (typeof palette !== 'string' || !/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(palette))
+      fail('invalid palette')
+    if (!['light', 'dark'].includes(theme) || !['quiet', 'balanced', 'vivid'].includes(expression))
+      fail('invalid mode or expression')
+    if (!states.includes(state) || !emphases.includes(emphasis))
+      fail('unsupported state or emphasis')
+    if (!Object.hasOwn(sites, part) || !Object.hasOwn(sites[part], site))
+      fail('unsupported part or paint site')
+    const min = sites[part][site]
+    const foreground = readThemeColor(fg, 'foreground', parseColor, fail),
+      background = readThemeColor(bg, 'background', parseColor, fail)
+    if (background.alpha !== 1) fail('background must be resolved over an opaque surface')
+    const measured = ratio(luminance(over(foreground, background)), luminance(background.lin))
+    return {
+      group: 'Theme part',
+      code: 'D010',
+      combo: `${theme}/${expression}`,
+      palette,
+      theme,
+      expression,
+      part,
+      state,
+      emphasis,
+      site,
+      path,
+      fg: fg.token,
+      bg: bg.token,
+      min,
+      ratio: measured,
+      pass: measured >= min,
+      fgHex: toHex(foreground.lin),
+      bgHex: toHex(background.lin),
+    }
+  })
+}
+
 export {
+  checkThemePairs,
   parseBlocks,
   splitTop,
   resolveEnv,
