@@ -160,7 +160,8 @@ function canvas() {
   }
 }
 
-function measured(module, text, whiteSpace, spacing, overflow, partial, rich, trace = []) {
+function measured(module, args, trace = []) {
+  const [text, whiteSpace, spacing, overflow, partial, rich] = args
   module.clearMeasurementCaches()
   const observe = (object, label) =>
     new Proxy(object, {
@@ -235,8 +236,8 @@ function comparePreparations(original, candidate) {
                   partial,
                   rich,
                 ]
-                const expected = measured(original, ...args, before)
-                const actual = measured(candidate, ...args, after)
+                const expected = measured(original, args, before)
+                const actual = measured(candidate, args, after)
                 assert.deepEqual(after, before)
                 assert.deepEqual(actual, expected)
                 cases++

@@ -182,7 +182,7 @@ function siteValues(engine, c, sites) {
   return seen
 }
 
-function inferKeys(engine, c, fwd, outer, st, seen, cache) {
+function inferKeys({ engine, c, fwd, outer, st, seen, cache }) {
   const named = new Set(c.info.keys.keys())
   const all = fwd.length ? named : new Set([...seen.keys(), ...named])
   const parts = []
@@ -273,7 +273,7 @@ function infer(c, sites, host) {
   const seen = siteValues(this, c, sites)
 
   const fwd = c.forwards
-  const { named, parts } = inferKeys(this, c, fwd, outer, st, seen, cache)
+  const { named, parts } = inferKeys({ engine: this, c, fwd, outer, st, seen, cache })
   const own = parts.length ? `{ ${parts.join('; ')} }` : '{}'
   if (fwd.length) {
     const f = fwd[0]

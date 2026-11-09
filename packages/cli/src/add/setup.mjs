@@ -64,7 +64,7 @@ export const setupActions = (plan) => [
   ...(plan.next ?? []).map((n) => `next: ${n}`),
 ]
 
-export function authEdits(root, files, context, tables, envText, layer) {
+export function authEdits({ root, files, context, tables, envText, layer }) {
   const edits = { ...files, 'src/context.server.ts': context }
   if (!envText.includes('BETTER_AUTH_SECRET'))
     edits['src/env.server.ts'] = envText.replace(

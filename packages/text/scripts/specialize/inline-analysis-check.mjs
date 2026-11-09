@@ -102,7 +102,7 @@ export { getEngineProfile } from './measurement.js'`,
   return import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'))
 }
 
-function analyze(module, text, whiteSpace, wordBreak, model, own) {
+function analyze({ module, text, whiteSpace, wordBreak, model, own }) {
   const trace = []
   const observe = (target, label) =>
     new Proxy(target, {
@@ -170,7 +170,7 @@ function compare(modules) {
         for (const model of [0, 1, 2])
           for (const own of [false, true]) {
             const outputs = modules.map((module) =>
-              analyze(module, text, whiteSpace, wordBreak, model, own),
+              analyze({ module, text, whiteSpace, wordBreak, model, own }),
             )
             assert.equal(Object.hasOwn(outputs[0].result, 'error'), false)
             assert.deepEqual(outputs[1], outputs[0])

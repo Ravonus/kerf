@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { poster } from '../video.mjs'
 
-export function createVideo(
+export function createVideo({
   videoRungs,
   encode,
   sourceOf,
@@ -14,7 +14,7 @@ export function createVideo(
   playable,
   COMPATIBLE,
   o,
-) {
+}) {
   return async function video(hash, bytes, name, info, extra = {}) {
     const { width, height } = info.video
     const plan = videoRungs(info, width)
@@ -22,14 +22,14 @@ export function createVideo(
       webm: `video/webm; codecs="${plan.webm === 'video/vp9' ? 'vp9' : 'av01.0.08M.08'}${info.audio ? ', opus' : ''}"`,
       mp4: 'video/mp4',
     }
-    const cover = await poster(
-      encode[COMPATIBLE],
-      sourceOf(hash),
-      'poster',
+    const cover = await poster({
+      enc: encode[COMPATIBLE],
+      source: sourceOf(hash),
+      stem: 'poster',
       width,
-      info.duration,
+      duration: info.duration,
       o,
-    )
+    })
     writeFileSync(join(dir, hash, 'poster.webp'), cover.file.bytes)
     const top = url(hash, plan.rungs.at(-1)[0], 'mp4')
     const asset = compatible({

@@ -42,16 +42,25 @@ function ident(dialect: string) {
   }
 }
 
-function listSql<Row>(
-  target: SqlTarget,
-  spec: SqlSpec,
-  q: (name: string) => string,
-  bind: (params: unknown[]) => (value: unknown) => string,
-  read: (text: string, params: unknown[]) => Promise<Row[]>,
-  table: string,
-  select: string,
-  idColumn: string,
-): ListSource<Row>['list'] {
+function listSql<Row>({
+  target,
+  spec,
+  q,
+  bind,
+  read,
+  table,
+  select,
+  idColumn,
+}: {
+  target: SqlTarget
+  spec: SqlSpec
+  q: (name: string) => string
+  bind: (params: unknown[]) => (value: unknown) => string
+  read: (text: string, params: unknown[]) => Promise<Row[]>
+  table: string
+  select: string
+  idColumn: string
+}): ListSource<Row>['list'] {
   return async function list(p: ListParams) {
     const qp = plan(spec, p)
     const params: unknown[] = []
@@ -130,7 +139,7 @@ export function sqlSource<Row = Record<string, unknown>>(
     ).then((r) => r[0] ?? null)
   }
   return {
-    list: listSql(target, spec, q, bind, read, table, select, idColumn),
+    list: listSql({ target, spec, q, bind, read, table, select, idColumn }),
     get: byId,
     async create(data) {
       const row = written(spec, data, true)

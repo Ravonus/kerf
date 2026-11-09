@@ -297,7 +297,12 @@ export function rewrite(code, file, catalog) {
     )
       edits.push({ start: n.source.start, end: n.source.end, text: "'@weft-js/warp-icons/icon'" })
   // the pack: a default import is the namespace, so a static member is an ordinary named import to the bundler
-  const lookups = rewritePack(unit, catalog, code, file, edits, {
+  const lookups = rewritePack({
+    unit,
+    catalog,
+    code,
+    file,
+    edits,
     packLocals,
     packName,
     unknownMessage,

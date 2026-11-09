@@ -5,7 +5,7 @@ export function makeReporter(out) {
   const reporter = (file) => {
     const pos = positions(file.text)
     const allow = allowed(file.text)
-    return (code, start, end, why, fix, severity) => {
+    const make = (severity) => (code, start, end, why, fix) => {
       if (allow.has(`${code}:${pos.lineCol(start)[0]}`)) return
       const edits =
         fix &&
@@ -29,6 +29,9 @@ export function makeReporter(out) {
         }),
       )
     }
+    const report = make()
+    report.warning = make('warning')
+    return report
   }
   return reporter
 }

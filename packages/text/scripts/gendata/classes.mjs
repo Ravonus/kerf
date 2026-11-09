@@ -1,5 +1,5 @@
 // Build and verify the engine's joint class tables.
-export function createClasses(U, maps, perMap, inA, alphabet, ruleTables, varints) {
+export function createClasses({ U, maps, perMap, inA, alphabet, ruleTables, varints }) {
   // gecko/char shares chromium/char; apple/line etc. have their own maps
   // --- class maps: out-of-alphabet code points copy the previous in-alphabet class (merges runs)
   if (alphabet)

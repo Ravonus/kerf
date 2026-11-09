@@ -599,21 +599,29 @@ async function editorTsProtocol() {
     ).body
     expect(done.entries.map((e) => e.name)).toContain('count')
 
-    await verifyEditorEdits(s, file, lines, bodyLine, shop, dir, line)
+    await verifyEditorEdits({ s, file, lines, bodyLine, shop, dir, line })
   } finally {
     s.child.kill()
   }
 }
 
-async function verifyEditorEdits(
-  s: ReturnType<typeof tsserver>,
-  file: string,
-  lines: string[],
-  bodyLine: number,
-  shop: number,
-  dir: string,
-  line: number,
-) {
+async function verifyEditorEdits({
+  s,
+  file,
+  lines,
+  bodyLine,
+  shop,
+  dir,
+  line,
+}: {
+  s: ReturnType<typeof tsserver>
+  file: string
+  lines: string[]
+  bodyLine: number
+  shop: number
+  dir: string
+  line: number
+}) {
   s.send('change', {
     file,
     line: bodyLine,

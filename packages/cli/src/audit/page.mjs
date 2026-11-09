@@ -109,7 +109,7 @@ const HEAD = `(() => {
   }
 })()`
 
-function listenPage(browser, sessionId, found, statics, served, loaded, document) {
+function listenPage({ browser, sessionId, found, statics, served, loaded, document }) {
   const where = (u, line) =>
     u
       ? `${u.replace(/^https?:\/\/127\.0\.0\.1:\d+/, '')}${line === undefined ? '' : `:${line + 1}`}`
@@ -261,7 +261,7 @@ async function inspectAxe(send, url, found) {
 }
 
 /** Audit one page in one form factor: what Chrome said while it loaded, its head, its layout, and axe-core's rules. */
-export async function auditPage(browser, url, form, statics, served, forms) {
+export async function auditPage({ browser, url, form, statics, served, forms }) {
   const { targetId } = await browser.send('Target.createTarget', { url: 'about:blank' })
   const { sessionId } = await browser.send('Target.attachToTarget', { targetId, flatten: true })
   const send = (m, p) => browser.send(m, p, sessionId)
@@ -271,7 +271,7 @@ export async function auditPage(browser, url, form, statics, served, forms) {
   const load = new Promise((ok) => {
     loaded = ok
   })
-  const off = listenPage(browser, sessionId, found, statics, served, loaded, document)
+  const off = listenPage({ browser, sessionId, found, statics, served, loaded, document })
 
   try {
     const f = forms[form]

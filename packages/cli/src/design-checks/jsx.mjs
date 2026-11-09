@@ -41,13 +41,11 @@ export function checkJsx({ files, reporter, tokens, looks }) {
     for (let i = 1; i < headings.length; i++) {
       const { level, el } = headings[i]
       if (level > headings[i - 1].level + 1)
-        report(
+        report.warning(
           'D035',
           el.start,
           el.tagEnd,
           `The outline jumps from h${headings[i - 1].level} to h${level}: screen-reader users navigate by headings (WCAG 1.3.1).`,
-          undefined,
-          'warning',
         )
     }
     for (const group of solids.values()) {
