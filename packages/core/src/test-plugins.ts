@@ -265,7 +265,7 @@ async function listPages({ s, ask, check, sortable, ids, walk }: ListCtx) {
   }
 }
 
-async function listFilters({ s, ask, check, sortable, ids, walk, count }: ListCtx) {
+async function listFilters({ s, ask, check, walk, count }: ListCtx) {
   const unsorted = await walk(null)
   check(
     'cursor: no sort still walks every row by id',

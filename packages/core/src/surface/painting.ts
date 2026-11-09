@@ -90,7 +90,6 @@ function watchPaint({
   frames,
   texts,
   invalidate,
-  paint,
   isPainting,
   setPainting,
   setStarted,
