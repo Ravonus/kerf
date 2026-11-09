@@ -5,7 +5,7 @@
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { definePlugin } from '@weft-js/core/plugin'
 import { hex, luminance, toLinear } from './tokens/color.mjs'
@@ -15,6 +15,8 @@ import { DEFAULT, RADII, FONTS, options } from './src/plugin/themes-options.mjs'
 import { buttonPairs } from './src/plugin/themes-contrast.mjs'
 import { tailwindTheme } from './src/plugin/tailwind.mjs'
 import { paletteCss } from './src/plugin/themes-palettes.mjs'
+import { namedToneCss } from './src/plugin/themes-tones.mjs'
+import { themeAliases } from './src/plugin/themes-aliases.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
 // The spec's scope roots (warp.css §2): every one recomputes the sys tokens, so an override has to land on each.
@@ -325,6 +327,15 @@ export const warp = definePlugin({
       dials +
       overrideCss(declarations) +
       (o.palettes ? paletteCss(o.palettes) : '') +
+      (o.namedColors
+        ? namedToneCss(o, {
+            overrides,
+            fitSeed,
+            checkButtonCandidate,
+            contrast,
+            source: () => readFileSync(new URL('styles/warp.css', core), 'utf8'),
+          })
+        : '') +
       (o.namedColors && !o.palettes
         ? `@layer warp.tokens{:root{${Object.entries(o.namedColors)
             .map(([name, value]) => `--warp-named-${name}:${value}`)
@@ -337,24 +348,7 @@ export const warp = definePlugin({
         ...(o.namedColors && {
           cssEntries: { tailwind: tailwindTheme({ colors: o.namedColors }) },
         }),
-        ...((o.namedColors || o.buttonCandidate) && {
-          alias: {
-            ...(o.namedColors && {
-              '@weft-js/warp/tailwind.css': join(
-                resolve(env.root),
-                '.weft/tokens/warp.tailwind.css',
-              ),
-            }),
-            ...(o.buttonCandidate && {
-              '@weft-js/warp-core/styles/warp.css': fileURLToPath(
-                new URL('styles/themed/warp.css', core),
-              ),
-              '@weft-js/warp-core/styles/components/button.css': fileURLToPath(
-                new URL('styles/themed/components/button.css', core),
-              ),
-            }),
-          },
-        }),
+        ...((o.namedColors || o.buttonCandidate) && { alias: themeAliases(o, env, core) }),
         values: {
           seed: { hue: seed.hue, chroma: seed.chroma },
           fields: o.fields ?? 'floating',

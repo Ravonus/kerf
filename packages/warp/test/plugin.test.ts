@@ -471,3 +471,15 @@ test('named palettes reject unknown names and unsupported settings before emissi
   ])
     expect(code(() => run(input as WarpOptions))).toBe('P115')
 })
+
+test('named tones retain full seed channels without colliding with named utility colours', () => {
+  const result = run({ colors: { brand: '#112233', 'brand-tone-h': '#112233' } })
+  const css = result.tokens.css
+  expect(css).toContain('--warp-named-brand-tone-h:#112233')
+  expect(css).toContain('--_warp-named-tone-brand-h:249.7')
+  for (const part of ['button', 'badge', 'status-dot', 'pill', 'link', 'nav'])
+    expect(css).toContain(`[data-scope="${part}"][data-tone="brand"]`)
+  for (const channel of ['solid', 'solid-hover', 'ink-on', 'soft', 'text', 'border'])
+    expect(css).toContain(`--_${channel}:light-dark(`)
+  expect(css).not.toContain('[data-tone="unknown"]')
+})
