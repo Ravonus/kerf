@@ -234,49 +234,6 @@ only on `:root` would be undone inside a `data-expression` scope. Writing it on 
 everywhere, and keeping it in a layer means your own unlayered CSS can still change it locally.
 :::
 
-## Theme your app
-
-Name a colour, then replace it in a palette:
-
-```ts
-import { defineConfig } from '@weft-js/core/config'
-import { warp } from '@weft-js/warp/plugin'
-
-export default defineConfig({
-  plugins: [warp({
-    colors: { brand: '#333333', ink: 'brand' },
-    themes: {
-      studio: { colors: { brand: '#555555' } },
-    },
-    dials: { palette: 'studio' },
-  })],
-})
-```
-
-Use `var(--warp-named-brand)` in your CSS. Themes replace existing
-named hex colours; aliases resolve to hex. Set `data-palette="studio"`
-on a subtree, or call `setDial('palette', 'studio')` to switch the
-page synchronously. `auto` follows the configured default and `default`
-selects the base colours. Persistence and URL options work only at the
-document root; `dialScript` restores saved choices before paint.
-
-Named palettes cannot be combined with nonempty `seed`, `tokens`, or
-`parts`. Without named palettes, you can set a root Button's resting
-colours together, for example:
-
-```ts
-import { warp } from '@weft-js/warp/plugin'
-
-warp({
-  parts: { button: { bg: '#333333', text: '#ffffff' } },
-})
-```
-
-Other part and system configuration is not supported yet. Existing raw
-custom properties can be changed locally in CSS. The generated
-[token reference](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/theme-tokens.md) lists candidate coverage;
-partial and unresolved rows do not claim a supported setting.
-
 ## Canvas and surfaces follow too
 
 A canvas has no CSS, so it can't read a custom property by itself. A surface from `@weft-js/core/surface` gets the

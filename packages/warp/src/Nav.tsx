@@ -1,6 +1,5 @@
 import { navIndicator } from '@weft-js/warp-core'
 import { use } from '@weft-js/warp-core/weft'
-import type { ThemeTone } from './theme-tone'
 import './styles'
 import '@weft-js/warp-core/styles/components/nav.css'
 
@@ -11,14 +10,12 @@ import '@weft-js/warp-core/styles/components/nav.css'
  */
 export function Nav({
   label,
-  tone,
   axis = 'x',
   spy,
   children,
   ...rest
 }: {
   label: string
-  tone?: ThemeTone | undefined
   axis?: 'x' | 'y'
   spy?: boolean | undefined
   children?: unknown
@@ -31,14 +28,7 @@ export function Nav({
     () => ({ axis, spy }),
   )
   return (
-    <nav
-      {...rest}
-      ref={(n) => (el = n)}
-      data-scope="nav"
-      data-tone={tone}
-      data-axis={axis}
-      aria-label={label}
-    >
+    <nav {...rest} ref={(n) => (el = n)} data-scope="nav" data-axis={axis} aria-label={label}>
       {children}
       <span data-part="indicator" aria-hidden="true"></span>
     </nav>

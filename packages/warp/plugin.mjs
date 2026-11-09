@@ -8,21 +8,100 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { definePlugin } from '@weft-js/core/plugin'
-import { hex, luminance, toLinear } from './tokens/color.mjs'
+import { fromHex, hex, luminance, toLinear } from './tokens/color.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
-import { DEFAULT, RADII, FONTS, options } from './src/plugin/themes-options.mjs'
-import { buttonPairs } from './src/plugin/themes-contrast.mjs'
-import { tailwindTheme } from './src/plugin/tailwind.mjs'
-import { paletteCss } from './src/plugin/themes-palettes.mjs'
-import { namedToneCss } from './src/plugin/themes-tones.mjs'
-import { themeAliases } from './src/plugin/themes-aliases.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
-const checks = new WeakMap() // Each options object owns checks for its exact inputs.
+const DEFAULT = { hue: 152, chroma: 0.115 }
+const DIALS = {
+  expression: ['quiet', 'balanced', 'vivid'],
+  density: ['compact', 'cozy', 'comfortable'],
+  flair: ['sweep', 'none'],
+  theme: ['light', 'dark'],
+}
+const RADII = { sharp: [2, 2, 2], soft: [8, 12, 4], round: [14, 20, 6] }
+const FONTS = {
+  body: ['sans', 'ui-sans-serif, system-ui, sans-serif'],
+  display: ['display', 'ui-sans-serif, system-ui, sans-serif'],
+  mono: ['mono', 'ui-monospace, monospace'],
+}
 // The spec's scope roots (warp.css §2): every one recomputes the sys tokens, so an override has to land on each.
 const SCOPES =
   ':root,[data-expression],[data-density],[data-form],[data-pointer],[data-motion],[data-flair],[data-theme],[data-warp]'
+const safe = (value) => typeof value === 'string' && value !== '' && !/[;{}<]/.test(value)
+const bad = (path, message) => Object.assign(new Error(message), { path })
+
+function hueOf(value, name) {
+  if (typeof value === 'string') {
+    if (!/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`${name} must be #rrggbb`)
+    const { C, H } = fromHex(value)
+    return { hue: Math.round(H * 10) / 10, chroma: Math.round(C * 1000) / 1000 }
+  }
+  const { hue, chroma } = value ?? {}
+  if (!(hue >= 0 && hue < 360) || !(chroma >= 0 && chroma <= 0.37))
+    throw new Error(
+      `${name === 'accent' ? 'seed' : name} is { hue: 0–360, chroma: 0–0.37 } or ${name === 'accent' ? '{ accent: "#rrggbb" }' : '"#rrggbb"'}`,
+    ) // weft reports it as P115
+  return { hue, chroma }
+}
+
+function normalizeSeed(seed) {
+  const { accent, neutral, ...rest } = seed ?? {}
+  const out = hueOf(
+    accent ?? (Object.keys(rest).length || neutral === undefined ? rest : DEFAULT),
+    'accent',
+  )
+  return neutral === undefined ? out : { ...out, neutral: hueOf(neutral, 'neutral') }
+}
+
+function options(input) {
+  const out = {}
+  for (const key of Object.keys(input))
+    if (!['seed', 'fields', 'dials', 'radius', 'fonts', 'tokens'].includes(key))
+      throw Object.assign(new Error(`unknown option \`${key}\``), { path: key })
+  if (input.fields !== undefined && input.fields !== 'floating' && input.fields !== 'classic')
+    throw Object.assign(new Error(`must be 'floating' or 'classic'`), { path: 'fields' })
+  if (input.seed !== undefined) {
+    try {
+      out.seed = normalizeSeed(input.seed)
+      if (input.seed?.accent) out.asked = input.seed.accent.toLowerCase()
+    } catch (error) {
+      throw Object.assign(/** @type {Error} */ (error), { path: 'seed' })
+    }
+  }
+  if (input.fields) out.fields = input.fields
+  for (const [dial, value] of Object.entries(input.dials ?? {})) {
+    if (!DIALS[dial])
+      throw bad(`dials.${dial}`, `unknown dial; use ${Object.keys(DIALS).join(', ')}`)
+    if (!DIALS[dial].includes(value))
+      throw bad(`dials.${dial}`, `must be one of ${DIALS[dial].join(', ')}`)
+  }
+  if (input.dials) out.dials = input.dials
+  if (input.radius !== undefined) {
+    if (!RADII[input.radius]) throw bad('radius', `must be one of ${Object.keys(RADII).join(', ')}`)
+    out.radius = input.radius
+  }
+  for (const [font, value] of Object.entries(input.fonts ?? {})) {
+    if (!FONTS[font])
+      throw bad(`fonts.${font}`, `unknown font; use ${Object.keys(FONTS).join(', ')}`)
+    if (!safe(value)) throw bad(`fonts.${font}`, 'must be a font family or a CSS font stack')
+  }
+  if (input.fonts) out.fonts = input.fonts
+  for (const [token, value] of Object.entries(input.tokens ?? {})) {
+    if (!/^--warp-[a-z0-9-]+$/.test(token))
+      throw bad(`tokens.${token}`, 'must be a warp token, like --warp-color-page')
+    if (!safe(value)) throw bad(`tokens.${token}`, 'must be a CSS value')
+    if (
+      token.startsWith('--warp-color-') &&
+      !/^(#[0-9a-f]{6}|(oklch|color-mix|light-dark)\(.+\))$/i.test(value)
+    )
+      throw bad(`tokens.${token}`, 'must be #rrggbb or oklch(), so the contrast check can read it')
+  }
+  if (input.tokens) out.tokens = input.tokens
+  return out
+}
+
 const fontStack = (value, fallback) =>
   value.includes(',') ? value : `${JSON.stringify(value)}, ${fallback}`
 
@@ -55,16 +134,13 @@ const seedCss = (s) =>
   `@layer warp.tokens{:root{--warp-seed-accent-h:${s.hue};--warp-seed-accent-c:${s.chroma}}}\n`
 
 /** The spec checker's report on warp.css with the seed and any token overrides applied. */
-function contrast(seed, declarations, cache) {
-  const source = readFileSync(new URL('styles/warp.css', core), 'utf8')
-  const key = JSON.stringify([seed, declarations, source])
-  if (cache?.reports.has(key)) return cache.reports.get(key)
+function contrast(seed, declarations) {
   const dir = mkdtempSync(join(tmpdir(), 'warp-seed-'))
   try {
     const css = join(dir, 'warp.css')
     writeFileSync(
       css,
-      source +
+      readFileSync(new URL('styles/warp.css', core), 'utf8') +
         `\n:root{--warp-seed-accent-h:${seed.hue};--warp-seed-accent-c:${seed.chroma}}\n${declarations && `${SCOPES}{${declarations}}\n`}`,
     )
     let out
@@ -77,56 +153,7 @@ function contrast(seed, declarations, cache) {
     } catch (e) {
       out = e.stdout // exit 1 on failures; the JSON is still on stdout
     }
-    const report = JSON.parse(out)
-    cache?.reports.set(key, report)
-    return report
-  } finally {
-    rmSync(dir, { recursive: true, force: true })
-  }
-}
-
-// Check configured frame text and visible sweep boundaries before admitting overrides.
-function checkButtonCandidate(button, resolved, tokens = {}, cache) {
-  const pairs = buttonPairs(button, resolved, tokens)
-  const source = readFileSync(new URL('styles/warp.css', core), 'utf8')
-  const key = JSON.stringify([pairs, source])
-  if (cache?.buttons.has(key)) return
-  const dir = mkdtempSync(join(tmpdir(), 'warp-seed-'))
-  try {
-    const file = join(dir, 'theme-pairs.json')
-    writeFileSync(file, JSON.stringify(pairs))
-    let output
-    try {
-      output = execFileSync(
-        process.execPath,
-        [
-          fileURLToPath(new URL('scripts/contrast-check.mjs', core)),
-          fileURLToPath(new URL('styles/warp.css', core)),
-          '--json',
-          `--theme-pairs=${file}`,
-        ],
-        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
-      )
-    } catch (error) {
-      if (!error.stdout) throw error
-      output = error.stdout
-    }
-    const failures = JSON.parse(output).results.filter((row) => !row.pass)
-    if (failures.length) {
-      const path = failures[0].path ?? 'parts.button.text'
-      throw Object.assign(
-        new Error(
-          `D010 ${path}: ${failures
-            .map(
-              (row) =>
-                `${row.combo} ${row.fg} on ${row.bg} is ${row.ratio.toFixed(2)}:1, needs ${row.min}:1`,
-            )
-            .join('; ')}`,
-        ),
-        { code: 'D010', path, failures },
-      )
-    }
-    cache?.buttons.add(key)
+    return JSON.parse(out)
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -140,8 +167,8 @@ const renders =
     (!dials.expression || r.expression === dials.expression)
 
 /** D010 with every failing pair, at the stops `dials` leave. Returns how many pairs passed. */
-export function checkSeed(seed, declarations = '', dials, cache) {
-  const results = contrast(seed, declarations, cache).results.filter(renders(dials))
+export function checkSeed(seed, declarations = '', dials) {
+  const results = contrast(seed, declarations).results.filter(renders(dials))
   const failed = results.filter((r) => !r.pass)
   const failures = failed.map(
     (r) => `${r.combo}: ${r.fg} on ${r.bg} is ${r.ratio.toFixed(2)}:1, needs ${r.min}:1`,
@@ -161,8 +188,8 @@ export function checkSeed(seed, declarations = '', dials, cache) {
 }
 
 /** Where a seed's accent lands: a seed sets the hue family, and each theme solves its own lightness for contrast. */
-function landed(seed, declarations, asked, cache) {
-  const { resolved } = contrast(seed, declarations, cache)
+function landed(seed, declarations, asked) {
+  const { resolved } = contrast(seed, declarations)
   const light = resolved['light/balanced']?.['accent-solid'],
     dark = resolved['dark/balanced']?.['accent-solid']
   return light === asked && dark === asked
@@ -217,9 +244,9 @@ function fitted(seed) {
 }
 
 /** `declarations` plus whatever a custom seed needs to pass, or D010. A token set in the config beats a fitted one. */
-function fitSeed(seed, declarations, dials, cache) {
+function fitSeed(seed, declarations, dials) {
   try {
-    checkSeed(seed, declarations, dials, cache)
+    checkSeed(seed, declarations, dials)
     return declarations
   } catch (error) {
     if (error.code !== 'D010') throw error
@@ -228,7 +255,7 @@ function fitSeed(seed, declarations, dials, cache) {
     .filter(([token]) => !declarations.includes(`${token}:`))
     .map(([k, v]) => `${k}:${v}`)
   const merged = [...fit, ...(declarations ? [declarations] : [])].join(';')
-  checkSeed(seed, merged, dials, cache)
+  checkSeed(seed, merged, dials)
   return merged
 }
 
@@ -270,7 +297,7 @@ function rescoped(key, scope) {
  * For `site.head`: applies the dials `setDial(…, { persist: true })` kept, before the first paint, so a prerendered page
  * doesn't show the OS theme first.
  */
-export const dialScript = `<script>try{const d=JSON.parse(localStorage.getItem('warp:dials')||'{}'),r=document.documentElement.dataset,v={expression:['quiet','balanced','vivid'],fields:['floating','classic'],theme:['auto','light','dark'],density:['compact','cozy','comfortable'],motion:['auto','full','reduce'],flair:['auto','sweep','none']};for(const k of [...Object.keys(v),'palette']){const x=d?.[k];if(typeof x!=='string'||!(k==='palette'?/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(x):v[k].includes(x)))continue;if(x==='auto'&&['theme','motion','flair','palette'].includes(k))delete r[k];else r[k]=x}}catch(e){}</script>`
+export const dialScript = `<script>try{Object.assign(document.documentElement.dataset,JSON.parse(localStorage.getItem('warp:dials')||'{}'))}catch(e){}</script>`
 
 export const classicCss = () =>
   rescoped('[data-fields="classic"]', ':root:not([data-fields="floating"])')
@@ -316,57 +343,25 @@ export const warp = definePlugin({
     fs: { read: ['node_modules/@weft-js/warp-core/**'], write: ['$TMPDIR/warp-seed-*'] },
     spawn: ['node'],
   },
-  contribute(o, env) {
-    if (!checks.has(o)) checks.set(o, { reports: new Map(), buttons: new Set() })
-    const cache = checks.get(o)
+  contribute(o) {
     const seed = o.seed ?? DEFAULT
     const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma
     let declarations = overrides(o)
-    if (custom) declarations = fitSeed(seed, declarations, o.dials, cache)
-    else if (declarations) checkSeed(seed, declarations, o.dials, cache)
-    if (o.buttonCandidate) {
-      checkButtonCandidate(
-        o.buttonCandidate,
-        contrast(seed, declarations, cache).resolved,
-        o.tokens,
-        cache,
-      )
-      declarations += `${declarations ? ';' : ''}--warp-config-part-button-bg:${o.buttonCandidate.bg};--warp-config-part-button-text:${o.buttonCandidate.text}`
-    }
-    const note = o.asked && landed(seed, declarations, o.asked, cache)
+    if (custom) declarations = fitSeed(seed, declarations, o.dials) // throws { code: 'D010' }
+    else if (declarations) checkSeed(seed, declarations, o.dials)
+    const note = o.asked && landed(seed, declarations, o.asked)
     const dials = Object.entries(o.dials ?? {})
-      .filter(([dial]) => dial !== 'palette')
       .map(([dial, value]) => dialCss(dial, value))
       .join('')
     const css =
       (custom ? seedCss(seed) : '') +
       (o.fields === 'classic' ? classicCss() : '') +
       dials +
-      overrideCss(declarations) +
-      (o.palettes ? paletteCss(o.palettes) : '') +
-      (o.namedColors
-        ? namedToneCss(o, {
-            overrides,
-            fitSeed: (candidate, values, stops) => fitSeed(candidate, values, stops, cache),
-            checkButtonCandidate: (button, resolved, tokens) =>
-              checkButtonCandidate(button, resolved, tokens, cache),
-            contrast: (candidate, values) => contrast(candidate, values, cache),
-            source: () => readFileSync(new URL('styles/warp.css', core), 'utf8'),
-          })
-        : '') +
-      (o.namedColors && !o.palettes
-        ? `@layer warp.tokens{:root{${Object.entries(o.namedColors)
-            .map(([name, value]) => `--warp-named-${name}:${value}`)
-            .join(';')}}}\n`
-        : '')
+      overrideCss(declarations)
     return {
       tokens: {
         namespace: 'warp',
         ...(css && { css }),
-        ...(o.namedColors && {
-          cssEntries: { tailwind: tailwindTheme({ colors: o.namedColors }) },
-        }),
-        ...((o.namedColors || o.buttonCandidate) && { alias: themeAliases(o, env, core) }),
         values: {
           seed: { hue: seed.hue, chroma: seed.chroma },
           fields: o.fields ?? 'floating',

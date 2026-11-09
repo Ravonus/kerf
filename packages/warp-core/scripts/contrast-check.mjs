@@ -18,11 +18,13 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import {
-  checkThemePairs,
   parseBlocks,
   splitTop,
   resolveEnv,
   substitute,
+  toLab,
+  fromLab,
+  fromSrgb,
   over,
   ratio,
   luminance,
@@ -30,7 +32,6 @@ import {
   toLinearSrgb,
   suggest,
 } from './contrast-check-colors.mjs'
-import { parseColor } from './contrast-check-parser.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const args = process.argv.slice(2)
@@ -77,6 +78,52 @@ function matchCompound(s, attrs) {
   return spec
 }
 const attrTest = (a, k, v) => (v === undefined ? k in a : a[k] === v)
+
+const num = (expr) => {
+  const e = expr
+    .replace(/calc\(/g, '(')
+    .replace(/\b(min|max)\(/g, 'Math.$1(')
+    .trim()
+  if (!/^(?:[\d.\s+\-*/(),e%]|Math\.min|Math\.max)+$/.test(e))
+    throw new Error('not numeric: ' + expr)
+  if (e.endsWith('%')) return Number(e.slice(0, -1)) / 100
+  return Function(`"use strict";return (${e});`)()
+}
+
+function parseColor(str) {
+  const s = str.trim()
+  let m
+  if ((m = s.match(/^color-mix\(\s*in\s+oklab\s*,([\s\S]*)\)$/))) {
+    const [a, b] = splitTop(m[1], ',').map((x) => x.trim())
+    const pct = (x) => {
+      const k = x.match(/\s([\d.]+)%$/)
+      return k ? [x.slice(0, k.index).trim(), Number(k[1]) / 100] : [x, null]
+    }
+    let [ca, pa] = pct(a),
+      [cb, pb] = pct(b)
+    if (pa === null && pb === null) pa = pb = 0.5
+    else if (pa === null) pa = 1 - pb
+    else if (pb === null) pb = 1 - pa
+    const A = parseColor(ca),
+      B = parseColor(cb)
+    if (A.lin || B.lin) throw new Error('color-mix needs oklch operands: ' + s)
+    const la = toLab(A),
+      lb = toLab(B),
+      t = pa + pb
+    const mixed = fromLab(la.map((v, i) => (v * pa + lb[i] * pb) / t))
+    return { ...mixed, alpha: 1 }
+  }
+  if ((m = s.match(/^oklch\(([\s\S]*)\)$/))) {
+    const [main, alpha] = splitTop(m[1], '/')
+    const [L, C, H] = splitTop(main.trim().replace(/\s+/g, ' '), ' ').filter(Boolean).map(num)
+    return { L, C, H, alpha: alpha ? num(alpha) : 1 }
+  }
+  if ((m = s.match(/^#([0-9a-f]{6})$/i))) {
+    const n = parseInt(m[1], 16)
+    return fromSrgb([(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255])
+  }
+  throw new Error('unsupported colour: ' + s)
+}
 
 function resolveColor(name, vars, theme, warnings, combo) {
   const raw = vars.get(name)
@@ -289,16 +336,6 @@ for (const theme of THEMES)
     }
   }
 
-const themePairArgs = args.filter(
-  (arg) => arg === '--theme-pairs' || arg.startsWith('--theme-pairs='),
-)
-if (themePairArgs.length > 1 || themePairArgs[0] === '--theme-pairs')
-  throw new Error('D010 use exactly one --theme-pairs=<file>')
-const themePairsArg = themePairArgs[0]
-if (themePairsArg) {
-  const file = themePairsArg.slice('--theme-pairs='.length)
-  results.push(...checkThemePairs(JSON.parse(readFileSync(file, 'utf8')), parseColor))
-}
 const fails = results.filter((r) => !r.pass)
 const fmt = (n) => n.toFixed(2)
 
@@ -341,11 +378,7 @@ if (flag('--json')) {
           `   ${r.pass ? 'ok  ' : 'FAIL'} ${fmt(r.ratio).padStart(6)}  ${r.fg} ${r.fgHex} on ${r.bg} ${r.bgHex}`,
         )
   }
-  for (const r of fails.filter((entry) => entry.group === 'Theme part'))
-    console.log(
-      `D010 ${r.path}: ${r.palette}/${r.theme}/${r.expression} ${r.part} ${r.state} ${r.emphasis}/${r.site} ${r.fg} on ${r.bg} is ${fmt(r.ratio)}:1, needs ${r.min}:1`,
-    )
-  for (const r of fails.filter((entry) => entry.group !== 'Theme part'))
+  for (const r of fails)
     console.log(
       `FAIL ${r.combo} ${r.fg} on ${r.bg}: ${fmt(r.ratio)} < ${r.min}  (try ${r.suggest})${r.where ? '  [' + r.where + ']' : ''}`,
     )

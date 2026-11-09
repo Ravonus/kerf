@@ -13,9 +13,6 @@
     "bindings",
     "scripts/contrast-check.mjs",
     "scripts/contrast-check-colors.mjs",
-    "scripts/contrast-check-parser.mjs",
-    "scripts/theme-schema-registry.mjs",
-    "scripts/theme-schema-registry.json",
     "README.md",
     "LICENSE"
   ],
@@ -28,8 +25,7 @@
     "./stage": "./src/stage.ts",
     "./dither": "./src/dither/index.ts",
     "./search": "./src/search.ts",
-    "./styles/*": "./styles/*",
-    "./theme-schema": "./scripts/theme-schema-registry.mjs"
+    "./styles/*": "./styles/*"
   },
   "peerDependencies": {
     "@weft-js/core": "*"

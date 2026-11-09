@@ -9,17 +9,14 @@ export const DIALS = {
   theme: { values: ['auto', 'light', 'dark'], initial: 'auto' },
   density: { values: ['compact', 'cozy', 'comfortable'], initial: 'cozy' },
   motion: { values: ['auto', 'full', 'reduce'], initial: 'auto' },
-  palette: { values: ['auto', 'default'], initial: 'default' },
   flair: { values: ['auto', 'sweep', 'none'], initial: 'auto' },
 } as const
 
 /** The name of a dial. */
 export type Dial = keyof typeof DIALS
 /** The values dial `D` allows. */
-export type DialValue<D extends Dial> = D extends 'palette'
-  ? string
-  : (typeof DIALS)[D]['values'][number]
-const AUTO_REMOVES = new Set<Dial>(['theme', 'motion', 'flair', 'palette'])
+export type DialValue<D extends Dial> = (typeof DIALS)[D]['values'][number]
+const AUTO_REMOVES = new Set<Dial>(['theme', 'motion', 'flair'])
 // `dialScript` in @weft-js/warp/plugin reads this key before the first paint.
 const KEY = 'warp:dials'
 // Only an "auto" that removes the attribute goes unsaid. Any other value is kept as chosen, the initial one too: a page
@@ -35,34 +32,12 @@ function remember(name: Dial, value: string) {
   } catch {} // private windows and blocked storage: the dial still works for this page
 }
 
-function paletteNames(root: HTMLElement) {
-  const documentRoot = root.ownerDocument.documentElement
-  const names =
-    root.ownerDocument.defaultView
-      ?.getComputedStyle(documentRoot)
-      .getPropertyValue('--warp-palette-names')
-      .trim()
-      .split(/\s+/) ?? []
-  return new Set([
-    'auto',
-    'default',
-    ...names.filter((name) => /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(name)),
-  ])
-}
-
 /** The dial's value on `root` (its initial value when unset). */
 export function getDial<D extends Dial>(
   name: D,
   root: HTMLElement = document.documentElement,
 ): DialValue<D> {
-  if (name === 'palette') {
-    const current = root.ownerDocument.defaultView
-      ?.getComputedStyle(root)
-      .getPropertyValue('--warp-palette-current')
-      .trim()
-    return (current || 'default') as DialValue<D>
-  }
-  return (root.dataset[name] ?? DIALS[name].initial) as DialValue<D>
+  return (root.dataset[name] as DialValue<D> | undefined) ?? DIALS[name].initial
 }
 
 /**
@@ -84,13 +59,7 @@ export function setDial<D extends Dial>(
     transition?: (write: () => void) => void
   } = {},
 ) {
-  if (name === 'palette' && root !== root.ownerDocument.documentElement && (url || persist))
-    throw new RangeError('palette persistence and URL require the document root')
-  if (
-    name === 'palette'
-      ? !paletteNames(root).has(value)
-      : !(DIALS[name].values as readonly string[]).includes(value)
-  )
+  if (!(DIALS[name].values as readonly string[]).includes(value))
     throw new RangeError(`${name} is one of ${DIALS[name].values.join(', ')}`)
   let done = false
   const write = () => {
@@ -121,12 +90,7 @@ export function dialsFromUrl(
     if (q.has(alias) && !q.has('expression')) q.set('expression', q.get(alias)!)
   for (const name of Object.keys(DIALS) as Dial[]) {
     const v = q.get(name)
-    if (
-      v &&
-      (name === 'palette'
-        ? paletteNames(root).has(v)
-        : (DIALS[name].values as readonly string[]).includes(v))
-    )
-      setDial(name, v, { root })
+    if (v && (DIALS[name].values as readonly string[]).includes(v))
+      setDial(name, v as DialValue<typeof name>, { root })
   }
 }

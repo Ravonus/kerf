@@ -2,23 +2,17 @@
 // The split keeps the spec's CSS exactly: every rule ships verbatim, in the spec's order within its file, and the
 // files on disk are what the splitter produces from docs/design/warp/tokens today.
 import { readdirSync, readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { transform } from 'lightningcss'
 import { build } from '../scripts/split-css.mjs'
-import { split } from '../scripts/split-css/sections.mjs'
-import { lowerTheme, themeNames } from '../scripts/theme-css.mjs'
 
 const { files, parts, routed } = build()
 const spec = (name: string) =>
   readFileSync(new URL(`../../../docs/design/warp/tokens/${name}`, import.meta.url), 'utf8')
-const sourceDir = fileURLToPath(new URL('../../../docs/design/warp/tokens/', import.meta.url))
-const themedComponents = split(sourceDir, 'warp-components.css', 'components')
 const disk = (name: string) => readFileSync(new URL(`../styles/${name}`, import.meta.url), 'utf8')
 
 test('styles/ is the split of the current spec (node scripts/split-css.mjs)', () => {
   for (const [name, text] of files) expect(disk(name), name).toBe(text)
-  expect(disk('warp.css')).toBe(lowerTheme(spec('warp.css'), themeNames))
-  expect(disk('themed/warp.css')).toBe(spec('warp.css'))
+  expect(disk('warp.css')).toBe(spec('warp.css'))
 })
 
 test('every rule of the rule-routed families ships verbatim, in spec order, and every rule ships somewhere', () => {
@@ -59,28 +53,20 @@ test('every rule of the spec ships verbatim, in spec order within its file', () 
     ['inputs', 'warp-inputs.css'],
     ['rich', 'warp-inputs-rich.css'],
   ] as const) {
-    for (const lane of ['legacy', 'themed'] as const) {
-      const css = lane === 'legacy' ? lowerTheme(spec(source), themeNames) : spec(source)
-      const familyParts =
-        lane === 'themed' && family === 'components' ? themedComponents : parts[family]
-      for (const [name, list] of familyParts.files) {
-        const path = `${family}/${name}.css`
-        const key = lane === 'themed' && files.has(`themed/${path}`) ? `themed/${path}` : path
-        const output = files.has(key) ? disk(key) : undefined
-        if (!list.some((item: { kind: string }) => item.kind === 'rule')) continue
-        expect(output, `${lane} ${path}: missing output`).toBeDefined()
-        let at = 0
-        for (const text of list
-          .filter((i: { kind: string }) => i.kind === 'rule')
-          .flatMap((i: { inner?: string[]; text: string }) => i.inner ?? [i.text])) {
-          const found = css.indexOf(text, at)
-          expect(
-            found,
-            `${lane} ${path}: source order or content: ${text.slice(0, 80)}`,
-          ).toBeGreaterThanOrEqual(0)
-          expect(output, `${lane} ${path}: missing rule: ${text.slice(0, 80)}`).toContain(text)
-          at = found + text.length
-        }
+    const css = spec(source)
+    for (const [name, list] of parts[family].files) {
+      let at = 0
+      // a tail @media block split by owner is a new wrapper around the spec's own rules: check those instead
+      for (const text of list
+        .filter((i: { kind: string }) => i.kind === 'rule')
+        .flatMap((i: { inner?: string[]; text: string }) => i.inner ?? [i.text])) {
+        const item = { text }
+        const found = css.indexOf(item.text, at)
+        expect(
+          found,
+          `${family}/${name}: rule out of order or changed: ${item.text.slice(0, 80)}`,
+        ).toBeGreaterThanOrEqual(0)
+        at = found + item.text.length
       }
     }
   }
@@ -92,39 +78,15 @@ test('every spec rule outside the tail lands in exactly one file; tail rules lan
     ['inputs', 'warp-inputs.css'],
     ['rich', 'warp-inputs-rich.css'],
   ] as const) {
-    for (const lane of ['legacy', 'themed'] as const) {
-      const paths = [...files.keys()].filter((k) => k.startsWith(`${family}/`))
-      const shipped = paths
-        .map((path) =>
-          disk(lane === 'themed' && files.has(`themed/${path}`) ? `themed/${path}` : path),
-        )
-        .join('\n')
-      const css = lane === 'legacy' ? lowerTheme(spec(source), themeNames) : spec(source)
-      const body = css.slice(css.indexOf('{', css.search(/@layer [\w.-]+ \{/)) + 1)
-      for (const m of body.matchAll(/^(:where\([^\n{]{0,60})/gm))
-        expect(shipped, `${lane} ${family}: ${m[1]}`).toContain(m[1])
-      const familyParts =
-        lane === 'themed' && family === 'components' ? themedComponents : parts[family]
-      const owners = new Map<string, Set<string>>()
-      for (const [name, list] of familyParts.files) {
-        for (const item of list.filter((entry: { kind: string }) => entry.kind === 'rule')) {
-          for (const text of item.inner ?? [item.text]) {
-            if (!owners.has(text)) owners.set(text, new Set())
-            owners.get(text)!.add(`${family}/${name}.css`)
-          }
-        }
-      }
-      const primary = [...familyParts.files.keys()].map((name) => `${family}/${name}.css`)
-      for (const [text, expected] of owners) {
-        const actual = primary.filter((path) => {
-          const key = lane === 'themed' && files.has(`themed/${path}`) ? `themed/${path}` : path
-          return files.has(key) && disk(key).includes(text)
-        })
-        expect(actual.sort(), `${lane} ${family}: owners of ${text.slice(0, 80)}`).toEqual(
-          [...expected].sort(),
-        )
-      }
-    }
+    const shipped = [...files]
+      .filter(([k]) => k.startsWith(`${family}/`))
+      .map(([, v]) => v)
+      .join('\n')
+    const css = spec(source)
+    const body = css.slice(css.indexOf('{', css.search(/@layer [\w.-]+ \{/)) + 1)
+    // the top-level selectors of the spec body all appear in what ships
+    for (const m of body.matchAll(/^(:where\([^\n{]{0,60})/gm))
+      expect(shipped, `${family}: ${m[1]}`).toContain(m[1])
   }
 })
 
@@ -136,7 +98,7 @@ test('each file parses as CSS and keeps its layer', () => {
       warnings.filter((w) => !/Unknown at rule|Unexpected token/.test(w.message)),
       name,
     ).toEqual([])
-    if (name !== 'warp.css' && name !== 'themed/warp.css')
+    if (name !== 'warp.css')
       expect(text).toMatch(
         /^\/\* generated[^\n]*\n@layer warp\.(components|inputs|inputs-rich|data|layout|app|flows|canvas|tokens) \{/,
       )

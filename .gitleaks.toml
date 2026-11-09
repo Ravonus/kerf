@@ -26,9 +26,3 @@ id = "generic-api-key"
 [[rules.allowlists]]
 description = "Deploy diagnostics test contains intentional fake credentials"
 paths = ['''^packages/cli/test/deploy\.test\.ts$''']
-
-[[rules.allowlists]]
-description = "Generated CSS elevation token names are not credentials"
-paths = ['''^packages/warp-core/(theme\.schema\.json|scripts/theme-schema-registry\.json)$''']
-regexes = ['''--warp-elevation-[0-3]''']
-condition = "AND"

@@ -16,10 +16,8 @@
 // selectors (`[data-scope="table"] [data-scope="field"]` is the table's), an @container or @media block is split the
 // same way, and a rule that names no scope goes to the family's base. @keyframes go to each file that animates with
 // them. Their tokens layer ships whole as `data/tokens.css`, with any @property the spec declares beside it.
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { tmpdir } from 'node:os'
-import { lowerTheme, themeNames } from './theme-css.mjs'
 import { fileURLToPath } from 'node:url'
 import { body, scopesOf } from './split-css/parse.mjs'
 import { split } from './split-css/sections.mjs'
@@ -171,21 +169,9 @@ function render({ layer, family, files, shared }) {
 }
 
 export function build() {
-  const foundation = readFileSync(join(spec, 'warp.css'), 'utf8')
-  const files = new Map([['warp.css', lowerTheme(foundation, themeNames)]])
-  if (files.get('warp.css') !== foundation) files.set('themed/warp.css', foundation)
-  const canonical = readFileSync(join(spec, 'warp-components.css'), 'utf8')
-  const themed = split(spec, 'warp-components.css', 'components')
-  const temporary = mkdtempSync(join(tmpdir(), 'warp-lower-'))
-  let components
-  try {
-    writeFileSync(join(temporary, 'warp-components.css'), lowerTheme(canonical, themeNames))
-    components = split(temporary, 'warp-components.css', 'components')
-  } finally {
-    rmSync(temporary, { recursive: true, force: true })
-  }
+  const files = new Map([['warp.css', readFileSync(join(spec, 'warp.css'), 'utf8')]])
   const parts = {
-    components,
+    components: split(spec, 'warp-components.css', 'components'),
     inputs: split(spec, 'warp-inputs.css', 'inputs'),
     rich: split(spec, 'warp-inputs-rich.css', 'rich'),
   }
@@ -224,9 +210,6 @@ export function build() {
       1,
     ) + '\n',
   )
-  for (const [path, content] of render(themed)) {
-    if (files.get(path) !== content) files.set(`themed/${path}`, content)
-  }
   return { files, parts, routed }
 }
 
