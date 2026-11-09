@@ -2,7 +2,8 @@ import { freshness } from '../app.mjs'
 import { raceOnce } from '../race.mjs'
 import { SITE_METRICS, spread } from '../stats.mjs'
 import { ttfbPass, htmlPass } from './http.mjs'
-import { interactionPass, mutatePass, navPass, streamingPass } from './passes.mjs'
+import { interactionPass, streamingPass } from './interaction.mjs'
+import { mutatePass, navPass } from './passes.mjs'
 import { cookieHeader } from './page.mjs'
 
 /**

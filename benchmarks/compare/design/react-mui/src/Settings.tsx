@@ -126,21 +126,29 @@ function settingsPanel({
             }
             label="Email updates"
           />
-          {done && (
-            <Alert severity="success" role="status">
-              Saved
-            </Alert>
-          )}
-          <Stack direction="row" spacing={1.5} justifyContent="flex-end">
-            <Button type="button" variant="outlined" color="inherit" onClick={cancel}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained">
-              Save
-            </Button>
-          </Stack>
+          {settingsActions({ done, cancel })}
         </Stack>
       </form>
     </Paper>
+  )
+}
+
+function settingsActions({ done, cancel }: { done: boolean; cancel: () => void }) {
+  return (
+    <>
+      {done && (
+        <Alert severity="success" role="status">
+          Saved
+        </Alert>
+      )}
+      <Stack direction="row" spacing={1.5} justifyContent="flex-end">
+        <Button type="button" variant="outlined" color="inherit" onClick={cancel}>
+          Cancel
+        </Button>
+        <Button type="submit" variant="contained">
+          Save
+        </Button>
+      </Stack>
+    </>
   )
 }

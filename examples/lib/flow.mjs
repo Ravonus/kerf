@@ -3,6 +3,7 @@
 export { canaryPass, signIn } from './flow/auth.mjs'
 export { ttfbPass, htmlPass, splitHtml } from './flow/http.mjs'
 export { cookieHeader, randomValue, centre, press, target, trustedClick } from './flow/page.mjs'
-export { interactionPass, mutatePass, navPass, streamingPass } from './flow/passes.mjs'
+export { interactionPass, streamingPass } from './flow/interaction.mjs'
+export { mutatePass, navPass } from './flow/passes.mjs'
 export { sitePass } from './flow/site.mjs'
 export { tracker } from './flow/tracker.mjs'
