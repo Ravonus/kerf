@@ -1,0 +1,323 @@
+// Exercise the Button's themed host and moving fill against real pointer states.
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { after, before, test } from 'node:test'
+
+const require = createRequire(
+  process.env.WEFT_PLAYWRIGHT_PACKAGE ?? new URL('../../warp/package.json', import.meta.url),
+)
+const { chromium } = require('playwright-core')
+const styles = new URL('../styles/', import.meta.url)
+const css = (path) =>
+  readFileSync(
+    path === 'themed/components/button.css' && process.env.WEFT_BUTTON_CSS
+      ? process.env.WEFT_BUTTON_CSS
+      : new URL(path, styles),
+    'utf8',
+  )
+let browser
+before(async () => {
+  browser = await chromium.launch()
+})
+after(async () => {
+  await browser?.close()
+})
+
+async function sample(themed, configured) {
+  const page = await browser.newPage()
+  try {
+    const values = configured
+      ? `--warp-button-bg:rgb(10,20,30);--warp-button-text:rgb(20,30,40);
+      --warp-button-bg-hover:rgb(200,0,0);--warp-button-text-hover:rgb(201,0,0);
+      --warp-button-bg-focus:rgb(0,180,0);--warp-button-text-focus:rgb(0,181,0);
+      --warp-button-bg-press:rgb(0,0,200);--warp-button-text-press:rgb(0,0,201);
+      --warp-button-bg-disabled:rgb(80,80,80);--warp-button-text-disabled:rgb(90,90,90);`
+      : ''
+    await page.setContent(`<style>${css('warp.css')}\n${css(themed ? 'themed/components/button.css' : 'components/button.css')}
+ button, button::before { transition: none !important }</style>
+      <button id="before">Before</button><button data-scope="button" data-follow style="--_a:1;${values}">Go</button>`)
+    const button = page.locator('[data-scope=button]')
+    const paint = () =>
+      button.evaluate((el) => {
+        const host = getComputedStyle(el),
+          layer = getComputedStyle(el, '::before')
+        return {
+          background: host.backgroundColor,
+          text: host.color,
+          layer: layer.backgroundColor,
+          image: layer.backgroundImage,
+        }
+      })
+    const resting = await paint()
+    await button.hover()
+    const hover = await paint()
+    await page.mouse.down()
+    const press = await paint()
+    await page.mouse.up()
+    await page.mouse.move(500, 500)
+    await page.locator('#before').focus()
+    await page.keyboard.press('Tab')
+    const focus = await paint()
+    await button.evaluate((el) => {
+      el.disabled = true
+    })
+    const disabled = await paint()
+    return { resting, hover, press, focus, disabled }
+  } finally {
+    await page.close()
+  }
+}
+
+void test('Button state colors reach host and moving fill without changing defaults', async () => {
+  assert.deepEqual(await sample(true, false), await sample(false, false))
+  const result = await sample(true, true)
+  for (const [state, rgb] of Object.entries({
+    resting: '10, 20, 30',
+    hover: '200, 0, 0',
+    press: '0, 0, 200',
+    focus: '0, 180, 0',
+    disabled: '80, 80, 80',
+  })) {
+    assert.equal(result[state].background, `rgb(${rgb})`, state)
+    if (state !== 'resting') assert.ok(result[state].image.includes(rgb), `${state} gradient`)
+  }
+  for (const [state, rgb] of Object.entries({
+    resting: '20, 30, 40',
+    hover: '201, 0, 0',
+    press: '0, 0, 201',
+    focus: '0, 181, 0',
+    disabled: '90, 90, 90',
+  })) {
+    assert.equal(result[state].text, `rgb(${rgb})`, state)
+  }
+})
+
+void test('overlapping states fall through and nested buttons isolate private state', async () => {
+  const page = await browser.newPage()
+  try {
+    await page.setContent(`<style>${css('warp.css')}\n${css('themed/components/button.css')}
+      [data-scope=button], [data-scope=button]::before { transition:none!important }
+      #outer {width:200px;height:100px} #inner {width:60px;height:30px}</style>
+      <button id="before">Before</button><div id="outer" tabindex="0" data-scope="button"
+       style="--warp-button-bg:rgb(10,20,30);--warp-button-text:rgb(20,30,40);
+       --warp-button-bg-hover:rgb(200,0,0);--warp-button-text-hover:rgb(201,0,0)">
+       <div id="inner" data-scope="button" style="--warp-button-bg:rgb(0,0,200);--warp-button-text:rgb(0,0,201)">Inner</div></div>`)
+    const outer = page.locator('#outer'),
+      inner = page.locator('#inner')
+    await page.locator('#before').focus()
+    await page.keyboard.press('Tab')
+    const box = await outer.boundingBox()
+    await page.mouse.move(box.x + 5, box.y + 5)
+    const read = (el) =>
+      el.evaluate((node) => ({
+        bg: getComputedStyle(node).backgroundColor,
+        text: getComputedStyle(node).color,
+        image: getComputedStyle(node, '::before').backgroundImage,
+      }))
+    const overlap = await read(outer)
+    assert.equal(overlap.bg, 'rgb(200, 0, 0)')
+    assert.equal(overlap.text, 'rgb(201, 0, 0)')
+    assert.ok(overlap.image.includes('200, 0, 0'))
+    await page.mouse.down()
+    const pressed = await read(outer)
+    assert.equal(pressed.bg, 'rgb(200, 0, 0)')
+    assert.equal(pressed.text, 'rgb(201, 0, 0)')
+    assert.ok(pressed.image.includes('200, 0, 0'))
+    const nested = await read(inner)
+    assert.equal(nested.bg, 'rgb(0, 0, 200)')
+    assert.equal(nested.text, 'rgb(0, 0, 201)')
+    assert.ok(nested.image.includes('0, 0, 200'))
+    await page.mouse.up()
+  } finally {
+    await page.close()
+  }
+})
+
+void test('nested Button does not inherit its parent moving fill state', async () => {
+  const page = await browser.newPage()
+  try {
+    await page.setContent(`<style>${css('warp.css')}\n${css('themed/components/button.css')}
+      #outer {width:200px;height:100px} #inner {width:60px;height:30px}</style>
+      <div id="outer" data-scope="button" style="--warp-button-bg-hover:rgb(200,0,0)">
+      <div id="inner" data-scope="button" style="--warp-button-bg:rgb(0,0,200)">Inner</div></div>`)
+    const outer = page.locator('#outer'),
+      inner = page.locator('#inner')
+    const box = await outer.boundingBox()
+    await page.mouse.move(box.x + 5, box.y + 5)
+    const image = await inner.evaluate((el) => getComputedStyle(el, '::before').backgroundImage)
+    assert.ok(image.includes('0, 0, 200'))
+    assert.ok(!image.includes('200, 0, 0'))
+  } finally {
+    await page.close()
+  }
+})
+
+async function matrixPaint(emphasis, tone, themed, media) {
+  const page = await browser.newPage()
+  try {
+    await page.emulateMedia(media)
+    await page.setContent(`<style>${css('warp.css')}\n${css(themed ? 'themed/components/button.css' : 'components/button.css')}
+      button,button::before {transition:none!important}</style>
+      <button data-scope="button" ${emphasis ? `data-emphasis="${emphasis}"` : ''}
+       data-tone="${tone}" style="--_a:1">Go</button>`)
+    const button = page.locator('button')
+    const read = () =>
+      button.evaluate((el) => {
+        const host = getComputedStyle(el),
+          layer = getComputedStyle(el, '::before')
+        return [
+          host.backgroundColor,
+          host.color,
+          host.borderColor,
+          layer.backgroundColor,
+          layer.backgroundImage,
+          layer.opacity,
+        ]
+      })
+    const values = [await read()]
+    await button.hover()
+    values.push(await read())
+    await button.evaluate((el) => el.setAttribute('data-press', ''))
+    values.push(await read())
+    await button.evaluate((el) => el.setAttribute('aria-disabled', 'true'))
+    values.push(await read())
+    await button.evaluate((el) => {
+      el.disabled = true
+    })
+    values.push(await read())
+    return values
+  } finally {
+    await page.close()
+  }
+}
+
+void test('legacy and themed no-config paints agree across emphasis, tone and media', async () => {
+  for (const emphasis of ['', 'soft', 'outline', 'ghost', 'frame', 'link']) {
+    for (const tone of ['neutral', 'accent']) {
+      for (const media of [{}, { reducedMotion: 'reduce' }, { forcedColors: 'active' }]) {
+        assert.deepEqual(
+          await matrixPaint(emphasis, tone, true, media),
+          await matrixPaint(emphasis, tone, false, media),
+          `${emphasis || 'solid'}/${tone}/${JSON.stringify(media)}`,
+        )
+      }
+    }
+  }
+})
+
+void test('configured data-press and disabled colors reach each emphasis and tone', async () => {
+  const page = await browser.newPage()
+  try {
+    for (const emphasis of ['', 'soft', 'outline', 'ghost', 'frame', 'link']) {
+      for (const tone of ['neutral', 'accent']) {
+        await page.setContent(`<style>${css('warp.css')}\n${css('themed/components/button.css')}
+          button,button::before {transition:none!important}</style>
+          <button data-scope="button" ${emphasis ? `data-emphasis="${emphasis}"` : ''}
+            data-tone="${tone}" data-press style="--_a:1;
+            --warp-button-bg-press:rgb(0,0,200);--warp-button-text-press:rgb(0,0,201);
+            --warp-button-bg-disabled:rgb(80,80,80);--warp-button-text-disabled:rgb(90,90,90)">Go</button>`)
+        const button = page.locator('button')
+        const read = () =>
+          button.evaluate((el) => {
+            const host = getComputedStyle(el),
+              layer = getComputedStyle(el, '::before')
+            return [host.backgroundColor, host.color, layer.backgroundImage, layer.opacity]
+          })
+        const press = await read()
+        assert.equal(press[0], 'rgb(0, 0, 200)', `${emphasis}/${tone} press bg`)
+        assert.equal(press[1], 'rgb(0, 0, 201)', `${emphasis}/${tone} press text`)
+        assert.ok(press[2].includes('0, 0, 200'), `${emphasis}/${tone} press gradient`)
+        await button.evaluate((el) => el.setAttribute('aria-disabled', 'true'))
+        const aria = await read()
+        assert.equal(aria[0], 'rgb(80, 80, 80)', `${emphasis}/${tone} aria bg`)
+        assert.equal(aria[1], 'rgb(90, 90, 90)', `${emphasis}/${tone} aria text`)
+        assert.equal(aria[3], '0', `${emphasis}/${tone} aria layer hidden`)
+        await button.evaluate((el) => {
+          el.disabled = true
+        })
+        const disabled = await read()
+        assert.equal(disabled[0], 'rgb(80, 80, 80)', `${emphasis}/${tone} disabled bg`)
+        assert.equal(disabled[1], 'rgb(90, 90, 90)', `${emphasis}/${tone} disabled text`)
+      }
+    }
+  } finally {
+    await page.close()
+  }
+})
+
+void test('frame paints use Button pair while explicit sweep colours win', async () => {
+  const page = await browser.newPage()
+  try {
+    for (const mode of ['light', 'dark']) {
+      for (const expression of ['quiet', 'balanced', 'vivid']) {
+        for (const filled of [false, true]) {
+          const render = async (themed, config) => {
+            await page.setContent(`<html data-theme="${mode}" data-expression="${expression}"><style>
+              ${css(themed ? 'themed/warp.css' : 'warp.css')}
+              ${css(themed ? 'themed/components/button.css' : 'components/button.css')}
+              * {transition:none!important;animation:none!important}</style>
+              <div id="frame" data-scope="button" data-emphasis="frame" data-sweep style="${config}">
+                ${filled ? '<i data-part="sweep-fill"></i>' : ''}<span data-part="sweep-outline"></span>
+                <span data-part="sweep-label">label</span><span data-part="sweep-content">copy</span>
+              </div></html>`)
+            return page.locator('#frame').evaluate((el) => {
+              const color = (part) =>
+                getComputedStyle(el.querySelector(`[data-part="${part}"]`)).color
+              const fill = el.querySelector('[data-part="sweep-fill"]')
+              return {
+                label: color('sweep-label'),
+                text: color('sweep-content'),
+                fill: fill ? getComputedStyle(fill).backgroundColor : null,
+              }
+            })
+          }
+          assert.deepEqual(
+            await render(true, ''),
+            await render(false, ''),
+            `default ${mode}/${expression}/${filled}`,
+          )
+          for (const [bg, ink] of [
+            ['black', 'white'],
+            ['white', 'black'],
+          ]) {
+            const black = bg === 'black'
+            const expectedBg = black ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)'
+            const expectedInk = black ? 'rgb(255, 255, 255)' : 'rgb(0, 0, 0)'
+            const pair = `--warp-button-bg:${bg};--warp-button-text:${ink}`
+            const paint = await render(true, pair)
+            assert.equal(paint.label, expectedInk, `label ${mode}/${expression}/${bg}`)
+            assert.equal(paint.text, expectedInk, `text ${mode}/${expression}/${bg}`)
+            if (filled) assert.equal(paint.fill, expectedBg, `fill ${mode}/${expression}/${bg}`)
+            const explicit = await render(
+              true,
+              `${pair};--warp-sweep-label:green;--warp-sweep-text:blue;--warp-sweep-fill:magenta`,
+            )
+            assert.equal(explicit.label, 'rgb(0, 128, 0)')
+            assert.equal(explicit.text, 'rgb(0, 0, 255)')
+            if (filled) assert.equal(explicit.fill, 'rgb(255, 0, 255)')
+          }
+        }
+      }
+    }
+  } finally {
+    await page.close()
+  }
+})
+
+void test('nested frame reads its own Button state slots', async () => {
+  const page = await browser.newPage()
+  try {
+    await page.setContent(`<style>${css('themed/warp.css')}\n${css('themed/components/button.css')}</style>
+      <div id="outer" data-scope="button" data-emphasis="frame" data-sweep data-press
+       style="--warp-button-text-press:red"><i data-part="sweep-outline"></i><span data-part="sweep-label">Outer</span>
+       <div id="inner" data-scope="button" data-emphasis="frame" data-sweep data-press
+        style="--warp-button-text-press:blue"><i data-part="sweep-outline"></i><span data-part="sweep-label">Inner</span></div></div>`)
+    const colors = await page
+      .locator('[data-part=sweep-label]')
+      .evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).color))
+    assert.deepEqual(colors, ['rgb(255, 0, 0)', 'rgb(0, 0, 255)'])
+  } finally {
+    await page.close()
+  }
+})

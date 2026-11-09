@@ -5,103 +5,20 @@
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { definePlugin } from '@weft-js/core/plugin'
-import { fromHex, hex, luminance, toLinear } from './tokens/color.mjs'
+import { hex, luminance, toLinear } from './tokens/color.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
+import { DEFAULT, RADII, FONTS, options } from './src/plugin/themes-options.mjs'
+import { buttonPairs } from './src/plugin/themes-contrast.mjs'
+import { tailwindTheme } from './src/plugin/tailwind.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
-const DEFAULT = { hue: 152, chroma: 0.115 }
-const DIALS = {
-  expression: ['quiet', 'balanced', 'vivid'],
-  density: ['compact', 'cozy', 'comfortable'],
-  flair: ['sweep', 'none'],
-  theme: ['light', 'dark'],
-}
-const RADII = { sharp: [2, 2, 2], soft: [8, 12, 4], round: [14, 20, 6] }
-const FONTS = {
-  body: ['sans', 'ui-sans-serif, system-ui, sans-serif'],
-  display: ['display', 'ui-sans-serif, system-ui, sans-serif'],
-  mono: ['mono', 'ui-monospace, monospace'],
-}
 // The spec's scope roots (warp.css §2): every one recomputes the sys tokens, so an override has to land on each.
 const SCOPES =
   ':root,[data-expression],[data-density],[data-form],[data-pointer],[data-motion],[data-flair],[data-theme],[data-warp]'
-const safe = (value) => typeof value === 'string' && value !== '' && !/[;{}<]/.test(value)
-const bad = (path, message) => Object.assign(new Error(message), { path })
-
-function hueOf(value, name) {
-  if (typeof value === 'string') {
-    if (!/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`${name} must be #rrggbb`)
-    const { C, H } = fromHex(value)
-    return { hue: Math.round(H * 10) / 10, chroma: Math.round(C * 1000) / 1000 }
-  }
-  const { hue, chroma } = value ?? {}
-  if (!(hue >= 0 && hue < 360) || !(chroma >= 0 && chroma <= 0.37))
-    throw new Error(
-      `${name === 'accent' ? 'seed' : name} is { hue: 0–360, chroma: 0–0.37 } or ${name === 'accent' ? '{ accent: "#rrggbb" }' : '"#rrggbb"'}`,
-    ) // weft reports it as P115
-  return { hue, chroma }
-}
-
-function normalizeSeed(seed) {
-  const { accent, neutral, ...rest } = seed ?? {}
-  const out = hueOf(
-    accent ?? (Object.keys(rest).length || neutral === undefined ? rest : DEFAULT),
-    'accent',
-  )
-  return neutral === undefined ? out : { ...out, neutral: hueOf(neutral, 'neutral') }
-}
-
-function options(input) {
-  const out = {}
-  for (const key of Object.keys(input))
-    if (!['seed', 'fields', 'dials', 'radius', 'fonts', 'tokens'].includes(key))
-      throw Object.assign(new Error(`unknown option \`${key}\``), { path: key })
-  if (input.fields !== undefined && input.fields !== 'floating' && input.fields !== 'classic')
-    throw Object.assign(new Error(`must be 'floating' or 'classic'`), { path: 'fields' })
-  if (input.seed !== undefined) {
-    try {
-      out.seed = normalizeSeed(input.seed)
-      if (input.seed?.accent) out.asked = input.seed.accent.toLowerCase()
-    } catch (error) {
-      throw Object.assign(/** @type {Error} */ (error), { path: 'seed' })
-    }
-  }
-  if (input.fields) out.fields = input.fields
-  for (const [dial, value] of Object.entries(input.dials ?? {})) {
-    if (!DIALS[dial])
-      throw bad(`dials.${dial}`, `unknown dial; use ${Object.keys(DIALS).join(', ')}`)
-    if (!DIALS[dial].includes(value))
-      throw bad(`dials.${dial}`, `must be one of ${DIALS[dial].join(', ')}`)
-  }
-  if (input.dials) out.dials = input.dials
-  if (input.radius !== undefined) {
-    if (!RADII[input.radius]) throw bad('radius', `must be one of ${Object.keys(RADII).join(', ')}`)
-    out.radius = input.radius
-  }
-  for (const [font, value] of Object.entries(input.fonts ?? {})) {
-    if (!FONTS[font])
-      throw bad(`fonts.${font}`, `unknown font; use ${Object.keys(FONTS).join(', ')}`)
-    if (!safe(value)) throw bad(`fonts.${font}`, 'must be a font family or a CSS font stack')
-  }
-  if (input.fonts) out.fonts = input.fonts
-  for (const [token, value] of Object.entries(input.tokens ?? {})) {
-    if (!/^--warp-[a-z0-9-]+$/.test(token))
-      throw bad(`tokens.${token}`, 'must be a warp token, like --warp-color-page')
-    if (!safe(value)) throw bad(`tokens.${token}`, 'must be a CSS value')
-    if (
-      token.startsWith('--warp-color-') &&
-      !/^(#[0-9a-f]{6}|(oklch|color-mix|light-dark)\(.+\))$/i.test(value)
-    )
-      throw bad(`tokens.${token}`, 'must be #rrggbb or oklch(), so the contrast check can read it')
-  }
-  if (input.tokens) out.tokens = input.tokens
-  return out
-}
-
 const fontStack = (value, fallback) =>
   value.includes(',') ? value : `${JSON.stringify(value)}, ${fallback}`
 
@@ -154,6 +71,49 @@ function contrast(seed, declarations) {
       out = e.stdout // exit 1 on failures; the JSON is still on stdout
     }
     return JSON.parse(out)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+}
+
+// Check configured frame text and visible sweep boundaries before admitting overrides.
+function checkButtonCandidate(button, resolved, tokens = {}) {
+  const dir = mkdtempSync(join(tmpdir(), 'warp-seed-'))
+  try {
+    const file = join(dir, 'theme-pairs.json')
+    const pairs = buttonPairs(button, resolved, tokens)
+    writeFileSync(file, JSON.stringify(pairs))
+    let output
+    try {
+      output = execFileSync(
+        process.execPath,
+        [
+          fileURLToPath(new URL('scripts/contrast-check.mjs', core)),
+          fileURLToPath(new URL('styles/warp.css', core)),
+          '--json',
+          `--theme-pairs=${file}`,
+        ],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+      )
+    } catch (error) {
+      if (!error.stdout) throw error
+      output = error.stdout
+    }
+    const failures = JSON.parse(output).results.filter((row) => !row.pass)
+    if (failures.length) {
+      const path = failures[0].path ?? 'parts.button.text'
+      throw Object.assign(
+        new Error(
+          `D010 ${path}: ${failures
+            .map(
+              (row) =>
+                `${row.combo} ${row.fg} on ${row.bg} is ${row.ratio.toFixed(2)}:1, needs ${row.min}:1`,
+            )
+            .join('; ')}`,
+        ),
+        { code: 'D010', path, failures },
+      )
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -343,12 +303,16 @@ export const warp = definePlugin({
     fs: { read: ['node_modules/@weft-js/warp-core/**'], write: ['$TMPDIR/warp-seed-*'] },
     spawn: ['node'],
   },
-  contribute(o) {
+  contribute(o, env) {
     const seed = o.seed ?? DEFAULT
     const custom = seed.hue !== DEFAULT.hue || seed.chroma !== DEFAULT.chroma
     let declarations = overrides(o)
-    if (custom) declarations = fitSeed(seed, declarations, o.dials) // throws { code: 'D010' }
+    if (custom) declarations = fitSeed(seed, declarations, o.dials)
     else if (declarations) checkSeed(seed, declarations, o.dials)
+    if (o.buttonCandidate) {
+      checkButtonCandidate(o.buttonCandidate, contrast(seed, declarations).resolved, o.tokens)
+      declarations += `${declarations ? ';' : ''}--warp-config-part-button-bg:${o.buttonCandidate.bg};--warp-config-part-button-text:${o.buttonCandidate.text}`
+    }
     const note = o.asked && landed(seed, declarations, o.asked)
     const dials = Object.entries(o.dials ?? {})
       .map(([dial, value]) => dialCss(dial, value))
@@ -357,11 +321,37 @@ export const warp = definePlugin({
       (custom ? seedCss(seed) : '') +
       (o.fields === 'classic' ? classicCss() : '') +
       dials +
-      overrideCss(declarations)
+      overrideCss(declarations) +
+      (o.namedColors
+        ? `@layer warp.tokens{:root{${Object.entries(o.namedColors)
+            .map(([name, value]) => `--warp-named-${name}:${value}`)
+            .join(';')}}}\n`
+        : '')
     return {
       tokens: {
         namespace: 'warp',
         ...(css && { css }),
+        ...(o.namedColors && {
+          cssEntries: { tailwind: tailwindTheme({ colors: o.namedColors }) },
+        }),
+        ...((o.namedColors || o.buttonCandidate) && {
+          alias: {
+            ...(o.namedColors && {
+              '@weft-js/warp/tailwind.css': join(
+                resolve(env.root),
+                '.weft/tokens/warp.tailwind.css',
+              ),
+            }),
+            ...(o.buttonCandidate && {
+              '@weft-js/warp-core/styles/warp.css': fileURLToPath(
+                new URL('styles/themed/warp.css', core),
+              ),
+              '@weft-js/warp-core/styles/components/button.css': fileURLToPath(
+                new URL('styles/themed/components/button.css', core),
+              ),
+            }),
+          },
+        }),
         values: {
           seed: { hue: seed.hue, chroma: seed.chroma },
           fields: o.fields ?? 'floating',
