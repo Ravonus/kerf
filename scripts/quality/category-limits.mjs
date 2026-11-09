@@ -6,7 +6,7 @@ import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { repoRoot } from '../lib/helpers.mjs'
-import { categories, classify } from './categories.mjs'
+import { categories, classify, isExcluded } from './categories.mjs'
 import { lineCount } from './length-metrics.mjs'
 import { rustFindings } from './length-rust.mjs'
 
@@ -84,10 +84,15 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     .split('\0')
     .filter(Boolean)
   const files = tracked.filter((path) => source.test(path))
-  let classified = 0,
+  let excluded = 0,
+    classified = 0,
     parseErrors = 0
   const unclassified = []
   for (const path of files) {
+    if (isExcluded(path)) {
+      excluded++
+      continue
+    }
     const result = measure(path, readFileSync(resolve(repoRoot, path), 'utf8'))
     if (!result.category) unclassified.push(path)
     else classified++
@@ -100,6 +105,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   }
   for (const path of unclassified) console.log(`${path}: unclassified`)
   console.log(
-    `Tracked files: ${tracked.length}; candidate source files: ${files.length}; classified: ${classified}; unclassified: ${unclassified.length}; parser diagnostics: ${parseErrors}`,
+    `Tracked files: ${tracked.length}; candidate source files: ${files.length}; excluded: ${excluded}; eligible: ${files.length - excluded}; classified: ${classified}; unclassified: ${unclassified.length}; parser diagnostics: ${parseErrors}`,
   )
 }

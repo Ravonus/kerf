@@ -101,3 +101,13 @@ void test('existing Rust collector still reports only long functions', async () 
   assert.deepEqual(rustFindings('crates/a/src/x.rs', text), [])
   assert.equal(rustFindings('crates/a/src/x.rs', text, { allFunctions: true })[0].params, 2)
 })
+
+void test('vendor exclusion applies to inventory and overrides only at its prefix', () => {
+  const vendor = 'packages/text/vendor/pretext/src/a.ts'
+  const adjacent = 'packages/text/vendor/pretext-other/src/a.ts'
+  const bad = `function f(a,b,c,d,e,f) {}`
+  assert.equal(measure(vendor, bad).category, null)
+  assert.ok(measure(adjacent, bad).findings.length)
+  assert.deepEqual(measure(adjacent, 'function f(a) {}').findings, [])
+  assert.deepEqual(overrides([{ path: vendor }, { path: adjacent }])[0].files, [adjacent])
+})

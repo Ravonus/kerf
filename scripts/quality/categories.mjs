@@ -54,8 +54,14 @@ export function isGenerated(path, content = '') {
   )
 }
 
+/** Vendored Pretext is maintained upstream, outside category limits. */
+export function isExcluded(path) {
+  return path.startsWith('packages/text/vendor/pretext/')
+}
+
 /** Return the first matching category, or undefined for an unclassified path. */
 export function classify(path, { content = '' } = {}) {
+  if (isExcluded(path)) return undefined
   return categories.find(
     ({ name, pattern }) => pattern.test(path) || (name === 'table' && isGenerated(path, content)),
   )
