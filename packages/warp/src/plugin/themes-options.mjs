@@ -2,6 +2,7 @@
 import { themeSchema } from '@weft-js/warp-core/theme-schema'
 import { fromHex } from '../../tokens/color.mjs'
 import { resolveThemes } from './themes.mjs'
+import { preparePalettes } from './themes-palettes.mjs'
 
 const DEFAULT = { hue: 152, chroma: 0.115 }
 const DIALS = {
@@ -43,7 +44,7 @@ function normalizeSeed(seed) {
 }
 
 function namedColors(input) {
-  for (const key of ['system', 'themes']) {
+  for (const key of ['system']) {
     if (input[key] === undefined) continue
     const value = input[key]
     if (
@@ -134,6 +135,8 @@ function options(input) {
       ].includes(key)
     )
       throw Object.assign(new Error(`unknown option \`${key}\``), { path: key })
+  const palettes = preparePalettes(input)
+  if (palettes) out.palettes = palettes
   const colors = namedColors(input)
   if (colors) out.namedColors = colors
   const button = buttonCandidate(input)
@@ -159,6 +162,7 @@ function options(input) {
   }
   if (input.fields) out.fields = input.fields
   for (const [dial, value] of Object.entries(input.dials ?? {})) {
+    if (dial === 'palette') continue
     if (!DIALS[dial])
       throw bad(`dials.${dial}`, `unknown dial; use ${Object.keys(DIALS).join(', ')}`)
     if (!DIALS[dial].includes(value))

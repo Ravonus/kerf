@@ -14,6 +14,7 @@ import { dtcgTokens } from './src/plugin/dtcg.mjs'
 import { DEFAULT, RADII, FONTS, options } from './src/plugin/themes-options.mjs'
 import { buttonPairs } from './src/plugin/themes-contrast.mjs'
 import { tailwindTheme } from './src/plugin/tailwind.mjs'
+import { paletteCss } from './src/plugin/themes-palettes.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
 // The spec's scope roots (warp.css §2): every one recomputes the sys tokens, so an override has to land on each.
@@ -257,7 +258,7 @@ function rescoped(key, scope) {
  * For `site.head`: applies the dials `setDial(…, { persist: true })` kept, before the first paint, so a prerendered page
  * doesn't show the OS theme first.
  */
-export const dialScript = `<script>try{Object.assign(document.documentElement.dataset,JSON.parse(localStorage.getItem('warp:dials')||'{}'))}catch(e){}</script>`
+export const dialScript = `<script>try{const d=JSON.parse(localStorage.getItem('warp:dials')||'{}'),r=document.documentElement.dataset,v={expression:['quiet','balanced','vivid'],fields:['floating','classic'],theme:['auto','light','dark'],density:['compact','cozy','comfortable'],motion:['auto','full','reduce'],flair:['auto','sweep','none']};for(const k of [...Object.keys(v),'palette']){const x=d?.[k];if(typeof x!=='string'||!(k==='palette'?/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(x):v[k].includes(x)))continue;if(x==='auto'&&['theme','motion','flair','palette'].includes(k))delete r[k];else r[k]=x}}catch(e){}</script>`
 
 export const classicCss = () =>
   rescoped('[data-fields="classic"]', ':root:not([data-fields="floating"])')
@@ -315,6 +316,7 @@ export const warp = definePlugin({
     }
     const note = o.asked && landed(seed, declarations, o.asked)
     const dials = Object.entries(o.dials ?? {})
+      .filter(([dial]) => dial !== 'palette')
       .map(([dial, value]) => dialCss(dial, value))
       .join('')
     const css =
@@ -322,7 +324,8 @@ export const warp = definePlugin({
       (o.fields === 'classic' ? classicCss() : '') +
       dials +
       overrideCss(declarations) +
-      (o.namedColors
+      (o.palettes ? paletteCss(o.palettes) : '') +
+      (o.namedColors && !o.palettes
         ? `@layer warp.tokens{:root{${Object.entries(o.namedColors)
             .map(([name, value]) => `--warp-named-${name}:${value}`)
             .join(';')}}}\n`
