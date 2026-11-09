@@ -150,13 +150,19 @@ export interface TransportPickerProps {
   title?: string
 }
 
-function transportLifecycle(
-  sim: ReturnType<typeof transportSim>,
-  rev: State<number>,
-  root: () => HTMLDivElement | undefined,
-  worst: { readonly value: LiveState },
-  stateOf: (k: LaneId) => LiveState,
-) {
+function transportLifecycle({
+  sim,
+  rev,
+  root,
+  worst,
+  stateOf,
+}: {
+  sim: ReturnType<typeof transportSim>
+  rev: State<number>
+  root: () => HTMLDivElement | undefined
+  worst: { readonly value: LiveState }
+  stateOf: (k: LaneId) => LiveState
+}) {
   onMount(() => {
     const off = sim.subscribe(() => {
       rev.value++
@@ -195,12 +201,17 @@ function transportLifecycle(
   })
 }
 
-function transportActions(
-  sim: ReturnType<typeof transportSim>,
-  start: TransportConfig,
-  onConfigChange: (read: () => TransportConfig) => void,
-  root: () => HTMLDivElement | undefined,
-) {
+function transportActions({
+  sim,
+  start,
+  onConfigChange,
+  root,
+}: {
+  sim: ReturnType<typeof transportSim>
+  start: TransportConfig
+  onConfigChange: (read: () => TransportConfig) => void
+  root: () => HTMLDivElement | undefined
+}) {
   const set = (next: Partial<TransportConfig>) => {
     sim.configure(next)
     onConfigChange(() => sim.config)
@@ -291,13 +302,13 @@ export function TransportPicker({
 
   let root: HTMLDivElement | undefined
 
-  transportLifecycle(sim, rev, () => root, worst, stateOf)
-  const { set, reset, drop } = transportActions(
+  transportLifecycle({ sim, rev, root: () => root, worst, stateOf })
+  const { set, reset, drop } = transportActions({
     sim,
     start,
-    (readConfig) => onConfigChange?.(readConfig()),
-    () => root,
-  )
+    onConfigChange: (readConfig) => onConfigChange?.(readConfig()),
+    root: () => root,
+  })
 
   return (
     <div ref={(n) => (root = n)} data-scope="transport">

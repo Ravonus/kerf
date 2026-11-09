@@ -4,6 +4,7 @@ import { derived } from '@weft-js/core'
 import { Button } from '../Button'
 import { Switch } from '../Choice'
 import { Select } from '../Select'
+import type { TimeEdit } from './AvailabilityEditor-actions'
 
 type DayProps = {
   day: WeekDay
@@ -11,7 +12,7 @@ type DayProps = {
   name: string
   options: { value: string; label: string }[]
   onToggle: (on: boolean) => void
-  onTime: (d: number, at: number, side: 0 | 1, v: number) => void
+  onTime: (edit: TimeEdit) => void
   onAdd: (d: number) => void
   onRemove: (d: number, at: number) => void
 }
@@ -44,7 +45,7 @@ export function Day({ day, id, name, options, onToggle, onTime, onAdd, onRemove 
                 aria-invalid={x.error ? 'true' : undefined}
                 aria-describedby={x.error ? `${id}-${x.k}-e` : undefined}
                 hold={!!x.error}
-                onChange={(e: Event) => changeTime(e, onTime, day.day, x.at, 0)}
+                onChange={(e: Event) => changeTime({ e, onTime, day: day.day, at: x.at, side: 0 })}
               />
               <Select
                 label="To"
@@ -54,7 +55,7 @@ export function Day({ day, id, name, options, onToggle, onTime, onAdd, onRemove 
                 aria-invalid={x.error ? 'true' : undefined}
                 aria-describedby={x.error ? `${id}-${x.k}-e` : undefined}
                 hold={!!x.error}
-                onChange={(e: Event) => changeTime(e, onTime, day.day, x.at, 1)}
+                onChange={(e: Event) => changeTime({ e, onTime, day: day.day, at: x.at, side: 1 })}
               />
               {day.ranges.length > 1 && (
                 <Button
@@ -101,6 +102,18 @@ function dayRows(day: () => WeekDay) {
   )
 }
 
-function changeTime(e: Event, onTime: DayProps['onTime'], day: number, at: number, side: 0 | 1) {
-  onTime(day, at, side, +(e.currentTarget as HTMLInputElement).value)
+function changeTime({
+  e,
+  onTime,
+  day,
+  at,
+  side,
+}: {
+  e: Event
+  onTime: DayProps['onTime']
+  day: number
+  at: number
+  side: 0 | 1
+}) {
+  onTime({ day, at, side, v: +(e.currentTarget as HTMLInputElement).value })
 }

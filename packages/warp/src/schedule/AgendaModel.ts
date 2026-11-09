@@ -51,15 +51,8 @@ export function agendaModel(p: () => AgendaProps) {
     lifted.value = e.id
     sheet.value = true
   }
-  agendaGestures(
-    () => view,
-    () => track,
-    date,
-    go,
-    byId,
-    open,
-  )
-  const { onKey, onClick, onTabs } = agendaKeys(p, week, date, settle, byId, open)
+  agendaGestures({ view: () => view, track: () => track, date, go, byId, open })
+  const { onKey, onClick, onTabs } = agendaKeys({ p, week, date, settle, byId, open })
   const create = agendaCreate(date, draft, editing)
   const moved = agendaMoved(p, env, go, say)
   return {

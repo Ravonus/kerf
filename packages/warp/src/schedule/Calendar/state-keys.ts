@@ -14,15 +14,23 @@ type Options = {
   next: (key: string, id: string) => string | null
 }
 
-function movingKey(
-  e: KeyboardEvent,
-  opts: Options,
-  id: string,
-  rtl: boolean,
-  m: NonNullable<Base['moving']['value']>,
-  { p, moving, say, focusEvent, env }: Base,
-  { change }: Change,
-) {
+function movingKey({
+  e,
+  opts,
+  id,
+  rtl,
+  m,
+  base: { p, moving, say, focusEvent, env },
+  actions: { change },
+}: {
+  e: KeyboardEvent
+  opts: Options
+  id: string
+  rtl: boolean
+  m: NonNullable<Base['moving']['value']>
+  base: Base
+  actions: Change
+}) {
   if (e.key === 'Tab') {
     moving.value = null
     return
@@ -75,7 +83,7 @@ export function useKeys(base: Base, actions: Change, editing: Editing) {
     const id = el.dataset.id!
     const rtl = getComputedStyle(el).direction === 'rtl'
     const m = moving.value
-    if (m && m.id === id) return movingKey(e, opts, id, rtl, m, base, actions)
+    if (m && m.id === id) return movingKey({ e, opts, id, rtl, m, base, actions })
     const ev = shown(id)
     if (!ev) return
     if (e.key === 'Enter' || e.key === ' ') {

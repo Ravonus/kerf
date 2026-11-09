@@ -17,15 +17,7 @@ export function meetingModel(p: () => RoomInputs) {
   let stage: HTMLDivElement | undefined
 
   const say = (text: string) => announce(root!.ownerDocument, text)
-  meetingMount(
-    p,
-    controls,
-    display,
-    people,
-    () => root,
-    () => stage,
-    say,
-  )
+  meetingMount({ props: p, controls, display, people, root: () => root, stage: () => stage, say })
   const handlers = meetingHandlers(
     p,
     controls,

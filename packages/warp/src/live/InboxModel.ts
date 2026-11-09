@@ -32,24 +32,17 @@ export function inboxModel(p: () => InboxInputs) {
   let root: HTMLElement | undefined
   const doc = () => root!.ownerDocument
 
-  inboxGestures(
-    p,
-    tab,
-    all,
-    fresh,
-    () => tablist,
-    () => list,
-  )
+  inboxGestures({ p, tab, all, fresh, tablist: () => tablist, list: () => list })
 
-  const { pick, onTabKey, dismiss, readAll, onRowKey, pressRow, toTop, onScroll } = inboxHandlers(
+  const { pick, onTabKey, dismiss, readAll, onRowKey, pressRow, toTop, onScroll } = inboxHandlers({
     p,
     tab,
     fresh,
     leaving,
-    () => list,
-    () => tablist,
+    list: () => list,
+    tablist: () => tablist,
     doc,
-  )
+  })
   const sync = derived(() => {
     const q = val<number>(p().queued === undefined ? 0 : p().queued!)
     if (q) return `${q} update${q > 1 ? 's' : ''} waiting to sync`

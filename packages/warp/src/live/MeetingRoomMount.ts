@@ -5,15 +5,23 @@ import type { Participant } from './MeetingRoomTypes'
 import type { RoomInputs } from './MeetingRoomModel'
 import type { meetingControls, meetingPeople } from './MeetingRoomState'
 
-export function meetingMount(
-  props: () => RoomInputs,
-  controls: ReturnType<typeof meetingControls>,
-  display: ReturnType<typeof meetingPeople>,
-  people: { readonly value: Participant[] },
-  root: () => HTMLDivElement | undefined,
-  stage: () => HTMLDivElement | undefined,
-  say: (text: string) => void,
-) {
+export function meetingMount({
+  props,
+  controls,
+  display,
+  people,
+  root,
+  stage,
+  say,
+}: {
+  props: () => RoomInputs
+  controls: ReturnType<typeof meetingControls>
+  display: ReturnType<typeof meetingPeople>
+  people: { readonly value: Participant[] }
+  root: () => HTMLDivElement | undefined
+  stage: () => HTMLDivElement | undefined
+  say: (text: string) => void
+}) {
   onMount(() => {
     const follow = speakerFollow((id) => (display.speaker.value = id))
     follow.update(untrack(() => display.speaker.value))

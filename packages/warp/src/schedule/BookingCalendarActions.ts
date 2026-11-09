@@ -3,20 +3,33 @@ import { flush, type State } from '@weft-js/core'
 import { confirmSweep } from './bits'
 import type { BookingCalendarProps } from './BookingCalendar'
 
-export function bookingActions(
-  p: () => BookingCalendarProps,
-  own: State<IsoDate | null>,
-  date: { readonly value: IsoDate | null },
-  pick: State<number | null>,
-  manual: State<boolean>,
-  stage: State<'pick' | 'confirm' | 'done'>,
-  busy: State<boolean>,
-  failed: State<string | null>,
-  len: { readonly value: number },
-  chosen: { readonly value: number | null },
-  when: { readonly value: string },
-  root: () => HTMLDivElement | undefined,
-) {
+export function bookingActions({
+  p,
+  own,
+  date,
+  pick,
+  manual,
+  stage,
+  busy,
+  failed,
+  len,
+  chosen,
+  when,
+  root,
+}: {
+  p: () => BookingCalendarProps
+  own: State<IsoDate | null>
+  date: { readonly value: IsoDate | null }
+  pick: State<number | null>
+  manual: State<boolean>
+  stage: State<'pick' | 'confirm' | 'done'>
+  busy: State<boolean>
+  failed: State<string | null>
+  len: { readonly value: number }
+  chosen: { readonly value: number | null }
+  when: { readonly value: string }
+  root: () => HTMLDivElement | undefined
+}) {
   const setDate = (d: IsoDate) => {
     if (p().date && typeof p().date === 'object') (p().date as State<IsoDate | null>).value = d
     else own.value = d

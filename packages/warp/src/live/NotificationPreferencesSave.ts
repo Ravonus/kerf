@@ -10,14 +10,21 @@ import {
 import type { State } from '@weft-js/core'
 import type { Inputs, Save } from './NotificationPreferencesModel'
 
-export function preferencesSave(
-  p: () => Inputs,
-  model: State<PrefValues>,
-  mail: State<string>,
-  save: State<Save>,
-  fixed: PrefRules,
-  grid: () => HTMLDivElement | undefined,
-) {
+export function preferencesSave({
+  p,
+  model,
+  mail,
+  save,
+  fixed,
+  grid,
+}: {
+  p: () => Inputs
+  model: State<PrefValues>
+  mail: State<string>
+  save: State<Save>
+  fixed: PrefRules
+  grid: () => HTMLDivElement | undefined
+}) {
   let seq = 0
   const say = (text: string, assertive = false) => announce(grid()!.ownerDocument, text, assertive)
   /** Apply now, run the save, roll back on rejection. */

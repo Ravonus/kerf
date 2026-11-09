@@ -1,14 +1,21 @@
 import type { CalEvent, IsoDate } from '@weft-js/warp-core'
 import type { AgendaProps } from './Agenda'
 
-export function agendaKeys(
-  p: () => AgendaProps,
-  week: { readonly value: readonly IsoDate[] },
-  date: { readonly value: string },
-  settle: (d: string, focus?: boolean) => void,
-  byId: (id: string | undefined) => CalEvent | undefined,
-  open: (e: CalEvent) => unknown,
-) {
+export function agendaKeys({
+  p,
+  week,
+  date,
+  settle,
+  byId,
+  open,
+}: {
+  p: () => AgendaProps
+  week: { readonly value: readonly IsoDate[] }
+  date: { readonly value: string }
+  settle: (d: string, focus?: boolean) => void
+  byId: (id: string | undefined) => CalEvent | undefined
+  open: (e: CalEvent) => unknown
+}) {
   const onKey = (e: KeyboardEvent) => {
     const r = (e.target as Element).closest?.<HTMLElement>('[data-part="row"][data-id]')
     if (!r) return

@@ -60,12 +60,17 @@ function useTimeData(c: Ctx, count: number) {
   return { days, list, stop, bars, nowAt, widths, tracks }
 }
 
-function useTimeFit(
-  c: Ctx,
-  getScroller: () => HTMLDivElement | undefined,
-  getCols: () => HTMLDivElement | undefined,
-  { days, widths }: Pick<ReturnType<typeof useTimeData>, 'days' | 'widths'>,
-) {
+function useTimeFit({
+  c,
+  getScroller,
+  getCols,
+  days,
+  widths,
+}: {
+  c: Ctx
+  getScroller: () => HTMLDivElement | undefined
+  getCols: () => HTMLDivElement | undefined
+} & Pick<ReturnType<typeof useTimeData>, 'days' | 'widths'>) {
   const fit = () => fitTimeGrid(c, getScroller(), getCols(), widths)
   let frame = 0
   const refit = () => {
@@ -129,12 +134,7 @@ function useTimeGrid(c: Ctx, count: number) {
     if (col && scroller.scrollWidth > scroller.clientWidth)
       scroller.scrollLeft = Math.max(0, col.offsetLeft - gutter)
   })
-  useTimeFit(
-    c,
-    () => scroller,
-    () => cols,
-    { days, widths },
-  )
+  useTimeFit({ c, getScroller: () => scroller, getCols: () => cols, days, widths })
   const onKey = (e: KeyboardEvent) =>
     c.eventKeys(e, {
       days: days.value,
