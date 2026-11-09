@@ -2,7 +2,7 @@
 // shadow edge of that form, so tone follows the object instead of filling it. Light is top left. The ramp snaps to cells:
 // clear, checker, solid. Hand clusters override it: ^ stays clear, % stays solid.
 import { pixel } from './draw.mjs'
-import { enclosed, interior, rasterize } from './raster.mjs'
+import { interior, rasterize } from './raster.mjs'
 
 const SIZE = 16
 export function master(text) {
@@ -203,7 +203,11 @@ export const litCells = (g) =>
 /** Pieces of a grid: connected ink (any neighbour) and connected clear (side neighbours, the outside counting as one). */
 function topology(grid) {
   // a clear ring round the grid, so all of the outside is one piece
-  const on = [Array(18).fill(false), ...grid.map((r) => [false, ...r, false]), Array(18).fill(false)]
+  const on = [
+    Array(18).fill(false),
+    ...grid.map((r) => [false, ...r, false]),
+    Array(18).fill(false),
+  ]
   const seen = on.map((r) => r.map(() => false))
   const fill = (x0, y0, want, eight) => {
     const stack = [[x0, y0]]
@@ -212,7 +216,8 @@ function topology(grid) {
       if (x < 0 || y < 0 || x > 17 || y > 17 || seen[y][x] || on[y][x] !== want) continue
       seen[y][x] = true
       for (let i = -1; i <= 1; i++)
-        for (let j = -1; j <= 1; j++) if ((i || j) && (eight || !i || !j)) stack.push([x + i, y + j])
+        for (let j = -1; j <= 1; j++)
+          if ((i || j) && (eight || !i || !j)) stack.push([x + i, y + j])
     }
   }
   let ink = 0,
@@ -238,53 +243,58 @@ const CORNER = [
 /** An open mark in pixels, as an object: every stroke grown a cell each way. Solid is the grown shape; hollow is its rim,
  *  the stroke itself left clear down the middle. Where growing would run two parts together or close a gap (a menu's bars,
  *  a refresh arc's break), that cell stays clear, so a tight mark grows as far as it can. The weft stays weft. */
-export function thick(g, form) {
-  const ink = (c) => c === '#' || c === 'w'
-  const lines = g.map((r) => r.map((c) => (ink(c) ? c : '.')))
-  const shape = (h) => topology(h.map((r) => r.map((c) => c !== '.')))
-  const before = shape(lines)
-  // art drawn two cells wide grows a cell down and right, no more: three wide reads as filled in solid, and in hollow its
-  // walls stay one cell round a one-cell core
+const SIDES = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+]
+const isInk = (c) => c === '#' || c === 'w'
+const shapeOf = (h) => topology(h.map((r) => r.map((c) => c !== '.')))
+const BLOCK = [
+  [0, 0],
+  [1, 0],
+  [0, 1],
+  [1, 1],
+]
+
+/** The mark grown a cell, never running two parts together or closing a gap. Art drawn two cells wide, and every solid,
+ *  grow a cell down and right only: three wide reads as filled, and a hollow's walls stay one cell round its core. */
+function grow(g, form) {
+  const lines = g.map((r) => r.map((c) => (isInk(c) ? c : '.')))
+  const before = shapeOf(lines)
   const cells = lines.flat().filter((c) => c !== '.').length
-  const blocky = lines.flatMap((r, y) =>
-    r.map((c, x) => c !== '.' && [[0, 0], [-1, 0], [0, -1], [-1, -1]].some(([i, j]) =>
-      [[0, 0], [1, 0], [0, 1], [1, 1]].every(([a, b]) => ink(g[y + j + b]?.[x + i + a])))),
-  ).filter(Boolean).length
+  const blocky = lines
+    .flatMap((r, y) =>
+      r.map(
+        (c, x) =>
+          c !== '.' &&
+          BLOCK.some(([i, j]) => BLOCK.every(([a, b]) => isInk(g[y - j + b]?.[x - i + a]))),
+      ),
+    )
+    .filter(Boolean).length
   const by = form === 'solid' || blocky > 0.6 * cells ? CORNER : SQUARE
-  const near = (x, y) => {
-    let weft = false,
-      any = false
-    for (const [i, j] of by)
-      if (ink(g[y - j]?.[x - i])) {
-        any = true
-        if (g[y - j][x - i] === 'w') weft = true
-      }
-    return any ? (weft ? 'w' : '#') : '.'
+  const reach = (x, y) => {
+    const from = by.map(([i, j]) => g[y - j]?.[x - i]).filter(isInk)
+    return !from.length ? '.' : from.includes('w') ? 'w' : '#'
   }
-  let grown = each(lines, (c, x, y) => (c !== '.' ? c : near(x, y)))
-  if (shape(grown) !== before) {
-    grown = lines.map((r) => r.slice())
-    for (let y = 0; y < 16; y++)
-      for (let x = 0; x < 16; x++) {
-        const c = grown[y][x] === '.' ? near(x, y) : '.'
-        if (c === '.') continue
-        grown[y][x] = c
-        if (shape(grown) !== before) grown[y][x] = '.'
-      }
-  }
-  const on = (x, y) => grown[y]?.[x] !== undefined && grown[y][x] !== '.'
-  const sides = [[1, 0], [-1, 0], [0, 1], [0, -1]]
-  const sides4 = sides
-  const inner = (x, y) => on(x, y) && sides.every(([i, j]) => on(x + i, y + j))
-  // the grown mark as a body the shaders know: its edge ink, its middle an inside to shade along the light
-  const weft = (h) => each(h, (c, x, y) => (c === '#' && grown[y][x] === 'w' ? 'w' : c))
-  if (form === 'solid')
-    // lit: the side toward the light breaks into checker and clear, the far end stays ink
-    return weft((solid(each(grown, (c, x, y) => (c === '.' ? '.' : inner(x, y) ? ':' : '#')))))
-  const rim = each(grown, (c, x, y) => (c !== '.' && !inner(x, y) ? c : '.'))
-  // smoothing: a rim cell that only makes an elbow (a step on a diagonal, the corner of a turn) goes, the way a stepped
-  // frame drops its corner cell, so long as the rim keeps its pieces and its middle stays shut off from the outside
-  // a dot is too small to lose a corner: it would turn into a broken diamond
+  const grown = each(lines, (c, x, y) => (c !== '.' ? c : reach(x, y)))
+  if (shapeOf(grown) === before) return grown
+  const safe = lines.map((r) => r.slice())
+  for (let y = 0; y < 16; y++)
+    for (let x = 0; x < 16; x++) {
+      const c = safe[y][x] === '.' ? reach(x, y) : '.'
+      if (c === '.') continue
+      safe[y][x] = c
+      if (shapeOf(safe) !== before) safe[y][x] = '.'
+    }
+  return safe
+}
+
+/** A rim cell that only makes an elbow (a step on a diagonal, the corner of a turn) goes, the way a stepped frame drops its
+ *  corner cell, so long as the rim keeps its pieces and its middle stays shut. A dot keeps its corners: without them it is
+ *  a broken diamond. */
+function smooth(rim, on) {
   const piece = (x0, y0) => {
     const seen = new Set(),
       stack = [[x0, y0]]
@@ -296,19 +306,35 @@ export function thick(g, form) {
     }
     return seen.size
   }
-  const keep = shape(rim),
+  const keep = shapeOf(rim),
     at = (x, y) => rim[y]?.[x] !== undefined && rim[y][x] !== '.'
   for (let y = 0; y < 16; y++)
     for (let x = 0; x < 16; x++) {
       if (!at(x, y)) continue
       const h = at(x - 1, y) || at(x + 1, y),
         v = at(x, y - 1) || at(x, y + 1)
-      const sides = sides4.filter(([i, j]) => at(x + i, y + j)).length
-      if (!(h && v && sides === 2) || piece(x, y) <= 9) continue
+      const touching = SIDES.filter(([i, j]) => at(x + i, y + j)).length
+      if (!(h && v && touching === 2) || piece(x, y) <= 9) continue
       const c = rim[y][x]
       rim[y][x] = '.'
-      if (shape(rim) !== keep) rim[y][x] = c
+      if (shapeOf(rim) !== keep) rim[y][x] = c
     }
+  return rim
+}
+
+export function thick(g, form) {
+  const grown = grow(g, form)
+  const on = (x, y) => grown[y]?.[x] !== undefined && grown[y][x] !== '.'
+  const inner = (x, y) => on(x, y) && SIDES.every(([i, j]) => on(x + i, y + j))
+  // the grown mark as a body the shaders know: its edge ink, its middle an inside to shade along the light
+  const weft = (h) => each(h, (c, x, y) => (c === '#' && grown[y][x] === 'w' ? 'w' : c))
+  if (form === 'solid')
+    // lit: the side toward the light breaks into checker and clear, the far end stays ink
+    return weft(solid(each(grown, (c, x, y) => (c === '.' ? '.' : inner(x, y) ? ':' : '#'))))
+  const rim = smooth(
+    each(grown, (c, x, y) => (c !== '.' && !inner(x, y) ? c : '.')),
+    on,
+  )
   // depth: the clear middle takes dither on its shadow side, walked along the light, as a body's inside does. A cast
   // shadow under the strokes was tried: under a bar it reads as a serrated edge.
   const base = each(rim, (c, x, y) => (c !== '.' ? '#' : inner(x, y) ? ':' : '.'))

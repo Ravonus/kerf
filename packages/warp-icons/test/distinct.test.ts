@@ -7,7 +7,6 @@ const PASSING = 517
 test('every form and tier of every icon paints clearly differently', async () => {
   const { items, css } = await shipped()
   const results = await measure(items, css)
-  // A ratchet, not a wall: since hollow and solid became the object itself (2026-11-09), a stroke icon's two forms differ
-  // only by the gap down its middle, and some fall under the bar. The count may rise, never fall.
+  // a ratchet: a stroke icon's hollow and solid differ only by the gap down its middle, so some fall under the bar
   expect(results.filter((r) => r.ok).length, summary(results)).toBeGreaterThanOrEqual(PASSING)
 }, 300000)

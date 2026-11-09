@@ -11,8 +11,20 @@ import MASTERS from '../art/style/masters.mjs'
 import SOLID, { FILL } from '../art/style/solid.mjs'
 import { cells, outline } from './draw.mjs'
 import { enclosed, interior, rasterize } from './raster.mjs'
-import { commands, isClosed, layout, scale, shut } from './shape.mjs'
-import { auto, crescent, fromHand, hollow, litCells, master, open, slim, solid, thick } from './style.mjs'
+import { isClosed, layout, scale } from './mark.mjs'
+import { commands, shut } from './shape.mjs'
+import {
+  auto,
+  crescent,
+  fromHand,
+  hollow,
+  litCells,
+  master,
+  open,
+  slim,
+  solid,
+  thick,
+} from './style.mjs'
 
 const path = (g, attr) => {
   const d = cells(g).ink
@@ -83,7 +95,8 @@ function parts(spec) {
   // the weft lines the inside needs: without one, it shrinks
   const whole = count(enclosed(rasterize(`${join(shell, ...lines)} /`).body))
   const needed = lines.filter(
-    (c) => count(enclosed(rasterize(`${join(shell, ...lines.filter((d) => d !== c))} /`).body)) < whole,
+    (c) =>
+      count(enclosed(rasterize(`${join(shell, ...lines.filter((d) => d !== c))} /`).body)) < whole,
   )
   return [join(body, ...needed), join(...commands(weft).filter((c) => !needed.includes(c)))]
 }
@@ -132,7 +145,9 @@ export function mark(name, spec, tier, form, id = `wi-${name}-${tier[0]}`) {
   const core = W - 2 * w,
     small = Math.min(SMALL_GAP, W - 2.4)
   const wide =
-    small > core + 0.05 ? `<path data-m="" stroke="#000" stroke-width="${f(small)}" d="${bo}${wo}"/>` : ''
+    small > core + 0.05
+      ? `<path data-m="" stroke="#000" stroke-width="${f(small)}" d="${bo}${wo}"/>`
+      : ''
   const mask =
     bo || wo
       ? `<mask id="${id}" maskUnits="userSpaceOnUse"><path d="M0 0h24v24H0z" fill="#fff" stroke="none"/><path stroke="#000" stroke-width="${f(core)}" d="${bo}${wo}"/>${wide}</mask>`
