@@ -1,47 +1,49 @@
 import { expect, test } from 'vitest'
-import type { WarpOptions } from '../plugin.mjs'
+import type { ThemeParts, ThemeSystem, WarpOptions } from '../plugin.mjs'
 
 const options: WarpOptions = {
   colors: { ink: '#ffffff', brand: 'ink' },
   themes: {},
-  system: { space: { page: 24 }, text: { code: { family: 'mono', size: 14 } } },
-  parts: {
-    'text/code': { font: { family: 'mono', size: 14 } },
-    'status-light': { font: { size: 14 } },
-  },
+  system: {},
+  parts: { button: { bg: '#757575', text: 'ink' } },
 }
+const empty: WarpOptions = { system: {}, themes: {}, parts: { button: {} } }
+const emptyParts: WarpOptions = { parts: {} }
 void options
+void empty
+void emptyParts
 
-const invalid: WarpOptions = {
-  parts: {
-    'text/code': {
-      font: {
-        // @ts-expect-error Code has no font weight consumer in the type shim.
-        weight: 500,
-      },
+const schemaParts: ThemeParts = {
+  'text/code': { font: { family: 'mono', size: 14 } },
+  'status-light': { font: { size: 14 } },
+}
+
+const invalid: ThemeParts = {
+  'text/code': {
+    font: {
+      // @ts-expect-error Code has no font weight consumer in the type shim.
+      weight: 500,
     },
   },
 }
 void invalid
 
-const invalidStatus: WarpOptions = {
-  parts: {
-    'status-light': {
-      font: {
-        // @ts-expect-error Status light only has an inventoried font size consumer.
-        weight: 500,
-      },
+const invalidStatus: ThemeParts = {
+  'status-light': {
+    font: {
+      // @ts-expect-error Status light only has an inventoried font size consumer.
+      weight: 500,
     },
   },
 }
 void invalidStatus
 
 test('keeps the classified type role options', () => {
-  const font = options.parts?.['text/code']?.font
+  const font = schemaParts['text/code']?.font
   expect(typeof font === 'object' && font?.size).toBe(14)
 })
 
-const scales: WarpOptions = {
+const scales: { system: ThemeSystem; parts: ThemeParts } = {
   system: {
     radius: { card: 8, badge: 'var(--my-radius)' },
     font: { body: 'Inter', editorial: 'serif' },
@@ -60,7 +62,7 @@ const scales: WarpOptions = {
 }
 void scales
 
-const wrongScale: WarpOptions = {
+const wrongScale: { system: ThemeSystem } = {
   system: {
     padding: {
       // @ts-expect-error Padding has only control and surface keys.
@@ -70,7 +72,7 @@ const wrongScale: WarpOptions = {
 }
 void wrongScale
 
-const wrongColor: WarpOptions = {
+const wrongColor: { system: ThemeSystem } = {
   system: {
     color: {
       // @ts-expect-error System colour keys come from declared CSS tokens.
@@ -80,7 +82,7 @@ const wrongColor: WarpOptions = {
 }
 void wrongColor
 
-const wrongDomain: WarpOptions = {
+const wrongDomain: { system: ThemeSystem } = {
   system: {
     font: {
       // @ts-expect-error Font families are strings rather than numbers.
@@ -98,7 +100,7 @@ const wrongPart: WarpOptions = {
 }
 void wrongPart
 
-const buttonGeometry: WarpOptions = {
+const buttonGeometry: { parts: ThemeParts } = {
   parts: {
     button: {
       radius: 6,
@@ -135,3 +137,46 @@ const unsupportedTheme: WarpOptions = {
   },
 }
 void unsupportedTheme
+
+const unsupportedSystem: WarpOptions = {
+  system: {
+    // @ts-expect-error Nonempty system overrides are not supported.
+    space: { group: 2 },
+  },
+}
+const unsupportedPart: WarpOptions = {
+  parts: {
+    // @ts-expect-error Only Button is supported.
+    link: {},
+  },
+}
+const unsupportedHover: WarpOptions = {
+  parts: {
+    button: {
+      bg: '#757575',
+      text: '#ffffff',
+      // @ts-expect-error Button states are not supported.
+      hover: { bg: '#000000' },
+    },
+  },
+}
+const unsupportedBorder: WarpOptions = {
+  parts: {
+    button: {
+      bg: '#757575',
+      text: '#ffffff',
+      // @ts-expect-error Button border is not supported.
+      border: '#ffffff',
+    },
+  },
+}
+// @ts-expect-error Nonempty Button config requires both colours.
+const missingText: WarpOptions = { parts: { button: { bg: '#757575' } } }
+// @ts-expect-error Nonempty Button config requires both colours.
+const missingBg: WarpOptions = { parts: { button: { text: '#ffffff' } } }
+void unsupportedSystem
+void unsupportedPart
+void unsupportedHover
+void unsupportedBorder
+void missingText
+void missingBg

@@ -237,14 +237,14 @@ export const dialScript: string
 
 /** What `warp()` takes in weft.config: the seed, the default dials, radius, fonts and any token. */
 export interface WarpOptions {
-  /** Type and space scales from the classified shim consumers. */
-  system?: ThemeSystem
+  /** System overrides are not yet supported; an empty dictionary is accepted. */
+  system?: Record<string, never>
   /** Named hex colours or aliases to other named colours. */
   colors?: Record<string, string>
   /** Named themes are not yet supported; an empty dictionary is accepted. */
   themes?: Record<string, never>
-  /** Part overrides from the explicit theme table. */
-  parts?: ThemeParts
+  /** Resting Button colours are supported together; empty dictionaries are accepted. */
+  parts?: { button?: { bg?: never; text?: never } | { bg: string; text: string } }
   /**
    * The brand's hue family: `{ accent: '#rrggbb' }`, or a hue and chroma. Each theme solves its own lightness, and the build
    * prints where it landed. `neutral` tints pages, surfaces and text the same way. Checked at the stops `dials` leave (D010).
