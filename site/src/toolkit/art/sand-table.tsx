@@ -35,7 +35,7 @@ export default function SandTable(_: ArtProps) {
 
   const garden = (x: number, y: number, t: number) => {
     if (!built) {
-      buildGarden(rake, sand, rock, shade)
+      buildGarden({ rake, sand, rock, shade })
       built = true
     }
     if (x > aspect) aspect = x
@@ -119,11 +119,9 @@ function plough(px: number, py: number, rock: Uint8Array, sand: Float32Array) {
 }
 
 function buildGarden(
-  rake: Float32Array,
-  sand: Float32Array,
-  rock: Uint8Array,
-  shade: Float32Array,
+  garden: Record<'rake' | 'sand' | 'shade', Float32Array> & { rock: Uint8Array },
 ) {
+  const { rake, sand, rock, shade } = garden
   for (let y = 0, i = 0; y < H; y++)
     for (let x = 0; x < W; x++, i++) {
       const u = (x / W) * 1.6,
