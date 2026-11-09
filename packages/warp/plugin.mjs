@@ -258,7 +258,7 @@ function rescoped(key, scope) {
  * For `site.head`: applies the dials `setDial(…, { persist: true })` kept, before the first paint, so a prerendered page
  * doesn't show the OS theme first.
  */
-export const dialScript = `<script>try{Object.assign(document.documentElement.dataset,JSON.parse(localStorage.getItem('warp:dials')||'{}'))}catch(e){}</script>`
+export const dialScript = `<script>try{const d=JSON.parse(localStorage.getItem('warp:dials')||'{}'),r=document.documentElement.dataset,v={expression:['quiet','balanced','vivid'],fields:['floating','classic'],theme:['auto','light','dark'],density:['compact','cozy','comfortable'],motion:['auto','full','reduce'],flair:['auto','sweep','none']};for(const k of [...Object.keys(v),'palette']){const x=d?.[k];if(typeof x!=='string'||!(k==='palette'?/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(x):v[k].includes(x)))continue;if(x==='auto'&&['theme','motion','flair','palette'].includes(k))delete r[k];else r[k]=x}}catch(e){}</script>`
 
 export const classicCss = () =>
   rescoped('[data-fields="classic"]', ':root:not([data-fields="floating"])')
