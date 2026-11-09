@@ -266,6 +266,7 @@ export function retainSourceContext(
     nativeSet: win.Element.prototype.setAttribute,
     // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     nativeRemove: win.Element.prototype.removeAttribute,
+    // oxlint-disable-next-line typescript/unbound-method -- the native setter is kept to be called with .call()
     attrValue: Object.getOwnPropertyDescriptor(win.Attr.prototype, 'value')?.set,
     stopped: false,
     wrappers: [],
