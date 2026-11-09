@@ -1,10 +1,16 @@
 import { uid, type Stroke } from '@weft-js/warp-core'
 import { flush } from '@weft-js/core'
+import { Segmented } from './Choice'
 import { Field, type FieldShell } from './Field'
 import { bindable, type Bindable } from './Picker'
 import { signatureState } from './SignaturePad/state'
 import { SignatureControl, SignatureFooter } from './SignaturePad/view'
 import '@weft-js/warp-core/styles/rich/signature.css'
+
+const METHODS = [
+  { value: 'draw' as const, label: 'Draw' },
+  { value: 'type' as const, label: 'Type' },
+]
 
 /** A signature, drawn or typed, with the SVG to show it. */
 export type SignatureValue = {
@@ -39,26 +45,14 @@ export function SignaturePad({
   return (
     <div data-scope="signature" class="stack">
       <div class="row" style="justify-content:flex-end">
-        <div class="seg" role="radiogroup" aria-label="Signing method">
-          <label>
-            <input
-              type="radio"
-              name={`${id}-m`}
-              checked={view.method.value === 'draw'}
-              onChange={() => view.pick('draw')}
-            />
-            <i>Draw</i>
-          </label>
-          <label>
-            <input
-              type="radio"
-              name={`${id}-m`}
-              checked={view.method.value === 'type'}
-              onChange={() => view.pick('type')}
-            />
-            <i>Type</i>
-          </label>
-        </div>
+        <Segmented
+          size="sm"
+          label="Signing method"
+          name={`${id}-m`}
+          value={view.method.value}
+          options={METHODS}
+          onChange={(m) => view.pick(m)}
+        />
       </div>
       <Field
         {...rest}

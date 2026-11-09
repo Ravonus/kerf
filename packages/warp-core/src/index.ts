@@ -41,7 +41,7 @@ export {
 export { dialog, popover, tooltip, type DialogOptions, type PopoverOptions } from './overlays'
 export { isMobileDevice, markDevice } from './device'
 export { edges, indicator, overflow, type IndicatorOptions } from './indicator'
-export { moveShuttle } from './shuttle'
+export { moveShuttle, type Across } from './shuttle'
 export { listbox, type ListboxOptions, type ListItem } from './listbox'
 export { slider, type SliderOptions } from './slider'
 export { formInvalid, formReset, reportMissing } from './form'

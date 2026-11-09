@@ -2,15 +2,6 @@
 @layer warp.inputs-rich {
 /* -- helpers: the small layout pieces the fields share ---- */
   :where(.muted) { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
-  :where(.seg) { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--warp-color-border); border-radius: calc(var(--warp-radius-control) + 2px); background: var(--warp-color-surface-sunken); }
-  :where(.seg label) { position: relative; display: flex; }
-  :where(.seg input) { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-  :where(.seg i) { font-style: normal; display: inline-flex; align-items: center; block-size: 26px; padding-inline: 10px; border-radius: var(--warp-radius-control); font-size: 12px; font-weight: 500; color: var(--warp-color-text-subtle); white-space: nowrap; transition: background-color var(--warp-duration-fast), color var(--warp-duration-fast); }
-  :where(.seg label:hover i) { color: var(--warp-color-text); }
-  :where(.seg input:checked + i) { background: var(--warp-color-surface-raised); color: var(--warp-color-text); box-shadow: 0 0 0 1px var(--warp-color-border), var(--warp-elevation-1); }
-  :where(.seg input:focus-visible + i) { outline: 2px solid var(--warp-color-focus); outline-offset: 1px; }
-  @media (pointer: coarse) { .seg i { block-size: max(26px, calc(var(--warp-hit-min) - 4px)); } }
-  :root[data-pointer="coarse"] .seg i { block-size: max(26px, calc(var(--warp-hit-min) - 4px)); }
   :where(.row) { display: flex; flex-wrap: wrap; gap: var(--warp-space-related); align-items: center; }
   :where(.addr-foot) { margin: 0; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
   :where(.sr) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }

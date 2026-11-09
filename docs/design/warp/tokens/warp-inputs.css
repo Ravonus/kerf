@@ -501,16 +501,19 @@
   flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   block-size: calc(var(--warp-control-md) - 8px); padding-inline: var(--warp-pad-control);
   font-weight: 500; font-size: var(--warp-text-body-size); color: var(--warp-color-text-subtle); white-space: nowrap;
-  border-radius: var(--warp-radius-control); transition: color calc(420ms * var(--warp-motion-scale)) var(--warp-sweep-ease);
+  border-radius: var(--warp-radius-control); transition: color var(--warp-shuttle-tail) var(--warp-ease-out);
 }
 :where([data-scope="segmented"] [data-part="item"] svg) { inline-size: 14px; block-size: 14px; }
 :where([data-scope="segmented"] [data-part="count"]) { font: 500 11px/1.25 var(--warp-font-mono); }   /* full ink: 0.8 opacity fell to 4.0:1 (review 03 m12) */
 :where([data-scope="segmented"] label:hover [data-part="item"]) { color: var(--warp-color-text); }
-:where([data-scope="segmented"] input:checked + [data-part="item"]) { color: var(--warp-color-accent-on-solid); }
+/* the ink turns with the shuttle: the arriving item as its head lands, the leaving one as its tail goes */
+:where([data-scope="segmented"] input:checked + [data-part="item"]) { color: var(--warp-color-accent-on-solid); transition-duration: var(--warp-shuttle-head); }
+/* in rows ([data-wrap]) every item is a cell of an even grid, and the face still travels to it */
+:where([data-scope="segmented"][data-wrap]) { grid-auto-flow: row; grid-template-columns: repeat(var(--seg-cols, 2), minmax(0, 1fr)); }
 :where([data-scope="segmented"] input:focus-visible + [data-part="item"]) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 1px; }
 :where([data-scope="segmented"] [data-part="indicator"]) {
-  position: absolute; z-index: 2; inset-block: 3px; inset-inline-start: 0;
-  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-accent-solid); overflow: clip;
+  position: absolute; z-index: 2; inset-block-start: 0; inset-inline-start: 0; pointer-events: none;
+  border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-accent-solid);
 }
 /* until the shuttle places the indicator (it writes the inline style), the selection paints its own fill: before the
    island loads, without JS, or in a reader that skips the indicator, the light ink never sits on the bare track */

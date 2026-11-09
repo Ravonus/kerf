@@ -83,6 +83,9 @@
 
    /* full ink: 0.8 opacity fell to 4.0:1 (review 03 m12) */
 
+/* the ink turns with the shuttle: the arriving item as its head lands, the leaving one as its tail goes */
+
+/* in rows ([data-wrap]) every item is a cell of an even grid, and the face still travels to it */
 
 
 

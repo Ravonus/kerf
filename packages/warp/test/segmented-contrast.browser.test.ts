@@ -46,7 +46,7 @@ async function contrast(place: boolean, flip?: boolean) {
     await page.evaluate(() => {
       const label = document.querySelector<HTMLElement>('label:has(input:checked)')!
       document.querySelector<HTMLElement>('[data-part="indicator"]')!.style.cssText =
-        `--warp-a:${label.offsetLeft}px;--warp-b:${label.offsetLeft + label.offsetWidth}px`
+        `--warp-a:${label.offsetLeft}px;--warp-b:${label.offsetLeft + label.offsetWidth}px;--warp-ca:${label.offsetTop}px;--warp-cb:${label.offsetTop + label.offsetHeight}px`
     })
   await page.addScriptTag({ content: axeSource })
   const found = await page.evaluate(

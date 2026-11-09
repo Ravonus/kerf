@@ -96,6 +96,9 @@
 /* the shuttle's two edges: registered so they interpolate, and on their own timings */
 @property --warp-a { syntax: "<length>"; inherits: false; initial-value: 0px; }
 @property --warp-b { syntax: "<length>"; inherits: false; initial-value: 0px; }
+/* and its two edges across, for a group in rows */
+@property --warp-ca { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --warp-cb { syntax: "<length>"; inherits: false; initial-value: 0px; }
 /* frame outline head/tail (§1b): registered so they interpolate */
 @property --warp-frame-tail { syntax: "<number>"; inherits: true; initial-value: 0; }
 @property --warp-frame-head { syntax: "<number>"; inherits: true; initial-value: 0; }
@@ -1258,10 +1261,21 @@
     transition: --warp-a var(--warp-shuttle-head) var(--warp-ease-spring), --warp-b var(--warp-shuttle-tail) var(--warp-ease-spring);
   }
   :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]):where([data-instant]) { transition: none; }
-  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]),
-  :where([data-scope="segmented"] > [data-part="indicator"]) {
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]) {
     translate: var(--warp-a) 0; inline-size: calc(var(--warp-b) - var(--warp-a));
   }
+  /* Segmented's face is a leaf box, so sizing it lays out nothing else. It moves on both axes: in a group of rows the
+     edges across travel with the head, so a move to another row reads as one jump, not a slide then a drop. */
+  :where([data-scope="segmented"] > [data-part="indicator"]) {
+    translate: var(--warp-a) var(--warp-ca); inline-size: calc(var(--warp-b) - var(--warp-a)); block-size: calc(var(--warp-cb) - var(--warp-ca));
+    transition: --warp-a var(--warp-shuttle-tail) var(--warp-ease-spring), --warp-b var(--warp-shuttle-head) var(--warp-ease-spring),
+                --warp-ca var(--warp-shuttle-head) var(--warp-ease-out), --warp-cb var(--warp-shuttle-head) var(--warp-ease-out);
+  }
+  :where([data-scope="segmented"] > [data-part="indicator"][data-dir="back"]) {
+    transition: --warp-a var(--warp-shuttle-head) var(--warp-ease-spring), --warp-b var(--warp-shuttle-tail) var(--warp-ease-spring),
+                --warp-ca var(--warp-shuttle-head) var(--warp-ease-out), --warp-cb var(--warp-shuttle-head) var(--warp-ease-out);
+  }
+  :where([data-scope="segmented"] > [data-part="indicator"][data-instant]) { transition: none; }
   /* the shuttle in a list: frequent, so short and without overshoot */
   :where([data-part="shuttle"]) {
     position: absolute; inset-inline: var(--_inset, 4px); inset-block-start: 0; z-index: -1; pointer-events: none;

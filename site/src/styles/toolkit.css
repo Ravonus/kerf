@@ -77,9 +77,7 @@
 /* measured at its natural width (Playground's wrap()); too wide for the panel, it becomes an even grid of equal columns,
    or, when none fits, gives way to the same choice as a dropdown */
 [data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-measure] { display: inline-grid; max-inline-size: none; inline-size: max-content; }
-[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] { grid-auto-flow: row; grid-template-columns: repeat(var(--seg-cols, 2), minmax(0, 1fr)); justify-self: stretch; }
-[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > [data-part="indicator"] { display: none; }
-[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] > label:has(input:checked) { background: var(--warp-color-accent-solid); }
+[data-site="frame"] [data-part="knob"] [data-scope="segmented"][data-wrap] { justify-self: stretch; }   /* rows, and the face moving between them, are warp's */
 [data-site="frame"] [data-part="knob"]:not([data-fallback]) > [data-scope="field"]:has([role="combobox"]):not(:only-child),
 [data-site="frame"] [data-part="knob"][data-fallback] > :is([data-part="knob-label"], [data-scope="segmented"]) { display: none; }
 [data-site="frame"] [data-part="knob"][hidden] { display: none; }

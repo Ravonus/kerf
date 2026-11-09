@@ -1,6 +1,6 @@
 // The sliding indicator of Segmented (inputs.html seg(), 1277-1284) and Tabs (components.html tabs(), 1821-1849): one
-// face measured from the selected item, moved as a shuttle (redesign §3): head first, tail after. The first placement
-// and re-measures on resize are instant (data-instant, dropped after two frames).
+// face measured from the selected item, moved as a shuttle (redesign §3): head first, tail after, and across rows when
+// the group wraps. The first placement and re-measures on resize are instant (data-instant, dropped after two frames).
 import { moveShuttle } from './shuttle'
 
 /** Options for the sliding tab indicator. */
@@ -22,7 +22,10 @@ export function indicator(container: HTMLElement, opts: IndicatorOptions) {
     const item = container.querySelector<HTMLElement>(o.selected)
     if (!el || !item) return
     if (instant) el.setAttribute('data-instant', '')
-    moveShuttle(el, item.offsetLeft, item.offsetLeft + item.offsetWidth)
+    moveShuttle(el, item.offsetLeft, item.offsetLeft + item.offsetWidth, {
+      a: item.offsetTop,
+      b: item.offsetTop + item.offsetHeight,
+    })
     if (instant)
       win.requestAnimationFrame(() =>
         win.requestAnimationFrame(() => el.removeAttribute('data-instant')),
