@@ -117,26 +117,29 @@ export function leave(el: HTMLElement, done: () => void): void {
   stay(el)
   el.dataset.state = 'closed'
   const playing = el.getAnimations?.() ?? []
+  if (playing.length === 0) return settle(el, done)
   let live = true
-  let cap: ReturnType<typeof setTimeout> | undefined
   const finish = () => {
     if (!live) return
     live = false
     clearTimeout(cap)
-    leaving.delete(el)
-    if (el.dataset.state === 'closed') delete el.dataset.state
-    done()
+    settle(el, done)
   }
-  if (playing.length === 0) return finish()
   // a cap at the longest exit plus a frame or two, so a paused timeline (a hidden tab) or an endless animation can
   // never hold an overlay open
   const end = Math.max(...playing.map((a) => Number(a.effect?.getComputedTiming().endTime) || 0))
-  cap = setTimeout(finish, Math.min(Number.isFinite(end) ? end + 50 : 1000, 1000))
+  const cap = setTimeout(finish, Math.min(Number.isFinite(end) ? end + 50 : 1000, 1000))
   leaving.set(el, () => {
     live = false
     clearTimeout(cap)
   })
   void Promise.allSettled(playing.map((a) => a.finished)).then(finish)
+}
+
+function settle(el: HTMLElement, done: () => void) {
+  leaving.delete(el)
+  if (el.dataset.state === 'closed') delete el.dataset.state
+  done()
 }
 
 /** Cancels a pending `leave()`: the element stays as it is, still open. True if one was pending. */

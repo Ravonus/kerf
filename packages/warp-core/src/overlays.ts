@@ -29,42 +29,27 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
   let opener: HTMLElement | null = null
   let remove: (() => void) | undefined
   const doc = el.ownerDocument
+  const layer = () =>
+    (remove = pushLayer({
+      el,
+      modal: true,
+      close: () => o.onClose(),
+      escape: () => !!o.onEscape?.(),
+    }))
   const show = () => {
     // reopened while its exit plays: it never closed, so it only takes its layer back
     const back = stay(el)
     if (remove || (el.open && !back)) return
     if (back) {
       if (el.dataset.state === 'closed') el.dataset.state = 'open'
-      remove = pushLayer({
-        el,
-        modal: true,
-        close: () => o.onClose(),
-        escape: () => !!o.onEscape?.(),
-      })
+      layer()
       return
     }
     opener = doc.activeElement as HTMLElement | null
-    const root = doc.documentElement
-    // a classic scrollbar, read before the lock takes it: the page keeps its room (warp's html:has(dialog:modal) rule)
-    root.toggleAttribute(
-      'data-scrollbar',
-      doc.defaultView!.innerWidth > root.clientWidth && root.scrollHeight > root.clientHeight,
-    )
+    keepScrollbarRoom(doc)
     el.showModal?.() ?? el.setAttribute('open', '')
-    if (opener && opener !== doc.body && opener.getBoundingClientRect) {
-      const a = opener.getBoundingClientRect(),
-        r = el.getBoundingClientRect()
-      el.style.setProperty(
-        '--warp-origin',
-        `${Math.round(a.left + a.width / 2 - r.left)}px ${Math.round(a.top + a.height / 2 - r.top)}px`,
-      )
-    }
-    remove = pushLayer({
-      el,
-      modal: true,
-      close: () => o.onClose(),
-      escape: () => !!o.onEscape?.(),
-    })
+    growFrom(el, opener)
+    layer()
     const first =
       el.querySelector<HTMLElement>('[autofocus], [data-initial]') ??
       el.querySelector<HTMLElement>('[data-part="title"]')
@@ -114,6 +99,26 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
   }
 }
 
+/** A classic scrollbar, read before the lock takes it: the page keeps its room (warp's html:has(dialog:modal) rule). */
+function keepScrollbarRoom(doc: Document) {
+  const root = doc.documentElement
+  root.toggleAttribute(
+    'data-scrollbar',
+    doc.defaultView!.innerWidth > root.clientWidth && root.scrollHeight > root.clientHeight,
+  )
+}
+
+/** Scales a dialog about the control that opened it, so it comes from somewhere. */
+function growFrom(el: HTMLElement, opener: HTMLElement | null) {
+  if (!opener || opener === el.ownerDocument.body || !opener.getBoundingClientRect) return
+  const a = opener.getBoundingClientRect(),
+    r = el.getBoundingClientRect()
+  el.style.setProperty(
+    '--warp-origin',
+    `${Math.round(a.left + a.width / 2 - r.left)}px ${Math.round(a.top + a.height / 2 - r.top)}px`,
+  )
+}
+
 /** Options for a popover. */
 export interface PopoverOptions {
   open: boolean
@@ -136,32 +141,25 @@ export function popover(el: HTMLElement, opts: PopoverOptions) {
   const win = el.ownerDocument.defaultView!
   const reposition = () =>
     el.matches(':popover-open') && place(el, o.trigger, o.side ?? 'bottom', o.align ?? 'start', 8)
-  const show = () => {
-    if (remove) return
-    const back = stay(el)
-    restore = true
-    el.dataset.state = 'open'
-    if (back) {
-      remove = pushLayer({
-        el,
-        trigger: o.trigger,
-        close: (reason) => {
-          restore = reason === 'escape'
-          o.onClose()
-        },
-      })
-      return
-    }
-    el.showPopover?.()
-    place(el, o.trigger, o.side ?? 'bottom', o.align ?? 'start', 8)
-    remove = pushLayer({
+  const layer = () =>
+    (remove = pushLayer({
       el,
       trigger: o.trigger,
       close: (reason) => {
         restore = reason === 'escape'
         o.onClose()
       },
-    })
+    }))
+  const show = () => {
+    if (remove) return
+    const back = stay(el)
+    restore = true
+    el.dataset.state = 'open'
+    layer()
+    // reopened while its exit plays: still shown, placed and listening
+    if (back) return
+    el.showPopover?.()
+    place(el, o.trigger, o.side ?? 'bottom', o.align ?? 'start', 8)
     const first =
       el.querySelector<HTMLElement>('[data-initial]') ?? el.querySelector<HTMLElement>(focusable)
     if (first) first.focus({ preventScroll: true })

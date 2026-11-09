@@ -2,9 +2,16 @@
 // comes off after, and stay() keeps a reopened element open.
 import { leave, stay } from '../src/motion'
 
+const tick = (ms: number) =>
+  new Promise<void>((r) => {
+    setTimeout(r, ms)
+  })
+
 const fake = () => {
   let end!: () => void
-  const finished = new Promise<void>((r) => (end = r))
+  const finished = new Promise<void>((r) => {
+    end = r
+  })
   return { anim: { finished, effect: { getComputedTiming: () => ({ endTime: 200 }) } }, end }
 }
 
@@ -25,7 +32,7 @@ test('done waits for the exit, with data-state="closed" on meanwhile', async () 
   expect(el.dataset.state).toBe('closed')
   expect(done).toBe(0)
   f.end()
-  await new Promise((r) => setTimeout(r, 0))
+  await tick(0)
   expect(done).toBe(1)
   expect(el.dataset.state).toBeUndefined()
 })
@@ -38,7 +45,7 @@ test('stay() cancels a pending leave: done never runs', async () => {
   leave(el, () => done++)
   expect(stay(el)).toBe(true)
   f.end()
-  await new Promise((r) => setTimeout(r, 250))
+  await tick(250)
   expect(done).toBe(0)
   expect(stay(el)).toBe(false)
 })
