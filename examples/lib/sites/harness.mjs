@@ -41,41 +41,43 @@ export const manifest = {
   },
 }
 
+async function startFixture(variant, env, browser) {
+  const db = await provision('fixture', variant),
+    root = fileURLToPath(new URL('../fixture', import.meta.url))
+  const v = {
+    name: variant,
+    root,
+    start: 'node server.mjs',
+    stack: { out: [] },
+    dbEnv: db.env,
+    buildEnv: { ...db.env, ...env },
+    log: join(mkdtempSync(join(tmpdir(), 'bench-log-')), 'log'),
+  }
+  const server = await startServer(v, '/__up', { proveBuild: false }),
+    site = {
+      db,
+      url: server.url,
+      jar: [],
+      cookies: () => site.jar,
+      login: async () => {
+        site.jar = await signIn(browser(), server.url, manifest.login)
+      },
+    }
+  return {
+    db,
+    server,
+    site,
+    stop: async () => {
+      await server.stop()
+      await db.stop()
+    },
+  }
+}
+
 /** Call inside a `describe`: one browser for its tests, and `up` to start the fixture server on its own database. */
 export function liveHarness() {
   let browser
-  const up = async (variant, env = {}) => {
-    const db = await provision('fixture', variant),
-      root = fileURLToPath(new URL('../fixture', import.meta.url))
-    const v = {
-      name: variant,
-      root,
-      start: 'node server.mjs',
-      stack: { out: [] },
-      dbEnv: db.env,
-      buildEnv: { ...db.env, ...env },
-      log: join(mkdtempSync(join(tmpdir(), 'bench-log-')), 'log'),
-    }
-    const server = await startServer(v, '/__up', { proveBuild: false }),
-      site = {
-        db,
-        url: server.url,
-        jar: [],
-        cookies: () => site.jar,
-        login: async () => {
-          site.jar = await signIn(browser, server.url, manifest.login)
-        },
-      }
-    return {
-      db,
-      server,
-      site,
-      stop: async () => {
-        await server.stop()
-        await db.stop()
-      },
-    }
-  }
+  const up = (variant, env = {}) => startFixture(variant, env, () => browser)
   const fresh = (s) => async () => {
     await s.db.reset()
     await s.site.login()

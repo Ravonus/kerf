@@ -55,6 +55,10 @@ function timeGap({ g, m, d, gapText, p, run, gap, path, kit }) {
         impact: d * PER.heapMB,
       },
     ]
+  return null
+}
+
+function serverGap({ g, m, gapText, p, run, gap, path }) {
   if (g.startsWith('server.'))
     return [
       `gap:${g}`,
@@ -94,7 +98,7 @@ export function tuneGaps({ run, name, path, p, split, kit, add, GAPS, gapAgainst
       m: METRICS[g],
       gapText: `${fmt(g, gap.mine)} vs ${fmt(g, gap.theirs)} (${run.variants[gap.best].label}) on ${path}`,
     }
-    const found = sizeGap(c) ?? timeGap(c)
+    const found = sizeGap(c) ?? timeGap(c) ?? serverGap(c)
     if (found) add(found[0], { ...found[1], pages: [path] })
   }
 }
