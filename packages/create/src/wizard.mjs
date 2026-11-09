@@ -1,4 +1,4 @@
-// The create-weft wizard (research 34 §3): each choice is a list with the default selected. A flag answers its question,
+// The create-weft wizard: each choice is a list with the default selected. A flag answers its question,
 // and with no terminal or with --yes every unanswered question takes its default, so agents and CI never see a prompt.
 import { emitKeypressEvents } from 'node:readline'
 import { CONFIGS, DB, LAYERS, RUNTIMES, UI } from './index.mjs'

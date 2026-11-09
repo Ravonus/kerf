@@ -1,4 +1,4 @@
-// The Native and Prisma data layers of a scaffold (research 34 §4), beside Drizzle's in stack.mjs. Each writes the same
+// The Native and Prisma data layers of a scaffold, beside Drizzle's in stack.mjs. Each writes the same
 // todo app, so the same e2e holds for every layer. `weft add db` writes these files too.
 
 const engineSql = {
