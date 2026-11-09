@@ -301,8 +301,7 @@ export function weftNav(go: (id: string) => void) {
   const item = (
     id: string,
     label: string,
-    icon: IconName,
-    count?: number,
+    { icon, count }: { icon: IconName; count?: number },
   ) => ({
     id,
     label,
@@ -314,17 +313,25 @@ export function weftNav(go: (id: string) => void) {
     {
       label: 'Workspace',
       items: [
-        item('projects', 'Projects', 'layers'),
-        item('deploys', 'Deploys', 'rocket', 2),
-        item('activity', 'Activity', 'activity'),
-        item('team', 'Team', 'users'),
-        item('billing', 'Billing', 'folder'),
+        item('projects', 'Projects', { icon: 'layers' }),
+        item('deploys', 'Deploys', {
+          icon: 'rocket',
+          count: 2,
+        }),
+        item('activity', 'Activity', {
+          icon: 'activity',
+        }),
+        item('team', 'Team', { icon: 'users' }),
+        item('billing', 'Billing', { icon: 'folder' }),
       ],
     },
     {
       label: 'Saved views',
       items: [
-        item('failed', 'Failed builds', 'filter', 1),
+        item('failed', 'Failed builds', {
+          icon: 'filter',
+          count: 1,
+        }),
       ],
     },
   ]

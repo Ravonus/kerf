@@ -15,7 +15,8 @@ const W = 150,
   FEED = 0.037,
   KILL = 0.06
 
-function sampleCloth(b: Float32Array, x: number, y: number, aspect: number) {
+function sampleCloth(b: Float32Array, at: { x: number; y: number }, aspect: number) {
+  const { x, y } = at
   const fx = (x / aspect) * (W - 1),
     fy = y * (H - 1),
     ix = fx | 0,
@@ -107,7 +108,7 @@ export default function TuringCloth({ live = true }: ArtProps) {
       step(grid, 2)
     }
     if (x > aspect) aspect = x
-    return sampleCloth(grid.b, x, y, aspect)
+    return sampleCloth(grid.b, { x, y }, aspect)
   }
   const press = (e: PointerEvent) => {
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect()

@@ -45,12 +45,10 @@ export default function Pluck(_: ArtProps) {
           dir = pointer.x > lx ? 1 : -1
         for (let s = Math.max(0, a); s <= Math.min(STRINGS - 1, b); s++)
           if (s + 1 > Math.min(lx, pointer.x) / gap && s + 1 <= Math.max(lx, pointer.x) / gap)
-            bendString(
-              u,
-              s,
-              Math.max(0.1, Math.min(0.9, (pointer.y - my) / (height - my * 2))),
-              dir * (pointer.down ? 22 : 13),
-            )
+            bendString(u, s, {
+              k: Math.max(0.1, Math.min(0.9, (pointer.y - my) / (height - my * 2))),
+              size: dir * (pointer.down ? 22 : 13),
+            })
       }
       lx = pointer.x
     } else lx = -1
@@ -60,7 +58,7 @@ export default function Pluck(_: ArtProps) {
       for (; due > 0.004; due -= 0.004) peak = stepStrings(u, v)
     }
     ctx.clearRect(0, 0, width, height)
-    paintStrings(ctx, c, u, gap, my, cell)
+    paintStrings(ctx, c, { u, gap, my, cell })
     return tier.reach > 0 && peak > 0.05
   }
   return (
@@ -75,7 +73,7 @@ export default function Pluck(_: ArtProps) {
 }
 
 /** Bends string `s` into a soft triangle peaking at `k` along it, the shape a finger leaves. */
-function bendString(u: Float32Array, s: number, k: number, size: number) {
+function bendString(u: Float32Array, s: number, { k, size }: { k: number; size: number }) {
   const at = s * NODES
   for (let n = 1; n < NODES - 1; n++) {
     const f = n / (NODES - 1)
@@ -100,14 +98,10 @@ function stepStrings(u: Float32Array, v: Float32Array) {
   return peak
 }
 
-function paintStrings(
-  ctx: CanvasRenderingContext2D,
-  c: ReturnType<typeof colours>,
-  u: Float32Array,
-  gap: number,
-  my: number,
-  cell: number,
-) {
+type Strings = { u: Float32Array; gap: number; my: number; cell: number }
+
+function paintStrings(ctx: CanvasRenderingContext2D, c: ReturnType<typeof colours>, o: Strings) {
+  const { u, gap, my, cell } = o
   for (let pass = 0; pass < 2; pass++) {
     ctx.beginPath()
     for (let s = 0; s < STRINGS; s++) {
@@ -128,11 +122,9 @@ function paintStrings(
 // A still is a chord caught mid-ring: the first run of it, frozen.
 function chord(u: Float32Array, v: Float32Array) {
   for (let s = 6; s < STRINGS - 6; s += 1)
-    bendString(
-      u,
-      s,
-      0.3 + 0.4 * (s / STRINGS),
-      26 * Math.sin((s / STRINGS) * Math.PI) ** 3 * Math.sin(s * 0.35) ** 2,
-    )
+    bendString(u, s, {
+      k: 0.3 + 0.4 * (s / STRINGS),
+      size: 26 * Math.sin((s / STRINGS) * Math.PI) ** 3 * Math.sin(s * 0.35) ** 2,
+    })
   for (let i = 0; i < 9; i++) stepStrings(u, v)
 }

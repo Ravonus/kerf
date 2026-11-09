@@ -20,7 +20,7 @@ const colours = inks({
   soft: '--warp-color-page',
 })
 
-function tile(ctx: CanvasRenderingContext2D, i: number, r: number, cols: number) {
+function tile(ctx: CanvasRenderingContext2D, i: number, { r, cols }: { r: number; cols: number }) {
   const x = (i % cols) * SIZE + SIZE / 2,
     y = Math.floor(i / cols) * SIZE + SIZE / 2,
     c = Math.cos(r),
@@ -36,22 +36,17 @@ function tile(ctx: CanvasRenderingContext2D, i: number, r: number, cols: number)
   ctx.moveTo(bx - h * c, by - h * s)
   ctx.arc(bx, by, h, r + PI, r + PI * 1.5)
 }
-function ribbon(
-  ctx: CanvasRenderingContext2D,
-  list: number[],
-  width: number,
-  ink: string,
-  ground: string,
-  turns: Float32Array,
-  cols: number,
-) {
+type Ribbon = { width: number; ink: string; ground: string; turns: Float32Array; cols: number }
+
+function ribbon(ctx: CanvasRenderingContext2D, list: number[], o: Ribbon) {
+  const { width, ink, ground, turns, cols } = o
   ctx.lineCap = 'butt'
   for (const [wide, colour] of [
     [width, ink],
     [width - 2, ground],
   ] as const) {
     ctx.beginPath()
-    for (const i of list) tile(ctx, i, turns[i]!, cols)
+    for (const i of list) tile(ctx, i, { r: turns[i]!, cols })
     ctx.lineWidth = wide
     ctx.strokeStyle = colour
     ctx.stroke()
@@ -106,11 +101,11 @@ export default function TruchetCloth({ live = true }: ArtProps) {
       } else turns[active] = targets[active]! * (PI / 2) + smooth(0, 1, phase) * (PI / 2)
     }
     ctx.clearRect(0, 0, width, height)
-    ribbon(ctx, all, 12, c.line, c.ground, turns, cols)
+    ribbon(ctx, all, { width: 12, ink: c.line, ground: c.ground, turns, cols })
     if (active >= 0) {
       ctx.fillStyle = c.soft
       ctx.fillRect((active % cols) * SIZE, Math.floor(active / cols) * SIZE, SIZE, SIZE)
-      ribbon(ctx, [active], 12, c.accent, c.ground, turns, cols)
+      ribbon(ctx, [active], { width: 12, ink: c.accent, ground: c.ground, turns, cols })
     }
     return active >= 0
   }

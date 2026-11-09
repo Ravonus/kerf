@@ -58,7 +58,14 @@ function cardArt() {
     const inWeft = weft >= 0 && x >= ox + 2 * unit && x < ox + 22 * unit
     if (inWarp && (!inWeft || (warp + weft) % 2 === 1)) return 4
     if (inWeft) return 6
-    return level(x, y, cols, rows, 0, -0.75 * (1 - Math.min(1, x / cols / 0.72)) ** 1.2 * 1.4)
+    return level({
+      x,
+      y,
+      cols,
+      rows,
+      t: 0,
+      lift: -0.75 * (1 - Math.min(1, x / cols / 0.72)) ** 1.2 * 1.4,
+    })
   }
   return png(
     cols * CELL,
@@ -111,7 +118,7 @@ function buildArt() {
   mkdirSync(join(pub, 'art'), { recursive: true })
   writeFileSync(
     join(pub, 'art/field.png'),
-    png(160, 100, (x, y) => level(x, y, 160, 100, 0), PALETTE),
+    png(160, 100, (x, y) => level({ x, y, cols: 160, rows: 100, t: 0 }), PALETTE),
   )
   write('card-art.json', { src: `data:image/png;base64,${cardArt().toString('base64')}` })
   // A band that dissolves from solid to nothing: the site's divider.

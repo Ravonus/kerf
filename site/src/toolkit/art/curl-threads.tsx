@@ -24,15 +24,10 @@ type ThreadFlow = {
   height: () => number
 }
 
-function walk(
-  ctx: CanvasRenderingContext2D,
-  from: number,
-  to: number,
-  px: number,
-  py: number,
-  over: boolean,
-  flow: ThreadFlow,
-) {
+type Walk = { from: number; to: number; px: number; py: number; over: boolean }
+
+function walk(ctx: CanvasRenderingContext2D, o: Walk, flow: ThreadFlow) {
+  const { from, to, px, py, over } = o
   const { x, y, age, potential, respawn } = flow
   ctx.beginPath()
   for (let i = from; i < to; i++) {
@@ -65,20 +60,16 @@ function walk(
   ctx.stroke()
 }
 
-function strands(
-  ctx: CanvasRenderingContext2D,
-  c: ReturnType<typeof colours>,
-  px: number,
-  py: number,
-  over: boolean,
-  flow: ThreadFlow,
-) {
+type Pull = { px: number; py: number; over: boolean; flow: ThreadFlow }
+
+function strands(ctx: CanvasRenderingContext2D, c: ReturnType<typeof colours>, pull: Pull) {
+  const { px, py, over, flow } = pull
   ctx.lineWidth = 0.7
   ctx.strokeStyle = c.line
-  walk(ctx, 0, COUNT - 60, px, py, over, flow)
+  walk(ctx, { from: 0, to: COUNT - 60, px, py, over }, flow)
   ctx.lineWidth = 1
   ctx.strokeStyle = c.accent
-  walk(ctx, COUNT - 60, COUNT, px, py, over, flow)
+  walk(ctx, { from: COUNT - 60, to: COUNT, px, py, over }, flow)
 }
 
 function particles() {
@@ -114,7 +105,7 @@ export default function CurlThreads({ live = true }: ArtProps) {
       for (let i = 0; i < COUNT; i++) respawn(i)
       ctx.clearRect(0, 0, w, h)
       ctx.globalAlpha = 0.85
-      for (let n = 0; n < 46; n++) strands(ctx, c, 0, 0, false, flow)
+      for (let n = 0; n < 46; n++) strands(ctx, c, { px: 0, py: 0, over: false, flow })
       ctx.globalAlpha = 1
       prepared = true
     }
@@ -125,7 +116,7 @@ export default function CurlThreads({ live = true }: ArtProps) {
     ctx.fillRect(0, 0, w, h)
     ctx.globalCompositeOperation = 'source-over'
     ctx.globalAlpha = 0.85
-    strands(ctx, c, pointer.x, pointer.y, pointer.in, flow)
+    strands(ctx, c, { px: pointer.x, py: pointer.y, over: pointer.in, flow })
     ctx.globalAlpha = 1
   }
   return (

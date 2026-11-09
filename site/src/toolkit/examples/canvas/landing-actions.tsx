@@ -200,28 +200,30 @@ export function landingFooter(joined: State<boolean>) {
   )
 }
 
-export function landingDialog(
-  name: Look,
-  plan: State<string>,
-  signedUp: State<boolean>,
-  setDialog: (n: HTMLDialogElement) => HTMLDialogElement,
-  close: () => void,
-) {
+type DialogProps = {
+  name: Look
+  plan: State<string>
+  signedUp: State<boolean>
+  setDialog: (n: HTMLDialogElement) => HTMLDialogElement
+  close: () => void
+}
+
+export function landingDialog(o: DialogProps) {
   const submit = (e: Event) => {
     e.preventDefault()
-    signedUp.value = true
+    o.signedUp.value = true
   }
   return (
     <dialog
-      ref={setDialog}
+      ref={o.setDialog}
       aria-label="Start a project"
-      onClose={() => (signedUp.value = false)}
+      onClose={() => (o.signedUp.value = false)}
     >
       <LookStage
-        look={name}
+        look={o.name}
         role="modal"
         onClick={(e: MouseEvent) =>
-          e.target === e.currentTarget && close()
+          e.target === e.currentTarget && o.close()
         }
       >
         <form
@@ -232,13 +234,13 @@ export function landingDialog(
             <span>Start a project</span>
           </div>
           <Stack gap="related">
-            {signedUp.value ? (
+            {o.signedUp.value ? (
               <p style="margin:0;line-height:1.5">
                 Done. Your first preview builds as soon as
                 you push.
               </p>
             ) : (
-              signupFields(plan)
+              signupFields(o.plan)
             )}
             <Row
               gap="related"
@@ -248,11 +250,11 @@ export function landingDialog(
                 type="button"
                 data-skin="button"
                 data-look="outline"
-                onClick={() => close()}
+                onClick={() => o.close()}
               >
-                {signedUp.value ? 'Close' : 'Cancel'}
+                {o.signedUp.value ? 'Close' : 'Cancel'}
               </button>
-              {!signedUp.value && (
+              {!o.signedUp.value && (
                 <button data-skin="button">Create</button>
               )}
             </Row>
@@ -333,13 +335,13 @@ export function Landing({ look }: { look: Look }) {
 
       {landingFooter(joined)}
 
-      {landingDialog(
+      {landingDialog({
         name,
         plan,
         signedUp,
         setDialog,
         close,
-      )}
+      })}
     </LookStage>
   )
 }

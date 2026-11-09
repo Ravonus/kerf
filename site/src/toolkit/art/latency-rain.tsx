@@ -89,16 +89,17 @@ export default function LatencyRain({ live = true }: ArtProps) {
   )
 }
 
-function drawRequests(
-  ctx: CanvasRenderingContext2D,
-  c: ReturnType<typeof colours>,
-  clock: number,
-  span: number,
-  top: number,
-  mx: number,
-  inner: number,
-  scale: (ms: number) => number,
-) {
+type Rain = {
+  clock: number
+  span: number
+  top: number
+  mx: number
+  inner: number
+  scale: (ms: number) => number
+}
+
+function drawRequests(ctx: CanvasRenderingContext2D, c: ReturnType<typeof colours>, rain: Rain) {
+  const { clock, span, top, mx, inner, scale } = rain
   for (let pass = 0; pass < 3; pass++) {
     ctx.fillStyle = pass === 2 ? c.err : pass ? c.drop : c.fine
     ctx.beginPath()
@@ -153,7 +154,7 @@ function rainDrawing(found: ReturnType<typeof state<string>>) {
       ctx.fillStyle = c.band
       ctx.fillRect(mx + Math.min(from, to) * inner, top, Math.abs(to - from) * inner, span)
     }
-    drawRequests(ctx, c, clock, span, top, mx, inner, scale)
+    drawRequests(ctx, c, { clock, span, top, mx, inner, scale })
     ctx.fillStyle = c.rule
     ctx.font = '11px var(--warp-font-mono, monospace)'
     for (const [name, value] of [

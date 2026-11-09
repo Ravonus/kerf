@@ -6,6 +6,7 @@ import type {
 import type {
   Style,
   PaintColor,
+  PaintBody,
 } from './paint-primitives'
 import {
   outline,
@@ -32,15 +33,17 @@ function makeFocusRing(st: Style, c: PaintColor) {
     ctx.lineDashOffset = -s.time * 24
     outline(
       ctx,
-      p.x - 4,
-      p.y - 4,
-      p.w + 8,
-      p.h + 8,
-      p.r + 4,
+      {
+        x: p.x - 4,
+        y: p.y - 4,
+        w: p.w + 8,
+        h: p.h + 8,
+        r: p.r + 4,
+        seed: seedOf(p.el) + 3,
+      },
       st,
-      seedOf(p.el) + 3,
     )
-    stroke(ctx, c(s, st.accent), 2, st)
+    stroke(ctx, st, { color: c(s, st.accent), width: 2 })
     ctx.setLineDash([])
   }
 }
@@ -52,16 +55,7 @@ function makeSurfaceLift(st: Style, c: PaintColor) {
       ctx.shadowColor = 'rgb(0 0 0 / 0.2)'
       ctx.shadowBlur = depth * 3
       ctx.shadowOffsetY = depth
-      outline(
-        ctx,
-        p.x,
-        p.y,
-        p.w,
-        p.h,
-        p.r,
-        st,
-        seedOf(p.el),
-      )
+      outline(ctx, { ...p, seed: seedOf(p.el) }, st)
       ctx.fillStyle = c(s, st.paper)
       ctx.fill()
       ctx.shadowColor = 'transparent'
@@ -69,62 +63,39 @@ function makeSurfaceLift(st: Style, c: PaintColor) {
     if (st.shadow === 'offset') {
       outline(
         ctx,
-        p.x + depth,
-        p.y + depth,
-        p.w,
-        p.h,
-        p.r,
+        {
+          ...p,
+          x: p.x + depth,
+          y: p.y + depth,
+          seed: seedOf(p.el) + 1,
+        },
         st,
-        seedOf(p.el) + 1,
       )
-      paint(
-        ctx,
-        c(s, st.soft),
-        st,
-        [p.x + depth, p.y + depth, p.w, p.h],
-        0.7,
-      )
+      paint(ctx, st, {
+        color: c(s, st.soft),
+        box: [p.x + depth, p.y + depth, p.w, p.h],
+        density: 0.7,
+      })
     }
   }
 }
+
+type BodyLook = Parameters<PaintBody>[2]
 
 function makeSurfaceBody(st: Style) {
   return (
     p: StagePiece,
     s: Scene,
-    fill: string,
-    line: string,
-    width = 1.5,
-    solid = false,
+    { fill, line, width = 1.5, solid = false }: BodyLook,
   ) => {
     const ctx = s.ctx
-    outline(
-      ctx,
-      p.x,
-      p.y,
-      p.w,
-      p.h,
-      p.r,
-      st,
-      seedOf(p.el),
-    )
-    paint(
-      ctx,
-      fill,
-      solid ? { ...st, hatch: false } : st,
-      [p.x, p.y, p.w, p.h],
-    )
-    outline(
-      ctx,
-      p.x,
-      p.y,
-      p.w,
-      p.h,
-      p.r,
-      st,
-      seedOf(p.el),
-    )
-    stroke(ctx, line, width, st)
+    outline(ctx, { ...p, seed: seedOf(p.el) }, st)
+    paint(ctx, solid ? { ...st, hatch: false } : st, {
+      color: fill,
+      box: [p.x, p.y, p.w, p.h],
+    })
+    outline(ctx, { ...p, seed: seedOf(p.el) }, st)
+    stroke(ctx, st, { color: line, width })
   }
 }
 
@@ -141,7 +112,10 @@ function makeOverlay(st: Style, c: PaintColor) {
         0,
         Math.PI * 2,
       )
-      stroke(ctx, c(s, st.accent), 2, st)
+      stroke(ctx, st, {
+        color: c(s, st.accent),
+        width: 2,
+      })
     }
     ctx.globalAlpha = 1
     if (s.rail) {
@@ -187,14 +161,15 @@ export function lookKit(st: Style) {
   // list floats over the page, and a field's words need
   // clean ground.
   const body = makeSurfaceBody(st)
+  const hands = { c, ring, lift, body }
   const painters: Record<string, StagePainter> = {
-    ...surfacePainters(st, c, ring, lift, body),
-    ...fieldPainters(st, c, lift, body),
-    ...checkPainters(st, c, ring, body),
-    ...switchPainters(st, c, ring, body),
-    ...rangeMeterPainters(st, c, ring, body),
-    ...chipRulePainters(st, c, ring, body),
-    ...detailPainters(st, c),
+    ...surfacePainters(st, hands),
+    ...fieldPainters(st, hands),
+    ...checkPainters(st, hands),
+    ...switchPainters(st, hands),
+    ...rangeMeterPainters(st, hands),
+    ...chipRulePainters(st, hands),
+    ...detailPainters(st, hands),
   }
   const overlay = makeOverlay(st, c)
   const plain = makePlain(st, c)
@@ -212,11 +187,15 @@ export function lookKit(st: Style) {
 // Words where the DOM set them, painted by the look: the
 // page keeps them as text for selection and screen
 // readers.
+type WordInk = {
+  fill: (ctx: CanvasRenderingContext2D) => void
+  tilt?: number
+}
+
 export const words = (
   p: StagePiece,
   s: Scene,
-  fill: (ctx: CanvasRenderingContext2D) => void,
-  tilt = 0,
+  { fill, tilt = 0 }: WordInk,
 ) => {
   const ctx = s.ctx,
     j = rng(seedOf(p.el))

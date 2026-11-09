@@ -32,10 +32,8 @@ const band = (r: number) => {
 /** One finished row: a 2/2 twill, so the weft lies over two warps and under two, stepping one along each row. */
 function weave(
   ctx: CanvasRenderingContext2D,
-  w: number,
-  r: number,
-  y: number,
   c: ReturnType<typeof colours>,
+  { w, r, y }: { w: number; r: number; y: number },
 ) {
   const count = Math.ceil(w / PITCH)
   ctx.fillStyle = c.warp
@@ -43,7 +41,11 @@ function weave(
   ctx.fillStyle = [c.soft, c.ink, c.deep][band(r)]!
   for (let i = 0; i < count; i++) if ((i + r) & 2) ctx.fillRect(i * PITCH, y, PITCH - 0.5, ROW)
 }
-function warps(ctx: CanvasRenderingContext2D, c: ReturnType<typeof colours>, w: number, h: number) {
+function warps(
+  ctx: CanvasRenderingContext2D,
+  c: ReturnType<typeof colours>,
+  { w, h }: { w: number; h: number },
+) {
   ctx.fillStyle = c.warp
   for (let x = PITCH / 2; x < w; x += PITCH) ctx.fillRect(x - 0.5, 0, 1, h)
 }
@@ -51,10 +53,7 @@ function warps(ctx: CanvasRenderingContext2D, c: ReturnType<typeof colours>, w: 
 function shuttleTail(
   ctx: CanvasRenderingContext2D,
   c: ReturnType<typeof colours>,
-  row: number,
-  across: number,
-  w: number,
-  n: number,
+  { row, across, w, n }: { row: number; across: number; w: number; n: number },
 ) {
   const y = Math.min(row, n - 1) * ROW + 4,
     right = row & 1,
@@ -94,7 +93,7 @@ export default function Shuttle({ live = true }: ArtProps) {
     g.setTransform(dpr, 0, 0, dpr, 0, 0)
     const n = rows()
     for (let i = 0; i < Math.min(row, n); i++)
-      weave(g, w, row - 1 - i, (Math.min(row, n) - 1 - i) * ROW + 4, c)
+      weave(g, c, { w, r: row - 1 - i, y: (Math.min(row, n) - 1 - i) * ROW + 4 })
   }
   const draw = ({ ctx, width, height, dpr: scale, dt, tier, still }: Frame) => {
     const c = colours(ctx.canvas)
@@ -119,14 +118,14 @@ export default function Shuttle({ live = true }: ArtProps) {
         g.setTransform(dpr, 0, 0, dpr, 0, 0)
         g.globalCompositeOperation = 'source-over'
       }
-      weave(g, w, row, Math.min(row, n - 1) * ROW + 4, c)
+      weave(g, c, { w, r: row, y: Math.min(row, n - 1) * ROW + 4 })
       row++
     }
     ctx.clearRect(0, 0, w, h)
-    warps(ctx, c, w, h)
+    warps(ctx, c, { w, h })
     ctx.drawImage(cloth!, 0, 0, w, h)
     const n = rows()
-    shuttleTail(ctx, c, row, across, w, n)
+    shuttleTail(ctx, c, { row, across, w, n })
   }
   return (
     <Canvas

@@ -70,18 +70,23 @@ function oklch(rgba: number) {
 }
 const css = (v: number) => `rgb(${v & 255} ${(v >> 8) & 255} ${(v >> 16) & 255})`
 
+type Spectrum = {
+  width: number
+  height: number
+  across: (chroma: number) => number
+  up: (light: number) => number
+  fills: string[]
+  cs: Float32Array
+  ls: Float32Array
+  pointer: Frame['pointer']
+}
+
 function paintSpectrum(
   ctx: CanvasRenderingContext2D,
   c: ReturnType<typeof colours>,
-  width: number,
-  height: number,
-  across: (chroma: number) => number,
-  up: (light: number) => number,
-  fills: string[],
-  cs: Float32Array,
-  ls: Float32Array,
-  pointer: Frame['pointer'],
+  spectrum: Spectrum,
 ) {
+  const { width, height, across, up, fills, cs, ls, pointer } = spectrum
   const mx = 42,
     my = 22,
     w = width - mx * 2,
@@ -128,13 +133,9 @@ function paintSpectrum(
   return near
 }
 
-function settleSpectrum(
-  ls: Float32Array,
-  cs: Float32Array,
-  tl: Float32Array,
-  tc: Float32Array,
-  dt: number,
-) {
+type Targets = { ls: Float32Array; cs: Float32Array; tl: Float32Array; tc: Float32Array }
+
+function settleSpectrum({ ls, cs, tl, tc }: Targets, dt: number) {
   let settling = false
   const k = Math.min(1, (dt || 0.016) * 7)
   for (let i = 0; i < COUNT; i++) {
@@ -181,8 +182,8 @@ export default function TokenSpectrum(_: ArtProps) {
       h = height - my * 2 - 12,
       across = (chroma: number) => mx + (chroma / MAX_C) * w,
       up = (light: number) => my + (1 - light) * h
-    const settling = settleSpectrum(ls, cs, tl, tc, dt)
-    const near = paintSpectrum(ctx, c, width, height, across, up, fills, cs, ls, pointer)
+    const settling = settleSpectrum({ ls, cs, tl, tc }, dt)
+    const near = paintSpectrum(ctx, c, { width, height, across, up, fills, cs, ls, pointer })
     if (near >= 0) {
       ctx.strokeStyle = c.hot
       ctx.lineWidth = 2
