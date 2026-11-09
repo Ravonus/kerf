@@ -2,7 +2,7 @@ import { sleep } from '../../scripts/lib/helpers.mjs'
 // race.*: does the page end up telling the truth? Each probe resets the database, drives a real browser, holds or shuffles the
 // replies with Playwright route interception (the server does the work in order; only the answers are late), and then compares
 // the list on screen with Postgres. Pass or fail, nothing else, and a fail outranks any millisecond (rule 7).
-import { tracker } from './flow.mjs'
+import { tracker } from './flow/tracker.mjs'
 import { PROBES } from './race/probes.mjs'
 
 /** Checkbox rows of the list, by accessible name and state, from the accessibility tree: the same in every stack's markup. */

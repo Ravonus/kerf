@@ -1,5 +1,5 @@
 import { sleep } from '../../../scripts/lib/helpers.mjs'
-import { centre, press, target, trustedClick } from '../flow.mjs'
+import { centre, press, target, trustedClick } from '../flow/page.mjs'
 
 /** The same seed, the same order of replies: a failure can be replayed. */
 export function shuffled(n, seed) {
