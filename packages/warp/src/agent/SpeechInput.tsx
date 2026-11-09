@@ -40,12 +40,12 @@ export interface SpeechInputProps {
  * blocked mic is a caution Alert with the fix, not a dead button. Uses the browser's speech recognition unless given an `engine`.
  */
 export function SpeechInput({ onInsert, mics, engine, initial }: SpeechInputProps) {
-  const view = speechState(
-    () => initial,
-    () => mics,
-    () => engine,
-    (words) => onInsert?.(words()),
-  )
+  const view = speechState({
+    initial: () => initial,
+    mics: () => mics,
+    engine: () => engine,
+    onInsert: (words) => onInsert?.(words()),
+  })
   return (
     <div ref={(n) => (view.refs.root = n)} data-scope="speech" data-state={view.mode.value}>
       <Select
@@ -117,12 +117,17 @@ export function SpeechInput({ onInsert, mics, engine, initial }: SpeechInputProp
   )
 }
 
-function speechState(
-  initial: () => SpeechInputProps['initial'],
-  mics: () => SpeechInputProps['mics'],
-  engine: () => SpeechInputProps['engine'],
-  onInsert: (words: () => string) => void,
-) {
+function speechState({
+  initial,
+  mics,
+  engine,
+  onInsert,
+}: {
+  initial: () => SpeechInputProps['initial']
+  mics: () => SpeechInputProps['mics']
+  engine: () => SpeechInputProps['engine']
+  onInsert: (words: () => string) => void
+}) {
   const start = untrack(initial)
   const mode = state<DictationState>(start?.state ?? 'idle')
   const final = state(start?.final ?? '')
@@ -147,7 +152,7 @@ function speechState(
     () => level.value,
   )
   const data = { mode, final, interim, seconds, level, found, mic, options, on, words, refs }
-  const actions = speechControl(data, mics, engine, onInsert)
+  const actions = speechControl({ d: data, mics, engine, onInsert })
   return { ...data, ...actions }
 }
 type SpeechData = {
@@ -167,12 +172,17 @@ type SpeechData = {
     clock?: ReturnType<typeof setInterval> | undefined
   }
 }
-function speechControl(
-  d: SpeechData,
-  mics: () => SpeechInputProps['mics'],
-  engine: () => SpeechInputProps['engine'],
-  onInsert: (words: () => string) => void,
-) {
+function speechControl({
+  d,
+  mics,
+  engine,
+  onInsert,
+}: {
+  d: SpeechData
+  mics: () => SpeechInputProps['mics']
+  engine: () => SpeechInputProps['engine']
+  onInsert: (words: () => string) => void
+}) {
   const { mode, final, interim, seconds, level, found, mic, on, words, refs } = d
   const say = (text: string, urgent = false) => announce(refs.root!.ownerDocument, text, urgent)
   const tick = (run: boolean) => {

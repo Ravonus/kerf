@@ -93,14 +93,21 @@ export interface ThreadProps {
  * with the quote draft. New messages are announced as one summary after 1 s of quiet, a failed send assertively once.
  * Plain messages have exact heights from `text.measure`; rows are keyed, so live updates patch in place.
  */
-function observeThread(
-  list: Derived<ChatMessage[]>,
-  ids: Derived<string[]>,
-  stuck: State<boolean>,
-  unseen: State<number>,
-  doc: () => Document,
-  getWin: () => VirtualControl | undefined,
-) {
+function observeThread({
+  list,
+  ids,
+  stuck,
+  unseen,
+  doc,
+  getWin,
+}: {
+  list: Derived<ChatMessage[]>
+  ids: Derived<string[]>
+  stuck: State<boolean>
+  unseen: State<number>
+  doc: () => Document
+  getWin: () => VirtualControl | undefined
+}) {
   onMount(() => {
     const told = burst<string>((names) => {
       const who = [...new Set(names)]
@@ -143,15 +150,23 @@ function observeThread(
   })
 }
 
-function bindThread(
-  getRoot: () => HTMLElement | undefined,
-  find: (mid?: string) => ChatMessage | undefined,
-  draft: State<QuoteDraftValue | null>,
-  getBox: () => HTMLTextAreaElement | undefined,
-  getWin: () => VirtualControl | undefined,
-  ids: Derived<string[]>,
-  doc: () => Document,
-) {
+function bindThread({
+  getRoot,
+  find,
+  draft,
+  getBox,
+  getWin,
+  ids,
+  doc,
+}: {
+  getRoot: () => HTMLElement | undefined
+  find: (mid?: string) => ChatMessage | undefined
+  draft: State<QuoteDraftValue | null>
+  getBox: () => HTMLTextAreaElement | undefined
+  getWin: () => VirtualControl | undefined
+  ids: Derived<string[]>
+  doc: () => Document
+}) {
   use(
     messageLog,
     () => getRoot()?.querySelector<HTMLElement>('[data-part="log"]') ?? undefined,
@@ -188,16 +203,8 @@ function threadState(p: ThreadProps) {
   const doc = () => root!.ownerDocument
   const find = (mid?: string) => (mid ? list.value.find((m) => m.id === mid) : undefined)
 
-  observeThread(list, ids, stuck, unseen, doc, () => win)
-  bindThread(
-    () => root,
-    find,
-    draft,
-    () => box,
-    () => win,
-    ids,
-    doc,
-  )
+  observeThread({ list, ids, stuck, unseen, doc, getWin: () => win })
+  bindThread({ getRoot: () => root, find, draft, getBox: () => box, getWin: () => win, ids, doc })
   const latest = () => {
     win?.scrollToEnd()
     const last = ids.value.at(-1)

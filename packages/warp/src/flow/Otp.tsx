@@ -63,14 +63,14 @@ export function OtpField({
     { k: `c${i}`, i },
     ...(i === half - 1 ? [{ k: 'sep', i: -1 }] : []),
   ]).flat()
-  const { shown, setRoot } = otpBinding(
+  const { shown, setRoot } = otpBinding({
     n,
-    () => error,
-    () => status,
-    (value) => onValueChange?.(value),
-    (value) => onComplete?.(value),
-    () => autoSubmit,
-  )
+    error: () => error,
+    status: () => status,
+    onValueChange: (value) => onValueChange?.(value),
+    onComplete: (value) => onComplete?.(value),
+    autoSubmit: () => autoSubmit,
+  })
   return (
     <div data-scope="stack" style="--_gap:8px">
       <label for={id} data-part="code-label">
@@ -117,14 +117,21 @@ export function OtpField({
   )
 }
 
-function otpBinding(
-  n: number,
-  error: () => OtpFieldProps['error'],
-  status: () => OtpFieldProps['status'],
-  onValueChange: (value: string) => void,
-  onComplete: (value: string) => void,
-  autoSubmit: () => boolean,
-) {
+function otpBinding({
+  n,
+  error,
+  status,
+  onValueChange,
+  onComplete,
+  autoSubmit,
+}: {
+  n: number
+  error: () => OtpFieldProps['error']
+  status: () => OtpFieldProps['status']
+  onValueChange: (value: string) => void
+  onComplete: (value: string) => void
+  autoSubmit: () => boolean
+}) {
   // the error shows until the next key, whatever the prop still says
   const shown = state(untrack(error))
   watch(error, (e) => {
