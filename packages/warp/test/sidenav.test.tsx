@@ -66,7 +66,7 @@ test("the links carry warp's sliding bar: it takes over at the next frame and mo
 
 test('a fold toggles and is remembered under the key; the current section reopens on arrival', async () => {
   const one = render(() => (
-    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember="k" />
+    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember="k" multiple />
   ))
   await flush()
   const [basics, advanced] = folds(one.container) as [HTMLButtonElement, HTMLButtonElement]
@@ -79,7 +79,7 @@ test('a fold toggles and is remembered under the key; the current section reopen
   one.unmount()
 
   const two = render(() => (
-    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember="k" />
+    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember="k" multiple />
   ))
   await flush()
   const [b2, a2] = folds(two.container) as [HTMLButtonElement, HTMLButtonElement]
@@ -88,12 +88,32 @@ test('a fold toggles and is remembered under the key; the current section reopen
   two.unmount()
 })
 
+test('one section open at a time by default: opening one folds the others; a pinned one stays', async () => {
+  localStorage.setItem('one', JSON.stringify({ Basics: true, Advanced: true }))
+  const { container: c } = render(() => (
+    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember="one" />
+  ))
+  await flush()
+  const [basics, advanced] = folds(c) as [HTMLButtonElement, HTMLButtonElement]
+  // two were remembered open; arriving keeps only the current page's
+  expect(basics.getAttribute('aria-expanded')).toBe('true')
+  expect(advanced.getAttribute('aria-expanded')).toBe('false')
+  advanced.click()
+  await flush()
+  expect(advanced.getAttribute('aria-expanded')).toBe('true')
+  expect(basics.getAttribute('aria-expanded')).toBe('false')
+  expect(rail(c).textContent).toContain('Overview')
+  advanced.click()
+  await flush()
+  expect(advanced.getAttribute('aria-expanded')).toBe('false')
+})
+
 test("a sidebar kept across sections reads each section's folds when its key changes", async () => {
   localStorage.setItem('a', JSON.stringify({ Advanced: true }))
   localStorage.setItem('b', JSON.stringify({ Advanced: false }))
   const key = state('a')
   const { container: c } = render(() => (
-    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember={key.value} />
+    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember={key.value} multiple />
   ))
   await flush()
   const advanced = () => folds(c)[1]!
@@ -207,7 +227,7 @@ test('laid over the page, Escape and the backdrop close what the bar opened, and
 
 test('docked, the bar folds the sidebar to itself and back, and the fold is remembered', async () => {
   const one = render(() => (
-    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember="k" />
+    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember="k" multiple />
   ))
   await flush()
   const root = () => one.container.querySelector<HTMLElement>('[data-scope="sidenav"]')!
@@ -223,7 +243,7 @@ test('docked, the bar folds the sidebar to itself and back, and the fold is reme
   one.unmount()
 
   const two = render(() => (
-    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember="k" />
+    <SideNav label="Docs" current="/docs/props" sections={SECTIONS} remember="k" multiple />
   ))
   await flush()
   const r2 = two.container.querySelector<HTMLElement>('[data-scope="sidenav"]')!
@@ -362,7 +382,10 @@ test('hydrates the server markup with its folds and its bar live', async () => {
   advanced.click()
   await flush()
   expect(advanced.getAttribute('aria-expanded')).toBe('true')
-  expect(JSON.parse(localStorage.getItem('test:sidenav')!)).toEqual({ Advanced: true })
+  expect(JSON.parse(localStorage.getItem('test:sidenav')!)).toEqual({
+    Basics: false,
+    Advanced: true,
+  })
   expect(root.querySelectorAll('[data-part="bar"]').length).toBe(1)
   edge(root).click()
   await flush()

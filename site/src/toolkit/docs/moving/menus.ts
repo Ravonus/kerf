@@ -70,6 +70,8 @@ export const menus: Doc[] = [
       current:
         "The current page's `href`. Its link is marked, its section opens, and the rail scrolls to it.",
       filter: 'Adds a filter box. A string is its placeholder.',
+      multiple:
+        'Lets any number of sections stay open. By default one is open at a time: opening a section folds the others, and arriving on a page opens its own.',
       overlay:
         "On a phone, where the open panel sits. `cover` (default) lays it over everything, header included. `under` opens it below the header (`--warp-sidenav-top`) with no title of its own: put a `SideNavTitle` around the brand's word in the header, and that word gives way to the panel's title while it is open.",
       remember:

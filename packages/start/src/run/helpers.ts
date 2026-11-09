@@ -73,7 +73,9 @@ export function current_(path: string) {
         !url.search &&
         !url.hash &&
         (url.pathname === path ||
-          (section && url.pathname !== '/' && path.startsWith(`${url.pathname.replace(/\/$/, '')}/`)))
+          (section &&
+            url.pathname !== '/' &&
+            path.startsWith(`${url.pathname.replace(/\/$/, '')}/`)))
     } catch {
       /* malformed links cannot match */
     }

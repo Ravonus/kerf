@@ -39,7 +39,12 @@ export function sideNavState(props: SideNavProps) {
   const unfolded = (s: SideNavSection) =>
     words.value !== '' || !!s.pinned || (chosen.value[s.title] ?? holds(s))
   const toggle = (s: SideNavSection) => {
-    chosen.value = { ...chosen.value, [s.title]: !unfolded(s) }
+    const next = !unfolded(s)
+    // one open at a time unless `multiple`: opening a section folds the others
+    chosen.value =
+      next && !props.multiple
+        ? { ...only(props.sections, s.title), [s.title]: true }
+        : { ...chosen.value, [s.title]: next }
     const k = key()
     if (k) writeFolds(k, chosen.value)
   }
@@ -64,6 +69,13 @@ export function sideNavState(props: SideNavProps) {
 }
 export type SideNavState = ReturnType<typeof sideNavState>
 
+/** Folds with `title` open and every other foldable section closed. */
+function only(sections: SideNavSection[], title: string): Folds {
+  return Object.fromEntries(
+    sections.filter((x) => !x.pinned).map((x) => [x.title, x.title === title]),
+  )
+}
+
 function bindSideNav(
   props: SideNavProps,
   d: {
@@ -80,7 +92,9 @@ function bindSideNav(
   // Arriving on a page opens its section, whatever was remembered, so the current link is never folded away.
   const reveal = () => {
     const s = props.sections.find(holds)
-    if (s && chosen.value[s.title] === false) chosen.value = { ...chosen.value, [s.title]: true }
+    if (!s) return
+    if (!props.multiple) chosen.value = only(props.sections, s.title)
+    else if (chosen.value[s.title] === false) chosen.value = { ...chosen.value, [s.title]: true }
   }
   const fold = (v: boolean) => {
     collapsed.value = v
