@@ -156,7 +156,7 @@ describe('navigation acceptance', () => {
   })
 })
 
-describe('navigation acceptance', () => {
+describe('navigation acceptance: unavailable shapes', () => {
   it('does not clear an existing presentation for an unavailable replacement', async () => {
     const routes: ClientRoutes = { table: [], load: {} }
     const outlet = { id: { value: 'old' }, shape: { value: undefined } }
@@ -226,7 +226,7 @@ describe('navigation acceptance', () => {
   })
 })
 
-describe('navigation acceptance', () => {
+describe('navigation acceptance: shared layout state', () => {
   it('keeps shared layout state and releases the shape after real content commits', async () => {
     history.replaceState(null, '', '/dir/from')
     document.body.innerHTML = '<div id="app"><a href="child">outgoing</a></div>'
@@ -299,7 +299,9 @@ describe('navigation acceptance', () => {
     submit.mockRestore()
     vi.mocked(guess).mockReturnValue([])
   })
+})
 
+describe('navigation acceptance: pending control ownership', () => {
   it('tears down pending control ownership and form wrappers', async () => {
     document.body.innerHTML = '<div id="app"><a href="child">old</a></div>'
     const routes: ClientRoutes = { table: [], load: {} }
@@ -331,7 +333,7 @@ describe('navigation acceptance', () => {
   })
 })
 
-describe('navigation acceptance', () => {
+describe('navigation acceptance: reentrant setup', () => {
   it('uses the newly committed URL when incoming setup reenters navigation', async () => {
     history.replaceState(null, '', '/dir/from')
     document.body.innerHTML = '<div id="app"></div>'
@@ -375,7 +377,9 @@ describe('navigation acceptance', () => {
     nav.current?.abort()
     await nested
   })
+})
 
+describe('navigation acceptance: changed params and queries', () => {
   it('presents changed params and queries at their first affected outlet', async () => {
     history.replaceState(null, '', '/users/1/posts/one?q=1')
     const routes: ClientRoutes = {
@@ -437,7 +441,7 @@ describe('navigation acceptance', () => {
   })
 })
 
-describe('navigation acceptance', () => {
+describe('navigation acceptance: same-path and hash changes', () => {
   it('does not present a same-path or hash change and honors a disabled leaf', async () => {
     history.replaceState(null, '', '/users/1?q=1')
     const routes: ClientRoutes = {

@@ -98,7 +98,7 @@ describe('retained source URL context', () => {
   })
 })
 
-describe('retained source URL context', () => {
+describe('retained source URL context: handler mutations', () => {
   it('keeps post-capture handler mutations on the source through activation', () => {
     history.replaceState(null, '', '/dir/old')
     document.body.innerHTML = '<div id="app"><a href="child">go</a><form></form></div>'
@@ -144,7 +144,9 @@ describe('retained source URL context', () => {
     expect(anchor.getAttribute('href')).toBe('last-link')
     expect(form.getAttribute('action')).toBe('last-submit')
   })
+})
 
+describe('retained source URL context: foreign descriptors', () => {
   it('keeps foreign descriptor changes when releasing hooks', () => {
     const anchor = HTMLAnchorElement.prototype
     const element = Element.prototype
@@ -207,7 +209,7 @@ describe('retained source URL context', () => {
   })
 })
 
-describe('retained source URL context', () => {
+describe('retained source URL context: hook chaining and rollback', () => {
   it('chains existing and later form hooks without keeping the source active', () => {
     history.replaceState(null, '', '/dir/old')
     document.body.innerHTML = '<div id="app"><form></form></div>'

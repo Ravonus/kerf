@@ -108,7 +108,7 @@ describe('retained source attribute mutations', () => {
   )
 })
 
-describe('retained source attribute mutations', () => {
+describe('retained source attribute mutations: removing named items', () => {
   it.each(['removeNamedItem', 'removeNamedItemNS'] as const)(
     'keeps missing form action on the source after NamedNodeMap.%s',
     (method) => {
@@ -142,7 +142,9 @@ describe('retained source attribute mutations', () => {
       expect(button.hasAttribute('formaction')).toBe(false)
     },
   )
+})
 
+describe('retained source attribute mutations: foreign attributes and contexts', () => {
   it('leaves namespaced and foreign attributes alone and preserves native errors', () => {
     history.replaceState(null, '', '/dir/old')
     document.body.innerHTML = '<div id="app"><a href="x">go</a></div><a id="outside"></a>'
@@ -196,7 +198,9 @@ describe('retained source attribute mutations', () => {
       Object.defineProperty(Node.prototype, 'nodeValue', original)
     }
   })
+})
 
+describe('retained source attribute mutations: hook rollback', () => {
   it('rolls back new attribute hooks if a map hook cannot be installed', () => {
     document.body.innerHTML = '<div id="app"><a href="x">go</a></div>'
     const node = Object.getOwnPropertyDescriptor(Node.prototype, 'nodeValue')!
@@ -222,7 +226,7 @@ describe('retained source attribute mutations', () => {
   })
 })
 
-describe('retained source attribute mutations', () => {
+describe('retained source attribute mutations: owned Attr and release', () => {
   it('preserves the authored value when setting the already owned Attr again', () => {
     history.replaceState(null, '', '/dir/old')
     document.body.innerHTML = '<div id="app"><a href="child">go</a></div>'
