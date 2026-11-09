@@ -13,7 +13,6 @@
 :where([data-scope="toast"][data-part="region"][data-position^="top"]) { inset-block: calc(var(--warp-space-page) + env(safe-area-inset-top, 0px)) auto; }
 :where([data-scope="toast"][data-part="region"][data-position$="left"]) { inset-inline: var(--warp-space-page) auto; }
 :where([data-scope="toast"][data-part="region"][data-position$="center"]) { inset-inline: 0; margin-inline: auto; }
-:where([data-scope="toast"][data-part="region"][data-position^="top"] [data-part="root"]) { inset-block: 0 auto; transform-origin: 50% 0%; }
 @media (max-width: 599.98px) {
   :where([data-scope="toast"][data-part="region"]) { inset-inline: 8px; inline-size: auto; inset-block-end: calc(8px + env(safe-area-inset-bottom, 0px)); }
 }
@@ -36,6 +35,8 @@
 @starting-style {
   :where([data-scope="toast"][data-part="region"][data-position^="top"] [data-part="root"]) { translate: 0 calc(-100% - var(--warp-space-page)); }
 }
+/* after the root rule above, so it beats its inset-block-end at equal (zero) specificity */
+:where([data-scope="toast"][data-part="region"][data-position^="top"] [data-part="root"]) { inset-block: 0 auto; transform-origin: 50% 0%; }
 :where([data-scope="toast"][data-part="root"][data-swiping]) { transition: none; }
 :where([data-scope="toast"][data-part="root"][data-state="closed"]) {
   --_o: 0; --_y: calc(var(--warp-motion-distance) * -0.5); --_s: var(--warp-motion-scale-from); pointer-events: none;
