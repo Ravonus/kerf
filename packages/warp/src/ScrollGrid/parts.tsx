@@ -6,14 +6,21 @@ export const CW = 104,
   PAD = 12
 
 type GridWatch = (node: () => HTMLElement, axis: 'x' | 'y', key: number) => void
-export function makeCell(
-  props: ScrollGridProps,
-  watch: GridWatch,
-  active: { readonly value: [number, number] },
-  cellId: (row: number, column: number) => string,
-  focusCell: (cell: [number, number], align?: boolean) => void,
-  hw: number,
-) {
+export function makeCell({
+  props,
+  watch,
+  active,
+  cellId,
+  focusCell,
+  hw,
+}: {
+  props: ScrollGridProps
+  watch: GridWatch
+  active: { readonly value: [number, number] }
+  cellId: (row: number, column: number) => string
+  focusCell: (cell: [number, number], align?: boolean) => void
+  hw: number
+}) {
   function Cell(p: { r: number; entry: { c: number; col: GridColumn } }) {
     let node: HTMLElement | undefined
     const c = untrack(() => p.entry.c)
@@ -60,14 +67,21 @@ export function makeHead(watch: GridWatch, hw: number) {
   return Head
 }
 
-export function makeRow(
-  props: ScrollGridProps,
-  watch: GridWatch,
-  shownCols: { readonly value: { c: number; col: GridColumn }[] },
-  hw: number,
-  rh: number,
-  Cell: ReturnType<typeof makeCell>,
-) {
+export function makeRow({
+  props,
+  watch,
+  shownCols,
+  hw,
+  rh,
+  Cell,
+}: {
+  props: ScrollGridProps
+  watch: GridWatch
+  shownCols: { readonly value: { c: number; col: GridColumn }[] }
+  hw: number
+  rh: number
+  Cell: ReturnType<typeof makeCell>
+}) {
   function Row(p: { r: number }) {
     let node: HTMLElement | undefined
     const r = untrack(() => p.r)

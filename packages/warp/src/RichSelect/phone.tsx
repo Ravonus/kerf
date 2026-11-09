@@ -74,19 +74,19 @@ export function PhoneField({
   readonly,
   ...rest
 }: PhoneFieldProps) {
-  const { env, v, list, find, code, text, pop, own, name_, placeholder } = phoneState(
-    () => value,
-    () => defaultValue,
-    () => onValueChange,
-    () => country,
-    () => defaultCountry,
-    () => countries,
-    () => locale,
-    () => today,
-  )
+  const { env, v, list, find, code, text, pop, own, name_, placeholder } = phoneState({
+    value: () => value,
+    defaultValue: () => defaultValue,
+    onValueChange: () => onValueChange,
+    country: () => country,
+    defaultCountry: () => defaultCountry,
+    countries: () => countries,
+    locale: () => locale,
+    today: () => today,
+  })
   let button: HTMLButtonElement | undefined
   let input: HTMLInputElement | undefined
-  const actions = phoneActions(
+  const actions = phoneActions({
     code,
     text,
     own,
@@ -94,21 +94,21 @@ export function PhoneField({
     v,
     pop,
     list,
-    () => input,
-    () => onCountryChange,
-    () => readonly,
-  )
+    getInput: () => input,
+    onCountryChange: () => onCountryChange,
+    isReadonly: () => readonly,
+  })
   use(restOnInput, () => input)
-  const view = phoneView(
-    { code, text, name: name_, placeholder, value: v, pop, env, list, find, actions },
-    () => readonly,
-    () => disabled,
-    () => name,
-    () => presentation,
-    () => button!,
-    (n) => (button = n),
-    (n) => (input = n),
-  )
+  const view = phoneView({
+    data: { code, text, name: name_, placeholder, value: v, pop, env, list, find, actions },
+    readonly: () => readonly,
+    disabled: () => disabled,
+    fieldName: () => name,
+    presentation: () => presentation,
+    button: () => button!,
+    setButton: (n) => (button = n),
+    setInput: (n) => (input = n),
+  })
 
   return (
     <Field
@@ -128,18 +128,29 @@ export function PhoneField({
   )
 }
 
-function phoneActions(
-  code: ReturnType<typeof state<PhoneCountry>>,
-  text: ReturnType<typeof state<string>>,
-  own: ReturnType<typeof state<string | undefined>>,
-  name_: { readonly value: string },
-  v: ReturnType<typeof bindable<E164 | null>>,
-  pop: ReturnType<typeof useOpen>,
-  list: PhoneCountry[],
-  getInput: () => HTMLInputElement | undefined,
-  onCountryChange: () => PhoneFieldProps['onCountryChange'],
-  isReadonly: () => boolean | undefined,
-) {
+function phoneActions({
+  code,
+  text,
+  own,
+  name_,
+  v,
+  pop,
+  list,
+  getInput,
+  onCountryChange,
+  isReadonly,
+}: {
+  code: ReturnType<typeof state<PhoneCountry>>
+  text: ReturnType<typeof state<string>>
+  own: ReturnType<typeof state<string | undefined>>
+  name_: { readonly value: string }
+  v: ReturnType<typeof bindable<E164 | null>>
+  pop: ReturnType<typeof useOpen>
+  list: PhoneCountry[]
+  getInput: () => HTMLInputElement | undefined
+  onCountryChange: () => PhoneFieldProps['onCountryChange']
+  isReadonly: () => boolean | undefined
+}) {
   const sync = (raw: string, caret: number | null) => {
     const c = code.value
     const before = digitsOf(raw.slice(0, caret ?? raw.length)).length
@@ -197,16 +208,25 @@ function phoneActions(
   return { sync, choose, onBlur, onPaste, reset }
 }
 
-function phoneState(
-  value: () => PhoneFieldProps['value'],
-  defaultValue: () => PhoneFieldProps['defaultValue'],
-  onValueChange: () => PhoneFieldProps['onValueChange'],
-  country: () => PhoneFieldProps['country'],
-  defaultCountry: () => PhoneFieldProps['defaultCountry'],
-  countries: () => PhoneFieldProps['countries'],
-  locale: () => PhoneFieldProps['locale'],
-  today: () => PhoneFieldProps['today'],
-) {
+function phoneState({
+  value,
+  defaultValue,
+  onValueChange,
+  country,
+  defaultCountry,
+  countries,
+  locale,
+  today,
+}: {
+  value: () => PhoneFieldProps['value']
+  defaultValue: () => PhoneFieldProps['defaultValue']
+  onValueChange: () => PhoneFieldProps['onValueChange']
+  country: () => PhoneFieldProps['country']
+  defaultCountry: () => PhoneFieldProps['defaultCountry']
+  countries: () => PhoneFieldProps['countries']
+  locale: () => PhoneFieldProps['locale']
+  today: () => PhoneFieldProps['today']
+}) {
   const env = usePickerEnv(locale, today)
   const v = bindable<E164 | null>(value, defaultValue, null, onValueChange)
   const list = untrack(() =>
@@ -242,19 +262,28 @@ function phoneState(
   return { env, v, list, find, code, text, pop, own, name_, placeholder }
 }
 
-function phoneView(
+function phoneView({
+  data,
+  readonly,
+  disabled,
+  fieldName,
+  presentation,
+  button,
+  setButton,
+  setInput,
+}: {
   data: Omit<
     PhoneView,
     'readonly' | 'disabled' | 'fieldName' | 'presentation' | 'button' | 'setButton' | 'setInput'
-  >,
-  readonly: () => PhoneView['readonly'],
-  disabled: () => PhoneView['disabled'],
-  fieldName: () => PhoneView['fieldName'],
-  presentation: () => PhoneView['presentation'],
-  button: PhoneView['button'],
-  setButton: PhoneView['setButton'],
-  setInput: PhoneView['setInput'],
-): PhoneView {
+  >
+  readonly: () => PhoneView['readonly']
+  disabled: () => PhoneView['disabled']
+  fieldName: () => PhoneView['fieldName']
+  presentation: () => PhoneView['presentation']
+  button: PhoneView['button']
+  setButton: PhoneView['setButton']
+  setInput: PhoneView['setInput']
+}): PhoneView {
   return {
     ...data,
     get readonly() {
