@@ -121,3 +121,16 @@ void test('lint runs the category invocation and propagates failures', async () 
   })
   assert.match(result.problems[0], /exited 8: parser failed/)
 })
+
+void test('category findings fail the lint step; a clean run passes', async () => {
+  const { categoryWarnings } = await import('./s9-warnings.mjs')
+  const finding = 'src/a.ts:3: eslint(max-params): too many parameters (6)'
+  const failed = await categoryWarnings(() =>
+    Promise.resolve({ code: 0, out: `${finding}\nCategory lint checked 1 tracked JS/TS files\n` }),
+  )
+  assert.deepEqual(failed.problems, [finding])
+  const clean = await categoryWarnings(() =>
+    Promise.resolve({ code: 0, out: 'Category lint checked 1 tracked JS/TS files\n' }),
+  )
+  assert.deepEqual(clean.problems, [])
+})

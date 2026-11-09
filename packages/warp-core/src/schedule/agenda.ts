@@ -45,6 +45,7 @@ export const dayDots = (events: CalEvent[], day: string) =>
   [...new Set(eventsOn(events, day).map((e) => e.cal ?? 1))].slice(0, 3)
 
 /** MoveSheet's start times: disabled when another event is there. */
+// oxlint-disable-next-line max-params -- public schedule API; changing it is a breaking change
 export function moveSlots(
   events: CalEvent[],
   e: CalEvent,

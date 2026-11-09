@@ -54,9 +54,11 @@ export function isGenerated(path, content = '') {
   )
 }
 
-/** Vendored Pretext is maintained upstream, outside category limits. */
+/** Vendored Pretext is maintained upstream; eval task fixtures are pinned by hash in their verification.json. */
 export function isExcluded(path) {
-  return path.startsWith('packages/text/vendor/pretext/')
+  return (
+    path.startsWith('packages/text/vendor/pretext/') || /^evals\/agent-eval\/tasks\//.test(path)
+  )
 }
 
 /** Return the first matching category, or undefined for an unclassified path. */

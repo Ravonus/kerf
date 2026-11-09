@@ -36,7 +36,15 @@ export function reportCommentWarnings(report, print = console.log) {
   return { ...report, diagnostics: rest }
 }
 
-/** Run category warnings as part of the enforced lint step. */
-export function categoryWarnings(run) {
-  return inventoryStep('category-overrides', (cmd, args) => run(cmd, [...args, '--lint'])).run()
+/** Category limits are enforced: every finding is a lint problem. */
+export async function categoryWarnings(run) {
+  const result = await run(process.execPath, ['scripts/quality/category-overrides.mjs', '--lint'])
+  if (result.code !== 0)
+    return {
+      problems: [`category-overrides exited ${result.code}: ${result.out.trim() || 'no output'}`],
+    }
+  const problems = result.out
+    .split('\n')
+    .filter((line) => line.trim() && !line.startsWith('Category lint checked'))
+  return { problems }
 }

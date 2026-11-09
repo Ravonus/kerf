@@ -4,6 +4,7 @@
  * Ordered dither into a packed-RGBA `out`. Returns how many cells changed, so an unchanged frame can skip the canvas.
  * `spread` is how much of the step between two inks the tile may cross: 1 dithers fully, 0 bands.
  */
+// oxlint-disable-next-line max-params -- public dither API; changing it is a breaking change
 export function quantize(
   v: Float32Array,
   cols: number,
