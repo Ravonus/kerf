@@ -121,11 +121,11 @@ function cell<T>(row: () => T, col: () => Column<T>, ctx: () => Ctx<T>) {
       {editing.value ? (
         <>
           {untrack(() =>
-            tableEditor(
-              () => `${c.header} for ${ctx().title(row())}`,
-              () => seed,
-              { onDone: done },
-            ),
+            tableEditor({
+              label: () => `${c.header} for ${ctx().title(row())}`,
+              start: () => seed,
+              callbacks: { onDone: done },
+            }),
           )}
           {problem.value && (
             <span data-part="sr-only" id={message()} role="alert">

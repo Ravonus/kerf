@@ -142,13 +142,7 @@ function membersState(p: MembersTableProps) {
   const removable = (keys: string[]) =>
     people.value.filter((m) => keys.includes(m.id) && m.id !== p.me && !locked(m))
   const count = derived(() => leaving.value.length)
-  const columns = memberColumns(
-    () => p.me,
-    () => p.roles,
-    locked,
-    change,
-    ask,
-  )
+  const columns = memberColumns({ me: () => p.me, roles: () => p.roles, locked, change, ask })
   const invitesColumns = inviteColumns(
     label,
     (v) => p.onResend?.(v),

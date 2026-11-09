@@ -4,14 +4,21 @@ import { use } from '@weft-js/warp-core/weft'
 import type { Note } from './Inbox'
 import type { InboxInputs } from './InboxModel'
 
-export function inboxGestures(
-  p: () => InboxInputs,
-  tab: State<InboxTab>,
-  all: { readonly value: Note[] },
-  fresh: State<number>,
-  tablist: () => HTMLDivElement | undefined,
-  list: () => HTMLDivElement | undefined,
-) {
+export function inboxGestures({
+  p,
+  tab,
+  all,
+  fresh,
+  tablist,
+  list,
+}: {
+  p: () => InboxInputs
+  tab: State<InboxTab>
+  all: { readonly value: Note[] }
+  fresh: State<number>
+  tablist: () => HTMLDivElement | undefined
+  list: () => HTMLDivElement | undefined
+}) {
   use(indicator, tablist, () => ({
     selected: '[aria-selected="true"]',
     x: '--_ix',

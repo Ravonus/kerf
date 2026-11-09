@@ -58,14 +58,14 @@ export function KeyValueEditor({
   const mode = state<'form' | 'json'>('form')
   const text = state('')
   onCleanup(() => clearTimeout(refs.timer))
-  const { dup, hasDup, edit, add, remove, flipMode, fromJson } = keyValueActions(
+  const { dup, hasDup, edit, add, remove, flipMode, fromJson } = keyValueActions({
     held,
     ids,
     mode,
     text,
     refs,
     toJson,
-  )
+  })
   const switcher = untrack(() => json)
     ? formatSwitcher(() => rest.label, mode, flipMode)
     : undefined

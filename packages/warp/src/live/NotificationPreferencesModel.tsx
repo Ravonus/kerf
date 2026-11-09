@@ -22,16 +22,16 @@ export function preferencesModel(p: () => Inputs) {
   let grid: HTMLDivElement | undefined
   preferencesWatch(p, model, mail, save, () => grid)
 
-  const { commit, cell, parent, onLocked, onNa } = preferencesSave(
+  const { commit, cell, parent, onLocked, onNa } = preferencesSave({
     p,
     model,
     mail,
     save,
     fixed,
-    () => grid,
-  )
+    grid: () => grid,
+  })
 
-  const { parentBox, na } = preferencesCells(model, fixed, parent, onNa)
+  const { parentBox, na } = preferencesCells({ model, fixed, parent, onNa })
   const emailOn = derived(() =>
     events.value.some(
       (e) =>
@@ -59,7 +59,15 @@ export function preferencesModel(p: () => Inputs) {
         error: "Couldn't save. Your last change was undone.",
       })[save.value],
   )
-  const { doReset, pickDigest } = preferencesActions(p, model, mail, events, reset, fixed, commit)
+  const { doReset, pickDigest } = preferencesActions({
+    p,
+    model,
+    mail,
+    events,
+    reset,
+    fixed,
+    commit,
+  })
 
   return {
     id,

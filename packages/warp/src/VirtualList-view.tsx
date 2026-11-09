@@ -20,12 +20,17 @@ type Bindings<T> = {
 }
 
 /** Draw the list using its existing owner and live references. */
-export function virtualView<T>(
-  read: () => VirtualListProps<T>,
-  data: ReturnType<typeof virtualData<T>>,
-  refs: Refs,
-  bindings: Bindings<T>,
-) {
+export function virtualView<T>({
+  read,
+  data,
+  refs,
+  bindings,
+}: {
+  read: () => VirtualListProps<T>
+  data: ReturnType<typeof virtualData<T>>
+  refs: Refs
+  bindings: Bindings<T>
+}) {
   const props = untrack(read)
   const { keys, shown, rows, samples, probing } = data
   const { waiting, pending, active, probes, onKeyDown, renderChildren } = bindings
@@ -34,7 +39,7 @@ export function virtualView<T>(
   /** A list's rows are its items (axe aria-required-children); `feed`, `log` and bare rows bring or need none. */
   const rowRole = () =>
     props.rowRole ?? (props.tag !== 'ol' && listRole() === 'list' ? 'listitem' : undefined)
-  const listAttrs = listAttributes(props, inner, refs, listRole, rowRole)
+  const listAttrs = listAttributes({ props, inner, refs, listRole, rowRole })
   const rowContext = {
     get props() {
       return props
@@ -87,13 +92,19 @@ export function virtualView<T>(
   )
 }
 
-function listAttributes<T>(
-  props: VirtualListProps<T>,
-  inner: boolean | undefined,
-  refs: Refs,
-  listRole: () => string,
-  rowRole: () => string | undefined,
-) {
+function listAttributes<T>({
+  props,
+  inner,
+  refs,
+  listRole,
+  rowRole,
+}: {
+  props: VirtualListProps<T>
+  inner: boolean | undefined
+  refs: Refs
+  listRole: () => string
+  rowRole: () => string | undefined
+}) {
   return () => ({
     ref: (n: HTMLElement) => (refs.list = n),
     'data-part': 'spacer',

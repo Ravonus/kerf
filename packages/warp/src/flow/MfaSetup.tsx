@@ -48,15 +48,15 @@ export function MfaSetup({ open, qr, secret, onVerify, codes, onDownload, onDone
   const problem = state<string | undefined>(undefined)
   const busy = state(false)
   const saved = state(false)
-  const next = mfaNext(
+  const next = mfaNext({
     step,
     code,
     problem,
     busy,
-    () => open,
-    (value) => onVerify(value()),
-    () => onDone?.(),
-  )
+    open: () => open,
+    onVerify: (value) => onVerify(value()),
+    onDone: () => onDone?.(),
+  })
   const label = derived(() => (step.value === 'codes' ? 'Finish' : 'Continue'))
   return (
     <Modal
@@ -108,15 +108,23 @@ async function copy(text: string) {
   announce(document, 'Copied')
 }
 
-function mfaNext(
-  step: State<keyof typeof STEPS>,
-  code: State<string>,
-  problem: State<string | undefined>,
-  busy: State<boolean>,
-  open: () => MfaSetupProps['open'],
-  onVerify: (value: () => string) => unknown,
-  onDone: () => void,
-) {
+function mfaNext({
+  step,
+  code,
+  problem,
+  busy,
+  open,
+  onVerify,
+  onDone,
+}: {
+  step: State<keyof typeof STEPS>
+  code: State<string>
+  problem: State<string | undefined>
+  busy: State<boolean>
+  open: () => MfaSetupProps['open']
+  onVerify: (value: () => string) => unknown
+  onDone: () => void
+}) {
   return async () => {
     if (step.value === 'scan') {
       step.value = 'verify'

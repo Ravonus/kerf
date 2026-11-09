@@ -1,7 +1,8 @@
-import { CW, LEADING, PAD, makeCell, makeHead, makeRow } from './ScrollGrid/parts'
+import { measureWrapped } from './ScrollGrid/measure'
+import { CW, PAD, makeCell, makeHead, makeRow } from './ScrollGrid/parts'
 import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
-import { measureEngine, type MeasureHandle, type MeasureProvider } from '@weft-js/core/text'
-import { slices, uid, virtualizer, type Virtualizer } from '@weft-js/warp-core'
+import { type MeasureHandle, type MeasureProvider } from '@weft-js/core/text'
+import { uid, virtualizer, type Virtualizer } from '@weft-js/warp-core'
 import './styles'
 import '@weft-js/warp-core/styles/data/scroll-grid.css'
 
@@ -41,7 +42,7 @@ const RH = 34,
 const HELP =
   'Arrow keys move one cell, Page Up and Page Down one screen, Home and End to the row ends, Control with Home or End to the grid ends.'
 
-type GridRuntime = {
+export type GridRuntime = {
   el: HTMLElement | undefined
   canvas: HTMLElement | undefined
   ys: Virtualizer | undefined
@@ -53,20 +54,33 @@ type GridRuntime = {
 }
 
 type Held = { node: HTMLElement; set: (undo: () => void) => void }
-function mountGrid(
-  runtime: GridRuntime,
-  props: ScrollGridProps,
-  rh: number,
-  hw: number,
-  size: (row: number) => number,
-  rows: { value: number[] },
-  cols: { value: number[] },
-  columns: { readonly value: readonly GridColumn[] },
-  wrapped: { readonly value: { c: GridColumn; i: number }[] },
-  active: { readonly value: [number, number] },
-  held: () => [Held, number][],
-  heldCols: () => [Held, number][],
-) {
+function mountGrid({
+  runtime,
+  props,
+  rh,
+  hw,
+  size,
+  rows,
+  cols,
+  columns,
+  wrapped,
+  active,
+  held,
+  heldCols,
+}: {
+  runtime: GridRuntime
+  props: ScrollGridProps
+  rh: number
+  hw: number
+  size: (row: number) => number
+  rows: { value: number[] }
+  cols: { value: number[] }
+  columns: { readonly value: readonly GridColumn[] }
+  wrapped: { readonly value: { c: GridColumn; i: number }[] }
+  active: { readonly value: [number, number] }
+  held: () => [Held, number][]
+  heldCols: () => [Held, number][]
+}) {
   onMount(() => {
     queueMicrotask(() => {
       if (!runtime.el) return
@@ -96,28 +110,7 @@ function mountGrid(
       for (const [row, key] of held().splice(0)) row.set(runtime.ys.attach(row.node, key))
       for (const [cell, key] of heldCols().splice(0)) cell.set(runtime.xs.attach(cell.node, key))
       if (!untrack(() => wrapped.value.length)) return
-      void measureEngine().then((e) => {
-        if (!e || !runtime.el) return
-        const c = getComputedStyle(runtime.el)
-        runtime.font = `${c.fontWeight} ${c.fontSize} ${c.fontFamily}`
-        runtime.line = parseFloat(c.fontSize) * LEADING
-        runtime.engine = e
-        runtime.ys!.refresh(rows.value[0] ?? 0, (rows.value.at(-1) ?? 0) + 1)
-        let at = 0,
-          lo = 0
-        runtime.stop = slices(() => {
-          if (at >= allRows.length) {
-            runtime.ys!.refresh(lo, at)
-            return false
-          }
-          size(at++)
-          if (at - lo >= 256) {
-            runtime.ys!.refresh(lo, at)
-            lo = at
-          }
-          return true
-        })
-      })
+      measureWrapped({ runtime, rows, size, count: allRows.length })
     })
     onCleanup(() => {
       runtime.stop?.()
@@ -127,13 +120,19 @@ function mountGrid(
   })
 }
 
-function gridSize(
-  runtime: GridRuntime,
-  props: ScrollGridProps,
-  handles: Map<string, MeasureHandle>,
-  wrapped: { readonly value: { c: GridColumn; i: number }[] },
-  rh: number,
-) {
+function gridSize({
+  runtime,
+  props,
+  handles,
+  wrapped,
+  rh,
+}: {
+  runtime: GridRuntime
+  props: ScrollGridProps
+  handles: Map<string, MeasureHandle>
+  wrapped: { readonly value: { c: GridColumn; i: number }[] }
+  rh: number
+}) {
   const handle = (r: number, c: GridColumn) => {
     const key = `${r}\0${c.id}`
     let h = handles.get(key)
@@ -160,15 +159,23 @@ function gridSize(
   return size
 }
 
-function gridNavigation(
-  runtime: GridRuntime,
-  props: ScrollGridProps,
-  active: { value: [number, number] },
-  columns: { readonly value: readonly GridColumn[] },
-  rh: number,
-  hw: number,
-  cellId: (row: number, column: number) => string,
-) {
+function gridNavigation({
+  runtime,
+  props,
+  active,
+  columns,
+  rh,
+  hw,
+  cellId,
+}: {
+  runtime: GridRuntime
+  props: ScrollGridProps
+  active: { value: [number, number] }
+  columns: { readonly value: readonly GridColumn[] }
+  rh: number
+  hw: number
+  cellId: (row: number, column: number) => string
+}) {
   function focusCell([r, c]: [number, number], align = true) {
     active.value = [r, c]
     runtime.ys?.update({})
@@ -278,25 +285,19 @@ function gridModel(props: ScrollGridProps) {
   const wrapped = derived(() => columns.value.flatMap((c, i) => (c.wrap ? [{ c, i }] : [])))
   const cellId = (r: number, c: number) => `${id}-r${r}-c${c}`
 
-  const size = gridSize(
-    runtime,
-    untrack(() => props),
-    handles,
-    wrapped,
-    rh,
-  )
+  const size = gridSize({ runtime, props: untrack(() => props), handles, wrapped, rh })
 
-  const { focusCell, onKeyDown } = gridNavigation(
+  const { focusCell, onKeyDown } = gridNavigation({
     runtime,
-    untrack(() => props),
+    props: untrack(() => props),
     active,
     columns,
     rh,
     hw,
     cellId,
-  )
+  })
 
-  mountGrid(
+  mountGrid({
     runtime,
     props,
     rh,
@@ -307,17 +308,17 @@ function gridModel(props: ScrollGridProps) {
     columns,
     wrapped,
     active,
-    () => held,
-    () => heldCols,
-  )
+    held: () => held,
+    heldCols: () => heldCols,
+  })
 
   const held: [Held, number][] = [],
     heldCols: [Held, number][] = []
   const watch = gridWatch(runtime, held, heldCols)
 
-  const Cell = makeCell(props, watch, active, cellId, focusCell, hw)
+  const Cell = makeCell({ props, watch, active, cellId, focusCell, hw })
   const Head = makeHead(watch, hw)
-  const Row = makeRow(props, watch, shownCols, hw, rh, Cell)
+  const Row = makeRow({ props, watch, shownCols, hw, rh, Cell })
 
   return { runtime, id, columns, rows, shownCols, hw, cellId, onKeyDown, Head, Row }
 }

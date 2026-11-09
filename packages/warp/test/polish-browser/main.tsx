@@ -40,15 +40,23 @@ const ROOMS = [
   { id: 'birch', name: 'Birch', meta: '6 seats' },
   { id: 'cedar', name: 'Cedar', meta: '12 seats' },
 ]
-const ev = (
-  id: string,
-  title: string,
-  day: number,
-  s: string,
-  e: string,
-  resource?: string,
+const ev = ({
+  id,
+  title,
+  day,
+  s,
+  e,
+  resource,
   cal = 1,
-) => ({
+}: {
+  id: string
+  title: string
+  day: number
+  s: string
+  e: string
+  resource?: string
+  cal?: number
+}) => ({
   id,
   title,
   start: `2026-11-${String(day).padStart(2, '0')}T${s}`,
@@ -57,19 +65,51 @@ const ev = (
   cal,
 })
 const EVENTS = [
-  ev('a', 'Design crit', 4, '09:00', '10:00', 'atlas'),
-  ev('b', 'Billing walkthrough', 4, '11:00', '12:00', 'birch', 2),
-  ev('c', 'Incident review: mobile-bff', 4, '10:30', '11:00', 'cedar', 3),
-  ev('d', 'Hiring sync', 4, '13:00', '14:30', 'atlas'),
-  ev('e', 'Roadmap', 4, '15:00', '16:30', 'cedar'),
+  ev({ id: 'a', title: 'Design crit', day: 4, s: '09:00', e: '10:00', resource: 'atlas' }),
+  ev({
+    id: 'b',
+    title: 'Billing walkthrough',
+    day: 4,
+    s: '11:00',
+    e: '12:00',
+    resource: 'birch',
+    cal: 2,
+  }),
+  ev({
+    id: 'c',
+    title: 'Incident review: mobile-bff',
+    day: 4,
+    s: '10:30',
+    e: '11:00',
+    resource: 'cedar',
+    cal: 3,
+  }),
+  ev({ id: 'd', title: 'Hiring sync', day: 4, s: '13:00', e: '14:30', resource: 'atlas' }),
+  ev({ id: 'e', title: 'Roadmap', day: 4, s: '15:00', e: '16:30', resource: 'cedar' }),
   ...[2, 3, 4, 5, 6].flatMap((d) => [
-    ev(`s${d}`, 'Standup', d, '09:30', '09:45'),
-    ev(`x${d}`, 'Focus block', d, '14:00', '16:00', undefined, 2),
-    ev(`y${d}`, 'Review', d, '16:00', '17:00', undefined, 3),
-    ev(`z${d}`, 'Wrap-up', d, '17:00', '17:30'),
+    ev({ id: `s${d}`, title: 'Standup', day: d, s: '09:30', e: '09:45' }),
+    ev({
+      id: `x${d}`,
+      title: 'Focus block',
+      day: d,
+      s: '14:00',
+      e: '16:00',
+
+      cal: 2,
+    }),
+    ev({
+      id: `y${d}`,
+      title: 'Review',
+      day: d,
+      s: '16:00',
+      e: '17:00',
+
+      cal: 3,
+    }),
+    ev({ id: `z${d}`, title: 'Wrap-up', day: d, s: '17:00', e: '17:30' }),
   ]),
-  ev('late', 'Quarter close', 27, '10:00', '11:00'),
-  ev('last', 'Retro', 30, '15:00', '16:00'),
+  ev({ id: 'late', title: 'Quarter close', day: 27, s: '10:00', e: '11:00' }),
+  ev({ id: 'last', title: 'Retro', day: 30, s: '15:00', e: '16:00' }),
   {
     id: 'oncall',
     title: 'Jun on call',
@@ -89,9 +129,9 @@ const EVENTS = [
 ]
 // a quiet month: every day has room for its events at two lines, and one long name runs from a weekend into a Monday
 const ROOMY = [
-  ev('late', 'Quarter close', 27, '10:00', '11:00'),
-  ev('last', 'Retro', 30, '15:00', '16:00'),
-  ev('mon', 'Hiring sync', 9, '13:00', '14:00'),
+  ev({ id: 'late', title: 'Quarter close', day: 27, s: '10:00', e: '11:00' }),
+  ev({ id: 'last', title: 'Retro', day: 30, s: '15:00', e: '16:00' }),
+  ev({ id: 'mon', title: 'Hiring sync', day: 9, s: '13:00', e: '14:00' }),
   {
     id: 'rel',
     title: 'Release 2026.11 to every region',

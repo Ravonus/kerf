@@ -25,16 +25,25 @@ export interface InviteDialogProps {
   onSend: (emails: string[], role: string) => Promise<void> | void
 }
 
-function inviteSend(
-  open: () => State<boolean>,
-  emails: State<string[]>,
-  role: State<string>,
-  error: State<string>,
-  busy: State<boolean>,
-  root: () => HTMLElement | undefined,
-  seatsLeft: () => number,
-  onSend: InviteDialogProps['onSend'],
-) {
+function inviteSend({
+  open,
+  emails,
+  role,
+  error,
+  busy,
+  root,
+  seatsLeft,
+  onSend,
+}: {
+  open: () => State<boolean>
+  emails: State<string[]>
+  role: State<string>
+  error: State<string>
+  busy: State<boolean>
+  root: () => HTMLElement | undefined
+  seatsLeft: () => number
+  onSend: InviteDialogProps['onSend']
+}) {
   const send = async () => {
     if (busy.value) return
     const typed = root()?.querySelector<HTMLInputElement>('input[data-part="input"]')
@@ -85,16 +94,16 @@ export function InviteDialog({ open, roles, defaultRole, seatsLeft, onSend }: In
       }
     },
   )
-  const send = inviteSend(
-    () => open,
+  const send = inviteSend({
+    open: () => open,
     emails,
     role,
     error,
     busy,
-    () => root,
-    () => seatsLeft,
-    (addresses, selectedRole) => onSend(addresses, selectedRole),
-  )
+    root: () => root,
+    seatsLeft: () => seatsLeft,
+    onSend: (addresses, selectedRole) => onSend(addresses, selectedRole),
+  })
   return (
     <>
       {armed.value && (

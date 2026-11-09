@@ -28,17 +28,17 @@ export function MonthPicker({
   disabled,
   ...rest
 }: MonthPickerProps) {
-  const { env, v, pop } = pickerBindings<IsoMonth | null>(
-    () => value,
-    () => defaultValue,
-    () => onValueChange,
-    () => open,
-    () => defaultOpen,
-    () => onOpenChange,
-    () => locale,
-    () => today,
-    null,
-  )
+  const { env, v, pop } = pickerBindings<IsoMonth | null>({
+    value: () => value,
+    initial: () => defaultValue,
+    changed: () => onValueChange,
+    open: () => open,
+    defaultOpen: () => defaultOpen,
+    onOpenChange: () => onOpenChange,
+    locale: () => locale,
+    today: () => today,
+    fallback: null,
+  })
   const year = state(
     yearOf(
       untrack(() => v.value),

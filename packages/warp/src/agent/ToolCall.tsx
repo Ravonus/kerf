@@ -45,13 +45,7 @@ export function ToolCall({ call, onApprove, onDeny, alwaysAllow, quiet }: ToolCa
     head?: HTMLElement | undefined
     ok?: HTMLElement | undefined
   } = {}
-  toolLifecycle(
-    st,
-    args,
-    () => call,
-    () => quiet,
-    refs,
-  )
+  toolLifecycle({ st, args, call: () => call, quiet: () => quiet, refs })
   const leave = toolLeave(refs)
   return (
     <div ref={(n) => (refs.frame = n)} data-part="tool-frame" data-sweep="">
@@ -120,13 +114,19 @@ function toolLeave(refs: { head?: HTMLElement | undefined }) {
   }
 }
 
-function toolLifecycle(
-  st: { readonly value: AgentTool['state'] },
-  args: State<string>,
-  call: () => AgentTool,
-  quiet: () => boolean | undefined,
-  refs: { frame?: HTMLElement | undefined; ok?: HTMLElement | undefined },
-) {
+function toolLifecycle({
+  st,
+  args,
+  call,
+  quiet,
+  refs,
+}: {
+  st: { readonly value: AgentTool['state'] }
+  args: State<string>
+  call: () => AgentTool
+  quiet: () => boolean | undefined
+  refs: { frame?: HTMLElement | undefined; ok?: HTMLElement | undefined }
+}) {
   onMount(() => {
     const asked = () =>
       queueMicrotask(() => {

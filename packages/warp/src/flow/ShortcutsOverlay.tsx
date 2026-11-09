@@ -32,7 +32,7 @@ export function ShortcutsOverlay({
   const apple = state(false)
   const rev = state(0)
   const query = state('')
-  registerShortcuts(reg, on, apple, rev)
+  registerShortcuts({ reg, on, apple, rev })
   const groups = derived(() => {
     void rev.value
     const by = new Map<string, Shortcut[]>()
@@ -91,12 +91,17 @@ export function ShortcutsOverlay({
   )
 }
 
-function registerShortcuts(
-  reg: Shortcuts,
-  on: State<boolean>,
-  apple: State<boolean>,
-  rev: State<number>,
-) {
+function registerShortcuts({
+  reg,
+  on,
+  apple,
+  rev,
+}: {
+  reg: Shortcuts
+  on: State<boolean>
+  apple: State<boolean>
+  rev: State<number>
+}) {
   onMount(() => {
     apple.value = isApple(navigator)
     const quiet = reg.subscribe(() => rev.value++)

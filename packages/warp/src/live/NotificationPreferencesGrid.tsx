@@ -21,14 +21,14 @@ export function PreferencesHead({ channels, state }: { channels: PrefChannel[]; 
           <span data-part="ch-head" aria-hidden="true">
             {c.label}
           </span>
-          {state.parentBox(
-            state.events.value,
-            c.id,
-            `${c.label}, all events`,
-            `All ${lower(c.label)}`,
-            undefined,
-            i === 0,
-          )}
+          {state.parentBox({
+            evs: state.events.value,
+            c: c.id,
+            nameText: `${c.label}, all events`,
+            visible: `All ${lower(c.label)}`,
+            where: undefined,
+            first: i === 0,
+          })}
         </div>
       ))}
     </div>
@@ -52,14 +52,14 @@ export function PreferencesGroup({
           <div key={c.id} role="gridcell">
             {triState({}, g.events, state.fixed, c.id) === null
               ? state.na(`${g.label}, ${lower(c.label)}, not offered`)
-              : state.parentBox(
-                  g.events,
-                  c.id,
-                  `${g.label}, all ${lower(c.label)}`,
-                  c.label,
-                  g.label,
-                  false,
-                )}
+              : state.parentBox({
+                  evs: g.events,
+                  c: c.id,
+                  nameText: `${g.label}, all ${lower(c.label)}`,
+                  visible: c.label,
+                  where: g.label,
+                  first: false,
+                })}
           </div>
         ))}
       </div>

@@ -17,18 +17,29 @@ type Model = {
 }
 
 /** Render the field in its existing owner and original static template. */
-export function fieldView(
-  p: Model['p'],
-  id: Model['id'],
-  problem: Model['problem'],
-  glyph: Model['glyph'],
-  message: Model['message'],
-  msg: Model['msg'],
-  chars: Model['chars'],
-  live: Model['live'],
-  shell: Model['shell'],
-  setRoot: Model['setRoot'],
-) {
+export function fieldView({
+  p,
+  id,
+  problem,
+  glyph,
+  message,
+  msg,
+  chars,
+  live,
+  shell,
+  setRoot,
+}: {
+  p: Model['p']
+  id: Model['id']
+  problem: Model['problem']
+  glyph: Model['glyph']
+  message: Model['message']
+  msg: Model['msg']
+  chars: Model['chars']
+  live: Model['live']
+  shell: Model['shell']
+  setRoot: Model['setRoot']
+}) {
   return (
     <div
       ref={setRoot}
@@ -66,7 +77,7 @@ export function fieldView(
           </span>
         </label>
         {p.prefix !== undefined && <span data-part="prefix">{p.prefix}</span>}
-        {p.group ? fieldBody(p, id, msg, problem, shell) : untrack(() => p.control(shell))}
+        {p.group ? fieldBody({ p, id, msg, problem, shell }) : untrack(() => p.control(shell))}
         {p.suffix !== undefined && <span data-part="suffix">{p.suffix}</span>}
         {p.clearable && (
           <button type="button" data-part="clear" tabindex="-1" aria-label={`Clear ${p.label}`}>
@@ -93,13 +104,19 @@ function fieldIcon(glyph: Model['glyph']) {
   )
 }
 
-function fieldBody(
-  p: Model['p'],
-  id: Model['id'],
-  msg: Model['msg'],
-  problem: Model['problem'],
-  shell: Model['shell'],
-) {
+function fieldBody({
+  p,
+  id,
+  msg,
+  problem,
+  shell,
+}: {
+  p: Model['p']
+  id: Model['id']
+  msg: Model['msg']
+  problem: Model['problem']
+  shell: Model['shell']
+}) {
   return (
     <div
       data-part="body"

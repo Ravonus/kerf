@@ -51,7 +51,7 @@ export function ModelPicker({ models, value, onChange, compact }: ModelPickerPro
     () => chip,
     open,
   )
-  const choose = (m: ModelOption) => chooseModel(m, picked, open, () => panel)
+  const choose = (m: ModelOption) => chooseModel({ m, picked, open, panel: () => panel })
   const onKey = (e: KeyboardEvent) => modelKey(e, panel!)
   return (
     <span data-scope="prompt" style="display:contents">
@@ -150,12 +150,17 @@ function useModelPopover(
   }))
 }
 
-function chooseModel(
-  m: ModelOption,
-  picked: { set: (value: string | undefined) => void },
-  open: State<boolean>,
-  panel: () => HTMLElement | undefined,
-) {
+function chooseModel({
+  m,
+  picked,
+  open,
+  panel,
+}: {
+  m: ModelOption
+  picked: { set: (value: string | undefined) => void }
+  open: State<boolean>
+  panel: () => HTMLElement | undefined
+}) {
   picked.set(m.id)
   open.value = false
   announce(panel()!.ownerDocument, `Model: ${m.name}`)

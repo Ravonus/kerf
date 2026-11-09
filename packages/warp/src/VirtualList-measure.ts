@@ -23,7 +23,7 @@ export function virtualMeasurements<T>(
   const metrics = new Map<string, Metric>()
   const prepared = new Map<VirtualKey, { text: string; handle: MeasureHandle; font: string }>()
   const probes = new Map<string, HTMLElement>()
-  const prepare = rowPreparer(props, data, refs, metrics, prepared, () => engine)
+  const prepare = rowPreparer({ props, data, refs, metrics, prepared, current: () => engine })
 
   const size = (i: number) => {
     if (!engine) return
@@ -92,14 +92,21 @@ type Refs = {
 type Prepared = Map<VirtualKey, { text: string; handle: MeasureHandle; font: string }>
 type Work = { stop: (() => void) | undefined; slicing: boolean; cursor: number }
 
-function rowPreparer<T>(
-  props: VirtualListProps<T>,
-  data: ReturnType<typeof virtualData<T>>,
-  refs: Refs,
-  metrics: Map<string, Metric>,
-  prepared: Prepared,
-  current: () => MeasureProvider | null,
-) {
+function rowPreparer<T>({
+  props,
+  data,
+  refs,
+  metrics,
+  prepared,
+  current,
+}: {
+  props: VirtualListProps<T>
+  data: ReturnType<typeof virtualData<T>>
+  refs: Refs
+  metrics: Map<string, Metric>
+  prepared: Prepared
+  current: () => MeasureProvider | null
+}) {
   const { items, variantOf, keyOf, index } = data
   return (i: number) => {
     const item = untrack(() => items.value[i]),

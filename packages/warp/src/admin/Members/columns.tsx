@@ -9,13 +9,38 @@ import { toast } from '../../Toast'
 import { InlineSelect } from '../atoms'
 import type { Member, Invite, Role } from '../Members'
 
-export function memberColumns(
-  me: () => string,
-  roles: () => Role[],
-  locked: (m: Member) => boolean,
-  change: (m: Member, role: string) => void,
-  ask: (list: Member[]) => void,
-): Column<Member>[] {
+function nameCell(m: Member, me: () => string) {
+  return (
+    <span data-scope="row" data-wrap="none">
+      <Avatar name={m.name} size="sm" />
+      <span>
+        <b>{m.name}</b>
+        {m.id === me() && (
+          <>
+            {' '}
+            <Badge>You</Badge>
+          </>
+        )}
+        <br />
+        <span class="muted">{m.email}</span>
+      </span>
+    </span>
+  )
+}
+
+export function memberColumns({
+  me,
+  roles,
+  locked,
+  change,
+  ask,
+}: {
+  me: () => string
+  roles: () => Role[]
+  locked: (m: Member) => boolean
+  change: (m: Member, role: string) => void
+  ask: (list: Member[]) => void
+}): Column<Member>[] {
   const inputs = {
     get roles() {
       return roles()
@@ -28,22 +53,7 @@ export function memberColumns(
       rowHeader: true,
       card: 'title',
       sort: true,
-      cell: (m) => (
-        <span data-scope="row" data-wrap="none">
-          <Avatar name={m.name} size="sm" />
-          <span>
-            <b>{m.name}</b>
-            {m.id === me() && (
-              <>
-                {' '}
-                <Badge>You</Badge>
-              </>
-            )}
-            <br />
-            <span class="muted">{m.email}</span>
-          </span>
-        </span>
-      ),
+      cell: (m) => nameCell(m, me),
     },
     {
       id: 'role',

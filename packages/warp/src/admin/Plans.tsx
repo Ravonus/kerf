@@ -61,15 +61,23 @@ export interface PlanPickerProps {
   onChange: (plan: BillingPlan, interval: BillingInterval) => Promise<string | void> | string | void
 }
 
-function planConfirm(
-  props: PlanPickerProps,
-  next: { readonly value: BillingPlan },
-  cycle: State<BillingInterval>,
-  open: State<boolean>,
-  busy: State<boolean>,
-  problem: State<string>,
-  up: { readonly value: boolean },
-) {
+function planConfirm({
+  props,
+  next,
+  cycle,
+  open,
+  busy,
+  problem,
+  up,
+}: {
+  props: PlanPickerProps
+  next: { readonly value: BillingPlan }
+  cycle: State<BillingInterval>
+  open: State<boolean>
+  busy: State<boolean>
+  problem: State<string>
+  up: { readonly value: boolean }
+}) {
   const confirm = async () => {
     if (busy.value) return
     busy.value = true
@@ -142,7 +150,7 @@ function planModel(props: PlanPickerProps) {
         })
     open.value = true
   }
-  const confirm = planConfirm(props, next, cycle, open, busy, problem, up)
+  const confirm = planConfirm({ props, next, cycle, open, busy, problem, up })
   const lost = derived(() => (up.value || same.value ? [] : (props.losses?.(next.value) ?? [])))
   return {
     planGroup: group,

@@ -13,6 +13,8 @@ import type { State } from '@weft-js/core'
 import type { AvailabilityEditorProps } from './AvailabilityEditor'
 import { confirmSweep } from './bits'
 
+export type TimeEdit = { day: number; at: number; side: 0 | 1; v: number }
+
 export type AvailabilityActionsContext = {
   p: AvailabilityEditorProps
   week: State<WeekDay[]>
@@ -39,7 +41,7 @@ export function weekActions({ week, p, say, dayName, focus, dirty }: Availabilit
     week.value = week.value.map((d) => (d.day === day ? f(d) : d))
     dirty()
   }
-  const setTime = (day: number, at: number, side: 0 | 1, v: number) => {
+  const setTime = ({ day, at, side, v }: TimeEdit) => {
     patch(day, (d) => ({
       ...d,
       ranges: d.ranges.map((r, i) => (i === at ? (side ? [r[0], v] : [v, r[1]]) : r)),

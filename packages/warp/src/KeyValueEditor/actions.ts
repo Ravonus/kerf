@@ -7,14 +7,21 @@ type Refs = {
   body?: HTMLElement | undefined
   timer?: ReturnType<typeof setTimeout> | undefined
 }
-export function keyValueActions(
-  held: ReturnType<typeof bindable<KeyValue[]>>,
-  ids: State<number[]>,
-  mode: State<'form' | 'json'>,
-  text: State<string>,
-  refs: Refs,
-  toJson: (rows: KeyValue[]) => string,
-) {
+export function keyValueActions({
+  held,
+  ids,
+  mode,
+  text,
+  refs,
+  toJson,
+}: {
+  held: ReturnType<typeof bindable<KeyValue[]>>
+  ids: State<number[]>
+  mode: State<'form' | 'json'>
+  text: State<string>
+  refs: Refs
+  toJson: (rows: KeyValue[]) => string
+}) {
   const dup = (rows: KeyValue[], at: number) =>
     !!rows[at]!.key && rows.findIndex((r) => r.key === rows[at]!.key) !== at
   const hasDup = () => held.value.some((_, at) => dup(held.value, at))

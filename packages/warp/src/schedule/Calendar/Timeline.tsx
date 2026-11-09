@@ -18,15 +18,23 @@ import type { Ctx } from './calendar-state'
 
 const STEP = 5 // a timeline lane's column, in minutes
 
-function useTimelineFit(
-  c: Ctx,
-  getBox: () => HTMLDivElement | undefined,
-  getScroller: () => HTMLDivElement | undefined,
-  slots: { value: number },
-  segs: { value: unknown },
-  rows: { value: unknown },
-  range: { value: unknown },
-) {
+function useTimelineFit({
+  c,
+  getBox,
+  getScroller,
+  slots,
+  segs,
+  rows,
+  range,
+}: {
+  c: Ctx
+  getBox: () => HTMLDivElement | undefined
+  getScroller: () => HTMLDivElement | undefined
+  slots: { value: number }
+  segs: { value: unknown }
+  rows: { value: unknown }
+  range: { value: unknown }
+}) {
   // names wrap between words, never inside one: when a word is wider than its booking, every hour widens a step
   // (--_fit) until each word fits, and the rows scroll sideways for it rather than cut a name
   const fit = () => {
@@ -132,15 +140,7 @@ function useTimeline(c: Ctx) {
       b = Math.max(Math.min(s.e, to), a + STEP)
     return `grid-column:${Math.round((a - from) / STEP) + 1} / span ${Math.max(1, Math.round((b - a) / STEP))}`
   }
-  useTimelineFit(
-    c,
-    () => box,
-    () => scroller,
-    slots,
-    segs,
-    rows,
-    range,
-  )
+  useTimelineFit({ c, getBox: () => box, getScroller: () => scroller, slots, segs, rows, range })
   const onKey = (e: KeyboardEvent) =>
     c.eventKeys(e, {
       resources: (c.p.resources ?? []).map((r) => r.id),

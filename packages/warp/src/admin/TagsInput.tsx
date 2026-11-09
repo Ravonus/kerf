@@ -38,14 +38,14 @@ export function TagsInput({
   const draft = state('')
   const armed = state(false)
   const refs: { host?: HTMLElement | undefined } = {}
-  const { add, drop, key, paste } = tagActions(
-    () => value,
+  const { add, drop, key, paste } = tagActions({
+    value: () => value,
     draft,
     armed,
     refs,
-    () => onEdit?.(),
-    () => onSubmit?.(),
-  )
+    onEdit: () => onEdit?.(),
+    onSubmit: () => onSubmit?.(),
+  })
   const last = derived(() => value.value[value.value.length - 1])
   return (
     <Field

@@ -17,15 +17,23 @@ type Data<T> = {
     timer?: ReturnType<typeof setTimeout> | undefined
   }
 }
-export function saveActions<T extends Record<string, unknown>>(
-  d: Data<T>,
-  errors: () => SaveBarProps<T>['errors'],
-  validate: (now: T) => FieldErrors | undefined,
-  onSave: SaveBarProps<T>['onSave'],
-  onDiscard: () => void,
-  hasLeave: () => SaveBarProps<T>['onLeave'],
-  onLeave: () => void,
-) {
+export function saveActions<T extends Record<string, unknown>>({
+  d,
+  errors,
+  validate,
+  onSave,
+  onDiscard,
+  hasLeave,
+  onLeave,
+}: {
+  d: Data<T>
+  errors: () => SaveBarProps<T>['errors']
+  validate: (now: T) => FieldErrors | undefined
+  onSave: SaveBarProps<T>['onSave']
+  onDiscard: () => void
+  hasLeave: () => SaveBarProps<T>['onLeave']
+  onLeave: () => void
+}) {
   const { box, base, phase, fixes, leaving, dirty, refs } = d
   const fail = (found: FieldErrors) => {
     if (errors()) errors()!.value = found

@@ -136,12 +136,17 @@ export interface TypeToConfirmProps {
   onConfirm: () => Promise<void> | void
 }
 
-function confirmActions(
-  open: () => State<boolean>,
-  ok: { readonly value: boolean },
-  busy: State<boolean>,
-  confirm: () => Promise<void> | void,
-) {
+function confirmActions({
+  open,
+  ok,
+  busy,
+  confirm,
+}: {
+  open: () => State<boolean>
+  ok: { readonly value: boolean }
+  busy: State<boolean>
+  confirm: () => Promise<void> | void
+}) {
   const go = async () => {
     if (!ok.value || busy.value) return
     busy.value = true
@@ -185,12 +190,7 @@ export function TypeToConfirm({
       if (on) typed.value = ''
     },
   )
-  const { go, submit } = confirmActions(
-    () => open,
-    ok,
-    busy,
-    () => onConfirm(),
-  )
+  const { go, submit } = confirmActions({ open: () => open, ok, busy, confirm: () => onConfirm() })
   return (
     <>
       {armed.value && (

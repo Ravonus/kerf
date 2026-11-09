@@ -58,7 +58,13 @@ export function ArtifactPanel({
     () => refs.list,
     () => ({ selected: '[aria-selected="true"]', x: '--_ix', w: '--_iw', at: view.value }),
   )
-  const { go, onTab, choose, onList } = artifactActions(view, picked, current, () => versions, refs)
+  const { go, onTab, choose, onList } = artifactActions({
+    view,
+    picked,
+    current,
+    versions: () => versions,
+    refs,
+  })
   return (
     <section
       ref={(n) => (refs.root = n)}
@@ -97,13 +103,19 @@ export function ArtifactPanel({
   )
 }
 
-function artifactActions(
-  view: State<(typeof VIEWS)[number]>,
-  picked: ReturnType<typeof held<string | undefined>>,
-  current: { readonly value: ArtifactVersion | undefined },
-  versions: () => ArtifactVersion[],
-  refs: { root?: HTMLElement | undefined; list?: HTMLElement | undefined },
-) {
+function artifactActions({
+  view,
+  picked,
+  current,
+  versions,
+  refs,
+}: {
+  view: State<(typeof VIEWS)[number]>
+  picked: ReturnType<typeof held<string | undefined>>
+  current: { readonly value: ArtifactVersion | undefined }
+  versions: () => ArtifactVersion[]
+  refs: { root?: HTMLElement | undefined; list?: HTMLElement | undefined }
+}) {
   const go = (v: (typeof VIEWS)[number]) => (view.value = v)
   const onTab = (e: KeyboardEvent) => {
     const to = nextIndex(e.key, VIEWS.indexOf(view.value), VIEWS.length, {

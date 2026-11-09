@@ -40,14 +40,21 @@ function gridFetch<T>(
   return fetchKids
 }
 
-function gridExpandAll<T>(
-  props: DataGridProps<T>,
-  st: GridState<T>,
-  src: GridSource<T>,
-  fetchKids: (key: string, row: T) => Promise<boolean>,
-  say: (s: string) => void,
-  getCtx: () => Ctx<T>,
-) {
+function gridExpandAll<T>({
+  props,
+  st,
+  src,
+  fetchKids,
+  say,
+  getCtx,
+}: {
+  props: DataGridProps<T>
+  st: GridState<T>
+  src: GridSource<T>
+  fetchKids: (key: string, row: T) => Promise<boolean>
+  say: (s: string) => void
+  getCtx: () => Ctx<T>
+}) {
   const { open, query, keyOf } = st
   const { isBranch, kidsOf, ordered } = src
   let expanding = 0 // a run of Expand all; Collapse all, or a newer run, ends it
@@ -87,14 +94,21 @@ function gridExpandAll<T>(
   return expandAll
 }
 
-export function gridTreeActions<T>(
-  props: DataGridProps<T>,
-  st: GridState<T>,
-  src: GridSource<T>,
-  ln: GridLines<T>,
-  say: (s: string) => void,
-  getCtx: () => Ctx<T>,
-) {
+export function gridTreeActions<T>({
+  props,
+  st,
+  src,
+  ln,
+  say,
+  getCtx,
+}: {
+  props: DataGridProps<T>
+  st: GridState<T>
+  src: GridSource<T>
+  ln: GridLines<T>
+  say: (s: string) => void
+  getCtx: () => Ctx<T>
+}) {
   const { query, closedHere, open, closed } = st
   const { kidsOf } = src
   const { lines } = ln
@@ -130,6 +144,6 @@ export function gridTreeActions<T>(
       closedHere.value = {}
     },
   )
-  const expandAll = gridExpandAll(props, st, src, fetchKids, say, getCtx)
+  const expandAll = gridExpandAll({ props, st, src, fetchKids, say, getCtx })
   return { isOpen, toggle, expandAll }
 }

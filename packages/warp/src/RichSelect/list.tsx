@@ -1,9 +1,10 @@
 import type { ChangeReason } from '@weft-js/warp-core'
-import { uid, listKey } from '@weft-js/warp-core'
-import { state, derived, untrack, flush, onMount, type State } from '@weft-js/core'
+import { uid } from '@weft-js/warp-core'
+import { state, derived, untrack, onMount } from '@weft-js/core'
 import { SearchIcon, DownIcon } from '@weft-js/warp-icons'
 import type { RichFieldProps, Bindable, Openable } from '../Picker'
 import type { IconRef } from '../Icon'
+import { searchKeys } from './search-keys'
 import { usePickerEnv, bindable, useOpen, Composite, Hidden, Panel } from '../Picker'
 
 export type Row = {
@@ -57,7 +58,7 @@ export function SearchList({
   )
   let list: HTMLUListElement | undefined
   const show = () => list?.querySelector('[data-active]')?.scrollIntoView?.({ block: 'nearest' })
-  const onKey = searchKeys(shown, active, () => onPick, show)
+  const onKey = searchKeys({ shown, active, onPick: () => onPick, show })
   onMount(show)
   return (
     <div class="tz-pop">
@@ -100,25 +101,6 @@ export function SearchList({
       )}
     </div>
   )
-}
-
-function searchKeys(
-  shown: { readonly value: Row[] },
-  active: State<number>,
-  onPick: () => (key: string, reason: ChangeReason) => void,
-  show: () => void,
-) {
-  return (e: KeyboardEvent) => {
-    const n = shown.value.length
-    if (!n) return
-    const m = listKey(e.key, active.value, n, { page: 8, wrap: true, typing: true })
-    if (!m.handled) return
-    e.preventDefault()
-    if (m.pick) return onPick()(shown.value[active.value]!.key, 'keyboard')
-    active.value = m.to
-    flush()
-    show()
-  }
 }
 
 const Option = ({

@@ -8,13 +8,19 @@ import type { TableModel } from './Table-model'
 const SKELETON_ROWS = 6
 
 /** Render the current table body under the table's owner. */
-export function tableBody<T>(
-  input: TableModel<T>['input'],
-  base: TableModel<T>['base'],
-  source: TableModel<T>['source'],
-  details: TableModel<T>['details'],
-  notice: TableModel<T>['notice'],
-) {
+export function tableBody<T>({
+  input,
+  base,
+  source,
+  details,
+  notice,
+}: {
+  input: TableModel<T>['input']
+  base: TableModel<T>['base']
+  source: TableModel<T>['source']
+  details: TableModel<T>['details']
+  notice: TableModel<T>['notice']
+}) {
   const [, level, cols, keyOf, , , typed, , sel] = base
   const [, , , , , visible, phase] = source
   const [ctx, hasDetails] = details

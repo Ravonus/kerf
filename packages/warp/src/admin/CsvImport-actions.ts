@@ -4,23 +4,58 @@ import {
   importRecords,
   isCsvFile,
   parseCsv,
+  SKIP_COLUMN,
   type CsvTable,
   type ImportIssue,
 } from '@weft-js/warp-core'
-import type { State } from '@weft-js/core'
+import { derived, type State } from '@weft-js/core'
 import { toast } from '../Toast'
 import type { CsvImportProps } from './CsvImport'
 
 export type Stage = 'upload' | 'map' | 'review' | 'done'
 
-export function csvLoading(
-  props: CsvImportProps,
-  table: State<CsvTable>,
-  map: State<string[]>,
-  file: State<string>,
-  issue: State<string>,
-  go: (next: Stage) => void,
-) {
+const PREVIEW_ROWS = 50
+
+export function csvPreview({
+  props,
+  table,
+  map,
+  issues,
+}: {
+  props: CsvImportProps
+  table: State<CsvTable>
+  map: State<string[]>
+  issues: { readonly value: ImportIssue[] }
+}) {
+  const cellIssue = (row: number, target: string) =>
+    issues.value.find((x) => x.row === row && x.path === target)
+  const preview = derived(() =>
+    table.value.rows.slice(0, PREVIEW_ROWS).map((cells, row) => ({ row, cells })),
+  )
+  const columns = derived(() =>
+    table.value.headers.map((h, col) => ({ h, col, target: map.value[col] })),
+  )
+  const kept = derived(() => columns.value.filter((c) => c.target !== SKIP_COLUMN))
+  const titleOf = (target: string) => props.targets.find((t) => t.id === target)?.label ?? target
+
+  return { cellIssue, preview, columns, kept, titleOf }
+}
+
+export function csvLoading({
+  props,
+  table,
+  map,
+  file,
+  issue,
+  go,
+}: {
+  props: CsvImportProps
+  table: State<CsvTable>
+  map: State<string[]>
+  file: State<string>
+  issue: State<string>
+  go: (next: Stage) => void
+}) {
   const load = (name: string, text: string) => {
     const t = parseCsv(text)
     if (t.problem) {
@@ -50,16 +85,25 @@ export function csvLoading(
   return { load, take }
 }
 
-export function csvRun(
-  props: CsvImportProps,
-  table: State<CsvTable>,
-  map: State<string[]>,
-  issues: { readonly value: ImportIssue[] },
-  percent: State<number>,
-  finished: State<boolean>,
-  count: (n: number) => string,
-  go: (next: Stage) => void,
-) {
+export function csvRun({
+  props,
+  table,
+  map,
+  issues,
+  percent,
+  finished,
+  count,
+  go,
+}: {
+  props: CsvImportProps
+  table: State<CsvTable>
+  map: State<string[]>
+  issues: { readonly value: ImportIssue[] }
+  percent: State<number>
+  finished: State<boolean>
+  count: (n: number) => string
+  go: (next: Stage) => void
+}) {
   const run = async () => {
     const records = importRecords(table.value.rows, map.value, issues.value)
     go('done')

@@ -77,17 +77,17 @@ export function PeriodPicker({
   disabled,
   ...rest
 }: PeriodPickerProps) {
-  const { env, v, pop } = pickerBindings<string | null>(
-    () => value,
-    () => defaultValue,
-    () => onValueChange,
-    () => open,
-    () => defaultOpen,
-    () => onOpenChange,
-    () => locale,
-    () => today,
-    null,
-  )
+  const { env, v, pop } = pickerBindings<string | null>({
+    value: () => value,
+    initial: () => defaultValue,
+    changed: () => onValueChange,
+    open: () => open,
+    defaultOpen: () => defaultOpen,
+    onOpenChange: () => onOpenChange,
+    locale: () => locale,
+    today: () => today,
+    fallback: null,
+  })
   const g = derived(() => granularity ?? granularityOf(v.value))
   const year = state(
     yearOf(

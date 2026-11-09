@@ -3,15 +3,23 @@ import type { State } from '@weft-js/core'
 import type { Inputs } from './NotificationPreferencesModel'
 import type { preferencesSave } from './NotificationPreferencesSave'
 
-export function preferencesActions(
-  p: () => Inputs,
-  model: State<PrefValues>,
-  mail: State<string>,
-  events: { readonly value: PrefEvent[] },
-  reset: Inputs['defaults'],
-  fixed: PrefRules,
-  commit: ReturnType<typeof preferencesSave>['commit'],
-) {
+export function preferencesActions({
+  p,
+  model,
+  mail,
+  events,
+  reset,
+  fixed,
+  commit,
+}: {
+  p: () => Inputs
+  model: State<PrefValues>
+  mail: State<string>
+  events: { readonly value: PrefEvent[] }
+  reset: Inputs['defaults']
+  fixed: PrefRules
+  commit: ReturnType<typeof preferencesSave>['commit']
+}) {
   const doReset = () =>
     commit(
       () => {

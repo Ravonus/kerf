@@ -86,13 +86,13 @@ export function ConnBanner({
     () => (recovered.value = false),
   )
   const retry = useCooldown(() => retryIn)
-  const postpone = connectionEffects(
+  const postpone = connectionEffects({
     view,
     recovered,
     later,
-    () => name,
-    () => onLater?.(),
-  )
+    name: () => name,
+    onLater: () => onLater?.(),
+  })
   return (
     <>
       {view.value && (
@@ -131,13 +131,19 @@ export function ConnBanner({
   )
 }
 
-function connectionEffects(
-  view: { readonly value: ReturnType<typeof connView> },
-  recovered: State<boolean>,
-  later: State<boolean>,
-  name: () => string,
-  onLater: () => void,
-) {
+function connectionEffects({
+  view,
+  recovered,
+  later,
+  name,
+  onLater,
+}: {
+  view: { readonly value: ReturnType<typeof connView> }
+  recovered: State<boolean>
+  later: State<boolean>
+  name: () => string
+  onLater: () => void
+}) {
   let hide: ReturnType<typeof setTimeout> | undefined
   onCleanup(() => clearTimeout(hide))
   onMount(() => {

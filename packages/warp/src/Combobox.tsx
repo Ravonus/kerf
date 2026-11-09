@@ -85,13 +85,19 @@ type ComboOptions<T> = {
   hint: () => ComboFieldProps<T>['hint']
 }
 
-function comboSearch<T>(
-  opts: ComboOptions<T>,
-  hits: State<T[]>,
-  active: State<number>,
-  open: State<boolean>,
-  busy: State<boolean>,
-) {
+function comboSearch<T>({
+  opts,
+  hits,
+  active,
+  open,
+  busy,
+}: {
+  opts: ComboOptions<T>
+  hits: State<T[]>
+  active: State<number>
+  open: State<boolean>
+  busy: State<boolean>
+}) {
   let timer: ReturnType<typeof setTimeout> | undefined
   let stop: AbortController | undefined
   const cancel = () => {
@@ -141,7 +147,7 @@ function comboModel<T>(opts: ComboOptions<T>) {
   const rows = derived(() => hits.value.map((hit, at) => ({ at, r: untrack(opts.row)(hit) })))
   let input: HTMLInputElement | undefined
   let pop: HTMLDivElement | undefined
-  const { cancel, run } = comboSearch(opts, hits, active, open, busy)
+  const { cancel, run } = comboSearch({ opts, hits, active, open, busy })
   onCleanup(cancel)
   use(
     comboPopup,

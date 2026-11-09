@@ -146,13 +146,19 @@ function fieldsModel(draft: CalEvent, p: EventEditorProps) {
   }
 }
 
-function fieldsTime(
-  e: CalEvent,
-  p: EventEditorProps,
-  start: ReturnType<typeof fieldsModel>['start'],
-  end: ReturnType<typeof fieldsModel>['end'],
-  timeError: ReturnType<typeof fieldsModel>['timeError'],
-) {
+function fieldsTime({
+  e,
+  p,
+  start,
+  end,
+  timeError,
+}: {
+  e: CalEvent
+  p: EventEditorProps
+  start: ReturnType<typeof fieldsModel>['start']
+  end: ReturnType<typeof fieldsModel>['end']
+  timeError: ReturnType<typeof fieldsModel>['timeError']
+}) {
   return (
     !e.allDay && (
       <div class="row">
@@ -223,7 +229,7 @@ function Fields({
     >
       {fieldsTitle(title, titleError)}
       <DateField label="Date" value={date} today={p.today} locale={p.locale} />
-      {fieldsTime(e, p, start, end, timeError)}
+      {fieldsTime({ e, p, start, end, timeError })}
       <Switch
         checked={repeats.value}
         onChange={(i: Event) => (repeats.value = (i.currentTarget as HTMLInputElement).checked)}

@@ -141,12 +141,17 @@ export interface FlowForm<V> {
   heading?: Heading
 }
 
-function watchStepFailure<V>(
-  p: FlowForm<V>,
-  failure: { readonly value: FlowError | undefined },
-  root: () => HTMLElement | undefined,
-  focusInvalid: (say?: string) => void,
-) {
+function watchStepFailure<V>({
+  p,
+  failure,
+  root,
+  focusInvalid,
+}: {
+  p: FlowForm<V>
+  failure: { readonly value: FlowError | undefined }
+  root: () => HTMLElement | undefined
+  focusInvalid: (say?: string) => void
+}) {
   onMount(() => {
     watch(
       () => failure.value,
@@ -210,7 +215,7 @@ export function useStepForm<V>(
     root?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
     if (say) announce(document, say)
   }
-  watchStepFailure(p, failure, () => root, focusInvalid)
+  watchStepFailure({ p, failure, root: () => root, focusInvalid })
   const submit = (e: SubmitEvent) => {
     e.preventDefault()
     const f = e.currentTarget as HTMLFormElement

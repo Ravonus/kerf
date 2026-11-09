@@ -120,7 +120,7 @@ export function ApiKeys({
     },
   )
   const tools = derived(() => <Button onClick={start}>{`Create ${title.value} key`}</Button>) // one build: Table reads the prop twice
-  const footer = keyFooter(secret, seen, dialog, busy, make)
+  const footer = keyFooter({ secret, seen, dialog, busy, make })
   return keyView({
     ...context,
     make,
@@ -192,13 +192,19 @@ function apiKeyColumns(
   ]
 }
 
-function keyFooter(
-  secret: State<string>,
-  seen: State<boolean>,
-  dialog: State<boolean>,
-  busy: State<boolean>,
-  make: () => Promise<void>,
-) {
+function keyFooter({
+  secret,
+  seen,
+  dialog,
+  busy,
+  make,
+}: {
+  secret: State<string>
+  seen: State<boolean>
+  dialog: State<boolean>
+  busy: State<boolean>
+  make: () => Promise<void>
+}) {
   return derived(() =>
     secret.value ? (
       <Button disabled={!seen.value} onClick={() => (dialog.value = false)}>

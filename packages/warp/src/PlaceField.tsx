@@ -137,14 +137,21 @@ export type AddressFieldProps = Bindable<Address | null> & {
   errors?: Partial<Record<AddressPart, string>> | undefined
 }
 
-function addressState(
-  value: () => AddressFieldProps['value'],
-  defaultValue: () => AddressFieldProps['defaultValue'],
-  onValueChange: () => AddressFieldProps['onValueChange'],
-  defaultCountry: () => string,
-  provider: () => AddressProvider | undefined,
-  root: () => HTMLDivElement | undefined,
-) {
+function addressState({
+  value,
+  defaultValue,
+  onValueChange,
+  defaultCountry,
+  provider,
+  root,
+}: {
+  value: () => AddressFieldProps['value']
+  defaultValue: () => AddressFieldProps['defaultValue']
+  onValueChange: () => AddressFieldProps['onValueChange']
+  defaultCountry: () => string
+  provider: () => AddressProvider | undefined
+  root: () => HTMLDivElement | undefined
+}) {
   const v = bindable<Address | null>(value, defaultValue, null, onValueChange)
   const country = state<string | null>(untrack(() => v.value?.country ?? defaultCountry()))
   const format = derived(() => addressFormat(country.value!))
@@ -168,7 +175,7 @@ function addressState(
     manual.value = true
     note.value = say
   }
-  const postal = derived(() => {
+  const zip = derived(() => {
     const f = format.value,
       t = addressPart(v.value, 'postalCode').trim()
     return f.postal && t && touched.value.postal && !f.postal.test(t) ? f.postalMessage : undefined
@@ -180,7 +187,7 @@ function addressState(
     note.value = ''
     touched.value = {}
   })
-  return { v, country, format, manual, note, touched, write, fill, goManual, postal }
+  return { v, country, format, manual, note, touched, write, fill, goManual, zip }
 }
 
 function postalBlur(part: AddressPart, touched: ReturnType<typeof state<Record<string, boolean>>>) {
@@ -210,14 +217,14 @@ export function AddressField({
   errors,
 }: AddressFieldProps) {
   let root: HTMLDivElement | undefined
-  const { v, country, format, manual, note, touched, write, fill, goManual, postal } = addressState(
-    () => value,
-    () => defaultValue,
-    () => onValueChange,
-    () => defaultCountry,
-    () => provider,
-    () => root,
-  )
+  const { v, country, format, manual, note, touched, write, fill, goManual, zip } = addressState({
+    value: () => value,
+    defaultValue: () => defaultValue,
+    onValueChange: () => onValueChange,
+    defaultCountry: () => defaultCountry,
+    provider: () => provider,
+    root: () => root,
+  })
   return (
     <div ref={(n) => (root = n)} role="group" aria-label={label} class="stack">
       {name && <input type="hidden" name={name} value={v.value ? JSON.stringify(v.value) : ''} />}
@@ -254,7 +261,7 @@ export function AddressField({
                   value={addressPart(v.value, part)}
                   error={
                     problem.value ??
-                    (part === 'postalCode' ? postal.value : undefined) ??
+                    (part === 'postalCode' ? zip.value : undefined) ??
                     (errors ? '' : undefined)
                   }
                   onInput={(e) => write(part, e.currentTarget.value)}

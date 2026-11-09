@@ -65,12 +65,17 @@ export function VirtualList<T>(props: VirtualListProps<T>) {
     edges,
   })
 
-  return virtualView(() => props, data, refs, {
-    waiting,
-    pending,
-    active,
-    probes,
-    onKeyDown,
-    renderChildren,
+  return virtualView({
+    read: () => props,
+    data,
+    refs,
+    bindings: {
+      waiting,
+      pending,
+      active,
+      probes,
+      onKeyDown,
+      renderChildren,
+    },
   })
 }

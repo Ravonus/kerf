@@ -3,20 +3,32 @@ import { derived, type State } from '@weft-js/core'
 import { Checkbox } from '../Choice'
 import type { preferencesSave } from './NotificationPreferencesSave'
 
-export function preferencesCells(
-  model: State<PrefValues>,
-  fixed: PrefRules,
-  parent: ReturnType<typeof preferencesSave>['parent'],
-  onNa: (e: KeyboardEvent) => void,
-) {
-  const parentBox = (
-    evs: PrefEvent[],
-    c: string,
-    nameText: string,
-    visible: string,
-    where: string | undefined,
-    first: boolean,
-  ) => {
+export function preferencesCells({
+  model,
+  fixed,
+  parent,
+  onNa,
+}: {
+  model: State<PrefValues>
+  fixed: PrefRules
+  parent: ReturnType<typeof preferencesSave>['parent']
+  onNa: (e: KeyboardEvent) => void
+}) {
+  const parentBox = ({
+    evs,
+    c,
+    nameText,
+    visible,
+    where,
+    first,
+  }: {
+    evs: PrefEvent[]
+    c: string
+    nameText: string
+    visible: string
+    where: string | undefined
+    first: boolean
+  }) => {
     const tri = derived(() => triState(model.value, evs, fixed, c))
     return (
       <Checkbox

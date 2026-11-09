@@ -45,7 +45,7 @@ export function bookingModel(p: () => BookingCalendarProps) {
       : ''
   })
   let root: HTMLDivElement | undefined
-  const { setDate, toConfirm, book } = bookingActions(
+  const { setDate, toConfirm, book } = bookingActions({
     p,
     own,
     date,
@@ -57,8 +57,8 @@ export function bookingModel(p: () => BookingCalendarProps) {
     len,
     chosen,
     when,
-    () => root,
-  )
+    root: () => root,
+  })
   const onSlots = bookingSlots()
   const empty = derived(() => !list.value.some((s) => !s.disabled))
 
