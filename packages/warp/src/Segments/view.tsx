@@ -18,13 +18,19 @@ type SegmentViewModel = {
 
 const keyOf = (p: SegmentPart) => (isSegment(p) ? p.type : `l${p.at}`)
 
-export const segmentView = (
-  model: SegmentViewModel,
-  label: () => string | undefined,
-  readonly: () => boolean | undefined,
-  disabled: () => boolean | undefined,
-  required: () => boolean | undefined,
-) => {
+export const segmentView = ({
+  model,
+  label,
+  readonly,
+  disabled,
+  required,
+}: {
+  model: SegmentViewModel
+  label: () => string | undefined
+  readonly: () => boolean | undefined
+  disabled: () => boolean | undefined
+  required: () => boolean | undefined
+}) => {
   const { parts, shape, onKey, onLeave, onPaste, setGroup } = model
   return (
     <div

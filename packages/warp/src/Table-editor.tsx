@@ -13,24 +13,30 @@ type EditorProps = {
 /** The input used to edit a cell. */
 export function Editor(props: EditorProps) {
   return untrack(() =>
-    tableEditor(
-      () => props.label,
-      () => props.start,
-      props,
-      () => props.invalid,
-      () => props.describedby,
-    ),
+    tableEditor({
+      label: () => props.label,
+      start: () => props.start,
+      callbacks: props,
+      invalid: () => props.invalid,
+      describedby: () => props.describedby,
+    }),
   )
 }
 
 /** Render the input under its editing owner, keeping the original callback receiver. */
-export function tableEditor(
-  label: () => string,
-  start: () => string,
-  callbacks: Pick<EditorProps, 'onDone' | 'onLeave'>,
-  invalid?: () => boolean | undefined,
-  describedby?: () => string | undefined,
-) {
+export function tableEditor({
+  label,
+  start,
+  callbacks,
+  invalid,
+  describedby,
+}: {
+  label: () => string
+  start: () => string
+  callbacks: Pick<EditorProps, 'onDone' | 'onLeave'>
+  invalid?: () => boolean | undefined
+  describedby?: () => string | undefined
+}) {
   let input: HTMLInputElement | undefined
   onMount(() => {
     input?.focus()

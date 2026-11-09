@@ -15,15 +15,23 @@ import {
 import { gridTreeActions } from './DataGrid-tree'
 import { gridEditing, gridViewActions } from './DataGrid-actions'
 
-function gridContext<T>(
-  props: DataGridProps<T>,
-  st: GridState<T>,
-  src: GridSource<T>,
-  isOpen: (key: string) => boolean,
-  toggle: (key: string, on?: boolean) => void,
-  hasDetails: boolean,
-  say: (s: string) => void,
-) {
+function gridContext<T>({
+  props,
+  st,
+  src,
+  isOpen,
+  toggle,
+  hasDetails,
+  say,
+}: {
+  props: DataGridProps<T>
+  st: GridState<T>
+  src: GridSource<T>
+  isOpen: (key: string) => boolean
+  toggle: (key: string, on?: boolean) => void
+  hasDetails: boolean
+  say: (s: string) => void
+}) {
   const { id, all, cols, keyOf, read, query, expanded, refs, busy } = st
   const { treed, kidsOf, rolled } = src
   const namedCol = derived(() => all.value.find((c) => c.rowHeader) ?? all.value[0])
@@ -60,15 +68,23 @@ function gridContext<T>(
   return ctx
 }
 
-function gridConnect<T>(
-  st: GridState<T>,
-  src: GridSource<T>,
-  ln: GridLines<T>,
-  ctx: Ctx<T>,
-  toggle: (key: string, on?: boolean) => void,
-  editing: ReturnType<typeof gridEditing<T>>,
-  say: (s: string) => void,
-) {
+function gridConnect<T>({
+  st,
+  src,
+  ln,
+  ctx,
+  toggle,
+  editing,
+  say,
+}: {
+  st: GridState<T>
+  src: GridSource<T>
+  ln: GridLines<T>
+  ctx: Ctx<T>
+  toggle: (key: string, on?: boolean) => void
+  editing: ReturnType<typeof gridEditing<T>>
+  say: (s: string) => void
+}) {
   const { refs, cols, picked } = st
   const { treed } = src
   const { lines } = ln
@@ -104,12 +120,20 @@ export function gridController<T>(props: DataGridProps<T>) {
   const ln = gridLines(props, st, src)
   const hasDetails = untrack(() => props.expand !== undefined)
   const say = (s: string) => (st.status.value = s)
-  const tree = gridTreeActions(props, st, src, ln, say, () => ctx)
-  const ctx: Ctx<T> = gridContext(props, st, src, tree.isOpen, tree.toggle, hasDetails, say)
+  const tree = gridTreeActions({ props, st, src, ln, say, getCtx: () => ctx })
+  const ctx: Ctx<T> = gridContext({
+    props,
+    st,
+    src,
+    isOpen: tree.isOpen,
+    toggle: tree.toggle,
+    hasDetails,
+    say,
+  })
   const editing = gridEditing(props, st, ln, say)
   const views = gridViewActions(props, st, ln, say)
 
-  gridConnect(st, src, ln, ctx, tree.toggle, editing, say)
+  gridConnect({ st, src, ln, ctx, toggle: tree.toggle, editing, say })
   const hint = () =>
     `Arrows move · Shift extends · ${st.all.value.some((c) => c.edit) ? 'Enter edits · ' : ''}⌘/Ctrl C copies`
   const hasAggregate = derived(() => st.all.value.some((c) => c.aggregate))

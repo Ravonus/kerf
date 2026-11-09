@@ -8,14 +8,21 @@ import type { TableModel } from './Table-model'
 /** The column chooser icon. */
 export const columnsIcon = () => <ColumnsIcon />
 /** Render the toolbar in the table's existing owner. */
-export function tableToolbar<T>(
-  input: TableModel<T>['input'],
-  refs: TableModel<T>['refs'],
-  base: TableModel<T>['base'],
-  paging: TableModel<T>['paging'],
-  hideable: TableModel<T>['hideable'],
-  flip: TableModel<T>['flip'],
-) {
+export function tableToolbar<T>({
+  input,
+  refs,
+  base,
+  paging,
+  hideable,
+  flip,
+}: {
+  input: TableModel<T>['input']
+  refs: TableModel<T>['refs']
+  base: TableModel<T>['base']
+  paging: TableModel<T>['paging']
+  hideable: TableModel<T>['hideable']
+  flip: TableModel<T>['flip']
+}) {
   const [id, , , , , , typed, , , , hidden, , , picking, picked] = base
   const [, , , , count] = paging
   return (

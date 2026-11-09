@@ -13,23 +13,45 @@ import {
 import { type state, untrack, watch } from '@weft-js/core'
 import { use } from '@weft-js/warp-core/weft'
 
-export function segmentEvents(
-  parts: ReturnType<typeof state<SegmentPart[]>>,
-  spins: () => HTMLElement[],
-  year: () => number,
-  update: (next: SegmentPart[]) => void,
-  group: () => HTMLDivElement | undefined,
-  readonly: () => boolean | undefined,
-  disabled: () => boolean | undefined,
-  kind: () => SegmentKind,
-  locale: () => string,
-  today: () => string,
-  onBlurPartial: () => unknown,
-  make: () => SegmentPart[],
-  value: () => string | null,
-  clears: () => number | undefined,
-  edited: () => boolean,
-) {
+function pastedValue(text: string, kind: SegmentKind, locale: string, today: string) {
+  if (kind === 'time') return parseTime(text)
+  if (kind === 'date') return parseDate(text, locale, today as IsoDate)
+  return /^\d{4}-\d{2}/.exec(text)?.[0] ?? null
+}
+
+export function segmentEvents({
+  parts,
+  spins,
+  year,
+  update,
+  group,
+  readonly,
+  disabled,
+  kind,
+  locale,
+  today,
+  onBlurPartial,
+  make,
+  value,
+  clears,
+  edited,
+}: {
+  parts: ReturnType<typeof state<SegmentPart[]>>
+  spins: () => HTMLElement[]
+  year: () => number
+  update: (next: SegmentPart[]) => void
+  group: () => HTMLDivElement | undefined
+  readonly: () => boolean | undefined
+  disabled: () => boolean | undefined
+  kind: () => SegmentKind
+  locale: () => string
+  today: () => string
+  onBlurPartial: () => unknown
+  make: () => SegmentPart[]
+  value: () => string | null
+  clears: () => number | undefined
+  edited: () => boolean
+}) {
   // a new locale reorders the parts; a value from outside fills them
   watch(locale, (l, prev) => {
     if (prev !== undefined && l !== prev) parts.value = make()
@@ -70,12 +92,7 @@ export function segmentEvents(
     e.preventDefault()
     const text = e.clipboardData?.getData('text') ?? ''
     const k = untrack(kind)
-    const v =
-      k === 'time'
-        ? parseTime(text)
-        : k === 'date'
-          ? parseDate(text, locale(), today() as IsoDate)
-          : (/^\d{4}-\d{2}/.exec(text)?.[0] ?? null)
+    const v = pastedValue(text, k, locale(), today())
     if (v) update(writeParts(parts.value, k, v))
   }
   return { onKey, onLeave, onPaste }

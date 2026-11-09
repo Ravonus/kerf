@@ -176,12 +176,17 @@ function editorLinks(d: Data) {
   return { startLink, endLink }
 }
 
-function bindEditor(
-  d: Data,
-  o: EditorOptions,
-  menu: ReturnType<typeof editorMenu>,
-  links: ReturnType<typeof editorLinks>,
-) {
+function bindEditor({
+  d,
+  o,
+  menu,
+  links,
+}: {
+  d: Data
+  o: EditorOptions
+  menu: ReturnType<typeof editorMenu>
+  links: ReturnType<typeof editorLinks>
+}) {
   use(
     (el: HTMLDivElement, options: RichTextOptions) => (d.refs.handle = richText(el, options)),
     () => d.refs.ed,
@@ -251,7 +256,7 @@ export function editorState(o: EditorOptions) {
   const d = editorData(o)
   const menu = editorMenu(d, o)
   const links = editorLinks(d)
-  bindEditor(d, o, menu, links)
+  bindEditor({ d, o, menu, links })
   const keys = editorKeys(d, menu)
   const rows = () =>
     [

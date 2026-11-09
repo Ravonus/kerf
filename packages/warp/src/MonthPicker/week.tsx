@@ -38,17 +38,17 @@ export function WeekPicker({
   disabled,
   ...rest
 }: WeekPickerProps) {
-  const { env, v, pop } = pickerBindings<IsoWeek | null>(
-    () => value,
-    () => defaultValue,
-    () => onValueChange,
-    () => open,
-    () => defaultOpen,
-    () => onOpenChange,
-    () => locale,
-    () => today,
-    null,
-  )
+  const { env, v, pop } = pickerBindings<IsoWeek | null>({
+    value: () => value,
+    initial: () => defaultValue,
+    changed: () => onValueChange,
+    open: () => open,
+    defaultOpen: () => defaultOpen,
+    onOpenChange: () => onOpenChange,
+    locale: () => locale,
+    today: () => today,
+    fallback: null,
+  })
   const shown = derived(() => (v.value ? `Week ${+v.value.slice(6)}, ${v.value.slice(0, 4)}` : ''))
   let trigger: HTMLButtonElement | undefined
   return (

@@ -9,14 +9,21 @@ const isState = (r: object | null | undefined): r is State<unknown> =>
   r != null && !Array.isArray(r) && 'value' in r
 
 /** Create the table's derived row and status views. */
-export function tableSource<T>(
-  props: TableProps<T>,
-  cols: { readonly value: Column<T>[] },
-  typed: State<string>,
-  order: State<TableSort | undefined>,
-  at: State<number>,
-  read: (column: Column<T>, row: T) => unknown,
-) {
+export function tableSource<T>({
+  props,
+  cols,
+  typed,
+  order,
+  at,
+  read,
+}: {
+  props: TableProps<T>
+  cols: { readonly value: Column<T>[] }
+  typed: State<string>
+  order: State<TableSort | undefined>
+  at: State<number>
+  read: (column: Column<T>, row: T) => unknown
+}) {
   const source = () =>
     (isResource(props.rows)
       ? (props.rows as Resource<unknown>).value

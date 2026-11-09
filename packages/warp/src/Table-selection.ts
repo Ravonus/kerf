@@ -4,14 +4,21 @@ import { checkState, rangeOf, type SortDir } from '@weft-js/warp-core'
 import type { Column, TableProps, TableSort } from './Table-types'
 
 /** Create selection and sort callbacks under the table's owner. */
-export function tableSelection<T>(
-  sel: State<Record<string, boolean>> | undefined,
-  visible: { readonly value: readonly T[] },
-  keyOf: (row: T) => string,
-  cols: { readonly value: Column<T>[] },
-  order: State<TableSort | undefined>,
-  props: TableProps<T>,
-) {
+export function tableSelection<T>({
+  sel,
+  visible,
+  keyOf,
+  cols,
+  order,
+  props,
+}: {
+  sel: State<Record<string, boolean>> | undefined
+  visible: { readonly value: readonly T[] }
+  keyOf: (row: T) => string
+  cols: { readonly value: Column<T>[] }
+  order: State<TableSort | undefined>
+  props: TableProps<T>
+}) {
   let anchor: string | undefined
   const keys = derived(() => visible.value.map(keyOf))
   const chosen = () => Object.keys(sel!.value).filter((k) => sel!.value[k])

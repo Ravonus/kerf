@@ -30,26 +30,14 @@ export type TableModel<T> = {
 }
 
 /** Render directly from private state instead of packing a second controller record. */
-export type TableRender = <T>(
-  input: TableModel<T>['input'],
-  refs: TableModel<T>['refs'],
-  base: TableModel<T>['base'],
-  source: TableModel<T>['source'],
-  selection: TableModel<T>['selection'],
-  details: TableModel<T>['details'],
-  paging: TableModel<T>['paging'],
-  notice: TableModel<T>['notice'],
-  toolbar: TableModel<T>['toolbar'],
-  hideable: TableModel<T>['hideable'],
-  flip: TableModel<T>['flip'],
-) => unknown
+export type TableRender = <T>(model: TableModel<T>) => unknown
 
 /** Create private state and render it under the table's existing owner. */
 export function tableModel<T>(input: TableInput<T>, render: TableRender) {
   const refs: Refs = { el: undefined, columnsButton: undefined }
   const base = tableBase(input)
   const [, , cols, keyOf, read, , typed, order, sel, , hidden, at, sheet, , , width] = base
-  const source = tableSource(input, cols, typed, order, at, read)
+  const source = tableSource({ props: input, cols, typed, order, at, read })
   const [, , , , , visible, phase] = source
   watch(
     () => typed.value,
@@ -57,9 +45,9 @@ export function tableModel<T>(input: TableInput<T>, render: TableRender) {
       if (was !== undefined) at.value = 0
     },
   )
-  const selection = tableSelection(sel, visible, keyOf, cols, order, input)
+  const selection = tableSelection({ sel, visible, keyOf, cols, order, props: input })
   const [, , , pick] = selection
-  const details = tableDetails(input, base, pick, () => refs.el)
+  const details = tableDetails({ props: input, base, pick, element: () => refs.el })
   const paging = tablePaging(input, source, at)
   const notice = tableNotice(input, phase, typed)
   use(
@@ -78,7 +66,7 @@ export function tableModel<T>(input: TableInput<T>, render: TableRender) {
   const flip = (c: Column<T>, show: boolean) => {
     hidden.value = show ? hidden.value.filter((x) => x !== c.id) : [...hidden.value, c.id]
   }
-  return render(
+  return render({
     input,
     refs,
     base,
@@ -90,5 +78,5 @@ export function tableModel<T>(input: TableInput<T>, render: TableRender) {
     toolbar,
     hideable,
     flip,
-  )
+  })
 }

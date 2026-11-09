@@ -5,12 +5,17 @@ import type { tableBase } from './Table-base'
 import type { Ctx, TableProps } from './Table-types'
 
 /** Create details callbacks and the context shared by rows. */
-export function tableDetails<T>(
-  props: TableProps<T>,
-  base: ReturnType<typeof tableBase<T>>,
-  pick: (key: string, event: MouseEvent) => void,
-  element: () => HTMLElement | undefined,
-) {
+export function tableDetails<T>({
+  props,
+  base,
+  pick,
+  element,
+}: {
+  props: TableProps<T>
+  base: ReturnType<typeof tableBase<T>>
+  pick: (key: string, event: MouseEvent) => void
+  element: () => HTMLElement | undefined
+}) {
   const [id, level, cols, keyOf, read, title, , , sel, open, , , sheet] = base
   const hasDetails = untrack(
     () => props.expand !== undefined || props.columns.some((c) => c.priority),

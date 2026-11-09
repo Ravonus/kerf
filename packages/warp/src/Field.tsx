@@ -146,7 +146,7 @@ function setupField(p: Parameters<typeof Field>[0]) {
       () => root,
       () => () => p.reset!(),
     )
-  return fieldView(
+  return fieldView({
     p,
     id,
     problem,
@@ -156,8 +156,8 @@ function setupField(p: Parameters<typeof Field>[0]) {
     chars,
     live,
     shell,
-    (n: HTMLDivElement) => (root = n),
-  )
+    setRoot: (n: HTMLDivElement) => (root = n),
+  })
 }
 
 /** A text field. Every native input attribute passes through (type, autocomplete, inputmode, onInput…). */

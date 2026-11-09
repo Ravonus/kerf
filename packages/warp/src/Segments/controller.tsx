@@ -21,18 +21,29 @@ export const afterRender = (fn: () => void) => {
   fn()
 }
 
-function segmentModel(
-  kind: () => SegmentKind,
-  locale: () => string,
-  value: () => string | null,
-  options: () => SegmentOptions | undefined,
-  today: () => string,
-  clears: () => number | undefined,
-  disabled: () => boolean | undefined,
-  readonly: () => boolean | undefined,
-  onEdit: (state: SegmentState, parts: SegmentPart[]) => void,
-  onBlurPartial: () => unknown,
-) {
+function segmentModel({
+  kind,
+  locale,
+  value,
+  options,
+  today,
+  clears,
+  disabled,
+  readonly,
+  onEdit,
+  onBlurPartial,
+}: {
+  kind: () => SegmentKind
+  locale: () => string
+  value: () => string | null
+  options: () => SegmentOptions | undefined
+  today: () => string
+  clears: () => number | undefined
+  disabled: () => boolean | undefined
+  readonly: () => boolean | undefined
+  onEdit: (state: SegmentState, parts: SegmentPart[]) => void
+  onBlurPartial: () => unknown
+}) {
   const make = () =>
     writeParts(
       segmentParts(untrack(kind), untrack(locale), untrack(options)),
@@ -57,12 +68,12 @@ function segmentModel(
     const st: SegmentState = isEmpty(next) ? 'empty' : isComplete(next) ? 'complete' : 'partial'
     onEdit(st, next)
   }
-  const { onKey, onLeave, onPaste } = segmentEvents(
+  const { onKey, onLeave, onPaste } = segmentEvents({
     parts,
     spins,
     year,
     update,
-    () => group,
+    group: () => group,
     readonly,
     disabled,
     kind,
@@ -72,8 +83,8 @@ function segmentModel(
     make,
     value,
     clears,
-    () => edited,
-  )
+    edited: () => edited,
+  })
   return {
     parts,
     shape,
@@ -115,23 +126,23 @@ export function Segments({
   onEdit: (state: SegmentState, parts: SegmentPart[]) => void
   onBlurPartial?: (() => unknown) | undefined
 }) {
-  const model = segmentModel(
-    () => kind,
-    () => locale,
-    () => value,
-    () => options,
-    () => today,
-    () => clears,
-    () => disabled,
-    () => readonly,
-    (st, parts) => onEdit(st, parts),
-    () => onBlurPartial?.(),
-  )
-  return segmentView(
+  const model = segmentModel({
+    kind: () => kind,
+    locale: () => locale,
+    value: () => value,
+    options: () => options,
+    today: () => today,
+    clears: () => clears,
+    disabled: () => disabled,
+    readonly: () => readonly,
+    onEdit: (st, parts) => onEdit(st, parts),
+    onBlurPartial: () => onBlurPartial?.(),
+  })
+  return segmentView({
     model,
-    () => label,
-    () => readonly,
-    () => disabled,
-    () => required,
-  )
+    label: () => label,
+    readonly: () => readonly,
+    disabled: () => disabled,
+    required: () => required,
+  })
 }

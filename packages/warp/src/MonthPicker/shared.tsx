@@ -47,14 +47,14 @@ export function PeriodGrid({
     flush()
     box?.querySelector<HTMLElement>('[role="gridcell"][tabindex="0"]')?.focus()
   }
-  const onKey = periodKeys(
-    () => cells,
-    () => columns,
+  const onKey = periodKeys({
+    cells: () => cells,
+    columns: () => columns,
     at,
     focus,
-    () => onPage,
-    () => onPick,
-  )
+    onPage: () => onPage,
+    onPick: () => onPick,
+  })
 
   return (
     <div ref={(n) => (box = n)} data-scope="monthgrid" onKeyDown={onKey}>
@@ -124,14 +124,21 @@ function PeriodGridHead({
   )
 }
 
-function periodKeys(
-  cells: () => Cell[],
-  columns: () => number,
-  at: State<string>,
-  focus: () => void,
-  onPage: () => (d: number) => void,
-  onPick: () => (v: string, r: ChangeReason) => void,
-) {
+function periodKeys({
+  cells,
+  columns,
+  at,
+  focus,
+  onPage,
+  onPick,
+}: {
+  cells: () => Cell[]
+  columns: () => number
+  at: State<string>
+  focus: () => void
+  onPage: () => (d: number) => void
+  onPick: () => (v: string, r: ChangeReason) => void
+}) {
   return (e: KeyboardEvent) => {
     const el = (e.target as Element).closest?.<HTMLElement>('[data-v]')
     if (!el) return
@@ -205,17 +212,27 @@ export function PickButton({
   )
 }
 
-export function pickerBindings<T>(
-  value: () => Bindable<T>['value'],
-  initial: () => Bindable<T>['defaultValue'],
-  changed: () => Bindable<T>['onValueChange'],
-  open: () => Openable['open'],
-  defaultOpen: () => Openable['defaultOpen'],
-  onOpenChange: () => Openable['onOpenChange'],
-  locale: () => string | undefined,
-  today: () => string | undefined,
-  fallback: T,
-) {
+export function pickerBindings<T>({
+  value,
+  initial,
+  changed,
+  open,
+  defaultOpen,
+  onOpenChange,
+  locale,
+  today,
+  fallback,
+}: {
+  value: () => Bindable<T>['value']
+  initial: () => Bindable<T>['defaultValue']
+  changed: () => Bindable<T>['onValueChange']
+  open: () => Openable['open']
+  defaultOpen: () => Openable['defaultOpen']
+  onOpenChange: () => Openable['onOpenChange']
+  locale: () => string | undefined
+  today: () => string | undefined
+  fallback: T
+}) {
   const env = usePickerEnv(locale, today)
   const v = bindable<T>(value, initial, fallback, changed)
   const pop = useOpen(open, defaultOpen, onOpenChange)

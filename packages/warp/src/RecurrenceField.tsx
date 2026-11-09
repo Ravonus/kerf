@@ -106,16 +106,25 @@ function monthlyOptions(dtstart: IsoDate, locale: string) {
   ]
 }
 
-function recurrenceState(
-  value: () => RecurrenceFieldProps['value'],
-  defaultValue: () => RecurrenceFieldProps['defaultValue'],
-  onValueChange: () => RecurrenceFieldProps['onValueChange'],
-  dtstart: () => IsoDate,
-  preview: () => number,
-  frequencies: () => Frequency[],
-  locale: () => string | undefined,
-  root: () => HTMLDivElement | undefined,
-) {
+function recurrenceState({
+  value,
+  defaultValue,
+  onValueChange,
+  dtstart,
+  preview,
+  frequencies,
+  locale,
+  root,
+}: {
+  value: () => RecurrenceFieldProps['value']
+  defaultValue: () => RecurrenceFieldProps['defaultValue']
+  onValueChange: () => RecurrenceFieldProps['onValueChange']
+  dtstart: () => IsoDate
+  preview: () => number
+  frequencies: () => Frequency[]
+  locale: () => string | undefined
+  root: () => HTMLDivElement | undefined
+}) {
   const env = usePickerEnv(locale, () => undefined)
   const v = bindable<string | null>(value, defaultValue, 'FREQ=WEEKLY', onValueChange)
   const rule = derived(() => parseRule(v.value))
@@ -342,16 +351,16 @@ export function RecurrenceField({
   name,
 }: RecurrenceFieldProps) {
   let root: HTMLDivElement | undefined
-  const model = recurrenceState(
-    () => value,
-    () => defaultValue,
-    () => onValueChange,
-    () => dtstart,
-    () => preview,
-    () => frequencies,
-    () => locale,
-    () => root,
-  )
+  const model = recurrenceState({
+    value: () => value,
+    defaultValue: () => defaultValue,
+    onValueChange: () => onValueChange,
+    dtstart: () => dtstart,
+    preview: () => preview,
+    frequencies: () => frequencies,
+    locale: () => locale,
+    root: () => root,
+  })
   const { v, asText, custom } = model
 
   return (

@@ -11,12 +11,12 @@ import { tableBulk, tableFooter } from './Table-actions'
 import type { TableRender } from './Table-model'
 
 /** Render the table under the caller's owner. */
-export const tableView: TableRender = (input, refs, ...parts) => {
-  const [base, source, selection, details, paging, notice, toolbar, hideable, flip] = parts
+export const tableView: TableRender = (m) => {
+  const { input, refs, base, paging, toolbar, hideable, flip } = m
   const [id, , , , , , , , sel, , hidden, , sheet, , , , shape] = base
-  const [, , , shown, , , phase] = source
-  const [, chosen, write, , headerCheck, pickAll, , sortChoices] = selection
-  const [ctx, hasDetails, closeSheet] = details
+  const [, , , shown, , , phase] = m.source
+  const [, chosen, write, , headerCheck, pickAll, , sortChoices] = m.selection
+  const [ctx, hasDetails, closeSheet] = m.details
   const [, , , , , footer] = paging
   return (
     <div
@@ -34,9 +34,9 @@ export const tableView: TableRender = (input, refs, ...parts) => {
           innerHTML={untrack(() => hideRule(id, hidden.value))}
         ></style>
       )}
-      {toolbar.value && tableToolbar(input, refs, base, paging, hideable, flip)}
+      {toolbar.value && tableToolbar({ input, refs, base, paging, hideable, flip })}
       {sel && tableBulk(chosen, write, input)}
-      {shape.value === 'cards' && sortChoices.value.length > 0 && tableSortbar(base, selection)}
+      {shape.value === 'cards' && sortChoices.value.length > 0 && tableSortbar(base, m.selection)}
       <div
         data-part="viewport"
         tabindex="0"
@@ -65,11 +65,11 @@ export const tableView: TableRender = (input, refs, ...parts) => {
                   <span data-part="sr-only">Details</span>
                 </th>
               )}
-              {tableHead(base, selection)}
+              {tableHead(base, m.selection)}
             </tr>
           </thead>
           <tbody aria-busy={phase.value === 'loading' ? 'true' : undefined}>
-            {tableBody(input, base, source, details, notice)}
+            {tableBody({ input, base, source: m.source, details: m.details, notice: m.notice })}
           </tbody>
         </table>
       </div>
