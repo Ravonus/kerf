@@ -1,4 +1,4 @@
-# warp 02 — Layout, navigation and responsive behaviour
+# Warp 02 — Layout, navigation and responsive behaviour
 
 Status: v0.3, 2026-10-28 (v0.2 review fixes: §14; v0.3 adds the Spacer demo and the locale provider: §15). CSS: [tokens/warp-layout.css](tokens/warp-layout.css), in `@layer warp.layout`. Specimen:
 [specimens/layout.html](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/layout.html) (nine templates × phone 390 / tablet 834 (portrait or landscape) /
@@ -27,7 +27,7 @@ desktop 1280, plus galleries of every part; the picker also flips `fields: float
    (`[data-scope="surface"][data-sweep]`, gated by `--warp-sweep-surfaces`: on at vivid or with
    `data-flair="sweep"`), on doc tabs and pager cards, and on the command field (the real floating-border field).
    Layout only sets `--warp-color-sweep-base` and `--warp-sweep-radius`; the phase machine is the shared one
-   (`specimens/warp-sweep.js`, weft `sweep()`): every exit keeps travelling right, at 480 · 620 · 700ms.
+   (`specimens/warp-sweep.js`, Weft `sweep()`): every exit keeps travelling right, at 480 · 620 · 700ms.
    **Bases follow the surfaces exception.** Controls (the command field, the workspace switcher) rest on the ink
    sweep-base, so sweep-vs-base is ≥ 3:1 (measured 3.03–3.16 at every stop and theme). Nav items, doc tabs and the
    phone command ring have no resting border (base `transparent`), so the sweep is measured against the surface
@@ -433,7 +433,7 @@ no JS. The few physical things key off the provider's `dir`:
   delays are measured from the left edge, so they stay in step with it.
 
 **How components read it.**
-- **weft components** call `locale()`. Each formatted value is derived from `(value, locale)`, so switching the
+- **Weft components** call `locale()`. Each formatted value is derived from `(value, locale)`, so switching the
   locale rewrites text nodes and two attributes and re-mounts nothing. Formatters are cached by
   `(tag, options)`, because constructing an `Intl` object costs far more than calling it.
 - **Plain DOM code** reads the closest `[lang]` and `getComputedStyle(el).direction`. The inputs' "nearest
@@ -499,9 +499,9 @@ or the digits, type an amount in the locale's own format, and read the resolved 
 Everything multiplies by `--warp-motion-scale`. Exits are shorter than entries. Nothing animates `width`: the
 sidebar animates a grid-track variable, and the rail overlay reveals with `clip-path`.
 
-## 12. Coverage map (old name → warp)
+## 12. Coverage map (old name → Warp)
 
-| Old | warp | | Old | warp |
+| Old | Warp | | Old | Warp |
 |---|---|---|---|---|
 | Stack, HStack, VStack | Stack / Row | | AppShell, SidebarLayout | Shell |
 | Spacer | Spacer | | Sidebar | Shell.Nav (+ NavList) |

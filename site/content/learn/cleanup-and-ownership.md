@@ -10,14 +10,14 @@
 
 A `watch` has to stop when its component goes, or it keeps running against a page that no longer shows it. So does an
 `on` listener, an `interval`, a socket, a chart widget. In the last two pages you saw that all of these clean up after
-themselves. This page is about *how*: who decides when something ends, and what to do when you start something weft
+themselves. This page is about *how*: who decides when something ends, and what to do when you start something Weft
 didn't.
 
 :::demo escape-owner
 
 ## Owners
 
-Every reactive thing in weft is created *inside* something: a `derived`, a `watch`, a DOM binding the compiler made,
+Every reactive thing in Weft is created *inside* something: a `derived`, a `watch`, a DOM binding the compiler made,
 an `onCleanup` callback, an `on` listener. That something is its **owner**. When an owner is disposed, everything it
 owns is disposed too: watches stop and run their cleanups, derived values let go of what they read, bindings stop
 updating, listeners are removed, and each `onCleanup` callback runs.
@@ -37,15 +37,15 @@ belongs to that place in the tree. That's why the demo's interval needs no clean
 `shown.value && …` branch, the interval belongs to that branch, and turning the switch off disposes the branch.
 
 :::deepdive How React compares
-React keeps a fiber for each component and runs effect cleanups when the fiber unmounts. weft has no per-component
+React keeps a fiber for each component and runs effect cleanups when the fiber unmounts. Weft has no per-component
 object at run time: the compiler turns your TSX into DOM nodes and a handful of bindings, and those bindings hang off
 whichever owner is current. The effect is the same, things stop when the UI that made them goes, but it costs one
-object per conditional or row rather than one per component, which is part of why weft's memory use stays low.
+object per conditional or row rather than one per component, which is part of why Weft's memory use stays low.
 :::
 
 ## Cleaning up what you start
 
-weft cleans up what weft made. When you start something yourself, a raw timer, a listener, a socket, a library
+Weft cleans up what Weft made. When you start something yourself, a raw timer, a listener, a socket, a library
 instance, you tell the owner how to end it, with `onCleanup`:
 
 ```tsx
@@ -75,7 +75,7 @@ Three ways to say the same thing, from the most specific to the most general:
 never removes, clears or closes it.
 
 :::pitfall setTimeout is yours to clear too
-weft doesn't flag `setTimeout`, because a one-shot timer usually ends by itself. But if it can fire after the component
+Weft doesn't flag `setTimeout`, because a one-shot timer usually ends by itself. But if it can fire after the component
 is gone, and its callback touches the page or writes state, clear it:
 
 ```tsx
@@ -136,13 +136,13 @@ export function Location({ lat, lng }: { lat: number; lng: number }) {
 one in the body would. To keep the map centred when the props change, add a `watch` inside the same `onMount`:
 `watch(() => [lat, lng] as const, ([lat, lng]) => map.setCentre(lat, lng))`.
 
-warp's components wire their behaviours the same way, through a helper you can use too: see
+Warp's components wire their behaviours the same way, through a helper you can use too: see
 [Reusing logic](/learn/reusing-logic).
 
 ## Making an owner: `createRoot`
 
 Sometimes you need to start owned work where there is no owner. A click handler runs long after setup, so `on` or
-`interval` called there has nothing to attach to: weft reports it as **W051**, and throws in development. The answer is
+`interval` called there has nothing to attach to: Weft reports it as **W051**, and throws in development. The answer is
 an owner of your own:
 
 :::demo escape-root
@@ -210,7 +210,7 @@ export const keyboard = defineState('keyboard', () => {
 Read it from any component as `keyboard.lastKey.value`. See [App-wide state with defineState](/learn/app-wide-state).
 
 Avoid making boxes at module scope in an app that renders on the server: one module is shared by every request, so a
-box there leaks one user's state into another's page. weft's catalog names that **W030**.
+box there leaks one user's state into another's page. Weft's catalog names that **W030**.
 
 ## Running code under an owner later: `getOwner` and `within`
 
@@ -277,7 +277,7 @@ export function Total() {
 ```
 
 Use it sparingly. A value read with `untrack` is a snapshot: if it changes, nothing that read it will notice. In a
-component body, `const x = untrack(() => …)` that only the TSX reads never updates, which weft reports as **W018**.
+component body, `const x = untrack(() => …)` that only the TSX reads never updates, which Weft reports as **W018**.
 A `watch` act is already untracked, so you don't need `untrack` there.
 
 ## Recap
@@ -285,7 +285,7 @@ A `watch` act is already untracked, so you don't need `untrack` there.
 - Everything reactive has an owner. Disposing an owner stops what it owns and runs its `onCleanup` callbacks.
 - `render` makes the root; each conditional branch, keyed row and `Boundary` side is an owner; components live in
   whichever owner renders them.
-- weft cleans up what it made. For what you start, use `on` and `interval`, return a cleanup from `watch`, or call
+- Weft cleans up what it made. For what you start, use `on` and `interval`, return a cleanup from `watch`, or call
   `onCleanup`.
 - `createRoot(dispose => …)` makes an owner where there isn't one, such as in a handler. It isn't disposed with its
   creator, so end it yourself, usually in `onCleanup`.

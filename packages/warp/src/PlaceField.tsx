@@ -40,7 +40,7 @@ export type PlaceLookupInputProps = RichFieldProps &
     minChars?: number
   }
 
-/** PlaceLookupInput (04 §3): "a place", not a postal address. warp ships no geocoder: the app supplies `search()`. */
+/** PlaceLookupInput (04 §3): "a place", not a postal address. Warp ships no geocoder: the app supplies `search()`. */
 export function PlaceLookupInput({
   value,
   defaultValue,

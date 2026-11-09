@@ -9,7 +9,7 @@ export const presence: Doc[] = [
     use: {
       when: [
         'A block of the page that comes and goes: details, a note, an extra field',
-        "Your own component that opens and closes and should move like warp's do",
+        "Your own component that opens and closes and should move like Warp's do",
       ],
       instead: [
         { name: 'Accordion', why: 'there is a heading to press for each section' },

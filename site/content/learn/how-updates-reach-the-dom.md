@@ -9,8 +9,8 @@
 
 In React, a state change asks React to render your component again: it calls your function, compares the new JSX with the
 old, and commits the difference to the DOM. Most of React's chapter on interactivity is about the consequences: render and
-commit, state as a snapshot, queueing updates. weft takes a different path, and this page follows it from one write to
-the DOM. It's short, and once you've seen it most of weft's behaviour stops being surprising.
+commit, state as a snapshot, queueing updates. Weft takes a different path, and this page follows it from one write to
+the DOM. It's short, and once you've seen it most of Weft's behaviour stops being surprising.
 
 ## Three steps from a write to the page
 
@@ -19,7 +19,7 @@ When a handler writes `count.value = 1`:
 1. **The box changes, now.** It stores the new value at once. Then it marks everything that read it: `derived` values that
    used it are marked stale, and the bits of DOM that showed it are put in a queue.
 2. **The queue runs once, soon.** On the next microtask, after your handler and anything else running with it has
-   finished, weft runs the queued bindings in the order they were created. Each one reads its expression again and writes
+   finished, Weft runs the queued bindings in the order they were created. Each one reads its expression again and writes
    its own DOM node: one text, one attribute, one class.
 3. **Derived values recompute when read.** A stale `derived` doesn't run on its own. It recomputes the next time
    something reads it, which is usually one of those bindings.
@@ -53,7 +53,7 @@ export function Counter() {
 }
 ```
 
-weft's compiler turns it into something like this. The real output uses generated names, and its helpers are internal,
+Weft's compiler turns it into something like this. The real output uses generated names, and its helpers are internal,
 but the shape is the same:
 
 ```js
@@ -86,12 +86,12 @@ the `child` binding reads `count.value` again and replaces one text node's conte
 expression again, and writes the attribute only if the result changed. The `<p>`, the button and the words around the
 number were made once, from the template, and are never touched again.
 
-That is why weft has no virtual DOM and no diffing step for ordinary updates. Each binding already knows which node it
+That is why Weft has no virtual DOM and no diffing step for ordinary updates. Each binding already knows which node it
 owns. (Lists are the one place that compares: a keyed list matches rows by `key`, so it can move, add and remove rows
 rather than rebuild them. See [Rendering lists](/learn/rendering-lists).)
 
 :::deepdive Push, then pull
-weft's graph is *push-pull*. A write pushes a mark through everything downstream: direct readers are marked dirty, and
+Weft's graph is *push-pull*. A write pushes a mark through everything downstream: direct readers are marked dirty, and
 their readers are marked "check". Nothing is computed during the push. Then the flush pulls: each queued binding asks its
 sources whether they really changed, and a `derived` marked "check" recomputes only if one of its own sources did.
 
@@ -119,7 +119,7 @@ Each line reads what the line before it wrote, so pressing +3 adds three.
 
 In React, the same three calls to `setScore(score + 1)` add one: `score` is that render's snapshot, fixed at the value it
 had when the render ran, so all three calls ask for the same number. React's answer is an updater function,
-`setScore(s => s + 1)`, which is queued and applied in order. weft needs neither: there is no snapshot to work around,
+`setScore(s => s + 1)`, which is queued and applied in order. Weft needs neither: there is no snapshot to work around,
 and no queue of updates to reason about. A box is a place, and `score.value` is what's in it now.
 
 The same holds for `derived`. A derived value read after a write in the same handler recomputes on that read and gives
@@ -254,10 +254,10 @@ Putting it together, each piece of a component runs at its own time:
 | A handler | When the event happens. Never because state changed |
 | `onMount(fn)` | Once, after the component's DOM is in place |
 
-This table is the reason for most of weft's rules. A value computed in the body is computed once and goes stale, so it
+This table is the reason for most of Weft's rules. A value computed in the body is computed once and goes stale, so it
 belongs in `derived` (**W001**). An early `return` that depends on state is checked once (also
 reported as **W001**), so the branch belongs in JSX. A `let` counter changes but nothing re-reads it (**W041** in the
-catalog; this weft doesn't report it yet). Each rule is the table, applied.
+catalog; this Weft doesn't report it yet). Each rule is the table, applied.
 
 :::deepdive Counting runs in a test
 `@weft-js/core/test` can count the reactive work an interaction does. `touches(fn)` reports the DOM mutations and the runs
@@ -381,7 +381,7 @@ export function Packing() {
 :::
 
 :::challenge A counter that adds three
-In React, this button adds one per click, not three. Write the weft version that adds three, and explain why the React
+In React, this button adds one per click, not three. Write the Weft version that adds three, and explain why the React
 version doesn't.
 
 ```tsx
@@ -409,6 +409,6 @@ export function Plus() {
 }
 ```
 
-In React, `count` is that render's snapshot, so each call asks for the same `count + 1`. In weft each `count.value++`
+In React, `count` is that render's snapshot, so each call asks for the same `count + 1`. In Weft each `count.value++`
 reads the box as the line before left it. The page still updates once, after the handler, and shows the total.
 :::

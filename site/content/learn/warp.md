@@ -1,19 +1,19 @@
-# Using warp
+# Using Warp
 
 :::learn
 - What `@weft-js/warp` and `@weft-js/warp-core` are, and when to use each
 - How to import components and set up the `warp()` plugin
-- How to compose forms, dialogs, menus and tables from warp's pieces
+- How to compose forms, dialogs, menus and tables from Warp's pieces
 - How to style a component's insides through `data-scope` and `data-part`
 :::
 
-warp is weft's UI toolkit: buttons, fields, dialogs, menus, tables, charts and larger blocks like a sign-in flow or a
+Warp is Weft's UI toolkit: buttons, fields, dialogs, menus, tables, charts and larger blocks like a sign-in flow or a
 settings page, with keyboard and screen reader support built in. It comes in two layers. `@weft-js/warp-core` is the
 behaviour (focus, keyboard, overlays, motion) and the CSS, in plain TypeScript with no framework. `@weft-js/warp` is the
-weft components on top of it.
+Weft components on top of it.
 
 In React you would pick a component library, a headless library and a styling approach, then wire them together. In
-weft that choice has a default: a new app starts with warp (`--ui warp`), and [Styling](/learn/styling) covers the other
+Weft that choice has a default: a new app starts with Warp (`--ui warp`), and [Styling](/learn/styling) covers the other
 starting points.
 
 :::demo ui-kit
@@ -38,7 +38,7 @@ export default function Product() {
 }
 ```
 
-Components are ordinary weft components: they take props, read state, and run once. Props that pass a value in, like
+Components are ordinary Weft components: they take props, read state, and run once. Props that pass a value in, like
 `checked` or `value`, are live, so `checked={done.value}` keeps the switch in step with `done`.
 
 ## The `warp()` plugin
@@ -62,9 +62,9 @@ export default defineConfig({
 })
 ```
 
-Every option is optional, and `warp()` with none gives warp's own look:
+Every option is optional, and `warp()` with none gives Warp's own look:
 
-- **`seed`**: your brand accent, as `{ accent: '#rrggbb' }` or `{ hue, chroma }`. warp derives every accent token from it
+- **`seed`**: your brand accent, as `{ accent: '#rrggbb' }` or `{ hue, chroma }`. Warp derives every accent token from it
   and checks each text and fill pair for contrast at every dial stop. A pair that can't pass is D010, and the build stops.
 - **`dials`**: the app's default `expression`, `density`, `flair` and `theme`. A `data-*` attribute on the page or any
   element still wins.
@@ -106,7 +106,7 @@ task.
 
 ## Composing a form
 
-A form is warp's fields inside an ordinary `<form>`. Each field takes a required `label` (its accessible name), and
+A form is Warp's fields inside an ordinary `<form>`. Each field takes a required `label` (its accessible name), and
 `hint` and `error` for the words under it. Layout comes from `Stack` and `Row`:
 
 ```tsx
@@ -312,7 +312,7 @@ Larger patterns, like a sign-in flow, a settings page, a chat thread or a bookin
 
 ## Styling a component's insides
 
-Every warp component marks its root with `data-scope` and its pieces with `data-part`. These are the styling hooks:
+Every Warp component marks its root with `data-scope` and its pieces with `data-part`. These are the styling hooks:
 stable names you can select in your own CSS. A `Card` is `data-scope="surface"`, with parts `eyebrow` and `title`;
 a `Button` is `data-scope="button"`. Each component's page lists its scope, parts and states.
 
@@ -324,7 +324,7 @@ a `Button` is `data-scope="button"`. Each component's page lists its scope, part
 [data-scope="button"][data-tone="critical"] { font-weight: 700; }
 ```
 
-Because warp's rules sit in cascade layers with zero specificity, these plain selectors win without `!important`
+Because Warp's rules sit in cascade layers with zero specificity, these plain selectors win without `!important`
 ([Styling](/learn/styling#cascade-layers) explains why). Prefer the tokens in what you write, like
 `var(--warp-space-related)`, so your change follows the theme too.
 
@@ -338,9 +338,9 @@ components (`data-g` and `data-part`), so one kind of selector covers the whole 
 
 ## warp-core on its own
 
-To keep your own markup and take only warp's behaviour, use `@weft-js/warp-core`. Each behaviour is an *action*: a
+To keep your own markup and take only Warp's behaviour, use `@weft-js/warp-core`. Each behaviour is an *action*: a
 function that takes an element and options and returns `{ update, destroy }`. `menu`, `dialog`, `popover`, `tooltip`,
-`roving`, `slider`, `listbox` and more are there. In weft, `use` from `@weft-js/warp-core/weft` attaches one to an
+`roving`, `slider`, `listbox` and more are there. In Weft, `use` from `@weft-js/warp-core/weft` attaches one to an
 element after it mounts and destroys it with the component:
 
 ```tsx
@@ -391,7 +391,7 @@ headless app, where D005 doesn't apply) so the browser gives you Enter, Space an
 - Import components from `@weft-js/warp`; a page pays only for the ones it renders.
 - `warp()` in `weft.config.ts` sets the seed accent, default dials, radius, fields, fonts and tokens, all checked for contrast.
 - Name things by meaning: `tone`, `emphasis`, `size`. Overlays take their open state as a box.
-- Style a component's insides through `data-scope` and `data-part`; your plain CSS wins over warp's layers.
+- Style a component's insides through `data-scope` and `data-part`; your plain CSS wins over Warp's layers.
 
 ## Try it
 
@@ -514,7 +514,7 @@ Every `Card` eyebrow in your app should be in the accent colour. Write the CSS, 
 }
 ```
 
-The rule has no layer, so it beats warp's layered rule for the eyebrow. `--warp-color-accent-text` is the accent's
-text colour, which warp checks for contrast against surfaces in both themes; a raw colour would be D001 and would not
+The rule has no layer, so it beats Warp's layered rule for the eyebrow. `--warp-color-accent-text` is the accent's
+text colour, which Warp checks for contrast against surfaces in both themes; a raw colour would be D001 and would not
 change in dark mode.
 :::

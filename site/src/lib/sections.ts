@@ -6,7 +6,7 @@ import type { Area } from './pages'
 
 /** Learn's chapters in teaching order, numbered, so the rail reads as a path from the top. */
 export const learnSections: SideNavSection[] = [
-  { title: 'Learn weft', pinned: true, items: [{ href: '/learn', label: 'Overview' }] },
+  { title: 'Learn Weft', pinned: true, items: [{ href: '/learn', label: 'Overview' }] },
   ...learn.map((g, n) => ({
     title: `${n + 1}. ${g.section}`,
     items: g.items.map((i) => ({ href: `/learn/${i.slug}`, label: i.title })),

@@ -7,7 +7,7 @@ import './icons.css'
 export type IconProps = {
   /** An accessible name: the icon becomes role="img". Without one it is aria-hidden. */
   label?: string | undefined
-  /** Width and height, in px or any CSS length. warp's own sizes apply otherwise. */
+  /** Width and height, in px or any CSS length. Warp's own sizes apply otherwise. */
   size?: number | string | undefined
   /** Show this tier whatever the page's expression is. */
   tier?: 'quiet' | 'balanced' | 'vivid' | undefined

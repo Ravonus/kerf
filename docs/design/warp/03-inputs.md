@@ -1,4 +1,4 @@
-# warp 03 — Inputs and forms
+# Warp 03 — Inputs and forms
 
 Status: v0.2, 2026-10-28. Tokens: [tokens/warp.css](tokens/warp.css) (signature layer) +
 [tokens/warp-inputs.css](tokens/warp-inputs.css) (`@layer warp.inputs`). Specimen:
@@ -430,7 +430,7 @@ label float takes `--warp-label-float-duration`. Reduced motion changes colour i
 | **Switch** | track 44×24, knob 18px. **The fill sweeps through the rail** L→R (clip-path, sweep duration) while the knob slides (420ms × motion). Off + hover: the ring sweeps. On + hover: an `accent-hover` layer sweeps through the inside | Switch: Space toggles | `input type=checkbox role=switch`; applies at once (never inside a form with a Save button) | rail per SIGNATURE §1c |
 | **Segmented** | the group rests on the ink border and does **not** sweep. Hovering or focusing an **unselected** option sweeps a ring around that option only (original `Segmented.tsx`); the selected option never sweeps. The accent-solid indicator slides to the selection (420ms, sweep ease): that slide is the rail. The group is `position: relative`, the indicator's containing block | Radio Group | native radios | per-option ring L→R in and out; indicator slide |
 | **Chips** (toggle group) | pill; hover sweeps; pressed pins the sweep on accent-soft and draws the check | button: Space/Enter; single choice uses `role=radio` with roving tabindex | `aria-pressed` | sweep + check draw |
-| **Select** | warp's trigger and list on every device, a sheet on a phone, same shell, chevron rotates | Select-only Combobox: ↓/Enter/Space opens, ↑↓ Home End, typeahead, Enter picks, Esc/Tab closes | `role=combobox` on the trigger, `aria-labelledby` = the `<label id>` only (the value is the trigger's content), `aria-controls` = the listbox, listbox with groups | popup opens with sweep forced; the highlight sweeps in as a fill |
+| **Select** | Warp's trigger and list on every device, a sheet on a phone, same shell, chevron rotates | Select-only Combobox: ↓/Enter/Space opens, ↑↓ Home End, typeahead, Enter picks, Esc/Tab closes | `role=combobox` on the trigger, `aria-labelledby` = the `<label id>` only (the value is the trigger's content), `aria-controls` = the listbox, listbox with groups | popup opens with sweep forced; the highlight sweeps in as a fill |
 | **Combobox** | async (350ms; stale results dimmed), creatable ("Create …" last, never the default) | Combobox (list) | `aria-activedescendant`; result count in a polite live region | as Select |
 | **MultiCombobox · TagsInput** | tags wrap inside the box; Enter or comma adds; paste "a, b, c" adds three | ←→ walk the tags, ⌫ highlights then removes | each add and remove is announced | tag pops in |
 | **Listbox** *(gap)* · **Transfer** *(gap)* | always-open list; multi with check boxes; transfer = two listboxes + move buttons; stacks under 520px | Listbox: ↑↓, Space toggles, ⇧↑↓ extends, ⌘A all | `aria-multiselectable` | the highlight fill sweeps |
@@ -441,7 +441,7 @@ label float takes `--warp-label-float-duration`. Reduced motion changes colour i
 list on every pointer: a popover where there is room, and under 600px a sheet with a title and Done, where focus moves
 onto the rows because mobile screen readers follow `aria-activedescendant` unreliably. A hidden real `<select>` stays the
 form value, so posting, reset, `required`, autofill and `onChange` all behave, and with scripting off it is what shows.
-The cost: the OS sheet was free for accessibility, so the warp sheet needs its own VoiceOver and TalkBack passes before a
+The cost: the OS sheet was free for accessibility, so the Warp sheet needs its own VoiceOver and TalkBack passes before a
 release. `presentation="popover" | "sheet"` overrides the width rule. Over 15 options the list adds a search (`searchable`
 overrides that); with free text, use Combobox. Up to 5, show
 them (radio, segmented, chips).

@@ -9,7 +9,7 @@
 :::
 
 Components talk to each other with props. A parent passes information to a child by giving it props, as in React: the
-same attribute syntax, the same `props` argument. What's different is time. A weft child runs once, yet its props are
+same attribute syntax, the same `props` argument. What's different is time. A Weft child runs once, yet its props are
 never stale: every read of a prop gets the parent's value as it is now.
 
 :::demo props
@@ -102,7 +102,7 @@ export function Avatar({
 }
 ```
 
-Both forms stay live. In React, destructuring copies each prop into a local variable for that render. In weft the
+Both forms stay live. In React, destructuring copies each prop into a local variable for that render. In Weft the
 compiler rewrites every use of `person` into a read of `props.person`, so `person` always means the parent's current
 value. You write the short form and get the live one.
 
@@ -196,7 +196,7 @@ export function Profile() {
 
 `Card` doesn't need to know what's inside it. It could hold a heading, a form, or another component. Think of a component
 with a `children` prop as having a hole that its parent fills: panels, dialogs, layouts and grids all work this way.
-`Card` from warp, used throughout these pages, is one.
+`Card` from Warp, used throughout these pages, is one.
 
 The compiler gives each component one memoised read of its children, so `{children}` placed in the markup is built once
 and moved into place, and a live expression inside it (`{stock.value} bags left` in the demo above) updates itself
@@ -204,7 +204,7 @@ where it is. You can type `children` as `unknown`, which takes anything TSX can 
 
 ## How props change over time
 
-In React, a component re-runs with new props each time its parent renders. In weft the child runs once, and there's no
+In React, a component re-runs with new props each time its parent renders. In Weft the child runs once, and there's no
 "new props" moment. Instead, the compiler makes each prop a getter. When `Tip` writes
 `<Price dollars={bill.value / 2} />`, `Price` gets an object whose `dollars` works out `bill.value / 2` each time it's
 read. Every place `Price` reads `props.dollars` (a text hole, an attribute, a `derived`, a handler) gets the current
@@ -246,7 +246,7 @@ owns, so be careful with it.
 
 ## Writing to the parent: `bind:`
 
-Sometimes a child should change the parent's value: a stepper that sets a count, a field that edits a name. In weft the
+Sometimes a child should change the parent's value: a stepper that sets a count, a field that edits a name. In Weft the
 parent decides that, at the call site, with `bind:`:
 
 :::demo bind
@@ -272,7 +272,7 @@ accepts.
 
 ## Copying a prop into state
 
-A common React habit is `useState(props.value)`: start from the prop, then edit locally. The weft translation,
+A common React habit is `useState(props.value)`: start from the prop, then edit locally. The Weft translation,
 `state(props.value)`, has the same bug React's has: the box takes the prop once and never follows it. The compiler
 reports it as **W005**. Use `state.linked` instead, which starts from the prop, takes local edits, and resets when the
 prop changes:
@@ -367,13 +367,13 @@ export function Checkout() {
 }
 ```
 
-Passing a box where a value is expected, or a value where a box is expected, is **W008** in the catalog (this weft
+Passing a box where a value is expected, or a value where a box is expected, is **W008** in the catalog (this Weft
 doesn't report it yet): the fix is `count.value` or `count`.
 
 ## Prop types
 
 You can write prop types yourself, as every example on this page does. You can also leave a component's props
-unannotated: weft infers them from the places that use the component and from what its body does with them, in the
+unannotated: Weft infers them from the places that use the component and from what its body does with them, in the
 editor, in `weft check` and in `weft tsc`.
 
 ```tsx

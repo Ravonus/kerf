@@ -44,7 +44,7 @@ export const sendFeedback = mutation({
 ```
 
 Then a route with a `<Form of={sendFeedback}>`. Its child is a function that gets the form's state, `form`, and returns
-the fields. warp's field components take an `error` and show it under the field, with the right ARIA wiring:
+the fields. Warp's field components take an `error` and show it under the field, with the right ARIA wiring:
 
 ```tsx
 // src/routes/feedback.tsx
@@ -124,7 +124,7 @@ That's a complete form. Here is what each part of `form` is for:
 | `form.field('email')` | Props to spread on a plain `<input>`: `name`, the typed value, and `aria-invalid`/`aria-describedby` when it's wrong. |
 | `<form.Error name="email" />` | The field's error text, in an element the `aria-describedby` points at. |
 
-On the path without JavaScript (below), `form.field(name)` puts what was typed back into a plain input by itself. warp's
+On the path without JavaScript (below), `form.field(name)` puts what was typed back into a plain input by itself. Warp's
 fields take a plain string `value`, so the example above leaves it out, and they start empty on that path. The field
 names are the input's keys. Nested objects use dots (`address.city`), and a name ending in `[]` collects
 every field with that name into an array (`tags[]`).
@@ -153,7 +153,7 @@ plain HTML, and JavaScript makes it nicer, not possible.
 A form that posts to your server could be posted from someone else's page, the attack called cross-site request
 forgery. Many frameworks put a secret token in every form to tell real submits from forged ones.
 
-weft checks the browser's own headers instead. A real submit from your page carries `Origin` with your address, or
+Weft checks the browser's own headers instead. A real submit from your page carries `Origin` with your address, or
 `Sec-Fetch-Site: same-origin`, and a page on another site can't forge either. A post without that proof is refused with
 **F002** (status 403). Behind a proxy, make sure the proxy forwards the original host, so the origins match.
 
@@ -226,7 +226,7 @@ replace the ones in `input`.
 The server's answer comes after a submit. For feedback before that, you have two options that keep one set of rules.
 
 The browser's own constraints are free: `required`, `minlength`, `type="email"`, `min` and `max` stop a submit and say
-why, and warp's fields show the browser's message in the same place as a server error. They run before the request is
+why, and Warp's fields show the browser's message in the same place as a server error. They run before the request is
 sent, so most mistakes never reach the server at all.
 
 For anything richer, put the schema in a plain module that both sides import, and check one field as it changes:
@@ -314,7 +314,7 @@ is submitted, before the server answers.
 
 ### Plain markup
 
-Without warp, or for your own field components, spread `form.field(name)` on the input and put `<form.Error>` near it.
+Without Warp, or for your own field components, spread `form.field(name)` on the input and put `<form.Error>` near it.
 The error element is in the page from the start, so a screen reader announces the message when it appears:
 
 ```tsx

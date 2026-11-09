@@ -1,6 +1,6 @@
-# warp 06 · Data display and charts
+# Warp 06 · Data display and charts
 
-Tables, collections, stats and charts for warp. Tokens live in `tokens/warp-data.css`, which loads after `warp.css`.
+Tables, collections, stats and charts for Warp. Tokens live in `tokens/warp-data.css`, which loads after `warp.css`.
 The specimen is `specimens/data.html`, sections 01–11. Every row that `COVERAGE.md` assigns to **data** has a section
 here and a demo there. §15 maps each row to both.
 
@@ -34,9 +34,9 @@ here and a demo there. §15 maps each row to both.
 | **Hand-rolled SVG plus own math** (linear, band and time scales, nice ticks, monotone cubic, arcs, stack, squarify, label window) | ≈ 3–4 KB for the core, ≈ 1 KB per extra form | **Chosen.** Ships as an opt-in `@weft/charts` pack, so the shop app's ≤ 10 KB budget is untouched |
 | d3-scale + d3-shape | 12–15 KB (pulls d3-array, interpolate, format, time) | Allowed as an opt-in adapter for log, time-zone or geo work |
 | Chart.js / ECharts | ~65 KB / 300 KB+ | Rejected: canvas, poor a11y, and they own the DOM |
-| MapLibre GL | ~200 KB | Opt-in `@weft/map` pack only. warp styles the shell, markers, clusters and popups (§13) |
+| MapLibre GL | ~200 KB | Opt-in `@weft/map` pack only. Warp styles the shell, markers, clusters and popups (§13) |
 
-Charts render through weft components that run once. A data change rewrites attributes (`d`, `cx`, `cy`) on existing
+Charts render through Weft components that run once. A data change rewrites attributes (`d`, `cx`, `cy`) on existing
 nodes. The axis domain is fixed per dataset, so a live update never makes the axis jump or shift the layout.
 
 ## 3. Tokens (warp-data.css)
@@ -467,7 +467,7 @@ render in the same frame height.
   value, add and remove, and one nested level. The output is a readable expression plus a live match count.
 - **CRUD resource pages.** These are generated from a schema (`key`, `label`, `type`, `required`, `min`, `options`):
   list → detail (`dl`) → edit/create form (floating fields with the sweep). Errors are described and focused. A
-  breadcrumb goes back up. warp supplies the parts; app supplies routing.
+  breadcrumb goes back up. Warp supplies the parts; app supplies routing.
 
 ## 14. Space and structure
 

@@ -62,7 +62,7 @@ export type Playground = {
 }
 
 export type Doc = {
-  /** Must be one of warp's exports. */
+  /** Must be one of Warp's exports. */
   component: string
   /** One plain sentence, at most 120 characters. The page's lede and its meta description. */
   summary: string

@@ -1,15 +1,15 @@
-# Styling and warp
+# Styling and Warp
 
 :::learn
 - How to style elements with `class`, `style`, plain CSS and style groups
-- How to build UI from warp's components
-- How to theme an app with warp's dials and tokens
+- How to build UI from Warp's components
+- How to theme an app with Warp's dials and tokens
 - How to use icons and fonts without paying for what you don't use
-- What warp does for accessibility, and what you still own
+- What Warp does for accessibility, and what you still own
 :::
 
 So far you've built components that hold state and respond to events. This chapter is about how they look, and about
-warp, weft's UI toolkit. weft gives styling a small core (attributes that follow state) and a design language on top:
+Warp, Weft's UI toolkit. Weft gives styling a small core (attributes that follow state) and a design language on top:
 tokens for colour, space and type, components that use them, and diagnostics that say when a value leaves them. You can
 use as much or as little of it as you like.
 
@@ -58,9 +58,9 @@ export function Stock(props: { count: number }) {
 Read **[Styling and style groups](/learn/styling)** to learn how `class` and `style` work, where plain CSS fits, how
 style groups are built, and what the D-codes in `weft check` catch.
 
-## Using warp
+## Using Warp
 
-warp is a toolkit of components (forms, dialogs, menus, tables, charts and larger blocks) with keyboard and screen reader
+Warp is a toolkit of components (forms, dialogs, menus, tables, charts and larger blocks) with keyboard and screen reader
 support built in. Import what you use, and name things by meaning rather than look:
 
 :::demo ui-kit
@@ -80,7 +80,7 @@ export function Billing() {
 }
 ```
 
-Read **[Using warp](/learn/warp)** to learn how to compose forms, dialogs, menus and tables, set up the `warp()` plugin,
+Read **[Using Warp](/learn/warp)** to learn how to compose forms, dialogs, menus and tables, set up the `warp()` plugin,
 and style a component's insides.
 
 ## Theming
@@ -111,7 +111,7 @@ your brand colour and tokens safely.
 
 ## Icons
 
-`@weft-js/warp-icons` has 651 icons, each hollow and solid, drawn for warp's three expressions. One you use costs about
+`@weft-js/warp-icons` has 651 icons, each hollow and solid, drawn for Warp's three expressions. One you use costs about
 164 bytes; one you don't costs nothing:
 
 :::demo style-icons
@@ -166,12 +166,12 @@ export default defineConfig({
 })
 ```
 
-Read **[Fonts](/learn/fonts)** to learn what the build does with each face, how to use one in CSS and in warp, and how
+Read **[Fonts](/learn/fonts)** to learn what the build does with each face, how to use one in CSS and in Warp, and how
 variable fonts are trimmed.
 
 ## Accessibility
 
-warp's components are native elements with names, keyboard patterns and focus management built in. You own the
+Warp's components are native elements with names, keyboard patterns and focus management built in. You own the
 structure and the words, and `weft check` catches the common mistakes in markup you write yourself:
 
 :::demo style-keyboard
@@ -199,7 +199,7 @@ export function Details() {
 }
 ```
 
-Read **[Accessibility](/learn/accessibility)** to learn what warp handles, what you still own, which diagnostics catch
+Read **[Accessibility](/learn/accessibility)** to learn what Warp handles, what you still own, which diagnostics catch
 accessibility mistakes, and how to test for them.
 
 ## What's next

@@ -5,7 +5,7 @@ import show from '../generated/showcase.json'
 
 const START = 2
 const EACH = 5
-const STEPS = ['Your agent wrote this', 'weft stops the build', 'The fix', 'Now it works']
+const STEPS = ['Your agent wrote this', 'Weft stops the build', 'The fix', 'Now it works']
 const SAY = [
   'The component works out its total once, so the number on the page can never change.',
   'The compiler explains what is wrong and refuses to build, so this never reaches a browser.',
@@ -76,7 +76,7 @@ type FixRenderer = (
 
 const renderFix: FixRenderer = (step, count, go, play, setBox) => (
   <section data-site="fix" data-step={step.value} ref={setBox}>
-    <h2>When your agent makes a mistake, weft catches it</h2>
+    <h2>When your agent makes a mistake, Weft catches it</h2>
     <p data-part="intro">
       The compiler stops the mistake before it ships and says how to fix it, in words your agent can
       act on.

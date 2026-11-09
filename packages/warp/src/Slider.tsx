@@ -21,7 +21,7 @@ export interface SliderProps<V extends number | [number, number] = number | [num
   name?: string | undefined
 }
 
-/** A slider (03 §5): role=slider thumbs on warp's rail, keyboard per APG, a pointer anywhere on the track. */
+/** A slider (03 §5): role=slider thumbs on Warp's rail, keyboard per APG, a pointer anywhere on the track. */
 export function Slider<V extends number | [number, number]>({
   label,
   value,

@@ -7,10 +7,10 @@
 - How `@weft-js/core/browser` turns browser events into values, so you rarely write a listener
 :::
 
-Most of a weft app is state, derived values and TSX. A box changes, and everything that reads it follows: text,
+Most of a Weft app is state, derived values and TSX. A box changes, and everything that reads it follows: text,
 attributes, lists, other derived values. None of that needs an effect. Effects are for the rest: keeping something
-*outside* weft in step with your state. A connection to a chat server, a timer, a third-party map widget, the page's
-title. weft can't update those by itself, because they aren't part of what your component renders.
+*outside* Weft in step with your state. A connection to a chat server, a timer, a third-party map widget, the page's
+title. Weft can't update those by itself, because they aren't part of what your component renders.
 
 In this demo, choosing a room opens a connection to it. When you choose another room, the old connection closes first:
 
@@ -40,10 +40,10 @@ const connect = (name: string) => ({
 })
 ```
 
-- The **source**, `() => room.value`, says what to follow. weft notes every box it reads.
+- The **source**, `() => room.value`, says what to follow. Weft notes every box it reads.
 - The **act**, `name => { … }`, is the side effect. It gets the source's value, and the previous value as a second
   argument (`undefined` the first time).
-- If the act **returns a function**, that is its cleanup. weft calls it before the next act, and when the component
+- If the act **returns a function**, that is its cleanup. Weft calls it before the next act, and when the component
   goes away.
 
 The act runs once straight away, as the component is set up, and again each time something the source read changes.
@@ -75,25 +75,25 @@ export function Connection() {
 }
 ```
 
-The act runs when *either* changes. weft decides by what the source read, not by comparing what it returned: a new
+The act runs when *either* changes. Weft decides by what the source read, not by comparing what it returned: a new
 tuple every time is fine. The flip side is that if the source computes something from several boxes, say `a.value +
 b.value`, the act runs whenever `a` or `b` changes, even if the sum came out the same. When that matters, compute the
 value in a `derived` and read that in the source: a `derived` only tells its readers when its result really changes.
 
 :::deepdive watch and useEffect
-React's `useEffect(fn, [deps])` and weft's `watch(source, act)` do the same job: keep something outside in step with
+React's `useEffect(fn, [deps])` and Weft's `watch(source, act)` do the same job: keep something outside in step with
 state, with a cleanup in between. The differences come from components running once.
 
-- **No dependency array.** The source is your dependency list, and weft builds it by watching what the source reads.
+- **No dependency array.** The source is your dependency list, and Weft builds it by watching what the source reads.
   You can't forget a dependency, and there's no lint rule to keep the list honest. A dependency array written out of
-  React habit is one of the React-isms in weft's diagnostics catalog (W020).
+  React habit is one of the React-isms in Weft's diagnostics catalog (W020).
 - **It runs when it's created.** `useEffect` runs after React commits and the browser paints. A `watch` runs its act
   synchronously during setup, then whenever its source changes, before the page updates. For work that needs the
   rendered elements, use `onMount` (below).
 - **No double run in development.** React's Strict Mode mounts each component twice to flush out missing cleanups.
-  weft doesn't, because nothing re-runs your component body. Write the cleanup anyway: it runs every time the source
+  Weft doesn't, because nothing re-runs your component body. Write the cleanup anyway: it runs every time the source
   changes, and when the component goes.
-- **No stale closures.** A React effect sees the props and state of the render that made it. A weft act reads `.value`
+- **No stale closures.** A React effect sees the props and state of the render that made it. A Weft act reads `.value`
   when it runs, so it always sees the current value.
 :::
 
@@ -141,8 +141,8 @@ The `watch` there is the whole timer: `if (!on) return` means a stopped watch st
 
 ## When effects run
 
-Writes in weft are batched. A handler can change five boxes, and nothing else runs until it returns. Then, on the next
-microtask, weft runs every effect and DOM update that the writes touched, once each:
+Writes in Weft are batched. A handler can change five boxes, and nothing else runs until it returns. Then, on the next
+microtask, Weft runs every effect and DOM update that the writes touched, once each:
 
 1. Effects run in the order they were created. A component is created before its children, so a parent's effects run
    before its children's.
@@ -241,7 +241,7 @@ reach through `ref` doesn't need this, because `onMount` only runs in the browse
 :::pitfall Create them while the component is set up
 `online()`, `on` and `interval` attach to the component being set up, which is how they know when to stop. Called from
 a click handler, a timer or after an `await`, there's no component being set up, so nothing would ever remove them.
-weft reports that as **W051**, and throws in development. Create them in the body, or see
+Weft reports that as **W051**, and throws in development. Create them in the body, or see
 [Cleanup and ownership](/learn/cleanup-and-ownership) for making an owner of your own.
 :::
 
@@ -259,10 +259,10 @@ interval or close the socket in `onCleanup` or a `watch` cleanup, and the warnin
 
 ## Recap
 
-- Effects keep things outside weft in step with state. What weft renders follows state by itself.
+- Effects keep things outside Weft in step with state. What Weft renders follows state by itself.
 - `watch(source, act)`: the source is followed, the act isn't. The act runs now, then whenever what the source read
   changes. A returned function cleans up before the next run and when the component goes.
-- There's no dependency array: weft finds dependencies by watching what the source reads.
+- There's no dependency array: Weft finds dependencies by watching what the source reads.
 - `onMount` runs once the elements are in the document; `onCleanup` runs when the component goes.
 - Effects run on the next microtask, in creation order, and never on the server. `flush()` runs them now.
 - `@weft-js/core/browser` gives you `online`, `visible`, `lifecycle`, `media`, `on` and `interval`, which clean up

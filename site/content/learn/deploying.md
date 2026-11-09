@@ -12,7 +12,7 @@ Everything so far ran under `weft dev`. Shipping it is one command, `weft build`
 into `.output/`. That server runs on Node, Bun or Deno, the same app on all three, and you choose which when you build.
 
 If you've deployed a Next.js or Remix app, the shape is familiar: a build step, a server entry, environment variables
-for secrets. The differences are in the details this page covers: what weft checks before it lets a build through, and
+for secrets. The differences are in the details this page covers: what Weft checks before it lets a build through, and
 what changes when your host ends a process with each request.
 
 ## Building
@@ -60,8 +60,8 @@ and break the other targets, so keep them out of shared server code.
 :::deepdive Presets, and what's underneath
 `weft build` runs Vite for the client and Nitro for the server. Each runtime is a Nitro preset: `node`, `bun` and
 `deno_server`. `--preset <name>` passes any other Nitro preset through, such as `vercel`, `netlify` or
-`cloudflare_module`, and weft's own checks know what those hosts can and can't do for realtime and live data, which
-the rest of this page covers. Node, Bun and Deno servers are the targets weft is tested on end to end; for the others,
+`cloudflare_module`, and Weft's own checks know what those hosts can and can't do for realtime and live data, which
+the rest of this page covers. Node, Bun and Deno servers are the targets Weft is tested on end to end; for the others,
 `weft doctor --preset <name>` is the place to start.
 :::
 
@@ -106,7 +106,7 @@ Import `env` from server code: server modules (`src/server/**`), `*.server.ts` f
 the server, and the client only ever gets stubs of your server functions. The database, auth and buses reaching the
 client bundle is an error at build time (**Q012**).
 
-The variables weft itself reads:
+The variables Weft itself reads:
 
 | Variable | What it's for |
 |---|---|
@@ -122,7 +122,7 @@ The variables weft itself reads:
 ### The site's address
 
 Set `site.url` in `weft.config.ts` before you ship. Canonical URLs, `og:url` and share-card URLs must be absolute, and a
-prerendered page has no request to take an origin from. Without it, weft falls back to `WEFT_SITE_URL`, then to what
+prerendered page has no request to take an origin from. Without it, Weft falls back to `WEFT_SITE_URL`, then to what
 common hosts set (`VERCEL_PROJECT_PRODUCTION_URL`, Netlify's `URL`, `CF_PAGES_URL`, `RENDER_EXTERNAL_URL`,
 `RAILWAY_PUBLIC_DOMAIN`, `FLY_APP_NAME` and a few more), then to the request's `Host` header, with a warning (**H001**).
 
@@ -152,7 +152,7 @@ for you, and three things change:
 
 - **Realtime needs a shared bus.** A message published on one instance must reach sockets on all of them. Add
   `@weft-js/realtime-redis` or `-nats`, or set `postgresBus` in `src/realtime.server.ts` ([Realtime and live
-  data](/learn/live-data#more-than-one-server)). On a preset weft knows runs many instances, `weft build` refuses the
+  data](/learn/live-data#more-than-one-server)). On a preset Weft knows runs many instances, `weft build` refuses the
   memory bus (**R002**).
 - **Shared caches.** A query with `cache: { life }` caches in each process's memory by default, so each instance warms
   its own.

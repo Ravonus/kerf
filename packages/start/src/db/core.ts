@@ -29,7 +29,7 @@ export interface DbHandle {
   }>
 }
 
-/** Attach weft's handle to a client. */
+/** Attach Weft's handle to a client. */
 export const register = <D extends object>(db: D, handle: DbHandle): D & { $weft: DbHandle } =>
   Object.assign(db, { $weft: handle })
 

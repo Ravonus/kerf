@@ -3,7 +3,7 @@
 :::learn
 - How to declare an app's fonts with the `text()` plugin from `@weft-js/text`
 - What the build does with them: subsets, preloads, and fallbacks matched to each font's metrics
-- How to use a face in CSS and in warp's tokens
+- How to use a face in CSS and in Warp's tokens
 - How variable fonts and their axes are trimmed, and how to keep an axis
 - What the X-codes about fonts catch
 :::
@@ -12,7 +12,7 @@ A web font is the most common reason a page's text jumps after it loads. The bro
 the real font arrives, and every line reflows because the two faces have different widths. It's also often the biggest
 thing the largest paint on a text-heavy page waits for.
 
-weft handles fonts in one place: you list the faces in `weft.config.ts`, and the build does the rest. There's nothing to
+Weft handles fonts in one place: you list the faces in `weft.config.ts`, and the build does the rest. There's nothing to
 import in your components and no `<link>` to write.
 
 ## Declaring fonts
@@ -63,8 +63,8 @@ Each key is a role of your choosing; `body` and `display` are the usual two. Eac
 Beside `fonts`, `text()` takes `subsets` (default `['latin']`; also `latin-ext`, `cyrillic`, `greek`, `vietnamese` and
 their extended sets) and `trim` (default `true`, below). The [Fonts reference](/reference/fonts) has every option.
 
-:::note weft isn't on npm yet
-`@weft-js/text` isn't published on its own yet. `weft add text` works in an app made from a weft checkout, which is how
+:::note Weft isn't on npm yet
+`@weft-js/text` isn't published on its own yet. `weft add text` works in an app made from a Weft checkout, which is how
 apps are made today ([Installation](/learn/installation)).
 :::
 
@@ -90,7 +90,7 @@ fonts at the same `font-size` can differ in all four, so a paragraph in Arial wr
 in Inter. CSS lets a `@font-face` correct a local font: `size-adjust` scales its widths, and `ascent-override`,
 `descent-override` and `line-gap-override` replace its vertical metrics. The build reads the real font file, computes the
 four numbers that make Arial occupy Inter's space, and writes them on the fallback face. The result isn't the same
-*look*, but it is the same *layout*, which is what keeps the page from moving. warp's own stylesheet does the same for
+*look*, but it is the same *layout*, which is what keeps the page from moving. Warp's own stylesheet does the same for
 the faces it names.
 :::
 
@@ -107,11 +107,11 @@ h1 { font-family: "Fraunces", "Fraunces Fallback", Georgia, serif; }
 Leave out `"Inter Fallback"` and the browser falls back to plain `sans-serif` while Inter loads, unscaled, and the
 layout shifts when it arrives.
 
-### With warp
+### With Warp
 
-warp's type roles read three tokens: `--warp-font-sans` for body text, `--warp-font-display` for headings and titles,
+Warp's type roles read three tokens: `--warp-font-sans` for body text, `--warp-font-display` for headings and titles,
 and `--warp-font-mono` for code. Point them at your faces with `fonts` in `warp()`. Pass a full stack, with the fallback
-face, so warp's text gets the metric match too:
+face, so Warp's text gets the metric match too:
 
 ```ts
 import { defineConfig } from '@weft-js/core/config'
@@ -148,11 +148,11 @@ export default defineConfig({
 })
 ```
 
-A bare family name, like `fonts: { body: 'Inter' }`, also works; warp then adds a system stack after it, without the
+A bare family name, like `fonts: { body: 'Inter' }`, also works; Warp then adds a system stack after it, without the
 fallback face.
 
 Each expression names its own faces: `balanced` uses Inter with Space Grotesk for headings, `quiet` Inter throughout, and
-`vivid` Space Grotesk with Instrument Serif. warp names them but doesn't ship the files. Declare the ones your app shows
+`vivid` Space Grotesk with Instrument Serif. Warp names them but doesn't ship the files. Declare the ones your app shows
 with `text()`, as this site does with the `@fontsource` packages, or override the tokens as above.
 
 ## Preloading
@@ -223,7 +223,7 @@ measures. `measure: 'off'` removes it. [Text, media and shapes](/learn/text-medi
 - Declare every face in `text({ fonts })` in `weft.config.ts`; there's nothing to import in components.
 - The build subsets faces, preloads `body` and `display`, and writes a `"<Family> Fallback"` face matched to each font's
   metrics, so the swap doesn't move the layout.
-- Name the face and its fallback face in your CSS, or in `warp({ fonts })` for warp's roles.
+- Name the face and its fallback face in your CSS, or in `warp({ fonts })` for Warp's roles.
 - A production build pins unused variable axes and splits rare latin characters into a lazy file; name an axis in `axes`
   to keep it.
 - X020–X023 catch hand-written font CSS that shifts layout, hides text, or loads too much.

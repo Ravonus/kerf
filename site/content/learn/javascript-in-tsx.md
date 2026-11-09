@@ -8,7 +8,7 @@
 :::
 
 TSX lets you write markup in a JavaScript file, and braces let you reach back into JavaScript from the markup: to show a
-variable, call a function, or pick a class. In weft, braces do one more thing. An expression in braces is live: when
+variable, call a function, or pick a class. In Weft, braces do one more thing. An expression in braces is live: when
 something it reads changes, it is worked out again and only that spot in the page is written.
 
 :::demo describe-braces
@@ -113,12 +113,12 @@ export function TodoList() {
 }
 ```
 
-There's nothing special about it: `{{` and `}}` are an object inside braces. In weft, `style` also takes a plain string
+There's nothing special about it: `{{` and `}}` are an object inside braces. In Weft, `style` also takes a plain string
 (`style="padding: 0"`), so you only need the object form when the values come from JavaScript.
 
 :::pitfall CSS names in the object
 In a style object, write property names in camelCase: `backgroundColor`, not `background-color`, because a key with a
-dash needs quotes in JavaScript. weft also accepts the dashed name in quotes, `{ 'background-color': … }`, and custom
+dash needs quotes in JavaScript. Weft also accepts the dashed name in quotes, `{ 'background-color': … }`, and custom
 properties such as `{ '--gap': '8px' }`. A number means pixels unless the property has no unit (`opacity`, `zIndex`,
 `lineHeight`), as in React.
 :::
@@ -153,7 +153,7 @@ export function TodoList() {
 
 ## Braces are live
 
-So far every value has been fixed. Here's the difference weft makes: when an expression in braces reads a piece of state
+So far every value has been fixed. Here's the difference Weft makes: when an expression in braces reads a piece of state
 (a box, read with `.value`) or a prop, the compiler turns that spot in the page into a binding. The binding remembers what
 it read, and runs again when one of those values changes.
 

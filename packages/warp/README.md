@@ -2,11 +2,11 @@
 
 > **Early release (0.1.1).** APIs will change between minor versions.
 
-warp is weft's UI toolkit: forms, overlays, tables, charts and more, with keyboard and screen reader support built in. The
+Warp is Weft's UI toolkit: forms, overlays, tables, charts and more, with keyboard and screen reader support built in. The
 components and their look are here. Their behaviour is in [`@weft-js/warp-core`](../warp-core), which works without any
 framework.
 
-An app made with `npm create @weft-js` gets warp by default (`--ui warp`). To add it to another app:
+An app made with `npm create @weft-js` gets Warp by default (`--ui warp`). To add it to another app:
 
 ```bash
 npm install @weft-js/warp
@@ -46,11 +46,11 @@ has the options.
 
 - The site's toolkit pages list every component with its props, live examples and keyboard table. The words and
   examples are in `site/src/toolkit`.
-- `weft docs design`: the design language and the D-codes `weft check` reports in an app with warp.
-- `weft docs icons`: warp's icons.
+- `weft docs design`: the design language and the D-codes `weft check` reports in an app with Warp.
+- `weft docs icons`: Warp's icons.
 
 ## Size
 
-An app built with warp has a ceiling of 50 KB of brotli JavaScript and CSS. `evals/gates/warp-exit.mjs` builds the shop app
-from the evals with warp and checks it against that.
+An app built with Warp has a ceiling of 50 KB of brotli JavaScript and CSS. `evals/gates/warp-exit.mjs` builds the shop app
+from the evals with Warp and checks it against that.
 `npm run size` in this folder prints what each component costs on its own and on a page with the others.

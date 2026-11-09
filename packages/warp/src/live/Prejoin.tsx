@@ -24,7 +24,7 @@ export interface PrejoinDevices {
 /** Props for Prejoin. */
 export interface PrejoinProps {
   name?: string | undefined
-  /** The preview: your own <video>. Media is the caller's; warp never touches getUserMedia. */
+  /** The preview: your own <video>. Media is the caller's; Warp never touches getUserMedia. */
   preview?: () => unknown
   /** 0 to 1. For a 10 Hz level, set `--level` on [data-part="meter"] yourself: nothing re-renders either way. */
   level?: number

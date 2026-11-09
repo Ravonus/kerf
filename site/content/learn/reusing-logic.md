@@ -10,7 +10,7 @@
 
 Two components often need the same bit of behaviour: follow the pointer, debounce what was typed, know whether the
 network is up, count something with a reset. In React you'd write a custom hook, `useSomething()`, and follow the rules
-of hooks to call it. In weft you write a function. It calls `state`, `derived`, `watch` or `on` like a component body
+of hooks to call it. In Weft you write a function. It calls `state`, `derived`, `watch` or `on` like a component body
 does, returns what the caller needs, and that's all.
 
 :::demo escape-debounce
@@ -69,7 +69,7 @@ cleared. Each call makes its own box, so two search fields with two `debounced` 
 
 A component body runs once, and so does a function called from it. If you passed `typed.value`, the function would
 get the string as it was at that moment, `''`, and never hear about a change. A getter is something the function can
-call again, from a `watch` source or a `derived`, and weft follows whatever the getter reads. So the input stays live.
+call again, from a `watch` source or a `derived`, and Weft follows whatever the getter reads. So the input stays live.
 
 The same goes for props. Pass `() => props.delay`, not `props.delay`. Reading a prop in the body to hand it over is
 also **W001**, because the body runs once.
@@ -132,7 +132,7 @@ once. Keep the box and read `.value` where you use it, as with props.
 
 ## The one rule: call it during setup
 
-React's rules of hooks exist because React finds each hook's state by the order of calls in each render. weft doesn't
+React's rules of hooks exist because React finds each hook's state by the order of calls in each render. Weft doesn't
 re-run components, so there's no order to keep. You can call these functions in an `if`, in a loop, or in another
 function:
 
@@ -160,10 +160,10 @@ export function Drinks() {
 }
 ```
 
-What weft does care about is *when* you call them. `watch`, `on`, `interval` and the browser values attach to the owner
+What Weft does care about is *when* you call them. `watch`, `on`, `interval` and the browser values attach to the owner
 being set up, so the function must run while one is: in a component body, in `onMount`, in a `defineState` setup, or
 inside `createRoot`. From a click handler, a timer, a promise callback or after an `await`, there's no owner, and what
-they start would never stop. weft reports the browser values there as **W051**, and they throw in development.
+they start would never stop. Weft reports the browser values there as **W051**, and they throw in development.
 [Cleanup and ownership](/learn/cleanup-and-ownership) has the details, and `createRoot` for when you really must start
 something from a handler.
 
@@ -171,10 +171,10 @@ A function that only makes `state` and `derived` values can be called anywhere, 
 
 ## Naming
 
-Name these functions after what they give you, in the style of weft's own: `online()`, `visible()`, `debounced()`,
+Name these functions after what they give you, in the style of Weft's own: `online()`, `visible()`, `debounced()`,
 `counter()`, `pointer()`. There's no `use` prefix to mark them, because nothing needs to find them: no linter has to
-check their call order. A custom `useX()` hook written from React habit is one of the React-isms in weft's diagnostics
-catalog (W020), so a `use` name also reads as a mistake to anyone, or any agent, who knows weft.
+check their call order. A custom `useX()` hook written from React habit is one of the React-isms in Weft's diagnostics
+catalog (W020), so a `use` name also reads as a mistake to anyone, or any agent, who knows Weft.
 
 ## Listening to the browser
 
@@ -208,7 +208,7 @@ It takes the element as a getter too, because the element doesn't exist yet when
 assigned later, when the TSX is made. By the time a `pointermove` arrives, it's there.
 
 Before writing one of these, check `@weft-js/core/browser`. React's documentation builds a `useOnlineStatus` hook as its
-example; in weft that's `online()`, already written, sharing one listener across every component that reads it. The
+example; in Weft that's `online()`, already written, sharing one listener across every component that reads it. The
 same module has `visible()`, `lifecycle()`, `media(query)`, `on`, `interval` and a typed channel between tabs:
 [Reference: browser](/reference/browser).
 
@@ -228,12 +228,12 @@ You can combine them: a `defineState` setup can call your functions, since it ru
 
 ## Behaviours from warp-core
 
-warp, weft's UI kit, keeps most of its behaviour in `@weft-js/warp-core`, a package that never imports a framework.
+Warp, Weft's UI kit, keeps most of its behaviour in `@weft-js/warp-core`, a package that never imports a framework.
 Focus handling, tooltips, sliders, listboxes and the rest are *actions*: a function that takes an element and options
 and returns `{ update, destroy }`. That shape is the same one Svelte calls an action, and it's how warp-core stays
 usable from any framework.
 
-weft attaches an action with `use` from `@weft-js/warp-core/weft`:
+Weft attaches an action with `use` from `@weft-js/warp-core/weft`:
 
 ```tsx
 import { state } from '@weft-js/core'
@@ -274,15 +274,15 @@ export function Note() {
 
 `use(make, el, opts)` waits until the component is mounted, makes the action with the element and the current options,
 calls `update` whenever what `opts` reads changes, and calls `destroy` when the component goes. It's a reusable function
-like the others on this page, built from `onMount`, `watch` and `onCleanup`. warp's own components use it for nearly
+like the others on this page, built from `onMount`, `watch` and `onCleanup`. Warp's own components use it for nearly
 everything they do to an element.
 
-Write an action rather than a weft function when the behaviour is pure DOM and you'd like it to work outside weft too,
-or when you're adding to warp-core itself. For app code, a plain weft function is usually simpler.
+Write an action rather than a Weft function when the behaviour is pure DOM and you'd like it to work outside Weft too,
+or when you're adding to warp-core itself. For app code, a plain Weft function is usually simpler.
 
 ## Recap
 
-- React's custom hooks are plain functions in weft. They call `state`, `derived`, `watch` and `on`, and return what
+- React's custom hooks are plain functions in Weft. They call `state`, `derived`, `watch` and `on`, and return what
   the caller needs.
 - What they make belongs to the component that called them, and is disposed with it.
 - Pass getters (`() => box.value`, `() => props.x`) so inputs stay live; pass a box only to give write access.

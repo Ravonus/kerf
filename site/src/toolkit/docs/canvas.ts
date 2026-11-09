@@ -6,6 +6,6 @@ export const canvas: DocGroup = {
   file: 'canvas',
   title: 'Canvas and dithering',
   intro:
-    "Drawings that use warp's colours, follow the theme and pause off screen, up to whole pages painted on one canvas.",
+    "Drawings that use Warp's colours, follow the theme and pause off screen, up to whole pages painted on one canvas.",
   docs: [...surfaceDocs, ...ditherDocs],
 }

@@ -2,15 +2,15 @@
 
 :::learn
 - What the render tree is, and where it can change
-- How weft's ownership tree decides what gets cleaned up, and when
+- How Weft's ownership tree decides what gets cleaned up, and when
 - What the module dependency tree is, and how it decides which code reaches the browser
 - How islands and hydration follow from these trees
 :::
 
 Your app is components inside components. Trees are a natural way to picture that: a root at the top, branches below,
-leaves at the ends. weft works with three trees. The render tree is the one you see. The ownership tree is the one weft
+leaves at the ends. Weft works with three trees. The render tree is the one you see. The ownership tree is the one Weft
 uses to clean up. The module tree is the one your imports make, and it decides what JavaScript is sent to the browser.
-They have the same shape most of the time, and knowing where they differ explains a lot of weft's behaviour.
+They have the same shape most of the time, and knowing where they differ explains a lot of Weft's behaviour.
 
 ## The render tree
 
@@ -64,7 +64,7 @@ it, so the layouts sit at the top of the render tree and the route's page below 
 
 ### Where the tree changes
 
-In React, a component's place in the tree is redrawn every time it renders. In weft, each component runs once, so the
+In React, a component's place in the tree is redrawn every time it renders. In Weft, each component runs once, so the
 tree is built once, top to bottom, and then holds still. It changes in exactly two kinds of place:
 
 - **Conditions**: `{open.value && <Sidebar />}` and `{a ? <A /> : <B />}`. When the condition flips, the branch under
@@ -77,7 +77,7 @@ the components themselves stay where they are.
 
 ## The ownership tree
 
-Every live thing weft makes (a binding in your markup, a `derived`, a `watch`, an `onCleanup` callback) has an owner:
+Every live thing Weft makes (a binding in your markup, a `derived`, a `watch`, an `onCleanup` callback) has an owner:
 whatever was running when it was made. When an owner goes away, everything it owns goes with it: bindings stop, watches
 stop, and cleanups run, children first.
 
@@ -169,11 +169,11 @@ can render one it never imports, passed in as `children`; and an import can be u
 ## Islands: how the trees decide what reaches the browser
 
 With `@weft-js/start`, every page is rendered to HTML on the server, the whole render tree at once. Then the browser
-needs code only for the parts that must do something there. weft works out which parts those are by reading the module
+needs code only for the parts that must do something there. Weft works out which parts those are by reading the module
 tree and each file's components:
 
 - A component **needs the browser** if it has an event handler or a `ref` on an element, does something as its module
-  loads, or reads weft's reactive API (it makes state, reads a query, uses a box from somewhere else). Reading another
+  loads, or reads Weft's reactive API (it makes state, reads a query, uses a box from somewhere else). Reading another
   binding that needs the browser counts too, across files: the analysis follows your imports.
 - A component that needs none of that is **static**: the server's HTML is all it ever is, and it ships no JavaScript.
 - Where static code renders a component that needs the browser, that call site becomes an **island**: a piece of the
@@ -194,19 +194,19 @@ ship it, `// @weft static` to never ship it, or `// @weft visible` to load it wh
 
 :::deepdive Why the module tree, and not the render tree?
 The render tree only exists once the page runs, and on the server it's thrown away after the HTML is written. The module
-tree is known at build time, from your source, so weft can decide what each page ships before anyone visits it. That
+tree is known at build time, from your source, so Weft can decide what each page ships before anyone visits it. That
 decision errs one way only: something the analysis can't see through is treated as needing the browser. The worst case
 is a few extra bytes, never a button that doesn't work.
 :::
 
 ## Recap
 
-- The render tree is your components nested inside each other. In weft it's built once and changes only at conditions
+- The render tree is your components nested inside each other. In Weft it's built once and changes only at conditions
   and keyed lists.
 - The ownership tree has the same shape, plus a node at each condition and list. Disposing an owner stops everything
   below it and runs its cleanups.
 - `context()` passes values down the ownership tree; `createRoot` makes a root of your own.
-- The module tree is your imports. weft reads it to decide which components need the browser and which call sites are
+- The module tree is your imports. Weft reads it to decide which components need the browser and which call sites are
   islands; static components ship no JavaScript.
 - `hydration` in `weft.config.ts` and the `@weft client`, `@weft static` and `@weft visible` comments adjust that
   decision.

@@ -217,7 +217,7 @@ const Chevron = () => (
 const FOR_CARRIER = ['name', 'form', 'required', 'autocomplete', 'onChange', 'onInput', 'readonly']
 
 /**
- * A select in the field shell, drawn by warp on every device: a popover on a desktop, a sheet on a phone (03 §4), a search
+ * A select in the field shell, drawn by Warp on every device: a popover on a desktop, a sheet on a phone (03 §4), a search
  * input once the list is long. The trigger is a button (APG select-only combobox), and a hidden real <select> is the form
  * value, so a form posts, resets and validates as it always did, and with scripting off that select is what shows.
  * Handlers read `e.currentTarget.value` as usual; `onValueChange` hears the value and why.

@@ -2,20 +2,20 @@
 
 :::learn
 - What the server sends for a page, and how it streams the slow parts
-- How weft works out which components need JavaScript at all, with nothing to annotate
+- How Weft works out which components need JavaScript at all, with nothing to annotate
 - When each island's code loads, and how a click before then isn't lost
 - How to read `.weft/hydration.json`, and when a `@weft` hint helps
 - How to prerender pages at build time
 :::
 
-Every page in a weft app is rendered on the server first. The browser gets real HTML it can paint at once, a crawler
+Every page in a Weft app is rendered on the server first. The browser gets real HTML it can paint at once, a crawler
 gets the same HTML, and a visitor on a slow phone can read the page before any script has arrived. Then the page has to
 become interactive, which is *hydration*: code runs in the browser, finds the HTML the server made, and attaches to it
 without rebuilding it.
 
 React hydrates the whole page: every component's code ships and runs again in the browser, even a footer that will
 never change. Frameworks that avoid that usually ask you to mark the interactive parts yourself, as islands or client
-components. weft does neither. Its compiler already knows which components read state, handle events or start effects,
+components. Weft does neither. Its compiler already knows which components read state, handle events or start effects,
 so it works out the islands for you, and the rest of the page ships no JavaScript at all.
 
 :::demo server-replay
@@ -117,7 +117,7 @@ where code runs.
 The compiler decides this from what each top-level binding does, followed across files:
 
 - A component **needs the client** when it has a handler or a `ref` on an element, a side effect at the top of its
-  module, or reads anything that does: weft's reactive API, a query, a binding that made a box.
+  module, or reads anything that does: Weft's reactive API, a query, a binding that made a box.
 - A call to such a component from code that doesn't need the client is an **island**.
 - Everything else is **static**: its HTML comes from the server, on the first load and on client navigation too, and its
   code isn't sent.
@@ -132,10 +132,10 @@ from local names, keeps its caller on the client. The failure mode is shipping a
 that doesn't work. A route that can't be split falls back to hydrating whole, as every route did before.
 :::
 
-:::deepdive Why weft infers this instead of asking
+:::deepdive Why Weft infers this instead of asking
 Other frameworks have `"use client"`, `client:load` or `<NoHydration>`. Each is one more thing to get right on every
 component, and getting it wrong in the cheap direction (never annotating) quietly costs the whole performance budget.
-weft's compiler already reports what each binding reads for its own reasons, so the project-level pass that follows
+Weft's compiler already reports what each binding reads for its own reasons, so the project-level pass that follows
 those facts across files is a small step, and it's exact where an annotation would be a guess.
 
 On the home page of a real shop measured while building it, this took the JavaScript from 34.1 KB to 26.3 KB and the
@@ -144,7 +144,7 @@ DOM's hydration markers from about a thousand to 73. Static regions get no keys 
 
 ## When an island loads
 
-Being an island says *whether* code is needed. weft also works out *when*, from what the island does. There are three
+Being an island says *whether* code is needed. Weft also works out *when*, from what the island does. There are three
 answers:
 
 | `when` | Means | Chosen when |
@@ -154,7 +154,7 @@ answers:
 | `load` | Load with the page | Anything else: it moves focus or scroll, has `autofocus`, runs code as its module loads, keeps a box at module level, or does something the compiler can't see into |
 
 `AddToCart` above only has a handler, so it waits for `interaction`. A page where every island waits starts with almost
-nothing to run: weft's runtime and a tiny inline script.
+nothing to run: Weft's runtime and a tiny inline script.
 
 A guess is still involved for fetching. Islands in roughly the first screen of the page (blocks and text before them,
 against 900 px) are preloaded, so their code is in the cache by the time anyone touches them; islands further down
@@ -164,7 +164,7 @@ until interaction.
 ### A click before the code arrives
 
 An island that waits for interaction has a problem to solve: the click that wakes it happens before its code exists.
-weft solves it with a capture script, about half a kilobyte, inline in every page of an app with lazy islands. It holds
+Weft solves it with a capture script, about half a kilobyte, inline in every page of an app with lazy islands. It holds
 events on islands that aren't running yet, starts loading their code, and replays the events in order once they're
 claimed. The demo at the top of the page shows the difference.
 
@@ -313,7 +313,7 @@ export default function Guide(
 
 `prerender` is a list of params, or a function (it can be `async`) that returns one. On a route with no params,
 `export const prerender = true` prerenders the page itself. Only pages that render with status 200 are written. A
-prerendered page is still a weft page: its islands hydrate and its links navigate on the client like any other.
+prerendered page is still a Weft page: its islands hydrate and its links navigate on the client like any other.
 
 A prerendered page has no request, so it can't read cookies or `ctx.user`, and it's only as fresh as the last build. Keep
 it for pages that are truly the same for everyone, and keep anything personal in a query on the client. Its absolute

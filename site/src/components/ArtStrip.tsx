@@ -8,7 +8,7 @@ const PIECES = ['woven-word', 'bobbin', 'survey', 'tide-table', 'moire-loom', 'c
 export function ArtStrip() {
   return (
     <section data-site="art-strip">
-      <h2 data-flow="heading">warp draws, too</h2>
+      <h2 data-flow="heading">Warp draws, too</h2>
       <p data-part="intro">
         Canvas art in your theme's own inks. These run on this page, three at most moving at a time.
       </p>

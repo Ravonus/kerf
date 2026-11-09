@@ -5,11 +5,11 @@
 - Why state is a box, and why you read and write `.value`
 - Why a plain variable doesn't update the page
 - How to keep several boxes, and why each copy of a component has its own
-- How weft's boxes compare with React's `useState`
+- How Weft's boxes compare with React's `useState`
 :::
 
 Components often need to remember things. A product card remembers how many are in the cart; a gallery remembers which
-picture it's on; a form remembers what you typed. In weft that memory is *state*, and a piece of state is a box: `state(0)`
+picture it's on; a form remembers what you typed. In Weft that memory is *state*, and a piece of state is a box: `state(0)`
 makes a box holding `0`, and you read and write it through `.value`.
 
 :::demo getting-started
@@ -42,7 +42,7 @@ export function Gallery() {
 Pressing Next changes `index`, but the heading never moves. The component body ran once, built the heading from `index`
 as it was then, and finished. Nothing reads `index` again, and nothing knows it changed.
 
-The fix is to make it state. The catalog names a `let` that a handler changes and JSX reads **W041**, but this weft
+The fix is to make it state. The catalog names a `let` that a handler changes and JSX reads **W041**, but this Weft
 doesn't report it yet, so watch for it yourself. (A `let` that names a prop is different, and allowed: see
 [Passing props](/learn/passing-props).)
 
@@ -100,7 +100,7 @@ index.value = 1    // write
 index.value++      // read, then write: 2
 ```
 
-`.value` is how weft knows who reads what. When JSX reads `index.value`, that spot in the page subscribes to the box. When
+`.value` is how Weft knows who reads what. When JSX reads `index.value`, that spot in the page subscribes to the box. When
 a handler writes it, the box tells exactly those spots, and they update. `Gallery` doesn't run again; nothing else on the
 page does either.
 
@@ -135,7 +135,7 @@ expects a number, or the other way round, is **W008** in the catalog (not report
 
 :::deepdive Why a box, and not a variable or a setter?
 A plain variable can't tell anyone it changed: JavaScript has no hook for "this `let` was reassigned". React solves this
-by running your whole component again after each change and comparing the result. weft doesn't re-run components, so it
+by running your whole component again after each change and comparing the result. Weft doesn't re-run components, so it
 needs the reads and writes themselves to be visible, and a property access is the cheapest place to see them. Reading
 `.value` registers the reader; writing `.value` tells the readers.
 
@@ -154,7 +154,7 @@ The differences follow from that:
 - **One name, not two.** You read and write through the same box.
 - **No snapshot.** `index.value` right after a write is the new value. In React, `index` stays the old value until the
   next render. [How an update reaches the DOM](/learn/how-updates-reach-the-dom) shows what this means in practice.
-- **No hook rules.** `useState` must be called in the same order on every render, so never in a condition or a loop. A weft
+- **No hook rules.** `useState` must be called in the same order on every render, so never in a condition or a loop. A Weft
   component runs once, so there's no order to keep: a box is an object you make like any other.
 - **Nothing re-renders.** A write updates the spots that read the box, not the component.
 
@@ -219,7 +219,7 @@ share it app-wide:
 :::note A box at module level
 A box made outside any component, at the top of a module, is shared by everything that imports it. That's handy in a
 small client-only demo, but on a server it would be shared by every request: the catalog names that **W030**, though this
-weft doesn't report it yet. Use `defineState` for state that should be app-wide.
+Weft doesn't report it yet. Use `defineState` for state that should be app-wide.
 :::
 
 ## Names in the dev tools

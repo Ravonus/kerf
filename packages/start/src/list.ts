@@ -36,7 +36,7 @@ export interface ListParams {
   filter: Record<string, Scalar | Scalar[]>
 }
 
-/** The envelope warp's `Table` reads. `next` and `prev` go back in as `cursor` or `page`; absent means no such page. */
+/** The envelope Warp's `Table` reads. `next` and `prev` go back in as `cursor` or `page`; absent means no such page. */
 export interface ListPage<T> {
   items: T[]
   total?: number

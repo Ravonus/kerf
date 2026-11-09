@@ -65,7 +65,7 @@ export const fluidRatio = (f: Fluid) => f.max / f.min
 
 /**
  * The CSS for a fluid size, as the spec writes it: `rem` is the length the rem terms multiply (the spec uses
- * `var(--warp-rem)`; plain `1rem` outside warp), `unit` the fluid unit (`var(--warp-ref-fluid-unit)`, or `1cqi`).
+ * `var(--warp-rem)`; plain `1rem` outside Warp), `unit` the fluid unit (`var(--warp-ref-fluid-unit)`, or `1cqi`).
  */
 export function fluidCss(
   f: Fluid,

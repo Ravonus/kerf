@@ -1,14 +1,14 @@
 # Diagnostics and weft check
 
 :::learn
-- What a weft diagnostic is: a code, a place, a reason and a fix
+- What a Weft diagnostic is: a code, a place, a reason and a fix
 - What each family of codes covers, from W to X
 - How to run `weft check` and `weft fix`, and what their output means
 - How to look up any code with `weft docs`
 - The handful of codes you'll meet first, and how to fix each
 :::
 
-weft's compiler reads every component before it runs, and it knows the mistakes that are easy to make in a framework
+Weft's compiler reads every component before it runs, and it knows the mistakes that are easy to make in a framework
 where components run once. When it sees one, it doesn't only fail: it tells you which mistake, where, why it's wrong, and
 what to write instead. That message is a **diagnostic**. This page teaches you to read one, run the commands that find
 them, and fix the ones you'll meet in your first week.
@@ -35,7 +35,7 @@ src/components/Price.tsx:2:23  W005 error
 weft check: 14 files, 1 errors, 0 warnings (812 ms)
 ```
 
-Every diagnostic, from every part of weft, has the same parts:
+Every diagnostic, from every part of Weft, has the same parts:
 
 | Part | Here | What it tells you |
 |---|---|---|
@@ -68,12 +68,12 @@ was a box that never heard about the prop again.
 :::note Why "copies once"
 A component body runs once. `state(props.value)` reads the prop at that moment and puts the number in a box. Nothing
 reads the prop again, so the box keeps the first value for good. React's `useState(props.value)` has the same bug, and
-it's a common one there too; the difference is that weft can see it and stop you.
+it's a common one there too; the difference is that Weft can see it and stop you.
 :::
 
 ## Families of codes
 
-The letter says what part of weft found the problem, and so roughly what it's about. You don't need to learn these:
+The letter says what part of Weft found the problem, and so roughly what it's about. You don't need to learn these:
 the code and its message are enough to act on. This is a map for when you wonder where one came from.
 
 | Family | About | Found by |
@@ -91,7 +91,7 @@ the code and its message are enough to act on. This is a map for when you wonder
 
 A plugin can add codes of its own, under its own name, such as `<short-name>/<CODE>`. They read the same way.
 
-Most of what you'll see as a beginner is **W**, with some **D** if your app uses warp. The
+Most of what you'll see as a beginner is **W**, with some **D** if your app uses Warp. The
 [diagnostics reference](/reference/diagnostics) lists every code, and each one has its own page at
 `/reference/codes/<CODE>`, such as [W005](/reference/codes/W005).
 
@@ -122,7 +122,7 @@ It ends with a summary line, and its exit code says how it went:
 |---|---|
 | `0` | No errors. There may be warnings |
 | `1` | At least one error |
-| `2` | A usage error, such as an unknown flag, or weft itself failed |
+| `2` | A usage error, such as an unknown flag, or Weft itself failed |
 
 So `weft check` in CI fails the build on errors and lets warnings through.
 
@@ -232,7 +232,7 @@ Triggers it:
 More: `weft docs props`.
 ```
 
-It says what the code catches, the fix, whether the weft you have installed reports it yet, a short example that
+It says what the code catches, the fix, whether the Weft you have installed reports it yet, a short example that
 triggers it, and which topic to read next. The same text is on the site at `/reference/codes/W005`.
 
 `weft docs` with no topic lists every topic, and `weft docs diagnostics` prints the table of every code with its status
@@ -248,7 +248,7 @@ yet), two solid buttons side by side (D038). They're reported, and nothing fails
 
 **Info** is something you might want to know, such as an icon name only known when the app runs (I002).
 
-weft has no comment that turns off a W-code. Each one marks code that behaves differently from how it reads, and there
+Weft has no comment that turns off a W-code. Each one marks code that behaves differently from how it reads, and there
 is always a way to write what you meant, often the one in the fix (`untrack` when you really want a snapshot). For the
 other families, there are switches where a real exception exists:
 
@@ -325,7 +325,7 @@ function TodoList(props: {
 }
 ```
 
-A row needs `key`, from a stable id in the data: `<li key={t.id}>`. With it, weft moves and reuses rows instead of
+A row needs `key`, from a stable id in the data: `<li key={t.id}>`. With it, Weft moves and reuses rows instead of
 rebuilding them. [Rendering lists](/learn/rendering-lists) has more.
 
 ### W020–W029: React hooks
@@ -335,7 +335,7 @@ const [open, setOpen] = useState(false)
 ```
 
 There are no hooks. `useState` is `state`, `useMemo` is `derived`, `useEffect` is `watch` or `onMount`, `useRef` is
-`ref={el}`, and `useCallback` is a plain function. These codes are in the catalog, but this weft doesn't report them
+`ref={el}`, and `useCallback` is a plain function. These codes are in the catalog, but this Weft doesn't report them
 yet, so look for hooks yourself.
 
 ### W061: `bind:` in the wrong place
@@ -377,10 +377,10 @@ return <button onClick={() => clicks++}>{clicks}</button>
 ```
 
 A plain variable changes, but nothing re-reads it, so the button shows `0` forever. Make it `state(0)` and read
-`clicks.value`. W041 is in the catalog, but this weft doesn't report it yet, so watch for it yourself.
+`clicks.value`. W041 is in the catalog, but this Weft doesn't report it yet, so watch for it yourself.
 
 :::deepdive Diagnostics written for agents
-weft was built with AI agents writing much of its code, and the diagnostics are designed for them as much as for you.
+Weft was built with AI agents writing much of its code, and the diagnostics are designed for them as much as for you.
 Every one has a stable code an agent can look up with `weft docs`, a reason written about the code in front of it, and a
 fix it can apply: the exact edit, marked safe or not. `weft check --json` gives the whole list in one shape, so an agent
 can run it after every change, read what's wrong, fix it and run it again, without a person translating a stack trace.

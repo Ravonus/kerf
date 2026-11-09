@@ -1,6 +1,6 @@
-# warp coverage: everything the original had, and more
+# Warp coverage: everything the original had, and more
 
-The user's requirement: warp handles **any use case**. Every component the original kit shipped must have a warp
+The user's requirement: Warp handles **any use case**. Every component the original kit shipped must have a Warp
 equivalent, rebuilt rather than dropped. The research doc's "move out / drop" verdicts are overridden. Things can
 live in optional packs, but they must be designed.
 
@@ -102,7 +102,7 @@ CalendarView's week view or Drawer's snap points, the row names only the missing
 | Component or pattern | Use case | Kits | P | Owner | Status |
 |---|---|---|---|---|---|
 | Field / Fieldset primitives (label, description, error, required mark, group legend) | every form; one way to wire `aria-describedby` | shadcn, Chakra, Ark, Fluent, Primer, Spectrum | P0 | inputs | ✓ [03 §6](03-inputs.md#6-forms) · [inputs#more](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/inputs.html#more) |
-| Select on touch | mobile-first forms; long lists (warp's sheet, not the OS's) | shadcn, Chakra, Tremor | P1 | inputs | ✓ [03 §4](03-inputs.md#4-choice-family) · [inputs#choice](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/inputs.html#choice) |
+| Select on touch | mobile-first forms; long lists (Warp's sheet, not the OS's) | shadcn, Chakra, Tremor | P1 | inputs | ✓ [03 §4](03-inputs.md#4-choice-family) · [inputs#choice](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/inputs.html#choice) |
 | Checkbox card / radio card | plan and shipping choices, onboarding options | Chakra, Tremor, Mantine, coss | P0 | inputs | ✓ [03 §4](03-inputs.md#4-choice-family) · [inputs#choice](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/inputs.html#choice) |
 | Toggle and ToggleGroup (pressed state, single or multi) | toolbar formatting, view switches | shadcn, Radix, Ark, Chakra, Tremor | P0 | comp | ✓ [05 §2](05-components.md#2-actions) · [components#fmt](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/components.html#fmt) |
 | Autocomplete (free text with suggestions, not constrained to options) | search fields, tags, addresses | Antd, Primer, MUI, Hero | P1 | inputs | ✓ [03 §3](03-inputs.md#3-text-family) · [inputs#more](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/inputs.html#more) |
@@ -178,7 +178,7 @@ CalendarView's week view or Drawer's snap points, the row names only the missing
 | Language / locale switcher | i18n apps | Polaris (pattern), Carbon (header pattern) | P1 | comp | ✓ [05 §7](05-components.md#7-preferences-as-components) · [components#lang](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/components.html#lang) |
 | Theme switcher (light, dark, system, as a menu or segmented) | every app | Magic (theme toggler), Radix, Chakra | P0 | comp | ✓ [05 §7](05-components.md#7-preferences-as-components) · [components#pref-theme](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/components.html#pref-theme) |
 | Density control (compact, cozy, comfortable) | tables, admin, pro apps | MUIX (grid density), Carbon, Fluent | P1 | comp | ✓ [05 §7](05-components.md#7-preferences-as-components) · [components#pref-density](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/components.html#pref-density) |
-| The warp dial as a user control (quiet ↔ balanced ↔ vivid) | user or tenant picks expression | Radix (ThemePanel is the nearest) | P1 | comp | ✓ [05 §7](05-components.md#7-preferences-as-components) · [components#pref-stop](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/components.html#pref-stop) |
+| The Warp dial as a user control (quiet ↔ balanced ↔ vivid) | user or tenant picks expression | Radix (ThemePanel is the nearest) | P1 | comp | ✓ [05 §7](05-components.md#7-preferences-as-components) · [components#pref-stop](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/components.html#pref-stop) |
 | Theme panel (accent, radius, scaling, appearance, live preview) | white-label tenants, theme builders | Radix (ThemePanel), shadcn (themes page) | P2 | comp |  |
 | Accessibility preferences panel (reduced motion, contrast, text size, underline links) | settings, a11y compliance | Fluent / Windows pattern | P2 | app |  |
 
@@ -437,7 +437,7 @@ demo in your specimen. Items marked **§1+** are original pieces that §1 had mi
   - the theme switcher
 - **P1:** popconfirm, toggletip, split button, FAB and speed dial, overlay manager, persona, meter, section message,
   highlight, link overlay, stopwatch, format helpers, selection toolbar, tour step primitive, locale switcher,
-  density control, **the warp dial as a user-facing control**, AI label.
+  density control, **the Warp dial as a user-facing control**, AI label.
 - **P2:** menubar, watermark, theme panel.
 - **§1+:** ThemeToggle, Logo, icon set, motion preset registry with per-component override, sliding indicator,
   overflow-to-more.

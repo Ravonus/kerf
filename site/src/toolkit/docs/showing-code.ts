@@ -147,7 +147,7 @@ export const codeDocs: Doc[] = [
       code: '<Snippet{props} />',
       stage: 'narrow',
       knobs: [
-        { prop: 'code', control: 'text', initial: 'npm install -g weft', default: '' },
+        { prop: 'code', control: 'text', initial: 'npm install -g Weft', default: '' },
         { prop: 'prompt', control: 'text', initial: '$', default: '$' },
       ],
     },

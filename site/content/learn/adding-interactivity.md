@@ -8,11 +8,11 @@
 :::
 
 Some things on the screen change in response to what people do. Typing in a search box filters a list; pressing a button
-adds to a cart; picking a picture in a gallery shows it. In weft, data that changes over time is called *state*. Any
+adds to a cart; picking a picture in a gallery shows it. In Weft, data that changes over time is called *state*. Any
 component can hold it in a box, and handlers change it. This chapter covers both, and what happens between a change and
 the page showing it.
 
-If you know React, most of this will look familiar, with one difference that runs through every page: a weft component
+If you know React, most of this will look familiar, with one difference that runs through every page: a Weft component
 runs once. There is no re-render. Each spot on the page that reads a box updates when that box changes, and nothing else
 does.
 
@@ -130,7 +130,7 @@ instead.
 
 ## Forms and inputs
 
-Every input follows the same pattern: `value` shows the box, and a handler writes it. warp's controls take the same
+Every input follows the same pattern: `value` shows the box, and a handler writes it. Warp's controls take the same
 props, and some, like `Select` and `NumberField`, take the box itself:
 
 :::demo interact-controls

@@ -12,7 +12,7 @@ total with shipping, a search box and a checkout. Then you move the products and
 shop becomes a full-stack app.
 
 You don't need to know anything beyond the [Quick start](/learn/quick-start), and you don't need to have read it
-closely. Each step explains what it adds and why. The techniques you'll practise are the ones nearly every weft app
+closely. Each step explains what it adds and why. The techniques you'll practise are the ones nearly every Weft app
 uses, so working through this page is the quickest way to get a feel for the framework.
 
 :::note What the steps look like
@@ -28,7 +28,7 @@ There are two ways to follow along.
 **Read and play here.** Every client step runs on this page. Press the buttons, read the code, and compare it with the
 step before. That's enough to learn everything until the server part.
 
-**Build it in your own app.** weft isn't on npm yet, so you make an app from a checkout of the repository, as
+**Build it in your own app.** Weft isn't on npm yet, so you make an app from a checkout of the repository, as
 [Installation](/learn/installation) explains:
 
 ```bash
@@ -38,8 +38,8 @@ cd my-shop
 npx weft dev
 ```
 
-`--yes` takes the defaults: warp for the UI and a SQLite database, which you won't need for this tutorial, though the
-server part uses `zod`, which comes with it. Once weft is published, `npm create @weft-js -- my-shop --yes` will do the
+`--yes` takes the defaults: Warp for the UI and a SQLite database, which you won't need for this tutorial, though the
+server part uses `zod`, which comes with it. Once Weft is published, `npm create @weft-js -- my-shop --yes` will do the
 same in one step.
 
 Then create `src/routes/shop.tsx`, paste each step's code into it, and open `/shop` in the browser. A file in
@@ -72,7 +72,7 @@ const PRODUCTS = [
 ]
 ```
 
-`PRODUCTS` is ordinary data in an ordinary constant, outside any component. Nothing about it is special to weft. Later
+`PRODUCTS` is ordinary data in an ordinary constant, outside any component. Nothing about it is special to Weft. Later
 in the tutorial it moves to the server, and the code that uses it hardly changes.
 
 ```tsx
@@ -91,7 +91,7 @@ Here there's one prop, `product`. Destructuring it in the parameter list, `({ pr
 `(props)` and then `props.product` everywhere.
 
 :::note Props stay live
-In weft a component runs once. You might expect a destructured prop to be a snapshot, frozen at that first run. It
+In Weft a component runs once. You might expect a destructured prop to be a snapshot, frozen at that first run. It
 isn't: the compiler turns each prop into a live read, so `product.name` in the markup always reads the prop as it is
 now. That matters from Step 5, when the parent starts changing what it passes. Destructure one level only:
 `({ product: { name } })` can't stay live, and the compiler reports it as **W006**.
@@ -104,10 +104,10 @@ now. That matters from Step 5, when the parent starts changing what it passes. D
 ```
 
 `Shop` turns each product into a `ProductRow` with `.map`, passing the product as the `product` prop. The `key` is how
-weft tells rows apart: when the list changes, a row with the same key is kept and moved, not rebuilt. Use something that
+Weft tells rows apart: when the list changes, a row with the same key is kept and moved, not rebuilt. Use something that
 belongs to the item, such as its id. On a list of objects, a missing `key` is **W010**.
 
-`Card` comes from warp, weft's UI toolkit. It draws a panel with a title.
+`Card` comes from Warp, Weft's UI toolkit. It draws a panel with a title.
 
 ## Step 2: add to cart
 
@@ -171,7 +171,7 @@ reach into its children to read their state.
 
 So the state goes in the closest component that needs all of it: `Shop`. This is called *lifting state up*, and you'll
 do it in every app. The rows get what they need through props. In React the same move means passing the value and a
-callback to every row. In weft you can pass the box, because a box carries both the reading and the writing, and
+callback to every row. In Weft you can pass the box, because a box carries both the reading and the writing, and
 `.get` keeps each row's reading narrow.
 :::
 
@@ -189,7 +189,7 @@ const qty = derived(() => cart.get(product.id) ?? 0)
 ```
 
 `derived` names a value worked out from other values. `qty` reads one entry of the cart, so it follows that entry. You
-don't list what it depends on; weft sees what it read. The row reads `qty.value` twice, in the count and in the minus
+don't list what it depends on; Weft sees what it read. The row reads `qty.value` twice, in the count and in the minus
 button's `disabled`, and naming it keeps the two the same.
 
 Why not `const qty = cart.get(product.id) ?? 0`? Because the component body runs once. That line would read the entry
@@ -234,7 +234,7 @@ const total = derived(() => subtotal.value + shipping.value)
 ```
 
 Each one says what the value *is*, once. Nowhere does the code say "when the cart changes, update the subtotal, then the
-shipping, then the total". weft works that out: `total` reads `subtotal` and `shipping`, `shipping` reads `subtotal`,
+shipping, then the total". Weft works that out: `total` reads `subtotal` and `shipping`, `shipping` reads `subtotal`,
 and `subtotal` reads the cart. A change to the cart reaches every one of them, in the right order, and the page is
 updated once.
 
@@ -247,7 +247,7 @@ No. A derived value is lazy and cached. It computes when something reads it, and
 changed. A click that changes the mug's count recomputes `items`, `subtotal`, `shipping` and `total` once each, and
 writes the text nodes that show them. Nothing else runs: not `Shop`, not the other rows.
 
-In React you might wrap these in `useMemo` to avoid recomputing them on every render. weft has no renders to avoid, so
+In React you might wrap these in `useMemo` to avoid recomputing them on every render. Weft has no renders to avoid, so
 `derived` isn't an optimisation. It's how you name a value that follows other values.
 :::
 
@@ -269,7 +269,7 @@ const search = state('')
 />
 ```
 
-`Input` is warp's text field. `value={search.value}` shows the state, and `onInput` writes it on every key press. The two
+`Input` is Warp's text field. `value={search.value}` shows the state, and `onInput` writes it on every key press. The two
 together make a *controlled* input: the state is the truth, and the field shows it.
 
 The list to show is derived from the text:
@@ -366,7 +366,7 @@ reasons:
 - **The browser can't be trusted with prices.** Anyone can open the developer tools and change `total` to a cent. The
   server has to work out what an order costs from its own prices.
 
-weft's full-stack part, `@weft-js/start`, gives you two tools for this. A **query** reads data on the server, and a
+Weft's full-stack part, `@weft-js/start`, gives you two tools for this. A **query** reads data on the server, and a
 component calls it like a function. A **mutation** changes something on the server: here, it places the order. Both
 live in modules under `src/server/`. The browser never gets their code: it gets small stubs that call the server for
 you.
@@ -581,7 +581,7 @@ server data copied into `state` as **S001**.
 :::
 
 :::deepdive Where the code runs
-`src/server/shop.ts` is a server module. When the browser's bundle is built, weft replaces each `query` and `mutation`
+`src/server/shop.ts` is a server module. When the browser's bundle is built, Weft replaces each `query` and `mutation`
 in it with a stub that sends a request, so `PRODUCTS` and every `run` stay on the server. That is also why a server
 module can import a database client or read secrets from the environment.
 
@@ -817,7 +817,7 @@ paragraph with `role="alert"` shows it, so a screen reader announces it too.
 <Button type="submit" loading={placeOrder.pending.value} …>
 ```
 
-Every mutation has a `pending` value that's true while a call is in flight. warp's `Button` takes it as `loading`: it
+Every mutation has a `pending` value that's true while a call is in flight. Warp's `Button` takes it as `loading`: it
 shows that work is under way and ignores presses, so an impatient double click doesn't place two orders. There's also
 `placeOrder.error.value`, the last call's failure, if you'd rather read that than catch.
 
@@ -843,7 +843,7 @@ You've built a shop that:
 
 Look back at the code and notice what isn't there: no effects, no memoisation, no dependency arrays, no re-renders to
 think about, and no code that keeps one value in step with another. Every component ran once. After that, each click
-wrote a box, and weft updated the few places on the page that read it.
+wrote a box, and Weft updated the few places on the page that read it.
 
 ### What to build next
 
@@ -857,7 +857,7 @@ If you want to keep going with this shop, here are ideas, roughly from small to 
 - Take payment at checkout: [Payments](/learn/payments).
 - Give each product its own page at `src/routes/products/[id].tsx`: [Routing and layouts](/learn/routing-and-layouts).
 
-To understand how to plan an app like this from scratch, read [Thinking in weft](/learn/thinking-in-weft) next.
+To understand how to plan an app like this from scratch, read [Thinking in Weft](/learn/thinking-in-weft) next.
 
 ## Recap
 

@@ -106,7 +106,7 @@ export interface Tier {
   gain: number
 }
 
-/** The tier's numbers, from warp's own `--warp-x` where `el` sits; a `--warp-dither-*` set in CSS overrides one. */
+/** The tier's numbers, from Warp's own `--warp-x` where `el` sits; a `--warp-dither-*` set in CSS overrides one. */
 export function tier(el: Element): Tier {
   const s = getComputedStyle(el),
     read = (name: string, fallback: number) => {

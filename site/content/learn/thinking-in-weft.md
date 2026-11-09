@@ -1,4 +1,4 @@
-# Thinking in weft
+# Thinking in Weft
 
 :::learn
 - How to break a design into a tree of components
@@ -8,7 +8,7 @@
 - Where this way of thinking differs from React's
 :::
 
-weft changes how you think about the screens you build. You take a design, break it into components, describe each
+Weft changes how you think about the screens you build. You take a design, break it into components, describe each
 state it can be in, and connect the components so data flows through them. On this page you'll go through that process
 once, building a searchable table of products for a coffee shop.
 
@@ -87,7 +87,7 @@ and the mockup looks like this:
 Out-of-stock products are shown in red. Typing in the search box narrows the list by name, and ticking the box hides
 what's out of stock.
 
-To build any UI in weft, you usually go through the same five steps.
+To build any UI in Weft, you usually go through the same five steps.
 
 ## Step 1: Break the UI into a component hierarchy
 
@@ -130,7 +130,7 @@ State is for data that changes over time, and the static version has none.
 
 Read it from the bottom up. `FilterableProductTable` passes the whole list to `ProductTable` as a prop. `ProductTable`
 works out the categories, and for each one shows a `ProductCategoryRow` and then a `ProductRow` per product in it.
-`ProductRow` turns its name red when the product is out of stock, using a warp colour token so it follows the theme.
+`ProductRow` turns its name red when the product is out of stock, using a Warp colour token so it follows the theme.
 
 You can build top-down, starting from `FilterableProductTable`, or bottom-up, starting from `ProductRow`. On a small
 screen like this one top-down is usually easier; on a big project, bottom-up lets you finish and test pieces as you go.
@@ -144,7 +144,7 @@ const categories = derived(() =>
 ```
 
 In React you'd compute this in the render, as a plain `const`, and it would be recomputed each time the component
-rendered. In weft the component body runs once. A plain `const categories = …` would be worked out once, from the
+rendered. In Weft the component body runs once. A plain `const categories = …` would be worked out once, from the
 props as they were at the start, and never again. The compiler reports that as **W001**. So even in the static version,
 anything you compute from props goes in `derived`, or straight into the markup, where every expression stays live.
 
@@ -187,7 +187,7 @@ So the state is:
 - whether the checkbox is ticked.
 
 :::deepdive Props, state and derived values
-There are three kinds of data in a weft component, and keeping them apart is most of the work of designing one.
+There are three kinds of data in a Weft component, and keeping them apart is most of the work of designing one.
 
 - **Props** are like a function's arguments. A parent passes them, and they stay current: when the parent's value
   changes, the child sees it, though the child never runs again.
@@ -196,7 +196,7 @@ There are three kinds of data in a weft component, and keeping them apart is mos
 - **Derived values** are worked out from props, state and other derived values with `derived(() => …)`. They are
   read-only, and they can't go out of date.
 
-React has the first two, and computes the third in the render, sometimes wrapped in `useMemo`. weft gives the third a
+React has the first two, and computes the third in the render, sometimes wrapped in `useMemo`. Weft gives the third a
 name of its own because the body doesn't re-run: `derived` is how a computed value follows what it reads. It's lazy and
 cached, so `shown` below is recomputed only when the text, the checkbox or the list has changed, and only if something
 reads it.
@@ -254,7 +254,7 @@ because the browser's input does that by itself, but nothing writes the state ye
 no way to send anything back. That's the last step.
 
 :::note What happens on a keystroke
-When the search text does change, here is all the work weft does: `shown` is recomputed, then `categories`, and the
+When the search text does change, here is all the work Weft does: `shown` is recomputed, then `categories`, and the
 keyed lists inside the table compare their new keys with their old ones. A row whose product is still there is kept
 as it is. A row that's gone is removed, and a new one is made for a product that came back. No component above the rows
 runs again, and nothing is compared that didn't read the search text.
@@ -266,7 +266,7 @@ At the moment the data only flows down. To change the state as the person types,
 that live in `FilterableProductTable`.
 
 In React, the parent would pass its setter functions down, and the child would call `onFilterTextChange(e.target.value)`.
-In weft the parent passes its boxes with `bind:`, and the child writes to its own props:
+In Weft the parent passes its boxes with `bind:`, and the child writes to its own props:
 
 :::demo start-thinking-step-3
 
@@ -351,9 +351,9 @@ call site says, in one word, that the child may write it.
 
 ## How this differs from React
 
-You followed the same five steps React teaches, and most of the reasoning was the same. Here is where weft differed:
+You followed the same five steps React teaches, and most of the reasoning was the same. Here is where Weft differed:
 
-| | React | weft |
+| | React | Weft |
 |---|---|---|
 | A component runs | On every render | Once, when it first appears |
 | A value computed from props or state | A `const` in the render, maybe in `useMemo` | `derived(() => …)`, or an expression in the markup |
@@ -361,7 +361,7 @@ You followed the same five steps React teaches, and most of the reasoning was th
 | Data flowing up | A callback prop | `bind:` at the call site, a box, or a callback |
 | What a change updates | The component and its children re-render, then the DOM is diffed | The text, attributes and keyed rows that read the change |
 
-The habit to unlearn is "the function runs again". In weft it doesn't, so you never ask "will this be recomputed on the
+The habit to unlearn is "the function runs again". In Weft it doesn't, so you never ask "will this be recomputed on the
 next render?" You ask "does this read what it depends on?" A `derived`, a handler, an expression in the markup and a
 prop all read live. A plain `const` computed in the body doesn't, and the compiler tells you when you've written one.
 

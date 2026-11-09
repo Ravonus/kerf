@@ -60,7 +60,7 @@ export type Page = {
     rows: { name: string; type: string; required: boolean; default?: string; doc: string }[]
   }[]
   parts: string[]
-  /** The `warp({ parts })` keys that style it, from warp's parts table; `example` is highlighted HTML. */
+  /** The `warp({ parts })` keys that style it, from Warp's parts table; `example` is highlighted HTML. */
   theming?: { rows: { path: string; own: string[]; states: string[] }[]; example: string }
   scope?: string
   states: string[]

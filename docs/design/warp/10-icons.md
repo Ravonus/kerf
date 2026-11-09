@@ -1,4 +1,4 @@
-# warp 10 — Icons
+# Warp 10 — Icons
 
 The rules every drawing in `@weft-js/warp-icons` is held to. Every icon is original: nothing is copied, traced or adapted from
 another set, and nothing here carries another set's licence. Source art is `packages/warp-icons/art/`.
@@ -17,15 +17,15 @@ The tiers are the expression stops (00 §3). Same names, same meaning, same box.
 
 ## 2. Grid
 
-- The box is warp's 24 grid. It is 16 pixels at × 1.5, so one stroke is 1.5 and draws as exactly 1px at 16 (00 §6).
+- The box is Warp's 24 grid. It is 16 pixels at × 1.5, so one stroke is 1.5 and draws as exactly 1px at 16 (00 §6).
 - **Outline coordinates are pixel centres.** Art is written in pixel units `u`, placed at `1.5u + 0.75`, so a straight
-  stroke fills one pixel row at warp's default 16px instead of smearing across two.
+  stroke fills one pixel row at Warp's default 16px instead of smearing across two.
 - Live area is columns and rows 1 to 13, centred on 7. Round forms may reach 0 and 14 for optical balance. Rows 14 and 15
   are empty unless a form needs them.
 
 ## 3. Outline strokes
 
-- Weight 1.5 everywhere, set by `--warp-icon-stroke`; the weft stroke by `--warp-icon-weft`.
+- Weight 1.5 everywhere, set by `--warp-icon-stroke`; the Weft stroke by `--warp-icon-weft`.
 - Outline only. Fill marks state, never decoration.
 - Diagonals are 45° wherever the form allows.
 - Dots are round caps on a zero-length stroke, so they follow the stroke weight.
@@ -34,13 +34,13 @@ The tiers are the expression stops (00 §3). Same names, same meaning, same box.
 
 ## 4. The two signatures
 
-1. **The notch.** warp's floated label sits in a gap in the field's top border. Every closed outer container in the set
+1. **The notch.** Warp's floated label sits in a gap in the field's top border. Every closed outer container in the set
    (box, ring, document, device) leaves that same gap in its top edge, near the left corner; on a ring, at about 10
    o'clock. Containers under 6 cells across keep their line, since the gap would read as damage.
 2. **The weft.** warp threads run one way and the weft crosses them in accent. Every icon that has a container and a
-   meaning separates them: the container is warp, and the one stroke that says what the icon means (the check inside the
-   shield, the hands of the clock) is the weft. It carries the emphasis weight (1.5 / 2, like the emphasis line), and
-   the app can colour it through `stroke` on `[data-w]`. A single-stroke mark is all weft.
+   meaning separates them: the container is Warp, and the one stroke that says what the icon means (the check inside the
+   shield, the hands of the clock) is the Weft. It carries the emphasis weight (1.5 / 2, like the emphasis line), and
+   the app can colour it through `stroke` on `[data-w]`. A single-stroke mark is all Weft.
 
 ## 5. Pixel tier
 
@@ -54,7 +54,7 @@ light from the top left.
   thin rendering lose nothing that matters.
 - Corners step: the corner cell of a frame is left empty.
 - No filled blob where a line will do. The silhouette should be recognisable at 16px, at 1×.
-- The notch is one empty cell in the top edge, third from the left. The weft is the solid ink mark in the middle.
+- The notch is one empty cell in the top edge, third from the left. The Weft is the solid ink mark in the middle.
 - The first 170 are drawn cell by cell. The rest land on the grid from their outline spec (`scripts/raster.mjs`): curves step
   one cell at a time, circles use the midpoint rule, and shade stays clear of detail. A hand bitmap overrides that wherever
   the landing reads worse.

@@ -9,7 +9,7 @@ export const tries: Record<string, string> = {
     "Change the first Button's tone to " +
     '"critical", or borderLeft\'s 4px to ' +
     '12px. style takes an object, and its ' +
-    'colour and spacing are warp tokens.',
+    'colour and spacing are Warp tokens.',
   'start-data':
     "Change the barista's name or size in " +
     'the object at the top. Every brace ' +
@@ -20,7 +20,7 @@ export const tries: Record<string, string> = {
     'appears only when both sides are true.',
   'start-list':
     'Add a fifth drink to MENU with its own ' +
-    'id. The key tells weft which row is ' +
+    'id. The key tells Weft which row is ' +
     'which.',
   'start-events':
     'Press Ring the bell. The handler is ' +

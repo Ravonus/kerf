@@ -65,7 +65,7 @@ export const examples: Record<string, Demo> = {
   'shop-5': {
     title: 'The shop, step 5',
     look:
-      'A checkout form from warp, so the ' +
+      'A checkout form from Warp, so the ' +
       'shop now has a labelled field, a ' +
       'switch and a submit button.',
     tryIt:
@@ -132,7 +132,7 @@ export const examples: Record<string, Demo> = {
     title: 'A list that keeps its rows',
     look:
       'A to-do list where each row has a ' +
-      'key, so weft knows which row is ' +
+      'key, so Weft knows which row is ' +
       'which.',
     tryIt:
       'Tick Grind, then press Do the first ' +
@@ -196,7 +196,7 @@ export const examples: Record<string, Demo> = {
       'what is ticked is data, a box synced ' +
       'to every tab, and hover, focus and ' +
       'press are UI state, one interaction ' +
-      'per row, drawn by warp.',
+      'per row, drawn by Warp.',
     tryIt:
       'Tick a row: both panes tick. Hover a ' +
       'row: both panes light. Open this ' +
@@ -231,7 +231,7 @@ export const examples: Record<string, Demo> = {
   habit: {
     title: 'A React habit, caught by the compiler',
     look:
-      'A real error from the weft compiler ' +
+      'A real error from the Weft compiler ' +
       'for state(props.value), which copies ' +
       'a prop once. That is fine in some ' +
       'frameworks and a silent bug here.',
@@ -246,11 +246,11 @@ export const examples: Record<string, Demo> = {
       'agent reads the same message.',
   },
   'ui-kit': {
-    title: 'A form from warp',
+    title: 'A form from Warp',
     look:
       'A billing form: email field, switch ' +
-      'and button, all from warp, the UI ' +
-      'kit that ships with weft.',
+      'and button, all from Warp, the UI ' +
+      'kit that ships with Weft.',
     tryIt:
       'Hover the field and the button, then ' +
       'press Tab to move through them.',
@@ -314,7 +314,7 @@ export const examples: Record<string, Demo> = {
     why:
       'You pay for the components you use. ' +
       "A page that imports a button doesn't " +
-      'bring the rest of warp with it.',
+      'bring the rest of Warp with it.',
   },
   ask: {
     title: 'Ask the app',

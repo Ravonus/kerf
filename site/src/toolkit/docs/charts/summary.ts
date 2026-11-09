@@ -26,7 +26,7 @@ export const summary: DocGroup['docs'] = [
             title: 'Colours',
             stage: 'narrow',
             height: 200,
-            note: '`color` takes any warp token.',
+            note: '`color` takes any Warp token.',
           },
         ],
       },
@@ -50,7 +50,7 @@ export const summary: DocGroup['docs'] = [
     propDocs: {
       values: 'The numbers to draw, oldest first.',
       color:
-        "The line's colour: a warp token such as `var(--warp-color-positive-solid)`, or any CSS colour.",
+        "The line's colour: a Warp token such as `var(--warp-color-positive-solid)`, or any CSS colour.",
     },
     related: ['LineChart', 'StreamChart'],
   },

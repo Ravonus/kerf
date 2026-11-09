@@ -8,7 +8,7 @@
 :::
 
 On [Choosing the state structure](/learn/choosing-state-structure) you kept state small: only what can't be worked out
-from anything else. Everything that *can* be worked out is a derived value. You say how to compute it once, and weft keeps
+from anything else. Everything that *can* be worked out is a derived value. You say how to compute it once, and Weft keeps
 it right.
 
 :::demo rules
@@ -41,13 +41,13 @@ export function Basket() {
 `derived` tracks what its function reads. `total` reads `qty` and `shipping`, so it follows both. You never list them:
 there's no dependency array to keep up to date, and no way for it to go out of date.
 
-A derived value is read-only. To change it, change what it reads. Assigning to `total.value` is a type error, and weft
+A derived value is read-only. To change it, change what it reads. Assigning to `total.value` is a type error, and Weft
 reports it as **W007**.
 
 :::note Coming from React
 `derived` is what `useMemo` is for, without the dependency array, and also what you'd otherwise compute in the render
-body. In React the body runs on every render, so `const total = price * qty` stays right. In weft the body runs once,
-so the same line would be computed once and never again. That's why weft has a name for it.
+body. In React the body runs on every render, so `const total = price * qty` stays right. In Weft the body runs once,
+so the same line would be computed once and never again. That's why Weft has a name for it.
 :::
 
 ## Where to compute
@@ -119,9 +119,9 @@ export function Greeting() {
 While `formal` is false, `greeting` read `formal` and `first`, so a change to `last` doesn't run it. Once `formal` turns
 true, it reads `last` and stops following `first`. You get the smallest set of dependencies without thinking about it.
 
-:::deepdive How weft keeps a chain consistent
+:::deepdive How Weft keeps a chain consistent
 A write to a box marks everything downstream: the readers that read it directly are *dirty*, and the readers of those are
-*check*. Nothing runs yet. When something is read, weft first brings what it read up to date, in order, and only reruns a
+*check*. Nothing runs yet. When something is read, Weft first brings what it read up to date, in order, and only reruns a
 step if one of its inputs actually changed.
 
 So in `total = subtotal + discount`, a change to `qty` never shows a `total` computed from a new `subtotal` and an old
@@ -229,7 +229,7 @@ export function PriceTag({
 }
 ```
 
-`price` and `currency` are destructured, and destructuring one level stays live in weft. `derived` reads them each time it
+`price` and `currency` are destructured, and destructuring one level stays live in Weft. `derived` reads them each time it
 runs. When the parent changes `price`, `label` recomputes.
 
 This is the answer to "how do I keep a copy of a prop in sync?": don't keep a copy. Derive what you need from the prop.
@@ -259,7 +259,7 @@ Don't. This version has three problems that `derived` doesn't:
   The catalog calls that **W003**.
 - **It's more state.** `total` is now a box anyone can write to, and nothing stops it from disagreeing with `qty`.
 
-The catalog names a `watch` that only copies one value into another **W004**, with `derived` as the fix. This weft
+The catalog names a `watch` that only copies one value into another **W004**, with `derived` as the fix. This Weft
 doesn't report W003 or W004 yet, so watch for them yourself. Keep `watch` for the outside world; see
 [Effects](/learn/effects) and [You might not need an effect](/learn/you-might-not-need-an-effect).
 

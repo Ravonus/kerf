@@ -8,9 +8,9 @@
 - Where fonts and text measuring come from (`@weft-js/text`), and what `@weft-js/core/head` is for
 :::
 
-Most of what a page shows is elements and text, and weft's TSX covers it. A few things need more care than an element
+Most of what a page shows is elements and text, and Weft's TSX covers it. A few things need more care than an element
 can give on its own: text that isn't there yet, text that streams in a few characters at a time, images that should
-arrive at the right size without pushing the page around, and drawing that only a canvas can do. weft has a small
+arrive at the right size without pushing the page around, and drawing that only a canvas can do. Weft has a small
 module for each, under `@weft-js/core`, and each one only costs a page that imports it.
 
 They share one goal: **nothing moves**. Layout shift, content jumping as things load, is one of the most annoying
@@ -59,21 +59,21 @@ export function Quote() {
 While the children are empty (`undefined`, `null`, `''` or `false`), `<Text>` renders placeholder text of about that many
 characters, invisible, inside the real element. The browser lays it out with the real font, width and line height, so
 the reserved room is exactly what text of that length would take, with nothing measured in JavaScript. The element is
-marked `aria-busy`, and warp's skeleton styles can show it as a shimmering bar (the demo imports
+marked `aria-busy`, and Warp's skeleton styles can show it as a shimmering bar (the demo imports
 `@weft-js/warp/skeleton` for that).
 
 `reserve` takes a number of characters, `true` for one line's worth, or a sample string. Pass `as` to choose the element:
 `'p'` (the default), `'span'`, `'div'`, `'li'` or `'h1'` to `'h4'`.
 
-:::note Text is the core one; warp has another
-warp also exports a `Text`, for its type roles (`<Text role="caption">`). They're different components. If a file needs
+:::note Text is the core one; Warp has another
+Warp also exports a `Text`, for its type roles (`<Text role="caption">`). They're different components. If a file needs
 both, rename one: `import { Text as Reserved } from '@weft-js/core/text'`.
 :::
 
 ### Streamed text
 
 An AI reply or a log arrives a few characters at a time. In a plain element, each new token can rewrap the last line,
-the element's height changes many times a second, and in a scrolling container the lines above jump. weft flags text
+the element's height changes many times a second, and in a scrolling container the lines above jump. Weft flags text
 streamed straight into a scroll container (**X035**). `<Text stream>` is the fix:
 
 :::demo escape-stream
@@ -175,7 +175,7 @@ Importing a file with `?media` gives you a record the build made from it, not a 
 `focus={[x, y]}` sets the focal point when the image is cropped with `fit="cover"`.
 
 The resizing and encoding happen at build time. With `@weft-js/plugin-media` in your config, the build makes AVIF and
-WebP files at several widths, choosing each image's quality by measuring it when it can; without the plugin, weft reads
+WebP files at several widths, choosing each image's quality by measuring it when it can; without the plugin, Weft reads
 the size from the file's header and serves the original. Video and audio records come from
 `@weft-js/plugin-media-ffmpeg`, which can also turn a large GIF into a video. The plugin also checks raw `<img>`
 and `<video>` tags: a missing size (**M001**), a missing `alt` (**M007**), a hero that loads lazily (**M008**), and
@@ -221,7 +221,7 @@ playback crosses a cue (not when you seek past it).
 
 A skeleton, grey bars where text will be, keeps a loading region the size of what's coming. The trouble is keeping a
 hand-drawn skeleton the same size as the real content as both change. When the two differ, the swap moves the page, and
-weft warns in development (**X031**).
+Weft warns in development (**X031**).
 
 `<Boundary pending="shape">` hands that job to the compiler:
 
@@ -262,16 +262,16 @@ as the fallback. It's laid out by the browser like the real thing, so the swap m
 hidden, from the very first paint, and is only revealed if the data takes longer than 150 ms.
 
 Variants are only built into a page that uses one, so this costs nothing elsewhere. `@weft-js/core/shape` holds what the
-compiled variants call; you don't import from it yourself. The CSS that draws the bars is warp's: import
-`@weft-js/warp/skeleton` once if the page has no other warp skeleton on it.
+compiled variants call; you don't import from it yourself. The CSS that draws the bars is Warp's: import
+`@weft-js/warp/skeleton` once if the page has no other Warp skeleton on it.
 
-How long is each bar? With a plain `resource`, weft knows nothing about the data, so it draws a few rows of short bars.
+How long is each bar? With a plain `resource`, Weft knows nothing about the data, so it draws a few rows of short bars.
 With a `@weft-js/start` query, the bars come from the query's `output` schema: `z.string().max(80)` gives a bar of up to
 80 characters, and `.max(20)` on an array or a `limit` input gives the row count. A list with no count hint shows five
 rows and warns (**X032**); a string with no length hint warns too (**X036**). A query's resource also has `.shape`, the
 placeholder value itself, for a hand-written fallback.
 
-For a fallback you draw yourself, warp's `<Shape>` gives you the standard skeletons by kind and count:
+For a fallback you draw yourself, Warp's `<Shape>` gives you the standard skeletons by kind and count:
 `<Shape kind="list" rows={5} />`, `kind="card"`, `kind="table"`, `kind="media"`.
 
 ## `<Surface>`: a canvas in layout
@@ -340,7 +340,7 @@ reduced motion.
 
 ### Text on a surface
 
-Text drawn with `fillText` exists only as pixels: no selection, no find in page, no translation, no screen reader. weft
+Text drawn with `fillText` exists only as pixels: no selection, no find in page, no translation, no screen reader. Weft
 reports it (**X010**). `s.text(text, options)` draws the text and keeps a real element over it, placed exactly where the
 pixels are, so all of those work:
 

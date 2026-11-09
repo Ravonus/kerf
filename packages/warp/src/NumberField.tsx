@@ -76,7 +76,7 @@ function numberModel(opts: NumberOptions) {
 
 /**
  * A number in the field shell (03: `inputmode` over `type="number"`, which changes on a wheel, takes "e" and has its own
- * locale bugs). The input stays real text, so editing, paste and the numeric keypad are the OS's; warp adds APG spinbutton
+ * locale bugs). The input stays real text, so editing, paste and the numeric keypad are the OS's; Warp adds APG spinbutton
  * keys (↑/↓, Page keys, Home/End with a bound) and two steppers. Text that isn't a number leaves the value alone until blur.
  */
 export function NumberField({

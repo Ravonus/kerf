@@ -1,13 +1,13 @@
 # Plugins
 
 :::learn
-- What a weft plugin is, and what it can and can't add to your app
+- What a Weft plugin is, and what it can and can't add to your app
 - How to add one with `weft add`, and what the plugin lock asks you to approve
 - How to write a small plugin of your own, with its own diagnostic
 - How project tasks and `weft run` keep scripts in one place
 :::
 
-warp, payments, the text measurer and the database layers all reach your app the same way: as a plugin in
+Warp, payments, the text measurer and the database layers all reach your app the same way: as a plugin in
 `weft.config.ts`. The framework doesn't know any of them by name. That's a deliberate limit, and it's what lets you write a
 plugin that's as much a part of `weft check`, `weft docs` and your agent's instructions as the first-party ones.
 
@@ -32,7 +32,7 @@ What it returns is mostly data: a name, a version, its options and the permissio
 `contribute()`, is pure. It takes the options and returns what the plugin adds:
 
 - **Slot providers.** A slot is a typed seam in the framework, such as `text.measure` or `server.extension`. A provider
-  names a module, and weft imports that module lazily, on the side it runs on. An app that doesn't use a plugin's slot
+  names a module, and Weft imports that module lazily, on the side it runs on. An app that doesn't use a plugin's slot
   carries none of its bytes.
 - **Tokens.** CSS variables in the plugin's own namespace (`--warp-*`), written to `.weft/tokens/`.
 - **Diagnostics.** Codes in the plugin's namespace, each with what it catches and the fix, and a `check` hook that
@@ -46,7 +46,7 @@ your bundler treats them like any other code.
 
 :::deepdive Why must `contribute()` be pure?
 `weft check` loads every plugin on every run, and so does your editor's language server through it. If `contribute()`
-read files or opened a connection, checking one file would cost that every time. So weft calls it twice and compares the
+read files or opened a connection, checking one file would cost that every time. So Weft calls it twice and compares the
 results: a manifest that differs between calls is P117. Anything heavy, such as a parser for your check hook, goes behind
 `import()` inside the hook, where it only loads when the hook runs.
 :::
@@ -60,7 +60,7 @@ weft add pay --dry-run   # what it would change
 weft add pay
 ```
 
-Short names cover weft's own add-ons (`warp`, `icons`, `text`, `pay`, `pay-stripe`, `redis`, `nats`, `media` and a few
+Short names cover Weft's own add-ons (`warp`, `icons`, `text`, `pay`, `pay-stripe`, `redis`, `nats`, `media` and a few
 more), and anything else is a package name. A plugin's setup can say what it needs first: `@weft-js/pay` needs a
 database and auth, so `weft add pay` stops, with nothing changed, until `weft add db` and `weft add auth` have run.
 
@@ -92,7 +92,7 @@ chain from config to plugin to module to the generated `.weft/slots/<id>.ts`. Bo
 
 ## The plugin lock
 
-A plugin runs code in your build, so weft shows you what each one asks for before it runs. A plugin declares
+A plugin runs code in your build, so Weft shows you what each one asks for before it runs. A plugin declares
 `permissions`: files it reads and writes, hosts it reaches, environment variables, processes it spawns, and whether it
 loads native code. `.weft/plugins.lock.json` records what you approved, plus a hash of each installed plugin's files.
 Commit it.
@@ -198,7 +198,7 @@ export default defineConfig({
 })
 ```
 
-Now `weft check` reports ACME001 at the exact span, with your explanation and fix, in the same format as weft's own codes.
+Now `weft check` reports ACME001 at the exact span, with your explanation and fix, in the same format as Weft's own codes.
 `--json` carries it to an agent, `weft docs ACME001` prints its entry, and `weft agents-md` puts your rule in `AGENTS.md`.
 
 Walk through what each part does:
@@ -207,7 +207,7 @@ Walk through what each part does:
 - **`namespace`** is the prefix of its codes. Without one it's the short name and a slash (`acme/`). A code outside it is
   P111, so two plugins can't report each other's codes.
 - **`permissions`** is what it reaches. This one reaches nothing beyond what `ctx` hands it, so it's `{}`. A plugin defined
-  in your own config is your code: weft compares its permissions with the lock, but has no package to hash.
+  in your own config is your code: Weft compares its permissions with the lock, but has no package to hash.
 - **`options`** is a Standard Schema (Zod, Valibot) or a function that parses the input and throws on a bad one. Bad
   options are P115, with the path.
 - **`check.run(ctx)`** gets the files that match `include`, and `read`, `exists`, `bytes` and `jsx` to look at them. It
@@ -217,7 +217,7 @@ Walk through what each part does:
 :::note A check is for what types can't see
 `alert()` type-checks. So does a webhook handler with no signature check, which is one of `@weft-js/pay`'s codes. A good
 plugin diagnostic catches a mistake TypeScript can't, explains why it matters in one sentence, and names the fix. That's
-the bar weft's own codes are held to.
+the bar Weft's own codes are held to.
 :::
 
 ### Going further: slots and fakes
@@ -249,7 +249,7 @@ throws P101 when it's loaded.
 A plugin that talks to the outside world should ship a fake with it, one that goes through the plugin's real code path.
 `fakePay` from `@weft-js/pay/test` is a payment rail in memory that runs your real webhook and ledger on the test clock.
 And a plugin that defines a slot should ship a suite any provider can be held to; `@weft-js/core/test/plugins` has the
-ones for weft's own slots (see [Testing](/learn/testing)).
+ones for Weft's own slots (see [Testing](/learn/testing)).
 
 The [plugins reference](/reference/plugins) walks through `@weft-js/pay` from manifest to `weft add` setup, and is the
 template to copy for a real package.
@@ -342,7 +342,7 @@ diagnostics: [
 ```
 :::solution
 `W100` doesn't start with the plugin's namespace, `ACME`. Codes outside it are P111, so a plugin can never report, or
-shadow, one of weft's own codes or another plugin's. Name it in the namespace:
+shadow, one of Weft's own codes or another plugin's. Name it in the namespace:
 
 ```ts
 {

@@ -12,7 +12,7 @@ Selling something is mostly bookkeeping that's easy to get subtly wrong. A price
 that marks the user as paid when they click it gives Pro to anyone who opens the console. A webhook handler that doesn't
 check signatures accepts forged events, and one that isn't idempotent grants twice when the provider retries.
 
-weft's answer is a plugin, `@weft-js/pay`. It's a plugin in the plain sense: nothing in weft names it, and an app that
+Weft's answer is a plugin, `@weft-js/pay`. It's a plugin in the plain sense: nothing in Weft names it, and an app that
 doesn't use it carries none of its code. It owns one ledger of purchases, verifies every event from the payment
 provider, and turns what's in the ledger into *entitlements*: short names like `'pro'` that your server functions check.
 The provider is a *rail*, and today's rail is Stripe.

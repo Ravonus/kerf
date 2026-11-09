@@ -7,7 +7,7 @@ const STOPS = [
   { value: 'vivid', label: 'Vivid' },
 ]
 
-/** Sets one attribute on the page's stages. Nothing re-renders: warp's tokens and icons read the nearest one. */
+/** Sets one attribute on the page's stages. Nothing re-renders: Warp's tokens and icons read the nearest one. */
 export function TierPicker() {
   const stop = state('balanced')
   const pick = (v: string) => {

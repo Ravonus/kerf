@@ -16,7 +16,7 @@ const scale = (prop: string) =>
     page: { [prop]: 'var(--warp-space-page)' },
   }) as const
 
-/** warp's tone channels (warp-components.css): a tone sets them once, and every group reads them. */
+/** Warp's tone channels (warp-components.css): a tone sets them once, and every group reads them. */
 const tone = (t: string): Decls => ({
   '--_solid': `var(--warp-color-${t}-solid)`,
   '--_solid-hover': `var(--warp-color-${t}-solid-hover)`,

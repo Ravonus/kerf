@@ -20,7 +20,7 @@ export const flowAuth: Doc[] = [
         examples: [
           {
             id: 'SignInWeft',
-            title: 'Signing in to weft',
+            title: 'Signing in to Weft',
             note: 'Nothing is sent: `onSubmit` is a stub. Sample values only, never a real password.',
             stage: 'narrow',
             height: 600,

@@ -235,7 +235,7 @@ export interface PayFrameProps {
   title: string
   /** The provider's hosted page. */
   src?: string
-  /** Or mount the provider's fields here, with warp's tokens for its appearance API. */
+  /** Or mount the provider's fields here, with Warp's tokens for its appearance API. */
   mount?: (el: HTMLElement, appearance: ProviderAppearance) => { destroy(): void }
   testMode?: boolean
   /** Ready once the provider says so; a `src` frame also flips on its load event. */
@@ -243,8 +243,8 @@ export interface PayFrameProps {
 }
 
 /**
- * The payment slot (09 §4.3): warp styles it (border, radius, shimmer, test-mode badge) and passes tokens to the
- * provider. It's an iframe slot only: warp never renders a card field.
+ * The payment slot (09 §4.3): Warp styles it (border, radius, shimmer, test-mode badge) and passes tokens to the
+ * provider. It's an iframe slot only: Warp never renders a card field.
  */
 export function PayFrame({ title, src, mount, testMode, ready }: PayFrameProps) {
   const loaded = state(false)

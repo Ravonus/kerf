@@ -71,7 +71,7 @@ export interface HandlerOptions {
   site?: Site
   /**
    * The client entry and what to preload (Nitro's `?assets=client`), plus the font build's preloads (`weft:fonts/preloads`).
-   * `pieces`: the build's first-paint table. Without it, `inline` and weft's purge (`critical`) are what `pageStyles` uses.
+   * `pieces`: the build's first-paint table. Without it, `inline` and Weft's purge (`critical`) are what `pageStyles` uses.
    */
   assets?: {
     entry?: string

@@ -1,6 +1,6 @@
 import type { Doc } from '../../types.ts'
 
-/** Side navigation and main navigation: two different menus (warp 02 §5). */
+/** Side navigation and main navigation: two different menus (Warp 02 §5). */
 export const menus: Doc[] = [
   {
     component: 'SideNav',

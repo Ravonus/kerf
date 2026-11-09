@@ -2,13 +2,13 @@
 
 :::learn
 - How to show different markup depending on a condition, with `? :` and `&&`
-- Why an early `return` that depends on state or props doesn't work in weft, and what to write instead
+- Why an early `return` that depends on state or props doesn't work in Weft, and what to write instead
 - How to render nothing
 - What happens to the markup, and the state inside it, when a condition flips
 :::
 
 Your components often need to show different things in different situations: a sign-in button or a profile, an empty
-state or a list, a struck-through item once it's packed. In weft you write conditions with the same JavaScript you'd use
+state or a list, a struck-through item once it's packed. In Weft you write conditions with the same JavaScript you'd use
 in React, `? :` and `&&`, inside the markup. The one thing that changes is where the condition goes: since a component's
 body runs once, the condition has to live in the markup, where it can be checked again.
 
@@ -31,7 +31,7 @@ function Item(
 }
 ```
 
-In React that works, because `Item` runs again whenever `isPacked` changes. In weft, `Item` runs once. The `if` would
+In React that works, because `Item` runs again whenever `isPacked` changes. In Weft, `Item` runs once. The `if` would
 check `isPacked` when the item first appears, pick a branch, and never look again, so ticking the item later would
 change nothing. The compiler stops you with **W001**: "`isPacked` is read once when the component is set up, so this
 never updates."
@@ -70,7 +70,7 @@ that's when the answer could change after the body has run.
 
 ## Conditionally returning nothing with `null`
 
-Sometimes a component shouldn't show anything at all. In React you'd `return null` early. In weft the same rule applies:
+Sometimes a component shouldn't show anything at all. In React you'd `return null` early. In Weft the same rule applies:
 `return null` is fine when it's unconditional, but a `return` that depends on a prop or state is **W001**, and so is a
 ternary on the `return` line:
 
@@ -125,12 +125,12 @@ small component of its own.
 
 :::deepdive Are these two the same?
 In React, `{isPacked ? <del>{name}</del> : name}` and the early-return version produce the same result: React compares
-the output either way. In weft they differ, and the markup version is the one that works, but it's worth seeing
+the output either way. In Weft they differ, and the markup version is the one that works, but it's worth seeing
 exactly what it does.
 
 The compiler tracks a conditional's test on its own, separately from its branches. While `isPacked` keeps the same
 value, the branch on screen stays exactly as it is, and the expressions inside it (`{name}` here) update in place. Only
-when the test's result changes does weft remove the old branch, cleaning up everything it owned, and build the other.
+when the test's result changes does Weft remove the old branch, cleaning up everything it owned, and build the other.
 So a condition costs nothing until it flips.
 :::
 
@@ -182,7 +182,7 @@ result changes on every new count, and the badge is rebuilt each time.
 
 ### Choosing markup in a function
 
-In React you might assign markup to a variable with an `if` and use the variable in the return. In weft a variable in
+In React you might assign markup to a variable with an `if` and use the variable in the return. In Weft a variable in
 the body is set once, so give the choice a function instead, and call the function in the markup:
 
 ```tsx
@@ -225,7 +225,7 @@ Hidden markup still costs its DOM nodes and keeps its bindings running, so use `
 often, and a condition for the rest. A third option for state that should outlive the markup is to keep the state in a
 parent, or in [defineState](/learn/app-wide-state), and pass it down: then the child can come and go and the data stays.
 
-:::deepdive How weft knows what to clean up
+:::deepdive How Weft knows what to clean up
 Each piece of markup is built under an owner: the binding that made it. When the condition flips, that binding runs
 again, and before it does, it disposes everything it owned the last time: the bindings in the old branch, the watches
 created there, the `onCleanup` callbacks registered there. Nothing has to be unsubscribed by hand, and nothing leaks.

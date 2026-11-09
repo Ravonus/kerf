@@ -50,7 +50,7 @@ const reads = (v: string) => v.includes('var(--_')
  *   (`var(--_text, var(--warp-color-text-subtle))` → the subtle token), or nothing when it has none (it was unset).
  * Any other shape (a tone read by another element, reads under conditions next to conditional tones) keeps channels.
  * A group with no tone at all reads its fallbacks. So a group never takes a tone from what it's nested in; context
- * tone stays warp's `data-tone`.
+ * tone stays Warp's `data-tone`.
  */
 function foldTones(rules: Rule[]) {
   // A group with no tone anywhere reads its fallbacks: `var(--_text, var(--warp-color-text))` → the text token.

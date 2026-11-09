@@ -3,7 +3,7 @@ import type { ModelOption } from '@weft-js/warp'
 export const MODELS: ModelOption[] = [
   {
     id: 'deep',
-    name: 'weft Deep',
+    name: 'Weft Deep',
     short: 'Deep',
     provider: 'Hosted',
     description: 'Long investigations',
@@ -13,7 +13,7 @@ export const MODELS: ModelOption[] = [
   },
   {
     id: 'swift',
-    name: 'weft Swift',
+    name: 'Weft Swift',
     short: 'Swift',
     provider: 'Hosted',
     description: 'Fast, good at config',

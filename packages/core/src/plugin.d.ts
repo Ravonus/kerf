@@ -150,7 +150,7 @@ export interface PluginDef<I, O> {
   /** Package name (P116). */
   name: string
   version: string
-  /** Semver range on weft (P103). */
+  /** Semver range on Weft (P103). */
   weft?: string
   /** Diagnostic namespace: first-party plugins claim a letter (`'D'`); the default is `<short-name>/`. */
   namespace?: string

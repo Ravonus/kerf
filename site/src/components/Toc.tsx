@@ -1,7 +1,7 @@
 import { Nav } from '@weft-js/warp'
 
 /* @weft visible */
-/** On this page: warp's Nav follows the heading in view. */
+/** On this page: Warp's Nav follows the heading in view. */
 export function Toc(props: { items: { id: string; text: string; depth?: number }[] }) {
   return (
     <aside data-site="toc">

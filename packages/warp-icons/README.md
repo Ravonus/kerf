@@ -2,8 +2,8 @@
 
 > **Early release (0.1.1).** APIs will change between minor versions.
 
-weft's own icon set: 651 icons in warp's three expression tiers, each with a hollow and a solid form. `@weft-js/warp`
-depends on it, so an app with warp already has it.
+Weft's own icon set: 651 icons in Warp's three expression tiers, each with a hollow and a solid form. `@weft-js/warp`
+depends on it, so an app with Warp already has it.
 
 ```bash
 npm install @weft-js/warp-icons

@@ -2,7 +2,7 @@ import { Button, Kbd } from '@weft-js/warp'
 import { warmBody } from '../lib/search'
 import { spotlightOpen } from '../lib/spotlight'
 
-/** Opens the spotlight: a warp button dressed as the search field it opens, with its shortcut. */
+/** Opens the spotlight: a Warp button dressed as the search field it opens, with its shortcut. */
 export function SearchTrigger() {
   return (
     <>

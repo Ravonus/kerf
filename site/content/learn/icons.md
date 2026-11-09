@@ -8,8 +8,8 @@
 - How the five action icons animate
 :::
 
-weft has its own icon set, `@weft-js/warp-icons`: 651 icons drawn for warp, each in a hollow and a solid form, and each
-drawn again for warp's three expressions. warp depends on it, so an app with warp already has it. You can browse every
+Weft has its own icon set, `@weft-js/warp-icons`: 651 icons drawn for Warp, each in a hollow and a solid form, and each
+drawn again for Warp's three expressions. Warp depends on it, so an app with Warp already has it. You can browse every
 one on the [icon browser](/icons).
 
 The set is built to cost nothing you don't use. An icon is a small component; an unused one tree-shakes away, and one
@@ -40,7 +40,7 @@ All three draw the same check, and the build compiles all three to the same thin
 - **`<Icon name>`**, when the name is data, like a menu item's `icon: 'pencil'`. `Icon` is exported from both
   `@weft-js/warp` and `@weft-js/warp-icons/icon`.
 
-warp's own components take icons the same way. `Button`, `Toggle`, menu items and `Segmented` options have an `icon` prop
+Warp's own components take icons the same way. `Button`, `Toggle`, menu items and `Segmented` options have an `icon` prop
 that takes a name or the component:
 
 ```tsx
@@ -101,7 +101,7 @@ export function Warning() {
 }
 ```
 
-For an icon-only *button*, put the label on the button, not the icon. warp's `Button` and `Toggle` take `label` for
+For an icon-only *button*, put the label on the button, not the icon. Warp's `Button` and `Toggle` take `label` for
 exactly this, and it becomes the button's accessible name:
 
 ```tsx
@@ -126,7 +126,7 @@ the same when a toggle changes state: "Like", with `aria-pressed` saying whether
 
 ### Size
 
-Icons take warp's icon sizes from their context, so an icon in a small button is small. `size` sets one by hand, in
+Icons take Warp's icon sizes from their context, so an icon in a small button is small. `size` sets one by hand, in
 pixels or any CSS length: `<StarIcon size={24} />`, `<StarIcon size="1.5em" />`.
 
 ## Tiers follow the expression
@@ -167,7 +167,7 @@ export default defineConfig({
 })
 ```
 
-- **`tier`** (`quiet`, `balanced` or `vivid`) compiles one tier in and drops the others, warp's own icons included. The
+- **`tier`** (`quiet`, `balanced` or `vivid`) compiles one tier in and drops the others, Warp's own icons included. The
   icons stop following `data-expression` after that. Run `weft plugins sync` if you change it.
 - **`source`** loads icons one at a time from a URL instead of building them in. It's for names that are only known at
   runtime, below.

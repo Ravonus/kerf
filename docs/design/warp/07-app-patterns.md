@@ -1,4 +1,4 @@
-# warp 07: App patterns (AI and agents, calendar, meetings, notifications, chat, collaboration)
+# Warp 07: App patterns (AI and agents, calendar, meetings, notifications, chat, collaboration)
 
 Status: v0.3, 2026-10-28 (gap fills from COVERAGE §4: year view §2.7, notification preferences matrix §4.6, realtime
 transport picker §4.7, quote reply §5.5, access denied 403 §6.5; checks in §8).
@@ -49,7 +49,7 @@ shortcuts overlay.
   motion; new ones take `data-loop` or `animation-play-state: var(--warp-loop-play)`. Live figures (timers, durations,
   counts) take `data-numeric`. Heading `em` reads `--warp-text-emphasis-style`, never a hard-coded italic.
 
-### weft bindings (research 07 §9)
+### Weft bindings (research 07 §9)
 
 ```ts
 // Server state that changes elsewhere: poke + refetch, driven by
@@ -606,10 +606,10 @@ const save = mutation(setNotificationPref, { optimistic: (c, { event,
 Demo: `#rt-transport`. A dev and sandbox surface (the original's TransportPicker recipe), never end-user UI:
 production apps show only LiveStatus (§4.4).
 
-**What is really chosen.** weft has no transport knob in app code (research 07 §9.5): `.live` and `stream` always
+**What is really chosen.** Weft has no transport knob in app code (research 07 §9.5): `.live` and `stream` always
 ride one multiplexed, fetch-based SSE connection per tab (`POST /_weft/rt`), and `channel` rides one multiplexed
 WebSocket per tab (crossws). A developer chooses the server **bus** (`realtime.bus`: `memory`, `postgres`
-LISTEN/NOTIFY, `redis`, `nats`, `durable-object`) and, in a sandbox or test, the **wire under test**: weft's default
+LISTEN/NOTIFY, `redis`, `nats`, `durable-object`) and, in a sandbox or test, the **wire under test**: Weft's default
 wires, tabs only (BroadcastChannel, `tabs.channel`, no server) or the fake in-memory pair from `@weft-js/core/test`.
 
 ```
@@ -638,11 +638,11 @@ TransportPicker[data-scope="transport"] (container: transport)
 - **Latency:** a ping every 2 s while a lane is live and the card is on screen (paused when `!visible()`); p50 and
   p95 over the last 20 samples, `data-numeric`; caution at p95 ≥ 250ms, critical at ≥ 1000ms. The bars are
   `aria-hidden`; the numbers are the readout. Ping sends one round trip on demand and logs it.
-- **Reconnect** uses weft's defaults: full-jitter backoff from 0.5 s to 30 s (attempt n waits a random time up to
+- **Reconnect** uses Weft's defaults: full-jitter backoff from 0.5 s to 30 s (attempt n waits a random time up to
   min(30 s, 0.5 s × 2ⁿ)), immediate on `online` and on becoming visible. The lane shows "Retry 3 in 2.1 s". On
   reconnect it resumes from its cursor ("Resumed from 7:142 · 3 replayed"); outside the 256-event / 60 s window it
   gets `reset` ("Too far behind · reset, refetched"). Fall behind simulates that.
-- **No polling fallback.** weft v0 has no long-poll (research 07 §9.5). "WebSocket blocked" shows it honestly: the
+- **No polling fallback.** Weft v0 has no long-poll (research 07 §9.5). "WebSocket blocked" shows it honestly: the
   channel lane goes offline with "WebSocket upgrade blocked · no fallback in v0" while `.live` and `stream` stay live
   over SSE. Apps that must work behind such proxies keep channel features optional.
 - **Bus and preset are validated like the build:** `memory` on Multi-instance shows R002 ("memory bus on a
@@ -993,7 +993,7 @@ page theme.
 
 ## 9. Coverage map
 
-| Original / COVERAGE row | warp name | Here | P |
+| Original / COVERAGE row | Warp name | Here | P |
 |---|---|---|---|
 | CalendarView, CalendarGrid (app view), DayCell, DayColumn, EventChip | Calendar (month/week/day), Event | §2 | P0 |
 | EventPopover | EventPopover (Popover) | §2 | P0 |
@@ -1052,7 +1052,7 @@ page theme.
   lives here (`app.html#sys-403`, §6.5) because it belongs to sharing; 09 §5.1 can link to it from its system pages.
   `app.html` doesn't load `warp-flows.css` (the `field` / `plan` scopes and the global `mark` / `rail` parts would
   collide), so `warp-app.css` §13 mirrors the `system-page` anatomy with the same values; where both load, flows wins.
-- **realtime (PLAN §4.2, research 07 §9.5):** the transport picker shows no polling fallback because weft v0 has none.
+- **realtime (PLAN §4.2, research 07 §9.5):** the transport picker shows no polling fallback because Weft v0 has none.
   If a long-poll fallback or a `transport` option lands, add it as a Network outcome and a wire card, not before.
   `server.network({ latency, loss, blockUpgrade })` in §4.7 is a proposed `@weft-js/core/test` addition.
 - **Signature:** Kanban cards and comment threads still sweep at every stop; gate them with

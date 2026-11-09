@@ -26,7 +26,7 @@ export function store<S>(initial: S) {
   }
 }
 
-/** An action: what a binding attaches to an element (`ref` + `onCleanup` in weft, an effect in React). */
+/** An action: what a binding attaches to an element (`ref` + `onCleanup` in Weft, an effect in React). */
 export interface Action<O = void> {
   update(opts: O): void
   destroy(): void

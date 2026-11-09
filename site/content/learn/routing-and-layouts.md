@@ -135,7 +135,7 @@ export default function Todo(
 
 The string you pass to `LoadArgs` and `RouteProps` is the route's file path, and it types `params`: here `params.id` is a
 `string`, and `params.idd` is an error. `RouteProps<typeof load>` types `props.data` from what `load` returns, with
-`notFound()` taken out, so `data.title` needs no check. weft writes `.weft/routes.d.ts` with every route path, so
+`notFound()` taken out, so `data.title` needs no check. Weft writes `.weft/routes.d.ts` with every route path, so
 an editor can complete them.
 
 `load` and `meta` never reach the browser: the build strips them from the client's copy of the file. [Loading
@@ -213,7 +213,7 @@ export default function Settings(props: RouteProps) {
 
 ### A layout stays while its pages change
 
-When you go from `/settings` to `/settings/profile`, the root layout and the settings layout don't change, so weft keeps
+When you go from `/settings` to `/settings/profile`, the root layout and the settings layout don't change, so Weft keeps
 them. They don't run again and nothing inside them is rebuilt: only the page level below them switches. That has a useful
 consequence. State in a layout survives navigation between its pages. A search box in the settings sidebar keeps what you
 typed while you click between settings pages, and a video playing in the root layout keeps playing.
@@ -228,11 +228,11 @@ A page is a chain of levels, outer to inner: the root layout, any nested layouts
 things: which route it shows, its params and its data.
 
 When you click a link, the browser fetches the new route's data from the server as JSON (`/_weft/data/<path>`), along with
-the code for any route it hasn't loaded yet. Then weft walks the chain. A level that keeps its route gets the new params
+the code for any route it hasn't loaded yet. Then Weft walks the chain. A level that keeps its route gets the new params
 and data, written only if they changed. The first level whose route changed renders its new component, and everything
 inside it goes with the old one.
 
-So weft never re-renders a page to find out what changed. It knows from the route table, and the work is proportional to
+So Weft never re-renders a page to find out what changed. It knows from the route table, and the work is proportional to
 what is different. A level with no client code at all (a layout that is only markup) arrives as HTML and is swapped in.
 :::
 
@@ -280,10 +280,10 @@ that section loads.
 ### What shows while the next page loads
 
 A click answers at once. The URL and every `<Link>`'s `aria-current` change right away, the layouts that stay keep
-showing, and the level that changes shows a skeleton until its data and code arrive. weft makes that skeleton from the
+showing, and the level that changes shows a skeleton until its data and code arrive. Weft makes that skeleton from the
 route's own markup at build time, so it has the page's headings, rows and panels in the right places.
 
-When a page's markup is mostly one component the compiler can't see into, such as a Markdown body, weft shows a
+When a page's markup is mostly one component the compiler can't see into, such as a Markdown body, Weft shows a
 generic page outline instead. To show something that fits better, name your own:
 
 ```tsx
@@ -359,7 +359,7 @@ export function Footer() {
 }
 ```
 
-Any same-origin `<a href>` already navigates without a full page load: weft listens for clicks on the page. What `Link`
+Any same-origin `<a href>` already navigates without a full page load: Weft listens for clicks on the page. What `Link`
 adds is `aria-current="page"` while its `href` is the page you're on, so a menu can show where you are with one CSS rule
 (`a[aria-current="page"] { font-weight: 600 }`), and screen readers announce it. It passes every other attribute through.
 

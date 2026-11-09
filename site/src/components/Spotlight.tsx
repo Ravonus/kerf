@@ -214,7 +214,7 @@ export function Spotlight() {
       modes={MODES}
       groupOrder={ORDER}
       onRun={remember}
-      label="Search weft"
+      label="Search Weft"
       placeholder="Search docs, components, codes…   > for commands"
     />
   )

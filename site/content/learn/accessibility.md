@@ -1,7 +1,7 @@
 # Accessibility
 
 :::learn
-- What warp does for you: native elements, names, keyboard support and focus management
+- What Warp does for you: native elements, names, keyboard support and focus management
 - What you still own: structure, words, and anything you build from plain elements
 - Which diagnostics catch accessibility mistakes, and how to read them
 - How to test it: role and label queries, the keyboard, and a screen reader
@@ -11,26 +11,26 @@ An accessible app is one that works for someone using a keyboard, a screen reade
 forced colours or reduced motion. Most of that is decided by small things: whether a control is a real `<button>`,
 whether a field has a name, where focus goes when a dialog closes.
 
-weft splits the work. warp's components handle the parts that are hard to get right and easy to get wrong, like
+Weft splits the work. Warp's components handle the parts that are hard to get right and easy to get wrong, like
 keyboard patterns and focus, and `weft check` catches the common mistakes in the markup you write yourself. What's left
 is what no library can do for you: the words, the structure, and the order things happen in.
 
 :::demo style-keyboard
 
-## What warp does for you
+## What Warp does for you
 
 ### Real elements
 
-A warp `Button` is a `<button>`. `Input` is an `<input>` with a `<label>`. `Modal` is a native `<dialog>` opened with
+A Warp `Button` is a `<button>`. `Input` is an `<input>` with a `<label>`. `Modal` is a native `<dialog>` opened with
 `showModal()`. `Switch` and `Checkbox` are real checkboxes. Building on native elements means the browser and assistive
 technology already know what each thing is: Enter and Space press a button, a disabled control leaves the tab order,
-and a form posts its fields with no script. This is why, in a warp app, `weft check` suggests the warp component when it
+and a form posts its fields with no script. This is why, in a Warp app, `weft check` suggests the Warp component when it
 finds a bare `<button>` or `<select>` (D005): the component gives you the same element with the behaviour around it
 finished.
 
 ### Names
 
-Every control needs an accessible name, the words a screen reader says for it. warp makes the name part of the API, so
+Every control needs an accessible name, the words a screen reader says for it. Warp makes the name part of the API, so
 you can't forget it:
 
 - Fields take a required `label`. TypeScript reports a field without one.
@@ -62,7 +62,7 @@ Each component's page on the site has its own keyboard table, for example [Menu]
 
 The "one tab stop" pattern is **roving focus**: Tab enters the group once, the arrow keys move inside it, and Tab leaves.
 A toolbar of twelve buttons costs a keyboard user one Tab, not twelve. warp-core exports it as `roving` for your own
-markup, as [Using warp](/learn/warp#warp-core-on-its-own) shows.
+markup, as [Using Warp](/learn/warp#warp-core-on-its-own) shows.
 
 ### Focus management
 
@@ -78,20 +78,20 @@ Where focus goes after something opens or closes is the part most often missed:
 
 ### The look
 
-- **Contrast.** Every text and fill pair in warp's tokens meets WCAG contrast at every dial stop, light and dark, and a
+- **Contrast.** Every text and fill pair in Warp's tokens meets WCAG contrast at every dial stop, light and dark, and a
   seed or token override that breaks one fails the build (D010).
 - **Focus ring.** Every interactive component draws a visible focus ring from `--warp-color-focus`, on `:focus-visible`.
 - **Targets.** On a touch screen, controls are at least 44 pixels tall.
-- **Forced colours.** warp redraws its parts in system colours when Windows' high-contrast mode is on.
+- **Forced colours.** Warp redraws its parts in system colours when Windows' high-contrast mode is on.
 - **Motion.** Under `prefers-reduced-motion` (or `data-motion="reduce"`), an animation runs at most once, nothing loops
   but an opacity pulse, and the action icons hold still.
 
-warp's own test suite runs axe-core over every component in a real browser at all twelve combinations of expression,
+Warp's own test suite runs axe-core over every component in a real browser at all twelve combinations of expression,
 theme and motion, so these hold for the components you import.
 
 :::note React developers
 In React you'd usually reach for a headless library like React Aria or Radix for the keyboard and focus work, and
-`eslint-plugin-jsx-a11y` for the markup checks. In weft, the first is warp-core (and warp on top of it), and the second
+`eslint-plugin-jsx-a11y` for the markup checks. In Weft, the first is warp-core (and Warp on top of it), and the second
 is built into `weft check` as the D-codes below. There is nothing to install or configure.
 :::
 
@@ -106,7 +106,7 @@ Screen reader users move through a page by its headings and landmarks, so those 
 - **Landmarks.** Put the page's main content in `<main>`, navigation in `<nav>` with an `aria-label` if there's more
   than one, and use `<header>`, `<footer>` and `<aside>` for what they are. `Stack as="main"` and the other layout
   primitives' `as` prop give you these elements.
-- **Language.** `<html lang>` tells a screen reader which voice to use. weft writes it from your config's
+- **Language.** `<html lang>` tells a screen reader which voice to use. Weft writes it from your config's
   `site.locale`; a hand-written `<html>` without one is D039.
 
 ```tsx
@@ -175,7 +175,7 @@ reader whether the details are showing.
 :::pitfall `role="button"` isn't a button
 Adding `role="button"` to a `<div>` changes what a screen reader *says*, not what the element *does*. You'd still have to
 add `tabindex="0"`, handle Enter and Space yourself, and handle the disabled state. Use `Button`, or a `<button>` in an app
-without warp, and get all of it from the browser.
+without Warp, and get all of it from the browser.
 :::
 
 ### What happens after an action
@@ -188,7 +188,7 @@ When something on the page changes because of what the user did, think about whe
 
 ## The diagnostics
 
-`weft check` reads your markup and CSS for the mistakes it can see. These run in every app, warp or not:
+`weft check` reads your markup and CSS for the mistakes it can see. These run in every app, Warp or not:
 
 | Code | Catches |
 |---|---|
@@ -321,7 +321,7 @@ Automated tests can't hear a page. Before a release, spend five minutes on each 
 
 ## Recap
 
-- warp's components are native elements with names, keyboard patterns and focus management built in, and their tokens
+- Warp's components are native elements with names, keyboard patterns and focus management built in, and their tokens
   pass contrast at every dial stop.
 - You own the structure (headings, landmarks, `lang`), the words (labels, errors, alt text) and anything built from plain
   elements.
@@ -389,7 +389,7 @@ export function SiteSearch() {
 }
 ```
 
-`label` is required on warp's fields, so the name can't be left out. A placeholder isn't a name: it disappears as soon
+`label` is required on Warp's fields, so the name can't be left out. A placeholder isn't a name: it disappears as soon
 as you type, and many screen readers don't read it.
 :::
 

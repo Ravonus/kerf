@@ -1,6 +1,6 @@
 # Code of Conduct
 
-We want weft to be a good place to work, for everyone, whatever their experience or background.
+We want Weft to be a good place to work, for everyone, whatever their experience or background.
 
 ## What we expect
 

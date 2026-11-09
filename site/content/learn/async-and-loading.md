@@ -10,7 +10,7 @@
 
 Everything so far has been synchronous: a box changes, and what reads it follows at once. Data from a server doesn't
 work like that. You ask, you wait, and the answer comes later, or fails, or arrives after you've asked a different
-question. `resource` is weft's tool for that wait. It's `derived` for values that arrive later: give it a function
+question. `resource` is Weft's tool for that wait. It's `derived` for values that arrive later: give it a function
 that returns a promise, and it gives you a value that fills in when the promise does.
 
 :::demo loading
@@ -49,15 +49,15 @@ A resource has four parts:
 | `user.refresh()` | Fetch again. The current value stays until the new one lands |
 
 The function runs straight away in the browser, and again whenever a box it read changes. Here it reads `id.value`, so
-setting `id.value = 'grace'` fetches Grace. You don't list what it depends on; weft watches what it reads, as it does for
+setting `id.value = 'grace'` fetches Grace. You don't list what it depends on; Weft watches what it reads, as it does for
 `derived`.
 
 `resource(fetcher, { initial })` gives the value something to be before the first answer, when `undefined` is awkward.
 
 ### What it follows: reads before the first `await`
 
-weft can only see reads that happen while the function is running. In an `async` function, that's the part before the
-first `await`. Everything after it runs later, from the microtask queue, when weft is no longer watching:
+Weft can only see reads that happen while the function is running. In an `async` function, that's the part before the
+first `await`. Everything after it runs later, from the microtask queue, when Weft is no longer watching:
 
 ```tsx
 import { resource, state } from '@weft-js/core'
@@ -109,7 +109,7 @@ with an `async` function holds a promise, not the data: use `resource`.
 Requests don't come back in the order you sent them. Type "a", then "ab", and the answer for "a" can arrive second. A
 hand-written `watch` that fetches would then show results for the wrong query.
 
-A resource can't get that wrong. Each run gets its own `AbortSignal`. When a box it read changes, weft aborts the
+A resource can't get that wrong. Each run gets its own `AbortSignal`. When a box it read changes, Weft aborts the
 previous run's signal before starting the next one, and an answer from an aborted run is ignored even if it arrives.
 Pass `signal` to `fetch` and the old request is cancelled on the network too:
 
@@ -149,7 +149,7 @@ export function Rates() {
 
 :::pitfall Don't put a skeleton behind `pending` alone
 `{x.pending && <Skeleton />}` shows the skeleton on every refetch, replacing data the user was reading with grey bars
-for a moment. weft warns about it (**X033**). Let `<Boundary>` handle the first load, below, and show at most a small
+for a moment. Weft warns about it (**X033**). Let `<Boundary>` handle the first load, below, and show at most a small
 "updating" hint while `pending` is true and there's a value.
 :::
 
@@ -229,9 +229,9 @@ A resource outside any Boundary simply has `value === undefined` until it loads.
 (`{user.value?.name ?? 'Guest'}`), and you can still read `pending` and `error` yourself.
 
 :::deepdive Boundary and React's Suspense
-A weft `Boundary` is React's `<Suspense>` and an error boundary in one element. The mechanics differ: React suspends by
+A Weft `Boundary` is React's `<Suspense>` and an error boundary in one element. The mechanics differ: React suspends by
 throwing a promise from render and retrying the render when it settles, and its transitions keep old UI on screen. A
-weft component never re-renders, so nothing is thrown or retried. Each resource registers with the nearest Boundary as
+Weft component never re-renders, so nothing is thrown or retried. Each resource registers with the nearest Boundary as
 it's created, and the Boundary watches their `first value` flags. A refetch keeps old content by default, which is what
 `startTransition` buys you in React.
 :::
@@ -239,9 +239,9 @@ it's created, and the Boundary watches their `first value` flags. A refetch keep
 ### Sizing the fallback
 
 When `pending` is smaller or larger than the content that replaces it, everything below jumps at the swap. In
-development weft measures both and warns when they differ by more than a pixel (**X031**). Two fixes:
+development Weft measures both and warns when they differ by more than a pixel (**X031**). Two fixes:
 
-- warp's `<Shape>` draws a skeleton of a given kind and count: `<Boundary pending={<Shape kind="list" rows={5} />}>`.
+- Warp's `<Shape>` draws a skeleton of a given kind and count: `<Boundary pending={<Shape kind="list" rows={5} />}>`.
 - `<Boundary pending="shape">` asks the compiler to make the skeleton from the children's own markup. See
   [Text, media and shapes](/learn/text-media-and-shapes).
 

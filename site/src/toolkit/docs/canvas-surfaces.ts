@@ -8,7 +8,7 @@ export const surfaceDocs: Doc[] = [
     summary:
       'A canvas that handles sizing, sharp pixels, off-screen pausing and reduced motion for you.',
     use: {
-      when: ['You need to draw something warp has no component for'],
+      when: ['You need to draw something Warp has no component for'],
       instead: [
         { name: 'DitherField', why: 'a textured background is enough' },
         { name: 'BarChart', why: 'it is data people need to read exactly' },
@@ -122,7 +122,7 @@ export const surfaceDocs: Doc[] = [
       'Canvas has a size of zero until its container has one, so set a height.',
     ],
     propDocs: {
-      draw: "Paints one frame. Read colours from warp's tokens so the theme applies.",
+      draw: "Paints one frame. Read colours from Warp's tokens so the theme applies.",
       onTheme: 'Called when the theme changes. Refresh any colours you keep here.',
     },
     related: ['CanvasStage', 'DitherField', 'Dither'],

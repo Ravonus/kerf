@@ -1,4 +1,4 @@
-# warp 01 — Foundations: the token spec
+# Warp 01 — Foundations: the token spec
 
 Status: v0.2, 2026-10-28 (review fixes: §14 lists what changed and what other areas must adopt). Implementation: [tokens/warp.css](tokens/warp.css) (hand-written for v0; `weft tokens build`
 will emit it from DTCG). Direction and rationale: [00-direction.md](00-direction.md). Citations as in 00 (`old:`,
@@ -273,7 +273,7 @@ Everything that opens closes with motion too. A close is never a cut.
 **One contract, three ways in:**
 
 1. **Top layer** (popovers, menus, dialogs, sheets, pickers): while open the element has `data-state="open"`; while
-   it leaves it has `data-state="closed"`. warp's overlay actions (`dialog()`, `popover()`, the pickers) run
+   it leaves it has `data-state="closed"`. Warp's overlay actions (`dialog()`, `popover()`, the pickers) run
    `leave(el, done)` from `@weft-js/warp-core/motion`: it sets `closed`, waits for whatever animation or transition
    the CSS gives that state, then hides the element. Focus returns once it is gone. Reopening before the exit ends
    cancels it (`stay(el)`). Style your own exit with one rule:
@@ -332,7 +332,7 @@ inline-block spans spell names out letter by letter (review 03 B1). The older si
 reports a floated name in caps; use the two-part form. Hints and errors get an id and join the input's
 `aria-describedby`; invalid inputs also set `aria-invalid="true"`. Every specimen builds the split with the one
 shared function, `warpSweep.label(labelEl)` in `specimens/warp-sweep.js` (idempotent, returns the letter spans for
-the page's per-character delays); weft's `floatingLabel()` does the same.
+the page's per-character delays); Weft's `floatingLabel()` does the same.
 
 **Caps are visual.** `text-transform: uppercase` (eyebrows, the floated label, vivid buttons) is a rendering choice.
 Chrome applies it in `innerText` and in name computation, so a test or an accessibility-tree dump shows
@@ -352,7 +352,7 @@ resting border back sets `--warp-color-sweep-base: inherit` on that same element
 so a dial switch costs nothing (was ~19ms). A page that overrides `--warp-sweep-duration` inline on a host opts out
 with `data-sweep-duration="live"` on it or an ancestor.
 
-**Behaviour contract** (weft's `sweep()` / `floatingLabel()`, ~60 lines in the specimen): one attribute,
+**Behaviour contract** (Weft's `sweep()` / `floatingLabel()`, ~60 lines in the specimen): one attribute,
 `data-phase="idle|in|out"`, on the `[data-sweep]` host, run by the one shared machine (`specimens/warp-sweep.js`,
 SIGNATURE §4). Active (hover, or focus-within for fields and focus-visible otherwise) → `in`; inactive while `in` →
 `out`; `transitionend` of the travelling part (or duration + 150ms backstop, e.g. a pinned invalid field) →
@@ -518,8 +518,8 @@ it is pure CSS in `warp.css`. Native date/time inputs use the fixed-notch label 
 |---|---|---|---|
 | **1 Re-theme** | colour, fonts, dial, density, sweep | none | `warp()` in config (`weft docs theme`), or override `--warp-seed-*` / sys vars on a scope with `data-warp` |
 | **2 Restyle parts** | any part's CSS | none | every component emits `data-scope`, `data-part` and state (`data-tone`, `data-emphasis`, `data-size`, `data-state`, ARIA). Target `[data-scope="button"]` (a component's root), or Tailwind `data-[part=label]:…`; `class` merges onto the root, `partClass={{ label }}` onto parts |
-| **3 Headless** | all warp component CSS | none | Not built; `create-weft --ui headless` gives warp's tokens with your own components. Planned: `kit: "headless"`: same components, behaviour, a11y and attributes; only `warp.tokens` ships, so layout primitives and your CSS can still read tokens |
-| **4 None** | no warp at all | n/a | `create-weft --ui none`; `weft check` D-codes for tokens switch off |
+| **3 Headless** | all Warp component CSS | none | Not built; `create-weft --ui headless` gives Warp's tokens with your own components. Planned: `kit: "headless"`: same components, behaviour, a11y and attributes; only `warp.tokens` ships, so layout primitives and your CSS can still read tokens |
+| **4 None** | no Warp at all | n/a | `create-weft --ui none`; `weft check` D-codes for tokens switch off |
 
 Level 2 is the supported path past tokens. `D040`, for forking a component, is reserved and not built.
 
@@ -530,7 +530,7 @@ warp.app, warp.flows, warp.marketing;` and every selector outside tokens is
 wrapped in `:where()` (specificity 0). Rules of the road:
 
 - **Plain CSS / CSS modules:** unlayered styles beat all layers. Nothing to do.
-- **Tailwind v4:** put warp first so utilities win, and alias tokens into the theme:
+- **Tailwind v4:** put Warp first so utilities win, and alias tokens into the theme:
   ```css
   @layer warp, theme, base, components, utilities;
   @import "@weft-js/warp/warp.css";

@@ -2,15 +2,15 @@
 
 :::learn
 - What `AGENTS.md` holds, where it comes from, and how to keep it current
-- How an agent learns weft from `weft docs` and `.weft/map.md` instead of guessing
+- How an agent learns Weft from `weft docs` and `.weft/map.md` instead of guessing
 - The loop an agent runs to finish a change: check, fix, see it work, pass the gate
-- How to give an agent weft's tools over MCP with `weft mcp`
+- How to give an agent Weft's tools over MCP with `weft mcp`
 - Why every command has `--json`, and why the diagnostics read the way they do
 :::
 
-weft is built for code that AI agents write, as much as for code you write yourself. An agent's usual problem with a
+Weft is built for code that AI agents write, as much as for code you write yourself. An agent's usual problem with a
 framework is that it guesses: it writes what the framework it knows best would want, and nothing tells it otherwise
-until a person reads the result. weft closes that gap from both sides. It tells the agent what this app is and how to
+until a person reads the result. Weft closes that gap from both sides. It tells the agent what this app is and how to
 write it, and when the agent gets something wrong, the [diagnostics](/learn/diagnostics) say exactly what and how to fix
 it, in a form a program can act on.
 
@@ -20,7 +20,7 @@ agent sees.
 ## `AGENTS.md`
 
 A new app has an `AGENTS.md` at its root. Most coding agents read a file by that name when they start work in a
-project. weft's opens like this:
+project. Weft's opens like this:
 
 ```md
 # AGENTS.md
@@ -33,14 +33,14 @@ state is a box, and React hooks don't exist. Run `weft check --json`
 after every change; each diagnostic gives code, location, why and fix.
 ```
 
-The rest is written from the weft you have installed, not from a template, so it can't describe a version you don't
+The rest is written from the Weft you have installed, not from a template, so it can't describe a version you don't
 have:
 
-- **The rules**: the short list of how weft code is written (boxes, `derived`, live JSX and props, bodies that run
+- **The rules**: the short list of how Weft code is written (boxes, `derived`, live JSX and props, bodies that run
   once). It's the same text as `weft docs rules`.
 - **The API in this version**: what `@weft-js/core` and its entries export, and anything it doesn't have yet, with
   "Don't import them".
-- **Diagnostics**: how to look one up, and which test checks this weft reports.
+- **Diagnostics**: how to look one up, and which test checks this Weft reports.
 - **How to verify a change**, which is the loop later on this page.
 - **Full stack**, for an app with `src/routes`: routes, server functions, the database and auth, in brief.
 - **Styling**, when the app has style groups: reuse a group before writing a new one.
@@ -48,13 +48,13 @@ have:
 - **Plugins**: a short section from each plugin in `weft.config.ts`.
 - **More**: the `weft docs` topics to read for depth.
 
-weft keeps its own part under 8 KB, because an agent pays for every word of it on every task. Each plugin's section has
+Weft keeps its own part under 8 KB, because an agent pays for every word of it on every task. Each plugin's section has
 its own limit of 1 KB (P112). Anything longer belongs in `weft docs`, which an agent reads only when it needs to.
 
 ### Keeping it current
 
 `AGENTS.md` is generated, so don't edit it by hand. It's written after the install by the generator, and again by
-`weft add` when you add a plugin. Regenerate it yourself after you upgrade weft or change `tasks` or `plugins`:
+`weft add` when you add a plugin. Regenerate it yourself after you upgrade Weft or change `tasks` or `plugins`:
 
 ```bash
 npx weft agents-md
@@ -66,7 +66,7 @@ To check it's current without writing, as in CI:
 npx weft agents-md --check
 ```
 
-That exits 1 when the file is stale, or when weft's part is over the limit. `--stdout` prints it instead of writing.
+That exits 1 when the file is stale, or when Weft's part is over the limit. `--stdout` prints it instead of writing.
 
 If your agent reads a different file, such as `CLAUDE.md`, have that file point to `AGENTS.md` rather than copying it,
 so there's one file to keep current.
@@ -93,7 +93,7 @@ from your app instead of written:
 
 | Topic | What it prints |
 |---|---|
-| `diagnostics` | Every code, and whether the weft you have installed reports it |
+| `diagnostics` | Every code, and whether the Weft you have installed reports it |
 | `commands` | This project's commands and tasks, with what each one changes |
 | `agents` | What `AGENTS.md` would say now |
 
@@ -105,7 +105,7 @@ site shows the same text.
 
 ### `.weft/map.md`: what this app has
 
-`AGENTS.md` says how to write weft. The map says what's in *this* app: its routes, its server functions and data, its
+`AGENTS.md` says how to write Weft. The map says what's in *this* app: its routes, its server functions and data, its
 style groups and its plugins, and what to call for each.
 
 ```bash
@@ -117,7 +117,7 @@ the agent to start there, so it reuses the `listTodos` query you already have in
 
 ### Tasks: commands an agent can trust
 
-An agent shouldn't have to read a shell script to learn whether it deletes a database. weft's project commands are
+An agent shouldn't have to read a shell script to learn whether it deletes a database. Weft's project commands are
 declared in `weft.config.ts`, each with what it does and what it touches:
 
 ```ts
@@ -131,10 +131,10 @@ tasks: {
 },
 ```
 
-`weft tasks` lists them beside weft's own commands, and `weft run seed` runs one. A task with no `description` or
+`weft tasks` lists them beside Weft's own commands, and `weft run seed` runs one. A task with no `description` or
 `sideEffects` is P004, and a `package.json` script that isn't a `weft` command is P002, for the same reason.
 
-`scope` in the config draws the lines an agent works inside: `write` and `read` globs, and `forbid`, which weft never
+`scope` in the config draws the lines an agent works inside: `write` and `read` globs, and `forbid`, which Weft never
 compiles or writes (`.env*`, say). The [config reference](/reference/config) has the details.
 
 ## The verify loop
@@ -212,9 +212,9 @@ of the uncommitted change. The [verify reference](/reference/verify) has every o
 writing tests.
 :::
 
-## `weft mcp`: weft's tools over MCP
+## `weft mcp`: Weft's tools over MCP
 
-Agents that speak the [Model Context Protocol](https://modelcontextprotocol.io) can use weft as a set of tools instead of
+Agents that speak the [Model Context Protocol](https://modelcontextprotocol.io) can use Weft as a set of tools instead of
 shell commands. `weft mcp` is an MCP server on stdio. Most clients take a block like this in their MCP settings:
 
 ```json
@@ -250,7 +250,7 @@ it:
 
 - **JSON goes to stdout**, and text for people goes to stderr. With `--json`, stdout holds nothing else.
 - **The exit code** is 0 when all is well, 1 when there are errors (or, for `agents-md --check`, a stale file), and 2
-  for a usage error or a failure in weft itself. A failure still prints `{ "ok": false, "error": { "code", "message" } }`.
+  for a usage error or a failure in Weft itself. A failure still prints `{ "ok": false, "error": { "code", "message" } }`.
 - **Diagnostics have one shape** in every command: `code`, `severity`, `file`, `span`, `why`, `fix` and `docs`.
 
 ```bash
@@ -259,14 +259,14 @@ npx weft routes --meta --json
 npx weft tasks --json
 ```
 
-:::deepdive Why weft's diagnostics are written for agents
+:::deepdive Why Weft's diagnostics are written for agents
 An agent fixes what it's told about. A compiler error written for an expert ("invalid hook call") sends it searching;
 one that names the variable, says what happens at run time, and gives the line to write gets fixed in one step. So each
-weft diagnostic is written about the code in front of it ("`total` is a box; JSX needs its value"), has a stable code
+Weft diagnostic is written about the code in front of it ("`total` is a box; JSX needs its value"), has a stable code
 the agent can look up with `weft docs`, and carries the edit when there is one, marked safe or not. The safe ones,
 `weft fix` applies; the others an agent has to decide on, and the `why` gives it what it needs to decide.
 
-The same thinking runs through the rest. `AGENTS.md` is generated, so it never describes a weft you don't have. Codes
+The same thinking runs through the rest. `AGENTS.md` is generated, so it never describes a Weft you don't have. Codes
 that the installed compiler doesn't report yet say so, so an agent doesn't trust a check that isn't there. The test
 gate exists because an agent can write a test that passes without testing anything, and T010 and T011 catch exactly
 that.
@@ -276,7 +276,7 @@ None of this is only for agents. A message that's specific enough for a program 
 
 ## Recap
 
-- `AGENTS.md` is generated from your installed weft and your config. Regenerate it with `weft agents-md`, check it in
+- `AGENTS.md` is generated from your installed Weft and your config. Regenerate it with `weft agents-md`, check it in
   CI with `--check`, and never edit it by hand.
 - `weft docs` is the reference in the terminal, `weft docs <CODE>` explains any diagnostic, and `.weft/map.md` says what
   this app has.
@@ -285,4 +285,4 @@ None of this is only for agents. A message that's specific enough for a program 
 - `weft mcp` offers the same commands as MCP tools, returning the same JSON.
 - Every command takes `--json`: JSON on stdout, text on stderr, and exit codes 0, 1 and 2.
 
-That's the end of Get started. Next, [Describing the UI](/learn/describing-the-ui) begins the tour of weft itself.
+That's the end of Get started. Next, [Describing the UI](/learn/describing-the-ui) begins the tour of Weft itself.

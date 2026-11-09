@@ -2,7 +2,7 @@
 
 > **Not released yet.** This package isn't published on its own. `weft docs fonts` covers what an app uses from it.
 
-Fonts and text for weft. `text()` for `weft.config.ts` is the main entry, `@weft-js/text/build` is the Node-only font build, and `@weft-js/text/measure` and `@weft-js/text/engine` are what a browser loads: nothing Node-only reaches them.
+Fonts and text for Weft. `text()` for `weft.config.ts` is the main entry, `@weft-js/text/build` is the Node-only font build, and `@weft-js/text/measure` and `@weft-js/text/engine` are what a browser loads: nothing Node-only reaches them.
 
 ## The engine
 
@@ -43,7 +43,7 @@ const ranges = te.lines(h, width)
 te.clear()
 ```
 
-It follows weft's `MeasureProvider` contract (`prepare`, `layout`, `lines`, `lineText`, `clear`, see `src/types.ts`). Extras:
+It follows Weft's `MeasureProvider` contract (`prepare`, `layout`, `lines`, `lineText`, `clear`, see `src/types.ts`). Extras:
 
 - `needs(text, font, opts)`: the lazy packs a text needs, from a scan of its code points.
 - `load(packs)`: preload those packs.

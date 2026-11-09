@@ -2,7 +2,7 @@
 
 :::learn
 - How to give every page a title and a description with `meta`, and build it from `data` on a param route
-- What weft writes for you when you leave something out, and why you still shouldn't
+- What Weft writes for you when you leave something out, and why you still shouldn't
 - How the site's defaults in `site` work, and why `site.url` matters before you ship
 - How share cards are drawn, and how to design your own with an `.og.tsx` file
 - How `weft check` and `weft routes --meta` show what every page says about itself
@@ -14,7 +14,7 @@ pastes the link. Crawlers that build link previews don't run JavaScript, so all 
 response.
 
 In React you'd add a head manager, remember to set the tags on every route, and then find a separate service to draw
-preview images. In weft a route exports `meta`, plain data, and the server writes the tags into the first byte. Every page
+preview images. In Weft a route exports `meta`, plain data, and the server writes the tags into the first byte. Every page
 also gets a share card drawn from its own title and description, unless you design a better one.
 
 :::demo server-meta-preview
@@ -117,9 +117,9 @@ in `load`.
   suits a home page.
 - `og` and `twitter` set those tags directly when they should differ from the title and description: `og.type`,
   `og.image`, `twitter.card` and so on.
-- `extra` adds tags weft doesn't model, such as `theme-color` or a verification tag:
+- `extra` adds tags Weft doesn't model, such as `theme-color` or a verification tag:
   `extra: [{ name: 'theme-color', content: '#0b120d' }]`.
-- `jsonLd` writes structured data as `application/ld+json`. weft writes a `WebSite` on `/` when `site.name` is set, and
+- `jsonLd` writes structured data as `application/ld+json`. Weft writes a `WebSite` on `/` when `site.name` is set, and
   nothing else unless you say: it doesn't guess what your page is.
 
 ```ts
@@ -148,9 +148,9 @@ can set `og.siteName` and a route its `og.type` without either losing the other.
 A layout's `meta` is the place for what a whole section shares, such as `twitter.site` for a blog, or an `extra` tag.
 Its title would be overridden by every page under it, so leave titles to routes.
 
-## What weft does when you leave something out
+## What Weft does when you leave something out
 
-A page with no `meta`, or a `meta` that leaves out a field, still gets tags. weft reads them from what the page
+A page with no `meta`, or a `meta` that leaves out a field, still gets tags. Weft reads them from what the page
 rendered:
 
 - **Title:** the page's `<h1>`, or with none its first `<h2>` or `<h3>`, through `site.title`.
@@ -167,7 +167,7 @@ rewrite.
 :::pitfall Never slice raw content into a description
 `description: post.body.slice(0, 155)` looks harmless until the body starts with a list or a code block, and the card
 under every shared link reads `- xs.map(x = <Row`. A description that reads like code, markdown or a cut-off sentence is
-**H015**. Write the sentence, or store a summary next to the content, or leave the field out and let weft find a
+**H015**. Write the sentence, or store a summary next to the content, or leave the field out and let Weft find a
 paragraph.
 :::
 
@@ -199,7 +199,7 @@ export default defineConfig({
 
 ### `site.url`: the address everything absolute needs
 
-Canonical URLs, `og:url` and `og:image` must be absolute, so weft needs to know where the site lives. It looks, in
+Canonical URLs, `og:url` and `og:image` must be absolute, so Weft needs to know where the site lives. It looks, in
 order, at `site.url`, the `WEFT_SITE_URL` environment variable, and what common hosts set (`VERCEL_PROJECT_PRODUCTION_URL`,
 `VERCEL_URL`, Netlify's `URL`, `CF_PAGES_URL`, `RENDER_EXTERNAL_URL`, `RAILWAY_PUBLIC_DOMAIN`, `FLY_APP_NAME`).
 
@@ -210,7 +210,7 @@ resolve relative URLs. Set `site.url` before you ship.
 ## Share cards
 
 When someone pastes a link into a chat, the preview's picture is `og:image`. By default (`site.image: 'auto'`) every
-page gets one: a 1200×630 PNG of its title, description, the app's name and its address, in warp's colours and the text
+page gets one: a 1200×630 PNG of its title, description, the app's name and its address, in Warp's colours and the text
 plugin's fonts when the app has them. You don't draw anything to get it.
 
 `site.card` adjusts the built-in card: `scheme: 'light'` or `'dark'` (one image goes to every feed, so a card picks

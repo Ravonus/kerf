@@ -387,9 +387,9 @@ An early deliberately red ticket is not permission to merge a failing final gate
 Keep bounded timing/shift/byte receipts with the candidate SHA and environment;
 close the browser, server and owned temporary scaffold on success and failure.
 For runtime/compiler changes, follow `CONTRIBUTING.md` and `CLAUDE.md`: package
-checks, size checks and the full comparison across weft + warp, Solid,
+checks, size checks and the full comparison across Weft + Warp, Solid,
 React + Radix, React + Zustand and React + MUI. Commit comparison history and
-HTML; retain the 50 KB warp ceiling. No benchmark or 3G acceptance ran for this
+HTML; retain the 50 KB Warp ceiling. No benchmark or 3G acceptance ran for this
 design-only ticket.
 
 M2 owns public coordination: reference types and exports, the Learn page's

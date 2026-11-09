@@ -1,17 +1,17 @@
 # Styling and style groups
 
 :::learn
-- How `class` and `style` work in weft, and how they follow state
-- Where plain CSS files fit, and how cascade layers keep warp out of your way
+- How `class` and `style` work in Weft, and how they follow state
+- Where plain CSS files fit, and how cascade layers keep Warp out of your way
 - How to name a thing's look with a style group from `@weft-js/core/style`
-- What tokens and the spacing and type scales are, and why weft asks for them
+- What tokens and the spacing and type scales are, and why Weft asks for them
 - What the D-codes in `weft check` catch, and how to answer them
 :::
 
-In weft, styling is attributes. `class` and `style` are attributes like `href` or `disabled`: they take expressions, and
+In Weft, styling is attributes. `class` and `style` are attributes like `href` or `disabled`: they take expressions, and
 when an expression reads state, the compiler wires that one attribute to it. Nothing re-renders to change a colour.
 
-On top of that sits a design language. An app made with warp (the default) has tokens for colour, space, type, radius
+On top of that sits a design language. An app made with Warp (the default) has tokens for colour, space, type, radius
 and motion, and `weft check` tells you when a value leaves them. This page starts with the plain attributes and builds
 up to style groups, which are how you give your own components a named, token-only look.
 
@@ -98,7 +98,7 @@ export function Meter() {
 :::note React developers
 This is the same `className` and `style` you know, with two differences. `class` is the preferred spelling, and the
 element is never rebuilt when it changes: the compiler emits one attribute write per change. There is no `styled()` or
-CSS-in-JS runtime. Plain CSS, style groups and warp's components cover what those are used for.
+CSS-in-JS runtime. Plain CSS, style groups and Warp's components cover what those are used for.
 :::
 
 ## Plain CSS files
@@ -115,12 +115,12 @@ export function Receipt(props: { total: string }) {
 ```
 
 The build bundles it, and a page loads it only when a component that imports it is on that page. The CSS is global, as
-it is anywhere: `.receipt-total` matches every element with that class. weft's types declare `.css` imports as side
+it is anywhere: `.receipt-total` matches every element with that class. Weft's types declare `.css` imports as side
 effects, so there is no CSS-modules object to import. When you want a name that can't collide, use a style group (below).
 
 ### Cascade layers
 
-warp puts all of its CSS in cascade layers (`@layer warp.tokens`, `warp.base`, `warp.components` and so on), and its
+Warp puts all of its CSS in cascade layers (`@layer warp.tokens`, `warp.base`, `warp.components` and so on), and its
 component rules use `:where()`, which has no specificity. Style groups go in `@layer app.groups`. CSS you write without
 a layer comes after every layer, so it wins:
 
@@ -129,13 +129,13 @@ a layer comes after every layer, so it wins:
 [data-scope="button"] { letter-spacing: 0.02em; }
 ```
 
-You never need `!important` to change something warp drew. If you use Tailwind, its layers are declared after warp's,
+You never need `!important` to change something Warp drew. If you use Tailwind, its layers are declared after Warp's,
 so a utility wins in the same way.
 
 :::deepdive Why layers and not specificity
 A component library that styles with ordinary selectors forces you into a specificity contest: your `.card .title`
 loses to its `.lib-card > .lib-card__title`, so you add a class, then `!important`. Cascade layers settle the order up
-front. The browser compares layers before it compares specificity, and unlayered rules come last. warp also wraps its
+front. The browser compares layers before it compares specificity, and unlayered rules come last. Warp also wraps its
 selectors in `:where()`, so even inside a layer it never outranks a plain selector of yours. The practical rule is
 short: write normal CSS, and it wins.
 :::
@@ -147,12 +147,12 @@ config line.
 
 | `--ui` | You get |
 |---|---|
-| `warp` | warp's components, tokens and themes, with `warp()` in `weft.config.ts`. The default. |
-| `headless` | warp-core: warp's keyboard, focus and motion behaviour, and its token CSS, under your own markup |
+| `warp` | Warp's components, tokens and themes, with `warp()` in `weft.config.ts`. The default. |
+| `headless` | warp-core: Warp's keyboard, focus and motion behaviour, and its token CSS, under your own markup |
 | `tailwind` | Tailwind v4, set up. `weft add tailwind` adds the same to an existing app. |
 | `none` | Plain CSS in `src/app.css` |
 
-In an app with warp, `weft add tailwind` also imports `@weft-js/warp/tailwind.css`, which turns warp's tokens into
+In an app with Warp, `weft add tailwind` also imports `@weft-js/warp/tailwind.css`, which turns Warp's tokens into
 Tailwind theme values: `bg-surface`, `text-accent`, `rounded-control`. Each utility stays a `var()`, so it follows the
 theme and the dials like a component does. [Theming](/learn/theming) covers those.
 
@@ -290,20 +290,20 @@ Tailwind names properties at the call site; CSS-in-JS names a component's styles
 at runtime. A style group names the *thing* and its *variations*, and leaves the properties to tokens. The result is
 closer to a design system's component spec than to either: `orderCard({ status: 'late' })` reads like the design
 review said it. It also costs nothing at runtime: the call compiles away, and a reactive axis is the same single
-attribute write as any other binding. Tailwind is still a fine choice in weft (`--ui tailwind`), and the D-codes apply
+attribute write as any other binding. Tailwind is still a fine choice in Weft (`--ui tailwind`), and the D-codes apply
 to its classes too.
 :::
 
 ## Tokens and the scales
 
-warp's look is a set of CSS custom properties, the **tokens**, all named `--warp-*`: `--warp-color-surface-raised`,
+Warp's look is a set of CSS custom properties, the **tokens**, all named `--warp-*`: `--warp-color-surface-raised`,
 `--warp-space-group`, `--warp-radius-control`, `--warp-text-heading-size`. Themes and dials change their values, so
 anything drawn from them changes with the theme. A raw `#fff` or `16px` doesn't.
 
 The two scales you meet most are space and type.
 
 **Space** is seven steps, named by relationship, not size: `none`, `hair`, `tight`, `related`, `group`, `section`,
-`page`. `related` is the space inside one thing, `group` the space between things, `section` between sections. warp's
+`page`. `related` is the space inside one thing, `group` the space between things, `section` between sections. Warp's
 layout primitives take these as `gap`, and style groups take them as `pad` and `gap`. The density dial scales the whole
 set.
 
@@ -337,13 +337,13 @@ The names are also exported as constants and types from `@weft-js/core/ds` (`SPA
 their types `Space`, `Tone` …), so your own components can take a `gap: Space` prop and stay on the scale.
 
 :::note Your own CSS can use the tokens too
-`var(--warp-color-text-subtle)` in a stylesheet follows the theme like warp does. That is the right way to write CSS by
-hand in a warp app: the D-codes below look for raw values, not for CSS.
+`var(--warp-color-text-subtle)` in a stylesheet follows the theme like Warp does. That is the right way to write CSS by
+hand in a Warp app: the D-codes below look for raw values, not for CSS.
 :::
 
 ## The D-codes
 
-In an app with warp, `weft check` reads your markup, `style` objects, CSS and Tailwind classes, and reports values that
+In an app with Warp, `weft check` reads your markup, `style` objects, CSS and Tailwind classes, and reports values that
 leave the design language. Each code says what to use instead:
 
 | Code | Catches | Instead |
@@ -352,11 +352,11 @@ leave the design language. Each code says what to use instead:
 | D002 | Spacing off the scale, or a step written by hand (`padding: 16px`) | A space step; `weft fix` rewrites an exact step |
 | D003 | Raw type, radius or shadow (`font-size`, `rounded-[7px]`) | `Heading`, `Text`, radius and elevation tokens |
 | D004 | Layout spelled out (`display: flex`, `flex flex-col gap-4`) | `Stack`, `Row`, `Grid` |
-| D005 | A browser-painted control: `<button>`, `<select>`, `<textarea>`, a `date` or `range` input, a `title` tooltip | The warp component |
+| D005 | A browser-painted control: `<button>`, `<select>`, `<textarea>`, a `date` or `range` input, a `title` tooltip | The Warp component |
 | D006 | One heading level at two looks across the app | Match the level's main role |
 | D007 | A bare `<a href>` | `Link`, or `Shell`'s nav |
 
-Another group runs in every app, warp or not, and catches accessibility mistakes: a field with no label (D030), a
+Another group runs in every app, Warp or not, and catches accessibility mistakes: a field with no label (D030), a
 button with no name (D031), an image with no `alt` (D032), focus rings removed (D036) and more. They have their own
 section on [Accessibility](/learn/accessibility). D020–D025 are the style-group codes above.
 
@@ -381,7 +381,7 @@ A token follows the theme and the raw value didn't, so there is no exact replace
 
 - `class` takes a string or an object of class names; `style` takes a string or a React-shaped object. Both follow state,
   one attribute write per change.
-- Import plain CSS from a component. warp sits in cascade layers with zero specificity, so your unlayered CSS wins.
+- Import plain CSS from a component. Warp sits in cascade layers with zero specificity, so your unlayered CSS wins.
 - A style group names a thing, its axes, parts and states in tokens; call sites compile to `data-*` attributes.
 - Tokens are `--warp-*` custom properties. Space is a scale of relationships, type a set of roles.
 - `weft check` reports off-system values as D-codes. Answer with a token, or keep a value with a `weft-allow` reason.
@@ -483,7 +483,7 @@ call compiles to `data-tone={tone}`, one attribute that follows the prop.
 :::
 
 :::challenge Answer the D-codes
-`weft check` reports D002 twice and D001 on this component. Rewrite it with warp's primitives and tokens so it
+`weft check` reports D002 twice and D001 on this component. Rewrite it with Warp's primitives and tokens so it
 reports none, and replace the hand-made flex row while you're there.
 
 <!-- example: skip the challenge's starting code, which has its D-codes on purpose -->

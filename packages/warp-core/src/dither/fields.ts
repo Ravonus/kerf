@@ -22,7 +22,7 @@ export const FIELDS: Record<FieldName, Field> = {
       2.44
     )
   },
-  /** Contour bands bent by a slow domain warp. */
+  /** Contour bands bent by a slow domain Warp. */
   flow(x: number, y: number, t: number) {
     const a = x * 2.2 + sin(y * 3.1 + t * 0.2) * 0.8,
       b = y * 2.2 + cos(x * 2.7 - t * 0.17) * 0.8

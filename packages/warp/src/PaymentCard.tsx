@@ -5,7 +5,7 @@ import { Field, type FieldShell } from './Field'
 import { use } from '@weft-js/warp-core/weft'
 import '@weft-js/warp-core/styles/rich/payment.css'
 
-/** The card field a payment provider mounts, as far as warp talks to it. */
+/** The card field a payment provider mounts, as far as Warp talks to it. */
 export interface ProviderField {
   on(
     e: 'focus' | 'blur' | 'change',
@@ -13,7 +13,7 @@ export interface ProviderField {
   ): void
   destroy(): void
 }
-/** The field styles warp hands a provider, since its iframe can't read ours. */
+/** The field styles Warp hands a provider, since its iframe can't read ours. */
 export interface ProviderAppearance {
   fontFamily: string
   fontSize: string
@@ -28,8 +28,8 @@ export type PaymentCardInputProps = FieldShell & {
 }
 
 /**
- * PaymentCardInput (04 §5): the field shell around the provider's hosted field, driven by its events, with warp's
- * tokens passed into its appearance API. warp never renders an input for a raw card number.
+ * PaymentCardInput (04 §5): the field shell around the provider's hosted field, driven by its events, with Warp's
+ * tokens passed into its appearance API. Warp never renders an input for a raw card number.
  */
 export function PaymentCardInput({ mount, label, hint, error, ...rest }: PaymentCardInputProps) {
   const focused = state(false)

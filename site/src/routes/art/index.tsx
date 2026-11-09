@@ -9,7 +9,7 @@ export const prerender = true
 export const meta: Meta = {
   title: 'Art',
   description:
-    "Twenty-eight pieces drawn with warp's Canvas and dither fields, in warp's own inks. They follow the theme and the dial, and only three move at once.",
+    "Twenty-eight pieces drawn with Warp's Canvas and dither fields, in Warp's own inks. They follow the theme and the dial, and only three move at once.",
 }
 
 /** Two to a row, so a piece left without a partner, before a wide one or at the end, takes the row. */

@@ -1,4 +1,4 @@
-# warp 08 — Marketing, commerce, media and the expressive governor
+# Warp 08 — Marketing, commerce, media and the expressive governor
 
 Status: v0.3, 2026-10-28 (market gaps closed: §4.2 reviews, §5.2 selection, §5.3 players + `timeline()`, §3.6 wall, §3.12 section set, §6.2–§6.6 backgrounds, text effects, scroll-driven, `fancy` presets, MotionCard; a second specimen page). v0.2: review round (01, 02, 03 findings fixed; §3.13, §3.14, §4.1, §6.1 new). Owner: brand and motion (`market` in [COVERAGE.md](COVERAGE.md)). Reads: [SIGNATURE.md](SIGNATURE.md),
 [00-direction.md](00-direction.md), [01-foundations.md](01-foundations.md). CSS: [tokens/warp-marketing.css](tokens/warp-marketing.css)
@@ -51,7 +51,7 @@ sliding `indicator`, **Chip**, **Badge**, **StatusDot**, **Surface**, **Accordio
 | `--warp-text-emphasis-style` | upright, accent ink | upright, accent ink | the serif's real italic | the headline `<em>` (01 §14); the landing sets `font-synthesis-style: none`, so no stop ever shows a faux slant |
 | `--warp-fx-cap` | `data-fx-cap="quiet / balanced"` | | | caps effects only; type and shape keep their stop |
 
-All are inherited and nest like every warp input: a `data-expression="quiet"` pricing section inside a vivid page gets
+All are inherited and nest like every Warp input: a `data-expression="quiet"` pricing section inside a vivid page gets
 quiet effects. `--warp-motion-scale` = 0 (reduced motion) is read alongside.
 
 ### 1.2 The effect contract
@@ -673,7 +673,7 @@ The Lightbox takes any list (the gallery, a review's photos), labels itself by i
 focus to the opener. The Toast gains an optional `action: { label, run }`.
 
 ### 5.3 Video and audio player chrome (demos `#video-player`, `#audio-player`, `#voice-note`)
-- **Video:** native `<video>` (the clock, the captions renderer and the media's own accessibility) under a warp bar on a
+- **Video:** native `<video>` (the clock, the captions renderer and the media's own accessibility) under a Warp bar on a
   dark stage at every stop and theme: `stage` (video, `big-play` while idle, `badge-row` with the duration chip and
   the current chapter chip), then `controls`: the `scrubber` on its own row (rail with `buffered`, `hover` and
   `played` layers as `scaleX`, never width; chapter `ticks` as 2px gaps; a `thumb` shown on hover and focus; a hover
@@ -790,7 +790,7 @@ staggered warp threads, so it reads as the sweep crossing the page.
 
 The old parallax hooks map to two primitives: `scrollFx(el, { from, to, range })` (a CSS scroll timeline, with an
 IntersectionObserver fallback) and `pointerFx(el, write)` (rAF-batched custom properties). `useGlobalMouse`,
-`useDocumentScroll` and `useInViewport` become `pointer()`, `scroll()` and `inView(el)` signals in weft.
+`useDocumentScroll` and `useInViewport` become `pointer()`, `scroll()` and `inView(el)` signals in Weft.
 
 ### 6.2 Animated backgrounds (demo `#backgrounds`)
 `backdrop` is a surface with an `aria-hidden` `bg` layer (`z-index: -1`, no pointer events) under its text; the same

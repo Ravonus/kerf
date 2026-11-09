@@ -1,19 +1,19 @@
-# weft
+# Weft
 
-weft is a fine-grained reactive TSX framework built for coding agents. A component is plain TSX and its body runs once.
+Weft is a fine-grained reactive TSX framework built for coding agents. A component is plain TSX and its body runs once.
 State is a box you read and write through `.value`, anything computed from it is `derived`, and JSX stays live. The
-mistakes agents tend to make are diagnostics with a code and a fix, reported by weft's own compiler, written in Rust on
+mistakes agents tend to make are diagnostics with a code and a fix, reported by Weft's own compiler, written in Rust on
 [Oxc](https://oxc.rs).
 
-You don't need Rust to use weft. An install gets the compiler as WebAssembly, plus a native addon where one fits your
+You don't need Rust to use Weft. An install gets the compiler as WebAssembly, plus a native addon where one fits your
 platform. Rust is only for server code you choose to write in Rust.
 
-warp is weft's UI toolkit. Its components are in `@weft-js/warp`, and their behaviour and CSS are in `@weft-js/warp-core`,
+Warp is Weft's UI toolkit. Its components are in `@weft-js/warp`, and their behaviour and CSS are in `@weft-js/warp-core`,
 which works without any framework.
 
 ## Start an app
 
-weft isn't on npm yet. Once it is, this starts an app:
+Weft isn't on npm yet. Once it is, this starts an app:
 
 ```bash
 npm create @weft-js my-app
@@ -48,9 +48,9 @@ export default function Counter() {
 | `@weft-js/create` | [packages/create](packages/create) | `npm create @weft-js` |
 | `@weft-js/start` | [packages/start](packages/start) | The full stack: file routes, server functions, SSR, a database, auth and realtime |
 | `@weft-js/db` | [packages/db](packages/db) | Database layers and list sources for `@weft-js/start` |
-| `@weft-js/warp` | [packages/warp](packages/warp) | warp's components |
-| `@weft-js/warp-core` | [packages/warp-core](packages/warp-core) | warp's behaviour, tokens and CSS, with no framework |
-| `@weft-js/warp-icons` | [packages/warp-icons](packages/warp-icons) | weft's icon set |
+| `@weft-js/warp` | [packages/warp](packages/warp) | Warp's components |
+| `@weft-js/warp-core` | [packages/warp-core](packages/warp-core) | Warp's behaviour, tokens and CSS, with no framework |
+| `@weft-js/warp-icons` | [packages/warp-icons](packages/warp-icons) | Weft's icon set |
 
 The other top-level packages are private add-ons that aren't released yet. The release script also selects built compiler
 platform packages for core's native binding. See [1.0 package scope](docs/ARCHITECTURE.md#10-package-scope).
@@ -63,13 +63,13 @@ Brotli, as `node packages/core/scripts/size.mjs` reports it:
 - The `@weft-js/core` entry alone: 4.76 KB.
 - Hello world: 1.54 KB.
 
-An app built with warp has a ceiling of 50 KB of JavaScript and CSS, which `evals/gates/warp-exit.mjs` checks.
+An app built with Warp has a ceiling of 50 KB of JavaScript and CSS, which `evals/gates/warp-exit.mjs` checks.
 
 ## Docs
 
 - [Learn](site/content/learn): the tutorial, in order.
 - [Reference](packages/cli/docs): every API, command and config key. An app gets the same pages with `npx weft docs`.
-- [docs/](docs/README.md): docs for working on weft, and the design notes behind it.
+- [docs/](docs/README.md): docs for working on Weft, and the design notes behind it.
 
 ## Contributing
 

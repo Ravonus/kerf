@@ -2,8 +2,8 @@
 
 > **Early release (0.1.1).** APIs will change between minor versions.
 
-warp's behaviour, tokens and CSS, with no components: plain TypeScript over the DOM. `@weft-js/warp` builds its components
-on it. Nothing in the main entry imports a framework, so it works under weft, React, Solid or no framework at all.
+Warp's behaviour, tokens and CSS, with no components: plain TypeScript over the DOM. `@weft-js/warp` builds its components
+on it. Nothing in the main entry imports a framework, so it works under Weft, React, Solid or no framework at all.
 
 ```bash
 npm install @weft-js/warp-core
@@ -11,12 +11,12 @@ npm install @weft-js/warp-core
 
 ## When to skip it
 
-Most weft apps should skip it.
+Most Weft apps should skip it.
 
 - **You want finished components:** install `@weft-js/warp`. It brings this package with it.
-- **You want no warp at all:** you need neither package. `npm create @weft-js -- --ui none` and `--ui tailwind` install
+- **You want no Warp at all:** you need neither package. `npm create @weft-js -- --ui none` and `--ui tailwind` install
   neither.
-- **You want your own markup and warp's keyboard, focus and motion:** this package is for you. `npm create @weft-js -- --ui headless`
+- **You want your own markup and Warp's keyboard, focus and motion:** this package is for you. `npm create @weft-js -- --ui headless`
   sets it up.
 
 ## What's in it
@@ -28,7 +28,7 @@ Most weft apps should skip it.
   `@weft-js/warp-core/styles/components/tabs.css`. Skip them and bring your own CSS if you like.
 - **Other entries:** `/motion`, `/charts`, `/canvas`, `/dither` and `/search`.
 
-## `use`: an action in a weft component
+## `use`: an action in a Weft component
 
 `use` comes from `@weft-js/warp-core/weft`, the one entry that needs `@weft-js/core`. It starts the action once the element is in the
 document, never on the server. It calls `update` when the options change and `destroy` with the component.
@@ -40,7 +40,7 @@ use(action, () => element, () => options)
 `update` runs only when the value from the options getter changes. An option the action doesn't read still counts, so
 read a box there to re-run it, like `at` in the tabs below.
 
-Outside weft, make the action yourself:
+Outside Weft, make the action yourself:
 
 ```ts
 const bar = indicator(list, { selected: '[aria-selected="true"]' })

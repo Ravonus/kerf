@@ -16,7 +16,7 @@ and `ref` is how you ask for it.
 
 ## Getting an element with `ref`
 
-Put `ref` on any element and give it a variable. When weft makes the element, it assigns it:
+Put `ref` on any element and give it a variable. When Weft makes the element, it assigns it:
 
 ```tsx
 import { Button } from '@weft-js/warp'
@@ -43,11 +43,11 @@ Three things make this work:
    declared and read but never written. The write is in the compiled output, so the rule can't see it. Turn it off for
    that one line and say why, as above.
 
-If you'd rather not have the `!` and the comment, use the function form below. Both are common in weft's own code.
+If you'd rather not have the `!` and the comment, use the function form below. Both are common in Weft's own code.
 
 ### The function form
 
-`ref` also takes a function. weft calls it once, with the element:
+`ref` also takes a function. Weft calls it once, with the element:
 
 ```tsx
 import { Button } from '@weft-js/warp'
@@ -68,8 +68,8 @@ you use when the element goes somewhere other than one variable: into a `Map`, i
 `ref` takes an array of functions too, `ref={[measure, el => (field = el)]}`, and calls each one.
 
 :::note React's `useRef`
-In React, `useRef(null)` gives you a box whose `.current` React fills in. weft has no `useRef` and no `.current`: the
-variable is the element. That works because a weft component's body runs once. In React the body runs on every render,
+In React, `useRef(null)` gives you a box whose `.current` React fills in. Weft has no `useRef` and no `.current`: the
+variable is the element. That works because a Weft component's body runs once. In React the body runs on every render,
 so a plain `let` would start over each time; here it's made once and lives as long as the component.
 :::
 
@@ -116,7 +116,7 @@ and the browser makes the elements that `ref` points at. Code that needs an elem
 are the right places for it.
 
 :::pitfall Focusing on arrival
-For "focus this field when it appears", you don't need a ref at all. Write `autofocus` on the element. weft focuses it
+For "focus this field when it appears", you don't need a ref at all. Write `autofocus` on the element. Weft focuses it
 when it's created, the way React does, not only when the page first loads (which is all the plain HTML attribute does):
 
 ```tsx
@@ -130,7 +130,7 @@ It skips an element inside a closed `<dialog>` or under `hidden`, where focus wo
 
 ### An element a write just showed
 
-Writes in weft are batched: a handler can change five boxes, and the page updates once, on the next microtask. So right
+Writes in Weft are batched: a handler can change five boxes, and the page updates once, on the next microtask. So right
 after `open.value = true`, the element that `open` shows isn't in the page yet. If you need it now, call `flush()`
 first. It applies every pending update straight away:
 
@@ -214,12 +214,12 @@ in the document and laid out, so measure in `onMount` or later. To follow a size
 
 :::demo escape-measure
 
-The number on screen is state, written by the observer's callback. That's the usual shape of DOM work in weft: the
+The number on screen is state, written by the observer's callback. That's the usual shape of DOM work in Weft: the
 element tells you something, you put it in a box, and the page follows the box like anything else.
 
 :::deepdive Why there's no layout effect
 React has `useLayoutEffect` for code that must run after the DOM changes but before the browser paints, such as
-measuring a tooltip to place it. weft doesn't need a second kind. `onMount` callbacks run at the end of the same
+measuring a tooltip to place it. Weft doesn't need a second kind. `onMount` callbacks run at the end of the same
 flush that put the component's nodes in the page, before the browser gets a chance to paint, and a box written there is
 applied in that same flush. So a measure-then-place in `onMount` never shows a frame in the wrong place.
 :::
@@ -260,12 +260,12 @@ The parent passes a function, not a variable: on a component, `ref={input}` woul
 which is `undefined`, because the compiler only turns `ref={x}` into an assignment on an element. Inside `NameField`,
 `ref={props.ref}` is on an element, so it calls the function with the input.
 
-This is what React calls forwarding a ref, without `forwardRef`. warp's components do it where it's useful: `Button`
+This is what React calls forwarding a ref, without `forwardRef`. Warp's components do it where it's useful: `Button`
 and `Card` take a `ref` function and call it with their element.
 
 :::pitfall Don't reach into a child's DOM to change it
 A ref is for what only the element can do: focus, scroll, measure, play a video. Don't use one to change what a
-component renders, by setting `textContent`, toggling classes or removing nodes. weft owns those nodes and will write
+component renders, by setting `textContent`, toggling classes or removing nodes. Weft owns those nodes and will write
 over your change on the next update, or try to update a node you removed. If the page should look different, change the
 state that drives it.
 :::
@@ -273,7 +273,7 @@ state that drives it.
 ## Values that aren't elements
 
 React's `useRef` has a second job: holding a value that survives re-renders without causing one, such as a timer id.
-In weft that's a plain variable in the component body. The body runs once, so the variable is made once and stays:
+In Weft that's a plain variable in the component body. The body runs once, so the variable is made once and stays:
 
 ```tsx
 import { onCleanup, state } from '@weft-js/core'
@@ -301,7 +301,7 @@ export function Stopwatch() {
 
 The rule for picking between them: if the page shows it, it's `state`; if only your code reads it, a `let` is enough. A
 `let` that the TSX reads never updates the page, because nothing tells the page it changed. The catalog names that
-**W041**, though this weft doesn't report it yet: a `let` written in a handler and read in TSX should be `state`.
+**W041**, though this Weft doesn't report it yet: a `let` written in a handler and read in TSX should be `state`.
 
 ## Recap
 
@@ -312,7 +312,7 @@ The rule for picking between them: if the page shows it, it's `state`; if only y
   run, never while the body runs. `flush()` puts a just-written change in the page now.
 - `autofocus` focuses an element when it's created, with no ref.
 - A component passes one of its elements out through a `ref` prop that is a function.
-- A plain `let` is weft's `useRef` for values: the body runs once, so it lasts as long as the component.
+- A plain `let` is Weft's `useRef` for values: the body runs once, so it lasts as long as the component.
 
 ## Try it
 

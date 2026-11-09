@@ -4,7 +4,7 @@ import './styles'
 import '@weft-js/warp-core/styles/components/nav.css'
 
 /**
- * Links with warp's sliding bar. It grows in from an item's edge, slides as the route or the pointer moves, and grows
+ * Links with Warp's sliding bar. It grows in from an item's edge, slides as the route or the pointer moves, and grows
  * out through the far edge. Mark the current link with `aria-current` (`Link` from `@weft-js/start` does). `spy` follows
  * the headings of a table of contents. The bar is on the current link in the server's HTML, so nothing moves on load.
  */

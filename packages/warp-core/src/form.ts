@@ -42,7 +42,7 @@ type Watch = { el: Element; fn: (message: string | undefined) => void; on: boole
 const watches = new WeakMap<Document, Set<Watch>>()
 
 /**
- * The browser's constraint message for the controls inside `el`, drawn by warp, never as its bubble: one document
+ * The browser's constraint message for the controls inside `el`, drawn by Warp, never as its bubble: one document
  * listener, in capture since `invalid` doesn't bubble. `fn` hears the message, and undefined once the control is valid
  * again. The form's first invalid control takes focus, on the part a person types in (a Select's trigger, not its hidden
  * select). A composite's hidden input is left to `reportMissing`. An action, for `use`; the option is `fn`.

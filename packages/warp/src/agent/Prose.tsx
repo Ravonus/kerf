@@ -94,7 +94,7 @@ function Block({
 }
 
 /**
- * Answer text, the safe default until warp has Markdown: paragraphs, `- ` lists, code fences (open ones already render
+ * Answer text, the safe default until Warp has Markdown: paragraphs, `- ` lists, code fences (open ones already render
  * as code), inline code and `[n]` cites. Text only: nothing in the model's output becomes markup. Blocks are keyed by
  * where they start, so streaming patches the last one in place.
  */

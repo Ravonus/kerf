@@ -7,7 +7,7 @@ import Shop from '../../demos/shop-5'
 export const prerender = true
 export const meta: Meta = {
   title: 'Examples',
-  description: 'Small working weft programs, each with its code, what to try and why it matters.',
+  description: 'Small working Weft programs, each with its code, what to try and why it matters.',
 }
 
 function Run(props: { id: string }) {

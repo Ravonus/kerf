@@ -14,7 +14,7 @@ how to keep update logic easy to maintain, and how to share state between compon
 apart, or in different tabs.
 
 If you know React's "Managing State" chapter, much of this will be familiar: the data advice is the same. What differs is
-that weft components run once, so state is never "preserved between renders" or "reset by position". It lives with the
+that Weft components run once, so state is never "preserved between renders" or "reset by position". It lives with the
 component that made it, and a box tells exactly the places that read it when it changes.
 
 ## Reacting to input with state
@@ -25,7 +25,7 @@ This quiz has one `status` box, and every screen comes from it:
 :::demo manage-quiz
 
 Read **[Reacting to input with state](/learn/reacting-to-input)** to learn how to list the visual states of a component,
-model them with one status box, and why weft branches in JSX instead of returning early.
+model them with one status box, and why Weft branches in JSX instead of returning early.
 
 ## Choosing the state structure
 
@@ -114,7 +114,7 @@ and people:
 
 :::demo manage-interaction
 
-Read **[Hover, focus and shared UI state](/learn/ui-state)** to learn how warp draws a row, how far sharing reaches, and
+Read **[Hover, focus and shared UI state](/learn/ui-state)** to learn how Warp draws a row, how far sharing reaches, and
 how to keep other UI state the same in every tab.
 
 ## App-wide state with defineState

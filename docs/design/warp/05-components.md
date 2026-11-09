@@ -1,4 +1,4 @@
-# warp 05: Components (actions, overlays, navigation, feedback, display)
+# Warp 05: Components (actions, overlays, navigation, feedback, display)
 
 Owner: comp. Specimen: `specimens/components.html`. Styles: `tokens/warp-components.css` (`@layer warp.components`;
 reads sys tokens only, plus the parts in `warp.signature` from `tokens/warp.css`). Coverage: every `comp` row in
@@ -28,7 +28,7 @@ QRCode is a display atom and lives here (§6), per `COVERAGE.md` §1.
 - **Motion** comes from foundations: durations `instant / fast / base / slow`, exits at `exit-k` (0.7) with `ease-in`,
   distance and scale-from per dial stop, and everything multiplied by `--warp-motion-scale` (0 when reduced).
 
-### weft API conventions
+### Weft API conventions
 
 ```ts
 type Tone =
@@ -70,7 +70,7 @@ The mechanics live in foundations (`@layer warp.signature`): parts `sweep`, `swe
 do it with tokens on their own hosts (`--warp-sweep-radius`, `--warp-color-sweep`, the gate `--_on`), never by
 restyling the parts, so `warp-components.css` cannot change how inputs, data or app sweeps look.
 
-- **Phase machine** (weft `sweep()`; in the specimens the one shared `specimens/warp-sweep.js`): pointer-enter or
+- **Phase machine** (Weft `sweep()`; in the specimens the one shared `specimens/warp-sweep.js`): pointer-enter or
   focus-visible (`:focus-within` for fields and the palette row), or held open (`aria-expanded`, `aria-pressed`,
   `data-state=open`, an open field) → `in`. Leaving while `in` → `out`. `transitionend` on the travelling part while
   `out` → `idle`, with a backstop at the part's real duration + 150ms. Re-entering during `out` **restarts from the
@@ -135,8 +135,8 @@ a popover of targets plus Copy link. Cancelling the system sheet (`AbortError`) 
 
 **Hamburger** (AnimatedHamburger): a ghost icon button with `aria-expanded`; its name stays “Menu”. The outer bars
 fold to an X (`base`, in-out) while the middle bar sweeps out to the right. **ThemeToggle**: a toggle button named
-“Dark theme” (`aria-pressed`); sun and moon cross-fade with a quarter turn. **Logo**: the warp lines take ink, the
-weft line takes the accent, so it follows scheme and tenant accent with no second asset.
+“Dark theme” (`aria-pressed`); sun and moon cross-fade with a quarter turn. **Logo**: the Warp lines take ink, the
+Weft line takes the accent, so it follows scheme and tenant accent with no second asset.
 
 ```ts
 Button(props: Named & {
@@ -297,7 +297,7 @@ title's `em` is the serif italic. Always one primary action and a secondary.
 in the last minute, critical at zero; announces at 5, 1 and 0 minutes only. **Stopwatch**: counts up (agent runs,
 calls), pause/resume announced.
 
-**Live status** (weft `.live`):
+**Live status** (Weft `.live`):
 
 | `.live` | Indicator | Announce | Extra |
 |---|---|---|---|

@@ -3,7 +3,7 @@
 :::learn
 - How a file gets from a form to your server, with or without JavaScript
 - How `ctx.media.ingest` turns an upload into a record `<Media>` can show
-- Where the limits are, and what weft refuses for you
+- Where the limits are, and what Weft refuses for you
 - How uploaded images, video and audio are stored, resized and served
 :::
 
@@ -12,7 +12,7 @@ and the build makes every size and format ahead of time. [Text, media and shapes
 that. This page is about the other kind: files your users give you, such as an avatar, a photo for a listing or a video
 for a post. Nobody saw those at build time, so the server has to do the same work when they arrive.
 
-In React you'd pick an upload library, a storage service and an image CDN, and glue the three together. weft has one
+In React you'd pick an upload library, a storage service and an image CDN, and glue the three together. Weft has one
 path for it: a `<Form>` sends the file to a mutation, `ctx.media.ingest` stores it and answers with a record, you save
 the record in a column, and `<Media src={record}>` renders it with the right sizes, formats and placeholder.
 
@@ -186,7 +186,7 @@ decoration, `alt=""` with `decorative` says so.
 
 :::deepdive Why the file only travels through a form
 A mutation call from code is `fetch` with a JSON body, so its input has to be JSON. A `<Form>` is a real
-`<form method="post">`: before hydration the browser posts it, and after hydration weft sends the same `FormData` with
+`<form method="post">`: before hydration the browser posts it, and after hydration Weft sends the same `FormData` with
 `fetch`. Either way the server gets multipart fields, decodes them into the input (`a.b` nests, `x[]` makes an array, an
 empty file input is left out), and validates them with your schema. So one mutation serves both the no-JavaScript post
 and the in-page submit, and a file is just another field.
@@ -259,7 +259,7 @@ loads, and there are no smaller sizes to choose from. Store what `ingest` return
 Some files never get stored. `ingest` refuses them with a code, and the mutation fails with status 422, so `<Form>` shows
 the message:
 
-- **M018**: the file isn't an image weft can read (PNG, JPEG, GIF, WebP, AVIF, SVG), or it's over the size limit. The
+- **M018**: the file isn't an image Weft can read (PNG, JPEG, GIF, WebP, AVIF, SVG), or it's over the size limit. The
   limit is `media({ server: { maxBytes } })`, 20 MB by default.
 - **M012**: an SVG with active content or external references, such as a script or an outside image. An SVG can carry
   code, so one that does isn't stored at all.
@@ -301,7 +301,7 @@ has more on what a host keeps between deploys.
 
 ## Video, audio and animated GIFs
 
-Images need nothing else. Video and audio need an encoder, which weft doesn't ship: `@weft-js/plugin-media-ffmpeg` runs
+Images need nothing else. Video and audio need an encoder, which Weft doesn't ship: `@weft-js/plugin-media-ffmpeg` runs
 an ffmpeg you install on the server.
 
 ```bash
@@ -323,7 +323,7 @@ pinned binary, or lacks an encoder is **M019**.
 
 :::pitfall ffmpeg's licence travels with it
 Builds of ffmpeg that include x264 or x265 are GPL. Running one on your own server is one thing; distributing it with
-what you ship can bind your code. weft never bundles ffmpeg for that reason, and the plugin's docs say so too.
+what you ship can bind your code. Weft never bundles ffmpeg for that reason, and the plugin's docs say so too.
 :::
 
 ## Recap

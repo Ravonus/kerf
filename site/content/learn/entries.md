@@ -9,7 +9,7 @@
 :::
 
 On [Choosing the state structure](/learn/choosing-state-structure) you flattened data into an object keyed by id. That
-shape has a second benefit in weft: a row can read *one entry* of the object, and then only a change to that entry
+shape has a second benefit in Weft: a row can read *one entry* of the object, and then only a change to that entry
 re-runs it. A list of a thousand products where you add one to the basket does one row's worth of work, not a thousand.
 
 :::demo entries
@@ -64,7 +64,7 @@ and five hundred re-runs that each find nothing to change. The compiler warns wh
 object (`stock.value[f]`, or `cart[p.id]` from a prop) as **W017**, and has an autofix to `.get`.
 
 :::note Where `get` and `set` come from
-`.get` and `.set` live in `@weft-js/core/keyed`. You don't import it: the weft Vite plugin adds it to any module that
+`.get` and `.set` live in `@weft-js/core/keyed`. You don't import it: the Weft Vite plugin adds it to any module that
 calls them, so an app that never uses them doesn't ship them. If you build the method name at run time
 (`box[name]`), the plugin can't see it, and you import `@weft-js/core/keyed` yourself.
 :::
@@ -86,7 +86,7 @@ stock.set((d) => {
 ```
 
 It's the same as writing `stock.value = { ...stock.value, pear: 5 }`, in a form that's harder to get wrong. After the
-write, weft compares the entries that `get` readers are following. Only those whose value changed re-run.
+write, Weft compares the entries that `get` readers are following. Only those whose value changed re-run.
 
 `set` works on arrays too: `list.set(d => { d.push(item) })` copies the array, pushes, and writes the copy.
 
@@ -239,7 +239,7 @@ The rules are short:
 - **A key that leaves takes its row with it.** Remove Ana, and her row is disposed of, with its note. Add her back, and
   she gets a new row with an empty note.
 
-That's weft's version of React's "preserving and resetting state" for lists, and the reason `key` matters: it says which
+That's Weft's version of React's "preserving and resetting state" for lists, and the reason `key` matters: it says which
 row is which. A missing key on a list of objects is **W010**. Over plain strings or numbers, the value is the key.
 
 :::deepdive Row state, or an object box in the parent?

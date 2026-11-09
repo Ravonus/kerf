@@ -21,7 +21,7 @@ this package), `prisma` or `native`.
 |---|---|
 | `@weft-js/db/plugin-native/<engine>` | `createDb({ url })`: a `sql` tag over the driver, with no ORM. Values always go to the driver as parameters. `<engine>` is `sqlite`, `postgres` or `mysql` |
 | `@weft-js/db/plugin-native/auth` | `nativeAuth(db)`: a Better Auth database adapter over that client |
-| `@weft-js/db/plugin-prisma` | `withWeft(client, dialect)`: the same Prisma client, with what weft needs to run its migrations and check its tags |
+| `@weft-js/db/plugin-prisma` | `withWeft(client, dialect)`: the same Prisma client, with what Weft needs to run its migrations and check its tags |
 | `@weft-js/db/sql`, `/kysely`, `/prisma`, `/mongo`, `/dynamodb`, `/firestore` | List sources: the rows behind a `query` that takes `listInput` from `@weft-js/start/list`, paged, filtered, sorted and searched |
 
 The layers and the list sources each have a `/plugin` subpath for `weft.config.ts`, so `weft check` and the plugin lock know it's there.

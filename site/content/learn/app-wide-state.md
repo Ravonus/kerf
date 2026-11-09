@@ -11,7 +11,7 @@
 Some state belongs to the whole app: the basket that the header counts and the checkout lists, the signed-in user's
 preferences, the document an editor has open. Passing it down from the root would thread it through every layer, and a
 [context](/learn/passing-data-deeply) is built for values that differ by subtree, not one value for everyone.
-`defineState` is weft's tool for this: a named scope of boxes, derived values and actions that any component imports.
+`defineState` is Weft's tool for this: a named scope of boxes, derived values and actions that any component imports.
 
 :::demo scope
 
@@ -86,7 +86,7 @@ two setups that read each other are a cycle, and throw S009.
 
 ## Keeping the update logic in one place
 
-React has `useReducer` for moving update logic out of event handlers into one function. weft has no reducer hook, and
+React has `useReducer` for moving update logic out of event handlers into one function. Weft has no reducer hook, and
 doesn't need one. A scope's actions *are* that place: every way the state can change is a named function next to the
 state, and components only call them.
 
@@ -209,7 +209,7 @@ actions, or for state with many kinds of change that you want to log or replay. 
 are shorter and say the same thing.
 
 :::deepdive Compared with Redux, Zustand and Context with a reducer
-- **Redux** keeps app state in one store, changed by dispatching actions to reducers, and read with selectors. A weft
+- **Redux** keeps app state in one store, changed by dispatching actions to reducers, and read with selectors. A Weft
   app usually has several small scopes instead of one store. Actions are functions on the scope. Selectors aren't
   needed: reads are already fine-grained, so a component that reads `basket.count.value` follows `count` and nothing
   else. Undo, which Redux apps add with a library, is the `history` option.
@@ -217,7 +217,7 @@ are shorter and say the same thing.
   `defineState` is that, with boxes instead of a `set` function, and with persistence, tab sync and undo as options
   rather than middleware.
 - **Context with `useReducer`** is React's built-in answer, and it re-renders every consumer when the value changes.
-  weft splits the two jobs: [`context`](/learn/passing-data-deeply) for values that depend on where in the tree you are,
+  Weft splits the two jobs: [`context`](/learn/passing-data-deeply) for values that depend on where in the tree you are,
   and `defineState` for one shared value, with no re-rendering either way.
 :::
 
@@ -434,7 +434,7 @@ the query. See [Loading data](/learn/loading-data).
 
 - `defineState(name, setup, options?)` makes a named scope. The setup runs once per app, on first use.
 - Components import the scope, read `.value`, and call its actions. Reads are fine-grained: no selectors.
-- Actions keep update logic in one place. weft has no `useReducer`; a reducer is an ordinary function if you want one.
+- Actions keep update logic in one place. Weft has no `useReducer`; a reducer is an ordinary function if you want one.
 - `{ history: { limit } }` gives `$history` with undo and redo, one step per action.
 - `persist` keeps a box through reloads (`local`, `session`, `cookie`, `memory`); objects need a schema, and shape
   changes need `version` and `migrate`.

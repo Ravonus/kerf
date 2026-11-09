@@ -1,4 +1,4 @@
-# weft 1.0: the road to an open-source release
+# Weft 1.0: the road to an open-source release
 
 Written 2026-11-04 from an audit of `main` at `ceb25cda`. It's a plan, so the numbers below are a
 snapshot. Each sprint ends by updating its **Status** line here.
@@ -23,8 +23,8 @@ agent. It ships three things:
 | Code samples | 2,060 lines in site example and demo `.tsx` files are over 80 columns | `site/src/toolkit/examples/*.tsx`, `site/src/demos/` |
 | Core promise | 18 compiler codes are in the catalog but nothing emits them, including every React-ism | See Sprint 4 |
 | CI | `quality.yml` and `runtime-matrix.yml` have failed on every recent push | `gh run list`: Firefox and WebKit missing in CI, a gitleaks hit in `cli/test/deploy.test.mjs` |
-| Size | weft + warp is 53.0 KB br, over the 50 KB ceiling. It was 40.8 KB on 10-31 | `evals/results/compare-history.jsonl` |
-| Speed | weft + warp loads in 210 ms against Solid + Kobalte's 155 ms. weft alone takes 113 ms | Same file |
+| Size | Weft + Warp is 53.0 KB br, over the 50 KB ceiling. It was 40.8 KB on 10-31 | `evals/results/compare-history.jsonl` |
+| Speed | Weft + Warp loads in 210 ms against Solid + Kobalte's 155 ms. Weft alone takes 113 ms | Same file |
 | Agent eval | The head-to-head eval (research 42) is built but has never been run | `evals/agent-eval/`, with nothing in `evals/results/` |
 | Layout | 2,497 of the 5,507 tracked files are in `evals/`, and 1,561 of those are run snapshots | `evals/results/` |
 | Size of code | 99 source files are over 400 lines. Some functions are over 400 lines | `start/src/server.tsx` `createHandler` (601), `start/src/hub.ts` `createHub` (415) |
@@ -183,7 +183,7 @@ docs/            contributor docs, ARCHITECTURE.md, decisions/
 
 ### Sprint 3: KISS and DRY
 
-**Status:** implemented. Accepted measured exceptions are +1,684 B of warp size (51,397 to
+**Status:** implemented. Accepted measured exceptions are +1,684 B of Warp size (51,397 to
 53,081 B) and Firefox text preparation at +8.5% paired median; both have Sprint 5 follow-ups.
 
 Every file under 400 lines and every function under 80, with the allowlist from Sprint 0 empty.
@@ -243,7 +243,7 @@ ESCALATIONS.md and carried into S5.
 
 ### Sprint 4: keep the promise
 
-Design rule 2 says every React habit that's silently wrong in weft is a hard compile error with a
+Design rule 2 says every React habit that's silently wrong in Weft is a hard compile error with a
 fix. At the baseline, these catalog rules had no implementation:
 
 | Code | Catches |
@@ -278,7 +278,7 @@ fix. At the baseline, these catalog rules had no implementation:
 - [x] For each undocumented subpath export (9 in core, 23 in start), either document it in
       `packages/cli/docs` or remove it from `exports`. Commit an API snapshot (`api.json` per
       package) that `check` compares against, so API changes are deliberate.
-- [x] Settle the 1.0 scope in `docs/ARCHITECTURE.md`. In: core, cli, create, start, db, warp,
+- [x] Settle the 1.0 scope in `docs/ARCHITECTURE.md`. In: core, cli, create, start, db, Warp,
       warp-core, warp-icons. Out: native (6a, 6b, 6d), the native half of pay, and anything with
       one conformance test. Unreleased packages get `"private": true` until they're ready, so
       `release.mjs` and the README agree.
@@ -308,7 +308,7 @@ in this record. Both remain unverified; package scope does not establish a pass.
 The archived plan's §11 questions have these dispositions:
 
 - `.value` in JSX: required; W015 catches bare boxes.
-- Compiler spike: settled, then superseded by weft's own backend.
+- Compiler spike: settled, then superseded by Weft's own backend.
 - Event replay: capture script for lazy-island pages.
 - Partial hydration: inferred by default, with explicit overrides.
 - Lazy islands: inferred by default, with explicit overrides.
@@ -323,14 +323,14 @@ The archived plan's §11 questions have these dispositions:
 - Better Auth on Native connections across engines: defer pending cross-engine proof.
 - Default `idiom`: defer the choice and wizard behavior.
 - Store payment policy ownership and refresh cadence: defer; no owner decision is recorded here.
-- Names: weft is the framework; warp is its default UI toolkit.
-- warp-core: framework-independent behavior and CSS; the `/weft` binding imports weft.
+- Names: Weft is the framework; Warp is its default UI toolkit.
+- warp-core: framework-independent behavior and CSS; the `/weft` binding imports Weft.
 
 ### Sprint 5: prove it (size and load time)
 
 **Status:** in progress. Final owner scope, 2026-11-05: T01, T02 and T05.
 
-- [ ] Get the comparison dashboard's weft + warp JS+CSS Brotli total below 51,200 B.
+- [ ] Get the comparison dashboard's Weft + Warp JS+CSS Brotli total below 51,200 B.
       Recover S3's growth from 51,397 B to 53,081 B without changing the UI or behavior.
 - [x] Run `benchmarks/compare/measure.mjs` once on Yuna against Solid + Kobalte and
       record the first-load numbers.
@@ -338,7 +338,7 @@ The archived plan's §11 questions have these dispositions:
       reproduction. The site's numbers link to it.
 
 S5 measurement (Yuna M3 Pro, Node 26.13.0, source `1b397bf4`): first-load task
-time is 215 ms for weft + warp and 150 ms for Solid + Kobalte; FCP is 204 ms and
+time is 215 ms for Weft + Warp and 150 ms for Solid + Kobalte; FCP is 204 ms and
 132 ms. Style time is 70 ms and 3 ms. The six-stack command exits 0 and all nine
 parity steps pass for each stack. Warp long-list `heightMoved` is 0 despite an
 empty error list, so scrolling acceptance remains unverified. Dashboard JS+CSS
@@ -355,7 +355,7 @@ the other stacks retain their byte totals. At least 1,289 B of recovery remains.
 
 The private cell helper change at `546a6065` measures 52,464 B (29,790 B JS +
 22,674 B CSS), another 24 B reduction. Same-setup production runs exit 0 with all
-54 parity steps passing and 1,590 sampled warp nodes in both. Task times are
+54 parity steps passing and 1,590 sampled Warp nodes in both. Task times are
 222/159 ms for control warp/Solid and 240/172 ms for candidate warp/Solid; the
 unchanged stacks also slow in the later run, so no speedup is claimed. Warp
 long-list `heightMoved` stays 0. At least 1,265 B of size recovery remains.
@@ -363,7 +363,7 @@ long-list `heightMoved` stays 0. At least 1,265 B of size recovery remains.
 The private Row/Fields/Editor/Sheet helper change at `47af9980` measures 52,411 B
 (29,737 B JS + 22,674 B CSS), 53 B below the fresh `97a2eaa0` control. It still
 needs 1,212 B to be strictly below 51,200 B. Both canonical comparison runs pass
-54 parity steps; warp keeps 1,590 sampled nodes and its design checks. Task time
+54 parity steps; Warp keeps 1,590 sampled nodes and its design checks. Task time
 is 236→240 ms against Solid's 173→169 ms; these ordered runs do not isolate a
 speed effect. Warp's long-list heightMoved remains zero, so scrolling is not
 proven. Full source-labeled evidence: S5 `manager-size-35/size-receipts.tar.gz`.
@@ -371,7 +371,7 @@ proven. Full source-labeled evidence: S5 `manager-size-35/size-receipts.tar.gz`.
 The Select private state and Item helper changes at `721fde60` measure 52,333 B
 (29,659 B JS + 22,674 B CSS), 78 B below the fresh `ce1c4ccb` control. Tuples alone
 measure 52,407 B. All other stacks retain identical sizes. Both canonical runs
-pass 54 parity steps; warp retains 1,590 sampled nodes and its design checks.
+pass 54 parity steps; Warp retains 1,590 sampled nodes and its design checks.
 Task time is 225→238 ms against Solid's 173→168 ms; style is 70→77 ms despite
 identical CSS. No isolated code speed effect is inferred. Long-list heightMoved
 remains zero. At least 1,134 B of recovery remains before the strict ceiling.
@@ -381,7 +381,7 @@ The equivalent Unicode-alias change at `5f9b1f44` measures 52,308 B (29,634 B JS
 22,674 B CSS), 25 B below the fresh `f1738f86` control. All other stack sizes and
 emitted CSS match; emitted dashboard JS differs only in that regex. Exhaustive
 Node 26 comparison checks 1,114,112 code points with zero mismatches. Both
-canonical runs pass 54 parity steps; warp retains 1,590 sampled nodes and its
+canonical runs pass 54 parity steps; Warp retains 1,590 sampled nodes and its
 design checks. Task time is 239→235 ms against Solid's 170→172 ms; no isolated
 speedup is claimed. Long-list heightMoved remains zero. At least 1,109 B of
 recovery remains. Full evidence: S5 `manager-size-44/size-receipts.tar.gz`.
@@ -405,7 +405,7 @@ Everything a first-time visitor and their agent expect to find.
 **Files.** These exist: LICENSE, CODE_OF_CONDUCT, CONTRIBUTING, SECURITY, and issue and PR
 templates. Add:
 
-- [ ] `AGENTS.md` at the root: what weft is, the commands, the rules above and where things live.
+- [ ] `AGENTS.md` at the root: what Weft is, the commands, the rules above and where things live.
       Add nested `AGENTS.md` files in `packages/core`, `packages/start`, `packages/warp` and
       `crates/weft-compiler`. Keep the root `CLAUDE.md` as one line pointing to `AGENTS.md`.
 - [ ] `docs/ARCHITECTURE.md`: how compile, runtime and SSR fit together, and a map of the folders.
@@ -446,7 +446,7 @@ through the steps above with only the README. `1.0.0-rc.0` is published to the `
 
 ### Sprint 8: theme anything
 
-Added by the owner on 2026-11-08, before the public release. Today warp's look follows one accent hue, default 152
+Added by the owner on 2026-11-08, before the public release. Today Warp's look follows one accent hue, default 152
 (green). `warp({ seed })` moves the hue and `tokens` takes raw `--warp-*` names, but there's no plain way to recolour one
 part: a button's fill and its hover, the sweep stroke that animates over a control and the text colour while it runs, the
 nav and tabs underline, links. An app can't ship two named themes and switch between them either. The goal is a theme
@@ -494,7 +494,7 @@ warp({
 })
 ```
 
-**Not just colour** (owner, 2026-11-08). warp keeps its locked default look, but it has to be as open as any UI
+**Not just colour** (owner, 2026-11-08). Warp keeps its locked default look, but it has to be as open as any UI
 system. Everything a component reads from a token that's reasonable to change is themeable, at every level: the
 system scale, one part, one state, one named theme, one element.
 
@@ -507,7 +507,7 @@ system scale, one part, one state, one named theme, one element.
   field label, floated label, badge, eyebrow, headings).
 - Depth: shadows and elevation per part and state.
 - Motion: sweep duration and easing, hover, press and enter durations, stagger, and turning a part's animation off.
-- Layout: max widths, container padding, and breakpoints where warp has them.
+- Layout: max widths, container padding, and breakpoints where Warp has them.
 
 The same names work in `system` (the scale every part reads: `space`, `radius`, `font`, `text`, `shadow`,
 `motion`, like Tailwind's `theme`) and in `parts`, for example:
@@ -571,7 +571,7 @@ differs from the plan below:
       the other dials do, and any element or subtree can take `data-<attr>="ocean"` to use a different one.
 - [ ] Per element: components take an optional `tone` (a name from `colors` or a theme) where a one-off colour makes
       sense (Button, Badge, Pill, Link, Nav), so one button can be different with no CSS.
-- [ ] Tailwind: the warp Tailwind entry exposes the named colours as utilities (`bg-brand`, `text-brand/80`).
+- [ ] Tailwind: the Warp Tailwind entry exposes the named colours as utilities (`bg-brand`, `text-brand/80`).
 - [ ] Component pages (`site/src/components/ComponentPage.tsx`, the per-component entries in `site/src/toolkit`):
       each component's page gets a "Theming" section next to `PropsTable`, generated from the same parts table:
       every part, property and state it exposes, its default, and the `warp({ parts })` key and `--warp-<part>-*`
@@ -604,7 +604,7 @@ icon page (`data-flow="icon"`), it stays tilted, shrunk and faded for as long as
       scale or rotate within a second, and that scrolling on still looks the same as today. No cost when a page has
       no flowed elements. Reduced motion is unchanged.
 
-**Exit:** with no theme config, warp's CSS and screenshots are unchanged. With the config above, every listed part shows
+**Exit:** with no theme config, Warp's CSS and screenshots are unchanged. With the config above, every listed part shows
 the configured colours at rest, on hover, and during the sweep, in light and dark, and switching to `ocean` at runtime
 changes all of them. Warp stays within its size budget (`size.mjs`), and `measure.mjs` shows no speed regression.
 
@@ -675,7 +675,7 @@ become errors last, once the lists are empty. Stall rule: two failed tries at fi
 split it differently or record it in the allowance with a reason, and move on.
 
 **Exit:** every check above is an error and passes with empty allowances, or with each remaining entry carrying a
-reason. Tests, API snapshots, `size.mjs` and `measure.mjs` show no change beyond noise, and warp's size doesn't grow.
+reason. Tests, API snapshots, `size.mjs` and `measure.mjs` show no change beyond noise, and Warp's size doesn't grow.
 
 **Shared files with Sprint 9.** Sprint 10 runs at the same time and owns the CSS pipeline: `packages/core/vite/**`,
 `packages/core/node/purge*`, `packages/warp/plugin.mjs`, `packages/warp/src/plugin/**`, `packages/warp-core/scripts/**`,
@@ -684,8 +684,8 @@ then gives them their own cleanup ticket.
 
 ### Sprint 10: compiled CSS
 
-Added by the owner on 2026-11-09. On the compare dashboard warp ships 22.9 KB br of CSS against Solid + Kobalte's 1.4 KB.
-Kobalte is headless, so that gap is mostly design, not waste, but the shape of warp's CSS still leaves bytes on the
+Added by the owner on 2026-11-09. On the compare dashboard Warp ships 22.9 KB br of CSS against Solid + Kobalte's 1.4 KB.
+Kobalte is headless, so that gap is mostly design, not waste, but the shape of Warp's CSS still leaves bytes on the
 table. Measured on that dashboard's CSS: 2,906 declarations of which 1,495 are distinct, 1,886 `var()` lookups (41 KB
 raw), and about 4 KB br of dial rules. Short class names save only 5% and atomic output about 15%: the bytes are in how
 much of the design stays switchable at run time. The goal is a hybrid: customisable through config like today, with
@@ -699,10 +699,10 @@ the build paying only for what can actually change while the page runs.
    least 15% br on its own; below that, report and move to step 2.
 2. **Dials fixed by config.** `warp({ dials: { expression: 'balanced', density: 'cozy' } })`: a fixed dial ships its
    one stop. A dial left open (or switched with `setDial`) keeps all of them, as today.
-3. **Variants from the compiler, not words.** The weft compiler already sees literal props: `emphasis="ghost"`,
+3. **Variants from the compiler, not words.** The Weft compiler already sees literal props: `emphasis="ghost"`,
    `tone="critical"`. It records each component's literal variant values per build, and the purge keeps exactly those.
    A dynamic value (`tone={row.tone}`) keeps every variant of that prop, so nothing breaks. This replaces word matching
-   for warp's own keyed attributes. `purge: { keep }` still works.
+   for Warp's own keyed attributes. `purge: { keep }` still works.
 4. **Atomic output for flat declarations.** A declaration on a single compound selector with no combinator is written
    once per distinct value and shared across components. Complex selectors stay rules. Only if it wins on bytes *and*
    on `measure.mjs` style time; skip it otherwise.
@@ -711,7 +711,7 @@ the build paying only for what can actually change while the page runs.
 config, and a theme switched at run time still repaints every part. No new runtime cost: `measure.mjs` load, style and
 layout times stay within noise. Every step lands on its own with its numbers, and a step that doesn't pay is dropped.
 
-**Exit:** the compare dashboard's warp CSS is at most 16 KB br with no screenshot or speed regression, or the sprint
+**Exit:** the compare dashboard's Warp CSS is at most 16 KB br with no screenshot or speed regression, or the sprint
 report shows each step's measured result and why it stopped where it did.
 
 ## Decisions to confirm
@@ -722,7 +722,7 @@ Each has a default. The plan proceeds on the default unless the owner says other
 |---|---|---|
 | Code on phones | Hanging-indent wrap at spaces | Horizontal scroll with an edge fade |
 | Source width | 100 for TS and Rust | 80 (react.dev, Vite) or 120 (today's `rustfmt`) |
-| Formatter | `oxfmt`, part of the Oxc toolchain weft already uses | Prettier or Biome |
+| Formatter | `oxfmt`, part of the Oxc toolchain Weft already uses | Prettier or Biome |
 | Archive for research, run snapshots and spikes | An archive git tag, plus an eval-results repo | Keep them in `docs/archive/` |
 | Folder renames (`weft` to `core`, and so on) | Rename in Sprint 2 | Keep the current names and document the mapping |
 | Unreleased add-ons | `private: true` until each has real tests | Publish as `0.x` experimental |
