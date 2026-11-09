@@ -60,3 +60,34 @@ it('rejects an unclosed optional themed block', () => {
     'Unclosed theme-only block',
   )
 })
+
+it('lowers noncolour system and Button reads without changing their fallbacks', () => {
+  const foundation = readFileSync('styles/themed/warp.css', 'utf8')
+  const button = readFileSync('styles/themed/components/button.css', 'utf8')
+  for (const name of [
+    'space-related',
+    'radius-control',
+    'font-sans',
+    'text-button-size',
+    'elevation-1',
+    'sweep-duration',
+  ]) {
+    expect(foundation).toContain(`var(--warp-config-system-${name},`)
+  }
+  for (const name of [
+    'gap',
+    'padding-inline',
+    'border-width',
+    'radius',
+    'font-family',
+    'font-size',
+    'font-weight',
+    'font-letter-spacing',
+  ]) {
+    expect(button).toContain(`var(--warp-button-${name},var(--warp-config-part-button-${name},`)
+    expect(foundation).toContain(
+      `@property --warp-button-${name} { syntax: "*"; inherits: false; }`,
+    )
+    expect(() => lowerTheme(`var(--warp-button-${name})`, themeNames)).toThrow('Missing fallback')
+  }
+})

@@ -169,12 +169,12 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   --_fill: var(--_solid); --_ink: var(--_ink-on); --_edge: transparent;
   --_layer: var(--_solid-hover); --_layer-a: 1;
   position: relative; isolation: isolate;
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--warp-space-related);
-  block-size: var(--warp-control-md); padding-inline: calc(var(--warp-pad-control) + 2px); margin: 0;
-  border: var(--warp-border-hairline) solid var(--warp-button-border,var(--warp-config-part-button-border,var(--warp-tone-edge, var(--_edge)))); border-radius: var(--warp-radius-control);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--warp-button-gap,var(--warp-config-part-button-gap,var(--warp-space-related)));
+  block-size: var(--warp-control-md); padding-inline: var(--warp-button-padding-inline,var(--warp-config-part-button-padding-inline,calc(var(--warp-pad-control) + 2px))); margin: 0;
+  border: var(--warp-button-border-width,var(--warp-config-part-button-border-width,var(--warp-border-hairline))) solid var(--warp-button-border,var(--warp-config-part-button-border,var(--warp-tone-edge, var(--_edge)))); border-radius: var(--warp-button-radius,var(--warp-config-part-button-radius,var(--warp-radius-control)));
   background: var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-fill, var(--_fill)))); color: var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-tone-ink, var(--_ink))));
-  font-family: var(--warp-text-button-font); font-size: var(--warp-text-button-size);
-  font-weight: var(--warp-text-button-weight); letter-spacing: var(--warp-text-button-tracking);
+  font-family: var(--warp-button-font-family,var(--warp-config-part-button-font-family,var(--warp-text-button-font))); font-size: var(--warp-button-font-size,var(--warp-config-part-button-font-size,var(--warp-text-button-size)));
+  font-weight: var(--warp-button-font-weight,var(--warp-config-part-button-font-weight,var(--warp-text-button-weight))); letter-spacing: var(--warp-button-font-letter-spacing,var(--warp-config-part-button-font-letter-spacing,var(--warp-text-button-tracking)));
   text-transform: var(--warp-text-button-case); line-height: 1; white-space: nowrap; text-decoration: none;
   cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   /* release: the spring. Press (below) is instant, and so is hover's colour: nothing waits on the thread clock */
