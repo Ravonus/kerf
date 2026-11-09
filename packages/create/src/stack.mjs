@@ -1,4 +1,4 @@
-// The `--db` and `--auth` part of a scaffold (research 28 §6): a database, a todo app on it, and with `--auth` a
+// The `--db` and `--auth` part of a scaffold: a database, a todo app on it, and with `--auth` a
 // sign-in/sign-up flow and a guarded `/todos`. Pinned versions, so a scaffold builds what the matrix tested.
 import { readFileSync } from 'node:fs'
 import {

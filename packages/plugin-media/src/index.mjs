@@ -1,4 +1,4 @@
-// media() for weft.config.ts (research 15 §7.4, research 26 §2, research 29 §6): provides media.build@1 (src/build.mjs,
+// media() for weft.config.ts: provides media.build@1 (src/build.mjs,
 // run by @weft-js/core/vite for `?media` imports) and media.server@1 (src/server.mjs, the route for uploads and `encoder:
 // 'server'`), and reports M001–M013 and M016 through its `check` hook (src/check.mjs).
 import { fileURLToPath } from 'node:url'

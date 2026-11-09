@@ -1,4 +1,4 @@
-// `--template` (research 40): a real app in `templates/<name>/`, laid over the scaffold. `template.json` holds what it
+// `--template`: a real app in `templates/<name>/`, laid over the scaffold. `template.json` holds what it
 // `requires` (db, auth), its `pages`, its `warp()` options and any `dependencies` of its own; `files/` is copied as it is.
 // A template's Drizzle schema is one dialect's, so it names that dialect, and its `drizzle/` ships with it
 // (scripts/template-migrations.mjs): the app runs on a fresh database, and on one that already has these tables.
