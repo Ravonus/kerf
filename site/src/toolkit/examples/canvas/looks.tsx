@@ -66,19 +66,21 @@ export const LOOKS = {
       }
     },
     type(p, s) {
-      words(p, s, (ctx) => {
-        const g = ctx.createLinearGradient(
-          p.x,
-          p.y,
-          p.x + p.w,
-          p.y + p.h,
-        )
-        g.addColorStop(0, s.color(TOKENS.accent))
-        g.addColorStop(
-          1,
-          s.color('--warp-color-info-solid'),
-        )
-        ctx.fillStyle = g
+      words(p, s, {
+        fill: (ctx) => {
+          const g = ctx.createLinearGradient(
+            p.x,
+            p.y,
+            p.x + p.w,
+            p.y + p.h,
+          )
+          g.addColorStop(0, s.color(TOKENS.accent))
+          g.addColorStop(
+            1,
+            s.color('--warp-color-info-solid'),
+          )
+          ctx.fillStyle = g
+        },
       })
     },
   }),
@@ -141,28 +143,20 @@ export const LOOKS = {
       }
       outline(
         ctx,
-        p.x,
-        p.y,
-        p.w,
-        p.h,
-        0,
-        LOOKS.sketch.style,
-        seedOf(p.el),
-      )
-      stroke(
-        ctx,
-        s.color(TOKENS.ink),
-        1.5,
+        { ...p, r: 0, seed: seedOf(p.el) },
         LOOKS.sketch.style,
       )
+      stroke(ctx, LOOKS.sketch.style, {
+        color: s.color(TOKENS.ink),
+        width: 1.5,
+      })
     },
     type(p, s) {
-      words(
-        p,
-        s,
-        (ctx) => (ctx.fillStyle = s.color(TOKENS.ink)),
-        0.04,
-      )
+      words(p, s, {
+        fill: (ctx) =>
+          (ctx.fillStyle = s.color(TOKENS.ink)),
+        tilt: 0.04,
+      })
     },
   }),
   neon: lookKit({
@@ -261,22 +255,24 @@ export const LOOKS = {
     type(p, s) {
       s.ctx.shadowColor = s.color(LOOKS.neon.style.accent)
       s.ctx.shadowBlur = 18
-      words(p, s, (ctx) => {
-        const g = ctx.createLinearGradient(
-          p.x,
-          p.y,
-          p.x,
-          p.y + p.h,
-        )
-        g.addColorStop(
-          0,
-          s.color('light-dark(#0aa6c9, #28e7ff)'),
-        )
-        g.addColorStop(
-          1,
-          s.color(LOOKS.neon.style.accent),
-        )
-        ctx.fillStyle = g
+      words(p, s, {
+        fill: (ctx) => {
+          const g = ctx.createLinearGradient(
+            p.x,
+            p.y,
+            p.x,
+            p.y + p.h,
+          )
+          g.addColorStop(
+            0,
+            s.color('light-dark(#0aa6c9, #28e7ff)'),
+          )
+          g.addColorStop(
+            1,
+            s.color(LOOKS.neon.style.accent),
+          )
+          ctx.fillStyle = g
+        },
       })
     },
   }),

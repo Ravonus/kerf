@@ -62,16 +62,23 @@ export const rng = (seed: number) => () => {
   return seed / 2147483647 - 0.5
 }
 
+type Pt = [number, number]
+
+export type Box = {
+  x: number
+  y: number
+  w: number
+  h: number
+  r: number
+  seed: number
+}
+
 export function outline(
   ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number,
+  box: Box,
   st: Style,
-  seed: number,
 ) {
+  const { x, y, w, h, r, seed } = box
   ctx.beginPath()
   if (!st.rough) {
     ctx.roundRect(x, y, w, h, Math.min(r, h / 2, w / 2))
@@ -79,27 +86,24 @@ export function outline(
   }
   const j = rng(seed),
     k = st.rough,
-    pts: [number, number][] = []
-  const edge = (
-    ax: number,
-    ay: number,
-    bx: number,
-    by: number,
-  ) => {
+    pts: Pt[] = []
+  const edge = (a: Pt, b: Pt) => {
     const n = Math.max(
       2,
-      Math.round(Math.hypot(bx - ax, by - ay) / 28),
+      Math.round(
+        Math.hypot(b[0] - a[0], b[1] - a[1]) / 28,
+      ),
     )
     for (let i = 0; i < n; i++)
       pts.push([
-        ax + ((bx - ax) * i) / n + j() * k,
-        ay + ((by - ay) * i) / n + j() * k,
+        a[0] + ((b[0] - a[0]) * i) / n + j() * k,
+        a[1] + ((b[1] - a[1]) * i) / n + j() * k,
       ])
   }
-  edge(x, y, x + w, y)
-  edge(x + w, y, x + w, y + h)
-  edge(x + w, y + h, x, y + h)
-  edge(x, y + h, x, y)
+  edge([x, y], [x + w, y])
+  edge([x + w, y], [x + w, y + h])
+  edge([x + w, y + h], [x, y + h])
+  edge([x, y + h], [x, y])
   ctx.moveTo(pts[0]![0], pts[0]![1])
   for (let i = 1; i <= pts.length; i++) {
     const [px, py] = pts[i % pts.length]!
@@ -110,10 +114,10 @@ export function outline(
 
 export function stroke(
   ctx: CanvasRenderingContext2D,
-  color: string,
-  width: number,
   st: Style,
+  pen: { color: string; width: number },
 ) {
+  const { color, width } = pen
   ctx.strokeStyle = color
   ctx.lineWidth = width
   ctx.lineJoin = ctx.lineCap = 'round'
@@ -127,11 +131,14 @@ export function stroke(
 
 export function paint(
   ctx: CanvasRenderingContext2D,
-  color: string,
   st: Style,
-  box: [number, number, number, number],
-  density = 1,
+  fill: {
+    color: string
+    box: [number, number, number, number]
+    density?: number
+  },
 ) {
+  const { color, box, density = 1 } = fill
   if (!st.hatch) {
     ctx.fillStyle = color
     ctx.fill()
@@ -168,37 +175,42 @@ export type PaintLift = (
 export type PaintBody = (
   p: StagePiece,
   s: Scene,
-  fill: string,
-  line: string,
-  width?: number,
-  solid?: boolean,
+  look: {
+    fill: string
+    line: string
+    width?: number
+    solid?: boolean
+  },
 ) => void
+
+export type Hands = {
+  c: PaintColor
+  ring: PaintRing
+  lift: PaintLift
+  body: PaintBody
+}
 
 export function surfacePainters(
   st: Style,
-  c: PaintColor,
-  ring: PaintRing,
-  lift: PaintLift,
-  body: PaintBody,
+  hands: Hands,
 ): Record<string, StagePainter> {
+  const { c, ring, lift, body } = hands
   return {
     button(p, s) {
       const outlineOnly = p.el.dataset.look === 'outline',
         y = p.press * 2
       lift({ ...p, y: p.y + y }, s, 4 - p.press * 3)
       const at = { ...p, y: p.y + y }
-      body(
-        at,
-        s,
-        outlineOnly
+      body(at, s, {
+        fill: outlineOnly
           ? c(s, p.hover ? st.soft : st.paper)
           : c(s, p.disabled ? st.soft : st.accent),
-        c(
+        line: c(
           s,
           outlineOnly || st.rough ? st.ink : st.accent,
         ),
-        outlineOnly ? 1.5 : 1,
-      )
+        width: outlineOnly ? 1.5 : 1,
+      })
       if (p.hover && !st.hatch && !outlineOnly) {
         const g = s.ctx.createRadialGradient(
           p.x + p.px,
@@ -213,16 +225,7 @@ export function surfacePainters(
           `rgb(255 255 255 / ${0.28 * p.hover})`,
         )
         g.addColorStop(1, 'rgb(255 255 255 / 0)')
-        outline(
-          s.ctx,
-          at.x,
-          at.y,
-          at.w,
-          at.h,
-          at.r,
-          st,
-          seedOf(p.el),
-        )
+        outline(s.ctx, { ...at, seed: seedOf(p.el) }, st)
         s.ctx.fillStyle = g
         s.ctx.fill()
       }
@@ -232,11 +235,9 @@ export function surfacePainters(
       const live = p.el.matches('a[href], button'),
         chosen = p.on > 0.5
       lift(p, s, 6 + (live ? p.hover * 6 : 0))
-      body(
-        p,
-        s,
-        c(s, st.paper),
-        c(
+      body(p, s, {
+        fill: c(s, st.paper),
+        line: c(
           s,
           chosen
             ? st.accent
@@ -244,13 +245,18 @@ export function surfacePainters(
               ? st.ink
               : st.soft,
         ),
-        chosen ? 3 : 1.5,
-      )
+        width: chosen ? 3 : 1.5,
+      })
       ring(p, s)
     },
     panel(p, s) {
       lift(p, s, 14)
-      body(p, s, c(s, st.paper), c(s, st.ink), 1.5, true)
+      body(p, s, {
+        fill: c(s, st.paper),
+        line: c(s, st.ink),
+        width: 1.5,
+        solid: true,
+      })
     },
   }
 }

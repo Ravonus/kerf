@@ -96,18 +96,23 @@ export const initials = (name: string) =>
 export const card = (
   id: string,
   title: string,
-  label: string,
-  color: number,
-  who: string,
-  meta?: string,
-): KanbanCardData => ({
-  id,
-  title,
-  label,
-  color,
-  assignee: initials(who),
-  meta,
-})
+  tag: {
+    label: string
+    color: number
+    who: string
+    meta?: string
+  },
+): KanbanCardData => {
+  const { label, color, who, meta } = tag
+  return {
+    id,
+    title,
+    label,
+    color,
+    assignee: initials(who),
+    meta,
+  }
+}
 
 export const BOARD: KanbanColumn[] = [
   {
@@ -115,29 +120,23 @@ export const BOARD: KanbanColumn[] = [
     title: 'To do',
     color: 8,
     cards: [
-      card(
-        't1',
-        'Rotate the edge cache keys',
-        'Ops',
-        2,
-        'Jun',
-        'Nov 4',
-      ),
-      card(
-        't2',
-        'Add Apple Pay to the receipts',
-        'Web',
-        1,
-        'Tomás',
-        'Nov 6',
-      ),
-      card(
-        't3',
-        'Write the ranking rollout notes',
-        'Docs',
-        5,
-        'Lena',
-      ),
+      card('t1', 'Rotate the edge cache keys', {
+        label: 'Ops',
+        color: 2,
+        who: 'Jun',
+        meta: 'Nov 4',
+      }),
+      card('t2', 'Add Apple Pay to the receipts', {
+        label: 'Web',
+        color: 1,
+        who: 'Tomás',
+        meta: 'Nov 6',
+      }),
+      card('t3', 'Write the ranking rollout notes', {
+        label: 'Docs',
+        color: 5,
+        who: 'Lena',
+      }),
     ],
   },
   {
@@ -146,22 +145,18 @@ export const BOARD: KanbanColumn[] = [
     color: 1,
     limit: 3,
     cards: [
-      card(
-        't4',
-        'Retry timed out upstream calls',
-        'Mobile',
-        3,
-        'Sam',
-        'Nov 2',
-      ),
-      card(
-        't5',
-        'Rank exact matches first',
-        'Search',
-        4,
-        'Lena',
-        'Nov 3',
-      ),
+      card('t4', 'Retry timed out upstream calls', {
+        label: 'Mobile',
+        color: 3,
+        who: 'Sam',
+        meta: 'Nov 2',
+      }),
+      card('t5', 'Rank exact matches first', {
+        label: 'Search',
+        color: 4,
+        who: 'Lena',
+        meta: 'Nov 3',
+      }),
     ],
   },
   {
@@ -169,13 +164,11 @@ export const BOARD: KanbanColumn[] = [
     title: 'In review',
     color: 4,
     cards: [
-      card(
-        't6',
-        'Prorate seats on plan change',
-        'Billing',
-        6,
-        'Mara',
-      ),
+      card('t6', 'Prorate seats on plan change', {
+        label: 'Billing',
+        color: 6,
+        who: 'Mara',
+      }),
     ],
   },
   {
@@ -183,20 +176,16 @@ export const BOARD: KanbanColumn[] = [
     title: 'Done',
     color: 7,
     cards: [
-      card(
-        't7',
-        'Cache product images at the edge',
-        'Web',
-        1,
-        'Priya',
-      ),
-      card(
-        't8',
-        'Lower the stale window to 30s',
-        'Ops',
-        2,
-        'Jun',
-      ),
+      card('t7', 'Cache product images at the edge', {
+        label: 'Web',
+        color: 1,
+        who: 'Priya',
+      }),
+      card('t8', 'Lower the stale window to 30s', {
+        label: 'Ops',
+        color: 2,
+        who: 'Jun',
+      }),
     ],
   },
 ]
@@ -207,13 +196,11 @@ export const OVER: KanbanColumn[] = [
     title: 'To do',
     color: 8,
     cards: [
-      card(
-        'o1',
-        'Rotate the edge cache keys',
-        'Ops',
-        2,
-        'Jun',
-      ),
+      card('o1', 'Rotate the edge cache keys', {
+        label: 'Ops',
+        color: 2,
+        who: 'Jun',
+      }),
     ],
   },
   {
@@ -222,27 +209,21 @@ export const OVER: KanbanColumn[] = [
     color: 1,
     limit: 2,
     cards: [
-      card(
-        'o2',
-        'Retry timed out upstream calls',
-        'Mobile',
-        3,
-        'Sam',
-      ),
-      card(
-        'o3',
-        'Rank exact matches first',
-        'Search',
-        4,
-        'Lena',
-      ),
-      card(
-        'o4',
-        'Prorate seats on plan change',
-        'Billing',
-        6,
-        'Mara',
-      ),
+      card('o2', 'Retry timed out upstream calls', {
+        label: 'Mobile',
+        color: 3,
+        who: 'Sam',
+      }),
+      card('o3', 'Rank exact matches first', {
+        label: 'Search',
+        color: 4,
+        who: 'Lena',
+      }),
+      card('o4', 'Prorate seats on plan change', {
+        label: 'Billing',
+        color: 6,
+        who: 'Mara',
+      }),
     ],
   },
 ]
