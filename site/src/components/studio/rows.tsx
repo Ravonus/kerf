@@ -108,9 +108,9 @@ export function PickRow(props: {
       <span data-studio="label">{props.label}</span>
       <CompactSelect
         label={props.label}
-        value={(getIn(props.cfg.value, props.path) as string | undefined) ?? ''}
-        options={[{ value: '', label: 'Auto' }, ...props.options]}
-        onValueChange={(v) => edit(props.cfg, props.path, v || undefined)}
+        value={(getIn(props.cfg.value, props.path) as string | undefined) ?? 'auto'}
+        options={[{ value: 'auto', label: 'Auto' }, ...props.options]}
+        onValueChange={(v) => edit(props.cfg, props.path, v === 'auto' ? undefined : v)}
       />
     </div>
   )

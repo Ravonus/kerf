@@ -130,7 +130,7 @@ export function ShapeControls(props: { cfg: Cfg }) {
       <NumberRow
         cfg={c}
         path={['system', 'radius', 'control']}
-        label="Control corners"
+        label="Controls"
         min={0}
         max={24}
         auto={4}
@@ -139,7 +139,7 @@ export function ShapeControls(props: { cfg: Cfg }) {
       <NumberRow
         cfg={c}
         path={['system', 'radius', 'surface']}
-        label="Surface corners"
+        label="Surfaces"
         min={0}
         max={32}
         auto={5}
@@ -148,7 +148,7 @@ export function ShapeControls(props: { cfg: Cfg }) {
       <NumberRow
         cfg={c}
         path={['system', 'radius', 'mark']}
-        label="Checkbox corners"
+        label="Checkboxes"
         min={0}
         max={10}
         step={0.5}
@@ -168,7 +168,7 @@ export function ShapeControls(props: { cfg: Cfg }) {
       <NumberRow
         cfg={c}
         path={['system', 'border', 'emphasis']}
-        label="Emphasis border"
+        label="Emphasis"
         min={1}
         max={4}
         step={0.5}
@@ -198,7 +198,7 @@ export function TypeControls(props: { cfg: Cfg }) {
       <NumberRow
         cfg={c}
         path={['system', 'text', 'heading', 'weight']}
-        label="Heading weight"
+        label="Head weight"
         min={300}
         max={800}
         step={50}
@@ -224,7 +224,7 @@ export function SpaceControls(props: { cfg: Cfg }) {
       <NumberRow
         cfg={c}
         path={['system', 'space', 'related']}
-        label="Related gap"
+        label="Small gap"
         min={2}
         max={16}
         auto={8}
@@ -242,7 +242,7 @@ export function SpaceControls(props: { cfg: Cfg }) {
       <NumberRow
         cfg={c}
         path={['system', 'pad', 'control']}
-        label="Control padding"
+        label="Control pad"
         min={4}
         max={28}
         auto={10}
@@ -251,7 +251,7 @@ export function SpaceControls(props: { cfg: Cfg }) {
       <NumberRow
         cfg={c}
         path={['system', 'pad', 'surface']}
-        label="Surface padding"
+        label="Surface pad"
         min={8}
         max={48}
         auto={17}
@@ -260,7 +260,7 @@ export function SpaceControls(props: { cfg: Cfg }) {
       <NumberRow
         cfg={c}
         path={['system', 'control', 'md']}
-        label="Control height"
+        label="Height"
         min={24}
         max={56}
         auto={34}

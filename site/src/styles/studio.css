@@ -318,7 +318,7 @@
 
 /* a slider row on one line: label · track · value, like the other rows (the head's pieces join the row's grid) */
 [data-site='studio'] [data-studio='row'] > div:has(> [data-scope='range-head']) {
-  grid-template-columns: 80px minmax(0, 1fr) 44px;
+  grid-template-columns: 84px minmax(0, 1fr) 44px;
   align-items: center;
 }
 [data-site='studio'] [data-studio='row'] [data-scope='range-head'] {
