@@ -2,65 +2,62 @@ import http from 'node:http'
 import { brotliCompressSync, constants } from 'node:zlib'
 import { median } from '../stats.mjs'
 
+function timedGet({ agent, hostname, port, path, cookie }, m) {
+  return new Promise((ok) => {
+    const t = performance.now()
+    let tail = '',
+      seen = false
+    const headers = {
+      'accept-encoding': 'identity',
+      accept: 'text/html',
+      ...(cookie && { cookie }),
+    }
+    http
+      .get({ agent, hostname, port, path, headers }, (r) => {
+        m.first.push(performance.now() - t)
+        r.setEncoding('latin1')
+        r.on('data', (d) => {
+          if (!seen && (tail + d).includes('</head>')) {
+            seen = true
+            m.head.push(performance.now() - t)
+          }
+          tail = d.slice(-6)
+        })
+        r.on('end', () => {
+          if (r.statusCode >= 400) m.bad++
+          ok()
+        })
+      })
+      .on('error', () => {
+        m.bad++
+        ok()
+      })
+  })
+}
+
+function percentiles({ first, head, bad }) {
+  first.sort((a, b) => a - b)
+  const at = (p) => first[Math.min(first.length - 1, Math.floor(first.length * p))] ?? null
+  return {
+    p50: at(0.5),
+    p95: at(0.95),
+    p99: at(0.99),
+    head: head.length ? median(head) : null,
+    errors: bad,
+  }
+}
+
 /** Time to first byte and to the `</head>` byte, closed loop. Uncompressed: a compressed stream hides where the byte is. */
 export function ttfbPass(url, { connections = 10, seconds = 2, cookie } = {}) {
   const agent = new http.Agent({ keepAlive: true, maxSockets: connections }),
     { hostname, port, pathname, search } = new URL(url)
-  const first = [],
-    head = [],
+  const m = { first: [], head: [], bad: 0 },
     end = performance.now() + seconds * 1000
-  let bad = 0
-  const one = () =>
-    new Promise((ok) => {
-      if (performance.now() > end) return ok()
-      const t = performance.now()
-      let tail = '',
-        seen = false
-      http
-        .get(
-          {
-            agent,
-            hostname,
-            port,
-            path: pathname + search,
-            headers: {
-              'accept-encoding': 'identity',
-              accept: 'text/html',
-              ...(cookie && { cookie }),
-            },
-          },
-          (r) => {
-            first.push(performance.now() - t)
-            r.setEncoding('latin1')
-            r.on('data', (d) => {
-              if (!seen && (tail + d).includes('</head>')) {
-                seen = true
-                head.push(performance.now() - t)
-              }
-              tail = d.slice(-6)
-            })
-            r.on('end', () => {
-              if (r.statusCode >= 400) bad++
-              ok(one())
-            })
-          },
-        )
-        .on('error', () => {
-          bad++
-          ok(one())
-        })
-    })
+  const target = { agent, hostname, port, path: pathname + search, cookie }
+  const one = () => (performance.now() > end ? undefined : timedGet(target, m).then(one))
   return Promise.all(Array.from({ length: connections }, one)).then(() => {
     agent.destroy()
-    first.sort((a, b) => a - b)
-    const at = (p) => first[Math.min(first.length - 1, Math.floor(first.length * p))] ?? null
-    return {
-      p50: at(0.5),
-      p95: at(0.95),
-      p99: at(0.99),
-      head: head.length ? median(head) : null,
-      errors: bad,
-    }
+    return percentiles(m)
   })
 }
 

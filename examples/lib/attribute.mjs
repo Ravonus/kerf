@@ -31,14 +31,11 @@ function perSource(mapFile) {
 
 const groupOf = (src, rules) => rules.find(([, re]) => re.test(src))?.[0] ?? 'other'
 
-/** Per page, the JS it loaded split by group, in brotli bytes shared out by each chunk's raw bytes. */
-export function attribute(v, { maps, same, total }, pages) {
-  const rules = (stacks.find((s) => s.id === v.stack.id)?.groups ?? v.stack.groups ?? []).map(
-    ([g, re]) => [g, new RegExp(re)],
-  )
-  // Next's hashes change with maps on, so a chunk is looked up by folder and name, its content hash taken off if that fails.
-  const plain = (n) => n.replace(/-[0-9a-f]{8,20}(\.m?js)$/, '$1')
-  const chunks = new Map(
+// Next's hashes change with maps on, so a chunk is looked up by folder and name, its content hash taken off if that fails.
+const plain = (n) => n.replace(/-[0-9a-f]{8,20}(\.m?js)$/, '$1')
+
+const chunkIndex = (maps) =>
+  new Map(
     maps.flatMap((m) => {
       const n = basename(m, '.map')
       return [
@@ -47,42 +44,53 @@ export function attribute(v, { maps, same, total }, pages) {
       ]
     }),
   )
-  const parsed = new Map()
-  const out = { sourcesMatch: same === total, matched: `${same}/${total}`, pages: {} }
-  for (const [path, page] of Object.entries(pages)) {
-    const groups = {},
-      modules = {}
-    for (const r of page.top.filter((t) => t.type === 'js')) {
-      const file = decodeURIComponent(r.path.split('?')[0]).split('/').slice(-2).join('__')
-      const name = chunks.has(file) ? file : plain(file)
-      if (!chunks.has(name)) {
-        groups.unmapped = (groups.unmapped ?? 0) + r.br
-        continue
-      }
-      if (!parsed.has(name)) parsed.set(name, perSource(chunks.get(name)))
-      const c = parsed.get(name)
-      if (!c) continue
-      const scale = r.br / c.total
-      for (const [src, n] of c.bytes) {
-        const g = groupOf(src, rules),
-          b = n * scale
-        groups[g] = (groups[g] ?? 0) + b
-        const key = src.replace(/^(\.\.\/)+/, '')
-        modules[key] = (modules[key] ?? 0) + b
-      }
-      groups.wrapper = (groups.wrapper ?? 0) + c.unmapped * scale
+
+function pageBreakdown(page, { chunks, parsed, rules }) {
+  const groups = {},
+    modules = {}
+  for (const r of page.top.filter((t) => t.type === 'js')) {
+    const file = decodeURIComponent(r.path.split('?')[0]).split('/').slice(-2).join('__')
+    const name = chunks.has(file) ? file : plain(file)
+    if (!chunks.has(name)) {
+      groups.unmapped = (groups.unmapped ?? 0) + r.br
+      continue
     }
-    out.pages[path] = {
-      groups: Object.fromEntries(
-        Object.entries(groups)
-          .map(([k, n]) => [k, Math.round(n)])
-          .sort((a, b) => b[1] - a[1]),
-      ),
-      modules: Object.entries(modules)
-        .map(([m, n]) => ({ m, br: Math.round(n) }))
-        .sort((a, b) => b.br - a.br)
-        .slice(0, 15),
+    if (!parsed.has(name)) parsed.set(name, perSource(chunks.get(name)))
+    const c = parsed.get(name)
+    if (!c) continue
+    const scale = r.br / c.total
+    for (const [src, n] of c.bytes) {
+      const g = groupOf(src, rules),
+        b = n * scale
+      groups[g] = (groups[g] ?? 0) + b
+      const key = src.replace(/^(\.\.\/)+/, '')
+      modules[key] = (modules[key] ?? 0) + b
     }
+    groups.wrapper = (groups.wrapper ?? 0) + c.unmapped * scale
   }
+  return { groups, modules }
+}
+
+const rankPage = ({ groups, modules }) => ({
+  groups: Object.fromEntries(
+    Object.entries(groups)
+      .map(([k, n]) => [k, Math.round(n)])
+      .sort((a, b) => b[1] - a[1]),
+  ),
+  modules: Object.entries(modules)
+    .map(([m, n]) => ({ m, br: Math.round(n) }))
+    .sort((a, b) => b.br - a.br)
+    .slice(0, 15),
+})
+
+/** Per page, the JS it loaded split by group, in brotli bytes shared out by each chunk's raw bytes. */
+export function attribute(v, { maps, same, total }, pages) {
+  const rules = (stacks.find((s) => s.id === v.stack.id)?.groups ?? v.stack.groups ?? []).map(
+    ([g, re]) => [g, new RegExp(re)],
+  )
+  const ctx = { chunks: chunkIndex(maps), parsed: new Map(), rules }
+  const out = { sourcesMatch: same === total, matched: `${same}/${total}`, pages: {} }
+  for (const [path, page] of Object.entries(pages))
+    out.pages[path] = rankPage(pageBreakdown(page, ctx))
   return out
 }
