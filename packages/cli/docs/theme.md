@@ -58,7 +58,7 @@ warp({
 
 The build checks the pair. State and other part settings are not supported
 by this config. Local CSS can still override existing raw custom properties,
-as in the Button channels below. The generated [token reference](theme-tokens.md)
+as in the Button channels below. The generated [token reference](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/theme-tokens.md)
 lists candidate coverage; unresolved and partial rows are not a promise of
 supported configuration.
 

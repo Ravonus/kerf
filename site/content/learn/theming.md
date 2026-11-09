@@ -274,7 +274,7 @@ warp({
 
 Other part and system configuration is not supported yet. Existing raw
 custom properties can be changed locally in CSS. The generated
-[token reference](/reference/theme-tokens) lists candidate coverage;
+[token reference](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/theme-tokens.md) lists candidate coverage;
 partial and unresolved rows do not claim a supported setting.
 
 ## Canvas and surfaces follow too
