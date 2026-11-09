@@ -11,7 +11,7 @@ import { definePlugin } from '@weft-js/core/plugin'
 import { hex, luminance, toLinear } from './tokens/color.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
-import { DEFAULT, normalizeSeed } from './src/plugin/seed.mjs'
+import { DEFAULT, normalizeSeed, seedByName } from './src/plugin/seed.mjs'
 import {
   checkTokens,
   tailwindTheme,
@@ -49,8 +49,9 @@ function options(input) {
     throw Object.assign(new Error(`must be 'floating' or 'classic'`), { path: 'fields' })
   if (input.seed !== undefined) {
     try {
-      out.seed = normalizeSeed(input.seed)
-      if (input.seed?.accent) out.asked = input.seed.accent.toLowerCase()
+      const seed = seedByName(input.seed, input.colors)
+      out.seed = normalizeSeed(seed)
+      if (typeof seed?.accent === 'string') out.asked = seed.accent.toLowerCase()
     } catch (error) {
       throw Object.assign(/** @type {Error} */ (error), { path: 'seed' })
     }
@@ -76,9 +77,9 @@ function options(input) {
   if (input.fonts) out.fonts = input.fonts
   checkTokens(input.tokens, 'tokens')
   if (input.tokens) out.tokens = input.tokens
-  const seedAt = (seed, path) => {
+  const seedAt = (seed, path, colors) => {
     try {
-      return normalizeSeed(seed)
+      return normalizeSeed(seedByName(seed, colors))
     } catch (error) {
       throw Object.assign(/** @type {Error} */ (error), { path })
     }

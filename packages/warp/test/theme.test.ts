@@ -73,6 +73,16 @@ describe('theming', () => {
     expect(css).toContain(':where([data-expression="quiet"] [data-palette="ocean"]:not(:root))')
   })
 
+  test('a seed can name a colour', () => {
+    const named = run({ colors: { brand: '#0b7285' }, seed: { accent: 'brand' } }).tokens.css ?? ''
+    const hex = run({ seed: { accent: '#0b7285' } }).tokens.css ?? ''
+    expect(named).toContain(/--warp-seed-accent-h:[^;]+/.exec(hex)![0])
+    const themed = run({
+      themes: { ocean: { colors: { deep: '#0b7285' }, seed: { accent: 'deep' } } },
+    })
+    expect(themed.tokens.css).toContain('[data-palette="ocean"]{--warp-seed-accent-h')
+  })
+
   test('the Tailwind entry names every colour, theme colours too', () => {
     const tw = run({
       colors: { brand: '#e8590c' },
@@ -81,7 +91,9 @@ describe('theming', () => {
     expect(tw).toContain('--color-brand: var(--warp-color-brand)')
     expect(tw).toContain('--color-glow: var(--warp-color-glow)')
   })
+})
 
+describe('theming checks', () => {
   test('refuses what it cannot read', () => {
     expect(fails({ colors: { Brand: '#e8590c' } }).path).toMatch(/colors/)
     expect(fails({ colors: { brand: 'orange' } }).path).toMatch(/colors\.brand/)

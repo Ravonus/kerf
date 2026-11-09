@@ -27,3 +27,14 @@ export function normalizeSeed(seed) {
   )
   return neutral === undefined ? out : { ...out, neutral: hueOf(neutral, 'neutral') }
 }
+
+/** `seed` with a colour name from `colors` (`{ accent: 'brand' }`) swapped for the colour it names. */
+export function seedByName(seed, colors = {}) {
+  if (!seed || typeof seed !== 'object') return seed
+  const swap = (v) => (typeof v === 'string' && typeof colors[v] === 'string' ? colors[v] : v)
+  return {
+    ...seed,
+    ...(seed.accent !== undefined && { accent: swap(seed.accent) }),
+    ...(seed.neutral !== undefined && { neutral: swap(seed.neutral) }),
+  }
+}

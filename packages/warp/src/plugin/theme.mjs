@@ -224,7 +224,8 @@ export function themeOptions(input, tokenNames, checkTheme) {
       if (!['seed', 'colors', 'system', 'parts', 'tokens'].includes(key))
         throw bad(`${at}.${key}`, 'unknown option')
     const own = checkColors(theme.colors, `${at}.colors`)
-    const seed = theme.seed && checkTheme.seed(theme.seed, `${at}.seed`)
+    const seed =
+      theme.seed && checkTheme.seed(theme.seed, `${at}.seed`, { ...input.colors, ...theme.colors })
     const neutral = seed?.neutral
       ? { '--warp-ref-neutral-h': seed.neutral.hue, '--warp-ref-neutral-c': seed.neutral.chroma }
       : {}

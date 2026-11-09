@@ -539,6 +539,24 @@ table generates the types in `plugin.d.mts` and the docs page, so they can't dri
 a number (px), or a name from `system`/`colors`. Per element, `class` and `style` keep working and a documented
 `--warp-<part>-*` custom property on any element overrides that one element.
 
+**Shipped 2026-11-08 (Claude, on `theming-redo`; the Codex run was backed out).** What landed, and where it
+differs from the plan below:
+
+- `warp({ colors, system, parts, themes })` and `dials.palette`. One table, `packages/warp/src/plugin/theme-parts.mjs`,
+  drives the CSS, the types test, the component pages' Theming sections and `weft docs theme`; no decision doc.
+- Parts write into a `warp.theme` layer. Solid controls move their tone channels, so there are no new
+  `--warp-<part>-*` tokens in warp-core and nothing changes when nothing is set (tested).
+- Colours are `#rrggbb` only (no `{ hue, chroma }` entries yet); a seed can name one (`{ accent: 'brand' }`).
+- Named themes use `data-palette`; `setPalette(name, { persist })` switches them (not `setDial`, whose values are
+  fixed), and `dialScript` restores a saved one. Each theme's seed is fitted and part text on a part fill is D010.
+- `tone` takes any colour name (Button, Badge and every component that takes `tone`).
+- Tailwind: `.weft/tokens/warp.tailwind.css` names every colour (`bg-brand`).
+- Site: a Palette row in Appearance, a palette button on every example frame and Playground stage, Theming sections
+  on component pages, and the Theming learn page. Not done: Playground knobs that print a `warp()` config, and a
+  build check for components with no part.
+- Also: square icon-only and copy buttons, an unboxed 24px close with the lift on the glyph, and the sheet grabber
+  only on a mobile device (`markDevice`: UA hints, UA, iPad touch points, coarse pointer), where the X is hidden.
+
 - [ ] A design ticket first (sol-xhigh): write `docs/decisions/theming.md`. Pick the attribute for a named theme
       (`data-theme` is already light/dark, so not that one), the token name for every part, property and state (colour, space, shape, type, depth, motion), and how parts
       fall back: a part token defaults to today's value, so an app that sets nothing paints exactly as now.
@@ -613,4 +631,4 @@ Each has a default. The plan proceeds on the default unless the owner says other
 - Sprint 4: implemented
 - Sprint 5: not started
 - Sprint 6: not started
-- Sprint 8: not started
+- Sprint 8: implemented (see its Shipped note); Playground config knobs left
