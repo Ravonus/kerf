@@ -5,12 +5,12 @@
   --_fill: var(--_solid); --_ink: var(--_ink-on); --_edge: transparent;
   --_layer: var(--_solid-hover); --_layer-a: 1;
   position: relative; isolation: isolate;
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--warp-button-gap,var(--warp-config-part-button-gap,var(--warp-space-related)));
-  block-size: var(--warp-control-md); padding-inline: var(--warp-button-padding-inline,var(--warp-config-part-button-padding-inline,calc(var(--warp-pad-control) + 2px))); margin: 0;
-  border: var(--warp-button-border-width,var(--warp-config-part-button-border-width,var(--warp-border-hairline))) solid var(--warp-button-border,var(--warp-config-part-button-border,var(--warp-tone-edge, var(--_edge)))); border-radius: var(--warp-button-radius,var(--warp-config-part-button-radius,var(--warp-radius-control)));
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--_warp-button-gap-press,var(--_warp-button-gap-hover,var(--warp-button-gap,var(--warp-config-part-button-gap,var(--warp-space-related)))));
+  block-size: var(--warp-control-md); padding-inline: var(--_warp-button-padding-inline-press,var(--_warp-button-padding-inline-hover,var(--warp-button-padding-inline,var(--warp-config-part-button-padding-inline,calc(var(--warp-pad-control) + 2px))))); margin: 0;
+  border: var(--_warp-button-border-width-press,var(--_warp-button-border-width-hover,var(--warp-button-border-width,var(--warp-config-part-button-border-width,var(--warp-border-hairline))))) solid var(--warp-button-border,var(--warp-config-part-button-border,var(--warp-tone-edge, var(--_edge)))); border-radius: var(--_warp-button-radius-press,var(--_warp-button-radius-hover,var(--warp-button-radius,var(--warp-config-part-button-radius,var(--warp-radius-control)))));
   background: var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-fill, var(--_fill)))); color: var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-tone-ink, var(--_ink))));
-  font-family: var(--warp-button-font-family,var(--warp-config-part-button-font-family,var(--warp-text-button-font))); font-size: var(--warp-button-font-size,var(--warp-config-part-button-font-size,var(--warp-text-button-size)));
-  font-weight: var(--warp-button-font-weight,var(--warp-config-part-button-font-weight,var(--warp-text-button-weight))); letter-spacing: var(--warp-button-font-letter-spacing,var(--warp-config-part-button-font-letter-spacing,var(--warp-text-button-tracking)));
+  font-family: var(--_warp-button-font-family-press,var(--_warp-button-font-family-hover,var(--warp-button-font-family,var(--warp-config-part-button-font-family,var(--warp-text-button-font))))); font-size: var(--_warp-button-font-size-press,var(--_warp-button-font-size-hover,var(--warp-button-font-size,var(--warp-config-part-button-font-size,var(--warp-text-button-size)))));
+  font-weight: var(--_warp-button-font-weight-press,var(--_warp-button-font-weight-hover,var(--warp-button-font-weight,var(--warp-config-part-button-font-weight,var(--warp-text-button-weight))))); letter-spacing: var(--_warp-button-font-letter-spacing-press,var(--_warp-button-font-letter-spacing-hover,var(--warp-button-font-letter-spacing,var(--warp-config-part-button-font-letter-spacing,var(--warp-text-button-tracking)))));
   text-transform: var(--warp-text-button-case); line-height: 1; white-space: nowrap; text-decoration: none;
   cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   /* release: the spring. Press (below) is instant, and so is hover's colour: nothing waits on the thread clock */
@@ -105,7 +105,7 @@
     radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),
       var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))))))) 0 66%, color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))))))) 50%, transparent) 84%, transparent 100%);
   transition:
-    transform var(--warp-sweep-duration) var(--warp-sweep-ease),     /* the wipe runs on the stroke's clock, both ways */
+    transform var(--_warp-sweep-duration,var(--warp-sweep-duration)) var(--warp-sweep-ease),     /* the wipe runs on the stroke's clock, both ways */
     --_fo var(--_D) var(--warp-sweep-ease-in),                 /* both ways: the exit is the enter */
     --_fr 1ms linear calc((1 - var(--_a, 0)) * var(--_D));     /* snaps in; collapses unseen after the exit */
 }
@@ -115,7 +115,7 @@
 :where([data-scope="button"][data-state="open"])::before,
 :where([data-scope="button"][aria-expanded="true"])::before {
   transform: scaleX(1); transform-origin: left center;
-  transition-duration: var(--warp-sweep-duration), var(--_D), 1ms;
+  transition-duration: var(--_warp-sweep-duration,var(--warp-sweep-duration)), var(--_D), 1ms;
 }
 /* a tap is shorter than the fill, so a finger gets it at once and watches it part */
 @media (hover: none) { :where([data-scope="button"]:active)::before { transition-duration: var(--warp-duration-base), 0ms, 1ms; } }
@@ -274,6 +274,10 @@
 :where([data-scope="button"][data-emphasis="frame"][data-sweep]) > :where([data-part="sweep-content"]) { color: var(--warp-sweep-text,var(--warp-config-part-sweep-text,var(--_warp-button-text-disabled,var(--_warp-button-text-press,var(--_warp-button-text-focus,var(--_warp-button-text-hover,var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-color-text))))))))); }
 :where([data-scope="button"][data-emphasis="frame"][data-sweep]):has(> [data-part="sweep-fill"]) > :where([data-part="sweep-content"]) { color: var(--warp-sweep-text,var(--warp-config-part-sweep-text,var(--_warp-button-text-disabled,var(--_warp-button-text-press,var(--_warp-button-text-focus,var(--_warp-button-text-hover,var(--warp-button-text,var(--warp-config-part-button-text,var(--_tone-ink, var(--warp-color-accent-on-solid)))))))))); }
 }
+/* warp-theme-only:end */
+/* warp-theme-only:start */
+:where([data-scope="button"]:hover) { --_warp-button-gap-hover: var(--warp-button-gap-hover,var(--warp-config-part-button-gap-hover)); --_warp-button-padding-inline-hover: var(--warp-button-padding-inline-hover,var(--warp-config-part-button-padding-inline-hover)); --_warp-button-border-width-hover: var(--warp-button-border-width-hover,var(--warp-config-part-button-border-width-hover)); --_warp-button-radius-hover: var(--warp-button-radius-hover,var(--warp-config-part-button-radius-hover)); --_warp-button-font-family-hover: var(--warp-button-font-family-hover,var(--warp-config-part-button-font-family-hover)); --_warp-button-font-size-hover: var(--warp-button-font-size-hover,var(--warp-config-part-button-font-size-hover)); --_warp-button-font-weight-hover: var(--warp-button-font-weight-hover,var(--warp-config-part-button-font-weight-hover)); --_warp-button-font-letter-spacing-hover: var(--warp-button-font-letter-spacing-hover,var(--warp-config-part-button-font-letter-spacing-hover)); }
+:where([data-scope="button"]:is(:active,[data-press])) { --_warp-button-gap-press: var(--warp-button-gap-press,var(--warp-config-part-button-gap-press)); --_warp-button-padding-inline-press: var(--warp-button-padding-inline-press,var(--warp-config-part-button-padding-inline-press)); --_warp-button-border-width-press: var(--warp-button-border-width-press,var(--warp-config-part-button-border-width-press)); --_warp-button-radius-press: var(--warp-button-radius-press,var(--warp-config-part-button-radius-press)); --_warp-button-font-family-press: var(--warp-button-font-family-press,var(--warp-config-part-button-font-family-press)); --_warp-button-font-size-press: var(--warp-button-font-size-press,var(--warp-config-part-button-font-size-press)); --_warp-button-font-weight-press: var(--warp-button-font-weight-press,var(--warp-config-part-button-font-weight-press)); --_warp-button-font-letter-spacing-press: var(--warp-button-font-letter-spacing-press,var(--warp-config-part-button-font-letter-spacing-press)); }
 /* warp-theme-only:end */
 :where([data-scope="button"] > [data-part="label"]) { display: inline-flex; align-items: center; gap: inherit; }
 }
