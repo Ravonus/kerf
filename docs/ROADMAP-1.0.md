@@ -608,6 +608,75 @@ icon page (`data-flow="icon"`), it stays tilted, shrunk and faded for as long as
 the configured colours at rest, on hover, and during the sweep, in light and dark, and switching to `ocean` at runtime
 changes all of them. Warp stays within its size budget (`size.mjs`), and `measure.mjs` shows no speed regression.
 
+### Sprint 9: clean for open source
+
+Added by the owner on 2026-11-09, before launch. The code works and is small. Now it has to read well to a stranger:
+every file where you'd look for it, sized for what it is, and explained by its names and structure, not by paragraphs
+of comments. Every change here keeps behaviour: tests, benchmarks and screenshots stay the same.
+
+**File categories.** One table, `scripts/quality/categories.mjs`, says what kind of file each path is, and every check
+reads it: the length collector, the oxlint overrides (generated from it, and a check fails when they drift), and the
+structure check below. A path matches the first row that fits.
+
+| Category | Matches | File lines | Function lines | Parameters |
+|---|---|---|---|---|
+| util | `**/utils/**`, `**/lib/**` | 150 | 40 | 3 |
+| hook | `use-*.ts`, `*-state.ts` | 200 | 60 | 3 |
+| component | `src/**/*.tsx` | 400 | 80 | 3 (props are one) |
+| module | other `src/**` code | 400 | 80 | 4 |
+| script | `scripts/**`, `bin/**`, configs | 400 | 80 | 4 |
+| test | `test/**`, `*.test.*`, `*.e2e.*` | 750 | 120 | 4 |
+| types | `*.d.ts`, `*.d.mts`, `types.ts`, `**/types/**` | 1,000 | — | — |
+| table | generated files, CSS token sources, Rust tests | 1,000 | — | — |
+| rust | `crates/**/src/**/*.rs` | 400 | 80 | 5 |
+
+Nothing anywhere goes over 1,000. `max-params` is on through the same table. An options object counts as one parameter,
+so a function that wants a fifth argument takes an object instead.
+
+**Where files live.** Written into CONTRIBUTING.md and AGENTS.md, and checked by `scripts/quality/structure.mjs`:
+
+- [ ] A folder holds at most 12 source files. Past that, related files move into a subfolder named for what they share
+      (`warp/src` has 125 today: `forms/`, `overlays/`, `data/`, `charts/`, `navigation/`, `feedback/`, `layout/`,
+      `media/` and so on). A subfolder has at least 3 files, so there are no one-file folders.
+- [ ] Names say what's inside: components `PascalCase.tsx`, one public component per file with its small private parts;
+      other modules `kebab-case.ts`; hooks `use-*.ts`; tests mirror the source path (`src/forms/Input.tsx` →
+      `test/forms/Input.test.tsx`).
+- [ ] An `index.ts` only re-exports. Helpers used by more than one file of a package live in that package's
+      `src/utils/`. Helpers used across packages live in the package that owns the concern (`core/markup` for `esc`),
+      and repo scripts share `scripts/lib/`.
+- [ ] Public import paths don't change: moves inside `src/` keep every `exports` entry and API snapshot as it is.
+
+**Comments.** Most of the explanation comes from names, structure and flow. A comment stays when it says something the
+code can't: why it's written this way, a constraint you'd break without knowing, a browser or platform workaround and
+its reason, `SAFETY:`, a lint disable's reason. Everything else goes:
+
+- [ ] Comments that restate the code, narrate history (dates, sprint and research numbers, "was", "used to"), or
+      explain what a better name would. Rename instead.
+- [ ] Doc comments on exports stay, one or two lines (`weft/public-doc`), longer only for an example.
+- [ ] A file header only when the name and folder don't already say what the file is, and two lines at most.
+- [ ] Lint, `weft/comment-budget`: in `src/`, comment lines are at most 15% of a file's code lines, no comment block
+      runs past 6 lines unless it's a doc comment with an example, and no comment names a sprint, research note or date.
+
+**DRY.** `scripts/quality/duplicates.mjs` finds repeated code across the repo (normalised token windows of about 12
+lines or more, tests included). Each repeat becomes one helper in the right `utils/` or an existing system, or is
+written down as a deliberate exception with a reason. It runs in the gate, against a baseline that can only shrink.
+
+**Edges** (measure first, keep only what the numbers support):
+
+- [ ] The site's `entry-client` chunk is about 25 KB br on every page. Find what's in it and move what a first paint
+      doesn't need behind the route or interaction that uses it.
+- [ ] A first visit downloads the first-paint rules twice: inlined in the page and again in the shared sheet that
+      loads after it (about 15 KB br on the home page). Try loading the shared sheet only when it's needed, or
+      splitting the inlined part out of it. Keep whichever wins on `measure.mjs` load numbers without a flash.
+
+**Order.** Categories and the lint rules first, landing as warnings with the current offenders listed. Then the moves
+(one area per ticket, a path sweep after each), the comment pass (one package per ticket), and the DRY pass. The rules
+become errors last, once the lists are empty. Stall rule: two failed tries at fitting a file into its category →
+split it differently or record it in the allowance with a reason, and move on.
+
+**Exit:** every check above is an error and passes with empty allowances, or with each remaining entry carrying a
+reason. Tests, API snapshots, `size.mjs` and `measure.mjs` show no change beyond noise, and warp's size doesn't grow.
+
 ## Decisions to confirm
 
 Each has a default. The plan proceeds on the default unless the owner says otherwise.
@@ -632,3 +701,4 @@ Each has a default. The plan proceeds on the default unless the owner says other
 - Sprint 5: not started
 - Sprint 6: not started
 - Sprint 8: implemented (see its Shipped note); Playground config knobs left
+- Sprint 9: not started
