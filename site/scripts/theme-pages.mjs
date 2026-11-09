@@ -1,0 +1,181 @@
+// Generate component-page theme candidates from the shared schema and tracked docs.
+import { execFileSync } from 'node:child_process'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { GROUPS } from '../src/toolkit/docs/index.ts'
+
+const root = fileURLToPath(new URL('../../', import.meta.url))
+const output = 'site/src/toolkit/theming.generated.json'
+const slug = (name) => name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
+const registeredDocs = () => GROUPS.flatMap((group) => group.docs)
+const scopeOverrides = () =>
+  Object.fromEntries(
+    registeredDocs()
+      .filter((doc) => doc.themeScopes)
+      .map((doc) => [doc.component, doc.themeScopes]),
+  )
+
+/** Read the component names declared in tracked toolkit docs. */
+export function trackedDocs(repo = root) {
+  const files = execFileSync('git', ['ls-files', '--', 'site/src/toolkit/docs'], {
+    cwd: repo,
+    encoding: 'utf8',
+  })
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+  const entries = files.flatMap((file) =>
+    [...readFileSync(resolve(repo, file), 'utf8').matchAll(/\bcomponent:\s*['"]([^'"]+)['"]/g)].map(
+      (match) => match[1],
+    ),
+  )
+  return { files: files.length, entries }
+}
+
+/** Require one registered page for every tracked component declaration. */
+export function checkInventory(registered, tracked) {
+  const sorted = (names) => [...names].sort()
+  if (
+    new Set(registered).size !== registered.length ||
+    new Set(tracked).size !== tracked.length ||
+    JSON.stringify(sorted(registered)) !== JSON.stringify(sorted(tracked))
+  )
+    throw new Error('Component docs and tracked declarations differ')
+}
+
+function keyFor(record) {
+  const part = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(record.part)
+    ? `parts.${record.part}`
+    : `parts[${JSON.stringify(record.part)}]`
+  return `${part}${record.state === 'rest' ? '' : `.${record.state}`}.${record.path}`
+}
+
+/** Build a deterministic candidate table with recorded CSS fallback evidence. */
+export function buildThemePages(schema, registered, overrides = {}) {
+  const parts = {}
+  for (const record of schema.records) {
+    const matching = schema.bindings.filter(
+      (binding) =>
+        binding.part === record.part &&
+        binding.state === record.state &&
+        binding.path === record.path,
+    )
+    const fallbacks = [
+      ...new Set(
+        matching
+          .map((binding) => binding.fallback)
+          .filter((fallback) => typeof fallback === 'string'),
+      ),
+    ].sort()
+    const systemKeys = [
+      ...new Set(
+        matching
+          .map((binding) => binding.systemPath)
+          .filter((path) => typeof path === 'string')
+          .map((path) => `system.${path}`),
+      ),
+    ].sort()
+    const rows = (parts[record.part] ??= [])
+    rows.push({
+      part: record.part,
+      property: record.path,
+      state: record.state,
+      default: fallbacks.length ? fallbacks.join(' | ') : 'Not classified',
+      config: [keyFor(record), ...systemKeys].join(' | '),
+      token: record.token,
+      status: `Candidate · ${record.binding}`,
+    })
+  }
+  for (const [name, scopes] of Object.entries(overrides)) {
+    if (
+      !registered.includes(name) ||
+      !Array.isArray(scopes) ||
+      !scopes.length ||
+      new Set(scopes).size !== scopes.length ||
+      scopes.some((scope) => !Object.hasOwn(parts, scope))
+    )
+      throw new Error(`Invalid theming scopes for ${name}`)
+  }
+  for (const rows of Object.values(parts))
+    rows.sort(
+      (a, b) =>
+        (a.state < b.state ? -1 : a.state > b.state ? 1 : 0) ||
+        (a.property < b.property ? -1 : a.property > b.property ? 1 : 0),
+    )
+  return {
+    schemaDigest: schema.digest,
+    components: [...registered].sort().map((name) => ({
+      name,
+      slug: slug(name),
+      ...(overrides[name] && {
+        scopes: Object.fromEntries(overrides[name].map((scope) => [scope, true])),
+      }),
+    })),
+    parts,
+  }
+}
+
+/** Attach the matching candidates to each generated component page. */
+export function attachThemeRows(pages, data) {
+  const expected = data.components.map((component) => component.slug).sort()
+  if (JSON.stringify(Object.keys(pages).sort()) !== JSON.stringify(expected))
+    throw new Error('Generated component pages differ from the tracked docs')
+  for (const component of data.components) {
+    const page = pages[component.slug]
+    if (page.name !== component.name) throw new Error(`Wrong component at ${component.slug}`)
+    const scope = page.scope ?? component.slug
+    page.theming = Object.keys(data.parts)
+      .filter((part) =>
+        component.scopes
+          ? Object.hasOwn(component.scopes, part)
+          : part === scope || part.startsWith(`${scope}/`),
+      )
+      .flatMap((part) => data.parts[part])
+  }
+  return pages
+}
+
+/** Compare generated bytes, so missing, extra and changed rows all fail. */
+export function checkGenerated(expected, actual) {
+  if (expected !== actual)
+    throw new Error(`${output} is stale; run node site/scripts/theme-pages.mjs`)
+}
+
+/** Verify the docs inventory and generated theming data. */
+export function checkThemePages(repo = root) {
+  const docs = registeredDocs().map((doc) => doc.component)
+  const tracked = trackedDocs(repo)
+  checkInventory(docs, tracked.entries)
+  const schema = JSON.parse(
+    readFileSync(resolve(repo, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  )
+  const expected = `${JSON.stringify(buildThemePages(schema, docs, scopeOverrides()), null, 2)}\n`
+  checkGenerated(expected, readFileSync(resolve(repo, output), 'utf8'))
+  return {
+    pages: docs.length,
+    tracked: tracked.entries.length,
+    files: tracked.files,
+    rows: schema.records.length,
+  }
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  if (process.argv.includes('--check')) {
+    const n = checkThemePages()
+    console.log(
+      `Theming: ${n.pages}/${n.tracked} component docs, ${n.files} tracked files, ${n.rows} candidates`,
+    )
+  } else {
+    const docs = registeredDocs().map((doc) => doc.component)
+    checkInventory(docs, trackedDocs().entries)
+    const schema = JSON.parse(
+      readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+    )
+    writeFileSync(
+      resolve(root, output),
+      `${JSON.stringify(buildThemePages(schema, docs, scopeOverrides()), null, 2)}\n`,
+    )
+    console.log(`Generated ${output}`)
+  }
+}

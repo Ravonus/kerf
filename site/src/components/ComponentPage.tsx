@@ -4,6 +4,7 @@ import { ExampleFrame, type ShownExample } from './ExampleFrame'
 import { Install } from './Install'
 import { Playground, type ShownPlayground } from './Playground'
 import { PropsTable } from './PropsTable'
+import { ThemingTable, type ThemingRow } from './ThemingTable'
 import { Toc } from './Toc'
 import { type Area, FLOW } from '../lib/pages'
 
@@ -59,6 +60,7 @@ export type Page = {
     title: string
     rows: { name: string; type: string; required: boolean; default?: string; doc: string }[]
   }[]
+  theming: ThemingRow[]
   parts: string[]
   scope?: string
   states: string[]
@@ -175,6 +177,7 @@ export function ComponentPage(props: { data: Page }) {
               Takes no props.
             </p>
           )}
+          <ThemingTable rows={d.theming} />
           {d.parts.length > 0 && <PartsContent data={d} />}
           {d.related.length > 0 && (
             <p data-part="chips" data-site="related" data-flow="item">

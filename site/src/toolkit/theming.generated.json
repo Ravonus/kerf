@@ -1,0 +1,7037 @@
+{
+  "schemaDigest": "76b5e0def0bfee0b6848e3d4604cf29be82e13a0b39bab0ac49a767d0019aae6",
+  "components": [
+    {
+      "name": "Accordion",
+      "slug": "accordion"
+    },
+    {
+      "name": "ActivityFeed",
+      "slug": "activity-feed"
+    },
+    {
+      "name": "AddressField",
+      "slug": "address-field"
+    },
+    {
+      "name": "Agenda",
+      "slug": "agenda"
+    },
+    {
+      "name": "AgendaDay",
+      "slug": "agenda-day"
+    },
+    {
+      "name": "AgentPlan",
+      "slug": "agent-plan"
+    },
+    {
+      "name": "Alert",
+      "slug": "alert"
+    },
+    {
+      "name": "ApiKeys",
+      "slug": "api-keys"
+    },
+    {
+      "name": "ArtifactPanel",
+      "slug": "artifact-panel"
+    },
+    {
+      "name": "Assistant",
+      "slug": "assistant"
+    },
+    {
+      "name": "AuditLog",
+      "slug": "audit-log"
+    },
+    {
+      "name": "AuthDone",
+      "slug": "auth-done"
+    },
+    {
+      "name": "AuthScreen",
+      "slug": "auth-screen"
+    },
+    {
+      "name": "AutoTrack",
+      "slug": "auto-track"
+    },
+    {
+      "name": "AvailabilityEditor",
+      "slug": "availability-editor"
+    },
+    {
+      "name": "Badge",
+      "slug": "badge"
+    },
+    {
+      "name": "BarChart",
+      "slug": "bar-chart"
+    },
+    {
+      "name": "Bell",
+      "slug": "bell"
+    },
+    {
+      "name": "BookingCalendar",
+      "slug": "booking-calendar"
+    },
+    {
+      "name": "BoxPlot",
+      "slug": "box-plot"
+    },
+    {
+      "name": "BranchSwitcher",
+      "slug": "branch-switcher"
+    },
+    {
+      "name": "BrushChart",
+      "slug": "brush-chart"
+    },
+    {
+      "name": "BubbleChart",
+      "slug": "bubble-chart"
+    },
+    {
+      "name": "Button",
+      "slug": "button"
+    },
+    {
+      "name": "Calendar",
+      "slug": "calendar"
+    },
+    {
+      "name": "CandlestickChart",
+      "slug": "candlestick-chart"
+    },
+    {
+      "name": "Canvas",
+      "slug": "canvas"
+    },
+    {
+      "name": "CanvasStage",
+      "slug": "canvas-stage"
+    },
+    {
+      "name": "Card",
+      "slug": "card"
+    },
+    {
+      "name": "CardNumberText",
+      "slug": "card-number-text"
+    },
+    {
+      "name": "CartButton",
+      "slug": "cart-button"
+    },
+    {
+      "name": "CartDrawer",
+      "slug": "cart-drawer"
+    },
+    {
+      "name": "Center",
+      "slug": "center"
+    },
+    {
+      "name": "Chart",
+      "slug": "chart"
+    },
+    {
+      "name": "Checkbox",
+      "slug": "checkbox"
+    },
+    {
+      "name": "Checklist",
+      "slug": "checklist"
+    },
+    {
+      "name": "Checkout",
+      "slug": "checkout"
+    },
+    {
+      "name": "Checkpoint",
+      "slug": "checkpoint"
+    },
+    {
+      "name": "Chip",
+      "slug": "chip"
+    },
+    {
+      "name": "Cite",
+      "slug": "cite"
+    },
+    {
+      "name": "Coachmark",
+      "slug": "coachmark"
+    },
+    {
+      "name": "Code",
+      "slug": "code"
+    },
+    {
+      "name": "CodeBlock",
+      "slug": "code-block"
+    },
+    {
+      "name": "CodeInput",
+      "slug": "code-input"
+    },
+    {
+      "name": "ComboChart",
+      "slug": "combo-chart"
+    },
+    {
+      "name": "CommandPalette",
+      "slug": "command-palette"
+    },
+    {
+      "name": "CommentAnchor",
+      "slug": "comment-anchor"
+    },
+    {
+      "name": "CommentRail",
+      "slug": "comment-rail"
+    },
+    {
+      "name": "CommentThread",
+      "slug": "comment-thread"
+    },
+    {
+      "name": "CompactSelect",
+      "slug": "compact-select"
+    },
+    {
+      "name": "Composer",
+      "slug": "composer"
+    },
+    {
+      "name": "ConfirmDialog",
+      "slug": "confirm-dialog"
+    },
+    {
+      "name": "ConflictAlert",
+      "slug": "conflict-alert"
+    },
+    {
+      "name": "ConnBanner",
+      "slug": "conn-banner"
+    },
+    {
+      "name": "ConnectionBanner",
+      "slug": "connection-banner"
+    },
+    {
+      "name": "ConnectionPill",
+      "slug": "connection-pill"
+    },
+    {
+      "name": "ContextMeter",
+      "slug": "context-meter"
+    },
+    {
+      "name": "ControlBar",
+      "slug": "control-bar"
+    },
+    {
+      "name": "Conversation",
+      "slug": "conversation"
+    },
+    {
+      "name": "ConversationList",
+      "slug": "conversation-list"
+    },
+    {
+      "name": "Countdown",
+      "slug": "countdown"
+    },
+    {
+      "name": "CountrySelect",
+      "slug": "country-select"
+    },
+    {
+      "name": "Cover",
+      "slug": "cover"
+    },
+    {
+      "name": "CsvImport",
+      "slug": "csv-import"
+    },
+    {
+      "name": "CurrencySelect",
+      "slug": "currency-select"
+    },
+    {
+      "name": "Cursors",
+      "slug": "cursors"
+    },
+    {
+      "name": "DangerZone",
+      "slug": "danger-zone"
+    },
+    {
+      "name": "DataGrid",
+      "slug": "data-grid"
+    },
+    {
+      "name": "DataIntegrity",
+      "slug": "data-integrity"
+    },
+    {
+      "name": "DateField",
+      "slug": "date-field"
+    },
+    {
+      "name": "DateRangeField",
+      "slug": "date-range-field"
+    },
+    {
+      "name": "DateTimeField",
+      "slug": "date-time-field"
+    },
+    {
+      "name": "Dither",
+      "slug": "dither"
+    },
+    {
+      "name": "DitherField",
+      "slug": "dither-field"
+    },
+    {
+      "name": "DitherGlyph",
+      "slug": "dither-glyph"
+    },
+    {
+      "name": "DitherStage",
+      "slug": "dither-stage"
+    },
+    {
+      "name": "DonutChart",
+      "slug": "donut-chart"
+    },
+    {
+      "name": "Drawer",
+      "slug": "drawer"
+    },
+    {
+      "name": "DurationField",
+      "slug": "duration-field"
+    },
+    {
+      "name": "EventEditor",
+      "slug": "event-editor"
+    },
+    {
+      "name": "EventPopover",
+      "slug": "event-popover"
+    },
+    {
+      "name": "Feed",
+      "slug": "feed"
+    },
+    {
+      "name": "Field",
+      "slug": "field"
+    },
+    {
+      "name": "Flow",
+      "slug": "flow"
+    },
+    {
+      "name": "Following",
+      "slug": "following"
+    },
+    {
+      "name": "Frame",
+      "slug": "frame"
+    },
+    {
+      "name": "FunnelChart",
+      "slug": "funnel-chart"
+    },
+    {
+      "name": "GaugeChart",
+      "slug": "gauge-chart"
+    },
+    {
+      "name": "Grid",
+      "slug": "grid"
+    },
+    {
+      "name": "Heading",
+      "slug": "heading",
+      "scopes": {
+        "text/display": true,
+        "text/title": true,
+        "text/heading": true,
+        "text/label": true
+      }
+    },
+    {
+      "name": "HeatGrid",
+      "slug": "heat-grid"
+    },
+    {
+      "name": "Histogram",
+      "slug": "histogram"
+    },
+    {
+      "name": "Icon",
+      "slug": "icon"
+    },
+    {
+      "name": "Inbox",
+      "slug": "inbox"
+    },
+    {
+      "name": "InlineCalendar",
+      "slug": "inline-calendar"
+    },
+    {
+      "name": "Input",
+      "slug": "input"
+    },
+    {
+      "name": "Inset",
+      "slug": "inset"
+    },
+    {
+      "name": "IntegrationsGrid",
+      "slug": "integrations-grid"
+    },
+    {
+      "name": "InviteAccept",
+      "slug": "invite-accept"
+    },
+    {
+      "name": "InviteDialog",
+      "slug": "invite-dialog"
+    },
+    {
+      "name": "Invoices",
+      "slug": "invoices"
+    },
+    {
+      "name": "JsonEditor",
+      "slug": "json-editor"
+    },
+    {
+      "name": "Kanban",
+      "slug": "kanban"
+    },
+    {
+      "name": "Kbd",
+      "slug": "kbd"
+    },
+    {
+      "name": "KeyValueEditor",
+      "slug": "key-value-editor"
+    },
+    {
+      "name": "LanguageSelect",
+      "slug": "language-select"
+    },
+    {
+      "name": "LineChart",
+      "slug": "line-chart"
+    },
+    {
+      "name": "LineItem",
+      "slug": "line-item"
+    },
+    {
+      "name": "Link",
+      "slug": "link"
+    },
+    {
+      "name": "LiveStatus",
+      "slug": "live-status"
+    },
+    {
+      "name": "LoadMore",
+      "slug": "load-more"
+    },
+    {
+      "name": "Lobby",
+      "slug": "lobby"
+    },
+    {
+      "name": "LockIndicator",
+      "slug": "lock-indicator"
+    },
+    {
+      "name": "LockedField",
+      "slug": "locked-field"
+    },
+    {
+      "name": "MagicLinkSent",
+      "slug": "magic-link-sent"
+    },
+    {
+      "name": "Markdown",
+      "slug": "markdown"
+    },
+    {
+      "name": "MarkdownEditor",
+      "slug": "markdown-editor"
+    },
+    {
+      "name": "MeetingPlanner",
+      "slug": "meeting-planner"
+    },
+    {
+      "name": "MeetingRoom",
+      "slug": "meeting-room"
+    },
+    {
+      "name": "MembersTable",
+      "slug": "members-table"
+    },
+    {
+      "name": "MentionsInput",
+      "slug": "mentions-input"
+    },
+    {
+      "name": "Menu",
+      "slug": "menu"
+    },
+    {
+      "name": "Message",
+      "slug": "message"
+    },
+    {
+      "name": "MessageActions",
+      "slug": "message-actions"
+    },
+    {
+      "name": "MfaSetup",
+      "slug": "mfa-setup"
+    },
+    {
+      "name": "Modal",
+      "slug": "modal"
+    },
+    {
+      "name": "ModelPicker",
+      "slug": "model-picker"
+    },
+    {
+      "name": "MonthPicker",
+      "slug": "month-picker"
+    },
+    {
+      "name": "MoveSheet",
+      "slug": "move-sheet"
+    },
+    {
+      "name": "Nav",
+      "slug": "nav"
+    },
+    {
+      "name": "NotificationPreferences",
+      "slug": "notification-preferences"
+    },
+    {
+      "name": "NumberField",
+      "slug": "number-field"
+    },
+    {
+      "name": "OrderConfirmation",
+      "slug": "order-confirmation"
+    },
+    {
+      "name": "OrderTracker",
+      "slug": "order-tracker"
+    },
+    {
+      "name": "OtpField",
+      "slug": "otp-field"
+    },
+    {
+      "name": "OtpStep",
+      "slug": "otp-step"
+    },
+    {
+      "name": "PaginationBar",
+      "slug": "pagination-bar"
+    },
+    {
+      "name": "PasskeyButton",
+      "slug": "passkey-button"
+    },
+    {
+      "name": "PasswordMeter",
+      "slug": "password-meter"
+    },
+    {
+      "name": "PayFrame",
+      "slug": "pay-frame"
+    },
+    {
+      "name": "PaymentCardInput",
+      "slug": "payment-card-input"
+    },
+    {
+      "name": "PaymentMethods",
+      "slug": "payment-methods"
+    },
+    {
+      "name": "PeerMark",
+      "slug": "peer-mark"
+    },
+    {
+      "name": "PeerSelection",
+      "slug": "peer-selection"
+    },
+    {
+      "name": "PeriodPicker",
+      "slug": "period-picker"
+    },
+    {
+      "name": "PhoneField",
+      "slug": "phone-field"
+    },
+    {
+      "name": "PivotTable",
+      "slug": "pivot-table"
+    },
+    {
+      "name": "PlaceLookupInput",
+      "slug": "place-lookup-input"
+    },
+    {
+      "name": "PlanPicker",
+      "slug": "plan-picker"
+    },
+    {
+      "name": "Popover",
+      "slug": "popover"
+    },
+    {
+      "name": "Prejoin",
+      "slug": "prejoin"
+    },
+    {
+      "name": "PresenceStack",
+      "slug": "presence-stack"
+    },
+    {
+      "name": "Progress",
+      "slug": "progress"
+    },
+    {
+      "name": "Prompt",
+      "slug": "prompt"
+    },
+    {
+      "name": "Prose",
+      "slug": "prose"
+    },
+    {
+      "name": "PushSoftAsk",
+      "slug": "push-soft-ask"
+    },
+    {
+      "name": "Question",
+      "slug": "question"
+    },
+    {
+      "name": "RadarChart",
+      "slug": "radar-chart"
+    },
+    {
+      "name": "RadialChart",
+      "slug": "radial-chart"
+    },
+    {
+      "name": "Radio",
+      "slug": "radio"
+    },
+    {
+      "name": "RadioGroup",
+      "slug": "radio-group"
+    },
+    {
+      "name": "RateLimited",
+      "slug": "rate-limited"
+    },
+    {
+      "name": "Reasoning",
+      "slug": "reasoning"
+    },
+    {
+      "name": "ReauthDialog",
+      "slug": "reauth-dialog"
+    },
+    {
+      "name": "RecurrenceField",
+      "slug": "recurrence-field"
+    },
+    {
+      "name": "ResetPassword",
+      "slug": "reset-password"
+    },
+    {
+      "name": "RichTextEditor",
+      "slug": "rich-text-editor"
+    },
+    {
+      "name": "RolesMatrix",
+      "slug": "roles-matrix"
+    },
+    {
+      "name": "Row",
+      "slug": "row"
+    },
+    {
+      "name": "SankeyChart",
+      "slug": "sankey-chart"
+    },
+    {
+      "name": "SaveBar",
+      "slug": "save-bar"
+    },
+    {
+      "name": "ScatterChart",
+      "slug": "scatter-chart"
+    },
+    {
+      "name": "ScheduledLobby",
+      "slug": "scheduled-lobby"
+    },
+    {
+      "name": "ScrollGrid",
+      "slug": "scroll-grid"
+    },
+    {
+      "name": "Search",
+      "slug": "search"
+    },
+    {
+      "name": "SeatsMeter",
+      "slug": "seats-meter"
+    },
+    {
+      "name": "SectionPeers",
+      "slug": "section-peers"
+    },
+    {
+      "name": "Segmented",
+      "slug": "segmented"
+    },
+    {
+      "name": "Select",
+      "slug": "select"
+    },
+    {
+      "name": "SettingRow",
+      "slug": "setting-row"
+    },
+    {
+      "name": "SettingsLayout",
+      "slug": "settings-layout"
+    },
+    {
+      "name": "SettingsSection",
+      "slug": "settings-section"
+    },
+    {
+      "name": "Shape",
+      "slug": "shape"
+    },
+    {
+      "name": "ShareDialog",
+      "slug": "share-dialog"
+    },
+    {
+      "name": "Shell",
+      "slug": "shell"
+    },
+    {
+      "name": "Shimmer",
+      "slug": "shimmer"
+    },
+    {
+      "name": "ShortcutsOverlay",
+      "slug": "shortcuts-overlay"
+    },
+    {
+      "name": "SideNav",
+      "slug": "side-nav"
+    },
+    {
+      "name": "SignGate",
+      "slug": "sign-gate"
+    },
+    {
+      "name": "SignGateBadge",
+      "slug": "sign-gate-badge"
+    },
+    {
+      "name": "SignIn",
+      "slug": "sign-in"
+    },
+    {
+      "name": "SignUp",
+      "slug": "sign-up"
+    },
+    {
+      "name": "SignaturePad",
+      "slug": "signature-pad"
+    },
+    {
+      "name": "Skeleton",
+      "slug": "skeleton"
+    },
+    {
+      "name": "Slider",
+      "slug": "slider"
+    },
+    {
+      "name": "Snippet",
+      "slug": "snippet"
+    },
+    {
+      "name": "Sources",
+      "slug": "sources"
+    },
+    {
+      "name": "Spacer",
+      "slug": "spacer"
+    },
+    {
+      "name": "Sparkline",
+      "slug": "sparkline"
+    },
+    {
+      "name": "SpeechInput",
+      "slug": "speech-input"
+    },
+    {
+      "name": "Spinner",
+      "slug": "spinner"
+    },
+    {
+      "name": "Split",
+      "slug": "split"
+    },
+    {
+      "name": "SsoButtons",
+      "slug": "sso-buttons"
+    },
+    {
+      "name": "Stack",
+      "slug": "stack"
+    },
+    {
+      "name": "StageSelect",
+      "slug": "stage-select"
+    },
+    {
+      "name": "StreamChart",
+      "slug": "stream-chart"
+    },
+    {
+      "name": "Suggestions",
+      "slug": "suggestions"
+    },
+    {
+      "name": "Sunburst",
+      "slug": "sunburst"
+    },
+    {
+      "name": "Switch",
+      "slug": "switch"
+    },
+    {
+      "name": "SyncIndicator",
+      "slug": "sync-indicator"
+    },
+    {
+      "name": "SyncedForm",
+      "slug": "synced-form"
+    },
+    {
+      "name": "SystemPage",
+      "slug": "system-page"
+    },
+    {
+      "name": "Table",
+      "slug": "table"
+    },
+    {
+      "name": "Tabs",
+      "slug": "tabs"
+    },
+    {
+      "name": "Tag",
+      "slug": "tag"
+    },
+    {
+      "name": "TagsInput",
+      "slug": "tags-input"
+    },
+    {
+      "name": "Text",
+      "slug": "text"
+    },
+    {
+      "name": "Textarea",
+      "slug": "textarea"
+    },
+    {
+      "name": "Thread",
+      "slug": "thread"
+    },
+    {
+      "name": "Ticker",
+      "slug": "ticker"
+    },
+    {
+      "name": "Tile",
+      "slug": "tile"
+    },
+    {
+      "name": "TileMap",
+      "slug": "tile-map"
+    },
+    {
+      "name": "TimeField",
+      "slug": "time-field"
+    },
+    {
+      "name": "TimeZoneSelect",
+      "slug": "time-zone-select"
+    },
+    {
+      "name": "Toaster",
+      "slug": "toaster"
+    },
+    {
+      "name": "Toggle",
+      "slug": "toggle"
+    },
+    {
+      "name": "ToolCall",
+      "slug": "tool-call"
+    },
+    {
+      "name": "Tooltip",
+      "slug": "tooltip"
+    },
+    {
+      "name": "Tour",
+      "slug": "tour"
+    },
+    {
+      "name": "TraceViewer",
+      "slug": "trace-viewer"
+    },
+    {
+      "name": "TransportPicker",
+      "slug": "transport-picker"
+    },
+    {
+      "name": "Treemap",
+      "slug": "treemap"
+    },
+    {
+      "name": "TypeToConfirm",
+      "slug": "type-to-confirm"
+    },
+    {
+      "name": "TypingIndicator",
+      "slug": "typing-indicator"
+    },
+    {
+      "name": "UsageMeter",
+      "slug": "usage-meter"
+    },
+    {
+      "name": "UsageMeters",
+      "slug": "usage-meters"
+    },
+    {
+      "name": "UserMessage",
+      "slug": "user-message"
+    },
+    {
+      "name": "VersionHistory",
+      "slug": "version-history"
+    },
+    {
+      "name": "ViewportRail",
+      "slug": "viewport-rail"
+    },
+    {
+      "name": "VirtualList",
+      "slug": "virtual-list"
+    },
+    {
+      "name": "WaterfallChart",
+      "slug": "waterfall-chart"
+    },
+    {
+      "name": "Webhooks",
+      "slug": "webhooks"
+    },
+    {
+      "name": "WeekPicker",
+      "slug": "week-picker"
+    },
+    {
+      "name": "YearView",
+      "slug": "year-view"
+    }
+  ],
+  "parts": {
+    "button": [
+      {
+        "part": "button",
+        "property": "bg",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.button.disabled.bg",
+        "token": "--warp-button-bg-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "border",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.button.disabled.border",
+        "token": "--warp-button-border-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "highlight",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.button.disabled.highlight",
+        "token": "--warp-button-highlight-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "text",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.button.disabled.text",
+        "token": "--warp-button-text-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "bg",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.button.focus.bg",
+        "token": "--warp-button-bg-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "border",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.button.focus.border",
+        "token": "--warp-button-border-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "highlight",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.button.focus.highlight",
+        "token": "--warp-button-highlight-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "text",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.button.focus.text",
+        "token": "--warp-button-text-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "bg",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.button.hover.bg",
+        "token": "--warp-button-bg-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "border",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.button.hover.border",
+        "token": "--warp-button-border-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "highlight",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.button.hover.highlight",
+        "token": "--warp-button-highlight-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "text",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.button.hover.text",
+        "token": "--warp-button-text-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "bg",
+        "state": "press",
+        "default": "Not classified",
+        "config": "parts.button.press.bg",
+        "token": "--warp-button-bg-press",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "border",
+        "state": "press",
+        "default": "Not classified",
+        "config": "parts.button.press.border",
+        "token": "--warp-button-border-press",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "highlight",
+        "state": "press",
+        "default": "Not classified",
+        "config": "parts.button.press.highlight",
+        "token": "--warp-button-highlight-press",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "text",
+        "state": "press",
+        "default": "Not classified",
+        "config": "parts.button.press.text",
+        "token": "--warp-button-text-press",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "bg",
+        "state": "rest",
+        "default": "var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-fill, var(--_fill))))",
+        "config": "parts.button.bg",
+        "token": "--warp-button-bg",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "border",
+        "state": "rest",
+        "default": "var(--warp-border-hairline) solid var(--warp-button-border,var(--warp-config-part-button-border,var(--warp-tone-edge, var(--_edge))))",
+        "config": "parts.button.border",
+        "token": "--warp-button-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "button",
+        "property": "font.family",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.button.font.family",
+        "token": "--warp-button-font-family",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "button",
+        "property": "font.letterSpacing",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.button.font.letterSpacing",
+        "token": "--warp-button-font-letter-spacing",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "button",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.button.font.size",
+        "token": "--warp-button-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "button",
+        "property": "font.transform",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.button.font.transform",
+        "token": "--warp-button-font-transform",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "button",
+        "property": "font.weight",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.button.font.weight",
+        "token": "--warp-button-font-weight",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "button",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.button.gap",
+        "token": "--warp-button-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "button",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.button.height",
+        "token": "--warp-button-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "button",
+        "property": "highlight",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.button.highlight",
+        "token": "--warp-button-highlight",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "button",
+        "property": "paddingInline",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.button.paddingInline",
+        "token": "--warp-button-padding-inline",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "button",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.button.radius",
+        "token": "--warp-button-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "button",
+        "property": "text",
+        "state": "rest",
+        "default": "var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-tone-ink, var(--_ink))))",
+        "config": "parts.button.text",
+        "token": "--warp-button-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "sweep": [
+      {
+        "part": "sweep",
+        "property": "label",
+        "state": "invalid",
+        "default": "Not classified",
+        "config": "parts.sweep.invalid.label",
+        "token": "--warp-sweep-label-invalid",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "sweep",
+        "property": "stroke",
+        "state": "invalid",
+        "default": "Not classified",
+        "config": "parts.sweep.invalid.stroke",
+        "token": "--warp-sweep-stroke-invalid",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "sweep",
+        "property": "text",
+        "state": "invalid",
+        "default": "Not classified",
+        "config": "parts.sweep.invalid.text",
+        "token": "--warp-sweep-text-invalid",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "sweep",
+        "property": "base",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.sweep.base",
+        "token": "--warp-sweep-base",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "sweep",
+        "property": "label",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.sweep.label",
+        "token": "--warp-sweep-label",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "sweep",
+        "property": "stroke",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.sweep.stroke",
+        "token": "--warp-sweep-stroke",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "sweep",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.sweep.text",
+        "token": "--warp-sweep-text",
+        "status": "Candidate · unresolved"
+      }
+    ],
+    "nav": [
+      {
+        "part": "nav",
+        "property": "text",
+        "state": "active",
+        "default": "Not classified",
+        "config": "parts.nav.active.text",
+        "token": "--warp-nav-text-active",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "nav",
+        "property": "underline",
+        "state": "active",
+        "default": "Not classified",
+        "config": "parts.nav.active.underline",
+        "token": "--warp-nav-underline-active",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "nav",
+        "property": "text",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.nav.disabled.text",
+        "token": "--warp-nav-text-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "nav",
+        "property": "underline",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.nav.disabled.underline",
+        "token": "--warp-nav-underline-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "nav",
+        "property": "text",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.nav.focus.text",
+        "token": "--warp-nav-text-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "nav",
+        "property": "underline",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.nav.focus.underline",
+        "token": "--warp-nav-underline-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "nav",
+        "property": "text",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.nav.hover.text",
+        "token": "--warp-nav-text-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "nav",
+        "property": "underline",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.nav.hover.underline",
+        "token": "--warp-nav-underline-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "nav",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.nav.gap",
+        "token": "--warp-nav-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "nav",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.nav.text",
+        "token": "--warp-nav-text",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "nav",
+        "property": "underline",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.nav.underline",
+        "token": "--warp-nav-underline",
+        "status": "Candidate · unresolved"
+      }
+    ],
+    "tabs": [
+      {
+        "part": "tabs",
+        "property": "text",
+        "state": "active",
+        "default": "Not classified",
+        "config": "parts.tabs.active.text",
+        "token": "--warp-tabs-text-active",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "tabs",
+        "property": "underline",
+        "state": "active",
+        "default": "Not classified",
+        "config": "parts.tabs.active.underline",
+        "token": "--warp-tabs-underline-active",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "tabs",
+        "property": "text",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.tabs.disabled.text",
+        "token": "--warp-tabs-text-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "tabs",
+        "property": "underline",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.tabs.disabled.underline",
+        "token": "--warp-tabs-underline-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "tabs",
+        "property": "text",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.tabs.focus.text",
+        "token": "--warp-tabs-text-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "tabs",
+        "property": "underline",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.tabs.focus.underline",
+        "token": "--warp-tabs-underline-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "tabs",
+        "property": "text",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.tabs.hover.text",
+        "token": "--warp-tabs-text-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "tabs",
+        "property": "underline",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.tabs.hover.underline",
+        "token": "--warp-tabs-underline-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "tabs",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tabs.text",
+        "token": "--warp-tabs-text",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "tabs",
+        "property": "underline",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tabs.underline",
+        "token": "--warp-tabs-underline",
+        "status": "Candidate · unresolved"
+      }
+    ],
+    "link": [
+      {
+        "part": "link",
+        "property": "text",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.link.disabled.text",
+        "token": "--warp-link-text-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "link",
+        "property": "underline",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.link.disabled.underline",
+        "token": "--warp-link-underline-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "link",
+        "property": "text",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.link.focus.text",
+        "token": "--warp-link-text-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "link",
+        "property": "underline",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.link.focus.underline",
+        "token": "--warp-link-underline-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "link",
+        "property": "text",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.link.hover.text",
+        "token": "--warp-link-text-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "link",
+        "property": "underline",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.link.hover.underline",
+        "token": "--warp-link-underline-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "link",
+        "property": "text",
+        "state": "press",
+        "default": "Not classified",
+        "config": "parts.link.press.text",
+        "token": "--warp-link-text-press",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "link",
+        "property": "underline",
+        "state": "press",
+        "default": "Not classified",
+        "config": "parts.link.press.underline",
+        "token": "--warp-link-underline-press",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "link",
+        "property": "text",
+        "state": "rest",
+        "default": "var(--warp-color-accent-text)",
+        "config": "parts.link.text",
+        "token": "--warp-link-text",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "link",
+        "property": "underline",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.link.underline",
+        "token": "--warp-link-underline",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "link",
+        "property": "underline.offset",
+        "state": "rest",
+        "default": "0.22em",
+        "config": "parts.link.underline.offset",
+        "token": "--warp-link-underline-offset",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "link",
+        "property": "underline.width",
+        "state": "rest",
+        "default": "var(--warp-border-hairline)",
+        "config": "parts.link.underline.width",
+        "token": "--warp-link-underline-width",
+        "status": "Candidate · partial"
+      }
+    ],
+    "pill": [
+      {
+        "part": "pill",
+        "property": "bg",
+        "state": "active",
+        "default": "Not classified",
+        "config": "parts.pill.active.bg",
+        "token": "--warp-pill-bg-active",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "border",
+        "state": "active",
+        "default": "Not classified",
+        "config": "parts.pill.active.border",
+        "token": "--warp-pill-border-active",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "text",
+        "state": "active",
+        "default": "Not classified",
+        "config": "parts.pill.active.text",
+        "token": "--warp-pill-text-active",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "bg",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.pill.disabled.bg",
+        "token": "--warp-pill-bg-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "border",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.pill.disabled.border",
+        "token": "--warp-pill-border-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "text",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.pill.disabled.text",
+        "token": "--warp-pill-text-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "bg",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.pill.focus.bg",
+        "token": "--warp-pill-bg-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "border",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.pill.focus.border",
+        "token": "--warp-pill-border-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "text",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.pill.focus.text",
+        "token": "--warp-pill-text-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "bg",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.pill.hover.bg",
+        "token": "--warp-pill-bg-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "border",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.pill.hover.border",
+        "token": "--warp-pill-border-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "text",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.pill.hover.text",
+        "token": "--warp-pill-text-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "bg",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pill.bg",
+        "token": "--warp-pill-bg",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "pill",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pill.border",
+        "token": "--warp-pill-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "pill",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pill.font.css",
+        "token": "--warp-pill-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "pill",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pill.radius",
+        "token": "--warp-pill-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "pill",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pill.text",
+        "token": "--warp-pill-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "badge": [
+      {
+        "part": "badge",
+        "property": "bg",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.badge.bg",
+        "token": "--warp-badge-bg",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "badge",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.badge.border",
+        "token": "--warp-badge-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "badge",
+        "property": "font.family",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.badge.font.family",
+        "token": "--warp-badge-font-family",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "badge",
+        "property": "font.letterSpacing",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.badge.font.letterSpacing",
+        "token": "--warp-badge-font-letter-spacing",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "badge",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.badge.font.size",
+        "token": "--warp-badge-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "badge",
+        "property": "font.transform",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.badge.font.transform",
+        "token": "--warp-badge-font-transform",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "badge",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.badge.radius",
+        "token": "--warp-badge-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "badge",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.badge.text",
+        "token": "--warp-badge-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "field": [
+      {
+        "part": "field",
+        "property": "bg",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.field.disabled.bg",
+        "token": "--warp-field-bg-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "label",
+        "state": "disabled",
+        "default": "Not classified",
+        "config": "parts.field.disabled.label",
+        "token": "--warp-field-label-disabled",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "label",
+        "state": "floated",
+        "default": "Not classified",
+        "config": "parts.field.floated.label",
+        "token": "--warp-field-label-floated",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "bg",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.field.focus.bg",
+        "token": "--warp-field-bg-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "label",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.field.focus.label",
+        "token": "--warp-field-label-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "ring",
+        "state": "focus",
+        "default": "Not classified",
+        "config": "parts.field.focus.ring",
+        "token": "--warp-field-ring-focus",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "bg",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.field.hover.bg",
+        "token": "--warp-field-bg-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "label",
+        "state": "hover",
+        "default": "Not classified",
+        "config": "parts.field.hover.label",
+        "token": "--warp-field-label-hover",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "bg",
+        "state": "invalid",
+        "default": "Not classified",
+        "config": "parts.field.invalid.bg",
+        "token": "--warp-field-bg-invalid",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "label",
+        "state": "invalid",
+        "default": "Not classified",
+        "config": "parts.field.invalid.label",
+        "token": "--warp-field-label-invalid",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "ring",
+        "state": "invalid",
+        "default": "Not classified",
+        "config": "parts.field.invalid.ring",
+        "token": "--warp-field-ring-invalid",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "bg",
+        "state": "readonly",
+        "default": "Not classified",
+        "config": "parts.field.readonly.bg",
+        "token": "--warp-field-bg-readonly",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "label",
+        "state": "readonly",
+        "default": "Not classified",
+        "config": "parts.field.readonly.label",
+        "token": "--warp-field-label-readonly",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "bg",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.field.bg",
+        "token": "--warp-field-bg",
+        "status": "Candidate · unresolved"
+      },
+      {
+        "part": "field",
+        "property": "label",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.field.label",
+        "token": "--warp-field-label",
+        "status": "Candidate · unresolved"
+      }
+    ],
+    "focus": [
+      {
+        "part": "focus",
+        "property": "ring",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.focus.ring",
+        "token": "--warp-focus-ring",
+        "status": "Candidate · unresolved"
+      }
+    ],
+    "text/display": [
+      {
+        "part": "text/display",
+        "property": "font.family",
+        "state": "rest",
+        "default": "var(--warp-text-display-font)",
+        "config": "parts[\"text/display\"].font.family | system.text.display.family",
+        "token": "--warp-text--display-font-family",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/display",
+        "property": "font.letterSpacing",
+        "state": "rest",
+        "default": "var(--warp-text-display-tracking)",
+        "config": "parts[\"text/display\"].font.letterSpacing | system.text.display.letterSpacing",
+        "token": "--warp-text--display-font-letter-spacing",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/display",
+        "property": "font.lineHeight",
+        "state": "rest",
+        "default": "var(--warp-text-display-leading)",
+        "config": "parts[\"text/display\"].font.lineHeight | system.text.display.lineHeight",
+        "token": "--warp-text--display-font-line-height",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/display",
+        "property": "font.size",
+        "state": "rest",
+        "default": "var(--warp-text-display-size)",
+        "config": "parts[\"text/display\"].font.size | system.text.display.size",
+        "token": "--warp-text--display-font-size",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/display",
+        "property": "font.weight",
+        "state": "rest",
+        "default": "var(--warp-text-display-weight)",
+        "config": "parts[\"text/display\"].font.weight | system.text.display.weight",
+        "token": "--warp-text--display-font-weight",
+        "status": "Candidate · classified"
+      }
+    ],
+    "text/title": [
+      {
+        "part": "text/title",
+        "property": "font.family",
+        "state": "rest",
+        "default": "var(--warp-text-title-font)",
+        "config": "parts[\"text/title\"].font.family | system.text.title.family",
+        "token": "--warp-text--title-font-family",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/title",
+        "property": "font.letterSpacing",
+        "state": "rest",
+        "default": "var(--warp-text-title-tracking)",
+        "config": "parts[\"text/title\"].font.letterSpacing | system.text.title.letterSpacing",
+        "token": "--warp-text--title-font-letter-spacing",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/title",
+        "property": "font.lineHeight",
+        "state": "rest",
+        "default": "var(--warp-text-title-leading)",
+        "config": "parts[\"text/title\"].font.lineHeight | system.text.title.lineHeight",
+        "token": "--warp-text--title-font-line-height",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/title",
+        "property": "font.size",
+        "state": "rest",
+        "default": "var(--warp-text-title-size)",
+        "config": "parts[\"text/title\"].font.size | system.text.title.size",
+        "token": "--warp-text--title-font-size",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/title",
+        "property": "font.weight",
+        "state": "rest",
+        "default": "var(--warp-text-title-weight)",
+        "config": "parts[\"text/title\"].font.weight | system.text.title.weight",
+        "token": "--warp-text--title-font-weight",
+        "status": "Candidate · classified"
+      }
+    ],
+    "text/heading": [
+      {
+        "part": "text/heading",
+        "property": "font.family",
+        "state": "rest",
+        "default": "var(--warp-text-heading-font)",
+        "config": "parts[\"text/heading\"].font.family | system.text.heading.family",
+        "token": "--warp-text--heading-font-family",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/heading",
+        "property": "font.letterSpacing",
+        "state": "rest",
+        "default": "var(--warp-text-heading-tracking)",
+        "config": "parts[\"text/heading\"].font.letterSpacing | system.text.heading.letterSpacing",
+        "token": "--warp-text--heading-font-letter-spacing",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/heading",
+        "property": "font.lineHeight",
+        "state": "rest",
+        "default": "var(--warp-text-heading-leading)",
+        "config": "parts[\"text/heading\"].font.lineHeight | system.text.heading.lineHeight",
+        "token": "--warp-text--heading-font-line-height",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/heading",
+        "property": "font.size",
+        "state": "rest",
+        "default": "var(--warp-text-heading-size)",
+        "config": "parts[\"text/heading\"].font.size | system.text.heading.size",
+        "token": "--warp-text--heading-font-size",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/heading",
+        "property": "font.weight",
+        "state": "rest",
+        "default": "var(--warp-text-heading-weight)",
+        "config": "parts[\"text/heading\"].font.weight | system.text.heading.weight",
+        "token": "--warp-text--heading-font-weight",
+        "status": "Candidate · classified"
+      }
+    ],
+    "text/body": [
+      {
+        "part": "text/body",
+        "property": "font.family",
+        "state": "rest",
+        "default": "var(--warp-text-body-font)",
+        "config": "parts[\"text/body\"].font.family | system.text.body.family",
+        "token": "--warp-text--body-font-family",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/body",
+        "property": "font.lineHeight",
+        "state": "rest",
+        "default": "var(--warp-text-body-leading)",
+        "config": "parts[\"text/body\"].font.lineHeight | system.text.body.lineHeight",
+        "token": "--warp-text--body-font-line-height",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/body",
+        "property": "font.size",
+        "state": "rest",
+        "default": "var(--warp-text-body-size)",
+        "config": "parts[\"text/body\"].font.size | system.text.body.size",
+        "token": "--warp-text--body-font-size",
+        "status": "Candidate · classified"
+      }
+    ],
+    "text/label": [
+      {
+        "part": "text/label",
+        "property": "font.family",
+        "state": "rest",
+        "default": "var(--warp-text-label-font)",
+        "config": "parts[\"text/label\"].font.family | system.text.label.family",
+        "token": "--warp-text--label-font-family",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/label",
+        "property": "font.letterSpacing",
+        "state": "rest",
+        "default": "var(--warp-text-label-tracking)",
+        "config": "parts[\"text/label\"].font.letterSpacing | system.text.label.letterSpacing",
+        "token": "--warp-text--label-font-letter-spacing",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/label",
+        "property": "font.lineHeight",
+        "state": "rest",
+        "default": "var(--warp-text-label-leading)",
+        "config": "parts[\"text/label\"].font.lineHeight | system.text.label.lineHeight",
+        "token": "--warp-text--label-font-line-height",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/label",
+        "property": "font.size",
+        "state": "rest",
+        "default": "var(--warp-text-label-size)",
+        "config": "parts[\"text/label\"].font.size | system.text.label.size",
+        "token": "--warp-text--label-font-size",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/label",
+        "property": "font.transform",
+        "state": "rest",
+        "default": "var(--warp-text-label-case)",
+        "config": "parts[\"text/label\"].font.transform | system.text.label.transform",
+        "token": "--warp-text--label-font-transform",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/label",
+        "property": "font.weight",
+        "state": "rest",
+        "default": "var(--warp-text-label-weight)",
+        "config": "parts[\"text/label\"].font.weight | system.text.label.weight",
+        "token": "--warp-text--label-font-weight",
+        "status": "Candidate · classified"
+      }
+    ],
+    "text/caption": [
+      {
+        "part": "text/caption",
+        "property": "font.family",
+        "state": "rest",
+        "default": "var(--warp-text-caption-font)",
+        "config": "parts[\"text/caption\"].font.family | system.text.caption.family",
+        "token": "--warp-text--caption-font-family",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/caption",
+        "property": "font.lineHeight",
+        "state": "rest",
+        "default": "var(--warp-text-caption-leading)",
+        "config": "parts[\"text/caption\"].font.lineHeight | system.text.caption.lineHeight",
+        "token": "--warp-text--caption-font-line-height",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/caption",
+        "property": "font.size",
+        "state": "rest",
+        "default": "var(--warp-text-caption-size)",
+        "config": "parts[\"text/caption\"].font.size | system.text.caption.size",
+        "token": "--warp-text--caption-font-size",
+        "status": "Candidate · classified"
+      }
+    ],
+    "text/eyebrow": [
+      {
+        "part": "text/eyebrow",
+        "property": "font.family",
+        "state": "rest",
+        "default": "var(--warp-text-eyebrow-font)",
+        "config": "parts[\"text/eyebrow\"].font.family | system.text.eyebrow.family",
+        "token": "--warp-text--eyebrow-font-family",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/eyebrow",
+        "property": "font.letterSpacing",
+        "state": "rest",
+        "default": "var(--warp-text-eyebrow-tracking)",
+        "config": "parts[\"text/eyebrow\"].font.letterSpacing | system.text.eyebrow.letterSpacing",
+        "token": "--warp-text--eyebrow-font-letter-spacing",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/eyebrow",
+        "property": "font.lineHeight",
+        "state": "rest",
+        "default": "var(--warp-text-eyebrow-leading)",
+        "config": "parts[\"text/eyebrow\"].font.lineHeight | system.text.eyebrow.lineHeight",
+        "token": "--warp-text--eyebrow-font-line-height",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/eyebrow",
+        "property": "font.size",
+        "state": "rest",
+        "default": "var(--warp-text-eyebrow-size)",
+        "config": "parts[\"text/eyebrow\"].font.size | system.text.eyebrow.size",
+        "token": "--warp-text--eyebrow-font-size",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/eyebrow",
+        "property": "font.transform",
+        "state": "rest",
+        "default": "var(--warp-text-eyebrow-case)",
+        "config": "parts[\"text/eyebrow\"].font.transform | system.text.eyebrow.transform",
+        "token": "--warp-text--eyebrow-font-transform",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/eyebrow",
+        "property": "font.weight",
+        "state": "rest",
+        "default": "var(--warp-text-eyebrow-weight)",
+        "config": "parts[\"text/eyebrow\"].font.weight | system.text.eyebrow.weight",
+        "token": "--warp-text--eyebrow-font-weight",
+        "status": "Candidate · classified"
+      }
+    ],
+    "text/code": [
+      {
+        "part": "text/code",
+        "property": "font.family",
+        "state": "rest",
+        "default": "var(--warp-text-code-font)",
+        "config": "parts[\"text/code\"].font.family | system.text.code.family",
+        "token": "--warp-text--code-font-family",
+        "status": "Candidate · classified"
+      },
+      {
+        "part": "text/code",
+        "property": "font.size",
+        "state": "rest",
+        "default": "var(--warp-text-code-size)",
+        "config": "parts[\"text/code\"].font.size | system.text.code.size",
+        "token": "--warp-text--code-font-size",
+        "status": "Candidate · classified"
+      }
+    ],
+    "status-light": [
+      {
+        "part": "status-light",
+        "property": "font.size",
+        "state": "rest",
+        "default": "var(--warp-text-body-size)",
+        "config": "parts[\"status-light\"].font.size",
+        "token": "--warp-status-light-font-size",
+        "status": "Candidate · classified"
+      }
+    ],
+    "avatar": [
+      {
+        "part": "avatar",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.avatar.font.css",
+        "token": "--warp-avatar-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "avatar",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.avatar.height",
+        "token": "--warp-avatar-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "avatar",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.avatar.radius",
+        "token": "--warp-avatar-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "avatar",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.avatar.shadow",
+        "token": "--warp-avatar-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "avatar",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.avatar.text",
+        "token": "--warp-avatar-text",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "avatar",
+        "property": "width",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.avatar.width",
+        "token": "--warp-avatar-width",
+        "status": "Candidate · partial"
+      }
+    ],
+    "event-card": [
+      {
+        "part": "event-card",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"event-card\"].gap",
+        "token": "--warp-event-card-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "tile": [
+      {
+        "part": "tile",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tile.border",
+        "token": "--warp-tile-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "tile",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tile.gap",
+        "token": "--warp-tile-local-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "tile",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tile.padding",
+        "token": "--warp-tile-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "tile",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tile.radius",
+        "token": "--warp-tile-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "tile",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tile.shadow",
+        "token": "--warp-tile-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "tile",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tile.text",
+        "token": "--warp-tile-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "pip": [
+      {
+        "part": "pip",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pip.radius",
+        "token": "--warp-pip-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "pip",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pip.shadow",
+        "token": "--warp-pip-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "call-controls": [
+      {
+        "part": "call-controls",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"call-controls\"].gap",
+        "token": "--warp-call-controls-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "call-controls",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"call-controls\"].padding",
+        "token": "--warp-call-controls-padding",
+        "status": "Candidate · partial"
+      }
+    ],
+    "notification": [
+      {
+        "part": "notification",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.notification.padding",
+        "token": "--warp-notification-padding",
+        "status": "Candidate · partial"
+      }
+    ],
+    "push-ask": [
+      {
+        "part": "push-ask",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"push-ask\"].padding",
+        "token": "--warp-push-ask-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "push-ask",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"push-ask\"].radius",
+        "token": "--warp-push-ask-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "push-ask",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"push-ask\"].shadow",
+        "token": "--warp-push-ask-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "receipts": [
+      {
+        "part": "receipts",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.receipts.text",
+        "token": "--warp-receipts-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "typing": [
+      {
+        "part": "typing",
+        "property": "paddingInline",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.typing.paddingInline",
+        "token": "--warp-typing-padding-inline",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "typing",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.typing.text",
+        "token": "--warp-typing-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "composer": [
+      {
+        "part": "composer",
+        "property": "margin",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.composer.margin",
+        "token": "--warp-composer-margin",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "composer",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.composer.radius",
+        "token": "--warp-composer-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "suggest": [
+      {
+        "part": "suggest",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.suggest.radius",
+        "token": "--warp-suggest-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "suggest",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.suggest.shadow",
+        "token": "--warp-suggest-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "cite": [
+      {
+        "part": "cite",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cite.font.css",
+        "token": "--warp-cite-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "cite",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cite.radius",
+        "token": "--warp-cite-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "cite",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cite.shadow",
+        "token": "--warp-cite-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "cite",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cite.text",
+        "token": "--warp-cite-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "tool-call": [
+      {
+        "part": "tool-call",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"tool-call\"].font.size",
+        "token": "--warp-tool-call-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "tool-call",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"tool-call\"].radius",
+        "token": "--warp-tool-call-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "tool-call",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"tool-call\"].shadow",
+        "token": "--warp-tool-call-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "cursor": [
+      {
+        "part": "cursor",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cursor.text",
+        "token": "--warp-cursor-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "lock": [
+      {
+        "part": "lock",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.lock.radius",
+        "token": "--warp-lock-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "lock",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.lock.shadow",
+        "token": "--warp-lock-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "lock",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.lock.text",
+        "token": "--warp-lock-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "sync": [
+      {
+        "part": "sync",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.sync.text",
+        "token": "--warp-sync-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "reasoning": [
+      {
+        "part": "reasoning",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.reasoning.font.size",
+        "token": "--warp-reasoning-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "reasoning",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.reasoning.radius",
+        "token": "--warp-reasoning-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "branch": [
+      {
+        "part": "branch",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.branch.font.css",
+        "token": "--warp-branch-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "branch",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.branch.text",
+        "token": "--warp-branch-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "context-meter": [
+      {
+        "part": "context-meter",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"context-meter\"].font.css",
+        "token": "--warp-context-meter-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "context-meter",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"context-meter\"].text",
+        "token": "--warp-context-meter-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "trace": [
+      {
+        "part": "trace",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.trace.font.css",
+        "token": "--warp-trace-font-css",
+        "status": "Candidate · partial"
+      }
+    ],
+    "question": [
+      {
+        "part": "question",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.question.radius",
+        "token": "--warp-question-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "question",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.question.shadow",
+        "token": "--warp-question-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "checkpoint": [
+      {
+        "part": "checkpoint",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.checkpoint.font.css",
+        "token": "--warp-checkpoint-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "checkpoint",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.checkpoint.text",
+        "token": "--warp-checkpoint-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "commit": [
+      {
+        "part": "commit",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.commit.radius",
+        "token": "--warp-commit-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "commit",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.commit.shadow",
+        "token": "--warp-commit-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "thread-replies": [
+      {
+        "part": "thread-replies",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"thread-replies\"].text",
+        "token": "--warp-thread-replies-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "comment-thread": [
+      {
+        "part": "comment-thread",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"comment-thread\"].radius",
+        "token": "--warp-comment-thread-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "comment-thread",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"comment-thread\"].shadow",
+        "token": "--warp-comment-thread-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "follow-flag": [
+      {
+        "part": "follow-flag",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"follow-flag\"].font.css",
+        "token": "--warp-follow-flag-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "follow-flag",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"follow-flag\"].radius",
+        "token": "--warp-follow-flag-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "follow-flag",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"follow-flag\"].text",
+        "token": "--warp-follow-flag-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "viewport-rail": [
+      {
+        "part": "viewport-rail",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"viewport-rail\"].radius",
+        "token": "--warp-viewport-rail-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "viewport-rail",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"viewport-rail\"].shadow",
+        "token": "--warp-viewport-rail-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "click-ripple": [
+      {
+        "part": "click-ripple",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"click-ripple\"].shadow",
+        "token": "--warp-click-ripple-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "artifact": [
+      {
+        "part": "artifact",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.artifact.radius",
+        "token": "--warp-artifact-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "artifact",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.artifact.shadow",
+        "token": "--warp-artifact-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "availability": [
+      {
+        "part": "availability",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.availability.gap",
+        "token": "--warp-availability-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "auto-track": [
+      {
+        "part": "auto-track",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"auto-track\"].font.size",
+        "token": "--warp-auto-track-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "auto-track",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"auto-track\"].text",
+        "token": "--warp-auto-track-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "year": [
+      {
+        "part": "year",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.year.gap",
+        "token": "--warp-year-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "prefs-matrix": [
+      {
+        "part": "prefs-matrix",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"prefs-matrix\"].gap",
+        "token": "--warp-prefs-matrix-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "transport": [
+      {
+        "part": "transport",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.transport.gap",
+        "token": "--warp-transport-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "message": [
+      {
+        "part": "message",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.message.radius",
+        "token": "--warp-message-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "system-page": [
+      {
+        "part": "system-page",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"system-page\"].padding",
+        "token": "--warp-system-page-padding",
+        "status": "Candidate · partial"
+      }
+    ],
+    "button-group": [
+      {
+        "part": "button-group",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"button-group\"].gap",
+        "token": "--warp-button-group-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "toggle": [
+      {
+        "part": "toggle",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.toggle.border",
+        "token": "--warp-toggle-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "toggle",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.toggle.font.css",
+        "token": "--warp-toggle-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "toggle",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.toggle.gap",
+        "token": "--warp-toggle-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "toggle",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.toggle.height",
+        "token": "--warp-toggle-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "toggle",
+        "property": "minWidth",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.toggle.minWidth",
+        "token": "--warp-toggle-min-width",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "toggle",
+        "property": "paddingInline",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.toggle.paddingInline",
+        "token": "--warp-toggle-padding-inline",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "toggle",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.toggle.radius",
+        "token": "--warp-toggle-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "toggle",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.toggle.text",
+        "token": "--warp-toggle-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "toggle-group": [
+      {
+        "part": "toggle-group",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"toggle-group\"].border",
+        "token": "--warp-toggle-group-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "toggle-group",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"toggle-group\"].radius",
+        "token": "--warp-toggle-group-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "chip": [
+      {
+        "part": "chip",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.chip.border",
+        "token": "--warp-chip-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "chip",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.chip.font.css",
+        "token": "--warp-chip-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "chip",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.chip.font.size",
+        "token": "--warp-chip-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "chip",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.chip.gap",
+        "token": "--warp-chip-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "chip",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.chip.height",
+        "token": "--warp-chip-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "chip",
+        "property": "paddingInline",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.chip.paddingInline",
+        "token": "--warp-chip-padding-inline",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "chip",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.chip.radius",
+        "token": "--warp-chip-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "chip",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.chip.text",
+        "token": "--warp-chip-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "surface": [
+      {
+        "part": "surface",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.surface.border",
+        "token": "--warp-surface-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "surface",
+        "property": "font.lineHeight",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.surface.font.lineHeight",
+        "token": "--warp-surface-font-line-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "surface",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.surface.gap",
+        "token": "--warp-surface-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "surface",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.surface.padding",
+        "token": "--warp-surface-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "surface",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.surface.radius",
+        "token": "--warp-surface-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "surface",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.surface.shadow",
+        "token": "--warp-surface-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "surface",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.surface.text",
+        "token": "--warp-surface-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "fab": [
+      {
+        "part": "fab",
+        "property": "font.family",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.fab.font.family",
+        "token": "--warp-fab-font-family",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "fab",
+        "property": "font.letterSpacing",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.fab.font.letterSpacing",
+        "token": "--warp-fab-font-letter-spacing",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "fab",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.fab.font.size",
+        "token": "--warp-fab-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "fab",
+        "property": "font.transform",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.fab.font.transform",
+        "token": "--warp-fab-font-transform",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "fab",
+        "property": "font.weight",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.fab.font.weight",
+        "token": "--warp-fab-font-weight",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "fab",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.fab.gap",
+        "token": "--warp-fab-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "fab",
+        "property": "insetBlockEnd",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.fab.insetBlockEnd",
+        "token": "--warp-fab-inset-block-end",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "fab",
+        "property": "insetInlineEnd",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.fab.insetInlineEnd",
+        "token": "--warp-fab-inset-inline-end",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "fab",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.fab.radius",
+        "token": "--warp-fab-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "fab",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.fab.shadow",
+        "token": "--warp-fab-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "fab",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.fab.text",
+        "token": "--warp-fab-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "alert": [
+      {
+        "part": "alert",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.alert.border",
+        "token": "--warp-alert-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "alert",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.alert.gap",
+        "token": "--warp-alert-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "alert",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.alert.padding",
+        "token": "--warp-alert-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "alert",
+        "property": "paddingInlineEnd",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.alert.paddingInlineEnd",
+        "token": "--warp-alert-padding-inline-end",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "alert",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.alert.radius",
+        "token": "--warp-alert-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "alert",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.alert.shadow",
+        "token": "--warp-alert-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "alert",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.alert.text",
+        "token": "--warp-alert-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "banner": [
+      {
+        "part": "banner",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.banner.border",
+        "token": "--warp-banner-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "banner",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.banner.font.size",
+        "token": "--warp-banner-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "banner",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.banner.gap",
+        "token": "--warp-banner-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "banner",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.banner.padding",
+        "token": "--warp-banner-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "banner",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.banner.radius",
+        "token": "--warp-banner-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "banner",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.banner.text",
+        "token": "--warp-banner-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "callout": [
+      {
+        "part": "callout",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.callout.gap",
+        "token": "--warp-callout-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "callout",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.callout.padding",
+        "token": "--warp-callout-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "callout",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.callout.radius",
+        "token": "--warp-callout-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "spinner": [
+      {
+        "part": "spinner",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.spinner.border",
+        "token": "--warp-spinner-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "spinner",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.spinner.height",
+        "token": "--warp-spinner-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "spinner",
+        "property": "width",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.spinner.width",
+        "token": "--warp-spinner-width",
+        "status": "Candidate · partial"
+      }
+    ],
+    "skeleton": [
+      {
+        "part": "skeleton",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.skeleton.radius",
+        "token": "--warp-skeleton-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "empty-state": [
+      {
+        "part": "empty-state",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"empty-state\"].gap",
+        "token": "--warp-empty-state-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "empty-state",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"empty-state\"].padding",
+        "token": "--warp-empty-state-padding",
+        "status": "Candidate · partial"
+      }
+    ],
+    "status-dot": [
+      {
+        "part": "status-dot",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"status-dot\"].shadow",
+        "token": "--warp-status-dot-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "live-status": [
+      {
+        "part": "live-status",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"live-status\"].border",
+        "token": "--warp-live-status-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "live-status",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"live-status\"].font.css",
+        "token": "--warp-live-status-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "live-status",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"live-status\"].radius",
+        "token": "--warp-live-status-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "live-status",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"live-status\"].text",
+        "token": "--warp-live-status-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "toolbar": [
+      {
+        "part": "toolbar",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.toolbar.border",
+        "token": "--warp-toolbar-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "toolbar",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.toolbar.radius",
+        "token": "--warp-toolbar-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "logo": [
+      {
+        "part": "logo",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.logo.text",
+        "token": "--warp-logo-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "tag": [
+      {
+        "part": "tag",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tag.border",
+        "token": "--warp-tag-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "tag",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tag.font.size",
+        "token": "--warp-tag-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "tag",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tag.radius",
+        "token": "--warp-tag-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "tag",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tag.text",
+        "token": "--warp-tag-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "image": [
+      {
+        "part": "image",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.image.radius",
+        "token": "--warp-image-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "item": [
+      {
+        "part": "item",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.item.gap",
+        "token": "--warp-item-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "item",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.item.padding",
+        "token": "--warp-item-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "item",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.item.radius",
+        "token": "--warp-item-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "section-message": [
+      {
+        "part": "section-message",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"section-message\"].padding",
+        "token": "--warp-section-message-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "section-message",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"section-message\"].text",
+        "token": "--warp-section-message-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "menubar": [
+      {
+        "part": "menubar",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.menubar.border",
+        "token": "--warp-menubar-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "menubar",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.menubar.radius",
+        "token": "--warp-menubar-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "selection-toolbar": [
+      {
+        "part": "selection-toolbar",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"selection-toolbar\"].radius",
+        "token": "--warp-selection-toolbar-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "selection-toolbar",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"selection-toolbar\"].shadow",
+        "token": "--warp-selection-toolbar-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "selection-toolbar",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"selection-toolbar\"].text",
+        "token": "--warp-selection-toolbar-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "ai-label": [
+      {
+        "part": "ai-label",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"ai-label\"].border",
+        "token": "--warp-ai-label-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "ai-label",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"ai-label\"].font.css",
+        "token": "--warp-ai-label-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "ai-label",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"ai-label\"].radius",
+        "token": "--warp-ai-label-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "ai-label",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"ai-label\"].text",
+        "token": "--warp-ai-label-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "qr": [
+      {
+        "part": "qr",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.qr.gap",
+        "token": "--warp-qr-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "panel": [
+      {
+        "part": "panel",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.panel.gap",
+        "token": "--warp-panel-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "panel",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.panel.padding",
+        "token": "--warp-panel-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "panel",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.panel.radius",
+        "token": "--warp-panel-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "panel",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.panel.shadow",
+        "token": "--warp-panel-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "table": [
+      {
+        "part": "table",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.table.gap",
+        "token": "--warp-table-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "delta": [
+      {
+        "part": "delta",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.delta.font.size",
+        "token": "--warp-delta-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "delta",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.delta.text",
+        "token": "--warp-delta-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "stat-row": [
+      {
+        "part": "stat-row",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"stat-row\"].gap",
+        "token": "--warp-stat-row-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "stat": [
+      {
+        "part": "stat",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.stat.padding",
+        "token": "--warp-stat-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "stat",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.stat.radius",
+        "token": "--warp-stat-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "chart": [
+      {
+        "part": "chart",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.chart.gap",
+        "token": "--warp-chart-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "list": [
+      {
+        "part": "list",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.list.border",
+        "token": "--warp-list-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "list",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.list.radius",
+        "token": "--warp-list-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "tree": [
+      {
+        "part": "tree",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tree.font.size",
+        "token": "--warp-tree-font-size",
+        "status": "Candidate · partial"
+      }
+    ],
+    "card-grid": [
+      {
+        "part": "card-grid",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"card-grid\"].gap",
+        "token": "--warp-card-grid-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "card": [
+      {
+        "part": "card",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.card.padding",
+        "token": "--warp-card-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "card",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.card.radius",
+        "token": "--warp-card-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "card",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.card.shadow",
+        "token": "--warp-card-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "kanban": [
+      {
+        "part": "kanban",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.kanban.gap",
+        "token": "--warp-kanban-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "virtual": [
+      {
+        "part": "virtual",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.virtual.border",
+        "token": "--warp-virtual-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "virtual",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.virtual.radius",
+        "token": "--warp-virtual-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "scroll-grid": [
+      {
+        "part": "scroll-grid",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"scroll-grid\"].border",
+        "token": "--warp-scroll-grid-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "scroll-grid",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"scroll-grid\"].font.size",
+        "token": "--warp-scroll-grid-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "scroll-grid",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"scroll-grid\"].radius",
+        "token": "--warp-scroll-grid-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "pagination": [
+      {
+        "part": "pagination",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pagination.font.size",
+        "token": "--warp-pagination-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "pagination",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pagination.text",
+        "token": "--warp-pagination-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "load-more": [
+      {
+        "part": "load-more",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"load-more\"].font.size",
+        "token": "--warp-load-more-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "load-more",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"load-more\"].text",
+        "token": "--warp-load-more-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "bar-list": [
+      {
+        "part": "bar-list",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"bar-list\"].font.size",
+        "token": "--warp-bar-list-font-size",
+        "status": "Candidate · partial"
+      }
+    ],
+    "map": [
+      {
+        "part": "map",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.map.border",
+        "token": "--warp-map-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "map",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.map.radius",
+        "token": "--warp-map-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "flow": [
+      {
+        "part": "flow",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.flow.border",
+        "token": "--warp-flow-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "flow",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.flow.radius",
+        "token": "--warp-flow-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "sso": [
+      {
+        "part": "sso",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.sso.gap",
+        "token": "--warp-sso-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "gate": [
+      {
+        "part": "gate",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.gate.radius",
+        "token": "--warp-gate-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "checklist": [
+      {
+        "part": "checklist",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.checklist.border",
+        "token": "--warp-checklist-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "checklist",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.checklist.gap",
+        "token": "--warp-checklist-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "checklist",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.checklist.padding",
+        "token": "--warp-checklist-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "checklist",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.checklist.radius",
+        "token": "--warp-checklist-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "checklist",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.checklist.shadow",
+        "token": "--warp-checklist-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "setting-row": [
+      {
+        "part": "setting-row",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"setting-row\"].gap",
+        "token": "--warp-setting-row-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "save-bar": [
+      {
+        "part": "save-bar",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"save-bar\"].font.size",
+        "token": "--warp-save-bar-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "save-bar",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"save-bar\"].gap",
+        "token": "--warp-save-bar-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "save-bar",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"save-bar\"].radius",
+        "token": "--warp-save-bar-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "save-bar",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"save-bar\"].shadow",
+        "token": "--warp-save-bar-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "save-bar",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"save-bar\"].text",
+        "token": "--warp-save-bar-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "confirm": [
+      {
+        "part": "confirm",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.confirm.gap",
+        "token": "--warp-confirm-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "plans": [
+      {
+        "part": "plans",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.plans.gap",
+        "token": "--warp-plans-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "plan-card": [
+      {
+        "part": "plan-card",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"plan-card\"].radius",
+        "token": "--warp-plan-card-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "lines": [
+      {
+        "part": "lines",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.lines.font.size",
+        "token": "--warp-lines-font-size",
+        "status": "Candidate · partial"
+      }
+    ],
+    "conn": [
+      {
+        "part": "conn",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.conn.font.size",
+        "token": "--warp-conn-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "conn",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.conn.text",
+        "token": "--warp-conn-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "qty": [
+      {
+        "part": "qty",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.qty.height",
+        "token": "--warp-qty-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "qty",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.qty.radius",
+        "token": "--warp-qty-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "qty",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.qty.shadow",
+        "token": "--warp-qty-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "pay-frame": [
+      {
+        "part": "pay-frame",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"pay-frame\"].border",
+        "token": "--warp-pay-frame-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "pay-frame",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"pay-frame\"].radius",
+        "token": "--warp-pay-frame-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "confirmation": [
+      {
+        "part": "confirmation",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.confirmation.gap",
+        "token": "--warp-confirmation-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "shortcuts": [
+      {
+        "part": "shortcuts",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.shortcuts.gap",
+        "token": "--warp-shortcuts-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "bulk-bar": [
+      {
+        "part": "bulk-bar",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"bulk-bar\"].font.size",
+        "token": "--warp-bulk-bar-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "bulk-bar",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"bulk-bar\"].gap",
+        "token": "--warp-bulk-bar-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "bulk-bar",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"bulk-bar\"].radius",
+        "token": "--warp-bulk-bar-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "bulk-bar",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"bulk-bar\"].text",
+        "token": "--warp-bulk-bar-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "integrations": [
+      {
+        "part": "integrations",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.integrations.gap",
+        "token": "--warp-integrations-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "integration": [
+      {
+        "part": "integration",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.integration.border",
+        "token": "--warp-integration-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "integration",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.integration.padding",
+        "token": "--warp-integration-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "integration",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.integration.radius",
+        "token": "--warp-integration-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "calendar": [
+      {
+        "part": "calendar",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.calendar.gap",
+        "token": "--warp-calendar-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "range-panel": [
+      {
+        "part": "range-panel",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"range-panel\"].gap",
+        "token": "--warp-range-panel-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "wheels": [
+      {
+        "part": "wheels",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.wheels.gap",
+        "token": "--warp-wheels-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "wheels",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.wheels.height",
+        "token": "--warp-wheels-height",
+        "status": "Candidate · partial"
+      }
+    ],
+    "rte": [
+      {
+        "part": "rte",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.rte.gap",
+        "token": "--warp-rte-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "kv": [
+      {
+        "part": "kv",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.kv.gap",
+        "token": "--warp-kv-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "md-editor": [
+      {
+        "part": "md-editor",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"md-editor\"].gap",
+        "token": "--warp-md-editor-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "code": [
+      {
+        "part": "code",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.code.border",
+        "token": "--warp-code-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "code",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.code.font.css",
+        "token": "--warp-code-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "code",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.code.radius",
+        "token": "--warp-code-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "codeblock": [
+      {
+        "part": "codeblock",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.codeblock.border",
+        "token": "--warp-codeblock-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "codeblock",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.codeblock.radius",
+        "token": "--warp-codeblock-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "markdown": [
+      {
+        "part": "markdown",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.markdown.font.size",
+        "token": "--warp-markdown-font-size",
+        "status": "Candidate · partial"
+      }
+    ],
+    "prose": [
+      {
+        "part": "prose",
+        "property": "font.lineHeight",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.prose.font.lineHeight",
+        "token": "--warp-prose-font-line-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "prose",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.prose.font.size",
+        "token": "--warp-prose-font-size",
+        "status": "Candidate · partial"
+      }
+    ],
+    "snippet": [
+      {
+        "part": "snippet",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.snippet.border",
+        "token": "--warp-snippet-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "snippet",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.snippet.font.css",
+        "token": "--warp-snippet-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "snippet",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.snippet.radius",
+        "token": "--warp-snippet-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "jsontree": [
+      {
+        "part": "jsontree",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.jsontree.font.css",
+        "token": "--warp-jsontree-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "jsontree",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.jsontree.radius",
+        "token": "--warp-jsontree-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "diff": [
+      {
+        "part": "diff",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.diff.border",
+        "token": "--warp-diff-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "diff",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.diff.radius",
+        "token": "--warp-diff-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "tests": [
+      {
+        "part": "tests",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.tests.font.size",
+        "token": "--warp-tests-font-size",
+        "status": "Candidate · partial"
+      }
+    ],
+    "props": [
+      {
+        "part": "props",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.props.border",
+        "token": "--warp-props-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "props",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.props.radius",
+        "token": "--warp-props-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "linkcard": [
+      {
+        "part": "linkcard",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.linkcard.border",
+        "token": "--warp-linkcard-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "linkcard",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.linkcard.radius",
+        "token": "--warp-linkcard-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "embed": [
+      {
+        "part": "embed",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.embed.border",
+        "token": "--warp-embed-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "embed",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.embed.radius",
+        "token": "--warp-embed-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "strength": [
+      {
+        "part": "strength",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.strength.font.size",
+        "token": "--warp-strength-font-size",
+        "status": "Candidate · partial"
+      }
+    ],
+    "quantity": [
+      {
+        "part": "quantity",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.quantity.height",
+        "token": "--warp-quantity-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "quantity",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.quantity.radius",
+        "token": "--warp-quantity-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "otp": [
+      {
+        "part": "otp",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.otp.gap",
+        "token": "--warp-otp-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "editable": [
+      {
+        "part": "editable",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.editable.gap",
+        "token": "--warp-editable-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "editable",
+        "property": "minHeight",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.editable.minHeight",
+        "token": "--warp-editable-min-height",
+        "status": "Candidate · partial"
+      }
+    ],
+    "group": [
+      {
+        "part": "group",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.group.gap",
+        "token": "--warp-group-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "choice-card": [
+      {
+        "part": "choice-card",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"choice-card\"].gap",
+        "token": "--warp-choice-card-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "choice-card",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"choice-card\"].padding",
+        "token": "--warp-choice-card-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "choice-card",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"choice-card\"].radius",
+        "token": "--warp-choice-card-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "segmented": [
+      {
+        "part": "segmented",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.segmented.radius",
+        "token": "--warp-segmented-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "segmented",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.segmented.shadow",
+        "token": "--warp-segmented-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "popup": [
+      {
+        "part": "popup",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.popup.border",
+        "token": "--warp-popup-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "popup",
+        "property": "font.family",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.popup.font.family",
+        "token": "--warp-popup-font-family",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "popup",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.popup.radius",
+        "token": "--warp-popup-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "popup",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.popup.shadow",
+        "token": "--warp-popup-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "transfer": [
+      {
+        "part": "transfer",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.transfer.gap",
+        "token": "--warp-transfer-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "slider": [
+      {
+        "part": "slider",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.slider.height",
+        "token": "--warp-slider-height",
+        "status": "Candidate · partial"
+      }
+    ],
+    "range-head": [
+      {
+        "part": "range-head",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"range-head\"].gap",
+        "token": "--warp-range-head-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "color": [
+      {
+        "part": "color",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.color.gap",
+        "token": "--warp-color-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "dropzone": [
+      {
+        "part": "dropzone",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.dropzone.gap",
+        "token": "--warp-dropzone-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "dropzone",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.dropzone.padding",
+        "token": "--warp-dropzone-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "dropzone",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.dropzone.radius",
+        "token": "--warp-dropzone-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "dropzone",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.dropzone.text",
+        "token": "--warp-dropzone-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "cropper": [
+      {
+        "part": "cropper",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cropper.radius",
+        "token": "--warp-cropper-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "form": [
+      {
+        "part": "form",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.form.gap",
+        "token": "--warp-form-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "error-summary": [
+      {
+        "part": "error-summary",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"error-summary\"].border",
+        "token": "--warp-error-summary-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "error-summary",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"error-summary\"].padding",
+        "token": "--warp-error-summary-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "error-summary",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"error-summary\"].radius",
+        "token": "--warp-error-summary-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "error-summary",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"error-summary\"].text",
+        "token": "--warp-error-summary-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "setting": [
+      {
+        "part": "setting",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.setting.gap",
+        "token": "--warp-setting-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "setting",
+        "property": "paddingBlock",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.setting.paddingBlock",
+        "token": "--warp-setting-padding-block",
+        "status": "Candidate · partial"
+      }
+    ],
+    "rules": [
+      {
+        "part": "rules",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.rules.font.size",
+        "token": "--warp-rules-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "rules",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.rules.text",
+        "token": "--warp-rules-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "knob-row": [
+      {
+        "part": "knob-row",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"knob-row\"].gap",
+        "token": "--warp-knob-row-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "xy-pad": [
+      {
+        "part": "xy-pad",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"xy-pad\"].radius",
+        "token": "--warp-xy-pad-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "gradient": [
+      {
+        "part": "gradient",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.gradient.gap",
+        "token": "--warp-gradient-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "icon-tile": [
+      {
+        "part": "icon-tile",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"icon-tile\"].radius",
+        "token": "--warp-icon-tile-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "hover-scope": [
+      {
+        "part": "hover-scope",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"hover-scope\"].gap",
+        "token": "--warp-hover-scope-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "hover-scope",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"hover-scope\"].radius",
+        "token": "--warp-hover-scope-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "autosave": [
+      {
+        "part": "autosave",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.autosave.font.size",
+        "token": "--warp-autosave-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "autosave",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.autosave.text",
+        "token": "--warp-autosave-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "stack": [
+      {
+        "part": "stack",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.stack.gap",
+        "token": "--warp-stack-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "row": [
+      {
+        "part": "row",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.row.gap",
+        "token": "--warp-row-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "grid": [
+      {
+        "part": "grid",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.grid.gap",
+        "token": "--warp-grid-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "split": [
+      {
+        "part": "split",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.split.gap",
+        "token": "--warp-split-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "center": [
+      {
+        "part": "center",
+        "property": "maxWidth",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.center.maxWidth",
+        "token": "--warp-center-max-width",
+        "status": "Candidate · partial"
+      }
+    ],
+    "cover": [
+      {
+        "part": "cover",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cover.gap",
+        "token": "--warp-cover-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "cover",
+        "property": "minHeight",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cover.minHeight",
+        "token": "--warp-cover-min-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "cover",
+        "property": "paddingBlock",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cover.paddingBlock",
+        "token": "--warp-cover-padding-block",
+        "status": "Candidate · partial"
+      }
+    ],
+    "master-detail": [
+      {
+        "part": "master-detail",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"master-detail\"].height",
+        "token": "--warp-master-detail-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "master-detail",
+        "property": "insetBlockStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"master-detail\"].insetBlockStart",
+        "token": "--warp-master-detail-inset-block-start",
+        "status": "Candidate · partial"
+      }
+    ],
+    "section": [
+      {
+        "part": "section",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.section.gap",
+        "token": "--warp-section-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "section",
+        "property": "paddingBlock",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.section.paddingBlock",
+        "token": "--warp-section-padding-block",
+        "status": "Candidate · partial"
+      }
+    ],
+    "page-header": [
+      {
+        "part": "page-header",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"page-header\"].gap",
+        "token": "--warp-page-header-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "masonry": [
+      {
+        "part": "masonry",
+        "property": "columnGap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.masonry.columnGap",
+        "token": "--warp-masonry-column-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "masonry",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.masonry.gap",
+        "token": "--warp-masonry-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "split-pane": [
+      {
+        "part": "split-pane",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"split-pane\"].border",
+        "token": "--warp-split-pane-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "split-pane",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"split-pane\"].radius",
+        "token": "--warp-split-pane-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "float-panel": [
+      {
+        "part": "float-panel",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"float-panel\"].border",
+        "token": "--warp-float-panel-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "float-panel",
+        "property": "inset",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"float-panel\"].inset",
+        "token": "--warp-float-panel-inset",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "float-panel",
+        "property": "insetBlockStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"float-panel\"].insetBlockStart",
+        "token": "--warp-float-panel-inset-block-start",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "float-panel",
+        "property": "insetInlineStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"float-panel\"].insetInlineStart",
+        "token": "--warp-float-panel-inset-inline-start",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "float-panel",
+        "property": "paddingBlockEnd",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"float-panel\"].paddingBlockEnd",
+        "token": "--warp-float-panel-padding-block-end",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "float-panel",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"float-panel\"].radius",
+        "token": "--warp-float-panel-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "float-panel",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"float-panel\"].shadow",
+        "token": "--warp-float-panel-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "navlist": [
+      {
+        "part": "navlist",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.navlist.gap",
+        "token": "--warp-navlist-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "sidenav": [
+      {
+        "part": "sidenav",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.sidenav.font.size",
+        "token": "--warp-sidenav-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "sidenav",
+        "property": "insetBlockStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.sidenav.insetBlockStart",
+        "token": "--warp-sidenav-inset-block-start",
+        "status": "Candidate · partial"
+      }
+    ],
+    "docs": [
+      {
+        "part": "docs",
+        "property": "minHeight",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.docs.minHeight",
+        "token": "--warp-docs-min-height",
+        "status": "Candidate · partial"
+      }
+    ],
+    "anchor-nav": [
+      {
+        "part": "anchor-nav",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"anchor-nav\"].font.size",
+        "token": "--warp-anchor-nav-font-size",
+        "status": "Candidate · partial"
+      }
+    ],
+    "topnav": [
+      {
+        "part": "topnav",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.topnav.gap",
+        "token": "--warp-topnav-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "topnav",
+        "property": "minHeight",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.topnav.minHeight",
+        "token": "--warp-topnav-min-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "topnav",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.topnav.padding",
+        "token": "--warp-topnav-padding",
+        "status": "Candidate · partial"
+      }
+    ],
+    "sticky-bar": [
+      {
+        "part": "sticky-bar",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"sticky-bar\"].gap",
+        "token": "--warp-sticky-bar-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "sticky-bar",
+        "property": "insetBlockEnd",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"sticky-bar\"].insetBlockEnd",
+        "token": "--warp-sticky-bar-inset-block-end",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "sticky-bar",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"sticky-bar\"].padding",
+        "token": "--warp-sticky-bar-padding",
+        "status": "Candidate · partial"
+      }
+    ],
+    "announcement": [
+      {
+        "part": "announcement",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.announcement.font.size",
+        "token": "--warp-announcement-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "announcement",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.announcement.gap",
+        "token": "--warp-announcement-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "announcement",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.announcement.padding",
+        "token": "--warp-announcement-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "announcement",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.announcement.text",
+        "token": "--warp-announcement-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "consent": [
+      {
+        "part": "consent",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.consent.border",
+        "token": "--warp-consent-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "consent",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.consent.gap",
+        "token": "--warp-consent-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "consent",
+        "property": "insetBlockEnd",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.consent.insetBlockEnd",
+        "token": "--warp-consent-inset-block-end",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "consent",
+        "property": "insetInlineStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.consent.insetInlineStart",
+        "token": "--warp-consent-inset-inline-start",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "consent",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.consent.padding",
+        "token": "--warp-consent-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "consent",
+        "property": "paddingBlockEnd",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.consent.paddingBlockEnd",
+        "token": "--warp-consent-padding-block-end",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "consent",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.consent.radius",
+        "token": "--warp-consent-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "consent",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.consent.shadow",
+        "token": "--warp-consent-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "consent",
+        "property": "width",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.consent.width",
+        "token": "--warp-consent-width",
+        "status": "Candidate · partial"
+      }
+    ],
+    "doc-tabs": [
+      {
+        "part": "doc-tabs",
+        "property": "paddingInline",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"doc-tabs\"].paddingInline",
+        "token": "--warp-doc-tabs-padding-inline",
+        "status": "Candidate · partial"
+      }
+    ],
+    "status-bar": [
+      {
+        "part": "status-bar",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"status-bar\"].font.css",
+        "token": "--warp-status-bar-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "status-bar",
+        "property": "paddingBlockEnd",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"status-bar\"].paddingBlockEnd",
+        "token": "--warp-status-bar-padding-block-end",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "status-bar",
+        "property": "paddingInline",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"status-bar\"].paddingInline",
+        "token": "--warp-status-bar-padding-inline",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "status-bar",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"status-bar\"].text",
+        "token": "--warp-status-bar-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "board": [
+      {
+        "part": "board",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.board.gap",
+        "token": "--warp-board-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "canvas": [
+      {
+        "part": "canvas",
+        "property": "backgroundImage",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.canvas.backgroundImage",
+        "token": "--warp-canvas-background-image",
+        "status": "Candidate · partial"
+      }
+    ],
+    "back-to-top": [
+      {
+        "part": "back-to-top",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"back-to-top\"].border",
+        "token": "--warp-back-to-top-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "back-to-top",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"back-to-top\"].height",
+        "token": "--warp-back-to-top-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "back-to-top",
+        "property": "insetBlockEnd",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"back-to-top\"].insetBlockEnd",
+        "token": "--warp-back-to-top-inset-block-end",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "back-to-top",
+        "property": "marginInlineEnd",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"back-to-top\"].marginInlineEnd",
+        "token": "--warp-back-to-top-margin-inline-end",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "back-to-top",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"back-to-top\"].shadow",
+        "token": "--warp-back-to-top-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "back-to-top",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"back-to-top\"].text",
+        "token": "--warp-back-to-top-text",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "back-to-top",
+        "property": "width",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"back-to-top\"].width",
+        "token": "--warp-back-to-top-width",
+        "status": "Candidate · partial"
+      }
+    ],
+    "pager": [
+      {
+        "part": "pager",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pager.gap",
+        "token": "--warp-pager-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "pager",
+        "property": "marginBlockStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pager.marginBlockStart",
+        "token": "--warp-pager-margin-block-start",
+        "status": "Candidate · partial"
+      }
+    ],
+    "inset": [
+      {
+        "part": "inset",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.inset.padding",
+        "token": "--warp-inset-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "inset",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.inset.radius",
+        "token": "--warp-inset-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "landing": [
+      {
+        "part": "landing",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.landing.text",
+        "token": "--warp-landing-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "block": [
+      {
+        "part": "block",
+        "property": "paddingBlock",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.block.paddingBlock",
+        "token": "--warp-block-padding-block",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "block",
+        "property": "paddingInline",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.block.paddingInline",
+        "token": "--warp-block-padding-inline",
+        "status": "Candidate · partial"
+      }
+    ],
+    "announce": [
+      {
+        "part": "announce",
+        "property": "font.size",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.announce.font.size",
+        "token": "--warp-announce-font-size",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "announce",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.announce.gap",
+        "token": "--warp-announce-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "announce",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.announce.padding",
+        "token": "--warp-announce-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "announce",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.announce.text",
+        "token": "--warp-announce-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "topbar": [
+      {
+        "part": "topbar",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.topbar.gap",
+        "token": "--warp-topbar-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "topbar",
+        "property": "paddingInline",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.topbar.paddingInline",
+        "token": "--warp-topbar-padding-inline",
+        "status": "Candidate · partial"
+      }
+    ],
+    "hero": [
+      {
+        "part": "hero",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.hero.padding",
+        "token": "--warp-hero-padding",
+        "status": "Candidate · partial"
+      }
+    ],
+    "mock": [
+      {
+        "part": "mock",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.mock.border",
+        "token": "--warp-mock-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "mock",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.mock.radius",
+        "token": "--warp-mock-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "mock",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.mock.shadow",
+        "token": "--warp-mock-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "logos": [
+      {
+        "part": "logos",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.logos.gap",
+        "token": "--warp-logos-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "marquee": [
+      {
+        "part": "marquee",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.marquee.gap",
+        "token": "--warp-marquee-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "stats": [
+      {
+        "part": "stats",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.stats.border",
+        "token": "--warp-stats-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "stats",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.stats.radius",
+        "token": "--warp-stats-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "bento": [
+      {
+        "part": "bento",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.bento.gap",
+        "token": "--warp-bento-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "story": [
+      {
+        "part": "story",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.story.gap",
+        "token": "--warp-story-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "carousel": [
+      {
+        "part": "carousel",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.carousel.gap",
+        "token": "--warp-carousel-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "quote": [
+      {
+        "part": "quote",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.quote.border",
+        "token": "--warp-quote-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "quote",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.quote.gap",
+        "token": "--warp-quote-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "quote",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.quote.padding",
+        "token": "--warp-quote-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "quote",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.quote.radius",
+        "token": "--warp-quote-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "quote",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.quote.shadow",
+        "token": "--warp-quote-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "gallery": [
+      {
+        "part": "gallery",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.gallery.gap",
+        "token": "--warp-gallery-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "selection-bar": [
+      {
+        "part": "selection-bar",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"selection-bar\"].border",
+        "token": "--warp-selection-bar-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "selection-bar",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"selection-bar\"].gap",
+        "token": "--warp-selection-bar-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "selection-bar",
+        "property": "insetBlockStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"selection-bar\"].insetBlockStart",
+        "token": "--warp-selection-bar-inset-block-start",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "selection-bar",
+        "property": "marginBlockEnd",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"selection-bar\"].marginBlockEnd",
+        "token": "--warp-selection-bar-margin-block-end",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "selection-bar",
+        "property": "minHeight",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"selection-bar\"].minHeight",
+        "token": "--warp-selection-bar-min-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "selection-bar",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"selection-bar\"].radius",
+        "token": "--warp-selection-bar-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "compare": [
+      {
+        "part": "compare",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.compare.border",
+        "token": "--warp-compare-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "compare",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.compare.radius",
+        "token": "--warp-compare-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "pricing": [
+      {
+        "part": "pricing",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.pricing.gap",
+        "token": "--warp-pricing-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "plan": [
+      {
+        "part": "plan",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.plan.border",
+        "token": "--warp-plan-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "plan",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.plan.gap",
+        "token": "--warp-plan-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "plan",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.plan.padding",
+        "token": "--warp-plan-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "plan",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.plan.radius",
+        "token": "--warp-plan-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "plan",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.plan.shadow",
+        "token": "--warp-plan-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "compare-table": [
+      {
+        "part": "compare-table",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"compare-table\"].border",
+        "token": "--warp-compare-table-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "compare-table",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"compare-table\"].radius",
+        "token": "--warp-compare-table-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "product": [
+      {
+        "part": "product",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.product.gap",
+        "token": "--warp-product-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "zoom": [
+      {
+        "part": "zoom",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.zoom.border",
+        "token": "--warp-zoom-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "zoom",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.zoom.radius",
+        "token": "--warp-zoom-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "thumbs": [
+      {
+        "part": "thumbs",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.thumbs.gap",
+        "token": "--warp-thumbs-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "variant": [
+      {
+        "part": "variant",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.variant.gap",
+        "token": "--warp-variant-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "lobby": [
+      {
+        "part": "lobby",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.lobby.border",
+        "token": "--warp-lobby-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "lobby",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.lobby.gap",
+        "token": "--warp-lobby-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "lobby",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.lobby.padding",
+        "token": "--warp-lobby-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "lobby",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.lobby.radius",
+        "token": "--warp-lobby-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "facts": [
+      {
+        "part": "facts",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.facts.gap",
+        "token": "--warp-facts-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "facts",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.facts.padding",
+        "token": "--warp-facts-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "facts",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.facts.radius",
+        "token": "--warp-facts-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "cta": [
+      {
+        "part": "cta",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cta.gap",
+        "token": "--warp-cta-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "cta",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cta.padding",
+        "token": "--warp-cta-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "cta",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cta.radius",
+        "token": "--warp-cta-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "cta",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.cta.text",
+        "token": "--warp-cta-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "newsletter": [
+      {
+        "part": "newsletter",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.newsletter.gap",
+        "token": "--warp-newsletter-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "footer": [
+      {
+        "part": "footer",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.footer.padding",
+        "token": "--warp-footer-padding",
+        "status": "Candidate · partial"
+      }
+    ],
+    "scene": [
+      {
+        "part": "scene",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.scene.border",
+        "token": "--warp-scene-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "scene",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.scene.radius",
+        "token": "--warp-scene-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "live-room": [
+      {
+        "part": "live-room",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"live-room\"].border",
+        "token": "--warp-live-room-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "live-room",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"live-room\"].gap",
+        "token": "--warp-live-room-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "live-room",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"live-room\"].padding",
+        "token": "--warp-live-room-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "live-room",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"live-room\"].radius",
+        "token": "--warp-live-room-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "live-room",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"live-room\"].shadow",
+        "token": "--warp-live-room-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "event-log": [
+      {
+        "part": "event-log",
+        "property": "font.css",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"event-log\"].font.css",
+        "token": "--warp-event-log-font-css",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "event-log",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"event-log\"].text",
+        "token": "--warp-event-log-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "stat-strip": [
+      {
+        "part": "stat-strip",
+        "property": "margin",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"stat-strip\"].margin",
+        "token": "--warp-stat-strip-margin",
+        "status": "Candidate · partial"
+      }
+    ],
+    "market": [
+      {
+        "part": "market",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.market.gap",
+        "token": "--warp-market-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "listing": [
+      {
+        "part": "listing",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.listing.border",
+        "token": "--warp-listing-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "listing",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.listing.radius",
+        "token": "--warp-listing-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "listing",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.listing.shadow",
+        "token": "--warp-listing-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "player-notes": [
+      {
+        "part": "player-notes",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"player-notes\"].gap",
+        "token": "--warp-player-notes-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "player-notes",
+        "property": "marginBlockStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"player-notes\"].marginBlockStart",
+        "token": "--warp-player-notes-margin-block-start",
+        "status": "Candidate · partial"
+      }
+    ],
+    "transcript": [
+      {
+        "part": "transcript",
+        "property": "marginBlockStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.transcript.marginBlockStart",
+        "token": "--warp-transcript-margin-block-start",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "transcript",
+        "property": "paddingBlockStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.transcript.paddingBlockStart",
+        "token": "--warp-transcript-padding-block-start",
+        "status": "Candidate · partial"
+      }
+    ],
+    "reviews": [
+      {
+        "part": "reviews",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.reviews.gap",
+        "token": "--warp-reviews-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "reviews",
+        "property": "marginBlockStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.reviews.marginBlockStart",
+        "token": "--warp-reviews-margin-block-start",
+        "status": "Candidate · partial"
+      }
+    ],
+    "review": [
+      {
+        "part": "review",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.review.gap",
+        "token": "--warp-review-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "review",
+        "property": "paddingBlock",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.review.paddingBlock",
+        "token": "--warp-review-padding-block",
+        "status": "Candidate · partial"
+      }
+    ],
+    "backdrops": [
+      {
+        "part": "backdrops",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.backdrops.gap",
+        "token": "--warp-backdrops-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "backdrop": [
+      {
+        "part": "backdrop",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.backdrop.border",
+        "token": "--warp-backdrop-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "backdrop",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.backdrop.padding",
+        "token": "--warp-backdrop-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "backdrop",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.backdrop.radius",
+        "token": "--warp-backdrop-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "scroll-progress": [
+      {
+        "part": "scroll-progress",
+        "property": "height",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"scroll-progress\"].height",
+        "token": "--warp-scroll-progress-height",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "scroll-progress",
+        "property": "inset",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"scroll-progress\"].inset",
+        "token": "--warp-scroll-progress-inset",
+        "status": "Candidate · partial"
+      }
+    ],
+    "container-scroll": [
+      {
+        "part": "container-scroll",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"container-scroll\"].gap",
+        "token": "--warp-container-scroll-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "fancy-stage": [
+      {
+        "part": "fancy-stage",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"fancy-stage\"].border",
+        "token": "--warp-fancy-stage-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "fancy-stage",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"fancy-stage\"].radius",
+        "token": "--warp-fancy-stage-radius",
+        "status": "Candidate · partial"
+      }
+    ],
+    "fancy-presets": [
+      {
+        "part": "fancy-presets",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"fancy-presets\"].gap",
+        "token": "--warp-fancy-presets-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "motion-cards": [
+      {
+        "part": "motion-cards",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"motion-cards\"].gap",
+        "token": "--warp-motion-cards-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "motion-card": [
+      {
+        "part": "motion-card",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"motion-card\"].border",
+        "token": "--warp-motion-card-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "motion-card",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"motion-card\"].gap",
+        "token": "--warp-motion-card-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "motion-card",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"motion-card\"].padding",
+        "token": "--warp-motion-card-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "motion-card",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"motion-card\"].radius",
+        "token": "--warp-motion-card-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "motion-card",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"motion-card\"].shadow",
+        "token": "--warp-motion-card-shadow",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "motion-card",
+        "property": "text",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"motion-card\"].text",
+        "token": "--warp-motion-card-text",
+        "status": "Candidate · partial"
+      }
+    ],
+    "wall": [
+      {
+        "part": "wall",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.wall.gap",
+        "token": "--warp-wall-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "team": [
+      {
+        "part": "team",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.team.gap",
+        "token": "--warp-team-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "blog": [
+      {
+        "part": "blog",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.blog.gap",
+        "token": "--warp-blog-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "post": [
+      {
+        "part": "post",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.post.border",
+        "token": "--warp-post-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "post",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.post.radius",
+        "token": "--warp-post-radius",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "post",
+        "property": "shadow",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.post.shadow",
+        "token": "--warp-post-shadow",
+        "status": "Candidate · partial"
+      }
+    ],
+    "blog-foot": [
+      {
+        "part": "blog-foot",
+        "property": "marginBlockStart",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts[\"blog-foot\"].marginBlockStart",
+        "token": "--warp-blog-foot-margin-block-start",
+        "status": "Candidate · partial"
+      }
+    ],
+    "contact": [
+      {
+        "part": "contact",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.contact.gap",
+        "token": "--warp-contact-gap",
+        "status": "Candidate · partial"
+      }
+    ],
+    "waitlist": [
+      {
+        "part": "waitlist",
+        "property": "border",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.waitlist.border",
+        "token": "--warp-waitlist-border",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "waitlist",
+        "property": "gap",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.waitlist.gap",
+        "token": "--warp-waitlist-gap",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "waitlist",
+        "property": "padding",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.waitlist.padding",
+        "token": "--warp-waitlist-padding",
+        "status": "Candidate · partial"
+      },
+      {
+        "part": "waitlist",
+        "property": "radius",
+        "state": "rest",
+        "default": "Not classified",
+        "config": "parts.waitlist.radius",
+        "token": "--warp-waitlist-radius",
+        "status": "Candidate · partial"
+      }
+    ]
+  }
+}

@@ -81,6 +81,7 @@ export const typographyDocs: Doc[] = [
   },
   {
     component: 'Heading',
+    themeScopes: ['text/display', 'text/title', 'text/heading', 'text/label'],
     summary: 'A real heading. Its level sets the page outline, and its size follows.',
     use: {
       when: ['Titling a page or a section'],

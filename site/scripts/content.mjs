@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { highlight, site, repo, reportSampleWidths } from './content/context.mjs'
 import { SHOWN } from './content/displayed.mjs'
+import { attachThemeRows, checkThemePages } from './theme-pages.mjs'
 const { write, numbers, MOVED } = await import('./content/docs-catalog.mjs')
 const { buildReference } = await import('./content/markdown.mjs')
 const { buildLearn, buildSearch } = await import('./content/learn-search.mjs')
@@ -9,10 +10,14 @@ const { buildToolkit } = await import('./content/toolkit.mjs')
 const { buildIcons, buildArt, buildShowcase, buildSpeed, buildLlms } =
   await import('./content/art.mjs')
 
+checkThemePages(repo)
 reportSampleWidths(repo)
 const docs = await buildReference()
 const learn = buildLearn(docs)
 const toolkit = buildToolkit()
+const toolkitPages = JSON.parse(readFileSync(join(site, 'src/generated/toolkit.json'), 'utf8'))
+const theming = JSON.parse(readFileSync(join(site, 'src/toolkit/theming.generated.json'), 'utf8'))
+write('toolkit.json', attachThemeRows(toolkitPages, theming))
 buildArt()
 buildShowcase()
 buildSpeed()

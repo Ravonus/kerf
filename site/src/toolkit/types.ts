@@ -64,6 +64,8 @@ export type Playground = {
 export type Doc = {
   /** Must be one of warp's exports. */
   component: string
+  /** Restricts theming candidates when a component supports only some roles in a scope. */
+  themeScopes?: string[]
   /** One plain sentence, at most 120 characters. The page's lede and its meta description. */
   summary: string
   /** The example that opens the page. Else the first one, simplest section first. */
