@@ -317,6 +317,7 @@ test('Button candidate rejects unsupported properties and low-contrast text', ()
   expect(() => run({ parts: { button: { mystery: '#000000' } } } as WarpOptions)).toThrow(
     /unknown property or unsupported state/,
   )
+  // @ts-expect-error -- JavaScript callers still receive a diagnostic for unsupported states.
   expect(() => run({ parts: { button: { hover: { bg: '#000000' } } } })).toThrow(
     /unknown property or unsupported state/,
   )
