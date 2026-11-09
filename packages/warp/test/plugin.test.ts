@@ -325,7 +325,7 @@ test('Button candidate rejects unsupported properties and low-contrast text', ()
       run({
         colors: { ink: '#111111' },
         parts: { button: { bg: '#000000', text: 'ink' } },
-      } as WarpOptions),
+      }),
     ),
   ).toBe('D010')
 })
