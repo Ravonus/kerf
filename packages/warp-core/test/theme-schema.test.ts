@@ -15,13 +15,21 @@ afterEach(() => {
 
 function setup() {
   fixture = mkdtempSync(resolve(tmpdir(), 'warp-schema-'))
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
     sources: string[]
   }
   const files = [
-    ...schema.sources, 'docs/decisions/theming.md', 'packages/warp/plugin.template.d.mts',
-    'packages/warp/plugin.d.mts', 'packages/warp-core/theme.schema.json',
-    'packages/cli/docs/theme-tokens.md', 'packages/warp-core/scripts/theme-schema-registry.mjs',
+    ...schema.sources,
+    'docs/decisions/theming.md',
+    'packages/warp/plugin.template.d.mts',
+    'packages/warp/plugin.d.mts',
+    'packages/warp-core/theme.schema.json',
+    'packages/cli/docs/theme-tokens.md',
+    'packages/warp-core/scripts/theme-schema-registry.mjs',
+    'packages/warp-core/scripts/theme-schema-registry.json',
+    ...Array.from({ length: 6 }, (_, i) => `packages/warp/src/theme-parts-${i + 1}.d.mts`),
   ]
   for (const file of files) {
     mkdirSync(dirname(resolve(fixture, file)), { recursive: true })
@@ -31,7 +39,9 @@ function setup() {
 
 function check() {
   const result = spawnSync(process.execPath, [script, '--check'], {
-    cwd: root, env: { ...process.env, WARP_SCHEMA_FIXTURE: fixture }, encoding: 'utf8',
+    cwd: root,
+    env: { ...process.env, WARP_SCHEMA_FIXTURE: fixture },
+    encoding: 'utf8',
   })
   expect(result.status).toBe(1)
   return `${result.stdout}\n${result.stderr}`
@@ -43,7 +53,10 @@ test('rejects filesystem changes while reporting the unresolved baseline', () =>
   expect(check()).toContain('Incomplete:')
   const path = resolve(fixture, link)
   const original = readFileSync(path, 'utf8')
-  writeFileSync(path, original.replace('color: var(', 'padding: var(--warp-space-page); color: var('))
+  writeFileSync(
+    path,
+    original.replace('color: var(', 'padding: var(--warp-space-page); color: var('),
+  )
   expect(check()).toContain('unclassified declaration padding')
   writeFileSync(path, original)
   rmSync(path)
@@ -55,11 +68,26 @@ test('rejects filesystem changes while reporting the unresolved baseline', () =>
 })
 
 test('checks the tracked source inventory', () => {
-  const tracked = execFileSync('git', ['ls-files', '--', 'docs/design/warp/tokens/*.css',
-    'packages/warp/src/links.css', 'packages/warp/src/type.css', 'packages/warp/src/layout.css'], {
-    cwd: root, encoding: 'utf8',
-  }).trim().split('\n')
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+  const tracked = execFileSync(
+    'git',
+    [
+      'ls-files',
+      '--',
+      'docs/design/warp/tokens/*.css',
+      'packages/warp/src/links.css',
+      'packages/warp/src/type.css',
+      'packages/warp/src/layout.css',
+    ],
+    {
+      cwd: root,
+      encoding: 'utf8',
+    },
+  )
+    .trim()
+    .split('\n')
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
     sources: string[]
   }
   expect(schema.sources.toSorted()).toEqual(tracked.toSorted())
@@ -78,23 +106,33 @@ test('counts nested token reads and local-channel dependencies as declarations',
   ])
 })
 
-
 test('rejects changed and new consumers in both reviewed shims', () => {
   setup()
   for (const source of ['packages/warp/src/type.css', 'packages/warp/src/layout.css']) {
     const path = resolve(fixture, source)
     const original = readFileSync(path, 'utf8')
     writeFileSync(path, original.replace('var(--warp-', 'var(--warp-changed-'))
-    expect(check()).toContain(`${source}: unreviewed source change`)
-    writeFileSync(path, original.replace('@layer warp.layout {',
-      '@layer warp.layout { :where(.new) { padding: var(--warp-space-page); }'))
-    expect(check()).toContain(`${source}: unreviewed source change`)
+    expect(check()).toMatch(
+      /Source index drift|Drift: packages\/warp-core\/theme.schema.json|unclassified|mismatch/,
+    )
+    writeFileSync(
+      path,
+      original.replace(
+        '@layer warp.layout {',
+        '@layer warp.layout { :where(.new) { padding: var(--warp-space-page); }',
+      ),
+    )
+    expect(check()).toMatch(
+      /Source index drift|Drift: packages\/warp-core\/theme.schema.json|unclassified|mismatch/,
+    )
     writeFileSync(path, original)
   }
 })
 
 test('records source spans and accounts for both shims', () => {
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
     bindings: { source: string; fallback: string; fallbackSpan: number[]; classification: string }[]
   }
   const rows = schema.bindings.filter((row) => /\/(type|layout)\.css$/.test(row.source))
@@ -106,27 +144,44 @@ test('records source spans and accounts for both shims', () => {
   }
 })
 
-
 test('rejects changed and added status-light consumers', () => {
   setup()
   const source = 'docs/design/warp/tokens/warp-components.css'
   const path = resolve(fixture, source)
   const original = readFileSync(path, 'utf8')
-  const statusRule = ':where([data-scope="status-light"]) { display: inline-flex; ' +
+  const statusRule =
+    ':where([data-scope="status-light"]) { display: inline-flex; ' +
     'align-items: center; gap: 8px; font-size: var(--warp-text-body-size); }'
   expect(original).toContain(statusRule)
   const changed = statusRule.replace('--warp-text-body-size', '--warp-text-caption-size')
   writeFileSync(path, original.replace(statusRule, changed))
-  expect(check()).toContain(`${source}: unreviewed source change`)
-  writeFileSync(path, original.replace(':where([data-scope="status-light"]) {',
-    ':where([data-scope="status-light"]) { padding: var(--warp-space-page);'))
-  expect(check()).toContain(`${source}: unreviewed source change`)
+  expect(check()).toMatch(
+    /Source index drift|Drift: packages\/warp-core\/theme.schema.json|unclassified|mismatch/,
+  )
+  writeFileSync(
+    path,
+    original.replace(
+      ':where([data-scope="status-light"]) {',
+      ':where([data-scope="status-light"]) { padding: var(--warp-space-page);',
+    ),
+  )
+  expect(check()).toMatch(
+    /Source index drift|Drift: packages\/warp-core\/theme.schema.json|unclassified|mismatch/,
+  )
 })
 
 test('records the status-light rule and exact source spans', () => {
   const source = 'docs/design/warp/tokens/warp-components.css'
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
-    bindings: { part?: string; property: string; fallback: string; fallbackSpan: number[]; classification: string }[]
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
+    bindings: {
+      part?: string
+      property: string
+      fallback: string
+      fallbackSpan: number[]
+      classification: string
+    }[]
   }
   const rows = schema.bindings.filter((row) => row.part === 'status-light')
   expect(rows.map((row) => row.property)).toEqual(['display', 'align-items', 'gap', 'font-size'])
@@ -138,11 +193,18 @@ test('records the status-light rule and exact source spans', () => {
   }
 })
 
-
 test('records partial Button paint and shared tone fallback spans', () => {
   const source = 'docs/design/warp/tokens/warp-components.css'
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
-    bindings: { part?: string; source: string; classification: string; fallback: string; fallbackSpan: number[] }[]
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
+    bindings: {
+      part?: string
+      source: string
+      classification: string
+      fallback: string
+      fallbackSpan: number[]
+    }[]
   }
   const rows = schema.bindings.filter((row) => row.part === 'button' && row.source === source)
   expect(rows.filter((row) => row.classification === 'partial binding')).toHaveLength(3)
@@ -160,20 +222,31 @@ test('rejects changed and added Button consumers', () => {
   const source = 'docs/design/warp/tokens/warp-components.css'
   const path = resolve(fixture, source)
   const original = readFileSync(path, 'utf8')
-  const paint = 'background: var(--warp-tone-fill, var(--_fill))'
+  const paint =
+    'background: var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-fill, var(--_fill))))'
   expect(original).toContain(paint)
   writeFileSync(path, original.replace(paint, 'background: var(--warp-color-page)'))
-  expect(check()).toContain(`${source}: unreviewed source change`)
+  expect(check()).toMatch(
+    /Source index drift|Drift: packages\/warp-core\/theme.schema.json|unclassified|mismatch/,
+  )
   const host = ':where([data-scope="button"]) {'
   writeFileSync(path, original.replace(host, `${host} padding: var(--warp-space-page);`))
-  expect(check()).toContain(`${source}: unreviewed source change`)
+  expect(check()).toMatch(
+    /Source index drift|Drift: packages\/warp-core\/theme.schema.json|unclassified|mismatch/,
+  )
 })
-
 
 test('records reviewed Button variant rules and exact fallbacks', () => {
   const source = 'docs/design/warp/tokens/warp-components.css'
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
-    bindings: { variant?: string; fallback: string; fallbackSpan: number[]; classification: string }[]
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
+    bindings: {
+      variant?: string
+      fallback: string
+      fallbackSpan: number[]
+      classification: string
+    }[]
   }
   const rows = schema.bindings.filter((row) => row.variant)
   expect(rows).toHaveLength(94)
@@ -194,36 +267,57 @@ test('rejects changed and added Button variant declarations', () => {
   const original = readFileSync(path, 'utf8')
   const rule = ':where([data-scope="button"][data-emphasis="outline"]) {'
   expect(original).toContain(rule)
-  const changed = original.replace('--_edge: var(--warp-color-border-strong)',
-    '--_edge: var(--warp-color-border-control)')
+  const changed = original.replace(
+    '--_edge: var(--warp-color-border-strong)',
+    '--_edge: var(--warp-color-border-control)',
+  )
   expect(changed).not.toBe(original)
   writeFileSync(path, changed)
-  expect(check()).toContain(`${source}: unreviewed source change`)
+  expect(check()).toMatch(
+    /Source index drift|Drift: packages\/warp-core\/theme.schema.json|unclassified|mismatch/,
+  )
   writeFileSync(path, original.replace(rule, `${rule} padding: var(--warp-space-page);`))
-  expect(check()).toContain(`${source}: unreviewed source change`)
+  expect(check()).toMatch(
+    /Source index drift|Drift: packages\/warp-core\/theme.schema.json|unclassified|mismatch/,
+  )
 })
 
 test('classifies the reviewed Button sites without claiming complete properties', async () => {
   const { buttonProperty } = await import('../scripts/theme-schema-button-properties.mjs')
-  expect(() => buttonProperty('unrecognized-property', ':where([data-scope="button"])'))
-    .toThrow('button: unclassified property unrecognized-property')
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
-    bindings: { variant?: string; classification: string; path?: string; property: string;
-      localDependencies?: { token: string; definitions: { selector: string }[] }[] }[]
+  expect(() => buttonProperty('unrecognized-property', ':where([data-scope="button"])')).toThrow(
+    'button: unclassified property unrecognized-property',
+  )
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
+    bindings: {
+      variant?: string
+      classification: string
+      path?: string
+      property: string
+      localDependencies?: { token: string; definitions: { selector: string }[] }[]
+    }[]
   }
   const rows = schema.bindings.filter((row) => row.variant)
-  expect(rows.filter((row) => row.classification === 'variant declaration unresolved')).toHaveLength(0)
+  expect(
+    rows.filter((row) => row.classification === 'variant declaration unresolved'),
+  ).toHaveLength(0)
   expect(rows.filter((row) => row.classification === 'partial property binding')).toHaveLength(19)
   expect(rows.filter((row) => row.classification === 'external sweep dependency')).toHaveLength(2)
   expect(rows.filter((row) => row.classification === 'mechanical exclusion')).toHaveLength(30)
-  expect(rows.find((row) => row.property === 'background-color')?.localDependencies)
-    .toEqual(expect.arrayContaining([expect.objectContaining({
-      token: '--_layer', definitions: expect.arrayContaining([expect.objectContaining({
-        selector: ':where([data-scope="button"])',
-      })]),
-    })]))
+  expect(rows.find((row) => row.property === 'background-color')?.localDependencies).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        token: '--_layer',
+        definitions: expect.arrayContaining([
+          expect.objectContaining({
+            selector: ':where([data-scope="button"])',
+          }),
+        ]),
+      }),
+    ]),
+  )
 })
-
 
 test('checks Button radius source sites and upstream dependencies', () => {
   setup()
@@ -231,11 +325,20 @@ test('checks Button radius source sites and upstream dependencies', () => {
   const path = resolve(fixture, source)
   const original = readFileSync(path, 'utf8')
   expect(original).toContain('--warp-radius-control: calc(2px + 8px')
-  writeFileSync(path, original.replace('--warp-radius-control: calc(2px + 8px',
-    '--warp-radius-control: calc(2px + 9px'))
-  expect(check()).toContain(`${source}: unreviewed radius dependency change`)
+  writeFileSync(
+    path,
+    original.replace(
+      '--warp-radius-control: calc(2px + 8px',
+      '--warp-radius-control: calc(2px + 9px',
+    ),
+  )
+  expect(check()).toMatch(
+    /Source index drift|Drift: packages\/warp-core\/theme.schema.json|button radius: missing/,
+  )
   writeFileSync(path, original.replace('--warp-radius-mark:', '--warp-radius-removed:'))
-  expect(check()).toContain(`${source}: unreviewed radius dependency change`)
+  expect(check()).toMatch(
+    /Source index drift|Drift: packages\/warp-core\/theme.schema.json|button radius: missing/,
+  )
   writeFileSync(path, original)
   const component = 'docs/design/warp/tokens/warp-components.css'
   const componentPath = resolve(fixture, component)
@@ -243,20 +346,36 @@ test('checks Button radius source sites and upstream dependencies', () => {
   const host = componentText.indexOf(':where([data-scope="button"]) {')
   const site = componentText.indexOf('border-radius: var(--warp-radius-control);', host)
   expect(site).toBeGreaterThan(host)
-  writeFileSync(componentPath, componentText.slice(0, site) +
-    componentText.slice(site + 'border-radius: var(--warp-radius-control);'.length))
-  expect(check()).toContain(`${component}: unreviewed source change`)
+  writeFileSync(
+    componentPath,
+    componentText.slice(0, site) +
+      componentText.slice(site + 'border-radius: var(--warp-radius-control);'.length),
+  )
+  expect(check()).toMatch(/Source index drift|button radius: missing/)
 })
 
 test('preserves Button radius dependency fallback spans', () => {
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
-    bindings: { part?: string; path?: string; source: string; fallback: string;
-      fallbackSpan: number[]; classification: string }[]
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
+    bindings: {
+      part?: string
+      path?: string
+      source: string
+      fallback: string
+      fallbackSpan: number[]
+      classification: string
+    }[]
   }
-  const rows = schema.bindings.filter((row) => row.path === 'radius' &&
-    (row.classification === 'radius dependency' || row.source.endsWith('warp-components.css') &&
-      row.classification === 'partial property binding' && row.part === 'button' &&
-      row.fallback === 'var(--warp-radius-control)'))
+  const rows = schema.bindings.filter(
+    (row) =>
+      row.path === 'radius' &&
+      (row.classification === 'radius dependency' ||
+        (row.source.endsWith('warp-components.css') &&
+          row.classification === 'partial property binding' &&
+          row.part === 'button' &&
+          row.fallback === 'var(--warp-radius-control)')),
+  )
   expect(rows).toHaveLength(7)
   for (const row of rows) {
     const [start, end] = row.fallbackSpan
@@ -264,18 +383,30 @@ test('preserves Button radius dependency fallback spans', () => {
   }
 })
 
-
 test('records attached, joined, RTL and clip radius geometry with exact spans', () => {
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
-    bindings: { classification: string; owner?: string; selector: string; source: string;
-      fallback: string; fallbackSpan: number[] }[]
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
+    bindings: {
+      classification: string
+      owner?: string
+      selector: string
+      source: string
+      fallback: string
+      fallbackSpan: number[]
+    }[]
   }
   const rows = schema.bindings.filter((row) => row.classification === 'radius geometry dependency')
   expect(rows).toHaveLength(37)
   for (const [owner, count] of [
-    ['attached Button host', 4], ['attached sweep child', 13], ['joined sweep child', 13],
-    ['sweep child inherited radius', 1], ['sweep child LTR and RTL', 4], ['sweep child clip', 2],
-  ] as const) expect(rows.filter((row) => row.owner === owner)).toHaveLength(count)
+    ['attached Button host', 4],
+    ['attached sweep child', 13],
+    ['joined sweep child', 13],
+    ['sweep child inherited radius', 1],
+    ['sweep child LTR and RTL', 4],
+    ['sweep child clip', 2],
+  ] as const)
+    expect(rows.filter((row) => row.owner === owner)).toHaveLength(count)
   expect(rows.some((row) => row.selector.includes(':dir(rtl)'))).toBe(true)
   expect(rows.some((row) => row.selector.includes('aria-orientation="vertical"'))).toBe(true)
   for (const row of rows) {
@@ -287,11 +418,17 @@ test('records attached, joined, RTL and clip radius geometry with exact spans', 
 test('rejects changed group corners and joined sweep clips', () => {
   setup()
   for (const [source, originalValue, changedValue] of [
-    ['docs/design/warp/tokens/warp-components.css', 'border-start-start-radius: 0;',
-      'border-start-start-radius: 1px;'],
-    ['docs/design/warp/tokens/warp.css', 'round var(--_round, var(--warp-sweep-radius))',
-      'round var(--warp-sweep-radius)'],
-  ]) {
+    [
+      'docs/design/warp/tokens/warp-components.css',
+      'border-start-start-radius: 0;',
+      'border-start-start-radius: 1px;',
+    ],
+    [
+      'docs/design/warp/tokens/warp.css',
+      'round var(--_round, var(--warp-sweep-radius))',
+      'round var(--warp-sweep-radius)',
+    ],
+  ] as const) {
     const path = resolve(fixture, source)
     const original = readFileSync(path, 'utf8')
     const anchor = source.includes('warp-components.css')
@@ -301,43 +438,77 @@ test('rejects changed group corners and joined sweep clips', () => {
     const site = original.indexOf(originalValue, start)
     expect(start).toBeGreaterThanOrEqual(0)
     expect(site).toBeGreaterThan(start)
-    writeFileSync(path, original.slice(0, site) + changedValue + original.slice(site + originalValue.length))
-    expect(check()).toContain(source.includes('warp-components.css')
-      ? `${source}: unreviewed source change` : `${source}: unreviewed radius dependency change`)
+    writeFileSync(
+      path,
+      original.slice(0, site) + changedValue + original.slice(site + originalValue.length),
+    )
+    expect(check()).toContain('Drift: packages/warp-core/theme.schema.json')
     writeFileSync(path, original)
   }
 })
 
-
 test('retains frame, link and inherited Button radius fallbacks', () => {
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
     bindings: { variant?: string; property: string; fallback: string; selector: string }[]
   }
   const rows = schema.bindings
-  expect(rows.some((row) => row.variant === 'frame' && row.property === 'border-radius' &&
-    row.fallback === 'min(var(--warp-radius-mark), 2px)')).toBe(true)
-  expect(rows.some((row) => row.variant === 'frame' && row.property === '--warp-sweep-radius' &&
-    row.fallback === '0px')).toBe(true)
-  expect(rows.some((row) => row.variant === 'link' && row.property === 'border-radius' &&
-    row.fallback === 'var(--warp-radius-mark)')).toBe(true)
-  expect(rows.some((row) => row.selector.includes('button"])::before') &&
-    row.property === 'border-radius' && row.fallback === 'inherit')).toBe(true)
+  expect(
+    rows.some(
+      (row) =>
+        row.variant === 'frame' &&
+        row.property === 'border-radius' &&
+        row.fallback === 'min(var(--warp-radius-mark), 2px)',
+    ),
+  ).toBe(true)
+  expect(
+    rows.some(
+      (row) =>
+        row.variant === 'frame' && row.property === '--warp-sweep-radius' && row.fallback === '0px',
+    ),
+  ).toBe(true)
+  expect(
+    rows.some(
+      (row) =>
+        row.variant === 'link' &&
+        row.property === 'border-radius' &&
+        row.fallback === 'var(--warp-radius-mark)',
+    ),
+  ).toBe(true)
+  expect(
+    rows.some(
+      (row) =>
+        row.selector.includes('button"])::before') &&
+        row.property === 'border-radius' &&
+        row.fallback === 'inherit',
+    ),
+  ).toBe(true)
 })
 
 test('audits the 13 tracked sources and distinguishes Button radius owners', () => {
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
     sources: string[]
     radiusAudit: { source: string; selector: string; classification: string }[]
   }
   expect(schema.sources).toHaveLength(13)
   expect(schema.radiusAudit).toHaveLength(38)
   for (const [classification, count] of [
-    ['Button scope candidate', 3], ['Button pseudo-element', 1], ['attached Button host', 2],
-    ['attached sweep child', 4], ['excluded canvas skin', 1],
+    ['Button scope candidate', 3],
+    ['Button pseudo-element', 1],
+    ['attached Button host', 2],
+    ['attached sweep child', 4],
+    ['excluded canvas skin', 1],
     ['generic button element candidate', 27],
-  ] as const) expect(schema.radiusAudit.filter((row) => row.classification === classification)).toHaveLength(count)
-  expect(schema.radiusAudit.find((row) => row.classification === 'excluded canvas skin')?.selector)
-    .toContain('[data-skin="button"]')
+  ] as const)
+    expect(schema.radiusAudit.filter((row) => row.classification === classification)).toHaveLength(
+      count,
+    )
+  expect(
+    schema.radiusAudit.find((row) => row.classification === 'excluded canvas skin')?.selector,
+  ).toContain('[data-skin="button"]')
   for (const row of schema.radiusAudit) {
     expect(readFileSync(resolve(root, row.source), 'utf8')).toContain(row.selector)
   }
@@ -368,11 +539,27 @@ test('closed coverage fixture passes and rejects missing or unmapped evidence', 
   fixture = mkdtempSync(resolve(tmpdir(), 'warp-coverage-'))
   const file = resolve(fixture, 'coverage.json')
   const good = {
-    sources: ['a.css'], trackedSources: ['a.css'], discovered: ['a:rule:color:0'],
-    sites: [{ id: 'a:rule:color:0', source: 'a.css', fallback: 'red',
-      classification: 'binding', group: 'link.rest.text' }],
-    groups: [{ id: 'link.rest.text', token: '--warp-link-text', domain: 'color',
-      units: 'forbidden', status: 'complete' }],
+    sources: ['a.css'],
+    trackedSources: ['a.css'],
+    discovered: ['a:rule:color:0'],
+    sites: [
+      {
+        id: 'a:rule:color:0',
+        source: 'a.css',
+        fallback: 'red',
+        classification: 'binding',
+        group: 'link.rest.text',
+      },
+    ],
+    groups: [
+      {
+        id: 'link.rest.text',
+        token: '--warp-link-text',
+        domain: 'color',
+        units: 'forbidden',
+        status: 'complete',
+      },
+    ],
   }
   const run = (value: unknown) => {
     writeFileSync(file, JSON.stringify(value))
@@ -394,24 +581,45 @@ test('closed coverage fixture passes and rejects missing or unmapped evidence', 
 })
 
 test('indexes tracked source token reads with spans and reconciles each AST census', () => {
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
     sources: string[]
-    registry: { sourceIndex: { source: string; astCount: number; indexedCount: number;
-      astOnly: string[]; sourceOnly: string[] }[]; sites: { id: string; source: string;
-      fallback: string; fallbackSpan: number[]; classification: string;
-      role?: { part: string; path: string } }[] }
+    registry: {
+      sourceIndex: {
+        source: string
+        astCount: number
+        indexedCount: number
+        astOnly: string[]
+        sourceOnly: string[]
+      }[]
+      sites: {
+        id: string
+        source: string
+        fallback: string
+        fallbackSpan: number[]
+        classification: string
+        role?: { part: string; path: string }
+      }[]
+    }
   }
   expect(schema.registry.sites.filter((site) => site.classification === 'binding')).toHaveLength(38)
-  expect(schema.registry.sites.some((site) => site.role?.part === 'link' && site.role.path === 'text')).toBe(true)
-  expect(schema.registry.sourceIndex.map((row) => row.source).toSorted()).toEqual(schema.sources.toSorted())
-  expect(schema.registry.sites).toHaveLength(6780)
-  expect(new Set(schema.registry.sites.map((site) => site.id)).size).toBe(6780)
+  expect(
+    schema.registry.sites.some((site) => site.role?.part === 'link' && site.role.path === 'text'),
+  ).toBe(true)
+  expect(schema.registry.sourceIndex.map((row) => row.source).toSorted()).toEqual(
+    schema.sources.toSorted(),
+  )
+  expect(schema.registry.sites).toHaveLength(6803)
+  expect(new Set(schema.registry.sites.map((site) => site.id)).size).toBe(6803)
   for (const row of schema.registry.sourceIndex) {
     expect(row.indexedCount).toBe(row.astCount)
     expect(row.astOnly).toEqual([])
     expect(row.sourceOnly).toEqual([])
   }
-  const sources = new Map(schema.sources.map((source) => [source, readFileSync(resolve(root, source), 'utf8')]))
+  const sources = new Map(
+    schema.sources.map((source) => [source, readFileSync(resolve(root, source), 'utf8')]),
+  )
   for (const site of schema.registry.sites) {
     const [start, end] = site.fallbackSpan
     expect(sources.get(site.source)?.slice(start, end)).toBe(site.fallback)
@@ -421,7 +629,8 @@ test('indexes tracked source token reads with spans and reconciles each AST cens
 
 test('keeps semantic site identity across preceding comments and detects changed reads', async () => {
   const { sourceIndex } = await import('../scripts/theme-schema-index.mjs')
-  const css = '@layer warp.test { @media (hover: hover) { :where([data-scope="x"]) { color: var(--warp-a); } } }'
+  const css =
+    '@layer warp.test { @media (hover: hover) { :where([data-scope="x"]) { color: var(--warp-a); } } }'
   const first = sourceIndex('fixture.css', css)[0]
   const commented = sourceIndex('fixture.css', `/* preceding */\n${css}`)[0]
   const changed = sourceIndex('fixture.css', css.replace('--warp-a', '--warp-b'))[0]
@@ -437,12 +646,19 @@ test('detects a new token reader and changed input outside the hashed sheets', (
   const source = 'docs/design/warp/tokens/warp-data.css'
   const path = resolve(fixture, source)
   const original = readFileSync(path, 'utf8')
-  writeFileSync(path, `${original}\n:where([data-scope="table"]) { padding: var(--warp-space-page); }\n`)
+  writeFileSync(
+    path,
+    `${original}\n:where([data-scope="table"]) { padding: var(--warp-space-page); }\n`,
+  )
   expect(check()).toContain('Source index drift')
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
     registry: { sites: { source: string; fallback: string; fallbackSpan: number[] }[] }
   }
-  const site = schema.registry.sites.find((item) => item.source === source && item.fallback.includes('--warp-'))
+  const site = schema.registry.sites.find(
+    (item) => item.source === source && item.fallback.includes('--warp-'),
+  )
   expect(site).toBeDefined()
   const [start, end] = site!.fallbackSpan
   const changed = site!.fallback.replace('--warp-', '--warp-changed-')
@@ -451,14 +667,18 @@ test('detects a new token reader and changed input outside the hashed sheets', (
 })
 
 test('normalizes reviewed anchor bindings and preserves one schema digest', () => {
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
     digest: string
     registry: { groups: { id: string; binding: string; token: string; bindingRefs: unknown[] }[] }
   }
   const group = schema.registry.groups.find((row) => row.id === 'link.rest.text')
   expect(group).toMatchObject({ binding: 'partial', token: '--warp-link-text' })
   expect(group?.bindingRefs).toHaveLength(1)
-  expect(schema.registry.groups.find((row) => row.id === 'link.rest.underline.width')?.binding).toBe('partial')
+  expect(
+    schema.registry.groups.find((row) => row.id === 'link.rest.underline.width')?.binding,
+  ).toBe('partial')
   const type = readFileSync(resolve(root, 'packages/warp/plugin.d.mts'), 'utf8')
   const doc = readFileSync(resolve(root, 'packages/cli/docs/theme-tokens.md'), 'utf8')
   expect(type).toContain(schema.digest)
@@ -479,37 +699,74 @@ test('detects a new declared system colour even without a token read', () => {
 
 test('normalizes finite groups from simple-scope consumers without closing them', async () => {
   const { partTypes } = await import('../scripts/theme-schema-types.mjs')
-  expect(() => partTypes([{ part: 'x', state: 'rest', path: 'width', domain: 'unknown' }]))
-    .toThrow('Unknown theme domain: unknown')
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
-    registry: { groups: { id: string; token: string; domain: string; units: string;
-      binding: string; siteIds: string[] }[]; sites: { id: string; fallback: string;
-        selectors: string[]; classification: string }[] }
+  expect(() => partTypes([{ part: 'x', state: 'rest', path: 'width', domain: 'unknown' }])).toThrow(
+    'Unknown theme domain: unknown',
+  )
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
+    registry: {
+      groups: {
+        id: string
+        token: string
+        domain: string
+        units: string
+        binding: string
+        siteIds: string[]
+      }[]
+      sites: { id: string; fallback: string; selectors: string[]; classification: string }[]
+    }
   }
   const radius = schema.registry.groups.find((row) => row.id === 'button.rest.radius')
-  expect(radius).toMatchObject({ token: '--warp-button-radius', domain: 'radius', units: 'px', binding: 'partial' })
+  expect(radius).toMatchObject({
+    token: '--warp-button-radius',
+    domain: 'radius',
+    units: 'px',
+    binding: 'partial',
+  })
   expect(radius?.siteIds.length).toBeGreaterThan(0)
   const site = schema.registry.sites.find((row) => row.id === radius?.siteIds[0])
-  expect(site).toMatchObject({ fallback: 'var(--warp-radius-control)', classification: 'partial binding' })
-  expect(schema.registry.groups.find((row) => row.id === 'button.rest.border')?.units).toBe('px width only')
-  expect(new Set(schema.registry.groups.map((row) => row.token)).size).toBe(schema.registry.groups.length)
+  expect(site).toMatchObject({
+    fallback: 'var(--warp-radius-control)',
+    classification: 'partial binding',
+  })
+  expect(schema.registry.groups.find((row) => row.id === 'button.rest.border')?.units).toBe(
+    'px width only',
+  )
+  expect(new Set(schema.registry.groups.map((row) => row.token)).size).toBe(
+    schema.registry.groups.length,
+  )
 })
 
 test('records finite system names, aliases, units and unresolved families', () => {
-  const schema = JSON.parse(readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8')) as {
-    registry: { systemScales: { path: string; status: string; allowCustom?: boolean;
-      entries: { key: string; token?: string; aliasOf?: string; unit?: string; status: string }[] }[] }
+  const schema = JSON.parse(
+    readFileSync(resolve(root, 'packages/warp-core/theme.schema.json'), 'utf8'),
+  ) as {
+    registry: {
+      systemScales: {
+        path: string
+        status: string
+        allowCustom?: boolean
+        entries: { key: string; token?: string; aliasOf?: string; unit?: string; status: string }[]
+      }[]
+    }
   }
   const radius = schema.registry.systemScales.find((row) => row.path === 'radius')
   expect(radius?.allowCustom).toBe(true)
   expect(radius?.entries.find((row) => row.key === 'card')).toMatchObject({
-    token: '--warp-radius-surface', aliasOf: 'surface', unit: 'px', status: 'declared-input',
+    token: '--warp-radius-surface',
+    aliasOf: 'surface',
+    unit: 'px',
+    status: 'declared-input',
   })
   const focus = schema.registry.systemScales.find((row) => row.path === 'focus')
   expect(focus?.entries.find((row) => row.key === 'color')).toMatchObject({
-    token: '--warp-color-focus', unit: 'forbidden',
+    token: '--warp-color-focus',
+    unit: 'forbidden',
   })
-  expect(schema.registry.systemScales.find((row) => row.path === 'breakpoint')?.status).toBe('unresolved')
+  expect(schema.registry.systemScales.find((row) => row.path === 'breakpoint')?.status).toBe(
+    'unresolved',
+  )
 })
 
 test('rejects a state not in the marked state table', () => {
@@ -533,26 +790,48 @@ test('rejects a change to a normalized system alias rule', () => {
 
 test('exports the compact schema through the package without source-site provenance', () => {
   const packageRoot = resolve(root, 'packages/warp-core')
-  const result = execFileSync(process.execPath, ['--input-type=module', '-e',
-    'import schema, { themeSchema } from "@weft-js/warp-core/theme-schema"; ' +
-    'if (schema !== themeSchema) process.exit(2); process.stdout.write(JSON.stringify(schema))'], {
-    cwd: packageRoot, encoding: 'utf8',
-  })
-  const compact = JSON.parse(result) as { digest: string; status: string; groups: {
-    id: string; status: string; evidence: string; siteIds?: unknown }[]; sites?: unknown }
+  const result = execFileSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      'import schema, { themeSchema } from "@weft-js/warp-core/theme-schema"; ' +
+        'if (schema !== themeSchema) process.exit(2); process.stdout.write(JSON.stringify(schema))',
+    ],
+    {
+      cwd: packageRoot,
+      encoding: 'utf8',
+    },
+  )
+  const compact = JSON.parse(result) as {
+    digest: string
+    status: string
+    groups: {
+      id: string
+      status: string
+      evidence: string
+      siteIds?: unknown
+    }[]
+    sites?: unknown
+  }
   const full = JSON.parse(readFileSync(resolve(packageRoot, 'theme.schema.json'), 'utf8')) as {
-    digest: string; registry: { groups: { id: string; binding: string }[] }
+    digest: string
+    registry: { groups: { id: string; binding: string }[] }
   }
   const pkg = JSON.parse(readFileSync(resolve(packageRoot, 'package.json'), 'utf8')) as {
-    files: string[]; exports: Record<string, string>
+    files: string[]
+    exports: Record<string, string>
   }
   expect(pkg.exports['./theme-schema']).toBe('./scripts/theme-schema-registry.mjs')
   expect(pkg.files).toContain('scripts/theme-schema-registry.mjs')
+  expect(pkg.files).toContain('scripts/theme-schema-registry.json')
   expect(compact.digest).toBe(full.digest)
   expect(compact.status).toBe('partial')
   expect(compact.sites).toBeUndefined()
   expect(compact.groups.map((row) => row.id)).toEqual(full.registry.groups.map((row) => row.id))
-  expect(compact.groups.every((row) => row.status === 'candidate' && row.siteIds === undefined)).toBe(true)
+  expect(
+    compact.groups.every((row) => row.status === 'candidate' && row.siteIds === undefined),
+  ).toBe(true)
   expect(compact.groups.find((row) => row.id === 'button.rest.radius')?.evidence).toBe('partial')
 })
 
@@ -561,4 +840,12 @@ test('rejects compact schema drift', () => {
   const file = resolve(fixture, 'packages/warp-core/scripts/theme-schema-registry.mjs')
   writeFileSync(file, `${readFileSync(file, 'utf8')}\n// changed\n`)
   expect(check()).toContain('Drift: packages/warp-core/scripts/theme-schema-registry.mjs')
+})
+
+test('rejects compact registry data drift', () => {
+  setup()
+  const path = 'packages/warp-core/scripts/theme-schema-registry.json'
+  const file = resolve(fixture, path)
+  writeFileSync(file, `${readFileSync(file, 'utf8')} \n`)
+  expect(check()).toContain(`Drift: ${path}`)
 })

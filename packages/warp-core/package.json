@@ -14,6 +14,7 @@
     "scripts/contrast-check.mjs",
     "scripts/contrast-check-colors.mjs",
     "scripts/theme-schema-registry.mjs",
+    "scripts/theme-schema-registry.json",
     "README.md",
     "LICENSE"
   ],
