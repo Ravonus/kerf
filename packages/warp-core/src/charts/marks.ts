@@ -42,8 +42,7 @@ export const xLabels = (
   labels: string[],
   at: (i: number) => number,
   y: number,
-  gap: number,
-  width: number,
+  [gap, width]: [number, number],
   ends = false,
 ) => {
   const show = labelWindow(labels.length, Math.max(2, Math.floor(width / gap)))
@@ -75,8 +74,7 @@ export const mark = (tag: string, xi: number, si: number, label: string, a: Attr
   })
 
 export const refLine = (
-  x0: number,
-  x1: number,
+  [x0, x1]: [number, number],
   y: number,
   label: string,
   at: number,
@@ -87,12 +85,9 @@ export const refLine = (
 ]
 export const anno = (
   x: number,
-  y0: number,
-  y1: number,
+  [y0, y1]: [number, number],
   label: string,
-  tx: number,
-  ty: number,
-  anchor?: string,
+  [tx, ty, anchor]: [number, number, string?],
   band?: [number, number],
 ) =>
   s(

@@ -64,11 +64,11 @@ export const brush: Form<BrushConfig> = {
       h: H,
       body: [
         axisY(ticks, ys, ml, W - mr),
-        t && refLine(ml, W - mr, ys(t.y), t.label, ml + 4),
+        t && refLine([ml, W - mr], ys(t.y), t.label, ml + 4),
         hit >= b0 &&
           hit <= b1 &&
           c.annotation &&
-          anno(xs(hit), mt, top, c.annotation, xs(hit) + 5, mt + 10),
+          anno(xs(hit), [mt, top], c.annotation, [xs(hit) + 5, mt + 10]),
         s(
           'g',
           { style: `--_dc:${color(0)}` },
@@ -85,7 +85,7 @@ export const brush: Form<BrushConfig> = {
         s(
           'g',
           { class: 'axis', 'aria-hidden': 'true' },
-          xLabels(X.slice(b0, b1 + 1), (k) => xs(b0 + k), top + 14, 70, W - ml, true),
+          xLabels(X.slice(b0, b1 + 1), (k) => xs(b0 + k), top + 14, [70, W - ml], true),
         ),
         s(
           'g',

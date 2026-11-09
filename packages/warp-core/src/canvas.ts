@@ -138,12 +138,11 @@ function track(fn: (e: PointerEvent) => void) {
 }
 
 function surfacePointer(
+  v: SurfaceState,
   box: HTMLElement,
   pointer: Pointer,
   visible: () => boolean,
   invalidate: () => void,
-  unit: () => number,
-  enabled: () => boolean,
 ) {
   let untrack: (() => void) | undefined
   const follow = (e: PointerEvent) => {
@@ -154,15 +153,16 @@ function surfacePointer(
     const over = x >= 0 && y >= 0 && x < r.width && y < r.height,
       down = e.type === 'pointerdown' ? over : e.type === 'pointermove' ? pointer.down : false
     if (!over && !pointer.in && down === pointer.down) return
-    pointer.x = x / unit()
-    pointer.y = y / unit()
+    pointer.x = x / v.unit
+    pointer.y = y / v.unit
     pointer.in = over
     pointer.down = down
     invalidate()
   }
   const listen = () => {
-    if (enabled() && !untrack) untrack = track(follow)
-    else if (!enabled() && untrack) {
+    const enabled = !!v.o.pointer
+    if (enabled && !untrack) untrack = track(follow)
+    else if (!enabled && untrack) {
       untrack()
       untrack = undefined
     }
@@ -223,16 +223,19 @@ function measureSurface(
 function runSurface(
   now: number,
   v: SurfaceState,
-  canvas: HTMLCanvasElement,
-  box: HTMLElement,
-  ctx: CanvasRenderingContext2D | null,
-  pointer: Pointer,
-  run: Run,
-  visible: () => boolean,
-  running: () => boolean,
-  moves: () => boolean,
-  dial: () => Tier,
+  s: {
+    canvas: HTMLCanvasElement
+    box: HTMLElement
+    ctx: CanvasRenderingContext2D | null
+    pointer: Pointer
+    run: Run
+    visible: () => boolean
+    running: () => boolean
+    moves: () => boolean
+    dial: () => Tier
+  },
 ) {
+  const { canvas, box, ctx, pointer, run, visible, running, moves, dial } = s
   if (!visible() || !ctx) return void queue.delete(run)
   if (!v.dirty && v.o.fps && now - v.shown < 1000 / v.o.fps - 2) return
   if (!v.sized && !(v.sized = measureSurface(v, canvas, box, ctx))) return void queue.delete(run)
@@ -348,17 +351,10 @@ export function surface(canvas: HTMLCanvasElement, options: SurfaceOptions): Sur
     wake()
   }
 
-  const run: Run = (now) =>
-    runSurface(now, v, canvas, box, ctx, pointer, run, visible, running, moves, dial)
+  const run: Run = (now) => runSurface(now, v, s)
+  const s = { canvas, box, ctx, pointer, run, visible, running, moves, dial }
 
-  const tracking = surfacePointer(
-    box,
-    pointer,
-    visible,
-    invalidate,
-    () => v.unit,
-    () => !!v.o.pointer,
-  )
+  const tracking = surfacePointer(v, box, pointer, visible, invalidate)
 
   const stop = observeSurface(v, canvas, box, invalidate, wake)
   tracking.listen()

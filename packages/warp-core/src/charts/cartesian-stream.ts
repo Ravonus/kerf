@@ -144,7 +144,7 @@ export const stream: Form<StreamConfig> = {
       h: H,
       body: [
         axisY(ticks, py, ml, W - mr),
-        ref && refLine(ml, W - mr, py(ref.y), ref.label, W - mr - 4, 'end'),
+        ref && refLine([ml, W - mr], py(ref.y), ref.label, W - mr - 4, 'end'),
         s(
           'g',
           { style: `--_dc:${color(0)}` },

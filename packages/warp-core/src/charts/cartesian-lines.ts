@@ -69,22 +69,19 @@ export const line: Form<LineConfig> = {
           'g',
           { class: 'axis', 'aria-hidden': 'true' },
           yLabels(ticks, py, ml, fa),
-          xLabels(X, px, H - 7, 58, W - ml - mr, true),
+          xLabels(X, px, H - 7, [58, W - ml - mr], true),
         ),
         W >= 420 &&
           c.annotations?.map((a) =>
             anno(
               px(index(a.x)),
-              mt,
-              H - mb,
+              [mt, H - mb],
               a.label,
-              px(index(a.x)) - 6,
-              mt + 12,
-              'end',
+              [px(index(a.x)) - 6, mt + 12, 'end'],
               a.band && [px(index(a.band[0])), px(index(a.band[1]))],
             ),
           ),
-        c.references?.map((r) => refLine(ml, W - mr, py(r.y), r.label, ml + 4)),
+        c.references?.map((r) => refLine([ml, W - mr], py(r.y), r.label, ml + 4)),
         lineSeries({ vis, px, py, n, x, c, H, mb, X, f, direct, ends }),
         s('line', { class: 'cross', x1: 0, x2: 0, y1: mt, y2: H - mb }),
       ],
@@ -149,7 +146,7 @@ export const bar: Form<BarConfig> = {
           'g',
           { class: 'axis', 'aria-hidden': 'true' },
           yLabels(ticks, y, ml, fa),
-          xLabels(X, (i) => ml + band * (i + 0.5), H - 7, 44, W - ml - mr),
+          xLabels(X, (i) => ml + band * (i + 0.5), H - 7, [44, W - ml - mr]),
         ),
         S.map((v, si) =>
           s(

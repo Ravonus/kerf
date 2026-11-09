@@ -84,8 +84,7 @@ export function chartLegend(
   svg: SVGSVGElement,
   hidden: Set<number>,
   markState: Marks,
-  draw: () => void,
-  current: { readonly byMark: boolean | undefined },
+  current: { draw: () => void; readonly byMark: boolean | undefined },
 ) {
   const { show, hide } = markState
   const isolate = (index: number | null) => {
@@ -108,7 +107,7 @@ export function chartLegend(
       else hidden.delete(i)
       b.setAttribute('aria-pressed', String(!on))
       hide()
-      draw()
+      current.draw()
     }
   }
   function over(e: Event) {
@@ -133,10 +132,13 @@ export function chartBind(
   fig: HTMLElement,
   area: HTMLElement,
   svg: SVGSVGElement,
-  events: ReturnType<typeof chartPointers>,
-  key: ReturnType<typeof chartKeyboard>,
-  legend: ReturnType<typeof chartLegend>,
+  on: {
+    events: ReturnType<typeof chartPointers>
+    key: ReturnType<typeof chartKeyboard>
+    legend: ReturnType<typeof chartLegend>
+  },
 ) {
+  const { events, key, legend } = on
   const { click, over, out } = legend
   const { focusIn, focusOut, down, move, up, leave, outside } = events
   fig.addEventListener('click', click)

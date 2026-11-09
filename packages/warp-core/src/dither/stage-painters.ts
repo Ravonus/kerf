@@ -8,15 +8,9 @@ const INTERACTIVE = 'a[href], button, [tabindex]:not([tabindex="-1"])'
 
 export const clamp = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v)
 
-export function inRound(
-  x: number,
-  y: number,
-  X: number,
-  Y: number,
-  W: number,
-  H: number,
-  R: number,
-) {
+export type Box = [number, number, number, number]
+
+export function inRound(x: number, y: number, [X, Y, W, H]: Box, R: number) {
   if (x < X || y < Y || x >= X + W || y >= Y + H) return false
   if (R <= 0) return true
   const dx = x < X + R ? X + R - x - 0.5 : x >= X + W - R ? x - (X + W - R) + 0.5 : 0
@@ -167,8 +161,9 @@ export const PAINTERS: Record<Skin, DitherPainter> = {
   art() {},
   clear(p, b) {
     // Clean ground for text, with an edge that dithers into the field instead of stopping hard.
+    const box: Box = [p.x, p.y, p.w, p.h]
     b.fill(p.x - 3, p.y - 3, p.w + 6, p.h + 6, p.r + 3, (cx, cy) =>
-      inRound(cx, cy, p.x, p.y, p.w, p.h, p.r) || b.threshold(cx, cy) < 0.5 ? 0 : -1,
+      inRound(cx, cy, box, p.r) || b.threshold(cx, cy) < 0.5 ? 0 : -1,
     )
   },
 }

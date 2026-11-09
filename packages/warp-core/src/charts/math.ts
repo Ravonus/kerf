@@ -102,12 +102,12 @@ export function arc(cx: number, cy: number, R: number, a0: number, a1: number) {
 }
 
 /** A closed ring segment (sunburst). */
-export function ring(cx: number, cy: number, r0: number, r1: number, a0: number, a1: number) {
+export function ring(c: number, r0: number, r1: number, a0: number, a1: number) {
   const g = 0.012,
     A0 = a0 + g,
     A1 = a1 - g,
     L = A1 - A0 > Math.PI ? 1 : 0
-  const p = (r: number, a: number) => polar(cx, cy, r, a).map(f1).join(',')
+  const p = (r: number, a: number) => polar(c, c, r, a).map(f1).join(',')
   return `M${p(r1, A0)}A${r1},${r1} 0 ${L} 1 ${p(r1, A1)}L${p(r0, A1)}A${r0},${r0} 0 ${L} 0 ${p(r0, A0)}Z`
 }
 

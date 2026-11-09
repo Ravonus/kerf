@@ -98,7 +98,7 @@ export const combo: Form<ComboConfig> = {
         s(
           'g',
           { class: 'axis', 'aria-hidden': 'true' },
-          xLabels(X, (i) => ml + band * (i + 0.5), H - 6, 40, W - ml),
+          xLabels(X, (i) => ml + band * (i + 0.5), H - 6, [40, W - ml]),
         ),
       ],
       tip: (i) => ({
@@ -190,14 +190,10 @@ export const histogram: Form<HistConfig> = {
           ['p50', q(0.5)],
           ['p95', q(0.95)],
         ].map(([l, v]) =>
-          anno(
-            px(v as number),
-            mt - 6,
-            H - mb,
-            `${l} ${f(v as number)}`,
+          anno(px(v as number), [mt - 6, H - mb], `${l} ${f(v as number)}`, [
             px(v as number) + 5,
             mt + 2,
-          ),
+          ]),
         ),
       ],
       tip: (i) => ({

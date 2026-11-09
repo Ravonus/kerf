@@ -17,14 +17,7 @@ export type DonutConfig = Base<Slice[]> & {
   format?: Fmt | undefined
   name?: string
 }
-function focusDonut(
-  m: Element | null,
-  svg: Element,
-  c: DonutConfig,
-  total: number,
-  f: Fmt,
-  unit: string,
-) {
+function focusDonut(m: Element | null, svg: Element, c: DonutConfig, total: number, f: Fmt) {
   const fig = svg.closest('figure')!,
     v = svg.querySelector('.center-v'),
     l = svg.querySelector('.center-l')
@@ -34,7 +27,7 @@ function focusDonut(
   if (!v || !l) return
   const d = m && c.data[Number(m.getAttribute('data-xi'))]
   v.textContent = d ? pct(d.value / total) : f(total)
-  l.textContent = d ? d.name : unit
+  l.textContent = d ? d.name : (c.unit ?? 'total')
 }
 
 /** Donut and pie charts. */
@@ -136,7 +129,7 @@ export const donut: Form<DonutConfig> = {
         const d = c.data[i]!
         return { rows: [[d.color ?? color(i), d.name, f(d.value)]] }
       },
-      on: (m, svg) => focusDonut(m, svg, c, total, f, unit),
+      on: (m, svg) => focusDonut(m, svg, c, total, f),
     }
   },
 }

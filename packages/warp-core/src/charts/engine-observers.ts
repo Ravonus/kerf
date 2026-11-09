@@ -66,8 +66,7 @@ export function chartObservers(
   fig: HTMLElement,
   area: HTMLElement,
   ctx: Ctx,
-  draw: () => void,
-  enter: () => void,
+  { draw, enter }: { draw: () => void; enter: () => void },
   dimensions: { width: number },
 ) {
   const self: Live = { near: true, dirty: false, redraw: () => draw() }

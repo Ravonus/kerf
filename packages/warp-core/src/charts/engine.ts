@@ -46,7 +46,8 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
   const draw = chartDraw(fig, svg, ctx, state, walk)
   const events = chartPointers(fig, svg, markState, state)
   const key = chartKeyboard(markState)
-  const legend = chartLegend(fig, svg, hidden, markState, draw, {
+  const legend = chartLegend(fig, svg, hidden, markState, {
+    draw,
     get byMark() {
       return state.form.byMark
     },
@@ -61,11 +62,11 @@ export function chart<C>(fig: HTMLElement, o: ChartOptions<C>) {
     clearTimeout(enterTimer)
     enterTimer = setTimeout(() => fig.removeAttribute('data-enter'), 1900)
   }
-  const observers = chartObservers(fig, area, ctx, draw, enter, state)
+  const observers = chartObservers(fig, area, ctx, { draw, enter }, state)
 
   state.plot = state.form.plot(state.cfg, state.width, ctx)
   walk()
-  chartBind(fig, area, svg, events, key, legend)
+  chartBind(fig, area, svg, { events, key, legend })
   observers.connect()
   const unbehave = state.form.behave?.({ svg, ctx, draw: () => draw() })
 

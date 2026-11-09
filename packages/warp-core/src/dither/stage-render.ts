@@ -2,7 +2,7 @@
 import type { Scene } from '../stage'
 import { FIELDS, sample, stepFor, type FieldName } from './fields'
 import { palette, type Ramp } from './ramp'
-import { clamp, glow, inRound, LEVEL, PAINTERS } from './stage-painters'
+import { clamp, glow, inRound, LEVEL, PAINTERS, type Box } from './stage-painters'
 import type { Brush, DitherPiece, DitherStageOptions, Skin } from './stage'
 import type { tile } from './tiles'
 
@@ -79,12 +79,13 @@ function stageDrawing(st: StageState) {
     Y = Math.round(Y)
     W = Math.round(W)
     H = Math.round(H)
-    const y1 = Math.min(st.rows, Y + H),
+    const box: Box = [X, Y, W, H],
+      y1 = Math.min(st.rows, Y + H),
       x1 = Math.min(st.cols, X + W),
       fn = typeof v === 'function' ? v : undefined
     for (let y = Math.max(0, Y); y < y1; y++)
       for (let x = Math.max(0, X); x < x1; x++) {
-        if (R > 0 && !inRound(x, y, X, Y, W, H, R)) continue
+        if (R > 0 && !inRound(x, y, box, R)) continue
         const t = fn ? fn(x, y) : (v as number)
         if (t >= 0) set(x, y, t, r)
       }
@@ -104,16 +105,14 @@ function stageDrawing(st: StageState) {
     Y = Math.round(Y)
     W = Math.round(W)
     H = Math.round(H)
-    const step = dash ? Math.floor(st.time * 10) : 0,
+    const outer: Box = [X, Y, W, H],
+      inner: Box = [X + t, Y + t, W - t * 2, H - t * 2],
+      step = dash ? Math.floor(st.time * 10) : 0,
       y1 = Math.min(st.rows, Y + H),
       x1 = Math.min(st.cols, X + W)
     for (let y = Math.max(0, Y); y < y1; y++)
       for (let x = Math.max(0, X); x < x1; x++) {
-        if (
-          !inRound(x, y, X, Y, W, H, R) ||
-          inRound(x, y, X + t, Y + t, W - t * 2, H - t * 2, Math.max(0, R - t))
-        )
-          continue
+        if (!inRound(x, y, outer, R) || inRound(x, y, inner, Math.max(0, R - t))) continue
         if (!dash || (x + y + step) % dash < dash / 2) set(x, y, v, r)
       }
   }
@@ -259,8 +258,10 @@ function paintPieces(
   sc: Scene,
   rampId: RampId,
   brush: Brush,
-  paintType: (p: DitherPiece) => void,
-  paintArt: (p: DitherPiece) => void,
+  {
+    paintType,
+    paintArt,
+  }: { paintType: (p: DitherPiece) => void; paintArt: (p: DitherPiece) => void },
 ) {
   for (const piece of sc.pieces) {
     const p = piece as DitherPiece,
@@ -276,14 +277,7 @@ function paintPieces(
   st.current = undefined
 }
 
-function paintOverlay(
-  st: StageState,
-  sc: Scene,
-  rampId: RampId,
-  threshold: Brush['threshold'],
-  set: Brush['set'],
-  fill: Brush['fill'],
-) {
+function paintOverlay(st: StageState, sc: Scene, rampId: RampId, { threshold, set, fill }: Brush) {
   // A press rings out from where it landed, over everything, in the ripple's inks.
   if (st.o.ripple !== false) {
     const id = rampId(st.o.ripple ?? 'accent')
@@ -323,7 +317,7 @@ function paintOutput(st: StageState, ctx: CanvasRenderingContext2D) {
 export function stageRenderer(st: StageState) {
   const { rampId, retheme } = stageRamps(st)
   const { brush, grow, threshold, set, fill, ring } = stageSurface(st, rampId)
-  const { paintType, paintArt } = stageDetails(st, fill, ring)
+  const details = stageDetails(st, fill, ring)
   function paint(sc: Scene) {
     const { ctx, width, height, time: now, live } = sc
     st.scene = sc
@@ -336,8 +330,8 @@ export function stageRenderer(st: StageState) {
     st.seenAt = now
     paintGround(st, sc)
     const moving = paintVeil(st, sc, live, rampId, threshold)
-    paintPieces(st, sc, rampId, brush, paintType, paintArt)
-    paintOverlay(st, sc, rampId, threshold, set, fill)
+    paintPieces(st, sc, rampId, brush, details)
+    paintOverlay(st, sc, rampId, brush)
     paintOutput(st, ctx)
     return moving
   }

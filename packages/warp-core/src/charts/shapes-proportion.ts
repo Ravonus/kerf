@@ -41,11 +41,11 @@ export const sunburst: Form<SunConfig> = {
         mark('path', k++, 0, `${g.name}: ${pct(total / t)}`, {
           class: 's-rect',
           style: `--_dc:${base}`,
-          d: ring(m, m, m * 0.32, m * 0.62, a0, a0 + (total / t) * TAU),
+          d: ring(m, m * 0.32, m * 0.62, a0, a0 + (total / t) * TAU),
         }),
         ...g.children.map((n, j) => {
           const a1 = a + (n.value / t) * TAU,
-            d = ring(m, m, m * 0.64, m * 0.96, a, a1)
+            d = ring(m, m * 0.64, m * 0.96, a, a1)
           a = a1
           return mark('path', k++, 0, `${g.name} › ${n.name}: ${pct(n.value / t)}`, {
             class: 's-rect',

@@ -38,25 +38,10 @@ export function drawField({ ctx, width, height, time, dt }: Frame, c: FieldDrawC
     v.fresh = true
   }
   const active = v.push?.step(dt) ?? false
-  v.hot = composeField(
-    time,
-    active,
-    v.o,
-    v.dials,
-    v.mask,
-    v.push,
-    v.ground,
-    moves,
-    host,
-    v.rows,
-    v.cols,
-    v.tones,
-    v.shown,
-    v.heat,
-  )
+  v.hot = composeField(time, active, v, moves() && !reducedMotion(host))
   let changed = quantize(v.shown, v.cols, v.rows, v.pattern, v.inks, v.out, v.o.spread ?? 0.9)
   if (v.sparks && (v.hot || active)) {
-    igniteField(v.inks, v.pattern, v.o.spread, v.rows, v.cols, v.heat, v.shown, v.out, v.sparks)
+    igniteField(v, v.sparks)
     changed = 1
   }
   if (changed || !v.painted) {

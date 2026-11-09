@@ -48,7 +48,7 @@ export function chartMarks(
     fig.setAttribute('data-hot', '')
     current.plot.on?.(m, svg)
     const b = (m as SVGGraphicsElement).getBBox?.() ?? { x: 0, y: 0, width: 0, height: 0 }
-    place(svg, area, tip, current, b.x + b.width / 2, b.y)
+    place(svg, area, tip, current, [b.x + b.width / 2, b.y])
     if (viaKey) for (const x of marks) x.setAttribute('tabindex', x === m ? '0' : '-1')
   }
   function hide() {
@@ -87,8 +87,7 @@ function place(
   area: HTMLElement,
   tip: HTMLElement,
   current: ChartCurrent,
-  sx: number,
-  sy: number,
+  [sx, sy]: [number, number],
 ) {
   const r = svg.getBoundingClientRect(),
     p = area.getBoundingClientRect(),

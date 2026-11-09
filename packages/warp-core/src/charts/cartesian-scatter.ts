@@ -29,12 +29,8 @@ const scatterSay = (c: ScatterConfig) =>
   `${c.data.reduce((n, g) => n + g.points.length, 0)} points in ${c.data.length} groups: ${c.xName} against ${c.yName}.`
 const scales = (
   c: ScatterConfig,
-  W: number,
-  H: number,
-  ml: number,
-  mr: number,
-  mt: number,
-  mb: number,
+  [W, H]: [number, number],
+  [ml, mr, mt, mb]: [number, number, number, number],
   n: number,
 ) => {
   const all = c.data.flatMap((g) => g.points),
@@ -60,7 +56,7 @@ export const scatter: Form<ScatterConfig> = {
       mr = 10,
       mt = 10,
       mb = 30,
-      { xt, yt, px, py } = scales(c, W, H, ml, mr, mt, mb, W < 400 ? 3 : 4),
+      { xt, yt, px, py } = scales(c, [W, H], [ml, mr, mt, mb], W < 400 ? 3 : 4),
       f = c.format ?? num,
       list = dots(c, x)
     return {
@@ -127,7 +123,7 @@ export const bubble: Form<ScatterConfig> = {
     const H = W < 420 ? 190 : 220,
       ml = 30,
       mb = 22,
-      { yt, px, py } = scales(c, W, H, ml, 8, 8, mb, 4),
+      { yt, px, py } = scales(c, [W, H], [ml, 8, 8, mb], 4),
       most = Math.max(1e-9, ...c.data.flatMap((g) => g.points.map((p) => p.size ?? 0))),
       rs = (v: number) => 3 + Math.sqrt(v / most) * (W < 420 ? 11 : 15),
       f = c.format ?? num

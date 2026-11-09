@@ -177,16 +177,19 @@ export interface MessageLogOptions {
 
 function messageHandlers(
   doc: Document,
-  options: () => MessageLogOptions,
-  all: () => HTMLElement[],
-  owner: (t: EventTarget | null) => HTMLElement | null,
-  rove: (m: HTMLElement | null | undefined) => void,
-  byId: (id: string) => HTMLElement | undefined,
-  quote: (m: HTMLElement) => void,
-  confirm: (m: Element) => void,
-  jump: (id: string) => void,
-  setPicked: (s: string) => void,
+  h: {
+    options: () => MessageLogOptions
+    all: () => HTMLElement[]
+    owner: (t: EventTarget | null) => HTMLElement | null
+    rove: (m: HTMLElement | null | undefined) => void
+    byId: (id: string) => HTMLElement | undefined
+    quote: (m: HTMLElement) => void
+    confirm: (m: Element) => void
+    jump: (id: string) => void
+    setPicked: (s: string) => void
+  },
 ) {
+  const { options, all, owner, rove, byId, quote, confirm, jump, setPicked } = h
   const onKey = (e: KeyboardEvent) => {
     const m = e.target as HTMLElement
     if (m.dataset.scope !== 'message') return
@@ -295,9 +298,8 @@ export function messageLog(log: HTMLElement, opts: MessageLogOptions) {
       if (now) land(now)
     })
   }
-  const { onKey, onFocus, onDown, onUp, onClick } = messageHandlers(
-    doc,
-    () => o,
+  const { onKey, onFocus, onDown, onUp, onClick } = messageHandlers(doc, {
+    options: () => o,
     all,
     owner,
     rove,
@@ -305,10 +307,10 @@ export function messageLog(log: HTMLElement, opts: MessageLogOptions) {
     quote,
     confirm,
     jump,
-    (s) => {
+    setPicked: (s) => {
       picked = s
     },
-  )
+  })
   const watch = new doc.defaultView!.MutationObserver((records: MutationRecord[]) => {
     if (!records.some((r) => [...r.addedNodes, ...r.removedNodes].some((n) => n.nodeType === 1)))
       return
