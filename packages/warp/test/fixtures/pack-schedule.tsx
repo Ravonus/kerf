@@ -24,8 +24,7 @@ const t = (d: number, h: string) => `${on(d)}T${h}`
 let n = 0
 const ev = (
   d: number,
-  s: string,
-  e: string,
+  [s, e]: [string, string],
   title: string,
   cal: number,
   o: Partial<CalEvent> = {},
@@ -34,59 +33,59 @@ const makeEvents = (): CalEvent[] => {
   n = 0
   return [
     ...[26, 27, 28, 29, 30].map((d) =>
-      ev(d, '09:00', '09:15', 'Standup', 1, {
+      ev(d, ['09:00', '09:15'], 'Standup', 1, {
         recurrence: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR',
         location: 'Room Atlas',
         attendees: ['Ana Ruiz', 'Kofi Mensah', 'Mei Tanaka', 'You'],
       }),
     ),
-    ev(26, '10:00', '11:30', 'Design crit', 2, {
+    ev(26, ['10:00', '11:30'], 'Design crit', 2, {
       location: 'Studio · Figma',
       attendees: ['Mei Tanaka', 'Léa Martin', 'You'],
       video: true,
     }),
-    ev(26, '13:00', '14:00', 'Lunch with Ana', 5, { location: 'Pasta place' }),
-    ev(26, '15:00', '16:00', '1:1 Kofi', 3, {
+    ev(26, ['13:00', '14:00'], 'Lunch with Ana', 5, { location: 'Pasta place' }),
+    ev(26, ['15:00', '16:00'], '1:1 Kofi', 3, {
       recurrence: 'FREQ=WEEKLY;INTERVAL=2',
       video: true,
       attendees: ['Kofi Mensah', 'You'],
     }),
-    ev(27, '11:00', '12:00', 'Roadmap review', 4, {
+    ev(27, ['11:00', '12:00'], 'Roadmap review', 4, {
       tentative: true,
       location: 'Maybe · awaiting Raj',
       attendees: ['Raj Patel', 'Ana Ruiz', 'You'],
     }),
-    ev(27, '11:30', '12:30', 'Vendor call', 6, { video: true }),
-    ev(27, '14:00', '17:00', 'Focus: calendar engine', 7, {
+    ev(27, ['11:30', '12:30'], 'Vendor call', 6, { video: true }),
+    ev(27, ['14:00', '17:00'], 'Focus: calendar engine', 7, {
       location: 'Do not book',
       locked: true,
     }),
-    ev(28, '10:00', '11:00', 'Interview · Frontend', 3, {
+    ev(28, ['10:00', '11:00'], 'Interview · Frontend', 3, {
       video: true,
       attendees: ['Sam Okafor', 'You'],
       resource: 'birch',
     }),
-    ev(28, '10:30', '11:15', 'Release sync', 8, {
+    ev(28, ['10:30', '11:15'], 'Release sync', 8, {
       attendees: ['Ivy Chen', 'You'],
       resource: 'atlas',
     }),
-    ev(28, '10:45', '12:00', 'Pairing with Mei', 2, {
+    ev(28, ['10:45', '12:00'], 'Pairing with Mei', 2, {
       location: 'Overlap layout',
       attendees: ['Mei Tanaka', 'You'],
       resource: 'cedar',
     }),
-    ev(28, '15:30', '16:30', 'Sprint planning', 4, {
+    ev(28, ['15:30', '16:30'], 'Sprint planning', 4, {
       recurrence: 'FREQ=WEEKLY',
       video: true,
       resource: 'atlas',
     }),
-    ev(28, '13:00', '13:30', 'Lunch', 5),
-    ev(29, '09:30', '10:30', 'Customer call · Acme', 6, { video: true }),
-    ev(29, '12:00', '13:00', 'Brown bag: Temporal', 1),
-    ev(29, '14:00', '15:30', 'Design crit', 2, { recurrence: 'FREQ=WEEKLY' }),
-    ev(30, '11:00', '12:00', 'Retro', 4, { video: true }),
-    ev(30, '16:00', '17:00', 'Demo day', 8, { location: 'All hands' }),
-    ev(31, '10:00', '12:00', 'Climbing', 5, { location: 'Boulder gym' }),
+    ev(28, ['13:00', '13:30'], 'Lunch', 5),
+    ev(29, ['09:30', '10:30'], 'Customer call · Acme', 6, { video: true }),
+    ev(29, ['12:00', '13:00'], 'Brown bag: Temporal', 1),
+    ev(29, ['14:00', '15:30'], 'Design crit', 2, { recurrence: 'FREQ=WEEKLY' }),
+    ev(30, ['11:00', '12:00'], 'Retro', 4, { video: true }),
+    ev(30, ['16:00', '17:00'], 'Demo day', 8, { location: 'All hands' }),
+    ev(31, ['10:00', '12:00'], 'Climbing', 5, { location: 'Boulder gym' }),
     { id: 'a1', title: 'Offsite prep', start: on(26), end: on(27), allDay: true, cal: 4 },
     { id: 'a2', title: 'Ana out of office', start: on(28), end: on(28), allDay: true, cal: 5 },
     { id: 'a3', title: 'Release 2026.11', start: on(30), end: on(30), allDay: true, cal: 8 },
