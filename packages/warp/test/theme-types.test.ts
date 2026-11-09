@@ -130,10 +130,19 @@ const wrongNamedColor: WarpOptions = {
 }
 void wrongNamedColor
 
+const namedThemes: WarpOptions = {
+  colors: { brand: '#ffffff' },
+  themes: { ocean: { colors: { brand: '#112233' } }, sunset: {} },
+  dials: { palette: 'ocean' },
+}
+void namedThemes
+
 const unsupportedTheme: WarpOptions = {
   themes: {
-    // @ts-expect-error Named themes are not supported yet.
-    ocean: {},
+    ocean: {
+      // @ts-expect-error Named theme seeds are not supported yet.
+      seed: { hue: 120, chroma: 0.1 },
+    },
   },
 }
 void unsupportedTheme

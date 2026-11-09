@@ -241,8 +241,8 @@ export interface WarpOptions {
   system?: Record<string, never>
   /** Named hex colours or aliases to other named colours. */
   colors?: Record<string, string>
-  /** Named themes are not yet supported; an empty dictionary is accepted. */
-  themes?: Record<string, never>
+  /** Named palettes may replace configured named hex colours. */
+  themes?: Record<string, { colors?: Record<string, string> }>
   /** Resting Button colours are supported together; empty dictionaries are accepted. */
   parts?: { button?: { bg?: never; text?: never } | { bg: string; text: string } }
   /**
@@ -259,6 +259,8 @@ export interface WarpOptions {
     expression?: 'quiet' | 'balanced' | 'vivid'
     density?: 'compact' | 'cozy' | 'comfortable'
     flair?: 'sweep' | 'none'
+    /** Default named palette; auto restores the base palette. */
+    palette?: string
     theme?: 'light' | 'dark'
   }
   /** Replaces the radius each expression sets. */

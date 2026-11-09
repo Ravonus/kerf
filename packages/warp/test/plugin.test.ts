@@ -307,7 +307,7 @@ test('unsupported theme features and unsafe colours are rejected', () => {
     { colors: null },
     { colors: { brand: 'oklch(0.5 0.1 20)' } },
     { colors: { brand: { hue: 120, chroma: 0.1 } } },
-    { themes: { ocean: {} } },
+    { themes: { ocean: { seed: { hue: 120, chroma: 0.1 } } } },
     { system: { space: { group: 2 } } },
   ])
     expect(code(() => run(input as WarpOptions))).toBe('P115')
@@ -426,4 +426,48 @@ test.each(['label', 'text', 'base'])('checks configured sweep %s overrides', (na
       expect.objectContaining({ path: `tokens.${token}`, fg: token }),
     )
   }
+})
+
+test('named colour palettes resolve aliases, select a default and reset nested boundaries', () => {
+  const out = run({
+    colors: { brand: 'ink', ink: '#112233' },
+    themes: { ocean: { colors: { ink: '#445566' } }, sunset: { colors: { ink: '#778899' } } },
+    dials: { palette: 'ocean' },
+  })
+  const css = out.tokens.css
+  const entries = out.tokens as unknown as {
+    alias: Record<string, string>
+    cssEntries: { tailwind: string }
+  }
+  expect(entries.alias['@weft-js/warp/tailwind.css']).toContain('.weft/tokens/warp.tailwind.css')
+  expect(entries.cssEntries.tailwind).toContain('--color-brand: var(--warp-named-brand)')
+  expect(css).toContain('--warp-palette-names:default ocean sunset;--warp-palette-default:ocean')
+  expect(css).toContain(
+    ':root:not([data-palette]){--warp-palette-current:ocean;--warp-named-brand:#445566;--warp-named-ink:#445566}',
+  )
+  expect(css).toContain(
+    '[data-palette]{--warp-palette-current:default;--warp-named-brand:#112233;--warp-named-ink:#112233}',
+  )
+  expect(css).toContain(
+    '[data-palette="sunset"]{--warp-palette-current:sunset;--warp-named-brand:#778899;--warp-named-ink:#778899}',
+  )
+  expect(run({ themes: {} }).tokens).toEqual(run().tokens)
+  expect(run({ themes: { ocean: {} }, dials: { palette: 'auto' } }).tokens.css).toContain(
+    '--warp-palette-default:default',
+  )
+})
+
+test('named palettes reject unknown names and unsupported settings before emission', () => {
+  for (const input of [
+    { themes: null },
+    { themes: { ocean: { colors: { missing: '#ffffff' } } } },
+    { themes: { ocean: {} }, dials: { palette: 'missing' } },
+    { themes: { ocean: {} }, dials: { palette: null } },
+    { colors: { ocean: '#ffffff' }, themes: { ocean: {} } },
+    { themes: { ocean: { parts: { button: { bg: '#000000', text: '#ffffff' } } } } },
+    { themes: { ocean: {} }, tokens: { '--warp-color-page': '#ffffff' } },
+    { themes: { ocean: {} }, seed: { hue: 100, chroma: 0.1 } },
+    { themes: { ocean: {} }, parts: { button: { bg: '#000000', text: '#ffffff' } } },
+  ])
+    expect(code(() => run(input as WarpOptions))).toBe('P115')
 })

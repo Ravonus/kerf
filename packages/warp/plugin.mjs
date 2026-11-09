@@ -14,6 +14,7 @@ import { dtcgTokens } from './src/plugin/dtcg.mjs'
 import { DEFAULT, RADII, FONTS, options } from './src/plugin/themes-options.mjs'
 import { buttonPairs } from './src/plugin/themes-contrast.mjs'
 import { tailwindTheme } from './src/plugin/tailwind.mjs'
+import { paletteCss } from './src/plugin/themes-palettes.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
 // The spec's scope roots (warp.css §2): every one recomputes the sys tokens, so an override has to land on each.
@@ -315,6 +316,7 @@ export const warp = definePlugin({
     }
     const note = o.asked && landed(seed, declarations, o.asked)
     const dials = Object.entries(o.dials ?? {})
+      .filter(([dial]) => dial !== 'palette')
       .map(([dial, value]) => dialCss(dial, value))
       .join('')
     const css =
@@ -322,7 +324,8 @@ export const warp = definePlugin({
       (o.fields === 'classic' ? classicCss() : '') +
       dials +
       overrideCss(declarations) +
-      (o.namedColors
+      (o.palettes ? paletteCss(o.palettes) : '') +
+      (o.namedColors && !o.palettes
         ? `@layer warp.tokens{:root{${Object.entries(o.namedColors)
             .map(([name, value]) => `--warp-named-${name}:${value}`)
             .join(';')}}}\n`
