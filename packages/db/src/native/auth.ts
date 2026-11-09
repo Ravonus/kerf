@@ -1,5 +1,4 @@
-// Better Auth on Native (research 34 §5): Better Auth speaks Kysely, so this is a Kysely dialect over Native's own
-// connection. One connection on every engine and runtime, with no second driver and no ORM in the app's code.
+// Better Auth uses a Kysely dialect over Native's connection, without a second driver.
 
 import type { Dialect } from 'kysely'
 import { driver } from '../driver'

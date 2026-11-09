@@ -1,4 +1,4 @@
-// Prisma on weft's seam (research 34 §4): `withWeft(client, dialect)` returns the same client with the handle the server
+// Prisma: `withWeft(client, dialect)` returns the same client with the handle the server
 // migrates and Q011 reads. Migrations are `prisma/migrations`, applied here because `prisma migrate deploy` isn't in a
 // production bundle. Interactive transactions keep the lock and the statements on one connection. It stays Prisma's own
 // client, so weft can't hold a statement: the server runs the gate per request instead, and a failed run doesn't fail it.

@@ -1,5 +1,4 @@
-// Each driver is an optional peer: nobody installs Prisma or Mongo to use SQLite. A subpath that needs one loads it here,
-// at the top of its own module, so a missing driver says what to install instead of failing somewhere in a bundle.
+// Optional peers load at the subpath so missing drivers report what to install.
 
 const MISSING = new Set(['ERR_MODULE_NOT_FOUND', 'MODULE_NOT_FOUND'])
 
