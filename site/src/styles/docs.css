@@ -23,6 +23,8 @@
 [data-site="docs"] { --warp-sidenav-top: var(--bar); --warp-sidenav-bar: 28px; --warp-sidenav-width: calc(248px + var(--warp-space-related)); }
 [data-site="docs"] > [data-scope="sidenav"] { margin-inline-start: calc(var(--warp-space-related) * -1); font-size: var(--doc-small); }
 [data-site="docs"] > [data-scope="sidenav"] [data-scope="navlist"] { font-size: var(--doc-small); }
+/* Docked, the sidebar rises over the header's hairline so its border and highlights meet the nav with no seam (it sticks at --bar, the same spot). */
+@media (min-width: 900px) { [data-site="docs"] > [data-scope="sidenav"] { margin-block-start: calc(var(--warp-border-hairline) * -1); z-index: 21; } }
 [data-site="docs"] > [data-site="page"] { max-inline-size: none; margin: 0; padding-inline: 0; min-inline-size: 0; }
 [data-site="toc"] { position: sticky; inset-block-start: var(--bar); align-self: start; box-sizing: border-box; max-block-size: calc(100dvh - var(--bar)); overflow: auto; padding-block: var(--warp-space-page); scrollbar-width: none; }
 
