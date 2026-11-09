@@ -115,7 +115,9 @@ describe('route response validators', () => {
       expect(result.headers.has('etag')).toBe(false)
     }
   })
+})
 
+describe('route response validators', () => {
   it('runs authorization and loaders before comparing session and mutation results', async () => {
     let value = 1
     let calls = 0

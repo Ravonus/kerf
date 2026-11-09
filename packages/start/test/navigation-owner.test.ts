@@ -22,6 +22,15 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
+const pageOf = (route: ReturnType<typeof createRouteState>) =>
+  ({
+    route,
+    chunk: vi.fn(async () => {}),
+    island: vi.fn(),
+    setBag: vi.fn(),
+    initialTags: [],
+  }) as unknown as ConstructorParameters<typeof Navigation>[1]
+
 it('keeps mounted layout and page owners through replacements and cancellation', async () => {
   history.replaceState(null, '', '/users/1?q=1')
   vi.stubGlobal('requestAnimationFrame', () => 0)
@@ -99,14 +108,7 @@ it('keeps mounted layout and page owners through replacements and cancellation',
     })
     return app
   }, document.body)
-  const page = {
-    route,
-    chunk: vi.fn(async () => {}),
-    island: vi.fn(),
-    setBag: vi.fn(),
-    initialTags: [],
-  }
-  const nav = new Navigation(routes, page as unknown as ConstructorParameters<typeof Navigation>[1])
+  const nav = new Navigation(routes, pageOf(route))
   const button = document.querySelector('button')!
   button.click()
   const pageButton = document.querySelector<HTMLButtonElement>('section div button')!
@@ -165,29 +167,16 @@ it('compares decoded splat segments and rejects malformed route guesses', async 
     },
     {},
   )
-  const page = {
-    route,
-    chunk: vi.fn(async () => {}),
-    island: vi.fn(),
-    setBag: vi.fn(),
-    initialTags: [],
-  }
   vi.stubGlobal('requestAnimationFrame', () => 0)
   try {
-    const nav = new Navigation(
-      routes,
-      page as unknown as ConstructorParameters<typeof Navigation>[1],
-    )
+    const nav = new Navigation(routes, pageOf(route))
     const { guess } = await import('../src/run/helpers')
     const ids = guess(routes, '/files/a/b')
     expect(ids).toEqual(['layout:', '/files/$'])
     expect(nav.changedParams(ids, new URL('/files/a/b', location.href))).toBe(1)
     expect(nav.changedParams(ids, new URL('/files/a%2fb', location.href))).toBe(-1)
     history.replaceState(null, '', '/files/a/b')
-    const fromPlain = new Navigation(
-      routes,
-      page as unknown as ConstructorParameters<typeof Navigation>[1],
-    )
+    const fromPlain = new Navigation(routes, pageOf(route))
     expect(fromPlain.changedParams(ids, new URL('/files/a//b', location.href))).toBe(1)
     expect(guess(routes, '/files/%XX')).toEqual([])
     expect(nav.changedParams(ids, new URL('/files/%XX', location.href))).toBe(-1)

@@ -154,7 +154,9 @@ describe('navigation acceptance', () => {
     expect(nav.source).toBeUndefined()
     vi.mocked(guess).mockReturnValue([])
   })
+})
 
+describe('navigation acceptance', () => {
   it('does not clear an existing presentation for an unavailable replacement', async () => {
     const routes: ClientRoutes = { table: [], load: {} }
     const outlet = { id: { value: 'old' }, shape: { value: undefined } }
@@ -222,7 +224,9 @@ describe('navigation acceptance', () => {
     document.body.innerHTML = ''
     vi.mocked(guess).mockReturnValue([])
   })
+})
 
+describe('navigation acceptance', () => {
   it('keeps shared layout state and releases the shape after real content commits', async () => {
     history.replaceState(null, '', '/dir/from')
     document.body.innerHTML = '<div id="app"><a href="child">outgoing</a></div>'
@@ -325,7 +329,9 @@ describe('navigation acceptance', () => {
     expect(document.querySelector('a')!.getAttribute('href')).toBe('child')
     vi.mocked(guess).mockReturnValue([])
   })
+})
 
+describe('navigation acceptance', () => {
   it('uses the newly committed URL when incoming setup reenters navigation', async () => {
     history.replaceState(null, '', '/dir/from')
     document.body.innerHTML = '<div id="app"></div>'
@@ -429,7 +435,9 @@ describe('navigation acceptance', () => {
     await back
     vi.mocked(guess).mockReturnValue([])
   })
+})
 
+describe('navigation acceptance', () => {
   it('does not present a same-path or hash change and honors a disabled leaf', async () => {
     history.replaceState(null, '', '/users/1?q=1')
     const routes: ClientRoutes = {

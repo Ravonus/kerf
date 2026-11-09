@@ -106,7 +106,9 @@ describe('retained source attribute mutations', () => {
         expect(items[i]!.getAttribute(names[i]!)).toBe(`changed-${i}`)
     },
   )
+})
 
+describe('retained source attribute mutations', () => {
   it.each(['removeNamedItem', 'removeNamedItemNS'] as const)(
     'keeps missing form action on the source after NamedNodeMap.%s',
     (method) => {
@@ -218,7 +220,9 @@ describe('retained source attribute mutations', () => {
     expect(context).not.toBeNull()
     context?.release()
   })
+})
 
+describe('retained source attribute mutations', () => {
   it('preserves the authored value when setting the already owned Attr again', () => {
     history.replaceState(null, '', '/dir/old')
     document.body.innerHTML = '<div id="app"><a href="child">go</a></div>'
