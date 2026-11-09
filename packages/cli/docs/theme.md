@@ -20,6 +20,48 @@ Three levels, in order. Stop at the first that gets you there; each one keeps th
 App-wide values go in `warp()`. A `--warp-color-*` set in CSS on `:root` skips the check and is undone inside any scope that
 sets a dial, such as a Table's density.
 
+## Named colours and palettes
+
+`colors` names hex colours and aliases. Use `var(--warp-named-brand)`
+in CSS. Named themes replace existing colour names; they do not add names.
+
+```ts
+import { warp } from '@weft-js/warp/plugin'
+
+warp({
+  colors: { brand: '#333333', ink: 'brand' },
+  themes: { studio: { colors: { brand: '#555555' } } },
+  dials: { palette: 'studio' },
+})
+```
+
+Set `data-palette="studio"` on a subtree, or call
+`setDial('palette', 'studio')` to change the document synchronously.
+`auto` removes the attribute and follows the configured default;
+`default` selects the base colours. `persist: true` and `url: true`
+work on the document root only. Add `dialScript` to `site.head` to
+restore a persisted choice before paint.
+
+Named palettes support colour replacements only. They cannot be combined
+with nonempty `seed`, `tokens`, or `parts`; system overrides are not yet
+supported. For a root Button override without named palettes, supply both
+resting colours:
+
+```ts
+import { warp } from '@weft-js/warp/plugin'
+
+warp({
+  colors: { charcoal: '#333333', paper: '#ffffff' },
+  parts: { button: { bg: 'charcoal', text: 'paper' } },
+})
+```
+
+The build checks the pair. State and other part settings are not supported
+by this config. Local CSS can still override existing raw custom properties,
+as in the Button channels below. The generated [token reference](theme-tokens.md)
+lists candidate coverage; unresolved and partial rows are not a promise of
+supported configuration.
+
 ## Brutalist
 
 ```ts
