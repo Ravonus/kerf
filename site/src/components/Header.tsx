@@ -1,19 +1,10 @@
 import { Link } from '@weft-js/start'
 import { AppearanceGate } from './AppearanceGate'
-import { Mark } from './Mark'
-import { NavSheet } from './NavSheet'
+import { BrandTitle } from './BrandTitle'
+import { NAV } from '../lib/nav'
+import { SiteMenu } from './SiteMenu'
 import { SearchTrigger } from './SearchTrigger'
 import { Nav } from '@weft-js/warp'
-
-export const NAV = [
-  { href: '/learn', label: 'Learn' },
-  { href: '/reference', label: 'Reference' },
-  { href: '/components', label: 'Components' },
-  { href: '/blocks', label: 'Blocks' },
-  { href: '/charts', label: 'Charts' },
-  { href: '/art', label: 'Art' },
-  { href: '/icons', label: 'Icons' },
-]
 
 /** The bar on every page. Static: its links need no script, and the three controls are islands. */
 export function Header() {
@@ -23,10 +14,7 @@ export function Header() {
         Skip to content
       </Link>
       <div data-site="bar">
-        <Link href="/" class="brand">
-          <Mark />
-          <span>weft</span>
-        </Link>
+        <BrandTitle />
         <Nav label="Main" data-site="top-nav">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href}>
@@ -48,7 +36,9 @@ export function Header() {
           GitHub
         </Link>
         <AppearanceGate />
-        <NavSheet />
+        <span data-site="menu">
+          <SiteMenu />
+        </span>
       </div>
     </header>
   )

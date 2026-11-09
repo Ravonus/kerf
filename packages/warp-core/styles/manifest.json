@@ -539,6 +539,9 @@
   "components/dialog.css",
   "components/menu.css"
  ],
+ "menu-screen": [
+  "components/hamburger.css"
+ ],
  "menubar": [
   "components/link.css",
   "components/logo.css",
@@ -817,6 +820,9 @@
  ],
  "sidenav": [
   "layout/sidenav.css"
+ ],
+ "sidenav-title": [
+  "layout/sidenav-title.css"
  ],
  "signature": [
   "rich/signature.css",

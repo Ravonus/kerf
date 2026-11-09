@@ -36,6 +36,7 @@ export { Tooltip } from './Tooltip'
 export { Popover } from './Popover'
 export { Modal } from './Modal'
 export { Drawer } from './Drawer'
+export { HamburgerMenu, type HamburgerLink, type HamburgerMenuProps } from './HamburgerMenu'
 export { Toaster, toast } from './Toast'
 export {
   Table,
@@ -81,6 +82,7 @@ export {
 } from './Shell'
 /** A docs sidebar: one left panel whose sections fold and remember; docked from 900px, opened over the page on phones. */
 export { SideNav, type SideNavProps, type SideNavSection, type SideNavLink } from './SideNav'
+export { SideNavTitle, type SideNavTitleProps } from './SideNavTitle'
 export { Icon, type IconName, type IconRef } from './Icon'
 export { Chart, type ChartFrame } from './Chart'
 export {

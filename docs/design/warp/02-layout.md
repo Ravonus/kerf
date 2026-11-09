@@ -155,10 +155,33 @@ ConsentBanner(p: { onAccept(): void; onReject(): void;
 
 ## 5. Navigation parts
 
+### Main navigation and side navigation are two different menus
+
+Every site has both, and they never merge.
+
+| | Main navigation | Side navigation |
+|---|---|---|
+| What it holds | The site's top-level places: Learn, Reference, Components, Pricing, Blog | The pages inside the section you are in: Button, Toggle, DateField… |
+| Part | TopNav on wide screens, **HamburgerMenu** on phones | **SideNav** (docs) or the Shell's nav (apps) |
+| Wide screen | Links in the header | Docked column beside the content |
+| Phone | Hamburger button in the header; opens a full-screen menu that animates in, locks scrolling behind it, and closes as the next page loads | Stays a sidebar: a bar down the left edge that opens the panel over the page |
+| On a page in a section | Present, unchanged | Present, beside the content |
+
+- **The hamburger is main navigation only.** It never lists a section's pages, a filter for them, or "On this page".
+- **The sidebar is side navigation only.** It never repeats the site's top links, on any screen size.
+- **A docs or component page uses both:** the hamburger for the site, the sidebar for the section. Neither replaces
+  the other on a phone.
+- "On this page" (AnchorNav) belongs to the page itself, not to either menu.
+
 ```ts
 // marketing / docs
 TopNav(p: { brand: Slot; links: NavLink[]; actions?: Slot;
   current?: string })
+HamburgerMenu(p: { links: { href: string; label: string }[];
+  current?: string; brand?: Slot; label?: string;
+  open?: State<boolean> })
+SideNav(p: { label: string; sections: SideNavSection[];
+  current?: string; filter?: boolean | string })
 NavLink = { label: string; href?: string; mega?: { icon?: Icon;
   title: string; description?: string; href: string }[] }
 NavList(p: { groups: { label?: string; items: NavItem[] }[];
@@ -182,8 +205,8 @@ VersionSwitcher(p: { versions: string[]; value: Bindable<string> })
   not a menu role). With none left it reads "Sections". Re-measure on resize, font load and density change.
   Escape, an outside click, focus leaving or picking a link closes it. TabNav scrolls instead (it shows state).
 - **TopNav** is sticky and glass. Links carry `aria-current="page"` and sweep. Below 1000 the links collapse into a
-  full-screen menu (`role="dialog"`, `aria-modal`, focus moves to Close, and Escape restores focus to the trigger)
-  that also holds the page's NavList. A link with `mega` is a disclosure **button** (`aria-expanded`,
+  full-screen menu (`role="dialog"`, `aria-modal`, focus moves to Close, and Escape restores focus to the trigger):
+  the HamburgerMenu. It holds the top links only, never the page's NavList or SideNav. A link with `mega` is a disclosure **button** (`aria-expanded`,
   `aria-controls`), not a menu role. Its panel spans the bar, holds links, and closes on Escape, an outside click
   or a route.
 - **NavList** is the sidebar's list as a standalone part. It has eyebrow group labels. A parent with children is a

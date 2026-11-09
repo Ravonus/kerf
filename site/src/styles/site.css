@@ -13,6 +13,7 @@
   [data-site="repo"][data-scope="button"] { color: var(--warp-color-text-subtle); }
   [data-site="bar"] { display: flex; align-items: center; gap: var(--warp-space-related); block-size: 56px; margin-inline: auto; padding-inline: var(--warp-space-page); }
   [data-site="bar"] .brand svg { inline-size: 26px; block-size: 26px; }
+  [data-site="bar"] [data-scope="sidenav-title"] > [data-part="title"] { font: 600 calc(1.25 * var(--warp-rem))/1 var(--warp-font-sans); letter-spacing: -0.03em; }
   [data-site="bar"] .brand span { font: 600 calc(1.25 * var(--warp-rem))/1 var(--warp-font-sans); letter-spacing: -0.03em; }
   [data-site="bar"] .brand { display: inline-flex; align-items: center; gap: var(--warp-space-related); color: var(--warp-color-text); text-decoration: none; font-family: var(--warp-font-sans); font-weight: var(--warp-text-heading-weight); font-size: var(--warp-text-heading-size); }
   [data-site="top-nav"] { display: flex; gap: var(--warp-space-tight); align-self: stretch; align-items: stretch; margin-inline-start: var(--warp-space-group); --_bar: 2px; }
@@ -28,9 +29,10 @@
   [data-site="dials"] { display: grid; gap: var(--warp-space-related); inline-size: 260px; margin-block-start: var(--warp-space-related); }
   [data-site="dials"] [data-part="row"] { display: grid; gap: var(--warp-space-hair); font-size: calc(0.8125 * var(--warp-rem)); color: var(--warp-color-text-subtle); }
   [data-site="dials"] [data-scope="segmented"] { inline-size: 100%; }
-  [data-site="sheet-nav"] { display: grid; gap: var(--warp-space-tight); }
-  [data-site="sheet-nav"] h2 { margin-block-start: var(--warp-space-group); }
-  [data-site="sheet-nav"] a { display: flex; align-items: center; min-block-size: var(--warp-hit-min); padding-inline: var(--warp-space-related); color: var(--warp-color-text); text-decoration: none; font-size: var(--warp-text-heading-size); }
+  /* the open menu's bar lines up with the site's, so the X lands where the bars were */
+  [data-scope="menu-screen"] > [data-part="head"] { box-sizing: border-box; block-size: 56px; padding-block: 0; padding-inline: var(--warp-space-page); }
+  [data-scope="menu-screen"] > [data-part="body"] { padding-inline: var(--warp-space-page); }
+  [data-scope="menu-screen"] .brand { display: inline-flex; align-items: center; gap: var(--warp-space-tight); color: var(--warp-color-text); text-decoration: none; font-weight: 600; }
 
   [data-site="footer"] { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--warp-space-group); max-inline-size: 1240px; inline-size: 100%; box-sizing: border-box; margin-inline: auto; padding: var(--warp-space-group) var(--warp-space-page); border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
   [data-site="footer"] nav { display: flex; flex-wrap: wrap; gap: var(--warp-space-group); }
@@ -168,8 +170,6 @@
   @media (max-width: 899.98px) {
     [data-site="top-nav"] { display: none; }
     [data-site="menu"] { display: inline-flex; }
-    /* A section's pages have its SideNav's bar, and the top links at the head of its panel: no menu button. */
-    :root:has([data-site="docs"] > [data-scope="sidenav"][data-collapsible]) [data-site="menu"] { display: none; }
     [data-site="repo"] { display: none; }
   }
 

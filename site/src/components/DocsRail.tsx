@@ -6,13 +6,7 @@ import { derived } from '@weft-js/core'
 import { currentPath } from '@weft-js/start'
 import { SideNav, type SideNavSection } from '@weft-js/warp'
 import type { Area } from '../lib/pages'
-import {
-  AREA_LABEL,
-  learnSections,
-  referenceSections,
-  SITE_LINKS,
-  toolkitSections,
-} from '../lib/sections'
+import { AREA_LABEL, learnSections, referenceSections, toolkitSections } from '../lib/sections'
 import { ROOM_TITLES } from '../toolkit/art/shared'
 import { FrameTools } from './FrameTools'
 import '../styles/docs.css'
@@ -33,7 +27,7 @@ interface Rail {
 const TOOLKIT = new Set<string>(['components', 'blocks', 'charts'])
 const rails = new Map<string, Rail>()
 
-/** The toolkit's rail, then the rooms on the art page. */
+/** The rooms on the art page. */
 const artSections = (): SideNavSection[] => [
   ...toolkitSections('art'),
   {
@@ -93,6 +87,7 @@ export function DocsRail(props: { children?: unknown }) {
   const rail = derived(() => railFor(path.value.split('/')[1] ?? ''))
   // Booleans for what's shown, so Components to Blocks keeps the same SideNav and only its props move.
   const docs = derived(() => rail.value !== undefined)
+  const side = derived(() => (rail.value?.sections.length ?? 0) > 0)
   const tools = derived(() => !!rail.value?.tools)
   // One wrapper on every page, with the page always its last child: a page outlet that moved between parents would be
   // rebuilt where the router no longer writes. Off the docs it lays nothing out.
@@ -102,9 +97,9 @@ export function DocsRail(props: { children?: unknown }) {
       data-learn={rail.value?.learn ? '' : undefined}
       style={docs.value ? undefined : 'display:contents'}
     >
-      {docs.value && (
+      {side.value && (
         <SideNav
-          lead={SITE_LINKS}
+          overlay="under"
           label={rail.value!.label}
           sections={rail.value!.sections}
           current={path.value}
