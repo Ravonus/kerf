@@ -231,17 +231,7 @@ function scopedShared(
   return { scopedShares, moved }
 }
 
-function groupBlocks({
-  used,
-  scopedShares,
-  moved,
-  owners,
-  shared,
-  scope,
-  taggedParts,
-  dev,
-  block,
-}: {
+type GroupArgs = {
   used: Used[]
   scopedShares: string[]
   moved: Set<Rule>
@@ -251,7 +241,10 @@ function groupBlocks({
   taggedParts: boolean
   dev: boolean
   block: Block
-}) {
+}
+
+function groupBlocks(a: GroupArgs) {
+  const { used, scopedShares, moved, owners, shared, scope, taggedParts, dev, block } = a
   const blocks: string[] = [...scopedShares]
   for (const { g, rules } of used) {
     const own: { sel: string; decls: Decls; tier: number }[] = []

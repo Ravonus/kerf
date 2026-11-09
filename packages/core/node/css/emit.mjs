@@ -231,17 +231,6 @@ function scopedShared(
   return { scopedShares, moved }
 }
 
-function groupBlocks({
-  used,
-  scopedShares,
-  moved,
-  owners,
-  shared,
-  scope,
-  taggedParts,
-  dev,
-  block,
-}
 
 
 
@@ -251,7 +240,11 @@ function groupBlocks({
 
 
 
- ) {
+
+
+
+function groupBlocks(a           ) {
+  const { used, scopedShares, moved, owners, shared, scope, taggedParts, dev, block } = a
   const blocks           = [...scopedShares]
   for (const { g, rules } of used) {
     const own                                                = []

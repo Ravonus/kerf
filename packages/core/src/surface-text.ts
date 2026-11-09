@@ -260,7 +260,6 @@ export function surfaceText(
   el.setAttribute('data-surface-text', '')
   const lineCount = state(0),
     height = state(0)
-
   let handle: MeasureHandle | undefined
   let font = ''
   let leading = 0

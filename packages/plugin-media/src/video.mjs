@@ -316,19 +316,7 @@ export async function gif({ bytes, name, stem, audio, meta, width, height }, o, 
       const sets = chosen(built.sets)
       const smallest = Math.min(...sets.map((s) => s.size))
       if (!audio && smallest > bytes.length * SMALLER) return null
-      if (!audio) {
-        const check = await onDisk(
-          `x.${sets[0].rungs.at(-1).name.split('.').pop()}`,
-          sets[0].rungs.at(-1).bytes,
-          (f) => probe.info(f),
-        )
-        if (Math.abs(check.duration - total) > Math.max(0.15, total * 0.05))
-          built.diagnostics.push({
-            code: 'M019',
-            severity: 'warning',
-            message: `${name}: the video runs ${check.duration} s, the GIF ${total} s.`,
-          })
-      }
+      if (!audio) await checkRuntime(probe, sets, total, name, built.diagnostics)
       const [winner, compatible] = sets.length > 1 ? [sets[0], sets.at(-1)] : [null, sets[0]]
       const served = winner ? [winner, compatible] : [compatible]
       const cover = await poster({
@@ -368,6 +356,17 @@ export async function gif({ bytes, name, stem, audio, meta, width, height }, o, 
   } catch (e) {
     return errored(name, e)
   }
+}
+
+async function checkRuntime(probe, sets, total, name, diagnostics) {
+  const top = sets[0].rungs.at(-1)
+  const check = await onDisk(`x.${top.name.split('.').pop()}`, top.bytes, (f) => probe.info(f))
+  if (Math.abs(check.duration - total) > Math.max(0.15, total * 0.05))
+    diagnostics.push({
+      code: 'M019',
+      severity: 'warning',
+      message: `${name}: the video runs ${check.duration} s, the GIF ${total} s.`,
+    })
 }
 
 async function alphaWebp({ bytes, name, stem, width, height }) {
