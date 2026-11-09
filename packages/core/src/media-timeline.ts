@@ -111,20 +111,19 @@ function watchTimeline(
   playing: State<boolean>,
   failure: State<Error | null>,
   getMedia: () => HTMLMediaElement | undefined,
-  getSeen: () => number,
-  setShown: (on: boolean) => void,
+  view: { getSeen: () => number; setShown: (on: boolean) => void },
 ) {
   watch(
     () => currentTime.value,
     (t) => {
       const media = getMedia()
-      if (media && t !== getSeen()) media.currentTime = t
+      if (media && t !== view.getSeen()) media.currentTime = t
     },
   )
   watch(
     () => playing.value,
     (on) => {
-      setShown(on)
+      view.setShown(on)
       const media = getMedia()
       if (!media || on !== media.paused) return
       if (on)
@@ -182,16 +181,12 @@ export function timeline<C extends string = never>(
     last = t
   }
 
-  watchTimeline(
-    currentTime,
-    playing,
-    failure,
-    () => media,
-    () => seen,
-    (value) => {
+  watchTimeline(currentTime, playing, failure, () => media, {
+    getSeen: () => seen,
+    setShown: (value) => {
       shown = value
     },
-  )
+  })
 
   return {
     currentTime,
