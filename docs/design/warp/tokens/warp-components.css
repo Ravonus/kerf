@@ -1605,6 +1605,61 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(1)) { translate: 0 var(--_gap); rotate: 45deg; }
 :where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(2)) { clip-path: inset(0 0 0 100%); }
 :where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(3)) { translate: 0 calc(var(--_gap) * -1); rotate: -45deg; }
+@starting-style {
+  :where([data-scope="menu-screen"][open] [data-hamburger] [data-part="bars"] > i) { translate: 0 0; rotate: 0deg; clip-path: inset(0); }
+}
+
+/* HamburgerMenu: a full-screen menu that opens as a circle from its button and closes back into it */
+:where(dialog[data-scope="menu-screen"]) {
+  --_x: calc(100% - 32px); --_y: 32px; --_t: calc(var(--warp-duration-slow) * 1.4);
+  position: fixed; inset: 0; inline-size: 100%; block-size: 100dvh; max-inline-size: none; max-block-size: none;
+  margin: 0; padding: 0; border: 0; box-sizing: border-box; overflow: auto; overscroll-behavior: contain;
+  background: var(--warp-color-surface); color: var(--warp-color-text);
+  clip-path: circle(0 at var(--_x) var(--_y));
+  transition: clip-path calc(var(--_t) * var(--warp-duration-exit-k) * 1.6) var(--warp-ease-in-out),
+              overlay var(--_t) allow-discrete, display var(--_t) allow-discrete;
+}
+:where(dialog[data-scope="menu-screen"][open]) {
+  clip-path: circle(150vmax at var(--_x) var(--_y));
+  transition: clip-path var(--_t) var(--warp-ease-out), overlay var(--_t) allow-discrete, display var(--_t) allow-discrete;
+}
+@starting-style { :where(dialog[data-scope="menu-screen"][open]) { clip-path: circle(0 at var(--_x) var(--_y)); } }
+:where(dialog[data-scope="menu-screen"])::backdrop { background: transparent; }
+:where([data-scope="menu-screen"] > [data-part="head"]) {
+  position: sticky; inset-block-start: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between;
+  min-block-size: var(--warp-control-lg); padding: var(--warp-space-related) var(--warp-pad-surface);
+  background: var(--warp-color-surface);
+}
+:where([data-scope="menu-screen"] > [data-part="body"]) {
+  display: grid; gap: var(--warp-space-section); padding: var(--warp-space-group) var(--warp-pad-surface) var(--warp-space-section);
+}
+:where([data-scope="menu-screen"] [data-part="links"]) { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--warp-space-tight); }
+:where([data-scope="menu-screen"] [data-part="links"] a) {
+  display: block; padding-block: var(--warp-space-tight); color: var(--warp-color-text); text-decoration: none;
+  font: 500 clamp(1.75rem, 8vw, 2.75rem)/1.1 var(--warp-text-heading-font); letter-spacing: -0.02em;
+}
+:where([data-scope="menu-screen"] [data-part="links"] a:hover) { color: var(--warp-color-accent-text); }
+:where([data-scope="menu-screen"] [data-part="links"] a[aria-current]) { color: var(--warp-color-accent-text); }
+/* the links rise in one after another, and leave together */
+:where([data-scope="menu-screen"] [data-part="body"] > *, [data-scope="menu-screen"] [data-part="links"] > li) {
+  transition: opacity var(--warp-duration-base) var(--warp-ease-out), translate var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="menu-screen"][open] [data-part="links"] > li) { transition-delay: calc(80ms + var(--_i, 0) * 40ms); }
+:where([data-scope="menu-screen"] [data-part="links"] > li:nth-child(2)) { --_i: 1; }
+:where([data-scope="menu-screen"] [data-part="links"] > li:nth-child(3)) { --_i: 2; }
+:where([data-scope="menu-screen"] [data-part="links"] > li:nth-child(4)) { --_i: 3; }
+:where([data-scope="menu-screen"] [data-part="links"] > li:nth-child(5)) { --_i: 4; }
+:where([data-scope="menu-screen"] [data-part="links"] > li:nth-child(n + 6)) { --_i: 5; }
+:where([data-scope="menu-screen"]:not([open]) :is([data-part="links"] > li, [data-part="body"] > :not([data-part="links"]))) { opacity: 0; }
+@starting-style {
+  :where([data-scope="menu-screen"][open] [data-part="links"] > li) { opacity: 0; translate: 0 12px; }
+  :where([data-scope="menu-screen"][open] [data-part="body"] > :not([data-part="links"])) { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(dialog[data-scope="menu-screen"], dialog[data-scope="menu-screen"][open]) { clip-path: none; transition: opacity var(--warp-duration-base), overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete; }
+  :where(dialog[data-scope="menu-screen"]:not([open])) { opacity: 0; }
+  @starting-style { :where(dialog[data-scope="menu-screen"][open]) { opacity: 0; } }
+}
 
 /* -- Theme toggle: a toggle button (aria-pressed = dark); the glyph crossfades with a quarter turn */
 :where([data-theme-toggle] [data-part="indicator"]) { display: grid; }

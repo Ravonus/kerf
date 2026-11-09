@@ -1,7 +1,7 @@
 import { RightIcon, XIcon } from '@weft-js/warp-icons'
 import { untrack } from '@weft-js/core'
 import { sideNavState } from './SideNav/state'
-import { SideNavLead, SideNavSections } from './SideNav/sections'
+import { SideNavSections } from './SideNav/sections'
 import './styles'
 import '@weft-js/warp-core/styles/components/button.css' // the close button, without a bar
 import '@weft-js/warp-core/styles/layout/tokens.css' // the bar height, the view's height and the safe areas, without a Shell
@@ -38,8 +38,9 @@ export interface SideNavProps {
   collapsible?: boolean | undefined
   /** The panel's id. Any button with `aria-controls` naming it also opens the panel on a phone. */
   id?: string | undefined
-  /** Links shown above the sections only while the panel is laid over the page, such as a site's top links. */
-  lead?: SideNavLink[] | undefined
+  /** On a phone, where the open panel sits. `cover` (default) lays it over everything, header too. `under` opens it
+   * below the header (`--warp-sidenav-top`), and a SideNavTitle in the header slides to the panel's title. */
+  overlay?: 'cover' | 'under' | undefined
 }
 
 /**
@@ -66,6 +67,7 @@ export function SideNav(props: SideNavProps) {
       data-open={open.value ? '' : undefined}
       data-collapsible={collapsible ? '' : undefined}
       data-collapsed={collapsible && collapsed.value ? '' : undefined}
+      data-overlay={props.overlay === 'under' ? 'under' : undefined}
     >
       <div data-part="backdrop" aria-hidden="true"></div>
       <div data-part="panel" id={id} tabindex="-1">
@@ -89,7 +91,6 @@ export function SideNav(props: SideNavProps) {
           )}
         </div>
         <div data-part="scroll">
-          {props.lead && props.lead.length > 0 && <SideNavLead props={props} />}
           {props.filter && (
             <input
               type="search"

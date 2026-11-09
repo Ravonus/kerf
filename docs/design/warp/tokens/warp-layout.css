@@ -976,7 +976,6 @@
   overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: var(--warp-space-related);
   padding-block-end: max(var(--warp-space-group), var(--warp-safe-bottom, 0px));
 }
-:where([data-scope="sidenav"] [data-part="lead"]) { padding-block-end: var(--warp-space-related); border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
 :where([data-scope="sidenav"] [data-scope="navlist"]) { gap: var(--warp-space-related); font-size: inherit; }
 :where([data-scope="sidenav"] [data-part="sections"]) { gap: 2px; }
 :where([data-scope="sidenav"] [data-part="sections"] > li > [data-part="group-label"]) { margin-block: var(--warp-space-tight) 2px; }
@@ -1019,16 +1018,16 @@
 }
 :where([data-scope="sidenav"] [data-part="bar"]:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
 :where([data-scope="sidenav"] [data-part="bar"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); color: var(--warp-color-text); }
-:where([data-scope="sidenav"] [data-part="bar"] svg) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); flex: none; transition: transform var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="sidenav"] [data-part="bar"] svg) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); flex: none; transition: transform var(--warp-duration-sheet, 240ms) var(--warp-ease-out); }
 :where([data-scope="sidenav"] [data-part="bar-label"]) {
-  writing-mode: vertical-rl; max-block-size: 50%; overflow: clip; text-overflow: ellipsis; white-space: nowrap;
-  font-weight: 600; letter-spacing: 0.02em;
+  writing-mode: vertical-rl; max-block-size: 50%; overflow: clip; overflow-clip-margin: 4px; text-overflow: ellipsis; white-space: nowrap;
+  font-weight: 600; letter-spacing: 0.02em; transition: opacity var(--warp-duration-base) var(--warp-ease-out);
 }
 /* Open, the bar is the panel's edge: the chevron points back, and the title is the panel's head, so the label goes
    (from sight only: it stays the button's name). */
-:where([data-scope="sidenav"][data-open] [data-part="bar"] svg) { transform: scaleX(-1); }
+:where([data-scope="sidenav"][data-open] [data-part="bar"] svg) { transform: rotate(180deg); }
 :where([data-scope="sidenav"][data-open] [data-part="bar"]) { box-shadow: none; }
-:where([data-scope="sidenav"][data-open] [data-part="bar-label"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); }
+:where([data-scope="sidenav"][data-open] [data-part="bar-label"]) { opacity: 0; }
 @media (min-width: 900px) {
   /* Docked, it runs from under the header to the bottom of the view however short its list, so its edge does too. */
   :where([data-scope="sidenav"]) { display: block; min-inline-size: 0; position: sticky; inset-block-start: var(--warp-sidenav-top, 0px); align-self: start; }
@@ -1038,7 +1037,6 @@
   }
   :where([data-scope="sidenav"] > [data-part="backdrop"]),
   :where([data-scope="sidenav"] [data-part="head"]),
-  :where([data-scope="sidenav"] [data-part="lead"]) { display: none; }
   :where([data-scope="sidenav"] [data-part="scroll"]) { padding: var(--warp-space-group) var(--warp-space-tight) var(--warp-space-group) 0; }
   :where([data-scope="sidenav"] [data-part="scroll"] > [data-part="filter"]) { position: sticky; inset-block-start: 0; z-index: 1; }
   /* Docked with a bar: the sidebar has its own width, and folding takes it to the bar's. The list keeps its width and
@@ -1057,9 +1055,26 @@
   }
   :where([data-scope="sidenav"] [data-part="bar"]) { inset-block: 0; inset-inline: auto 0; background: none; box-shadow: none; }
   :where([data-scope="sidenav"] [data-part="bar"]:hover) { background: var(--warp-color-surface-hover); }
-  :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"] svg) { transform: scaleX(-1); }
+  :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"] svg) { transform: rotate(180deg); }
   :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar-label"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); }
 }
+/* overlay="under": on a phone the open panel and its backdrop start below the header, which stays usable, and the
+   header's SideNavTitle carries the panel's title in place of the panel's own head. */
+:where([data-scope="sidenav"][data-overlay="under"] > [data-part="panel"]),
+:where([data-scope="sidenav"][data-overlay="under"] > [data-part="backdrop"]) { inset-block-start: var(--warp-sidenav-top, 0px); padding-block-start: 0; }
+:where([data-scope="sidenav"][data-overlay="under"] > [data-part="panel"] > [data-part="head"]) { display: none; }
+:where([data-scope="sidenav"][data-overlay="under"] [data-part="scroll"]) { padding: var(--warp-space-group); }
+:where([data-scope="sidenav"][data-overlay="under"] [data-part="bar"]) { inset-block-start: 0; }
+/* SideNavTitle: the header's brand word, and the open panel's title stacked on it. While an `under` panel is open the
+   word lifts and fades out as the title rises into its place; closing reverses it. */
+:where([data-scope="sidenav-title"]) { display: inline-grid; align-items: center; justify-items: start; }
+:where([data-scope="sidenav-title"] > *) {
+  grid-area: 1 / 1; white-space: nowrap;
+  transition: translate var(--warp-duration-slow) var(--warp-ease-out), opacity var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="sidenav-title"] > [data-part="title"]) { translate: 0 0.5em; opacity: 0; pointer-events: none; }
+:root:has([data-scope="sidenav"][data-overlay="under"][data-open]) :where([data-scope="sidenav-title"] > [data-part="home"]) { translate: 0 -0.5em; opacity: 0; }
+:root:has([data-scope="sidenav"][data-overlay="under"][data-open]) :where([data-scope="sidenav-title"] > [data-part="title"]) { translate: none; opacity: 1; transition-delay: 60ms; }
 /* Arriving with the sidebar folded (a remembered choice) shows it folded, not folding. */
 :where([data-scope="sidenav"][data-settling]),
 :where([data-scope="sidenav"][data-settling] *) { transition: none !important; }
@@ -1069,7 +1084,8 @@
   :where([data-scope="sidenav"] > [data-part="backdrop"]),
   :where([data-scope="sidenav"] [data-part="scroll"]),
   :where([data-scope="sidenav"] [data-part="bar"]),
-  :where([data-scope="sidenav"] [data-part="bar"] svg) { transition: none; }
+  :where([data-scope="sidenav"] [data-part="bar"] svg),
+  :where([data-scope="sidenav-title"] > *) { transition: none; }
 }
 @media print { :where([data-scope="sidenav"]) { display: none !important; } }
 

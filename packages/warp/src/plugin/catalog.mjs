@@ -63,6 +63,10 @@ const components = [
   ['Popover', 'Button that opens a non-modal dialog panel'],
   ['Modal', 'Native modal dialog; alert dialog'],
   ['Drawer', 'Sheet: side on wide screens, bottom on phones'],
+  [
+    'HamburgerMenu',
+    "Main navigation on phones: the site's top links only, full-screen. Never a section's pages (that is SideNav)",
+  ],
   ['Toaster', 'Toast region; toast.show() from anywhere'],
   [
     'Table',
@@ -98,8 +102,12 @@ const components = [
     'App shell: bottom bar, rail or sidebar by its own width; header, account menu, More sheet, focus variant',
   ],
   [
+    'SideNavTitle',
+    'Header brand that slides to the open SideNav\'s title on phones; pair with SideNav overlay="under"',
+  ],
+  [
     'SideNav',
-    'Docs sidebar: a left panel of folding sections, remembered; a collapse bar at its edge folds it when docked and opens it over the page on phones; filter',
+    'Side navigation: the pages inside one section, on every screen size; folds when docked, a bar that opens over the page on phones. overlay cover|under. Never the site top links (that is HamburgerMenu)',
   ],
 ]
 

@@ -54,6 +54,8 @@ export const ENTRIES = {
   Popover: ['Popover', '<Popover label="Open">x</Popover>'],
   Modal: ['Modal', '<Modal open={open} title="T">x</Modal>'],
   Drawer: ['Drawer', '<Drawer open={open} title="T">x</Drawer>'],
+  HamburgerMenu: ['HamburgerMenu', '<HamburgerMenu links={[{ href: "/", label: "Home" }]} />'],
+  SideNavTitle: ['SideNavTitle', '<SideNavTitle title="Docs">weft</SideNavTitle>'],
   Toaster: ['Toaster', '<Toaster />'],
   Table: [
     'Table',

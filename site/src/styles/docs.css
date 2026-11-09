@@ -15,6 +15,7 @@
   display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 48px; box-sizing: border-box; padding-inline: var(--warp-space-page); background: var(--warp-color-page); color: var(--ink);
 }
 [data-site="docs"]:has(> [data-site="toc"], [data-site="doc-skeleton"] > [data-site="toc"]) { grid-template-columns: auto minmax(0, 1fr) 208px; }
+[data-site="docs"]:not(:has(> [data-scope="sidenav"])) { grid-template-columns: minmax(0, 1fr); }
 
 /* -- sidebar and contents -- */
 /* The section's SideNav (warp): docked on the left on wide screens, in an `auto` column that follows it when its bar
@@ -116,7 +117,7 @@
 
 @media (max-width: 1239.98px) { [data-site="docs"]:has(> [data-site="toc"], [data-site="doc-skeleton"] > [data-site="toc"]) { grid-template-columns: auto minmax(0, 1fr); } [data-site="toc"] { display: none; } }
 @media (max-width: 899.98px) {
-  [data-site="docs"], [data-site="docs"]:has(> [data-site="toc"]) { grid-template-columns: minmax(0, 1fr); padding-inline: var(--warp-space-page); }
+  [data-site="docs"], [data-site="docs"]:has(> [data-site="toc"], [data-site="doc-skeleton"] > [data-site="toc"]) { grid-template-columns: minmax(0, 1fr); padding-inline: var(--warp-space-page); }
   /* The page starts past the SideNav's bar, which stays down the left edge. */
   [data-site="docs"]:has(> [data-scope="sidenav"][data-collapsible]) { padding-inline-start: calc(var(--warp-sidenav-bar) + var(--warp-space-related)); }
   [data-site="doc"] { padding-block-start: var(--warp-space-group); }

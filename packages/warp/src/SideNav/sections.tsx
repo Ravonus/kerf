@@ -48,23 +48,3 @@ export function SideNavSections({ props, id, refs, shown, holds, unfolded, toggl
     </nav>
   )
 }
-
-export function SideNavLead({ props }: { props: SideNavProps }) {
-  return (
-    <div data-part="lead" data-scope="navlist">
-      <ul>
-        {props.lead!.map((i) => (
-          <li key={i.href}>
-            <a
-              data-part="item"
-              href={i.href}
-              aria-current={props.current?.startsWith(i.href) ? 'true' : undefined}
-            >
-              {i.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
