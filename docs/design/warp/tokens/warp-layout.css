@@ -984,7 +984,6 @@
 :where([data-scope="sidenav"] [data-part="item"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); }
 :where([data-scope="sidenav"] [data-part="chevron"]) { display: inline-flex; color: var(--warp-color-text-subtle); }
 :where([data-scope="sidenav"] [data-part="chevron"] svg) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
-:where([data-scope="sidenav"] [data-part="sections"] ul[hidden]) { display: none; }
 /* The sliding bar (warp-core nav.ts), as Nav draws it: one face, moved by transform. Before script the current link's
    static edge stands in; once the bar takes over, the edge goes. */
 :where([data-scope="sidenav"] [data-scope="navlist"][data-bar]) { position: relative; --_bar: var(--warp-sweep-width); }

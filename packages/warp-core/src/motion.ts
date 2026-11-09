@@ -104,3 +104,46 @@ export function exit(el: HTMLElement, preset: Preset = 'rise'): Promise<void> {
 /** Stagger delay for the nth entering item: `stagger × min(index, 6)` so a list never takes more than ~300 ms. */
 export const stagger = (el: Element, index: number) =>
   reducedMotion(el) ? 0 : token(el, '--warp-stagger', 32) * Math.min(index, 6)
+
+const leaving = new WeakMap<Element, () => void>()
+
+/**
+ * The close contract every warp overlay keeps, and the hook for your own exits: `data-state="closed"` goes on, the
+ * animation or transition the CSS gives that state plays out, and only then does `done` hide the element. With
+ * nothing to play (no rule, reduced motion with none, a test DOM) `done` runs at once. `stay()` cancels a pending
+ * leave when the element opens again before it finishes.
+ */
+export function leave(el: HTMLElement, done: () => void): void {
+  stay(el)
+  el.dataset.state = 'closed'
+  const playing = el.getAnimations?.() ?? []
+  let live = true
+  let cap: ReturnType<typeof setTimeout> | undefined
+  const finish = () => {
+    if (!live) return
+    live = false
+    clearTimeout(cap)
+    leaving.delete(el)
+    if (el.dataset.state === 'closed') delete el.dataset.state
+    done()
+  }
+  if (playing.length === 0) return finish()
+  // a cap at the longest exit plus a frame or two, so a paused timeline (a hidden tab) or an endless animation can
+  // never hold an overlay open
+  const end = Math.max(...playing.map((a) => Number(a.effect?.getComputedTiming().endTime) || 0))
+  cap = setTimeout(finish, Math.min(Number.isFinite(end) ? end + 50 : 1000, 1000))
+  leaving.set(el, () => {
+    live = false
+    clearTimeout(cap)
+  })
+  void Promise.allSettled(playing.map((a) => a.finished)).then(finish)
+}
+
+/** Cancels a pending `leave()`: the element stays as it is, still open. True if one was pending. */
+export function stay(el: Element): boolean {
+  const cancel = leaving.get(el)
+  if (!cancel) return false
+  cancel()
+  leaving.delete(el)
+  return true
+}

@@ -1661,6 +1661,39 @@
   ::details-content { block-size: 0; overflow: clip; transition: block-size var(--warp-duration-slow) var(--warp-ease-out), content-visibility var(--warp-duration-slow) allow-discrete; }
   [open]::details-content { block-size: auto; }
   [role="tabpanel"]:not([hidden]) { transition: opacity var(--warp-duration-base) var(--warp-ease-out), translate var(--warp-duration-base) var(--warp-ease-out); @starting-style { opacity: 0; translate: 0 var(--warp-motion-distance); } }
+  /* Open and close, both ways, for anything shown and hidden by the `hidden` attribute (the exit runs before display:none
+     lands). [data-collapse] grows from nothing to its height; [data-presence] keeps its size and arrives by a preset:
+     fade, rise, pop, or slide-up/down/left/right. Exits run at --warp-duration-exit-k of the entry, ease in, and travel
+     half as far, back the way they came. */
+  [data-collapse], [data-presence] {
+    transition: block-size var(--warp-duration-slow) var(--warp-ease-out), opacity var(--warp-duration-base) var(--warp-ease-out),
+      translate var(--warp-duration-base) var(--warp-ease-out), scale var(--warp-duration-base) var(--warp-ease-out),
+      display var(--warp-duration-slow) allow-discrete, content-visibility var(--warp-duration-slow) allow-discrete;
+  }
+  [data-collapse] { overflow: clip; }
+  [data-collapse][hidden], [data-presence][hidden] {
+    display: none; opacity: 0; transition-timing-function: var(--warp-ease-in);
+    --_out: calc(var(--warp-duration-slow) * var(--warp-duration-exit-k));
+    --_fade: calc(var(--warp-duration-base) * var(--warp-duration-exit-k));
+    transition-duration: var(--_out), var(--_fade), var(--_fade), var(--_fade), var(--_out), var(--_out);
+  }
+  [data-collapse][hidden] { block-size: 0; }
+  [data-presence="rise"][hidden] { translate: 0 calc(var(--warp-motion-distance) * -0.5); }
+  [data-presence="pop"][hidden] { scale: var(--warp-motion-scale-from); }
+  [data-presence="slide-up"][hidden] { translate: 0 50%; }
+  [data-presence="slide-down"][hidden] { translate: 0 -50%; }
+  [data-presence="slide-left"][hidden] { translate: -50% 0; }
+  [data-presence="slide-right"][hidden] { translate: 50% 0; }
+  @starting-style {
+    [data-collapse]:not([hidden]) { block-size: 0; opacity: 0; }
+    [data-presence]:not([hidden]) { opacity: 0; }
+    [data-presence="rise"]:not([hidden]) { translate: 0 var(--warp-motion-distance); }
+    [data-presence="pop"]:not([hidden]) { scale: var(--warp-motion-scale-from); }
+    [data-presence="slide-up"]:not([hidden]) { translate: 0 100%; }
+    [data-presence="slide-down"]:not([hidden]) { translate: 0 -100%; }
+    [data-presence="slide-left"]:not([hidden]) { translate: -100% 0; }
+    [data-presence="slide-right"]:not([hidden]) { translate: 100% 0; }
+  }
   [data-fade-in] { transition: opacity var(--warp-duration-slow) var(--warp-ease-out); @starting-style { opacity: 0; } }
   [data-scope="skeleton"] + *, [data-scope="skeleton"] ~ * { transition: opacity var(--warp-duration-slow) var(--warp-ease-out); @starting-style { opacity: 0; } }
 

@@ -28,7 +28,7 @@ export function SideNavSections({ props, id, refs, shown, holds, unfolded, toggl
                 </span>
               </button>
             )}
-            <ul id={`${id}-${x.n}`} hidden={!unfolded(x.section)}>
+            <ul id={`${id}-${x.n}`} data-collapse="" hidden={!unfolded(x.section)}>
               {x.items.map((i) => (
                 <li key={i.href}>
                   <a

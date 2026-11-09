@@ -132,4 +132,27 @@ export const menus: Doc[] = [
     },
     related: ['SideNav', 'Nav', 'Drawer'],
   },
+  {
+    component: 'SideNavTitle',
+    summary:
+      "The header's brand word, which gives way to the open SideNav's title on a phone: the logo stays, the word slides.",
+    use: {
+      when: ['A docs site whose SideNav opens below the header on a phone (`overlay="under"`)'],
+      instead: [
+        {
+          name: 'SideNav',
+          why: 'the panel covers the header (`overlay="cover"`) and titles itself',
+        },
+      ],
+    },
+    sections: [],
+    keyboard: [],
+    a11yNotes: ['The title is `aria-hidden`: the panel is already named by its landmark label.'],
+    propDocs: {
+      title: "The open SideNav's title.",
+      children:
+        'What the header shows the rest of the time, usually the brand word (keep the logo outside it).',
+    },
+    related: ['SideNav', 'HamburgerMenu'],
+  },
 ]

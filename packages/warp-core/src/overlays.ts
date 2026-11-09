@@ -3,6 +3,7 @@
 // and the layer stack.
 import { justEscaped, place, pushLayer, type Align, type Side } from './layers'
 import { markDevice } from './device'
+import { leave, stay } from './motion'
 
 const focusable =
   'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])'
@@ -29,7 +30,19 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
   let remove: (() => void) | undefined
   const doc = el.ownerDocument
   const show = () => {
-    if (el.open) return
+    // reopened while its exit plays: it never closed, so it only takes its layer back
+    const back = stay(el)
+    if (remove || (el.open && !back)) return
+    if (back) {
+      if (el.dataset.state === 'closed') el.dataset.state = 'open'
+      remove = pushLayer({
+        el,
+        modal: true,
+        close: () => o.onClose(),
+        escape: () => !!o.onEscape?.(),
+      })
+      return
+    }
     opener = doc.activeElement as HTMLElement | null
     const root = doc.documentElement
     // a classic scrollbar, read before the lock takes it: the page keeps its room (warp's html:has(dialog:modal) rule)
@@ -59,11 +72,16 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
     first?.focus({ preventScroll: true })
   }
   const hide = () => {
-    remove?.()
+    if (!remove) return
+    remove()
     remove = undefined
-    if (el.open) el.close?.() ?? el.removeAttribute('open')
-    if (opener?.isConnected) opener.focus({ preventScroll: true })
+    const back = opener
     opener = null
+    // focus goes back once it has closed: while it is still modal the page behind is inert
+    leave(el, () => {
+      if (el.open) el.close?.() ?? el.removeAttribute('open')
+      if (back?.isConnected) back.focus({ preventScroll: true })
+    })
   }
   // Escape: the layer stack already asked to close; the native cancel would close it a second way
   const onCancel = (e: Event) => {
@@ -120,8 +138,20 @@ export function popover(el: HTMLElement, opts: PopoverOptions) {
     el.matches(':popover-open') && place(el, o.trigger, o.side ?? 'bottom', o.align ?? 'start', 8)
   const show = () => {
     if (remove) return
+    const back = stay(el)
     restore = true
     el.dataset.state = 'open'
+    if (back) {
+      remove = pushLayer({
+        el,
+        trigger: o.trigger,
+        close: (reason) => {
+          restore = reason === 'escape'
+          o.onClose()
+        },
+      })
+      return
+    }
     el.showPopover?.()
     place(el, o.trigger, o.side ?? 'bottom', o.align ?? 'start', 8)
     remove = pushLayer({
@@ -146,10 +176,11 @@ export function popover(el: HTMLElement, opts: PopoverOptions) {
     if (!remove) return
     remove()
     remove = undefined
-    delete el.dataset.state
-    if (el.matches?.(':popover-open')) el.hidePopover?.()
-    win.removeEventListener('resize', reposition)
-    win.removeEventListener('scroll', reposition, true)
+    leave(el, () => {
+      if (el.matches?.(':popover-open')) el.hidePopover?.()
+      win.removeEventListener('resize', reposition)
+      win.removeEventListener('scroll', reposition, true)
+    })
     if (restore) o.trigger.focus({ preventScroll: true })
   }
   const onFocusOut = (e: FocusEvent) => {
