@@ -25,10 +25,7 @@ function tick(
   nx: number,
   ny: number,
   size: number,
-  ux: Float32Array,
-  uy: Float32Array,
-  vx: Float32Array,
-  vy: Float32Array,
+  { ux, uy, vx, vy }: { ux: Float32Array; uy: Float32Array; vx: Float32Array; vy: Float32Array },
 ) {
   let peak = 0
   for (let y = 1; y < ny - 1; y++)
@@ -64,9 +61,7 @@ function visit(
   px: number,
   py: number,
   r: number,
-  GAP: number,
-  nx: number,
-  ny: number,
+  { GAP, nx, ny }: { GAP: number; nx: number; ny: number },
   fn: (i: number, dx: number, dy: number, d: number) => void,
 ) {
   const n = Math.ceil(r / GAP),
@@ -104,13 +99,14 @@ export function forces(modes: PointerMode[], cols: number, rows: number, power =
     uy = new Float32Array(size),
     vx = new Float32Array(size),
     vy = new Float32Array(size)
+  const lattice = { ux, uy, vx, vy },
+    bounds = { GAP, nx, ny }
   let moving = false,
     due = 0,
     lx = -1,
     ly = -1
-
   const around: Visit = (px, py, r, fn) => {
-    visit(px, py, r, GAP, nx, ny, fn)
+    visit(px, py, r, bounds, fn)
     moving = true
   }
   const kick = makeKick(around, power, scale, vx, vy)
@@ -141,7 +137,7 @@ export function forces(modes: PointerMode[], cols: number, rows: number, power =
     step(dt) {
       if (!moving) return false
       due = Math.min(due + dt, TICK * 3)
-      for (; due >= TICK; due -= TICK) moving = tick(nx, ny, size, ux, uy, vx, vy)
+      for (; due >= TICK; due -= TICK) moving = tick(nx, ny, size, lattice)
       return moving
     },
     at(x, y) {

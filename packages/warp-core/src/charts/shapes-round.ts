@@ -22,8 +22,7 @@ function focusDonut(
   svg: Element,
   c: DonutConfig,
   total: number,
-  f: Fmt,
-  unit: string,
+  { f, unit }: { f: Fmt; unit: string },
 ) {
   const fig = svg.closest('figure')!,
     v = svg.querySelector('.center-v'),
@@ -136,7 +135,7 @@ export const donut: Form<DonutConfig> = {
         const d = c.data[i]!
         return { rows: [[d.color ?? color(i), d.name, f(d.value)]] }
       },
-      on: (m, svg) => focusDonut(m, svg, c, total, f, unit),
+      on: (m, svg) => focusDonut(m, svg, c, total, { f, unit }),
     }
   },
 }
