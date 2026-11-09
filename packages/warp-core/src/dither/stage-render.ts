@@ -309,8 +309,8 @@ function paintOutput(st: StageState, ctx: CanvasRenderingContext2D) {
 
 export function stageRenderer(st: StageState) {
   const { rampId, retheme } = stageRamps(st)
-  const { brush, grow, threshold } = stageSurface(st, rampId)
-  const details = stageDetails(st, brush.paint, brush.ring)
+  const { brush, grow, threshold, paint: cover, ring } = stageSurface(st, rampId)
+  const details = stageDetails(st, cover, ring)
   function paint(sc: Scene) {
     const { ctx, width, height, time: now, live } = sc
     st.scene = sc
