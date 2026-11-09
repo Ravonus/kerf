@@ -28,34 +28,45 @@ function loadSaved(): Saved {
 export function App({ api }: { api: Api }) {
   const d = appState()
 
-  bindStocks(() => api, d.stocks, d.holdings, d.live, d.favorites)
+  bindStocks({
+    api: () => api,
+    stocks: d.stocks,
+    holdings: d.holdings,
+    live: d.live,
+    favorites: d.favorites,
+  })
 
   bindSaved(d.tab, d.views)
 
   const { view, setView, favoritesOnly, sortBy } = createView(d.tab, d.views)
 
-  const { search, selectTab } = createSearch(() => api, d.saved.tab, d.tab, d.views)
+  const { search, selectTab } = createSearch({
+    api: () => api,
+    initialTab: d.saved.tab,
+    tab: d.tab,
+    views: d.views,
+  })
 
-  const { shown, portfolio } = createResults(
-    d.stocks,
-    d.holdings,
-    d.live,
-    d.favorites,
-    d.tab,
+  const { shown, portfolio } = createResults({
+    stocks: d.stocks,
+    holdings: d.holdings,
+    live: d.live,
+    favorites: d.favorites,
+    tab: d.tab,
     view,
     search,
     favoritesOnly,
     sortBy,
-  )
+  })
 
   const toggle = favoriteActions(() => api, d.favorites, d.alert)
 
-  const { openDetails, closeDetails, opened, save, undo } = detailActions(
-    d.stocks,
-    d.openId,
-    d.notes,
-    d.saves,
-  )
+  const { openDetails, closeDetails, opened, save, undo } = detailActions({
+    stocks: d.stocks,
+    openId: d.openId,
+    notes: d.notes,
+    saves: d.saves,
+  })
 
   return (
     <>
@@ -103,13 +114,19 @@ export function App({ api }: { api: Api }) {
   )
 }
 
-function bindStocks(
-  api: () => Api,
-  stocks: State<Stock[] | null>,
-  holdings: State<Holding[]>,
-  live: State<Record<string, Live>>,
-  favorites: State<Record<string, boolean>>,
-) {
+function bindStocks({
+  api,
+  stocks,
+  holdings,
+  live,
+  favorites,
+}: {
+  api: () => Api
+  stocks: State<Stock[] | null>
+  holdings: State<Holding[]>
+  live: State<Record<string, Live>>
+  favorites: State<Record<string, boolean>>
+}) {
   watch(api, (source) => {
     let alive = true
     Promise.all([source.listStocks(), source.listHoldings()]).then(([list, held]) => {
@@ -141,12 +158,17 @@ function bindSaved(tab: State<Tab>, views: State<Record<Tab, View>>) {
     (v) => localStorage.setItem(VIEW_KEY, JSON.stringify(v)),
   )
 }
-function createSearch(
-  api: () => Api,
-  initialTab: Tab,
-  tab: State<Tab>,
-  views: State<Record<Tab, View>>,
-) {
+function createSearch({
+  api,
+  initialTab,
+  tab,
+  views,
+}: {
+  api: () => Api
+  initialTab: Tab
+  tab: State<Tab>
+  views: State<Record<Tab, View>>
+}) {
   // One search per tab, started the first time the tab is shown and kept from then on: switching away neither
   // aborts nor hides its request. Each reads only its own tab's entries, so typing in one tab leaves the others be.
   const visited = state<Partial<Record<Tab, true>>>({ [initialTab]: true })
@@ -172,17 +194,27 @@ function createSearch(
 
   return { search, selectTab }
 }
-function createResults(
-  stocks: State<Stock[] | null>,
-  holdings: State<Holding[]>,
-  live: State<Record<string, Live>>,
-  favorites: State<Record<string, boolean>>,
-  tab: State<Tab>,
-  view: { readonly value: View },
-  search: ReturnType<typeof createSearch>['search'],
-  favoritesOnly: { readonly value: boolean },
-  sortBy: { readonly value: View['sort'] },
-) {
+function createResults({
+  stocks,
+  holdings,
+  live,
+  favorites,
+  tab,
+  view,
+  search,
+  favoritesOnly,
+  sortBy,
+}: {
+  stocks: State<Stock[] | null>
+  holdings: State<Holding[]>
+  live: State<Record<string, Live>>
+  favorites: State<Record<string, boolean>>
+  tab: State<Tab>
+  view: { readonly value: View }
+  search: ReturnType<typeof createSearch>['search']
+  favoritesOnly: { readonly value: boolean }
+  sortBy: { readonly value: View['sort'] }
+}) {
   // Rows keep their identity (the loaded Stock objects), so the list only adds, removes and moves rows.
   const filtered = derived(() => {
     const t = tab.value
@@ -230,12 +262,17 @@ function favoriteActions(
 
   return toggle
 }
-function detailActions(
-  stocks: State<Stock[] | null>,
-  openId: State<string | null>,
-  notes: State<Record<string, string>>,
-  saves: State<Save[]>,
-) {
+function detailActions({
+  stocks,
+  openId,
+  notes,
+  saves,
+}: {
+  stocks: State<Stock[] | null>
+  openId: State<string | null>
+  notes: State<Record<string, string>>
+  saves: State<Save[]>
+}) {
   const opener: { button?: HTMLElement } = {}
   const openDetails = (id: string, button: HTMLElement) => {
     opener.button = button

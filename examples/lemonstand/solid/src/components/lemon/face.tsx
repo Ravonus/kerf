@@ -315,7 +315,7 @@ function filledMouth(
   }
 }
 
-function sparkle(x: number, y: number, s: number, delay: string) {
+function sparkle([x, y, s]: readonly [number, number, number], delay: string) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
       <g class="lemon-twinkle" style={`animation-delay:${delay}`}>
@@ -337,9 +337,9 @@ export function faceExtras(expression: LemonExpression) {
   if (extra === 'sparkle') {
     return (
       <g>
-        {sparkle(22, 34, 0.9, '0s')}
-        {sparkle(176, 22, 1.05, '-0.6s')}
-        {sparkle(186, 64, 0.6, '-1.1s')}
+        {sparkle([22, 34, 0.9], '0s')}
+        {sparkle([176, 22, 1.05], '-0.6s')}
+        {sparkle([186, 64, 0.6], '-1.1s')}
       </g>
     )
   }

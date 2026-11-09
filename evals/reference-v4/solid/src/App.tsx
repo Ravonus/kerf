@@ -45,11 +45,11 @@ export function App(props: { api: Api }) {
   const { tab, view, setView, selectTab, search } = createViews(api)
 
   const [alert, setAlert] = createSignal<string | null>(null)
-  const toggle = favoriteActions(api, favorites, setFavorites, setAlert)
+  const toggle = favoriteActions({ api, favorites, setFavorites, setAlert })
 
   const { openId, openDetails, closeDetails, saves, save, undo } = detailActions(notes, setNotes)
 
-  const filtered = createFiltered(data, tab, search, view, favorites)
+  const filtered = createFiltered({ data, tab, search, view, favorites })
   // Only the Change sort reads live prices, so quotes don't re-sort a Symbol-sorted list. Array#sort is stable,
   // which keeps ties in list order.
   const shown = createMemo(() => {
@@ -173,12 +173,17 @@ function createViews(api: Api) {
 
   return { tab, view, setView, selectTab, search }
 }
-function favoriteActions(
-  api: Api,
-  favorites: Record<string, boolean>,
-  setFavorites: SetStoreFunction<Record<string, boolean>>,
-  setAlert: (message: string) => unknown,
-) {
+function favoriteActions({
+  api,
+  favorites,
+  setFavorites,
+  setAlert,
+}: {
+  api: Api
+  favorites: Record<string, boolean>
+  setFavorites: SetStoreFunction<Record<string, boolean>>
+  setAlert: (message: string) => unknown
+}) {
   const clicks = new Map<string, number>()
   const toggle = (stock: Stock) => {
     const before = favorites[stock.id]
@@ -229,13 +234,19 @@ function detailActions(
   return { openId, openDetails, closeDetails, saves, save, undo }
 }
 
-function createFiltered(
-  data: ReturnType<typeof createLive>['data'],
-  tab: () => Tab,
-  search: () => SearchState,
-  view: () => View,
-  favorites: Record<string, boolean>,
-) {
+function createFiltered({
+  data,
+  tab,
+  search,
+  view,
+  favorites,
+}: {
+  data: ReturnType<typeof createLive>['data']
+  tab: () => Tab
+  search: () => SearchState
+  view: () => View
+  favorites: Record<string, boolean>
+}) {
   // The rows keep their identity (the same Stock objects from the load), so <For> only adds, removes and moves rows.
   const filtered = createMemo(() => {
     const all = data()?.stocks ?? []

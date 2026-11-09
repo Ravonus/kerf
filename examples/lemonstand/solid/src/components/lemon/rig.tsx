@@ -116,7 +116,14 @@ function glove(id: string, kind: HandKind) {
   const h = HANDS[kind]
   return (
     <g>
-      {form(id, h.shapes, C.glove, C.gloveShade, [-1.6, -1.8], h.detail)}
+      {form({
+        id,
+        shapes: h.shapes,
+        fill: C.glove,
+        shade: C.gloveShade,
+        offset: [-1.6, -1.8],
+        extra: h.detail,
+      })}
       {/* Rolled cuff */}
       <rect
         x={-8.5}
@@ -187,15 +194,15 @@ function arm(id: string, s: Pt, spec: ArmSpec) {
   const ns = unit(s, c)
   const nc = unit(s, w)
   const nw = unit(c, w)
-  const side = (k: 1 | -1, half: number, n: Pt, p: Pt): string =>
+  const side = (k: 1 | -1, half: number, [n, p]: readonly [Pt, Pt]): string =>
     `${f(p[0] + n[0] * half * k)} ${f(p[1] + n[1] * half * k)}`
   const mid = (ws + ww) / 4
-  const a1 = side(1, ws / 2, ns, s)
-  const a2 = side(1, mid * 1.05, nc, c)
-  const a3 = side(1, ww / 2, nw, w)
-  const b1 = side(-1, ws / 2, ns, s)
-  const b2 = side(-1, mid * 1.05, nc, c)
-  const b3 = side(-1, ww / 2, nw, w)
+  const a1 = side(1, ws / 2, [ns, s])
+  const a2 = side(1, mid * 1.05, [nc, c])
+  const a3 = side(1, ww / 2, [nw, w])
+  const b1 = side(-1, ws / 2, [ns, s])
+  const b2 = side(-1, mid * 1.05, [nc, c])
+  const b3 = side(-1, ww / 2, [nw, w])
   const angle = deg(c, w) - 90 + (spec.rot ?? 0)
 
   return (
@@ -274,15 +281,13 @@ export function lemonFigure({ expression, pose, uid, shadow = true }: LemonFigur
 export function lemonHead({ expression, uid }: { expression: () => LemonExpression; uid: string }) {
   return (
     <g>
-      {form(
-        `${uid}-hood`,
-        () => (
-          <path d="M30 172 Q28 146 70 140 L130 140 Q172 146 170 172 Z" />
-        ),
-        C.hoodie,
-        C.hoodieShade,
-        [-2.5, -3],
-      )}
+      {form({
+        id: `${uid}-hood`,
+        shapes: () => <path d="M30 172 Q28 146 70 140 L130 140 Q172 146 170 172 Z" />,
+        fill: C.hoodie,
+        shade: C.hoodieShade,
+        offset: [-2.5, -3],
+      })}
       {head(uid, expression)}
     </g>
   )
