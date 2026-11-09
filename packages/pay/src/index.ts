@@ -165,7 +165,7 @@ export const entitlementTag = (user: string) => `entitlements:${user}`
 
 // ---- pay.rail@1 ---------------------------------------------------------------------------------------------------
 
-/** What a purchase is doing now, on any rail (research 10 §3). */
+/** What a purchase is doing now, on any rail. */
 export type PurchaseState =
   | 'pending'
   | 'active'
