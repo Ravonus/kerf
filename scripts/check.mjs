@@ -76,9 +76,9 @@ const all = (items, job) => allJobs(items, job, limit)
 const lines = (r) => (r.code === 0 ? { problems: [] } : { problems: r.out.trim().split('\n') })
 let lengthResult
 const lengths = () => (lengthResult ??= checkLengths())
-
 const STEPS = [
   ...['structure', 'duplicates', 'comment-budget'].map((name) => inventoryStep(name, run)),
+  inventoryStep('category-limits', run),
   conventionsStep(run, lines),
   {
     id: 'package-folders',
