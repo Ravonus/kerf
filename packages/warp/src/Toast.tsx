@@ -23,6 +23,20 @@ const toasts = () => (store ??= toastStore())
 const mounted = state<object[]>([])
 const toFront = (list: object[], me: object) => [...list.filter((k) => k !== me), me]
 
+/** Joins the mounted list as it renders, comes to the front when `position` changes, and says if it is in front.
+ * On the server nothing mounts for long, so every Toaster renders the list as it stands. */
+function inFront(position: () => unknown) {
+  const me = {}
+  const front = () => {
+    const m = untrack(() => mounted.value)
+    if (m.at(-1) !== me) mounted.value = toFront(m, me)
+  }
+  if (typeof document !== 'undefined') front()
+  watch(position, front)
+  onCleanup(() => (mounted.value = mounted.value.filter((k) => k !== me)))
+  return () => !mounted.value.length || mounted.value.at(-1) === me
+}
+
 /**
  * Show a toast from anywhere (05 §5): `toast.show({ title, description, tone, action })`. Needs one <Toaster />.
  * Life is 5s + 60ms a word, 10s with an action; a critical toast with an action stays until dismissed.
@@ -52,16 +66,7 @@ type ToasterProps = {
 export function Toaster(props: ToasterProps = {}) {
   const list = state<Toast[]>(toasts().get())
   onCleanup(toasts().subscribe((v) => (list.value = v)))
-  // On the server nothing mounts for long, so every Toaster renders the list as it stands.
-  const me = {}
-  const front = () => {
-    const m = untrack(() => mounted.value)
-    if (m.at(-1) !== me) mounted.value = toFront(m, me)
-  }
-  if (typeof document !== 'undefined') front()
-  watch(() => props.position, front)
-  onCleanup(() => (mounted.value = mounted.value.filter((k) => k !== me)))
-  const mine = () => !mounted.value.length || mounted.value.at(-1) === me
+  const mine = inFront(() => props.position)
   let region: HTMLElement | undefined
   use(
     toaster,
