@@ -15,6 +15,7 @@
     "./skeleton": "./src/skeleton-css.ts",
     "./ui": "./src/ui.ts",
     "./plugin": "./plugin.mjs",
+    "./theme-parts": "./src/plugin/theme-parts.mjs",
     "./tailwind.css": "./tailwind.css"
   },
   "scripts": {

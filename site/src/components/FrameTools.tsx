@@ -1,6 +1,7 @@
 import { getDial } from '@weft-js/warp'
 import { onMount } from '@weft-js/core'
 import { on } from '@weft-js/core/browser'
+import { PALETTE_NAMES } from '../lib/palettes'
 
 const EXPRESSIONS = ['quiet', 'balanced', 'vivid']
 const WIDTHS = ['full', 'tablet', 'phone']
@@ -44,6 +45,13 @@ export function FrameTools() {
       t === shownTheme(document.documentElement)
         ? stage.removeAttribute('data-theme')
         : stage.setAttribute('data-theme', t)
+    }
+    if (act === 'stage-palette') {
+      // The next named theme; back round to the page's own, which is no attribute, so it follows the page again.
+      const at = stage.getAttribute('data-palette') ?? 'weft'
+      const to = next(PALETTE_NAMES, at)
+      to === 'weft' ? stage.removeAttribute('data-palette') : stage.setAttribute('data-palette', to)
+      button.setAttribute('title', `Palette: ${to}`)
     }
     if (act === 'stage-width')
       width(stage, next(WIDTHS, stage.getAttribute('data-width') ?? 'full'))

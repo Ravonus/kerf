@@ -13,6 +13,7 @@ import {
   inline,
 } from './docs-catalog.mjs'
 import { codeBlock } from './markdown.mjs'
+import { themingOf } from './theming.mjs'
 import {
   HIDDEN_PROPS,
   arrange,
@@ -22,6 +23,12 @@ import {
   propRow,
   finishKnobs,
 } from './toolkit-props.mjs'
+
+/** The page's Theming section, its example highlighted like the others. */
+function themed(name) {
+  const t = themingOf(name)
+  return t && { rows: t.rows, example: codeBlock(t.example, 'ts') }
+}
 
 function toolkitPage({
   c,
@@ -67,6 +74,7 @@ function toolkitPage({
     )?.map(inline),
     groups,
     parts: c.parts,
+    theming: themed(c.name),
     scope: c.scope,
     states: c.states,
     related,
@@ -164,6 +172,7 @@ function toolkitDoc(
     ]),
     ...(doc.use ? [{ id: 'when-to-use', text: 'When to use' }] : []),
     { id: 'accessibility', text: 'Accessibility' },
+    ...(themingOf(c.name) ? [{ id: 'theming', text: 'Theming' }] : []),
     { id: 'api-reference', text: 'API Reference' },
   ]
   const i = order.indexOf(c.name)

@@ -225,4 +225,4 @@ export type {
   DateRange,
   ChangeReason,
 } from '@weft-js/warp-core'
-export { sweep, setDial, getDial } from '@weft-js/warp-core'
+export { sweep, setDial, getDial, setPalette, getPalette } from '@weft-js/warp-core'

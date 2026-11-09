@@ -3,6 +3,7 @@ import { highlight } from '@weft-js/warp-core'
 import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
 import { render } from '@weft-js/core/dom'
 import { previews } from '../generated/previews'
+import { StageButtons } from './StageButtons'
 import type { Knob, Playground as Play } from '../toolkit/types'
 
 export type ShownPlayground = Omit<Play, 'knobs'> & {
@@ -245,33 +246,7 @@ function playgroundTools() {
       </span>
       <span data-part="spacer"></span>
       <span data-part="stage-tools">
-        <Button
-          emphasis="ghost"
-          tone="neutral"
-          size="sm"
-          icon="palette"
-          label="Expression of this stage"
-          title="Change this stage's expression"
-          data-act="stage-expression"
-        />
-        <Button
-          emphasis="ghost"
-          tone="neutral"
-          size="sm"
-          icon="moon"
-          label="Theme of this stage"
-          title="Change this stage's theme"
-          data-act="stage-theme"
-        />
-        <Button
-          emphasis="ghost"
-          tone="neutral"
-          size="sm"
-          icon="smartphone"
-          label="Width of this stage"
-          title="Change this stage's width"
-          data-act="stage-width"
-        />
+        <StageButtons />
       </span>
     </div>
   )

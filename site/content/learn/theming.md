@@ -5,6 +5,7 @@
 - How dark mode works, and how to add a theme switch that remembers the choice
 - How to scope a theme to part of a page
 - What the `--warp-*` tokens are, and how to set your brand colour and override a token safely
+- How to name your own colours, retune the system, restyle each part, and ship named themes
 :::
 
 [Using warp](/learn/warp) said that warp's look comes from tokens, so it follows the theme and the dials with no change
@@ -234,6 +235,87 @@ only on `:root` would be undone inside a `data-expression` scope. Writing it on 
 everywhere, and keeping it in a layer means your own unlayered CSS can still change it locally.
 :::
 
+## Your own colours, parts and themes
+
+The seed and tokens retune what warp already draws. For more than that, `warp()` takes four more options. They work
+like a Tailwind config: name things once, then use the names everywhere.
+
+```ts
+import { defineConfig } from '@weft-js/core/config'
+import { warp } from '@weft-js/warp/plugin'
+
+export default defineConfig({
+  plugins: [
+    warp({
+      // Named colours: --warp-color-brand, tone="brand",
+      // and bg-brand in Tailwind
+      colors: { brand: '#e8590c', ink: '#1b1b1f' },
+      // The system's own scales, app-wide
+      system: {
+        radius: { control: 6 },
+        space: { related: 10 },
+        text: { button: { weight: 700, case: 'uppercase' } },
+      },
+      // Each element, at rest and per state
+      parts: {
+        button: {
+          bg: 'brand',
+          text: 'ink',
+          radius: 'pill',
+          hover: { bg: 'ink', text: 'white' },
+        },
+        sweep: { stroke: 'brand', width: 2 },
+        nav: {
+          item: { hover: { text: 'brand' } },
+          underline: { color: 'brand', width: 3 },
+        },
+        card: { padding: 32, radius: 20 },
+      },
+      // Named themes: data-palette or setPalette()
+      themes: {
+        ocean: {
+          seed: { accent: '#0b7285' },
+          colors: { brand: '#0b7285' },
+        },
+      },
+    }),
+  ],
+})
+```
+
+- **colors** names a colour. Each becomes a token, `--warp-color-brand`, and a tone: `<Button tone="brand">` gets the
+  full set of fills, hovers and text that the built-in tones have. Every option below takes the name.
+- **system** retunes the scales every component reads: `radius`, `space`, `pad`, `control` heights, `font`, `shadow`,
+  `duration`, `ease`, `border`, `icon` and the `text` roles.
+- **parts** restyles one kind of element. Every part takes colour (`bg`, `text`, `border`), spacing (`padding`, `gap`,
+  `margin`), size, `radius`, `shadow`, type and motion, and nests states inside: `hover`, `focus`, `press`, `active`,
+  `open`, `disabled`. A number is pixels (milliseconds for a duration), and a name like `'related'` or `'pill'` is the
+  system's own step. Each component's page lists the parts that style it under **Theming**.
+- **themes** are named looks. Each takes its own `seed`, `colors`, `system` and `parts`, and applies under
+  `data-palette="ocean"`, on `<html>` or on any element, like a dial.
+
+A part that sets a button's fill moves its tone's channels, not just `background`, so the hover wash, the vivid pull-out
+and the sweep all follow it. The build checks text against the fill it sits on, so `text: 'white'` on a light brand is
+D010, with the ratio.
+
+To switch themes at run time, `setPalette` works like `setDial`, and `dials: { palette: 'ocean' }` in `warp()` makes one
+the default:
+
+```tsx
+import { setPalette } from '@weft-js/warp'
+
+export function OceanButton() {
+  return (
+    <button onClick={() => setPalette('ocean', { persist: true })}>
+      Ocean
+    </button>
+  )
+}
+```
+
+`setPalette('auto')` goes back to the default, and `dialScript` restores a saved palette before the first paint like the
+other dials.
+
 ## Canvas and surfaces follow too
 
 A canvas has no CSS, so it can't read a custom property by itself. A surface from `@weft-js/core/surface` gets the
@@ -282,6 +364,8 @@ export function Progress() {
 - Read and write dials in `onMount` or handlers, never while rendering on the server.
 - Tokens are `--warp-*` custom properties. Use them in your own CSS and it follows every dial.
 - `warp({ seed, radius, fonts, tokens })` sets the brand; every override is contrast-checked, and a failing one is D010.
+- `colors`, `system`, `parts` and `themes` name your own colours, retune the scales, restyle each element per state, and
+  ship named looks that `data-palette` or `setPalette` switch.
 
 ## Try it
 

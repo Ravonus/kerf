@@ -318,7 +318,7 @@ function cardColors(seed, dials) {
   }
 }
 
-const agents = `Import components from \`@weft-js/warp\`. Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page). No raw values (D001–D007); intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). The look comes from dials: \`data-expression|theme|density|motion|flair\` on any element (scopes nest). Fields take \`label\` (required), \`hint\`, \`error\`. App-wide: \`warp({ seed: { accent }, dials, radius, fonts, tokens })\`; D010 fails a pair that can't pass.`
+const agents = `Import components from \`@weft-js/warp\`. Layout: \`Stack Row Grid Split Center Cover Frame Spacer Inset\` (\`gap\`: hair tight related group section page). No raw values (D001–D007); intent props only: \`tone\` (neutral accent positive caution critical info), \`emphasis\` (solid soft outline ghost frame link), \`size\` (sm md lg). The look comes from dials: \`data-expression|theme|density|motion|flair\` on any element (scopes nest). Fields take \`label\` (required), \`hint\`, \`error\`. App-wide: \`warp({ seed: { accent }, dials, radius, fonts, tokens })\`; D010 fails a pair that can't pass. Theming: \`colors\` names colours (\`tone="brand"\`), \`system\` retunes scales, \`parts\` restyles an element per state (\`parts.button.hover.bg\`; \`weft docs theme\` lists parts), \`themes\` are named looks switched by \`data-palette\` or \`setPalette\`.`
 
 const catalog = componentCatalog()
 

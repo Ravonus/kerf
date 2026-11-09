@@ -1,6 +1,7 @@
-import { getDial, Icon, setDial, Popover, Segmented } from '@weft-js/warp'
+import { getDial, getPalette, Icon, setDial, setPalette, Popover, Segmented } from '@weft-js/warp'
 import { onMount, state } from '@weft-js/core'
 import { shownExpression } from '../lib/dial'
+import { PALETTES } from '../lib/palettes'
 
 type Theme = 'auto' | 'light' | 'dark'
 type Stop = 'quiet' | 'balanced' | 'vivid'
@@ -75,7 +76,32 @@ export function Appearance() {
             }}
           />
         </div>
+        <PaletteRow />
       </div>
     </Popover>
+  )
+}
+
+/** The site's named themes (src/lib/palettes.ts); "weft" is the default look, so it clears the attribute. */
+function PaletteRow() {
+  const palette = state('weft')
+  onMount(() => {
+    const p = getPalette()
+    palette.value = p === 'auto' ? 'weft' : p
+  })
+  return (
+    <div data-part="row">
+      <span>Palette</span>
+      <Segmented
+        size="sm"
+        label="Palette"
+        value={palette.value}
+        options={PALETTES.map((p) => ({ value: p.name, label: p.label }))}
+        onChange={(v) => {
+          palette.value = v
+          setPalette(v === 'weft' ? 'auto' : v, { persist: true })
+        }}
+      />
+    </div>
   )
 }

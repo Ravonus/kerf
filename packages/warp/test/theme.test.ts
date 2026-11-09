@@ -68,6 +68,9 @@ describe('theming', () => {
     expect(css).toContain('[data-palette="ocean"]')
     expect(css).toContain(':root:not([data-palette])')
     expect(css).toContain('--warp-seed-accent-h')
+    // a palette set below the root re-declares the stop's colour refs, or its primary keeps the page's hue
+    expect(css).toContain(':where([data-palette="ocean"]:not(:root)){--warp-ref-primary-solid')
+    expect(css).toContain(':where([data-expression="quiet"] [data-palette="ocean"]:not(:root))')
   })
 
   test('the Tailwind entry names every colour, theme colours too', () => {
@@ -103,6 +106,13 @@ describe('the parts table', () => {
       expect(spec.sel, path).toContain('&')
       for (const s of spec.states ?? []) expect(Object.keys(STATES), `${path}: ${s}`).toContain(s)
     }
+  })
+
+  test('every component a part names is one warp exports', () => {
+    const index = readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8')
+    for (const [name, spec] of Object.entries(PARTS))
+      for (const c of (spec as { for?: string[] }).for ?? [])
+        expect(index, `${name}: ${c}`).toMatch(new RegExp(`\\b${c}\\b`))
   })
 
   test('the types name every part and sub-part', () => {

@@ -315,7 +315,21 @@ export function themeContext(core) {
     '--_text': formula('text'),
     '--_border': formula('border'),
   }
-  context = { layers, scopes, tokenNames, formulas }
+  // An expression stop picks some refs by colour token (the primary is the accent, or ink at quiet). Those resolve where
+  // the stop is declared, so a palette set below it needs them declared again, per stop (themeCss).
+  const stopRefs = (sel) => {
+    const at = css.indexOf(`\n${sel} {`)
+    const body = css.slice(css.indexOf('{', at) + 1, css.indexOf('\n}', at))
+    return (body.match(/--warp-ref-[a-z0-9-]+:\s*[^;]*var\(--warp-color-[^;]+;/g) ?? [])
+      .map((d) => d.replace(/\s+/g, ' '))
+      .join('')
+  }
+  const stops = {
+    balanced: stopRefs(':root, [data-expression="balanced"]'),
+    quiet: stopRefs('[data-expression="quiet"]'),
+    vivid: stopRefs('[data-expression="vivid"]'),
+  }
+  context = { layers, scopes, tokenNames, formulas, stops }
   return context
 }
 

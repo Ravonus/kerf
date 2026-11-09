@@ -3,6 +3,7 @@
 Three levels, in order. Stop at the first that gets you there; each one keeps the contrast check.
 
 1. `warp({ seed, dials, radius, fonts, tokens })` in the weft config. Checked by D010 at the stops `dials` leave.
+   For your own names, per-element looks and named themes: `colors`, `system`, `parts`, `themes` (below).
 2. `src/theme.css`, unlayered: `[data-scope]` and `[data-part]` rules beat warp with no `!important`.
 3. Your own component, with warp's tokens.
 
@@ -19,6 +20,79 @@ Three levels, in order. Stop at the first that gets you there; each one keeps th
 
 App-wide values go in `warp()`. A `--warp-color-*` set in CSS on `:root` skips the check and is undone inside any scope that
 sets a dial, such as a Table's density.
+
+## colors, system, parts, themes
+
+| Option | Does |
+|---|---|
+| `colors` | `{ brand: '#e8590c' }`: `--warp-color-brand`, a tone (`tone="brand"`), and `bg-brand` via `.weft/tokens/warp.tailwind.css`. Lowercase names, `#rrggbb` |
+| `system` | The scales: `radius`, `space`, `pad`, `control`, `font`, `shadow`, `duration`, `ease`, `border`, `icon`, `text.<role>` |
+| `parts` | One element, at rest and per state (`hover focus press active open disabled`). Numbers are px (ms for `duration`); names are system steps or `colors` |
+| `themes` | `{ ocean: { seed, colors, system, parts } }` under `[data-palette="ocean"]`. `dials.palette` sets the default; `setPalette()` switches |
+
+Every part takes `bg text border borderWidth radius padding paddingX paddingY gap margin height minHeight width size
+shadow opacity scale duration easing font fontSize weight leading tracking case`. A part's own keys add to those or
+replace one of the same name with its own meaning (an underline's `width` is its thickness):
+
+| Part | For | Own keys | States |
+|---|---|---|---|
+| `button` | Button and ButtonLink | `bg` `text` `border` `radius` | hover focus press active open disabled |
+| `button.soft` |  | `bg` `text` `border` | hover focus press active open disabled |
+| `button.outline` |  | `bg` `text` `border` | hover focus press active open disabled |
+| `button.ghost` |  | `bg` `text` `border` | hover focus press active open disabled |
+| `button.frame` |  | `bg` `text` `border` | hover focus press active open disabled |
+| `button.link` |  | `bg` `text` `border` | hover focus press active open disabled |
+| `iconButton` | A button that holds only an icon (copy, close, menu): square by default | `radius` `icon` | hover focus press active open disabled |
+| `copy` | CopyButton | `radius` | hover focus press active open disabled |
+| `close` | The close button of a dialog, sheet, drawer, alert or side nav | — | hover focus press active open disabled |
+| `link` | Link: the text link with the drawn underline | — | hover focus press active open disabled |
+| `link.underline` |  | `color` `width` `offset` | hover focus |
+| `nav` | Nav: the row or column of links with the sliding bar | — | — |
+| `nav.item` |  | — | hover focus press active open disabled |
+| `nav.underline` |  | `color` `width` `duration` | — |
+| `tabs` | Tabs | — | — |
+| `tabs.tab` |  | `radius` | hover focus press active open disabled |
+| `tabs.underline` |  | `color` `width` | — |
+| `pill` | Pill and PillLink | `radius` | hover focus press active open disabled |
+| `badge` | Badge | — | hover focus press active open disabled |
+| `chip` | Chip | `radius` | hover focus press active open disabled |
+| `card` | Card and Surface | — | hover focus press active open disabled |
+| `field` | Text fields, selects and pickers | `bg` `radius` | hover focus press active open disabled |
+| `field.label` |  | `text` | hover focus |
+| `sweep` | The sweep: the stroke that draws round a control on hover and focus, and the text while it runs | `stroke` `base` `text` `width` `duration` | — |
+| `dialog` | Modal and Dialog | — | — |
+| `sheet` | Sheet and Drawer | — | — |
+| `popover` | Popover, Menu and Tooltip panels | — | — |
+| `toast` | Toast | — | — |
+
+A solid's `bg` and `text` move its tone channels, so hover, pull-out and sweep follow. `hover.bg` is the hover fill. Text
+set on a fill set in the same part is checked like a seed: below 4.5:1 is D010. Each named theme's seed is fitted the
+same way as the main one.
+
+```ts
+warp({
+  colors: { brand: '#e8590c', ink: '#1b1b1f' },
+  parts: {
+    button: {
+      bg: 'brand',
+      text: 'ink',
+      radius: 'pill',
+      hover: { bg: 'ink', text: 'white' },
+    },
+    sweep: { stroke: 'brand', width: 2 },
+    nav: {
+      item: { hover: { text: 'brand' } },
+      underline: { color: 'brand', width: 3 },
+    },
+  },
+  themes: {
+    ocean: {
+      seed: { accent: '#0b7285' },
+      colors: { brand: '#0b7285' },
+    },
+  },
+})
+```
 
 ## Brutalist
 

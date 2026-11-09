@@ -60,6 +60,8 @@ export type Page = {
     rows: { name: string; type: string; required: boolean; default?: string; doc: string }[]
   }[]
   parts: string[]
+  /** The `warp({ parts })` keys that style it, from warp's parts table; `example` is highlighted HTML. */
+  theming?: { rows: { path: string; own: string[]; states: string[] }[]; example: string }
   scope?: string
   states: string[]
   related: Near[]
@@ -166,6 +168,7 @@ export function ComponentPage(props: { data: Page }) {
         ))}
         {d.use && <UsageContent data={d} />}
         {(d.keyboard || d.a11yNotes) && <AccessibilityContent data={d} />}
+        {d.theming && <ThemingContent theming={d.theming} />}
         <section id="api-reference" data-site="tk-section">
           <h2 data-flow="heading">API Reference</h2>
           {d.groups.length ? (
@@ -279,6 +282,55 @@ function AccessibilityContent(props: { data: Page }) {
           ))}
         </ul>
       )}
+    </section>
+  )
+}
+
+function ThemingContent(props: { theming: NonNullable<Page['theming']> }) {
+  const t = props.theming
+  return (
+    <section id="theming" data-site="tk-section">
+      <h2 data-flow="heading">Theming</h2>
+      <p data-part="note" data-flow="item">
+        Restyle it app-wide from <code data-scope="code">warp()</code> in your weft config. Every
+        key takes colour, spacing, size, radius, shadow, type and motion; its own keys are listed. A
+        state nests inside: <code data-scope="code">{"hover: { bg: 'ink' }"}</code>. Text on a fill
+        you set is contrast-checked at build. <Link href="/learn/theming">How theming works</Link>
+      </p>
+      <div
+        data-scope="props"
+        tabindex="0"
+        role="region"
+        aria-label="Theming keys"
+        data-site="props"
+        data-flow="item"
+      >
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Key</th>
+              <th scope="col">Own keys</th>
+              <th scope="col">States</th>
+            </tr>
+          </thead>
+          <tbody>
+            {t.rows.map((r) => (
+              <tr key={r.path}>
+                <th scope="row">
+                  <code>{`parts.${r.path}`}</code>
+                </th>
+                <td data-label="Own keys">{r.own.length ? r.own.join(', ') : '—'}</td>
+                <td data-label="States">{r.states.length ? r.states.join(', ') : 'none'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div
+        data-flow="item"
+        // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from warp's parts table
+        innerHTML={t.example}
+      ></div>
     </section>
   )
 }

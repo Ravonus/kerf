@@ -3,6 +3,7 @@ import { dialScript, warp } from '@weft-js/warp/plugin'
 import { icons } from '@weft-js/warp-icons/plugin'
 import { text } from '@weft-js/text'
 import { EXPRESSION } from './src/expression'
+import { PALETTES } from './src/lib/palettes'
 
 const FILES = 'node_modules/@fontsource'
 // The site's expression (src/expression.ts), vivid unless the reader chose another stop. In order: the default, warp's
@@ -44,7 +45,12 @@ export default defineConfig({
     head: `<link rel="icon" href="/favicon.svg" type="image/svg+xml">${dialHead}`,
   },
   plugins: [
-    warp(),
+    // The named themes the Appearance menu and each example frame switch (src/lib/palettes.ts).
+    warp({
+      themes: Object.fromEntries(
+        PALETTES.flatMap((p) => ('theme' in p ? [[p.name, p.theme]] : [])),
+      ),
+    }),
     icons(),
     text({
       measure: 'off',

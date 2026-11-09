@@ -71,28 +71,32 @@ const emphasis = (e) => {
 const sweepHost = { radius: { css: ['border-radius', '--warp-sweep-radius'], kind: 'radius' } }
 
 /**
- * The parts. `sel` is the element (with `&` where a state attaches); `props` adds or replaces properties; `states`
- * limits the states (all by default). `sub` names inner pieces, each a part of its own (`nav.underline`).
+ * The parts. `for` names the components a part styles (their docs pages list it). `sel` is the element (with `&` where
+ * a state attaches); `props` adds or replaces properties; `states` limits the states (all by default). `sub` names inner pieces, each a part of its own (`nav.underline`).
  */
 export const PARTS = {
   button: {
     about: 'Button and ButtonLink',
+    for: ['Button'],
     sel: '[data-scope="button"]&',
     props: { ...channels('[data-scope="button"]:not([data-emphasis])&', true), ...sweepHost },
     sub: Object.fromEntries(EMPHASES.map((e) => [e, emphasis(e)])),
   },
   iconButton: {
     about: 'A button that holds only an icon (copy, close, menu): square by default',
+    for: ['Button'],
     sel: '[data-scope="button"][data-icon-only]&',
     props: { ...sweepHost, icon: { css: '--warp-icon-md', kind: 'length' } },
   },
-  copy: { about: 'CopyButton', sel: '[data-copy]&', props: sweepHost },
+  copy: { about: 'CopyButton', for: ['CodeBlock'], sel: '[data-copy]&', props: sweepHost },
   close: {
     about: 'The close button of a dialog, sheet, drawer, alert or side nav',
+    for: ['Modal', 'Drawer', 'Alert', 'SideNav'],
     sel: '[data-part="close"]&',
   },
   link: {
     about: 'Link: the text link with the drawn underline',
+    for: ['Link'],
     sel: 'a[data-scope="link"]&',
     sub: {
       underline: {
@@ -108,6 +112,7 @@ export const PARTS = {
   },
   nav: {
     about: 'Nav: the row or column of links with the sliding bar',
+    for: ['Nav', 'SideNav'],
     sel: '[data-scope="nav"]&',
     states: [],
     sub: {
@@ -125,6 +130,7 @@ export const PARTS = {
   },
   tabs: {
     about: 'Tabs',
+    for: ['Tabs'],
     sel: '[data-scope="tabs"] > [data-part="list"]&',
     states: [],
     sub: {
@@ -143,11 +149,12 @@ export const PARTS = {
     },
   },
   pill: { about: 'Pill and PillLink', sel: '[data-scope="pill"]&', props: sweepHost },
-  badge: { about: 'Badge', sel: '[data-scope="badge"]&' },
-  chip: { about: 'Chip', sel: '[data-scope="chip"]&', props: sweepHost },
-  card: { about: 'Card and Surface', sel: '[data-scope="surface"]&' },
+  badge: { about: 'Badge', for: ['Badge'], sel: '[data-scope="badge"]&' },
+  chip: { about: 'Chip', for: ['Chip'], sel: '[data-scope="chip"]&', props: sweepHost },
+  card: { about: 'Card and Surface', for: ['Card'], sel: '[data-scope="surface"]&' },
   field: {
     about: 'Text fields, selects and pickers',
+    for: ['Field', 'Textarea', 'Search', 'Select', 'NumberField', 'DateField', 'TimeField'],
     sel: '[data-scope="field"] > [data-part="control"]&',
     props: { bg: { vars: ['--warp-color-field'], kind: 'color' }, ...sweepHost },
     sub: {
@@ -180,14 +187,25 @@ export const PARTS = {
       duration: { vars: ['--warp-ref-sweep', '--warp-ref-frame'], kind: 'time', scope: true },
     },
   },
-  dialog: { about: 'Modal and Dialog', sel: 'dialog[data-scope="dialog"]&', states: [] },
-  sheet: { about: 'Sheet and Drawer', sel: 'dialog[data-scope="sheet"]&', states: [] },
+  dialog: {
+    about: 'Modal and Dialog',
+    for: ['Modal'],
+    sel: 'dialog[data-scope="dialog"]&',
+    states: [],
+  },
+  sheet: {
+    about: 'Sheet and Drawer',
+    for: ['Drawer'],
+    sel: 'dialog[data-scope="sheet"]&',
+    states: [],
+  },
   popover: {
     about: 'Popover, Menu and Tooltip panels',
+    for: ['Popover', 'Menu', 'Tooltip'],
     sel: ':is([data-scope="popover"], [data-scope="menu"], [data-scope="tooltip"])&',
     states: [],
   },
-  toast: { about: 'Toast', sel: '[data-scope="toast"]&', states: [] },
+  toast: { about: 'Toast', for: ['Toast'], sel: '[data-scope="toast"]&', states: [] },
 }
 
 /** Every part, sub-parts included, as `[path, spec]` with `path` like `nav.underline`. */

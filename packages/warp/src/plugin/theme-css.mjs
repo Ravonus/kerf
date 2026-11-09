@@ -89,7 +89,7 @@ const declare = (tokens) =>
  * order), `scopes` (its scope roots) and `formulas` (the accent channel formulas).
  */
 export function themeCss(o, ctx) {
-  const { layers, scopes, formulas } = ctx
+  const { layers, scopes, formulas, stops } = ctx
   let parts = colorsCss(o.colors ?? {}, null, formulas) + partCss(o.rows, null, scopes)
   let tokens = ''
   for (const [name, theme] of Object.entries(o.themes)) {
@@ -97,8 +97,12 @@ export function themeCss(o, ctx) {
       `[data-palette="${name}"]`,
       ...(o.default === name ? [':root:not([data-palette])'] : []),
     ]
-    if (theme.seed)
+    if (theme.seed) {
       tokens += `${prefixes.join(',')}{--warp-seed-accent-h:${theme.seed.hue};--warp-seed-accent-c:${theme.seed.chroma}}`
+    }
+    // a seed or a fitted token moves colour tokens the stop's refs point at
+    if (theme.seed || Object.keys(theme.system).length)
+      tokens += stopRefsCss(`[data-palette="${name}"]`, stops)
     if (Object.keys(theme.system).length)
       parts += `${prefixes.flatMap((p) => [p, `${p} :is(${scopes})`]).join(',')}{${declare(theme.system)}}`
     parts += colorsCss(theme.colors, prefixes, formulas) + partCss(theme.rows, prefixes, scopes)
@@ -110,6 +114,18 @@ export function themeCss(o, ctx) {
     (parts && `@layer warp.theme{${parts}}\n`)
   )
 }
+// A palette below the page's root: the stop's colour refs again, at no specificity so the element's own stop wins.
+// The stop is the nearest data-expression above it, or balanced with none; quiet and vivid come later so they win.
+function stopRefsCss(at, stops) {
+  if (!stops) return ''
+  const own = `${at}:not(:root)`
+  return (
+    (stops.balanced && `:where(${own}){${stops.balanced}}`) +
+    (stops.quiet && `:where([data-expression="quiet"] ${own}){${stops.quiet}}`) +
+    (stops.vivid && `:where([data-expression="vivid"] ${own}){${stops.vivid}}`)
+  )
+}
+
 /** Tailwind v4 names for the app's colours (`bg-brand`, `text-ink`), or '' with none: on the var, so themes follow. */
 export function tailwindTheme(o) {
   const names = new Set([

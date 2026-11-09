@@ -1,4 +1,5 @@
 import { Button } from '@weft-js/warp'
+import { StageButtons } from './StageButtons'
 import { Preview } from './Preview'
 import type { ExampleRef } from '../toolkit/types'
 
@@ -48,33 +49,7 @@ export function ExampleFrame(props: ExampleFrameProps) {
         <span data-part="spacer"></span>
         <span data-part="stage-tools">
           {ex.replay && replayButton()}
-          <Button
-            emphasis="ghost"
-            tone="neutral"
-            size="sm"
-            icon="palette"
-            label="Expression of this stage"
-            title="Change this stage's expression"
-            data-act="stage-expression"
-          />
-          <Button
-            emphasis="ghost"
-            tone="neutral"
-            size="sm"
-            icon="moon"
-            label="Theme of this stage"
-            title="Change this stage's theme"
-            data-act="stage-theme"
-          />
-          <Button
-            emphasis="ghost"
-            tone="neutral"
-            size="sm"
-            icon="smartphone"
-            label="Width of this stage"
-            title="Change this stage's width"
-            data-act="stage-width"
-          />
+          <StageButtons />
         </span>
       </div>
       <div
