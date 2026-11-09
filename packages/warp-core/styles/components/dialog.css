@@ -110,10 +110,12 @@
   grid-column: 1; margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-body-size); line-height: var(--warp-text-body-leading);
 }
 :where([data-scope="dialog"] [data-part="close"]),
-:where([data-scope="sheet"] [data-part="close"]) { grid-column: 2; grid-row: 1; margin-block-start: -12px; margin-inline-end: -14px; }
-/* the close cross: just the X, small and tucked into the corner. No box, fill or sweep round it; under the hand the
-   glyph itself lifts off the same hard offset a vivid button pulls out of, and a press sets it back down. Its target
-   stays hit-min from ::after, so the smaller mark is no harder to reach */
+:where([data-scope="sheet"] [data-part="close"]) { grid-column: 2; grid-row: 1; margin-block-start: -17px; margin-inline-end: -17px; }
+/* the close cross: just the X, small and tucked into the corner. No box, fill or sweep round it, and nothing lifts:
+   under the hand the X wipes to the accent left to right, and on the way out wipes off the same way, never back. The
+   accent is a copy of the glyph ([data-part="ink"], CloseX) over it, shown through a mask that grows from the left
+   and leaves into the right: only the mask's size moves, so its anchor can jump sides unseen at 0 and 100%. Its
+   target stays hit-min from ::after, so the smaller mark is no harder to reach */
 :where([data-scope="button"][data-part="close"]) {
   inline-size: 24px; block-size: 24px; min-inline-size: 0; min-block-size: 0; padding: 0;
   background: none; border-color: transparent; box-shadow: none; translate: none;
@@ -122,15 +124,14 @@
 :where([data-scope="button"][data-part="close"])::before,
 :where([data-scope="button"][data-part="close"]) > :where([data-part="sweep"]) { display: none; }
 :where([data-scope="button"][data-part="close"])::after { inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
-:where([data-scope="button"][data-part="close"]) > svg {
-  inline-size: 14px; block-size: 14px; stroke-width: 2;
-  transition: translate var(--warp-duration-fast) var(--warp-ease-spring), filter var(--warp-duration-fast) var(--warp-ease-out);
+:where([data-scope="button"][data-part="close"]) > svg { inline-size: 14px; block-size: 14px; stroke-width: 2; }
+:where([data-scope="button"][data-part="close"]:is(:hover, :focus-visible)) { box-shadow: none; translate: none; }
+:where([data-scope="button"][data-part="close"]) > [data-part="ink"] {
+  position: absolute; inset: 0; margin: auto; color: var(--warp-color-accent-text); pointer-events: none;
+  mask: linear-gradient(#000 0 0) right / 0% 100% no-repeat;
+  transition: mask-size var(--warp-sweep-duration) var(--warp-sweep-ease);
 }
-:where([data-scope="button"][data-part="close"]:is(:hover, :focus-visible)) { color: var(--warp-color-text); box-shadow: none; translate: none; }
-:where([data-scope="button"][data-part="close"]:is(:hover, :focus-visible):not(:active)) > svg {
-  translate: calc(-1.5px * var(--warp-motion-scale)) calc(-1.5px * var(--warp-motion-scale));
-  filter: drop-shadow(1.5px 1.5px 0 var(--warp-offset-color));
-}
+:where([data-scope="button"][data-part="close"]:is(:hover, :focus-visible)) > [data-part="ink"] { mask-position: left; mask-size: 100% 100%; }
 :where([data-scope="dialog"] [data-part="body"]),
 :where([data-scope="sheet"] [data-part="body"]) {
   overflow: auto; overscroll-behavior: contain; padding: 0 var(--warp-pad-surface) var(--warp-pad-surface);

@@ -1,4 +1,4 @@
-import { XIcon } from '@weft-js/warp-icons'
+import { CloseX } from './CloseX'
 import { derived } from '@weft-js/core'
 import type { Tone } from './Button'
 import { Icon, toneIcon } from './Icon'
@@ -47,7 +47,7 @@ export function Alert({
           data-dismiss=""
           onClick={onDismiss}
         >
-          <XIcon />
+          <CloseX />
         </button>
       )}
     </div>

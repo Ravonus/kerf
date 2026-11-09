@@ -14,6 +14,16 @@
 :where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(1)) { translate: 0 var(--_gap); rotate: 45deg; }
 :where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(2)) { clip-path: inset(0 0 0 100%); }
 :where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(3)) { translate: 0 calc(var(--_gap) * -1); rotate: -45deg; }
+/* as the close in a menu-screen, the X wipes to the accent like the close cross (dialog): each bar carries it as a
+   layer over its own colour, grown from the left and shrunk into the right */
+:where([data-scope="button"][data-part="close"][data-hamburger] [data-part="bars"] > i) {
+  background: linear-gradient(var(--warp-color-accent-text) 0 0) right / 0% 100% no-repeat, currentColor;
+  transition: translate var(--warp-duration-base) var(--warp-ease-in-out), rotate var(--warp-duration-base) var(--warp-ease-in-out),
+              clip-path var(--warp-sweep-duration) var(--warp-sweep-ease), background-size var(--warp-sweep-duration) var(--warp-sweep-ease);
+}
+:where([data-scope="button"][data-part="close"][data-hamburger]:is(:hover, :focus-visible) [data-part="bars"] > i) {
+  background-position: left, 0 0; background-size: 100% 100%, auto;
+}
 @starting-style {
   :where([data-scope="menu-screen"][open] [data-hamburger] [data-part="bars"] > i) { translate: 0 0; rotate: 0deg; clip-path: inset(0); }
 }

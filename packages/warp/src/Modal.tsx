@@ -1,4 +1,4 @@
-import { XIcon } from '@weft-js/warp-icons'
+import { CloseX } from './CloseX'
 import { dialog, uid } from '@weft-js/warp-core'
 import { derived, untrack, type State } from '@weft-js/core'
 import type { Tone } from './Button'
@@ -99,7 +99,7 @@ export function Modal({
           data-part="close"
           data-close=""
         >
-          <XIcon />
+          <CloseX />
         </button>
       </div>
       <div data-part="body">{children}</div>

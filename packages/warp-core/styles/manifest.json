@@ -120,6 +120,7 @@
   "components/button-group.css",
   "components/dialog.css",
   "components/alert.css",
+  "components/hamburger.css",
   "inputs/text.css",
   "rich/sortable.css"
  ],

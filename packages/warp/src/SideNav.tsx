@@ -1,4 +1,5 @@
-import { RightIcon, XIcon } from '@weft-js/warp-icons'
+import { RightIcon } from '@weft-js/warp-icons'
+import { CloseX } from './CloseX'
 import { untrack } from '@weft-js/core'
 import { sideNavState } from './SideNav/state'
 import { SideNavSections } from './SideNav/sections'
@@ -88,7 +89,7 @@ export function SideNav(props: SideNavProps) {
               aria-label="Close"
               data-part="close"
             >
-              <XIcon />
+              <CloseX />
             </button>
           )}
         </div>

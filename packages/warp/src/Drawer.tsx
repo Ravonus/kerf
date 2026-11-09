@@ -1,4 +1,4 @@
-import { XIcon } from '@weft-js/warp-icons'
+import { CloseX } from './CloseX'
 import { dialog, uid } from '@weft-js/warp-core'
 import { derived, type State, untrack } from '@weft-js/core'
 import { use } from '@weft-js/warp-core/weft'
@@ -91,7 +91,7 @@ export function Drawer({
           data-part="close"
           data-close=""
         >
-          <XIcon />
+          <CloseX />
         </button>
       </div>
       <div data-part="body">{children}</div>
