@@ -25,6 +25,7 @@ import { packageProblems } from './quality/package-folders.mjs'
 import { checkLengths } from './quality/lengths.mjs'
 import { conventionsStep, importantStep } from './quality/conventions.mjs'
 import { clippyProblems, lintProblems } from './quality/length-diagnostics.mjs'
+import { inventoryStep, splitCommentWarnings } from './quality/s9-warnings.mjs'
 
 // While a new rule beds in this is 'warn': everything is reported and nothing fails. Otherwise 'error'.
 const LEVEL = 'error'
@@ -78,6 +79,7 @@ let lengthResult
 const lengths = () => (lengthResult ??= checkLengths())
 
 const STEPS = [
+  ...['structure', 'duplicates', 'comment-budget'].map((name) => inventoryStep(name, run)),
   conventionsStep(run, lines),
   {
     id: 'package-folders',
@@ -135,9 +137,11 @@ const STEPS = [
       } catch {
         return lines({ code: 1, out: r.out })
       }
-      const problems = lintProblems(report, lengths())
-      if (r.code !== 0 && !report.diagnostics.length)
-        problems.push(r.out.trim() || 'Oxlint failed without diagnostics')
+      const { warnings, rest } = splitCommentWarnings(report.diagnostics)
+      if (warnings.length) console.log(`\ncomment-budget lint warnings:\n${warnings.join('\n')}`)
+      const problems = lintProblems({ ...report, diagnostics: rest }, lengths())
+      if (r.code !== 0 && !rest.length)
+        problems.push(r.out.trim() || 'Oxlint failed without error diagnostics')
       return { problems }
     },
   },

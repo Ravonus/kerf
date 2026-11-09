@@ -1,6 +1,7 @@
 // The rules Oxlint has no built-in for, as an Oxlint plugin so they show up with every other lint. These are rules for the
 // framework's own code; what apps get is `weft check`, in the compiler and the CLI.
 import { repoRoot } from '../lib/helpers.mjs'
+import { analyzeComments } from './comment-budget.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
@@ -108,6 +109,18 @@ const allComments = (context, check) => ({
 export default {
   meta: { name: 'weft' },
   rules: {
+    'comment-budget': {
+      create(context) {
+        return {
+          Program(node) {
+            for (const warning of analyzeComments(context.sourceCode.text, context.filename).warnings) {
+              const position = { line: warning.line, column: 0 }
+              context.report({ node, loc: { start: position, end: position }, message: warning.message })
+            }
+          },
+        }
+      },
+    },
     'no-commented-code': {
       create: (context) =>
         allComments(context, (comment) => {

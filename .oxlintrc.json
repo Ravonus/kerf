@@ -76,6 +76,7 @@
     "weft/no-html-sink": "error",
 
     // Comments.
+    "weft/comment-budget": "warn",
     "weft/no-commented-code": "error",
     "weft/todo-needs-issue": "error",
     "weft/disable-needs-reason": "error",
