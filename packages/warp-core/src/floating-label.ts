@@ -112,7 +112,16 @@ function notch(host: Element) {
 
 // The notch is a measured colour, so a theme, dial or colour-scheme change outdates it. One watcher per document
 // re-measures every mounted field: on the next frame, then once more when a background transition has finished.
-const WATCHED = ['class', 'style', 'data-theme', 'data-expression', 'data-seed']
+// The root's class and style count too; below it only the dials do, since a themed island sets them on any element.
+const DIALS = [
+  'data-theme',
+  'data-expression',
+  'data-palette',
+  'data-density',
+  'data-flair',
+  'data-seed',
+]
+const WATCHED = ['class', 'style', ...DIALS]
 const watchers = new WeakMap<Document, { fields: Set<() => void>; stop(): void }>()
 function onTheme(doc: Document, measure: () => void) {
   let w = watchers.get(doc)
@@ -131,12 +140,15 @@ function onTheme(doc: Document, measure: () => void) {
     const seen = new win.MutationObserver(changed)
     seen.observe(doc.documentElement, { attributes: true, attributeFilter: WATCHED })
     if (doc.body) seen.observe(doc.body, { attributes: true, attributeFilter: WATCHED })
+    const below = new win.MutationObserver(changed)
+    below.observe(doc.documentElement, { attributes: true, attributeFilter: DIALS, subtree: true })
     const scheme = win.matchMedia?.('(prefers-color-scheme: dark)')
     scheme?.addEventListener('change', changed)
     w = {
       fields,
       stop() {
         seen.disconnect()
+        below.disconnect()
         scheme?.removeEventListener('change', changed)
         win.cancelAnimationFrame(frame)
         clearTimeout(late)

@@ -138,3 +138,29 @@ describe('the parts table', () => {
     for (const prop of Object.keys(PROPS)) expect(dts, prop).toMatch(new RegExp(`\\b${prop}\\??:`))
   })
 })
+
+describe('the compiler without the plugin', () => {
+  test('runs from the stylesheet facts alone, with no Node import', async () => {
+    for (const f of ['theme.mjs', 'theme-css.mjs', 'theme-parts.mjs', 'seed.mjs'])
+      expect(readFileSync(new URL(`../src/plugin/${f}`, import.meta.url), 'utf8')).not.toMatch(
+        /from 'node:/,
+      )
+    const theme = await import('../src/plugin/theme.mjs')
+    const { themeContext } = await import('../src/plugin/theme-context.mjs')
+    const ctx = themeContext(new URL('../../warp-core/', import.meta.url))
+    const o = theme.themeOptions(
+      {
+        themes: { studio: { seed: { accent: '#e8590c' }, parts: { button: { radius: 'pill' } } } },
+      },
+      ctx.tokenNames,
+      {
+        seed: (s: unknown) => theme.normalizeSeed(s),
+        tokens: (t: Record<string, string> | undefined, p: string) => theme.checkTokens(t, p) ?? {},
+      },
+    )
+    const css = theme.themeCss(o, ctx)
+    expect(css).toContain('[data-palette="studio"]{--warp-seed-accent-h:')
+    expect(css).toContain(':where([data-palette="studio"]) :where([data-scope="button"]),')
+    expect(css).toContain('{border-radius:9999px;')
+  })
+})

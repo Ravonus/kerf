@@ -16,6 +16,8 @@
     "./ui": "./src/ui.ts",
     "./plugin": "./plugin.mjs",
     "./theme-parts": "./src/plugin/theme-parts.mjs",
+    "./theme": "./src/plugin/theme.mjs",
+    "./theme-context": "./src/plugin/theme-context.mjs",
     "./tailwind.css": "./tailwind.css"
   },
   "scripts": {

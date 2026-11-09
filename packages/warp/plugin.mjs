@@ -12,13 +12,8 @@ import { hex, luminance, toLinear } from './tokens/color.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
 import { DEFAULT, normalizeSeed, seedByName } from './src/plugin/seed.mjs'
-import {
-  checkTokens,
-  tailwindTheme,
-  themeContext,
-  themed,
-  themeOptions,
-} from './src/plugin/theme.mjs'
+import { checkTokens, tailwindTheme, themed, themeOptions } from './src/plugin/theme.mjs'
+import { themeContext } from './src/plugin/theme-context.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
 const DIALS = {
@@ -342,7 +337,13 @@ export const warp = definePlugin({
     else if (declarations) checkSeed(seed, declarations, o.dials)
     const note = o.asked && landed(seed, declarations, o.asked)
     const theming = o.theme
-      ? themed(o.theme, { core, seed, dials: o.dials, checkSeed: fitSeed, declare: overrides })
+      ? themed(o.theme, {
+          context: themeContext(core),
+          seed,
+          dials: o.dials,
+          checkSeed: fitSeed,
+          declare: overrides,
+        })
       : ''
     const tailwind = o.theme ? tailwindTheme(o.theme) : ''
     const dials = Object.entries(o.dials ?? {})

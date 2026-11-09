@@ -20,6 +20,15 @@ export const referenceSections: SideNavSection[] = reference.map((g) => ({
 
 /** A toolkit area's rail: the area's groups. Art and Icons have none of their own. */
 export const toolkitSections = (area: Area | 'art' | 'icons'): SideNavSection[] => [
+  ...(area === 'components'
+    ? [
+        {
+          title: 'Theming',
+          pinned: true,
+          items: [{ href: '/components/theme-studio', label: 'Theme studio' }],
+        },
+      ]
+    : []),
   ...toolkit
     .filter((g) => g.area === area)
     .map((g) => ({ title: g.group, items: g.items.map((i) => ({ href: i.href, label: i.name })) })),

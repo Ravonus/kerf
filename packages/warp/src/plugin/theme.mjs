@@ -1,7 +1,7 @@
 // `warp({ colors, system, parts, themes })`: names colours once, restyles any part in any state, and ships named
 // themes that switch at runtime (`data-palette`, `setDial('palette', name)`). Everything here is emitted only when the
-// app configures it, so an app that sets nothing gets exactly warp's own CSS.
-import { readFileSync } from 'node:fs'
+// app configures it, so an app that sets nothing gets exactly warp's own CSS. No Node here: a browser can run it too
+// (`@weft-js/warp/theme`), given the stylesheet facts theme-context.mjs reads.
 import { contrast, fromHex, toLinear } from '../../tokens/color.mjs'
 import { themeCss } from './theme-css.mjs'
 import { PARTS, STATES, allParts, propsOf, statesOf } from './theme-parts.mjs'
@@ -292,50 +292,8 @@ export function checkTokens(tokens, path) {
   return tokens
 }
 
-let context
-/** Facts read once from warp-core's stylesheet: sub-layer order, scope roots, token names and the accent formulas. */
-export function themeContext(core) {
-  if (context) return context
-  const css = readFileSync(new URL('styles/warp.css', core), 'utf8').replace(
-    /\/\*[\s\S]*?\*\//g,
-    '',
-  )
-  const layers = /@layer (warp\.tokens[^;]*);/
-    .exec(css)[1]
-    .split(',')
-    .map((l) => l.trim().slice(5))
-  const scopes = /\n(:root, \[data-expression\][^{]*)\{/.exec(css)[1].replace(/\s+/g, ' ').trim()
-  const tokenNames = new Set(css.match(/--warp-[a-z0-9-]+(?=\s*:)/g))
-  const formula = (name) =>
-    new RegExp(`--warp-color-accent-${name}:\\s*([^;]+);`).exec(css)[1].replace(/\s+/g, ' ')
-  const formulas = {
-    '--_solid': formula('solid'),
-    '--_solid-hover': formula('solid-hover'),
-    '--_ink-on': formula('on-solid'),
-    '--_soft': formula('soft'),
-    '--_text': formula('text'),
-    '--_border': formula('border'),
-  }
-  // An expression stop picks some refs by colour token (the primary is the accent, or ink at quiet). Those resolve where
-  // the stop is declared, so a palette set below it needs them declared again, per stop (themeCss).
-  const stopRefs = (sel) => {
-    const at = css.indexOf(`\n${sel} {`)
-    const body = css.slice(css.indexOf('{', at) + 1, css.indexOf('\n}', at))
-    return (body.match(/--warp-ref-[a-z0-9-]+:\s*[^;]*var\(--warp-color-[^;]+;/g) ?? [])
-      .map((d) => d.replace(/\s+/g, ' '))
-      .join('')
-  }
-  const stops = {
-    balanced: stopRefs(':root, [data-expression="balanced"]'),
-    quiet: stopRefs('[data-expression="quiet"]'),
-    vivid: stopRefs('[data-expression="vivid"]'),
-  }
-  context = { layers, scopes, tokenNames, formulas, stops }
-  return context
-}
-
 /** The theming CSS, after D010: each named theme's seed and tokens, and every configured text-on-fill pair. */
-export function themed(theme, { core, seed, dials, checkSeed, declare: declareOf }) {
+export function themed(theme, { context, seed, dials, checkSeed, declare: declareOf }) {
   const failures = partContrast(theme.rows, theme.colors ?? {}, '')
   for (const [name, t] of Object.entries(theme.themes)) {
     failures.push(...partContrast(t.rows, { ...theme.colors, ...t.colors }, `themes.${name}.`))
@@ -354,8 +312,9 @@ export function themed(theme, { core, seed, dials, checkSeed, declare: declareOf
       failures,
       help: 'Pick a text colour with more contrast against the fill, or set only one of them.',
     })
-  return themeCss(theme, themeContext(core))
+  return themeCss(theme, context)
 }
 
 export { PARTS }
-export { tailwindTheme, toneChannels } from './theme-css.mjs'
+export { tailwindTheme, themeCss, toneChannels } from './theme-css.mjs'
+export { normalizeSeed, seedByName } from './seed.mjs'

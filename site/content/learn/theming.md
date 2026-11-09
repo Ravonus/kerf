@@ -12,6 +12,9 @@
 to your code. This page is about those dials and tokens: what they are, how to set them for a whole app or one corner of
 a page, and how your own CSS and canvases can follow them too.
 
+To try all of it at once, open the [Theme studio](/components/theme-studio): every control there writes a key of
+`warp()`, real components take it as you go, and it hands you the config to paste into weft.config.ts.
+
 :::demo style-dials
 
 Nothing in the card above knows about themes. The three controls write three attributes on the `<div>` around it, and
