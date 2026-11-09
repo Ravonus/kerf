@@ -3,6 +3,7 @@ import type { Interaction } from '@weft-js/core/interaction'
 import { pressOrigin } from '@weft-js/warp-core'
 import { Icon, type IconRef } from './Icon'
 import { useUi } from './use-ui'
+import type { ThemeTone } from './theme-tone'
 import './styles'
 import '@weft-js/warp-core/styles/components/button.css'
 import '@weft-js/warp-core/styles/components/spinner.css'
@@ -16,7 +17,7 @@ export type Emphasis = 'solid' | 'soft' | 'outline' | 'ghost' | 'frame' | 'link'
 export interface ButtonProps {
   /** solid (default) · soft · outline · ghost · frame (the signature) · link. Fixed at creation: it picks the anatomy. */
   emphasis?: Emphasis | undefined
-  tone?: Tone | undefined
+  tone?: ThemeTone | undefined
   size?: 'sm' | 'md' | 'lg' | undefined
   /** A frame button with the solid fill sweeping in. */
   fill?: boolean
