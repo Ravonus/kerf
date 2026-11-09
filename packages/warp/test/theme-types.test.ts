@@ -3,6 +3,7 @@ import type { WarpOptions } from '../plugin.mjs'
 
 const options: WarpOptions = {
   colors: { ink: '#ffffff', brand: 'ink' },
+  themes: {},
   system: { space: { page: 24 }, text: { code: { family: 'mono', size: 14 } } },
   parts: {
     'text/code': { font: { family: 'mono', size: 14 } },
@@ -126,3 +127,11 @@ const wrongNamedColor: WarpOptions = {
   },
 }
 void wrongNamedColor
+
+const unsupportedTheme: WarpOptions = {
+  themes: {
+    // @ts-expect-error Named themes are not supported yet.
+    ocean: {},
+  },
+}
+void unsupportedTheme
