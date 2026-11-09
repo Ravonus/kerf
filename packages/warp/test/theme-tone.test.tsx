@@ -74,6 +74,20 @@ test('updates named tones on existing hosts without inline CSS', () => {
   const nodes = [...container.querySelectorAll('[data-tone]')]
   tone.value = 'sunset'
   expect(nodes).toHaveLength(6)
+  expect(
+    nodes.map((node) => [
+      node.tagName,
+      node.getAttribute('data-scope'),
+      node.getAttribute('data-tone'),
+    ]),
+  ).toEqual([
+    ['BUTTON', 'button', 'sunset'],
+    ['SPAN', 'badge', 'sunset'],
+    ['A', 'link', 'sunset'],
+    ['NAV', 'nav', 'sunset'],
+    ['BUTTON', 'pill', 'sunset'],
+    ['A', 'pill', 'sunset'],
+  ])
   expect(nodes.every((node) => node.getAttribute('data-tone') === 'sunset')).toBe(true)
   expect([...container.querySelectorAll('[data-tone]')]).toEqual(nodes)
   expect(nodes.every((node) => !node.hasAttribute('style'))).toBe(true)
