@@ -785,7 +785,7 @@ exports[`Choices: client DOM after mount 1`] = `
 <span data-part="hint">On the go</span>
 </label>
 <div aria-label="View" data-scope="segmented" data-size="sm" role="radiogroup">
-<span aria-hidden="true" data-part="indicator" style="--warp-a: 0px; --warp-b: 0px;">
+<span aria-hidden="true" data-part="indicator" style="--warp-a: 0px; --warp-b: 0px; --warp-ca: 0px; --warp-cb: 0px;">
 </span>
 <label data-sweep="">
 <span aria-hidden="true" data-part="sweep">
@@ -2503,7 +2503,7 @@ exports[`Tabbed: client DOM after mount 1`] = `
 <div aria-label="T" data-part="list" role="tablist">
 <button aria-controls="tabs-0-p0" aria-selected="true" data-part="trigger" id="tabs-0-t0" role="tab" type="button">A</button>
 <button aria-controls="tabs-0-p1" aria-selected="false" data-part="trigger" disabled="" id="tabs-0-t1" role="tab" tabindex="-1" type="button">B</button>
-<span aria-hidden="true" data-part="indicator" style="--warp-a: 0px; --warp-b: 0px;">
+<span aria-hidden="true" data-part="indicator" style="--warp-a: 0px; --warp-b: 0px; --warp-ca: 0px; --warp-cb: 0px;">
 </span>
 </div>
 <div aria-labelledby="tabs-0-t0" data-part="content" id="tabs-0-p0" role="tabpanel" tabindex="0">
@@ -2517,7 +2517,7 @@ exports[`Tabbed: client DOM after mount 1`] = `
 <div aria-label="P" data-part="list" role="tablist">
 <button aria-controls="tabs-1-p0" aria-selected="true" data-part="trigger" id="tabs-1-t0" role="tab" type="button">A</button>
 <button aria-controls="tabs-1-p0" aria-selected="false" data-part="trigger" id="tabs-1-t1" role="tab" tabindex="-1" type="button">B</button>
-<span aria-hidden="true" data-part="indicator" style="--warp-a: 0px; --warp-b: 0px;">
+<span aria-hidden="true" data-part="indicator" style="--warp-a: 0px; --warp-b: 0px; --warp-ca: 0px; --warp-cb: 0px;">
 </span>
 </div>
 <div aria-labelledby="tabs-1-t0" data-part="content" id="tabs-1-p0" role="tabpanel" tabindex="0">
