@@ -8,19 +8,103 @@ import { repoRoot } from '../lib/helpers.mjs'
 
 const source = /\.(?:js|jsx|ts|tsx|mjs|cjs|mts|cts|rs)$/
 
+// Scan literals as units so comment markers inside them remain significant.
+function tokenize(text, rust) {
+  const lines = [[]]
+  let i = 0
+  let previous = ''
+  function add(value) {
+    const parts = value.split('\n')
+    for (let n = 0; n < parts.length; n++) {
+      if (n) lines.push([])
+      if (parts[n]) lines.at(-1).push(parts[n])
+    }
+  }
+  function quoted(quote) {
+    const start = i++
+    while (i < text.length) {
+      if (text[i] === '\\') i += 2
+      else if (text[i++] === quote) break
+    }
+    return text.slice(start, i)
+  }
+  function template() {
+    const start = i++
+    while (i < text.length) {
+      if (text[i] === '\\') i += 2
+      else if (text[i] === '`') { i++; break }
+      else if (text[i] === '$' && text[i + 1] === '{') {
+        i += 2
+        let depth = 1
+        while (i < text.length && depth) {
+          if (text[i] === '"' || text[i] === "'") quoted(text[i])
+          else if (text[i] === '`') template()
+          else if (text.startsWith('//', i)) {
+            i = text.indexOf('\n', i)
+            if (i < 0) i = text.length
+          } else if (text.startsWith('/*', i)) blockComment(false)
+          else if (text[i] === '{') { depth++; i++ }
+          else if (text[i] === '}') { depth--; i++ }
+          else i++
+        }
+      } else i++
+    }
+    return text.slice(start, i)
+  }
+  function blockComment(countLines = true) {
+    i += 2
+    let depth = 1
+    while (i < text.length && depth) {
+      if (rust && text.startsWith('/*', i)) { depth++; i += 2 }
+      else if (text.startsWith('*/', i)) { depth--; i += 2 }
+      else { if (countLines && text[i] === '\n') lines.push([]); i++ }
+    }
+  }
+  while (i < text.length) {
+    if (text[i] === '\n') { lines.push([]); i++; continue }
+    if (/\s/.test(text[i])) { i++; continue }
+    if (text.startsWith('//', i)) {
+      while (i < text.length && text[i] !== '\n') i++
+      continue
+    }
+    if (text.startsWith('/*', i)) { blockComment(); continue }
+    const raw = rust && text.slice(i).match(/^(?:br|r)(#*)"/)
+    let token
+    if (raw) {
+      const start = i
+      i += raw[0].length
+      const end = text.indexOf('"' + raw[1], i)
+      i = end < 0 ? text.length : end + 1 + raw[1].length
+      token = text.slice(start, i)
+    } else if (text[i] === '"' || text[i] === "'") token = quoted(text[i])
+    else if (!rust && text[i] === '`') token = template()
+    else if (!rust && text[i] === '/' && (!previous || /^(?:[({[=,:;!?&|+*%~<>-]|return|throw|case|yield|await)$/.test(previous))) {
+      const start = i++
+      let inClass = false
+      while (i < text.length && text[i] !== '\n') {
+        if (text[i] === '\\') i += 2
+        else if (text[i] === '[') { inClass = true; i++ }
+        else if (text[i] === ']') { inClass = false; i++ }
+        else if (text[i++] === '/' && !inClass) break
+      }
+      while (/[a-z]/i.test(text[i] ?? '') && i < text.length) i++
+      token = text.slice(start, i)
+    } else {
+      const match = text.slice(i).match(/^[\w$]+/)
+      token = match ? match[0] : text[i]
+      i += token.length
+    }
+    add(token)
+    previous = token
+  }
+  return lines
+}
+
 /** Find repeated sequences of twelve nonempty tokenized lines. */
 export function duplicates(files) {
   const windows = new Map()
   for (const [path, text] of files) {
-    // Keep literal contents and newlines while discarding comments and whitespace.
-    const tokens = text.match(/(?:\/\*[\s\S]*?\*\/|\/\/[^\n]*|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|`(?:\\[\s\S]|[^`\\])*`|\n|[\w$]+|[^\s])/g) ?? []
-    const lines = [[]]
-    for (const token of tokens) {
-      if (token === '\n') lines.push([])
-      else if (token.startsWith('//') || token.startsWith('/*')) {
-        for (const char of token) if (char === '\n') lines.push([])
-      } else lines.at(-1).push(token)
-    }
+    const lines = tokenize(text, path.endsWith('.rs'))
     const populated = lines.flatMap((line, i) => line.length ? [{ line: i + 1, value: JSON.stringify(line) }] : [])
     for (let i = 0; i + 12 <= populated.length; i++) {
       const key = populated.slice(i, i + 12).map((line) => line.value).join('\n')
