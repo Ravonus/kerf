@@ -14,6 +14,7 @@ import {
   TypeControls,
 } from './Controls'
 import type { Cfg } from './rows'
+import { Presets, WearIt } from './Presets'
 import { Specimen } from './Specimen'
 import '../../styles/studio.css'
 
@@ -117,6 +118,7 @@ export function ThemeStudio() {
     <div data-site="studio" id="studio">
       <style>{built.value.css}</style>
       <aside data-studio="controls" aria-label="Theme controls">
+        <Presets cfg={cfg} />
         <Tabs
           label="Controls"
           variant="pill"
@@ -150,6 +152,9 @@ export function ThemeStudio() {
         </Tabs>
       </aside>
       <div data-studio="main">
+        <div data-studio="bar">
+          <WearIt />
+        </div>
         {built.value.error && (
           <p data-studio="problem" role="status">
             <b>{built.value.error.path || 'config'}</b> {built.value.error.message}
