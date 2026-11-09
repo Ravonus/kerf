@@ -875,12 +875,12 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
    no grabber and the X closes */
 :where(:root[data-device="mobile"] [data-scope="sheet"][data-side="bottom"] [data-part="handle"]) { display: block; }
 :where(:root[data-device="mobile"] [data-scope="sheet"][data-side="bottom"] [data-part="close"]) {
-  position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
 }
 @media (hover: none) and (pointer: coarse) {
   :where(:root:not([data-device]) [data-scope="sheet"][data-side="bottom"] [data-part="handle"]) { display: block; }
   :where(:root:not([data-device]) [data-scope="sheet"][data-side="bottom"] [data-part="close"]) {
-    position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
   }
 }
 :where([data-scope="sheet"][data-side="bottom"] [data-part="header"]) { padding-block-start: var(--warp-space-tight); touch-action: none; }
