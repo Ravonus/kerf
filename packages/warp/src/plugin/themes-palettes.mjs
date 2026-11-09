@@ -15,7 +15,7 @@ export function preparePalettes(input) {
   if (!plain(themes)) throw bad('themes', 'must be a plain object')
   const entries = Object.entries(themes)
   if (!entries.length && input.dials?.palette === undefined) return undefined
-  for (const key of ['seed', 'tokens', 'parts']) {
+  for (const key of ['tokens', 'parts']) {
     const value = input[key]
     if (value !== undefined && (!plain(value) || Object.keys(value).length))
       throw bad(key, 'not supported together with named palettes yet')

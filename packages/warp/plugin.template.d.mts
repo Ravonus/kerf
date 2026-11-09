@@ -52,7 +52,10 @@ export type WarpOptions = WarpCommonOptions &
         themes?: Record<string, { colors?: Record<string, string> }>
         /** Only empty root overrides are supported with named palettes. */
         parts?: Record<string, never>
-        seed?: Record<string, never>
+        /** A root seed applies to every named palette. */
+        seed?: ({ accent: string } | { hue: number; chroma: number } | {}) & {
+          neutral?: string | { hue: number; chroma: number }
+        }
         tokens?: Record<string, never>
         /** Auto removes the attribute and follows the configured default; default selects the base. */
         dials?: WarpDials & { palette?: string }

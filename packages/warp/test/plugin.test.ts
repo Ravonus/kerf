@@ -467,7 +467,8 @@ test('named palettes reject unknown names and unsupported settings before emissi
     { colors: { ocean: '#ffffff' }, themes: { ocean: {} } },
     { themes: { ocean: { parts: { button: { bg: '#000000', text: '#ffffff' } } } } },
     { themes: { ocean: {} }, tokens: { '--warp-color-page': '#ffffff' } },
-    { themes: { ocean: {} }, seed: { hue: 100, chroma: 0.1 } },
+    { themes: { ocean: { seed: { hue: 100, chroma: 0.1 } } } },
+    { themes: { ocean: {} }, seed: { hue: 400, chroma: 0.1 } },
     { themes: { ocean: {} }, parts: { button: { bg: '#000000', text: '#ffffff' } } },
   ])
     expect(code(() => run(input as WarpOptions))).toBe('P115')
@@ -529,4 +530,14 @@ test('reuses exact contrast checks only within a plugin instance', () => {
   expect(result.afterSecond).toBeGreaterThan(result.afterInvalid)
   expect(result.final).toBe(result.afterSecond)
   expect(result.different).toBe(true)
+})
+
+test('a root seed applies to every named palette', () => {
+  const seed = { hue: 100, chroma: 0.1, neutral: { hue: 85, chroma: 0.012 } }
+  const base = run({ seed })
+  const themed = run({ seed, themes: { ocean: {} }, dials: { palette: 'ocean' } })
+  expect(base.tokens.css).toContain('--warp-seed-accent-h:100;--warp-seed-accent-c:0.1')
+  expect(themed.tokens.css).toContain(base.tokens.css!)
+  expect(themed.tokens.css).toContain('--warp-palette-current:ocean')
+  expect(themed.tokens.css).toContain('[data-palette]{--warp-palette-current:default}')
 })
