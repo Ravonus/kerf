@@ -82,8 +82,13 @@ void test('generated overrides match literal glob metacharacters in Oxlint', asy
     })
     assert.equal(result.status, 0, result.stderr)
     const diagnostics = JSON.parse(result.stdout).diagnostics
-    const paths = diagnostics.map((item) => item.filename.replaceAll('\\', '/')).sort()
-    assert.deepEqual(paths, [files[0], files[1], files[2], files[3]].sort())
+    const paths = diagnostics
+      .map((item) => item.filename.replaceAll('\\', '/'))
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+    assert.deepEqual(
+      paths,
+      [files[0], files[1], files[2], files[3]].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
+    )
     assert.ok(diagnostics.every((item) => item.code === 'eslint(max-params)'))
   } finally {
     rmSync(root, { recursive: true, force: true })
