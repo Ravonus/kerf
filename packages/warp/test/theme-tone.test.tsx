@@ -1,5 +1,5 @@
 import { state } from '@weft-js/core'
-import { render } from '@weft-js/core/test'
+import { flush, render } from '@weft-js/core/test'
 import { Button, type Tone } from '../src/Button'
 import { Badge } from '../src/Badge'
 import { Link } from '../src/Type'
@@ -55,7 +55,7 @@ test('emits semantic and named tones, and leaves omitted tones absent', () => {
   expect(nodes[5]?.tagName).toBe('A')
 })
 
-test('updates named tones on existing hosts without inline CSS', () => {
+test('updates named tones on existing hosts without inline CSS', async () => {
   const tone = state('ocean')
   const { container } = render(() => (
     <>
@@ -73,6 +73,7 @@ test('updates named tones on existing hosts without inline CSS', () => {
   ))
   const nodes = [...container.querySelectorAll('[data-tone]')]
   tone.value = 'sunset'
+  await flush()
   expect(nodes).toHaveLength(6)
   expect(
     nodes.map((node) => [
