@@ -12,7 +12,7 @@ read and write a database. An app made with `--db` has one wired up already: a s
 and migrations that apply themselves.
 
 The database layer is [Drizzle](https://orm.drizzle.team), with SQLite, Postgres or MySQL under it. You write queries in
-TypeScript that read like SQL, and they're typed from your schema. This page covers what weft adds around it; for every
+TypeScript that read like SQL, and they're typed from your schema. This page covers what Weft adds around it; for every
 Drizzle query there is, its own docs are the reference.
 
 ## What a new app has
@@ -40,7 +40,7 @@ export const db = createDb({ schema, url: env.DATABASE_URL })
 `src/context.server.ts` returns it as `db`, so every server function and every `load` has it as `ctx.db`. Use `ctx.db`
 in your code rather than importing `db` directly: it's the same client, and a test can hand in another one.
 
-`index.server.ts` ends in `.server.ts` for a reason. The database client must never reach the browser, and weft keeps it
+`index.server.ts` ends in `.server.ts` for a reason. The database client must never reach the browser, and Weft keeps it
 out: importing `@weft-js/start/db` from a file the browser loads is **Q012**. `src/db/schema.ts` is plain table
 definitions, so it's safe to import anywhere, and its types are useful on both sides.
 
@@ -97,7 +97,7 @@ migrations into the server bundle, and the first request after a deploy that use
 second server starting at the same moment waits for the first (Postgres takes a lock), and each migration runs once:
 the database keeps a table, `__weft_migrations`, of the ones it has applied.
 
-weft tells you when the two sides don't match:
+Weft tells you when the two sides don't match:
 
 - **Q015** (from `weft check`): the schema changed since the last `weft db generate`. Run it.
 - **Q014** (at run time): a statement used a table or column the database doesn't have. Usually the same fix.
@@ -179,7 +179,7 @@ export const withOwner = query({
 annotation from you.
 
 Notice the `tags`. A query's tags say which tables it reads, so a mutation that writes one of them refreshes it.
-`withOwner` reads two tables and names both. In development weft watches the SQL each function runs, and warns with
+`withOwner` reads two tables and names both. In development Weft watches the SQL each function runs, and warns with
 **Q011** when it touches a table its tags don't name: a change to that table wouldn't refresh it.
 
 :::pitfall Ownership goes in the `where`

@@ -212,7 +212,7 @@ export const notifications: Doc[] = [
         examples: [
           {
             id: 'NotificationPreferencesWeft',
-            title: 'weft notifications',
+            title: 'Weft notifications',
             note: 'Each change saves on its own. Security alerts must go to email, so that box is locked.',
             stage: 'fill',
             height: 680,

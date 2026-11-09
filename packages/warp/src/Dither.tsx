@@ -137,7 +137,7 @@ export interface DitherProps {
   [attr: string]: unknown
 }
 
-/** A still image or gradient, dithered to warp's inks once, and again only when its size or theme changes (08 §6.7). */
+/** A still image or gradient, dithered to Warp's inks once, and again only when its size or theme changes (08 §6.7). */
 export function Dither({
   src,
   alt,

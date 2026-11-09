@@ -12,7 +12,7 @@ function fontOf(c: CSSStyleDeclaration) {
   return `${c.fontStyle} ${c.fontWeight} ${c.fontSize} ${c.fontFamily}`
 }
 
-/** One row's text and everything around it, read from a real hidden row: nothing here knows warp's padding. */
+/** One row's text and everything around it, read from a real hidden row: nothing here knows Warp's padding. */
 export function metricOf(probe: HTMLElement): Metric | undefined {
   const box = probe.querySelector<HTMLElement>('[data-measure]')
   if (!box) return

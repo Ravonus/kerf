@@ -102,7 +102,7 @@ export function Text({
 
 /**
  * A link (05 §4): underlined, with the underline sweep. `subtle` takes the surrounding ink, and `external` opens a new
- * tab and says so. A bare `<a>` gets warp's colour from the base layer; this adds the rest, and D007 points to it.
+ * tab and says so. A bare `<a>` gets Warp's colour from the base layer; this adds the rest, and D007 points to it.
  */
 export function Link({
   href,

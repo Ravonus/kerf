@@ -45,7 +45,7 @@ export type MatrixGroup = {
   tokens: string[]
   /** `css: { … }` escapes (D023): where, and the properties they set. */
   escapes: { at: string; props: string[] }[]
-  /** Reads a tone it doesn't set, so it takes one from warp's `data-tone` context. */
+  /** Reads a tone it doesn't set, so it takes one from Warp's `data-tone` context. */
   contextTone: boolean
   used: {
     file: string

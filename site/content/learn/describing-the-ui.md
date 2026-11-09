@@ -1,29 +1,29 @@
 # Describing the UI
 
 :::learn
-- How to write your first weft component
+- How to write your first Weft component
 - When and how to split components into files
 - How to add markup to JavaScript with TSX, and JavaScript to markup with braces
 - How to configure components with props, and show things conditionally or as lists
-- Why a weft component runs only once, and how to picture your UI as a tree
+- Why a Weft component runs only once, and how to picture your UI as a tree
 :::
 
-weft is a TypeScript framework for building user interfaces. A user interface is made of small pieces, such as buttons,
-text and images, and weft lets you combine them into reusable, nestable components. From web sites to apps, everything
-on the screen can be broken down into components. In this chapter you'll learn to write, configure and show weft
+Weft is a TypeScript framework for building user interfaces. A user interface is made of small pieces, such as buttons,
+text and images, and Weft lets you combine them into reusable, nestable components. From web sites to apps, everything
+on the screen can be broken down into components. In this chapter you'll learn to write, configure and show Weft
 components. If you know React, most of this will look familiar, with one important difference, which has a page of its
-own: a weft component runs once.
+own: a Weft component runs once.
 
 ## Your first component
 
-A weft app is built from isolated pieces of UI called components. A component is a TypeScript function whose name
+A Weft app is built from isolated pieces of UI called components. A component is a TypeScript function whose name
 starts with a capital letter and which returns markup. Components can be as small as a button or as large as a page.
 Here `Gallery` renders three `Profile` components:
 
 :::demo describe-gallery
 
 Read **[Your first component](/learn/your-first-component)** to learn how to define and use components, and what
-weft's compiler does with them.
+Weft's compiler does with them.
 
 ## Importing and exporting components
 
@@ -53,23 +53,23 @@ export default function HallOfFame() {
 ```
 
 Read **[Importing and exporting components](/learn/importing-and-exporting)** to learn how to split components into
-their own files, and what weft's tools look for in your exports.
+their own files, and what Weft's tools look for in your exports.
 
 ## Writing markup with TSX
 
 Each component is a function that may contain markup the browser shows. That markup is TSX: an HTML-like syntax inside
-TypeScript. It's stricter than HTML: there's one root, and every tag is closed. weft accepts HTML's attribute names and
+TypeScript. It's stricter than HTML: there's one root, and every tag is closed. Weft accepts HTML's attribute names and
 React's, so `class` and `className` both work:
 
 :::demo describe-markup
 
 Read **[Writing markup with TSX](/learn/writing-markup-with-tsx)** to learn how to write valid markup, convert HTML to
-TSX, and use the attributes weft adds, such as `ref`.
+TSX, and use the attributes Weft adds, such as `ref`.
 
 ## JavaScript in TSX with braces
 
 Braces open a window from markup back into JavaScript. Use them to show a variable, call a function, or pass an object.
-In weft, braces are also live: an expression in braces that reads state runs again, by itself, when that state changes.
+In Weft, braces are also live: an expression in braces that reads state runs again, by itself, when that state changes.
 Drag the slider and only the list's font size is written:
 
 :::demo describe-braces
@@ -80,7 +80,7 @@ and why a `.value` read inside braces stays up to date.
 ## Passing props to a component
 
 Components use props to talk to each other. A parent passes information to its children as props, which look like
-HTML attributes but can hold any value: objects, arrays, functions, and markup as `children`. In weft, props are never
+HTML attributes but can hold any value: objects, arrays, functions, and markup as `children`. In Weft, props are never
 stale: the child runs once, and every read of a prop gets the parent's current value.
 
 :::demo props
@@ -90,7 +90,7 @@ Read **[Passing props](/learn/passing-props)** to learn how to pass and read pro
 
 ## Conditional rendering
 
-Your components will often show different things in different situations. In weft you use JavaScript's `? :` and `&&`
+Your components will often show different things in different situations. In Weft you use JavaScript's `? :` and `&&`
 inside the markup, where they stay live. Because the body runs once, an `if` with an early `return` would only check
 once, so the compiler asks you to branch in the markup instead:
 
@@ -102,7 +102,7 @@ happens to the markup and its state when a condition flips.
 ## Rendering lists
 
 You'll often show several components from a collection of data. Use `filter` and `map` in the markup, and give each row
-a `key` that identifies its item, so weft can move rows instead of rebuilding them when the list changes:
+a `key` that identifies its item, so Weft can move rows instead of rebuilding them when the list changes:
 
 :::demo describe-people
 
@@ -111,7 +111,7 @@ large lists fast.
 
 ## Components run once
 
-This is the idea that makes weft different from React. A React component runs again on every change. A weft component
+This is the idea that makes Weft different from React. A React component runs again on every change. A Weft component
 runs once: its body sets things up, and the compiler wires each expression in its markup straight to the DOM node it
 fills. A change runs only the bindings that read it. So there are no hook rules, no dependency arrays and no `memo`,
 and a local variable lives as long as the component:
@@ -123,8 +123,8 @@ the mistakes the compiler catches.
 
 ## Your UI as a tree
 
-weft sees your app as trees. The render tree is your components nested inside each other. The ownership tree has the
-same shape and decides what is cleaned up when part of the page goes away. The module tree is your imports, and weft
+Weft sees your app as trees. The render tree is your components nested inside each other. The ownership tree has the
+same shape and decides what is cleaned up when part of the page goes away. The module tree is your imports, and Weft
 reads it to decide which components need JavaScript in the browser at all:
 
 :::demo describe-tree

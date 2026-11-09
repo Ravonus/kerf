@@ -32,13 +32,13 @@ files, errors and warnings.
 | `test --gate` | The test gate on the diff: fail-before, mutants on changed lines and no weakened tests |
 | `browser <cmd>` | Drives the running app: open, snapshot, act, assert and more (`weft browser help`) |
 | `docs [topic\|code]` | Prints a docs page or a diagnostic (`weft docs props`, `weft docs W014`) |
-| `agents-md [--check]` | Writes AGENTS.md from the installed weft; `--check` exits 1 when it's stale |
+| `agents-md [--check]` | Writes AGENTS.md from the installed Weft; `--check` exits 1 when it's stale |
 | `map [--stdout]` | Writes `.weft/map.md`: what to call in this app |
 | `tasks`, `run <task>` | Lists commands and project tasks; runs a task from `weft.config.ts` |
 | `add <feature>` | Installs a plugin and wires it into the config; also `tailwind`, `auth`, `db` and `rust` |
 | `plugins [list\|explain\|sync\|audit\|approve]` | Plugins, their slots and permissions |
 | `style find\|explain\|matrix` | Style groups |
-| `tokens` | warp's resolved tokens as DTCG, in `.weft/tokens/` |
+| `tokens` | Warp's resolved tokens as DTCG, in `.weft/tokens/` |
 | `lsp` | A language server for editors, with inferred props |
 | `mcp` | These commands as MCP tools, on stdio |
 
@@ -48,7 +48,7 @@ people to stderr. Exit codes: 0 ok, 1 errors found (or a stale AGENTS.md under `
 ## Docs
 
 - `weft docs config`: `weft.config.ts` and every key in it.
-- `weft docs diagnostics`: every code, and which ones the installed weft reports.
+- `weft docs diagnostics`: every code, and which ones the installed Weft reports.
 - `weft docs verify`: `weft browser` and the test gate.
 - `weft docs plugins`: writing a plugin.
 

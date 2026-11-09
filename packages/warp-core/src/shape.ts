@@ -39,7 +39,7 @@ const bar = (width: string): SkeletonPart => ({
   style: `inline-size:${width};block-size:0.7em;${BAR_MARGIN}`,
 })
 
-/** n body lines; the last of several is 60%, as warp's `Skeleton lines`. */
+/** n body lines; the last of several is 60%, as Warp's `Skeleton lines`. */
 function lines(n: number, widths?: string[]): SkeletonBox {
   return column(
     '0',

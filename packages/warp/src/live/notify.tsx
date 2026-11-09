@@ -2,7 +2,7 @@ import { announce, notifyPolicy, type NotifyItem } from '@weft-js/warp-core'
 import { toast } from '../Toast'
 
 /**
- * The inbox's toast policy (07 §4.2) on warp's toaster: `const n = notify({ open: () => inboxOpen.value })`, then
+ * The inbox's toast policy (07 §4.2) on Warp's toaster: `const n = notify({ open: () => inboxOpen.value })`, then
  * `n.push({ title, description, tone, urgent, action })` per arrival. Inbox open: no toast, one announcement after a
  * second of quiet. Closed: a toast each, three at most; a burst collapses to "3 new notifications".
  */

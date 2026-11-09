@@ -204,7 +204,7 @@ function release(doc: Document) {
 /**
  * What warp.flow moves, read from the sheets: the rules that set `--_flow-r` (or `prop`), the reach each family's view() range reads.
  * The list lives in the CSS alone, so the fallback moves what the CSS moves, and the JS names no family: a name here is
- * a word in every build, and weft's purge would keep every family's rules and keyframes for it. Custom properties
+ * a word in every build, and Weft's purge would keep every family's rules and keyframes for it. Custom properties
  * survive a parser that can't read animation-timeline, and a sheet behind @supports is still in the CSSOM.
  */
 function families(doc: Document, prop = '--_flow-r') {

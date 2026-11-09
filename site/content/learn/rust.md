@@ -1,21 +1,21 @@
 # Rust, in depth
 
 :::learn
-- Why you never need Rust to use weft, and where Rust is working for you anyway
-- What weft's compiler does to a component, from parse to DOM code
+- Why you never need Rust to use Weft, and where Rust is working for you anyway
+- What Weft's compiler does to a component, from parse to DOM code
 - How the compiler reaches your machine: a native addon or WebAssembly, with the same output
 - When a server function is worth writing in Rust, and how `native()` and `remote()` run it
 - How the Zod schema stays the one contract between TypeScript and Rust
 :::
 
-You never need Rust to create, run, build or check a weft app, on any platform. Rust is recommended for two things, and
-required for neither: it's the language weft's compiler is written in, which reaches you prebuilt; and it's a language
+You never need Rust to create, run, build or check a Weft app, on any platform. Rust is recommended for two things, and
+required for neither: it's the language Weft's compiler is written in, which reaches you prebuilt; and it's a language
 you can choose for a server function that does heavy CPU work. This page covers both, so you know what's happening
 underneath and when it's worth writing Rust yourself.
 
 ## The compiler, from the outside
 
-Every `.tsx` file in a weft app goes through one compiler, `crates/weft-compiler` in the weft repository. It's written in
+Every `.tsx` file in a Weft app goes through one compiler, `crates/weft-compiler` in the Weft repository. It's written in
 Rust on top of [Oxc](https://oxc.rs), a fast JavaScript and TypeScript toolchain. You meet it in three places:
 
 - **`weft dev` and `weft build`**, through the Vite plugin, which compiles each component as it's served or bundled.
@@ -27,31 +27,31 @@ All three call the same code, so a diagnostic you see in the editor is the one `
 ### Native addon or WebAssembly
 
 The compiler is built two ways from one crate: a Node addon for each common platform, and a WebAssembly module that runs
-anywhere. When weft starts, it takes the fastest one that's there:
+anywhere. When Weft starts, it takes the fastest one that's there:
 
-1. a native addon built in a checkout of the weft repository, if there is one;
+1. a native addon built in a checkout of the Weft repository, if there is one;
 2. the prebuilt addon for this platform, an optional dependency a normal install adds by itself;
 3. the WebAssembly build that ships inside `@weft-js/core`.
 
-The output is the same byte for byte, whichever runs. weft's own test suite holds the two to that, so the addon only
+The output is the same byte for byte, whichever runs. Weft's own test suite holds the two to that, so the addon only
 changes how long a build takes, never what it produces. `weft doctor` tells you which you have:
 
 ```bash
 weft doctor
 ```
 
-It prints the weft version and runtime, a line such as `compiler: native addon (@weft-js/compiler-…)` or
-`compiler: WASM, same output as the addon`, and whether `cargo` is on your `PATH`, adding that weft doesn't need it.
+It prints the Weft version and runtime, a line such as `compiler: native addon (@weft-js/compiler-…)` or
+`compiler: WASM, same output as the addon`, and whether `cargo` is on your `PATH`, adding that Weft doesn't need it.
 `weft check --verbose` prints the same compiler line after its report.
 
 :::note When you'd see the WASM line
-On a platform with no prebuilt addon, or an install that skipped optional dependencies, weft runs the WebAssembly build.
+On a platform with no prebuilt addon, or an install that skipped optional dependencies, Weft runs the WebAssembly build.
 Everything works; builds of a large app are slower. Nothing to fix, and `weft doctor` doesn't fail over it.
 :::
 
 ## The compiler, from the inside
 
-You don't need this section to write weft. Read it when you want to know why a diagnostic fires, or why some patterns
+You don't need this section to write Weft. Read it when you want to know why a diagnostic fires, or why some patterns
 cost nothing at run time.
 
 Each file is parsed once. Then four passes run over that one tree:
@@ -63,7 +63,7 @@ Each file is parsed once. Then four passes run over that one tree:
 2. **Transform** applies the plan to the same tree. Destructured props become live reads of `props`, so
    `({ name }) => <p>{name}</p>` keeps following the parent. A keyed `.map` in JSX becomes a `For` that keeps each row by
    its key. Style groups lower to plain attributes.
-3. **Emit** lowers JSX to code against weft's runtime. For the browser, each element tree becomes a template that's
+3. **Emit** lowers JSX to code against Weft's runtime. For the browser, each element tree becomes a template that's
    parsed once and cloned for each use, with one small binding for each dynamic part and delegated events. For the
    server, it becomes code that writes HTML.
 4. **Facts** for the rest of the project: what each top-level binding needs from the browser (so partial hydration can
@@ -86,7 +86,7 @@ says what it found, why it matters and how to fix it, and many come with an auto
 
 ### Building the compiler yourself
 
-This is for working on weft itself, in a checkout of the repository, not for building an app. `pnpm run setup` at the
+This is for working on Weft itself, in a checkout of the repository, not for building an app. `pnpm run setup` at the
 repository root builds everything once, the compiler included. After you change the crate, rebuild the addon and the
 WebAssembly module from `packages/core`:
 
@@ -95,7 +95,7 @@ cd packages/core
 pnpm run build:native
 ```
 
-The crate pins its Rust version in `rust-toolchain.toml`, and rustup picks it up by itself. In a checkout, weft refuses to
+The crate pins its Rust version in `rust-toolchain.toml`, and rustup picks it up by itself. In a checkout, Weft refuses to
 load an addon that's older than the crate's source, with a message asking you to rebuild, so you can't
 test a stale compiler by accident.
 
@@ -136,7 +136,7 @@ weft add rust media            # native(): an in-process addon
 weft add rust search --remote  # remote(): a sidecar
 ```
 
-This is the one part of weft that needs a Rust toolchain (`cargo`, from [rustup.rs](https://rustup.rs)), and only for this
+This is the one part of Weft that needs a Rust toolchain (`cargo`, from [rustup.rs](https://rustup.rs)), and only for this
 crate. Here's what it writes for `media`. First, the one place Rust targets are named:
 
 ```ts
@@ -252,7 +252,7 @@ The [Rust reference](/reference/rust) has the rest: every option, the deployment
   same output. `weft doctor` says which.
 - The compiler parses each file once with Oxc, analyzes it (the W-codes), transforms props and lists, emits templates and
   bindings, and records facts that `weft check` joins across files.
-- `pnpm run build:native` in `packages/core` is for working on weft itself.
+- `pnpm run build:native` in `packages/core` is for working on Weft itself.
 - Write a server function in Rust at about a millisecond of CPU per call. `native()` runs it in process; `remote()` runs a
   sidecar. `weft add rust` sets either up.
 - The Zod schema is the contract. The Rust types are generated from it, so a schema change stops `cargo` where the Rust no

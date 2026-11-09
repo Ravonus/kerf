@@ -1,26 +1,26 @@
 # Installation
 
 :::learn
-- How to make a new weft app, and every option the generator takes
+- How to make a new Weft app, and every option the generator takes
 - What each file in a new app is for
 - How to run, check, build and start it, on Node, Bun or Deno
-- How to add weft to a Vite project you already have
+- How to add Weft to a Vite project you already have
 - What changes if you're coming from React
 :::
 
-This page takes you from an empty folder to a running weft app, then walks through what you got. You need Node 26 and
-npm. Once weft is published, Bun or Deno can take Node's place: the CLI, `weft dev` and `weft build` all run on either one,
+This page takes you from an empty folder to a running Weft app, then walks through what you got. You need Node 26 and
+npm. Once Weft is published, Bun or Deno can take Node's place: the CLI, `weft dev` and `weft build` all run on either one,
 with no Node installed.
 
-Rust isn't needed to use weft. The compiler comes with it as WebAssembly, which runs anywhere, and a native addon for your
+Rust isn't needed to use Weft. The compiler comes with it as WebAssembly, which runs anywhere, and a native addon for your
 platform installs by itself and makes builds faster. Rust only comes in if you choose to write
 [Rust server functions](/learn/rust). The next page, [Editor and TypeScript setup](/learn/setup), says more about the two
 builds of the compiler.
 
 ## Create an app
 
-weft isn't on npm yet, so for now an app is made from a checkout of the repo, and building that checkout's compiler does
-take Rust (`cargo`). Once weft is published, `npm create @weft-js` replaces the first two steps and no Rust is involved.
+Weft isn't on npm yet, so for now an app is made from a checkout of the repo, and building that checkout's compiler does
+take Rust (`cargo`). Once Weft is published, `npm create @weft-js` replaces the first two steps and no Rust is involved.
 
 ### 1. Get the repo
 
@@ -40,7 +40,7 @@ node weft/packages/create/scripts/local.mjs new my-app --yes --db none
 `--db none` leaves out the database so there's nothing to set up. Leave off `--yes` and it asks you each question in turn,
 with the default already picked: arrow keys move, Enter chooses.
 
-Once weft is published, the same app is one command, and it takes the same flags:
+Once Weft is published, the same app is one command, and it takes the same flags:
 
 ```bash
 npm create @weft-js -- my-app --yes --db none
@@ -83,7 +83,7 @@ Each question the generator asks has a flag, so an agent or a CI job never sees 
 | Flag | Values | Default | What it does |
 |---|---|---|---|
 | `[dir]` | a folder name | asked, `my-weft-app` with `--yes` | Where the app goes. It must be missing or empty |
-| `--ui` | `warp`, `headless`, `tailwind`, `none` | `warp` | The UI kit. `headless` gives you warp's behaviour and tokens under your own markup |
+| `--ui` | `warp`, `headless`, `tailwind`, `none` | `warp` | The UI kit. `headless` gives you Warp's behaviour and tokens under your own markup |
 | `--db` | `sqlite`, `postgres`, `mysql`, `none` | `sqlite` | A database, and a todo page that uses it |
 | `--layer` | `drizzle`, `prisma`, `native` | `drizzle` | How the app talks to the database. `native` is SQL migrations with no ORM |
 | `--auth`, `--no-auth` | | on when there's a database | Sign-in with Better Auth, and a login page |
@@ -114,13 +114,13 @@ for the published generator.
 
 :::note Making it from a checkout
 `local.mjs` keeps the packed tarballs in `~/.weft/local` (set `WEFT_LOCAL_DIR` to move it). After you pull new changes to
-weft, run `node weft/packages/create/scripts/local.mjs refresh my-app` to rebuild what changed and put the new
+Weft, run `node weft/packages/create/scripts/local.mjs refresh my-app` to rebuild what changed and put the new
 tarballs in the app, then restart `weft dev`.
 :::
 
 ## What's in a new app
 
-Here is the app `--yes` makes, with every default: warp, SQLite through Drizzle, and Better Auth.
+Here is the app `--yes` makes, with every default: Warp, SQLite through Drizzle, and Better Auth.
 
 ```text
 my-app/
@@ -163,14 +163,14 @@ files and three routes. The parts worth knowing on day one:
   them; the code inside only ever runs on the server. [Server functions](/learn/server-functions) explains how.
 - **A `.server.ts` file** never reaches the browser. The database, the auth secret and the environment live in those.
 - **`weft.config.ts`** is short on purpose. `site` gives every page its title pattern and description, and `plugins`
-  lists what extends weft, here `warp()`. The [config reference](/reference/config) lists every key.
+  lists what extends Weft, here `warp()`. The [config reference](/reference/config) lists every key.
 - **`package.json`'s scripts** are all `weft` commands: `dev`, `build`, `check`, `typecheck` (which is `weft tsc`),
   `start`, and `db:generate` when there's a database. A script that runs something other than `weft` gets a P002
   warning, because an agent can't see what it does. Project commands go in `tasks` in `weft.config.ts` instead.
-- **`AGENTS.md`** is written by `weft agents-md` right after the install, from the weft you installed. Don't edit it:
+- **`AGENTS.md`** is written by `weft agents-md` right after the install, from the Weft you installed. Don't edit it:
   [Working with AI agents](/learn/working-with-agents) explains what it holds and how to regenerate it.
 
-A `.weft/` folder also appears the first time you run `weft dev` or `weft check`. It holds files weft generates, such as
+A `.weft/` folder also appears the first time you run `weft dev` or `weft check`. It holds files Weft generates, such as
 `.weft/map.md`, and only the plugin lock in it is committed.
 
 ## Run, check and build
@@ -181,7 +181,7 @@ These are the commands you'll use every day. Each one is `npx weft <command>` wi
 |---|---|
 | `weft dev` | The dev server, with the page updating as you save. `--port 3000` picks the port |
 | `weft check` | Reads the whole app and reports mistakes, each with a code, a reason and a fix |
-| `weft tsc` | Type-checks the project, with the prop types weft works out for you |
+| `weft tsc` | Type-checks the project, with the prop types Weft works out for you |
 | `weft build` | The production build, into `.output/` |
 | `weft start` | Runs `.output/` |
 | `weft db generate` | A migration for what changed in `src/db/schema.ts`. It applies on the next request |
@@ -227,9 +227,9 @@ key for you. [Runtimes and deploying](/learn/deploying) covers hosts and presets
 `.server.ts` files and pick the runtime in the config, so the build and the code agree.
 :::
 
-## Add weft to an existing Vite project
+## Add Weft to an existing Vite project
 
-You don't need `@weft-js/start` to use weft. A Vite app can use weft's components and reactivity alone, with no server
+You don't need `@weft-js/start` to use Weft. A Vite app can use Weft's components and reactivity alone, with no server
 routes, and the same checks work on it.
 
 You need Vite 8, and two packages: `@weft-js/core` (the runtime and its Vite plugin) and `@weft-js/cli` as a dev
@@ -249,7 +249,7 @@ node weft/packages/create/scripts/local.mjs refresh my-vite-app
 
 `refresh` works with npm only, and stops if it finds another package manager's lockfile.
 
-Add the plugin to `vite.config.ts`. It compiles `.tsx` and `.jsx` files with weft's compiler:
+Add the plugin to `vite.config.ts`. It compiles `.tsx` and `.jsx` files with Weft's compiler:
 
 <!-- example: skip a Vite config, which lives outside src; the scratch app is a @weft-js/start app with its own -->
 ```ts
@@ -259,7 +259,7 @@ import weft from '@weft-js/core/vite'
 export default defineConfig({ plugins: [weft()] })
 ```
 
-Tell TypeScript that TSX is weft's. These are the keys that matter; keep the rest of your `tsconfig.json`:
+Tell TypeScript that TSX is Weft's. These are the keys that matter; keep the rest of your `tsconfig.json`:
 
 ```json
 {
@@ -303,19 +303,19 @@ A few things to know about this setup:
   `.tsx` and `.jsx` file in the project.
 - **Your `vite` scripts get P002 warnings**, since they aren't `weft` commands. That's advice for agents, not an error:
   move them into `tasks` in a `weft.config.ts` when you want them listed by `weft tasks`.
-- **In dev, the plugin adds weft's devtools to every page**, so `weft browser` and the in-page agent work here too.
+- **In dev, the plugin adds Weft's devtools to every page**, so `weft browser` and the in-page agent work here too.
 - **A production build drops CSS nothing can reach.** `weft({ purge: { keep: ['knob'] } })` keeps a name only built at
   run time, and `weft({ purge: false })` turns it off.
 
-:::pitfall React and weft TSX in one project
-`jsxImportSource` applies to the whole project, and weft's plugin compiles every `.tsx` and `.jsx` file Vite loads. A
-React component compiled as weft's won't work: weft has no hooks, and it isn't run the way React runs it. Move to
-weft one app at a time, not one component at a time.
+:::pitfall React and Weft TSX in one project
+`jsxImportSource` applies to the whole project, and Weft's plugin compiles every `.tsx` and `.jsx` file Vite loads. A
+React component compiled as Weft's won't work: Weft has no hooks, and it isn't run the way React runs it. Move to
+Weft one app at a time, not one component at a time.
 :::
 
 ## Coming from React
 
-Most of what you write in TSX carries over. weft accepts React's prop names on native elements: `className`, `htmlFor`,
+Most of what you write in TSX carries over. Weft accepts React's prop names on native elements: `className`, `htmlFor`,
 `tabIndex`, camelCase SVG attributes, a `style` object, and `onChange` firing on every keystroke as it does in React. The
 [From React](/reference/react) reference lists each one.
 
@@ -323,35 +323,35 @@ What doesn't carry over is the model underneath. A component runs once, state is
 compiler wires each read to the DOM. So the habits that come with hooks have no place. `weft check` reports most of
 them; the hooks themselves are in the catalog but not reported yet, so look for those yourself:
 
-| A React habit | What weft reports | The weft way |
+| A React habit | What Weft reports | The Weft way |
 |---|---|---|
 | `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`, a custom `useX()` hook, a dependency array | W020–W029 (in the catalog, not reported yet) | `state`, `watch`, `derived`, `ref={el}`, plain functions |
 | `useState(props.value)` written as `state(props.value)` | W005: the box never follows the prop | `state.linked(() => props.value)` |
 | Computing from a prop in the component body | W001: the body runs once | `derived(() => …)`, or compute in the JSX |
 | `{count}` for a state value | W015: that renders the box | `{count.value}` |
-| `data-open={true}` on an element | W043: weft writes `data-open=""`, not `"true"` | `data-open` for a flag, `data-open="true"` for the word |
+| `data-open={true}` on an element | W043: Weft writes `data-open=""`, not `"true"` | `data-open` for a flag, `data-open="true"` for the word |
 | `key={crypto.randomUUID()}` | W044: the key differs on server and client | A stable id from the data |
 | `bind:value` on an `<input>` | W061: `bind:` is for component props | `value` and `onChange` |
 
-[Thinking in weft](/learn/thinking-in-weft) explains the model, and [Components run once](/learn/components-run-once)
+[Thinking in Weft](/learn/thinking-in-weft) explains the model, and [Components run once](/learn/components-run-once)
 shows why the body isn't a render function.
 
-:::deepdive Why weft keeps React's prop names
+:::deepdive Why Weft keeps React's prop names
 Code that agents and people write is full of React's names, and most of them have one obvious meaning. Rejecting
 `className` would only add a step. The compiler resolves the names it can see while it compiles, so they cost nothing at
 run time, and a `{...spread}` resolves its keys only in an app that has one. Hooks are different: they assume a
-component re-runs, and in weft it doesn't, so a hook would silently do the wrong thing. That's why one is an error and
+component re-runs, and in Weft it doesn't, so a hook would silently do the wrong thing. That's why one is an error and
 the other just works.
 :::
 
 ## Recap
 
-- `local.mjs new my-app` makes an app from a checkout today; `npm create @weft-js` will once weft is published. Both take
+- `local.mjs new my-app` makes an app from a checkout today; `npm create @weft-js` will once Weft is published. Both take
   the same flags, and `--yes` takes every default.
 - `src/routes` is your pages, `src/server` your server functions, and `.server.ts` files never reach the browser.
 - `weft dev` runs the app, `weft check` checks it, `weft build` builds it and `weft start` runs the build.
 - Node, Bun and Deno all work: `runtime` in the config picks what the build targets.
-- A Vite app can use weft alone: the `weft()` plugin, `jsxImportSource`, and `render` from `@weft-js/core/dom`.
+- A Vite app can use Weft alone: the `weft()` plugin, `jsxImportSource`, and `render` from `@weft-js/core/dom`.
 - Rust is only for code you choose to write in Rust.
 
 Next, set up your editor and TypeScript in [Editor and TypeScript setup](/learn/setup).

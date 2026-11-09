@@ -108,7 +108,7 @@ export const stagger = (el: Element, index: number) =>
 const leaving = new WeakMap<Element, () => void>()
 
 /**
- * The close contract every warp overlay keeps, and the hook for your own exits: `data-state="closed"` goes on, the
+ * The close contract every Warp overlay keeps, and the hook for your own exits: `data-state="closed"` goes on, the
  * animation or transition the CSS gives that state plays out, and only then does `done` hide the element. With
  * nothing to play (no rule, reduced motion with none, a test DOM) `done` runs at once. `stay()` cancels a pending
  * leave when the element opens again before it finishes.

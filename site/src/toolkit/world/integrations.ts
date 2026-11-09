@@ -50,7 +50,7 @@ export const INTEGRATIONS: Integration[] = [
     summary:
       'Tie new errors to the deploy that caused them.',
     state: 'connected',
-    detail: 'weft · 4 projects',
+    detail: 'Weft · 4 projects',
     can: ['Read releases'],
   },
 ]

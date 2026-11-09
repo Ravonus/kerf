@@ -3,7 +3,7 @@
 Status: 2026-10-31. Audit and evidence: [../../research/41-warp-audit.md](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/research/41-warp-audit.md). Keeps
 [SIGNATURE.md](SIGNATURE.md); where this changes it, it says so.
 
-## 1. What warp is
+## 1. What Warp is
 
 A shadcn clone is a pile of quiet boxes. warp is **a loom**: thin threads under tension, and one shuttle that carries
 colour across them. Every decision comes from that picture.
@@ -14,14 +14,14 @@ colour across them. Every decision comes from that picture.
 | Weft | the sweep | Crosses left to right, in accent, never rewinds. Untouched |
 | **Shuttle** | the one moving highlight in a group | One per group. It never fades between items: it travels |
 | **Tension** | press and release | A press takes up slack at once. Release settles on a spring |
-| **Pick** | a single pass of weft | One line drawn across a surface as it arrives, then gone |
+| **Pick** | a single pass of Weft | One line drawn across a surface as it arrives, then gone |
 | Selvedge | the finished edge | Focus, selected rows and the open panel's edge are drawn, not switched on |
 
 The dither belongs to `claude/warp-dither` and is the loom's cloth at a distance. This pass adds no texture.
 
 ## 2. Two clocks
 
-The audit's main finding is that the first 150 ms is empty. So warp runs two clocks, and every interaction uses both.
+The audit's main finding is that the first 150 ms is empty. So Warp runs two clocks, and every interaction uses both.
 
 - **The touch clock answers the hand.** 0–120 ms, front-loaded. Hover colour is instant in and fades out over 160 ms.
   Press is instant. This is what makes it feel wired to the pointer.
@@ -109,7 +109,7 @@ case, but that is a loading decision for the framework, not this pass.
 
 ## 5. Select, by construction
 
-`Select` is warp's on every device: a `button[role=combobox]` and warp-core's `listbox()`, a popover or, on a phone, a sheet.
+`Select` is Warp's on every device: a `button[role=combobox]` and warp-core's `listbox()`, a popover or, on a phone, a sheet.
 A hidden real `<select>` stays the form control and the `change` event, so no consumer changes, and with scripting off it is
 what shows. `appearance: base-select` was tried first and dropped: it left Safari, Firefox and every touch device on the OS
 popup, and the owner wants no browser-drawn control anywhere. `CompactSelect` is the same list for table rows and pagers,
@@ -117,7 +117,7 @@ with no `<option>` until it opens.
 
 ## 6. Size
 
-warp's kit was 7.57 KB against the 7.00 KB allowance before this pass, and 9.22 KB once it added the custom Select. It was
+Warp's kit was 7.57 KB against the 7.00 KB allowance before this pass, and 9.22 KB once it added the custom Select. It was
 6.36 KB after two changes of construction, then the scripted Select came back on purpose, and the allowance is now 11 KB
 (`evals/gates/warp-exit.mjs`). Measured with brotli 11, whole page with one component, runtime included: Select 15.04 KB against
 10.63 KB for the base-select version, so **4.42 KB** more; Input 10.27 KB; CompactSelect 10.21 KB; NumberField 11.29 KB, 1.02 KB

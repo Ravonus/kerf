@@ -3,7 +3,7 @@ import type { Doc } from '../types.ts'
 export const typographyDocs: Doc[] = [
   {
     component: 'Icon',
-    summary: "One icon by name, from warp's set.",
+    summary: "One icon by name, from Warp's set.",
     use: {
       when: ['A picture beside a word, or a label on a button'],
       instead: [{ name: 'Button', why: 'it can be pressed: use its icon prop' }],
@@ -157,7 +157,7 @@ export const typographyDocs: Doc[] = [
   },
   {
     component: 'Text',
-    summary: "Any text, in one of warp's roles. A size, weight or colour is never a prop.",
+    summary: "Any text, in one of Warp's roles. A size, weight or colour is never a prop.",
     use: {
       when: ["Every piece of text that isn't a heading"],
       instead: [{ name: 'Heading', why: 'it titles a section' }],
@@ -228,7 +228,7 @@ export const typographyDocs: Doc[] = [
     ],
     a11yNotes: [
       '`role` here is a look, not an ARIA role: it never reaches the HTML `role` attribute.',
-      "Every text colour meets contrast on warp's surfaces, except `faint`, which is for what people can do without.",
+      "Every text colour meets contrast on Warp's surfaces, except `faint`, which is for what people can do without.",
     ],
     propDocs: {
       role: 'The look: `display`, `title`, `heading`, `body`, `label`, `caption`, `eyebrow` or `code`.',

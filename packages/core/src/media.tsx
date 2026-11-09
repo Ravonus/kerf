@@ -66,7 +66,7 @@ export interface MediaProps {
   [attr: string]: unknown
 }
 
-/** warp's phone breakpoint: under 600 px a fractional width is the full viewport. */
+/** Warp's phone breakpoint: under 600 px a fractional width is the full viewport. */
 const PHONE = '(max-width: 599px)'
 
 /**
@@ -199,7 +199,7 @@ function timed({
 
 /**
  * One source, everything automatic: `<Media src={hero} alt="…" />`. Renders `<picture>` with the efficient formats
- * when the asset has them (AVIF isn't in every engine weft targets: iOS 15), else one `<img>`.
+ * when the asset has them (AVIF isn't in every engine Weft targets: iOS 15), else one `<img>`.
  */
 export function Media(props: MediaProps) {
   return untrack(() =>

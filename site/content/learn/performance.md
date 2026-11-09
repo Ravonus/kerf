@@ -1,14 +1,14 @@
 # Performance and bundle size
 
 :::learn
-- Why a weft app does little work on each change, and what the compiler does to get there
+- Why a Weft app does little work on each change, and what the compiler does to get there
 - The few habits that keep lists fast: keys, stable items and one entry per row
 - How islands, server-only code and lazy slots keep JavaScript off the page
 - How to measure what you ship and what a change costs
-- How weft compares with other stacks, with the numbers and their limits
+- How Weft compares with other stacks, with the numbers and their limits
 :::
 
-Most of weft's speed is something you get by writing ordinary components. There's no memo to remember and no dependency
+Most of Weft's speed is something you get by writing ordinary components. There's no memo to remember and no dependency
 list to keep right. But there are a few patterns that undo it, mostly around lists, and the compiler can only warn about
 them. This page explains where the speed comes from, so those patterns make sense, then shows how to measure.
 
@@ -18,7 +18,7 @@ In React, a state change runs the component again, builds a new tree of elements
 find what to change in the DOM. That's a lot of work to find out that one number moved, which is why React has
 `memo`, `useMemo` and `useCallback`.
 
-A weft component runs once. The compiler reads its JSX and wires each reactive read straight to the DOM node that shows
+A Weft component runs once. The compiler reads its JSX and wires each reactive read straight to the DOM node that shows
 it. When a box changes, the bindings that read it run, and nothing else:
 
 :::demo getting-started
@@ -27,7 +27,7 @@ Pressing the button writes `inCart.value`. One text node changes. `Product` does
 again, and there's no tree to compare.
 
 :::deepdive What the compiler turns JSX into
-weft's compiler is written in Rust on top of the Oxc parser ([Rust, in depth](/learn/rust) covers it). For the browser,
+Weft's compiler is written in Rust on top of the Oxc parser ([Rust, in depth](/learn/rust) covers it). For the browser,
 each element tree becomes a template, parsed once by the browser and cloned for each use, plus one small binding for
 each dynamic part. Roughly:
 
@@ -88,7 +88,7 @@ checks each of them.
 ### Give every row a key
 
 `items.map(item => <Row key={item.id} … />)` is a keyed list: each key keeps its row, its DOM nodes and its state. Without
-a key over objects, weft can't tell a moved row from a new one. That's W010, with an autofix to `key={item.id}` when items
+a key over objects, Weft can't tell a moved row from a new one. That's W010, with an autofix to `key={item.id}` when items
 have an `id`. Over strings and numbers, the value is the key.
 
 ### Change only what changed
@@ -127,7 +127,7 @@ export function PriceList() {
 ```
 
 The line that matters is the `map`: the product that changed gets a new object, and every other product is the same
-object as before. weft's list sees that only one row's item changed and updates that row.
+object as before. Weft's list sees that only one row's item changed and updates that row.
 
 :::pitfall New objects for every item
 `products.value = products.value.map(p => ({ ...p, price: p.price * 0.9 }))` gives every item a new identity, even if
@@ -221,7 +221,7 @@ export function Orders(
 }
 ```
 
-Two readers of `sum` share one computation. In React you'd reach for `useMemo` here; in weft this is the normal way to
+Two readers of `sum` share one computation. In React you'd reach for `useMemo` here; in Weft this is the normal way to
 write it.
 
 `untrack(() => …)` reads without subscribing: the value is read once and the result never updates. It's for the rare case
@@ -286,13 +286,13 @@ reference](/reference/verify) has the commands.
 downloads. Compress them the way your host does (brotli, usually) before you compare sizes. `.weft/hydration.json` says
 which islands load when.
 
-:::note Inside the weft repository
+:::note Inside the Weft repository
 The framework holds itself to size budgets with `node packages/core/scripts/size.mjs`, which builds a set of fixture apps
-and reports their brotli sizes, and to speed with the benchmarks in `evals/`. These are for working on weft itself, not
+and reports their brotli sizes, and to speed with the benchmarks in `evals/`. These are for working on Weft itself, not
 commands for your app. `CONTRIBUTING.md` says when to run them.
 :::
 
-## How weft compares
+## How Weft compares
 
 The repository builds the same dashboard in six stacks: a shell with a sidebar and menus, and a 200-row table with
 sorting, filtering, selection, paging and a live cell. Each uses the latest stable versions and a plain `vite build`.
@@ -300,8 +300,8 @@ These are the numbers from the run on 2 November 2026, as the home page shows th
 
 | Stack | JS (brotli) | CSS (brotli) | First paint |
 |---|---|---|---|
-| weft, no warp | 6.6 KB | 1.4 KB | 88 ms |
-| weft + warp | 23.1 KB | 19.3 KB | 156 ms |
+| Weft, no Warp | 6.6 KB | 1.4 KB | 88 ms |
+| Weft + Warp | 23.1 KB | 19.3 KB | 156 ms |
 | Solid + Kobalte | 47.4 KB | 1.4 KB | 124 ms |
 | React + Radix | 98.3 KB | 1.4 KB | 200 ms |
 | React + Zustand | 98.4 KB | 1.4 KB | 204 ms |
@@ -310,16 +310,16 @@ These are the numbers from the run on 2 November 2026, as the home page shows th
 Read them with their limits:
 
 - **Compare like with like.** "weft, no warp", Solid, and the two Radix rows share one hand-written stylesheet, so they're
-  the fair framework comparison. warp and MUI each bring a design system, so compare those two as kits. warp ships more
+  the fair framework comparison. Warp and MUI each bring a design system, so compare those two as kits. Warp ships more
   CSS than the rest because it's a whole design system, where the others share one small sheet (MUI keeps its styles in
   its JavaScript).
-- **Smaller isn't always faster to paint.** weft + warp is a quarter of the JavaScript of React + Radix, but Solid +
+- **Smaller isn't always faster to paint.** Weft + Warp is a quarter of the JavaScript of React + Radix, but Solid +
   Kobalte paints its first frame sooner. The table has both columns for that reason.
-- **Kits differ in what they do.** Radix and Kobalte add menu keyboard handling and focus traps that the no-warp weft page
-  doesn't have, and warp keeps some closed menus mounted. `benchmarks/compare/README.md` lists every difference.
+- **Kits differ in what they do.** Radix and Kobalte add menu keyboard handling and focus traps that the no-warp Weft page
+  doesn't have, and Warp keeps some closed menus mounted. `benchmarks/compare/README.md` lists every difference.
 
 The home page also has a speed table against Solid and React on the usual benchmark operations (create, update, swap and
-remove rows). weft wins some rows and loses others, and rows where the rounds overlap are marked as too close to call.
+remove rows). Weft wins some rows and loses others, and rows where the rounds overlap are marked as too close to call.
 Those losses are on the page on purpose.
 
 ## Recap

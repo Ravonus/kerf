@@ -57,7 +57,7 @@ export interface SiteConfig {
   /** `'auto'` = the generated card (research 20 §4, not built yet), or a path/URL with its size. */
   /** A path or URL; `'auto'` (the default) is the generated card, `false` no image at all. */
   image?: false | string | { url: string; width?: number; height?: number; alt?: string }
-  /** The generated card's look, over what warp and the text plugin give it. */
+  /** The generated card's look, over what Warp and the text plugin give it. */
   card?: CardTheme
   twitter?: {
     card?: 'summary' | 'summary_large_image' | 'app' | 'player'

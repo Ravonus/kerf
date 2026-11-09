@@ -1,14 +1,14 @@
 # Theming
 
 :::learn
-- What warp's six dials are, and how they set the look through `data-*` attributes
+- What Warp's six dials are, and how they set the look through `data-*` attributes
 - How dark mode works, and how to add a theme switch that remembers the choice
 - How to scope a theme to part of a page
 - What the `--warp-*` tokens are, and how to set your brand colour and override a token safely
 - How to name your own colours, retune the system, restyle each part, and ship named themes
 :::
 
-[Using warp](/learn/warp) said that warp's look comes from tokens, so it follows the theme and the dials with no change
+[Using Warp](/learn/warp) said that Warp's look comes from tokens, so it follows the theme and the dials with no change
 to your code. This page is about those dials and tokens: what they are, how to set them for a whole app or one corner of
 a page, and how your own CSS and canvases can follow them too.
 
@@ -29,7 +29,7 @@ element for what's inside it:
 | `density` | `compact`, `cozy`, `comfortable` | `cozy` |
 | `motion` | `full`, `reduce` | follows the system's `prefers-reduced-motion` |
 | `fields` | `floating`, `classic` | `floating` |
-| `flair` | `sweep`, `none` | warp's own choice per component |
+| `flair` | `sweep`, `none` | Warp's own choice per component |
 
 - **theme** is light or dark.
 - **expression** is how much personality the page has. `quiet` is plain and calm, `balanced` is the default, and `vivid`
@@ -37,20 +37,20 @@ element for what's inside it:
 - **density** scales the space steps and control heights, for a dense admin table or a roomy marketing page.
 - **motion** turns animation down. Under `reduce`, an animation runs at most once and spinners become an opacity pulse.
 - **fields** puts every field's label in the border (`floating`) or above it (`classic`).
-- **flair** turns warp's signature sweep on for buttons and surfaces too, or off.
+- **flair** turns Warp's signature sweep on for buttons and surfaces too, or off.
 
 Because they are attributes, CSS does all the work. Switching a dial writes one attribute; no component runs again, and
 there is no theme object passed through your tree.
 
 :::note React developers
-In React a theme is often a context provider and a hook in every component that reads it. weft has no theme context. The
+In React a theme is often a context provider and a hook in every component that reads it. Weft has no theme context. The
 dials are attributes and the tokens are CSS custom properties, so the browser resolves them per element, on the server's
 HTML as much as on the client, and changing one never re-runs a component.
 :::
 
 ## Dark mode
 
-With no `data-theme` anywhere, warp follows the system: a reader with a dark OS gets the dark theme, and it changes the
+With no `data-theme` anywhere, Warp follows the system: a reader with a dark OS gets the dark theme, and it changes the
 moment they switch. Most apps can stop there.
 
 To let people choose, write the dial with `setDial` from `@weft-js/warp`. `persist: true` remembers the choice in
@@ -156,7 +156,7 @@ attribute itself is simpler, as in the demo: `data-theme={theme.value}`.
 
 ## Tokens
 
-Every value warp draws with is a CSS custom property named `--warp-*`. A few of the families:
+Every value Warp draws with is a CSS custom property named `--warp-*`. A few of the families:
 
 | Family | Examples |
 |---|---|
@@ -190,7 +190,7 @@ Figma, Style Dictionary or Terrazzo.
 
 ## Your brand: the seed
 
-warp's colours are derived from a **seed**. Give `warp()` your brand accent and every accent token, in both themes and
+Warp's colours are derived from a **seed**. Give `warp()` your brand accent and every accent token, in both themes and
 at every expression, is worked out from it:
 
 ```ts
@@ -202,8 +202,8 @@ export default defineConfig({
 })
 ```
 
-The build runs warp's contrast check on the result: every text and fill pair, and the focus ring, at every dial stop.
-warp fits the seed so that it passes; what can still fail is a token you override yourself.
+The build runs Warp's contrast check on the result: every text and fill pair, and the focus ring, at every dial stop.
+Warp fits the seed so that it passes; what can still fail is a token you override yourself.
 
 ## Overriding a token
 
@@ -237,7 +237,7 @@ everywhere, and keeping it in a layer means your own unlayered CSS can still cha
 
 ## Your own colours, parts and themes
 
-The seed and tokens retune what warp already draws. For more than that, `warp()` takes four more options. They work
+The seed and tokens retune what Warp already draws. For more than that, `warp()` takes four more options. They work
 like a Tailwind config: name things once, then use the names everywhere.
 
 ```ts
@@ -359,7 +359,7 @@ export function Progress() {
 
 - Six dials set the look: `theme`, `expression`, `density`, `motion`, `fields`, `flair`. Each is a `data-*` attribute on
   `<html>` or any element, and the nearest one wins.
-- With no `data-theme`, warp follows the system. `setDial('theme', …, { persist: true })` plus `dialScript` in
+- With no `data-theme`, Warp follows the system. `setDial('theme', …, { persist: true })` plus `dialScript` in
   `site.head` gives a remembered choice with no flash.
 - Read and write dials in `onMount` or handlers, never while rendering on the server.
 - Tokens are `--warp-*` custom properties. Use them in your own CSS and it follows every dial.

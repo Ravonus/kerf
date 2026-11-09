@@ -8,23 +8,23 @@
 - How to compute values, share data between components, and call the server
 :::
 
-Welcome to weft. This page is a tour of the ideas you will use every day: about four fifths of what you need to build
+Welcome to Weft. This page is a tour of the ideas you will use every day: about four fifths of what you need to build
 an app. Each section has a small live example, and its source beside it is the real code that runs. Every section ends
 with a link to the page that goes deeper, so you can stop at anything that looks new.
 
 If you have written React, most of this will read right straight away. The differences are few, and they are worth
 watching for: a component runs **once**, state is a **box** you read and write through `.value`, and values you compute
-from state are **derived**. Those three ideas carry most of what makes weft different.
+from state are **derived**. Those three ideas carry most of what makes Weft different.
 
 :::note Running the examples on your own machine
-weft isn't on npm yet. Once it is, `npm create @weft-js` will make an app. Until then you make one from a checkout of the
+Weft isn't on npm yet. Once it is, `npm create @weft-js` will make an app. Until then you make one from a checkout of the
 repository with `node packages/create/scripts/local.mjs new my-app`. [Installation](/learn/installation) has every
 step. You don't need an app to read this page: the examples run right here.
 :::
 
 ## Creating and nesting components
 
-A weft app is made of components. A component is a piece of the page with its own markup and logic: as small as a
+A Weft app is made of components. A component is a piece of the page with its own markup and logic: as small as a
 button, or as large as a whole screen.
 
 A component is a JavaScript function that returns markup:
@@ -45,10 +45,10 @@ Once you have declared `OrderButton`, you can put it inside another component:
 `<p>`, which is always lower case. The page shows `OrderButton` twice because the markup uses it twice: each use is a
 separate copy.
 
-`Button` and `Card` here come from **warp**, weft's UI toolkit. They are ordinary components too, written the same way
-as yours. A new app starts with warp unless you choose otherwise.
+`Button` and `Card` here come from **warp**, Weft's UI toolkit. They are ordinary components too, written the same way
+as yours. A new app starts with Warp unless you choose otherwise.
 
-The `export default` in front of `Cafe` marks the file's main component. In a weft app, the default export of a file in
+The `export default` in front of `Cafe` marks the file's main component. In a Weft app, the default export of a file in
 `src/routes` is a page. [Your first component](/learn/your-first-component) and
 [Importing and exporting components](/learn/importing-and-exporting) go further.
 
@@ -73,7 +73,7 @@ export function About() {
 }
 ```
 
-TSX in weft is close to HTML in its attribute names too. `class` works, and so does React's `className`; `for` works, and
+TSX in Weft is close to HTML in its attribute names too. `class` works, and so does React's `className`; `for` works, and
 so does `htmlFor`. You can copy markup from a web page or from a React component and it will usually work as is.
 
 Read [Writing markup with TSX](/learn/writing-markup-with-tsx) for the rest of the rules.
@@ -96,12 +96,12 @@ property has no unit, the same as in React. The braces around it are explained u
 
 :::demo start-styles
 
-The colour in that border is a warp token, `var(--warp-color-accent-solid)`, not a raw colour such as `teal`, and the
-padding is a step of warp's spacing scale, `var(--warp-space-related)`, not `12px`. A token follows the theme and dark
-mode. In an app with warp, `weft check` flags a raw colour as **D001** and spacing off the scale as **D002**, so the look
-stays consistent. `Text role="title"` is warp's way to size type: you pick a role, and the theme decides the size.
+The colour in that border is a Warp token, `var(--warp-color-accent-solid)`, not a raw colour such as `teal`, and the
+padding is a step of Warp's spacing scale, `var(--warp-space-related)`, not `12px`. A token follows the theme and dark
+mode. In an app with Warp, `weft check` flags a raw colour as **D001** and spacing off the scale as **D002**, so the look
+stays consistent. `Text role="title"` is Warp's way to size type: you pick a role, and the theme decides the size.
 
-For the look of your own components, weft has **style groups**: you name a thing and its variations, written in your
+For the look of your own components, Weft has **style groups**: you name a thing and its variations, written in your
 design tokens, and the markup says which variation an element is in. You don't need them on day one, but here is the
 shape of one:
 
@@ -128,10 +128,10 @@ export function Ticket(
 }
 ```
 
-Most of the time you won't style a button or a field at all: warp's components come with their look, their keyboard
+Most of the time you won't style a button or a field at all: Warp's components come with their look, their keyboard
 support and their themes. You choose among them with props such as `tone` and `emphasis`, as the demo does.
 
-Read [Styling and style groups](/learn/styling) and [Using warp](/learn/warp) for more.
+Read [Styling and style groups](/learn/styling) and [Using Warp](/learn/warp) for more.
 
 ## Displaying data
 
@@ -159,7 +159,7 @@ The button uses **state**, which comes a few sections down. For now, read `signe
 signed in".
 
 :::pitfall Branch in the markup, not in the body
-In React you might write `if (!signedIn) return <SignIn />` at the top of a component. In weft the body of a component
+In React you might write `if (!signedIn) return <SignIn />` at the top of a component. In Weft the body of a component
 runs only once, so an early `return` that depends on state would be checked once and never again. The compiler stops
 you with **W001**. Put the condition in the markup with `? :` or `&&`, where it stays live.
 
@@ -176,7 +176,7 @@ To show a list, you `.map` an array to elements, as in React:
 :::demo start-list
 
 Each item gets a `key`: a string or number that tells it apart from its neighbours. Usually it is an id from your data.
-weft uses the key to keep each row when the list changes, so when items are added, removed or reordered, rows move
+Weft uses the key to keep each row when the list changes, so when items are added, removed or reordered, rows move
 instead of being rebuilt, and anything inside a row, such as a ticked box or half-typed text, stays with it. Leaving out
 the key on a list of objects is **W010**.
 
@@ -188,7 +188,7 @@ You respond to events by passing a function, a *handler*, to an attribute such a
 
 :::demo start-events
 
-Write `onClick={ring}`, not `onClick={ring()}`. You pass the function, and weft calls it when the button is pressed. A
+Write `onClick={ring}`, not `onClick={ring()}`. You pass the function, and Weft calls it when the button is pressed. A
 short handler can be written in place, as the second button does: `onClick={() => (rang.value = false)}`.
 
 Event names are the DOM's, written in camelCase: `onClick`, `onInput`, `onKeyDown`, `onSubmit`. A handler receives the
@@ -226,22 +226,22 @@ made it.
 
 This is the one big difference from React, so it is worth slowing down for.
 
-In React, pressing the button would call `CupCounter` again to work out the new markup. In weft, `CupCounter` ran once,
-when it first appeared, and it never runs again. While compiling, weft saw that the text `{cups.value}` reads the box,
+In React, pressing the button would call `CupCounter` again to work out the new markup. In Weft, `CupCounter` ran once,
+when it first appeared, and it never runs again. While compiling, Weft saw that the text `{cups.value}` reads the box,
 and wired that one text node to it. A write to `cups.value` updates that text node and nothing else.
 
 Because the body runs once:
 
 - There are no hook rules and no dependency lists. `state` is a plain function call.
 - A plain `let` that a handler changes won't update the page, because the markup that read it was set up once. Make it
-  `state`. This weft doesn't report it yet (W041 in the catalog), so watch for it.
+  `state`. This Weft doesn't report it yet (W041 in the catalog), so watch for it.
 - You always write `.value`, in markup too. `{cups}` without it renders the box itself, which is **W015**.
 
 :::deepdive How is this different from useState?
 `const [cups, setCups] = useState(0)` in React gives you a *snapshot*: a plain number for this render, and a setter that
 schedules the next render. The component function is the unit that updates.
 
-`const cups = state(0)` in weft gives you the box itself. Reading `.value` inside markup subscribes that one spot in the
+`const cups = state(0)` in Weft gives you the box itself. Reading `.value` inside markup subscribes that one spot in the
 page; writing `.value` updates the spots that read it. The function is never the unit that updates: the reads are. So
 there's nothing to memoise, no stale closure (a handler always reads the box as it is now) and no re-render to skip.
 
@@ -258,14 +258,14 @@ their own and keep them in step by hand. Say how to compute them once, with `der
 
 :::demo start-derived
 
-`derived(() => cups.value * price)` reads `cups`, so it follows `cups`. You never list what it depends on: weft sees what
+`derived(() => cups.value * price)` reads `cups`, so it follows `cups`. You never list what it depends on: Weft sees what
 it read. It computes when something reads it, and again only after what it read has changed.
 
 The body runs once, so `const total = cups.value * price` in the body would be computed once and never again. The
 compiler reports that as **W001** and offers `derived`. For a one-off, computing inside the markup works too:
 `{cups.value * price}` stays live, as every expression in braces does.
 
-Where React reaches for `useMemo`, weft uses `derived`, and it's never a question of performance: it is how you name a
+Where React reaches for `useMemo`, Weft uses `derived`, and it's never a question of performance: it is how you name a
 value that follows other values.
 
 Read [Derived values](/learn/derived) for more.
@@ -291,7 +291,7 @@ The third button gets `cups={cups.value}` without `bind:`. Press it: its own num
 doesn't. When the shared count next changes, the parent's value wins again. Only `bind:` at the call site lets a write
 leave a component, so reading the parent tells you everything that can change its state.
 
-In React you would pass a callback such as `onIncrement` for the child to call. You can do that in weft too, and it is
+In React you would pass a callback such as `onIncrement` for the child to call. You can do that in Weft too, and it is
 right for events that aren't "change this value". For a child that edits a value, `bind:` is shorter, and the child
 works the same with or without a parent box.
 
@@ -300,7 +300,7 @@ Read [Passing props](/learn/passing-props), [Writing to a parent with bind:](/le
 
 ## A peek at the server
 
-Everything so far runs in the browser. With `@weft-js/start`, weft's full-stack part, a component can also call code that
+Everything so far runs in the browser. With `@weft-js/start`, Weft's full-stack part, a component can also call code that
 runs on the server. You write a **query** in `src/server/`:
 
 ```ts
@@ -357,11 +357,11 @@ a schema. The [tutorial](/learn/tutorial) builds both, and [Full-stack apps](/le
 
 ## Next steps
 
-You now know the basics of writing weft. Two pages put them to work:
+You now know the basics of writing Weft. Two pages put them to work:
 
 - [Tutorial: a shop with a server](/learn/tutorial) builds a small shop step by step, then moves its data and its
   checkout to the server.
-- [Thinking in weft](/learn/thinking-in-weft) shows how to go from a mockup to components, and how to decide where
+- [Thinking in Weft](/learn/thinking-in-weft) shows how to go from a mockup to components, and how to decide where
   state lives.
 
 When you want to build on your own machine, [Installation](/learn/installation) has the steps.

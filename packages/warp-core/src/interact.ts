@@ -3,7 +3,7 @@
 // counts the elements holding it, so a row bound twice falls only when the last one lets go, and `destroy` lets go:
 // an element removed under the pointer gets no pointerleave, and that is how a hover sticks.
 
-/** A boolean a binding can write to: weft's box, or anything shaped like one. */
+/** A boolean a binding can write to: Weft's box, or anything shaped like one. */
 export interface Flag {
   value: boolean
 }

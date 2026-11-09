@@ -1,10 +1,10 @@
-# Using a weft checkout in your apps
+# Using a Weft checkout in your apps
 
-weft isn't on npm yet. Until it is, `packages/create/scripts/local.mjs` lets any app on your machine use a checkout of
+Weft isn't on npm yet. Until it is, `packages/create/scripts/local.mjs` lets any app on your machine use a checkout of
 this repo. It builds what's stale, packs every package as a tarball and points the app at those tarballs, so the app gets
 what a consumer would get, not workspace links.
 
-This page is for working on weft. For a first app, follow [Installation](../site/content/learn/installation.md).
+This page is for working on Weft. For a first app, follow [Installation](../site/content/learn/installation.md).
 
 ## What you need
 
@@ -39,7 +39,7 @@ npx weft dev
 
 Skip `weft db generate` if you made the app with `--db none`. `npx weft build` makes the production build.
 
-## After changing weft
+## After changing Weft
 
 From the app:
 

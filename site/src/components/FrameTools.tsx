@@ -15,7 +15,7 @@ function shownTheme(el: Element) {
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-/** Sets one stage's width, which warp's scope attributes carry. */
+/** Sets one stage's width, which Warp's scope attributes carry. */
 function width(stage: HTMLElement, v: string) {
   if (v === 'full') {
     stage.removeAttribute('data-form')

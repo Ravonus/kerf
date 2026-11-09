@@ -28,6 +28,8 @@ export interface SideNavProps {
   sections: SideNavSection[]
   /** The current page's href: its link is marked, its section starts open, and the panel scrolls to it. */
   current?: string | undefined
+  /** Let any number of sections stay open. Default false: opening one folds the others, so one is open at a time. */
+  multiple?: boolean | undefined
   /** A filter box at the top, for a long list. A string is its placeholder. */
   filter?: boolean | string | undefined
   /** The localStorage key for what a viewer folded, and `<key>:collapsed` for the docked panel's fold; `false` keeps

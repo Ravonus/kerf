@@ -8,12 +8,12 @@
 - Which diagnostics point at an effect you don't need
 :::
 
-Effects are an escape hatch: they step outside weft to keep something else in step with your state. When nothing
+Effects are an escape hatch: they step outside Weft to keep something else in step with your state. When nothing
 outside is involved, when all you want is to show a value or respond to a click, an effect is the long way round. It
 adds a second copy of the truth, a moment where the two copies disagree, and code that runs at a time you have to think
 about. Removing it makes the component shorter and the page right from the first paint.
 
-This page goes through the common cases, most of them familiar from React's page of the same name. In weft the fixes are
+This page goes through the common cases, most of them familiar from React's page of the same name. In Weft the fixes are
 usually simpler still, because a component's body runs once and `derived` is always current.
 
 :::demo escape-filter
@@ -70,7 +70,7 @@ export function Greeting(props: { first: string; last: string }) {
 }
 ```
 
-The body runs once, so `full` is whatever the props were then. weft reports this as **W001**: a prop or `.value` used
+The body runs once, so `full` is whatever the props were then. Weft reports this as **W001**: a prop or `.value` used
 to compute something in the body, outside `derived`, a `watch`, TSX or a handler. Wrap it in `derived`, or write it in
 the TSX.
 :::
@@ -115,7 +115,7 @@ A profile page shows one person at a time, with a note you can write about them.
 the note should be empty again. In React you'd give the component a `key`; the effect version, clearing state when the
 id changes, renders the old note for a moment first.
 
-weft does the same thing with a key. A list keyed by id throws a row away when its key goes and makes a new one, with
+Weft does the same thing with a key. A list keyed by id throws a row away when its key goes and makes a new one, with
 fresh state, when a new key comes. A list of one does the same for a single component:
 
 :::demo escape-keyed
@@ -254,7 +254,7 @@ export function Game() {
 }
 ```
 
-A `watch` that writes a box its own source reads is a loop waiting to happen; weft's catalog names it **W003**.
+A `watch` that writes a box its own source reads is a loop waiting to happen; Weft's catalog names it **W003**.
 
 ### Telling the parent
 
@@ -294,7 +294,7 @@ message at all: see [Writing to a parent with bind:](/learn/bind).
 ## Values that come from outside
 
 Some values aren't yours: whether the browser is online, the size of the window, the state of a store a library keeps.
-The effect version listens and copies each change into a box. weft has two better answers.
+The effect version listens and copies each change into a box. Weft has two better answers.
 
 For the browser, `@weft-js/core/browser` already gives you the value. Read it directly:
 
@@ -334,7 +334,7 @@ export function ThemeName() {
 ## Loading data
 
 Fetching in an effect is the classic React pattern, and the classic source of bugs: two requests in flight, the slow one
-lands last and shows stale results, and you need an `ignore` flag to fix it. In weft you don't write that effect.
+lands last and shows stale results, and you need an `ignore` flag to fix it. In Weft you don't write that effect.
 `resource` is the async version of `derived`: it fetches, refetches when what it read changes, and cancels the request it
 no longer needs.
 
@@ -386,20 +386,20 @@ dies with the component. A stream's `fold` keeps it in the cache instead: see
 
 ## When you do need an effect
 
-After all that, effects are for the cases where something outside weft has to follow your state, for as long as a
+After all that, effects are for the cases where something outside Weft has to follow your state, for as long as a
 component is on screen:
 
 - a connection to a server that depends on which room, user or document is showing;
 - a timer or animation that runs while a value says so;
 - a third-party widget (a map, an editor, a chart) that must be told when your data changes;
-- `document.title`, or anything else on the page that weft didn't render.
+- `document.title`, or anything else on the page that Weft didn't render.
 
 Those are what [Effects](/learn/effects) is for.
 
 ## The diagnostics
 
 Several of the patterns on this page have codes. `weft check` and your editor point at the first five; W003, W004 and
-W012 are in the catalog, but this weft doesn't report them yet.
+W012 are in the catalog, but this Weft doesn't report them yet.
 
 | Code | What it catches | Instead |
 |---|---|---|
@@ -413,7 +413,7 @@ W012 are in the catalog, but this weft doesn't report them yet.
 | W012 | `derived(async …)` | `resource` |
 
 :::note
-The last three are in weft's diagnostics catalog, but this version of the compiler doesn't report them yet. Each code's
+The last three are in Weft's diagnostics catalog, but this version of the compiler doesn't report them yet. Each code's
 page in [Reference: diagnostics](/reference/diagnostics) says whether your version does.
 :::
 
@@ -421,7 +421,7 @@ page in [Reference: diagnostics](/reference/diagnostics) says whether your versi
 
 - If a value can be computed from props and state, it's `derived`, or an expression in the TSX. Not state kept in
   sync by an effect.
-- `derived` is already cached: weft has no `useMemo` because it doesn't need one.
+- `derived` is already cached: Weft has no `useMemo` because it doesn't need one.
 - Key a component to start all its state over; `state.linked(…, { key })` starts one box over.
 - Code caused by an event goes in that event's handler. Tell the parent from the handler, or share a box with `bind:`.
 - Read browser values directly, and subscribe to outside stores with `onCleanup`, not a copying `watch`.

@@ -31,7 +31,7 @@ export const ditherDocs: Doc[] = [
         kind: 'composition',
         title: 'Hybrid and your own',
         intro:
-          'Anything without a skin paints itself over the stage, so warp components and canvas pieces share a page.',
+          'Anything without a skin paints itself over the stage, so Warp components and canvas pieces share a page.',
         examples: [
           fill(
             'StageHybrid',

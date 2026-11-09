@@ -44,7 +44,7 @@ export interface CheckoutProps {
   /** The ISO 4217 code prices are shown in, such as `EUR`. */
   currency?: string
   locale?: string
-  /** The Payment step's body: a PayFrame, in a provider's slot. warp never renders card fields. */
+  /** The Payment step's body: a PayFrame, in a provider's slot. Warp never renders card fields. */
   payment: unknown
   /** The saved wallet's frame button, above the divider. */
   wallet?: { label: string; onClick: () => void }

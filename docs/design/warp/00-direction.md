@@ -1,10 +1,10 @@
-# warp 00 — Art direction
+# Warp 00 — Art direction
 
 Status: v0.2, 2026-10-28. Owner: foundations (art direction + design system). Downstream: layout, inputs,
 components. Tokens: [01-foundations.md](01-foundations.md) · [tokens/warp.css](tokens/warp.css) ·
 [specimens/foundations.html](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/design/warp/specimens/foundations.html).
 
-warp is weft's default toolkit. It keeps the predecessor toolkit's base idea (hairline chrome, a surface ladder,
+Warp is Weft's default toolkit. It keeps the predecessor toolkit's base idea (hairline chrome, a surface ladder,
 mono caps labels, a left-to-right sweep) and rebuilds everything underneath it. Two shipped looks of that
 predecessor become the two ends of one dial.
 
@@ -33,8 +33,8 @@ predecessor [research notes](https://github.com/Ravonus/weft/tree/archive/evals-
    from tokens alone (`hit-min`, plus the touch floor in `warp.base`, 01 §2). *Test:* the 390px frame in the specimen; no consumer `min-h-11` patches.
 6. **Intent names only.** Components read sys tokens (`color.accent.solid`, `space.related`), never ref values.
    *Test:* no `--warp-ref-*` outside `warp.css`.
-7. **The page wins.** Every warp rule sits in `@layer warp.*` behind `:where()`. Any app CSS beats it without
-   `!important`. *Test:* a one-class Tailwind utility overrides a warp component in the integration fixture.
+7. **The page wins.** Every Warp rule sits in `@layer warp.*` behind `:where()`. Any app CSS beats it without
+   `!important`. *Test:* a one-class Tailwind utility overrides a Warp component in the integration fixture.
 
 ## 2. "Thin and streamlined", in numbers
 
@@ -52,13 +52,13 @@ predecessor [research notes](https://github.com/Ravonus/weft/tree/archive/evals-
 
 **Shipping it.** This CSS and the specimens' behaviour ship as the framework-agnostic `@weft-js/warp-core`. The CSS is
 split per component, unchanged. The behaviour (sweep, floating label, dials, widget machines) is plain TS over the
-DOM. `@weft-js/warp` is a thin weft binding that renders the specimen markup exactly. A binding for another framework
+DOM. `@weft-js/warp` is a thin Weft binding that renders the specimen markup exactly. A binding for another framework
 sits beside it on the same core (PLAN §6.1).
 
 ## 3. The expression dial
 
 **Decision: three named stops, backed by a number.** `data-expression="quiet | balanced | vivid"` is what
-components, agents and the config see: a closed enum fits weft's vocabulary rule, and three stops are what a
+components, agents and the config see: a closed enum fits Weft's vocabulary rule, and three stops are what a
 designer can actually review. Under it is `--warp-x` = 0, 0.5, 1, and every continuous token (radius, emphasis
 weight, blur) is a formula of `x`, so `expression: 0.3` in the config works and needs no new design.
 Discrete choices (font pairing, caps, the spring) snap to the nearest stop.
@@ -90,7 +90,7 @@ including the stop's sweep reach; `data-flair` on the same element widens (`swee
 
 ## 3b. The signature: sweep border and floating border field
 
-Source of truth: [SIGNATURE.md](SIGNATURE.md). These two are warp's brand and run at **every** stop. The dial only
+Source of truth: [SIGNATURE.md](SIGNATURE.md). These two are Warp's brand and run at **every** stop. The dial only
 changes speed and reach, never whether they exist or how visible they are.
 
 **The sweep border.** Two stacked borders. On hover or focus the accent border draws in left to right while the
@@ -107,7 +107,7 @@ segmented indicator) and buttons at all stops; cards, panels and stat rows join 
 - **Frame button** (`old:theme/tokens.css:317-493`, `old:components/buttons/core/Button.frame.tsx:1-54`): four
   10px/2px bracket corners in the track colour at rest, no border. On hover three things run together: tone
   corners clip in, an outline draws itself from the left middle over the top and under the bottom to meet at
-  the right (the original's `dashoffset 1 → 0`, 2.6px; warp draws it in CSS with container units so it closes at
+  the right (the original's `dashoffset 1 → 0`, 2.6px; Warp draws it in CSS with container units so it closes at
   any width), and a tone copy of the label wipes in. On leave it all
   keeps going right (`→ -1`). The filled variant slides a tone fill in from the left and out to the right.
 - **Rails** (`old:components/inputs/choice/Switch.tsx`): the accent fill sweeps *through* the rail as the knob
@@ -139,7 +139,7 @@ date/time inputs always use the fixed-notch label in `floating`.
   Serif has a small x-height.
 - **Pairing logic.** Display carries personality, body carries reading. Body is never a serif or a display face.
   At vivid, use the serif's italic for a single emphasised word in a headline, never for whole lines.
-- **No faux italics.** Space Grotesk ships no italic, and warp doesn't load Inter's for display use. Headings set
+- **No faux italics.** Space Grotesk ships no italic, and Warp doesn't load Inter's for display use. Headings set
   `font-synthesis-style: none`, and `<em>` in a heading takes `text.emphasis.style`: upright in the accent colour at
   quiet and balanced, Instrument Serif's real italic at vivid. A browser-slanted roman is a craft defect.
 - **Numerals:** tabular at every stop, through `text.numeric.font` + `text.numeric.variant`. Instrument Serif has no

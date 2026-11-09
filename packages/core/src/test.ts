@@ -138,7 +138,7 @@ const fire = (target: EventTarget, type: string, init?: object) =>
 /**
  * The fake transport for @weft-js/start's server functions (research 27 §7). With @weft-js/core/test loaded, `query`/`mutation`
  * calls run in process through the server's executor (validation, request cache, tags, single-flight, a JSON round
- * trip) instead of HTTP. @weft-js/start finds these controls under a global symbol, so weft doesn't depend on it.
+ * trip) instead of HTTP. @weft-js/start finds these controls under a global symbol, so Weft doesn't depend on it.
  */
 type FnRef = { $id: string } | string
 const fnId = (f: FnRef) => (typeof f === 'string' ? f : f.$id)

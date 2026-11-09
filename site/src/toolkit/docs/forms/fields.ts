@@ -81,7 +81,7 @@ export const formsFields: Doc[] = [
     component: 'Field',
     summary: 'The frame every field shares: label, icon, hint, error. Wrap your own control in it.',
     use: {
-      when: ["A control warp doesn't have that should sit with the rest of a form"],
+      when: ["A control Warp doesn't have that should sit with the rest of a form"],
       instead: [
         { name: 'Input', why: "it's plain text" },
         { name: 'Select', why: "it's a list" },

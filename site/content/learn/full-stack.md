@@ -7,11 +7,11 @@
 :::
 
 Everything so far ran in the browser. A real app also has a server: it stores data, knows who is signed in, and sends
-each page with its data already in it. `@weft-js/start` is that half of weft. It gives you pages from files, functions
+each page with its data already in it. `@weft-js/start` is that half of Weft. It gives you pages from files, functions
 that run on the server and that components call like local ones, a database, sign-in, forms that work without
 JavaScript, and live updates, all typed from end to end.
 
-An app made with `create-weft` already has it. It runs on Node, Bun or Deno, and needs no Rust. Once weft is published,
+An app made with `create-weft` already has it. It runs on Node, Bun or Deno, and needs no Rust. Once Weft is published,
 `npm create @weft-js` makes one; until then, [Installation](/learn/installation) shows how to make one from a checkout.
 With a database and sign-in chosen, a new app is a small working todo list, and the examples in this chapter build on
 it.
@@ -280,7 +280,7 @@ Read **[Payments](/learn/payments)** to learn about products, checkout and entit
 
 ## Metadata and share images
 
-Each route says what it is with `meta`: a title and a sentence, from what's on the page. weft adds the rest of the head,
+Each route says what it is with `meta`: a title and a sentence, from what's on the page. Weft adds the rest of the head,
 and draws a share card for link previews:
 
 ```tsx
@@ -302,7 +302,7 @@ data and custom cards.
 
 ## SSR, islands and hydration
 
-The server renders every page to HTML, and streams the slow parts in. In the browser, weft takes that HTML over without
+The server renders every page to HTML, and streams the slow parts in. In the browser, Weft takes that HTML over without
 building it again. A component with no handler, effect or state needs no JavaScript at all, and the compiler leaves it
 out on its own, so a mostly static page ships little code.
 

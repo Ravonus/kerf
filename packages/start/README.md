@@ -2,7 +2,7 @@
 
 > **Early release (0.1.1).** APIs will change between minor versions.
 
-The full-stack part of weft: routes from files, server functions, server rendering with streaming, a database, auth and
+The full-stack part of Weft: routes from files, server functions, server rendering with streaming, a database, auth and
 realtime. It runs on Node, Bun or Deno, and doesn't need Rust. An app made with `npm create @weft-js` already has it.
 
 ```bash

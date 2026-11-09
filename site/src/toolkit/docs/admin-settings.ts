@@ -47,7 +47,7 @@ export const settingsDocs: Doc[] = [
         examples: [
           {
             id: 'MembersTableTeam',
-            title: 'The weft team',
+            title: 'The Weft team',
             note: 'Role changes apply at once with Undo. The last owner cannot be demoted, and the select says why.',
             stage: 'fill',
             height: 620,
@@ -111,7 +111,7 @@ export const settingsDocs: Doc[] = [
         examples: [
           {
             id: 'CheckoutShop',
-            title: 'The weft shop',
+            title: 'The Weft shop',
             note: 'Nothing is charged. Try the code `WEFT10`. Going back keeps what you typed.',
             stage: 'fill',
             height: 460,

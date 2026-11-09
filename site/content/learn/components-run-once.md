@@ -3,20 +3,20 @@
 :::learn
 - What "the body runs once" means, and how it differs from React's re-rendering
 - How reads in markup become bindings that update the page on their own
-- What that means for local variables, and why weft needs no hook rules or dependency arrays
+- What that means for local variables, and why Weft needs no hook rules or dependency arrays
 - The mistakes this model makes possible, and the diagnostics that catch them
 :::
 
-This is the page to read if you know React. Almost everything in weft looks like React: functions, TSX, props, `.map`
+This is the page to read if you know React. Almost everything in Weft looks like React: functions, TSX, props, `.map`
 with keys. The one deep difference is when your code runs. A React component runs again every time its state or props
-change. A weft component runs once. Everything else on this page follows from that.
+change. A Weft component runs once. Everything else on this page follows from that.
 
 :::demo describe-runs
 
 ## One run, then bindings
 
-When a weft component first appears, weft calls its function. The body runs top to bottom: it creates its state, defines
-its handlers, and returns markup. Then it's done, and weft never calls that function again for that piece of the page.
+When a Weft component first appears, Weft calls its function. The body runs top to bottom: it creates its state, defines
+its handlers, and returns markup. Then it's done, and Weft never calls that function again for that piece of the page.
 
 What keeps the page up to date is the markup. The compiler turns every expression in braces and every dynamic attribute
 into a binding: a small function attached to the exact text node or attribute it fills. When a binding runs, it records
@@ -42,7 +42,7 @@ Here's what runs when, for a component that's on the page:
 
 ## Reads in markup become bindings
 
-Because each binding records its own reads, weft knows exactly what depends on what without you saying so:
+Because each binding records its own reads, Weft knows exactly what depends on what without you saying so:
 
 ```tsx
 import { state } from '@weft-js/core'
@@ -68,17 +68,17 @@ export function Profile() {
 ```
 
 Toggling `online` runs two bindings: the `class` on the `<p>` and its text. The heading doesn't run, because it never read
-`online`. `Profile` doesn't run either. An update in weft costs what changed, not the size of the component around it.
+`online`. `Profile` doesn't run either. An update in Weft costs what changed, not the size of the component around it.
 
 A binding's reads can change from one run to the next. `{loggedIn.value ? user.value.name : 'Guest'}` reads `user` only
 while someone is logged in, so a change to `user` while logged out does nothing at all.
 
-:::deepdive Why weft does it this way
+:::deepdive Why Weft does it this way
 React's model is: run the component, get a description of the UI, compare it with the last one, and write the
 difference. It's simple to reason about, and it costs work proportional to the size of the component on every change,
 which is why React has `memo`, `useMemo` and `useCallback` to skip some of it.
 
-weft's model skips the comparison. The compiler knows, from your TSX, which parts of the markup can change and what
+Weft's model skips the comparison. The compiler knows, from your TSX, which parts of the markup can change and what
 they read, so it wires those parts straight to their data. There's nothing to compare and nothing to memoise, and the
 code you write has no performance hints in it. The cost is a rule you have to keep in mind: code in the body is setup
 code, not render code. The rest of this page is about that rule.
@@ -90,7 +90,7 @@ A local variable in the body is made once. It isn't reset, and it isn't reactive
 them.
 
 **It isn't reset**, so a plain variable can hold anything a component needs to remember that the page doesn't show: a
-timer, an element, a cache. React needs `useRef` for this; weft doesn't:
+timer, an element, a cache. React needs `useRef` for this; Weft doesn't:
 
 ```tsx
 import { onCleanup, state } from '@weft-js/core'
@@ -154,7 +154,7 @@ export function Counter() {
 ```
 
 :::pitfall The compiler doesn't catch the `let` counter yet
-weft's diagnostic catalogue has a code for this mistake, W041 ("a `let` mutated in a handler and read in JSX"), but the
+Weft's diagnostic catalogue has a code for this mistake, W041 ("a `let` mutated in a handler and read in JSX"), but the
 compiler doesn't report it yet. Until it does, look for it yourself: if a variable is changed in a handler and shown in
 the markup, it should be `state`. A `let` that names a prop is a different thing, a writable alias, and works: see
 [Passing props](/learn/passing-props).
@@ -163,7 +163,7 @@ the markup, it should be `state`. A `let` that names a prop is a different thing
 ## No hook rules, no dependency arrays
 
 React's rules of hooks exist because React finds a component's state by the order of the hook calls in each render. Call
-`useState` inside an `if`, and the order changes between renders, and the state gets mixed up. weft has no such order to
+`useState` inside an `if`, and the order changes between renders, and the state gets mixed up. Weft has no such order to
 keep. `state()` returns a box, and the box is yours: keep it in a variable, put it in an object, create it in a loop or
 in a helper function, or behind a condition. Since the body runs once, there's no second render to get out of step with.
 
@@ -205,7 +205,7 @@ export function Settings() {
 There are no dependency arrays either. `derived`, `watch` and the bindings in your markup record what they read while
 they run, every time they run. A dependency can't be forgotten, because there's no list to forget it from.
 
-| React | weft |
+| React | Weft |
 |---|---|
 | `useState(0)` | `state(0)`, read and written as `.value` |
 | `useMemo(() => a * b, [a, b])` | `derived(() => a.value * b.value)` |
@@ -245,7 +245,7 @@ export function Cart(props: { items: { price: number }[] }) {
 }
 ```
 
-The same code catches an early `return` or an `if` on state or a prop in the body: weft can't run the body again to
+The same code catches an early `return` or an `if` on state or a prop in the body: Weft can't run the body again to
 check it, so branch in the markup instead (see [Conditional rendering](/learn/conditional-rendering)).
 
 What W001 doesn't flag: naming a prop. `const items = props.items` and `const { items } = props` are aliases, not
@@ -267,7 +267,7 @@ arithmetic, is a one-time computation.
 markup, it shows the setup-time value for ever, which is rarely what you meant: **W018**, a warning, suggests `derived`.
 
 :::deepdive How "once" is enforced
-weft calls a component inside `untrack`: while the body runs, nothing it reads is recorded, because the body isn't a
+Weft calls a component inside `untrack`: while the body runs, nothing it reads is recorded, because the body isn't a
 binding and will never run again. That's also why a read there can't update anything: there's no one listening. The
 bindings the body's markup creates are owned by whatever created the component, so when that part of the page goes
 away, they go with it (see [Your UI as a tree](/learn/your-ui-as-a-tree)).
@@ -289,7 +289,7 @@ A short guide to putting each kind of code in the right place:
 
 ## Recap
 
-- A weft component's body runs once. React's runs on every change.
+- A Weft component's body runs once. React's runs on every change.
 - Expressions in markup are bindings: each records what it reads and runs again, alone, when one of those changes.
 - A local variable lives as long as the component, so it can hold a timer or an element. But it isn't reactive: what
   the page shows belongs in `state`.
@@ -331,7 +331,7 @@ to it runs that binding.
 :::
 
 :::challenge Translate a React component
-Rewrite this React component in weft.
+Rewrite this React component in Weft.
 
 <!-- example: skip React code, for translation -->
 ```tsx

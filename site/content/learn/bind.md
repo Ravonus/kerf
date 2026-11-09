@@ -5,7 +5,7 @@
 - Why only the call site decides whether a write leaves a component
 - How `bind:` is typed, and the `bind(box)` form plain `tsc` accepts
 - When to pass a box typed `State<T>` instead
-- Patterns: an input inside a child, reusable controls, warp's own controls
+- Patterns: an input inside a child, reusable controls, Warp's own controls
 :::
 
 On [Passing props](/learn/passing-props) a child could change its own copy of a prop with `let` or `props.x =`, but the
@@ -185,9 +185,9 @@ Which to choose:
 - **`bind:`** when the child edits a value. The child stays simple, it reads and writes a plain prop, and it works with or
   without a parent box: with `value={x}` it keeps its own edits, with `bind:value={box}` it writes the parent's.
 - **A `State<T>` prop** when the child needs the box itself: to read one entry with `.get` in a list row (see
-  [Keyed state and entries](/learn/entries)), to pass it on to a warp control, or to call `.set` on it.
+  [Keyed state and entries](/learn/entries)), to pass it on to a Warp control, or to call `.set` on it.
 
-Mixing them up is **W008** in the catalog (this weft doesn't report it yet): a box where the child's prop type wants a
+Mixing them up is **W008** in the catalog (this Weft doesn't report it yet): a box where the child's prop type wants a
 value, or a value where it wants a box.
 
 ## Patterns
@@ -230,9 +230,9 @@ export function Settings() {
 }
 ```
 
-### warp's controls take the box
+### Warp's controls take the box
 
-warp's own controls that hold a value, such as `Select`, `NumberField` and the date and time fields, take the box
+Warp's own controls that hold a value, such as `Select`, `NumberField` and the date and time fields, take the box
 directly as `value`. They write it, and you don't need `bind:`:
 
 ```tsx
@@ -260,7 +260,7 @@ but never write back. [Forms and inputs](/learn/forms-and-inputs) has each contr
 
 ### Callbacks still work
 
-You don't have to use `bind:`. The React pattern, a value and a handler prop, works in weft as it does in React:
+You don't have to use `bind:`. The React pattern, a value and a handler prop, works in Weft as it does in React:
 
 ```tsx
 import { state } from '@weft-js/core'
@@ -295,12 +295,12 @@ write to a prop there always stays local: there's no parent box in the browser t
 inside the island, or in a [`defineState`](/learn/app-wide-state) scope.
 :::
 
-:::deepdive Why weft does it this way
+:::deepdive Why Weft does it this way
 In React, data flows one way. A child that wants to change the parent's state calls a function the parent passed it, and
 you can read the parent to see every way its state can change. Svelte's `bind:` and Vue's `v-model` let a child write a
 parent's value with less code, at the cost that the child alone may decide to write.
 
-weft keeps React's guarantee and drops the boilerplate. A child can always write its own props, so a reusable component
+Weft keeps React's guarantee and drops the boilerplate. A child can always write its own props, so a reusable component
 needs no `value`/`onChange`/`defaultValue` trio to work both controlled and uncontrolled. Whether a write goes further is
 decided only where the parent uses the child, written in the parent's file. Reading the parent still tells you every way its
 state can change: look for `bind:`, and for boxes passed as props.
@@ -314,7 +314,7 @@ state can change: look for `bind:`, and for boxes passed as props.
 - `bind:` takes a box, on a component. Anything else is **W061**.
 - `weft tsc` types `bind:x` as `x`. `x={bind(box)}` is the same binding in a form plain `tsc` accepts.
 - A prop typed `State<T>` passes the box itself, for children that need `.get`, `.set` or to pass it on.
-- warp's value controls take the box as `value={box}`. Callback props work too, when the parent wants a say.
+- Warp's value controls take the box as `value={box}`. Callback props work too, when the parent wants a say.
 
 ## Try it
 
@@ -374,7 +374,7 @@ export function Post() {
 }
 ```
 
-Here the built-in input is swapped for warp's `Input`, which takes the same `value` and `onInput`.
+Here the built-in input is swapped for Warp's `Input`, which takes the same `value` and `onInput`.
 :::
 
 :::challenge A rating that works both ways

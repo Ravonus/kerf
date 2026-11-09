@@ -34,7 +34,7 @@ export type RichFieldProps = FieldShell & {
 
 /**
  * The locale and today a picker renders with. The server and the hydrating client must agree, so both start from the
- * prop (or en-US and the server's clock, which weft carries over in the state payload); after mount the document's lang
+ * prop (or en-US and the server's clock, which Weft carries over in the state payload); after mount the document's lang
  * and the browser's clock take over, a microtask later so hydration itself writes nothing.
  */
 export function usePickerEnv(locale: () => string | undefined, today: () => string | undefined) {

@@ -7,7 +7,7 @@
 - Why a component branches in JSX rather than returning early
 :::
 
-You don't tell weft "disable this button, then show that message". You describe what the screen looks like in each state
+You don't tell Weft "disable this button, then show that message". You describe what the screen looks like in each state
 the component can be in, and change the state when the user or the network does something. This page walks through
 building a small form that way, from a list of states to working code.
 
@@ -43,8 +43,8 @@ function handleSubmit() {
 This works for a small form. Add a step, or a new element, and you have to find every place that touches it. Forget one,
 and the page gets into a state no one meant: a spinner over a success message, a button that never comes back.
 
-In weft, as in React, you work the other way round. You say what the page shows for each state, and the handlers change
-only the state. weft updates the page from it. Because a component runs once and the compiler wires each read to the
+In Weft, as in React, you work the other way round. You say what the page shows for each state, and the handlers change
+only the state. Weft updates the page from it. Because a component runs once and the compiler wires each read to the
 place that shows it, "updates the page" means: changes exactly the attributes and text that read the state that changed.
 
 ## Step 1: list the visual states
@@ -122,8 +122,8 @@ export function quizState() {
 every comparison: `status.value === 'sucess'` is a type error.
 
 :::note A function like this isn't a hook
-The function above only groups four boxes. There are no hook rules in weft: a function that makes state can be called
-from a component body in any order, even inside an `if`. Don't name it `useSomething`, though: weft's catalog counts a
+The function above only groups four boxes. There are no hook rules in Weft: a function that makes state can be called
+from a component body in any order, even inside an `if`. Don't name it `useSomething`, though: Weft's catalog counts a
 `useX()` call as a React habit (W020–W029; not reported yet). See [Reusing logic](/learn/reusing-logic).
 :::
 
@@ -196,7 +196,7 @@ export function Quiz() {
 Read the JSX and you can see every state: which element is disabled when, when the error shows, what replaces the form.
 The handlers say nothing about any of that.
 
-Two weft details make this work:
+Two Weft details make this work:
 
 - **Writes after an `await` are fine.** A handler is ordinary code, and a box can be written at any time. The page
   follows on the next microtask.
@@ -211,12 +211,12 @@ In React you might write the success screen as an early return:
 if (status === 'success') return <h2>That's right!</h2>
 ```
 
-In weft that's a bug. The component body runs **once**, when the component is made. The `if` is checked once, while the
+In Weft that's a bug. The component body runs **once**, when the component is made. The `if` is checked once, while the
 status is still `'typing'`, and never again: the success message would never appear. The compiler reports an early
 `return` that depends on state as **W001** (the catalog's own code for it, W040, isn't reported yet).
 
 Put the branch inside the JSX instead, as the example does with a ternary. Every `{expression}` in JSX is live: when
-`status` changes, weft re-evaluates the branch and swaps what's on screen.
+`status` changes, Weft re-evaluates the branch and swaps what's on screen.
 
 :::pitfall State stays in the branch it was made in
 A component inside a branch is made when its branch is shown, and disposed of when the branch goes, together with its
@@ -225,9 +225,9 @@ holds. Here `answer` lives in the parent, so nothing is lost. If the field kept 
 trip through success would empty it. Keep state that must survive a branch in a component outside it.
 :::
 
-:::deepdive Why weft doesn't need "same type, same position"
+:::deepdive Why Weft doesn't need "same type, same position"
 React decides whether to keep a component's state by comparing the tree before and after a render: the same component
-type at the same position keeps its state. weft doesn't compare trees, because it doesn't render again. What exists is
+type at the same position keeps its state. Weft doesn't compare trees, because it doesn't render again. What exists is
 what was made: a component in a branch lives as long as its branch is shown, and a row in a keyed list lives as long as
 its key is in the list. There are no rules about positions to remember, and a component never loses its state because a
 sibling above it appeared. See [Keyed state and entries](/learn/entries#state-lives-with-the-row) for lists.

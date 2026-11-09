@@ -762,6 +762,9 @@
  "scroll-grid": [
   "data/scroll-grid.css"
  ],
+ "scroll-rail": [
+  "layout/scroll-rail.css"
+ ],
  "section": [
   "layout/section.css"
  ],

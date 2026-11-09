@@ -99,7 +99,7 @@ export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
   }
 }
 
-/** A classic scrollbar, read before the lock takes it: the page keeps its room (warp's html:has(dialog:modal) rule). */
+/** A classic scrollbar, read before the lock takes it: the page keeps its room (Warp's html:has(dialog:modal) rule). */
 function keepScrollbarRoom(doc: Document) {
   const root = doc.documentElement
   root.toggleAttribute(

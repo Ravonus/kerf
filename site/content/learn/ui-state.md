@@ -2,7 +2,7 @@
 
 :::learn
 - How `interaction()` turns hover, focus and press into state you can read
-- How warp components fill it and draw it with `ui`
+- How Warp components fill it and draw it with `ui`
 - How one key shares a row between components, tabs and visitors
 - How to keep other UI state, such as a collapsed sidebar, the same in every tab
 - What U001–U005 catch
@@ -44,12 +44,12 @@ export function Save() {
 | `row.pressed.value` | it's being pressed |
 | `row.remote.value` | how many *others* have each of those, when it's shared (below) |
 
-Hand the row to a warp component with `ui={row}`. The component fills the row from real events and draws from it. The
+Hand the row to a Warp component with `ui={row}`. The component fills the row from real events and draws from it. The
 components that take `ui` are Button, Checkbox, Switch, Radio, Toggle, Chip and Card. Passing `ui` to one that doesn't
 take it is **U005**: an attribute is written and nothing is drawn.
 
 The three local values are ordinary boxes, so you can read them anywhere you'd read state: in JSX, in a `derived`, in a
-`watch`. You can also write them yourself, for an element warp doesn't draw:
+`watch`. You can also write them yourself, for an element Warp doesn't draw:
 
 ```tsx
 import { interaction } from '@weft-js/core/interaction'
@@ -69,7 +69,7 @@ export function Tile(props: { title: string }) {
 }
 ```
 
-An app that never calls `interaction()` ships none of it, and a warp component that's never given `ui` doesn't pull it
+An app that never calls `interaction()` ships none of it, and a Warp component that's never given `ui` doesn't pull it
 in either.
 
 :::note Prefer CSS when CSS can do it
@@ -145,7 +145,7 @@ export function Open(props: { id: string }) {
 }
 ```
 
-To draw both by hand, read both: `row.hover.value || row.remote.value.hover > 0`. warp does this for you: a component lit
+To draw both by hand, read both: `row.hover.value || row.remote.value.hover > 0`. Warp does this for you: a component lit
 from anywhere gets `data-hold`, and `data-remote` when it's only others.
 
 `row.remote` is a derived value: only the network writes it. Assigning to it is **U004**.
@@ -172,7 +172,7 @@ Peers see three bits and an opaque connection id: no name, no pointer position, 
 there's `@weft-js/multiplayer`.
 
 :::pitfall Hover tells people things
-What someone lingers on in a shared document, or which field of a form has focus, is a real signal. warp never shares by
+What someone lingers on in a shared document, or which field of a form has focus, is a real signal. Warp never shares by
 default: you opt in, row by row, with `share`. Build keys from data the server knows, not from the URL or something
 typed: a key taken from user input is **U002**, because the server's rule then authorises a string the user chose. And
 it's worth telling your users what others can see.
@@ -225,7 +225,7 @@ export function SidebarToggle() {
 
 Collapse the sidebar in one tab and it collapses in the others; reload, and it's still collapsed. `sync: 'tabs'` needs
 `persist`, because a new tab starts from what was stored, and it can't be `'session'`, which is per tab. Getting either
-wrong throws **S008** in development. The `@weft-js/core/sync` module that does the work is added by the weft Vite plugin
+wrong throws **S008** in development. The `@weft-js/core/sync` module that does the work is added by the Weft Vite plugin
 to the modules that use the option, so you don't import it.
 
 :::note Server rendering and `local`

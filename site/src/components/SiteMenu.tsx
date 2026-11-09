@@ -15,7 +15,7 @@ export function SiteMenu() {
       brand={
         <a href="/" class="brand">
           <Mark />
-          <span>weft</span>
+          <span>Weft</span>
         </a>
       }
     />

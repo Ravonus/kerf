@@ -45,7 +45,7 @@ packages are never published.
 
 ## Known gaps
 
-- warp's dashboard bundle is 52.3 KB brotli, slightly over the 50 KB target. This is accepted for
+- Warp's dashboard bundle is 52.3 KB brotli, slightly over the 50 KB target. This is accepted for
   1.0; the target is a goal, not a release gate.
 - Instant navigation shows its skeleton in about 15-30 ms on 3G, but the
   layout still shifts by about 0.20 between skeleton and content. The

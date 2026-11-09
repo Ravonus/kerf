@@ -11,7 +11,7 @@
 A box can hold any value: a number, a string, an object, an array. Numbers and strings can't be changed in place, only
 replaced, so a write is always a new value. Objects and arrays *can* be changed in place, and that's where it goes wrong:
 a box only knows about writes to `.value`, and a change made inside the object it already holds never goes through
-`.value`. This page shows how to update objects and arrays so the page follows, with weft's `set` to save the copying.
+`.value`. This page shows how to update objects and arrays so the page follows, with Weft's `set` to save the copying.
 
 ## What counts as a change
 
@@ -37,8 +37,8 @@ the box sees no change either.
 
 So treat any object or array in a box as read-only. To change it, make a new one and write that.
 
-:::deepdive Why weft doesn't watch inside objects
-Some libraries wrap your objects in a proxy that notices `obj.x = 5`. weft doesn't, on purpose. A box compares with one
+:::deepdive Why Weft doesn't watch inside objects
+Some libraries wrap your objects in a proxy that notices `obj.x = 5`. Weft doesn't, on purpose. A box compares with one
 `Object.is`, which is as cheap as a check can be, and a whole set of features rests on "a new value means a change":
 
 - A keyed list keeps a row when its item is the same object, and updates it when the item is a new one.
@@ -148,7 +148,7 @@ now changed, so a keyed list row showing that item keeps it, a `.get(0)` reader 
 value. Replace anything below the first level you change, as in the second line.
 :::
 
-React developers may know Immer, which tracks changes at any depth with a proxy. weft's `set` is deliberately smaller: a
+React developers may know Immer, which tracks changes at any depth with a proxy. Weft's `set` is deliberately smaller: a
 one-level copy, with no proxy and nothing to install. For the deeper levels, copy what you change.
 
 ## Updating a nested object

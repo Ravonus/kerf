@@ -2,7 +2,7 @@ import type { Meta } from '@weft-js/start'
 import { WarpIndex } from '../../components/WarpIndex'
 
 export const prerender = true
-export const meta: Meta = { title: 'Blocks', description: 'warp blocks, for weft.' }
+export const meta: Meta = { title: 'Blocks', description: 'Warp blocks, for Weft.' }
 
 export default function Index() {
   return (

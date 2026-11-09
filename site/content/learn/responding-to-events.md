@@ -4,7 +4,7 @@
 - How to write an event handler and pass it to an element
 - How a component takes handlers as props, and how to name them
 - How events travel up the page, and how to stop them or their default
-- How weft attaches handlers, and what happens to a click before the code has loaded
+- How Weft attaches handlers, and what happens to a click before the code has loaded
 :::
 
 A page that only shows things is half a page. Event handlers are your own functions that run when something happens: a
@@ -82,7 +82,7 @@ export function Toolbar() {
 ```
 
 If the parent later passes a different `message`, the next click shows the new one. Nothing re-created the handler: it
-reads `message` each time it runs. In React a handler closes over one render's values; in weft there is one run of
+reads `message` each time it runs. In React a handler closes over one render's values; in Weft there is one run of
 the component, and every read is live.
 
 ## Passing handlers as props
@@ -95,7 +95,7 @@ app using it decides what they mean. Pass the handlers down as props:
 `Toolbar` takes `onPlay` and `onUpload` and hands each to a `Button`. It doesn't know what playing or uploading is. That's
 the same move as passing any other prop: a function is a value like the rest.
 
-warp's own components work this way. `Button`'s `onClick` is a prop, and `Button` passes it to the real `<button>` inside.
+Warp's own components work this way. `Button`'s `onClick` is a prop, and `Button` passes it to the real `<button>` inside.
 
 ### Naming handler props
 
@@ -133,7 +133,7 @@ handler below it.
 ## `onChange` fires on every edit
 
 As in React, `onChange` on a text field fires on each keystroke, not when the field loses focus. On a checkbox, radio,
-select or file input it fires when the value changes. weft listens for both the browser's `input` and `change` events and
+select or file input it fires when the value changes. Weft listens for both the browser's `input` and `change` events and
 drops the `change` that only repeats an edit it already reported, so your handler runs once per edit. To act when the user
 is done with a field, use `onBlur`.
 
@@ -198,8 +198,8 @@ export function Signup() {
 The two are unrelated: `stopPropagation()` stops handlers above from running, `preventDefault()` stops the browser's
 default. You can call either, both or neither. [Forms and inputs](/learn/forms-and-inputs) covers submitting in more depth.
 
-:::deepdive How weft attaches handlers
-weft doesn't put a listener on every button. For the common bubbling events (`click`, `input`, `keydown`, `keyup`,
+:::deepdive How Weft attaches handlers
+Weft doesn't put a listener on every button. For the common bubbling events (`click`, `input`, `keydown`, `keyup`,
 `pointerdown` and the other pointer, mouse and touch events, `focusin`, `focusout`, `dblclick`, `contextmenu`,
 `beforeinput`) the compiler stores your handler on the element itself, and the page has one listener per event type, on
 the `document`. When a click arrives there, that listener walks from the clicked element up through its parents and calls
@@ -214,10 +214,10 @@ Everything else gets an ordinary listener on its own element: the events not on 
 
 Two consequences, both shared with React, which delegates the same way:
 
-- A listener you add yourself with `addEventListener` on a parent element runs *before* weft's handlers for a bubbling
-  event, because the event reaches that parent before it reaches the `document`. A weft handler's `stopPropagation()`
+- A listener you add yourself with `addEventListener` on a parent element runs *before* Weft's handlers for a bubbling
+  event, because the event reaches that parent before it reaches the `document`. A Weft handler's `stopPropagation()`
   can't stop it.
-- A listener of your own that calls `stopPropagation()` keeps the event from reaching the `document`, so weft handlers
+- A listener of your own that calls `stopPropagation()` keeps the event from reaching the `document`, so Weft handlers
   above it don't run.
 
 You rarely need your own listeners on elements. For the window or the document, use `on(window, 'keydown', …)` from
@@ -285,7 +285,7 @@ why. [SSR, islands and hydration](/learn/ssr-and-hydration) covers this in full.
 - Components take handlers as props. Name them `on` plus what happened in your app: `onPlay`, `onSelect`.
 - `e.currentTarget` is the element the handler is on, already typed. `onChange` fires on every edit.
 - Events bubble to parents. `e.stopPropagation()` stops that; `e.preventDefault()` stops the browser's default.
-- weft delegates common events to one listener on the document. Handlers on built-in elements are read once.
+- Weft delegates common events to one listener on the document. Handlers on built-in elements are read once.
 - On a server-rendered page, events that arrive before an island's code are held and replayed.
 
 ## Try it

@@ -14,9 +14,9 @@ import show from '../generated/showcase.json'
 
 export const prerender = true
 export const meta: Meta = {
-  title: { absolute: 'weft: a TypeScript framework for fast web apps' },
+  title: { absolute: 'Weft: a TypeScript framework for fast web apps' },
   description:
-    'Write components in TSX. weft compiles them to small, direct page updates, with routing, data, a UI kit and errors your coding agent can act on.',
+    'Write components in TSX. Weft compiles them to small, direct page updates, with routing, data, a UI kit and errors your coding agent can act on.',
 }
 
 const components = kit.reduce((n, g) => n + g.items.length, 0)
@@ -187,7 +187,7 @@ function fullStack() {
         ))}
       </dl>
       <p data-part="more">
-        <Link href="/learn/full-stack">Read about full-stack weft</Link>
+        <Link href="/learn/full-stack">Read about full-stack Weft</Link>
       </p>
     </section>
   )
@@ -242,7 +242,7 @@ function hero() {
         </div>
         <p data-part="install">
           <code>node packages/create/scripts/local.mjs new my-app</code>
-          <span>weft is not on npm yet, so run this from a checkout of the repo.</span>
+          <span>Weft is not on npm yet, so run this from a checkout of the repo.</span>
         </p>
       </div>
     </section>

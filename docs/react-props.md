@@ -2,7 +2,7 @@
 
 Code written with React habits runs as React would. On native elements these names work in a literal, a dynamic value
 and a `{...spread}`, on the client, on the server and in hydration. Components receive their props untouched. React's
-hooks are a different matter: `useState`, `useEffect` and the rest are W020–W029, each with the weft form to use
+hooks are a different matter: `useState`, `useEffect` and the rest are W020–W029, each with the Weft form to use
 (`weft docs rules`).
 
 ## Names
@@ -40,10 +40,10 @@ element ships none of this.
 - `onDoubleClick` listens to `dblclick`. The `Capture` forms (`onClickCapture`) listen in the capture phase;
   `onChangeCapture` listens to `input`.
 
-## Where weft differs from React
+## Where Weft differs from React
 
 **`data-*` booleans are presence flags.** `data-open={true}` writes `data-open=""` and `data-open={false}` removes it;
-React writes `"true"` and `"false"`. So `[data-open]` works in weft, and `[data-open="true"]` doesn't match. For React's
-output, pass a string: `data-open={String(open)}`. weft's own components and recorded output depend on the presence form,
+React writes `"true"` and `"false"`. So `[data-open]` works in Weft, and `[data-open="true"]` doesn't match. For React's
+output, pass a string: `data-open={String(open)}`. Weft's own components and recorded output depend on the presence form,
 so this stays. `weft check` reports a literal `{true}` or `{false}` here as W043, and `weft fix` rewrites it to what it
 already renders: `data-open`, or nothing.

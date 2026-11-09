@@ -23,7 +23,7 @@ export interface TagsInputProps {
 
 /**
  * TagsInput (09 §4.2): Enter, comma or a pasted list adds tags; an invalid one stays as a critical tag; Backspace
- * highlights the last tag, then removes it. warp had none, so it lives here. Changes are announced politely.
+ * highlights the last tag, then removes it. Warp had none, so it lives here. Changes are announced politely.
  */
 export function TagsInput({
   label,

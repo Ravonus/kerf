@@ -18,7 +18,7 @@ export interface Site {
   /** A path or URL; `'auto'` (the default) is the generated card, `false` no image at all. */
   image?: Image | false | undefined
   twitter?: Twitter | undefined
-  /** The generated card's look. Colours come from warp and fonts from the text plugin when the app has them. */
+  /** The generated card's look. Colours come from Warp and fonts from the text plugin when the app has them. */
   card?: CardTheme | undefined
   /** `false`: no stylesheet text in the page, just links. */
   inlineCss?: boolean | undefined
@@ -89,9 +89,9 @@ export interface Meta {
   description?: string | undefined
   og?: Og | undefined
   twitter?: Twitter | undefined
-  /** Tags weft doesn't model (theme-color, hreflang alternates, verification). */
+  /** Tags Weft doesn't model (theme-color, hreflang alternates, verification). */
   extra?: readonly Extra[] | undefined
-  /** Structured data, written as `application/ld+json`. `false` drops what a layout or weft set. */
+  /** Structured data, written as `application/ld+json`. `false` drops what a layout or Weft set. */
   jsonLd?: object | readonly object[] | false | undefined
 }
 

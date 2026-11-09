@@ -162,7 +162,7 @@ function lifecycle(s: SimState) {
 }
 
 /**
- * The sandbox's model of weft's wires (07 §4.7): no real connection, the documented behaviour under a chosen network.
+ * The sandbox's model of Weft's wires (07 §4.7): no real connection, the documented behaviour under a chosen network.
  * States, backoff, cursors, resume and reset run on timers; `tick()` is the 2 s heartbeat, which the caller pauses
  * when the card is off screen. `subscribe` fires on every change.
  */

@@ -7,8 +7,8 @@
 - What the compiler does with the TSX you write
 :::
 
-Components are the pieces you build a weft interface from. A button, a product card, a whole page: each is a component,
-and bigger components are made of smaller ones. If you've written React, you already know how they look, because a weft
+Components are the pieces you build a Weft interface from. A button, a product card, a whole page: each is a component,
+and bigger components are made of smaller ones. If you've written React, you already know how they look, because a Weft
 component is the same thing on the surface: a function that returns TSX. What happens underneath is different, and this
 page shows you both.
 
@@ -34,7 +34,7 @@ structures appear again and again: a card for every product, a row for every mes
 component lets you write a piece of markup once, with the logic that belongs to it, give it a name, and use it wherever
 you need it.
 
-You can mix your own components with plain HTML tags and with components other people wrote. weft comes with
+You can mix your own components with plain HTML tags and with components other people wrote. Weft comes with
 [warp](/learn/warp), a set of ready components such as `Button`, `Card` and `Input`, and the demos on these pages use them
 alongside plain tags.
 
@@ -67,7 +67,7 @@ You build it in three steps.
 
 :::pitfall Capitalise the name
 A component's name must start with a capital letter. In TSX, `<profile />` means an HTML tag called `profile`, and
-`<Profile />` means your function. The weft compiler uses the same rule to find components in a file: it treats a
+`<Profile />` means your function. The Weft compiler uses the same rule to find components in a file: it treats a
 function whose name starts with a capital letter as a component, and gives its props and body the handling the rest of
 this chapter describes.
 :::
@@ -133,7 +133,7 @@ export default function Gallery() {
 }
 ```
 
-In React this is slow and buggy because the inner function is a new component type on every render. In weft the outer
+In React this is slow and buggy because the inner function is a new component type on every render. In Weft the outer
 body runs only once, so it wouldn't be redefined, but it still hides `Profile` from the rest of the file, from hot
 reload (which swaps top-level components by name) and from the analysis that decides which parts of a page need
 JavaScript in the browser. Move it out, and pass it what it needs as props:
@@ -166,11 +166,11 @@ have their own page, [Writing markup with TSX](/learn/writing-markup-with-tsx), 
 
 ## The body runs once
 
-This is the one big difference from React. weft calls a component function once, when that part of the page first
+This is the one big difference from React. Weft calls a component function once, when that part of the page first
 appears, and never calls it again. When a value changes later, nothing re-renders: the compiler has already wired each
 `{expression}` and each attribute to the DOM node it fills, so that one node is written and nothing else runs.
 
-That's why there are no hook rules and no dependency arrays in weft. Code in the body runs once, top to bottom, and sets
+That's why there are no hook rules and no dependency arrays in Weft. Code in the body runs once, top to bottom, and sets
 things up. The live parts are the expressions in your markup, plus anything you put in `derived` or `watch`.
 
 It also means that a value computed in the body is computed once:
@@ -193,7 +193,7 @@ Work values out in the markup itself (`{price * qty}`) or with `derived` (see
 idea, with the mistakes it catches.
 
 :::deepdive What the compiler does with a component
-weft compiles each `.tsx` file ahead of time with its own compiler (written in Rust, and shipped as WebAssembly too, so
+Weft compiles each `.tsx` file ahead of time with its own compiler (written in Rust, and shipped as WebAssembly too, so
 you never need Rust installed). For a component it does roughly this:
 
 1. The static markup becomes an HTML template, parsed by the browser once and cloned for each use. Cloning a template is
@@ -207,7 +207,7 @@ you never need Rust installed). For a component it does roughly this:
    to anything, which is why a read there can't update and why the compiler flags it.
 
 React does the opposite: it calls your component again on every change, compares the new markup with the old, and
-writes the difference. Both give you a page that follows your data. weft gets there without running your component
+writes the difference. Both give you a page that follows your data. Weft gets there without running your component
 again or comparing anything, so an update costs the same however big the component is.
 :::
 

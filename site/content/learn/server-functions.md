@@ -351,7 +351,7 @@ export function Book() {
 }
 ```
 
-The diagnostics weft itself throws (Q002, A002 and the rest) are `StartError`s on the server. They reach the browser as
+The diagnostics Weft itself throws (Q002, A002 and the rest) are `StartError`s on the server. They reach the browser as
 `FnError`s too, with the code in `code`.
 
 ### Redirecting
@@ -421,7 +421,7 @@ export const renameFast = mutation({
 with none). The recipe edits a copy-on-write draft: only the row it touches is copied, so every other row keeps its
 identity and its place on the page.
 
-What weft does with it:
+What Weft does with it:
 
 1. The call starts. `optimistic` runs in the browser, and its change is applied as a **layer** on top of the cached
    value. Every component reading `listTodos` shows it at once.
@@ -439,7 +439,7 @@ mutation that changes the rows of two queries calls `cache.update` once for each
 everything else.
 
 :::deepdive One round trip
-A change in most apps costs two trips: the write, then a refetch of everything that might have changed. weft does it in
+A change in most apps costs two trips: the write, then a refetch of everything that might have changed. Weft does it in
 one. The browser sends the mutation with the list of queries the page is showing. The server runs the mutation, works out
 which of those queries share a tag with `invalidates`, runs them, and sends their values back with the result. This is
 sometimes called single-flight.
@@ -470,7 +470,7 @@ Each has a page with the fix, such as [Q004](/reference/codes/Q004).
 
 For a function that does heavy CPU work, such as search, parsing or images, the body can be Rust instead of TypeScript.
 The declaration stays: the same import, call, cache, tags and errors, with `impl` in place of `run` and an `output`
-schema as the contract. Nothing changes for the component that calls it. Rust is never needed for weft; it's there for
+schema as the contract. Nothing changes for the component that calls it. Rust is never needed for Weft; it's there for
 the functions where it pays. [Rust, in depth](/learn/rust) walks through it.
 
 ## Recap

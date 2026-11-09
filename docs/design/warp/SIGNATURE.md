@@ -1,6 +1,6 @@
-# warp signature: the sweep (non-negotiable)
+# Warp signature: the sweep (non-negotiable)
 
-The user's words: the original inputs, and the sweep above all, are **the part of the old design to keep**. Every warp
+The user's words: the original inputs, and the sweep above all, are **the part of the old design to keep**. Every Warp
 designer builds on this. It isn't an option, and it isn't vivid-only. The dial changes speed and how much a click target answers,
 never whether inputs and controls sweep, and never makes the stroke faint.
 
@@ -16,7 +16,7 @@ The source is read-only in `~/dev/agorix-discord/packages/ui/src`:
 **The original showcase:** `~/dev/agorix-discord/packages/ui/sandbox`, a Vite app with pages under
 `sandbox/src/pages/{foundations,forms,display,feedback,layout-nav,motion,recipes,setup}`.
 - Read its pages to see how each component was actually presented and combined.
-- When it's running, it's at http://localhost:5174. warp's specimens should be at least as rich as it.
+- When it's running, it's at http://localhost:5174. Warp's specimens should be at least as rich as it.
 
 ## 1. The sweep border
 
@@ -64,7 +64,7 @@ Source: `buttons/core/Button.frame.tsx` and `theme/tokens.css:228-480`.
        `M 1 50 V 1 H 99 V 50`, goes up from the left middle, across the top, and down to the right middle. Path B,
        `M 1 50 V 99 H 99 V 50`, does the same along the bottom. Both draw at once (`stroke-dashoffset: 1 → 0`,
        `pathLength=1`, `vector-effect: non-scaling-stroke`, 2.6 stroke, square caps).
-     - warp draws the same two routes in **CSS**, not SVG: six 2.6px segments
+     - Warp draws the same two routes in **CSS**, not SVG: six 2.6px segments
        (`<span data-part="sweep-outline"><i></i>×6</span>`) size themselves from two registered numbers,
        `--warp-frame-head` and `--warp-frame-tail` (0 → 1), with container units. In Chrome an SVG dash with
        `pathLength` + `non-scaling-stroke` is measured in screen px and leaves gaps past ~200px wide; the CSS
@@ -158,7 +158,7 @@ other `data-sweep` on a surface is an explicit opt-in and sweeps at every stop; 
 - The label float becomes a 120 ms fade, with no movement and no per-character stagger.
 - The resulting states are identical to the animated version.
 
-## 4. In weft
+## 4. In Weft
 
 - The sweep is CSS: `--_a` plus each part's clocks and two edges (§1.4). `installSweep()` keeps only `confirm()`, `pin()` and `duration()`.
 - A tap draws one whole sweep, then exits: `:active` ends at once, and the clocks finish the draw (§1.4). Still no script.
@@ -167,7 +167,7 @@ other `data-sweep` on a surface is an explicit opt-in and sweeps at every stop; 
 - The notch window is a `derived` value that reads the layout once.
 - The markup is `data-sweep` on the host, `data-part="sweep"` and `data-part="sweep-base"` inside it. `floatingLabel()` does the
   label.
-- `specimens/warp-sweep.js` is the historical phase machine that the specimens still run. warp no longer ships one.
+- `specimens/warp-sweep.js` is the historical phase machine that the specimens still run. Warp no longer ships one.
 - **`--_on` is reserved.** It is the sweep switch, a number (0/1) the signature layer multiplies into opacity and
   clip. Components must name tone colours differently (`--_tone`, `--_solid`); a colour in `--_on` kills the sweep.
 - `--warp-color-sweep-base: inherit` on a host restores the ink resting border after a component recolours it.

@@ -34,7 +34,7 @@ src/routes/todos/_layout.tsx  guards /todos for signed-in users
 An app made without it gets the same with `weft add auth`, as long as it has a database (`weft add db` first). Run
 `weft db generate` afterwards, because it adds tables.
 
-The provider is a few lines. `createAuth` makes a Better Auth instance with weft's defaults (email and password on,
+The provider is a few lines. `createAuth` makes a Better Auth instance with Weft's defaults (email and password on,
 telemetry off), stored through Drizzle in your own database:
 
 ```ts
@@ -52,7 +52,7 @@ export default createAuth({
 })
 ```
 
-weft serves Better Auth's own routes under `/api/auth/*`. Anything in `options` goes to Better Auth as is, and wins over
+Weft serves Better Auth's own routes under `/api/auth/*`. Anything in `options` goes to Better Auth as is, and wins over
 the defaults, so its plugins and settings (social sign-in, email verification, session length) are configured here, as its
 docs describe. A provider with no store is **A005**.
 
@@ -86,7 +86,7 @@ declare module '@weft-js/start' {
 visitor who isn't signed in both are `null`. The `declare module` block types them, so `ctx.user.email` is checked
 everywhere.
 
-A request with no session cookie costs nothing: weft answers `{ user: null, session: null }` without asking the
+A request with no session cookie costs nothing: Weft answers `{ user: null, session: null }` without asking the
 database. Pages for visitors stay as cheap as pages without auth.
 
 ## Signing up, in and out

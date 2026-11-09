@@ -1,7 +1,7 @@
 /**
  * What a move between docs pages shows until the page arrives: the doc article's own outline (crumb, title, lede, the
  * copy button, paragraphs, a code block, a heading, the pager) and the contents column beside it, so the swap moves
- * nothing. The bars are warp's skeleton (`data-scope="skeleton"`); docs.css sizes them.
+ * nothing. The bars are Warp's skeleton (`data-scope="skeleton"`); docs.css sizes them.
  *
  * Navigation draws it before any of the page's code loads, so it is plain markup only: no components, and string
  * `class` and `data-*` attributes. Keep it in step with the doc article in the routes that use it.

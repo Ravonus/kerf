@@ -14,14 +14,14 @@ export const prerender = true
 export const meta: Meta = {
   title: 'Learn',
   description:
-    'Learn weft from the first component to the server: chapters in order, each with live examples.',
+    'Learn Weft from the first component to the server: chapters in order, each with live examples.',
 }
 
 export default function LearnHome(props: RouteProps<typeof load>) {
   return (
     <article data-site="doc" data-vt="main" data-learn-home="">
       <header>
-        <h1>Learn weft</h1>
+        <h1>Learn Weft</h1>
         <p data-part="lede">
           weft is TSX that compiles to direct DOM updates. A component runs once, state is a box
           with a <code data-scope="code">.value</code>, and the compiler names each mistake with a
@@ -31,7 +31,7 @@ export default function LearnHome(props: RouteProps<typeof load>) {
 
       <section data-site="quick-start">
         <h2 id="quick-start">Quick start</h2>
-        <p>Once weft is on npm, one command makes an app:</p>
+        <p>Once Weft is on npm, one command makes an app:</p>
         <pre data-part="cmd">
           <code>npm create @weft-js</code>
         </pre>

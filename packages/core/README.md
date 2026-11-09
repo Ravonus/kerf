@@ -2,7 +2,7 @@
 
 > **Early release (0.1.1).** APIs will change between minor versions.
 
-weft's runtime, compiler binding, Vite plugin, server renderer and test utilities. An app made with `npm create @weft-js`
+Weft's runtime, compiler binding, Vite plugin, server renderer and test utilities. An app made with `npm create @weft-js`
 already has it, wired up.
 
 ```bash
@@ -67,7 +67,7 @@ code.
 
 ## The Vite plugin
 
-`weft()` from `@weft-js/core/vite` compiles `.tsx` and `.jsx` files with weft's compiler, for the client or the server.
+`weft()` from `@weft-js/core/vite` compiles `.tsx` and `.jsx` files with Weft's compiler, for the client or the server.
 A production build also drops CSS that nothing can reach: a rule keyed on a `data-scope`, `data-part`, `data-variant`,
 `data-tone` or `data-emphasis` value that no built file mentions, then the tokens and keyframes left unused.
 `weft({ purge: { keep: ['knob'] } })` keeps a name that's only built at run time, and `purge: false` turns this off.

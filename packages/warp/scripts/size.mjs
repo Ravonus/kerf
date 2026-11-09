@@ -57,6 +57,7 @@ export const ENTRIES = {
   HamburgerMenu: ['HamburgerMenu', '<HamburgerMenu links={[{ href: "/", label: "Home" }]} />'],
   SideNavTitle: ['SideNavTitle', '<SideNavTitle title="Docs">weft</SideNavTitle>'],
   Presence: ['Presence', '<Presence when={true}>x</Presence>'],
+  ScrollRail: ['ScrollRail', '<ScrollRail />'],
   Toaster: ['Toaster', '<Toaster />'],
   Table: [
     'Table',

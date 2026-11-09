@@ -67,7 +67,15 @@ export function current_(path: string) {
     let match = false
     try {
       const url = new URL(a.href)
-      match = url.origin === location.origin && url.pathname === path && !url.search && !url.hash
+      const section = a.dataset.match === 'section'
+      match =
+        url.origin === location.origin &&
+        !url.search &&
+        !url.hash &&
+        (url.pathname === path ||
+          (section &&
+            url.pathname !== '/' &&
+            path.startsWith(`${url.pathname.replace(/\/$/, '')}/`)))
     } catch {
       /* malformed links cannot match */
     }

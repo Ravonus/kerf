@@ -121,7 +121,7 @@ Wrapping it in an element, as here, also means content that appears *later* unde
 
 ## A context's value is read once
 
-In React, a context value can change, and every component that uses it renders again. In weft, nothing renders again.
+In React, a context value can change, and every component that uses it renders again. In Weft, nothing renders again.
 `Section` above runs once, calls `provide` once, and the level it gives is fixed. That suits values that are part of the
 structure, like a level.
 
@@ -207,7 +207,7 @@ too: those belong to the component.
 
 ## Compared with React
 
-| React | weft |
+| React | Weft |
 |---|---|
 | `const Ctx = createContext(fallback)` | `const Ctx = context(fallback)` |
 | `<Ctx value={v}>…</Ctx>` (or `<Ctx.Provider>`) | `Ctx.provide(v, () => <>…</>)` |
@@ -238,7 +238,7 @@ export function DensityScope(
 ```
 
 Note the `derived`. Passing `props.value` straight to `provide` would read the prop once, when `DensityScope` is made, and
-miss every later change; weft reports that as **W001**. A derived value of the prop is live, like a box, and readers read
+miss every later change; Weft reports that as **W001**. A derived value of the prop is live, like a box, and readers read
 `.value`. If you do mean the first value only, say so with `untrack(() => props.value)`.
 
 :::deepdive How `use` finds its value
@@ -250,7 +250,7 @@ That's also why `use` gives the fallback in a handler: by the time a click arriv
 owner to start from. And it's why a subtree built under `provide` is disposed of with the component that called it: it's
 owned by it.
 
-weft uses this itself. Each `defineState` scope finds which app it belongs to through a context (a server renders many
+Weft uses this itself. Each `defineState` scope finds which app it belongs to through a context (a server renders many
 apps at once, one per request), and `<Boundary>` finds the resources inside it the same way.
 :::
 
@@ -434,6 +434,6 @@ export function Title(props: { children?: unknown }) {
   )
 }
 ```
-Each section reads the level around it and provides one more, so nesting is all it takes. (warp's `Heading` takes a
+Each section reads the level around it and provides one more, so nesting is all it takes. (Warp's `Heading` takes a
 `level` prop and does the tag choice for you, as the demo at the top of the page does.)
 :::

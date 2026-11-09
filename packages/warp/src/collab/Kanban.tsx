@@ -26,14 +26,14 @@ import '@weft-js/warp-core/styles/data/kanban.css'
 import '@weft-js/warp-core/styles/app/kanban.css'
 import '@weft-js/warp-core/styles/layout/edges.css'
 
-/** A card on the board, with what warp draws on it. */
+/** A card on the board, with what Warp draws on it. */
 export type KanbanCardData = BoardCard & {
   label?: string | undefined
   color?: number | undefined
   assignee?: string | undefined
   /** Footer text: a due date, a count. */ meta?: string | undefined
 }
-/** A board column of warp cards. */
+/** A board column of Warp cards. */
 export type KanbanColumn = BoardColumn<KanbanCardData>
 
 const hasFooter = (c: KanbanCardData) =>

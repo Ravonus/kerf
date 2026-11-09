@@ -27,7 +27,7 @@ export interface MeetingRoomProps {
   compact?: boolean | undefined
   /** Dark island by default (07 §7). */
   theme?: 'dark' | 'light' | undefined
-  /** Media is the caller's: warp never touches getUserMedia. Return the <video> for a participant. */
+  /** Media is the caller's: Warp never touches getUserMedia. Return the <video> for a participant. */
   video?: Video | undefined
   /** The shared screen, for presentation layout. */
   share?: (() => unknown) | undefined

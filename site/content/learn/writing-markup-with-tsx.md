@@ -1,16 +1,16 @@
 # Writing markup with TSX
 
 :::learn
-- Why weft puts markup and logic together in TSX
+- Why Weft puts markup and logic together in TSX
 - How TSX differs from HTML: one root, closed tags, attribute names
-- Which names weft accepts: `class` and `className`, `for` and `htmlFor`, events, `style`
+- Which names Weft accepts: `class` and `className`, `for` and `htmlFor`, events, `style`
 - The weft-specific attributes: `ref`, `bind:`, `textContent` and `innerHTML`
 - How to turn a piece of HTML into TSX
 :::
 
 TSX is TypeScript with markup in it. It lets you write HTML-like tags inside a `.tsx` file, right next to the logic that
 fills them in. Most of what you write is HTML you already know; this page covers the few rules that differ, and the
-handful of attributes weft adds.
+handful of attributes Weft adds.
 
 :::demo describe-markup
 
@@ -24,7 +24,7 @@ change to one is next to the other.
 A sidebar component and a form component each keep their markup and logic together, and you can still keep their
 styles where you like: see [Styling and style groups](/learn/styling).
 
-TSX looks like HTML but it is stricter, and it can hold live values. weft's compiler reads it at build time and turns it
+TSX looks like HTML but it is stricter, and it can hold live values. Weft's compiler reads it at build time and turns it
 into the code that builds and updates the page (see [Your first component](/learn/your-first-component)). There is no
 `React.createElement` and no virtual DOM: the tags you write become real DOM nodes, built once from a template.
 
@@ -111,7 +111,7 @@ A fragment groups things without leaving any element of its own in the page.
 :::deepdive Why one root?
 A tag in TSX is an expression: it produces one value, as `1 + 2` does. A function can't return two values without
 putting them in something, in the same way that `return 1 2` isn't JavaScript. A parent element or a fragment is that
-something. In weft the value is the DOM nodes themselves: a fragment hands back its children as a list, and the place it
+something. In Weft the value is the DOM nodes themselves: a fragment hands back its children as a list, and the place it
 lands in puts them all in order.
 :::
 
@@ -123,10 +123,10 @@ Every tag must be closed. Tags that are empty in HTML, such as `<img>`, `<input>
 ### 3. Attribute names: both spellings work
 
 HTML attributes are written in TSX as they are in HTML, and most are one lowercase word: `src`, `alt`, `href`,
-`placeholder`. Where React renamed an attribute to suit JavaScript, weft accepts React's name as well, so code written
+`placeholder`. Where React renamed an attribute to suit JavaScript, Weft accepts React's name as well, so code written
 either way works:
 
-| HTML | React's name | weft accepts |
+| HTML | React's name | Weft accepts |
 |---|---|---|
 | `class` | `className` | both |
 | `for` | `htmlFor` | both |
@@ -144,7 +144,7 @@ HTML.
 
 :::pitfall `data-*` booleans are presence flags
 `data-open={true}` writes `data-open=""`, and `data-open={false}` leaves the attribute off. React writes the strings
-`"true"` and `"false"` instead. So in weft you select it with `[data-open]` in CSS, and `[data-open="true"]` never
+`"true"` and `"false"` instead. So in Weft you select it with `[data-open]` in CSS, and `[data-open="true"]` never
 matches. If you want React's output, pass a string: `data-open={String(open.value)}`. `weft check` reports a literal
 `{true}` or `{false}` here as **W043**, and its fix rewrites it to what it renders.
 :::
@@ -172,7 +172,7 @@ export function Send() {
 ```
 
 A few attributes take the words `true` and `false` as values rather than meaning on or off: `aria-*`, `contentEditable`,
-`spellCheck`, `draggable`. For those, weft writes `false` as the word, so `aria-pressed={false}` is
+`spellCheck`, `draggable`. For those, Weft writes `false` as the word, so `aria-pressed={false}` is
 `aria-pressed="false"`.
 
 ### The fixed version
@@ -200,7 +200,7 @@ export default function TodoList() {
 ```
 
 :::note Pro tip: convert with your editor or an agent
-Converting a large block of HTML by hand is tedious. Any HTML-to-JSX converter's output works in weft, since weft accepts
+Converting a large block of HTML by hand is tedious. Any HTML-to-JSX converter's output works in Weft, since Weft accepts
 React's attribute names. An AI agent with `weft check` in its loop will fix what's left: see
 [Working with AI agents](/learn/working-with-agents).
 :::
@@ -284,8 +284,8 @@ properties as `'--name'`. A number gets `px` unless the property has no unit, su
 `null`, `undefined` and booleans mean "no declaration", so `color: urgent && 'red'` sets the colour only when `urgent` is
 true. When a value in the object reads state, only the declarations that changed are written.
 
-:::note Styles in a warp app
-In an app that uses warp, `weft check` asks for warp's tokens (`var(--warp-color-…)`, `var(--warp-space-…)`) instead of
+:::note Styles in a Warp app
+In an app that uses Warp, `weft check` asks for Warp's tokens (`var(--warp-color-…)`, `var(--warp-space-…)`) instead of
 raw colours and lengths, so a theme or dark mode follows everywhere. [Styling and style groups](/learn/styling) shows the
 better tool for most styling: style groups, which compile to class names.
 :::
@@ -312,10 +312,10 @@ export function Tab(props: { label: string }) {
 }
 ```
 
-With the object form, weft adds and removes only the classes that changed, and leaves any other class on the element
+With the object form, Weft adds and removes only the classes that changed, and leaves any other class on the element
 alone.
 
-## Attributes weft adds
+## Attributes Weft adds
 
 ### `ref`: the element itself
 
@@ -351,9 +351,9 @@ they would replace them; the compiler reports it.
 :::pitfall `innerHTML` isn't escaped
 Text in braces is always escaped: `{comment}` shows `<script>` as those characters. `innerHTML` is the one way around
 that: whatever string you give it is parsed as markup, so a value that came from a user can run script in your page.
-Use it only for HTML you made or cleaned yourself. weft's own code bans it outright with a lint rule (`no-html-sink`)
+Use it only for HTML you made or cleaned yourself. Weft's own code bans it outright with a lint rule (`no-html-sink`)
 unless a comment says why the HTML is safe, and these pages' demos follow that rule. To show formatted text from users,
-build the elements, or use warp's `Markdown`.
+build the elements, or use Warp's `Markdown`.
 :::
 
 ### `key`
@@ -363,7 +363,7 @@ written to the page. [Rendering lists](/learn/rendering-lists) is where it matte
 
 ## Types
 
-TSX in weft is checked by TypeScript with weft's own JSX types. Each HTML element knows its events, so `e.currentTarget`
+TSX in Weft is checked by TypeScript with Weft's own JSX types. Each HTML element knows its events, so `e.currentTarget`
 in `onInput` on an `<input>` is an `HTMLInputElement`. Other attributes are left open: any name with any value is
 accepted, because HTML has hundreds of attributes and custom ones are common. So TypeScript won't catch a misspelt
 attribute such as `palceholder`; the browser ignores it and so would you, until you look.
@@ -421,7 +421,7 @@ export default function Bio() {
   )
 }
 ```
-`class` stays as it is: weft accepts it as well as `className`.
+`class` stays as it is: Weft accepts it as well as `className`.
 :::
 
 :::challenge Fix the click handler

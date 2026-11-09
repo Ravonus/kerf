@@ -1,4 +1,4 @@
-# warp 04 — Rich inputs: time, place, ink and structure
+# Warp 04 — Rich inputs: time, place, ink and structure
 
 Status: v0.2, 2026-10-28. Owner: interaction design, temporal and rich inputs. Reads: [00-direction.md](00-direction.md),
 [01-foundations.md](01-foundations.md), [SIGNATURE.md](SIGNATURE.md), [tokens/warp.css](tokens/warp.css). Siblings:
@@ -443,7 +443,7 @@ type AddressFieldProps = Omit<FieldShell, "prefix" | "suffix"> &
 
 ### PlaceLookupInput
 - A combobox in the field shell (pin icon) for "a place", not a postal address: birthplace, event city, a weather
-  location. The app supplies `search()`, so warp is vendor-agnostic and ships no geocoder. Results read "Lisbon,
+  location. The app supplies `search()`, so Warp is vendor-agnostic and ships no geocoder. Results read "Lisbon,
   Portugal · city" with coordinates as secondary text. **Bias chips** ("Cities", "Countries", "Landmarks") re-rank
   the results and re-run the search. The request is debounced (120ms) and cancelled when superseded; the body is
   `aria-busy` and the hint says "Searching…". The value is the chosen place, with its IANA zone when known, so it can
@@ -513,7 +513,7 @@ type CurrencySelectProps = FieldShell &
   caret. The editor (`role="textbox" aria-multiline`) gets `aria-expanded`, `aria-controls` and
   `aria-activedescendant`. Mentions insert as atomic nodes named "Mention: Ada Lovelace". Slash items have an icon,
   label, hint and shortcut.
-- Engine: a headless editor model (ProseMirror via `@weft/editor`); warp only skins it with `data-part`s.
+- Engine: a headless editor model (ProseMirror via `@weft/editor`); Warp only skins it with `data-part`s.
 ```ts
 type RichTextEditorProps = FieldShell &
   Bindable<string> & {
@@ -604,7 +604,7 @@ type ImageCropperProps = Bindable<Crop> & {
 - **Markdown** is a small, safe renderer: h1–h4 (rendered one level down), paragraphs, lists and task lists,
   bold, italic, strike, inline code, links (http, https, mailto and relative only), quotes, rules, and fenced
   blocks rendered through CodeBlock. **Raw HTML is never interpreted**: it's escaped and shown as text. Larger needs
-  (tables, footnotes, MDX) plug in a parser through `renderer` and keep warp's element styles.
+  (tables, footnotes, MDX) plug in a parser through `renderer` and keep Warp's element styles.
 ```ts
 type CodeProps = { children: string };
 type CodeBlockProps = {
@@ -721,9 +721,9 @@ type JsonViewerProps = {
 ## 5. Specialised
 
 ### PaymentCardInput (provider iframe) · CardNumberText
-**warp never renders an input for a raw card number.** Entry belongs to the payment provider's hosted field or iframe
+**Warp never renders an input for a raw card number.** Entry belongs to the payment provider's hosted field or iframe
 (the predecessor got this right: `old:inputs/specialized/PaymentCardInput.tsx:12`). That keeps the app in PCI SAQ-A
-scope. warp provides: (1) the **field shell around the provider's iframe**, with its focus and invalid states driven by
+scope. Warp provides: (1) the **field shell around the provider's iframe**, with its focus and invalid states driven by
 the provider's events, and its tokens passed into the provider's appearance API (font, `text-control-size`,
 `radius-control`, `border-control`, `critical-text`); (2) **`CardNumberText`**, for display: `•••• 4242`, brand
 from the BIN range, grouping 4-4-4-4 / Amex 4-6-5, and expiry as `MM/YY` from the locale. Provider `focus` → `force(true)`,
@@ -843,7 +843,7 @@ continue the entry direction, and leave toward the anchor.
 | Take the week start, hour cycle and segment order from the locale. | Hard-code Sunday, `MM/DD` or 12h. |
 | Use a sheet on phone when the picker needs ranges, presets or search. | Squeeze a two-month popover into 390px. |
 | Use native `tel` and address autofill on phone. | Build a custom keypad or a sheet for an address. |
-| Wrap the provider's card iframe in the warp field shell. | Render your own `<input>` for a card number. |
+| Wrap the provider's card iframe in the Warp field shell. | Render your own `<input>` for a card number. |
 | Put every input, popover trigger and editor frame in the SIGNATURE shell. | Draw a second border or label for a "special" input. |
 | Let `fields` or `variant` choose floating or classic. | Hard-code a label position per component. |
 | Offer typed signatures and Move up/down buttons. | Make drawing or dragging the only way to complete a field. |

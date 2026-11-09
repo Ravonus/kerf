@@ -35,7 +35,7 @@ export interface ConnBannerProps {
   stale?: Live<boolean | undefined>
   /** A mutation failed because the contract changed: the Banner turns caution. */
   contractFailed?: boolean
-  /** Seconds to the next try: weft's backoff. */
+  /** Seconds to the next try: Weft's backoff. */
   retryIn?: number
   /** Adds Retry now, to try before the backoff runs out. */
   onRetry?: () => void

@@ -10,7 +10,7 @@
 
 A test should fail when the code is wrong, and pass when it's right. That sounds obvious, but a lot of tests pass
 whatever the code does: they assert on a value they set themselves, sleep and hope, or check a snapshot nobody reads.
-weft's test helpers are built so that the natural way to write a test is the one that catches bugs, and `weft check`
+Weft's test helpers are built so that the natural way to write a test is the one that catches bugs, and `weft check`
 reports the patterns that don't.
 
 Everything on this page comes from `@weft-js/core/test`, which runs under [vitest](https://vitest.dev) in jsdom. Here is
@@ -27,7 +27,7 @@ npm install -D vitest jsdom @testing-library/dom \
   @testing-library/user-event
 ```
 
-Then give vitest the weft compiler, so a `.tsx` test compiles the same way your app does:
+Then give vitest the Weft compiler, so a `.tsx` test compiles the same way your app does:
 
 <!-- example: skip @weft-js/core/vite has no type declarations yet (TS7016 under strict) -->
 ```ts
@@ -124,13 +124,13 @@ exactly when a user would notice something wrong.
 
 :::note Coming from React Testing Library
 Most of this will look familiar. Two things are different. There's no `act()`, because every `user` action already waits
-for the page to update. And there's no `rerender`, because a weft component runs once: to see it with new props, pass a
+for the page to update. And there's no `rerender`, because a Weft component runs once: to see it with new props, pass a
 box or render the parent that owns the value.
 :::
 
 ## Every action ends in a flush
 
-In weft, writes are batched: a handler sets some boxes, and the DOM catches up together once the handler is done. In a
+In Weft, writes are batched: a handler sets some boxes, and the DOM catches up together once the handler is done. In a
 test, that means there's a moment after a click when the page hasn't changed yet.
 
 You never see that moment, because every `user` action ends in `flush()`, which applies pending updates and lets what
@@ -399,7 +399,7 @@ The second test is worth a closer look. `net.handle` replaced the body, but not 
 the real `auth: 'user'` check refuses the call (A002), the query's `error` is set, and the component shows the message. A
 mock of `listTodos` would have skipped exactly the part this test checks.
 
-:::pitfall Mocking weft or the thing you're testing
+:::pitfall Mocking Weft or the thing you're testing
 `vi.mock('@weft-js/core')`, or mocking the component under test, makes a test check its own mock. `weft check` reports it
 as T006. Fake the edges instead (the network with `net`, time with `clock`, storage with `memoryStorage`) and render the
 real component.
@@ -481,7 +481,7 @@ DOM writes stay at one, so only the `runs` budget notices. That's why the budget
 full count (`mutations`, `runs`, `added`, `removed`, `text`, `attributes`) if you want to look before you pick a budget.
 
 :::deepdive Why count re-runs as well as DOM writes?
-weft compiles each read of a box to its own binding. When a row's item object is replaced by an equal copy, the row's
+Weft compiles each read of a box to its own binding. When a row's item object is replaced by an equal copy, the row's
 bindings run again, compare, and find nothing to write. So the DOM barely changes, but the CPU did the work for every
 row. That's the bug W014 describes: an array rebuilt with new item identities. The compiler catches it inside one file
 and `weft check` follows the box into other files, but a test with a `runs` budget catches it wherever it comes from,

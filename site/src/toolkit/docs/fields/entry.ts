@@ -68,7 +68,7 @@ export const fieldsEntry: Doc[] = [
       value: 'The address, or a `State` to bind.',
       defaultValue: 'The first address.',
       onValueChange: 'Hears the new address and why it changed.',
-      provider: 'Where suggestions come from: `suggest` and `resolve`. warp ships none.',
+      provider: 'Where suggestions come from: `suggest` and `resolve`. Warp ships none.',
       countries: 'Limits the country list.',
       defaultCountry: 'The country to start on.',
       errors: 'A message per line, keyed `line1`, `postalCode` and so on.',
@@ -125,7 +125,7 @@ export const fieldsEntry: Doc[] = [
     ],
     propDocs: {
       ...shell,
-      search: 'Your geocoder. warp ships none. Gets the text, the filters and an abort signal.',
+      search: 'Your geocoder. Warp ships none. Gets the text, the filters and an abort signal.',
       biases: 'Filter chips: `{ id, label, default }`.',
       minChars: 'How many letters before it searches.',
       value: 'The place, or a `State` to bind.',
@@ -149,7 +149,7 @@ export const fieldsEntry: Doc[] = [
           {
             id: 'PaymentCardInputBasic',
             title: 'A hosted field',
-            note: "This one is a stand-in that sends nothing anywhere. Use a test number like the one shown. Your `mount` gets warp's colours and fonts to pass to the provider.",
+            note: "This one is a stand-in that sends nothing anywhere. Use a test number like the one shown. Your `mount` gets Warp's colours and fonts to pass to the provider.",
             stage: 'narrow',
             height: 180,
           },
@@ -183,7 +183,7 @@ export const fieldsEntry: Doc[] = [
       },
     ],
     a11yNotes: [
-      "warp never draws an input for a real card number. The number stays inside the provider's frame.",
+      "Warp never draws an input for a real card number. The number stays inside the provider's frame.",
     ],
     propDocs: {
       ...shell,

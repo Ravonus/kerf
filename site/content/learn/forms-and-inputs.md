@@ -3,13 +3,13 @@
 :::learn
 - How to tie a text field, number, checkbox, radio, select and textarea to state
 - When to keep an input's value in a box, and when to let the browser keep it
-- Which warp control takes which props, and which ones take the box itself
+- Which Warp control takes which props, and which ones take the box itself
 - How to submit a form in the browser, and where server forms come in
 :::
 
 Most interactivity ends in a form: a search box, a settings page, a checkout. You already have the pieces: a box holds
 the value, the input reads it, and a handler writes it. This page goes through each kind of input, first as the browser's
-own element and then as its warp control, and ends with submitting.
+own element and then as its Warp control, and ends with submitting.
 
 :::demo interact-controls
 
@@ -44,15 +44,15 @@ list, a button that's only enabled when the field isn't empty. And a write from 
 Clear button, shows in the field.
 
 `value`, `checked` and `selected` are written as DOM properties, not attributes. The attribute is only the starting
-value: after someone types, setting the attribute no longer changes what the field shows, and the property does. weft
+value: after someone types, setting the attribute no longer changes what the field shows, and the property does. Weft
 handles that for you.
 
 In React this is a *controlled input*. One difference to know: React puts the field back to the state's value after
-every keystroke, so an input with a `value` and no handler can't be typed in. weft writes the field only when the box
+every keystroke, so an input with a `value` and no handler can't be typed in. Weft writes the field only when the box
 changes. That matters in one case, covered in the pitfall below.
 
 :::pitfall A handler that refuses a change
-weft writes `value` to the field when the box changes, and not otherwise. A handler that *rejects* an edit, by not
+Weft writes `value` to the field when the box changes, and not otherwise. A handler that *rejects* an edit, by not
 writing or by writing what the box already held, leaves the user's typing on screen:
 
 ```tsx
@@ -78,8 +78,8 @@ button that enables, another field that depends on it. Otherwise the browser hol
 
 ## Each kind of input
 
-The browser's own elements work as below. In an app that uses warp, `weft check` suggests warp's control instead of a
-browser-drawn `<select>`, `<textarea>`, number input and the like (**D005**): warp's draw the same in every browser, with
+The browser's own elements work as below. In an app that uses Warp, `weft check` suggests Warp's control instead of a
+browser-drawn `<select>`, `<textarea>`, number input and the like (**D005**): Warp's draw the same in every browser, with
 the focus ring and touch targets of the rest of the app. Each section shows both.
 
 ### Text and textarea
@@ -87,7 +87,7 @@ the focus ring and touch targets of the rest of the app. Each section shows both
 `value` and `onInput`, as above. `e.currentTarget.value` is a string. A `<textarea>` works the same way: in TSX it takes a
 `value` like an input, not children.
 
-warp's `Input` and `Textarea` take the same two props, plus a `label`, which they need:
+Warp's `Input` and `Textarea` take the same two props, plus a `label`, which they need:
 
 ```tsx
 import { state } from '@weft-js/core'
@@ -151,7 +151,7 @@ export function Quantity() {
 }
 ```
 
-warp's `NumberField` holds a `number | null`, with `null` for empty, and takes the box itself as `value`. It writes the box
+Warp's `NumberField` holds a `number | null`, with `null` for empty, and takes the box itself as `value`. It writes the box
 as the user types, steps or presses the arrow keys:
 
 ```tsx
@@ -199,7 +199,7 @@ export function Terms() {
 }
 ```
 
-warp's `Checkbox` and `Switch` are a real checkbox inside, and pass `checked` and `onChange` to it. Their extra props are
+Warp's `Checkbox` and `Switch` are a real checkbox inside, and pass `checked` and `onChange` to it. Their extra props are
 typed loosely, so give the handler's event a type:
 
 ```tsx
@@ -264,7 +264,7 @@ export function SizePicker() {
 }
 ```
 
-warp's `RadioGroup` does that wiring for you. It takes the current `value`, an `onChange` that receives the picked value
+Warp's `RadioGroup` does that wiring for you. It takes the current `value`, an `onChange` that receives the picked value
 (not an event), and the `options`. `Segmented` takes the same props and draws them as a row of segments:
 
 ```tsx
@@ -318,7 +318,7 @@ export function Milk() {
 The compiler writes a select's `value` after its options exist, so the right option is selected even when the options
 come from a list.
 
-warp's `Select` takes `options` as data and, like `NumberField`, the box itself as `value`. A real `<select>` stays inside
+Warp's `Select` takes `options` as data and, like `NumberField`, the box itself as `value`. A real `<select>` stays inside
 it, so a form posts, resets and validates as it would with the browser's:
 
 ```tsx
@@ -348,7 +348,7 @@ export function Milk() {
 }
 ```
 
-### Which warp control takes what
+### Which Warp control takes what
 
 | Control | Value | How it writes |
 |---|---|---|
@@ -358,7 +358,7 @@ export function Milk() {
 | `Slider` | `value={box.value}` (a number, or two) | `onChange={v => …}`, the value |
 | `Select`, `NumberField`, the date and time fields | `value={box}`, the box itself | Writes the box. Or `value` plus `onValueChange`, or `defaultValue` |
 
-The last row is warp's `Bindable` props: a control that takes the box writes it, so there's no handler to write. `bind:`
+The last row is Warp's `Bindable` props: a control that takes the box writes it, so there's no handler to write. `bind:`
 isn't needed for them, and isn't what they expect: see [Writing to a parent with bind:](/learn/bind).
 
 ## Submitting a form
@@ -377,7 +377,7 @@ The handler does three things:
 3. **Holds state for the request**, `sending` and `joined`, so the page can show progress and the result.
 
 The browser checks `required` and `type="email"` before `onSubmit` runs: press Join with the field empty and the handler
-never runs. warp's fields show the browser's message in their own error style.
+never runs. Warp's fields show the browser's message in their own error style.
 
 Nothing waits for a promise an event handler returns, and a rejected one goes unhandled. So keep the submit handler
 itself synchronous, as the demo does: call `preventDefault()` first, then start the async work with `void join(email)`,
@@ -401,10 +401,10 @@ or never leaves the page.
 ## Recap
 
 - Tie an input to a box with two halves: `value={box.value}` to show it, a handler to write it.
-- weft writes the field only when the box changes. A handler that rejects an edit puts the field back itself.
+- Weft writes the field only when the box changes. A handler that rejects an edit puts the field back itself.
 - Let the browser keep a value, with `defaultValue` and `FormData`, when nothing reads it before submit.
 - Checkboxes use `checked` and `onChange`; radios share a `name` and compare with the box; a select takes `value`.
-- In a warp app, use warp's controls (**D005**). Text and choice controls take a value and a handler; `Select`,
+- In a Warp app, use Warp's controls (**D005**). Text and choice controls take a value and a handler; `Select`,
   `NumberField` and the date fields take the box itself.
 - Submit with `onSubmit` on the form, `e.preventDefault()`, and `FormData`. For server forms, use `Form` from
   `@weft-js/start`.
@@ -564,6 +564,6 @@ export function Pin() {
 }
 ```
 
-Stripping the letter leaves the box as it was, so weft has nothing to write to the field. The handler puts the field back
+Stripping the letter leaves the box as it was, so Weft has nothing to write to the field. The handler puts the field back
 to the box itself.
 :::

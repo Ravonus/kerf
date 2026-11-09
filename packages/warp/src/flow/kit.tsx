@@ -114,7 +114,7 @@ export function useCooldown(seconds: () => number | undefined, onDone?: () => vo
   return left
 }
 
-/** What `<Form of={mutation}>` gives its children; a step reads it, so warp never imports the server's Form. */
+/** What `<Form of={mutation}>` gives its children; a step reads it, so Warp never imports the server's Form. */
 export interface FormLike {
   readonly pending: { readonly value: boolean }
   readonly errors: { readonly value: Record<string, string> }

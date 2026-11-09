@@ -2,13 +2,13 @@
 
 :::learn
 - How to reach a DOM element when only the element can do the job
-- How to keep things outside weft in step with your state, and when you shouldn't
-- How weft decides when work stops, and how to clean up what you start
+- How to keep things outside Weft in step with your state, and when you shouldn't
+- How Weft decides when work stops, and how to clean up what you start
 - How to reuse stateful logic between components with plain functions
 - How to load data, show loading states, and keep text, media and canvases from moving the page
 :::
 
-So far, everything has stayed inside weft: state in boxes, values derived from them, TSX that follows both. That covers
+So far, everything has stayed inside Weft: state in boxes, values derived from them, TSX that follows both. That covers
 most of an app. Some things live outside it, though: a DOM element you need to focus, a socket to a chat server, a
 timer, a map widget, a request that answers later, a canvas. This chapter is about stepping outside, safely, and
 coming back. Most apps need these tools in a few places, and the first lesson of each page is often that you need them
@@ -43,7 +43,7 @@ and how a component hands one of its elements to its parent.
 
 ## Effects
 
-An effect keeps something outside weft in step with state. `watch(source, act)` runs `act` now and whenever what
+An effect keeps something outside Weft in step with state. `watch(source, act)` runs `act` now and whenever what
 `source` read changes, and a function it returns cleans up before the next run:
 
 :::demo escape-room
@@ -61,14 +61,14 @@ export function Room() {
 }
 ```
 
-There's no dependency array: weft follows what the source reads.
+There's no dependency array: Weft follows what the source reads.
 
 Read **[Effects](/learn/effects)** to learn how `watch`, `onMount` and `onCleanup` work, when they run, and how
 `@weft-js/core/browser` turns browser events into values.
 
 ## You might not need an effect
 
-Most effects in other frameworks copy one value into another, or run code because of a click. In weft, a value computed
+Most effects in other frameworks copy one value into another, or run code because of a click. In Weft, a value computed
 from others is `derived`, and code caused by an event goes in its handler:
 
 ```tsx
@@ -110,7 +110,7 @@ start yourself, and how `createRoot` makes an owner where there isn't one.
 
 ## Reusing logic
 
-React has custom hooks. weft has functions: anything that makes state, derived values or effects can move out of a
+React has custom hooks. Weft has functions: anything that makes state, derived values or effects can move out of a
 component into a function, and each call gets its own:
 
 ```tsx
@@ -182,7 +182,7 @@ retries work, and how loaded data is rendered on the server.
 
 ## Text, media and shapes
 
-Some content needs to hold its place: text that hasn't arrived, text that streams, images, skeletons, canvases. weft has
+Some content needs to hold its place: text that hasn't arrived, text that streams, images, skeletons, canvases. Weft has
 a small module for each, so nothing moves as the page fills in:
 
 :::demo escape-stream

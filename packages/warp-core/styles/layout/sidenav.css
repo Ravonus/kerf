@@ -93,8 +93,8 @@
     padding: 0; background: none; border: 0; box-shadow: none; transform: none; visibility: visible; transition: none;
   }
 :where([data-scope="sidenav"] > [data-part="backdrop"]),
-  :where([data-scope="sidenav"] [data-part="head"]),
-  :where([data-scope="sidenav"] [data-part="scroll"]) { padding: var(--warp-space-group) var(--warp-space-tight) var(--warp-space-group) 0; }
+  :where([data-scope="sidenav"] [data-part="head"]) { display: none; }
+:where([data-scope="sidenav"] [data-part="scroll"]) { padding: var(--warp-space-group) var(--warp-space-tight) var(--warp-space-group) 0; }
 :where([data-scope="sidenav"] [data-part="scroll"] > [data-part="filter"]) { position: sticky; inset-block-start: 0; z-index: 1; }
 :where([data-scope="sidenav"][data-collapsible]) {
     inline-size: var(--warp-sidenav-width, 240px); transition: inline-size var(--warp-duration-base) var(--warp-ease-out);
@@ -111,15 +111,22 @@
 :where([data-scope="sidenav"] [data-part="bar"]) { inset-block: 0; inset-inline: auto 0; background: none; box-shadow: none; }
 :where([data-scope="sidenav"] [data-part="bar"]:hover) { background: var(--warp-color-surface-hover); }
 :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"] svg) { transform: rotate(180deg); }
+@media (hover: hover) {
+    :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"] svg) { opacity: 0; transition: transform var(--warp-duration-sheet, 240ms) var(--warp-ease-out), opacity var(--warp-duration-base) var(--warp-ease-out); }
+    :where([data-scope="sidenav"]:not([data-collapsed]):hover [data-part="bar"] svg),
+    :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"]:focus-visible svg) { opacity: 1; }
+  }
 :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar-label"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); }
 }
 /* overlay="under": on a phone the open panel and its backdrop start below the header, which stays usable, and the
    header's SideNavTitle carries the panel's title in place of the panel's own head. */
+@media (max-width: 899.98px) {
 :where([data-scope="sidenav"][data-overlay="under"] > [data-part="panel"]),
-:where([data-scope="sidenav"][data-overlay="under"] > [data-part="backdrop"]) { inset-block-start: var(--warp-sidenav-top, 0px); padding-block-start: 0; }
+  :where([data-scope="sidenav"][data-overlay="under"] > [data-part="backdrop"]) { inset-block-start: var(--warp-sidenav-top, 0px); padding-block-start: 0; }
 :where([data-scope="sidenav"][data-overlay="under"] > [data-part="panel"] > [data-part="head"]) { display: none; }
 :where([data-scope="sidenav"][data-overlay="under"] [data-part="scroll"]) { padding: var(--warp-space-group); }
 :where([data-scope="sidenav"][data-overlay="under"] [data-part="bar"]) { inset-block-start: 0; }
+}
 :root:has([data-scope="sidenav"][data-overlay="under"][data-open]) :where([data-scope="sidenav-title"] > [data-part="home"]) { translate: 0 -0.5em; opacity: 0; }
 :root:has([data-scope="sidenav"][data-overlay="under"][data-open]) :where([data-scope="sidenav-title"] > [data-part="title"]) { translate: none; opacity: 1; transition-delay: 60ms; }
 /* Arriving with the sidebar folded (a remembered choice) shows it folded, not folding. */

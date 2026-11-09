@@ -35,7 +35,7 @@ export function Arena() {
   const model = arenaState()
   return (
     <section data-site="arena" ref={model.setBox}>
-      <h2>The same app in weft, Solid and React</h2>
+      <h2>The same app in Weft, Solid and React</h2>
       {!built.frames && (
         <p data-part="missing" role="status">
           The live comparison isn't in this build: its three frames come from{' '}
@@ -70,7 +70,7 @@ export function Arena() {
           <thead>
             <tr>
               <th scope="col">Operation</th>
-              <th scope="col">weft</th>
+              <th scope="col">Weft</th>
               <th scope="col">Solid</th>
               <th scope="col">React</th>
               <th scope="col">Fastest</th>

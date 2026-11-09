@@ -12,7 +12,7 @@ A query is fresh when you load it. On a page that several people look at, such a
 goes stale the moment someone else changes the data. In React you'd reach for a WebSocket library, a polling interval or
 a hosted service, and then write the code that merges what arrives into what you already have.
 
-In weft the server functions you already wrote are most of the answer. A query that has `tags` can stay live, a
+In Weft the server functions you already wrote are most of the answer. A query that has `tags` can stay live, a
 generator can push messages, and a room of named messages rides one shared socket that reconnects, resumes and cleans up
 for you. This page goes from the smallest change (one word on a query) to the larger tools.
 
@@ -177,7 +177,7 @@ export function Ticker() {
 
 ### Fold, don't collect in state
 
-To keep every message, not only the latest, pass `fold` and `initial`. The fold lives in weft's cache, not in your
+To keep every message, not only the latest, pass `fold` and `initial`. The fold lives in Weft's cache, not in your
 component, so a remount within `keep` finds everything it had:
 
 ```tsx
@@ -717,6 +717,6 @@ instances and can't see each other's messages, though each sees their own. What'
 :::solution
 A shared bus. Each instance's memory bus only reaches its own sockets, so `room.publish` on Alice's instance never gets
 to Bob's. Add one: `weft add redis` (with `REDIS_URL`), `weft add nats`, or `bus: postgresBus({ url })` in
-`src/realtime.server.ts`. On presets weft knows run many instances, `weft build` stops with **R002** before this can
+`src/realtime.server.ts`. On presets Weft knows run many instances, `weft build` stops with **R002** before this can
 happen; on a container host you choose the instance count, so it's yours to remember.
 :::

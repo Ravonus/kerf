@@ -39,7 +39,7 @@ export interface CanvasProps {
   [attr: string]: unknown
 }
 
-/** A canvas that handles pixel ratio, resize, off-screen and reduced motion, for anything warp doesn't draw itself (08 §6.7). */
+/** A canvas that handles pixel ratio, resize, off-screen and reduced motion, for anything Warp doesn't draw itself (08 §6.7). */
 export function Canvas({
   draw,
   animate,

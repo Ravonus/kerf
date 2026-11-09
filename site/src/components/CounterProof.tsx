@@ -2,7 +2,7 @@ import { onMount, state } from '@weft-js/core'
 import { stats } from '@weft-js/core/internal'
 import { Button } from '@weft-js/warp'
 
-/** The hero's claim, live: press it and the counts come from this page's own MutationObserver and weft's own counter. */
+/** The hero's claim, live: press it and the counts come from this page's own MutationObserver and Weft's own counter. */
 export function CounterProof() {
   const count = state(0)
   const writes = state(0)

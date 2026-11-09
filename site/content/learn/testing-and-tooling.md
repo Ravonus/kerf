@@ -1,9 +1,9 @@
 # Testing and tooling
 
 :::learn
-- How to test a component the way a user would use it, and how weft spots tests that can't fail
+- How to test a component the way a user would use it, and how Weft spots tests that can't fail
 - What a plugin adds to an app, and how to write one
-- Where weft's speed comes from, and how to keep it and measure it
+- Where Weft's speed comes from, and how to keep it and measure it
 - What the Rust compiler does, and when to write Rust yourself
 :::
 
@@ -49,7 +49,7 @@ number on how much work a click does.
 
 ## Plugins
 
-warp, payments, fonts and the database layers all reach your app as plugins in `weft.config.ts`. A plugin can add slot
+Warp, payments, fonts and the database layers all reach your app as plugins in `weft.config.ts`. A plugin can add slot
 providers, design tokens, diagnostics with their own check, and a section of your agent's `AGENTS.md`. `weft add`
 installs and wires one; the plugin lock asks you to approve what it may touch.
 
@@ -63,18 +63,18 @@ diagnostic, and how project tasks keep your scripts in one list.
 
 ## Performance and bundle size
 
-A weft component runs once, and each reactive read is wired to the DOM node that shows it, so a change does work in
+A Weft component runs once, and each reactive read is wired to the DOM node that shows it, so a change does work in
 proportion to what it changes. Lists are where that's won or lost: keep items you didn't change as the same objects, and
 read one entry per row.
 
 :::demo tool-rows
 
 Read **[Performance and bundle size](/learn/performance)** to learn the list habits the compiler checks, how islands and
-server-only code keep JavaScript off the page, how to measure, and how weft compares with other stacks.
+server-only code keep JavaScript off the page, how to measure, and how Weft compares with other stacks.
 
 ## Rust, in depth
 
-You never need Rust to use weft. The compiler is written in it and reaches you prebuilt, as a native addon or as
+You never need Rust to use Weft. The compiler is written in it and reaches you prebuilt, as a native addon or as
 WebAssembly with the same output, and `weft doctor` says which you have. When a server function does heavy CPU work, you
 can give it a Rust body without changing anything the client sees:
 

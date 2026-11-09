@@ -258,7 +258,7 @@ the same query with the same input in one request, it runs once.
 ### An input that changes
 
 A query that takes input gets it as an argument: `findTodo({ id: '42' })`. When the input depends on state, pass a
-function instead. weft tracks what the function reads, and asks again when it changes, like any [derived
+function instead. Weft tracks what the function reads, and asks again when it changes, like any [derived
 value](/learn/derived):
 
 ```tsx
@@ -303,7 +303,7 @@ input is cached separately, so going back to a todo you already looked at shows 
 
 :::pitfall `query()` only in components; `.fetch()` everywhere else
 `listTodos()` makes a resource that lives as long as the component that made it. Outside a component (in `load`, a
-click handler, a timer, another server function, module scope) there's nothing for it to belong to, and weft stops
+click handler, a timer, another server function, module scope) there's nothing for it to belong to, and Weft stops
 with **Q001**. There, use `await listTodos.fetch()`, which gives you the value once.
 
 And don't copy a query's value into `state` to "keep" it. The query already keeps it, and keeps it fresh after every
@@ -313,7 +313,7 @@ change. A copy goes stale the first time something changes.
 ## Keeping data fresh
 
 Loading data is half of it. The other half is what happens after a change: you add a todo, and the list, the open count
-and the summary page all need to know. In weft you don't refetch by hand. You **tag** queries, and changes say which
+and the summary page all need to know. In Weft you don't refetch by hand. You **tag** queries, and changes say which
 tags they affect.
 
 A query lists its tags, usually the tables it reads:
@@ -351,7 +351,7 @@ fetched again:
 :::demo stack-tags
 
 Tags can depend on the input, for queries that read one record: `tags: ({ id }) => ['todos', `todos:${id}`]`. A
-mutation that changes one todo can then invalidate `todos:${id}` and leave the others alone. weft checks the names in
+mutation that changes one todo can then invalidate `todos:${id}` and leave the others alone. Weft checks the names in
 development: a mutation that invalidates a tag no query declares gets **Q008**, and a function that reads or writes a
 table its tags don't name gets **Q011**.
 

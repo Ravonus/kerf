@@ -9,7 +9,7 @@
 :::
 
 Well-structured state is the difference between a component that's pleasant to change and one that keeps growing bugs.
-The rules on this page are mostly the same as React's, because they're about data, not rendering. A few are weft's own:
+The rules on this page are mostly the same as React's, because they're about data, not rendering. A few are Weft's own:
 how many boxes to use, and how to shape an object so a list reads it one entry at a time.
 
 ## Principles for structuring state
@@ -59,7 +59,7 @@ Both work. The second is closer to how you think about it, and one write can't u
 
 ### One box, many boxes, or one object box
 
-This choice matters a little more in weft than in React, because each box is its own source of updates. Whatever reads a
+This choice matters a little more in Weft than in React, because each box is its own source of updates. Whatever reads a
 box re-runs when that box gets a new value, and nothing else does. That gives you three shapes to choose from:
 
 | Shape | A write re-runs | Good for |
@@ -68,7 +68,7 @@ box re-runs when that box gets a new value, and nothing else does. That gives yo
 | One box holding an object: `state({ x, y })` | everything that reads `.value` | values that always change together |
 | One object box read with `.get(key)` | only what reads that key | collections keyed by id, read one entry per row |
 
-The third is weft's answer to a list of a thousand rows where one changes: each row reads `box.get(id)`, and a write
+The third is Weft's answer to a list of a thousand rows where one changes: each row reads `box.get(id)`, and a write
 re-runs only the rows whose entry changed. It's the subject of [Keyed state and entries](/learn/entries).
 
 When you're unsure, start with separate boxes. Merge them when you notice you always write them together.
@@ -152,7 +152,7 @@ export function Name() {
 }
 ```
 
-`full` can never be stale, and nothing can write it. In React you'd compute it in the body; in weft the body runs once,
+`full` can never be stale, and nothing can write it. In React you'd compute it in the body; in Weft the body runs once,
 so it has to be `derived` (or written inline in the JSX).
 
 ## Don't copy props into state
@@ -167,12 +167,12 @@ function Message(props: { color: string }) {
 ```
 
 The box is made once, with whatever `color` was then. When the parent passes a new colour, the box doesn't follow, and
-the message keeps the old one. This is the same bug as React's `useState(prop)`, and weft reports it as **W005**.
+the message keeps the old one. This is the same bug as React's `useState(prop)`, and Weft reports it as **W005**.
 
 What to do depends on what you meant:
 
 - **You only want to read it.** Read the prop. `props.color` is always current, and so is `const color = props.color`,
-  which in weft is a live alias, not a copy.
+  which in Weft is a live alias, not a copy.
 - **The component should be able to change it locally**, and take the parent's value again when that changes:
   `state.linked(() => props.color)`. It follows the prop until you write to it, and resets when the prop changes.
   `let { color } = props` does the same with less ceremony; see [Passing props](/learn/passing-props).

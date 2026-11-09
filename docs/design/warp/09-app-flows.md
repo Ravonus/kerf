@@ -1,4 +1,4 @@
-# warp 09: App flows (auth, onboarding, settings, billing and admin, system states, commerce, shortcuts)
+# Warp 09: App flows (auth, onboarding, settings, billing and admin, system states, commerce, shortcuts)
 
 v0.2 · 2026-10-28. Changes since v0.1 are listed in §11.
 
@@ -45,7 +45,7 @@ After the enter, focus moves to the step title (`[data-part="step-title"]`, `tab
 programmatic focus) and the polite region announces "Step 2 of 4, Shipping". Browser history gets one entry per step
 (`?step=shipping`), so the hardware Back button on a phone goes back a step, not out of the flow.
 
-### 1.2 Binding to weft
+### 1.2 Binding to Weft
 
 Every flow submits through `<Form of={mutation}>`. The mutation's Zod `input` is the form schema; the same schema runs
 on input (after first blur), on submit and on the server. Errors are typed in `.weft/contract.json`, so the flow knows
@@ -160,7 +160,7 @@ A device frame in the specimen is not a viewport: a top-layer `<dialog>`, a `pos
 `100dvh` shell would all escape to the page. The specimen therefore renders 05's dialog, sheet and toast **parts** in
 a per-frame layer and sets `--warp-viewport-block: 100cqb` on the frame's app, so 02's shell measures the frame. In a
 product none of this applies: use 05's Dialog, Sheet and Toast as shipped. Step containers in the specimen are marked
-`data-flow-step="<name>"` (was `data-form`, which read as a weft attribute).
+`data-flow-step="<name>"` (was `data-form`, which read as a Weft attribute).
 
 ## 2. Auth and identity
 
@@ -354,8 +354,8 @@ export const updateProfile = mutation({
   links to the plan picker preselected on the next tier.
 - **Invoices:** DataTable (06): date, number, amount, status Badge, PDF link. Failed payment pins a Banner at the top
   of Billing with "Update payment method".
-- **Payment method:** the provider's hosted fields in an iframe slot (`[data-scope="pay-frame"]`); warp styles the
-  slot (border, radius, loading shimmer, test-mode badge) and passes tokens to the provider's appearance API. warp
+- **Payment method:** the provider's hosted fields in an iframe slot (`[data-scope="pay-frame"]`); Warp styles the
+  slot (border, radius, loading shimmer, test-mode badge) and passes tokens to the provider's appearance API. Warp
   never renders card fields itself.
 
 ```ts
@@ -492,13 +492,13 @@ Reads `online()` from `@weft-js/core/browser` and the `.live` state (07 §4.4).
 - **Offline:** caution Banner under the shell header: "You're offline. Changes are saved on this device and sync when
   you reconnect." plus "Retrying in 4s" and Retry now. Items edited offline show "Waiting to sync" chips. Server-only
   actions disable with a reason. Full offline page only for routes with no cached data.
-- **Reconnecting** counts down weft's jittered backoff (0.5–30 s). **Online:** positive, "Back online. 2 changes
+- **Reconnecting** counts down Weft's jittered backoff (0.5–30 s). **Online:** positive, "Back online. 2 changes
   synced.", leaves after 3 s. Phone wraps Retry under the text, never over the bottom nav. Offline announces
   assertively once; back online politely once.
 
 ### 5.4 Stale deploy (schema hash)
 
-At connect, weft compares the tab's schema hash with the server's. On mismatch: an info Banner "A new version of
+At connect, Weft compares the tab's schema hash with the server's. On mismatch: an info Banner "A new version of
 Fieldwork is ready" with Reload (solid) and Later. Later hides it for 30 minutes. Drafts are saved to `storage` before
 reload, so nothing typed is lost. If a mutation fails because the contract changed, the Banner turns caution and the
 failed action's Toast says "Reload to finish saving".

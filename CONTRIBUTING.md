@@ -1,6 +1,6 @@
-# Contributing to weft
+# Contributing to Weft
 
-Thanks for helping. weft is a fine-grained reactive TSX framework with a Rust compiler, and warp is its UI toolkit. This
+Thanks for helping. Weft is a fine-grained reactive TSX framework with a Rust compiler, and Warp is its UI toolkit. This
 page is everything you need: how to get set up, the one command to run, and what a good pull request looks like.
 
 ## Setup
@@ -35,7 +35,7 @@ and CI runs them for you.
 To work on one package: `pnpm --filter @weft-js/<name> test`. To undo the hook: `git config --unset core.hooksPath`.
 
 `pnpm run check` is about the code in this repo. Don't confuse it with `weft check`, which is the product: the diagnostics an
-app built with weft gets.
+app built with Weft gets.
 
 ## The rules
 
@@ -91,10 +91,10 @@ Run `node scripts/quality/rust-format.mjs` to check, or add `--write` to format 
 
 ## Speed and size
 
-Speed comes first, then bytes. If you change the compiler, the runtime, warp or warp-core:
+Speed comes first, then bytes. If you change the compiler, the runtime, Warp or warp-core:
 
 - `node packages/core/scripts/size.mjs` and the tests in each package hold the size budgets.
-- `node benchmarks/compare/measure.mjs` measures every stack in `benchmarks/compare`, not only weft, and you commit the new line in
+- `node benchmarks/compare/measure.mjs` measures every stack in `benchmarks/compare`, not only Weft, and you commit the new line in
   `evals/results/compare-history.jsonl` and the regenerated `compare.html`. [benchmarks/compare/README.md](benchmarks/compare/README.md)
   has the rules.
 
@@ -112,7 +112,7 @@ A diagnostic is a stable code, one line of why, a fix, and an autofix when the c
 
 After a compiler change, rebuild with `pnpm run build:native` in `packages/core`.
 
-## Adding a warp component
+## Adding a Warp component
 
 1. Behaviour that isn't tied to a framework goes in `packages/warp-core/src`, and its CSS in
    `packages/warp-core/styles/components/`. Run `pnpm run build:css` there.
@@ -155,7 +155,7 @@ Add a body when the why isn't obvious. Sign off every commit (see below).
 
 ## Developer Certificate of Origin
 
-weft uses the [Developer Certificate of Origin](https://developercertificate.org), not a CLA. It's a short statement that you
+Weft uses the [Developer Certificate of Origin](https://developercertificate.org), not a CLA. It's a short statement that you
 wrote the code or have the right to send it. Agree by adding a sign-off to each commit:
 
 ```bash

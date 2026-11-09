@@ -5,11 +5,11 @@ export default function Receipt() {
   return (
     <figure data-part="receipt">
       <p style={`--share:${(weft / total) * 100}%`}>
-        <span>weft and the shop</span>
+        <span>Weft and the shop</span>
         <b>{weft} KB</b>
       </p>
       <p style={`--share:${(kit / total) * 100}%`}>
-        <span>warp components it uses</span>
+        <span>Warp components it uses</span>
         <b>{kit} KB</b>
       </p>
       <p data-part="total">
