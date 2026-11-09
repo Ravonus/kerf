@@ -61,6 +61,58 @@ function spawnAgent({ box, model, effort, budgetUsd, extraEnv, tools }) {
   })
 }
 
+const resolveWaiter = (st, e) => {
+  const w = st.waiter
+  if (!w) return
+  st.waiter = null
+  w(e)
+}
+
+function readEvents({ child, log, events, st }) {
+  child.stderr.on('data', (d) => {
+    st.stderr += d
+  })
+  createInterface({ input: child.stdout }).on('line', (line) => {
+    log.write(line + '\n')
+    let e
+    try {
+      e = JSON.parse(line)
+    } catch {
+      return
+    }
+    events.push(e)
+    if (e.type === 'result') resolveWaiter(st, e)
+  })
+}
+
+function controls({ child, st, log, groupKill, root }) {
+  const say = (text) =>
+    new Promise((ok) => {
+      if (st.exited) return ok(null)
+      st.waiter = ok
+      child.stdin.write(
+        JSON.stringify({ type: 'user', message: { role: 'user', content: text } }) + '\n',
+      )
+    })
+  const stop = () =>
+    new Promise((ok) => {
+      if (st.exited) return ok()
+      child.once('exit', ok)
+      child.stdin.end()
+      setTimeout(groupKill, 10_000).unref()
+    }).then(() => {
+      groupKill()
+      sweep(root)
+      log.end()
+    })
+  const status = () => ({
+    timedOut: st.timedOut,
+    exited: st.exited,
+    stderr: st.stderr.slice(-2000),
+  })
+  return { say, stop, status }
+}
+
 export function startAgent({
   box,
   model,
@@ -79,59 +131,16 @@ export function startAgent({
   }
   const log = createWriteStream(transcript)
   const events = []
-  let waiter = null,
-    stderr = '',
-    timedOut = false,
-    exited = false
+  const st = { waiter: null, stderr: '', timedOut: false, exited: false }
   const timer = setTimeout(() => {
-    timedOut = true
+    st.timedOut = true
     groupKill()
   }, wallMs)
-  child.stderr.on('data', (d) => {
-    stderr += d
-  })
-  createInterface({ input: child.stdout }).on('line', (line) => {
-    log.write(line + '\n')
-    let e
-    try {
-      e = JSON.parse(line)
-    } catch {
-      return
-    }
-    events.push(e)
-    if (e.type === 'result' && waiter) {
-      const w = waiter
-      waiter = null
-      w(e)
-    }
-  })
+  readEvents({ child, log, events, st })
   child.on('exit', () => {
-    exited = true
+    st.exited = true
     clearTimeout(timer)
-    if (waiter) {
-      const w = waiter
-      waiter = null
-      w(null)
-    }
+    resolveWaiter(st, null)
   })
-  const say = (text) =>
-    new Promise((ok) => {
-      if (exited) return ok(null)
-      waiter = ok
-      child.stdin.write(
-        JSON.stringify({ type: 'user', message: { role: 'user', content: text } }) + '\n',
-      )
-    })
-  const stop = () =>
-    new Promise((ok) => {
-      if (exited) return ok()
-      child.once('exit', ok)
-      child.stdin.end()
-      setTimeout(groupKill, 10_000).unref()
-    }).then(() => {
-      groupKill()
-      sweep(box.root)
-      log.end()
-    })
-  return { say, stop, events, status: () => ({ timedOut, exited, stderr: stderr.slice(-2000) }) }
+  return { ...controls({ child, st, log, groupKill, root: box.root }), events }
 }
