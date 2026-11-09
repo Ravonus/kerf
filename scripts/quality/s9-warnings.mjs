@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 // Keep inventory output visible while treating execution failures as errors.
 /** Build a warning-only check step; a failed process still fails the check. */
 export function inventoryStep(name, run, print = console.log) {
@@ -45,6 +46,14 @@ export async function categoryWarnings(run) {
     }
   const problems = result.out
     .split('\n')
-    .filter((line) => line.trim() && !line.startsWith('Category lint checked'))
+    .filter((line) => line.trim() && !line.startsWith('Category lint checked') && !allowed(line))
   return { problems }
 }
+
+/** Findings listed in category-allowance.json, each with its reason, don't fail the step. */
+export function allowed(line, list = allowance()) {
+  return list.some(({ path, name }) => line.startsWith(`${path}:`) && line.includes(`'${name}'`))
+}
+
+const allowance = () =>
+  JSON.parse(readFileSync(new URL('./category-allowance.json', import.meta.url), 'utf8'))

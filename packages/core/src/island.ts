@@ -308,7 +308,6 @@ export function enter<T>(fn: () => T): T {
  * `next` (the next level) where that level's markers are. The value goes in the hole that shows the level. `wait`
  * loads an island that doesn't have to be there first.
  */
-// oxlint-disable-next-line max-params -- compiler-emitted code calls this; its arity is part of the compiler's output
 export function level(
   html: string,
   d: number,

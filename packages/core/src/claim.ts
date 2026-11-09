@@ -154,7 +154,6 @@ const isSeparator = (n: Node) => n.nodeType === 8 && (n as Comment).data === ','
  * `slot` name the hole's scope (its template's key and its index). `once`: `value` builds static content (a
  * component, an element) and runs once, untracked (`2`: `marker` is the page's data script, not a hole); otherwise a function value is read reactively.
  */
-// oxlint-disable-next-line max-params -- compiler-emitted code calls this; its arity is part of the compiler's output
 export function hchild(
   parent: Element,
   value: unknown,

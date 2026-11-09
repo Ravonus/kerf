@@ -66,7 +66,6 @@ function stageDrawing(st: StageState) {
     st.tone[i] = v
     st.ink[i] = v === 0 && p ? st.paper : (r ?? p?.ramp ?? 0)
   }
-  // oxlint-disable-next-line max-params -- implements the public Brush interface
   function fill(
     X: number,
     Y: number,
@@ -91,7 +90,6 @@ function stageDrawing(st: StageState) {
         if (t >= 0) set(x, y, t, r)
       }
   }
-  // oxlint-disable-next-line max-params -- implements the public Brush interface
   function ring(
     X: number,
     Y: number,

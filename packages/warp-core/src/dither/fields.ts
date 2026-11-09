@@ -65,7 +65,6 @@ export const FIELDS: Record<FieldName, Field> = {
 }
 
 /** The field across a grid, into `out`. `step` > 1 interpolates between lattice points. */
-// oxlint-disable-next-line max-params -- public dither API; changing it is a breaking change
 export function sample(
   field: Field,
   cols: number,

@@ -71,7 +71,6 @@ export function monotone(pts: number[][]) {
 }
 
 /** A bar with only its value end rounded. */
-// oxlint-disable-next-line max-params -- public charts API; changing it is a breaking change
 export function barPath(
   x: number,
   y: number,

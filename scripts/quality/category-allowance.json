@@ -1,0 +1,47 @@
+[
+  {
+    "path": "packages/core/src/claim.ts",
+    "name": "hchild",
+    "reason": "compiler-emitted code calls it; its arity is part of the compiler's output"
+  },
+  {
+    "path": "packages/core/src/island.ts",
+    "name": "level",
+    "reason": "compiler-emitted code calls it; its arity is part of the compiler's output"
+  },
+  {
+    "path": "packages/core/src/ssr.ts",
+    "name": "island",
+    "reason": "public @weft-js/core/ssr API"
+  },
+  {
+    "path": "packages/warp-core/src/charts/math.ts",
+    "name": "barPath",
+    "reason": "public charts API"
+  },
+  {
+    "path": "packages/warp-core/src/dither/fields.ts",
+    "name": "sample",
+    "reason": "public dither API"
+  },
+  {
+    "path": "packages/warp-core/src/dither/quantize.ts",
+    "name": "quantize",
+    "reason": "public dither API"
+  },
+  {
+    "path": "packages/warp-core/src/dither/stage-render.ts",
+    "name": "fill",
+    "reason": "implements the public Brush interface"
+  },
+  {
+    "path": "packages/warp-core/src/dither/stage-render.ts",
+    "name": "ring",
+    "reason": "implements the public Brush interface"
+  },
+  {
+    "path": "packages/warp-core/src/schedule/agenda.ts",
+    "name": "moveSlots",
+    "reason": "public schedule API"
+  }
+]

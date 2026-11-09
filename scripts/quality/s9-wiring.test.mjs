@@ -134,3 +134,11 @@ void test('category findings fail the lint step; a clean run passes', async () =
   )
   assert.deepEqual(clean.problems, [])
 })
+
+void test('an allowance entry matches its path and function name only', async () => {
+  const { allowed } = await import('./s9-warnings.mjs')
+  const list = [{ path: 'src/a.ts', name: 'f', reason: 'public' }]
+  assert.equal(allowed("src/a.ts:3: eslint(max-params): Function 'f' has too many", list), true)
+  assert.equal(allowed("src/a.ts:9: eslint(max-params): Function 'g' has too many", list), false)
+  assert.equal(allowed("src/b.ts:3: eslint(max-params): Function 'f' has too many", list), false)
+})

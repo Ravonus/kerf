@@ -257,7 +257,6 @@ const notWire = (v: unknown): string | undefined => {
  * `names`: the props that go as JSON, `when`: `v` or `i` when it can wait for the page to need it. Anywhere else it's
  * the component.
  */
-// oxlint-disable-next-line max-params -- public @weft-js/core/ssr API; changing it is a breaking change
 export function island(
   id: string,
   names: string[],

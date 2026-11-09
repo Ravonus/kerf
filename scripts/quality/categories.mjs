@@ -57,7 +57,7 @@ export function isGenerated(path, content = '') {
 /** Vendored Pretext is maintained upstream; eval task fixtures are pinned by hash in their verification.json. */
 export function isExcluded(path) {
   return (
-    path.startsWith('packages/text/vendor/pretext/') || /^evals\/agent-eval\/tasks\//.test(path)
+    path.startsWith('packages/text/vendor/pretext/') || path.startsWith('evals/agent-eval/tasks/')
   )
 }
 
