@@ -53,16 +53,17 @@ const startOf = (v: CalendarValue, today: string, mode: CalendarMode) =>
         ? null
         : (v as string | null)) ?? today
 
-function calendarEvents(
-  p: GridProps,
-  firstDay: { readonly value: number },
-  cursor: State<string>,
-  hover: State<string | null>,
-  box: () => HTMLDivElement | undefined,
-  pick: (iso: string, reason: ChangeReason) => void,
-  moveTo: (iso: string) => void,
-  focusCursor: () => void,
-) {
+function calendarEvents(options: {
+  p: GridProps
+  firstDay: { readonly value: number }
+  cursor: State<string>
+  hover: State<string | null>
+  box: () => HTMLDivElement | undefined
+  pick: (iso: string, reason: ChangeReason) => void
+  moveTo: (iso: string) => void
+  focusCursor: () => void
+}) {
+  const { p, firstDay, cursor, hover, box, pick, moveTo, focusCursor } = options
   const onKey = (e: KeyboardEvent) => {
     if (!(e.target as Element).closest?.('[data-part="day"]')) return
     const to = gridKey(
@@ -142,16 +143,7 @@ function calendarController(p: GridProps, box: () => HTMLDivElement | undefined)
     hover.value = null
     p.onPick(iso as IsoDate, reason)
   }
-  const { onKey, onClick, onOver, onLeave } = calendarEvents(
-    p,
-    firstDay,
-    cursor,
-    hover,
-    box,
-    pick,
-    moveTo,
-    focusCursor,
-  )
+  const events = calendarEvents({ p, firstDay, cursor, hover, box, pick, moveTo, focusCursor })
   const page = (d: number) => {
     anim.value = d > 0 ? 'next' : 'prev'
     view.value = addMonths(view.value, d)
@@ -163,7 +155,7 @@ function calendarController(p: GridProps, box: () => HTMLDivElement | undefined)
       if (iso) moveTo(iso)
     },
   )
-  return { firstDay, cursor, anim, shown, heads, t, context, page, onKey, onClick, onOver, onLeave }
+  return { firstDay, cursor, anim, shown, heads, t, context, page, ...events }
 }
 
 /**
