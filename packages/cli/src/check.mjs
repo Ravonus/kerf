@@ -187,7 +187,7 @@ function compileFiles(root, rels, compiler, scan, style) {
   return { files, posByAbs }
 }
 
-async function collectDiagnostics(
+async function collectDiagnostics({
   root,
   loaded,
   config,
@@ -197,7 +197,7 @@ async function collectDiagnostics(
   testRels,
   options,
   given,
-) {
+}) {
   const fontBuild =
     typeof loaded.slots['font.build'] === 'string' &&
     !loaded.slots['font.build'].startsWith('weft:default')
@@ -287,7 +287,7 @@ export async function check(root, options = {}) {
     ...(matrix ? matrixDiagnostics(root, matrix) : []),
   ]
 
-  const diagnostics = await collectDiagnostics(
+  const diagnostics = await collectDiagnostics({
     root,
     loaded,
     config,
@@ -297,7 +297,7 @@ export async function check(root, options = {}) {
     testRels,
     options,
     given,
-  )
+  })
   const summary = { files: files.length, tests: testRels.length, ...summarize(diagnostics) }
   return {
     version: 1,

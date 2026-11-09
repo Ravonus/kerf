@@ -54,7 +54,7 @@ function trace(g, f, steps) {
   }
   for (const [x, y] of path) put(g, x, y)
 }
-function arc(g, cx, cy, r, from = 0, to = Math.PI * 2) {
+function arc({ g, cx, cy, r, from = 0, to = Math.PI * 2 }) {
   trace(
     g,
     (t) => [cx + r * Math.cos(from + (to - from) * t), cy + r * Math.sin(from + (to - from) * t)],
@@ -97,7 +97,7 @@ function disc(g, cx, cy, r, gap) {
 }
 const pts = (w) => w.map((p) => p.split(',').map(Number))
 
-function rawArc(g, o, rx, large, sweep, x, y) {
+function rawArc({ g, o, rx, large, sweep, x, y }) {
   // circular arcs only: enough for this set, and an ellipse would not land on the grid anyway
   const dx = x - o[0],
     dy = y - o[1],
@@ -110,7 +110,7 @@ function rawArc(g, o, rx, large, sweep, x, y) {
   let a1 = Math.atan2(y - cy, x - cx)
   if (sweep && a1 < a0) a1 += Math.PI * 2
   if (!sweep && a1 > a0) a1 -= Math.PI * 2
-  arc(g, cx, cy, r, a0, a1)
+  arc({ g, cx, cy, r, from: a0, to: a1 })
   return [x, y]
 }
 
@@ -180,7 +180,7 @@ function raw(g, words) {
       do {
         const [rx, , , large, sweep, x, y] = take(7),
           o = cur
-        cur = rawArc(g, o, rx, large, sweep, x, y)
+        cur = rawArc({ g, o, rx, large, sweep, x, y })
       } while (more())
   }
 }

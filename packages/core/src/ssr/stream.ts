@@ -2,15 +2,19 @@ import { rt } from '../index/graph'
 import { type SsrData } from '../index'
 import type { RenderOptions, Stream } from '../ssr'
 
-type Pass = (
-  code: () => unknown,
-  options: RenderOptions,
-  cache: SsrData['r'],
-  wait: Promise<unknown>[],
-  flight: Map<string, Promise<unknown>>,
-  stream: Map<string, string>,
-  top: Promise<unknown>[],
-) => { html: string; data: SsrData }
+export type PassArgs = {
+  code: () => unknown
+  options: RenderOptions
+  cache: SsrData['r']
+  wait: Promise<unknown>[]
+  flight: Map<string, Promise<unknown>>
+  stream?: Map<string, string>
+  top?: Promise<unknown>[]
+}
+type Pass = (a: PassArgs & { stream: Map<string, string>; top: Promise<unknown>[] }) => {
+  html: string
+  data: SsrData
+}
 type Headway = (first: number) => { readonly idle: number; pass(got: number): boolean }
 type ChunkOptions = {
   options: RenderOptions & { timeout?: number; passes?: number; landing?: () => string }
@@ -56,7 +60,7 @@ export function streamRender(
     html.clear()
     wait = []
     top = []
-    const out = pass(code, options, cache, wait, flight, html, top)
+    const out = pass({ code, options, cache, wait, flight, stream: html, top })
     last = out.data
     got = rt.got!
     return out.html

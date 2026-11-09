@@ -169,7 +169,7 @@ export function place(parent: Node, value: unknown, current: Node[], marker: Nod
       was--
       now--
     }
-    if (!SWAP || !trade?.(parent, current, next, start, was, now)) break
+    if (!SWAP || was !== now || !trade?.(parent, current, next, start, was)) break
   }
   if (start === was && start === now) return current
   const before = current.slice(start, was),
@@ -288,5 +288,5 @@ export function For<T>(props: {
     for (const row of data.order) clean(row)
     data.order = []
   })
-  return listMemo(props, base, data, make, claim, repeats)
+  return listMemo({ props, base, data, make, claim, repeats })
 }

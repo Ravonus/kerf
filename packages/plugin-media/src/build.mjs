@@ -39,7 +39,7 @@ export function findScorer(name) {
 }
 
 /** Lowest quality whose SSIMULACRA2 score is ≥ target, within 5 encodes (scores rise with quality). */
-async function search(format, base, width, scorer, target, dir) {
+async function search({ format, base, width, scorer, target, dir }) {
   const ref = join(dir, 'ref.png')
   if (!existsSync(ref)) writeFileSync(ref, await base().resize({ width }).png().toBuffer())
   const score = async (q) => {
@@ -244,7 +244,7 @@ async function raster({ bytes, name, stem, audio }, o, encode) {
     for (const f of formats) {
       if (f === 'png') continue
       qualities[f] = scorer
-        ? await search(f, base, largest, scorer, o.quality.target, dir)
+        ? await search({ format: f, base, width: largest, scorer, target: o.quality.target, dir })
         : FIXED[f]
     }
   } finally {

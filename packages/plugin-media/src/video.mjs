@@ -65,7 +65,7 @@ async function search(enc, source, ctx) {
 }
 
 /** One codec at every width, biggest last. */
-async function rungs(enc, stem, codec, source, widths, knob, { keepTop, audio, loopVideo }) {
+async function rungs({ enc, stem, codec, source, widths, knob, keepTop, audio, loopVideo }) {
   const out = []
   for (const width of widths) {
     const copy = keepTop && width === widths.at(-1)
@@ -99,7 +99,7 @@ async function encodersFor(o, encode) {
 }
 
 /** The poster, its dominant colour and the placeholder, from one frame. */
-export async function poster(enc, source, stem, width, duration, o) {
+export async function poster({ enc, source, stem, width, duration, o }) {
   const png = await enc.still(source, { at: Math.min(1, duration / 10), width })
   const bytes = await sharp(png).webp({ quality: 80 }).toBuffer()
   const name = `${stem}-poster-${short(bytes)}.webp`
@@ -117,14 +117,18 @@ export const ladderOf = (o, width) => {
   return [...new Set([...o.video.widths.filter((w) => w < top), top])]
 }
 
-async function encodeLadder(
+async function encodeLadder({
   stem,
   source,
   info,
   o,
   encode,
-  { widths, keepTop, audio, loopVideo, scorer },
-) {
+  widths,
+  keepTop,
+  audio,
+  loopVideo,
+  scorer,
+}) {
   const { found, diagnostics, error } = await encodersFor(o, encode)
   if (error) return { error }
   const top = widths.at(-1)
@@ -139,7 +143,13 @@ async function encodeLadder(
     const knob = scorer && !kept ? await search(enc, source, ctx) : enc.knob.fixed
     qualities[enc.key.slice(6)] = knob
     sets.push(
-      await rungs(enc, stem, enc.key.slice(6), source, widths, knob, {
+      await rungs({
+        enc,
+        stem,
+        codec: enc.key.slice(6),
+        source,
+        widths,
+        knob,
         keepTop: kept,
         audio,
         loopVideo,
@@ -218,7 +228,12 @@ export async function video({ bytes, name, stem, audio }, o, encode, scorer) {
         pix === 'yuv420p' &&
         widths.at(-1) === width &&
         (!info.audio || info.audio.codec === 'aac')
-      const built = await encodeLadder(stem, source, info, o, encode, {
+      const built = await encodeLadder({
+        stem,
+        source,
+        info,
+        o,
+        encode,
         widths,
         keepTop,
         audio,
@@ -226,7 +241,14 @@ export async function video({ bytes, name, stem, audio }, o, encode, scorer) {
       })
       if (built.error) return { asset: null, files: [], diagnostics: [built.error] }
       const sets = chosen(built.sets)
-      const cover = await poster(probe, source, stem, widths.at(-1), info.duration, o)
+      const cover = await poster({
+        enc: probe,
+        source,
+        stem,
+        width: widths.at(-1),
+        duration: info.duration,
+        o,
+      })
       const diagnostics = built.diagnostics
       if (hdr)
         diagnostics.push({
@@ -279,7 +301,12 @@ export async function gif({ bytes, name, stem, audio, meta, width, height }, o, 
         ? delays.reduce((a, b) => a + (b < 20 ? 100 : b), 0) / 1000
         : info.duration
       const widths = ladderOf(o, width)
-      const built = await encodeLadder(stem, source, { ...info, duration: total }, o, encode, {
+      const built = await encodeLadder({
+        stem,
+        source,
+        info: { ...info, duration: total },
+        o,
+        encode,
         widths,
         audio,
         loopVideo: !!audio,
@@ -289,22 +316,17 @@ export async function gif({ bytes, name, stem, audio, meta, width, height }, o, 
       const sets = chosen(built.sets)
       const smallest = Math.min(...sets.map((s) => s.size))
       if (!audio && smallest > bytes.length * SMALLER) return null
-      if (!audio) {
-        const check = await onDisk(
-          `x.${sets[0].rungs.at(-1).name.split('.').pop()}`,
-          sets[0].rungs.at(-1).bytes,
-          (f) => probe.info(f),
-        )
-        if (Math.abs(check.duration - total) > Math.max(0.15, total * 0.05))
-          built.diagnostics.push({
-            code: 'M019',
-            severity: 'warning',
-            message: `${name}: the video runs ${check.duration} s, the GIF ${total} s.`,
-          })
-      }
+      if (!audio) await checkRuntime(probe, sets, total, name, built.diagnostics)
       const [winner, compatible] = sets.length > 1 ? [sets[0], sets.at(-1)] : [null, sets[0]]
       const served = winner ? [winner, compatible] : [compatible]
-      const cover = await poster(probe, source, stem, widths.at(-1), total, o)
+      const cover = await poster({
+        enc: probe,
+        source,
+        stem,
+        width: widths.at(-1),
+        duration: total,
+        o,
+      })
       const asset = {
         kind: 'video',
         width,
@@ -334,6 +356,17 @@ export async function gif({ bytes, name, stem, audio, meta, width, height }, o, 
   } catch (e) {
     return errored(name, e)
   }
+}
+
+async function checkRuntime(probe, sets, total, name, diagnostics) {
+  const top = sets[0].rungs.at(-1)
+  const check = await onDisk(`x.${top.name.split('.').pop()}`, top.bytes, (f) => probe.info(f))
+  if (Math.abs(check.duration - total) > Math.max(0.15, total * 0.05))
+    diagnostics.push({
+      code: 'M019',
+      severity: 'warning',
+      message: `${name}: the video runs ${check.duration} s, the GIF ${total} s.`,
+    })
 }
 
 async function alphaWebp({ bytes, name, stem, width, height }) {

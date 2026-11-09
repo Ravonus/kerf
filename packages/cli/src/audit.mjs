@@ -285,14 +285,14 @@ export async function audit(root, options = {}) {
     let i = 0
     const worker = async () => {
       for (let job; (job = jobs[i++]);) {
-        for (const f of await auditPage(
+        for (const f of await auditPage({
           browser,
-          `${base}${job.route}`,
-          job.form,
-          !!server,
+          url: `${base}${job.route}`,
+          form: job.form,
+          statics: !!server,
           served,
-          FORMS,
-        )) {
+          forms: FORMS,
+        })) {
           const key = `${f.code} ${f.key}`
           const seen = findings.get(key) ?? { ...f, routes: new Set(), forms: new Set() }
           seen.routes.add(job.route)

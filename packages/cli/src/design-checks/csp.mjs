@@ -48,13 +48,12 @@ export function checkCsp(root, files, reporter) {
           { description: 'Set site: { inlineCss: false }', safe: false, text: m[0] },
         )
       else if (!inlineAllowed(policy, 'script-src-elem', 'script-src', 'default-src'))
-        report(
+        report.warning(
           'D012',
           m.index,
           m.index + m[0].length,
           "This Content-Security-Policy refuses inline scripts, so a page's deferred sheets switch on only once the client entry has run: rules its first paint left out wait for it.",
           { description: 'Set site: { inlineCss: false }', safe: false, text: m[0] },
-          'warning',
         )
     }
   }

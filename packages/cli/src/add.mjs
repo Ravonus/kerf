@@ -251,7 +251,7 @@ async function addAuth(root, { dryRun, install }) {
     actions.push(`install ${specs.join(' ')} with ${manager}`)
     if (!dryRun) installSpecs(root, manager, verb, specs)
   }
-  const edits = authEdits(root, files, context, tables, envText, layer)
+  const edits = authEdits({ root, files, context, tables, envText, layer })
   actions.push(...Object.keys(edits).map((f) => `write ${f}`))
   if (!dryRun) {
     for (const [file, text] of Object.entries(edits)) {
@@ -340,10 +340,10 @@ export async function addCommand(
       dryRun: true,
     }
 
-  return finishAdd(root, file, next, text, config, pkg, install, actions, plan, setup)
+  return finishAdd({ root, file, next, text, config, pkg, install, actions, plan, setup })
 }
 
-async function finishAdd(root, file, next, text, config, pkg, install, actions, plan, setup) {
+async function finishAdd({ root, file, next, text, config, pkg, install, actions, plan, setup }) {
   writeFileSync(file, next)
   const after = await loadConfig(root)
   const failed = after.diagnostics.filter((d) => d.severity === 'error')

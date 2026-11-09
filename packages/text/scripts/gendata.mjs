@@ -159,8 +159,8 @@ export async function genEngineData({ upstreamDir, engine, alphabet = null }) {
   const perMap = {}
   for (const m of maps) perMap[m] = cls(m).slice()
 
-  const ruleTables = createRuleTables(U, D, RULES[engine], perMap, inA, alphabet)
-  const { classMaps, classRunsV, remapBytes, jointCount, runList } = createClasses(
+  const ruleTables = createRuleTables({ U, D, names: RULES[engine], perMap, inA, alphabet })
+  const { classMaps, classRunsV, remapBytes, jointCount, runList } = createClasses({
     U,
     maps,
     perMap,
@@ -168,7 +168,7 @@ export async function genEngineData({ upstreamDir, engine, alphabet = null }) {
     alphabet,
     ruleTables,
     varints,
-  )
+  })
   const rt = encodeRules(ruleTables, U)
   const remapsPacked = packTable(remapBytes)
   if (Buffer.compare(Buffer.from(U.unpackTable(remapsPacked)), Buffer.from(remapBytes)))
@@ -182,11 +182,29 @@ export async function genEngineData({ upstreamDir, engine, alphabet = null }) {
       },
     ]),
   )
-  const src = engineSource(D, engine, alphabet, classMaps, jointCount, classRunsV, remapsPacked, rt)
+  const src = engineSource({
+    D,
+    engine,
+    alphabet,
+    classMaps,
+    jointCount,
+    classRunsV,
+    remapsPacked,
+    rt,
+  })
   return { src, stats, jointCount, runs: runList.length / 2 }
 }
 
-function engineSource(D, engine, alphabet, classMaps, jointCount, classRunsV, remapsPacked, rt) {
+function engineSource({
+  D,
+  engine,
+  alphabet,
+  classMaps,
+  jointCount,
+  classRunsV,
+  remapsPacked,
+  rt,
+}) {
   const J = JSON.stringify
   const src =
     [

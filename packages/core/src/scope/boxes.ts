@@ -3,20 +3,28 @@ import type { Box } from '../index/state'
 import type { App, Instance, features, owners, StateError } from '../scope'
 
 type Deps = {
+  inst: Instance
+  boxes: Box<unknown>[]
+  named: Map<Box<unknown>, string>
+  app: App
+  def: { name: string }
   features: typeof features
   owners: typeof owners
   onWrite: (box: Box<unknown>, before: unknown) => void
   StateError: typeof StateError
 }
 
-export function attachBoxes(
-  inst: Instance,
-  boxes: Box<unknown>[],
-  named: Map<Box<unknown>, string>,
-  app: App,
-  def: { name: string },
-  { features, owners, onWrite, StateError }: Deps,
-) {
+export function attachBoxes({
+  inst,
+  boxes,
+  named,
+  app,
+  def,
+  features,
+  owners,
+  onWrite,
+  StateError,
+}: Deps) {
   const seed = app.seed[def.name] ?? rt.state?.[def.name] ?? {}
   if (rt.state) delete rt.state[def.name]
   for (const box of boxes) {

@@ -1,5 +1,5 @@
 // Prune rule tables while preserving the categories read by each engine.
-export function createRuleTables(U, D, names, perMap, inA, alphabet) {
+export function createRuleTables({ U, D, names, perMap, inA, alphabet }) {
   // --- rule tables: prune states / categories
   const ruleTables = {}
 
@@ -27,15 +27,15 @@ export function createRuleTables(U, D, names, perMap, inA, alphabet) {
     const newCat = new Map(order.map((c, i) => [c, i]))
     for (const c of [0, 1, 2]) if (newCat.get(c) !== c) throw new Error('special categories moved')
     const { nrows, nw, states: count } = minimizeStates(rows, width, order)
-    const { mrows, mw, dictStart2, merged, keep } = mergeCategories(
+    const { mrows, mw, dictStart2, merged, keep } = mergeCategories({
       nrows,
       nw,
       order,
       plain,
       newCat,
       map,
-      count,
-    )
+      states: count,
+    })
     const S = count
     ruleTables[t] = {
       catCount: keep.length,
@@ -117,7 +117,7 @@ function minimizeStates(rows, width, order) {
   return { nrows, nw, states: num.size }
 }
 
-function mergeCategories(nrows, nw, order, plain, newCat, map, states) {
+function mergeCategories({ nrows, nw, order, plain, newCat, map, states }) {
   // Merge categories whose columns are identical in every kept state (never 0..2, never across the
   // dictionary boundary). The class map then gives both the same category.
   const S = states,

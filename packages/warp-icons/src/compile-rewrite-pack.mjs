@@ -1,5 +1,15 @@
-export function rewritePack(unit, catalog, code, file, edits, helpers) {
-  const { packLocals, packName, unknownMessage, packIds, line } = helpers
+export function rewritePack({
+  unit,
+  catalog,
+  code,
+  file,
+  edits,
+  packLocals,
+  packName,
+  unknownMessage,
+  packIds,
+  line,
+}) {
   let lookups = false
   for (const pack of packLocals(unit)) {
     for (const n of unit.ast.body)

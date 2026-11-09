@@ -278,7 +278,7 @@ function writeModules(engine, profile, rare, out) {
   const folds = { count: 0 }
   const foundMoves = new Set()
   for (const f of files) {
-    const { src, moves } = prepareModule(f, engine, profile, rare, folds, foundMoves)
+    const { src, moves } = prepareModule({ f, engine, profile, rare, folds, foundMoves })
     const { base, lazy } = moveFunctions(f, src, moves)
     fs.writeFileSync(path.join(out, f), base)
     for (const [pack, text] of Object.entries(lazy)) {
@@ -290,7 +290,7 @@ function writeModules(engine, profile, rare, out) {
   return { packFiles, folds: folds.count, foundMoves }
 }
 
-function prepareModule(f, engine, profile, rare, folds, foundMoves) {
+function prepareModule({ f, engine, profile, rare, folds, foundMoves }) {
   let src = fs.readFileSync(path.join(vendor, f), 'utf8')
   if (f === 'analysis.ts') src = inlineAnalysis(src)
   if (f === 'analysis-segments.ts') src = inlineAnalysisSegments(src)

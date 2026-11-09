@@ -340,7 +340,7 @@ export function run(ctx) {
 
   unmatchedReads(reads, known, out)
 
-  configChecks(ctx, out, secrets, spanOf, isTest, SECRET_OPTION)
+  configChecks({ ctx, out, secrets, spanOf, isTest, SECRET_OPTION })
 
   const config = ctx.files.find((r) => r.startsWith('weft.config.')) ?? 'weft.config.ts'
   if (!payFile) {

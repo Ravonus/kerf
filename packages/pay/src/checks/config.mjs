@@ -1,5 +1,5 @@
 /** Check config and test files for exposed credentials. */
-export function configChecks(ctx, out, secrets, spanOf, isTest, SECRET_OPTION) {
+export function configChecks({ ctx, out, secrets, spanOf, isTest, SECRET_OPTION }) {
   for (const rel of ctx.files.filter((r) => r.startsWith('weft.config.'))) {
     const text = ctx.read(rel)
     secrets(rel, text, true, out)

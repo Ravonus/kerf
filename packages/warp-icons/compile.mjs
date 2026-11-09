@@ -277,17 +277,9 @@ function scanPack(unit, ctx) {
   }
 }
 
-/** `<Icon name="check">` becomes `<CheckIcon>`, the same output a named import gives, and `icon="check"` on a warp component takes `CheckIcon`. */
-export function rewrite(code, file, catalog) {
-  if (!/@weft-js\/(warp-icons|warp)/.test(code)) return null
-  const unit = read(file, code)
-  if (!unit.ast) return null
-  const local = [...unit.imports].find(
-    ([, i]) => i.imported === 'Icon' && ICON_SOURCES.has(i.source),
-  )?.[0]
-  const edits = [],
-    added = new Set()
-  // `Icon` alone is a small file over the names module, so this import doesn't bring the set
+// `Icon` alone is a small file over the names module, so this import doesn't bring the set
+function iconOnlyImports(unit) {
+  const edits = []
   for (const n of unit.ast.body)
     if (
       n.type === 'ImportDeclaration' &&
@@ -296,8 +288,26 @@ export function rewrite(code, file, catalog) {
       n.specifiers[0].imported?.name === 'Icon'
     )
       edits.push({ start: n.source.start, end: n.source.end, text: "'@weft-js/warp-icons/icon'" })
+  return edits
+}
+
+/** `<Icon name="check">` becomes `<CheckIcon>`, the same output a named import gives, and `icon="check"` on a warp component takes `CheckIcon`. */
+export function rewrite(code, file, catalog) {
+  if (!/@weft-js\/(warp-icons|warp)/.test(code)) return null
+  const unit = read(file, code)
+  if (!unit.ast) return null
+  const local = [...unit.imports].find(
+    ([, i]) => i.imported === 'Icon' && ICON_SOURCES.has(i.source),
+  )?.[0]
+  const edits = iconOnlyImports(unit),
+    added = new Set()
   // the pack: a default import is the namespace, so a static member is an ordinary named import to the bundler
-  const lookups = rewritePack(unit, catalog, code, file, edits, {
+  const lookups = rewritePack({
+    unit,
+    catalog,
+    code,
+    file,
+    edits,
     packLocals,
     packName,
     unknownMessage,

@@ -205,7 +205,7 @@ function scanImports(ts, sf, imports, exported) {
   return exportsLoad
 }
 
-function visitNodes(ts, sf, file, text, comps, sites, wraps, escaped) {
+function visitNodes({ ts, sf, file, text, comps, sites, wraps, escaped }) {
   const enclosing = []
   const visit = (node) => {
     const found = componentAt(ts, node)
@@ -304,7 +304,7 @@ function fileFacts(ts, file, text, options = {}) {
     exported = new Set()
   const exportsLoad = scanImports(ts, sf, imports, exported)
 
-  visitNodes(ts, sf, file, text, comps, sites, wraps, escaped)
+  visitNodes({ ts, sf, file, text, comps, sites, wraps, escaped })
 
   for (const c of comps)
     if (exported.has(c.name) || c.isDefault) {

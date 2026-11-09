@@ -231,17 +231,20 @@ function scopedShared(
   return { scopedShares, moved }
 }
 
-function groupBlocks(
-  used: Used[],
-  scopedShares: string[],
-  moved: Set<Rule>,
-  owners: Map<string, Set<string>>,
-  shared: Map<string, { sels: string[]; decls: Decls }>,
-  scope: boolean,
-  taggedParts: boolean,
-  dev: boolean,
-  block: Block,
-) {
+type GroupArgs = {
+  used: Used[]
+  scopedShares: string[]
+  moved: Set<Rule>
+  owners: Map<string, Set<string>>
+  shared: Map<string, { sels: string[]; decls: Decls }>
+  scope: boolean
+  taggedParts: boolean
+  dev: boolean
+  block: Block
+}
+
+function groupBlocks(a: GroupArgs) {
+  const { used, scopedShares, moved, owners, shared, scope, taggedParts, dev, block } = a
   const blocks: string[] = [...scopedShares]
   for (const { g, rules } of used) {
     const own: { sel: string; decls: Decls; tier: number }[] = []
@@ -329,7 +332,7 @@ export function emitGroups(
   // With bare parts, a block several groups share goes in one @scope over all of them. It's only written that way
   // when no group in the list has a root or part the list names but doesn't own (that element would pick it up).
   const { scopedShares, moved } = scopedShared(used, share, taggedParts, dev, block)
-  const blocks = groupBlocks(
+  const blocks = groupBlocks({
     used,
     scopedShares,
     moved,
@@ -339,7 +342,7 @@ export function emitGroups(
     taggedParts,
     dev,
     block,
-  )
+  })
   const head =
     dev && shared.size ? '  /* the same base or part in several groups, written once */\n' : ''
   const sharedBlocks = [...shared.values()].map((m) => block(m.sels, m.decls, '  '))

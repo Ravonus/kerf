@@ -24,9 +24,7 @@ export function checkFiles(root, exclude, tokens, reporter) {
       if (tokens)
         declaration(
           { prop, value: m[2].trim(), start, end: start + m[2].trimEnd().length },
-          theming
-            ? (code, from, to, why, fix) => report(code, from, to, why, fix, 'warning')
-            : report,
+          theming ? report.warning : report,
         )
       if ((prop === 'outline' || prop === 'outline-width') && /^(none|0(px)?)\s*$/.test(m[2])) {
         const rule = css.lastIndexOf('}', m.index)

@@ -48,14 +48,21 @@ function createCanvas(
   return canvas
 }
 
-function fitCanvas(
-  def: Mounting,
-  canvas: HTMLCanvasElement,
-  backend: SurfaceBackend,
-  size: State<{ width: number; height: number }>,
-  dpr: State<number>,
-  scale: State<number>,
-) {
+function fitCanvas({
+  def,
+  canvas,
+  backend,
+  size,
+  dpr,
+  scale,
+}: {
+  def: Mounting
+  canvas: HTMLCanvasElement
+  backend: SurfaceBackend
+  size: State<{ width: number; height: number }>
+  dpr: State<number>
+  scale: State<number>
+}) {
   return (width: number, height: number, deviceWidth?: number, deviceHeight?: number) => {
     const device = devicePixelRatio || 1
     const d = Math.min(device, def.maxDpr ?? 2)
@@ -132,7 +139,7 @@ function startSurface(renderer: SurfaceRenderer, args: StartArgs) {
   }
   onCleanup(() => backend.dispose?.())
 
-  const fit = fitCanvas(def, canvas, backend, size, dpr, scale)
+  const fit = fitCanvas({ def, canvas, backend, size, dpr, scale })
 
   let stop: (() => void) | undefined
   let repaint = () => {}

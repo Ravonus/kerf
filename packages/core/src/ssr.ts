@@ -16,7 +16,7 @@ import { keys, nextKey, under } from './keys'
 import { createApp, dehydrate, useApp, type AppOptions } from './scope'
 import { withHead, type HeadOptions } from './head'
 import { attr, escape, resolveSelects } from './ssr/attrs'
-import { streamRender } from './ssr/stream'
+import { streamRender, type PassArgs } from './ssr/stream'
 import { component } from './dom-next'
 
 export { SWAP } from './ssr/stream'
@@ -77,7 +77,7 @@ export interface RenderOptions {
 
 /** Render `code` (usually `() => <App />`) to HTML now. Effects and watchers don't run on the server. */
 export function renderToString(code: () => unknown, options: RenderOptions = {}): string {
-  const html = pass(code, options, {}, [], new Map())
+  const html = pass({ code, options, cache: {}, wait: [], flight: new Map() })
   return options.head ? withHead(html, options.head) : html
 }
 
@@ -91,7 +91,7 @@ export async function renderToStringAsync(
   let way: ReturnType<typeof headway> | undefined
   for (let n = 1; ; n++) {
     const wait: Promise<unknown>[] = []
-    const html = pass(code, options, cache, wait, flight)
+    const html = pass({ code, options, cache, wait, flight })
     const going = way ? way.pass(rt.got!) : !!(way = headway(rt.got!))
     if (!going) options.stalled?.()
     if (!wait.length || !going || n >= (options.passes ?? 10))
@@ -132,31 +132,20 @@ export function renderToStream(
   return streamRender(code, options, pass, headway)
 }
 
-function pass(
-  code: () => unknown,
-  options: RenderOptions,
-  cache: SsrData['r'],
-  wait: Promise<unknown>[],
-  flight: Map<string, Promise<unknown>>,
-): string
-function pass(
-  code: () => unknown,
-  options: RenderOptions,
-  cache: SsrData['r'],
-  wait: Promise<unknown>[],
-  flight: Map<string, Promise<unknown>>,
-  stream: Map<string, string>,
-  top: Promise<unknown>[],
-): { html: string; data: SsrData }
-function pass(
-  code: () => unknown,
-  options: RenderOptions,
-  cache: SsrData['r'],
-  wait: Promise<unknown>[],
-  flight: Map<string, Promise<unknown>>,
-  stream?: Map<string, string>,
-  top?: Promise<unknown>[],
-): string | { html: string; data: SsrData } {
+function pass(a: PassArgs & { stream?: undefined; top?: undefined }): string
+function pass(a: PassArgs & { stream: Map<string, string>; top: Promise<unknown>[] }): {
+  html: string
+  data: SsrData
+}
+function pass({
+  code,
+  options,
+  cache,
+  wait,
+  flight,
+  stream,
+  top,
+}: PassArgs): string | { html: string; data: SsrData } {
   const prev = { ...rt }
   const prevKeys = { ...keys }
   const prevWrite = writeKeys

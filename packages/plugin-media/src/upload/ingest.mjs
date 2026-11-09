@@ -1,6 +1,6 @@
 import { writeFileSync } from 'node:fs'
 
-export function createIngest(
+export function createIngest({
   encode,
   sourceOf,
   refuse,
@@ -10,7 +10,7 @@ export function createIngest(
   store,
   video,
   COMPATIBLE,
-) {
+}) {
   return async function ingest(hash, bytes, name, kind) {
     const enc = encode[COMPATIBLE]
     writeFileSync(sourceOf(hash), bytes)
