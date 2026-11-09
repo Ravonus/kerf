@@ -3,20 +3,21 @@ import { join } from 'node:path'
 import { isServerModule } from '../vite.mjs'
 import { buildable, crateDir, isNative, urlVariable } from './common.mjs'
 
-export async function watchServices(
-  root,
-  rust,
-  contract,
-  setContract,
-  first,
-  states,
-  proxy,
-  publish,
-  rebuild,
-  refresh,
-  overlay,
-  log,
-) {
+export async function watchServices(deps) {
+  const {
+    root,
+    rust,
+    contract,
+    setContract,
+    first,
+    states,
+    proxy,
+    publish,
+    rebuild,
+    refresh,
+    overlay,
+    log,
+  } = deps
   const watchers = []
 
   for (const service of buildable(contract(), rust)) {

@@ -19,10 +19,13 @@ export async function open(
   body: Body,
   frame: (event: string, data: unknown) => void,
   signal: AbortSignal,
-  up: () => void,
-  subs: Map<string, { fn: Fn; input: unknown }>,
-  closing: (close: () => unknown) => void,
+  hooks: {
+    up: () => void
+    subs: Map<string, { fn: Fn; input: unknown }>
+    closing: (close: () => unknown) => void
+  },
 ) {
+  const { up, subs, closing } = hooks
   const n = net()!
   const [{ hub, resetHub }, exec] = await Promise.all([import('./hub'), loadExec()])
   if (!n.online()) throw Object.assign(new Error('offline'), { name: 'OfflineError' })

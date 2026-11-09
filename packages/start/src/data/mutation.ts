@@ -34,7 +34,7 @@ export async function mutate(
     overlap = run
     const a = await settled(() => transport().mutate(fn.$id, input, refresh, form))
     if (a.x) client.sessionChanged?.()
-    const out = applyResult(fn, a, touched, m, overlap, error, drop, wait)
+    const out = applyResult({ fn, a, touched, m, overlap, error, drop, wait })
     if (a.t?.length) peers?.postMessage(a.t)
     if (a.x) peers?.postMessage(0)
     if (a.r !== undefined) {
@@ -57,16 +57,17 @@ export async function mutate(
     untrack(() => calls.value--)
   }
 }
-function applyResult(
-  fn: Fn,
-  a: Answer,
-  touched: Set<Entry>,
-  m: number,
-  overlap: number,
-  error: State<unknown>,
-  drop: (e: Entry) => void,
-  wait: (e: Entry) => void,
-) {
+function applyResult(o: {
+  fn: Fn
+  a: Answer
+  touched: Set<Entry>
+  m: number
+  overlap: number
+  error: State<unknown>
+  drop: (e: Entry) => void
+  wait: (e: Entry) => void
+}) {
+  const { fn, a, touched, m, overlap, error, drop, wait } = o
   let out: unknown
   untrack(() => {
     const refreshed = new Set<string>()

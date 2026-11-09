@@ -9,14 +9,21 @@ import { payloadOf, wire } from './payload'
 import { noRetention, validateNavigation } from './navigation-cache'
 import { cookieJar, redirectBody, withHeaders } from './request'
 import type { HandlerOptions, Resolved } from './types'
-export function makeNavigation(
-  resolve: (path: string, request: Request) => Promise<Resolved>,
-  finished: (r: Resolved, request: Request) => Promise<Merged>,
-  statics: Set<string>,
-  stateOf: (r: Resolved, payload: RoutePayload) => ReturnType<typeof createRouteState>,
-  PASSES: number,
-  options: HandlerOptions,
-) {
+export function makeNavigation({
+  resolve,
+  finished,
+  statics,
+  stateOf,
+  PASSES,
+  options,
+}: {
+  resolve: (path: string, request: Request) => Promise<Resolved>
+  finished: (r: Resolved, request: Request) => Promise<Merged>
+  statics: Set<string>
+  stateOf: (r: Resolved, payload: RoutePayload) => ReturnType<typeof createRouteState>
+  PASSES: number
+  options: HandlerOptions
+}) {
   /** The route as JSON for client navigation, with deferred fields awaited. */
   return async function data(path: string, request: Request, scope: Scope): Promise<Response> {
     const r = await resolve(path, request)

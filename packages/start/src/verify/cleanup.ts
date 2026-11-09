@@ -2,14 +2,15 @@ import type postgres from 'postgres'
 import type { VerifyResult } from '../verify'
 import { Broke, clean, type insert } from './support'
 
-export async function cleanup(
-  ac: AbortController,
-  row: Awaited<ReturnType<typeof insert>> | undefined,
-  ms: VerifyResult['ms'],
-  sql: postgres.Sql | undefined,
-  listener: postgres.Sql | undefined,
-  marker: string,
-) {
+export async function cleanup(o: {
+  ac: AbortController
+  row: Awaited<ReturnType<typeof insert>> | undefined
+  ms: VerifyResult['ms']
+  sql: postgres.Sql | undefined
+  listener: postgres.Sql | undefined
+  marker: string
+}) {
+  const { ac, row, ms, sql, listener, marker } = o
   let cleaning: unknown
   ac.abort()
   if (row) {

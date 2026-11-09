@@ -74,6 +74,29 @@ export async function resolveRoute(
   return resolvedMatches(deps, router, hold, path, request)
 }
 
+function redirectOf(
+  deps: ResolverDeps,
+  router: InstanceType<typeof RouterCore>,
+  hold: LoadContext,
+  path: string,
+): Resolved | undefined {
+  const native =
+    router._serverResult?.type === 'redirect' ? router._serverResult.redirect : undefined
+  const href = native?.headers.get('location')
+  const goes =
+    hold.out.redirect ??
+    (native && href ? { isRedirect: true as const, href, status: native.status } : undefined)
+  if (!goes) return undefined
+  return {
+    status: goes.status,
+    path,
+    levels: [],
+    head: mergeMeta(deps.site),
+    redirect: goes,
+    ...(!hold.out.redirect && native ? { redirectHeaders: native.headers } : {}),
+  }
+}
+
 async function resolvedMatches(
   deps: ResolverDeps,
   router: InstanceType<typeof RouterCore>,
@@ -81,22 +104,9 @@ async function resolvedMatches(
   path: string,
   request: Request,
 ): Promise<Resolved> {
-  const { site, manifest, byId, mod, comps, options } = deps
-  const native =
-    router._serverResult?.type === 'redirect' ? router._serverResult.redirect : undefined
-  const href = native?.headers.get('location')
-  const goes =
-    hold.out.redirect ??
-    (native && href ? { isRedirect: true as const, href, status: native.status } : undefined)
-  if (goes)
-    return {
-      status: goes.status,
-      path,
-      levels: [],
-      head: mergeMeta(site),
-      redirect: goes,
-      ...(!hold.out.redirect && native ? { redirectHeaders: native.headers } : {}),
-    }
+  const { manifest, byId, mod, comps, options } = deps
+  const redirected = redirectOf(deps, router, hold, path)
+  if (redirected) return redirected
   const matches = router.state.matches.map((m) => ({
     m,
     weft: (router.routesById as Record<string, { options: { weft?: RouteEntry | LayoutEntry } }>)[
@@ -146,7 +156,7 @@ async function resolvedMatches(
     return finish(levels, status, undefined, error)
   }
   const finish = (shown: Level[], status: number, matched?: RouteEntry, error?: unknown) =>
-    finishResolution(deps, path, request, shown, status, matched, error)
+    finishResolution(deps, { path, request }, { shown, status, matched, error })
 
   if (failed) {
     const e = exec.dbError(failed.m.error)
@@ -164,12 +174,18 @@ async function resolvedMatches(
 
 export async function finishResolution(
   deps: ResolverDeps,
-  path: string,
-  request: Request,
-  shown: Level[],
-  status: number,
-  matched?: RouteEntry,
-  error?: unknown,
+  { path, request }: { path: string; request: Request },
+  {
+    shown,
+    status,
+    matched,
+    error,
+  }: {
+    shown: Level[]
+    status: number
+    matched?: RouteEntry | undefined
+    error?: unknown
+  },
 ): Promise<Resolved> {
   const { site, options, originOf } = deps
   const metas: MetaObject[] = []

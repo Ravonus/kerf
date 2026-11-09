@@ -12,11 +12,14 @@ type Styles = ReturnType<typeof pageStyles>
 async function warmContent(
   p: PageState,
   known: Head,
-  cold: string,
-  set: number,
-  styles: Styles | undefined,
-  controller: ReadableStreamDefaultController<Uint8Array>,
+  sent: {
+    cold: string
+    set: number
+    styles: Styles | undefined
+    controller: ReadableStreamDefaultController<Uint8Array>
+  },
 ) {
+  const { cold, set, styles, controller } = sent
   const t0 = performance.now()
   p.stream = render(p)
   await p.stream.settle() // queries read outside a Boundary have nowhere to stream to
@@ -63,7 +66,7 @@ async function warmContent(
       fold: !!shape.parts.fold.length,
       preloads: [...have, ...more.split(/(?=<link )/)].filter(Boolean).join(''),
     })
-  await rest(p, controller, t || styles!, shape.streaming)
+  await rest(p, { controller, styles: t || styles!, streaming: shape.streaming })
 }
 
 /** Send the remembered head, then flush the render behind it. */
@@ -79,15 +82,12 @@ export async function warmPage(
   const set = [...p.scope.headers].length
   const styles = p.assets.pieces
     ? undefined
-    : pageStyles(
-        p.assets,
-        known.sheets,
-        '',
-        p.site.head,
-        known,
-        kept,
-        p.request.headers.has('cookie'),
-      )
+    : pageStyles(p.assets, known.sheets, '', {
+        head: p.site.head,
+        seen: known,
+        have: kept,
+        keep: p.request.headers.has('cookie'),
+      })
   // With a table, the rules come with the shell; here there is only the layer order.
   const head =
     top(p) +
@@ -109,7 +109,7 @@ export async function warmPage(
     async start(controller) {
       controller.enqueue(p.enc.encode(head))
       try {
-        await warmContent(p, known, cold, set, styles, controller)
+        await warmContent(p, known, { cold, set, styles, controller })
       } catch (e) {
         p.heads.set(cold, null).set(cold + ' w', null)
         p.options.onDiagnostic?.({

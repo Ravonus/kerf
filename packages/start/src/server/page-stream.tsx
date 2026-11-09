@@ -146,9 +146,15 @@ export async function finish(p: PageState, streaming: boolean) {
 /** Flush each remaining chunk with its styles. */
 export async function rest(
   p: PageState,
-  controller: ReadableStreamDefaultController<Uint8Array>,
-  styles: Pick<ReturnType<typeof pageStyles>, 'late'>,
-  streaming: boolean,
+  {
+    controller,
+    styles,
+    streaming,
+  }: {
+    controller: ReadableStreamDefaultController<Uint8Array>
+    styles: Pick<ReturnType<typeof pageStyles>, 'late'>
+    streaming: boolean
+  },
 ) {
   try {
     for await (const chunk of p.stream.chunks)

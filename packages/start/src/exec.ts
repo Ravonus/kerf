@@ -134,7 +134,10 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
     const ctx = early ?? (await scope.ctx())
     const touched = tracker(scope)
     const added: string[] = []
-    const v = await call(scope, fn, valid, cached ? shared(ctx, fn, scope) : ctx, touched, added)
+    const v = await call(scope, fn, valid, cached ? shared(ctx, fn, scope) : ctx, {
+      touched,
+      added,
+    })
     const fresh = [...new Set(added)].filter((t) => !entry.tags.includes(t))
     if (fresh.length) {
       entry.tags.push(...fresh)
@@ -193,9 +196,9 @@ async function callImpl(
   input: unknown,
   ctx: Context,
   scope: Scope,
-  touched: Touched | undefined,
-  added: string[],
+  track: { touched?: Touched | undefined; added: string[] },
 ) {
+  const { touched, added } = track
   const {
     value,
     tags,
@@ -240,9 +243,10 @@ async function call(
   fn: Fn,
   input: unknown,
   ctx: Context,
-  touched?: Touched,
-  added: string[] = [],
+  track: { touched?: Touched | undefined; added?: string[] } = {},
 ) {
+  const { touched } = track
+  const added = track.added ?? []
   guard(fn, ctx)
   claimed(fn, scope)
   try {
@@ -257,7 +261,7 @@ async function call(
     await (replaced
       ? replaced(input, ctx)
       : fn.def.impl
-        ? callImpl(fn, input, ctx, scope, touched, added)
+        ? callImpl(fn, input, ctx, scope, { touched, added })
         : fn.def.run!({ input, ctx }))
   let v: unknown
   try {
@@ -314,7 +318,7 @@ export async function runMutation(
   const valid = await (form ? formInput(fn, input) : validate(fn, input))
   const touched = tracker(scope)
   const added: string[] = []
-  const v = await call(scope, fn, valid, await scope.ctx(), touched, added)
+  const v = await call(scope, fn, valid, await scope.ctx(), { touched, added })
   if (scope.options.dev) await checked(v, fn, scope)
   const declared =
     typeof fn.def.invalidates === 'function'

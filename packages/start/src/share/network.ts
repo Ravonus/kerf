@@ -3,19 +3,55 @@ import type { shareStats as ShareStats } from '../share'
 import { mine, tabs, type Pair } from './state'
 
 type Conn = ReturnType<typeof connectBuiltIn>
-export function network(
-  connection: () => Conn | undefined,
-  isOpen: () => boolean,
-  sent: Map<string, number>,
-  refused: Set<string>,
-  dirtyNet: Set<string>,
-  toAdd: Set<string>,
-  toDrop: Set<string>,
-  upstream: (key: string) => number,
-  shareStats: typeof ShareStats,
-  GAP_NET: number,
-  BATCH: number,
-) {
+
+function changedPairs(o: {
+  dirtyNet: Set<string>
+  sent: Map<string, number>
+  refused: Set<string>
+  upstream: (key: string) => number
+  BATCH: number
+}) {
+  const { dirtyNet, sent, refused, upstream, BATCH } = o
+  const e: Pair[] = []
+  for (const key of dirtyNet) {
+    if (e.length === BATCH) break
+    dirtyNet.delete(key)
+    if (!sent.has(key) || refused.has(key)) continue
+    const bits = upstream(key)
+    // Off and on again inside the gap: nothing to say. The latest value is all that's kept.
+    if (bits !== sent.get(key)) {
+      sent.set(key, bits)
+      e.push([key, bits])
+    }
+  }
+  return e
+}
+
+export function network({
+  connection,
+  isOpen,
+  sent,
+  refused,
+  dirtyNet,
+  toAdd,
+  toDrop,
+  upstream,
+  shareStats,
+  GAP_NET,
+  BATCH,
+}: {
+  connection: () => Conn | undefined
+  isOpen: () => boolean
+  sent: Map<string, number>
+  refused: Set<string>
+  dirtyNet: Set<string>
+  toAdd: Set<string>
+  toDrop: Set<string>
+  upstream: (key: string) => number
+  shareStats: typeof ShareStats
+  GAP_NET: number
+  BATCH: number
+}) {
   let netLast = 0
   let netTimer: ReturnType<typeof setTimeout> | undefined
   /** One frame per GAP_NET, `u` first: the bucket is 20 a second, and a frame carries every key that's waiting. */
@@ -35,18 +71,7 @@ export function network(
       msg = { add, drop }
       size = add.length + drop.length
     } else {
-      const e: Pair[] = []
-      for (const key of dirtyNet) {
-        if (e.length === BATCH) break
-        dirtyNet.delete(key)
-        if (!sent.has(key) || refused.has(key)) continue
-        const bits = upstream(key)
-        // Off and on again inside the gap: nothing to say. The latest value is all that's kept.
-        if (bits !== sent.get(key)) {
-          sent.set(key, bits)
-          e.push([key, bits])
-        }
-      }
+      const e = changedPairs({ dirtyNet, sent, refused, upstream, BATCH })
       if (e.length) {
         name = 'set'
         msg = { e }

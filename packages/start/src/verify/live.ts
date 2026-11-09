@@ -7,20 +7,21 @@ type Timed = <T>(link: Link, run: () => Promise<T>) => Promise<T>
 type Live = Awaited<ReturnType<typeof openApp>>
 type Denied = Awaited<ReturnType<typeof subscribe>> | undefined
 
-export async function checkLive(
-  live: Live,
-  denied: Denied,
-  timed: Timed,
-  skip: (links: Link[], why: string) => void,
-  url: string,
-  id: string,
-  input: unknown,
-  cookie: string | undefined,
-  other: string | undefined,
-  marker: string,
-  timeout: number,
-  options: VerifyOptions,
-) {
+export async function checkLive(o: {
+  live: Live
+  denied: Denied
+  timed: Timed
+  skip: (links: Link[], why: string) => void
+  url: string
+  id: string
+  input: unknown
+  cookie: string | undefined
+  other: string | undefined
+  marker: string
+  timeout: number
+  options: VerifyOptions
+}) {
+  const { live, denied, timed, skip, url, id, input, cookie, other, marker, timeout, options } = o
   await timed('poke', async () => {
     const p = await live.until(
       (f) => f[0] === 'p' && (f[1] as { t: string[] }).t.some((t) => live.tags.includes(t)),

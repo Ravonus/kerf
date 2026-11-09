@@ -115,96 +115,90 @@ describe('route response validators', () => {
       expect(result.headers.has('etag')).toBe(false)
     }
   })
+})
 
-  it('runs authorization and loaders before comparing session and mutation results', async () => {
-    let value = 1
-    let calls = 0
-    let mode = 'normal'
+function sessionRoutes() {
+  const state = { value: 1, calls: 0, mode: 'normal' }
+  // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
+  const resolve = async (_path: string, req: Request) => {
+    state.calls++
+    const session = req.headers.get('cookie')
+    return {
+      ...(state.mode === 'error' && { error: new Error('failed') }),
+      ...(state.mode === 'redirect' && { redirect: { status: 302, href: '/login' } }),
+      status: session ? 200 : 403,
+      path: '/page',
+      head: {},
+      levels: [{ id: 'page', params: {}, data: { session, value: state.value }, raw: {} }],
+    }
+  }
+  const receipt: AssetReceipt = {
+    build: 'build',
+    version: 1,
+    scope: 'vite-static-closure',
+    files: { 'page.js': { bytes: 10, kind: 'js' } },
+    routes: { page: { files: ['page.js'], bytes: 10 } },
+    eager: null,
+  }
+  const data = makeNavigation({
+    resolve: resolve as unknown as Parameters<typeof makeNavigation>[0]['resolve'],
     // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
-    const resolve = async (_path: string, req: Request) => {
-      calls++
-      const session = req.headers.get('cookie')
-      return {
-        ...(mode === 'error' && { error: new Error('failed') }),
-        ...(mode === 'redirect' && { redirect: { status: 302, href: '/login' } }),
-        status: session ? 200 : 403,
-        path: '/page',
-        head: {},
-        levels: [{ id: 'page', params: {}, data: { session, value }, raw: {} }],
-      }
-    }
-    const receipt: AssetReceipt = {
+    finished: async () => ({ title: '', og: {}, twitter: {}, extra: [] }),
+    statics: new Set(),
+    stateOf: () => {
+      throw new Error('unexpected static render')
+    },
+    PASSES: 1,
+    options: {
       build: 'build',
-      version: 1,
-      scope: 'vite-static-closure',
-      files: { 'page.js': { bytes: 10, kind: 'js' } },
-      routes: { page: { files: ['page.js'], bytes: 10 } },
-      eager: null,
-    }
-    const data = makeNavigation(
-      resolve as unknown as Parameters<typeof makeNavigation>[0],
-      // oxlint-disable-next-line typescript/require-await -- the mocked contract returns a Promise
-      async () => ({ title: '', og: {}, twitter: {}, extra: [] }),
-      new Set(),
-      () => {
-        throw new Error('unexpected static render')
-      },
-      1,
-      {
-        build: 'build',
-        routeAssetBytes: receipt,
-        manifest: { dir: '', routes: [], layouts: [] },
-        modules: {},
-      },
-    )
-    const scope = () =>
-      ({ headers: new Headers(), entries: new Map() }) as Parameters<typeof data>[2]
-    const first = await data('/page', request({ cookie: 'session=a' }), scope())
-    const tag = first.headers.get('etag')!
-    expect((await first.json()).a.routeBytes).toBe(10)
-    const same = await data(
-      '/page',
-      request({ cookie: 'session=a', 'if-none-match': tag }),
-      scope(),
-    )
-    expect(same.status).toBe(304)
-    receipt.files['page.js']!.bytes = 20
-    const costChanged = await data(
-      '/page',
-      request({ cookie: 'session=a', 'if-none-match': tag }),
-      scope(),
-    )
-    expect(costChanged.status).toBe(200)
-    expect((await costChanged.json()).a.routeBytes).toBe(20)
-    expect(costChanged.headers.get('etag')).not.toBe(tag)
-    receipt.files['page.js']!.bytes = 10
-    const other = await data(
-      '/page',
-      request({ cookie: 'session=b', 'if-none-match': tag }),
-      scope(),
-    )
-    expect(other.status).toBe(200)
-    const refused = await data('/page', request({ 'if-none-match': tag }), scope())
-    expect(refused.headers.get('cache-control')).toBe('no-store')
-    value++
-    const changed = await data(
-      '/page',
-      request({ cookie: 'session=a', 'if-none-match': tag }),
-      scope(),
-    )
-    expect(changed.status).toBe(200)
-    expect(changed.headers.get('etag')).not.toBe(tag)
-    for (const next of ['error', 'redirect']) {
-      mode = next
-      const result = await data(
-        '/page',
-        request({ cookie: 'session=a', 'if-none-match': tag }),
-        scope(),
-      )
-      expect(result.status).toBe(200)
-      expect(result.headers.get('cache-control')).toBe('no-store')
-      expect(result.headers.has('etag')).toBe(false)
-    }
-    expect(calls).toBe(8)
+      routeAssetBytes: receipt,
+      manifest: { dir: '', routes: [], layouts: [] },
+      modules: {},
+    },
   })
+  const scope = () => ({ headers: new Headers(), entries: new Map() }) as Parameters<typeof data>[2]
+  return { state, receipt, data, scope }
+}
+
+it('runs authorization and loaders before comparing session and mutation results', async () => {
+  const { state, receipt, data, scope } = sessionRoutes()
+  const first = await data('/page', request({ cookie: 'session=a' }), scope())
+  const tag = first.headers.get('etag')!
+  expect((await first.json()).a.routeBytes).toBe(10)
+  const same = await data('/page', request({ cookie: 'session=a', 'if-none-match': tag }), scope())
+  expect(same.status).toBe(304)
+  receipt.files['page.js']!.bytes = 20
+  const costChanged = await data(
+    '/page',
+    request({ cookie: 'session=a', 'if-none-match': tag }),
+    scope(),
+  )
+  expect(costChanged.status).toBe(200)
+  expect((await costChanged.json()).a.routeBytes).toBe(20)
+  expect(costChanged.headers.get('etag')).not.toBe(tag)
+  receipt.files['page.js']!.bytes = 10
+  const other = await data('/page', request({ cookie: 'session=b', 'if-none-match': tag }), scope())
+  expect(other.status).toBe(200)
+  const refused = await data('/page', request({ 'if-none-match': tag }), scope())
+  expect(refused.headers.get('cache-control')).toBe('no-store')
+  state.value++
+  const changed = await data(
+    '/page',
+    request({ cookie: 'session=a', 'if-none-match': tag }),
+    scope(),
+  )
+  expect(changed.status).toBe(200)
+  expect(changed.headers.get('etag')).not.toBe(tag)
+  for (const next of ['error', 'redirect']) {
+    state.mode = next
+    const result = await data(
+      '/page',
+      request({ cookie: 'session=a', 'if-none-match': tag }),
+      scope(),
+    )
+    expect(result.status).toBe(200)
+    expect(result.headers.get('cache-control')).toBe('no-store')
+    expect(result.headers.has('etag')).toBe(false)
+  }
+  expect(state.calls).toBe(8)
 })

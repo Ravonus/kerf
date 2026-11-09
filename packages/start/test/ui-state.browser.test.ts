@@ -225,40 +225,37 @@ const heard = async (p: Playwright.Page, text: string) => {
   await expect.poll(() => label(p, 'said').textContent(), { timeout: 10_000 }).toContain(text)
 }
 
-registerTabsWithShareChannelAndLiveOne(
-  () => browser,
+registerTabsWithShareChannelAndLiveOne(() => browser, {
   together,
   label,
   socketsOpen,
   hitsOf,
   say,
   heard,
-)
+})
 
-registerTheLeaderClosesOneNewSocketAnd(
-  () => browser,
+registerTheLeaderClosesOneNewSocketAnd(() => browser, {
   together,
   label,
   socketsOpen,
   hitsOf,
   say,
   heard,
-)
+})
 
-registerTheSocketDiesChannelAndLiveReconnect(
-  () => browser,
+registerTheSocketDiesChannelAndLiveReconnect(() => browser, {
   together,
   label,
   socketsOpen,
   say,
   heard,
-)
+})
 
 registerATabThatClosesTakesItsLines(() => browser, together, socketsOpen, say, heard)
 
 registerATabHiddenPastTheParkLimit(() => browser, open, label)
 
-registerATabSignsInAfterTheSocket(() => browser, open, together, label, socketsOpen, url)
+registerATabSignsInAfterTheSocket(() => browser, { open, together, label, socketsOpen, url })
 
 const measuring = process.env.TOGETHER_MEASURE ? test : test.skip
 registerLatencyOfLiveAndChannelSenderAnd(() => browser, together, socketsOpen, measuring)

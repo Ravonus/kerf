@@ -16,7 +16,8 @@ function placeholder(path) {
   })
 }
 
-async function routeHead(route, layouts, mod, site, mergeMeta, cardPath, take, report, modules) {
+async function routeHead(route, layouts, mod, context, report) {
+  const { site, mergeMeta, cardPath, take, modules } = context
   let head, status, url, data, redirect, source
   if (route.kind !== 'page') {
     const metas = [
@@ -70,20 +71,9 @@ async function routeHead(route, layouts, mod, site, mergeMeta, cardPath, take, r
   return { head, status, url, data, redirect, source }
 }
 
-function applyHead(
-  entry,
-  route,
-  manifest,
-  mod,
-  head,
-  status,
-  url,
-  data,
-  redirect,
-  source,
-  headTags,
-  out,
-) {
+function applyHead(entry, route, mod, resolved, context) {
+  const { head, status, url, data, redirect, source } = resolved
+  const { manifest, headTags, out } = context
   const image = head.og.image
   entry.url = url
   entry.status = status
@@ -116,21 +106,7 @@ function applyHead(
 }
 
 async function inspectRoute(route, context) {
-  const {
-    root,
-    manifest,
-    modules,
-    site,
-    mergeMeta,
-    cardPath,
-    take,
-    headTags,
-    h006,
-    diagnostics,
-    out,
-    entries,
-    preset,
-  } = context
+  const { root, manifest, modules, h006, diagnostics, out, entries, preset } = context
   const mod = modules[route.file] ?? {}
   const layouts = route.layouts.map((id) => manifest.layouts.find((l) => l.id === id))
   const entry = {
@@ -153,34 +129,9 @@ async function inspectRoute(route, context) {
     h006(readFileSync(join(root, f), 'utf8'), f, (why, file) =>
       diagnostics.push({ code: 'H006', severity: 'error', file, route: entry.path, why }),
     )
-  const { head, status, url, data, redirect, source } = await routeHead(
-    route,
-    layouts,
-    mod,
-    site,
-    mergeMeta,
-    cardPath,
-    take,
-    report,
-    modules,
-  )
-  if (
-    !applyHead(
-      entry,
-      route,
-      manifest,
-      mod,
-      head,
-      status,
-      url,
-      data,
-      redirect,
-      source,
-      headTags,
-      out,
-    )
-  )
-    return
+  const resolved = await routeHead(route, layouts, mod, context, report)
+  const { head, status } = resolved
+  if (!applyHead(entry, route, mod, resolved, context)) return
   // Route-level checks on the merged result (the config-level ones run in `weft check`).
   if (preset === 'static' && entry.image === 'on-demand')
     report(

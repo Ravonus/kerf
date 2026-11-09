@@ -188,7 +188,7 @@ export async function routesMeta({ root, site = {}, preset }) {
     await inspectSamples(entries, modules, seen, take)
     await inspectCards(entries, manifest, found, handler)
 
-    diagnostics.push(...compare(root, entries, pages, site, known, metaExport, metaSnippet))
+    diagnostics.push(...compare({ root, entries, pages, site, known, metaExport, metaSnippet }))
     out.sort(
       (a, b) =>
         manifest.routes.findIndex((r) => r.file === a.file) -

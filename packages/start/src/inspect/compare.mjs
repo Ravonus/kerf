@@ -37,7 +37,8 @@ function compareLengths(own, words, at, push) {
     )
 }
 
-function compareRoute(root, route, entry, byRoute, site, push, metaExport, metaSnippet) {
+function compareRoute(route, entry, c) {
+  const { root, byRoute, site, push, metaExport, metaSnippet } = c
   if (route.kind !== 'page') return
   const own = byRoute.get(route) ?? []
   const at = { file: route.file, path: entry.path }
@@ -100,7 +101,8 @@ function compareRoute(root, route, entry, byRoute, site, push, metaExport, metaS
 }
 
 /** The checks that take every page at once: is each one's text its own, and is it text at all? */
-export function compare(root, entries, pages, site, known, metaExport, metaSnippet) {
+export function compare(c) {
+  const { root, entries, pages, site, known, metaExport, metaSnippet } = c
   const out = []
   const push = (code, severity, route, why, extra) =>
     out.push({ code, severity, file: route.file, route: route.path, why, ...extra })
@@ -118,7 +120,7 @@ export function compare(root, entries, pages, site, known, metaExport, metaSnipp
     })
 
   for (const { route, entry } of entries)
-    compareRoute(root, route, entry, byRoute, site, push, metaExport, metaSnippet)
+    compareRoute(route, entry, { root, byRoute, site, push, metaExport, metaSnippet })
 
   const clash = (key, code) => {
     const groups = new Map()

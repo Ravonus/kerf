@@ -137,7 +137,11 @@ const fake: Link = {
     ) // `net.settle()` waits for the connection, not for its end
     return import(/* @vite-ignore */ FAKE)
       .then((m) =>
-        m.open(body, heard, signal, up, subs, (close: () => unknown) => (closeHub = close)),
+        m.open(body, heard, signal, {
+          up,
+          subs,
+          closing: (close: () => unknown) => (closeHub = close),
+        }),
       )
       .finally(up)
   },

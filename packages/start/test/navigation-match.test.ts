@@ -292,14 +292,14 @@ it('delivers router redirect headers and request-scope headers on both response 
   expect(pageResponse.headers.get('location')).toBe('/users/alice')
   expect(pageResponse.headers.get('x-route')).toBe('yes')
   expect(pageResponse.headers.get('set-cookie')).toBe('session=ok; Path=/')
-  const navigation = makeNavigation(
+  const navigation = makeNavigation({
     resolve,
-    (() => {}) as never,
-    new Set(),
-    (() => {}) as never,
-    1,
-    { manifest, modules: {} },
-  )
+    finished: (() => {}) as never,
+    statics: new Set(),
+    stateOf: (() => {}) as never,
+    PASSES: 1,
+    options: { manifest, modules: {} },
+  })
   const dataResponse = await navigation('/users/new', request, scope)
   expect(dataResponse.status).toBe(200)
   expect(dataResponse.headers.get('location')).toBeNull()
@@ -366,9 +366,13 @@ it.each(['page', 'navigation'] as const)(
     const response =
       kind === 'page'
         ? await makePage({ resolve } as never)(new URL(request.url), request, scope)
-        : await makeNavigation(resolve, (() => {}) as never, new Set(), (() => {}) as never, 1, {
-            manifest,
-            modules: {},
+        : await makeNavigation({
+            resolve,
+            finished: (() => {}) as never,
+            statics: new Set(),
+            stateOf: (() => {}) as never,
+            PASSES: 1,
+            options: { manifest, modules: {} },
           })('/users/new', request, scope)
     expect(response.status).toBe(kind === 'page' ? 302 : 200)
     expect.soft(response.headers.get('location')).toBe(kind === 'page' ? '/users/alice' : null)

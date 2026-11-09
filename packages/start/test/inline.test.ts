@@ -56,7 +56,7 @@ test('interaction and forced-colours rules wait for the late sheet; a state the 
 
 test('a browser that has every sheet the page uses gets links, and a chunk links only what is new', () => {
   const have = keptSheets(`a=1; weft-css=zz.${sheetId('/a.css')}; b=2`)
-  const s = pageStyles(assets, css, html, undefined, undefined, have)
+  const s = pageStyles(assets, css, html, { have })
   expect(s.links).toBe(true)
   expect(s.head).toBe(`<style>${LAYER_ORDER}</style>\n<link rel="stylesheet" href="/a.css">\n`)
   expect(s.late([{ href: '/a.css' }, { href: '/b.css' }], '<div data-scope="menu"></div>')).toBe(
@@ -65,22 +65,15 @@ test('a browser that has every sheet the page uses gets links, and a chunk links
 })
 
 test('one sheet the browser lacks, and the page paints from its own rules as before', () => {
-  const s = pageStyles(
-    assets,
-    [...css, { href: '/b.css' }],
-    html,
-    undefined,
-    undefined,
-    keptSheets(`weft-css=${sheetId('/a.css')}`),
-  )
+  const s = pageStyles(assets, [...css, { href: '/b.css' }], html, {
+    have: keptSheets(`weft-css=${sheetId('/a.css')}`),
+  })
   expect(s.links).toBe(false)
   expect(s.head).toContain('data-late')
 })
 
 test('a request with cookies has the browser list the sheets it loaded, by the ids the server reads', async () => {
-  expect(pageStyles(assets, css, html, undefined, undefined, undefined, true).head).toContain(
-    LATE_SHEETS_KEPT,
-  )
+  expect(pageStyles(assets, css, html, { keep: true }).head).toContain(LATE_SHEETS_KEPT)
   expect(pageStyles(assets, css, html).head).toContain(LATE_SHEETS)
   const cookies: string[] = []
   const links = [
@@ -129,7 +122,7 @@ test('dials the head restores before paint keep their rules', () => {
   const dials = `:where([data-expression="vivid"]){color:red}${big}`
   const a = { inline: { '/dials.css': dials }, critical },
     on = [{ href: '/dials.css' }]
-  expect(pageStyles(a, on, html, 'warp:dials').head).toContain('vivid')
+  expect(pageStyles(a, on, html, { head: 'warp:dials' }).head).toContain('vivid')
   expect(pageStyles(a, on, html).head).not.toContain('vivid')
 })
 
@@ -405,5 +398,5 @@ test('the budget counts the head an app adds, not just the shell', () => {
     s = 'x'.repeat(4 * (12 * 1024 - size) - 400)
   const a = { inline: { '/a.css': sheet }, critical }
   expect(pageStyles(a, css, s).head).not.toContain('media="print"')
-  expect(pageStyles(a, css, s, 'y'.repeat(1000)).head).toContain('media="print"')
+  expect(pageStyles(a, css, s, { head: 'y'.repeat(1000) }).head).toContain('media="print"')
 })

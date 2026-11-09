@@ -47,7 +47,7 @@ export function campaign(
       },
     }
   }
-  return queuedCampaign(name, lockName, l, state, hold, lose, stolen)
+  return queuedCampaign(name, lockName, l, state, { hold, lose, stolen })
 }
 
 interface ElectionState {
@@ -61,10 +61,9 @@ function queuedCampaign(
   lockName: string,
   l: LockManager,
   state: ElectionState,
-  hold: () => void,
-  lose: () => void,
-  stolen?: () => void,
+  on: { hold: () => void; lose: () => void; stolen?: (() => void) | undefined },
 ): Campaign {
+  const { hold, lose, stolen } = on
   let release: (() => void) | undefined
   let abort: AbortController | undefined
   let pongAt = 0

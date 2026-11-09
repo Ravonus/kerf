@@ -10,15 +10,23 @@ import { cookieJar } from './request'
 import type { Resolved } from './types'
 
 /** Finish page metadata and inspect a route in its request scope. */
-export function makePreview(
-  als: AsyncLocalStorage<Scope>,
-  scopeOptions: Parameters<typeof exec.createScope>[1],
-  resolve: (path: string, request: Request) => Promise<Resolved>,
-  stateOf: (r: Resolved, payload: RoutePayload) => ReturnType<typeof createRouteState>,
-  timing: { timeout?: number },
-  complete: (r: Resolved, html?: string) => Merged,
-  PASSES: number,
-) {
+export function makePreview({
+  als,
+  scopeOptions,
+  resolve,
+  stateOf,
+  timing,
+  complete,
+  PASSES,
+}: {
+  als: AsyncLocalStorage<Scope>
+  scopeOptions: Parameters<typeof exec.createScope>[1]
+  resolve: (path: string, request: Request) => Promise<Resolved>
+  stateOf: (r: Resolved, payload: RoutePayload) => ReturnType<typeof createRouteState>
+  timing: { timeout?: number }
+  complete: (r: Resolved, html?: string) => Merged
+  PASSES: number
+}) {
   /** What `page` shows a reader, without the streaming: the same pass, so a page, its navigation and its card agree. */
   async function shell(r: Resolved, request: Request) {
     const route = stateOf(r, payloadOf(r, false))

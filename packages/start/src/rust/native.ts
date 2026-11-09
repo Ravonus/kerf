@@ -22,7 +22,9 @@ interface Wasm {
   weft_free: (ptr: number, len: number) => void
   weft_alloc: (len: number) => number
   weft_contract: () => bigint
-  weft_call: (i: number, il: number, c: number, cl: number, b: number, bl: number) => bigint
+  weft_call: (
+    ...args: [i: number, il: number, c: number, cl: number, b: number, bl: number]
+  ) => bigint
 }
 interface Engine {
   kind: 'addon' | 'wasm'
