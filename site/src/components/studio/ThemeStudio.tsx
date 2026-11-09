@@ -1,12 +1,7 @@
 // The theme studio: edit a `warp()` config, see real components take it, copy it into weft.config.ts.
 import { derived, onMount, state, watch } from '@weft-js/core'
 import { Button, Tabs } from '@weft-js/warp'
-import {
-  compile,
-  configSource,
-  STUDIO_PALETTE,
-  type StudioConfig,
-} from '../../lib/studio'
+import { compile, configSource, STUDIO_PALETTE, type StudioConfig } from '../../lib/studio'
 import { ratio } from '../../lib/contrast'
 import { keepConfig, loadConfig, shareLink } from '../../lib/studio-store'
 import { JsonPanel, PartsEditor, TokensEditor } from './Advanced'

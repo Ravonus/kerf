@@ -16,7 +16,10 @@ const toolkit = buildToolkit()
 // The stylesheet facts warp's theme compiler needs, so the theme studio can run it in the browser.
 const { themeContext } = await import('../../packages/warp/src/plugin/theme-context.mjs')
 const themeFacts = themeContext(new URL('../../packages/warp-core/', import.meta.url))
-write('theme-context.json', { ...themeFacts, tokenNames: [...themeFacts.tokenNames].sort((a, b) => a.localeCompare(b)) })
+write('theme-context.json', {
+  ...themeFacts,
+  tokenNames: [...themeFacts.tokenNames].sort((a, b) => a.localeCompare(b)),
+})
 buildArt()
 buildShowcase()
 buildSpeed()
