@@ -1055,15 +1055,23 @@
   :where([data-scope="sidenav"] [data-part="bar"]) { inset-block: 0; inset-inline: auto 0; background: none; box-shadow: none; }
   :where([data-scope="sidenav"] [data-part="bar"]:hover) { background: var(--warp-color-surface-hover); }
   :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"] svg) { transform: rotate(180deg); }
+  /* docked and open, the fold arrow waits for the pointer (or keyboard focus); folded, it is all there is, so it stays */
+  @media (hover: hover) {
+    :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"] svg) { opacity: 0; transition: transform var(--warp-duration-sheet, 240ms) var(--warp-ease-out), opacity var(--warp-duration-base) var(--warp-ease-out); }
+    :where([data-scope="sidenav"]:not([data-collapsed]):hover [data-part="bar"] svg),
+    :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"]:focus-visible svg) { opacity: 1; }
+  }
   :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar-label"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); }
 }
 /* overlay="under": on a phone the open panel and its backdrop start below the header, which stays usable, and the
    header's SideNavTitle carries the panel's title in place of the panel's own head. */
-:where([data-scope="sidenav"][data-overlay="under"] > [data-part="panel"]),
-:where([data-scope="sidenav"][data-overlay="under"] > [data-part="backdrop"]) { inset-block-start: var(--warp-sidenav-top, 0px); padding-block-start: 0; }
-:where([data-scope="sidenav"][data-overlay="under"] > [data-part="panel"] > [data-part="head"]) { display: none; }
-:where([data-scope="sidenav"][data-overlay="under"] [data-part="scroll"]) { padding: var(--warp-space-group); }
-:where([data-scope="sidenav"][data-overlay="under"] [data-part="bar"]) { inset-block-start: 0; }
+@media (max-width: 899.98px) {
+  :where([data-scope="sidenav"][data-overlay="under"] > [data-part="panel"]),
+  :where([data-scope="sidenav"][data-overlay="under"] > [data-part="backdrop"]) { inset-block-start: var(--warp-sidenav-top, 0px); padding-block-start: 0; }
+  :where([data-scope="sidenav"][data-overlay="under"] > [data-part="panel"] > [data-part="head"]) { display: none; }
+  :where([data-scope="sidenav"][data-overlay="under"] [data-part="scroll"]) { padding: var(--warp-space-group); }
+  :where([data-scope="sidenav"][data-overlay="under"] [data-part="bar"]) { inset-block-start: 0; }
+}
 /* SideNavTitle: the header's brand word, and the open panel's title stacked on it. While an `under` panel is open the
    word lifts and fades out as the title rises into its place; closing reverses it. */
 :where([data-scope="sidenav-title"]) { display: inline-grid; align-items: center; justify-items: start; }
@@ -1087,6 +1095,27 @@
   :where([data-scope="sidenav-title"] > *) { transition: none; }
 }
 @media print { :where([data-scope="sidenav"]) { display: none !important; } }
+
+/* ScrollRail — the page's scrollbar drawn from below a sticky header (--warp-scroll-rail-top) rather than over it.
+   Only with a fine pointer: there the native bar steps aside; touch screens keep their own overlay bar. */
+:where([data-scope="scroll-rail"]) { display: none; }
+@media (pointer: fine) {
+  :where(html:has(> body [data-scope="scroll-rail"])) { scrollbar-width: none; }
+  :where(html:has(> body [data-scope="scroll-rail"]))::-webkit-scrollbar { display: none; }
+  :where([data-scope="scroll-rail"]) {
+    display: block; position: fixed; inset-block: var(--warp-scroll-rail-top, 0px) 0; inset-inline-end: 0;
+    inline-size: 12px; z-index: var(--warp-z-sticky); touch-action: none;
+  }
+  :where([data-scope="scroll-rail"][data-none]) { display: none; }
+  :where([data-scope="scroll-rail"] > [data-part="thumb"]) {
+    position: absolute; inset-block-start: 0; inset-inline-end: 3px; inline-size: 6px; border-radius: 999px;
+    background: color-mix(in oklab, var(--warp-color-text) 22%, transparent); opacity: 0.6;
+    transition: opacity var(--warp-duration-slow) var(--warp-ease-out), inline-size var(--warp-duration-fast) var(--warp-ease-out), background-color var(--warp-duration-fast);
+  }
+  :where([data-scope="scroll-rail"][data-active] > [data-part="thumb"]) { opacity: 1; }
+  :where([data-scope="scroll-rail"]:hover > [data-part="thumb"]),
+  :where([data-scope="scroll-rail"][data-dragging] > [data-part="thumb"]) { opacity: 1; inline-size: 8px; background: color-mix(in oklab, var(--warp-color-text) 40%, transparent); }
+}
 
 /* Docs layout — TopNav over NavList | article | AnchorNav. (Not "content": warp.signature claims that part name.) It names itself
    warp-page so page-level parts (AnchorNav) decide by the page, not their pane.

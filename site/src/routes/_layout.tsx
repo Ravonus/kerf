@@ -2,6 +2,7 @@ import type { RouteProps } from '@weft-js/start'
 import { Footer } from '../components/Footer'
 import { DocsRail } from '../components/DocsRail'
 import { Header } from '../components/Header'
+import { ScrollRail } from '@weft-js/warp'
 import { SpotlightGate } from '../components/SpotlightGate'
 import '../styles/site.css'
 
@@ -20,6 +21,7 @@ export default function Root(props: RouteProps) {
       </main>
       <Footer />
       <SpotlightGate />
+      <ScrollRail />
     </>
   )
 }

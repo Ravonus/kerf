@@ -102,6 +102,10 @@ const components = [
     'App shell: bottom bar, rail or sidebar by its own width; header, account menu, More sheet, focus variant',
   ],
   [
+    'ScrollRail',
+    'The page scrollbar drawn from below a sticky header (--warp-scroll-rail-top); fine pointers only, touch keeps native',
+  ],
+  [
     'Presence',
     'Show and hide with an entrance and an exit (collapse, fade, rise, pop, slide-*); no-JS form: hidden + data-collapse / data-presence',
   ],

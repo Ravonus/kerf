@@ -9,6 +9,7 @@
   [data-site="skip"] { position: absolute; inset-block-start: 8px; inset-inline-start: 8px; padding: var(--warp-space-related) var(--warp-space-related); background: var(--warp-color-surface-raised); border-radius: var(--warp-radius-control); translate: 0 -200%; z-index: 30; }
   [data-site="skip"]:focus { translate: 0 0; }
 
+  :root { --warp-scroll-rail-top: 57px; }
   [data-site="header"] { position: sticky; inset-block-start: 0; z-index: 20; background: color-mix(in oklab, var(--warp-color-page) 96%, transparent); backdrop-filter: blur(16px); border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
   [data-site="repo"][data-scope="button"] { color: var(--warp-color-text-subtle); }
   [data-site="bar"] { display: flex; align-items: center; gap: var(--warp-space-related); block-size: 56px; margin-inline: auto; padding-inline: var(--warp-space-page); }
