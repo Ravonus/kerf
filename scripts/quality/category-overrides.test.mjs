@@ -44,7 +44,7 @@ void test('category warnings do not hide independently enforced lint errors', as
   try {
     mkdirSync(join(dir, 'src/utils'), { recursive: true })
     const path = 'src/utils/test.ts'
-    const content = 'function f(a,b,c,d) { return a }\nf(1,2,3,4)\n'
+    const content = 'function f(a,b,c,d,e,f) { return a }\nf(1,2,3,4,5,6)\n'
     writeFileSync(join(dir, path), content)
     const local = resolve('node_modules/.bin/oxlint')
     const binary = existsSync(local) ? local : resolve('../../weft/node_modules/.bin/oxlint')

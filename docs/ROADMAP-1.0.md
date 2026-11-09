@@ -16,44 +16,44 @@ agent. It ships three things:
 
 ## Where things stand
 
-| Area | Finding | Evidence |
-|---|---|---|
-| Code samples | Every `<pre>` wraps at any character, so long lines break mid-token | `site/src/styles/site.css:177` sets `pre-wrap` and `overflow-wrap: anywhere` |
-| Code samples | 812 lines in Markdown code fences are over 80 columns, across 86 files | Worst: `packages/cli/docs/start.md` (50), `learn/tutorial.md` (35), `learn/auth.md` (21) |
-| Code samples | 2,060 lines in site example and demo `.tsx` files are over 80 columns | `site/src/toolkit/examples/*.tsx`, `site/src/demos/` |
-| Core promise | 18 compiler codes are in the catalog but nothing emits them, including every React-ism | See Sprint 4 |
-| CI | `quality.yml` and `runtime-matrix.yml` have failed on every recent push | `gh run list`: Firefox and WebKit missing in CI, a gitleaks hit in `cli/test/deploy.test.mjs` |
-| Size | Weft + Warp is 53.0 KB br, over the 50 KB ceiling. It was 40.8 KB on 10-31 | `evals/results/compare-history.jsonl` |
-| Speed | Weft + Warp loads in 210 ms against Solid + Kobalte's 155 ms. Weft alone takes 113 ms | Same file |
-| Agent eval | The head-to-head eval (research 42) is built but has never been run | `evals/agent-eval/`, with nothing in `evals/results/` |
-| Layout | 2,497 of the 5,507 tracked files are in `evals/`, and 1,561 of those are run snapshots | `evals/results/` |
-| Size of code | 99 source files are over 400 lines. Some functions are over 400 lines | `start/src/server.tsx` `createHandler` (601), `start/src/hub.ts` `createHub` (415) |
-| Line width | No JS/TS formatter. 13,000+ lines are over 120 columns, the longest 3,365 | `rustfmt.toml` is 120, and there's nothing for TS |
-| DRY | `freePort`, `sleep`, `until`, `esc`, `walk` and `median` are each written 7 to 12 times | Scripts, tests and four runtime packages |
-| Release scope | The README says the add-ons aren't released, but `scripts/release.mjs` publishes every non-private package | All 20 packages are public at 0.1.1 |
+| Area          | Finding                                                                                                    | Evidence                                                                                      |
+| ------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Code samples  | Every `<pre>` wraps at any character, so long lines break mid-token                                        | `site/src/styles/site.css:177` sets `pre-wrap` and `overflow-wrap: anywhere`                  |
+| Code samples  | 812 lines in Markdown code fences are over 80 columns, across 86 files                                     | Worst: `packages/cli/docs/start.md` (50), `learn/tutorial.md` (35), `learn/auth.md` (21)      |
+| Code samples  | 2,060 lines in site example and demo `.tsx` files are over 80 columns                                      | `site/src/toolkit/examples/*.tsx`, `site/src/demos/`                                          |
+| Core promise  | 18 compiler codes are in the catalog but nothing emits them, including every React-ism                     | See Sprint 4                                                                                  |
+| CI            | `quality.yml` and `runtime-matrix.yml` have failed on every recent push                                    | `gh run list`: Firefox and WebKit missing in CI, a gitleaks hit in `cli/test/deploy.test.mjs` |
+| Size          | Weft + Warp is 53.0 KB br, over the 50 KB ceiling. It was 40.8 KB on 10-31                                 | `evals/results/compare-history.jsonl`                                                         |
+| Speed         | Weft + Warp loads in 210 ms against Solid + Kobalte's 155 ms. Weft alone takes 113 ms                      | Same file                                                                                     |
+| Agent eval    | The head-to-head eval (research 42) is built but has never been run                                        | `evals/agent-eval/`, with nothing in `evals/results/`                                         |
+| Layout        | 2,497 of the 5,507 tracked files are in `evals/`, and 1,561 of those are run snapshots                     | `evals/results/`                                                                              |
+| Size of code  | 99 source files are over 400 lines. Some functions are over 400 lines                                      | `start/src/server.tsx` `createHandler` (601), `start/src/hub.ts` `createHub` (415)            |
+| Line width    | No JS/TS formatter. 13,000+ lines are over 120 columns, the longest 3,365                                  | `rustfmt.toml` is 120, and there's nothing for TS                                             |
+| DRY           | `freePort`, `sleep`, `until`, `esc`, `walk` and `median` are each written 7 to 12 times                    | Scripts, tests and four runtime packages                                                      |
+| Release scope | The README says the add-ons aren't released, but `scripts/release.mjs` publishes every non-private package | All 20 packages are public at 0.1.1                                                           |
 
 ## Rules for 1.0
 
 These are the rules every sprint works to. Sprint 0 makes the tools enforce them, so they don't
 depend on anyone remembering them.
 
-| Rule | Limit | Enforced by |
-|---|---|---|
-| Source line width (TS, JS, Rust) | 100 | `oxfmt` (`printWidth: 100`), `rustfmt` (`max_width = 100`) |
-| Code in doc fences and callouts | 70 columns | `site/scripts/content.mjs` fails the build |
-| Code shown in split example panes | 58 columns | Same check, run over `site/src/toolkit/examples` and `site/src/demos` |
-| File length | 400 lines (generated, vendored and test files: 800) | `oxlint` `max-lines`, with a shrinking allowlist |
-| Function length | 80 lines | `oxlint` `max-lines-per-function`; `clippy::too_many_lines` for Rust |
-| Shared helpers | One home for each, and no private copy | `scripts/check.mjs` greps for the known duplicates |
-| Folder names | A package's folder matches its npm name | A check in `scripts/check.mjs` |
+| Rule                              | Limit                                               | Enforced by                                                           |
+| --------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------- |
+| Source line width (TS, JS, Rust)  | 100                                                 | `oxfmt` (`printWidth: 100`), `rustfmt` (`max_width = 100`)            |
+| Code in doc fences and callouts   | 70 columns                                          | `site/scripts/content.mjs` fails the build                            |
+| Code shown in split example panes | 58 columns                                          | Same check, run over `site/src/toolkit/examples` and `site/src/demos` |
+| File length                       | 400 lines (generated, vendored and test files: 800) | `oxlint` `max-lines`, with a shrinking allowlist                      |
+| Function length                   | 80 lines                                            | `oxlint` `max-lines-per-function`; `clippy::too_many_lines` for Rust  |
+| Shared helpers                    | One home for each, and no private copy              | `scripts/check.mjs` greps for the known duplicates                    |
+| Folder names                      | A package's folder matches its npm name             | A check in `scripts/check.mjs`                                        |
 
 The sample widths come from measuring the site's code boxes with IBM Plex Mono at 13 to 14 px:
 
-| Box | 1440 px | 1024 px | 390 px |
-|---|---|---|---|
-| Doc column | 89 | 76 | 32 |
-| Pitfall and challenge callouts | 74 | 71 | 28 |
-| Split example pane (`/examples`, home) | 59 to 78 | about 55 | 38 |
+| Box                                    | 1440 px  | 1024 px  | 390 px |
+| -------------------------------------- | -------- | -------- | ------ |
+| Doc column                             | 89       | 76       | 32     |
+| Pitfall and challenge callouts         | 74       | 71       | 28     |
+| Split example pane (`/examples`, home) | 59 to 78 | about 55 | 38     |
 
 So 70 columns fits every doc box on a tablet or anything wider. 58 fits the narrowest split pane.
 On a phone, nothing fits without breaking lines, so phones get the hanging-indent wrap from Sprint 1.
@@ -190,6 +190,7 @@ Every file under 400 lines and every function under 80, with the allowlist from 
 
 **Flaky tests first** (found in S2's verification, 2026-11-04). Make these deterministic, by waiting
 on the state rather than on wall-clock time, before any split. Each one failed once and passed on a re-run:
+
 - [x] `packages/warp/test/sweep.browser.test.ts`: the per-step draw limit (`< 6`) fails on a slow
       ARM VM at 13.1.
 - [x] `packages/start/test/ui-state.browser.test.ts`, "killing the leader mid-hover: no stuck hover
@@ -200,20 +201,20 @@ on the state rather than on wall-clock time, before any split. Each one failed o
 **Splits**, largest first. Each split moves code as-is and doesn't change behaviour, so each can be
 its own PR.
 
-| File | Function(s) | Split into |
-|---|---|---|
-| `start/src/server.tsx` (1,180) | `createHandler` (601) | `server/` with request routing, SSR render, server-function calls, assets and errors |
-| `start/src/hub.ts` (822) | `createHub` (415) | Connections, rooms, presence and delivery, each a factory `createHub` composes |
-| `start/src/vite.mjs` (968) | `weftStart` (264) | One Vite plugin per concern, and `weftStart` returns the array |
-| `start/src/data.ts` (1,106) | `mutate` (81) | Query, mutate and cache modules |
-| `core/vite.mjs` (628) | `styleGroups` (148) | `vite/style-groups.mjs` |
-| `cli/src/tests.mjs` (572) | `checkTestFile` (214) | One function per rule, plus a table |
-| `warp/src/schedule/Calendar.tsx` (865) | `useCalendar`, `TimeGrid`, `MonthGrid`, `Timeline` | One file per view, plus a `calendar-state.ts` |
-| `warp-core/src/live.ts` (815) | `transportSim` (147) | `live/sim.ts` |
-| `weft-compiler/src/emit.rs` (1,604) | `walk` (283), `props` (99) | `emit/{walk,props,list,attrs}.rs` |
-| `weft-compiler/src/analyze.rs` (1,901) | `analyze_list` (106) | `analyze/` with one module per diagnostic family |
-| `weft-compiler/src/hydration.rs` (1,220) | `facts` (223), `visit_jsx_element` (107) | `hydration/{facts,visit}.rs` |
-| `site/src/toolkit/examples/canvas.tsx` (1,036) | `Landing` (148), `lookKit` (128) | One file per demo |
+| File                                           | Function(s)                                        | Split into                                                                           |
+| ---------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `start/src/server.tsx` (1,180)                 | `createHandler` (601)                              | `server/` with request routing, SSR render, server-function calls, assets and errors |
+| `start/src/hub.ts` (822)                       | `createHub` (415)                                  | Connections, rooms, presence and delivery, each a factory `createHub` composes       |
+| `start/src/vite.mjs` (968)                     | `weftStart` (264)                                  | One Vite plugin per concern, and `weftStart` returns the array                       |
+| `start/src/data.ts` (1,106)                    | `mutate` (81)                                      | Query, mutate and cache modules                                                      |
+| `core/vite.mjs` (628)                          | `styleGroups` (148)                                | `vite/style-groups.mjs`                                                              |
+| `cli/src/tests.mjs` (572)                      | `checkTestFile` (214)                              | One function per rule, plus a table                                                  |
+| `warp/src/schedule/Calendar.tsx` (865)         | `useCalendar`, `TimeGrid`, `MonthGrid`, `Timeline` | One file per view, plus a `calendar-state.ts`                                        |
+| `warp-core/src/live.ts` (815)                  | `transportSim` (147)                               | `live/sim.ts`                                                                        |
+| `weft-compiler/src/emit.rs` (1,604)            | `walk` (283), `props` (99)                         | `emit/{walk,props,list,attrs}.rs`                                                    |
+| `weft-compiler/src/analyze.rs` (1,901)         | `analyze_list` (106)                               | `analyze/` with one module per diagnostic family                                     |
+| `weft-compiler/src/hydration.rs` (1,220)       | `facts` (223), `visit_jsx_element` (107)           | `hydration/{facts,visit}.rs`                                                         |
+| `site/src/toolkit/examples/canvas.tsx` (1,036) | `Landing` (148), `lookKit` (128)                   | One file per demo                                                                    |
 
 **One home for each helper:**
 
@@ -246,18 +247,18 @@ ESCALATIONS.md and carried into S5.
 Design rule 2 says every React habit that's silently wrong in Weft is a hard compile error with a
 fix. At the baseline, these catalog rules had no implementation:
 
-| Code | Catches |
-|---|---|
+| Code         | Catches                                                                                                           |
+| ------------ | ----------------------------------------------------------------------------------------------------------------- |
 | W020 to W029 | React-isms: `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`, custom `useX()` hooks, dependency arrays |
-| W040 | An early `return` that depends on state (the body runs once, so it's never checked again) |
-| W041 | A `let` changed in a handler and read in JSX (it never updates) |
-| W011 | A number on the left of `&&` (renders `0`) |
-| W012 | `derived(async …)`, or reads after `await` in `resource` |
-| W002 | Writing state inside `derived` |
-| W003 | A `watch` that writes state its own source reads (a cycle) |
-| W004 | A `watch` that only copies one value into another |
-| W008 | A box where a value is expected at a prop, or the reverse |
-| W030 | Module-level `state` the server entry can reach (it leaks across requests) |
+| W040         | An early `return` that depends on state (the body runs once, so it's never checked again)                         |
+| W041         | A `let` changed in a handler and read in JSX (it never updates)                                                   |
+| W011         | A number on the left of `&&` (renders `0`)                                                                        |
+| W012         | `derived(async …)`, or reads after `await` in `resource`                                                          |
+| W002         | Writing state inside `derived`                                                                                    |
+| W003         | A `watch` that writes state its own source reads (a cycle)                                                        |
+| W004         | A `watch` that only copies one value into another                                                                 |
+| W008         | A box where a value is expected at a prop, or the reverse                                                         |
+| W030         | Module-level `state` the server entry can reach (it leaks across requests)                                        |
 
 - [x] Implement them in `crates/weft-compiler` in that order. The React-isms and W040 come first:
       they're the bugs agents write most. Each code gets a failing fixture, a fix and a
@@ -468,13 +469,16 @@ warp({
   // per part, at rest and in each state
   parts: {
     button: {
-      bg: 'brand', text: 'white',
+      bg: 'brand',
+      text: 'white',
       hover: { bg: 'ink', text: 'brand' },
     },
     // the animated overlay and the text while it runs
     sweep: { stroke: 'mint', text: 'mint', base: 'ink' },
     nav: {
-      underline: 'brand', text: 'ink', active: { text: 'brand' },
+      underline: 'brand',
+      text: 'ink',
+      active: { text: 'brand' },
     },
     tabs: { underline: 'brand' },
     link: { text: 'brand', hover: { text: 'ink' } },
@@ -521,13 +525,16 @@ warp({
   },
   parts: {
     button: {
-      padding: '10px 18px', radius: 'pill',
+      padding: '10px 18px',
+      radius: 'pill',
       font: { weight: 600, transform: 'uppercase' },
-      hover: { bg: 'ink', shadow: 'lg' }, press: { scale: 0.98 },
+      hover: { bg: 'ink', shadow: 'lg' },
+      press: { scale: 0.98 },
     },
     sweep: { stroke: 'brand', width: 2, duration: 400 },
     nav: {
-      gap: 24, underline: { color: 'brand', width: 3, offset: 6 },
+      gap: 24,
+      underline: { color: 'brand', width: 3, offset: 6 },
     },
     card: { padding: 32, radius: 20, shadow: 'md', border: 'none' },
   },
@@ -618,20 +625,21 @@ of comments. Every change here keeps behaviour: tests, benchmarks and screenshot
 reads it: the length collector, the oxlint overrides (generated from it, and a check fails when they drift), and the
 structure check below. A path matches the first row that fits.
 
-| Category | Matches | File lines | Function lines | Parameters |
-|---|---|---|---|---|
-| util | `**/utils/**`, `**/lib/**` | 150 | 40 | 3 |
-| hook | `use-*.ts`, `*-state.ts` | 200 | 60 | 3 |
-| component | `src/**/*.tsx` | 400 | 80 | 3 (props are one) |
-| module | other `src/**` code | 400 | 80 | 4 |
-| script | `scripts/**`, `bin/**`, configs | 400 | 80 | 4 |
-| test | `test/**`, `*.test.*`, `*.e2e.*` | 750 | 120 | 4 |
-| types | `*.d.ts`, `*.d.mts`, `types.ts`, `**/types/**` | 1,000 | — | — |
-| table | generated files, CSS token sources, Rust tests | 1,000 | — | — |
-| rust | `crates/**/src/**/*.rs` | 400 | 80 | 5 |
+| Category  | Matches                                        | File lines | Function lines | Parameters        |
+| --------- | ---------------------------------------------- | ---------- | -------------- | ----------------- |
+| util      | `**/utils/**`, `**/lib/**`                     | 150        | 40             | 5                 |
+| hook      | `use-*.ts`, `*-state.ts`                       | 200        | 60             | 5                 |
+| component | `src/**/*.tsx`                                 | 400        | 80             | 3 (props are one) |
+| module    | other `src/**` code                            | 400        | 80             | 5                 |
+| script    | `scripts/**`, `bin/**`, configs                | 400        | 80             | 5                 |
+| test      | `test/**`, `*.test.*`, `*.e2e.*`               | 750        | 120            | 5                 |
+| types     | `*.d.ts`, `*.d.mts`, `types.ts`, `**/types/**` | 1,000      | —              | —                 |
+| table     | generated files, CSS token sources, Rust tests | 1,000      | —              | —                 |
+| rust      | `crates/**/src/**/*.rs`                        | 400        | 80             | 7                 |
 
 Nothing anywhere goes over 1,000. `max-params` is on through the same table. An options object counts as one parameter,
-so a function that wants a fifth argument takes an object instead.
+so a function that wants a sixth argument takes an object instead. The limits follow common linter defaults
+(Pylint and RuboCop 5, Clippy and SonarQube 7); components stay at 3 because props already arrive as one object.
 
 **Where files live.** Written into CONTRIBUTING.md and AGENTS.md, and checked by `scripts/quality/structure.mjs`:
 
@@ -704,7 +712,7 @@ the build paying only for what can actually change while the page runs.
    A dynamic value (`tone={row.tone}`) keeps every variant of that prop, so nothing breaks. This replaces word matching
    for Warp's own keyed attributes. `purge: { keep }` still works.
 4. **Atomic output for flat declarations.** A declaration on a single compound selector with no combinator is written
-   once per distinct value and shared across components. Complex selectors stay rules. Only if it wins on bytes *and*
+   once per distinct value and shared across components. Complex selectors stay rules. Only if it wins on bytes _and_
    on `measure.mjs` style time; skip it otherwise.
 
 **Rules.** No visual change: the screenshot suite and the theming tests pass unchanged, with and without a theme
@@ -718,15 +726,15 @@ report shows each step's measured result and why it stopped where it did.
 
 Each has a default. The plan proceeds on the default unless the owner says otherwise.
 
-| Decision | Default | Alternative |
-|---|---|---|
-| Code on phones | Hanging-indent wrap at spaces | Horizontal scroll with an edge fade |
-| Source width | 100 for TS and Rust | 80 (react.dev, Vite) or 120 (today's `rustfmt`) |
-| Formatter | `oxfmt`, part of the Oxc toolchain Weft already uses | Prettier or Biome |
-| Archive for research, run snapshots and spikes | An archive git tag, plus an eval-results repo | Keep them in `docs/archive/` |
-| Folder renames (`weft` to `core`, and so on) | Rename in Sprint 2 | Keep the current names and document the mapping |
-| Unreleased add-ons | `private: true` until each has real tests | Publish as `0.x` experimental |
-| Provenance | Owner's call (see Sprint 6) | — |
+| Decision                                       | Default                                              | Alternative                                     |
+| ---------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------- |
+| Code on phones                                 | Hanging-indent wrap at spaces                        | Horizontal scroll with an edge fade             |
+| Source width                                   | 100 for TS and Rust                                  | 80 (react.dev, Vite) or 120 (today's `rustfmt`) |
+| Formatter                                      | `oxfmt`, part of the Oxc toolchain Weft already uses | Prettier or Biome                               |
+| Archive for research, run snapshots and spikes | An archive git tag, plus an eval-results repo        | Keep them in `docs/archive/`                    |
+| Folder renames (`weft` to `core`, and so on)   | Rename in Sprint 2                                   | Keep the current names and document the mapping |
+| Unreleased add-ons                             | `private: true` until each has real tests            | Publish as `0.x` experimental                   |
+| Provenance                                     | Owner's call (see Sprint 6)                          | —                                               |
 
 ## Status
 
