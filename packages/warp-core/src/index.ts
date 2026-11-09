@@ -18,7 +18,16 @@ export {
   type SearchIndex,
   type SearchWire,
 } from './search'
-export { DIALS, getDial, setDial, dialsFromUrl, type Dial, type DialValue } from './dial'
+export {
+  DIALS,
+  getDial,
+  setDial,
+  setPalette,
+  getPalette,
+  dialsFromUrl,
+  type Dial,
+  type DialValue,
+} from './dial'
 export { nextIndex, roving, anchor, type Orientation, type Placement } from './focus'
 export {
   pushLayer,
@@ -30,6 +39,7 @@ export {
   type Align,
 } from './layers'
 export { dialog, popover, tooltip, type DialogOptions, type PopoverOptions } from './overlays'
+export { isMobileDevice, markDevice } from './device'
 export { edges, indicator, overflow, type IndicatorOptions } from './indicator'
 export { moveShuttle } from './shuttle'
 export { listbox, type ListboxOptions, type ListItem } from './listbox'

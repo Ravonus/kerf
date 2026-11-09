@@ -8,12 +8,19 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { definePlugin } from '@weft-js/core/plugin'
-import { fromHex, hex, luminance, toLinear } from './tokens/color.mjs'
+import { hex, luminance, toLinear } from './tokens/color.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
+import { DEFAULT, normalizeSeed } from './src/plugin/seed.mjs'
+import {
+  checkTokens,
+  tailwindTheme,
+  themeContext,
+  themed,
+  themeOptions,
+} from './src/plugin/theme.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
-const DEFAULT = { hue: 152, chroma: 0.115 }
 const DIALS = {
   expression: ['quiet', 'balanced', 'vivid'],
   density: ['compact', 'cozy', 'comfortable'],
@@ -28,37 +35,15 @@ const FONTS = {
 }
 // The spec's scope roots (warp.css §2): every one recomputes the sys tokens, so an override has to land on each.
 const SCOPES =
-  ':root,[data-expression],[data-density],[data-form],[data-pointer],[data-motion],[data-flair],[data-theme],[data-warp]'
+  ':root,[data-expression],[data-density],[data-form],[data-pointer],[data-motion],[data-flair],[data-theme],[data-palette],[data-warp]'
+const THEMING = ['colors', 'system', 'parts', 'themes']
 const safe = (value) => typeof value === 'string' && value !== '' && !/[;{}<]/.test(value)
 const bad = (path, message) => Object.assign(new Error(message), { path })
-
-function hueOf(value, name) {
-  if (typeof value === 'string') {
-    if (!/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`${name} must be #rrggbb`)
-    const { C, H } = fromHex(value)
-    return { hue: Math.round(H * 10) / 10, chroma: Math.round(C * 1000) / 1000 }
-  }
-  const { hue, chroma } = value ?? {}
-  if (!(hue >= 0 && hue < 360) || !(chroma >= 0 && chroma <= 0.37))
-    throw new Error(
-      `${name === 'accent' ? 'seed' : name} is { hue: 0–360, chroma: 0–0.37 } or ${name === 'accent' ? '{ accent: "#rrggbb" }' : '"#rrggbb"'}`,
-    ) // weft reports it as P115
-  return { hue, chroma }
-}
-
-function normalizeSeed(seed) {
-  const { accent, neutral, ...rest } = seed ?? {}
-  const out = hueOf(
-    accent ?? (Object.keys(rest).length || neutral === undefined ? rest : DEFAULT),
-    'accent',
-  )
-  return neutral === undefined ? out : { ...out, neutral: hueOf(neutral, 'neutral') }
-}
 
 function options(input) {
   const out = {}
   for (const key of Object.keys(input))
-    if (!['seed', 'fields', 'dials', 'radius', 'fonts', 'tokens'].includes(key))
+    if (!['seed', 'fields', 'dials', 'radius', 'fonts', 'tokens', ...THEMING].includes(key))
       throw Object.assign(new Error(`unknown option \`${key}\``), { path: key })
   if (input.fields !== undefined && input.fields !== 'floating' && input.fields !== 'classic')
     throw Object.assign(new Error(`must be 'floating' or 'classic'`), { path: 'fields' })
@@ -71,13 +56,14 @@ function options(input) {
     }
   }
   if (input.fields) out.fields = input.fields
-  for (const [dial, value] of Object.entries(input.dials ?? {})) {
+  const { palette, ...dialsIn } = input.dials ?? {}
+  for (const [dial, value] of Object.entries(dialsIn)) {
     if (!DIALS[dial])
       throw bad(`dials.${dial}`, `unknown dial; use ${Object.keys(DIALS).join(', ')}`)
     if (!DIALS[dial].includes(value))
       throw bad(`dials.${dial}`, `must be one of ${DIALS[dial].join(', ')}`)
   }
-  if (input.dials) out.dials = input.dials
+  if (Object.keys(dialsIn).length) out.dials = dialsIn
   if (input.radius !== undefined) {
     if (!RADII[input.radius]) throw bad('radius', `must be one of ${Object.keys(RADII).join(', ')}`)
     out.radius = input.radius
@@ -88,17 +74,21 @@ function options(input) {
     if (!safe(value)) throw bad(`fonts.${font}`, 'must be a font family or a CSS font stack')
   }
   if (input.fonts) out.fonts = input.fonts
-  for (const [token, value] of Object.entries(input.tokens ?? {})) {
-    if (!/^--warp-[a-z0-9-]+$/.test(token))
-      throw bad(`tokens.${token}`, 'must be a warp token, like --warp-color-page')
-    if (!safe(value)) throw bad(`tokens.${token}`, 'must be a CSS value')
-    if (
-      token.startsWith('--warp-color-') &&
-      !/^(#[0-9a-f]{6}|(oklch|color-mix|light-dark)\(.+\))$/i.test(value)
-    )
-      throw bad(`tokens.${token}`, 'must be #rrggbb or oklch(), so the contrast check can read it')
-  }
+  checkTokens(input.tokens, 'tokens')
   if (input.tokens) out.tokens = input.tokens
+  const seedAt = (seed, path) => {
+    try {
+      return normalizeSeed(seed)
+    } catch (error) {
+      throw Object.assign(/** @type {Error} */ (error), { path })
+    }
+  }
+  if (THEMING.some((k) => input[k] !== undefined) || palette !== undefined)
+    out.theme = themeOptions({ ...input, default: palette }, themeContext(core).tokenNames, {
+      seed: seedAt,
+      tokens: (tokens, path) => checkTokens(tokens, path) ?? {},
+    })
+  if (palette !== undefined) out.theme.default = palette
   return out
 }
 
@@ -106,7 +96,7 @@ const fontStack = (value, fallback) =>
   value.includes(',') ? value : `${JSON.stringify(value)}, ${fallback}`
 
 /** The radius, fonts and tokens as declarations, or '' with none set. */
-function overrides({ seed, radius, fonts = {}, tokens = {} }) {
+function overrides({ seed, radius, fonts = {}, tokens = {}, theme }) {
   const out = {}
   // The neutral's refs are redeclared at each expression stop, so it lands on every scope, as a token does.
   if (seed?.neutral)
@@ -120,7 +110,7 @@ function overrides({ seed, radius, fonts = {}, tokens = {} }) {
     ].map((px) => `${px}px`)
   for (const [font, value] of Object.entries(fonts))
     out[`--warp-font-${FONTS[font][0]}`] = fontStack(value, FONTS[font][1])
-  Object.assign(out, tokens)
+  Object.assign(out, theme?.system, tokens)
   return Object.entries(out)
     .map(([k, v]) => `${k}:${v}`)
     .join(';')
@@ -350,6 +340,10 @@ export const warp = definePlugin({
     if (custom) declarations = fitSeed(seed, declarations, o.dials) // throws { code: 'D010' }
     else if (declarations) checkSeed(seed, declarations, o.dials)
     const note = o.asked && landed(seed, declarations, o.asked)
+    const theming = o.theme
+      ? themed(o.theme, { core, seed, dials: o.dials, checkSeed: fitSeed, declare: overrides })
+      : ''
+    const tailwind = o.theme ? tailwindTheme(o.theme) : ''
     const dials = Object.entries(o.dials ?? {})
       .map(([dial, value]) => dialCss(dial, value))
       .join('')
@@ -357,11 +351,13 @@ export const warp = definePlugin({
       (custom ? seedCss(seed) : '') +
       (o.fields === 'classic' ? classicCss() : '') +
       dials +
-      overrideCss(declarations)
+      overrideCss(declarations) +
+      theming
     return {
       tokens: {
         namespace: 'warp',
         ...(css && { css }),
+        ...(tailwind && { cssEntries: { tailwind } }),
         values: {
           seed: { hue: seed.hue, chroma: seed.chroma },
           fields: o.fields ?? 'floating',

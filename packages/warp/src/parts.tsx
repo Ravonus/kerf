@@ -111,7 +111,8 @@ export function Banner({
   children?: unknown
   [attr: string]: unknown
 }) {
-  const icon = derived(() => toneIcon[tone])
+  // a colour named in warp({ colors }) takes the neutral icon
+  const icon = derived(() => toneIcon[tone as keyof typeof toneIcon] ?? toneIcon.neutral)
   const acts = derived(() => actions) // one build, however often it is read
   return (
     <div

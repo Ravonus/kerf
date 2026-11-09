@@ -7,8 +7,17 @@ import './styles'
 import '@weft-js/warp-core/styles/components/button.css'
 import '@weft-js/warp-core/styles/components/spinner.css'
 
-/** The colour role a control speaks in. */
-export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical' | 'info'
+/**
+ * The colour role a control speaks in: one of the six, or a colour named in `warp({ colors })` (`tone="brand"`).
+ */
+export type Tone =
+  | 'neutral'
+  | 'accent'
+  | 'positive'
+  | 'caution'
+  | 'critical'
+  | 'info'
+  | (string & {})
 /** How much weight a control carries, from solid down to a plain link. */
 export type Emphasis = 'solid' | 'soft' | 'outline' | 'ghost' | 'frame' | 'link'
 

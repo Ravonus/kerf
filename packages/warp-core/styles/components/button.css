@@ -203,10 +203,11 @@
 :where([data-scope="button"][data-size="lg"]) { block-size: var(--warp-control-lg); padding-inline: calc(var(--warp-pad-control) * 1.5); }
 :where([data-scope="button"][data-size="sm"] svg[data-icon]) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
 :where([data-scope="button"][data-size="lg"] svg[data-icon]) { inline-size: var(--warp-icon-lg); block-size: var(--warp-icon-lg); }
-:where([data-scope="button"][data-icon-only]) { inline-size: var(--warp-control-md); padding: 0; }
-:where([data-scope="button"][data-icon-only][data-size="sm"]) { inline-size: var(--warp-control-sm); }
-:where([data-scope="button"][data-icon-only][data-size="lg"]) { inline-size: var(--warp-control-lg); }
-:where([data-scope="button"][data-icon-only])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+/* a button that holds only an icon is square at every size: icon-only, and a copy action with no words */
+:where([data-scope="button"]:is([data-icon-only], [data-act="copy"]:not(:has([data-part="label"])))) { inline-size: var(--warp-control-md); padding: 0; flex: none; }
+:where([data-scope="button"]:is([data-icon-only], [data-act="copy"]:not(:has([data-part="label"])))[data-size="sm"]) { inline-size: var(--warp-control-sm); }
+:where([data-scope="button"]:is([data-icon-only], [data-act="copy"]:not(:has([data-part="label"])))[data-size="lg"]) { inline-size: var(--warp-control-lg); }
+:where([data-scope="button"]:is([data-icon-only], [data-act="copy"]:not(:has([data-part="label"]))))::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
 /* collapse: under its form factor (`collapse="phone"`, or "tablet", which includes phones) a button with an icon shows only
    the icon. Its text leaves the eye, not the accessibility tree: display: none would take the button's name with it. The
    square is !important inside warp's layer so an app's own width for the wide look (unlayered) can't stretch it. */

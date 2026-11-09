@@ -438,7 +438,7 @@
    ------------------------------------------------------------------------ */
 
 :root, [data-expression], [data-density], [data-form], [data-pointer],
-[data-motion], [data-flair], [data-theme], [data-warp] {
+[data-motion], [data-flair], [data-theme], [data-palette], [data-warp] {
   /* private shorthands */
   --_h: var(--warp-ref-neutral-h);
   --_c: var(--warp-ref-neutral-c);

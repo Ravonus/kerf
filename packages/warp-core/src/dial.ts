@@ -94,3 +94,35 @@ export function dialsFromUrl(
       setDial(name, v as DialValue<typeof name>, { root })
   }
 }
+
+/**
+ * Switch the named theme (`warp({ themes })`) on `root`: `data-palette="<name>"`, or "auto" to go back to the default.
+ * Names are the app's own, so any name is taken; one the stylesheet doesn't define leaves the default colours.
+ * Announced as a `warp:dial` event like the others, and kept for the next visit with `persist`.
+ */
+export function setPalette(
+  name: string,
+  {
+    root = document.documentElement,
+    persist = false,
+  }: { root?: HTMLElement; persist?: boolean } = {},
+) {
+  if (!/^[a-z][a-z0-9-]*$/.test(name))
+    throw new RangeError('a palette name is lowercase letters, digits and dashes')
+  if (name === 'auto') delete root.dataset.palette
+  else root.dataset.palette = name
+  if (persist)
+    try {
+      const held = JSON.parse(localStorage.getItem(KEY) ?? '{}')
+      if (name === 'auto') delete held.palette
+      else held.palette = name
+      localStorage.setItem(KEY, JSON.stringify(held))
+    } catch {} // the switch still works for this page
+  root.ownerDocument.dispatchEvent(
+    new CustomEvent('warp:dial', { detail: { name: 'palette', value: name } }),
+  )
+}
+
+/** The named theme on `root` ("auto" when none is set). */
+export const getPalette = (root: HTMLElement = document.documentElement) =>
+  root.dataset.palette ?? 'auto'

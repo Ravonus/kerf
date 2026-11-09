@@ -79,7 +79,20 @@
   background: var(--warp-color-text-subtle); inline-size: 44px;
   outline: var(--warp-focus-width, 2px) solid var(--warp-color-focus); outline-offset: 3px;
 }
-:where([data-scope="sheet"][data-side="bottom"] [data-part="handle"]) { display: block; }
+/* the grabber is for touch: a bottom sheet shows it on a phone or tablet (<html data-device="mobile">, which warp-core's
+   markDevice sets from more than the width; before script, a coarse pointer that can't hover), and there the X gives
+   way to it. The X stays in the accessibility tree, so a screen reader can still close the sheet. On a desktop there's
+   no grabber and the X closes */
+:where(:root[data-device="mobile"] [data-scope="sheet"][data-side="bottom"] [data-part="handle"]) { display: block; }
+:where(:root[data-device="mobile"] [data-scope="sheet"][data-side="bottom"] [data-part="close"]) {
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+@media (hover: none) and (pointer: coarse) {
+  :where(:root:not([data-device]) [data-scope="sheet"][data-side="bottom"] [data-part="handle"]) { display: block; }
+  :where(:root:not([data-device]) [data-scope="sheet"][data-side="bottom"] [data-part="close"]) {
+    position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+}
 :where([data-scope="sheet"][data-side="bottom"] [data-part="header"]) { padding-block-start: var(--warp-space-tight); touch-action: none; }
 /* initial focus lands on the title (tabindex="-1"), never the grabber; a programmatic
    landing spot needs no ring of its own */

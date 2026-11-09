@@ -25,7 +25,8 @@ export function Alert({
   onDismiss?: () => void
   children?: unknown
 }) {
-  const icon = derived(() => toneIcon[tone])
+  // a colour named in warp({ colors }) takes the neutral icon
+  const icon = derived(() => toneIcon[tone as keyof typeof toneIcon] ?? toneIcon.neutral)
   return (
     <div data-scope="alert" data-tone={tone} role={live ? 'alert' : undefined}>
       <Icon name={icon.value} data-part="icon" />

@@ -367,10 +367,11 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"][data-size="lg"]) { block-size: var(--warp-control-lg); padding-inline: calc(var(--warp-pad-control) * 1.5); }
 :where([data-scope="button"][data-size="sm"] svg[data-icon]) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
 :where([data-scope="button"][data-size="lg"] svg[data-icon]) { inline-size: var(--warp-icon-lg); block-size: var(--warp-icon-lg); }
-:where([data-scope="button"][data-icon-only]) { inline-size: var(--warp-control-md); padding: 0; }
-:where([data-scope="button"][data-icon-only][data-size="sm"]) { inline-size: var(--warp-control-sm); }
-:where([data-scope="button"][data-icon-only][data-size="lg"]) { inline-size: var(--warp-control-lg); }
-:where([data-scope="button"][data-icon-only])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+/* a button that holds only an icon is square at every size: icon-only, and a copy action with no words */
+:where([data-scope="button"]:is([data-icon-only], [data-act="copy"]:not(:has([data-part="label"])))) { inline-size: var(--warp-control-md); padding: 0; flex: none; }
+:where([data-scope="button"]:is([data-icon-only], [data-act="copy"]:not(:has([data-part="label"])))[data-size="sm"]) { inline-size: var(--warp-control-sm); }
+:where([data-scope="button"]:is([data-icon-only], [data-act="copy"]:not(:has([data-part="label"])))[data-size="lg"]) { inline-size: var(--warp-control-lg); }
+:where([data-scope="button"]:is([data-icon-only], [data-act="copy"]:not(:has([data-part="label"]))))::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
 /* collapse: under its form factor (`collapse="phone"`, or "tablet", which includes phones) a button with an icon shows only
    the icon. Its text leaves the eye, not the accessibility tree: display: none would take the button's name with it. The
    square is !important inside warp's layer so an app's own width for the wide look (unlayered) can't stretch it. */
@@ -715,7 +716,27 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   grid-column: 1; margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-body-size); line-height: var(--warp-text-body-leading);
 }
 :where([data-scope="dialog"] [data-part="close"]),
-:where([data-scope="sheet"] [data-part="close"]) { grid-column: 2; grid-row: 1; margin-block-start: -6px; margin-inline-end: -8px; }
+:where([data-scope="sheet"] [data-part="close"]) { grid-column: 2; grid-row: 1; margin-block-start: -12px; margin-inline-end: -14px; }
+/* the close cross: just the X, small and tucked into the corner. No box, fill or sweep round it; under the hand the
+   glyph itself lifts off the same hard offset a vivid button pulls out of, and a press sets it back down. Its target
+   stays hit-min from ::after, so the smaller mark is no harder to reach */
+:where([data-scope="button"][data-part="close"]) {
+  inline-size: 24px; block-size: 24px; min-inline-size: 0; min-block-size: 0; padding: 0;
+  background: none; border-color: transparent; box-shadow: none; translate: none;
+  color: var(--warp-color-text-subtle); --warp-btn-fill: 0; --_layer-a: 0; --_on: 0;
+}
+:where([data-scope="button"][data-part="close"])::before,
+:where([data-scope="button"][data-part="close"]) > :where([data-part="sweep"]) { display: none; }
+:where([data-scope="button"][data-part="close"])::after { inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+:where([data-scope="button"][data-part="close"]) > svg {
+  inline-size: 14px; block-size: 14px; stroke-width: 2;
+  transition: translate var(--warp-duration-fast) var(--warp-ease-spring), filter var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-scope="button"][data-part="close"]:is(:hover, :focus-visible)) { color: var(--warp-color-text); box-shadow: none; translate: none; }
+:where([data-scope="button"][data-part="close"]:is(:hover, :focus-visible):not(:active)) > svg {
+  translate: calc(-1.5px * var(--warp-motion-scale)) calc(-1.5px * var(--warp-motion-scale));
+  filter: drop-shadow(1.5px 1.5px 0 var(--warp-offset-color));
+}
 :where([data-scope="dialog"] [data-part="body"]),
 :where([data-scope="sheet"] [data-part="body"]) {
   overflow: auto; overscroll-behavior: contain; padding: 0 var(--warp-pad-surface) var(--warp-pad-surface);
@@ -848,7 +869,20 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   background: var(--warp-color-text-subtle); inline-size: 44px;
   outline: var(--warp-focus-width, 2px) solid var(--warp-color-focus); outline-offset: 3px;
 }
-:where([data-scope="sheet"][data-side="bottom"] [data-part="handle"]) { display: block; }
+/* the grabber is for touch: a bottom sheet shows it on a phone or tablet (<html data-device="mobile">, which warp-core's
+   markDevice sets from more than the width; before script, a coarse pointer that can't hover), and there the X gives
+   way to it. The X stays in the accessibility tree, so a screen reader can still close the sheet. On a desktop there's
+   no grabber and the X closes */
+:where(:root[data-device="mobile"] [data-scope="sheet"][data-side="bottom"] [data-part="handle"]) { display: block; }
+:where(:root[data-device="mobile"] [data-scope="sheet"][data-side="bottom"] [data-part="close"]) {
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+@media (hover: none) and (pointer: coarse) {
+  :where(:root:not([data-device]) [data-scope="sheet"][data-side="bottom"] [data-part="handle"]) { display: block; }
+  :where(:root:not([data-device]) [data-scope="sheet"][data-side="bottom"] [data-part="close"]) {
+    position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+}
 :where([data-scope="sheet"][data-side="bottom"] [data-part="header"]) { padding-block-start: var(--warp-space-tight); touch-action: none; }
 /* initial focus lands on the title (tabindex="-1"), never the grabber; a programmatic
    landing spot needs no ring of its own */

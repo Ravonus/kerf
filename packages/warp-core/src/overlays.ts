@@ -2,6 +2,7 @@
 // options and returns { update, destroy }; a binding decides when they are open, these do the platform calls, focus
 // and the layer stack.
 import { justEscaped, place, pushLayer, type Align, type Side } from './layers'
+import { markDevice } from './device'
 
 const focusable =
   'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])'
@@ -21,6 +22,8 @@ export interface DialogOptions {
  * role="alertdialog", [data-close] buttons close.
  */
 export function dialog(el: HTMLDialogElement, opts: DialogOptions) {
+  // a sheet shows its grabber (and drops its X) only on a phone or tablet: CSS reads <html data-device>
+  markDevice(el.ownerDocument)
   let o = opts
   let opener: HTMLElement | null = null
   let remove: (() => void) | undefined

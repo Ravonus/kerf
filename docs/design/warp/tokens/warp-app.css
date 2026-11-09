@@ -22,7 +22,7 @@
 
 @layer warp.tokens {
   :root, [data-expression], [data-density], [data-form], [data-pointer],
-  [data-motion], [data-flair], [data-theme], [data-warp] {
+  [data-motion], [data-flair], [data-theme], [data-palette], [data-warp] {
     --warp-cal-hour: calc(48px * var(--warp-density-k));          /* 36 · 48 · 60 px per hour */
     --warp-cal-gutter: 52px;
     --warp-cal-hour-w: 64px;                                       /* a timeline hour's least width: past it the rows scroll sideways */

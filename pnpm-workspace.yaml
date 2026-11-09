@@ -30,3 +30,10 @@ overrides:
 # that one fail quietly, so WebKit tests run on a macOS 14 machine (the release gate's).
 patchedDependencies:
   playwright-core@1.64.1: patches/playwright-core@1.64.1.patch
+
+# nitro's dev worker imports vite but doesn't declare it, so it got whichever vite pnpm hoisted: the arena's 6.4.4,
+# whose transform hook rolldown rejects ("Missing field `moduleType`"). As a peer it resolves to the app's vite.
+packageExtensions:
+  nitro:
+    peerDependencies:
+      vite: '*'
