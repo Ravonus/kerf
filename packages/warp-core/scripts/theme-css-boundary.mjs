@@ -107,7 +107,6 @@ void test('frame and soft boundaries respect Button inputs and explicit sweep ov
             ]) {
               const paint = await render(page, { ...common, bg, ink })
               const expectedBg = bg === 'black' ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)'
-              const expectedInk = ink === 'black' ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)'
               assert.equal(paint.bg, expectedBg)
               assert.equal(paint.strokeRgb, paint.role)
               assert.equal(paint.stroke, paint.corners)

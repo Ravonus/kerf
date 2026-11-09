@@ -2,6 +2,7 @@
 // are what an app reads them through. A size, weight or colour is never a prop.
 import { untrack } from '@weft-js/core'
 import type { TextRole, Tone } from '@weft-js/core/ds'
+import type { ThemeTone } from './theme-tone'
 import './styles'
 import '@weft-js/warp-core/styles/components/link.css'
 import './type.css'
@@ -106,15 +107,22 @@ export function Text({
  */
 export function Link({
   href,
+  tone,
   subtle,
   external,
   children,
   ...rest
-}: Open & { href: string; subtle?: boolean | undefined; external?: boolean | undefined }) {
+}: Open & {
+  href: string
+  tone?: ThemeTone | undefined
+  subtle?: boolean | undefined
+  external?: boolean | undefined
+}) {
   if (untrack(() => external))
     return (
       <a
         data-scope="link"
+        data-tone={tone}
         data-variant={subtle ? 'subtle' : undefined}
         href={href}
         target="_blank"
@@ -126,7 +134,13 @@ export function Link({
       </a>
     )
   return (
-    <a data-scope="link" data-variant={subtle ? 'subtle' : undefined} href={href} {...rest}>
+    <a
+      data-scope="link"
+      data-tone={tone}
+      data-variant={subtle ? 'subtle' : undefined}
+      href={href}
+      {...rest}
+    >
       {children}
     </a>
   )
