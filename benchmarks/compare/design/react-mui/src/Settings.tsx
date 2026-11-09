@@ -56,19 +56,26 @@ export function Settings() {
           Manage your profile and notification preferences.
         </Typography>
       </div>
-      {settingsPanel(form, error, done, set, submit, cancel)}
+      {settingsPanel({ form, error, done, set, submit, cancel })}
     </Stack>
   )
 }
 
-function settingsPanel(
-  form: typeof initial,
-  error: string,
-  done: boolean,
-  set: <K extends keyof typeof initial>(k: K, v: (typeof initial)[K]) => void,
-  submit: (e: FormEvent) => void,
-  cancel: () => void,
-) {
+function settingsPanel({
+  form,
+  error,
+  done,
+  set,
+  submit,
+  cancel,
+}: {
+  form: typeof initial
+  error: string
+  done: boolean
+  set: <K extends keyof typeof initial>(k: K, v: (typeof initial)[K]) => void
+  submit: (e: FormEvent) => void
+  cancel: () => void
+}) {
   return (
     <Paper variant="outlined" sx={{ p: { xs: 2, sm: 4 } }}>
       <form onSubmit={submit} noValidate>
@@ -119,21 +126,29 @@ function settingsPanel(
             }
             label="Email updates"
           />
-          {done && (
-            <Alert severity="success" role="status">
-              Saved
-            </Alert>
-          )}
-          <Stack direction="row" spacing={1.5} justifyContent="flex-end">
-            <Button type="button" variant="outlined" color="inherit" onClick={cancel}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained">
-              Save
-            </Button>
-          </Stack>
+          {settingsActions({ done, cancel })}
         </Stack>
       </form>
     </Paper>
+  )
+}
+
+function settingsActions({ done, cancel }: { done: boolean; cancel: () => void }) {
+  return (
+    <>
+      {done && (
+        <Alert severity="success" role="status">
+          Saved
+        </Alert>
+      )}
+      <Stack direction="row" spacing={1.5} justifyContent="flex-end">
+        <Button type="button" variant="outlined" color="inherit" onClick={cancel}>
+          Cancel
+        </Button>
+        <Button type="submit" variant="contained">
+          Save
+        </Button>
+      </Stack>
+    </>
   )
 }

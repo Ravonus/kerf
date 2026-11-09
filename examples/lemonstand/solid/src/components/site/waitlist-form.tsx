@@ -105,7 +105,7 @@ export function WaitlistForm(props: WaitlistProps) {
             />
             {waitlistSubmit(dark, () => submission.pending, props)}
           </div>
-          {waitlistMessage(id, dark, emailError, message)}
+          {waitlistMessage({ id, dark, emailError, message })}
         </form>
       }
     >
@@ -173,12 +173,17 @@ function waitlistSubmit(
   )
 }
 
-function waitlistMessage(
-  id: string,
-  dark: () => boolean,
-  emailError: () => string | undefined,
-  message: () => string | undefined,
-) {
+function waitlistMessage({
+  id,
+  dark,
+  emailError,
+  message,
+}: {
+  id: string
+  dark: () => boolean
+  emailError: () => string | undefined
+  message: () => string | undefined
+}) {
   return (
     <p
       id={`${id}-error`}

@@ -84,6 +84,43 @@ document.querySelector('nav').onclick = e => { const a = e.target.closest('a'); 
 if (!bug) addEventListener('focus', refresh)
 </script>`
 
+async function handleLogin(r, send, go) {
+  if (r.method !== 'POST') return send(200, 'text/html', login)
+  const f = new URLSearchParams(await body(r)),
+    id = await passwordOk(f.get('email'), f.get('password'))
+  return id
+    ? go('/todos', { 'set-cookie': `sid=${sign(id)}; HttpOnly; Path=/; SameSite=Lax` })
+    : send(401, 'text/html', login)
+}
+
+async function handleApi({ r, url, user, send }) {
+  if (url.pathname === '/api/todos' && r.method === 'GET')
+    return send(
+      200,
+      'application/json',
+      JSON.stringify({
+        rows: await todos(user, url.searchParams.get('filter')),
+        left: await left(user),
+      }),
+    )
+  if (url.pathname === '/api/todos' && r.method === 'POST') {
+    const { title } = JSON.parse(await body(r))
+    await q(`insert into todos (user_id, title) values (${text(user)}, ${text(title)})`)
+    return send(200, 'application/json', '{}')
+  }
+  const id = /^\/api\/todos\/([0-9a-f-]+)$/.exec(url.pathname)?.[1]
+  if (id && r.method === 'PATCH') {
+    const { done } = JSON.parse(await body(r))
+    await q(`update todos set done = ${!!done} where id = ${text(id)} and user_id = ${text(user)}`)
+    return send(200, 'application/json', '{}')
+  }
+  if (id && r.method === 'DELETE') {
+    await q(`delete from todos where id = ${text(id)} and user_id = ${text(user)}`)
+    return send(200, 'application/json', '{}')
+  }
+  send(404, 'text/plain', 'not found')
+}
+
 createServer(async (r, s) => {
   const url = new URL(r.url, 'http://x'),
     user = who(r),
@@ -97,14 +134,7 @@ createServer(async (r, s) => {
   }
   try {
     if (url.pathname === '/__up') return send(200, 'text/plain', 'up')
-    if (url.pathname === '/login') {
-      if (r.method !== 'POST') return send(200, 'text/html', login)
-      const f = new URLSearchParams(await body(r)),
-        id = await passwordOk(f.get('email'), f.get('password'))
-      return id
-        ? go('/todos', { 'set-cookie': `sid=${sign(id)}; HttpOnly; Path=/; SameSite=Lax` })
-        : send(401, 'text/html', login)
-    }
+    if (url.pathname === '/login') return await handleLogin(r, send, go)
     if (!user) return go('/login')
     if (url.pathname === '/todos')
       return send(
@@ -112,33 +142,7 @@ createServer(async (r, s) => {
         'text/html',
         page(await todos(user, url.searchParams.get('filter')), await left(user)),
       )
-    if (url.pathname === '/api/todos' && r.method === 'GET')
-      return send(
-        200,
-        'application/json',
-        JSON.stringify({
-          rows: await todos(user, url.searchParams.get('filter')),
-          left: await left(user),
-        }),
-      )
-    if (url.pathname === '/api/todos' && r.method === 'POST') {
-      const { title } = JSON.parse(await body(r))
-      await q(`insert into todos (user_id, title) values (${text(user)}, ${text(title)})`)
-      return send(200, 'application/json', '{}')
-    }
-    const id = /^\/api\/todos\/([0-9a-f-]+)$/.exec(url.pathname)?.[1]
-    if (id && r.method === 'PATCH') {
-      const { done } = JSON.parse(await body(r))
-      await q(
-        `update todos set done = ${!!done} where id = ${text(id)} and user_id = ${text(user)}`,
-      )
-      return send(200, 'application/json', '{}')
-    }
-    if (id && r.method === 'DELETE') {
-      await q(`delete from todos where id = ${text(id)} and user_id = ${text(user)}`)
-      return send(200, 'application/json', '{}')
-    }
-    send(404, 'text/plain', 'not found')
+    await handleApi({ r, url, user, send })
   } catch (e) {
     send(500, 'text/plain', String(e.message))
   }

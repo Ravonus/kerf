@@ -20,15 +20,13 @@ export function head(uid: string, expression: () => LemonExpression) {
           stroke-width={SW * 1.1}
           stroke-linecap="round"
         />
-        {form(
-          `${uid}-leaf`,
-          () => (
-            <path d="M103 14 C108 1 127 -6 143 0.5 C136 15 118 22 103 14 Z" />
-          ),
-          C.leaf,
-          C.leafShade,
-          [-1.5, -3],
-          () => (
+        {form({
+          id: `${uid}-leaf`,
+          shapes: () => <path d="M103 14 C108 1 127 -6 143 0.5 C136 15 118 22 103 14 Z" />,
+          fill: C.leaf,
+          shade: C.leafShade,
+          offset: [-1.5, -3],
+          extra: () => (
             <path
               d="M106 12.5 Q123 9 138 2.5"
               fill="none"
@@ -37,17 +35,15 @@ export function head(uid: string, expression: () => LemonExpression) {
               stroke-linecap="round"
             />
           ),
-        )}
+        })}
         {/* Lemon body = head */}
-        {form(
-          `${uid}-lemon`,
-          () => (
-            <path d={LEMON_PATH} />
-          ),
-          C.lemon,
-          C.lemonShade,
-          [-5.5, -5],
-          () => (
+        {form({
+          id: `${uid}-lemon`,
+          shapes: () => <path d={LEMON_PATH} />,
+          fill: C.lemon,
+          shade: C.lemonShade,
+          offset: [-5.5, -5],
+          extra: () => (
             <g>
               <ellipse
                 cx={64}
@@ -67,7 +63,7 @@ export function head(uid: string, expression: () => LemonExpression) {
               </g>
             </g>
           ),
-        )}
+        })}
         {face(expression())}
       </g>
     </g>
@@ -78,15 +74,15 @@ function shoe(uid: string, side: 'l' | 'r') {
   const x = side === 'l' ? 83 : 117
   return (
     <g transform={`translate(${x} 243) ${side === 'l' ? 'scale(-1 1)' : ''}`}>
-      {form(
-        `${uid}-shoe-${side}`,
-        () => (
+      {form({
+        id: `${uid}-shoe-${side}`,
+        shapes: () => (
           <path d="M-12 -1 L-12.5 -9 Q-12.5 -17 -4.5 -17 L3 -17 Q8 -17 10 -12 Q20.5 -10.5 22 -3.5 L22 -1 Z" />
         ),
-        C.sneaker,
-        C.sneakerShade,
-        [-2, -2],
-        () => (
+        fill: C.sneaker,
+        shade: C.sneakerShade,
+        offset: [-2, -2],
+        extra: () => (
           <path
             d="M-2.5 -16 L1.5 -11.5 M3.5 -16.5 L7 -12.5"
             stroke={C.sole}
@@ -94,7 +90,7 @@ function shoe(uid: string, side: 'l' | 'r') {
             stroke-linecap="round"
           />
         ),
-      )}
+      })}
       <path
         d="M-14.5 -4 L23 -4 Q25 -4 25 -2 L25 1 Q25 3.5 22.5 3.5 L-12.5 3.5 Q-14.5 3.5 -14.5 1.5 Z"
         fill={C.sole}
@@ -110,30 +106,30 @@ export function lowerBody(uid: string) {
   return (
     <g>
       {/* Legs (lemon-yellow, like the original art) */}
-      {form(
-        `${uid}-legs`,
-        () => (
+      {form({
+        id: `${uid}-legs`,
+        shapes: () => (
           <>
             <rect x={77} y={206} width={12} height={32} rx={6} />
             <rect x={111} y={206} width={12} height={32} rx={6} />
           </>
         ),
-        C.lemon,
-        C.lemonShade,
-        [-2.5, 0],
-      )}
+        fill: C.lemon,
+        shade: C.lemonShade,
+        offset: [-2.5, 0],
+      })}
       {shoe(uid, 'l')}
       {shoe(uid, 'r')}
       {/* Shorts */}
-      {form(
-        `${uid}-shorts`,
-        () => (
+      {form({
+        id: `${uid}-shorts`,
+        shapes: () => (
           <path d="M65 188 L135 188 L138.5 212 Q139 216 135 216 L106 216 Q102 216 101.4 212 L100 203 L98.6 212 Q98 216 94 216 L65 216 Q61 216 61.5 212 Z" />
         ),
-        C.shorts,
-        C.shortsShade,
-        [-2.5, -2.5],
-      )}
+        fill: C.shorts,
+        shade: C.shortsShade,
+        offset: [-2.5, -2.5],
+      })}
     </g>
   )
 }
@@ -141,32 +137,32 @@ export function lowerBody(uid: string) {
 export function torso(uid: string) {
   return (
     <g>
-      {form(
-        `${uid}-torso`,
-        () => (
+      {form({
+        id: `${uid}-torso`,
+        shapes: () => (
           <path d="M66 150 Q58 152 57.5 160 L54 191 Q53 199 61 199 L139 199 Q147 199 146 191 L142.5 160 Q142 152 134 150 Z" />
         ),
-        C.hoodie,
-        C.hoodieShade,
-        [-3, -3],
-        () => (
+        fill: C.hoodie,
+        shade: C.hoodieShade,
+        offset: [-3, -3],
+        extra: () => (
           <g fill={C.hoodieShade}>
             {/* Kangaroo pocket + ribbed hem as flat shade shapes, no extra lines */}
             <path d="M77 176 Q100 172.5 123 176 L128.5 192 L71.5 192 Z" />
             <rect x={50} y={192.5} width={100} height={10} />
           </g>
         ),
-      )}
+      })}
       {/* Hood bunched around the base of the lemon */}
-      {form(
-        `${uid}-hood`,
-        () => (
+      {form({
+        id: `${uid}-hood`,
+        shapes: () => (
           <path d="M54 156 Q52 142 70 140 L130 140 Q148 142 146 156 Q145 166 128 167 L72 167 Q55 166 54 156 Z" />
         ),
-        C.hoodie,
-        C.hoodieShade,
-        [-2.5, -3],
-      )}
+        fill: C.hoodie,
+        shade: C.hoodieShade,
+        offset: [-2.5, -3],
+      })}
       {/* Drawstrings */}
       <g stroke={C.cord} stroke-width={2.6} stroke-linecap="round" fill="none">
         <path d="M91 163 Q89.5 172 90.5 180" />
@@ -183,15 +179,13 @@ export function torso(uid: string) {
 export function clipboard(uid: string) {
   return (
     <g transform="translate(99 192) rotate(-6)">
-      {form(
-        `${uid}-board`,
-        () => (
-          <rect x={-25} y={-30} width={50} height={60} rx={5.5} />
-        ),
-        '#d39a55',
-        '#b57d3c',
-        [-2, -2],
-      )}
+      {form({
+        id: `${uid}-board`,
+        shapes: () => <rect x={-25} y={-30} width={50} height={60} rx={5.5} />,
+        fill: '#d39a55',
+        shade: '#b57d3c',
+        offset: [-2, -2],
+      })}
       <rect x={-19.5} y={-21} width={39} height={45} rx={3} fill="#fff" />
       <g stroke={C.line} stroke-width={2} stroke-linecap="round" opacity={0.75}>
         <path d="M-5 -10 L13 -10 M-5 0 L13 0 M-5 10 L8 10" />

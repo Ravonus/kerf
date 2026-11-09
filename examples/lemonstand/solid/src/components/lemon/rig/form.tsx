@@ -7,14 +7,21 @@ type Draw = () => JSX.Element
 
 /* ─────────────── Form helper: outline + shade + offset light fill ─────────────── */
 
-export function form(
-  id: string,
-  shapes: Draw,
-  fill: string,
-  shade: string,
-  offset: Pt = [-2, -2.4],
-  extra?: Draw | null,
-) {
+export function form({
+  id,
+  shapes,
+  fill,
+  shade,
+  offset = [-2, -2.4],
+  extra,
+}: {
+  id: string
+  shapes: Draw
+  fill: string
+  shade: string
+  offset?: Pt
+  extra?: Draw | null
+}) {
   return (
     <g>
       <defs>

@@ -8,6 +8,26 @@ const median = (xs) => (xs.length ? sharedMedian(xs) : null)
 const fmt = (x) => (x === null || x === undefined ? 'n/a' : Math.round(x).toLocaleString('en-US'))
 const spread = (xs) => (xs.length ? `${fmt(Math.min(...xs))}–${fmt(Math.max(...xs))}` : 'n/a')
 
+function failureLines(runs) {
+  return runs
+    .filter((r) => !r.final.pass || r.infra)
+    .map(
+      (r) =>
+        `- ${r.id} ${r.task} ${r.stack} ${r.model}: ${r.infra ? `infra: ${r.infra}` : `${r.status}; ${(r.final.hidden?.failed ?? []).map((f) => (typeof f === 'string' ? f : `${f.title}: ${f.failure}`)).join('; ')}`}`,
+    )
+}
+
+function tallyActivity(runs) {
+  const diag = {},
+    docs = {}
+  for (const r of runs) {
+    for (const [k, v] of Object.entries(r.activity.diagnostics)) diag[k] = (diag[k] ?? 0) + v
+    if (r.stack === 'weft-warp')
+      for (const [k, v] of Object.entries(r.activity.docs)) docs[k] = (docs[k] ?? 0) + v
+  }
+  return { diag, docs }
+}
+
 export function report(dir) {
   const runs = readFileSync(join(dir, 'runs.jsonl'), 'utf8')
     .trim()
@@ -25,19 +45,8 @@ export function report(dir) {
       `| ${key} | ${ok.length} | ${all.length - ok.length} | ${ok.filter((r) => r.first.pass).length}/${ok.length} | ${ok.filter((r) => r.final.pass).length}/${ok.length} | ${fmt(median(u((x) => x.total)))} (${spread(u((x) => x.total))}) | ${fmt(median(u((x) => x.input + x.output)))} | ${fmt(median(u((x) => x.cacheRead)))} | ${fmt(median(u((x) => x.cacheWrite)))} | ${median(u((x) => x.costUsd))?.toFixed(3)} | ${median(u((x) => x.turns))} | ${median(ok.map((r) => r.activity.toolCalls))} | ${fmt(median(ok.map((r) => r.wallMs / 1000)))} | ${median(ok.map((r) => r.final.bugsLeft ?? 99))} |`,
     )
   }
-  const failures = runs
-    .filter((r) => !r.final.pass || r.infra)
-    .map(
-      (r) =>
-        `- ${r.id} ${r.task} ${r.stack} ${r.model}: ${r.infra ? `infra: ${r.infra}` : `${r.status}; ${(r.final.hidden?.failed ?? []).map((f) => (typeof f === 'string' ? f : `${f.title}: ${f.failure}`)).join('; ')}`}`,
-    )
-  const diag = {},
-    docs = {}
-  for (const r of runs) {
-    for (const [k, v] of Object.entries(r.activity.diagnostics)) diag[k] = (diag[k] ?? 0) + v
-    if (r.stack === 'weft-warp')
-      for (const [k, v] of Object.entries(r.activity.docs)) docs[k] = (docs[k] ?? 0) + v
-  }
+  const failures = failureLines(runs)
+  const { diag, docs } = tallyActivity(runs)
   return [
     ...rows,
     '',

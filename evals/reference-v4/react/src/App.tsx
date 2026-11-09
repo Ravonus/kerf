@@ -50,27 +50,27 @@ export function App({ api }: { api: Api }) {
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [saves, setSaves] = useState<Save[]>([])
 
-  useData(api, setStocks, setHoldings, setLive, setFavorites)
+  useData({ api, setStocks, setHoldings, setLive, setFavorites })
 
   useEffect(() => {
     localStorage.setItem(VIEW_KEY, JSON.stringify(saved))
   }, [saved])
 
-  const { tab, view, setView, selectTab, onSearch, search } = useViews(
+  const { tab, view, setView, selectTab, onSearch, search } = useViews({
     saved,
     setSaved,
     setVisited,
     searches,
     setSearches,
-  )
+  })
 
-  const toggle = useFavorites(api, favorites, setFavorites, setAlert)
+  const toggle = useFavorites({ api, favorites, setFavorites, setAlert })
 
   const openDetails = useDetails(openId, setOpenId)
 
   const { save, undo } = useNotes(saves, setSaves, setNotes)
 
-  const { shown, portfolio } = useResults(stocks, holdings, live, tab, view, search, favorites)
+  const { shown, portfolio } = useResults({ stocks, holdings, live, tab, view, search, favorites })
 
   if (!stocks) return <p>Loading…</p>
   const open = openId ? stocks.find((s) => s.id === openId) : undefined
@@ -116,13 +116,19 @@ export function App({ api }: { api: Api }) {
 }
 
 type Setter<T> = Dispatch<SetStateAction<T>>
-function useData(
-  api: Api,
-  setStocks: Setter<Stock[] | null>,
-  setHoldings: Setter<Holding[]>,
-  setLive: Setter<Record<string, Live>>,
-  setFavorites: Setter<Record<string, boolean>>,
-) {
+function useData({
+  api,
+  setStocks,
+  setHoldings,
+  setLive,
+  setFavorites,
+}: {
+  api: Api
+  setStocks: Setter<Stock[] | null>
+  setHoldings: Setter<Holding[]>
+  setLive: Setter<Record<string, Live>>
+  setFavorites: Setter<Record<string, boolean>>
+}) {
   useEffect(() => {
     let alive = true
     Promise.all([api.listStocks(), api.listHoldings()]).then(([list, held]) => {
@@ -150,12 +156,17 @@ function useData(
     [api],
   )
 }
-function useFavorites(
-  api: Api,
-  favorites: Record<string, boolean>,
-  setFavorites: Setter<Record<string, boolean>>,
-  setAlert: Setter<string | null>,
-) {
+function useFavorites({
+  api,
+  favorites,
+  setFavorites,
+  setAlert,
+}: {
+  api: Api
+  favorites: Record<string, boolean>
+  setFavorites: Setter<Record<string, boolean>>
+  setAlert: Setter<string | null>
+}) {
   const favRef = useRef(favorites)
   favRef.current = favorites
   const clicks = useRef<Record<string, number>>({})
@@ -211,15 +222,23 @@ function useNotes(
 
   return { save, undo }
 }
-function useResults(
-  stocks: Stock[] | null,
-  holdings: Holding[],
-  live: Record<string, Live>,
-  tab: Tab,
-  view: View,
-  search: SearchState | undefined,
-  favorites: Record<string, boolean>,
-) {
+function useResults({
+  stocks,
+  holdings,
+  live,
+  tab,
+  view,
+  search,
+  favorites,
+}: {
+  stocks: Stock[] | null
+  holdings: Holding[]
+  live: Record<string, Live>
+  tab: Tab
+  view: View
+  search: SearchState | undefined
+  favorites: Record<string, boolean>
+}) {
   const results = view.query.trim() ? (search?.results ?? null) : null
   const filtered = useMemo(
     () =>
@@ -248,13 +267,19 @@ function useResults(
   return { shown, portfolio }
 }
 
-function useViews(
-  saved: Saved,
-  setSaved: Setter<Saved>,
-  setVisited: Setter<Set<Tab>>,
-  searches: Partial<Record<Tab, SearchState>>,
-  setSearches: Setter<Partial<Record<Tab, SearchState>>>,
-) {
+function useViews({
+  saved,
+  setSaved,
+  setVisited,
+  searches,
+  setSearches,
+}: {
+  saved: Saved
+  setSaved: Setter<Saved>
+  setVisited: Setter<Set<Tab>>
+  searches: Partial<Record<Tab, SearchState>>
+  setSearches: Setter<Partial<Record<Tab, SearchState>>>
+}) {
   const tab = saved.tab
   const view = saved.views[tab]
   const setView = useCallback(

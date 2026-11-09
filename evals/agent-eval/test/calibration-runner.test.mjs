@@ -18,11 +18,13 @@ const runner = fileURLToPath(new URL('../evidence/T06/run-calibrations.mjs', imp
 
 function fixture(
   referencePass,
-  breakFirst = false,
-  taskName = 'medium-shop',
-  count = 45,
-  receiptTask = taskName,
-  inconclusive = false,
+  {
+    breakFirst = false,
+    taskName = 'medium-shop',
+    count = 45,
+    receiptTask = taskName,
+    inconclusive = false,
+  } = {},
 ) {
   const root = mkdtempSync(join(tmpdir(), 'weft-calibration-runner-'))
   const task = join(root, 'evals/agent-eval/tasks', taskName)
@@ -99,7 +101,7 @@ test('runner verifies all named failures and retains detailed logs', () => {
 })
 
 test('a mutant setup failure stops the run and retains its detail', () => {
-  const item = fixture(true, true)
+  const item = fixture(true, { breakFirst: true })
   try {
     const child = runFixture(item)
     assert.notEqual(child.status, 0)
@@ -134,8 +136,8 @@ test('low disk space stops before reference execution', () => {
 })
 
 test('runner rejects a receipt from another task', () => {
-  const item = fixture(true, false, 'edit-shop', 20)
-  const wrong = fixture(true, false, 'edit-shop', 20, 'medium-shop')
+  const item = fixture(true, { taskName: 'edit-shop', count: 20 })
+  const wrong = fixture(true, { taskName: 'edit-shop', count: 20, receiptTask: 'medium-shop' })
   try {
     const child = runFixture(item)
     assert.equal(child.status, 0, child.stderr)
@@ -158,7 +160,7 @@ test('runner rejects a receipt from another task', () => {
 })
 
 test('runner rejects a shortened edit mutant set before grading', () => {
-  const item = fixture(true, false, 'edit-shop', 2)
+  const item = fixture(true, { taskName: 'edit-shop', count: 2 })
   try {
     const child = runFixture(item)
     assert.notEqual(child.status, 0)
@@ -169,7 +171,7 @@ test('runner rejects a shortened edit mutant set before grading', () => {
 })
 
 test('runner rejects inconclusive timing instead of counting a caught mutant', () => {
-  const item = fixture(true, false, 'edit-shop', 20, 'edit-shop', true)
+  const item = fixture(true, { taskName: 'edit-shop', count: 20, inconclusive: true })
   try {
     const child = runFixture(item)
     assert.notEqual(child.status, 0)
@@ -185,7 +187,7 @@ test('runner rejects inconclusive timing instead of counting a caught mutant', (
 })
 
 test('bugfix runner refuses the old one-check calibration selection', () => {
-  const item = fixture(true, false, 'bugfix-shop', 8)
+  const item = fixture(true, { taskName: 'bugfix-shop', count: 8 })
   try {
     writeFileSync(
       join(item.root, 'evals/agent-eval/tasks/bugfix-shop/hidden.mjs'),
@@ -201,7 +203,7 @@ test('bugfix runner refuses the old one-check calibration selection', () => {
 })
 
 test('bugfix runner accepts exactly 14 checks and eight mutants', () => {
-  const item = fixture(true, false, 'bugfix-shop', 8)
+  const item = fixture(true, { taskName: 'bugfix-shop', count: 8 })
   try {
     const child = runFixture(item)
     assert.equal(child.status, 0, child.stderr)
