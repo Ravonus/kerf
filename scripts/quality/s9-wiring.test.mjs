@@ -97,15 +97,17 @@ void test('category inventory prints warnings and propagates failure', async () 
   const output = []
   const good = inventoryStep(
     'category-limits',
-    async (cmd, args) => {
+    (cmd, args) => {
       assert.equal(cmd, process.execPath)
       assert.deepEqual(args, ['scripts/quality/category-limits.mjs'])
-      return { code: 0, out: 'one\ntwo\n' }
+      return Promise.resolve({ code: 0, out: 'one\ntwo\n' })
     },
     (text) => output.push(text),
   )
   assert.deepEqual(await good.run(), { problems: [] })
   assert.match(output[0], /one\ntwo/)
-  const bad = inventoryStep('category-limits', async () => ({ code: 9, out: 'parser failed' }))
+  const bad = inventoryStep('category-limits', () =>
+    Promise.resolve({ code: 9, out: 'parser failed' }),
+  )
   assert.match((await bad.run()).problems[0], /exited 9: parser failed/)
 })
