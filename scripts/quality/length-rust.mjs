@@ -58,8 +58,42 @@ const size = (tokens) =>
   tokens.reduce((sum, token) => sum + (token.value === ';' ? 0 : token.value.length), 0)
 const lineAt = (text, pos) => text.slice(0, pos).split('\n').length
 
+function parameterCount(tokens, index) {
+  let angles = 0
+  while (index < tokens.length) {
+    const value = tokens[index].value
+    if (value === '<') angles++
+    else if (value === '>' && angles) angles--
+    else if (value === '(' && !angles) break
+    index++
+  }
+  if (index === tokens.length) return 0
+  let parens = 1,
+    brackets = 0,
+    braces = 0,
+    nestedAngles = 0,
+    count = 0,
+    present = false
+  for (index++; index < tokens.length && parens; index++) {
+    const value = tokens[index].value
+    if (value === '(') parens++
+    else if (value === ')') parens--
+    else if (value === '[') brackets++
+    else if (value === ']') brackets--
+    else if (value === '{') braces++
+    else if (value === '}') braces--
+    else if (value === '<') nestedAngles++
+    else if (value === '>' && nestedAngles) nestedAngles--
+    if (parens === 1 && !brackets && !braces && !nestedAngles && value === ',') {
+      if (present) count++
+      present = false
+    } else if (parens && value !== ')') present = true
+  }
+  return count + Number(present)
+}
+
 /** Return file and named function offenders, with spans for matching Clippy diagnostics. */
-export function rustFindings(path, text) {
+export function rustFindings(path, text, { allFunctions = false } = {}) {
   const tokens = rustTokens(text),
     findings = []
   const count = lineCount(text)
@@ -107,12 +141,13 @@ export function rustFindings(path, text) {
     const start = tokens[i].start,
       end = tokens[close - 1].end
     const lines = lineCount(text.slice(start, end))
-    if (lines > 80)
+    if (allFunctions || lines > 80)
       findings.push({
         id: `function:${path}:${name}${occurrence === 1 ? '' : `#${occurrence}`}`,
         count: lines,
         tokens: size(tokens.slice(i, close)),
         kind: 'function',
+        ...(allFunctions ? { params: parameterCount(tokens, i + 2) } : {}),
         start: lineAt(text, start),
         end: lineAt(text, end),
       })

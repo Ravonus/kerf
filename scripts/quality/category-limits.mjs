@@ -24,8 +24,11 @@ export function measure(path, text) {
   }
   check('file', lineCount(text), category.file)
   if (path.endsWith('.rs')) {
-    for (const item of rustFindings(path, text))
-      if (item.kind === 'function') check('function', item.count, category.function, item.start)
+    for (const item of rustFindings(path, text, { allFunctions: true })) {
+      if (item.kind !== 'function') continue
+      check('function', item.count, category.function, item.start)
+      check('params', item.params, category.params, item.start)
+    }
     return { category: category.name, findings, parseErrors: 0 }
   }
   if (!/\.[cm]?[jt]sx?$/.test(path)) return { category: category.name, findings, parseErrors: 0 }
@@ -55,7 +58,9 @@ export function overrides(files) {
   return categories.flatMap((category) => {
     const paths = files
       .filter(({ path, content = '' }) => classify(path, { content })?.name === category.name)
-      .map(({ path }) => path)
+      .map(({ path }) =>
+        path.replace(/\[|\*|\?/g, (char) => ({ '[': '[[]', '*': '[*]', '?': '[?]' })[char]),
+      )
       .sort()
     if (!paths.length) return []
     const rules = { 'max-lines': ['warn', { max: category.file, skipBlankLines: false }] }
@@ -87,6 +92,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     if (!result.category) unclassified.push(path)
     else classified++
     parseErrors += result.parseErrors
+    if (result.parseErrors) console.log(`${path}: ${result.parseErrors} parser diagnostic(s)`)
     for (const item of result.findings)
       console.log(
         `${item.path}:${item.line}: ${item.category} ${item.kind} ${item.count} > ${item.limit}`,
@@ -95,8 +101,5 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   for (const path of unclassified) console.log(`${path}: unclassified`)
   console.log(
     `Tracked files: ${tracked.length}; candidate source files: ${files.length}; classified: ${classified}; unclassified: ${unclassified.length}; parser diagnostics: ${parseErrors}`,
-  )
-  console.log(
-    'Rust parameter counts and Rust functions below the existing 80-line collector threshold are not measured.',
   )
 }
