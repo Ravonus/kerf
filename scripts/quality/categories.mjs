@@ -12,7 +12,16 @@ export const categories = [
   { name: 'rust', pattern: /^crates\/.*\/src\/.*\.rs$/, file: 400, function: 80, params: 5 },
 ]
 
+/** Identify generated paths and explicit generated file headers. */
+export function isGenerated(path, content = '') {
+  return /(?:^|\/)(?:generated|__generated__)\//.test(path) ||
+    /(?:^|\/)[^/]+\.(?:gen|generated)\.[^/]+$/.test(path) ||
+    /^(?:\s*\/\/|\s*\/\*|\s*#)\s*(?:this file is automatically @generated|@generated|generated (?:by|from)\b)/i.test(content)
+}
+
 /** Return the first matching category, or undefined for an unclassified path. */
-export function classify(path) {
-  return categories.find(({ pattern }) => pattern.test(path))
+export function classify(path, { content = '' } = {}) {
+  return categories.find(({ name, pattern }) =>
+    pattern.test(path) || (name === 'table' && isGenerated(path, content)),
+  )
 }
