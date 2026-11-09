@@ -245,8 +245,12 @@ interface WarpDials {
 
 /** Options shared by the base and named-palette configurations. */
 interface WarpCommonOptions {
-  /** System overrides are not yet supported; an empty dictionary is accepted. */
-  system?: Record<string, never>
+  /** Inherited space, radius and font scale inputs. */
+  system?: {
+    space?: Record<string, number | string>
+    radius?: Record<string, number | string>
+    font?: Record<string, string>
+  }
   /** Named hex colours or aliases to other named colours. */
   colors?: Record<string, string>
   /** 'classic' makes classic fields the default. */

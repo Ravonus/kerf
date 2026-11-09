@@ -309,7 +309,7 @@ test('unsupported theme features and unsafe colours are rejected', () => {
     { colors: { brand: 'oklch(0.5 0.1 20)' } },
     { colors: { brand: { hue: 120, chroma: 0.1 } } },
     { themes: { ocean: { seed: { hue: 120, chroma: 0.1 } } } },
-    { system: { space: { group: 2 } } },
+    { system: { motion: { scale: 2 } } },
   ])
     expect(code(() => run(input as WarpOptions))).toBe('P115')
 })
@@ -540,4 +540,30 @@ test('a root seed applies to every named palette', () => {
   expect(themed.tokens.css).toContain(base.tokens.css!)
   expect(themed.tokens.css).toContain('--warp-palette-current:ocean')
   expect(themed.tokens.css).toContain('[data-palette]{--warp-palette-current:default}')
+})
+
+test('root system scales emit inherited inputs and reject invalid references', () => {
+  const css = run({
+    system: {
+      space: { group: 12, inset: 'group' },
+      radius: { card: 8 },
+      font: { body: 'Inter, sans-serif' },
+    },
+  }).tokens.css
+  expect(css).toContain('--warp-config-system-space-group:12px')
+  expect(css).toContain(
+    '--warp-config-system-space-inset:var(--warp-config-system-space-group,var(--warp-space-group))',
+  )
+  expect(css).toContain('--warp-config-system-radius-surface:8px')
+  expect(css).toContain('--warp-config-system-font-sans:Inter, sans-serif')
+  expect(run({ system: {} }).tokens).toEqual(run().tokens)
+  for (const system of [
+    { space: { group: -1 } },
+    { space: { group: 'missing' } },
+    { space: { a: 'b', b: 'a' } },
+    { radius: { card: 2, surface: 3 } },
+    { font: { body: 'x; color:red' } },
+    { motion: { scale: 1 } },
+  ])
+    expect(code(() => run({ system } as WarpOptions))).toBe('P115')
 })

@@ -3,6 +3,7 @@ import { themeSchema } from '@weft-js/warp-core/theme-schema'
 import { fromHex } from '../../tokens/color.mjs'
 import { resolveThemes } from './themes.mjs'
 import { preparePalettes } from './themes-palettes.mjs'
+import { systemInputs } from './themes-system.mjs'
 
 const DEFAULT = { hue: 152, chroma: 0.115 }
 const DIALS = {
@@ -44,20 +45,6 @@ function normalizeSeed(seed) {
 }
 
 function namedColors(input) {
-  for (const key of ['system']) {
-    if (input[key] === undefined) continue
-    const value = input[key]
-    if (
-      !value ||
-      typeof value !== 'object' ||
-      Array.isArray(value) ||
-      (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null)
-    )
-      throw bad(key, 'must be a plain object')
-    const first = Object.keys(value)[0]
-    if (first)
-      throw bad(`${key}.${first}`, 'not supported until theme contrast validation is available')
-  }
   if (input.colors === undefined) return undefined
   if (
     !input.colors ||
@@ -137,6 +124,8 @@ function options(input) {
       throw Object.assign(new Error(`unknown option \`${key}\``), { path: key })
   const palettes = preparePalettes(input)
   if (palettes) out.palettes = palettes
+  const system = systemInputs(input.system)
+  if (system) out.systemInputs = system
   const colors = namedColors(input)
   if (colors) out.namedColors = colors
   const button = buttonCandidate(input)

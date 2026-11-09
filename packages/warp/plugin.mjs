@@ -17,7 +17,6 @@ import { tailwindTheme } from './src/plugin/tailwind.mjs'
 import { paletteCss } from './src/plugin/themes-palettes.mjs'
 import { namedToneCss } from './src/plugin/themes-tones.mjs'
 import { themeAliases } from './src/plugin/themes-aliases.mjs'
-
 const core = new URL('../warp-core/', import.meta.url)
 const checks = new WeakMap() // Each options object owns checks for its exact inputs.
 // The spec's scope roots (warp.css §2): every one recomputes the sys tokens, so an override has to land on each.
@@ -343,6 +342,7 @@ export const warp = definePlugin({
       (o.fields === 'classic' ? classicCss() : '') +
       dials +
       overrideCss(declarations) +
+      (o.systemInputs ? `@layer warp.tokens{:root{${o.systemInputs}}}\n` : '') +
       (o.palettes ? paletteCss(o.palettes) : '') +
       (o.namedColors
         ? namedToneCss(o, {
