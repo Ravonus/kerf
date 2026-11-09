@@ -10,12 +10,15 @@ export function stageRenderer(
   v: StageState,
   host: HTMLElement,
   box: HTMLElement,
-  marks: { x: number; y: number; at: number }[],
-  pointer: { x: number; y: number },
-  lively: () => boolean,
-  scroller: () => Element | undefined,
-  getSizes: () => ResizeObserver | undefined,
+  h: {
+    marks: { x: number; y: number; at: number }[]
+    pointer: { x: number; y: number }
+    lively: () => boolean
+    scroller: () => Element | undefined
+    getSizes: () => ResizeObserver | undefined
+  },
 ) {
+  const { marks, pointer, lively, scroller, getSizes } = h
   function color(css: string) {
     let c = v.inks.get(css)
     if (c === undefined) {
@@ -42,7 +45,7 @@ export function stageRenderer(
   }
 
   const read = (el: HTMLElement, base: DOMRect, ease: number, snap: boolean) =>
-    readPiece(el, base, ease, snap, v.states, host, v.unit, pointer, lively)
+    readPiece(el, base, ease, snap, drawContext)
   const settled = (p: Piece) =>
     p.seen >= 1 && [p.hover, p.press, p.focus, p.on].every((value) => value === 0 || value === 1)
 

@@ -44,12 +44,15 @@ export function readPiece(
   base: DOMRect,
   ease: number,
   snap: boolean,
-  states: WeakMap<HTMLElement, Piece>,
-  host: HTMLElement,
-  unit: number,
-  pointer: { x: number; y: number },
-  lively: () => boolean,
+  c: {
+    v: { states: WeakMap<HTMLElement, Piece>; unit: number }
+    host: HTMLElement
+    pointer: { x: number; y: number }
+    lively: () => boolean
+  },
 ): Piece {
+  const { host, pointer, lively } = c,
+    { states, unit } = c.v
   const b = el.getBoundingClientRect(),
     cut = (v: number) => (snap ? Math.round(v) : v)
   let p = states.get(el)

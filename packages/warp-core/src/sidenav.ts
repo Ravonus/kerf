@@ -64,16 +64,25 @@ export function writeFolds(key: string, folds: Folds) {
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
-function sideNavClick(
-  bar: HTMLElement | null,
-  panel: HTMLElement,
-  el: HTMLElement,
-  options: () => SideNavOptions,
-  overlaid: () => boolean,
-  controllers: () => HTMLElement[],
-  ask: (open: boolean) => void,
-  setOpener: (el: HTMLElement) => void,
-) {
+type SideNavState = { opener: HTMLElement | null; shown: boolean }
+type SideNavCtx = {
+  el: HTMLElement
+  panel: HTMLElement
+  bar: HTMLElement | null
+  doc: Document
+  win: Window | null
+  state: SideNavState
+  options: () => SideNavOptions
+  overlaid: () => boolean
+  controllers: () => HTMLElement[]
+  ask: (open: boolean) => void
+  later: () => void
+}
+
+function sideNavClick({ el, panel, bar, state, options, overlaid, controllers, ask }: SideNavCtx) {
+  const setOpener = (opener: HTMLElement) => {
+    state.opener = opener
+  }
   return (e: MouseEvent) => {
     const t = e.target as Element | null
     if (bar && t && bar.contains(t)) {
@@ -100,15 +109,8 @@ function sideNavClick(
   }
 }
 
-function sideNavKey(
-  e: KeyboardEvent,
-  o: SideNavOptions,
-  overlaid: () => boolean,
-  ask: (open: boolean) => void,
-  panel: HTMLElement,
-  doc: Document,
-) {
-  if (!o.open || !overlaid()) return
+function sideNavKey(e: KeyboardEvent, { options, overlaid, ask, panel, doc }: SideNavCtx) {
+  if (!options().open || !overlaid()) return
   if (e.key === 'Escape') {
     e.preventDefault()
     ask(false)
@@ -151,19 +153,17 @@ function sideNavReveal(scroller: HTMLElement, win: Window | null) {
   return { later, destroy: () => win?.cancelAnimationFrame(frame) }
 }
 
-type SideNavState = { opener: HTMLElement | null; shown: boolean }
-
-function sideNavSync(
-  state: SideNavState,
-  options: () => SideNavOptions,
-  overlaid: () => boolean,
-  controllers: () => HTMLElement[],
-  bar: HTMLElement | null,
-  panel: HTMLElement,
-  doc: Document,
-  win: Window | null,
-  later: () => void,
-) {
+function sideNavSync({
+  state,
+  options,
+  overlaid,
+  controllers,
+  bar,
+  panel,
+  doc,
+  win,
+  later,
+}: SideNavCtx) {
   return () => {
     const over = overlaid(),
       open = !!options().open && over
@@ -222,23 +222,25 @@ export function sideNav(el: HTMLElement, opts: SideNavOptions = {}) {
   const reveal = sideNavReveal(scroller, win)
   const later = reveal.later
 
-  const onDocClick = sideNavClick(
-    bar,
-    panel,
+  const c: SideNavCtx = {
     el,
-    () => o,
+    panel,
+    bar,
+    doc,
+    win,
+    state,
+    options: () => o,
     overlaid,
     controllers,
     ask,
-    (opener) => {
-      state.opener = opener
-    },
-  )
-  const onKey = (e: KeyboardEvent) => sideNavKey(e, o, overlaid, ask, panel, doc)
+    later,
+  }
+  const onDocClick = sideNavClick(c)
+  const onKey = (e: KeyboardEvent) => sideNavKey(e, c)
   doc.addEventListener('click', onDocClick)
   doc.addEventListener('keydown', onKey)
 
-  const sync = sideNavSync(state, () => o, overlaid, controllers, bar, panel, doc, win, later)
+  const sync = sideNavSync(c)
   // A phone turned wide while the panel was open: the panel docks, so the modal state goes.
   const onResize = () => {
     if (o.open && !overlaid()) ask(false)

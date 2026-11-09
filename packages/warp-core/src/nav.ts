@@ -73,16 +73,16 @@ function geometry(nav: HTMLElement, face: HTMLElement, axis: 'x' | 'y') {
 }
 
 function motion(
+  nav: HTMLElement,
   face: HTMLElement,
   axis: 'x' | 'y',
-  win: Window & typeof globalThis,
-  place: (item: HTMLElement) => { start: number; size: number },
-  write: (start: number, size: number, cross?: number) => void,
-  jump: (start: number, size: number) => void,
-  target: () => HTMLElement | null | undefined,
-  current: () => HTMLElement | null,
-  nav: HTMLElement,
+  { place, write, jump }: ReturnType<typeof geometry>,
+  {
+    target,
+    current,
+  }: { target: () => HTMLElement | null | undefined; current: () => HTMLElement | null },
 ) {
+  const win = nav.ownerDocument.defaultView!
   let phase: Phase = 'idle'
   let pendingOut = false
   const grow = (item: HTMLElement) => {
@@ -180,10 +180,10 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
   const face = nav.querySelector<HTMLElement>(':scope > [data-part="indicator"]')!
   const links = () => [...nav.querySelectorAll<HTMLAnchorElement>('a[href]')]
   const current = () => nav.querySelector<HTMLElement>('a[aria-current]')
-  const { write, place, jump } = geometry(nav, face, axis)
+  const geo = geometry(nav, face, axis)
   const tracked = tracking(nav, current, () => settle())
   const { over, pointerOut: off, focus, blur, target } = tracked
-  const { settle, ended, start } = motion(face, axis, win, place, write, jump, target, current, nav)
+  const { settle, ended, start } = motion(nav, face, axis, geo, { target, current })
   nav.addEventListener('pointerover', over)
   nav.addEventListener('pointerout', off)
   nav.addEventListener('focusin', focus)
@@ -200,8 +200,8 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
       ? new win.ResizeObserver(() => {
           const t = target()
           if (t) {
-            const { start: at, size } = place(t)
-            jump(at, size)
+            const { start: at, size } = geo.place(t)
+            geo.jump(at, size)
           }
         })
       : undefined
@@ -210,8 +210,8 @@ export function navIndicator(nav: HTMLElement, opts: NavIndicatorOptions = {}) {
     win.requestAnimationFrame(() => {
       const t = current()
       if (t) {
-        const { start: at, size } = place(t)
-        jump(at, size)
+        const { start: at, size } = geo.place(t)
+        geo.jump(at, size)
       }
     })
   doc.addEventListener('warp:dial', onDial)

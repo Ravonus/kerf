@@ -12,17 +12,18 @@ export interface StageSelectOptions {
   onPick(value: string): void
 }
 
-function selectKeys(
-  shown: () => boolean,
-  locked: () => boolean,
-  show: (move?: 'first' | 'last') => void,
-  type: (key: string) => void,
-  typed: ReturnType<typeof typeahead>,
-  at: () => number,
-  rows: () => HTMLElement[],
-  pick: (i: number) => void,
-  go: (i: number) => void,
-) {
+function selectKeys(h: {
+  shown: () => boolean
+  locked: () => boolean
+  show: (move?: 'first' | 'last') => void
+  type: (key: string) => void
+  typed: ReturnType<typeof typeahead>
+  at: () => number
+  rows: () => HTMLElement[]
+  pick: (i: number) => void
+  go: (i: number) => void
+}) {
+  const { shown, locked, show, type, typed, at, rows, pick, go } = h
   return (e: KeyboardEvent) => {
     if (e.isComposing || e.defaultPrevented) return
     const { key } = e,
@@ -108,20 +109,34 @@ function followSelect(
 
 type SelectState = { at: number; shown: boolean; remove?: (() => void) | undefined }
 
-function selectVisibility(
-  state: SelectState,
-  float: () => HTMLElement | undefined,
-  locked: () => boolean,
-  rows: () => HTMLElement[],
-  trigger: HTMLButtonElement,
-  options: () => StageSelectOptions,
-  reposition: () => void,
-  win: Window,
-  follow: (e: Event) => void,
-  go: (i: number, keyed?: boolean) => void,
-  typed: ReturnType<typeof typeahead>,
-  cancel: () => void,
-) {
+function selectVisibility(h: {
+  state: SelectState
+  float: () => HTMLElement | undefined
+  locked: () => boolean
+  rows: () => HTMLElement[]
+  trigger: HTMLButtonElement
+  options: () => StageSelectOptions
+  reposition: () => void
+  win: Window
+  follow: (e: Event) => void
+  go: (i: number, keyed?: boolean) => void
+  typed: ReturnType<typeof typeahead>
+  cancel: () => void
+}) {
+  const {
+    state,
+    float,
+    locked,
+    rows,
+    trigger,
+    options,
+    reposition,
+    win,
+    follow,
+    go,
+    typed,
+    cancel,
+  } = h
   function show(move?: 'first' | 'last') {
     const f = float()
     if (state.shown || locked() || !f) return
@@ -221,20 +236,20 @@ export function stageSelect(
 
   const { reposition, follow, cancel } = followSelect(win, trigger, float)
 
-  const { show, hide } = selectVisibility(
+  const { show, hide } = selectVisibility({
     state,
     float,
     locked,
     rows,
     trigger,
-    () => o,
+    options: () => o,
     reposition,
     win,
     follow,
     go,
     typed,
     cancel,
-  )
+  })
 
   const pick = (i: number) => pickSelect(i, rows, hide, () => o)
 
@@ -244,17 +259,17 @@ export function stageSelect(
     if (hit) go(all.indexOf(hit))
   }
 
-  const onKey = selectKeys(
-    () => state.shown,
+  const onKey = selectKeys({
+    shown: () => state.shown,
     locked,
     show,
     type,
     typed,
-    () => state.at,
+    at: () => state.at,
     rows,
     pick,
     go,
-  )
+  })
 
   const { onMove, onDown, onPress } = selectPointer(rows, () => state.at, go, pick)
   const onClick = () => (state.shown ? hide(true) : show())

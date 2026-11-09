@@ -216,12 +216,15 @@ let current: (() => void) | null = null
 function tooltipEvents(
   tip: HTMLElement,
   t: () => HTMLElement,
-  show: () => void,
-  hide: () => void,
-  open: () => boolean,
-  later: (fn: () => void, ms: number) => void,
-  cancel: () => void,
+  h: {
+    show: () => void
+    hide: () => void
+    open: () => boolean
+    later: (fn: () => void, ms: number) => void
+    cancel: () => void
+  },
 ): [EventTarget, string, (e: never) => void][] {
+  const { show, hide, open, later, cancel } = h
   return [
     [
       t(),
@@ -316,7 +319,7 @@ export function tooltip(
     timer = setTimeout(fn, ms)
   }
   const t = () => o.trigger
-  const on = tooltipEvents(tip, t, show, hide, open, later, () => clearTimeout(timer))
+  const on = tooltipEvents(tip, t, { show, hide, open, later, cancel: () => clearTimeout(timer) })
   for (const [target, type, fn] of on) target.addEventListener(type, fn as EventListener)
   return {
     update: (next: typeof opts) => void (o = next),

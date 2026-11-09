@@ -180,7 +180,13 @@ export function stage(canvas: HTMLCanvasElement, options: StageOptions = {}): Ac
         ? host
         : undefined
 
-  const draw = stageRenderer(v, host, box, marks, pointer, lively, scroller, () => sizes)
+  const draw = stageRenderer(v, host, box, {
+    marks,
+    pointer,
+    lively,
+    scroller,
+    getSizes: () => sizes,
+  })
 
   // Its float: a box with no ground of its own, which the float's own painters fill.
   LOOKS.set(host, (c) => {
@@ -196,17 +202,14 @@ export function stage(canvas: HTMLCanvasElement, options: StageOptions = {}): Ac
   }
   const { sizes, watch } = observeStage(v, box, host, invalidate, stir)
 
-  const stopInput = stageInput(
-    host,
-    box,
-    stageInputState(v),
+  const stopInput = stageInput(host, box, stageInputState(v), {
     pointer,
     marks,
     scroller,
     lively,
     stir,
     invalidate,
-  )
+  })
 
   return {
     update(next) {

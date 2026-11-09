@@ -50,13 +50,16 @@ export function stageInput(
   host: HTMLElement,
   box: HTMLElement,
   state: InputState,
-  pointer: { x: number; y: number },
-  marks: { x: number; y: number; at: number }[],
-  scroller: () => Element | undefined,
-  lively: () => boolean,
-  stir: (e?: Event) => void,
-  invalidate: () => void,
+  h: {
+    pointer: { x: number; y: number }
+    marks: { x: number; y: number; at: number }[]
+    scroller: () => Element | undefined
+    lively: () => boolean
+    stir: (e?: Event) => void
+    invalidate: () => void
+  },
 ) {
+  const { pointer, marks, scroller, lively, stir, invalidate } = h
   const at = (e: PointerEvent) => {
     const b = box.getBoundingClientRect()
     return { x: (e.clientX - b.left) / state.unit, y: (e.clientY - b.top) / state.unit }

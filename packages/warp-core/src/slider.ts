@@ -16,7 +16,6 @@ export interface SliderOptions {
 
 function sliderKey(
   e: KeyboardEvent,
-  el: HTMLElement,
   o: SliderOptions,
   vals: number[],
   thumbs: () => HTMLElement[],
@@ -26,7 +25,7 @@ function sliderKey(
   if (i < 0 || o.disabled) return
   const big = Math.max(o.step, (o.max - o.min) / 10)
   // the arrows go the way they point: the track runs right to left in RTL
-  const along = getComputedStyle(el).direction === 'rtl' ? -o.step : o.step
+  const along = getComputedStyle(e.currentTarget as Element).direction === 'rtl' ? -o.step : o.step
   const d = (
     {
       ArrowRight: along,
@@ -114,7 +113,7 @@ export function slider(el: HTMLElement, opts: SliderOptions) {
     el.addEventListener('pointerup', up)
     el.addEventListener('pointercancel', up)
   }
-  const onKey = (e: KeyboardEvent) => sliderKey(e, el, o, vals, thumbs, set)
+  const onKey = (e: KeyboardEvent) => sliderKey(e, o, vals, thumbs, set)
   el.addEventListener('pointerdown', onDown)
   el.addEventListener('keydown', onKey)
   // the binding holds the value: a form's reset goes back to the first one through onChange

@@ -77,16 +77,19 @@ function editorSelection(ed: HTMLElement, doc: Document, options: () => RichText
 }
 
 type EditorExec = (cmd: string, value?: string) => boolean
+type EditorCtx = {
+  ed: HTMLElement
+  doc: Document
+  exec: EditorExec
+  options: () => RichTextOptions
+  blockOf: (node: Node | null) => HTMLElement | null
+  restore: () => void
+  changed: () => void
+  report: () => void
+  save: () => void
+}
 
-function editorRun(
-  ed: HTMLElement,
-  doc: Document,
-  exec: EditorExec,
-  restore: () => void,
-  changed: () => void,
-  report: () => void,
-  save: () => void,
-) {
+function editorRun({ ed, doc, exec, restore, changed, report, save }: EditorCtx) {
   return (cmd: string, value?: string) => {
     ed.focus()
     restore()
@@ -108,15 +111,7 @@ function editorRun(
   }
 }
 
-function editorInsert(
-  ed: HTMLElement,
-  doc: Document,
-  exec: EditorExec,
-  restore: () => void,
-  changed: () => void,
-  report: () => void,
-  save: () => void,
-) {
+function editorInsert({ ed, doc, exec, restore, changed, report, save }: EditorCtx) {
   const insertHtml = (html: string) => {
     ed.focus()
     restore()
@@ -189,14 +184,7 @@ function editorMarks(doc: Document, exec: EditorExec) {
   )
 }
 
-function editorInput(
-  doc: Document,
-  exec: EditorExec,
-  blockOf: (node: Node | null) => HTMLElement | null,
-  options: () => RichTextOptions,
-  report: () => void,
-  changed: () => void,
-) {
+function editorInput({ doc, exec, blockOf, options, report, changed }: EditorCtx) {
   const shortcuts = () => {
     const s = doc.getSelection()
     const block = blockOf(s?.anchorNode ?? null)
@@ -253,13 +241,8 @@ function editorInput(
 }
 
 function editorEvents(
-  ed: HTMLElement,
-  doc: Document,
-  options: () => RichTextOptions,
-  exec: EditorExec,
+  { ed, doc, options, exec, save, report }: EditorCtx,
   run: (cmd: string, value?: string) => void,
-  save: () => void,
-  report: () => void,
 ) {
   const onKey = (e: KeyboardEvent) => {
     if (!(e.metaKey || e.ctrlKey) || e.altKey) return
@@ -319,26 +302,11 @@ export function richText(ed: HTMLElement, opts: RichTextOptions) {
   const exec = (cmd: string, value?: string) => doc.execCommand(cmd, false, value)
   const { blockOf, save, restore, report } = editorSelection(ed, doc, () => o)
   const changed = () => o.onChange(sanitizeHtml(ed.innerHTML))
-  const run = editorRun(ed, doc, exec, restore, changed, report, save)
-  const { insertHtml, insertMention, replaceQuery } = editorInsert(
-    ed,
-    doc,
-    exec,
-    restore,
-    changed,
-    report,
-    save,
-  )
-  const onInput = editorInput(doc, exec, blockOf, () => o, report, changed)
-  const { onKey, onPaste, onDrop, onSelection, onMove } = editorEvents(
-    ed,
-    doc,
-    () => o,
-    exec,
-    run,
-    save,
-    report,
-  )
+  const x: EditorCtx = { ed, doc, exec, options: () => o, blockOf, restore, changed, report, save }
+  const run = editorRun(x)
+  const { insertHtml, insertMention, replaceQuery } = editorInsert(x)
+  const onInput = editorInput(x)
+  const { onKey, onPaste, onDrop, onSelection, onMove } = editorEvents(x, run)
   ed.addEventListener('input', onInput)
   ed.addEventListener('keydown', onKey)
   ed.addEventListener('paste', onPaste)

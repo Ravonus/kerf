@@ -103,7 +103,6 @@ export function forces(modes: PointerMode[], cols: number, rows: number, power =
     due = 0,
     lx = -1,
     ly = -1
-
   const around: Visit = (px, py, r, fn) => {
     visit(px, py, r, grid, fn)
     moving = true

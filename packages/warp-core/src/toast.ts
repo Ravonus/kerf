@@ -106,8 +106,6 @@ const stop = (a: Animation | ReturnType<typeof setTimeout> | undefined) =>
 export function toaster(region: HTMLElement, toasts: ToastStore) {
   const doc = region.ownerDocument
   const win = doc.defaultView!
-  const timers = new Map<HTMLElement, Animation | ReturnType<typeof setTimeout>>()
-  const seen = new Set<string>()
   const items = () => toastItems(region)
   // WebKit's first pointerenter after a move can come before :hover is true, and nothing follows it, so the event counts too
   let over = false
@@ -116,7 +114,7 @@ export function toaster(region: HTMLElement, toasts: ToastStore) {
 
   const layout = () => layoutToasts(region, items, expanded)
 
-  const { render, syncTimers } = toastTimers(toasts, items, paused, layout, timers, seen, doc)
+  const { render, syncTimers, timers } = toastTimers(toasts, items, paused, layout, doc)
   // the binding renders the list into the region; follow it
   const observer = new win.MutationObserver(() => render())
   observer.observe(region, {
@@ -216,10 +214,10 @@ function toastTimers(
   items: () => HTMLElement[],
   paused: () => boolean,
   layout: () => void,
-  timers: Map<HTMLElement, Animation | ReturnType<typeof setTimeout>>,
-  seen: Set<string>,
   doc: Document,
 ) {
+  const timers = new Map<HTMLElement, Animation | ReturnType<typeof setTimeout>>()
+  const seen = new Set<string>()
   // the timer is the progress hairline running down; its end dismisses
   function arm(el: HTMLElement, t: { id: string; life: number }) {
     if (timers.has(el) || !t.life) return
@@ -262,7 +260,7 @@ function toastTimers(
       }
     layout()
   }
-  return { render, syncTimers }
+  return { render, syncTimers, timers }
 }
 
 function toastSwipe(toasts: ToastStore, layout: () => void) {
