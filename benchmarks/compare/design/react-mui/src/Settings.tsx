@@ -56,19 +56,26 @@ export function Settings() {
           Manage your profile and notification preferences.
         </Typography>
       </div>
-      {settingsPanel(form, error, done, set, submit, cancel)}
+      {settingsPanel({ form, error, done, set, submit, cancel })}
     </Stack>
   )
 }
 
-function settingsPanel(
-  form: typeof initial,
-  error: string,
-  done: boolean,
-  set: <K extends keyof typeof initial>(k: K, v: (typeof initial)[K]) => void,
-  submit: (e: FormEvent) => void,
-  cancel: () => void,
-) {
+function settingsPanel({
+  form,
+  error,
+  done,
+  set,
+  submit,
+  cancel,
+}: {
+  form: typeof initial
+  error: string
+  done: boolean
+  set: <K extends keyof typeof initial>(k: K, v: (typeof initial)[K]) => void
+  submit: (e: FormEvent) => void
+  cancel: () => void
+}) {
   return (
     <Paper variant="outlined" sx={{ p: { xs: 2, sm: 4 } }}>
       <form onSubmit={submit} noValidate>
