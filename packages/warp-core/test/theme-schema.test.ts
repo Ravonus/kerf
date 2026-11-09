@@ -47,10 +47,15 @@ function check() {
   return `${result.stdout}\n${result.stderr}`
 }
 
-test('rejects filesystem changes while reporting the unresolved baseline', () => {
+test('reports tracked records and unresolved baseline', () => {
   setup()
-  expect(check()).toContain('reviewed records: 229')
-  expect(check()).toContain('Incomplete:')
+  const output = check()
+  expect(output).toContain('reviewed records: 229')
+  expect(output).toContain('Incomplete:')
+})
+
+test('rejects a new link consumer', () => {
+  setup()
   const path = resolve(fixture, link)
   const original = readFileSync(path, 'utf8')
   writeFileSync(
@@ -58,10 +63,16 @@ test('rejects filesystem changes while reporting the unresolved baseline', () =>
     original.replace('color: var(', 'padding: var(--warp-space-page); color: var('),
   )
   expect(check()).toContain('unclassified declaration padding')
-  writeFileSync(path, original)
-  rmSync(path)
+})
+
+test('rejects a missing link source', () => {
+  setup()
+  rmSync(resolve(fixture, link))
   expect(check()).toContain('ENOENT')
-  writeFileSync(path, original)
+})
+
+test('rejects reference drift', () => {
+  setup()
   const doc = resolve(fixture, 'packages/cli/docs/theme-tokens.md')
   writeFileSync(doc, readFileSync(doc, 'utf8').replace('Schema digest:', 'Schema digest: changed'))
   expect(check()).toContain('Drift: packages/cli/docs/theme-tokens.md')
