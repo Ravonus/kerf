@@ -313,60 +313,75 @@ test('unsupported theme features and unsafe colours are rejected', () => {
     expect(code(() => run(input as WarpOptions))).toBe('P115')
 })
 
-test('Button candidate uses schema and checks the configured frame text', () => {
+test('Button candidate rejects unsupported properties and low-contrast text', () => {
   expect(() => run({ parts: { button: { mystery: '#000000' } } } as WarpOptions)).toThrow(
     /unknown property or unsupported state/,
   )
   expect(() => run({ parts: { button: { hover: { bg: '#000000' } } } })).toThrow(
     /unknown property or unsupported state/,
   )
-  expect(code(() => run({
-    colors: { ink: '#111111' }, parts: { button: { bg: '#000000', text: 'ink' } },
-  } as WarpOptions))).toBe('D010')
-  try {
-    run({ colors: { ink: '#ffffff' }, parts: { button: { bg: '#000000', text: 'ink' } } } as WarpOptions)
-    throw new Error('expected rejection')
-  } catch (error) {
-    const failure = error as { code: string; path: string; failures: {
-      combo: string; fg: string; fgHex: string; bgHex: string; ratio: number; site: string
-    }[] }
-    expect(failure).toMatchObject({ code: 'D010', path: 'parts.button.bg' })
-    expect(failure.failures).toContainEqual(expect.objectContaining({
-      combo: 'light/quiet', fg: '--warp-frame-track', fgHex: '#191f26',
-      bgHex: '#000000', site: 'base-surface', ratio: expect.closeTo(1.27, 2),
-    }))
-    expect(failure.failures.some((row) => row.fg === '--warp-color-accent-text' &&
-      row.site === 'text-unfilled')).toBe(false)
-  }
+  expect(
+    code(() =>
+      run({
+        colors: { ink: '#111111' },
+        parts: { button: { bg: '#000000', text: 'ink' } },
+      } as WarpOptions),
+    ),
+  ).toBe('D010')
 })
 
-test('white Button fill fails a dark positive-tone sweep boundary', () => {
+test('middle Button background still fails its white sweep stroke on a light surface', () => {
   try {
-    run({ parts: { button: { bg: '#ffffff', text: '#000000' } } })
+    run({ parts: { button: { bg: '#757575', text: '#ffffff' } } })
     throw new Error('expected rejection')
   } catch (error) {
-    const failure = error as { code: string; path: string; failures: {
-      combo: string; fg: string; fgHex: string; bgHex: string; ratio: number; site: string
-    }[] }
-    expect(failure).toMatchObject({ code: 'D010', path: 'parts.button.bg' })
-    expect(failure.failures).toContainEqual(expect.objectContaining({
-      combo: 'dark/balanced', fg: '--warp-color-positive-text', fgHex: '#7dd18a',
-      bgHex: '#ffffff', site: 'stroke-surface', ratio: expect.closeTo(1.85, 2),
-    }))
-  }
-})
-
-test.each(['label', 'text', 'stroke', 'base'])('checks explicit sweep %s against Button fill', (name) => {
-  try {
-    run({ parts: { button: { bg: '#000000', text: '#ffffff' } },
-      tokens: { [`--warp-sweep-${name}`]: '#000000' } })
-    throw new Error('expected rejection')
-  } catch (error) {
-    const failure = error as { code: string; failures: { path: string; fg: string }[] }
+    const failure = error as {
+      code: string
+      failures: {
+        combo: string
+        fg: string
+        fgHex: string
+        bgHex: string
+        ratio: number
+        site: string
+      }[]
+    }
     expect(failure.code).toBe('D010')
-    expect(failure.failures).toContainEqual(expect.objectContaining({
-      path: `tokens.--warp-sweep-${name}`, fg: `--warp-sweep-${name}`,
-    }))
+    expect(failure.failures).toContainEqual(
+      expect.objectContaining({
+        combo: 'light/quiet',
+        fg: '--warp-button-text',
+        fgHex: '#ffffff',
+        bgHex: '#fbfdff',
+        site: 'stroke-surface',
+        ratio: expect.closeTo(1.02, 2),
+      }),
+    )
+    expect(failure.failures.some((row) => row.site === 'base-surface')).toBe(false)
+  }
+})
+
+test('explicit sweep values take precedence and are checked against their actual neighbors', () => {
+  try {
+    run({
+      parts: { button: { bg: '#757575', text: '#ffffff' } },
+      tokens: { '--warp-sweep-stroke': '#757575', '--warp-config-part-sweep-stroke': '#ffffff' },
+    })
+    throw new Error('expected rejection')
+  } catch (error) {
+    const failure = error as {
+      code: string
+      failures: { path: string; fg: string; site: string }[]
+    }
+    expect(failure.code).toBe('D010')
+    expect(failure.failures).toContainEqual(
+      expect.objectContaining({
+        path: 'tokens.--warp-sweep-stroke',
+        fg: '--warp-sweep-stroke',
+        site: 'stroke-base',
+      }),
+    )
+    expect(failure.failures.some((row) => row.fg === '--warp-config-part-sweep-stroke')).toBe(false)
   }
 })
 
@@ -375,10 +390,37 @@ test('Button sweep checks include modes reachable under a local theme override',
     run({ dials: { theme: 'light' }, parts: { button: { bg: '#ffffff', text: '#000000' } } })
     throw new Error('expected rejection')
   } catch (error) {
-    const failure = error as { code: string; failures: { combo: string; fg: string }[] }
+    const failure = error as { code: string; failures: { combo: string; site: string }[] }
     expect(failure.code).toBe('D010')
-    expect(failure.failures).toContainEqual(expect.objectContaining({
-      combo: 'dark/balanced', fg: '--warp-color-positive-text',
-    }))
+    expect(failure.failures).toContainEqual(
+      expect.objectContaining({
+        combo: 'light/quiet',
+        site: 'base-surface',
+      }),
+    )
+    expect(failure.failures).toContainEqual(
+      expect.objectContaining({
+        combo: 'dark/balanced',
+        site: 'stroke-surface',
+      }),
+    )
+  }
+})
+
+test.each(['label', 'text', 'base'])('checks configured sweep %s overrides', (name) => {
+  const token = `--warp-config-part-sweep-${name}`
+  const value = name === 'base' ? '#ffffff' : '#757575'
+  try {
+    run({
+      parts: { button: { bg: '#757575', text: '#ffffff' } },
+      tokens: { [token]: value },
+    })
+    throw new Error('expected rejection')
+  } catch (error) {
+    const failure = error as { code: string; failures: { path: string; fg: string }[] }
+    expect(failure.code).toBe('D010')
+    expect(failure.failures).toContainEqual(
+      expect.objectContaining({ path: `tokens.${token}`, fg: token }),
+    )
   }
 })

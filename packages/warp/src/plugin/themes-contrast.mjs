@@ -1,12 +1,24 @@
-// Enumerate the currently supported Button frame checks without inferring CSS cascade.
+// Enumerate Button and sweep paints without inferring the DOM cascade.
 const bad = (path, message) => Object.assign(new Error(message), { path })
+const surfaces = [
+  'page',
+  'surface',
+  'surface-raised',
+  'surface-overlay',
+  'surface-sunken',
+  'surface-hover',
+]
 
-/** Return the checked host, frame text and sweep pairs for each canonical mode. */
+/** Return checked host, frame text and sweep boundaries for each canonical mode. */
 export function buttonPairs(button, resolved, tokens = {}) {
   const override = (name, fallback) => {
     const local = `--warp-sweep-${name}`
     const configured = `--warp-config-part-sweep-${name}`
-    const token = Object.hasOwn(tokens, local) ? local : Object.hasOwn(tokens, configured) ? configured : null
+    const token = Object.hasOwn(tokens, local)
+      ? local
+      : Object.hasOwn(tokens, configured)
+        ? configured
+        : null
     if (token && !/^#[0-9a-f]{6}$/i.test(tokens[token])) {
       throw bad(`tokens.${token}`, 'only #rrggbb is supported for this Button check')
     }
@@ -14,39 +26,39 @@ export function buttonPairs(button, resolved, tokens = {}) {
   }
   const background = { token: '--warp-button-bg', value: button.bg }
   const text = { token: '--warp-button-text', value: button.text }
+  const base = override('base', background)
+  const stroke = override('stroke', text)
   const label = override('label', text)
   const content = override('text', text)
+  const path = (value, fallback) =>
+    value === fallback
+      ? `parts.button.${fallback === text ? 'text' : 'bg'}`
+      : `tokens.${value.token}`
   return ['light', 'dark'].flatMap((theme) =>
     ['quiet', 'balanced', 'vivid'].flatMap((expression) => {
       const colors = resolved[`${theme}/${expression}`]
       const common = { palette: 'default', theme, expression, state: 'rest' }
-      const pair = (part, emphasis, site, fg, bg, path) => ({
-        ...common, part, emphasis, site, fg, bg, path,
+      const pair = (part, emphasis, site, fg, bg, at) => ({
+        ...common,
+        part,
+        emphasis,
+        site,
+        fg,
+        bg,
+        path: at,
       })
       const rows = [
         pair('button', 'solid', 'base', text, background, 'parts.button.text'),
-        pair('sweep', 'frame', 'text-unfilled', label, background,
-          label.token === text.token ? 'parts.button.text' : `tokens.${label.token}`),
-        pair('sweep', 'frame', 'text-unfilled', content, background,
-          content.token === text.token ? 'parts.button.text' : `tokens.${content.token}`),
-        pair('sweep', 'frame', 'text-filled', content, background,
-          content.token === text.token ? 'parts.button.text' : `tokens.${content.token}`),
+        pair('sweep', 'frame', 'text-unfilled', label, background, path(label, text)),
+        pair('sweep', 'frame', 'text-unfilled', content, background, path(content, text)),
+        pair('sweep', 'frame', 'text-filled', content, background, path(content, text)),
+        pair('sweep', 'frame', 'stroke-base', stroke, base, path(stroke, text)),
       ]
-      for (const tone of ['positive', 'caution', 'critical', 'info']) {
-        const key = `${tone}-text`
-        if (!colors?.[key]) throw bad('parts.button.bg', `cannot resolve sweep ${key}`)
-        const stroke = override('stroke', { token: `--warp-color-${key}`, value: colors[key] })
-        rows.push(pair('sweep', 'soft', 'stroke-surface', stroke, background,
-          stroke.token.startsWith('--warp-color-') ? 'parts.button.bg' : `tokens.${stroke.token}`))
-      }
-      if (theme === 'light') {
-        const rawTrack = tokens['--warp-frame-track']
-        if (rawTrack !== undefined && !/^#[0-9a-f]{6}$/i.test(rawTrack)) {
-          throw bad('tokens.--warp-frame-track', 'only #rrggbb is supported for this Button check')
-        }
-        const track = override('base', { token: '--warp-frame-track', value: rawTrack ?? colors.text })
-        rows.push(pair('sweep', 'frame', 'base-surface', track, background,
-          track.token === '--warp-frame-track' ? 'parts.button.bg' : `tokens.${track.token}`))
+      for (const name of surfaces) {
+        if (!colors?.[name]) throw bad('parts.button.bg', `cannot resolve ${name}`)
+        const surface = { token: `--warp-color-${name}`, value: colors[name] }
+        rows.push(pair('sweep', 'frame', 'base-surface', base, surface, path(base, background)))
+        rows.push(pair('sweep', 'frame', 'stroke-surface', stroke, surface, path(stroke, text)))
       }
       return rows
     }),

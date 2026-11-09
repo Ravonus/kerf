@@ -168,10 +168,11 @@ export function resolveThemes(input = {}) {
     if (Object.hasOwn(baseColors, name))
       throw bad(`themes.${name}`, 'theme and colour names collide')
   const result = {}
-  for (const [name, patch] of [
+  const entries = /** @type {[string, Record<string, unknown>][]} */ ([
     ['default', {}],
     ...Object.entries(themes).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
-  ]) {
+  ])
+  for (const [name, patch] of entries) {
     const path = name === 'default' ? '' : `themes.${name}`
     object(patch, path || 'config')
     for (const key of Object.keys(patch))
