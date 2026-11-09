@@ -677,6 +677,43 @@ split it differently or record it in the allowance with a reason, and move on.
 **Exit:** every check above is an error and passes with empty allowances, or with each remaining entry carrying a
 reason. Tests, API snapshots, `size.mjs` and `measure.mjs` show no change beyond noise, and warp's size doesn't grow.
 
+**Shared files with Sprint 9.** Sprint 10 runs at the same time and owns the CSS pipeline: `packages/core/vite/**`,
+`packages/core/node/purge*`, `packages/warp/plugin.mjs`, `packages/warp/src/plugin/**`, `packages/warp-core/scripts/**`,
+`packages/warp-core/styles/**` and `docs/design/warp/tokens/**`. Sprint 9 leaves those alone until Sprint 10 merges,
+then gives them their own cleanup ticket.
+
+### Sprint 10: compiled CSS
+
+Added by the owner on 2026-11-09. On the compare dashboard warp ships 22.9 KB br of CSS against Solid + Kobalte's 1.4 KB.
+Kobalte is headless, so that gap is mostly design, not waste, but the shape of warp's CSS still leaves bytes on the
+table. Measured on that dashboard's CSS: 2,906 declarations of which 1,495 are distinct, 1,886 `var()` lookups (41 KB
+raw), and about 4 KB br of dial rules. Short class names save only 5% and atomic output about 15%: the bytes are in how
+much of the design stays switchable at run time. The goal is a hybrid: customisable through config like today, with
+the build paying only for what can actually change while the page runs.
+
+1. **Fold what the config fixes** (prototype first). The `warp()` config fixes most of the design at build time. The
+   compiler writes those values straight into the CSS instead of `var()` chains. Custom properties stay only where
+   something can change at run time: light and dark, the named themes the config lists (`themes`), dials the app
+   switches (step 2), and the override points a `parts` entry or `tokens` asks for. Start with a prototype on the
+   compare dashboard and report bytes and `measure.mjs` load numbers before building it out. Keep going if it saves at
+   least 15% br on its own; below that, report and move to step 2.
+2. **Dials fixed by config.** `warp({ dials: { expression: 'balanced', density: 'cozy' } })`: a fixed dial ships its
+   one stop. A dial left open (or switched with `setDial`) keeps all of them, as today.
+3. **Variants from the compiler, not words.** The weft compiler already sees literal props: `emphasis="ghost"`,
+   `tone="critical"`. It records each component's literal variant values per build, and the purge keeps exactly those.
+   A dynamic value (`tone={row.tone}`) keeps every variant of that prop, so nothing breaks. This replaces word matching
+   for warp's own keyed attributes. `purge: { keep }` still works.
+4. **Atomic output for flat declarations.** A declaration on a single compound selector with no combinator is written
+   once per distinct value and shared across components. Complex selectors stay rules. Only if it wins on bytes *and*
+   on `measure.mjs` style time; skip it otherwise.
+
+**Rules.** No visual change: the screenshot suite and the theming tests pass unchanged, with and without a theme
+config, and a theme switched at run time still repaints every part. No new runtime cost: `measure.mjs` load, style and
+layout times stay within noise. Every step lands on its own with its numbers, and a step that doesn't pay is dropped.
+
+**Exit:** the compare dashboard's warp CSS is at most 16 KB br with no screenshot or speed regression, or the sprint
+report shows each step's measured result and why it stopped where it did.
+
 ## Decisions to confirm
 
 Each has a default. The plan proceeds on the default unless the owner says otherwise.
@@ -701,4 +738,5 @@ Each has a default. The plan proceeds on the default unless the owner says other
 - Sprint 5: not started
 - Sprint 6: not started
 - Sprint 8: implemented (see its Shipped note); Playground config knobs left
-- Sprint 9: not started
+- Sprint 9: in progress
+- Sprint 10: not started
