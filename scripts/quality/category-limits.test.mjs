@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { measure, overrides, overrideDrift } from './category-limits.mjs'
 
 void test('category limits report bad file, function and parameter counts', () => {
-  const text = `function work(a,b,c,d) {\n${'const x = 1;\n'.repeat(150)}return a\n}`
+  const text = `function work(a,b,c,d,e,f) {\n${'const x = 1;\n'.repeat(150)}return a\n}`
   const result = measure('app/src/utils/x.ts', text)
   assert.deepEqual(
     result.findings.map((f) => f.kind),
@@ -23,20 +23,20 @@ void test('override drift detects changes and keeps first-match disjoint paths',
   const files = [{ path: 'app/src/utils/x.ts' }, { path: 'app/src/X.tsx' }]
   const result = overrides(files)
   assert.equal(overrideDrift(result, files), false)
-  assert.equal(result[0].rules['max-params'][1].max, 3)
-  result[0].rules['max-params'][1].max = 4
+  assert.equal(result[0].rules['max-params'][1].max, 5)
+  result[0].rules['max-params'][1].max = 6
   assert.equal(overrideDrift(result, files), true)
 })
 
 void test('Rust functions use the category limit and count nested parameter types', () => {
   const body = 'let x = 1;\n'.repeat(45)
-  const text = `fn f<T>(a: (i32, i32), b: Vec<Result<i32, T>>, c: [u8; 2], d: i32) {\n${body}}`
+  const text = `fn f<T>(a: (i32, i32), b: Vec<Result<i32, T>>, c: [u8; 2], d: i32, e: i32, g: i32) {\n${body}}`
   const result = measure('crates/a/src/utils/foo.rs', text)
   assert.deepEqual(
     result.findings.map((item) => item.kind),
     ['function', 'params'],
   )
-  assert.equal(result.findings[1].count, 4)
+  assert.equal(result.findings[1].count, 6)
   assert.deepEqual(measure('crates/a/src/utils/foo.rs', 'fn f(a: (i32, i32)) {}').findings, [])
 })
 
@@ -63,7 +63,7 @@ void test('generated overrides match literal glob metacharacters in Oxlint', asy
       mkdirSync(dirname(join(root, path)), { recursive: true })
       writeFileSync(
         join(root, path),
-        path.endsWith('good.ts') ? 'function f(a) {}' : 'function f(a,b,c,d) {}',
+        path.endsWith('good.ts') ? 'function f(a) {}' : 'function f(a,b,c,d,e,f) {}',
       )
     }
     const generated = overrides([0, 1, 2, 3, 5].map((index) => ({ path: files[index] })))

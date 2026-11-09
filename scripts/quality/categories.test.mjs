@@ -4,15 +4,15 @@ import { categories, classify } from './categories.mjs'
 
 void test('roadmap rows and limits follow first-match order', () => {
   const fixtures = [
-    ['x/utils/use-x.ts', 'util', 150, 40, 3],
-    ['x/use-x.ts', 'hook', 200, 60, 3],
+    ['x/utils/use-x.ts', 'util', 150, 40, 5],
+    ['x/use-x.ts', 'hook', 200, 60, 5],
     ['x/src/A.tsx', 'component', 400, 80, 3],
-    ['x/src/a.ts', 'module', 400, 80, 4],
-    ['x/scripts/a.mjs', 'script', 400, 80, 4],
-    ['x/test/a.test.ts', 'test', 750, 120, 4],
+    ['x/src/a.ts', 'module', 400, 80, 5],
+    ['x/scripts/a.mjs', 'script', 400, 80, 5],
+    ['x/test/a.test.ts', 'test', 750, 120, 5],
     ['x/types/a.ts', 'types', 1000, null, null],
     ['x/generated/a.ts', 'table', 1000, null, null],
-    ['crates/a/src/a.rs', 'rust', 400, 80, 5],
+    ['crates/a/src/a.rs', 'rust', 400, 80, 7],
   ]
   assert.equal(fixtures.length, categories.length)
   for (const [path, name, file, fn, params] of fixtures) {
