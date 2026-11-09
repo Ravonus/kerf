@@ -18,7 +18,7 @@ const run = (cmd, args) =>
     child.on('close', (code) => resolve({ code, out }))
   })
 
-test('inventory prints every warning and fails on child errors', async () => {
+void test('inventory prints every warning and fails on child errors', async () => {
   const output = []
   const good = inventoryStep(
     'structure',
@@ -33,7 +33,7 @@ test('inventory prints every warning and fails on child errors', async () => {
   assert.match((await bad.run()).problems[0], /exited 7: broken/)
 })
 
-test('comment rule reports analysis warnings and preserves other lint errors', () => {
+void test('comment rule reports analysis warnings and preserves other lint errors', () => {
   const reports = []
   const rule = plugin.rules['comment-budget'].create({
     filename: 'source.ts',
@@ -52,7 +52,7 @@ test('comment rule reports analysis warnings and preserves other lint errors', (
   assert.deepEqual(splitCommentWarnings([warning, error]), { warnings: ['x:0 bad'], rest: [error] })
 })
 
-test('comment analysis loads the CLI parser ahead of an incompatible root package', async () => {
+void test('comment analysis loads the CLI parser ahead of an incompatible root package', async () => {
   const { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, symlinkSync, rmSync } =
     await import('node:fs')
   const { tmpdir } = await import('node:os')

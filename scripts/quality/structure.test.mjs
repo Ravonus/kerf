@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import { strict as assert } from 'node:assert'
 import { inventory, structure } from './structure.mjs'
 
-test('accepts good source, mirrors and parsed re-exports', () => {
+void test('accepts good source, mirrors and parsed re-exports', () => {
   const files = [
     'packages/a/src/Alpha.tsx',
     'packages/a/src/foo.ts',
@@ -19,7 +19,7 @@ test('accepts good source, mirrors and parsed re-exports', () => {
   assert.deepEqual([result.source, result.folders, result.tests], [5, 3, 1])
 })
 
-test('reports bad names, counts, test mirrors and non-reexports', () => {
+void test('reports bad names, counts, test mirrors and non-reexports', () => {
   const files = [
     ...Array.from({ length: 13 }, (_, i) => `packages/a/src/file-${i}.ts`),
     'packages/a/src/Bad_name.ts',
@@ -44,7 +44,7 @@ test('reports bad names, counts, test mirrors and non-reexports', () => {
     )
 })
 
-test('rejects local exports and malformed index syntax', () => {
+void test('rejects local exports and malformed index syntax', () => {
   for (const text of ['export { x }', 'export { from']) {
     assert.ok(
       structure(['site/src/index.ts'], () => text).warnings.some((warning) =>
@@ -54,7 +54,7 @@ test('rejects local exports and malformed index syntax', () => {
   }
 })
 
-test('inventory counts generated files and lists unclassified source', () => {
+void test('inventory counts generated files and lists unclassified source', () => {
   const files = [
     'crates/a/src/protocol.rs',
     'packages/a/src/generated/x.ts',
