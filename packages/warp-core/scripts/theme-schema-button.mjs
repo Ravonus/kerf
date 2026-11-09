@@ -68,6 +68,12 @@ export function classifyButton(text) {
       reason: 'The default channel assignment is replaced by Button variant selectors.',
     })
   }
+  result.push(...sharedToneChannels(text))
+  return result
+}
+
+function sharedToneChannels(text) {
+  const result = []
   const channels = ['solid', 'solid-hover', 'ink-on', 'soft', 'text', 'border']
   for (const tone of ['accent', 'neutral', 'positive', 'caution', 'critical', 'info']) {
     const toneSelector =

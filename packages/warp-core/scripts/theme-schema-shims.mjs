@@ -17,8 +17,7 @@ export function classifyShim(source, text) {
   for (const rule of text.matchAll(rules)) {
     const selector = rule[1]
     const role = /data-role="([\w-]+)"/.exec(selector)?.[1]
-    const items = /([\w-]+)\s*:\s*([^;]+);/g
-    for (const item of rule[2].matchAll(items)) {
+    for (const item of rule[2].matchAll(/([\w-]+)\s*:\s*([^;]+);/g)) {
       const property = item[1]
       const fallback = item[2].trim()
       const start = rule.index + rule[0].indexOf(rule[2]) + item.index + item[0].indexOf(fallback)
@@ -77,27 +76,7 @@ export function classifyShim(source, text) {
           reason: 'Ink variant uses an existing semantic colour.',
         })
       } else if (property === 'color' && input === '--_text') {
-        result.push({
-          ...base,
-          inputs: [
-            {
-              token: input,
-              classification: 'local channel',
-              source: 'docs/design/warp/tokens/warp-components.css',
-              reason:
-                'Tone channels supply this value; their transitive ownership remains unresolved.',
-            },
-          ],
-          classification: 'external channel',
-          reason: 'Tone variants use the shared local text channel.',
-          transitiveInputs: ['accent', 'neutral', 'positive', 'caution', 'critical', 'info'].map(
-            (tone) => ({
-              token: `--warp-color-${tone}-text`,
-              classification: 'unresolved canonical input',
-              source: 'docs/design/warp/tokens/warp-components.css',
-            }),
-          ),
-        })
+        result.push(externalText(base, input))
       } else if (property === 'margin' && fallback === '0') {
         result.push({
           ...base,
@@ -108,8 +87,34 @@ export function classifyShim(source, text) {
       } else throw new Error(`${source}: unclassified declaration ${property}`)
     }
   }
-  if (parsed.length !== result.filter((row) => row.inputs.length).length) {
-    throw new Error(`${source}: parsed declaration coverage mismatch`)
-  }
+  validateCount(parsed, result, source)
   return result
+}
+
+function externalText(base, input) {
+  return {
+    ...base,
+    inputs: [
+      {
+        token: input,
+        classification: 'local channel',
+        source: 'docs/design/warp/tokens/warp-components.css',
+        reason: 'Tone channels supply this value; their transitive ownership remains unresolved.',
+      },
+    ],
+    classification: 'external channel',
+    reason: 'Tone variants use the shared local text channel.',
+    transitiveInputs: ['accent', 'neutral', 'positive', 'caution', 'critical', 'info'].map(
+      (tone) => ({
+        token: `--warp-color-${tone}-text`,
+        classification: 'unresolved canonical input',
+        source: 'docs/design/warp/tokens/warp-components.css',
+      }),
+    ),
+  }
+}
+
+function validateCount(parsed, result, source) {
+  if (parsed.length !== result.filter((row) => row.inputs.length).length)
+    throw new Error(`${source}: parsed declaration coverage mismatch`)
 }

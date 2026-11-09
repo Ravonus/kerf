@@ -10,9 +10,35 @@ export function coverage({ sources, trackedSources, discovered, sites, groups })
   for (const source of knownSources)
     if (!tracked.has(source)) issues.push(`extra source: ${source}`)
   if (discoveredIds.size !== discovered.length) issues.push('duplicate discovered site')
+  if (knownSources.size !== sources.length) issues.push('duplicate source')
+  const knownGroups = validateGroups(groups, issues)
+  const seen = new Set()
+  for (const site of sites) {
+    if (!site.id || seen.has(site.id)) issues.push(`duplicate or missing site: ${site.id}`)
+    seen.add(site.id)
+    if (!discoveredIds.has(site.id)) issues.push(`unexpected site: ${site.id}`)
+    if (!knownSources.has(site.source)) issues.push(`unknown source: ${site.source}`)
+    if (!site.fallback) issues.push(`missing fallback: ${site.id}`)
+    if (!['binding', 'raw-only', 'excluded'].includes(site.classification)) {
+      issues.push(`unmapped site: ${site.id}`)
+    }
+    if (site.classification === 'binding' && !knownGroups.has(site.group)) {
+      issues.push(`unknown group: ${site.id}`)
+    }
+    if (site.classification !== 'binding' && !site.reason) issues.push(`missing reason: ${site.id}`)
+  }
+  for (const id of discoveredIds) if (!seen.has(id)) issues.push(`missing site: ${id}`)
+  for (const group of groups) {
+    if (!sites.some((site) => site.group === group.id && site.classification === 'binding')) {
+      issues.push(`group without binding: ${group.id}`)
+    }
+  }
+  return { status: issues.length ? 'partial' : 'complete', issues }
+}
+
+function validateGroups(groups, issues) {
   const knownGroups = new Map()
   const tokens = new Set()
-  if (knownSources.size !== sources.length) issues.push('duplicate source')
   for (const group of groups) {
     if (!group.id || knownGroups.has(group.id))
       issues.push(`duplicate or missing group: ${group.id}`)
@@ -68,26 +94,5 @@ export function coverage({ sources, trackedSources, discovered, sites, groups })
       issues.push(`invalid unit: ${group.id}`)
     if (group.status !== 'complete') issues.push(`unresolved group: ${group.id}`)
   }
-  const seen = new Set()
-  for (const site of sites) {
-    if (!site.id || seen.has(site.id)) issues.push(`duplicate or missing site: ${site.id}`)
-    seen.add(site.id)
-    if (!discoveredIds.has(site.id)) issues.push(`unexpected site: ${site.id}`)
-    if (!knownSources.has(site.source)) issues.push(`unknown source: ${site.source}`)
-    if (!site.fallback) issues.push(`missing fallback: ${site.id}`)
-    if (!['binding', 'raw-only', 'excluded'].includes(site.classification)) {
-      issues.push(`unmapped site: ${site.id}`)
-    }
-    if (site.classification === 'binding' && !knownGroups.has(site.group)) {
-      issues.push(`unknown group: ${site.id}`)
-    }
-    if (site.classification !== 'binding' && !site.reason) issues.push(`missing reason: ${site.id}`)
-  }
-  for (const id of discoveredIds) if (!seen.has(id)) issues.push(`missing site: ${id}`)
-  for (const group of groups) {
-    if (!sites.some((site) => site.group === group.id && site.classification === 'binding')) {
-      issues.push(`group without binding: ${group.id}`)
-    }
-  }
-  return { status: issues.length ? 'partial' : 'complete', issues }
+  return knownGroups
 }
