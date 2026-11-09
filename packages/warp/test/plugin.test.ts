@@ -345,8 +345,10 @@ test('accepts checked Button colours and emits themed CSS aliases', () => {
   for (const [name, part] of [
     ['@weft-js/warp-core/styles/warp.css', 'warp.css'],
     ['@weft-js/warp-core/styles/components/button.css', 'components/button.css'],
-  ]) {
+  ] as const) {
     const target = result.tokens.alias[name]
+    expect(target).toBeDefined()
+    if (target === undefined) throw new Error(`missing alias: ${name}`)
     expect(target).toContain(`/styles/themed/${part}`)
     expect(readFileSync(target, 'utf8')).toContain('--warp-config-part-')
   }

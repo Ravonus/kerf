@@ -154,7 +154,34 @@ function validateSystem(system, path) {
   }
 }
 
-/** Resolve the base palette and named palette overrides after merging their dictionaries. */
+/**
+ * @template B, P
+ * @typedef {B extends object ? P extends object ? {
+ *   [K in keyof B | keyof P]: K extends keyof P ? K extends keyof B
+ *     ? ThemeMerge<B[K], P[K]> : P[K] : K extends keyof B ? B[K] : never
+ * } : P : P} ThemeMerge
+ */
+
+/**
+ * @template T
+ * @typedef {T extends string ? string : T extends number ? number | string :
+ *   T extends object ? { [K in keyof T]: ThemeValues<T[K]> } : T} ThemeValues
+ */
+
+/**
+ * @template T
+ * @typedef {ThemeValues<T> & { colors: T extends { colors: infer C } ? ThemeValues<C> : {},
+ *   parts: T extends { parts: infer P } ? ThemeValues<P> : {} }} ResolvedPalette
+ */
+
+/**
+ * Resolve the base palette and named palette overrides after merging their dictionaries.
+ * @template {object} T
+ * @param {T} [input]
+ * @returns {{ default: ResolvedPalette<T> } & (T extends { themes: infer N } ? {
+ *   [K in keyof N]: ResolvedPalette<ThemeMerge<T, N[K]>>
+ * } : {})}
+ */
 export function resolveThemes(input = {}) {
   object(input, 'config')
   const base = {}
