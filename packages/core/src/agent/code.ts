@@ -80,17 +80,24 @@ export function buildCode(steps: Step[], o: CodeOptions = {}) {
       body.push(`await net.${st.op}()`)
     } else if (st.kind === 'note') body.push(`// ${st.text}`)
   }
-  return finishCode(steps, o, comp, used, body, asserts)
+  return finishCode({ steps, o, comp, used, body, asserts })
 }
 
-function finishCode(
-  steps: Step[],
-  o: CodeOptions,
-  comp: string,
-  used: Set<string>,
-  body: string[],
-  asserts: number,
-) {
+function finishCode({
+  steps,
+  o,
+  comp,
+  used,
+  body,
+  asserts,
+}: {
+  steps: Step[]
+  o: CodeOptions
+  comp: string
+  used: Set<string>
+  body: string[]
+  asserts: number
+}) {
   // Paused from the start (`record start` with the clock paused): install before render, like the page did.
   const renderAt = body[0] === 'clock.install()' && steps[0]?.kind === 'clock' ? 1 : 0
   body.splice(renderAt, 0, `render(${comp}${o.props ? `, ${o.props}` : ''})`)

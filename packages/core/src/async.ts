@@ -102,7 +102,7 @@ export function resource<T>(
       }
     }
   } else {
-    clientFetch(fetcher, saved, version, pending, settle, fail)
+    clientFetch({ fetcher, saved, version, pending, settle, fail })
   }
 
   if (rt.server && pass.got !== undefined && !untrack(() => pending.value)) pass.got++
@@ -110,14 +110,21 @@ export function resource<T>(
   return resourceView(value, pending, error, options, refresh)
 }
 
-function clientFetch<T>(
-  fetcher: (signal: AbortSignal) => Promise<T> | T,
-  saved: unknown,
-  version: State<number>,
-  pending: State<boolean>,
-  settle: (value: T) => void,
-  fail: (error: unknown) => void,
-) {
+function clientFetch<T>({
+  fetcher,
+  saved,
+  version,
+  pending,
+  settle,
+  fail,
+}: {
+  fetcher: (signal: AbortSignal) => Promise<T> | T
+  saved: unknown
+  version: State<number>
+  pending: State<boolean>
+  settle: (value: T) => void
+  fail: (error: unknown) => void
+}) {
   let ctrl: AbortController | undefined
   let hydrated = !!saved
   effect(

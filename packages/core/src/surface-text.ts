@@ -146,17 +146,27 @@ function inspect(el: HTMLElement, font: string, exact: boolean | undefined) {
     )
 }
 
-function mountText(
-  ctx: CanvasRenderingContext2D | null | undefined,
-  live: Live,
-  el: HTMLElement,
-  host: TextHost,
-  read: () => TextOptions,
-  getHandle: () => MeasureHandle | undefined,
-  getFont: () => string,
-  getLaid: () => MeasureHandle | undefined,
-  text: string | (() => string),
-) {
+function mountText({
+  ctx,
+  live,
+  el,
+  host,
+  read,
+  getHandle,
+  getFont,
+  getLaid,
+  text,
+}: {
+  ctx: CanvasRenderingContext2D | null | undefined
+  live: Live
+  el: HTMLElement
+  host: TextHost
+  read: () => TextOptions
+  getHandle: () => MeasureHandle | undefined
+  getFont: () => string
+  getLaid: () => MeasureHandle | undefined
+  text: string | (() => string)
+}) {
   effect(read, (o) => {
     const s = el.style
     s.left = `${o.x}px`
@@ -211,12 +221,8 @@ function drawText(
   ctx: CanvasRenderingContext2D,
   o: TextOptions,
   lines: { text: string; width: number }[],
-  font: string,
-  color: string,
   leading: number,
 ) {
-  ctx.font = font
-  ctx.fillStyle = color
   ctx.textBaseline = 'alphabetic'
   const m = ctx.measureText('')
   const ascent = m.fontBoundingBoxAscent ?? 0,
@@ -284,17 +290,17 @@ export function surfaceText(
   }
   ownText(live, el)
 
-  mountText(
+  mountText({
     ctx,
     live,
     el,
     host,
     read,
-    () => handle,
-    () => font,
-    () => laid,
+    getHandle: () => handle,
+    getFont: () => font,
+    getLaid: () => laid,
     text,
-  )
+  })
 
   const paint = () => {
     if (!handle || !provider || !ctx || plain?.matches) return
@@ -316,7 +322,9 @@ export function surfaceText(
           )
       }
     }
-    drawText(ctx, o, lines, font, color, leading)
+    ctx.font = font
+    ctx.fillStyle = color
+    drawText(ctx, o, lines, leading)
   }
 
   return { el, lineCount, height, paint }

@@ -250,7 +250,7 @@ export class Instance {
         'split it by feature: one scope per feature file',
       )
 
-    attachBoxes(this, boxes, named, app, def, { features, owners, onWrite, StateError })
+    attachBoxes({ inst: this, boxes, named, app, def, features, owners, onWrite, StateError })
     if (DEV) {
       // The dev graph (@weft-js/core/devtools): the scope's boxes and returned derived values, until the app ends.
       const nodes: (Box<unknown> | Memo<unknown>['node'])[] = [...boxes]

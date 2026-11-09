@@ -80,7 +80,7 @@ export function Boundary(props: BoundaryProps) {
   const scoped = <T>(side: 'c' | 'f', fn: () => T): T =>
     keys.on && key !== undefined ? under(key + side + '/', fn) : fn()
 
-  const build = makeBuilder(list, boundary, scoped, track, props, thrown, parent)
+  const build = makeBuilder({ list, boundary, scoped, track, props, thrown, parent })
   // What failed on the server isn't asked again until someone says to: the error view's retry builds it.
   if (!boundary.held && boundary.was !== 'e') build()
 
@@ -94,7 +94,7 @@ export function Boundary(props: BoundaryProps) {
     if (status === 'p') show.value = 'fallback'
     else if (status === 'c' && key !== undefined)
       rt.stream?.set(key, (boundary.content as { t?: string } | null | undefined)?.t ?? '')
-  } else showClient(boundary, show, loading, page, key, data, failed, build)
+  } else showClient({ boundary, show, loading, page, key, data, failed, build })
 
   const retry = () => {
     if (untrack(() => thrown.value) !== undefined) {
@@ -104,7 +104,7 @@ export function Boundary(props: BoundaryProps) {
     for (const r of list) if (untrack(() => r.err.value) !== undefined) r.refresh()
   }
 
-  return boundaryView(parent, list, props, scoped, boundary, key, failure, retry, show)
+  return boundaryView({ parent, list, props, scoped, boundary, key, failure, retry, show })
 }
 
 /** What a page that's still streaming carries once the client runs: `w` claims a chunk's nodes (@weft-js/start's client). */
@@ -143,15 +143,23 @@ function claim(t: HTMLTemplateElement, data: Streamed, fn: () => void) {
 }
 
 type Scoped = <T>(side: 'c' | 'f', fn: () => T) => T
-function makeBuilder(
-  list: Tracked[],
-  boundary: BoundaryState,
-  scoped: Scoped,
-  track: { add(r: Tracked): void },
-  props: BoundaryProps,
-  thrown: State<unknown>,
-  parent: ReturnType<typeof getOwner>,
-) {
+function makeBuilder({
+  list,
+  boundary,
+  scoped,
+  track,
+  props,
+  thrown,
+  parent,
+}: {
+  list: Tracked[]
+  boundary: BoundaryState
+  scoped: Scoped
+  track: { add(r: Tracked): void }
+  props: BoundaryProps
+  thrown: State<unknown>
+  parent: ReturnType<typeof getOwner>
+}) {
   return (chunk?: boolean) => {
     boundary.dispose?.()
     list.length = 0
@@ -199,16 +207,25 @@ type BoundaryState = {
 type Display = State<'wait' | 'fallback' | 'content'>
 type Observable<T> = { readonly value: T }
 
-function showClient(
-  boundary: BoundaryState,
-  show: Display,
-  loading: Observable<boolean>,
-  page: Page,
-  key: string | undefined,
-  data: Streamed | undefined,
-  failed: () => unknown,
-  build: (chunk?: boolean) => void,
-) {
+function showClient({
+  boundary,
+  show,
+  loading,
+  page,
+  key,
+  data,
+  failed,
+  build,
+}: {
+  boundary: BoundaryState
+  show: Display
+  loading: Observable<boolean>
+  page: Page
+  key: string | undefined
+  data: Streamed | undefined
+  failed: () => unknown
+  build: (chunk?: boolean) => void
+}) {
   let timer: ReturnType<typeof setTimeout> | undefined
   let shownAt = 0
   if (boundary.was === 'p') {
@@ -250,17 +267,27 @@ function showClient(
   }
 }
 
-function boundaryView(
-  parent: ReturnType<typeof getOwner>,
-  list: Tracked[],
-  props: BoundaryProps,
-  scoped: Scoped,
-  boundary: BoundaryState,
-  key: string | undefined,
-  failure: Observable<unknown>,
-  retry: () => void,
-  show: Display,
-) {
+function boundaryView({
+  parent,
+  list,
+  props,
+  scoped,
+  boundary,
+  key,
+  failure,
+  retry,
+  show,
+}: {
+  parent: ReturnType<typeof getOwner>
+  list: Tracked[]
+  props: BoundaryProps
+  scoped: Scoped
+  boundary: BoundaryState
+  key: string | undefined
+  failure: Observable<unknown>
+  retry: () => void
+  show: Display
+}) {
   let side: { kind: 'p' | 'e'; node: unknown; dispose: () => void } | undefined
   // `parent` is only where they look things up, so nothing else disposes these two. What they read may outlive the page.
   onCleanup(() => {

@@ -38,18 +38,29 @@ export interface Timeline<C extends string = string> {
   bind(element: HTMLMediaElement): () => void
 }
 
-function bindTimeline(
-  el: HTMLMediaElement,
-  options: TimelineOptions<string>,
-  setMedia: (el: HTMLMediaElement | undefined) => void,
-  getLast: () => number,
-  setLast: (t: number) => void,
-  getShown: () => boolean,
-  place: (t: number, crossing: boolean) => void,
-  playing: State<boolean>,
-  over: State<boolean>,
-  length: State<number>,
-) {
+function bindTimeline({
+  el,
+  options,
+  setMedia,
+  getLast,
+  setLast,
+  getShown,
+  place,
+  playing,
+  over,
+  length,
+}: {
+  el: HTMLMediaElement
+  options: TimelineOptions<string>
+  setMedia: (el: HTMLMediaElement | undefined) => void
+  getLast: () => number
+  setLast: (t: number) => void
+  getShown: () => boolean
+  place: (t: number, crossing: boolean) => void
+  playing: State<boolean>
+  over: State<boolean>
+  length: State<number>
+}) {
   setMedia(el)
   if (options.loop !== undefined) el.loop = options.loop
   const video = el as HTMLVideoElement
@@ -106,14 +117,21 @@ function bindTimeline(
   }
 }
 
-function watchTimeline(
-  currentTime: State<number>,
-  playing: State<boolean>,
-  failure: State<Error | null>,
-  getMedia: () => HTMLMediaElement | undefined,
-  getSeen: () => number,
-  setShown: (on: boolean) => void,
-) {
+function watchTimeline({
+  currentTime,
+  playing,
+  failure,
+  getMedia,
+  getSeen,
+  setShown,
+}: {
+  currentTime: State<number>
+  playing: State<boolean>
+  failure: State<Error | null>
+  getMedia: () => HTMLMediaElement | undefined
+  getSeen: () => number
+  setShown: (on: boolean) => void
+}) {
   watch(
     () => currentTime.value,
     (t) => {
@@ -182,16 +200,16 @@ export function timeline<C extends string = never>(
     last = t
   }
 
-  watchTimeline(
+  watchTimeline({
     currentTime,
     playing,
     failure,
-    () => media,
-    () => seen,
-    (value) => {
+    getMedia: () => media,
+    getSeen: () => seen,
+    setShown: (value) => {
       shown = value
     },
-  )
+  })
 
   return {
     currentTime,
@@ -202,22 +220,22 @@ export function timeline<C extends string = never>(
     error: derived(() => failure.value),
     on: (cue, run) => listenTimeline(listeners, cue, run),
     bind(el) {
-      return bindTimeline(
+      return bindTimeline({
         el,
         options,
-        (value) => {
+        setMedia: (value) => {
           media = value
         },
-        () => last,
-        (value) => {
+        getLast: () => last,
+        setLast: (value) => {
           last = value
         },
-        () => shown,
+        getShown: () => shown,
         place,
         playing,
         over,
         length,
-      )
+      })
     },
   }
 }

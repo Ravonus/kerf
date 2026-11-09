@@ -1,19 +1,11 @@
 /** The two ends of what's left traded places: moves them, and says so. */
-export function swap(
-  parent: Node,
-  current: Node[],
-  next: Node[],
-  start: number,
-  was: number,
-  now: number,
-) {
+export function swap(parent: Node, current: Node[], next: Node[], start: number, was: number) {
   const a = current[start]!,
     b = current[was - 1]!
   if (
     was - start < 2 ||
-    was !== now ||
     next[start] !== b ||
-    next[now - 1] !== a ||
+    next[was - 1] !== a ||
     a.parentNode !== parent ||
     b.parentNode !== parent
   )

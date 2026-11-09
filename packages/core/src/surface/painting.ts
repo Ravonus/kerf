@@ -26,16 +26,25 @@ type PaintArgs = {
   fps: number
 }
 
-function surfaceContext(
-  args: PaintArgs,
-  draws: (() => void)[],
-  frames: ((t: FrameTime) => void)[],
-  texts: PaintedText[],
-  invalidate: () => void,
-  paint: () => void,
-  ticker: (force?: boolean) => void,
-  isStarted: () => boolean,
-) {
+function surfaceContext({
+  args,
+  draws,
+  frames,
+  texts,
+  invalidate,
+  paint,
+  ticker,
+  isStarted,
+}: {
+  args: PaintArgs
+  draws: (() => void)[]
+  frames: ((t: FrameTime) => void)[]
+  texts: PaintedText[]
+  invalidate: () => void
+  paint: () => void
+  ticker: (force?: boolean) => void
+  isStarted: () => boolean
+}) {
   const { backend, canvas, host, size, dpr, scale } = args
   const textHost: TextHost = {
     el: host,
@@ -74,20 +83,33 @@ function surfaceContext(
   }
 }
 
-function watchPaint(
-  args: PaintArgs,
-  tick: State<number>,
-  draws: (() => void)[],
-  frames: ((t: FrameTime) => void)[],
-  texts: PaintedText[],
-  invalidate: () => void,
-  paint: () => void,
-  isPainting: () => boolean,
-  setPainting: (v: boolean) => void,
-  setStarted: () => void,
-  getTime: () => FrameTime,
-  visibility: (seen: boolean) => void,
-) {
+function watchPaint({
+  args,
+  tick,
+  draws,
+  frames,
+  texts,
+  invalidate,
+  paint,
+  isPainting,
+  setPainting,
+  setStarted,
+  getTime,
+  visibility,
+}: {
+  args: PaintArgs
+  tick: State<number>
+  draws: (() => void)[]
+  frames: ((t: FrameTime) => void)[]
+  texts: PaintedText[]
+  invalidate: () => void
+  paint: () => void
+  isPainting: () => boolean
+  setPainting: (v: boolean) => void
+  setStarted: () => void
+  getTime: () => FrameTime
+  visibility: (seen: boolean) => void
+}) {
   const { backend, host } = args
   // Paint and tracking are one effect: `tick` starts a paint, and a run with `painting` false means a source changed.
   setPainting(true)
@@ -155,12 +177,21 @@ function createPainting(args: PaintArgs, setRepaint: (paint: () => void) => void
     else stale = true
   }
 
-  const s = surfaceContext(args, draws, frames, texts, invalidate, paint, ticker, () => started)
+  const s = surfaceContext({
+    args,
+    draws,
+    frames,
+    texts,
+    invalidate,
+    paint,
+    ticker,
+    isStarted: () => started,
+  })
 
   const cleanup = def.setup(s, props)
   if (cleanup) onCleanup(cleanup)
 
-  watchPaint(
+  watchPaint({
     args,
     tick,
     draws,
@@ -168,22 +199,22 @@ function createPainting(args: PaintArgs, setRepaint: (paint: () => void) => void
     texts,
     invalidate,
     paint,
-    () => painting,
-    (v) => {
+    isPainting: () => painting,
+    setPainting: (v) => {
       painting = v
     },
-    () => {
+    setStarted: () => {
       started = true
     },
-    () => time,
-    (value) => {
+    getTime: () => time,
+    visibility: (value) => {
       seen = value
       if (seen && stale) {
         stale = false
         paint()
       }
     },
-  )
+  })
 }
 
 export function bootPainting(

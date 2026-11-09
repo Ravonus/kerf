@@ -12,21 +12,24 @@ type Props<T> = {
   children: (item: () => T, index: () => number) => unknown
 }
 
-export function listMemo<T>(
-  props: Props<T>,
-  base: string,
-  data: ListState,
-  make: () => unknown,
-  claim: () => unknown,
-  repeats: () => void,
-) {
+type Hooks<T> = {
+  props: Props<T>
+  base: string
+  data: ListState
+  make: () => unknown
+  claim: () => unknown
+  repeats: () => void
+}
+
+export function listMemo<T>(o: Hooks<T>) {
+  const { props, base } = o
   return memo(() => {
     const list = props.each || []
     if (rt.server) return untrack(() => rendered(list, props, base))
     const parent = getOwner()
     // A callback that takes an index (or might: `(...args)`) gets an index box; `(row) =>` doesn't.
     const indexed = props.children.length !== 1
-    return untrack(() => reconcile(list, parent, indexed, props, base, data, make, claim, repeats))
+    return untrack(() => reconcile(list, parent, indexed, o))
   })
 }
 
@@ -58,12 +61,7 @@ function reconcile<T>(
   list: readonly T[],
   parent: Owner | null,
   indexed: boolean,
-  props: Props<T>,
-  base: string,
-  data: ListState,
-  make: () => unknown,
-  claim: () => unknown,
-  repeats: () => void,
+  { props, base, data, make, claim, repeats }: Hooks<T>,
 ) {
   const by = props.by
   const key = (i: number) => (by ? by(list[i]!, i) : list[i])
