@@ -75,5 +75,42 @@ test('updates named tones on existing hosts without inline CSS', () => {
   tone.value = 'sunset'
   expect(nodes).toHaveLength(6)
   expect(nodes.every((node) => node.getAttribute('data-tone') === 'sunset')).toBe(true)
+  expect([...container.querySelectorAll('[data-tone]')]).toEqual(nodes)
   expect(nodes.every((node) => !node.hasAttribute('style'))).toBe(true)
+})
+
+test('pills preserve native button and link behavior with a decorative sweep', () => {
+  const clicked = vi.fn()
+  const { container } = render(() => (
+    <>
+      <Pill onClick={clicked} aria-pressed="true">
+        Filter
+      </Pill>
+      <Pill disabled onClick={clicked}>
+        Disabled
+      </Pill>
+      <Pill type="submit">Submit</Pill>
+      <PillLink href="/next" aria-current="page" target="_blank">
+        Next
+      </PillLink>
+    </>
+  ))
+  const [button, disabled, submit] = container.querySelectorAll('button')
+  const link = container.querySelector('a')!
+  for (const host of [button!, disabled!, submit!, link]) {
+    expect(host.hasAttribute('data-sweep')).toBe(true)
+    expect(host.querySelector(':scope > [data-part="sweep"]')?.getAttribute('aria-hidden')).toBe(
+      'true',
+    )
+    expect(host.hasAttribute('data-tone')).toBe(false)
+  }
+  expect(button!.type).toBe('button')
+  expect(button!.getAttribute('aria-pressed')).toBe('true')
+  expect(submit!.type).toBe('submit')
+  button!.click()
+  disabled!.click()
+  expect(clicked).toHaveBeenCalledTimes(1)
+  expect(link.getAttribute('href')).toBe('/next')
+  expect(link.getAttribute('aria-current')).toBe('page')
+  expect(link.target).toBe('_blank')
 })

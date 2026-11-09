@@ -11,8 +11,9 @@ type PillProps = {
 /** A selectable pill backed by a native button. */
 export function Pill({ tone, children, type = 'button', ...rest }: PillProps) {
   return (
-    <button type={type} data-scope="pill" data-tone={tone} {...rest}>
+    <button type={type} data-scope="pill" data-tone={tone} data-sweep="" {...rest}>
       {children}
+      <span data-part="sweep" aria-hidden="true"></span>
     </button>
   )
 }
@@ -20,8 +21,9 @@ export function Pill({ tone, children, type = 'button', ...rest }: PillProps) {
 /** A pill that navigates to a destination. */
 export function PillLink({ tone, href, children, ...rest }: PillProps & { href: string }) {
   return (
-    <a href={href} data-scope="pill" data-tone={tone} {...rest}>
+    <a href={href} data-scope="pill" data-tone={tone} data-sweep="" {...rest}>
       {children}
+      <span data-part="sweep" aria-hidden="true"></span>
     </a>
   )
 }
