@@ -15,9 +15,9 @@
 :where(a[data-scope="link"] svg[data-icon]) { inline-size: 0.85em; block-size: 0.85em; vertical-align: -0.05em; margin-inline-start: 2px; }
 
 /* warp-theme-only:start */
-:where(a[data-scope="link"]) { --_warp-link-duration: calc(var(--warp-link-duration,var(--warp-config-part-link-duration)) * var(--warp-motion-scale)); }
-:where(a[data-scope="link"]:hover) { --_warp-link-radius-hover: var(--warp-link-radius-hover,var(--warp-config-part-link-radius-hover)); --_warp-link-font-weight-hover: var(--warp-link-font-weight-hover,var(--warp-config-part-link-font-weight-hover)); }
-:where(a[data-scope="link"]:active) { --_warp-link-radius-press: var(--warp-link-radius-press,var(--warp-config-part-link-radius-press)); --_warp-link-font-weight-press: var(--warp-link-font-weight-press,var(--warp-config-part-link-font-weight-press)); }
+:where(a[data-scope="link"]) { --_warp-link-duration: calc(var(--_warp-link-duration-press,var(--_warp-link-duration-hover,var(--warp-link-duration,var(--warp-config-part-link-duration)))) * var(--warp-motion-scale)); }
+:where(a[data-scope="link"]:hover) { --_warp-link-duration-hover: var(--warp-link-duration-hover,var(--warp-link-duration,var(--warp-config-part-link-duration-hover))); --_warp-link-radius-hover: var(--warp-link-radius-hover,var(--warp-link-radius,var(--warp-config-part-link-radius-hover))); --_warp-link-font-weight-hover: var(--warp-link-font-weight-hover,var(--warp-link-font-weight,var(--warp-config-part-link-font-weight-hover))); }
+:where(a[data-scope="link"]:active) { --_warp-link-duration-press: var(--warp-link-duration-press,var(--warp-link-duration,var(--warp-config-part-link-duration-press))); --_warp-link-radius-press: var(--warp-link-radius-press,var(--warp-link-radius,var(--warp-config-part-link-radius-press))); --_warp-link-font-weight-press: var(--warp-link-font-weight-press,var(--warp-link-font-weight,var(--warp-config-part-link-font-weight-press))); }
 /* warp-theme-only:end */
 /* ---------------------------------------------------------------------------
    4 · FEEDBACK

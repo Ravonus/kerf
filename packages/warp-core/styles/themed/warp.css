@@ -1,4 +1,209 @@
 /* warp-theme-only:start */
+@property --warp-nav-underline-width-hover { syntax: "*"; inherits: false; }
+@property --_warp-nav-underline-width-hover { syntax: "*"; inherits: false; }
+@property --warp-nav-underline-width-active { syntax: "*"; inherits: false; }
+@property --_warp-nav-underline-width-active { syntax: "*"; inherits: false; }
+@property --warp-tabs-underline-width-hover { syntax: "*"; inherits: false; }
+@property --_warp-tabs-underline-width-hover { syntax: "*"; inherits: false; }
+@property --warp-tabs-underline-width-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-underline-width-active { syntax: "*"; inherits: false; }
+@property --warp-link-duration-hover { syntax: "*"; inherits: false; }
+@property --_warp-link-duration-hover { syntax: "*"; inherits: false; }
+@property --warp-link-duration-press { syntax: "*"; inherits: false; }
+@property --_warp-link-duration-press { syntax: "*"; inherits: false; }
+@property --_warp-card-gap { syntax: "*"; inherits: false; }
+@property --warp-card-gap-active { syntax: "*"; inherits: false; }
+@property --_warp-card-gap-active { syntax: "*"; inherits: false; }
+@property --warp-card-gap-press { syntax: "*"; inherits: false; }
+@property --_warp-card-gap-press { syntax: "*"; inherits: false; }
+@property --_warp-card-padding { syntax: "*"; inherits: false; }
+@property --warp-card-padding-active { syntax: "*"; inherits: false; }
+@property --_warp-card-padding-active { syntax: "*"; inherits: false; }
+@property --warp-card-padding-press { syntax: "*"; inherits: false; }
+@property --_warp-card-padding-press { syntax: "*"; inherits: false; }
+@property --_warp-card-radius { syntax: "*"; inherits: false; }
+@property --warp-card-radius-active { syntax: "*"; inherits: false; }
+@property --_warp-card-radius-active { syntax: "*"; inherits: false; }
+@property --warp-card-radius-press { syntax: "*"; inherits: false; }
+@property --_warp-card-radius-press { syntax: "*"; inherits: false; }
+@property --_warp-card-shadow { syntax: "*"; inherits: false; }
+@property --_warp-card-shadow-hover { syntax: "*"; inherits: false; }
+@property --warp-card-shadow-active { syntax: "*"; inherits: false; }
+@property --_warp-card-shadow-active { syntax: "*"; inherits: false; }
+@property --warp-card-shadow-press { syntax: "*"; inherits: false; }
+@property --_warp-card-shadow-press { syntax: "*"; inherits: false; }
+@property --warp-card-font-family { syntax: "*"; inherits: false; }
+@property --_warp-card-font-family { syntax: "*"; inherits: false; }
+@property --warp-card-font-family-hover { syntax: "*"; inherits: false; }
+@property --_warp-card-font-family-hover { syntax: "*"; inherits: false; }
+@property --warp-card-font-family-active { syntax: "*"; inherits: false; }
+@property --_warp-card-font-family-active { syntax: "*"; inherits: false; }
+@property --warp-card-font-family-press { syntax: "*"; inherits: false; }
+@property --_warp-card-font-family-press { syntax: "*"; inherits: false; }
+@property --warp-card-font-size { syntax: "*"; inherits: false; }
+@property --_warp-card-font-size { syntax: "*"; inherits: false; }
+@property --warp-card-font-size-hover { syntax: "*"; inherits: false; }
+@property --_warp-card-font-size-hover { syntax: "*"; inherits: false; }
+@property --warp-card-font-size-active { syntax: "*"; inherits: false; }
+@property --_warp-card-font-size-active { syntax: "*"; inherits: false; }
+@property --warp-card-font-size-press { syntax: "*"; inherits: false; }
+@property --_warp-card-font-size-press { syntax: "*"; inherits: false; }
+@property --warp-card-font-weight { syntax: "*"; inherits: false; }
+@property --_warp-card-font-weight { syntax: "*"; inherits: false; }
+@property --warp-card-font-weight-hover { syntax: "*"; inherits: false; }
+@property --_warp-card-font-weight-hover { syntax: "*"; inherits: false; }
+@property --warp-card-font-weight-active { syntax: "*"; inherits: false; }
+@property --_warp-card-font-weight-active { syntax: "*"; inherits: false; }
+@property --warp-card-font-weight-press { syntax: "*"; inherits: false; }
+@property --_warp-card-font-weight-press { syntax: "*"; inherits: false; }
+@property --warp-card-border-width { syntax: "*"; inherits: false; }
+@property --_warp-card-border-width { syntax: "*"; inherits: false; }
+@property --warp-card-border-width-hover { syntax: "*"; inherits: false; }
+@property --_warp-card-border-width-hover { syntax: "*"; inherits: false; }
+@property --warp-card-border-width-active { syntax: "*"; inherits: false; }
+@property --_warp-card-border-width-active { syntax: "*"; inherits: false; }
+@property --warp-card-border-width-press { syntax: "*"; inherits: false; }
+@property --_warp-card-border-width-press { syntax: "*"; inherits: false; }
+@property --warp-card-duration { syntax: "*"; inherits: false; }
+@property --_warp-card-duration { syntax: "*"; inherits: false; }
+@property --warp-card-duration-hover { syntax: "*"; inherits: false; }
+@property --_warp-card-duration-hover { syntax: "*"; inherits: false; }
+@property --warp-card-duration-active { syntax: "*"; inherits: false; }
+@property --_warp-card-duration-active { syntax: "*"; inherits: false; }
+@property --warp-card-duration-press { syntax: "*"; inherits: false; }
+@property --_warp-card-duration-press { syntax: "*"; inherits: false; }
+@property --warp-nav-font-family { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-family { syntax: "*"; inherits: false; }
+@property --warp-nav-font-family-hover { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-family-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-family-hover { syntax: "*"; inherits: false; }
+@property --warp-nav-font-family-active { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-family-active-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-family-active { syntax: "*"; inherits: false; }
+@property --warp-nav-font-size { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-size { syntax: "*"; inherits: false; }
+@property --warp-nav-font-size-hover { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-size-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-size-hover { syntax: "*"; inherits: false; }
+@property --warp-nav-font-size-active { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-size-active-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-size-active { syntax: "*"; inherits: false; }
+@property --warp-nav-font-weight { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-weight { syntax: "*"; inherits: false; }
+@property --warp-nav-font-weight-hover { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-weight-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-weight-hover { syntax: "*"; inherits: false; }
+@property --warp-nav-font-weight-active { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-weight-active-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-font-weight-active { syntax: "*"; inherits: false; }
+@property --warp-nav-border-width { syntax: "*"; inherits: false; }
+@property --_warp-nav-border-width { syntax: "*"; inherits: false; }
+@property --warp-nav-border-width-hover { syntax: "*"; inherits: false; }
+@property --_warp-nav-border-width-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-border-width-hover { syntax: "*"; inherits: false; }
+@property --warp-nav-border-width-active { syntax: "*"; inherits: false; }
+@property --_warp-nav-border-width-active-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-border-width-active { syntax: "*"; inherits: false; }
+@property --warp-nav-radius { syntax: "*"; inherits: false; }
+@property --_warp-nav-radius { syntax: "*"; inherits: false; }
+@property --warp-nav-radius-hover { syntax: "*"; inherits: false; }
+@property --_warp-nav-radius-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-radius-hover { syntax: "*"; inherits: false; }
+@property --warp-nav-radius-active { syntax: "*"; inherits: false; }
+@property --_warp-nav-radius-active-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-radius-active { syntax: "*"; inherits: false; }
+@property --warp-nav-shadow { syntax: "*"; inherits: false; }
+@property --_warp-nav-shadow { syntax: "*"; inherits: false; }
+@property --warp-nav-shadow-hover { syntax: "*"; inherits: false; }
+@property --_warp-nav-shadow-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-shadow-hover { syntax: "*"; inherits: false; }
+@property --warp-nav-shadow-active { syntax: "*"; inherits: false; }
+@property --_warp-nav-shadow-active-input { syntax: "*"; inherits: false; }
+@property --_warp-nav-shadow-active { syntax: "*"; inherits: false; }
+@property --warp-tabs-border-width { syntax: "*"; inherits: false; }
+@property --_warp-tabs-border-width { syntax: "*"; inherits: false; }
+@property --warp-tabs-border-width-hover { syntax: "*"; inherits: false; }
+@property --_warp-tabs-border-width-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-border-width-hover { syntax: "*"; inherits: false; }
+@property --warp-tabs-border-width-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-border-width-active-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-border-width-active { syntax: "*"; inherits: false; }
+@property --warp-tabs-shadow { syntax: "*"; inherits: false; }
+@property --_warp-tabs-shadow { syntax: "*"; inherits: false; }
+@property --warp-tabs-shadow-hover { syntax: "*"; inherits: false; }
+@property --_warp-tabs-shadow-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-shadow-hover { syntax: "*"; inherits: false; }
+@property --warp-tabs-shadow-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-shadow-active-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-shadow-active { syntax: "*"; inherits: false; }
+@property --warp-nav-duration-hover { syntax: "*"; inherits: false; }
+@property --_warp-nav-duration-hover { syntax: "*"; inherits: false; }
+@property --warp-nav-duration-active { syntax: "*"; inherits: false; }
+@property --_warp-nav-duration-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-gap { syntax: "*"; inherits: false; }
+@property --warp-button-duration-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-duration-hover { syntax: "*"; inherits: false; }
+@property --warp-button-duration-press { syntax: "*"; inherits: false; }
+@property --_warp-button-duration-press { syntax: "*"; inherits: false; }
+@property --_warp-button-duration-press-time { syntax: "*"; inherits: false; }
+@property --warp-field-radius-hover { syntax: "*"; inherits: false; }
+@property --_warp-field-radius-hover { syntax: "*"; inherits: false; }
+@property --warp-field-radius-active { syntax: "*"; inherits: false; }
+@property --_warp-field-radius-active { syntax: "*"; inherits: false; }
+@property --warp-field-radius-press { syntax: "*"; inherits: false; }
+@property --_warp-field-radius-press { syntax: "*"; inherits: false; }
+@property --warp-field-gap-active { syntax: "*"; inherits: false; }
+@property --_warp-field-gap-active { syntax: "*"; inherits: false; }
+@property --warp-field-gap-press { syntax: "*"; inherits: false; }
+@property --_warp-field-gap-press { syntax: "*"; inherits: false; }
+@property --warp-field-local-height-hover { syntax: "*"; inherits: false; }
+@property --_warp-field-height-hover { syntax: "*"; inherits: false; }
+@property --warp-field-local-height-active { syntax: "*"; inherits: false; }
+@property --_warp-field-height-active { syntax: "*"; inherits: false; }
+@property --warp-field-local-height-press { syntax: "*"; inherits: false; }
+@property --_warp-field-height-press { syntax: "*"; inherits: false; }
+@property --warp-field-padding-inline-hover { syntax: "*"; inherits: false; }
+@property --_warp-field-padding-inline-hover { syntax: "*"; inherits: false; }
+@property --warp-field-padding-inline-active { syntax: "*"; inherits: false; }
+@property --_warp-field-padding-inline-active { syntax: "*"; inherits: false; }
+@property --warp-field-padding-inline-press { syntax: "*"; inherits: false; }
+@property --_warp-field-padding-inline-press { syntax: "*"; inherits: false; }
+@property --warp-field-font-family-hover { syntax: "*"; inherits: false; }
+@property --_warp-field-font-family-hover { syntax: "*"; inherits: false; }
+@property --warp-field-font-family-active { syntax: "*"; inherits: false; }
+@property --_warp-field-font-family-active { syntax: "*"; inherits: false; }
+@property --warp-field-font-family-press { syntax: "*"; inherits: false; }
+@property --_warp-field-font-family-press { syntax: "*"; inherits: false; }
+@property --warp-field-font-size-hover { syntax: "*"; inherits: false; }
+@property --_warp-field-font-size-hover { syntax: "*"; inherits: false; }
+@property --warp-field-font-size-active { syntax: "*"; inherits: false; }
+@property --_warp-field-font-size-active { syntax: "*"; inherits: false; }
+@property --warp-field-font-size-press { syntax: "*"; inherits: false; }
+@property --_warp-field-font-size-press { syntax: "*"; inherits: false; }
+@property --warp-field-font-weight-hover { syntax: "*"; inherits: false; }
+@property --_warp-field-font-weight-hover { syntax: "*"; inherits: false; }
+@property --warp-field-font-weight-active { syntax: "*"; inherits: false; }
+@property --_warp-field-font-weight-active { syntax: "*"; inherits: false; }
+@property --warp-field-font-weight-press { syntax: "*"; inherits: false; }
+@property --_warp-field-font-weight-press { syntax: "*"; inherits: false; }
+@property --warp-field-shadow-active { syntax: "*"; inherits: false; }
+@property --_warp-field-shadow-active { syntax: "*"; inherits: false; }
+@property --warp-field-shadow-press { syntax: "*"; inherits: false; }
+@property --_warp-field-shadow-press { syntax: "*"; inherits: false; }
+@property --warp-field-duration-hover { syntax: "*"; inherits: false; }
+@property --_warp-field-duration-hover { syntax: "*"; inherits: false; }
+@property --warp-field-duration-active { syntax: "*"; inherits: false; }
+@property --_warp-field-duration-active { syntax: "*"; inherits: false; }
+@property --warp-field-duration-press { syntax: "*"; inherits: false; }
+@property --_warp-field-duration-press { syntax: "*"; inherits: false; }
+@property --warp-field-border-width { syntax: "*"; inherits: false; }
+@property --_warp-field-border-width { syntax: "*"; inherits: false; }
+@property --warp-field-border-width-hover { syntax: "*"; inherits: false; }
+@property --_warp-field-border-width-hover { syntax: "*"; inherits: false; }
+@property --warp-field-border-width-active { syntax: "*"; inherits: false; }
+@property --_warp-field-border-width-active { syntax: "*"; inherits: false; }
+@property --warp-field-border-width-press { syntax: "*"; inherits: false; }
+@property --_warp-field-border-width-press { syntax: "*"; inherits: false; }
 @property --_warp-tabs-underline-width { syntax: "*"; inherits: false; }
 @property --warp-tabs-padding-inline { syntax: "*"; inherits: false; }
 @property --_warp-tabs-padding-inline { syntax: "*"; inherits: false; }
@@ -1367,9 +1572,9 @@
     --_warp-sweep-width: var(--_warp-sweep-width-press,var(--_warp-sweep-width-active,var(--_warp-sweep-width-hover,var(--warp-sweep-local-width,var(--warp-config-part-sweep-width)))));
     --_warp-sweep-duration: calc(var(--_warp-sweep-duration-press,var(--_warp-sweep-duration-active,var(--_warp-sweep-duration-hover,var(--warp-sweep-local-duration,var(--warp-config-part-sweep-duration))))) * var(--warp-motion-scale));
   }
-  :where([data-sweep]:hover) { --_warp-sweep-width-hover: var(--warp-sweep-local-width-hover,var(--warp-config-part-sweep-width-hover)); --_warp-sweep-duration-hover: var(--warp-sweep-local-duration-hover,var(--warp-config-part-sweep-duration-hover)); }
-  :where([data-sweep]:is([aria-current],[aria-selected="true"],[aria-pressed="true"],[data-state="open"])) { --_warp-sweep-width-active: var(--warp-sweep-local-width-active,var(--warp-config-part-sweep-width-active)); --_warp-sweep-duration-active: var(--warp-sweep-local-duration-active,var(--warp-config-part-sweep-duration-active)); }
-  :where([data-sweep]:is(:active,[data-press])) { --_warp-sweep-width-press: var(--warp-sweep-local-width-press,var(--warp-config-part-sweep-width-press)); --_warp-sweep-duration-press: var(--warp-sweep-local-duration-press,var(--warp-config-part-sweep-duration-press)); }
+  :where([data-sweep]:hover) { --_warp-sweep-width-hover: var(--warp-sweep-local-width-hover,var(--warp-sweep-local-width,var(--warp-config-part-sweep-width-hover))); --_warp-sweep-duration-hover: var(--warp-sweep-local-duration-hover,var(--warp-sweep-local-duration,var(--warp-config-part-sweep-duration-hover))); }
+  :where([data-sweep]:is([aria-current],[aria-selected="true"],[aria-pressed="true"],[data-state="open"])) { --_warp-sweep-width-active: var(--warp-sweep-local-width-active,var(--warp-sweep-local-width,var(--warp-config-part-sweep-width-active))); --_warp-sweep-duration-active: var(--warp-sweep-local-duration-active,var(--warp-sweep-local-duration,var(--warp-config-part-sweep-duration-active))); }
+  :where([data-sweep]:is(:active,[data-press])) { --_warp-sweep-width-press: var(--warp-sweep-local-width-press,var(--warp-sweep-local-width,var(--warp-config-part-sweep-width-press))); --_warp-sweep-duration-press: var(--warp-sweep-local-duration-press,var(--warp-sweep-local-duration,var(--warp-config-part-sweep-duration-press))); }
   :where([data-sweep] :not([data-sweep])),
   :where([data-sweep])::before, :where([data-sweep] :not([data-sweep]))::before,
   :where([data-sweep])::after, :where([data-sweep] :not([data-sweep]))::after {
@@ -1633,21 +1838,55 @@
   :where([data-scope="field"]) { display: grid; gap: var(--_warp-field-gap,var(--warp-field-gap,var(--warp-config-part-field-gap,0))); min-inline-size: 0; }
 /* warp-theme-only:start */
   :where([data-scope="field"]) {
-    --_warp-field-radius: var(--warp-field-radius,var(--warp-config-part-field-radius));
-    --_warp-field-gap: var(--_warp-field-gap-hover,var(--warp-field-gap,var(--warp-config-part-field-gap)));
-    --_warp-field-height: max(var(--warp-field-local-height,var(--warp-config-part-field-height)),var(--warp-target-min));
-    --_warp-field-padding-inline: var(--warp-field-padding-inline,var(--warp-config-part-field-padding-inline));
-    --_warp-field-font-family: var(--warp-field-font-family,var(--warp-config-part-field-font-family));
-    --_warp-field-font-size: var(--warp-field-font-size,var(--warp-config-part-field-font-size));
-    --_warp-field-font-weight: var(--warp-field-font-weight,var(--warp-config-part-field-font-weight));
-    --_warp-field-shadow: var(--_warp-field-shadow-hover,var(--warp-field-shadow,var(--warp-config-part-field-shadow)));
-    --_warp-field-duration: calc(var(--warp-field-duration,var(--warp-config-part-field-duration)) * var(--warp-motion-scale));
+    --_warp-field-radius: var(--_warp-field-radius-press,var(--_warp-field-radius-active,var(--_warp-field-radius-hover,var(--warp-field-radius,var(--warp-config-part-field-radius)))));
+    --_warp-field-gap: var(--_warp-field-gap-press,var(--_warp-field-gap-active,var(--_warp-field-gap-hover,var(--warp-field-gap,var(--warp-config-part-field-gap)))));
+    --_warp-field-height: max(var(--_warp-field-height-press,var(--_warp-field-height-active,var(--_warp-field-height-hover,var(--warp-field-local-height,var(--warp-config-part-field-height))))),var(--warp-target-min));
+    --_warp-field-padding-inline: var(--_warp-field-padding-inline-press,var(--_warp-field-padding-inline-active,var(--_warp-field-padding-inline-hover,var(--warp-field-padding-inline,var(--warp-config-part-field-padding-inline)))));
+    --_warp-field-font-family: var(--_warp-field-font-family-press,var(--_warp-field-font-family-active,var(--_warp-field-font-family-hover,var(--warp-field-font-family,var(--warp-config-part-field-font-family)))));
+    --_warp-field-font-size: var(--_warp-field-font-size-press,var(--_warp-field-font-size-active,var(--_warp-field-font-size-hover,var(--warp-field-font-size,var(--warp-config-part-field-font-size)))));
+    --_warp-field-font-weight: var(--_warp-field-font-weight-press,var(--_warp-field-font-weight-active,var(--_warp-field-font-weight-hover,var(--warp-field-font-weight,var(--warp-config-part-field-font-weight)))));
+    --_warp-field-shadow: var(--_warp-field-shadow-press,var(--_warp-field-shadow-active,var(--_warp-field-shadow-hover,var(--warp-field-shadow,var(--warp-config-part-field-shadow)))));
+    --_warp-field-duration: calc(var(--_warp-field-duration-press,var(--_warp-field-duration-active,var(--_warp-field-duration-hover,var(--warp-field-duration,var(--warp-config-part-field-duration))))) * var(--warp-motion-scale));
+    --_warp-field-border-width: var(--_warp-field-border-width-press,var(--_warp-field-border-width-active,var(--_warp-field-border-width-hover,var(--warp-field-border-width,var(--warp-config-part-field-border-width)))));
   }
   :where([data-scope="field"]:has(> [data-part="control"]:hover)) {
-    --_warp-field-gap-hover: var(--warp-field-gap-hover,var(--warp-config-part-field-gap-hover));
-    --_warp-field-shadow-hover: var(--warp-field-shadow-hover,var(--warp-config-part-field-shadow-hover));
+    --_warp-field-radius-hover: var(--warp-field-radius-hover,var(--warp-field-radius,var(--warp-config-part-field-radius-hover)));
+    --_warp-field-gap-hover: var(--warp-field-gap-hover,var(--warp-field-gap,var(--warp-config-part-field-gap-hover)));
+    --_warp-field-height-hover: var(--warp-field-local-height-hover,var(--warp-field-local-height,var(--warp-config-part-field-height-hover)));
+    --_warp-field-padding-inline-hover: var(--warp-field-padding-inline-hover,var(--warp-field-padding-inline,var(--warp-config-part-field-padding-inline-hover)));
+    --_warp-field-font-family-hover: var(--warp-field-font-family-hover,var(--warp-field-font-family,var(--warp-config-part-field-font-family-hover)));
+    --_warp-field-font-size-hover: var(--warp-field-font-size-hover,var(--warp-field-font-size,var(--warp-config-part-field-font-size-hover)));
+    --_warp-field-font-weight-hover: var(--warp-field-font-weight-hover,var(--warp-field-font-weight,var(--warp-config-part-field-font-weight-hover)));
+    --_warp-field-shadow-hover: var(--warp-field-shadow-hover,var(--warp-field-shadow,var(--warp-config-part-field-shadow-hover)));
+    --_warp-field-duration-hover: var(--warp-field-duration-hover,var(--warp-field-duration,var(--warp-config-part-field-duration-hover)));
+    --_warp-field-border-width-hover: var(--warp-field-border-width-hover,var(--warp-field-border-width,var(--warp-config-part-field-border-width-hover)));
+  }
+  :where([data-scope="field"]:is([data-active],[data-open],[data-state="active"]):not([data-disabled])) {
+    --_warp-field-radius-active: var(--warp-field-radius-active,var(--warp-field-radius,var(--warp-config-part-field-radius-active)));
+    --_warp-field-gap-active: var(--warp-field-gap-active,var(--warp-field-gap,var(--warp-config-part-field-gap-active)));
+    --_warp-field-height-active: var(--warp-field-local-height-active,var(--warp-field-local-height,var(--warp-config-part-field-height-active)));
+    --_warp-field-padding-inline-active: var(--warp-field-padding-inline-active,var(--warp-field-padding-inline,var(--warp-config-part-field-padding-inline-active)));
+    --_warp-field-font-family-active: var(--warp-field-font-family-active,var(--warp-field-font-family,var(--warp-config-part-field-font-family-active)));
+    --_warp-field-font-size-active: var(--warp-field-font-size-active,var(--warp-field-font-size,var(--warp-config-part-field-font-size-active)));
+    --_warp-field-font-weight-active: var(--warp-field-font-weight-active,var(--warp-field-font-weight,var(--warp-config-part-field-font-weight-active)));
+    --_warp-field-shadow-active: var(--warp-field-shadow-active,var(--warp-field-shadow,var(--warp-config-part-field-shadow-active)));
+    --_warp-field-duration-active: var(--warp-field-duration-active,var(--warp-field-duration,var(--warp-config-part-field-duration-active)));
+    --_warp-field-border-width-active: var(--warp-field-border-width-active,var(--warp-field-border-width,var(--warp-config-part-field-border-width-active)));
+  }
+  :where([data-scope="field"]:is([data-press],:has(> [data-part="control"]:is(:active,[data-press]))):not([data-disabled])) {
+    --_warp-field-radius-press: var(--warp-field-radius-press,var(--warp-field-radius,var(--warp-config-part-field-radius-press)));
+    --_warp-field-gap-press: var(--warp-field-gap-press,var(--warp-field-gap,var(--warp-config-part-field-gap-press)));
+    --_warp-field-height-press: var(--warp-field-local-height-press,var(--warp-field-local-height,var(--warp-config-part-field-height-press)));
+    --_warp-field-padding-inline-press: var(--warp-field-padding-inline-press,var(--warp-field-padding-inline,var(--warp-config-part-field-padding-inline-press)));
+    --_warp-field-font-family-press: var(--warp-field-font-family-press,var(--warp-field-font-family,var(--warp-config-part-field-font-family-press)));
+    --_warp-field-font-size-press: var(--warp-field-font-size-press,var(--warp-field-font-size,var(--warp-config-part-field-font-size-press)));
+    --_warp-field-font-weight-press: var(--warp-field-font-weight-press,var(--warp-field-font-weight,var(--warp-config-part-field-font-weight-press)));
+    --_warp-field-shadow-press: var(--warp-field-shadow-press,var(--warp-field-shadow,var(--warp-config-part-field-shadow-press)));
+    --_warp-field-duration-press: var(--warp-field-duration-press,var(--warp-field-duration,var(--warp-config-part-field-duration-press)));
+    --_warp-field-border-width-press: var(--warp-field-border-width-press,var(--warp-field-border-width,var(--warp-config-part-field-border-width-press)));
   }
   :where([data-scope="field"] :not([data-scope="field"])) {
+    --_warp-field-border-width: inherit;
     --_warp-field-radius: inherit;
     --_warp-field-gap: inherit;
     --_warp-field-height: inherit;

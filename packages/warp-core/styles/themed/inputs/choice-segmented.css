@@ -82,7 +82,7 @@
 }
 :where([data-scope="segmented"]:has(input:focus-visible)) { box-shadow: inset 0 0 0 var(--warp-sweep-base-width) var(--warp-color-sweep-base); }
 :where([data-scope="segmented"] > label[data-sweep]) { --warp-sweep-radius: var(--warp-radius-control); border-radius: var(--warp-radius-control); }
-:where([data-scope="segmented"] > label[data-sweep]) > :where([data-part="sweep"]) { z-index: 1; border-width: var(--_warp-sweep-width,var(--warp-sweep-width)); }
+:where([data-scope="segmented"] > label[data-sweep]) > :where([data-part="sweep"]) { z-index: 1; border-width: var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))); }
 :where([data-scope="segmented"] > label:has(input:checked)) > :where([data-part="sweep"]) { visibility: hidden; }
 :where([data-scope="segmented"] label) { position: relative; z-index: 3; display: flex; }
 :where([data-scope="segmented"] input) { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }

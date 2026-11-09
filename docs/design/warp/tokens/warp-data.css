@@ -783,20 +783,63 @@
 /* card + card grid (a card sweeps only when it opts in) */
 :where([data-scope="card-grid"]) { display: grid; gap: var(--warp-space-group); grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); list-style: none; margin: 0; padding: 0; }
 :where([data-scope="card"]) {
-  position: relative; display: grid; gap: var(--_warp-card-gap-hover,var(--warp-card-gap,var(--warp-config-part-card-gap,8px))); align-content: start; padding: var(--_warp-card-padding-hover,var(--warp-card-padding,var(--warp-config-part-card-padding,var(--warp-pad-surface))));
-  background: var(--warp-color-surface-raised); border-radius: var(--_warp-card-radius-hover,var(--warp-card-radius,var(--warp-config-part-card-radius,var(--warp-radius-surface)))); box-shadow: var(--warp-card-shadow,var(--warp-config-part-card-shadow,var(--warp-elevation-1)));
+  position: relative; display: grid; gap: var(--_warp-card-gap,var(--_warp-card-gap-hover,var(--warp-card-gap,var(--warp-config-part-card-gap,8px)))); align-content: start; padding: var(--_warp-card-padding,var(--_warp-card-padding-hover,var(--warp-card-padding,var(--warp-config-part-card-padding,var(--warp-pad-surface)))));
+  background: var(--warp-color-surface-raised); border-radius: var(--_warp-card-radius,var(--_warp-card-radius-hover,var(--warp-card-radius,var(--warp-config-part-card-radius,var(--warp-radius-surface))))); box-shadow: var(--_warp-card-shadow,var(--warp-card-shadow,var(--warp-config-part-card-shadow,var(--warp-elevation-1))));
   color: inherit; text-decoration: none;
 }
 /* warp-theme-only:start */
-:where([data-scope="card"]:hover) { box-shadow: var(--warp-card-shadow-hover,var(--warp-config-part-card-shadow-hover,var(--warp-card-shadow,var(--warp-config-part-card-shadow,var(--warp-elevation-1))))); }
-/* warp-theme-only:end */
-/* warp-theme-only:start */
-:where([data-scope="card"]:hover) { --_warp-card-gap-hover: var(--warp-card-gap-hover,var(--warp-config-part-card-gap-hover)); --_warp-card-padding-hover: var(--warp-card-padding-hover,var(--warp-config-part-card-padding-hover)); --_warp-card-radius-hover: var(--warp-card-radius-hover,var(--warp-config-part-card-radius-hover)); }
+:where([data-scope="card"]) {
+  --_warp-card-gap: var(--_warp-card-gap-press,var(--_warp-card-gap-active,var(--_warp-card-gap-hover,var(--warp-card-gap,var(--warp-config-part-card-gap)))));
+  --_warp-card-padding: var(--_warp-card-padding-press,var(--_warp-card-padding-active,var(--_warp-card-padding-hover,var(--warp-card-padding,var(--warp-config-part-card-padding)))));
+  --_warp-card-radius: var(--_warp-card-radius-press,var(--_warp-card-radius-active,var(--_warp-card-radius-hover,var(--warp-card-radius,var(--warp-config-part-card-radius)))));
+  --_warp-card-shadow: var(--_warp-card-shadow-press,var(--_warp-card-shadow-active,var(--_warp-card-shadow-hover,var(--warp-card-shadow,var(--warp-config-part-card-shadow)))));
+  --_warp-card-font-family: var(--_warp-card-font-family-press,var(--_warp-card-font-family-active,var(--_warp-card-font-family-hover,var(--warp-card-font-family,var(--warp-config-part-card-font-family)))));
+  --_warp-card-font-size: var(--_warp-card-font-size-press,var(--_warp-card-font-size-active,var(--_warp-card-font-size-hover,var(--warp-card-font-size,var(--warp-config-part-card-font-size)))));
+  --_warp-card-font-weight: var(--_warp-card-font-weight-press,var(--_warp-card-font-weight-active,var(--_warp-card-font-weight-hover,var(--warp-card-font-weight,var(--warp-config-part-card-font-weight)))));
+  --_warp-card-border-width: var(--_warp-card-border-width-press,var(--_warp-card-border-width-active,var(--_warp-card-border-width-hover,var(--warp-card-border-width,var(--warp-config-part-card-border-width)))));
+  --_warp-card-duration: calc(var(--_warp-card-duration-press,var(--_warp-card-duration-active,var(--_warp-card-duration-hover,var(--warp-card-duration,var(--warp-config-part-card-duration))))) * var(--warp-motion-scale));
+  font-family: var(--_warp-card-font-family,inherit); font-size: var(--_warp-card-font-size,inherit); font-weight: var(--_warp-card-font-weight,inherit);
+  border: var(--_warp-card-border-width,0) solid currentColor; transition: background-color var(--_warp-card-duration,0s), box-shadow var(--_warp-card-duration,0s);
+}
+:where([data-scope="card"]:hover) {
+  --_warp-card-gap-hover: var(--warp-card-gap-hover,var(--warp-card-gap,var(--warp-config-part-card-gap-hover)));
+  --_warp-card-padding-hover: var(--warp-card-padding-hover,var(--warp-card-padding,var(--warp-config-part-card-padding-hover)));
+  --_warp-card-radius-hover: var(--warp-card-radius-hover,var(--warp-card-radius,var(--warp-config-part-card-radius-hover)));
+  --_warp-card-shadow-hover: var(--warp-card-shadow-hover,var(--warp-card-shadow,var(--warp-config-part-card-shadow-hover)));
+  --_warp-card-font-family-hover: var(--warp-card-font-family-hover,var(--warp-card-font-family,var(--warp-config-part-card-font-family-hover)));
+  --_warp-card-font-size-hover: var(--warp-card-font-size-hover,var(--warp-card-font-size,var(--warp-config-part-card-font-size-hover)));
+  --_warp-card-font-weight-hover: var(--warp-card-font-weight-hover,var(--warp-card-font-weight,var(--warp-config-part-card-font-weight-hover)));
+  --_warp-card-border-width-hover: var(--warp-card-border-width-hover,var(--warp-card-border-width,var(--warp-config-part-card-border-width-hover)));
+  --_warp-card-duration-hover: var(--warp-card-duration-hover,var(--warp-card-duration,var(--warp-config-part-card-duration-hover)));
+}
+:where([data-scope="card"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"],[data-active])) {
+  --_warp-card-gap-active: var(--warp-card-gap-active,var(--warp-card-gap,var(--warp-config-part-card-gap-active)));
+  --_warp-card-padding-active: var(--warp-card-padding-active,var(--warp-card-padding,var(--warp-config-part-card-padding-active)));
+  --_warp-card-radius-active: var(--warp-card-radius-active,var(--warp-card-radius,var(--warp-config-part-card-radius-active)));
+  --_warp-card-shadow-active: var(--warp-card-shadow-active,var(--warp-card-shadow,var(--warp-config-part-card-shadow-active)));
+  --_warp-card-font-family-active: var(--warp-card-font-family-active,var(--warp-card-font-family,var(--warp-config-part-card-font-family-active)));
+  --_warp-card-font-size-active: var(--warp-card-font-size-active,var(--warp-card-font-size,var(--warp-config-part-card-font-size-active)));
+  --_warp-card-font-weight-active: var(--warp-card-font-weight-active,var(--warp-card-font-weight,var(--warp-config-part-card-font-weight-active)));
+  --_warp-card-border-width-active: var(--warp-card-border-width-active,var(--warp-card-border-width,var(--warp-config-part-card-border-width-active)));
+  --_warp-card-duration-active: var(--warp-card-duration-active,var(--warp-card-duration,var(--warp-config-part-card-duration-active)));
+}
+:where([data-scope="card"]:is(:active,[data-press])) {
+  --_warp-card-gap-press: var(--warp-card-gap-press,var(--warp-card-gap,var(--warp-config-part-card-gap-press)));
+  --_warp-card-padding-press: var(--warp-card-padding-press,var(--warp-card-padding,var(--warp-config-part-card-padding-press)));
+  --_warp-card-radius-press: var(--warp-card-radius-press,var(--warp-card-radius,var(--warp-config-part-card-radius-press)));
+  --_warp-card-shadow-press: var(--warp-card-shadow-press,var(--warp-card-shadow,var(--warp-config-part-card-shadow-press)));
+  --_warp-card-font-family-press: var(--warp-card-font-family-press,var(--warp-card-font-family,var(--warp-config-part-card-font-family-press)));
+  --_warp-card-font-size-press: var(--warp-card-font-size-press,var(--warp-card-font-size,var(--warp-config-part-card-font-size-press)));
+  --_warp-card-font-weight-press: var(--warp-card-font-weight-press,var(--warp-card-font-weight,var(--warp-config-part-card-font-weight-press)));
+  --_warp-card-border-width-press: var(--warp-card-border-width-press,var(--warp-card-border-width,var(--warp-config-part-card-border-width-press)));
+  --_warp-card-duration-press: var(--warp-card-duration-press,var(--warp-card-duration,var(--warp-config-part-card-duration-press)));
+}
+:where([data-scope="card"] :not([data-scope="card"])) { --_warp-card-font-family: inherit; --_warp-card-font-size: inherit; --_warp-card-font-weight: inherit; }
 /* warp-theme-only:end */
 :where([data-scope="card"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
 :where([data-scope="card"] :is(h3)),
-:where([data-scope="card"] :is(h4)) { margin: 0; font-size: calc(var(--warp-text-body-size) + 1px); font-weight: 600; }
-:where([data-scope="card"] p) { margin: 0; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="card"] :is(h4)) { margin: 0; font-size: var(--_warp-card-font-size,calc(var(--warp-text-body-size) + 1px)); font-weight: var(--_warp-card-font-weight,600); }
+:where([data-scope="card"] p) { margin: 0; color: var(--warp-color-text-subtle); font-size: var(--_warp-card-font-size,var(--warp-text-caption-size)); }
 
 /* ===========================================================================
    KANBAN · columns are lists; cards drag on pointer, move-menu on touch + keys

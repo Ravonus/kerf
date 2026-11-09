@@ -50,7 +50,7 @@
   clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--warp-sweep-radius));
 }
 :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after {
-  z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on); border: var(--_warp-sweep-width,var(--warp-sweep-width)) solid currentColor;
+  z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on); border: var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))) solid currentColor;
   clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
 }
 :where([data-scope="checkbox"][data-invalid]) > [data-part="control"][data-sweep]::after { color: var(--warp-color-sweep-critical); opacity: 1; }

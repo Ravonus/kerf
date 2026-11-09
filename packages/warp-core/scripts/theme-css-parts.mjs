@@ -11,11 +11,13 @@ const { chromium } = require('playwright-core')
 const styles = new URL('../styles/', import.meta.url)
 const read = (path) =>
   readFileSync(
-    path === 'themed/data/card.css' && process.env.WEFT_CARD_CSS
-      ? process.env.WEFT_CARD_CSS
-      : path === 'themed/warp.css' && process.env.WEFT_FOUNDATION_CSS
-        ? process.env.WEFT_FOUNDATION_CSS
-        : new URL(path, styles),
+    path === process.env.WEFT_MUTANT_PATH && process.env.WEFT_MUTANT_CSS
+      ? process.env.WEFT_MUTANT_CSS
+      : path === 'themed/data/card.css' && process.env.WEFT_CARD_CSS
+        ? process.env.WEFT_CARD_CSS
+        : path === 'themed/warp.css' && process.env.WEFT_FOUNDATION_CSS
+          ? process.env.WEFT_FOUNDATION_CSS
+          : new URL(path, styles),
     'utf8',
   )
 const sheets = [
@@ -305,6 +307,319 @@ void test('field inputs follow their host and preserve nested isolation', async 
       el.style.setProperty('--warp-target-min', '44px')
     })
     assert.equal(await get('#field-control', 'minBlockSize'), '44px')
+  } finally {
+    await page.close()
+  }
+})
+
+void test('each requested host responds when its local input changes', async () => {
+  const page = await render(
+    true,
+    `<button id="change-button" data-scope="button" data-size="sm">Button</button>
+    <div id="change-sweep" data-sweep><i data-part="sweep"></i></div>
+    <nav id="change-nav" data-scope="nav"><a>Nav</a></nav>
+    <div id="change-tabs" data-scope="tabs" data-part="root" data-variant="enclosed"><div data-part="list"><button data-part="trigger" aria-selected="true">Tab</button></div></div>
+    <a id="change-link" data-scope="link" href="#">Link</a>
+    <span id="change-pill" data-scope="pill">Pill</span>
+    <div id="change-field" data-scope="field"><div data-part="control" data-sweep><input data-part="input"></div></div>
+    <div id="change-card" data-scope="card">Card</div>`,
+    '* { transition:none!important }',
+  )
+  try {
+    const cases = [
+      ['button', 'gap', '--warp-button-gap', '13px', '14px', ''],
+      ['sweep', 'borderTopWidth', '--warp-sweep-local-width', '3px', '4px', ' [data-part="sweep"]'],
+      ['nav', 'fontSize', '--warp-nav-font-size', '15px', '16px', ' a'],
+      [
+        'tabs',
+        'borderTopWidth',
+        '--warp-tabs-border-width',
+        '2px',
+        '4px',
+        ' [data-part="trigger"]',
+      ],
+      ['link', 'borderRadius', '--warp-link-radius', '4px', '6px', ''],
+      ['pill', 'height', '--warp-pill-height', '37px', '39px', ''],
+      [
+        'field',
+        'paddingLeft',
+        '--warp-field-padding-inline',
+        '12px',
+        '20px',
+        ' [data-part="control"]',
+      ],
+      ['card', 'borderTopWidth', '--warp-card-border-width', '2px', '4px', ''],
+    ]
+    for (const [part, property, variable, first, second, child] of cases) {
+      const host = page.locator(`#change-${part}`)
+      const target = page.locator(`#change-${part}${child}`)
+      const sample = async (value) => {
+        await host.evaluate(
+          (el, [name, next]) => el.style.setProperty(name, next),
+          [variable, value],
+        )
+        return target.evaluate((el, key) => getComputedStyle(el)[key], property)
+      }
+      assert.equal(await sample(first), first, `${part} first`)
+      assert.equal(await sample(second), second, `${part} changed`)
+    }
+  } finally {
+    await page.close()
+  }
+})
+
+void test('Button duration states and emphasis shadows keep their fallbacks', async () => {
+  const page = await render(
+    true,
+    `<button id="variant" data-scope="button" data-size="sm" data-emphasis="frame"
+    style="--warp-button-duration:120ms;--warp-button-duration-hover:180ms;--warp-button-duration-press:70ms;
+    --warp-button-shadow:0 0 2px red;--warp-button-shadow-hover:0 0 3px blue;--warp-button-shadow-press:0 0 4px green">Button</button>`,
+  )
+  try {
+    const button = page.locator('#variant')
+    const get = (key) => button.evaluate((el, prop) => getComputedStyle(el)[prop], key)
+    assert.match(await get('transitionDuration'), /0.12s/)
+    assert.match(await get('boxShadow'), /rgb\(255, 0, 0\).*2px/)
+    await button.hover()
+    assert.match(await get('transitionDuration'), /0.18s/)
+    await page.addStyleTag({ content: '#variant { transition-property:none!important }' })
+    assert.match(await get('boxShadow'), /rgb\(0, 0, 255\).*3px/)
+    await button.evaluate((el) => el.setAttribute('data-press', ''))
+    assert.match(await get('transitionDuration'), /0.07s/)
+    assert.match(await get('boxShadow'), /rgb\(0, 128, 0\).*4px/)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    assert.equal(await get('transitionDuration'), '0s')
+  } finally {
+    await page.close()
+  }
+})
+
+void test('Nav, Tabs, Field and Card states respect local inputs and nested hosts', async () => {
+  const page = await render(
+    true,
+    `<div style="--warp-config-part-nav-font-size-active:30px;--warp-config-part-field-gap-active:31px">
+    <nav id="state-nav" data-scope="nav" style="--warp-nav-font-size:16px;--warp-nav-font-size-active:22px;
+      --warp-nav-border-width:2px;--warp-nav-border-width-active:4px;--warp-nav-radius:8px">
+      <a id="nav-link" aria-current="page">Nav</a><nav id="inner-nav" data-scope="nav"><a>Nested</a></nav></nav>
+    <div id="state-tabs" data-scope="tabs" data-part="root" data-variant="enclosed" style="--warp-tabs-border-width:3px;
+      --warp-tabs-border-width-active:5px;--warp-tabs-shadow-active:0 0 4px red"><div data-part="list">
+      <button id="state-tab" data-part="trigger" aria-selected="true">Tab</button></div></div>
+    <div id="state-field" data-scope="field" style="--warp-field-gap:12px;--warp-field-gap-active:20px;--warp-field-gap-press:24px;
+      --warp-field-border-width-active:4px;--warp-field-border-width-press:5px;--warp-field-font-size-active:19px">
+      <div id="state-control" data-part="control" data-sweep><i data-part="sweep"></i><input data-part="input"></div>
+      <div id="nested-field" data-scope="field"><div data-part="control" data-sweep><input data-part="input"></div></div></div>
+    <div id="state-card" data-scope="card" style="--warp-card-font-size:18px;--warp-card-font-size-active:21px;
+      --warp-card-font-size-press:24px;--warp-card-border-width-active:3px;--warp-card-border-width-press:4px;
+      --warp-card-shadow-active:0 0 4px red;--warp-card-duration:140ms"><h3>Card</h3>
+      <div id="nested-card" data-scope="card"><h3>Nested</h3></div></div></div>`,
+    '* { transition:none!important }',
+  )
+  try {
+    const get = (selector, property) =>
+      page.locator(selector).evaluate((el, key) => getComputedStyle(el)[key], property)
+    assert.equal(await get('#nav-link', 'fontSize'), '22px')
+    assert.equal(await get('#nav-link', 'borderTopWidth'), '4px')
+    assert.notEqual(await get('#inner-nav a', 'fontSize'), '22px')
+    await page
+      .locator('#state-nav')
+      .evaluate((el) => el.style.removeProperty('--warp-nav-font-size-active'))
+    assert.equal(await get('#nav-link', 'fontSize'), '16px')
+    await page
+      .locator('#state-nav')
+      .evaluate((el) => el.style.removeProperty('--warp-nav-font-size'))
+    assert.equal(await get('#nav-link', 'fontSize'), '30px')
+    assert.equal(await get('#state-tab', 'borderTopWidth'), '5px')
+    assert.match(await get('#state-tab', 'boxShadow'), /rgb\(255, 0, 0\).*4px/)
+    await page.locator('#state-field').evaluate((el) => el.setAttribute('data-active', ''))
+    assert.equal(await get('#state-control', 'gap'), '20px')
+    assert.equal(await get('#state-control [data-part="sweep"]', 'borderTopWidth'), '4px')
+    assert.equal(await get('#state-control input', 'fontSize'), '19px')
+    assert.notEqual(await get('#nested-field input', 'fontSize'), '19px')
+    await page.locator('#state-field').evaluate((el) => el.setAttribute('data-press', ''))
+    assert.equal(await get('#state-control', 'gap'), '24px')
+    assert.equal(await get('#state-control [data-part="sweep"]', 'borderTopWidth'), '5px')
+    await page.locator('#state-card').evaluate((el) => el.setAttribute('data-active', ''))
+    assert.equal(await get('#state-card > h3', 'fontSize'), '21px')
+    assert.equal(await get('#state-card', 'borderTopWidth'), '3px')
+    assert.match(await get('#state-card', 'boxShadow'), /rgb\(255, 0, 0\).*4px/)
+    assert.notEqual(await get('#nested-card > h3', 'fontSize'), '21px')
+    await page.locator('#state-card').evaluate((el) => el.setAttribute('data-press', ''))
+    assert.equal(await get('#state-card > h3', 'fontSize'), '24px')
+    assert.equal(await get('#state-card', 'borderTopWidth'), '4px')
+  } finally {
+    await page.close()
+  }
+})
+
+void test('local rest and state values precede inherited state configuration', async () => {
+  const page = await render(
+    true,
+    `<div style="--warp-config-part-button-gap-press:31px;--warp-config-part-sweep-width-press:6px;
+    --warp-config-part-nav-font-size-active:30px;--warp-config-part-tabs-border-width-active:6px;
+    --warp-config-part-link-radius-hover:30px;--warp-config-part-pill-height-active:50px;
+    --warp-config-part-field-gap-active:31px;--warp-config-part-card-border-width-active:7px">
+    <button id="order-button" data-scope="button" data-press>Button</button>
+    <div id="order-sweep" data-sweep data-press><i data-part="sweep"></i></div>
+    <nav id="order-nav" data-scope="nav"><a aria-current="page">Nav</a></nav>
+    <div id="order-tabs" data-scope="tabs" data-part="root" data-variant="enclosed"><div data-part="list"><button data-part="trigger" aria-selected="true">Tab</button></div></div>
+    <a id="order-link" data-scope="link" href="#">Link</a>
+    <span id="order-pill" data-scope="pill" aria-selected="true">Pill</span>
+    <div id="order-field" data-scope="field" data-active><div data-part="control" data-sweep><input data-part="input"></div></div>
+    <div id="order-card" data-scope="card" data-active>Card</div></div>`,
+    '* { transition:none!important }',
+  )
+  try {
+    const cases = [
+      ['button', 'gap', 'button-gap', 'button-gap-press', '13px', '17px', '31px', ''],
+      [
+        'sweep',
+        'borderTopWidth',
+        'sweep-local-width',
+        'sweep-local-width-press',
+        '3px',
+        '4px',
+        '6px',
+        ' [data-part="sweep"]',
+      ],
+      ['nav', 'fontSize', 'nav-font-size', 'nav-font-size-active', '16px', '22px', '30px', ' a'],
+      [
+        'tabs',
+        'borderTopWidth',
+        'tabs-border-width',
+        'tabs-border-width-active',
+        '2px',
+        '4px',
+        '6px',
+        ' [data-part="trigger"]',
+      ],
+      ['link', 'borderRadius', 'link-radius', 'link-radius-hover', '4px', '6px', '30px', ''],
+      ['pill', 'height', 'pill-height', 'pill-height-active', '37px', '39px', '50px', ''],
+      [
+        'field',
+        'gap',
+        'field-gap',
+        'field-gap-active',
+        '12px',
+        '20px',
+        '31px',
+        ' [data-part="control"]',
+      ],
+      [
+        'card',
+        'borderTopWidth',
+        'card-border-width',
+        'card-border-width-active',
+        '2px',
+        '4px',
+        '7px',
+        '',
+      ],
+    ]
+    for (const [
+      part,
+      property,
+      rest,
+      state,
+      localRest,
+      localState,
+      configuredState,
+      child,
+    ] of cases) {
+      const host = page.locator(`#order-${part}`)
+      const target = page.locator(`#order-${part}${child}`)
+      if (part === 'link') await host.hover()
+      const set = (name, value) =>
+        host.evaluate(
+          (el, [key, next]) => el.style.setProperty(`--warp-${key}`, next),
+          [name, value],
+        )
+      const read = () => target.evaluate((el, key) => getComputedStyle(el)[key], property)
+      await set(rest, localRest)
+      assert.equal(await read(), localRest, `${part} local rest`)
+      await set(state, localState)
+      assert.equal(await read(), localState, `${part} local state`)
+      await host.evaluate(
+        (el, names) => names.forEach((name) => el.style.removeProperty(`--warp-${name}`)),
+        [rest, state],
+      )
+      assert.equal(await read(), configuredState, `${part} inherited state`)
+    }
+  } finally {
+    await page.close()
+  }
+})
+
+void test('Button variants keep default geometry and shadow across states', async () => {
+  const sample = async (themed, emphasis, size) => {
+    const page = await render(
+      themed,
+      `<button id="parity-button" data-scope="button"
+      ${emphasis ? `data-emphasis="${emphasis}"` : ''} ${size ? `data-size="${size}"` : ''}>Button</button>`,
+      '* { transition:none!important;animation:none!important }',
+    )
+    try {
+      const button = page.locator('#parity-button')
+      const read = () =>
+        button.evaluate((el) => {
+          const style = getComputedStyle(el)
+          return [style.boxShadow, style.gap, style.paddingInline, style.borderRadius, style.font]
+        })
+      const values = [await read()]
+      await button.hover()
+      values.push(await read())
+      await button.evaluate((el) => el.setAttribute('data-press', ''))
+      values.push(await read())
+      return values
+    } finally {
+      await page.close()
+    }
+  }
+  for (const emphasis of ['', 'soft', 'outline', 'ghost', 'frame', 'link']) {
+    for (const size of ['', 'sm', 'lg']) {
+      assert.deepEqual(
+        await sample(true, emphasis, size),
+        await sample(false, emphasis, size),
+        `${emphasis}/${size}`,
+      )
+    }
+  }
+})
+
+void test('variant radius, indicator widths and Link clocks follow state inputs', async () => {
+  const page = await render(
+    true,
+    `<button id="frame-variant" data-scope="button" data-emphasis="frame"
+      style="--warp-button-radius:6px;--warp-button-radius-hover:9px;--warp-button-radius-press:11px">Button</button>
+    <nav id="width-nav" data-scope="nav" data-axis="x" style="--warp-nav-underline-width-active:4px;--warp-nav-underline-width-hover:5px">
+      <a aria-current="page">Nav</a><i data-part="indicator"></i></nav>
+    <div id="width-tabs" data-scope="tabs" data-part="root" style="--warp-tabs-underline-width-active:6px;--warp-tabs-underline-width-hover:7px"><div data-part="list">
+      <button data-part="trigger" aria-selected="true">Tab</button><i data-part="indicator"></i></div></div>
+    <a id="clock-link" data-scope="link" href="#" style="--warp-link-duration:150ms;--warp-link-duration-hover:210ms;--warp-link-duration-press:70ms">Link</a>`,
+  )
+  try {
+    const get = (selector, property) =>
+      page.locator(selector).evaluate((el, key) => getComputedStyle(el)[key], property)
+    assert.equal(await get('#frame-variant', 'borderRadius'), '6px')
+    await page.locator('#frame-variant').hover()
+    assert.equal(await get('#frame-variant', 'borderRadius'), '9px')
+    await page.locator('#frame-variant').evaluate((el) => el.setAttribute('data-press', ''))
+    assert.equal(await get('#frame-variant', 'borderRadius'), '11px')
+    assert.equal(await get('#width-nav [data-part="indicator"]', 'blockSize'), '4px')
+    await page.locator('#width-nav a').evaluate((el) => el.removeAttribute('aria-current'))
+    await page.locator('#width-nav').hover()
+    assert.equal(await get('#width-nav [data-part="indicator"]', 'blockSize'), '5px')
+    assert.equal(await get('#width-tabs [data-part="indicator"]', 'blockSize'), '6px')
+    await page
+      .locator('#width-tabs [data-part="trigger"]')
+      .evaluate((el) => el.removeAttribute('aria-selected'))
+    await page.locator('#width-tabs [data-part="trigger"]').hover()
+    assert.equal(await get('#width-tabs [data-part="indicator"]', 'blockSize'), '7px')
+    assert.match(await get('#clock-link', 'transitionDuration'), /0.15s/)
+    await page.locator('#clock-link').hover()
+    assert.match(await get('#clock-link', 'transitionDuration'), /0.21s/)
+    await page.mouse.down()
+    assert.match(await get('#clock-link', 'transitionDuration'), /0.07s/)
+    await page.mouse.up()
   } finally {
     await page.close()
   }

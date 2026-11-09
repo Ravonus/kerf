@@ -50,7 +50,7 @@
   position: absolute; inset: 0; box-sizing: border-box; pointer-events: none; border-radius: inherit;
   border: 0 solid currentColor;
 }
-:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"]:empty) { border-width: var(--_warp-sweep-width,var(--warp-sweep-width)); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"]:empty) { border-width: var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))); }
 :where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep-base"]:empty) { border-width: var(--warp-sweep-base-width); }
 :where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep-base"]) { z-index: 1; color: var(--_base, var(--warp-color-sweep-base)); clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0)) round var(--_round, var(--warp-sweep-radius))); }
 :where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"]) { z-index: 2; color: var(--_tint, var(--warp-color-sweep)); opacity: 1; clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--_round, var(--warp-sweep-radius))); }
@@ -63,7 +63,7 @@
 :where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > [data-part="icon"] > :where([data-part="sweep"]) { color: var(--warp-color-sweep); clip-path: inset(0 var(--_sr) 0 var(--_sl)); }
 /* keyboard focus is heavier than hover: +1px on the swept line */
 :where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]:is(:focus-visible, :has(:focus-visible), [data-focus])) > :where([data-part="sweep"]:empty),
-:where([data-scope="field"] > [data-part="control"]:focus-within) > :where([data-part="sweep"]:empty) { border-width: calc(var(--_warp-sweep-width,var(--warp-sweep-width)) + 1px); }
+:where([data-scope="field"] > [data-part="control"]:focus-within) > :where([data-part="sweep"]:empty) { border-width: calc(var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))) + 1px); }
 /* error: the danger sweep is pinned in, at field level or on the host */
 :where([data-scope="field"][data-invalid] > [data-part="control"], :is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-invalid]) > :where([data-part="sweep"]) {
   color: var(--warp-color-sweep-critical);
@@ -215,9 +215,9 @@
 }
 :where([data-scope="field"][data-appearance="line"] > [data-part="control"]) > :where([data-part="sweep-base"]) { color: var(--warp-color-sweep-base); /* ink: sweep-vs-base ≥ 3:1 (review 03 M9) */ }
 :where([data-scope="field"][data-appearance="line"] > [data-part="control"]) > :where([data-part="sweep"]) {
-  border-top-width: var(--_warp-sweep-width,var(--warp-sweep-width));
+  border-top-width: var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width)));
 }
-:where([data-scope="field"][data-appearance="line"] > [data-part="control"]:focus-within) > :where([data-part="sweep"]) { border-top-width: calc(var(--_warp-sweep-width,var(--warp-sweep-width)) + 1px); }
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]:focus-within) > :where([data-part="sweep"]) { border-top-width: calc(var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))) + 1px); }
 :where([data-scope="field"][data-appearance="line"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="label"]) { background: none; padding-inline: 0; }
 :where([data-scope="field"][data-appearance="line"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]) {
   inset-block-start: -4px; inset-inline-start: 0;
@@ -394,7 +394,7 @@
   clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--warp-sweep-radius));
 }
 :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after {
-  z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on); border: var(--_warp-sweep-width,var(--warp-sweep-width)) solid currentColor;
+  z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on); border: var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))) solid currentColor;
   clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
 }
 :where([data-scope="checkbox"][data-invalid]) > [data-part="control"][data-sweep]::after { color: var(--warp-color-sweep-critical); opacity: 1; }
@@ -437,7 +437,7 @@
   border-radius: var(--warp-radius-round); background: var(--warp-color-text-subtle); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);   /* the knob's corners follow the track's */
 }
 :where([data-scope="switch"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(20px); background: var(--warp-color-accent-on-solid); }
-:where([data-scope="switch"]) > input:focus-visible + [data-part="track"] > [data-part="sweep"] { border-width: calc(var(--_warp-sweep-width,var(--warp-sweep-width)) + 1px); }
+:where([data-scope="switch"]) > input:focus-visible + [data-part="track"] > [data-part="sweep"] { border-width: calc(var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))) + 1px); }
 :where([data-scope="switch"][data-size="sm"]) > [data-part="track"] { inline-size: 36px; block-size: 20px; }
 :where([data-scope="switch"][data-size="sm"] [data-part="thumb"]) { inline-size: 14px; block-size: 14px; }
 :where([data-scope="switch"][data-size="sm"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(16px); }
@@ -477,7 +477,7 @@
 :where([data-scope="choice-card"] [data-part="meta"]) { grid-row: 1; grid-column: 2; font-variant-numeric: tabular-nums; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
 :where([data-scope="choice-card"]:has(input:checked)) { background: var(--warp-color-accent-soft); }
 :where([data-scope="choice-card"]:has(input:checked)) { --_a: 1; }
-:where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep"] { border-width: calc(var(--_warp-sweep-width,var(--warp-sweep-width)) + 0.5px); }
+:where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep"] { border-width: calc(var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))) + 0.5px); }
 :where([data-scope="choice-card"]:has(input:checked) [data-part="meta"]) { color: var(--warp-color-accent-text); }
 
 /* segmented (original Segmented.tsx; review 01 M8): the group rests as a filled track on the hairline, takes ink
@@ -493,7 +493,7 @@
 }
 :where([data-scope="segmented"]:has(input:focus-visible)) { box-shadow: inset 0 0 0 var(--warp-sweep-base-width) var(--warp-color-sweep-base); }
 :where([data-scope="segmented"] > label[data-sweep]) { --warp-sweep-radius: var(--warp-radius-control); border-radius: var(--warp-radius-control); }
-:where([data-scope="segmented"] > label[data-sweep]) > :where([data-part="sweep"]) { z-index: 1; border-width: var(--_warp-sweep-width,var(--warp-sweep-width)); }
+:where([data-scope="segmented"] > label[data-sweep]) > :where([data-part="sweep"]) { z-index: 1; border-width: var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))); }
 :where([data-scope="segmented"] > label:has(input:checked)) > :where([data-part="sweep"]) { visibility: hidden; }
 :where([data-scope="segmented"] label) { position: relative; z-index: 3; display: flex; }
 :where([data-scope="segmented"] input) { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
@@ -687,7 +687,7 @@
   position: relative; border-radius: var(--warp-radius-control); background: var(--warp-color-field);
   box-shadow: inset 0 0 0 var(--warp-border-hairline) var(--warp-color-border-control);
 }
-:where(div[data-scope="listbox"]:focus-visible) { box-shadow: inset 0 0 0 calc(var(--_warp-sweep-width,var(--warp-sweep-width)) + 1px) var(--warp-color-sweep); }
+:where(div[data-scope="listbox"]:focus-visible) { box-shadow: inset 0 0 0 calc(var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))) + 1px) var(--warp-color-sweep); }
 :where([data-scope="popup"] [data-scope="listbox"]) { padding: 0; max-block-size: none; overflow: visible; background: none; box-shadow: none; }
 :where([role="option"]) {
   position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 2px var(--warp-space-related);

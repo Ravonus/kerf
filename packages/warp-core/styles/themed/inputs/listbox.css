@@ -20,7 +20,7 @@
   position: relative; border-radius: var(--warp-radius-control); background: var(--warp-color-field);
   box-shadow: inset 0 0 0 var(--warp-border-hairline) var(--warp-color-border-control);
 }
-:where(div[data-scope="listbox"]:focus-visible) { box-shadow: inset 0 0 0 calc(var(--_warp-sweep-width,var(--warp-sweep-width)) + 1px) var(--warp-color-sweep); }
+:where(div[data-scope="listbox"]:focus-visible) { box-shadow: inset 0 0 0 calc(var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))) + 1px) var(--warp-color-sweep); }
 :where([data-scope="popup"] [data-scope="listbox"]) { padding: 0; max-block-size: none; overflow: visible; background: none; box-shadow: none; }
 :where([role="option"]) {
   position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 2px var(--warp-space-related);

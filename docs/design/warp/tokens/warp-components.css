@@ -298,7 +298,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   --_layer-a: calc(var(--warp-state-hover) * (1 - var(--_on, 0)));
   --_tone-ink: var(--_ink-on); --warp-sweep-fill: var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_solid))))))); --warp-sweep-radius: 0px;
   /* the original is square-capped and mitred: never rounder than 2px */
-  border-color: transparent; border-radius: min(var(--warp-radius-mark), 2px); overflow: clip;
+  border-color: transparent; border-radius: var(--_warp-button-radius-press,var(--_warp-button-radius-hover,var(--warp-button-radius,var(--warp-config-part-button-radius,min(var(--warp-radius-mark), 2px))))); overflow: clip;
 }
 :where([data-scope="button"][data-emphasis="frame"][data-tone]:not([data-tone="accent"])) { --_tone: var(--_text); }
 :where([data-scope="button"][data-emphasis="frame"][data-tone="neutral"]) { --_tone: var(--warp-color-text); }
@@ -317,7 +317,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));   /* both axes: a narrow (icon or one-glyph) button reaches hit-min wide too */
 }
 :where([data-scope="button"]:is(:active)),
-:where([data-scope="button"]:is([data-press])) { scale: var(--warp-button-scale-press,var(--warp-config-part-button-scale-press,var(--warp-press))); transition-duration: 0ms; }
+:where([data-scope="button"]:is([data-press])) { scale: var(--warp-button-scale-press,var(--warp-config-part-button-scale-press,var(--warp-press))); transition-duration: var(--_warp-button-duration-press-time,0ms); }
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
 /* vivid: a solid rests flat, its offset folded away under it (0 0, so the hover can grow it out), and the press puts
    it back down: it never sinks into the page */
@@ -326,7 +326,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   background-image: linear-gradient(180deg, color-mix(in oklab, white calc(var(--warp-btn-fill) * 10%), transparent), transparent 62%, color-mix(in oklab, black calc(var(--warp-btn-fill) * 7%), transparent));
 }
 :where([data-scope="button"]:not([data-emphasis]):active) {
-  translate: 0 0; box-shadow: var(--warp-button-shadow-press,var(--warp-config-part-button-shadow-press,var(--warp-button-shadow,var(--warp-config-part-button-shadow,0 0 0 var(--_off)))));
+  translate: 0 0; box-shadow: var(--warp-button-shadow-press,var(--warp-button-shadow,var(--warp-config-part-button-shadow-press,var(--warp-config-part-button-shadow,0 0 0 var(--_off)))));
 }
 :where([data-scope="button"][data-emphasis]:active)::before { opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a) * 1.55); }
 /* Keel's pull-out: the button rests flat and, under the hand, comes up and left off a hard offset that grows in behind
@@ -334,7 +334,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 @media (hover: hover) {
   :where([data-scope="button"]:hover:not(:active, :disabled, [aria-disabled="true"], [data-emphasis="frame"], [data-emphasis="link"])) {
     translate: calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale)) calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale));
-    box-shadow: var(--_warp-button-shadow-press,var(--warp-button-shadow-hover,var(--warp-config-part-button-shadow-hover,var(--warp-button-shadow,var(--warp-config-part-button-shadow,calc((var(--warp-offset) + 1px) * var(--warp-btn-fill)) calc((var(--warp-offset) + 2px) * var(--warp-btn-fill)) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent))))));
+    box-shadow: var(--_warp-button-shadow-press,var(--warp-button-shadow-hover,var(--warp-button-shadow,var(--warp-config-part-button-shadow-hover,var(--warp-config-part-button-shadow,calc((var(--warp-offset) + 1px) * var(--warp-btn-fill)) calc((var(--warp-offset) + 2px) * var(--warp-btn-fill)) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent))))));
   }
 }
 :where([data-scope="button"][data-emphasis="soft"]) {
@@ -354,17 +354,17 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 }
 :where([data-scope="button"][data-emphasis="link"]) {
   --_fill: transparent; --_ink: var(--_text); --_layer: transparent; --_layer-a: 0;
-  block-size: auto; padding: 0; border: 0; border-radius: var(--warp-radius-mark);
-  font-family: var(--warp-text-body-font); font-size: inherit; letter-spacing: 0; text-transform: none; font-weight: 500;
+  block-size: auto; padding: 0; border: 0; border-radius: var(--_warp-button-radius-press,var(--_warp-button-radius-hover,var(--warp-button-radius,var(--warp-config-part-button-radius,var(--warp-radius-mark)))));
+  font-family: var(--_warp-button-font-family-press,var(--_warp-button-font-family-hover,var(--warp-button-font-family,var(--warp-config-part-button-font-family,var(--warp-text-body-font))))); font-size: var(--_warp-button-font-size-press,var(--_warp-button-font-size-hover,var(--warp-button-font-size,var(--warp-config-part-button-font-size,inherit)))); letter-spacing: var(--_warp-button-font-letter-spacing-press,var(--_warp-button-font-letter-spacing-hover,var(--warp-button-font-letter-spacing,var(--warp-config-part-button-font-letter-spacing,0)))); text-transform: none; font-weight: var(--_warp-button-font-weight-press,var(--_warp-button-font-weight-hover,var(--warp-button-font-weight,var(--warp-config-part-button-font-weight,500))));
   text-decoration: underline; text-decoration-thickness: var(--warp-border-hairline); text-underline-offset: 0.22em;
   text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
 }
 :where([data-scope="button"][data-emphasis="link"]:hover) { text-decoration-color: currentColor; text-decoration-thickness: var(--warp-border-emphasis); }
 :where([data-scope="button"][data-emphasis="link"]:active) { scale: 1; }
-:where([data-scope="button"][data-size="sm"]) { block-size: var(--warp-control-sm); padding-inline: var(--warp-pad-control); gap: calc(var(--warp-space-related) * 0.75); }
+:where([data-scope="button"][data-size="sm"]) { block-size: var(--warp-control-sm); padding-inline: var(--_warp-button-padding-inline-press,var(--_warp-button-padding-inline-hover,var(--warp-button-padding-inline,var(--warp-config-part-button-padding-inline,var(--warp-pad-control))))); gap: var(--_warp-button-gap-press,var(--_warp-button-gap-hover,var(--warp-button-gap,var(--warp-config-part-button-gap,calc(var(--warp-space-related) * 0.75))))); }
 /* vivid's hard offset in scale with a small button: the full one under a 24px icon (a code block's copy) read as a bar */
 :where([data-scope="button"][data-size="sm"]) { --warp-offset: calc(var(--warp-ref-offset) / 3); }
-:where([data-scope="button"][data-size="lg"]) { block-size: var(--warp-control-lg); padding-inline: calc(var(--warp-pad-control) * 1.5); }
+:where([data-scope="button"][data-size="lg"]) { block-size: var(--warp-control-lg); padding-inline: var(--_warp-button-padding-inline-press,var(--_warp-button-padding-inline-hover,var(--warp-button-padding-inline,var(--warp-config-part-button-padding-inline,calc(var(--warp-pad-control) * 1.5))))); }
 :where([data-scope="button"][data-size="sm"] svg[data-icon]) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
 :where([data-scope="button"][data-size="lg"] svg[data-icon]) { inline-size: var(--warp-icon-lg); block-size: var(--warp-icon-lg); }
 :where([data-scope="button"][data-icon-only]) { inline-size: var(--warp-control-md); padding: 0; }
@@ -407,8 +407,10 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"] > [data-part="label"]) { transition: opacity var(--warp-duration-fast) var(--warp-ease-out), scale var(--warp-duration-fast) var(--warp-ease-out); }
 :where([data-scope="button"] > [data-part="spinner"]) { position: absolute; inset: 0; margin: auto; color: var(--_ink); border-color: color-mix(in oklab, var(--_ink) 30%, transparent); border-block-start-color: var(--_ink); }
 /* warp-theme-only:start */
-:where([data-scope="button"]) { --_warp-button-duration: calc(var(--warp-button-duration,var(--warp-config-part-button-duration)) * var(--warp-motion-scale)); }
-:where([data-scope="button"][data-press]) { --_warp-button-shadow-press: var(--warp-button-shadow-press,var(--warp-config-part-button-shadow-press)); }
+:where([data-scope="button"]) { --_warp-button-duration: calc(var(--_warp-button-duration-press,var(--_warp-button-duration-hover,var(--warp-button-duration,var(--warp-config-part-button-duration)))) * var(--warp-motion-scale)); --_warp-button-duration-press-time: calc(var(--_warp-button-duration-press) * var(--warp-motion-scale)); }
+:where([data-scope="button"]:hover) { --_warp-button-duration-hover: var(--warp-button-duration-hover,var(--warp-button-duration,var(--warp-config-part-button-duration-hover))); }
+:where([data-scope="button"]:is(:active,[data-press])) { --_warp-button-duration-press: var(--warp-button-duration-press,var(--warp-button-duration,var(--warp-config-part-button-duration-press))); }
+:where([data-scope="button"][data-press]) { --_warp-button-shadow-press: var(--warp-button-shadow-press,var(--warp-button-shadow,var(--warp-config-part-button-shadow-press))); }
 @property --_warp-button-shadow-press { syntax: "*"; inherits: false; }
 @property --_warp-button-boundary { syntax: "*"; inherits: false; }
 @property --_warp-button-bg-hover { syntax: "*"; inherits: false; }
@@ -440,8 +442,13 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 }
 /* warp-theme-only:end */
 /* warp-theme-only:start */
-:where([data-scope="button"]:hover) { --_warp-button-gap-hover: var(--warp-button-gap-hover,var(--warp-config-part-button-gap-hover)); --_warp-button-padding-inline-hover: var(--warp-button-padding-inline-hover,var(--warp-config-part-button-padding-inline-hover)); --_warp-button-border-width-hover: var(--warp-button-border-width-hover,var(--warp-config-part-button-border-width-hover)); --_warp-button-radius-hover: var(--warp-button-radius-hover,var(--warp-config-part-button-radius-hover)); --_warp-button-font-family-hover: var(--warp-button-font-family-hover,var(--warp-config-part-button-font-family-hover)); --_warp-button-font-size-hover: var(--warp-button-font-size-hover,var(--warp-config-part-button-font-size-hover)); --_warp-button-font-weight-hover: var(--warp-button-font-weight-hover,var(--warp-config-part-button-font-weight-hover)); --_warp-button-font-letter-spacing-hover: var(--warp-button-font-letter-spacing-hover,var(--warp-config-part-button-font-letter-spacing-hover)); }
-:where([data-scope="button"]:is(:active,[data-press])) { --_warp-button-gap-press: var(--warp-button-gap-press,var(--warp-config-part-button-gap-press)); --_warp-button-padding-inline-press: var(--warp-button-padding-inline-press,var(--warp-config-part-button-padding-inline-press)); --_warp-button-border-width-press: var(--warp-button-border-width-press,var(--warp-config-part-button-border-width-press)); --_warp-button-radius-press: var(--warp-button-radius-press,var(--warp-config-part-button-radius-press)); --_warp-button-font-family-press: var(--warp-button-font-family-press,var(--warp-config-part-button-font-family-press)); --_warp-button-font-size-press: var(--warp-button-font-size-press,var(--warp-config-part-button-font-size-press)); --_warp-button-font-weight-press: var(--warp-button-font-weight-press,var(--warp-config-part-button-font-weight-press)); --_warp-button-font-letter-spacing-press: var(--warp-button-font-letter-spacing-press,var(--warp-config-part-button-font-letter-spacing-press)); }
+:where([data-scope="button"]:hover) { --_warp-button-gap-hover: var(--warp-button-gap-hover,var(--warp-button-gap,var(--warp-config-part-button-gap-hover))); --_warp-button-padding-inline-hover: var(--warp-button-padding-inline-hover,var(--warp-button-padding-inline,var(--warp-config-part-button-padding-inline-hover))); --_warp-button-border-width-hover: var(--warp-button-border-width-hover,var(--warp-button-border-width,var(--warp-config-part-button-border-width-hover))); --_warp-button-radius-hover: var(--warp-button-radius-hover,var(--warp-button-radius,var(--warp-config-part-button-radius-hover))); --_warp-button-font-family-hover: var(--warp-button-font-family-hover,var(--warp-button-font-family,var(--warp-config-part-button-font-family-hover))); --_warp-button-font-size-hover: var(--warp-button-font-size-hover,var(--warp-button-font-size,var(--warp-config-part-button-font-size-hover))); --_warp-button-font-weight-hover: var(--warp-button-font-weight-hover,var(--warp-button-font-weight,var(--warp-config-part-button-font-weight-hover))); --_warp-button-font-letter-spacing-hover: var(--warp-button-font-letter-spacing-hover,var(--warp-button-font-letter-spacing,var(--warp-config-part-button-font-letter-spacing-hover))); }
+:where([data-scope="button"]:is(:active,[data-press])) { --_warp-button-gap-press: var(--warp-button-gap-press,var(--warp-button-gap,var(--warp-config-part-button-gap-press))); --_warp-button-padding-inline-press: var(--warp-button-padding-inline-press,var(--warp-button-padding-inline,var(--warp-config-part-button-padding-inline-press))); --_warp-button-border-width-press: var(--warp-button-border-width-press,var(--warp-button-border-width,var(--warp-config-part-button-border-width-press))); --_warp-button-radius-press: var(--warp-button-radius-press,var(--warp-button-radius,var(--warp-config-part-button-radius-press))); --_warp-button-font-family-press: var(--warp-button-font-family-press,var(--warp-button-font-family,var(--warp-config-part-button-font-family-press))); --_warp-button-font-size-press: var(--warp-button-font-size-press,var(--warp-button-font-size,var(--warp-config-part-button-font-size-press))); --_warp-button-font-weight-press: var(--warp-button-font-weight-press,var(--warp-button-font-weight,var(--warp-config-part-button-font-weight-press))); --_warp-button-font-letter-spacing-press: var(--warp-button-font-letter-spacing-press,var(--warp-button-font-letter-spacing,var(--warp-config-part-button-font-letter-spacing-press))); }
+/* warp-theme-only:end */
+/* warp-theme-only:start */
+:where([data-scope="button"][data-emphasis]:not(:hover,:active,[data-press])) { box-shadow: var(--warp-button-shadow,var(--warp-config-part-button-shadow,none)); }
+:where([data-scope="button"][data-emphasis="frame"]:hover, [data-scope="button"][data-emphasis="link"]:hover) { box-shadow: var(--warp-button-shadow-hover,var(--warp-button-shadow,var(--warp-config-part-button-shadow-hover,var(--warp-config-part-button-shadow,none)))); }
+:where([data-scope="button"][data-emphasis]:active, [data-scope="button"][data-emphasis][data-press]:not(:hover), [data-scope="button"][data-emphasis="frame"][data-press], [data-scope="button"][data-emphasis="link"][data-press]) { box-shadow: var(--warp-button-shadow-press,var(--warp-button-shadow,var(--warp-config-part-button-shadow-press,var(--warp-config-part-button-shadow,none)))); }
 /* warp-theme-only:end */
 :where([data-scope="button"] > [data-part="label"]) { display: inline-flex; align-items: center; gap: inherit; }
 
@@ -1143,10 +1150,12 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 /* -- Tabs: line (default) · pill · enclosed --------------------------------- */
 :where([data-scope="tabs"][data-part="root"]) { display: grid; gap: var(--warp-tabs-gap,var(--warp-config-part-tabs-gap,var(--warp-space-group))); min-inline-size: 0; }
 /* warp-theme-only:start */
-:where([data-scope="tabs"]) { --_warp-tabs-underline-width: var(--warp-tabs-underline-width,var(--warp-config-part-tabs-underline-width)); }
+:where([data-scope="tabs"]) { --_warp-tabs-underline-width: var(--_warp-tabs-underline-width-active,var(--_warp-tabs-underline-width-hover,var(--warp-tabs-underline-width,var(--warp-config-part-tabs-underline-width)))); }
+:where([data-scope="tabs"]:has(> [data-part="list"] > [data-part="trigger"]:hover)) { --_warp-tabs-underline-width-hover: var(--warp-tabs-underline-width-hover,var(--warp-tabs-underline-width,var(--warp-config-part-tabs-underline-width-hover))); }
+:where([data-scope="tabs"]:has(> [data-part="list"] > [data-part="trigger"][aria-selected="true"])) { --_warp-tabs-underline-width-active: var(--warp-tabs-underline-width-active,var(--warp-tabs-underline-width,var(--warp-config-part-tabs-underline-width-active))); }
 /* warp-theme-only:end */
 :where([data-scope="tabs"] > [data-part="list"]) {
-  position: relative; display: flex; gap: var(--warp-space-tight); min-inline-size: 0;
+  position: relative; display: flex; gap: var(--_warp-tabs-gap,var(--warp-space-tight)); min-inline-size: 0;
   overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity;
   box-shadow: inset 0 calc(var(--warp-border-hairline) * -1) 0 var(--warp-color-border);
   --_fs: 0px; --_fe: 0px;
@@ -1190,34 +1199,41 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 @keyframes warp-settle { from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * 0.5); } }
 /* pill */
 :where([data-scope="tabs"][data-variant="pill"] > [data-part="list"]) {
-  inline-size: fit-content; max-inline-size: 100%; gap: 2px; padding: 2px; box-shadow: none;
-  background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border);
-  border-radius: calc(var(--warp-radius-control) + 3px);
+  inline-size: fit-content; max-inline-size: 100%; gap: var(--_warp-tabs-gap,2px); padding: 2px; box-shadow: none;
+  background: var(--warp-color-surface-sunken); border: var(--_warp-tabs-border-width-active,var(--_warp-tabs-border-width-hover,var(--_warp-tabs-border-width,var(--warp-border-hairline)))) solid var(--warp-color-border);
+  border-radius: var(--_warp-tabs-radius,calc(var(--warp-radius-control) + 3px));
 }
 :where([data-scope="tabs"][data-variant="pill"] > [data-part="list"] > [data-part="trigger"]) { z-index: 1; block-size: var(--_warp-tabs-height-active,var(--_warp-tabs-height-hover,var(--_warp-tabs-height,calc(var(--warp-control-md) - 6px)))); padding-inline: var(--_warp-tabs-padding-inline-active,var(--_warp-tabs-padding-inline-hover,var(--_warp-tabs-padding-inline,var(--warp-pad-control)))); border-radius: var(--_warp-tabs-radius-active,var(--_warp-tabs-radius-hover,var(--_warp-tabs-radius,var(--warp-radius-control)))); }
 :where([data-scope="tabs"][data-variant="pill"] > [data-part="list"] > [data-part="indicator"]) {
-  inset-block: 2px; block-size: auto; background: var(--warp-color-surface-raised); border-radius: var(--warp-radius-control);
-  box-shadow: 0 0 0 var(--warp-border-hairline) var(--warp-color-border), var(--warp-elevation-1);
+  inset-block: 2px; block-size: auto; background: var(--warp-color-surface-raised); border-radius: var(--_warp-tabs-radius,var(--warp-radius-control));
+  box-shadow: var(--_warp-tabs-shadow,0 0 0 var(--warp-border-hairline) var(--warp-color-border), var(--warp-elevation-1));
 }
 /* enclosed */
-:where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"]) { gap: 0; }
+:where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"]) { gap: var(--_warp-tabs-gap,0); }
 :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"] > [data-part="trigger"]) {
-  padding-inline: var(--_warp-tabs-padding-inline-active,var(--_warp-tabs-padding-inline-hover,var(--_warp-tabs-padding-inline,var(--warp-pad-control)))); border: var(--warp-border-hairline) solid transparent; border-block-end: 0;
+  padding-inline: var(--_warp-tabs-padding-inline-active,var(--_warp-tabs-padding-inline-hover,var(--_warp-tabs-padding-inline,var(--warp-pad-control)))); border: var(--_warp-tabs-border-width-active,var(--_warp-tabs-border-width-hover,var(--_warp-tabs-border-width,var(--warp-border-hairline)))) solid transparent; border-block-end: 0;
 }
 :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) {
   background: var(--warp-color-surface-raised); border-color: var(--warp-color-border);
-  box-shadow: 0 var(--warp-border-hairline) 0 var(--warp-color-surface-raised);
+  box-shadow: var(--_warp-tabs-shadow-active,var(--_warp-tabs-shadow-hover,var(--_warp-tabs-shadow,0 var(--warp-border-hairline) 0 var(--warp-color-surface-raised))));
 }
 :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"] > [data-part="indicator"]) { inset-block: 0 auto; }
-:where([data-scope="tabs"][data-variant="enclosed"][data-part="root"]) { gap: 0; }
+:where([data-scope="tabs"][data-variant="enclosed"][data-part="root"]) { gap: var(--warp-tabs-gap,var(--warp-config-part-tabs-gap,0)); }
 :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="content"]) {
   padding: var(--warp-pad-surface); background: var(--warp-color-surface-raised);
-  border: var(--warp-border-hairline) solid var(--warp-color-border); border-block-start: 0;
+  border: var(--_warp-tabs-border-width-active,var(--_warp-tabs-border-width-hover,var(--_warp-tabs-border-width,var(--warp-border-hairline)))) solid var(--warp-color-border); border-block-start: 0;
   border-radius: 0 0 var(--warp-radius-surface) var(--warp-radius-surface);
 }
 
 /* warp-theme-only:start */
 :where([data-scope="tabs"]) {
+  --_warp-tabs-gap: var(--warp-tabs-gap,var(--warp-config-part-tabs-gap));
+  --_warp-tabs-border-width: var(--warp-tabs-border-width,var(--warp-config-part-tabs-border-width));
+  --_warp-tabs-border-width-hover-input: var(--warp-tabs-border-width-hover,var(--warp-tabs-border-width,var(--warp-config-part-tabs-border-width-hover)));
+  --_warp-tabs-border-width-active-input: var(--warp-tabs-border-width-active,var(--warp-tabs-border-width,var(--warp-config-part-tabs-border-width-active)));
+  --_warp-tabs-shadow: var(--warp-tabs-shadow,var(--warp-config-part-tabs-shadow));
+  --_warp-tabs-shadow-hover-input: var(--warp-tabs-shadow-hover,var(--warp-tabs-shadow,var(--warp-config-part-tabs-shadow-hover)));
+  --_warp-tabs-shadow-active-input: var(--warp-tabs-shadow-active,var(--warp-tabs-shadow,var(--warp-config-part-tabs-shadow-active)));
   --_warp-tabs-padding-inline: var(--warp-tabs-padding-inline,var(--warp-config-part-tabs-padding-inline));
   --_warp-tabs-radius: var(--warp-tabs-radius,var(--warp-config-part-tabs-radius));
   --_warp-tabs-font-family: var(--warp-tabs-font-family,var(--warp-config-part-tabs-font-family));
@@ -1225,21 +1241,28 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   --_warp-tabs-font-weight: var(--warp-tabs-font-weight,var(--warp-config-part-tabs-font-weight));
   --_warp-tabs-height: var(--warp-tabs-height,var(--warp-config-part-tabs-height));
   --_warp-tabs-duration: calc(var(--warp-tabs-duration,var(--warp-config-part-tabs-duration)) * var(--warp-motion-scale));
-  --_warp-tabs-padding-inline-hover-input: var(--warp-tabs-padding-inline-hover,var(--warp-config-part-tabs-padding-inline-hover));
-  --_warp-tabs-padding-inline-active-input: var(--warp-tabs-padding-inline-active,var(--warp-config-part-tabs-padding-inline-active));
-  --_warp-tabs-radius-hover-input: var(--warp-tabs-radius-hover,var(--warp-config-part-tabs-radius-hover));
-  --_warp-tabs-radius-active-input: var(--warp-tabs-radius-active,var(--warp-config-part-tabs-radius-active));
-  --_warp-tabs-font-family-hover-input: var(--warp-tabs-font-family-hover,var(--warp-config-part-tabs-font-family-hover));
-  --_warp-tabs-font-family-active-input: var(--warp-tabs-font-family-active,var(--warp-config-part-tabs-font-family-active));
-  --_warp-tabs-font-size-hover-input: var(--warp-tabs-font-size-hover,var(--warp-config-part-tabs-font-size-hover));
-  --_warp-tabs-font-size-active-input: var(--warp-tabs-font-size-active,var(--warp-config-part-tabs-font-size-active));
-  --_warp-tabs-font-weight-hover-input: var(--warp-tabs-font-weight-hover,var(--warp-config-part-tabs-font-weight-hover));
-  --_warp-tabs-font-weight-active-input: var(--warp-tabs-font-weight-active,var(--warp-config-part-tabs-font-weight-active));
-  --_warp-tabs-height-hover-input: var(--warp-tabs-height-hover,var(--warp-config-part-tabs-height-hover));
-  --_warp-tabs-height-active-input: var(--warp-tabs-height-active,var(--warp-config-part-tabs-height-active));
+  --_warp-tabs-padding-inline-hover-input: var(--warp-tabs-padding-inline-hover,var(--warp-tabs-padding-inline,var(--warp-config-part-tabs-padding-inline-hover)));
+  --_warp-tabs-padding-inline-active-input: var(--warp-tabs-padding-inline-active,var(--warp-tabs-padding-inline,var(--warp-config-part-tabs-padding-inline-active)));
+  --_warp-tabs-radius-hover-input: var(--warp-tabs-radius-hover,var(--warp-tabs-radius,var(--warp-config-part-tabs-radius-hover)));
+  --_warp-tabs-radius-active-input: var(--warp-tabs-radius-active,var(--warp-tabs-radius,var(--warp-config-part-tabs-radius-active)));
+  --_warp-tabs-font-family-hover-input: var(--warp-tabs-font-family-hover,var(--warp-tabs-font-family,var(--warp-config-part-tabs-font-family-hover)));
+  --_warp-tabs-font-family-active-input: var(--warp-tabs-font-family-active,var(--warp-tabs-font-family,var(--warp-config-part-tabs-font-family-active)));
+  --_warp-tabs-font-size-hover-input: var(--warp-tabs-font-size-hover,var(--warp-tabs-font-size,var(--warp-config-part-tabs-font-size-hover)));
+  --_warp-tabs-font-size-active-input: var(--warp-tabs-font-size-active,var(--warp-tabs-font-size,var(--warp-config-part-tabs-font-size-active)));
+  --_warp-tabs-font-weight-hover-input: var(--warp-tabs-font-weight-hover,var(--warp-tabs-font-weight,var(--warp-config-part-tabs-font-weight-hover)));
+  --_warp-tabs-font-weight-active-input: var(--warp-tabs-font-weight-active,var(--warp-tabs-font-weight,var(--warp-config-part-tabs-font-weight-active)));
+  --_warp-tabs-height-hover-input: var(--warp-tabs-height-hover,var(--warp-tabs-height,var(--warp-config-part-tabs-height-hover)));
+  --_warp-tabs-height-active-input: var(--warp-tabs-height-active,var(--warp-tabs-height,var(--warp-config-part-tabs-height-active)));
 }
 :where([data-scope="tabs"] :not([data-scope="tabs"])) {
   --_warp-tabs-underline-width: inherit;
+  --_warp-tabs-gap: inherit;
+  --_warp-tabs-border-width: inherit;
+  --_warp-tabs-border-width-hover-input: inherit;
+  --_warp-tabs-border-width-active-input: inherit;
+  --_warp-tabs-shadow: inherit;
+  --_warp-tabs-shadow-hover-input: inherit;
+  --_warp-tabs-shadow-active-input: inherit;
   --_warp-tabs-padding-inline: inherit;
   --_warp-tabs-radius: inherit;
   --_warp-tabs-font-family: inherit;
@@ -1261,6 +1284,8 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   --_warp-tabs-height-active-input: inherit;
 }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]:hover) {
+  --_warp-tabs-border-width-hover: var(--_warp-tabs-border-width-hover-input);
+  --_warp-tabs-shadow-hover: var(--_warp-tabs-shadow-hover-input);
   --_warp-tabs-padding-inline-hover: var(--_warp-tabs-padding-inline-hover-input);
   --_warp-tabs-radius-hover: var(--_warp-tabs-radius-hover-input);
   --_warp-tabs-font-family-hover: var(--_warp-tabs-font-family-hover-input);
@@ -1269,6 +1294,8 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   --_warp-tabs-height-hover: var(--_warp-tabs-height-hover-input);
 }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) {
+  --_warp-tabs-border-width-active: var(--_warp-tabs-border-width-active-input);
+  --_warp-tabs-shadow-active: var(--_warp-tabs-shadow-active-input);
   --_warp-tabs-padding-inline-active: var(--_warp-tabs-padding-inline-active-input);
   --_warp-tabs-radius-active: var(--_warp-tabs-radius-active-input);
   --_warp-tabs-font-family-active: var(--_warp-tabs-font-family-active-input);
@@ -1428,9 +1455,9 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where(a[data-scope="link"] svg[data-icon]) { inline-size: 0.85em; block-size: 0.85em; vertical-align: -0.05em; margin-inline-start: 2px; }
 
 /* warp-theme-only:start */
-:where(a[data-scope="link"]) { --_warp-link-duration: calc(var(--warp-link-duration,var(--warp-config-part-link-duration)) * var(--warp-motion-scale)); }
-:where(a[data-scope="link"]:hover) { --_warp-link-radius-hover: var(--warp-link-radius-hover,var(--warp-config-part-link-radius-hover)); --_warp-link-font-weight-hover: var(--warp-link-font-weight-hover,var(--warp-config-part-link-font-weight-hover)); }
-:where(a[data-scope="link"]:active) { --_warp-link-radius-press: var(--warp-link-radius-press,var(--warp-config-part-link-radius-press)); --_warp-link-font-weight-press: var(--warp-link-font-weight-press,var(--warp-config-part-link-font-weight-press)); }
+:where(a[data-scope="link"]) { --_warp-link-duration: calc(var(--_warp-link-duration-press,var(--_warp-link-duration-hover,var(--warp-link-duration,var(--warp-config-part-link-duration)))) * var(--warp-motion-scale)); }
+:where(a[data-scope="link"]:hover) { --_warp-link-duration-hover: var(--warp-link-duration-hover,var(--warp-link-duration,var(--warp-config-part-link-duration-hover))); --_warp-link-radius-hover: var(--warp-link-radius-hover,var(--warp-link-radius,var(--warp-config-part-link-radius-hover))); --_warp-link-font-weight-hover: var(--warp-link-font-weight-hover,var(--warp-link-font-weight,var(--warp-config-part-link-font-weight-hover))); }
+:where(a[data-scope="link"]:active) { --_warp-link-duration-press: var(--warp-link-duration-press,var(--warp-link-duration,var(--warp-config-part-link-duration-press))); --_warp-link-radius-press: var(--warp-link-radius-press,var(--warp-link-radius,var(--warp-config-part-link-radius-press))); --_warp-link-font-weight-press: var(--warp-link-font-weight-press,var(--warp-link-font-weight,var(--warp-config-part-link-font-weight-press))); }
 /* warp-theme-only:end */
 /* ---------------------------------------------------------------------------
    4 · FEEDBACK
@@ -1747,17 +1774,17 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 /* warp-theme-only:start */
 @property --_warp-pill-gap-hover { syntax: "*"; inherits: false; }
 @property --_warp-pill-gap-active { syntax: "*"; inherits: false; }
-:where([data-scope="pill"]:hover) { --_warp-pill-gap-hover: var(--warp-pill-gap-hover,var(--warp-config-part-pill-gap-hover)); }
-:where([data-scope="pill"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"])) { --_warp-pill-gap-active: var(--warp-pill-gap-active,var(--warp-config-part-pill-gap-active)); }
+:where([data-scope="pill"]:hover) { --_warp-pill-gap-hover: var(--warp-pill-gap-hover,var(--warp-pill-gap,var(--warp-config-part-pill-gap-hover))); }
+:where([data-scope="pill"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"])) { --_warp-pill-gap-active: var(--warp-pill-gap-active,var(--warp-pill-gap,var(--warp-config-part-pill-gap-active))); }
 /* warp-theme-only:end */
 /* warp-theme-only:start */
-:where([data-scope="pill"]:hover) { --_warp-pill-height-hover: var(--warp-pill-height-hover,var(--warp-config-part-pill-height-hover)); --_warp-pill-padding-inline-hover: var(--warp-pill-padding-inline-hover,var(--warp-config-part-pill-padding-inline-hover)); --_warp-pill-border-width-hover: var(--warp-pill-border-width-hover,var(--warp-config-part-pill-border-width-hover)); --_warp-pill-radius-hover: var(--warp-pill-radius-hover,var(--warp-config-part-pill-radius-hover)); --_warp-pill-font-family-hover: var(--warp-pill-font-family-hover,var(--warp-config-part-pill-font-family-hover)); --_warp-pill-font-size-hover: var(--warp-pill-font-size-hover,var(--warp-config-part-pill-font-size-hover)); --_warp-pill-font-weight-hover: var(--warp-pill-font-weight-hover,var(--warp-config-part-pill-font-weight-hover)); --_warp-pill-font-line-height-hover: var(--warp-pill-font-line-height-hover,var(--warp-config-part-pill-font-line-height-hover)); }
-:where([data-scope="pill"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"])) { --_warp-pill-height-active: var(--warp-pill-height-active,var(--warp-config-part-pill-height-active)); --_warp-pill-padding-inline-active: var(--warp-pill-padding-inline-active,var(--warp-config-part-pill-padding-inline-active)); --_warp-pill-border-width-active: var(--warp-pill-border-width-active,var(--warp-config-part-pill-border-width-active)); --_warp-pill-radius-active: var(--warp-pill-radius-active,var(--warp-config-part-pill-radius-active)); --_warp-pill-font-family-active: var(--warp-pill-font-family-active,var(--warp-config-part-pill-font-family-active)); --_warp-pill-font-size-active: var(--warp-pill-font-size-active,var(--warp-config-part-pill-font-size-active)); --_warp-pill-font-weight-active: var(--warp-pill-font-weight-active,var(--warp-config-part-pill-font-weight-active)); --_warp-pill-font-line-height-active: var(--warp-pill-font-line-height-active,var(--warp-config-part-pill-font-line-height-active)); }
+:where([data-scope="pill"]:hover) { --_warp-pill-height-hover: var(--warp-pill-height-hover,var(--warp-pill-height,var(--warp-config-part-pill-height-hover))); --_warp-pill-padding-inline-hover: var(--warp-pill-padding-inline-hover,var(--warp-pill-padding-inline,var(--warp-config-part-pill-padding-inline-hover))); --_warp-pill-border-width-hover: var(--warp-pill-border-width-hover,var(--warp-pill-border-width,var(--warp-config-part-pill-border-width-hover))); --_warp-pill-radius-hover: var(--warp-pill-radius-hover,var(--warp-pill-radius,var(--warp-config-part-pill-radius-hover))); --_warp-pill-font-family-hover: var(--warp-pill-font-family-hover,var(--warp-pill-font-family,var(--warp-config-part-pill-font-family-hover))); --_warp-pill-font-size-hover: var(--warp-pill-font-size-hover,var(--warp-pill-font-size,var(--warp-config-part-pill-font-size-hover))); --_warp-pill-font-weight-hover: var(--warp-pill-font-weight-hover,var(--warp-pill-font-weight,var(--warp-config-part-pill-font-weight-hover))); --_warp-pill-font-line-height-hover: var(--warp-pill-font-line-height-hover,var(--warp-pill-font-line-height,var(--warp-config-part-pill-font-line-height-hover))); }
+:where([data-scope="pill"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"])) { --_warp-pill-height-active: var(--warp-pill-height-active,var(--warp-pill-height,var(--warp-config-part-pill-height-active))); --_warp-pill-padding-inline-active: var(--warp-pill-padding-inline-active,var(--warp-pill-padding-inline,var(--warp-config-part-pill-padding-inline-active))); --_warp-pill-border-width-active: var(--warp-pill-border-width-active,var(--warp-pill-border-width,var(--warp-config-part-pill-border-width-active))); --_warp-pill-radius-active: var(--warp-pill-radius-active,var(--warp-pill-radius,var(--warp-config-part-pill-radius-active))); --_warp-pill-font-family-active: var(--warp-pill-font-family-active,var(--warp-pill-font-family,var(--warp-config-part-pill-font-family-active))); --_warp-pill-font-size-active: var(--warp-pill-font-size-active,var(--warp-pill-font-size,var(--warp-config-part-pill-font-size-active))); --_warp-pill-font-weight-active: var(--warp-pill-font-weight-active,var(--warp-pill-font-weight,var(--warp-config-part-pill-font-weight-active))); --_warp-pill-font-line-height-active: var(--warp-pill-font-line-height-active,var(--warp-pill-font-line-height,var(--warp-config-part-pill-font-line-height-active))); }
 /* warp-theme-only:end */
 /* warp-theme-only:start */
 :where([data-scope="pill"]) { --_warp-pill-duration: calc(var(--_warp-pill-duration-active,var(--_warp-pill-duration-hover,var(--warp-pill-duration,var(--warp-config-part-pill-duration)))) * var(--warp-motion-scale)); }
-:where([data-scope="pill"]:hover) { --_warp-pill-duration-hover: var(--warp-pill-duration-hover,var(--warp-config-part-pill-duration-hover)); }
-:where([data-scope="pill"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"])) { --_warp-pill-duration-active: var(--warp-pill-duration-active,var(--warp-config-part-pill-duration-active)); }
+:where([data-scope="pill"]:hover) { --_warp-pill-duration-hover: var(--warp-pill-duration-hover,var(--warp-pill-duration,var(--warp-config-part-pill-duration-hover))); }
+:where([data-scope="pill"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"])) { --_warp-pill-duration-active: var(--warp-pill-duration-active,var(--warp-pill-duration,var(--warp-config-part-pill-duration-active))); }
 /* warp-theme-only:end */
 /* -- Separator ----------------------------------------------------------------- */
 :where([data-scope="separator"]) { border: 0; margin: 0; block-size: 1px; background: var(--warp-color-border); }
@@ -2099,7 +2126,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 
 /* -- Nav: links with the sliding bar. One face, moved by transform only: the phase machine (warp-core nav.ts) grows it in
    from an item's edge and out through the far edge. Before script the current link draws the same bar itself. */
-:where([data-scope="nav"]) { position: relative; --_bar: var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width,var(--_warp-sweep-width,var(--warp-sweep-width)))); display: flex; gap: var(--_warp-nav-gap-active,var(--_warp-nav-gap-hover,var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-group))))); align-self: start; inline-size: fit-content; }
+:where([data-scope="nav"]) { position: relative; --_bar: var(--_warp-nav-underline-width-active,var(--_warp-nav-underline-width-hover,var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width,var(--_warp-sweep-width,var(--warp-sweep-width)))))); display: flex; gap: var(--_warp-nav-gap-active,var(--_warp-nav-gap-hover,var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-group))))); align-self: start; inline-size: fit-content; }
 :where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--_warp-nav-gap-active,var(--_warp-nav-gap-hover,var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-tight))))); }
 :where([data-scope="nav"][data-axis="x"] a) { padding-block: var(--_warp-nav-padding-block,var(--warp-space-tight)); }
 :where([data-scope="nav"] a) { color: var(--warp-nav-text,var(--warp-config-part-nav-text,var(--warp-color-text-subtle))); text-decoration: none; transition: color var(--_warp-nav-duration,var(--warp-duration-fast)) var(--warp-ease-out); }
@@ -2119,12 +2146,55 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="nav"]:not([data-ready])[data-axis="x"] a[aria-current])::after { content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; block-size: var(--_bar); background: var(--warp-nav-underline,var(--warp-config-part-nav-underline,var(--warp-color-accent-solid))); }
 /* warp-theme-only:start */
 :where([data-scope="nav"]) {
+  --_warp-nav-font-family: var(--warp-nav-font-family,var(--warp-config-part-nav-font-family));
+  --_warp-nav-font-family-hover-input: var(--warp-nav-font-family-hover,var(--warp-nav-font-family,var(--warp-config-part-nav-font-family-hover)));
+  --_warp-nav-font-family-active-input: var(--warp-nav-font-family-active,var(--warp-nav-font-family,var(--warp-config-part-nav-font-family-active)));
+  --_warp-nav-font-size: var(--warp-nav-font-size,var(--warp-config-part-nav-font-size));
+  --_warp-nav-font-size-hover-input: var(--warp-nav-font-size-hover,var(--warp-nav-font-size,var(--warp-config-part-nav-font-size-hover)));
+  --_warp-nav-font-size-active-input: var(--warp-nav-font-size-active,var(--warp-nav-font-size,var(--warp-config-part-nav-font-size-active)));
+  --_warp-nav-font-weight: var(--warp-nav-font-weight,var(--warp-config-part-nav-font-weight));
+  --_warp-nav-font-weight-hover-input: var(--warp-nav-font-weight-hover,var(--warp-nav-font-weight,var(--warp-config-part-nav-font-weight-hover)));
+  --_warp-nav-font-weight-active-input: var(--warp-nav-font-weight-active,var(--warp-nav-font-weight,var(--warp-config-part-nav-font-weight-active)));
+  --_warp-nav-border-width: var(--warp-nav-border-width,var(--warp-config-part-nav-border-width));
+  --_warp-nav-border-width-hover-input: var(--warp-nav-border-width-hover,var(--warp-nav-border-width,var(--warp-config-part-nav-border-width-hover)));
+  --_warp-nav-border-width-active-input: var(--warp-nav-border-width-active,var(--warp-nav-border-width,var(--warp-config-part-nav-border-width-active)));
+  --_warp-nav-radius: var(--warp-nav-radius,var(--warp-config-part-nav-radius));
+  --_warp-nav-radius-hover-input: var(--warp-nav-radius-hover,var(--warp-nav-radius,var(--warp-config-part-nav-radius-hover)));
+  --_warp-nav-radius-active-input: var(--warp-nav-radius-active,var(--warp-nav-radius,var(--warp-config-part-nav-radius-active)));
+  --_warp-nav-shadow: var(--warp-nav-shadow,var(--warp-config-part-nav-shadow));
+  --_warp-nav-shadow-hover-input: var(--warp-nav-shadow-hover,var(--warp-nav-shadow,var(--warp-config-part-nav-shadow-hover)));
+  --_warp-nav-shadow-active-input: var(--warp-nav-shadow-active,var(--warp-nav-shadow,var(--warp-config-part-nav-shadow-active)));
   --_warp-nav-padding-block: var(--warp-nav-padding-block,var(--warp-config-part-nav-padding-block));
-  --_warp-nav-duration: calc(var(--warp-nav-duration,var(--warp-config-part-nav-duration)) * var(--warp-motion-scale));
+  --_warp-nav-duration: calc(var(--_warp-nav-duration-active,var(--_warp-nav-duration-hover,var(--warp-nav-duration,var(--warp-config-part-nav-duration)))) * var(--warp-motion-scale));
 }
-:where([data-scope="nav"]:hover) { --_warp-nav-gap-hover: var(--warp-nav-gap-hover,var(--warp-config-part-nav-gap-hover)); }
-:where([data-scope="nav"]:has(a[aria-current])) { --_warp-nav-gap-active: var(--warp-nav-gap-active,var(--warp-config-part-nav-gap-active)); }
-:where([data-scope="nav"] :not([data-scope="nav"])) { --_warp-nav-padding-block: inherit; --_warp-nav-duration: inherit; }
+:where([data-scope="nav"]:hover) { --_warp-nav-underline-width-hover: var(--warp-nav-underline-width-hover,var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width-hover))); --_warp-nav-duration-hover: var(--warp-nav-duration-hover,var(--warp-nav-duration,var(--warp-config-part-nav-duration-hover))); --_warp-nav-gap-hover: var(--warp-nav-gap-hover,var(--warp-nav-gap,var(--warp-config-part-nav-gap-hover))); }
+:where([data-scope="nav"]:has(a[aria-current])) { --_warp-nav-underline-width-active: var(--warp-nav-underline-width-active,var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width-active))); --_warp-nav-duration-active: var(--warp-nav-duration-active,var(--warp-nav-duration,var(--warp-config-part-nav-duration-active))); --_warp-nav-gap-active: var(--warp-nav-gap-active,var(--warp-nav-gap,var(--warp-config-part-nav-gap-active))); }
+:where([data-scope="nav"] :not([data-scope="nav"])) { --_warp-nav-padding-block: inherit; --_warp-nav-duration: inherit; --_warp-nav-font-family: inherit; --_warp-nav-font-family-hover-input: inherit; --_warp-nav-font-family-active-input: inherit; --_warp-nav-font-size: inherit; --_warp-nav-font-size-hover-input: inherit; --_warp-nav-font-size-active-input: inherit; --_warp-nav-font-weight: inherit; --_warp-nav-font-weight-hover-input: inherit; --_warp-nav-font-weight-active-input: inherit; --_warp-nav-border-width: inherit; --_warp-nav-border-width-hover-input: inherit; --_warp-nav-border-width-active-input: inherit; --_warp-nav-radius: inherit; --_warp-nav-radius-hover-input: inherit; --_warp-nav-radius-active-input: inherit; --_warp-nav-shadow: inherit; --_warp-nav-shadow-hover-input: inherit; --_warp-nav-shadow-active-input: inherit; }
+:where([data-scope="nav"] a) {
+  font-family: var(--_warp-nav-font-family-active,var(--_warp-nav-font-family-hover,var(--_warp-nav-font-family,inherit)));
+  font-size: var(--_warp-nav-font-size-active,var(--_warp-nav-font-size-hover,var(--_warp-nav-font-size,inherit)));
+  font-weight: var(--_warp-nav-font-weight-active,var(--_warp-nav-font-weight-hover,var(--_warp-nav-font-weight,inherit)));
+  border-width: var(--_warp-nav-border-width-active,var(--_warp-nav-border-width-hover,var(--_warp-nav-border-width,0)));
+  border-radius: var(--_warp-nav-radius-active,var(--_warp-nav-radius-hover,var(--_warp-nav-radius,0)));
+  box-shadow: var(--_warp-nav-shadow-active,var(--_warp-nav-shadow-hover,var(--_warp-nav-shadow,none)));
+  border-style: solid; border-color: currentColor;
+}
+:where([data-scope="nav"] a:hover) {
+  --_warp-nav-font-family-hover: var(--_warp-nav-font-family-hover-input);
+  --_warp-nav-font-size-hover: var(--_warp-nav-font-size-hover-input);
+  --_warp-nav-font-weight-hover: var(--_warp-nav-font-weight-hover-input);
+  --_warp-nav-border-width-hover: var(--_warp-nav-border-width-hover-input);
+  --_warp-nav-radius-hover: var(--_warp-nav-radius-hover-input);
+  --_warp-nav-shadow-hover: var(--_warp-nav-shadow-hover-input);
+}
+:where([data-scope="nav"] a[aria-current]) {
+  --_warp-nav-font-family-active: var(--_warp-nav-font-family-active-input);
+  --_warp-nav-font-size-active: var(--_warp-nav-font-size-active-input);
+  --_warp-nav-font-weight-active: var(--_warp-nav-font-weight-active-input);
+  --_warp-nav-border-width-active: var(--_warp-nav-border-width-active-input);
+  --_warp-nav-radius-active: var(--_warp-nav-radius-active-input);
+  --_warp-nav-shadow-active: var(--_warp-nav-shadow-active-input);
+}
 /* warp-theme-only:end */
 :where([data-scope="nav"]:not([data-ready])[data-axis="y"] a[aria-current])::after { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: var(--_bar); background: var(--warp-nav-underline,var(--warp-config-part-nav-underline,var(--warp-color-accent-solid))); }
 

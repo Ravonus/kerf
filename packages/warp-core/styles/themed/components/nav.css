@@ -2,7 +2,7 @@
 @layer warp.components {
 /* -- Nav: links with the sliding bar. One face, moved by transform only: the phase machine (warp-core nav.ts) grows it in
    from an item's edge and out through the far edge. Before script the current link draws the same bar itself. */
-:where([data-scope="nav"]) { position: relative; --_bar: var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width,var(--_warp-sweep-width,var(--warp-sweep-width)))); display: flex; gap: var(--_warp-nav-gap-active,var(--_warp-nav-gap-hover,var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-group))))); align-self: start; inline-size: fit-content; }
+:where([data-scope="nav"]) { position: relative; --_bar: var(--_warp-nav-underline-width-active,var(--_warp-nav-underline-width-hover,var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width,var(--_warp-sweep-width,var(--warp-sweep-width)))))); display: flex; gap: var(--_warp-nav-gap-active,var(--_warp-nav-gap-hover,var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-group))))); align-self: start; inline-size: fit-content; }
 :where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--_warp-nav-gap-active,var(--_warp-nav-gap-hover,var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-tight))))); }
 :where([data-scope="nav"][data-axis="x"] a) { padding-block: var(--_warp-nav-padding-block,var(--warp-space-tight)); }
 :where([data-scope="nav"] a) { color: var(--warp-nav-text,var(--warp-config-part-nav-text,var(--warp-color-text-subtle))); text-decoration: none; transition: color var(--_warp-nav-duration,var(--warp-duration-fast)) var(--warp-ease-out); }
@@ -22,12 +22,55 @@
 :where([data-scope="nav"]:not([data-ready])[data-axis="x"] a[aria-current])::after { content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; block-size: var(--_bar); background: var(--warp-nav-underline,var(--warp-config-part-nav-underline,var(--warp-color-accent-solid))); }
 /* warp-theme-only:start */
 :where([data-scope="nav"]) {
+  --_warp-nav-font-family: var(--warp-nav-font-family,var(--warp-config-part-nav-font-family));
+  --_warp-nav-font-family-hover-input: var(--warp-nav-font-family-hover,var(--warp-nav-font-family,var(--warp-config-part-nav-font-family-hover)));
+  --_warp-nav-font-family-active-input: var(--warp-nav-font-family-active,var(--warp-nav-font-family,var(--warp-config-part-nav-font-family-active)));
+  --_warp-nav-font-size: var(--warp-nav-font-size,var(--warp-config-part-nav-font-size));
+  --_warp-nav-font-size-hover-input: var(--warp-nav-font-size-hover,var(--warp-nav-font-size,var(--warp-config-part-nav-font-size-hover)));
+  --_warp-nav-font-size-active-input: var(--warp-nav-font-size-active,var(--warp-nav-font-size,var(--warp-config-part-nav-font-size-active)));
+  --_warp-nav-font-weight: var(--warp-nav-font-weight,var(--warp-config-part-nav-font-weight));
+  --_warp-nav-font-weight-hover-input: var(--warp-nav-font-weight-hover,var(--warp-nav-font-weight,var(--warp-config-part-nav-font-weight-hover)));
+  --_warp-nav-font-weight-active-input: var(--warp-nav-font-weight-active,var(--warp-nav-font-weight,var(--warp-config-part-nav-font-weight-active)));
+  --_warp-nav-border-width: var(--warp-nav-border-width,var(--warp-config-part-nav-border-width));
+  --_warp-nav-border-width-hover-input: var(--warp-nav-border-width-hover,var(--warp-nav-border-width,var(--warp-config-part-nav-border-width-hover)));
+  --_warp-nav-border-width-active-input: var(--warp-nav-border-width-active,var(--warp-nav-border-width,var(--warp-config-part-nav-border-width-active)));
+  --_warp-nav-radius: var(--warp-nav-radius,var(--warp-config-part-nav-radius));
+  --_warp-nav-radius-hover-input: var(--warp-nav-radius-hover,var(--warp-nav-radius,var(--warp-config-part-nav-radius-hover)));
+  --_warp-nav-radius-active-input: var(--warp-nav-radius-active,var(--warp-nav-radius,var(--warp-config-part-nav-radius-active)));
+  --_warp-nav-shadow: var(--warp-nav-shadow,var(--warp-config-part-nav-shadow));
+  --_warp-nav-shadow-hover-input: var(--warp-nav-shadow-hover,var(--warp-nav-shadow,var(--warp-config-part-nav-shadow-hover)));
+  --_warp-nav-shadow-active-input: var(--warp-nav-shadow-active,var(--warp-nav-shadow,var(--warp-config-part-nav-shadow-active)));
   --_warp-nav-padding-block: var(--warp-nav-padding-block,var(--warp-config-part-nav-padding-block));
-  --_warp-nav-duration: calc(var(--warp-nav-duration,var(--warp-config-part-nav-duration)) * var(--warp-motion-scale));
+  --_warp-nav-duration: calc(var(--_warp-nav-duration-active,var(--_warp-nav-duration-hover,var(--warp-nav-duration,var(--warp-config-part-nav-duration)))) * var(--warp-motion-scale));
 }
-:where([data-scope="nav"]:hover) { --_warp-nav-gap-hover: var(--warp-nav-gap-hover,var(--warp-config-part-nav-gap-hover)); }
-:where([data-scope="nav"]:has(a[aria-current])) { --_warp-nav-gap-active: var(--warp-nav-gap-active,var(--warp-config-part-nav-gap-active)); }
-:where([data-scope="nav"] :not([data-scope="nav"])) { --_warp-nav-padding-block: inherit; --_warp-nav-duration: inherit; }
+:where([data-scope="nav"]:hover) { --_warp-nav-underline-width-hover: var(--warp-nav-underline-width-hover,var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width-hover))); --_warp-nav-duration-hover: var(--warp-nav-duration-hover,var(--warp-nav-duration,var(--warp-config-part-nav-duration-hover))); --_warp-nav-gap-hover: var(--warp-nav-gap-hover,var(--warp-nav-gap,var(--warp-config-part-nav-gap-hover))); }
+:where([data-scope="nav"]:has(a[aria-current])) { --_warp-nav-underline-width-active: var(--warp-nav-underline-width-active,var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width-active))); --_warp-nav-duration-active: var(--warp-nav-duration-active,var(--warp-nav-duration,var(--warp-config-part-nav-duration-active))); --_warp-nav-gap-active: var(--warp-nav-gap-active,var(--warp-nav-gap,var(--warp-config-part-nav-gap-active))); }
+:where([data-scope="nav"] :not([data-scope="nav"])) { --_warp-nav-padding-block: inherit; --_warp-nav-duration: inherit; --_warp-nav-font-family: inherit; --_warp-nav-font-family-hover-input: inherit; --_warp-nav-font-family-active-input: inherit; --_warp-nav-font-size: inherit; --_warp-nav-font-size-hover-input: inherit; --_warp-nav-font-size-active-input: inherit; --_warp-nav-font-weight: inherit; --_warp-nav-font-weight-hover-input: inherit; --_warp-nav-font-weight-active-input: inherit; --_warp-nav-border-width: inherit; --_warp-nav-border-width-hover-input: inherit; --_warp-nav-border-width-active-input: inherit; --_warp-nav-radius: inherit; --_warp-nav-radius-hover-input: inherit; --_warp-nav-radius-active-input: inherit; --_warp-nav-shadow: inherit; --_warp-nav-shadow-hover-input: inherit; --_warp-nav-shadow-active-input: inherit; }
+:where([data-scope="nav"] a) {
+  font-family: var(--_warp-nav-font-family-active,var(--_warp-nav-font-family-hover,var(--_warp-nav-font-family,inherit)));
+  font-size: var(--_warp-nav-font-size-active,var(--_warp-nav-font-size-hover,var(--_warp-nav-font-size,inherit)));
+  font-weight: var(--_warp-nav-font-weight-active,var(--_warp-nav-font-weight-hover,var(--_warp-nav-font-weight,inherit)));
+  border-width: var(--_warp-nav-border-width-active,var(--_warp-nav-border-width-hover,var(--_warp-nav-border-width,0)));
+  border-radius: var(--_warp-nav-radius-active,var(--_warp-nav-radius-hover,var(--_warp-nav-radius,0)));
+  box-shadow: var(--_warp-nav-shadow-active,var(--_warp-nav-shadow-hover,var(--_warp-nav-shadow,none)));
+  border-style: solid; border-color: currentColor;
+}
+:where([data-scope="nav"] a:hover) {
+  --_warp-nav-font-family-hover: var(--_warp-nav-font-family-hover-input);
+  --_warp-nav-font-size-hover: var(--_warp-nav-font-size-hover-input);
+  --_warp-nav-font-weight-hover: var(--_warp-nav-font-weight-hover-input);
+  --_warp-nav-border-width-hover: var(--_warp-nav-border-width-hover-input);
+  --_warp-nav-radius-hover: var(--_warp-nav-radius-hover-input);
+  --_warp-nav-shadow-hover: var(--_warp-nav-shadow-hover-input);
+}
+:where([data-scope="nav"] a[aria-current]) {
+  --_warp-nav-font-family-active: var(--_warp-nav-font-family-active-input);
+  --_warp-nav-font-size-active: var(--_warp-nav-font-size-active-input);
+  --_warp-nav-font-weight-active: var(--_warp-nav-font-weight-active-input);
+  --_warp-nav-border-width-active: var(--_warp-nav-border-width-active-input);
+  --_warp-nav-radius-active: var(--_warp-nav-radius-active-input);
+  --_warp-nav-shadow-active: var(--_warp-nav-shadow-active-input);
+}
 /* warp-theme-only:end */
 :where([data-scope="nav"]:not([data-ready])[data-axis="y"] a[aria-current])::after { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: var(--_bar); background: var(--warp-nav-underline,var(--warp-config-part-nav-underline,var(--warp-color-accent-solid))); }
 }

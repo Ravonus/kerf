@@ -50,7 +50,7 @@
   clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--warp-sweep-radius));
 }
 :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after {
-  z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on); border: var(--_warp-sweep-width,var(--warp-sweep-width)) solid currentColor;
+  z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on); border: var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))) solid currentColor;
   clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
 }
 :where([data-scope="checkbox"][data-invalid]) > [data-part="control"][data-sweep]::after { color: var(--warp-color-sweep-critical); opacity: 1; }
@@ -93,7 +93,7 @@
   border-radius: var(--warp-radius-round); background: var(--warp-color-text-subtle); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);   /* the knob's corners follow the track's */
 }
 :where([data-scope="switch"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(20px); background: var(--warp-color-accent-on-solid); }
-:where([data-scope="switch"]) > input:focus-visible + [data-part="track"] > [data-part="sweep"] { border-width: calc(var(--_warp-sweep-width,var(--warp-sweep-width)) + 1px); }
+:where([data-scope="switch"]) > input:focus-visible + [data-part="track"] > [data-part="sweep"] { border-width: calc(var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))) + 1px); }
 :where([data-scope="switch"][data-size="sm"]) > [data-part="track"] { inline-size: 36px; block-size: 20px; }
 :where([data-scope="switch"][data-size="sm"] [data-part="thumb"]) { inline-size: 14px; block-size: 14px; }
 :where([data-scope="switch"][data-size="sm"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(16px); }
@@ -133,7 +133,7 @@
 :where([data-scope="choice-card"] [data-part="meta"]) { grid-row: 1; grid-column: 2; font-variant-numeric: tabular-nums; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
 :where([data-scope="choice-card"]:has(input:checked)) { background: var(--warp-color-accent-soft); }
 :where([data-scope="choice-card"]:has(input:checked)) { --_a: 1; }
-:where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep"] { border-width: calc(var(--_warp-sweep-width,var(--warp-sweep-width)) + 0.5px); }
+:where([data-scope="choice-card"]:has(input:checked)) > [data-part="sweep"] { border-width: calc(var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))) + 0.5px); }
 :where([data-scope="choice-card"]:has(input:checked) [data-part="meta"]) { color: var(--warp-color-accent-text); }
 
 /* segmented (original Segmented.tsx; review 01 M8): the group rests as a filled track on the hairline, takes ink
@@ -149,7 +149,7 @@
 }
 :where([data-scope="segmented"]:has(input:focus-visible)) { box-shadow: inset 0 0 0 var(--warp-sweep-base-width) var(--warp-color-sweep-base); }
 :where([data-scope="segmented"] > label[data-sweep]) { --warp-sweep-radius: var(--warp-radius-control); border-radius: var(--warp-radius-control); }
-:where([data-scope="segmented"] > label[data-sweep]) > :where([data-part="sweep"]) { z-index: 1; border-width: var(--_warp-sweep-width,var(--warp-sweep-width)); }
+:where([data-scope="segmented"] > label[data-sweep]) > :where([data-part="sweep"]) { z-index: 1; border-width: var(--_warp-field-border-width,var(--_warp-sweep-width,var(--warp-sweep-width))); }
 :where([data-scope="segmented"] > label:has(input:checked)) > :where([data-part="sweep"]) { visibility: hidden; }
 :where([data-scope="segmented"] label) { position: relative; z-index: 3; display: flex; }
 :where([data-scope="segmented"] input) { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
