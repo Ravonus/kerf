@@ -1,8 +1,5 @@
 import { configChecks } from './checks/config.mjs'
-// The PAY-codes (research 10 §7, 37): what `weft check` reports for this plugin, through the `check` hook any plugin has.
-// `run` gets the project through `ctx` and returns findings, and weft does the rest: spans, fixes, `weft fix`, `--json`.
 // TypeScript is loaded here, not in plugin.mjs, so a config load doesn't pay for it. A regex decides which files parse.
-//
 // The client is everything in `src` that isn't a server module. `src/pay/catalog.ts` is client code on purpose: it holds
 // names and amounts, which is why a rail's ids don't go there (PAY012).
 

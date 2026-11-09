@@ -1,9 +1,4 @@
-// @weft-js/pay (PLAN §4.4, research 10): the catalog, and what a `pay.rail` provider implements. Safe in the client graph: nothing
-// here reaches a rail or a server. App code names products and plans; a rail is one line in `plugins`. `@weft-js/pay/server`
-// holds the ledger, and `checkout()` never grants anything: the grant arrives from a verified rail event.
-//
-//   export const pro = product({ id: 'pro', kind: 'subscription', use: 'digital', plans: { month: { usd: 999 } }, grants: ['pro'] })
-//   <button onClick={() => checkout({ product: 'pro', plan: 'month' })}>Go Pro · {price(pro, 'month').display}</button>
+// `checkout()` never grants anything: the grant arrives from a verified rail event.
 
 /** How a product is paid for: a subscription renews, a one-time purchase stays, a consumable is used up. */
 export type ProductKind = 'subscription' | 'one-time' | 'consumable'

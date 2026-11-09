@@ -1,8 +1,3 @@
-// @weft-js/pay/server (research 10 §3, 37): one ledger for every rail. A rail's `verify` turns the bytes it received into events;
-// `ingest` folds them into `purchases`; entitlements are read from those, against the catalog, so nothing else can grant
-// anything. `src/pay.server.ts` default-exports what `definePay` returns, and that value is a `server.extension`: it is
-// how this package reaches the server, through the slot any plugin can use. No line of @weft-js/start names payments.
-//
 // Delivery is at least once, in any order. An event applies by the rail's own clock, so an old one changes nothing and a
 // repeat lands on what it already wrote; `mark` comes last, because a crash before it should redeliver. A failure answers
 // 500 for the same reason. A terminal state wins a tie: a refund and a renewal in the same second is a refund.

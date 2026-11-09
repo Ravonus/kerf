@@ -1,7 +1,3 @@
-// `pay.rail@1` on Stripe (research 10 §5): hosted Checkout and the customer portal, over `fetch` with no SDK, and webhooks
-// checked here rather than left to the app. Nothing runs in the browser: `checkout` is a redirect, so a page needs neither
-// Stripe.js nor a publishable key.
-//
 // Stripe's signature is HMAC-SHA256 of `<t>.<raw body>`, in a header `t=…,v1=…` that can carry several `v1` while a secret
 // rolls. Stripe has no ordering guarantee, so each event carries the object's `created` or the event's own time, and the
 // ledger orders by that. A price is the catalog's unless `prices` maps `pro.month` to a Stripe id, on the server.
@@ -51,7 +47,7 @@ const encoder = new TextEncoder()
 const fromHex = (s: string) =>
   /^[0-9a-f]{64}$/.test(s) ? Uint8Array.from(s.match(/../g)!, (b) => parseInt(b, 16)) : undefined
 
-/** The runtime's own constant-time compare, in native code. A wasm build was measured against it: see research 38. */
+/** The runtime's constant-time compare. */
 async function verified(secret: string, text: string, signatures: string[]) {
   const key = await crypto.subtle.importKey(
     'raw',

@@ -1,6 +1,3 @@
-// The ledger on a Drizzle client (research 10 §3): `purchases` and `pay_events`, in the app's schema so they're
-// inspectable and joinable like any other table. An entry of its own, so an app on another data layer needs no drizzle-orm.
-
 import { eq, getTableName, type AnyColumn, type SQL, type Table } from 'drizzle-orm'
 import type { DbHandle } from '@weft-js/start/db/core'
 import type { PayStore, Purchase } from './server'
