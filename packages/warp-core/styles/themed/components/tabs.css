@@ -1,7 +1,10 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.components {
 /* -- Tabs: line (default) · pill · enclosed --------------------------------- */
-:where([data-scope="tabs"][data-part="root"]) { display: grid; gap: var(--warp-space-group); min-inline-size: 0; }
+:where([data-scope="tabs"][data-part="root"]) { display: grid; gap: var(--warp-tabs-gap,var(--warp-config-part-tabs-gap,var(--warp-space-group))); min-inline-size: 0; }
+/* warp-theme-only:start */
+:where([data-scope="tabs"]) { --_warp-tabs-underline-width: var(--warp-tabs-underline-width,var(--warp-config-part-tabs-underline-width)); }
+/* warp-theme-only:end */
 :where([data-scope="tabs"] > [data-part="list"]) {
   position: relative; display: flex; gap: var(--warp-space-tight); min-inline-size: 0;
   overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity;
@@ -24,7 +27,7 @@
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]:focus-visible) { outline-offset: -2px; }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"] [data-scope="badge"]) { block-size: 18px; padding-inline: 6px; }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]) {
-  position: absolute; inset-block-end: 0; inset-inline-start: 0; block-size: var(--warp-border-emphasis);
+  position: absolute; inset-block-end: 0; inset-inline-start: 0; block-size: var(--_warp-tabs-underline-width,var(--warp-border-emphasis));
   background: var(--warp-tabs-underline,var(--warp-config-part-tabs-underline,var(--warp-color-accent-solid))); pointer-events: none;
 }
 :where([data-scope="tabs"] > [data-part="content"]) { min-inline-size: 0; }

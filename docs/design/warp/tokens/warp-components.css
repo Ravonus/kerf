@@ -169,18 +169,18 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   --_fill: var(--_solid); --_ink: var(--_ink-on); --_edge: transparent;
   --_layer: var(--_solid-hover); --_layer-a: 1;
   position: relative; isolation: isolate;
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--warp-space-related);
-  block-size: var(--warp-control-md); padding-inline: calc(var(--warp-pad-control) + 2px); margin: 0;
-  border: var(--warp-border-hairline) solid var(--warp-button-border,var(--warp-config-part-button-border,var(--warp-tone-edge, var(--_edge)))); border-radius: var(--warp-radius-control);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--warp-button-gap,var(--warp-config-part-button-gap,var(--warp-space-related)));
+  block-size: var(--warp-control-md); padding-inline: var(--warp-button-padding-inline,var(--warp-config-part-button-padding-inline,calc(var(--warp-pad-control) + 2px))); margin: 0;
+  border: var(--warp-button-border-width,var(--warp-config-part-button-border-width,var(--warp-border-hairline))) solid var(--warp-button-border,var(--warp-config-part-button-border,var(--warp-tone-edge, var(--_edge)))); border-radius: var(--warp-button-radius,var(--warp-config-part-button-radius,var(--warp-radius-control)));
   background: var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-fill, var(--_fill)))); color: var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-tone-ink, var(--_ink))));
-  font-family: var(--warp-text-button-font); font-size: var(--warp-text-button-size);
-  font-weight: var(--warp-text-button-weight); letter-spacing: var(--warp-text-button-tracking);
+  font-family: var(--warp-button-font-family,var(--warp-config-part-button-font-family,var(--warp-text-button-font))); font-size: var(--warp-button-font-size,var(--warp-config-part-button-font-size,var(--warp-text-button-size)));
+  font-weight: var(--warp-button-font-weight,var(--warp-config-part-button-font-weight,var(--warp-text-button-weight))); letter-spacing: var(--warp-button-font-letter-spacing,var(--warp-config-part-button-font-letter-spacing,var(--warp-text-button-tracking)));
   text-transform: var(--warp-text-button-case); line-height: 1; white-space: nowrap; text-decoration: none;
   cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   /* release: the spring. Press (below) is instant, and so is hover's colour: nothing waits on the thread clock */
   --_settle: calc(var(--warp-spring-duration) - var(--warp-btn-fill) * 300ms * var(--warp-motion-scale));   /* vivid's offset is a key going back up: it never lingers */
-  transition: scale var(--_settle) var(--warp-ease-spring), translate var(--_settle) var(--warp-ease-spring),
-              box-shadow var(--_settle) var(--warp-ease-spring),
+  transition: scale var(--_warp-button-duration,var(--_settle)) var(--warp-ease-spring), translate var(--_warp-button-duration,var(--_settle)) var(--warp-ease-spring),
+              box-shadow var(--_warp-button-duration,var(--_settle)) var(--warp-ease-spring),
               border-color var(--warp-touch-out) var(--warp-ease-out), color var(--warp-touch-out) var(--warp-ease-out);
 }
 :where([data-scope="button"]:hover) { transition-property: scale, translate, box-shadow; }
@@ -317,16 +317,16 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));   /* both axes: a narrow (icon or one-glyph) button reaches hit-min wide too */
 }
 :where([data-scope="button"]:is(:active)),
-:where([data-scope="button"]:is([data-press])) { scale: var(--warp-press); transition-duration: 0ms; }
+:where([data-scope="button"]:is([data-press])) { scale: var(--warp-button-scale-press,var(--warp-config-part-button-scale-press,var(--warp-press))); transition-duration: 0ms; }
 :where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
 /* vivid: a solid rests flat, its offset folded away under it (0 0, so the hover can grow it out), and the press puts
    it back down: it never sinks into the page */
 :where([data-scope="button"]:not([data-emphasis], :disabled, [aria-disabled="true"])) {
-  box-shadow: 0 0 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
+  box-shadow: var(--_warp-button-shadow-press,var(--warp-button-shadow,var(--warp-config-part-button-shadow,0 0 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent))));
   background-image: linear-gradient(180deg, color-mix(in oklab, white calc(var(--warp-btn-fill) * 10%), transparent), transparent 62%, color-mix(in oklab, black calc(var(--warp-btn-fill) * 7%), transparent));
 }
 :where([data-scope="button"]:not([data-emphasis]):active) {
-  translate: 0 0; box-shadow: 0 0 0 var(--_off);
+  translate: 0 0; box-shadow: var(--warp-button-shadow-press,var(--warp-config-part-button-shadow-press,var(--warp-button-shadow,var(--warp-config-part-button-shadow,0 0 0 var(--_off)))));
 }
 :where([data-scope="button"][data-emphasis]:active)::before { opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a) * 1.55); }
 /* Keel's pull-out: the button rests flat and, under the hand, comes up and left off a hard offset that grows in behind
@@ -334,7 +334,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 @media (hover: hover) {
   :where([data-scope="button"]:hover:not(:active, :disabled, [aria-disabled="true"], [data-emphasis="frame"], [data-emphasis="link"])) {
     translate: calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale)) calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale));
-    box-shadow: calc((var(--warp-offset) + 1px) * var(--warp-btn-fill)) calc((var(--warp-offset) + 2px) * var(--warp-btn-fill)) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
+    box-shadow: var(--_warp-button-shadow-press,var(--warp-button-shadow-hover,var(--warp-config-part-button-shadow-hover,var(--warp-button-shadow,var(--warp-config-part-button-shadow,calc((var(--warp-offset) + 1px) * var(--warp-btn-fill)) calc((var(--warp-offset) + 2px) * var(--warp-btn-fill)) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent))))));
   }
 }
 :where([data-scope="button"][data-emphasis="soft"]) {
@@ -407,6 +407,9 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"] > [data-part="label"]) { transition: opacity var(--warp-duration-fast) var(--warp-ease-out), scale var(--warp-duration-fast) var(--warp-ease-out); }
 :where([data-scope="button"] > [data-part="spinner"]) { position: absolute; inset: 0; margin: auto; color: var(--_ink); border-color: color-mix(in oklab, var(--_ink) 30%, transparent); border-block-start-color: var(--_ink); }
 /* warp-theme-only:start */
+:where([data-scope="button"]) { --_warp-button-duration: calc(var(--warp-button-duration,var(--warp-config-part-button-duration)) * var(--warp-motion-scale)); }
+:where([data-scope="button"][data-press]) { --_warp-button-shadow-press: var(--warp-button-shadow-press,var(--warp-config-part-button-shadow-press)); }
+@property --_warp-button-shadow-press { syntax: "*"; inherits: false; }
 @property --_warp-button-boundary { syntax: "*"; inherits: false; }
 @property --_warp-button-bg-hover { syntax: "*"; inherits: false; }
 @property --_warp-button-bg-focus { syntax: "*"; inherits: false; }
@@ -1134,7 +1137,10 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
    ------------------------------------------------------------------------ */
 
 /* -- Tabs: line (default) · pill · enclosed --------------------------------- */
-:where([data-scope="tabs"][data-part="root"]) { display: grid; gap: var(--warp-space-group); min-inline-size: 0; }
+:where([data-scope="tabs"][data-part="root"]) { display: grid; gap: var(--warp-tabs-gap,var(--warp-config-part-tabs-gap,var(--warp-space-group))); min-inline-size: 0; }
+/* warp-theme-only:start */
+:where([data-scope="tabs"]) { --_warp-tabs-underline-width: var(--warp-tabs-underline-width,var(--warp-config-part-tabs-underline-width)); }
+/* warp-theme-only:end */
 :where([data-scope="tabs"] > [data-part="list"]) {
   position: relative; display: flex; gap: var(--warp-space-tight); min-inline-size: 0;
   overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity;
@@ -1157,7 +1163,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]:focus-visible) { outline-offset: -2px; }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"] [data-scope="badge"]) { block-size: 18px; padding-inline: 6px; }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]) {
-  position: absolute; inset-block-end: 0; inset-inline-start: 0; block-size: var(--warp-border-emphasis);
+  position: absolute; inset-block-end: 0; inset-inline-start: 0; block-size: var(--_warp-tabs-underline-width,var(--warp-border-emphasis));
   background: var(--warp-tabs-underline,var(--warp-config-part-tabs-underline,var(--warp-color-accent-solid))); pointer-events: none;
 }
 :where([data-scope="tabs"] > [data-part="content"]) { min-inline-size: 0; }
@@ -1345,14 +1351,14 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 /* -- Link ------------------------------------------------------------------------- */
 :where(a[data-scope="link"]) {
   color: var(--warp-link-text,var(--warp-config-part-link-text,var(--warp-color-accent-text))); font-weight: 500; border-radius: var(--warp-radius-mark);
-  text-decoration: underline; text-decoration-thickness: var(--warp-border-hairline); text-underline-offset: 0.22em;
+  text-decoration: underline; text-decoration-thickness: var(--warp-link-underline-width,var(--warp-config-part-link-underline-width,var(--warp-border-hairline))); text-underline-offset: var(--warp-link-underline-offset,var(--warp-config-part-link-underline-offset,0.22em));
   text-decoration-color: color-mix(in oklab, var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor)) 40%, transparent);
   /* the sweep: an emphasis-weight underline draws L→R and leaves through the right */
-  background: linear-gradient(var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor)), var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor))) no-repeat right 0 bottom 0 / 0% var(--warp-border-emphasis);
+  background: linear-gradient(var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor)), var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor))) no-repeat right 0 bottom var(--warp-link-underline-offset,var(--warp-config-part-link-underline-offset,0)) / 0% var(--warp-link-underline-width,var(--warp-config-part-link-underline-width,var(--warp-border-emphasis)));
   transition: background-size var(--warp-sweep-duration) var(--warp-sweep-ease), text-decoration-color var(--warp-duration-fast);
 }
 :where(a[data-scope="link"]:hover),
-:where(a[data-scope="link"]:focus-visible) { background-size: 100% var(--warp-border-emphasis); background-position: left 0 bottom 0; text-decoration-color: transparent; }
+:where(a[data-scope="link"]:focus-visible) { background-size: 100% var(--warp-link-underline-width,var(--warp-config-part-link-underline-width,var(--warp-border-emphasis))); background-position: left 0 bottom var(--warp-link-underline-offset,var(--warp-config-part-link-underline-offset,0)); text-decoration-color: transparent; }
 :where(a[data-scope="link"][data-variant="subtle"]) { color: inherit; text-decoration-color: transparent; }
 :where(a[data-scope="link"] svg[data-icon]) { inline-size: 0.85em; block-size: 0.85em; vertical-align: -0.05em; margin-inline-start: 2px; }
 
@@ -1654,9 +1660,9 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 
 /* -- Pill (and PillLink): rounded, selectable; sweeps while hovered or active -- */
 :where([data-scope="pill"]) {
-  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 6px; block-size: 30px; padding-inline: 12px;
-  border: var(--warp-border-hairline) solid var(--warp-pill-border,var(--warp-config-part-pill-border,var(--warp-color-border))); border-radius: var(--warp-radius-round); --warp-sweep-radius: var(--warp-radius-round);
-  background: var(--warp-pill-bg,var(--warp-config-part-pill-bg,var(--warp-color-surface-raised))); color: var(--warp-pill-text,var(--warp-config-part-pill-text,var(--warp-color-text-subtle))); font: 500 var(--warp-text-caption-size)/1 var(--warp-text-body-font);
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: var(--_warp-pill-gap-active,var(--_warp-pill-gap-hover,var(--warp-pill-gap,var(--warp-config-part-pill-gap,6px)))); block-size: var(--warp-pill-height,var(--warp-config-part-pill-height,30px)); padding-inline: var(--warp-pill-padding-inline,var(--warp-config-part-pill-padding-inline,12px));
+  border: var(--warp-pill-border-width,var(--warp-config-part-pill-border-width,var(--warp-border-hairline))) solid var(--warp-pill-border,var(--warp-config-part-pill-border,var(--warp-color-border))); border-radius: var(--warp-pill-radius,var(--warp-config-part-pill-radius,var(--warp-radius-round))); --warp-sweep-radius: var(--warp-pill-radius,var(--warp-config-part-pill-radius,var(--warp-radius-round)));
+  background: var(--warp-pill-bg,var(--warp-config-part-pill-bg,var(--warp-color-surface-raised))); color: var(--warp-pill-text,var(--warp-config-part-pill-text,var(--warp-color-text-subtle))); font: var(--warp-pill-font-weight,var(--warp-config-part-pill-font-weight,500)) var(--warp-pill-font-size,var(--warp-config-part-pill-font-size,var(--warp-text-caption-size)))/var(--warp-pill-font-line-height,var(--warp-config-part-pill-font-line-height,1)) var(--warp-pill-font-family,var(--warp-config-part-pill-font-family,var(--warp-text-body-font)));
   text-decoration: none; cursor: pointer;
   transition: color var(--warp-duration-fast), background-color var(--warp-duration-fast), border-color var(--warp-duration-fast);
 }
@@ -1668,6 +1674,12 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 }
 :where([data-scope="pill"] [data-part="count"]) { font: 500 11px/1 var(--warp-font-mono); }   /* full ink: 0.75 opacity fell to 3.6:1 (review 03 m12) */
 
+/* warp-theme-only:start */
+@property --_warp-pill-gap-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-gap-active { syntax: "*"; inherits: false; }
+:where([data-scope="pill"]:hover) { --_warp-pill-gap-hover: var(--warp-pill-gap-hover,var(--warp-config-part-pill-gap-hover)); }
+:where([data-scope="pill"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"])) { --_warp-pill-gap-active: var(--warp-pill-gap-active,var(--warp-config-part-pill-gap-active)); }
+/* warp-theme-only:end */
 /* -- Separator ----------------------------------------------------------------- */
 :where([data-scope="separator"]) { border: 0; margin: 0; block-size: 1px; background: var(--warp-color-border); }
 :where([data-scope="separator"][aria-orientation="vertical"]) { inline-size: 1px; block-size: auto; align-self: stretch; }
@@ -2008,8 +2020,8 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 
 /* -- Nav: links with the sliding bar. One face, moved by transform only: the phase machine (warp-core nav.ts) grows it in
    from an item's edge and out through the far edge. Before script the current link draws the same bar itself. */
-:where([data-scope="nav"]) { position: relative; --_bar: var(--warp-sweep-width); display: flex; gap: var(--warp-space-group); align-self: start; inline-size: fit-content; }
-:where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--warp-space-tight); }
+:where([data-scope="nav"]) { position: relative; --_bar: var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width,var(--warp-sweep-width))); display: flex; gap: var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-group))); align-self: start; inline-size: fit-content; }
+:where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-tight))); }
 :where([data-scope="nav"][data-axis="x"] a) { padding-block: var(--warp-space-tight); }
 :where([data-scope="nav"] a) { color: var(--warp-nav-text,var(--warp-config-part-nav-text,var(--warp-color-text-subtle))); text-decoration: none; transition: color var(--warp-duration-fast) var(--warp-ease-out); }
 :where([data-scope="nav"] a:hover),

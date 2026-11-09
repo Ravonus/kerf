@@ -1,3 +1,42 @@
+/* warp-theme-only:start */
+@property --warp-button-shadow { syntax: "*"; inherits: false; }
+@property --warp-button-shadow-hover { syntax: "*"; inherits: false; }
+@property --warp-button-shadow-press { syntax: "*"; inherits: false; }
+@property --warp-button-duration { syntax: "*"; inherits: false; }
+@property --warp-button-scale-press { syntax: "*"; inherits: false; }
+@property --warp-nav-gap { syntax: "*"; inherits: false; }
+@property --warp-nav-underline-width { syntax: "*"; inherits: false; }
+@property --warp-tabs-gap { syntax: "*"; inherits: false; }
+@property --warp-tabs-underline-width { syntax: "*"; inherits: false; }
+@property --warp-link-underline-width { syntax: "*"; inherits: false; }
+@property --warp-link-underline-offset { syntax: "*"; inherits: false; }
+@property --warp-pill-gap { syntax: "*"; inherits: false; }
+@property --warp-pill-gap-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-gap-active { syntax: "*"; inherits: false; }
+@property --warp-pill-height { syntax: "*"; inherits: false; }
+@property --warp-pill-padding-inline { syntax: "*"; inherits: false; }
+@property --warp-pill-border-width { syntax: "*"; inherits: false; }
+@property --warp-pill-radius { syntax: "*"; inherits: false; }
+@property --warp-pill-font-family { syntax: "*"; inherits: false; }
+@property --warp-pill-font-size { syntax: "*"; inherits: false; }
+@property --warp-pill-font-weight { syntax: "*"; inherits: false; }
+@property --warp-pill-font-line-height { syntax: "*"; inherits: false; }
+@property --warp-field-gap { syntax: "*"; inherits: false; }
+@property --warp-field-radius { syntax: "*"; inherits: false; }
+@property --warp-card-gap { syntax: "*"; inherits: false; }
+@property --warp-card-padding { syntax: "*"; inherits: false; }
+@property --warp-card-radius { syntax: "*"; inherits: false; }
+@property --warp-card-shadow { syntax: "*"; inherits: false; }
+@property --warp-card-shadow-hover { syntax: "*"; inherits: false; }
+@property --warp-button-gap { syntax: "*"; inherits: false; }
+@property --warp-button-padding-inline { syntax: "*"; inherits: false; }
+@property --warp-button-border-width { syntax: "*"; inherits: false; }
+@property --warp-button-radius { syntax: "*"; inherits: false; }
+@property --warp-button-font-family { syntax: "*"; inherits: false; }
+@property --warp-button-font-size { syntax: "*"; inherits: false; }
+@property --warp-button-font-weight { syntax: "*"; inherits: false; }
+@property --warp-button-font-letter-spacing { syntax: "*"; inherits: false; }
+/* warp-theme-only:end */
 /* =============================================================================
    warp · foundations — tokens + base                         v0.2 · 2026-10-28
    Spec: ../01-foundations.md        Direction: ../00-direction.md
@@ -152,9 +191,9 @@
   --warp-ref-surface-line: var(--warp-color-border);
   --warp-ref-hair: -0.03;    --warp-ref-page: 0;              /* crisper hairline */
   --warp-ref-body-leading: 1.5;
-  --warp-font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --warp-font-display: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --warp-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
+  --warp-font-sans: var(--warp-config-system-font-sans,"Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+  --warp-font-display: var(--warp-config-system-font-display,"Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif);
+  --warp-font-mono: var(--warp-config-system-font-mono,"IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace);
   --warp-ref-title-font: var(--warp-font-display);
   --warp-ref-heading-font: var(--warp-font-display);   /* Space Grotesk carries every heading */
   --warp-ref-display-weight: 500;
@@ -213,9 +252,9 @@
   --warp-ref-surface-line: transparent;
   --warp-ref-hair: 0.032;    --warp-ref-page: -0.012;         /* the hairline all but goes; a deeper page lifts white cards */
   --warp-ref-body-leading: 1.6;
-  --warp-font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --warp-font-display: "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
-  --warp-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
+  --warp-font-sans: var(--warp-config-system-font-sans,"Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+  --warp-font-display: var(--warp-config-system-font-display,"Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif);
+  --warp-font-mono: var(--warp-config-system-font-mono,"IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace);
   --warp-ref-title-font: var(--warp-font-display);
   --warp-ref-heading-font: var(--warp-font-sans);
   --warp-ref-display-weight: 500;
@@ -272,9 +311,9 @@
   --warp-ref-surface-line: var(--warp-color-border);
   --warp-ref-hair: 0;        --warp-ref-page: 0;
   --warp-ref-body-leading: 1.55;
-  --warp-font-sans: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --warp-font-display: "Instrument Serif", "Instrument Serif Fallback", "Fraunces", Georgia, serif;
-  --warp-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
+  --warp-font-sans: var(--warp-config-system-font-sans,"Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif);
+  --warp-font-display: var(--warp-config-system-font-display,"Instrument Serif", "Instrument Serif Fallback", "Fraunces", Georgia, serif);
+  --warp-font-mono: var(--warp-config-system-font-mono,"IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace);
   --warp-ref-title-font: var(--warp-font-display);
   --warp-ref-heading-font: var(--warp-font-sans);
   --warp-ref-display-weight: 400;
@@ -361,12 +400,12 @@
     /* the two fluid sizes again (as in SYS TOKENS): a custom property resolves where it's declared */
     --warp-ref-fluid-unit: calc((100cqi - var(--_navw)) / 100);   /* for scope roots inside it */
     --_fu: var(--warp-ref-fluid-unit);
-    --warp-text-display-size: clamp(calc(var(--warp-ref-display-min) * var(--warp-rem)),
+    --warp-text-display-size: var(--warp-config-system-text-display-size,clamp(calc(var(--warp-ref-display-min) * var(--warp-rem)),
       calc(var(--warp-ref-display-b) * var(--warp-rem) + var(--warp-ref-display-m) * var(--_fu)),
-      calc(var(--warp-ref-display-max) * var(--warp-rem)));
-    --warp-text-title-size: clamp(calc(var(--warp-ref-title-min) * var(--warp-rem)),
+      calc(var(--warp-ref-display-max) * var(--warp-rem))));
+    --warp-text-title-size: var(--warp-config-system-text-title-size,clamp(calc(var(--warp-ref-title-min) * var(--warp-rem)),
       calc(var(--warp-ref-title-b) * var(--warp-rem) + var(--warp-ref-title-m) * var(--_fu)),
-      calc(var(--warp-ref-title-max) * var(--warp-rem)));
+      calc(var(--warp-ref-title-max) * var(--warp-rem))));
   }
 }
 @media (max-width: 1023.98px) { :root:not([data-form]) { --warp-ref-rem-k: 1.066667; --warp-ref-root-size: 0.9375rem; } }
@@ -540,10 +579,10 @@
   --warp-color-data-axis: var(--warp-color-text-subtle);
 
   /* -- shape ------------------------------------------------------------ */
-  --warp-radius-control: calc(2px + 8px * (1 - var(--warp-x)) * (1 - var(--warp-x)));     /* 10 · 4 · 2 */
-  --warp-radius-surface: calc(2px + 12px * (1 - var(--warp-x)) * (1 - var(--warp-x)));    /* 14 · 5 · 2 */
-  --warp-radius-mark:    calc(2px + 2px * (1 - var(--warp-x)) * (1 - var(--warp-x)));     /* checkbox, kbd: 4 · 2.5 · 2 */
-  --warp-radius-round:   var(--warp-ref-radius-round);        /* chip, switch, avatar */
+  --warp-radius-control: var(--warp-config-system-radius-control,calc(2px + 8px * (1 - var(--warp-x)) * (1 - var(--warp-x))));     /* 10 · 4 · 2 */
+  --warp-radius-surface: var(--warp-config-system-radius-surface,calc(2px + 12px * (1 - var(--warp-x)) * (1 - var(--warp-x))));    /* 14 · 5 · 2 */
+  --warp-radius-mark:    var(--warp-config-system-radius-mark,calc(2px + 2px * (1 - var(--warp-x)) * (1 - var(--warp-x))));     /* checkbox, kbd: 4 · 2.5 · 2 */
+  --warp-radius-round:   var(--warp-config-system-radius-round,var(--warp-ref-radius-round));        /* chip, switch, avatar */
   --warp-border-hairline: 1px;
   --warp-border-emphasis: calc(1px + 1px * var(--warp-x));    /* selected, tabs, sweep: 1 · 1.5 · 2 */
   --warp-focus-width: 2px;
@@ -551,26 +590,26 @@
 
   /* -- elevation (alpha × depth; vivid is near-flat and leans on borders) -- */
   --_sa: var(--warp-ref-depth);
-  --warp-elevation-0: none;
+  --warp-elevation-0: var(--warp-config-system-elevation-0,none);
   --_rest: var(--warp-ref-depth-rest);                          /* resting surfaces: 1.2 · 0 · 0.35 */
   --warp-elevation-1:
-    0 1px 2px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.07 * var(--_rest))), oklch(0 0 0 / calc(0.4 * var(--_rest)))),
-    0 6px 18px -6px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.12 * var(--warp-ref-rest-ambient))), oklch(0 0 0 / calc(0.5 * var(--warp-ref-rest-ambient))));
+    var(--warp-config-system-elevation-1,0 1px 2px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.07 * var(--_rest))), oklch(0 0 0 / calc(0.4 * var(--_rest)))),
+    0 6px 18px -6px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.12 * var(--warp-ref-rest-ambient))), oklch(0 0 0 / calc(0.5 * var(--warp-ref-rest-ambient)))));
   --warp-elevation-2:
-    0 1px 3px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.06 * var(--_sa))), oklch(0 0 0 / calc(0.35 * var(--_sa)))),
-    0 6px 16px -4px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.1 * var(--_sa))), oklch(0 0 0 / calc(0.5 * var(--_sa))));
+    var(--warp-config-system-elevation-2,0 1px 3px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.06 * var(--_sa))), oklch(0 0 0 / calc(0.35 * var(--_sa)))),
+    0 6px 16px -4px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.1 * var(--_sa))), oklch(0 0 0 / calc(0.5 * var(--_sa)))));
   --warp-elevation-3:
-    0 2px 6px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.07 * var(--_sa))), oklch(0 0 0 / calc(0.4 * var(--_sa)))),
-    0 18px 40px -8px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.16 * var(--_sa))), oklch(0 0 0 / calc(0.6 * var(--_sa))));
+    var(--warp-config-system-elevation-3,0 2px 6px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.07 * var(--_sa))), oklch(0 0 0 / calc(0.4 * var(--_sa)))),
+    0 18px 40px -8px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.16 * var(--_sa))), oklch(0 0 0 / calc(0.6 * var(--_sa)))));
   --warp-blur-overlay: calc(12px * (1 - var(--warp-x)));      /* 12 · 6 · 0 */
 
   /* -- space (relationships; density-scaled except section/page) -------- */
-  --warp-space-hair:    calc(2px * var(--warp-density-k));
-  --warp-space-tight:   calc(4px * var(--warp-density-k));
-  --warp-space-related: calc(8px * var(--warp-density-k));
-  --warp-space-group:   calc(16px * var(--warp-density-k) * var(--warp-ref-air));
-  --warp-space-section: calc(var(--warp-ref-section) * var(--warp-ref-air));
-  --warp-space-page:    var(--warp-ref-gutter);
+  --warp-space-hair:    var(--warp-config-system-space-hair,calc(2px * var(--warp-density-k)));
+  --warp-space-tight:   var(--warp-config-system-space-tight,calc(4px * var(--warp-density-k)));
+  --warp-space-related: var(--warp-config-system-space-related,calc(8px * var(--warp-density-k)));
+  --warp-space-group:   var(--warp-config-system-space-group,calc(16px * var(--warp-density-k) * var(--warp-ref-air)));
+  --warp-space-section: var(--warp-config-system-space-section,calc(var(--warp-ref-section) * var(--warp-ref-air)));
+  --warp-space-page:    var(--warp-config-system-space-page,var(--warp-ref-gutter));
   --warp-pad-control:   calc(12px * var(--warp-density-k) * var(--warp-ref-air));
   --warp-pad-surface:   calc(20px * var(--warp-density-k) * var(--warp-ref-air));     /* cozy: 24 · 17 · 20 */
 
@@ -588,35 +627,35 @@
      being the nearest inline-size query container (none: the small viewport; iOS 15: vw). max/min
      ≤ 2.5 so 200% zoom still doubles them (WCAG 1.4.4): 1.53 · 1.3 (quiet) · 1.25 (title). */
   --_fu: var(--warp-ref-fluid-unit);
-  --warp-text-display-font: var(--warp-font-display);
-  --warp-text-display-size: clamp(calc(var(--warp-ref-display-min) * var(--warp-rem)),
+  --warp-text-display-font: var(--warp-config-system-text-display-font,var(--warp-font-display));
+  --warp-text-display-size: var(--warp-config-system-text-display-size,clamp(calc(var(--warp-ref-display-min) * var(--warp-rem)),
     calc(var(--warp-ref-display-b) * var(--warp-rem) + var(--warp-ref-display-m) * var(--_fu)),
-    calc(var(--warp-ref-display-max) * var(--warp-rem)));
-  --warp-text-display-leading: 1.04;
-  --warp-text-display-weight: var(--warp-ref-display-weight);
-  --warp-text-display-tracking: var(--warp-ref-display-tracking);
+    calc(var(--warp-ref-display-max) * var(--warp-rem))));
+  --warp-text-display-leading: var(--warp-config-system-text-display-leading,1.04);
+  --warp-text-display-weight: var(--warp-config-system-text-display-weight,var(--warp-ref-display-weight));
+  --warp-text-display-tracking: var(--warp-config-system-text-display-tracking,var(--warp-ref-display-tracking));
   --warp-text-display-variation: var(--warp-ref-display-variation);   /* vivid: "opsz" pinned to max */
   --warp-text-display-trim: var(--warp-ref-trim-display);
   --warp-text-display-trim-k: var(--warp-ref-trim-display-k);         /* 1 where display trims (vivid) */
-  --warp-text-title-font: var(--warp-ref-title-font);
-  --warp-text-title-size: clamp(calc(var(--warp-ref-title-min) * var(--warp-rem)),
+  --warp-text-title-font: var(--warp-config-system-text-title-font,var(--warp-ref-title-font));
+  --warp-text-title-size: var(--warp-config-system-text-title-size,clamp(calc(var(--warp-ref-title-min) * var(--warp-rem)),
     calc(var(--warp-ref-title-b) * var(--warp-rem) + var(--warp-ref-title-m) * var(--_fu)),
-    calc(var(--warp-ref-title-max) * var(--warp-rem)));
-  --warp-text-title-leading: 1.15;
-  --warp-text-title-weight: var(--warp-ref-title-weight);
-  --warp-text-title-tracking: calc(var(--warp-ref-display-tracking) * 0.6);
-  --warp-text-heading-font: var(--warp-ref-heading-font);
-  --warp-text-heading-size: var(--warp-ref-type-heading);
-  --warp-text-heading-leading: 1.3;
-  --warp-text-heading-weight: var(--warp-ref-heading-weight);
-  --warp-text-heading-tracking: -0.01em;
+    calc(var(--warp-ref-title-max) * var(--warp-rem))));
+  --warp-text-title-leading: var(--warp-config-system-text-title-leading,1.15);
+  --warp-text-title-weight: var(--warp-config-system-text-title-weight,var(--warp-ref-title-weight));
+  --warp-text-title-tracking: var(--warp-config-system-text-title-tracking,calc(var(--warp-ref-display-tracking) * 0.6));
+  --warp-text-heading-font: var(--warp-config-system-text-heading-font,var(--warp-ref-heading-font));
+  --warp-text-heading-size: var(--warp-config-system-text-heading-size,var(--warp-ref-type-heading));
+  --warp-text-heading-leading: var(--warp-config-system-text-heading-leading,1.3);
+  --warp-text-heading-weight: var(--warp-config-system-text-heading-weight,var(--warp-ref-heading-weight));
+  --warp-text-heading-tracking: var(--warp-config-system-text-heading-tracking,-0.01em);
   --warp-text-heading-trim: var(--warp-ref-trim-heading);              /* quiet: normal */
   --warp-text-heading-trim-k: var(--warp-ref-trim-heading-k);          /* quiet: 0 */
   --warp-text-heading-wrap: balance;
-  --warp-text-body-font: var(--warp-font-sans);
-  --warp-text-body-size: var(--warp-ref-type-body);
-  --warp-text-body-leading: var(--warp-ref-body-leading);
-  --warp-text-body-weight: 400;
+  --warp-text-body-font: var(--warp-config-system-text-body-font,var(--warp-font-sans));
+  --warp-text-body-size: var(--warp-config-system-text-body-size,var(--warp-ref-type-body));
+  --warp-text-body-leading: var(--warp-config-system-text-body-leading,var(--warp-ref-body-leading));
+  --warp-text-body-weight: var(--warp-config-system-text-body-weight,400);
   --warp-text-prose-size: var(--warp-ref-type-prose);
   --warp-text-prose-leading: 1.65;
   --warp-text-prose-wrap: var(--warp-ref-prose-wrap);                  /* quiet: wrap; else pretty */
@@ -626,31 +665,31 @@
      Inter's at the matched size); --warp-ch is the brand face's ch as em, which doesn't */
   --warp-ch: var(--warp-ref-ch);
   --warp-measure: calc(var(--warp-ref-measure) * var(--warp-ch));
-  --warp-text-label-font: var(--warp-ref-label-font);
-  --warp-text-label-size: calc(var(--warp-ref-type-label) + var(--warp-ref-label-adjust));
-  --warp-text-label-leading: 1.25;
-  --warp-text-label-weight: 500;
-  --warp-text-label-tracking: var(--warp-ref-label-tracking);
-  --warp-text-label-case: var(--warp-ref-label-case);
+  --warp-text-label-font: var(--warp-config-system-text-label-font,var(--warp-ref-label-font));
+  --warp-text-label-size: var(--warp-config-system-text-label-size,calc(var(--warp-ref-type-label) + var(--warp-ref-label-adjust)));
+  --warp-text-label-leading: var(--warp-config-system-text-label-leading,1.25);
+  --warp-text-label-weight: var(--warp-config-system-text-label-weight,500);
+  --warp-text-label-tracking: var(--warp-config-system-text-label-tracking,var(--warp-ref-label-tracking));
+  --warp-text-label-case: var(--warp-config-system-text-label-case,var(--warp-ref-label-case));
   --warp-text-eyebrow-font: var(--warp-ref-eyebrow-font);
   --warp-text-eyebrow-size: calc(var(--warp-ref-type-label) + var(--warp-ref-eyebrow-adjust));
   --warp-text-eyebrow-leading: 1.25;
   --warp-text-eyebrow-weight: 500;
   --warp-text-eyebrow-tracking: var(--warp-ref-eyebrow-tracking);
   --warp-text-eyebrow-case: var(--warp-ref-eyebrow-case);
-  --warp-text-caption-size: var(--warp-ref-type-caption);
-  --warp-text-caption-leading: 1.45;
-  --warp-text-code-font: var(--warp-font-mono);
-  --warp-text-code-size: var(--warp-ref-type-code);
-  --warp-text-code-leading: 1.55;
+  --warp-text-caption-size: var(--warp-config-system-text-caption-size,var(--warp-ref-type-caption));
+  --warp-text-caption-leading: var(--warp-config-system-text-caption-leading,1.45);
+  --warp-text-code-font: var(--warp-config-system-text-code-font,var(--warp-font-mono));
+  --warp-text-code-size: var(--warp-config-system-text-code-size,var(--warp-ref-type-code));
+  --warp-text-code-leading: var(--warp-config-system-text-code-leading,1.55);
   --warp-text-control-size: max(var(--warp-ref-type-body), var(--warp-input-font-min));
   --warp-text-control-leading: 1.25;
-  --warp-text-button-font: var(--warp-ref-button-font);
-  --warp-text-button-size: calc(var(--warp-ref-type-body) + var(--warp-ref-button-adjust));
-  --warp-text-button-leading: 1;
-  --warp-text-button-weight: var(--warp-ref-button-weight);
-  --warp-text-button-tracking: var(--warp-ref-button-tracking);
-  --warp-text-button-case: var(--warp-ref-button-case);
+  --warp-text-button-font: var(--warp-config-system-text-button-font,var(--warp-ref-button-font));
+  --warp-text-button-size: var(--warp-config-system-text-button-size,calc(var(--warp-ref-type-body) + var(--warp-ref-button-adjust)));
+  --warp-text-button-leading: var(--warp-config-system-text-button-leading,1);
+  --warp-text-button-weight: var(--warp-config-system-text-button-weight,var(--warp-ref-button-weight));
+  --warp-text-button-tracking: var(--warp-config-system-text-button-tracking,var(--warp-ref-button-tracking));
+  --warp-text-button-case: var(--warp-config-system-text-button-case,var(--warp-ref-button-case));
   /* trimmed text boxes: controls, badges, chips, eyebrows at every stop; headings from balanced;
      display at vivid (research 11 §3.4). The fallback (no text-box) is in warp.base */
   --warp-text-box-trim: trim-both cap alphabetic;
@@ -719,7 +758,7 @@
   --warp-ease-pop:    var(--warp-ref-ease-pop);                  /* scale-in accents */
   --warp-ease-sheet:  cubic-bezier(0.32, 0.72, 0, 1);            /* drawers: long, rare, heavy */
   --warp-ease-spring: var(--warp-ref-spring);                    /* release, arrivals: the stop's tension */
-  --warp-spring-duration: calc(var(--warp-ref-spring-ms) * var(--warp-motion-scale));
+  --warp-spring-duration: calc(var(--warp-config-system-spring-duration,var(--warp-ref-spring-ms)) * var(--warp-motion-scale));
   --warp-touch-out: calc(var(--warp-ref-touch-out) * var(--_mk));/* hover: instant in, this long out */
   --warp-press: calc(1 - (1 - var(--warp-ref-press)) * var(--warp-motion-scale));
   --warp-offset: calc(var(--warp-ref-offset) * 1);               /* vivid's hard ink shadow; it is depth, so it stays under reduced motion */
@@ -732,7 +771,7 @@
   --warp-stagger-max: 6;                                         /* items; later ones share the last delay */
 
   /* -- signature: sweep + floating border label ------------------------- */
-  --warp-sweep-duration: calc(var(--warp-ref-sweep) * var(--warp-motion-scale)); /* 480 · 620 · 700; 0 = instant */
+  --warp-sweep-duration: calc(var(--warp-config-system-sweep-duration,var(--warp-ref-sweep)) * var(--warp-motion-scale)); /* 480 · 620 · 700; 0 = instant */
   --warp-sweep-ease: cubic-bezier(0.65, 0, 0.35, 1);
   --warp-sweep-ease-in: cubic-bezier(0.3, 0.55, 0.15, 1);        /* in leaves at once (redesign §2); out keeps the original curve */
   --warp-sweep-width: calc(1px + 0.5px * min(1, var(--warp-x) * 2));   /* stroke 1 · 1.5 · 1.5 */
@@ -746,7 +785,7 @@
   /* frame button (§1b): track = ink (#050505-strength) in light, ink at 62% in dark */
   --warp-frame-track: light-dark(var(--warp-color-text), color-mix(in oklab, var(--warp-color-text) 62%, transparent));
   --warp-frame-corner: 10px; --warp-frame-weight: 2px; --warp-frame-stroke: 2.6;
-  --warp-frame-duration: calc(var(--warp-ref-frame) * var(--warp-motion-scale)); /* 480 · 620 · 700, the sweep's; 0 = instant */
+  --warp-frame-duration: calc(var(--warp-config-system-frame-duration,var(--warp-ref-frame)) * var(--warp-motion-scale)); /* 480 · 620 · 700, the sweep's; 0 = instant */
   --warp-color-sweep-critical: var(--warp-color-critical-solid);
   --warp-color-field: var(--warp-ref-field-fill);                  /* at rest */
   --warp-color-field-active: var(--warp-ref-field-fill-active);    /* hover / focus, with the sweep */
@@ -1394,12 +1433,15 @@
   }
 
   /* -- 2 · the floating border field ------------------------------------ */
-  :where([data-scope="field"]) { display: grid; gap: 0; min-inline-size: 0; }
+  :where([data-scope="field"]) { display: grid; gap: var(--warp-field-gap,var(--warp-config-part-field-gap,0)); min-inline-size: 0; }
+/* warp-theme-only:start */
+  :where([data-scope="field"]) { --_warp-field-radius: var(--warp-field-radius,var(--warp-config-part-field-radius)); }
+/* warp-theme-only:end */
   :where([data-scope="field"] > [data-part="control"]) {
     --_lead: var(--warp-pad-control);
     position: relative; display: block; min-inline-size: 0;
     block-size: var(--warp-field-height);
-    border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control);
+    border-radius: var(--_warp-field-radius,var(--warp-radius-control)); --warp-sweep-radius: var(--_warp-field-radius,var(--warp-radius-control));
     background: var(--warp-color-field);
     font-family: var(--warp-label-font);
     transition: background-color var(--warp-duration-base) var(--warp-ease-out);
