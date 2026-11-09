@@ -3,7 +3,7 @@ import type { Scene } from '../stage'
 import { FIELDS, sample, stepFor, type FieldName } from './fields'
 import { palette, type Ramp } from './ramp'
 import { clamp, glow, inRound, LEVEL, PAINTERS, type Box } from './stage-painters'
-import type { Brush, DitherPiece, DitherStageOptions, Skin } from './stage'
+import type { Brush, Cells, DitherPiece, DitherStageOptions, Line, Skin } from './stage'
 import type { tile } from './tiles'
 
 export type StageState = {
@@ -66,46 +66,30 @@ function stageDrawing(st: StageState) {
     st.tone[i] = v
     st.ink[i] = v === 0 && p ? st.paper : (r ?? p?.ramp ?? 0)
   }
-  function fill(
-    X: number,
-    Y: number,
-    W: number,
-    H: number,
-    R: number,
-    v: number | ((x: number, y: number) => number),
-    r?: number,
-  ) {
-    X = Math.round(X)
-    Y = Math.round(Y)
-    W = Math.round(W)
-    H = Math.round(H)
-    const box: Box = [X, Y, W, H],
+  const cells = ({ x, y, w, h }: Cells): Box => [
+    Math.round(x),
+    Math.round(y),
+    Math.round(w),
+    Math.round(h),
+  ]
+  function fill(box: Cells, v: number | ((x: number, y: number) => number), r?: number) {
+    const outer = cells(box),
+      [X, Y, W, H] = outer,
+      R = box.r ?? 0,
       y1 = Math.min(st.rows, Y + H),
       x1 = Math.min(st.cols, X + W),
       fn = typeof v === 'function' ? v : undefined
     for (let y = Math.max(0, Y); y < y1; y++)
       for (let x = Math.max(0, X); x < x1; x++) {
-        if (R > 0 && !inRound(x, y, box, R)) continue
+        if (R > 0 && !inRound(x, y, outer, R)) continue
         const t = fn ? fn(x, y) : (v as number)
         if (t >= 0) set(x, y, t, r)
       }
   }
-  function ring(
-    X: number,
-    Y: number,
-    W: number,
-    H: number,
-    R: number,
-    t: number,
-    v: number,
-    r?: number,
-    dash?: number,
-  ) {
-    X = Math.round(X)
-    Y = Math.round(Y)
-    W = Math.round(W)
-    H = Math.round(H)
-    const outer: Box = [X, Y, W, H],
+  function ring(box: Cells, v: number, { t = 1, ramp: r, dash }: Line = {}) {
+    const outer = cells(box),
+      [X, Y, W, H] = outer,
+      R = box.r ?? 0,
       inner: Box = [X + t, Y + t, W - t * 2, H - t * 2],
       step = dash ? Math.floor(st.time * 10) : 0,
       y1 = Math.min(st.rows, Y + H),
@@ -181,7 +165,7 @@ function stageDetails(st: StageState, fill: Brush['fill'], ring: Brush['ring']) 
     if (!shape) return
     // Strokes are solid ink cut at a hard edge, so letters read as pixels rather than noise. Cells that
     // only graze a stroke clear to paper, which keeps a one-cell halo between the letters and the ground.
-    fill(p.x, p.y, p.w, p.h, 0, (x, y) => {
+    fill({ x: p.x, y: p.y, w: p.w, h: p.h }, (x, y) => {
       const c = shape[(y - p.y) * p.w + (x - p.x)] ?? 0
       return c >= 0.4 ? T : c > 0.04 ? 0 : -1
     })
@@ -192,12 +176,18 @@ function stageDetails(st: StageState, fill: Brush['fill'], ring: Brush['ring']) 
       cells = Math.max(0, p.w * p.h)
     let buf = st.arts.get(p.el)
     if (!buf || buf.length !== cells) st.arts.set(p.el, (buf = new Float32Array(cells)))
-    sample(FIELDS[kind] ?? FIELDS.flow, p.w, p.h, 12 + st.clock + p.hover, buf, stepFor(cells))
-    fill(p.x, p.y, p.w, p.h, p.r, (x, y) => {
+    sample(
+      FIELDS[kind] ?? FIELDS.flow,
+      { cols: p.w, rows: p.h },
+      12 + st.clock + p.hover,
+      buf,
+      stepFor(cells),
+    )
+    fill(p, (x, y) => {
       const v = buf[(y - p.y) * p.w + (x - p.x)]!
       return clamp(v * v * (1.05 + p.hover * 0.3) + glow(p, x, y) * 0.3)
     })
-    ring(p.x, p.y, p.w, p.h, p.r, 1, E, 0)
+    ring(p, E, { ramp: 0 })
   }
 
   return { paintType, paintArt }
@@ -212,8 +202,7 @@ function paintGround(st: StageState, sc: Scene) {
       off = ((sc.scroll?.top ?? 0) * (st.o.drift ?? 0.35)) / sc.unit / st.rows
     sample(
       off ? (x, y, t) => fn(x, y + off, t) : fn,
-      st.cols,
-      st.rows,
+      st,
       12 + st.clock,
       st.ground,
       stepFor(st.cols * st.rows),
@@ -293,8 +282,12 @@ function paintOverlay(st: StageState, sc: Scene, rampId: RampId, brush: Brush) {
   }
   if (sc.rail) {
     const { x, top, len, drag } = sc.rail
-    brush.fill(st.cols - 3, 0, 2, st.rows, 0, (_, y) => (y & 1 ? -1 : S))
-    brush.fill(Math.min(x, st.cols - 3), top, 2, len, 0, drag ? K : T, rampId('accent'))
+    brush.fill({ x: st.cols - 3, y: 0, w: 2, h: st.rows }, (_, y) => (y & 1 ? -1 : S))
+    brush.fill(
+      { x: Math.min(x, st.cols - 3), y: top, w: 2, h: len },
+      drag ? K : T,
+      rampId('accent'),
+    )
   }
 }
 

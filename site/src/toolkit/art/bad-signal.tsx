@@ -67,7 +67,7 @@ export default function BadSignal({ live = true }: ArtProps) {
         tones[i] = (s * 0.96 + h * 0.14) * scan * glow
       }
     }
-    quantize(tones, width, height, SCREEN, cells, out)
+    quantize(tones, out, { cols: width, rows: height }, { tile: SCREEN, palette: cells })
     if (burst > 0.2)
       for (let y = 0; y < height; y++)
         if (noise(y * 0.3, t * 9) > 0.66)

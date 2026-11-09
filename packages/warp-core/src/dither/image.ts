@@ -110,7 +110,7 @@ export function ditherImage(
     if (isDiffusion(algorithm)) {
       const picked = diffuse(v, cols, rows, inks.length, algorithm)
       for (let i = 0; i < picked.length; i++) out[i] = inks[picked[i]!]!
-    } else quantize(v, cols, rows, tile(algorithm), inks, out)
+    } else quantize(v, out, { cols, rows }, { tile: tile(algorithm), palette: inks })
     ctx.clearRect(0, 0, width, height)
     ctx.putImageData(image, 0, 0)
     host.setAttribute('data-state', 'live')

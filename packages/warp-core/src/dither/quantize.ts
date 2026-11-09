@@ -1,17 +1,24 @@
+import type { Grid } from './fields'
+
 // Tones to inks. `v` holds tones in 0–1, one per cell, and a palette index 0 is the darkest or faintest ink.
 
+/** How tones become inks: the threshold tile, the packed-RGBA inks darkest first, and how far the tile reaches. */
+export interface Inking {
+  tile: { n: number; t: Float32Array }
+  palette: Uint32Array
+  /** How much of the step between two inks the tile may cross: 1 (the default) dithers fully, 0 bands. */
+  spread?: number
+}
+
 /**
- * Ordered dither into a packed-RGBA `out`. Returns how many cells changed, so an unchanged frame can skip the canvas.
- * `spread` is how much of the step between two inks the tile may cross: 1 dithers fully, 0 bands.
+ * Ordered dither of a grid's tones `v` into a packed-RGBA `out`. Returns how many cells changed, so an unchanged frame
+ * can skip the canvas.
  */
 export function quantize(
   v: Float32Array,
-  cols: number,
-  rows: number,
-  tile: { n: number; t: Float32Array },
-  palette: Uint32Array,
   out: Uint32Array,
-  spread = 1,
+  { cols, rows }: Grid,
+  { tile, palette, spread = 1 }: Inking,
 ) {
   const top = palette.length - 1,
     n = tile.n,

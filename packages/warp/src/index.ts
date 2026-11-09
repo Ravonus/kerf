@@ -188,6 +188,8 @@ export {
   type DitherStageProps,
   type Algorithm,
   type Brush,
+  type Cells,
+  type Line,
   type DitherPainter,
   type DitherPiece,
   type FieldFn,

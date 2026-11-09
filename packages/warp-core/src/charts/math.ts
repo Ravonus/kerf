@@ -70,15 +70,16 @@ export function monotone(pts: number[][]) {
   return d
 }
 
-/** A bar with only its value end rounded. */
-export function barPath(
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number,
-  dir: 'up' | 'right' = 'up',
-) {
+/** A bar's box in the chart's own units. */
+export interface Bar {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+/** A bar with only its value end rounded, by `r`. */
+export function barPath({ x, y, w, h }: Bar, r: number, dir: 'up' | 'right' = 'up') {
   r = Math.max(0, Math.min(r, (dir === 'up' ? w : h) / 2, Math.abs(dir === 'up' ? h : w)))
   const X = f1(x),
     Y = f1(y),

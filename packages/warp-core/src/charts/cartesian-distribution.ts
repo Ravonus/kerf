@@ -74,7 +74,10 @@ export const combo: Form<ComboConfig> = {
                 {
                   class: 's-bar',
                   style: `--i:${i}`,
-                  d: barPath(ml + band * i + band * 0.2, y(v), band * 0.6, y(0) - y(v), 3),
+                  d: barPath(
+                    { x: ml + band * i + band * 0.2, y: y(v), w: band * 0.6, h: y(0) - y(v) },
+                    3,
+                  ),
                 },
               ),
             ),
@@ -177,10 +180,12 @@ export const histogram: Form<HistConfig> = {
               class: 's-bar',
               style: `--i:${i}`,
               d: barPath(
-                px(b.x0) + 1,
-                py(b.n),
-                px(b.x1) - px(b.x0) - 2,
-                Math.max(0.5, py(0) - py(b.n)),
+                {
+                  x: px(b.x0) + 1,
+                  y: py(b.n),
+                  w: px(b.x1) - px(b.x0) - 2,
+                  h: Math.max(0.5, py(0) - py(b.n)),
+                },
                 x.r,
               ),
             }),

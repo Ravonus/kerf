@@ -389,7 +389,12 @@ describe('agenda', () => {
   })
   test('move slots disable what is taken, ignoring the event itself', () => {
     const e = ev('a', ...on('08:00', '09:00'))
-    const s = moveSlots([e, ev('b', ...on('10:00', '11:00'))], e, '2026-10-28', 60, 480, 660)
+    const s = moveSlots(
+      [e, ev('b', ...on('10:00', '11:00'))],
+      e,
+      { date: '2026-10-28', len: 60 },
+      { to: 660 },
+    )
     expect(s.map((x) => x.busy)).toEqual([false, false, false, true, true, true])
   })
 })

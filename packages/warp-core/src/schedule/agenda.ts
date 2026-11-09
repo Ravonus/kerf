@@ -44,15 +44,15 @@ export function agendaItems(
 export const dayDots = (events: CalEvent[], day: string) =>
   [...new Set(eventsOn(events, day).map((e) => e.cal ?? 1))].slice(0, 3)
 
-/** MoveSheet's start times: disabled when another event is there. */
+/**
+ * MoveSheet's start times for `e` on `date`, `len` minutes long: disabled when another event is there. The day runs
+ * `from` to `to` in minutes (8:00 to 18:00), every `step` (30).
+ */
 export function moveSlots(
   events: CalEvent[],
   e: CalEvent,
-  date: string,
-  len: number,
-  from = 480,
-  to = 1080,
-  step = 30,
+  { date, len }: { date: string; len: number },
+  { from = 480, to = 1080, step = 30 }: { from?: number; to?: number; step?: number } = {},
 ) {
   const out: { s: number; busy: boolean }[] = []
   for (let s = from; s < to; s += step)

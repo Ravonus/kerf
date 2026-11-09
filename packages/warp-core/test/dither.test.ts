@@ -61,7 +61,7 @@ test('a flat tone keeps its coverage through every tile', () => {
     ink = Uint32Array.of(1, 2),
     out = new Uint32Array(size * size)
   for (const p of ['bayer2', 'bayer4', 'bayer8', 'blue', 'halftone'] as Pattern[]) {
-    quantize(v, size, size, tile(p), ink, out)
+    quantize(v, out, { cols: size, rows: size }, { tile: tile(p), palette: ink })
     expect(out.filter((i) => i === 2).length / out.length, p).toBeCloseTo(0.25, 1)
   }
 })
@@ -69,8 +69,22 @@ test('a flat tone keeps its coverage through every tile', () => {
 test('quantize reports what changed, and nothing the second time', () => {
   const v = new Float32Array(16).fill(0.6),
     out = new Uint32Array(16)
-  expect(quantize(v, 4, 4, tile('bayer4'), Uint32Array.of(1, 2, 3), out)).toBe(16)
-  expect(quantize(v, 4, 4, tile('bayer4'), Uint32Array.of(1, 2, 3), out)).toBe(0)
+  expect(
+    quantize(
+      v,
+      out,
+      { cols: 4, rows: 4 },
+      { tile: tile('bayer4'), palette: Uint32Array.of(1, 2, 3) },
+    ),
+  ).toBe(16)
+  expect(
+    quantize(
+      v,
+      out,
+      { cols: 4, rows: 4 },
+      { tile: tile('bayer4'), palette: Uint32Array.of(1, 2, 3) },
+    ),
+  ).toBe(0)
 })
 
 test('error diffusion conserves tone (Floyd-Steinberg) and Atkinson stays cleaner at the ends', () => {
@@ -113,10 +127,10 @@ test('the lattice is the field to within a tone step, at a sixteenth of the call
     calls++
     return FIELDS.weave(x, y, t)
   }
-  const a = sample(f, 160, 90, 3, new Float32Array(14400)),
+  const a = sample(f, { cols: 160, rows: 90 }, 3, new Float32Array(14400)),
     full = calls
   calls = 0
-  const b = sample(f, 160, 90, 3, new Float32Array(14400), 4)
+  const b = sample(f, { cols: 160, rows: 90 }, 3, new Float32Array(14400), 4)
   expect(calls).toBeLessThan(full / 12)
   let worst = 0
   for (let i = 0; i < a.length; i++) worst = Math.max(worst, Math.abs(a[i]! - b[i]!))

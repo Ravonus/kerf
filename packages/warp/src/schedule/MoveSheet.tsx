@@ -78,7 +78,7 @@ function bodyModel(event: CalEvent, p: MoveSheetProps, bind: (go: () => void) =>
   const len = state(origin.e - origin.s)
   const locale = derived(() => p.locale ?? 'en-US')
   const week = derived(() => weekDates(origin.date, p.firstDayOfWeek ?? 1))
-  const slots = derived(() => moveSlots(p.events, e, day.value, len.value))
+  const slots = derived(() => moveSlots(p.events, e, { date: day.value, len: len.value }))
   const stepBy = untrack(() => p.step ?? 15)
   const go = () => {
     const to = {

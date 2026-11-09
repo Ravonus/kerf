@@ -18,7 +18,9 @@ import '@weft-js/warp-core/styles/canvas/stage.css'
 export type {
   Algorithm,
   Brush,
+  Cells,
   DitherPainter,
+  Line,
   DitherPiece,
   Field as FieldFn,
   FieldName,

@@ -12,23 +12,28 @@ export const battery: DitherPainter = (p, b) => {
     gap = 1,
     inner = body - 4,
     bar = (inner - gap * (bars - 1)) / bars
-  b.ring(p.x, p.y, body, p.h, 2, 1, LEVEL.ink)
+  b.ring(
+    { x: p.x, y: p.y, w: body, h: p.h, r: 2 },
+    LEVEL.ink,
+  )
   b.fill(
-    p.x + body,
-    p.y + nub,
-    nub,
-    p.h - nub * 2,
-    0,
+    {
+      x: p.x + body,
+      y: p.y + nub,
+      w: nub,
+      h: p.h - nub * 2,
+    },
     LEVEL.ink,
   )
   for (let i = 0; i < bars; i++) {
     const lit = p.value * bars - i
     b.fill(
-      p.x + 2 + i * (bar + gap),
-      p.y + 2,
-      bar,
-      p.h - 4,
-      0,
+      {
+        x: p.x + 2 + i * (bar + gap),
+        y: p.y + 2,
+        w: bar,
+        h: p.h - 4,
+      },
       lit >= 1
         ? LEVEL.tone
         : lit > 0

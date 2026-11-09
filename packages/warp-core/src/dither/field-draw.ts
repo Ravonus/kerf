@@ -29,8 +29,7 @@ export function drawField({ ctx, width, height, time, dt }: Frame, c: FieldDrawC
       own = typeof f === 'function'
     sample(
       own ? f : FIELDS[f],
-      v.cols,
-      v.rows,
+      v,
       (v.o.seed ?? 12) + v.clock,
       v.tones,
       own && !v.o.smooth ? 1 : stepFor(v.cells),
@@ -39,7 +38,11 @@ export function drawField({ ctx, width, height, time, dt }: Frame, c: FieldDrawC
   }
   const active = v.push?.step(dt) ?? false
   v.hot = composeField(time, active, v, moves() && !reducedMotion(host))
-  let changed = quantize(v.shown, v.cols, v.rows, v.pattern, v.inks, v.out, v.o.spread ?? 0.9)
+  let changed = quantize(v.shown, v.out, v, {
+    tile: v.pattern,
+    palette: v.inks,
+    spread: v.o.spread ?? 0.9,
+  })
   if (v.sparks && (v.hot || active)) {
     igniteField(v, v.sparks)
     changed = 1

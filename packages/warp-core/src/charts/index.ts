@@ -59,5 +59,15 @@ export {
   type Band,
 } from './shapes'
 export { patch, s, type Scene, type Child, type Kid } from './scene'
-export { niceTicks, labelWindow, monotone, barPath, squarify, lin, quantile, seq } from './math'
+export {
+  niceTicks,
+  labelWindow,
+  monotone,
+  barPath,
+  squarify,
+  lin,
+  quantile,
+  seq,
+  type Bar,
+} from './math'
 export type { Form, Ctx, Plot, Tip, LegendItem, TableData } from './types'

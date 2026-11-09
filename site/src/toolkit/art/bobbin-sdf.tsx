@@ -133,7 +133,12 @@ function drawBobbin(state: BobbinState, { ctx, width, height, dt, tier, still, p
         sb,
       })
   state.parity ^= 1
-  quantize(state.tones, width, height, SCREEN, state.cells, state.out)
+  quantize(
+    state.tones,
+    state.out,
+    { cols: width, rows: height },
+    { tile: SCREEN, palette: state.cells },
+  )
   ctx.putImageData(state.image, 0, 0)
 }
 

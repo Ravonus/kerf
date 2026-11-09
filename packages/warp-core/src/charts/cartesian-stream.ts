@@ -68,7 +68,7 @@ export const waterfall: Form<WaterConfig> = {
               `${d.name}: ${d.total ? f(v) : `${v > 0 ? 'up' : 'down'} ${f(Math.abs(v))}`}`,
               {
                 style: `fill:${col}`,
-                d: barPath(x, hi, bw, Math.max(1, h), v < 0 && !d.total ? 0 : 3),
+                d: barPath({ x, y: hi, w: bw, h: Math.max(1, h) }, v < 0 && !d.total ? 0 : 3),
               },
             ),
             i < S.length - 1 &&

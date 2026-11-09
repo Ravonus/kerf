@@ -32,34 +32,32 @@ export interface DitherPiece extends Piece {
   ramp: number
 }
 
+/** A box in cells, rounded by `r` cells. A piece is one, so a painter can hand its piece straight to `fill` and `ring`. */
+export interface Cells {
+  x: number
+  y: number
+  w: number
+  h: number
+  r?: number | undefined
+}
+
+/** How `ring` draws its border: `t` cells thick (1), in `ramp`, dashed every `dash` cells. */
+export interface Line {
+  t?: number | undefined
+  ramp?: number | undefined
+  dash?: number | undefined
+}
+
 /** What a painter draws with. Tones run 0–1 over a ramp's inks, and 0 clears a cell to the page underneath. */
 export interface Brush {
   cols: number
   rows: number
   time: number
   set(x: number, y: number, tone: number, ramp?: number): void
-  /** Fills a box, rounded by `r` cells. `tone` can be a function of the cell, returning a negative number to skip it. */
-  fill(
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    r: number,
-    tone: number | ((x: number, y: number) => number),
-    ramp?: number,
-  ): void
-  /** A border `t` cells thick inside the box. With `dash` it marches round as time passes, for focus. */
-  ring(
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    r: number,
-    t: number,
-    tone: number,
-    ramp?: number,
-    dash?: number,
-  ): void
+  /** Fills a box, rounded by its `r` cells. `tone` can be a function of the cell, returning a negative number to skip it. */
+  fill(box: Cells, tone: number | ((x: number, y: number) => number), ramp?: number): void
+  /** A border inside the box, `t` cells thick (1). With `dash` it marches round as time passes, for focus. */
+  ring(box: Cells, tone: number, line?: Line): void
   /** The stage's field at a cell, 0–1. */
   field(x: number, y: number): number
   /** The dither threshold at a cell, 0–1: compare a coverage with it for an ordered dissolve. */

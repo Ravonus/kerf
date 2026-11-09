@@ -55,7 +55,8 @@ export default function PlasmaInk({ live = true }: ArtProps) {
         tones[i] = sum * 0.125 + 0.5
       }
     }
-    if (quantize(tones, width, height, SCREEN, cells, out)) ctx.putImageData(image, 0, 0)
+    if (quantize(tones, out, { cols: width, rows: height }, { tile: SCREEN, palette: cells }))
+      ctx.putImageData(image, 0, 0)
   }
   return (
     <Canvas

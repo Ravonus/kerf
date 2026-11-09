@@ -175,7 +175,7 @@ export const bar: Form<BarConfig> = {
               return mark('path', i, v.i, `${X[i]}, ${v.name}: ${f(val)}`, {
                 class: 's-bar',
                 style: `--i:${k++}`,
-                d: barPath(bx, by, bw, Math.max(0.5, bh), top ? x.r : 0),
+                d: barPath({ x: bx, y: by, w: bw, h: Math.max(0.5, bh) }, top ? x.r : 0),
               })
             }),
           ),

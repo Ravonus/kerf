@@ -64,15 +64,14 @@ export const FIELDS: Record<FieldName, Field> = {
   },
 }
 
-/** The field across a grid, into `out`. `step` > 1 interpolates between lattice points. */
-export function sample(
-  field: Field,
-  cols: number,
-  rows: number,
-  t: number,
-  out: Float32Array,
-  step = 1,
-) {
+/** A grid of cells. A stage, a field's canvas or a Brush is one, so it can be passed as it is. */
+export interface Grid {
+  cols: number
+  rows: number
+}
+
+/** The field across a grid at time `t`, into `out`. `step` > 1 interpolates between lattice points. */
+export function sample(field: Field, { cols, rows }: Grid, t: number, out: Float32Array, step = 1) {
   const unit = 1 / rows
   if (step === 1) {
     for (let y = 0, i = 0; y < rows; y++)
