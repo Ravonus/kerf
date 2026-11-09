@@ -1,5 +1,4 @@
-// What a transport pack has to do, for `@weft/realtime-*` (research 35 §4). Plain data in, Checks out: it runs in Node
-// against a real relay, or in a page. `make` builds a transport for one named peer.
+// Plain data in, Checks out: it runs in Node against a real relay, or in a page.
 
 import { state, type Derived } from '@weft-js/core'
 import type { PeerLink, PeerRoom, PeerTransport } from './index'

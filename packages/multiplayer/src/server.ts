@@ -1,12 +1,3 @@
-// The server's half (research 35 §2): messages a `channel` spreads into its own definition, so the compiler still sees a
-// plain `channel({ … })` and `authorize` stays the app's.
-//
-//   const mp = multiplayer({ user: ({ ctx }) => ({ id: ctx.user!.id, name: ctx.user!.name }) })
-//   export const doc = channel({
-//     params, authorize,
-//     client: { ...mp.client, say }, server: { ...mp.server, said }, on: { ...mp.on, say: … }, left: mp.left,
-//   })
-//
 // Who a peer is comes from `user`, never from the client: a connection names only its own state and cursor, and every
 // frame is stamped here with the connection that sent it. There's no roster on the server: each client
 // answers an `ask`, peers expire without a beat, so any bus works and a dead instance's peers just age out.
@@ -235,8 +226,6 @@ function messages(
     },
   }
 }
-
-// ---- tickets --------------------------------------------------------------------------------------------------------
 
 const b64 = (bytes: Uint8Array) =>
   btoa(String.fromCharCode(...bytes))

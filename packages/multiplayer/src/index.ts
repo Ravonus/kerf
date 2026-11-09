@@ -1,12 +1,3 @@
-// Presence, cursors, a typed relay and synced scroll, on a `channel` connection (research 35). A library: nothing here
-// is a plugin, and an app that doesn't import it ships none of it. The server's half is `@weft-js/multiplayer/server`.
-//
-//   const chat = doc.connect(() => ({ id: props.id }))
-//   const room = presence(chat, { state: () => ({ typing: typing.value }) })
-//   room.peers.value                      // Peer[], without this connection
-//   const pointers = cursors(room)        // follows the pointer; <Cursors of={pointers} /> draws the others
-//   const clicks = relay<{ ping: { at: string } }>(chat); clicks.on('ping', e => flash(e.data.at, e.peer))
-
 import {
   derived,
   effect,
@@ -183,8 +174,6 @@ export function presence<S = undefined>(conn: Conn, options: PresenceOptions<S> 
 export { cursors, hue, locate, resolve } from './index/cursors'
 export type { CursorOptions, Cursors, LiveCursor } from './index/cursors'
 
-// ---- relay ----------------------------------------------------------------------------------------------------------
-
 /** Something a peer did, named and validated by the server, and which peer did it. */
 export interface RelayEvent<D> {
   peer: string
@@ -212,8 +201,6 @@ export function relay<K extends Record<string, unknown>>(conn: Pick<Conn, 'on' |
     },
   }
 }
-
-// ---- synced scroll and hash: the box, not the DOM ------------------------------------------------------
 
 /** One scroll position in a shared box, as a fraction, so different heights land on the same place. */
 export function syncedScroll(
