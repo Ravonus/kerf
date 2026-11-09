@@ -6,7 +6,7 @@ import { syncBuiltinESMExports } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
-import { startServer } from './serve.mjs'
+import { quote, startServer } from './serve.mjs'
 
 await test('a production server starts and stops without a database', async () => {
   const root = mkdtempSync(join(tmpdir(), 'weft-serve-test-'))
@@ -38,6 +38,28 @@ await test('a production server starts and stops without a database', async () =
     }
     childProcess.spawn = spawn
     syncBuiltinESMExports()
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+await test('reports the exit code when a server exits before answering', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'weft-serve-exit-'))
+  const log = join(root, 'server.log')
+  try {
+    await assert.rejects(
+      startServer(
+        {
+          name: 'early exit',
+          root,
+          log,
+          start: `${quote(process.execPath)} -e "process.exit(23)"`,
+        },
+        '/',
+        { proveBuild: false },
+      ),
+      { message: `early exit: server exited (23) before answering, see ${log}` },
+    )
+  } finally {
     rmSync(root, { recursive: true, force: true })
   }
 })

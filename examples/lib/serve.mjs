@@ -72,7 +72,7 @@ function launch(v, cmd, port, url) {
   }
   // Whatever ends the run, the server ends with it.
   process.on('exit', () => kill('SIGKILL'))
-  return { child, log, kill, alive: () => exited === null }
+  return { child, log, kill, alive: () => exited === null, exit: () => exited }
 }
 
 export async function startServer(v, firstPage, { proveBuild = true } = {}) {
