@@ -6,7 +6,7 @@ import {
   type ToastInput,
   type ToastPromise,
 } from '@weft-js/warp-core'
-import { derived, onCleanup, state, untrack, watch } from '@weft-js/core'
+import { onCleanup, state, untrack, watch } from '@weft-js/core'
 import { Icon, toneIcon } from './Icon'
 import { use } from '@weft-js/warp-core/weft'
 import './styles'
@@ -52,18 +52,16 @@ type ToasterProps = {
 export function Toaster(props: ToasterProps = {}) {
   const list = state<Toast[]>(toasts().get())
   onCleanup(toasts().subscribe((v) => (list.value = v)))
+  // On the server nothing mounts for long, so every Toaster renders the list as it stands.
   const me = {}
-  watch(
-    () => props.position,
-    () => {
-      mounted.value = toFront(
-        untrack(() => mounted.value),
-        me,
-      )
-    },
-  )
+  const front = () => {
+    const m = untrack(() => mounted.value)
+    if (m.at(-1) !== me) mounted.value = toFront(m, me)
+  }
+  if (typeof document !== 'undefined') front()
+  watch(() => props.position, front)
   onCleanup(() => (mounted.value = mounted.value.filter((k) => k !== me)))
-  const shown = derived(() => (mounted.value.at(-1) === me ? list.value : []))
+  const mine = () => !mounted.value.length || mounted.value.at(-1) === me
   let region: HTMLElement | undefined
   use(
     toaster,
@@ -80,7 +78,7 @@ export function Toaster(props: ToasterProps = {}) {
         aria-label="Notifications (F8)"
         tabindex="-1"
       >
-        {shown.value.map((t) => (
+        {(mine() ? list.value : []).map((t) => (
           <div
             key={t.id}
             data-scope="toast"
