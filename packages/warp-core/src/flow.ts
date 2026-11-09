@@ -1,3 +1,6 @@
+const arrival = (a: Animation) =>
+  'animationName' in a && String(a.animationName).startsWith('warp-in-')
+
 let installed = false
 
 /**
@@ -18,11 +21,146 @@ export function flow(
     release(doc)
     scans(doc)
     fallback(doc)
+    settle(doc)
   }
   if (root.hasAttribute('data-flow-armed')) {
     scans(doc)
     fallback(doc)
+    settle(doc)
   } else doc.addEventListener('scroll', arm, { capture: true, once: true, passive: true })
+}
+
+function finishArrival(animation: Animation, win: Window) {
+  const effect = animation.effect as KeyframeEffect | null
+  const progress = effect?.getComputedTiming().progress
+  const el = effect?.target as HTMLElement | null
+  if (!el || progress == null || progress <= 0 || progress >= 1 || el.dataset.flowSettled != null)
+    return
+  const rect = el.getBoundingClientRect()
+  if (rect.bottom <= 0 || rect.top >= win.innerHeight) return
+  const frames = effect!.getKeyframes()
+  const properties = new Set(frames.flatMap((frame) => Object.keys(frame)))
+  for (const key of ['offset', 'computedOffset', 'easing', 'composite']) properties.delete(key)
+  const from: Record<string, string> = {},
+    to: Record<string, string> = {}
+  const read = (style: CSSStyleDeclaration, key: string) =>
+    style.getPropertyValue(key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`))
+  const before = win.getComputedStyle(el)
+  for (const key of properties) from[key] = read(before, key)
+  // Keep both CSS animation slots so the exit retains its original range and timeline.
+  el.dataset.flowSettled = ''
+  const after = win.getComputedStyle(el)
+  const time = after.getPropertyValue('--_flow-settle-time').trim()
+  const duration = parseFloat(time) * (time.endsWith('ms') ? 1 : 1000)
+  const last = frames.at(-1)!
+  for (const key of properties) to[key] = String(last[key] ?? read(after, key))
+  const played = el.animate([from, to], {
+    duration: Number.isFinite(duration) ? duration : 0,
+    easing: after.getPropertyValue('--warp-ref-flow-ease').trim() || 'linear',
+  })
+  return { el, played }
+}
+
+/** Reduced motion hides the animations, so wait for its gate to open only on pages with flow. */
+function waitForMotion(doc: Document) {
+  const selector = families(doc)
+  if (!selector || !doc.querySelector(selector)) return
+  const win = doc.defaultView!
+  const motion = win.matchMedia('(prefers-reduced-motion: reduce)')
+  const retry = () => {
+    if (!doc.getAnimations().some(arrival)) return
+    observer.disconnect()
+    motion.removeEventListener('change', retry)
+    settle(doc)
+  }
+  const observer = new win.MutationObserver(retry)
+  motion.addEventListener('change', retry)
+  observer.observe(doc.documentElement, {
+    attributes: true,
+    subtree: true,
+    attributeFilter: ['data-motion', 'data-flow', 'data-flow-seen'],
+  })
+}
+
+/** Finish an interrupted arrival on a clock; the departure still belongs to its scroll timeline. */
+function settle(doc: Document) {
+  const win = doc.defaultView
+  if (
+    !win?.CSS?.supports('animation-timeline: view()') ||
+    !doc.getAnimations ||
+    !win.IntersectionObserver
+  )
+    return
+  if (!doc.getAnimations().some(arrival)) return waitForMotion(doc)
+  const running = new Map<HTMLElement, Animation>()
+  const offscreen = new win.IntersectionObserver((entries) => {
+    for (const { target, isIntersecting } of entries) {
+      if (isIntersecting) continue
+      const el = target as HTMLElement
+      running.get(el)?.cancel()
+      running.delete(el)
+      delete el.dataset.flowSettled
+      offscreen.unobserve(el)
+    }
+  })
+  const finish = () => {
+    for (const animation of doc.getAnimations()) {
+      if (!arrival(animation)) continue
+      const result = finishArrival(animation, win)
+      if (!result) continue
+      const { el, played } = result
+      running.set(el, played)
+      played.onfinish = () => running.delete(el)
+      offscreen.observe(el)
+    }
+  }
+  const native = 'onscrollend' in doc
+  const interrupt = () => {
+    for (const [el, animation] of running)
+      if (
+        win.getComputedStyle(el).getPropertyValue('--warp-flow-gate').trim() === 'none' ||
+        el.matches(':focus-within,:target') ||
+        el
+          .getAnimations()
+          .some(
+            (a) =>
+              'animationName' in a &&
+              String(a.animationName).startsWith('warp-out-') &&
+              (a.effect?.getComputedTiming().progress ?? 0) > 0,
+          )
+      ) {
+        animation.cancel()
+        running.delete(el)
+      }
+  }
+  let timer = 0,
+    frame = 0
+  doc.addEventListener(
+    'scroll',
+    () => {
+      // A fast fling may reach the header before the clock finishes; never cover that departure.
+      if (running.size && !frame)
+        frame = win.requestAnimationFrame(() => {
+          frame = 0
+          interrupt()
+        })
+      if (!native) {
+        win.clearTimeout(timer)
+        timer = win.setTimeout(finish, 150)
+      }
+    },
+    { capture: true, passive: true },
+  )
+  if (native) doc.addEventListener('scrollend', finish, { capture: true, passive: true })
+  doc.addEventListener('focusin', interrupt, { capture: true })
+  win.addEventListener('hashchange', interrupt)
+  win.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', interrupt)
+  win.matchMedia('print').addEventListener('change', interrupt)
+  new win.MutationObserver(interrupt).observe(doc.documentElement, {
+    attributes: true,
+    subtree: true,
+    attributeFilter: ['data-motion', 'data-flow'],
+  })
 }
 
 /**

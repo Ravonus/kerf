@@ -5,7 +5,7 @@ import { agentsMd } from '../src/agents-md.mjs'
 import { check } from '../src/check.mjs'
 import { main } from '../src/cli.mjs'
 import { loadConfig } from '../src/load-config.mjs'
-import { explain, list } from '../src/plugins.mjs'
+import { explain, list, sync } from '../src/plugins.mjs'
 import { project } from './helpers.mjs'
 
 /** Two fixture plugins defined with @weft-js/core/plugin, in a config that lists them in `order`. */
@@ -257,5 +257,46 @@ describe('build-side slots and check hooks (research 26 §2.5, §3.1)', () => {
     expect(r.diagnostics.find((d) => d.code === 'P111').why).toContain(
       '`X999`, outside its namespace `D`',
     )
+  })
+})
+
+describe('secondary token entries', () => {
+  it('writes entries, removes stale files and rejects invalid input before writing', () => {
+    const dir = project()
+    const tokens = { namespace: 'kit', cssEntries: { tailwind: '@theme {}' } }
+    const loaded = { slots: {}, contributions: [{ name: 'kit', manifest: { tokens } }] }
+    sync(dir, loaded)
+    const entry = join(dir, '.weft/tokens/kit.tailwind.css')
+    expect(readFileSync(entry, 'utf8')).toBe(
+      '/* Generated from weft.config.ts (kit). Do not edit. */\n@theme {}',
+    )
+    for (const cssEntries of [{ '../bad': 'x' }, { valid: 1 }, null, []]) {
+      expect(() =>
+        sync(dir, {
+          ...loaded,
+          contributions: [
+            {
+              name: 'kit',
+              manifest: {
+                tokens: { namespace: 'kit', cssEntries },
+              },
+            },
+          ],
+        }),
+      ).toThrow()
+      expect(existsSync(entry)).toBe(true)
+    }
+    sync(dir, {
+      ...loaded,
+      contributions: [
+        {
+          name: 'kit',
+          manifest: {
+            tokens: { namespace: 'kit' },
+          },
+        },
+      ],
+    })
+    expect(existsSync(entry)).toBe(false)
   })
 })

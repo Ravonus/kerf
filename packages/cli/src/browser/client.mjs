@@ -107,6 +107,78 @@ export function findChrome() {
 
 const stateFile = (root) => join(root, '.weft', 'browser', 'chrome.json')
 
+// Report only URL structure, never credentials, query parameters or fragments.
+function safeUrl(value) {
+  try {
+    const url = new URL(value)
+    url.username = ''
+    url.password = ''
+    url.search = ''
+    url.hash = ''
+    return url.href.slice(0, 500)
+  } catch {
+    return '[invalid URL]'
+  }
+}
+
+async function devtoolsJson(port, path, signal) {
+  const response = await fetch(`http://127.0.0.1:${port}${path}`, { signal })
+  if (!response.ok || !response.body) throw new Error('DevTools endpoint unavailable')
+  const reader = response.body.getReader()
+  const chunks = []
+  let size = 0
+  try {
+    for (;;) {
+      const { value, done } = await reader.read()
+      if (done) break
+      size += value.length
+      if (size > 32_768) throw new Error('DevTools response too large')
+      chunks.push(value)
+    }
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+  } finally {
+    await reader.cancel().catch(() => {})
+  }
+}
+
+/** Append bounded, failure-only DevTools evidence without replacing the launch error. */
+export async function diagnoseLaunch(error, profile, expected) {
+  try {
+    const port = readFileSync(join(profile, 'DevToolsActivePort'), 'utf8').split('\n')[0]
+    if (!/^\d{1,5}$/.test(port) || +port < 1 || +port > 65535) throw new Error('invalid port')
+    const signal = AbortSignal.timeout(750)
+    const [version, targets] = await Promise.all([
+      devtoolsJson(port, '/json/version', signal).catch(() => null),
+      devtoolsJson(port, '/json/list', signal).catch(() => null),
+    ])
+    const browser =
+      typeof version?.Browser === 'string'
+        ? (version.Browser.match(/^(?:Chrome|Chromium|HeadlessChrome|Edg)\/[0-9.]+/)?.[0] ??
+          'unavailable')
+        : 'unavailable'
+    const pages = Array.isArray(targets)
+      ? targets
+          .filter((target) => target?.type === 'page')
+          .slice(0, 10)
+          .map((target) => ({
+            url: safeUrl(target.url),
+            state:
+              typeof target.attached === 'boolean'
+                ? target.attached
+                  ? 'attached'
+                  : 'not attached'
+                : target.webSocketDebuggerUrl
+                  ? 'debuggable'
+                  : 'no debugger',
+          }))
+      : 'unavailable'
+    error.message += `; DevTools: ${JSON.stringify({ browser, expected: safeUrl(expected), pages })}`
+  } catch {
+    error.message += `; DevTools unavailable; expected: ${safeUrl(expected)}`
+  }
+  return error
+}
+
 /**
  * Start a headless Chrome on `route` (a plain page; @weft-js/core/agent connects back to the dev server).
  * @param {string} root
@@ -161,6 +233,7 @@ export async function launch(root, route = '/', { url, headed = false } = {}) {
     })
     return { launched: true, pid: child.pid, headless: !headed, ...t }
   } catch (error) {
+    await diagnoseLaunch(error, profile, args.at(-1))
     close(root)
     child.stderr.destroy()
     error.message += ` (Chrome ${failure ?? 'still running'}; stderr: ${stderr})`

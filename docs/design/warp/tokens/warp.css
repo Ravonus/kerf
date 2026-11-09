@@ -77,6 +77,7 @@
 @property --_flow-sy  { syntax: "<number>"; inherits: false; initial-value: 1; }
 @property --_flow-rot { syntax: "<angle>";  inherits: false; initial-value: 0deg; }
 @property --_flow-scan { syntax: "<number>"; inherits: false; initial-value: 0; }   /* 1 while a code block waits below the fold for its scan */
+@property --_flow-settle-time { syntax: "<time>"; inherits: false; initial-value: 0s; }
 @property --warp-text-display-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
 @property --warp-text-title-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
 @property --warp-text-heading-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
@@ -1234,16 +1235,16 @@
   :where([data-joined="vertical"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part="sweep-base"]) { --_je: 0; border-block-end-width: 0; border-end-start-radius: 0; border-end-end-radius: 0; }
   /* the base wipes away ahead of the stroke and is back the moment the host lets go */
   :where([data-part="sweep-base"]) {
-    z-index: 1; color: var(--warp-color-sweep-base);
+    z-index: 1; color: var(--warp-sweep-base,var(--warp-config-part-sweep-base,var(--warp-color-sweep-base)));
     clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--_round, var(--warp-sweep-radius)));
   }
   :where([data-part="sweep"]) {
-    z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on);
+    z-index: 2; color: var(--warp-sweep-stroke,var(--warp-config-part-sweep-stroke,var(--warp-color-sweep))); opacity: var(--_on);
     clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--_round, var(--warp-sweep-radius)));
   }
   /* error: pinned in by the switch, painted critical */
   :where([data-invalid] > [data-part="sweep"]),
-  :where([data-invalid] > [data-sweep] > [data-part="sweep"]) { color: var(--warp-color-sweep-critical); opacity: 1; }
+  :where([data-invalid] > [data-sweep] > [data-part="sweep"]) { color: var(--warp-sweep-stroke-invalid,var(--warp-config-part-sweep-stroke-invalid,var(--warp-color-sweep-critical))); opacity: 1; }
 
   /* -- the shuttle (redesign §3): one highlight per group that travels. Two registered numbers, one per edge, on their
      own timings: the leading edge goes first, the trailing edge follows, so it draws out like a thread and snaps
@@ -1300,7 +1301,7 @@
   :where([data-sweep]:has(> [data-part="sweep-outline"])) { --warp-sweep-duration: var(--warp-frame-duration); }
   :where([data-part="frame-corners"]),
   :where([data-part="sweep-corners"]) {
-    position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--warp-frame-track);
+    position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--warp-sweep-base,var(--warp-config-part-sweep-base,var(--warp-frame-track)));
   }
   :where([data-part="frame-corners"], [data-part="sweep-corners"]) > i {
     position: absolute; inline-size: var(--warp-frame-corner); block-size: var(--warp-frame-corner);
@@ -1312,7 +1313,7 @@
   :where([data-part$="corners"]) > i:nth-child(4) { inset-block-end: 0;   inset-inline-end: 0;   border-block-end-width: var(--warp-frame-weight);   border-inline-end-width: var(--warp-frame-weight); }
   :where([data-part="sweep-corners"]),
   :where([data-part="sweep-content"]) {
-    color: var(--_tone, var(--warp-color-sweep)); opacity: var(--_on);
+    color: var(--warp-sweep-stroke,var(--warp-config-part-sweep-stroke,var(--_tone, var(--warp-color-sweep)))); opacity: var(--_on);
     clip-path: inset(0 var(--_sr) 0 var(--_sl));
   }
   :where([data-part="sweep-outline"]) {
@@ -1326,7 +1327,7 @@
     --_L: calc(100cqw + 100cqh); --_s: calc(var(--warp-frame-stroke) * 1px);
     --_u0: clamp(0px, calc(var(--warp-frame-tail) * var(--_L) - var(--_o)), var(--_n));
     --_u1: clamp(0px, calc(var(--warp-frame-head) * var(--_L) - var(--_o)), var(--_n));
-    position: absolute; background: var(--_tone, var(--warp-color-sweep));
+    position: absolute; background: var(--warp-sweep-stroke,var(--warp-config-part-sweep-stroke,var(--_tone, var(--warp-color-sweep))));
   }
   :where([data-part="sweep-outline"]) > i:nth-child(-n+3) { --_o: 0px; --_n: 50cqh; }
   :where([data-part="sweep-outline"]) > i:is(:nth-child(2)),
@@ -1356,13 +1357,13 @@
      It is back the moment the host lets go. The margins keep descenders whole at rest; ×3 clears it however narrow it is. */
   :where([data-part="sweep-label"]) { clip-path: inset(-1em -1em -1em calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1) * 3 - 1em)); }
   /* idle accent: the resting label is in the tone; the copy that wipes over it is the text colour */
-  :where([data-sweep]:has(> [data-part="sweep-outline"]) > [data-part="sweep-label"]) { color: var(--_tone, var(--warp-color-accent-text)); }
+  :where([data-sweep]:has(> [data-part="sweep-outline"]) > [data-part="sweep-label"]) { color: var(--warp-sweep-label,var(--warp-config-part-sweep-label,var(--_tone, var(--warp-color-accent-text)))); }
   :where([data-part="sweep-content"]) {
     position: absolute; inset: 0; z-index: 2; display: inline-flex; align-items: center; justify-content: center;
-    gap: inherit; padding: inherit; pointer-events: none; color: var(--warp-color-text);
+    gap: inherit; padding: inherit; pointer-events: none; color: var(--warp-sweep-text,var(--warp-config-part-sweep-text,var(--warp-color-text)));
   }
   /* filled frame: the tone fill slides in under it (sweep-fill), the content copy reads on it */
-  :where([data-sweep]:has(> [data-part="sweep-fill"]) > [data-part="sweep-content"]) { color: var(--_tone-ink, var(--warp-color-accent-on-solid)); }
+  :where([data-sweep]:has(> [data-part="sweep-fill"]) > [data-part="sweep-content"]) { color: var(--warp-sweep-text,var(--warp-config-part-sweep-text,var(--_tone-ink, var(--warp-color-accent-on-solid)))); }
 
   /* -- 1c · rails (SIGNATURE §1c; old: inputs/choice/Switch.tsx) ---------
      The fill moves THROUGH the rail. [data-part="rail-fill"] clips in L→R
@@ -1475,16 +1476,16 @@
      The spans are INLINE: an inline-block per letter makes Chrome compute the label's accessible name
      (and innerText, copy, find) as "F I R S T  N A M E". Colour transitions need no box. */
   :where([data-scope="field"] [data-part="label"] [data-char]) {
-    display: inline; white-space: pre; color: var(--warp-color-label);
+    display: inline; white-space: pre; color: var(--warp-field-label,var(--warp-config-part-field-label,var(--warp-color-label)));
     transition: color var(--warp-label-char-duration) linear;
     transition-delay: calc(var(--d, 0ms) * var(--warp-label-stagger));
   }
   :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-char]),
   :where([data-scope="field"] > [data-part="control"]:is([data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-char]) {
-    color: var(--warp-color-label-rest);
+    color: var(--warp-field-label-floated,var(--warp-config-part-field-label-floated,var(--warp-color-label-rest)));
   }
-  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-char]) { color: var(--warp-color-label-active); }
-  :where([data-scope="field"][data-invalid] [data-char]) { color: var(--warp-color-critical-text); }
+  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-char]) { color: var(--warp-field-label-interaction,var(--warp-config-part-field-label-interaction,var(--warp-color-label-active))); }
+  :where([data-scope="field"][data-invalid] [data-char]) { color: var(--warp-field-label-invalid,var(--warp-config-part-field-label-invalid,var(--warp-color-critical-text))); }
   /* -- classic fields (SIGNATURE §2.5): data-fields="classic" on any ancestor,
      or data-variant="classic" on the field. Label above the box as plain text:
      no float, no notch, no overlap. The sweep border and icon sweep stay;
@@ -1669,7 +1670,7 @@
   :where([role="button"]):active { transition-duration: var(--warp-duration-instant); }
 }
 
-/* warp.flow: automatic scroll choreography. Scrubbed on the compositor, stateless, nothing to hydrate. */
+/* warp.flow: compositor scroll choreography; interrupted arrivals finish when scrolling stops. */
 @layer warp.tokens {
   :root, [data-expression="balanced"] {
     --warp-ref-flow-reach: 20%;   --warp-ref-flow-out: 200px; --warp-ref-flow-step: 14px;   /* reach: a share of the view timeline's cover range, so the move is seen */
@@ -1793,6 +1794,7 @@
       --_flow-w: min(100%, max(var(--_flow-e), 45%));
       --_flow-t: var(--warp-flow-top, calc(var(--warp-control-md) + 12px));   /* warp's bar by default; a page with another header, or none, sets its own */
       --_flow-i: 0;
+      --_flow-settle-time: var(--warp-duration-slow);
       animation-name: var(--warp-flow-gate, var(--_flow-in)), var(--warp-flow-gate, var(--_flow-out));
       animation-timeline: view(), view();
       animation-duration: auto, auto;
@@ -1851,9 +1853,13 @@
       :where([data-scope="table"]:has(> [data-part="viewport"]) tbody > tr) { --_flow-i: min(calc(sibling-index() - 1), 12); }
     }
     :where([data-scope="stat"] [data-part="value"]) {
+      --_flow-settle-time: var(--warp-duration-slow);
       display: block; animation: var(--warp-flow-gate, warp-in-value) auto var(--warp-ref-flow-ease) backwards;
       animation-timeline: --warp-flow-host; animation-range: entry 0 cover var(--warp-ref-flow-reach);
     }
+    /* Only the arrival rests; the second animation keeps fading under the header. */
+    [data-flow-settled] { animation-name: none, var(--warp-flow-gate, var(--_flow-out)); }
+    :where([data-scope="stat"] [data-part="value"])[data-flow-settled] { animation-name: none; }
     :where([data-scope="codeblock"])::after,
     :where([data-flow="code"])::after {
       content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transform-origin: 100% 50%;

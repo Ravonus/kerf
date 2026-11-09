@@ -1,0 +1,276 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.components {
+/* -- Button ---------------------------------------------------------------- */
+:where([data-scope="button"]) {
+  --_fill: var(--_solid); --_ink: var(--_ink-on); --_edge: transparent;
+  --_layer: var(--_solid-hover); --_layer-a: 1;
+  position: relative; isolation: isolate;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--warp-space-related);
+  block-size: var(--warp-control-md); padding-inline: calc(var(--warp-pad-control) + 2px); margin: 0;
+  border: var(--warp-border-hairline) solid var(--warp-button-border,var(--warp-config-part-button-border,var(--warp-tone-edge, var(--_edge)))); border-radius: var(--warp-radius-control);
+  background: var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-fill, var(--_fill)))); color: var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-tone-ink, var(--_ink))));
+  font-family: var(--warp-text-button-font); font-size: var(--warp-text-button-size);
+  font-weight: var(--warp-text-button-weight); letter-spacing: var(--warp-text-button-tracking);
+  text-transform: var(--warp-text-button-case); line-height: 1; white-space: nowrap; text-decoration: none;
+  cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  /* release: the spring. Press (below) is instant, and so is hover's colour: nothing waits on the thread clock */
+  --_settle: calc(var(--warp-spring-duration) - var(--warp-btn-fill) * 300ms * var(--warp-motion-scale));   /* vivid's offset is a key going back up: it never lingers */
+  transition: scale var(--_settle) var(--warp-ease-spring), translate var(--_settle) var(--warp-ease-spring),
+              box-shadow var(--_settle) var(--warp-ease-spring),
+              border-color var(--warp-touch-out) var(--warp-ease-out), color var(--warp-touch-out) var(--warp-ease-out);
+}
+:where([data-scope="button"]:hover) { transition-property: scale, translate, box-shadow; }
+/* the touch clock's fill: the hover layer wipes in L→R and leaves through the right, so it never reverses; at vivid
+   (--warp-btn-fill) the wipe carries the tone's fill. A button that asks to follow (data-follow, --_ptr) swaps the wipe at
+   vivid for two blobs of the tone that close on where the hand arrived, then part at the seam and leave by their own edges:
+   the ground is revealed, never repainted. --_a is the sweep's switch, so hover,
+   focus, hold, open and touch all arrive free, and the ink edge fades in as the fill lands. */
+:where([data-scope="button"]) {
+  --_x: var(--warp-mx, 50%); --_y: var(--warp-my, 50%); --_ptr: 0;
+  --_pa: var(--_solid-hover);
+  --_pb: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 9%, var(--_solid-hover));
+  /* the hard offset: the page's opposite (--warp-offset-color), so the pull-out reads on any ground */
+  --_off: var(--warp-offset-color);
+}
+:where([data-scope="button"][data-follow]) { --_ptr: 1; }
+:where([data-scope="button"][data-tone="neutral"]) { --_pb: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 5%, var(--_solid-hover)); }
+/* a solid's fill is lighter, brighter ink than its rest, spreading from the hand: the hover shade (darker in light) next to
+   the rest read as nothing happening. The fill leans to the highlight, and on light its lightness stops at 0.53, where the
+   on-solid ink still has 4.5:1 (on dark the lift only adds contrast). Without relative colour, a smaller safe mix. Only
+   vivid draws it (--warp-btn-fill). */
+:where([data-scope="button"]:not([data-emphasis])) {
+  --_pa: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 8%, var(--_solid));
+  --_pb: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 11%, var(--_solid));
+}
+@supports (color: oklch(from red l c h)) {
+  :where([data-scope="button"]:not([data-emphasis])) {
+    --_pa: light-dark(oklch(from color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 30%, var(--_solid)) min(l, 0.53) c h), color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 30%, var(--_solid)));
+    --_pb: light-dark(oklch(from color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 48%, var(--_solid)) min(l, 0.53) calc(c * 1.1) h), color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 48%, var(--_solid)));
+  }
+}
+:where([data-scope="button"][data-tone="neutral"]:not([data-emphasis])) {
+  --_pa: color-mix(in oklab, white 10%, var(--_solid));
+  --_pb: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 6%, color-mix(in oklab, white 16%, var(--_solid)));
+}
+/* the primary action reads the stop's primary, which is ink at quiet */
+:where([data-scope="button"]:not([data-emphasis], [data-tone])) {
+  --_solid: var(--warp-color-primary-solid); --_solid-hover: var(--warp-color-primary-solid-hover); --_ink-on: var(--warp-color-primary-on-solid);
+}
+/* a held or keyboard state has no hand: it closes on the middle */
+:where([data-scope="button"]:is(:focus-visible):not(:hover)),
+:where([data-scope="button"]:is([data-hold]):not(:hover)),
+:where([data-scope="button"]:is([data-state="open"]):not(:hover)),
+:where([data-scope="button"]:is([aria-expanded="true"]):not(:hover)) { --_x: 50%; --_y: 50%; }
+/* tints: the ink stays --_text on every frame, so nothing has to be timed */
+:where([data-scope="button"]:is([data-emphasis="soft"])),
+:where([data-scope="button"]:is([data-emphasis="outline"])),
+:where([data-scope="button"]:is([data-emphasis="ghost"])) {
+  --_pa: color-mix(in oklab, var(--_solid) 22%, var(--warp-color-surface));
+  --_pb: color-mix(in oklab, var(--warp-button-highlight,var(--warp-config-part-button-highlight,var(--warp-color-highlight-solid))) 10%, var(--_pa));
+}
+:where([data-scope="button"]:is([data-emphasis="frame"])),
+:where([data-scope="button"]:is([data-emphasis="link"])),
+:where([data-scope="button"]:is(:disabled)),
+:where([data-scope="button"]:is([aria-disabled="true"])) { --warp-btn-fill: 0; }
+/* the sweep on solid and ghost is vivid's ink edge, so it is off below vivid */
+:where([data-scope="button"]:not([data-emphasis])),
+:where([data-scope="button"][data-emphasis="ghost"]) { --_on: 0; --warp-color-sweep: var(--_off); }
+/* a solid draws no edge: the pull-out and its offset already answer the hand, and a rim round the fill read as a border */
+:where([data-scope="button"]:not([data-emphasis])) > :where([data-part="sweep"]) { display: none; }
+/* it fades in whole with the fill: drawn along the edge, it read as a broken line halfway round */
+:where([data-scope="button"][data-emphasis="ghost"]) > :where([data-part="sweep"]) {
+  clip-path: none; opacity: calc(var(--_a, 0) * var(--warp-btn-fill));
+  transition: var(--_edges), opacity var(--warp-duration-base) var(--warp-ease-out);
+}
+:where([data-scope="button"]:is(:disabled)),
+:where([data-scope="button"]:is([aria-disabled="true"])) { --_on: 0; }
+:where([data-scope="button"])::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
+  --_D: calc(var(--warp-fill-duration) * var(--warp-motion-scale));
+  --_fo: calc(1 - var(--_a, 0));
+  --_fr: calc(var(--_a, 0) * 1.3 * var(--warp-btn-fill) * var(--_ptr));
+  --_fa: calc(var(--_fr) * (var(--_x) + 7%) * var(--warp-lead-a, 1));
+  --_fb: calc(var(--_fr) * (107% - var(--_x)) * var(--warp-lead-b, 1));
+  --_fu: calc(var(--_fb) * 0.1 + var(--_fr) * 5%);
+  /* the under-layer rises with the blobs, so nothing shows between them mid-frame */
+  background-color: color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-layer, var(--_layer)))))))) calc((1 - var(--warp-btn-fill)) * 100%), color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))))))) calc((1 - var(--_fo) * var(--_ptr)) * 100%), transparent));
+  opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a));
+  transform: scaleX(calc(var(--warp-btn-fill) * var(--_ptr))); transform-origin: right center;
+  background-origin: border-box;
+  background-image:
+    radial-gradient(ellipse calc(var(--_fb) * 0.44) 95% at calc(var(--_x) + var(--_fb) * 0.44 + var(--_fo) * var(--_fb)) calc(var(--_y) - 42% + (var(--_y) - 50%) * 0.35),
+      var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))))))) 0 58%, color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))))))) 50%, transparent) 80%, transparent 100%),
+    radial-gradient(ellipse calc(var(--_fb) * 0.5) 185% at calc(var(--_x) + var(--_fb) * 0.5 + var(--_fo) * var(--_fb)) var(--_y),
+      var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))))))) 0 62%, color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pb))))))) 50%, transparent) 82%, transparent 100%),
+    radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),
+      var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))))))) 0 66%, color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))))))) 50%, transparent) 84%, transparent 100%);
+  transition:
+    transform var(--warp-sweep-duration) var(--warp-sweep-ease),     /* the wipe runs on the stroke's clock, both ways */
+    --_fo var(--_D) var(--warp-sweep-ease-in),                 /* both ways: the exit is the enter */
+    --_fr 1ms linear calc((1 - var(--_a, 0)) * var(--_D));     /* snaps in; collapses unseen after the exit */
+}
+:where([data-scope="button"]:hover)::before,
+:where([data-scope="button"]:focus-visible)::before,
+:where([data-scope="button"][data-hold])::before,
+:where([data-scope="button"][data-state="open"])::before,
+:where([data-scope="button"][aria-expanded="true"])::before {
+  transform: scaleX(1); transform-origin: left center;
+  transition-duration: var(--warp-sweep-duration), var(--_D), 1ms;
+}
+/* a tap is shorter than the fill, so a finger gets it at once and watches it part */
+@media (hover: none) { :where([data-scope="button"]:active)::before { transition-duration: var(--warp-duration-base), 0ms, 1ms; } }
+/* soft + outline draw the signature border sweep (a [data-part="sweep"] child); tone sets --warp-color-sweep on the host */
+:where([data-scope="button"][data-tone]:not([data-tone="accent"]):not([data-tone="neutral"])) { --warp-color-sweep: var(--_text); }
+
+/* -- frame: the signature button (SIGNATURE §1b). The parts, their motion (760ms), the
+   six-segment CSS outline and the label colours live in warp.css (warp.signature §1b);
+   the button only supplies tone, ink and shape. Markup:
+   <span data-part="frame-corners"><i>×4</i></span><span data-part="sweep-corners"><i>×4</i></span>
+   <span data-part="sweep-outline"><i>×6</i></span><span data-part="sweep-label">…</span>
+   <span data-part="sweep-content" aria-hidden="true">…</span>   (+ sweep-fill first for the filled frame) */
+:where([data-scope="button"][data-emphasis="frame"]) {
+  --_fill: transparent; --_ink: var(--warp-color-text); --_layer: var(--warp-color-text);
+  /* only with data-flair="none" (buttons off): corners stay, a plain hover layer stands in */
+  --_layer-a: calc(var(--warp-state-hover) * (1 - var(--_on, 0)));
+  --_tone-ink: var(--_ink-on); --warp-sweep-fill: var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_solid))))))); --warp-sweep-radius: 0px;
+  /* the original is square-capped and mitred: never rounder than 2px */
+  border-color: transparent; border-radius: min(var(--warp-radius-mark), 2px); overflow: clip;
+}
+:where([data-scope="button"][data-emphasis="frame"][data-tone]:not([data-tone="accent"])) { --_tone: var(--_text); }
+:where([data-scope="button"][data-emphasis="frame"][data-tone="neutral"]) { --_tone: var(--warp-color-text); }
+:where([data-scope="button"][data-emphasis="frame"]:hover),
+:where([data-scope="button"][data-emphasis="frame"]:focus-visible) { color: var(--_ink); }
+/* solid sweep fill, clipped to the button. warp.css slides the fill in with a translate, which paints it outside a
+   button with overflow: visible (the hit area's ::after needs visible). Here the fill stays put and wipes through
+   clip-path instead: the same L→R edge on the same curve, never outside the box, and the 44px hit area and the
+   focus ring (outline) are untouched. --_on 0 (flair none) keeps the plain fade. */
+:where([data-scope="button"] > [data-part="sweep-fill"]) {
+  transform: none; clip-path: inset(0 calc(var(--_sr) * var(--_on, 1)) 0 calc(var(--_sl) * var(--_on, 1)));
+}
+/* touch: the hit area reaches hit-min even when the visual is smaller */
+:where([data-scope="button"])::after {
+  content: ""; position: absolute; pointer-events: auto;
+  inset: min(0px, calc((100% - var(--warp-hit-min)) / 2));   /* both axes: a narrow (icon or one-glyph) button reaches hit-min wide too */
+}
+:where([data-scope="button"]:is(:active)),
+:where([data-scope="button"]:is([data-press])) { scale: var(--warp-press); transition-duration: 0ms; }
+:where([data-scope="button"]:not([data-emphasis]):active)::before { filter: brightness(0.94); }
+/* vivid: a solid rests flat, its offset folded away under it (0 0, so the hover can grow it out), and the press puts
+   it back down: it never sinks into the page */
+:where([data-scope="button"]:not([data-emphasis], :disabled, [aria-disabled="true"])) {
+  box-shadow: 0 0 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
+  background-image: linear-gradient(180deg, color-mix(in oklab, white calc(var(--warp-btn-fill) * 10%), transparent), transparent 62%, color-mix(in oklab, black calc(var(--warp-btn-fill) * 7%), transparent));
+}
+:where([data-scope="button"]:not([data-emphasis]):active) {
+  translate: 0 0; box-shadow: 0 0 0 var(--_off);
+}
+:where([data-scope="button"][data-emphasis]:active)::before { opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a) * 1.55); }
+/* Keel's pull-out: the button rests flat and, under the hand, comes up and left off a hard offset that grows in behind
+   it. It sits after the rest so its offset wins; the press sets it back down, and focus never lifts */
+@media (hover: hover) {
+  :where([data-scope="button"]:hover:not(:active, :disabled, [aria-disabled="true"], [data-emphasis="frame"], [data-emphasis="link"])) {
+    translate: calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale)) calc(-2px * var(--warp-btn-fill) * var(--warp-motion-scale));
+    box-shadow: calc((var(--warp-offset) + 1px) * var(--warp-btn-fill)) calc((var(--warp-offset) + 2px) * var(--warp-btn-fill)) 0 var(--_off), inset 0 1px 0 color-mix(in oklab, white calc(var(--warp-btn-fill) * 22%), transparent);
+  }
+}
+:where([data-scope="button"][data-emphasis="soft"]) {
+  --_fill: var(--_soft); --_ink: var(--_text); --_layer: currentColor; --_layer-a: var(--warp-state-hover);
+}
+:where([data-scope="button"][data-emphasis="outline"]) {
+  --_fill: transparent; --_ink: var(--_text); --_edge: var(--warp-color-border-strong);
+  --_layer: currentColor; --_layer-a: var(--warp-state-hover);
+}
+:where([data-scope="button"][data-emphasis="outline"]:hover) { --_edge: var(--warp-color-border-control); }
+:where([data-scope="button"][data-emphasis="ghost"]) {
+  --_fill: transparent; --_ink: var(--_text); --_layer: currentColor; --_layer-a: var(--warp-state-hover);
+}
+:where([data-scope="button"][data-emphasis="ghost"][data-tone="neutral"]),
+:where([data-scope="button"][data-emphasis="outline"][data-tone="neutral"]) {
+  --_ink: var(--warp-color-text);
+}
+:where([data-scope="button"][data-emphasis="link"]) {
+  --_fill: transparent; --_ink: var(--_text); --_layer: transparent; --_layer-a: 0;
+  block-size: auto; padding: 0; border: 0; border-radius: var(--warp-radius-mark);
+  font-family: var(--warp-text-body-font); font-size: inherit; letter-spacing: 0; text-transform: none; font-weight: 500;
+  text-decoration: underline; text-decoration-thickness: var(--warp-border-hairline); text-underline-offset: 0.22em;
+  text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
+}
+:where([data-scope="button"][data-emphasis="link"]:hover) { text-decoration-color: currentColor; text-decoration-thickness: var(--warp-border-emphasis); }
+:where([data-scope="button"][data-emphasis="link"]:active) { scale: 1; }
+:where([data-scope="button"][data-size="sm"]) { block-size: var(--warp-control-sm); padding-inline: var(--warp-pad-control); gap: calc(var(--warp-space-related) * 0.75); }
+/* vivid's hard offset in scale with a small button: the full one under a 24px icon (a code block's copy) read as a bar */
+:where([data-scope="button"][data-size="sm"]) { --warp-offset: calc(var(--warp-ref-offset) / 3); }
+:where([data-scope="button"][data-size="lg"]) { block-size: var(--warp-control-lg); padding-inline: calc(var(--warp-pad-control) * 1.5); }
+:where([data-scope="button"][data-size="sm"] svg[data-icon]) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
+:where([data-scope="button"][data-size="lg"] svg[data-icon]) { inline-size: var(--warp-icon-lg); block-size: var(--warp-icon-lg); }
+:where([data-scope="button"][data-icon-only]) { inline-size: var(--warp-control-md); padding: 0; }
+:where([data-scope="button"][data-icon-only][data-size="sm"]) { inline-size: var(--warp-control-sm); }
+:where([data-scope="button"][data-icon-only][data-size="lg"]) { inline-size: var(--warp-control-lg); }
+:where([data-scope="button"][data-icon-only])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+/* collapse: under its form factor (`collapse="phone"`, or "tablet", which includes phones) a button with an icon shows only
+   the icon. Its text leaves the eye, not the accessibility tree: display: none would take the button's name with it. The
+   square is !important inside warp's layer so an app's own width for the wide look (unlayered) can't stretch it. */
+:where([data-scope="button"][data-collapse]) { --_square: var(--warp-control-md); }
+:where([data-scope="button"][data-collapse][data-size="sm"]) { --_square: var(--warp-control-sm); }
+:where([data-scope="button"][data-collapse][data-size="lg"]) { --_square: var(--warp-control-lg); }
+@media (max-width: 599.98px) {
+  :root:not([data-form]) :where([data-scope="button"][data-collapse]) { inline-size: var(--_square) !important; padding-inline: 0 !important; justify-content: center !important; }
+  :root:not([data-form]) :where([data-scope="button"][data-collapse])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+  :root:not([data-form]) :where([data-scope="button"][data-collapse] [data-part="collapse"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
+}
+@media (max-width: 1023.98px) {
+  :root:not([data-form]) :where([data-scope="button"][data-collapse="tablet"]) { inline-size: var(--_square) !important; padding-inline: 0 !important; justify-content: center !important; }
+  :root:not([data-form]) :where([data-scope="button"][data-collapse="tablet"])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+  :root:not([data-form]) :where([data-scope="button"][data-collapse="tablet"] [data-part="collapse"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
+}
+:where([data-form="phone"] [data-scope="button"][data-collapse]),
+:where([data-form="tablet"] [data-scope="button"][data-collapse="tablet"]) { inline-size: var(--_square) !important; padding-inline: 0 !important; justify-content: center !important; }
+:where([data-form="phone"] [data-scope="button"][data-collapse])::after,
+:where([data-form="tablet"] [data-scope="button"][data-collapse="tablet"])::after { inset-inline: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
+:where([data-form="phone"] [data-scope="button"][data-collapse] [data-part="collapse"]),
+:where([data-form="tablet"] [data-scope="button"][data-collapse="tablet"] [data-part="collapse"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
+:where([data-scope="button"]:disabled),
+:where([data-scope="button"][aria-disabled="true"]:not([data-loading])) {
+  opacity: var(--warp-opacity-disabled); cursor: not-allowed;
+}
+:where([data-scope="button"]:disabled)::before, :where([data-scope="button"][aria-disabled="true"])::before { opacity: 0; }
+:where([data-scope="button"]:disabled:active),
+:where([data-scope="button"][aria-disabled="true"]:active) { scale: 1; translate: 0 0; }
+:where([data-scope="button"][data-full]) { inline-size: 100%; }
+/* loading: width is kept, the label hides visually, a spinner sits on top */
+:where([data-scope="button"][data-loading]) { cursor: progress; }
+:where([data-scope="button"][data-loading] > :not([data-part="spinner"])) { opacity: 0; scale: 0.96; }   /* opacity, not visibility: the label stays the accessible name (review 03 M3) */
+:where([data-scope="button"] > [data-part="label"]) { transition: opacity var(--warp-duration-fast) var(--warp-ease-out), scale var(--warp-duration-fast) var(--warp-ease-out); }
+:where([data-scope="button"] > [data-part="spinner"]) { position: absolute; inset: 0; margin: auto; color: var(--_ink); border-color: color-mix(in oklab, var(--_ink) 30%, transparent); border-block-start-color: var(--_ink); }
+/* warp-theme-only:start */
+@property --_warp-button-boundary { syntax: "*"; inherits: false; }
+@property --_warp-button-bg-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-bg-focus { syntax: "*"; inherits: false; }
+@property --_warp-button-bg-press { syntax: "*"; inherits: false; }
+@property --_warp-button-bg-disabled { syntax: "*"; inherits: false; }
+@property --_warp-button-text-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-text-focus { syntax: "*"; inherits: false; }
+@property --_warp-button-text-press { syntax: "*"; inherits: false; }
+@property --_warp-button-text-disabled { syntax: "*"; inherits: false; }
+:where([data-scope="button"]) { background-color: var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-fill, var(--_fill)))))))); color: var(--_warp-button-text-disabled,var(--_warp-button-text-press,var(--_warp-button-text-focus,var(--_warp-button-text-hover,var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-tone-ink, var(--_ink)))))))); }
+:where([data-scope="button"]:hover) { --_warp-button-bg-hover: var(--warp-button-bg-hover,var(--warp-config-part-button-bg-hover)); --_warp-button-text-hover: var(--warp-button-text-hover,var(--warp-config-part-button-text-hover)); }
+:where([data-scope="button"]:focus-visible) { --_warp-button-bg-focus: var(--warp-button-bg-focus,var(--warp-config-part-button-bg-focus)); --_warp-button-text-focus: var(--warp-button-text-focus,var(--warp-config-part-button-text-focus)); }
+:where([data-scope="button"]:is(:active,[data-press])) { --_warp-button-bg-press: var(--warp-button-bg-press,var(--warp-config-part-button-bg-press)); --_warp-button-text-press: var(--warp-button-text-press,var(--warp-config-part-button-text-press)); }
+:where([data-scope="button"]:is(:disabled,[aria-disabled="true"])) { --_warp-button-bg-disabled: var(--warp-button-bg-disabled,var(--warp-config-part-button-bg-disabled)); --_warp-button-text-disabled: var(--warp-button-text-disabled,var(--warp-config-part-button-text-disabled)); }
+:where([data-scope="button"]) { --_warp-button-boundary: color-mix(in srgb,var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--_warp-button-text-disabled,var(--_warp-button-text-press,var(--_warp-button-text-focus,var(--_warp-button-text-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-button-text,var(--warp-config-part-button-text)))))))))))) 0%,var(--warp-color-text)); }
+:where([data-scope="button"])::before { --_warp-button-bg-hover: inherit; --_warp-button-bg-focus: inherit; --_warp-button-bg-press: inherit; --_warp-button-bg-disabled: inherit; }
+@media not (forced-colors: active) {
+:where([data-scope="button"][data-sweep]) > :where([data-part="sweep-base"], [data-part="sweep"], [data-part="frame-corners"], [data-part="sweep-corners"], [data-part="sweep-outline"]) { --_warp-button-boundary: inherit; --_warp-button-bg-hover: inherit; --_warp-button-bg-focus: inherit; --_warp-button-bg-press: inherit; --_warp-button-bg-disabled: inherit; --_warp-button-text-hover: inherit; --_warp-button-text-focus: inherit; --_warp-button-text-press: inherit; --_warp-button-text-disabled: inherit; }
+:where([data-scope="button"][data-sweep]) > :where([data-part="sweep-outline"]) > i { --_warp-button-boundary: inherit; --_warp-button-text-hover: inherit; --_warp-button-text-focus: inherit; --_warp-button-text-press: inherit; --_warp-button-text-disabled: inherit; background: var(--warp-sweep-stroke,var(--warp-config-part-sweep-stroke,var(--_warp-button-boundary,var(--_tone, var(--warp-color-sweep))))); }
+:where([data-scope="button"][data-sweep]) > :where([data-part="sweep-base"]) { color: var(--warp-sweep-base,var(--warp-config-part-sweep-base,var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-color-sweep-base))))))))); }
+:where([data-scope="button"][data-sweep]) > :where([data-part="frame-corners"]) { color: var(--warp-sweep-base,var(--warp-config-part-sweep-base,var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-frame-track))))))))); }
+:where([data-scope="button"][data-sweep]:not([data-invalid])) > :where([data-part="sweep"]) { color: var(--warp-sweep-stroke,var(--warp-config-part-sweep-stroke,var(--_warp-button-boundary,var(--warp-color-sweep)))); }
+:where([data-scope="button"][data-sweep]) > :where([data-part="sweep-corners"]) { color: var(--warp-sweep-stroke,var(--warp-config-part-sweep-stroke,var(--_warp-button-boundary,var(--_tone, var(--warp-color-sweep))))); }
+:where([data-scope="button"][data-emphasis="frame"][data-sweep]) > :where([data-part="sweep-label"], [data-part="sweep-content"]) { --_warp-button-text-hover: inherit; --_warp-button-text-focus: inherit; --_warp-button-text-press: inherit; --_warp-button-text-disabled: inherit; }
+:where([data-scope="button"][data-emphasis="frame"][data-sweep]):has(> [data-part="sweep-outline"]) > :where([data-part="sweep-label"]) { color: var(--warp-sweep-label,var(--warp-config-part-sweep-label,var(--_warp-button-text-disabled,var(--_warp-button-text-press,var(--_warp-button-text-focus,var(--_warp-button-text-hover,var(--warp-button-text,var(--warp-config-part-button-text,var(--_tone, var(--warp-color-accent-text)))))))))); }
+:where([data-scope="button"][data-emphasis="frame"][data-sweep]) > :where([data-part="sweep-content"]) { color: var(--warp-sweep-text,var(--warp-config-part-sweep-text,var(--_warp-button-text-disabled,var(--_warp-button-text-press,var(--_warp-button-text-focus,var(--_warp-button-text-hover,var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-color-text))))))))); }
+:where([data-scope="button"][data-emphasis="frame"][data-sweep]):has(> [data-part="sweep-fill"]) > :where([data-part="sweep-content"]) { color: var(--warp-sweep-text,var(--warp-config-part-sweep-text,var(--_warp-button-text-disabled,var(--_warp-button-text-press,var(--_warp-button-text-focus,var(--_warp-button-text-hover,var(--warp-button-text,var(--warp-config-part-button-text,var(--_tone-ink, var(--warp-color-accent-on-solid)))))))))); }
+}
+/* warp-theme-only:end */
+:where([data-scope="button"] > [data-part="label"]) { display: inline-flex; align-items: center; gap: inherit; }
+}
