@@ -1,9 +1,5 @@
 import type { StagePainter } from '@weft-js/warp'
-import type {
-  Style,
-  PaintColor,
-  Hands,
-} from './paint-primitives'
+import type { Style, Hands } from './paint-primitives'
 import {
   stroke,
   paint,
