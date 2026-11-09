@@ -1,8 +1,13 @@
-type Name = 'href' | 'action' | 'formaction'
-interface Saved {
-  original: string | null
-  installed: string
-}
+import {
+  changedNode,
+  ownerOf,
+  patchItem,
+  pin,
+  relevant,
+  scan,
+  SELECTOR,
+  type Retained,
+} from './source-context/pin'
 
 export interface SourceContext {
   /** Stop observing before incoming setup; keep controls pinned until the swap. */
@@ -10,129 +15,11 @@ export interface SourceContext {
   release(): void
 }
 
-interface Wrapper {
-  target: object
-  name: string
-  descriptor: PropertyDescriptor
-  replacement: PropertyDescriptor
-}
-
-interface Retained {
-  root: HTMLElement
-  win: Window & typeof globalThis
-  source: string
-  base: string
-  saved: Map<Element, Map<Name, Saved>>
-  owners: WeakMap<NamedNodeMap, Element>
-  nativeSet: Element['setAttribute']
-  nativeRemove: Element['removeAttribute']
-  attrValue: PropertyDescriptor['set']
-  stopped: boolean
-  wrappers: Wrapper[]
-}
-
 type Original = (...args: unknown[]) => unknown
 
 const active = new WeakSet<Document>()
-const SELECTOR = 'a[href],form,button[formaction],input[formaction]'
 const EVENTS = ['pointerdown', 'click', 'auxclick', 'submit']
 const AFTER = ['click', 'auxclick', 'submit']
-
-const relevant = (item: Element, name: string): name is Name =>
-  (item.localName === 'a' && name === 'href') ||
-  (item.localName === 'form' && name === 'action') ||
-  ((item.localName === 'button' || item.localName === 'input') && name === 'formaction')
-
-function pin(
-  c: Retained,
-  item: Element,
-  name: Name,
-  raw: string | null,
-  force = false,
-): string | null {
-  const records = c.saved.get(item)
-  if (!force && records?.get(name)?.installed === raw) return raw
-  if (raw === null && name !== 'action') {
-    records?.delete(name)
-    return null
-  }
-  // Absolute and root-relative URLs resolve the same from any path: leave them alone.
-  if (raw && raw !== records?.get(name)?.installed && /^(?:[a-z][a-z\d+.-]*:|\/)/i.test(raw)) {
-    records?.delete(name)
-    return raw
-  }
-  let resolved: string
-  try {
-    resolved = name !== 'href' && !raw ? c.source : new URL(raw ?? '', c.base).href
-  } catch {
-    records?.delete(name)
-    return raw
-  }
-  if (raw === resolved) {
-    records?.delete(name)
-    return raw
-  }
-  const own = records ?? new Map<Name, Saved>()
-  c.saved.set(item, own)
-  own.set(name, { original: raw, installed: resolved })
-  return resolved
-}
-
-function patch(c: Retained, item: Element, name: Name) {
-  const raw = item.getAttribute(name)
-  const resolved = pin(c, item, name, raw)
-  if (resolved !== raw) {
-    if (resolved === null) Reflect.apply(c.nativeRemove, item, [name])
-    else Reflect.apply(c.nativeSet, item, [name, resolved])
-  }
-}
-
-function patchItem(c: Retained, item: Element) {
-  void item.attributes // Register maps captured before this context began.
-  if (item.localName === 'a') patch(c, item, 'href')
-  if (item.localName === 'form') patch(c, item, 'action')
-  if (item.localName === 'button' || item.localName === 'input') patch(c, item, 'formaction')
-}
-
-function scan(c: Retained, parent: ParentNode) {
-  for (const item of parent.querySelectorAll(SELECTOR)) patchItem(c, item)
-}
-
-function ownerOf(c: Retained, map: NamedNodeMap) {
-  const known = c.owners.get(map)
-  if (known) return known
-  if (c.root.matches('a,form,button,input') && c.root.attributes === map) return c.root
-  for (const item of c.root.querySelectorAll('a,form,button,input'))
-    if (item.attributes === map) return item
-  return undefined
-}
-
-function changedNode(
-  c: Retained,
-  item: Element | null | undefined,
-  attr: unknown,
-  added: boolean,
-  previous: Attr | null,
-) {
-  if (
-    c.stopped ||
-    !item ||
-    !c.root.contains(item) ||
-    !(attr instanceof c.win.Attr) ||
-    attr.namespaceURI !== null ||
-    !relevant(item, attr.localName.toLowerCase())
-  )
-    return
-  const name = attr.localName.toLowerCase() as Name
-  if (added) {
-    const raw = attr.value,
-      value = pin(c, item, name, raw, previous !== attr)
-    if (value !== raw) Reflect.apply(c.attrValue!, attr, [value])
-  } else {
-    const value = pin(c, item, name, null, true)
-    if (value !== null) Reflect.apply(c.nativeSet, item, [name, value])
-  }
-}
 
 function install(
   c: Retained,
@@ -166,6 +53,19 @@ function restore(c: Retained) {
     )
       Object.defineProperty(target, name, descriptor)
   }
+}
+
+function wrapMethods(
+  c: Retained,
+  target: object,
+  names: string[],
+  make: (name: string, original: Original) => Original,
+) {
+  for (const name of names)
+    install(c, target, name, (descriptor) => ({
+      ...descriptor,
+      value: make(name, descriptor.value as Original),
+    }))
 }
 
 function hookAttributes(c: Retained) {
@@ -208,64 +108,61 @@ function hookValues(c: Retained) {
 
 function hookNamedNodeMap(c: Retained) {
   const { win } = c
-  for (const method of ['setNamedItem', 'setNamedItemNS', 'removeNamedItem', 'removeNamedItemNS']) {
-    install(c, win.NamedNodeMap.prototype, method, (descriptor) => {
-      const original = descriptor.value as Original
-      return {
-        ...descriptor,
-        value(this: NamedNodeMap, ...args: unknown[]) {
-          const added = method.startsWith('set')
-          const owner = !c.stopped && !added ? ownerOf(c, this) : c.owners.get(this)
-          const result = Reflect.apply(original, this, args) as Attr | null
-          const attr = added ? args[0] : result
-          const item = owner ?? (attr instanceof win.Attr ? attr.ownerElement : null)
-          changedNode(c, item, attr, added, result)
-          return result
-        },
-      }
-    })
-  }
+  const names = ['setNamedItem', 'setNamedItemNS', 'removeNamedItem', 'removeNamedItemNS']
+  wrapMethods(
+    c,
+    win.NamedNodeMap.prototype,
+    names,
+    (method, original) =>
+      function (this: NamedNodeMap, ...args: unknown[]) {
+        const added = method.startsWith('set')
+        const owner = !c.stopped && !added ? ownerOf(c, this) : c.owners.get(this)
+        const result = Reflect.apply(original, this, args) as Attr | null
+        const attr = added ? args[0] : result
+        const item = owner ?? (attr instanceof win.Attr ? attr.ownerElement : null)
+        changedNode(c, item, attr, added, result)
+        return result
+      },
+  )
 }
 
 function hookAttributeNodes(c: Retained) {
-  for (const method of ['setAttributeNode', 'setAttributeNodeNS', 'removeAttributeNode']) {
-    install(c, c.win.Element.prototype, method, (descriptor) => {
-      const original = descriptor.value as Original
-      return {
-        ...descriptor,
-        value(this: Element, ...args: unknown[]) {
-          const result = Reflect.apply(original, this, args) as Attr | null
-          const added = method !== 'removeAttributeNode'
-          changedNode(c, this, added ? args[0] : result, added, result)
-          return result
-        },
-      }
-    })
-  }
+  const names = ['setAttributeNode', 'setAttributeNodeNS', 'removeAttributeNode']
+  wrapMethods(
+    c,
+    c.win.Element.prototype,
+    names,
+    (method, original) =>
+      function (this: Element, ...args: unknown[]) {
+        const result = Reflect.apply(original, this, args) as Attr | null
+        const added = method !== 'removeAttributeNode'
+        changedNode(c, this, added ? args[0] : result, added, result)
+        return result
+      },
+  )
 }
 
 function hookAttributeMethods(c: Retained) {
-  for (const name of ['setAttribute', 'removeAttribute', 'setAttributeNS', 'removeAttributeNS']) {
-    install(c, c.win.Element.prototype, name, (descriptor) => {
-      const original = descriptor.value as Original
-      return {
-        ...descriptor,
-        value(this: Element, ...args: unknown[]) {
-          const namespaced = name.endsWith('NS')
-          const key = String(args[namespaced ? 1 : 0])
-          const attr = key.toLowerCase()
-          const local = !namespaced || args[0] === null || args[0] === ''
-          if (!c.stopped && local && c.root.contains(this) && relevant(this, attr)) {
-            const raw = name.startsWith('remove') ? null : String(args[namespaced ? 2 : 1])
-            const value = pin(c, this, attr, raw, true)
-            if (value === null) return Reflect.apply(c.nativeRemove, this, [key])
-            return Reflect.apply(c.nativeSet, this, [key, value])
-          }
-          return Reflect.apply(original, this, args)
-        },
-      }
-    })
-  }
+  const names = ['setAttribute', 'removeAttribute', 'setAttributeNS', 'removeAttributeNS']
+  wrapMethods(
+    c,
+    c.win.Element.prototype,
+    names,
+    (name, original) =>
+      function (this: Element, ...args: unknown[]) {
+        const namespaced = name.endsWith('NS')
+        const key = String(args[namespaced ? 1 : 0])
+        const attr = key.toLowerCase()
+        const local = !namespaced || args[0] === null || args[0] === ''
+        if (!c.stopped && local && c.root.contains(this) && relevant(this, attr)) {
+          const raw = name.startsWith('remove') ? null : String(args[namespaced ? 2 : 1])
+          const value = pin(c, this, attr, raw, true)
+          if (value === null) return Reflect.apply(c.nativeRemove, this, [key])
+          return Reflect.apply(c.nativeSet, this, [key, value])
+        }
+        return Reflect.apply(original, this, args)
+      },
+  )
 }
 
 function hookReflected(c: Retained) {
@@ -294,21 +191,19 @@ function hookReflected(c: Retained) {
 }
 
 function hookSubmit(c: Retained) {
-  for (const name of ['submit', 'requestSubmit']) {
-    install(c, c.win.HTMLFormElement.prototype, name, (descriptor) => {
-      const original = descriptor.value as Original
-      return {
-        ...descriptor,
-        value(this: HTMLFormElement, ...args: unknown[]) {
-          if (!c.stopped && c.root.contains(this)) {
-            patchItem(c, this)
-            if (args[0] instanceof Element && c.root.contains(args[0])) patchItem(c, args[0])
-          }
-          return Reflect.apply(original, this, args)
-        },
-      }
-    })
-  }
+  wrapMethods(
+    c,
+    c.win.HTMLFormElement.prototype,
+    ['submit', 'requestSubmit'],
+    (_, original) =>
+      function (this: HTMLFormElement, ...args: unknown[]) {
+        if (!c.stopped && c.root.contains(this)) {
+          patchItem(c, this)
+          if (args[0] instanceof Element && c.root.contains(args[0])) patchItem(c, args[0])
+        }
+        return Reflect.apply(original, this, args)
+      },
+  )
 }
 
 function observe(c: Retained, doc: Document) {

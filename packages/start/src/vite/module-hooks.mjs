@@ -68,102 +68,14 @@ export const load = (s) => ({
     if (/[?&]assets\b/.test(raw)) return
     const which = raw.slice(1).replace(/\?.*$/, '')
     const client = this.environment?.config.consumer === 'client'
-    if (which.startsWith('virtual:weft/shape-override/')) {
-      if (!client || !which.endsWith('.tsx')) this.error('Invalid skeleton override request')
-      const file = decodeURIComponent(which.slice('virtual:weft/shape-override/'.length, -4))
-      const levels = [...s.manifest.layouts, ...s.manifest.routes]
-      if (!levels.some((level) => s.abs(level.file) === file))
-        this.error('Unknown skeleton override')
-      const imported = await resolveImportedOverride(this, file, s.root ?? dirname(file))
-      const code = shapeOverride(file) ?? imported?.code
-      if (!code) this.error(`Unsafe or missing skeleton override: ${file}`)
-      this.addWatchFile(file)
-      if (imported?.file) this.addWatchFile(imported.file)
-      return code
-    }
+    if (which.startsWith('virtual:weft/shape-override/'))
+      return overrideModule(this, s, which, client)
     if (which.startsWith(ISLAND)) {
       const { islands } = await s.hydration(this)
       const i = islands[Number(which.slice(ISLAND.length))]
       return `export { $i${i.index} as default } from ${JSON.stringify(i.file)}\n`
     }
-    if (which === V.routes) {
-      const owner = s.shapeEntryOwner
-      if (client && s.shapeEntryClosed) throw new Error('entry style scan outlived its server')
-      const scan = client ? (s.shapeScanGeneration = (s.shapeScanGeneration ?? 0) + 1) : undefined
-      if (client) s.shapeScanActive = scan
-      try {
-        const p = await s.hydration(this)
-        if (client) {
-          const entry = s.clientEntry()
-          const entryFile = entry.startsWith('virtual:') ? join(here, 'client.tsx') : entry
-          const levels = [...s.manifest.layouts, ...s.manifest.routes]
-          const all = [...new Set(levels.map((r) => s.abs(r.file)))]
-          const root = s.root ?? dirname(entryFile)
-          const overrides = new Map()
-          const dependencies = new Map()
-          const missing = new Set()
-          const depend = (target, file) => {
-            if (!dependencies.has(target)) dependencies.set(target, new Set())
-            dependencies.get(target).add(file)
-          }
-          for (const file of all) {
-            if (!/\.[jt]sx$/.test(file) || skeletonExport(file) !== 'unavailable') continue
-            const found = await resolveImportedOverride(this, file, root, (spec) => {
-              const candidate = resolve(dirname(file), spec)
-              if (projectParent(root, candidate)) {
-                const path = candidate.replace(/\\/g, '/')
-                missing.add(path)
-                depend(path, file)
-              }
-            })
-            took(this, { s, root, file, found, depend, overrides })
-          }
-          const files = all.filter(
-            (file) =>
-              /\.[jt]sx$/.test(file) &&
-              (overrides.has(file) || ['generated', 'custom'].includes(skeletonExport(file))),
-          )
-          const sources = await Promise.all(files.map((file) => entryCss(this, file, root)))
-          const shared = await entryCss(this, entryFile, root)
-          if (owner && owner !== s.shapeEntryOwner)
-            throw new Error('entry style scan outlived its server')
-          if (scan !== s.shapeScanGeneration) throw new Error('entry style scan superseded')
-          for (const source of sources) {
-            for (const [file, signature] of source.signatures)
-              shared.signatures.set(file, signature)
-            for (const file of source.candidates) shared.candidates.add(file)
-            for (const file of source.missing) shared.missing.add(file)
-          }
-          for (const file of missing) {
-            shared.candidates.add(file)
-            shared.missing.add(file)
-          }
-          const css = {
-            entry: shared.styles,
-            levels: new Map(files.map((file, i) => [file, sources[i].styles])),
-            overrides,
-            build: s.build || null,
-          }
-          const output = clientRoutes(s.manifest, s.abs, p, css)
-          s.shapeEntrySignatures = shared.signatures
-          s.shapeEntryCandidates = shared.candidates
-          s.shapeEntryMissing = shared.missing
-          s.shapeOverrideDependencies = dependencies
-          if (s.dev) watchEntryCandidates(s.vite, shared.missing, root)
-          return output
-        }
-        return serverRoutes(
-          s.manifest,
-          s.abs,
-          s.dev
-            ? await devStyles(s.vite.environments.client, s.manifest, s.abs, s.clientEntry())
-            : undefined,
-          p,
-        )
-      } finally {
-        if (client && s.shapeScanActive === scan) delete s.shapeScanActive
-      }
-    }
+    if (which === V.routes) return routesModule(this, s, client)
     if (which === V.app)
       return appModule({
         site: s.options.site ?? {},
@@ -182,16 +94,8 @@ export const load = (s) => ({
     if (which === V.server) return serverEntry(s.clientEntry(), s.dev, s.root)
     if (which === V.fns)
       return s.serverModules.map((f) => `import ${JSON.stringify(s.abs(f))}`).join('\n') + '\n'
-    if (which === V.context || which === V.auth || which === V.realtime) {
-      const name = which.slice('virtual:weft/'.length)
-      const f = ['ts', 'mts', 'js', 'mjs']
-        .map((x) => `src/${name}.server.${x}`)
-        .find((x) => existsSync(s.abs(x)))
-      if (which === V.realtime && busBound(s.root)) return busModule(f && s.abs(f), here)
-      return f
-        ? `export { default } from ${JSON.stringify(s.abs(f))}\n`
-        : 'export default undefined\n'
-    }
+    if (which === V.context || which === V.auth || which === V.realtime)
+      return configModule(s, which)
     if (which === V.extensions) return extensionsModule(s.root, s.abs)
     if (which === V.migrations)
       return s.dev
@@ -274,4 +178,111 @@ function unusableSkeleton(ctx, s, root, file) {
       'article, main, header, footer, p, h1-h6, ul, ol, li, with only string class and data-* attributes. ' +
       '`export const skeleton = false` turns it off. `weft docs start` has an example.',
   )
+}
+
+async function overrideModule(ctx, s, which, client) {
+  if (!client || !which.endsWith('.tsx')) ctx.error('Invalid skeleton override request')
+  const file = decodeURIComponent(which.slice('virtual:weft/shape-override/'.length, -4))
+  const levels = [...s.manifest.layouts, ...s.manifest.routes]
+  if (!levels.some((level) => s.abs(level.file) === file)) ctx.error('Unknown skeleton override')
+  const imported = await resolveImportedOverride(ctx, file, s.root ?? dirname(file))
+  const code = shapeOverride(file) ?? imported?.code
+  if (!code) ctx.error(`Unsafe or missing skeleton override: ${file}`)
+  ctx.addWatchFile(file)
+  if (imported?.file) ctx.addWatchFile(imported.file)
+  return code
+}
+
+function configModule(s, which) {
+  const name = which.slice('virtual:weft/'.length)
+  const f = ['ts', 'mts', 'js', 'mjs']
+    .map((x) => `src/${name}.server.${x}`)
+    .find((x) => existsSync(s.abs(x)))
+  if (which === V.realtime && busBound(s.root)) return busModule(f && s.abs(f), here)
+  return f ? `export { default } from ${JSON.stringify(s.abs(f))}\n` : 'export default undefined\n'
+}
+
+async function routesModule(ctx, s, client) {
+  const run = { owner: s.shapeEntryOwner, scan: undefined }
+  if (client && s.shapeEntryClosed) throw new Error('entry style scan outlived its server')
+  if (client)
+    run.scan = s.shapeScanActive = s.shapeScanGeneration = (s.shapeScanGeneration ?? 0) + 1
+  try {
+    const p = await s.hydration(ctx)
+    if (client) return await clientRoutesModule(ctx, s, p, run)
+    return serverRoutes(
+      s.manifest,
+      s.abs,
+      s.dev
+        ? await devStyles(s.vite.environments.client, s.manifest, s.abs, s.clientEntry())
+        : undefined,
+      p,
+    )
+  } finally {
+    if (client && s.shapeScanActive === run.scan) delete s.shapeScanActive
+  }
+}
+
+async function scanOverrides(ctx, s, all, root) {
+  const overrides = new Map()
+  const dependencies = new Map()
+  const missing = new Set()
+  const depend = (target, file) => {
+    if (!dependencies.has(target)) dependencies.set(target, new Set())
+    dependencies.get(target).add(file)
+  }
+  for (const file of all) {
+    if (!/\.[jt]sx$/.test(file) || skeletonExport(file) !== 'unavailable') continue
+    const found = await resolveImportedOverride(ctx, file, root, (spec) => {
+      const candidate = resolve(dirname(file), spec)
+      if (projectParent(root, candidate)) {
+        const path = candidate.replace(/\\/g, '/')
+        missing.add(path)
+        depend(path, file)
+      }
+    })
+    took(ctx, { s, root, file, found, depend, overrides })
+  }
+  return { overrides, dependencies, missing }
+}
+
+async function clientRoutesModule(ctx, s, p, run) {
+  const entry = s.clientEntry()
+  const entryFile = entry.startsWith('virtual:') ? join(here, 'client.tsx') : entry
+  const levels = [...s.manifest.layouts, ...s.manifest.routes]
+  const all = [...new Set(levels.map((r) => s.abs(r.file)))]
+  const root = s.root ?? dirname(entryFile)
+  const { overrides, dependencies, missing } = await scanOverrides(ctx, s, all, root)
+  const files = all.filter(
+    (file) =>
+      /\.[jt]sx$/.test(file) &&
+      (overrides.has(file) || ['generated', 'custom'].includes(skeletonExport(file))),
+  )
+  const sources = await Promise.all(files.map((file) => entryCss(ctx, file, root)))
+  const shared = await entryCss(ctx, entryFile, root)
+  if (run.owner && run.owner !== s.shapeEntryOwner)
+    throw new Error('entry style scan outlived its server')
+  if (run.scan !== s.shapeScanGeneration) throw new Error('entry style scan superseded')
+  for (const source of sources) {
+    for (const [file, signature] of source.signatures) shared.signatures.set(file, signature)
+    for (const file of source.candidates) shared.candidates.add(file)
+    for (const file of source.missing) shared.missing.add(file)
+  }
+  for (const file of missing) {
+    shared.candidates.add(file)
+    shared.missing.add(file)
+  }
+  const css = {
+    entry: shared.styles,
+    levels: new Map(files.map((file, i) => [file, sources[i].styles])),
+    overrides,
+    build: s.build || null,
+  }
+  const output = clientRoutes(s.manifest, s.abs, p, css)
+  s.shapeEntrySignatures = shared.signatures
+  s.shapeEntryCandidates = shared.candidates
+  s.shapeEntryMissing = shared.missing
+  s.shapeOverrideDependencies = dependencies
+  if (s.dev) watchEntryCandidates(s.vite, shared.missing, root)
+  return output
 }

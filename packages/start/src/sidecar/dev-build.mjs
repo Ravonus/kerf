@@ -11,7 +11,7 @@ function place(from, to) {
 }
 
 export function devBuilder(deps) {
-  const { log, states, contract, closed } = deps
+  const { log, states, closed } = deps
   async function rebuild(service) {
     const s = states.get(service)
     if (s.building) return void (s.again = true)

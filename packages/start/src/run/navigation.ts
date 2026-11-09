@@ -3,7 +3,6 @@ import { setHead } from '@weft-js/core/head'
 import {
   applyMatches,
   client,
-  level,
   type Level,
   type NavigateOptions,
   type RoutePayload,
