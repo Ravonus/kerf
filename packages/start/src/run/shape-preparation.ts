@@ -1,7 +1,9 @@
-import type { Component } from '../router'
+import { flush } from '@weft-js/core'
+import { level, type Component } from '../router'
 import type { ClientRoutes, RouteShape } from '../run'
 import { acquireShapeStyles } from './shape-styles'
 import { PageSkeleton, PassThroughSkeleton } from './page-skeleton'
+import type { Navigation } from './navigation'
 
 export interface PreparedRouteShape {
   kind: 'generated' | 'override'
@@ -51,4 +53,45 @@ function prepare(
     // oxlint-disable-next-line typescript/unbound-method -- the native method is kept to be called with .call()
     release: lease.release,
   }
+}
+
+/** Prepare all changed levels before replacing the current outlet. */
+export function presentShape(nav: Navigation, ids: string[], url: URL, force: boolean) {
+  let first = ids.findIndex((id, depth) => nav.route.levels[depth]?.id.value !== id)
+  if (first < 0) first = force ? ids.length - 1 : nav.changedParams(ids, url)
+  if (first < 0) {
+    const committed = new URL(nav.committedURL)
+    if (url.pathname === committed.pathname && url.search === committed.search) nav.clearShape()
+    return false
+  }
+  if (!nav.route.prepareShape) return false
+  const leases: PreparedRouteShape[] = []
+  try {
+    for (const id of ids.slice(first)) {
+      const lease = nav.route.prepareShape(id)
+      if (!lease) {
+        leases.forEach((item) => item.release())
+        return false
+      }
+      leases.push(lease)
+    }
+  } catch {
+    leases.forEach((item) => item.release())
+    return false
+  }
+  // A same-id layout stays mounted; its existing child outlet owns the presentation.
+  let depth = first
+  while (depth < ids.length - 1 && nav.route.levels[depth]?.id.value === ids[depth]) depth++
+  const retained = leases.splice(0, depth - first)
+  retained.forEach((lease) => lease.release())
+  const outlet = level(nav.route, depth)
+  const old = nav.detachShape()
+  outlet.shape.value = leases
+  nav.shape = { outlet, leases }
+  try {
+    flush()
+  } finally {
+    old?.forEach((lease) => lease.release())
+  }
+  return true
 }

@@ -11,14 +11,13 @@ import {
 import type { ClientRoutes } from '../run'
 import { streamed, type mount } from './boot'
 import { matchingRouteAssets } from '../asset-receipt.mjs'
-import { ask, changedRouteParams, current_, guess, revive } from './helpers'
-import type { PreparedRouteShape } from './shape-preparation'
+import { ask, changedRouteParams, crossfade, current_, guess, revive } from './helpers'
+import { presentShape, type PreparedRouteShape } from './shape-preparation'
 import { retainSourceContext, type SourceContext } from './source-context'
 import { RouteCache, type Read } from './cache'
 import { Prefetch } from './prefetch'
 import { CachePresentation, retryDelay } from './cache-presentation'
 
-const SLOW_FADE = 100
 const RETRY = 1000,
   RETRIES = 30_000
 
@@ -137,43 +136,7 @@ export class Navigation {
 
   /** Prepare all changed levels before replacing the current outlet. */
   present(ids: string[], url: URL, force = false) {
-    let first = ids.findIndex((id, depth) => this.route.levels[depth]?.id.value !== id)
-    if (first < 0) first = force ? ids.length - 1 : this.changedParams(ids, url)
-    if (first < 0) {
-      const committed = new URL(this.committedURL)
-      if (url.pathname === committed.pathname && url.search === committed.search) this.clearShape()
-      return false
-    }
-    if (!this.route.prepareShape) return false
-    const leases: PreparedRouteShape[] = []
-    try {
-      for (const id of ids.slice(first)) {
-        const lease = this.route.prepareShape(id)
-        if (!lease) {
-          leases.forEach((item) => item.release())
-          return false
-        }
-        leases.push(lease)
-      }
-    } catch {
-      leases.forEach((item) => item.release())
-      return false
-    }
-    // A same-id layout stays mounted; its existing child outlet owns the presentation.
-    let depth = first
-    while (depth < ids.length - 1 && this.route.levels[depth]?.id.value === ids[depth]) depth++
-    const retained = leases.splice(0, depth - first)
-    retained.forEach((lease) => lease.release())
-    const outlet = level(this.route, depth)
-    const old = this.detachShape()
-    outlet.shape.value = leases
-    this.shape = { outlet, leases }
-    try {
-      flush()
-    } finally {
-      old?.forEach((lease) => lease.release())
-    }
-    return true
+    return presentShape(this, ids, url, force)
   }
 
   detachShape() {
@@ -342,29 +305,7 @@ export class Navigation {
       if (ctrl.signal.aborted || this.current !== ctrl || this.cache.version !== version) return
       this.apply(next, url, path, since, opts.scroll !== false && !opts.pop)()
     }
-    if (
-      this.fades &&
-      this.painted &&
-      document.startViewTransition &&
-      !document.hidden &&
-      !matchMedia('(prefers-reduced-motion: reduce)').matches
-    ) {
-      const started = performance.now()
-      const fade = (this.fading = document.startViewTransition(swap))
-      void fade.ready
-        .then(() => {
-          if (performance.now() - started > SLOW_FADE) this.fades = false
-          return fade.finished
-        })
-        .catch(() => {})
-        .then(() => {
-          if (this.fading === fade) this.fading = undefined
-        })
-      // A transition the browser aborts rejects `finished`: the page already swapped.
-      void fade.finished.catch(() => {})
-      // Aborted before its update ran ("invalid state"): swap without the fade.
-      await fade.updateCallbackDone.catch(() => swapped || swap())
-    } else swap()
+    await crossfade(this, swap, () => swapped)
     if (!ctrl.signal.aborted && this.current === ctrl && this.cache.version !== version)
       await this.travel(url, ctrl, opts, shown)
   }

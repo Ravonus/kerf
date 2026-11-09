@@ -2,6 +2,7 @@ import { flush } from '@weft-js/core'
 import { rt } from '@weft-js/core/internal'
 import type { Component, Match, RoutePayload } from '../router'
 import type { ClientRoutes } from '../run'
+import type { Navigation } from './navigation'
 
 /**
  * A deferred field on a page that loaded with its value still out. A chunk brings what's rendered from it; this is for
@@ -158,4 +159,39 @@ export function changedRouteParams(
   } catch {
     return -1
   }
+}
+
+const SLOW_FADE = 100
+
+/** Swaps inside a view transition when the page can take one, and plainly when not. */
+export async function crossfade(
+  nav: Pick<Navigation, 'fades' | 'painted' | 'fading'>,
+  swap: () => void,
+  swapped: () => boolean,
+) {
+  if (
+    !(
+      nav.fades &&
+      nav.painted &&
+      'startViewTransition' in document &&
+      !document.hidden &&
+      !matchMedia('(prefers-reduced-motion: reduce)').matches
+    )
+  )
+    return swap()
+  const started = performance.now()
+  const fade = (nav.fading = document.startViewTransition(swap))
+  void fade.ready
+    .then(() => {
+      if (performance.now() - started > SLOW_FADE) nav.fades = false
+      return fade.finished
+    })
+    .catch(() => {})
+    .then(() => {
+      if (nav.fading === fade) nav.fading = undefined
+    })
+  // A transition the browser aborts rejects `finished`: the page already swapped.
+  void fade.finished.catch(() => {})
+  // Aborted before its update ran ("invalid state"): swap without the fade.
+  await fade.updateCallbackDone.catch(() => swapped() || swap())
 }
