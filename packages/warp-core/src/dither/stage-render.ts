@@ -72,7 +72,7 @@ function stageDrawing(st: StageState) {
     Math.round(w),
     Math.round(h),
   ]
-  function fill(box: Cells, v: number | ((x: number, y: number) => number), r?: number) {
+  function paint(box: Cells, v: number | ((x: number, y: number) => number), r?: number) {
     const outer = cells(box),
       [X, Y, W, H] = outer,
       R = box.r ?? 0,
@@ -100,17 +100,17 @@ function stageDrawing(st: StageState) {
         if (!dash || (x + y + step) % dash < dash / 2) set(x, y, v, r)
       }
   }
-  return { threshold, set, fill, ring }
+  return { threshold, set, paint, ring }
 }
 
 function stageSurface(st: StageState, rampId: RampId) {
-  const { threshold, set, fill, ring } = stageDrawing(st)
+  const { threshold, set, paint, ring } = stageDrawing(st)
   const brush: Brush = {
     cols: 0,
     rows: 0,
     time: 0,
     set,
-    fill,
+    paint,
     ring,
     threshold,
     ramp: rampId,
@@ -129,10 +129,10 @@ function stageSurface(st: StageState, rampId: RampId) {
     st.masks = new WeakMap()
   }
 
-  return { brush, grow, threshold, set, fill, ring }
+  return { brush, grow, threshold, set, paint, ring }
 }
 
-function stageDetails(st: StageState, fill: Brush['fill'], ring: Brush['ring']) {
+function stageDetails(st: StageState, paint: Brush['paint'], ring: Brush['ring']) {
   // Display type: the stage's words, drawn at three times the grid and averaged into coverage per cell.
   function typeMask(p: DitherPiece) {
     const key = `${p.w}x${p.h}:${p.el.textContent}`,
@@ -165,7 +165,7 @@ function stageDetails(st: StageState, fill: Brush['fill'], ring: Brush['ring']) 
     if (!shape) return
     // Strokes are solid ink cut at a hard edge, so letters read as pixels rather than noise. Cells that
     // only graze a stroke clear to paper, which keeps a one-cell halo between the letters and the ground.
-    fill({ x: p.x, y: p.y, w: p.w, h: p.h }, (x, y) => {
+    paint({ x: p.x, y: p.y, w: p.w, h: p.h }, (x, y) => {
       const c = shape[(y - p.y) * p.w + (x - p.x)] ?? 0
       return c >= 0.4 ? T : c > 0.04 ? 0 : -1
     })
@@ -183,7 +183,7 @@ function stageDetails(st: StageState, fill: Brush['fill'], ring: Brush['ring']) 
       buf,
       stepFor(cells),
     )
-    fill(p, (x, y) => {
+    paint(p, (x, y) => {
       const v = buf[(y - p.y) * p.w + (x - p.x)]!
       return clamp(v * v * (1.05 + p.hover * 0.3) + glow(p, x, y) * 0.3)
     })
@@ -282,8 +282,8 @@ function paintOverlay(st: StageState, sc: Scene, rampId: RampId, brush: Brush) {
   }
   if (sc.rail) {
     const { x, top, len, drag } = sc.rail
-    brush.fill({ x: st.cols - 3, y: 0, w: 2, h: st.rows }, (_, y) => (y & 1 ? -1 : S))
-    brush.fill(
+    brush.paint({ x: st.cols - 3, y: 0, w: 2, h: st.rows }, (_, y) => (y & 1 ? -1 : S))
+    brush.paint(
       { x: Math.min(x, st.cols - 3), y: top, w: 2, h: len },
       drag ? K : T,
       rampId('accent'),
@@ -309,8 +309,8 @@ function paintOutput(st: StageState, ctx: CanvasRenderingContext2D) {
 
 export function stageRenderer(st: StageState) {
   const { rampId, retheme } = stageRamps(st)
-  const { brush, grow, threshold, fill, ring } = stageSurface(st, rampId)
-  const details = stageDetails(st, fill, ring)
+  const { brush, grow, threshold } = stageSurface(st, rampId)
+  const details = stageDetails(st, brush.paint, brush.ring)
   function paint(sc: Scene) {
     const { ctx, width, height, time: now, live } = sc
     st.scene = sc

@@ -32,7 +32,7 @@ export interface DitherPiece extends Piece {
   ramp: number
 }
 
-/** A box in cells, rounded by `r` cells. A piece is one, so a painter can hand its piece straight to `fill` and `ring`. */
+/** A box in cells, rounded by `r` cells. A piece is one, so a painter can hand its piece straight to `paint` and `ring`. */
 export interface Cells {
   x: number
   y: number
@@ -55,14 +55,14 @@ export interface Brush {
   time: number
   set(x: number, y: number, tone: number, ramp?: number): void
   /** Fills a box, rounded by its `r` cells. `tone` can be a function of the cell, returning a negative number to skip it. */
-  fill(box: Cells, tone: number | ((x: number, y: number) => number), ramp?: number): void
+  paint(box: Cells, tone: number | ((x: number, y: number) => number), ramp?: number): void
   /** A border inside the box, `t` cells thick (1). With `dash` it marches round as time passes, for focus. */
   ring(box: Cells, tone: number, line?: Line): void
   /** The stage's field at a cell, 0–1. */
   field(x: number, y: number): number
   /** The dither threshold at a cell, 0–1: compare a coverage with it for an ordered dissolve. */
   threshold(x: number, y: number): number
-  /** A ramp's id, for `set`, `fill` and `ring`. */
+  /** A ramp's id, for `set`, `paint` and `ring`. */
   ramp(ramp: Ramp): number
 }
 

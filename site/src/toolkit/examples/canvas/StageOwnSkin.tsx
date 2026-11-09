@@ -16,7 +16,7 @@ export const battery: DitherPainter = (p, b) => {
     { x: p.x, y: p.y, w: body, h: p.h, r: 2 },
     LEVEL.ink,
   )
-  b.fill(
+  b.paint(
     {
       x: p.x + body,
       y: p.y + nub,
@@ -27,7 +27,7 @@ export const battery: DitherPainter = (p, b) => {
   )
   for (let i = 0; i < bars; i++) {
     const lit = p.value * bars - i
-    b.fill(
+    b.paint(
       {
         x: p.x + 2 + i * (bar + gap),
         y: p.y + 2,

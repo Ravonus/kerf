@@ -43,15 +43,15 @@ export const PAINTERS: Record<Skin, DitherPainter> = {
     const { h } = p,
       outline = p.el.dataset.look === 'outline'
     if (p.disabled) {
-      b.fill(p, S)
+      b.paint(p, S)
       b.ring(p, E)
       return
     }
     // The shadow is where the button sits: a press slides it home, as the element's own translate moves its text.
     const lift = Math.round(Math.max(1, h / 8) * (1 - p.press)),
       shade = b.ramp('neutral')
-    if (lift) b.fill(shift(p, lift), 0.875, shade)
-    b.fill(p, (cx, cy) => (outline ? glow(p, cx, cy) * 0.45 : T + glow(p, cx, cy) * 0.3))
+    if (lift) b.paint(shift(p, lift), 0.875, shade)
+    b.paint(p, (cx, cy) => (outline ? glow(p, cx, cy) * 0.45 : T + glow(p, cx, cy) * 0.3))
     b.ring(p, K, { ramp: outline ? undefined : shade })
     focusRing(p, b)
   },
@@ -59,25 +59,25 @@ export const PAINTERS: Record<Skin, DitherPainter> = {
     const live = p.el.matches(INTERACTIVE),
       chosen = p.on > 0.5,
       off = 2 + Math.round((live ? p.hover : 0) * 2)
-    b.fill(shift(p, off), chosen ? 0.625 : 0.375)
-    b.fill(p, live ? (cx, cy) => glow(p, cx, cy) * 0.2 : 0)
+    b.paint(shift(p, off), chosen ? 0.625 : 0.375)
+    b.paint(p, live ? (cx, cy) => glow(p, cx, cy) * 0.2 : 0)
     b.ring(p, chosen || (live && p.hover > 0.5) ? K : E, { t: chosen ? 2 : 1 })
     focusRing(p, b)
   },
   panel(p, b) {
-    b.fill(shift(p, 4), 0.625)
-    b.fill(p, 0)
+    b.paint(shift(p, 4), 0.625)
+    b.paint(p, 0)
     b.ring(p, K)
   },
   // A title bar in the old way: every other row inked, with the label on clean ground.
   bar(p, b) {
-    b.fill({ x: p.x, y: p.y, w: p.w, h: p.h }, (_, cy) => ((cy - p.y) & 1 ? 0 : E))
+    b.paint({ x: p.x, y: p.y, w: p.w, h: p.h }, (_, cy) => ((cy - p.y) & 1 ? 0 : E))
   },
   field(p, b) {
     const { x, y, w, h } = p,
       ramp = p.invalid ? b.ramp('critical') : p.ramp
     // The inside stays clean paper, so the caret, the selection and the words never sit on grain; focus thickens the ring.
-    b.fill(p, 0)
+    b.paint(p, 0)
     b.ring(p, p.disabled ? S : p.focus > 0.5 || p.invalid ? K : p.hover > 0.5 ? T : E, {
       t: p.focus > 0.5 ? 2 : 1,
       ramp: p.focus > 0.5 && !p.invalid ? b.ramp('accent') : ramp,
@@ -88,19 +88,19 @@ export const PAINTERS: Record<Skin, DitherPainter> = {
         cy = y + (h >> 1) - 1,
         up = p.on > 0.5
       for (let i = 0; i < 3; i++)
-        b.fill({ x: cx - 2 + i, y: cy + (up ? 2 - i : i), w: 5 - i * 2, h: 1 }, K, ramp)
+        b.paint({ x: cx - 2 + i, y: cy + (up ? 2 - i : i), w: 5 - i * 2, h: 1 }, K, ramp)
     }
   },
   // A select's list: a panel on a short shadow, and its options, the one under the pointer or the keys filled solid.
   menu(p, b) {
-    b.fill(shift(p, 2), 0.625)
-    b.fill(p, 0)
+    b.paint(shift(p, 2), 0.625)
+    b.paint(p, 0)
     b.ring(p, K)
   },
   option(p, b) {
     const { x, y, w, h } = p
-    if (p.hover > 0.5 || p.focus > 0.5) b.fill({ x, y, w, h }, T)
-    else if (p.on > 0.5) b.fill({ x, y: y + 2, w: 2, h: h - 4 }, K)
+    if (p.hover > 0.5 || p.focus > 0.5) b.paint({ x, y, w, h }, T)
+    else if (p.on > 0.5) b.paint({ x, y: y + 2, w: 2, h: h - 4 }, K)
   },
   check(p, b) {
     const { x, y, w, h } = p,
@@ -110,7 +110,7 @@ export const PAINTERS: Record<Skin, DitherPainter> = {
     b.ring({ x, y, w, h, r }, p.disabled ? E : K)
     // Checking dissolves the mark in, cell by cell, in the dither's own order.
     const mark = w - inset * 2
-    b.fill(
+    b.paint(
       { x: x + inset, y: y + inset, w: mark, h: h - inset * 2, r: radio ? mark / 2 : 0 },
       (cx, cy) => (b.threshold(cx, cy) < p.on ? T : p.hover * S),
     )
@@ -122,9 +122,9 @@ export const PAINTERS: Record<Skin, DitherPainter> = {
       kx = x + 2 + Math.round((w - h) * p.on)
     const track = { x, y, w, h, r: h / 2 },
       thumb = { x: kx, y: y + 2, w: knob, h: knob, r: knob / 2 }
-    b.fill(track, (cx, cy) => (b.threshold(cx, cy) < p.on ? T : p.hover * S))
+    b.paint(track, (cx, cy) => (b.threshold(cx, cy) < p.on ? T : p.hover * S))
     b.ring(track, p.disabled ? E : K)
-    b.fill(thumb, p.on > 0.5 ? 0 : K)
+    b.paint(thumb, p.on > 0.5 ? 0 : K)
     b.ring(thumb, K)
     focusRing(p, b)
   },
@@ -135,31 +135,31 @@ export const PAINTERS: Record<Skin, DitherPainter> = {
       kx = x + Math.round((w - kw) * p.value),
       ty = y + (h >> 1) - 1
     const thumb = { x: kx, y: y + ((h - kh) >> 1), w: kw, h: kh, r: 1 }
-    b.fill({ x, y: ty, w, h: 2 }, (cx, cy) => ((cx + cy) & 1 ? E : S))
-    b.fill({ x, y: ty, w: kx - x, h: 2 }, T)
-    b.fill(thumb, p.press > 0.5 ? T : K)
+    b.paint({ x, y: ty, w, h: 2 }, (cx, cy) => ((cx + cy) & 1 ? E : S))
+    b.paint({ x, y: ty, w: kx - x, h: 2 }, T)
+    b.paint(thumb, p.press > 0.5 ? T : K)
     if (p.focus > 0.5) b.ring(grow(thumb, 2), K, { dash: 4 })
   },
   // A meter fills to its value with a dithered leading edge, as if still pouring.
   meter(p, b) {
     const end = p.x + p.w * p.value
-    b.fill(p, (cx) => (cx < end - 6 ? T : clamp((end - cx) / 6) * T))
+    b.paint(p, (cx) => (cx < end - 6 ? T : clamp((end - cx) / 6) * T))
     b.ring(p, E)
   },
   chip(p, b) {
-    b.fill(p, (cx, cy) => (p.on > 0.5 ? T : S + glow(p, cx, cy) * 0.25))
+    b.paint(p, (cx, cy) => (p.on > 0.5 ? T : S + glow(p, cx, cy) * 0.25))
     b.ring(p, p.on > 0.5 ? K : E)
     focusRing(p, b)
   },
   rule(p, b) {
-    b.fill({ x: p.x, y: p.y + (p.h >> 1), w: p.w, h: 1 }, (cx) => ((cx >> 1) & 1 ? -1 : E))
+    b.paint({ x: p.x, y: p.y + (p.h >> 1), w: p.w, h: 1 }, (cx) => ((cx >> 1) & 1 ? -1 : E))
   },
   type() {}, // painted by the stage, which keeps its masks
   art() {},
   clear(p, b) {
     // Clean ground for text, with an edge that dithers into the field instead of stopping hard.
     const box: Box = [p.x, p.y, p.w, p.h]
-    b.fill(grow(p, 3), (cx, cy) =>
+    b.paint(grow(p, 3), (cx, cy) =>
       inRound(cx, cy, box, p.r) || b.threshold(cx, cy) < 0.5 ? 0 : -1,
     )
   },
