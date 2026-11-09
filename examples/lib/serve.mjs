@@ -8,6 +8,8 @@ import { createServer } from 'node:http'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { serveStatic } from './serve-static.mjs'
+import { waitReady } from './serve-ready.mjs'
+export { rssMB } from './serve-memory.mjs'
 
 const freePort = () =>
   new Promise((ok, no) => {
@@ -40,23 +42,7 @@ const listeners = (port) =>
     ),
   ].map((m) => m[1])
 
-export async function startServer(v, firstPage, { proveBuild = true } = {}) {
-  const port = await freePort(),
-    url = `http://127.0.0.1:${port}`
-  let answered = true
-  try {
-    await fetch(url, { signal: AbortSignal.timeout(500) })
-  } catch {
-    answered = false
-  }
-  if (answered)
-    throw new Error(`port ${port} already answers: refusing to measure someone else's server`)
-  const out = !v.start && v.stack.out.find((d) => existsSync(join(v.root, d, 'index.html')))
-  if (!v.start && !out)
-    throw new Error(`${v.name}: no start script and no index.html in ${v.stack.out.join(', ')}`)
-  const cmd =
-    v.start ??
-    `${quote(process.execPath)} ${quote(fileURLToPath(import.meta.url))} ${quote(join(v.root, out))}`
+function launch(v, cmd, port, url) {
   const log = createWriteStream(v.log, { flags: 'a' })
   // Its own process group: `npm run start` wraps the server, and only killing the group takes both down. Windows: killTree.
   const child = spawn(cmd, {
@@ -86,26 +72,36 @@ export async function startServer(v, firstPage, { proveBuild = true } = {}) {
   }
   // Whatever ends the run, the server ends with it.
   process.on('exit', () => kill('SIGKILL'))
-  const t0 = performance.now()
-  for (;;) {
-    if (exited !== null)
-      throw new Error(`${v.name}: server exited (${exited}) before answering, see ${v.log}`)
-    if (performance.now() - t0 > 30000) {
-      kill('SIGKILL')
-      throw new Error(`${v.name}: server didn't answer on ${url} in 30s, see ${v.log}`)
-    }
-    try {
-      if ((await fetch(url + firstPage, { signal: AbortSignal.timeout(2000) })).ok) break
-    } catch {}
-    await wait(50)
+  return { child, log, kill, alive: () => exited === null }
+}
+
+export async function startServer(v, firstPage, { proveBuild = true } = {}) {
+  const port = await freePort(),
+    url = `http://127.0.0.1:${port}`
+  let answered = true
+  try {
+    await fetch(url, { signal: AbortSignal.timeout(500) })
+  } catch {
+    answered = false
   }
+  if (answered)
+    throw new Error(`port ${port} already answers: refusing to measure someone else's server`)
+  const out = !v.start && v.stack.out.find((d) => existsSync(join(v.root, d, 'index.html')))
+  if (!v.start && !out)
+    throw new Error(`${v.name}: no start script and no index.html in ${v.stack.out.join(', ')}`)
+  const cmd =
+    v.start ??
+    `${quote(process.execPath)} ${quote(fileURLToPath(import.meta.url))} ${quote(join(v.root, out))}`
+  const { child, log, kill, alive, exit } = launch(v, cmd, port, url)
+  const t0 = performance.now()
+  await waitReady({ v, url, firstPage, kill, alive, exit, t0 })
   const server = {
     url,
     port,
     pid: child.pid,
     bootMs: performance.now() - t0,
     seen: new Map(),
-    alive: () => exited === null,
+    alive,
     stop: async () => {
       kill('SIGTERM')
       await wait(200)
@@ -134,45 +130,6 @@ export async function assertFresh(v, server, paths = []) {
     server.seen.set(p, h)
   }
   return { canary: true, verified: server.seen.size }
-}
-
-/** Working sets across the server's process tree, in MB: Windows has neither `ps` nor groups. */
-function treeMB(root) {
-  const script =
-    'Get-CimInstance Win32_Process | ForEach-Object { "$($_.ProcessId) $($_.ParentProcessId) $($_.WorkingSetSize)" }'
-  const all = execFileSync('powershell', ['-NoProfile', '-Command', script], {
-    encoding: 'utf8',
-    windowsHide: true,
-  })
-    .trim()
-    .split(/\r?\n/)
-    .map((l) => l.split(' ').map(Number))
-  const tree = new Set([root])
-  for (let grew = true; grew;) {
-    grew = false
-    for (const [pid, parent] of all)
-      if (tree.has(parent) && !tree.has(pid)) {
-        tree.add(pid)
-        grew = true
-      }
-  }
-  return all.filter(([pid]) => tree.has(pid)).reduce((n, p) => n + p[2], 0) / 1048576
-}
-
-/** Sum of resident memory across the server's process group, in MB. */
-export function rssMB(server) {
-  try {
-    if (windows) return treeMB(server.pid)
-    return (
-      execFileSync('ps', ['-axo', 'pgid=,rss='], { encoding: 'utf8' })
-        .split('\n')
-        .map((l) => l.trim().split(/\s+/))
-        .filter(([g]) => +g === server.pid)
-        .reduce((n, [, r]) => n + +r, 0) / 1024
-    )
-  } catch {
-    return null
-  }
 }
 
 // Keep the static host entry at this public path.
