@@ -25,8 +25,7 @@ import { packageProblems } from './quality/package-folders.mjs'
 import { checkLengths } from './quality/lengths.mjs'
 import { conventionsStep, importantStep } from './quality/conventions.mjs'
 import { clippyProblems, lintProblems } from './quality/length-diagnostics.mjs'
-import { inventoryStep, reportCommentWarnings } from './quality/s9-warnings.mjs'
-
+import { categoryWarnings, inventoryStep, reportCommentWarnings } from './quality/s9-warnings.mjs'
 // While a new rule beds in this is 'warn': everything is reported and nothing fails. Otherwise 'error'.
 const LEVEL = 'error'
 const root = repoRoot
@@ -140,6 +139,7 @@ const STEPS = [
       const problems = lintProblems(report, lengths())
       if (r.code !== 0 && !report.diagnostics.length)
         problems.push(r.out.trim() || 'Oxlint failed without error diagnostics')
+      problems.push(...(await categoryWarnings(run)).problems)
       return { problems }
     },
   },

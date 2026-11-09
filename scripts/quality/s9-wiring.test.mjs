@@ -111,3 +111,13 @@ void test('category inventory prints warnings and propagates failure', async () 
   )
   assert.match((await bad.run()).problems[0], /exited 9: parser failed/)
 })
+
+void test('lint runs the category invocation and propagates failures', async () => {
+  const { categoryWarnings } = await import('./s9-warnings.mjs')
+  const result = await categoryWarnings((cmd, args) => {
+    assert.equal(cmd, process.execPath)
+    assert.deepEqual(args, ['scripts/quality/category-overrides.mjs', '--lint'])
+    return Promise.resolve({ code: 8, out: 'parser failed' })
+  })
+  assert.match(result.problems[0], /exited 8: parser failed/)
+})

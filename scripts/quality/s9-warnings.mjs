@@ -35,3 +35,8 @@ export function reportCommentWarnings(report, print = console.log) {
   if (warnings.length) print(`\ncomment-budget lint warnings:\n${warnings.join('\n')}`)
   return { ...report, diagnostics: rest }
 }
+
+/** Run category warnings as part of the enforced lint step. */
+export function categoryWarnings(run) {
+  return inventoryStep('category-overrides', (cmd, args) => run(cmd, [...args, '--lint'])).run()
+}
