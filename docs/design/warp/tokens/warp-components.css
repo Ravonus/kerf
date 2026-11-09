@@ -169,12 +169,12 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   --_fill: var(--_solid); --_ink: var(--_ink-on); --_edge: transparent;
   --_layer: var(--_solid-hover); --_layer-a: 1;
   position: relative; isolation: isolate;
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--warp-button-gap,var(--warp-config-part-button-gap,var(--warp-space-related)));
-  block-size: var(--warp-control-md); padding-inline: var(--warp-button-padding-inline,var(--warp-config-part-button-padding-inline,calc(var(--warp-pad-control) + 2px))); margin: 0;
-  border: var(--warp-button-border-width,var(--warp-config-part-button-border-width,var(--warp-border-hairline))) solid var(--warp-button-border,var(--warp-config-part-button-border,var(--warp-tone-edge, var(--_edge)))); border-radius: var(--warp-button-radius,var(--warp-config-part-button-radius,var(--warp-radius-control)));
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--_warp-button-gap-press,var(--_warp-button-gap-hover,var(--warp-button-gap,var(--warp-config-part-button-gap,var(--warp-space-related)))));
+  block-size: var(--warp-control-md); padding-inline: var(--_warp-button-padding-inline-press,var(--_warp-button-padding-inline-hover,var(--warp-button-padding-inline,var(--warp-config-part-button-padding-inline,calc(var(--warp-pad-control) + 2px))))); margin: 0;
+  border: var(--_warp-button-border-width-press,var(--_warp-button-border-width-hover,var(--warp-button-border-width,var(--warp-config-part-button-border-width,var(--warp-border-hairline))))) solid var(--warp-button-border,var(--warp-config-part-button-border,var(--warp-tone-edge, var(--_edge)))); border-radius: var(--_warp-button-radius-press,var(--_warp-button-radius-hover,var(--warp-button-radius,var(--warp-config-part-button-radius,var(--warp-radius-control)))));
   background: var(--warp-button-bg,var(--warp-config-part-button-bg,var(--warp-tone-fill, var(--_fill)))); color: var(--warp-button-text,var(--warp-config-part-button-text,var(--warp-tone-ink, var(--_ink))));
-  font-family: var(--warp-button-font-family,var(--warp-config-part-button-font-family,var(--warp-text-button-font))); font-size: var(--warp-button-font-size,var(--warp-config-part-button-font-size,var(--warp-text-button-size)));
-  font-weight: var(--warp-button-font-weight,var(--warp-config-part-button-font-weight,var(--warp-text-button-weight))); letter-spacing: var(--warp-button-font-letter-spacing,var(--warp-config-part-button-font-letter-spacing,var(--warp-text-button-tracking)));
+  font-family: var(--_warp-button-font-family-press,var(--_warp-button-font-family-hover,var(--warp-button-font-family,var(--warp-config-part-button-font-family,var(--warp-text-button-font))))); font-size: var(--_warp-button-font-size-press,var(--_warp-button-font-size-hover,var(--warp-button-font-size,var(--warp-config-part-button-font-size,var(--warp-text-button-size)))));
+  font-weight: var(--_warp-button-font-weight-press,var(--_warp-button-font-weight-hover,var(--warp-button-font-weight,var(--warp-config-part-button-font-weight,var(--warp-text-button-weight))))); letter-spacing: var(--_warp-button-font-letter-spacing-press,var(--_warp-button-font-letter-spacing-hover,var(--warp-button-font-letter-spacing,var(--warp-config-part-button-font-letter-spacing,var(--warp-text-button-tracking)))));
   text-transform: var(--warp-text-button-case); line-height: 1; white-space: nowrap; text-decoration: none;
   cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   /* release: the spring. Press (below) is instant, and so is hover's colour: nothing waits on the thread clock */
@@ -269,7 +269,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
     radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),
       var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))))))) 0 66%, color-mix(in oklab, var(--_warp-button-bg-disabled,var(--_warp-button-bg-press,var(--_warp-button-bg-focus,var(--_warp-button-bg-hover,var(--warp-button-bg,var(--warp-config-part-button-bg,var(--_pa))))))) 50%, transparent) 84%, transparent 100%);
   transition:
-    transform var(--warp-sweep-duration) var(--warp-sweep-ease),     /* the wipe runs on the stroke's clock, both ways */
+    transform var(--_warp-sweep-duration,var(--warp-sweep-duration)) var(--warp-sweep-ease),     /* the wipe runs on the stroke's clock, both ways */
     --_fo var(--_D) var(--warp-sweep-ease-in),                 /* both ways: the exit is the enter */
     --_fr 1ms linear calc((1 - var(--_a, 0)) * var(--_D));     /* snaps in; collapses unseen after the exit */
 }
@@ -279,7 +279,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"][data-state="open"])::before,
 :where([data-scope="button"][aria-expanded="true"])::before {
   transform: scaleX(1); transform-origin: left center;
-  transition-duration: var(--warp-sweep-duration), var(--_D), 1ms;
+  transition-duration: var(--_warp-sweep-duration,var(--warp-sweep-duration)), var(--_D), 1ms;
 }
 /* a tap is shorter than the fill, so a finger gets it at once and watches it part */
 @media (hover: none) { :where([data-scope="button"]:active)::before { transition-duration: var(--warp-duration-base), 0ms, 1ms; } }
@@ -439,6 +439,10 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"][data-emphasis="frame"][data-sweep]):has(> [data-part="sweep-fill"]) > :where([data-part="sweep-content"]) { color: var(--warp-sweep-text,var(--warp-config-part-sweep-text,var(--_warp-button-text-disabled,var(--_warp-button-text-press,var(--_warp-button-text-focus,var(--_warp-button-text-hover,var(--warp-button-text,var(--warp-config-part-button-text,var(--_tone-ink, var(--warp-color-accent-on-solid)))))))))); }
 }
 /* warp-theme-only:end */
+/* warp-theme-only:start */
+:where([data-scope="button"]:hover) { --_warp-button-gap-hover: var(--warp-button-gap-hover,var(--warp-config-part-button-gap-hover)); --_warp-button-padding-inline-hover: var(--warp-button-padding-inline-hover,var(--warp-config-part-button-padding-inline-hover)); --_warp-button-border-width-hover: var(--warp-button-border-width-hover,var(--warp-config-part-button-border-width-hover)); --_warp-button-radius-hover: var(--warp-button-radius-hover,var(--warp-config-part-button-radius-hover)); --_warp-button-font-family-hover: var(--warp-button-font-family-hover,var(--warp-config-part-button-font-family-hover)); --_warp-button-font-size-hover: var(--warp-button-font-size-hover,var(--warp-config-part-button-font-size-hover)); --_warp-button-font-weight-hover: var(--warp-button-font-weight-hover,var(--warp-config-part-button-font-weight-hover)); --_warp-button-font-letter-spacing-hover: var(--warp-button-font-letter-spacing-hover,var(--warp-config-part-button-font-letter-spacing-hover)); }
+:where([data-scope="button"]:is(:active,[data-press])) { --_warp-button-gap-press: var(--warp-button-gap-press,var(--warp-config-part-button-gap-press)); --_warp-button-padding-inline-press: var(--warp-button-padding-inline-press,var(--warp-config-part-button-padding-inline-press)); --_warp-button-border-width-press: var(--warp-button-border-width-press,var(--warp-config-part-button-border-width-press)); --_warp-button-radius-press: var(--warp-button-radius-press,var(--warp-config-part-button-radius-press)); --_warp-button-font-family-press: var(--warp-button-font-family-press,var(--warp-config-part-button-font-family-press)); --_warp-button-font-size-press: var(--warp-button-font-size-press,var(--warp-config-part-button-font-size-press)); --_warp-button-font-weight-press: var(--warp-button-font-weight-press,var(--warp-config-part-button-font-weight-press)); --_warp-button-font-letter-spacing-press: var(--warp-button-font-letter-spacing-press,var(--warp-config-part-button-font-letter-spacing-press)); }
+/* warp-theme-only:end */
 :where([data-scope="button"] > [data-part="label"]) { display: inline-flex; align-items: center; gap: inherit; }
 
 /* -- Button group (attached) -------------------------------------------- */
@@ -526,7 +530,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   position: absolute; z-index: -1; inset-block: 2px; inset-inline-start: 0; inline-size: var(--_iw, 0px); translate: var(--_ix, 0px) 0;
   border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
   box-shadow: 0 0 0 var(--warp-border-hairline) var(--warp-color-border), var(--warp-elevation-1); pointer-events: none;
-  transition: translate var(--warp-sweep-duration) var(--warp-sweep-ease), inline-size var(--warp-sweep-duration) var(--warp-sweep-ease);
+  transition: translate var(--_warp-sweep-duration,var(--warp-sweep-duration)) var(--warp-sweep-ease), inline-size var(--_warp-sweep-duration,var(--warp-sweep-duration)) var(--warp-sweep-ease);
 }
 :where([data-scope="toggle-group"] > [data-part="indicator"][data-instant]) { transition: none; }
 /* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
@@ -683,9 +687,9 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 /* the pick: one pass of weft across the top edge as it arrives, then gone */
 :where(dialog[data-scope="dialog"][open]):where(:not([data-flair="none"]))::before,
 :where(dialog[data-scope="sheet"][open]):where(:not([data-flair="none"]))::before {
-  content: ""; position: absolute; inset: -1px -1px auto; block-size: var(--warp-sweep-width); background: var(--warp-color-sweep); border-radius: inherit;
+  content: ""; position: absolute; inset: -1px -1px auto; block-size: var(--_warp-sweep-width,var(--warp-sweep-width)); background: var(--warp-color-sweep); border-radius: inherit;
   pointer-events: none; transform-origin: 0 50%;
-  animation: warp-pick calc(var(--warp-sweep-duration) * 1.2) var(--warp-sweep-ease-in) both;
+  animation: warp-pick calc(var(--_warp-sweep-duration,var(--warp-sweep-duration)) * 1.2) var(--warp-sweep-ease-in) both;
 }
 :where(dialog[data-tone="critical"])::before { background: var(--warp-color-sweep-critical); }
 @keyframes warp-pick { from { scale: 0 1; opacity: 1; } 62% { scale: 1 1; opacity: 1; } to { scale: 1 1; opacity: 0; } }
@@ -1093,7 +1097,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="palette"] [data-part="input-row"]) { --warp-sweep-radius: 0px; }
 :where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep"]),
 :where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep-base"]) {
-  inset: auto 0 calc(var(--warp-border-hairline) * -1); block-size: 0; border-radius: 0; border-width: var(--warp-sweep-width) 0 0;
+  inset: auto 0 calc(var(--warp-border-hairline) * -1); block-size: 0; border-radius: 0; border-width: var(--_warp-sweep-width,var(--warp-sweep-width)) 0 0;
 }
 :where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep-base"]) { border-width: var(--warp-border-hairline) 0 0; color: var(--warp-color-border); }
 :where([data-scope="palette"] [data-part="input-row"]) {
@@ -1153,10 +1157,10 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="tabs"] > [data-part="list"][data-overflow~="end"]) { --_fe: 32px; }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]) {
   position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; scroll-snap-align: start;
-  block-size: var(--warp-control-md); padding-inline: var(--warp-space-related); margin: 0; border: 0; background: transparent;
-  color: var(--warp-tabs-text,var(--warp-config-part-tabs-text,var(--warp-color-text-subtle))); font: 500 var(--warp-text-body-size)/1 var(--warp-text-body-font); white-space: nowrap;
-  cursor: pointer; border-radius: var(--warp-radius-control) var(--warp-radius-control) 0 0; -webkit-tap-highlight-color: transparent;
-  transition: color var(--warp-duration-fast) var(--warp-ease-out);
+  block-size: var(--_warp-tabs-height-active,var(--_warp-tabs-height-hover,var(--_warp-tabs-height,var(--warp-control-md)))); padding-inline: var(--_warp-tabs-padding-inline-active,var(--_warp-tabs-padding-inline-hover,var(--_warp-tabs-padding-inline,var(--warp-space-related)))); margin: 0; border: 0; background: transparent;
+  color: var(--warp-tabs-text,var(--warp-config-part-tabs-text,var(--warp-color-text-subtle))); font: var(--_warp-tabs-font-weight-active,var(--_warp-tabs-font-weight-hover,var(--_warp-tabs-font-weight,500))) var(--_warp-tabs-font-size-active,var(--_warp-tabs-font-size-hover,var(--_warp-tabs-font-size,var(--warp-text-body-size))))/1 var(--_warp-tabs-font-family-active,var(--_warp-tabs-font-family-hover,var(--_warp-tabs-font-family,var(--warp-text-body-font)))); white-space: nowrap;
+  cursor: pointer; border-radius: var(--_warp-tabs-radius-active,var(--_warp-tabs-radius-hover,var(--_warp-tabs-radius,var(--warp-radius-control) var(--warp-radius-control) 0 0))); -webkit-tap-highlight-color: transparent;
+  transition: color var(--_warp-tabs-duration,var(--warp-duration-fast)) var(--warp-ease-out);
 }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]:hover) { color: var(--warp-tabs-text-hover,var(--warp-config-part-tabs-text-hover,var(--warp-color-text))); }
 :where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) { color: var(--warp-tabs-text-active,var(--warp-config-part-tabs-text-active,var(--warp-color-text))); }
@@ -1190,7 +1194,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   background: var(--warp-color-surface-sunken); border: var(--warp-border-hairline) solid var(--warp-color-border);
   border-radius: calc(var(--warp-radius-control) + 3px);
 }
-:where([data-scope="tabs"][data-variant="pill"] > [data-part="list"] > [data-part="trigger"]) { z-index: 1; block-size: calc(var(--warp-control-md) - 6px); padding-inline: var(--warp-pad-control); border-radius: var(--warp-radius-control); }
+:where([data-scope="tabs"][data-variant="pill"] > [data-part="list"] > [data-part="trigger"]) { z-index: 1; block-size: var(--_warp-tabs-height-active,var(--_warp-tabs-height-hover,var(--_warp-tabs-height,calc(var(--warp-control-md) - 6px)))); padding-inline: var(--_warp-tabs-padding-inline-active,var(--_warp-tabs-padding-inline-hover,var(--_warp-tabs-padding-inline,var(--warp-pad-control)))); border-radius: var(--_warp-tabs-radius-active,var(--_warp-tabs-radius-hover,var(--_warp-tabs-radius,var(--warp-radius-control)))); }
 :where([data-scope="tabs"][data-variant="pill"] > [data-part="list"] > [data-part="indicator"]) {
   inset-block: 2px; block-size: auto; background: var(--warp-color-surface-raised); border-radius: var(--warp-radius-control);
   box-shadow: 0 0 0 var(--warp-border-hairline) var(--warp-color-border), var(--warp-elevation-1);
@@ -1198,7 +1202,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 /* enclosed */
 :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"]) { gap: 0; }
 :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"] > [data-part="trigger"]) {
-  padding-inline: var(--warp-pad-control); border: var(--warp-border-hairline) solid transparent; border-block-end: 0;
+  padding-inline: var(--_warp-tabs-padding-inline-active,var(--_warp-tabs-padding-inline-hover,var(--_warp-tabs-padding-inline,var(--warp-pad-control)))); border: var(--warp-border-hairline) solid transparent; border-block-end: 0;
 }
 :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) {
   background: var(--warp-color-surface-raised); border-color: var(--warp-color-border);
@@ -1212,6 +1216,67 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   border-radius: 0 0 var(--warp-radius-surface) var(--warp-radius-surface);
 }
 
+/* warp-theme-only:start */
+:where([data-scope="tabs"]) {
+  --_warp-tabs-padding-inline: var(--warp-tabs-padding-inline,var(--warp-config-part-tabs-padding-inline));
+  --_warp-tabs-radius: var(--warp-tabs-radius,var(--warp-config-part-tabs-radius));
+  --_warp-tabs-font-family: var(--warp-tabs-font-family,var(--warp-config-part-tabs-font-family));
+  --_warp-tabs-font-size: var(--warp-tabs-font-size,var(--warp-config-part-tabs-font-size));
+  --_warp-tabs-font-weight: var(--warp-tabs-font-weight,var(--warp-config-part-tabs-font-weight));
+  --_warp-tabs-height: var(--warp-tabs-height,var(--warp-config-part-tabs-height));
+  --_warp-tabs-duration: calc(var(--warp-tabs-duration,var(--warp-config-part-tabs-duration)) * var(--warp-motion-scale));
+  --_warp-tabs-padding-inline-hover-input: var(--warp-tabs-padding-inline-hover,var(--warp-config-part-tabs-padding-inline-hover));
+  --_warp-tabs-padding-inline-active-input: var(--warp-tabs-padding-inline-active,var(--warp-config-part-tabs-padding-inline-active));
+  --_warp-tabs-radius-hover-input: var(--warp-tabs-radius-hover,var(--warp-config-part-tabs-radius-hover));
+  --_warp-tabs-radius-active-input: var(--warp-tabs-radius-active,var(--warp-config-part-tabs-radius-active));
+  --_warp-tabs-font-family-hover-input: var(--warp-tabs-font-family-hover,var(--warp-config-part-tabs-font-family-hover));
+  --_warp-tabs-font-family-active-input: var(--warp-tabs-font-family-active,var(--warp-config-part-tabs-font-family-active));
+  --_warp-tabs-font-size-hover-input: var(--warp-tabs-font-size-hover,var(--warp-config-part-tabs-font-size-hover));
+  --_warp-tabs-font-size-active-input: var(--warp-tabs-font-size-active,var(--warp-config-part-tabs-font-size-active));
+  --_warp-tabs-font-weight-hover-input: var(--warp-tabs-font-weight-hover,var(--warp-config-part-tabs-font-weight-hover));
+  --_warp-tabs-font-weight-active-input: var(--warp-tabs-font-weight-active,var(--warp-config-part-tabs-font-weight-active));
+  --_warp-tabs-height-hover-input: var(--warp-tabs-height-hover,var(--warp-config-part-tabs-height-hover));
+  --_warp-tabs-height-active-input: var(--warp-tabs-height-active,var(--warp-config-part-tabs-height-active));
+}
+:where([data-scope="tabs"] :not([data-scope="tabs"])) {
+  --_warp-tabs-underline-width: inherit;
+  --_warp-tabs-padding-inline: inherit;
+  --_warp-tabs-radius: inherit;
+  --_warp-tabs-font-family: inherit;
+  --_warp-tabs-font-size: inherit;
+  --_warp-tabs-font-weight: inherit;
+  --_warp-tabs-height: inherit;
+  --_warp-tabs-duration: inherit;
+  --_warp-tabs-padding-inline-hover-input: inherit;
+  --_warp-tabs-padding-inline-active-input: inherit;
+  --_warp-tabs-radius-hover-input: inherit;
+  --_warp-tabs-radius-active-input: inherit;
+  --_warp-tabs-font-family-hover-input: inherit;
+  --_warp-tabs-font-family-active-input: inherit;
+  --_warp-tabs-font-size-hover-input: inherit;
+  --_warp-tabs-font-size-active-input: inherit;
+  --_warp-tabs-font-weight-hover-input: inherit;
+  --_warp-tabs-font-weight-active-input: inherit;
+  --_warp-tabs-height-hover-input: inherit;
+  --_warp-tabs-height-active-input: inherit;
+}
+:where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"]:hover) {
+  --_warp-tabs-padding-inline-hover: var(--_warp-tabs-padding-inline-hover-input);
+  --_warp-tabs-radius-hover: var(--_warp-tabs-radius-hover-input);
+  --_warp-tabs-font-family-hover: var(--_warp-tabs-font-family-hover-input);
+  --_warp-tabs-font-size-hover: var(--_warp-tabs-font-size-hover-input);
+  --_warp-tabs-font-weight-hover: var(--_warp-tabs-font-weight-hover-input);
+  --_warp-tabs-height-hover: var(--_warp-tabs-height-hover-input);
+}
+:where([data-scope="tabs"] > [data-part="list"] > [data-part="trigger"][aria-selected="true"]) {
+  --_warp-tabs-padding-inline-active: var(--_warp-tabs-padding-inline-active-input);
+  --_warp-tabs-radius-active: var(--_warp-tabs-radius-active-input);
+  --_warp-tabs-font-family-active: var(--_warp-tabs-font-family-active-input);
+  --_warp-tabs-font-size-active: var(--_warp-tabs-font-size-active-input);
+  --_warp-tabs-font-weight-active: var(--_warp-tabs-font-weight-active-input);
+  --_warp-tabs-height-active: var(--_warp-tabs-height-active-input);
+}
+/* warp-theme-only:end */
 /* -- Accordion / disclosure ----------------------------------------------------- */
 /* boxed (default): each item is a hairline surface that sweeps on hover and holds while open */
 :where([data-scope="accordion"][data-part="root"]) { display: grid; gap: var(--warp-space-related); }
@@ -1228,8 +1293,8 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
    full-weight stroke drawn over it, L→R in and out, held while open */
 :where([data-scope="accordion"][data-variant="line"] [data-part="item"]) { --warp-sweep-radius: 0px; }
 :where([data-scope="accordion"][data-variant="line"] [data-part="item"] > [data-part="sweep"]) {
-  inset: auto 0 calc(var(--warp-border-hairline) * -1); block-size: var(--warp-sweep-width);
-  border-width: 0 0 var(--warp-sweep-width);
+  inset: auto 0 calc(var(--warp-border-hairline) * -1); block-size: var(--_warp-sweep-width,var(--warp-sweep-width));
+  border-width: 0 0 var(--_warp-sweep-width,var(--warp-sweep-width));
 }
 :where([data-scope="accordion"] [data-part="heading"]) { margin: 0; font: inherit; }
 :where([data-scope="accordion"] [data-part="trigger"]),
@@ -1350,18 +1415,23 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 
 /* -- Link ------------------------------------------------------------------------- */
 :where(a[data-scope="link"]) {
-  color: var(--warp-link-text,var(--warp-config-part-link-text,var(--warp-color-accent-text))); font-weight: 500; border-radius: var(--warp-radius-mark);
+  color: var(--warp-link-text,var(--warp-config-part-link-text,var(--warp-color-accent-text))); font-weight: var(--_warp-link-font-weight-press,var(--_warp-link-font-weight-hover,var(--warp-link-font-weight,var(--warp-config-part-link-font-weight,500)))); border-radius: var(--_warp-link-radius-press,var(--_warp-link-radius-hover,var(--warp-link-radius,var(--warp-config-part-link-radius,var(--warp-radius-mark)))));
   text-decoration: underline; text-decoration-thickness: var(--warp-link-underline-width,var(--warp-config-part-link-underline-width,var(--warp-border-hairline))); text-underline-offset: var(--warp-link-underline-offset,var(--warp-config-part-link-underline-offset,0.22em));
   text-decoration-color: color-mix(in oklab, var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor)) 40%, transparent);
   /* the sweep: an emphasis-weight underline draws L→R and leaves through the right */
   background: linear-gradient(var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor)), var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor))) no-repeat right 0 bottom var(--warp-link-underline-offset,var(--warp-config-part-link-underline-offset,0)) / 0% var(--warp-link-underline-width,var(--warp-config-part-link-underline-width,var(--warp-border-emphasis)));
-  transition: background-size var(--warp-sweep-duration) var(--warp-sweep-ease), text-decoration-color var(--warp-duration-fast);
+  transition: background-size var(--_warp-link-duration,var(--_warp-sweep-duration,var(--warp-sweep-duration))) var(--warp-sweep-ease), text-decoration-color var(--_warp-link-duration,var(--warp-duration-fast));
 }
 :where(a[data-scope="link"]:hover),
 :where(a[data-scope="link"]:focus-visible) { background-size: 100% var(--warp-link-underline-width,var(--warp-config-part-link-underline-width,var(--warp-border-emphasis))); background-position: left 0 bottom var(--warp-link-underline-offset,var(--warp-config-part-link-underline-offset,0)); text-decoration-color: transparent; }
 :where(a[data-scope="link"][data-variant="subtle"]) { color: inherit; text-decoration-color: transparent; }
 :where(a[data-scope="link"] svg[data-icon]) { inline-size: 0.85em; block-size: 0.85em; vertical-align: -0.05em; margin-inline-start: 2px; }
 
+/* warp-theme-only:start */
+:where(a[data-scope="link"]) { --_warp-link-duration: calc(var(--warp-link-duration,var(--warp-config-part-link-duration)) * var(--warp-motion-scale)); }
+:where(a[data-scope="link"]:hover) { --_warp-link-radius-hover: var(--warp-link-radius-hover,var(--warp-config-part-link-radius-hover)); --_warp-link-font-weight-hover: var(--warp-link-font-weight-hover,var(--warp-config-part-link-font-weight-hover)); }
+:where(a[data-scope="link"]:active) { --_warp-link-radius-press: var(--warp-link-radius-press,var(--warp-config-part-link-radius-press)); --_warp-link-font-weight-press: var(--warp-link-font-weight-press,var(--warp-config-part-link-font-weight-press)); }
+/* warp-theme-only:end */
 /* ---------------------------------------------------------------------------
    4 · FEEDBACK
    ------------------------------------------------------------------------ */
@@ -1470,7 +1540,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   background: var(--_solid);
   /* the fill moves through the rail: clip, not scale, so the leading edge keeps its radius */
   clip-path: inset(0 calc(100% - var(--_v, 0) * 100%) 0 0 round var(--warp-radius-round));
-  transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
+  transition: clip-path var(--_warp-sweep-duration,var(--warp-sweep-duration)) var(--warp-sweep-ease);
 }
 :where([data-scope="progress"][data-state="indeterminate"] [data-part="range"]) {
   inline-size: 38%; clip-path: none;
@@ -1599,7 +1669,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-hamburger] [data-part="bars"] > i) {
   position: absolute; inset-inline: 0; block-size: 1.5px; border-radius: 2px; background: currentColor;
   transition: translate var(--warp-duration-base) var(--warp-ease-in-out), rotate var(--warp-duration-base) var(--warp-ease-in-out),
-              clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
+              clip-path var(--_warp-sweep-duration,var(--warp-sweep-duration)) var(--warp-sweep-ease);
 }
 :where([data-hamburger] [data-part="bars"] > i:nth-child(1)) { inset-block-start: 0; }
 :where([data-hamburger] [data-part="bars"] > i:nth-child(2)) { inset-block-start: var(--_gap); clip-path: inset(0); }
@@ -1660,11 +1730,11 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 
 /* -- Pill (and PillLink): rounded, selectable; sweeps while hovered or active -- */
 :where([data-scope="pill"]) {
-  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: var(--_warp-pill-gap-active,var(--_warp-pill-gap-hover,var(--warp-pill-gap,var(--warp-config-part-pill-gap,6px)))); block-size: var(--warp-pill-height,var(--warp-config-part-pill-height,30px)); padding-inline: var(--warp-pill-padding-inline,var(--warp-config-part-pill-padding-inline,12px));
-  border: var(--warp-pill-border-width,var(--warp-config-part-pill-border-width,var(--warp-border-hairline))) solid var(--warp-pill-border,var(--warp-config-part-pill-border,var(--warp-color-border))); border-radius: var(--warp-pill-radius,var(--warp-config-part-pill-radius,var(--warp-radius-round))); --warp-sweep-radius: var(--warp-pill-radius,var(--warp-config-part-pill-radius,var(--warp-radius-round)));
-  background: var(--warp-pill-bg,var(--warp-config-part-pill-bg,var(--warp-color-surface-raised))); color: var(--warp-pill-text,var(--warp-config-part-pill-text,var(--warp-color-text-subtle))); font: var(--warp-pill-font-weight,var(--warp-config-part-pill-font-weight,500)) var(--warp-pill-font-size,var(--warp-config-part-pill-font-size,var(--warp-text-caption-size)))/var(--warp-pill-font-line-height,var(--warp-config-part-pill-font-line-height,1)) var(--warp-pill-font-family,var(--warp-config-part-pill-font-family,var(--warp-text-body-font)));
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: var(--_warp-pill-gap-active,var(--_warp-pill-gap-hover,var(--warp-pill-gap,var(--warp-config-part-pill-gap,6px)))); block-size: var(--_warp-pill-height-active,var(--_warp-pill-height-hover,var(--warp-pill-height,var(--warp-config-part-pill-height,30px)))); padding-inline: var(--_warp-pill-padding-inline-active,var(--_warp-pill-padding-inline-hover,var(--warp-pill-padding-inline,var(--warp-config-part-pill-padding-inline,12px))));
+  border: var(--_warp-pill-border-width-active,var(--_warp-pill-border-width-hover,var(--warp-pill-border-width,var(--warp-config-part-pill-border-width,var(--warp-border-hairline))))) solid var(--warp-pill-border,var(--warp-config-part-pill-border,var(--warp-color-border))); border-radius: var(--_warp-pill-radius-active,var(--_warp-pill-radius-hover,var(--warp-pill-radius,var(--warp-config-part-pill-radius,var(--warp-radius-round))))); --warp-sweep-radius: var(--_warp-pill-radius-active,var(--_warp-pill-radius-hover,var(--warp-pill-radius,var(--warp-config-part-pill-radius,var(--warp-radius-round)))));
+  background: var(--warp-pill-bg,var(--warp-config-part-pill-bg,var(--warp-color-surface-raised))); color: var(--warp-pill-text,var(--warp-config-part-pill-text,var(--warp-color-text-subtle))); font: var(--_warp-pill-font-weight-active,var(--_warp-pill-font-weight-hover,var(--warp-pill-font-weight,var(--warp-config-part-pill-font-weight,500)))) var(--_warp-pill-font-size-active,var(--_warp-pill-font-size-hover,var(--warp-pill-font-size,var(--warp-config-part-pill-font-size,var(--warp-text-caption-size)))))/var(--_warp-pill-font-line-height-active,var(--_warp-pill-font-line-height-hover,var(--warp-pill-font-line-height,var(--warp-config-part-pill-font-line-height,1)))) var(--_warp-pill-font-family-active,var(--_warp-pill-font-family-hover,var(--warp-pill-font-family,var(--warp-config-part-pill-font-family,var(--warp-text-body-font)))));
   text-decoration: none; cursor: pointer;
-  transition: color var(--warp-duration-fast), background-color var(--warp-duration-fast), border-color var(--warp-duration-fast);
+  transition: color var(--_warp-pill-duration,var(--warp-duration-fast)), background-color var(--_warp-pill-duration,var(--warp-duration-fast)), border-color var(--_warp-pill-duration,var(--warp-duration-fast));
 }
 :where([data-scope="pill"]:hover) { color: var(--warp-pill-text-hover,var(--warp-config-part-pill-text-hover,var(--warp-color-text))); }
 :where([data-scope="pill"][aria-current]),
@@ -1679,6 +1749,15 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 @property --_warp-pill-gap-active { syntax: "*"; inherits: false; }
 :where([data-scope="pill"]:hover) { --_warp-pill-gap-hover: var(--warp-pill-gap-hover,var(--warp-config-part-pill-gap-hover)); }
 :where([data-scope="pill"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"])) { --_warp-pill-gap-active: var(--warp-pill-gap-active,var(--warp-config-part-pill-gap-active)); }
+/* warp-theme-only:end */
+/* warp-theme-only:start */
+:where([data-scope="pill"]:hover) { --_warp-pill-height-hover: var(--warp-pill-height-hover,var(--warp-config-part-pill-height-hover)); --_warp-pill-padding-inline-hover: var(--warp-pill-padding-inline-hover,var(--warp-config-part-pill-padding-inline-hover)); --_warp-pill-border-width-hover: var(--warp-pill-border-width-hover,var(--warp-config-part-pill-border-width-hover)); --_warp-pill-radius-hover: var(--warp-pill-radius-hover,var(--warp-config-part-pill-radius-hover)); --_warp-pill-font-family-hover: var(--warp-pill-font-family-hover,var(--warp-config-part-pill-font-family-hover)); --_warp-pill-font-size-hover: var(--warp-pill-font-size-hover,var(--warp-config-part-pill-font-size-hover)); --_warp-pill-font-weight-hover: var(--warp-pill-font-weight-hover,var(--warp-config-part-pill-font-weight-hover)); --_warp-pill-font-line-height-hover: var(--warp-pill-font-line-height-hover,var(--warp-config-part-pill-font-line-height-hover)); }
+:where([data-scope="pill"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"])) { --_warp-pill-height-active: var(--warp-pill-height-active,var(--warp-config-part-pill-height-active)); --_warp-pill-padding-inline-active: var(--warp-pill-padding-inline-active,var(--warp-config-part-pill-padding-inline-active)); --_warp-pill-border-width-active: var(--warp-pill-border-width-active,var(--warp-config-part-pill-border-width-active)); --_warp-pill-radius-active: var(--warp-pill-radius-active,var(--warp-config-part-pill-radius-active)); --_warp-pill-font-family-active: var(--warp-pill-font-family-active,var(--warp-config-part-pill-font-family-active)); --_warp-pill-font-size-active: var(--warp-pill-font-size-active,var(--warp-config-part-pill-font-size-active)); --_warp-pill-font-weight-active: var(--warp-pill-font-weight-active,var(--warp-config-part-pill-font-weight-active)); --_warp-pill-font-line-height-active: var(--warp-pill-font-line-height-active,var(--warp-config-part-pill-font-line-height-active)); }
+/* warp-theme-only:end */
+/* warp-theme-only:start */
+:where([data-scope="pill"]) { --_warp-pill-duration: calc(var(--_warp-pill-duration-active,var(--_warp-pill-duration-hover,var(--warp-pill-duration,var(--warp-config-part-pill-duration)))) * var(--warp-motion-scale)); }
+:where([data-scope="pill"]:hover) { --_warp-pill-duration-hover: var(--warp-pill-duration-hover,var(--warp-config-part-pill-duration-hover)); }
+:where([data-scope="pill"]:is([aria-current],[aria-selected="true"],[aria-pressed="true"])) { --_warp-pill-duration-active: var(--warp-pill-duration-active,var(--warp-config-part-pill-duration-active)); }
 /* warp-theme-only:end */
 /* -- Separator ----------------------------------------------------------------- */
 :where([data-scope="separator"]) { border: 0; margin: 0; block-size: 1px; background: var(--warp-color-border); }
@@ -1869,7 +1948,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="meter"] [data-part="range"]) {
   position: absolute; inset: 0; border-radius: inherit; background: var(--_solid);
   clip-path: inset(0 calc(100% - var(--_v, 0) * 100%) 0 0 round var(--warp-radius-round));
-  transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease), background-color var(--warp-duration-base);
+  transition: clip-path var(--_warp-sweep-duration,var(--warp-sweep-duration)) var(--warp-sweep-ease), background-color var(--warp-duration-base);
 }
 :where([data-scope="meter"][data-level="high"]) { --_solid: var(--warp-color-caution-solid); }
 :where([data-scope="meter"][data-level="full"]) { --_solid: var(--warp-color-critical-solid); }
@@ -2020,17 +2099,17 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 
 /* -- Nav: links with the sliding bar. One face, moved by transform only: the phase machine (warp-core nav.ts) grows it in
    from an item's edge and out through the far edge. Before script the current link draws the same bar itself. */
-:where([data-scope="nav"]) { position: relative; --_bar: var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width,var(--warp-sweep-width))); display: flex; gap: var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-group))); align-self: start; inline-size: fit-content; }
-:where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-tight))); }
-:where([data-scope="nav"][data-axis="x"] a) { padding-block: var(--warp-space-tight); }
-:where([data-scope="nav"] a) { color: var(--warp-nav-text,var(--warp-config-part-nav-text,var(--warp-color-text-subtle))); text-decoration: none; transition: color var(--warp-duration-fast) var(--warp-ease-out); }
+:where([data-scope="nav"]) { position: relative; --_bar: var(--warp-nav-underline-width,var(--warp-config-part-nav-underline-width,var(--_warp-sweep-width,var(--warp-sweep-width)))); display: flex; gap: var(--_warp-nav-gap-active,var(--_warp-nav-gap-hover,var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-group))))); align-self: start; inline-size: fit-content; }
+:where([data-scope="nav"][data-axis="y"]) { flex-direction: column; gap: var(--_warp-nav-gap-active,var(--_warp-nav-gap-hover,var(--warp-nav-gap,var(--warp-config-part-nav-gap,var(--warp-space-tight))))); }
+:where([data-scope="nav"][data-axis="x"] a) { padding-block: var(--_warp-nav-padding-block,var(--warp-space-tight)); }
+:where([data-scope="nav"] a) { color: var(--warp-nav-text,var(--warp-config-part-nav-text,var(--warp-color-text-subtle))); text-decoration: none; transition: color var(--_warp-nav-duration,var(--warp-duration-fast)) var(--warp-ease-out); }
 :where([data-scope="nav"] a:hover),
 :where([data-scope="nav"] a:focus-visible),
 :where([data-scope="nav"] a[aria-current]) { color: var(--warp-nav-text-interaction,var(--warp-config-part-nav-text-interaction,var(--warp-color-text))); }
 :where([data-scope="nav"] > [data-part="indicator"]) {
   position: absolute; inset-block-start: 0; inset-inline-start: 0; pointer-events: none;
   background: var(--warp-nav-underline,var(--warp-config-part-nav-underline,var(--warp-color-accent-solid))); transform-origin: 0 0; transform: scaleX(0); opacity: 0;
-  transition: transform calc(var(--warp-sweep-duration) * 0.68) var(--warp-sweep-ease);
+  transition: transform var(--_warp-nav-duration,calc(var(--_warp-sweep-duration,var(--warp-sweep-duration)) * 0.68)) var(--warp-sweep-ease);
 }
 :where([data-scope="nav"][data-ready] > [data-part="indicator"]) { opacity: 1; }
 :where([data-scope="nav"] > [data-part="indicator"][data-instant]) { transition: none; }
@@ -2038,6 +2117,15 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="nav"][data-axis="y"] > [data-part="indicator"]) { inline-size: var(--_bar); block-size: 1px; transform: scaleY(0); }
 :where([data-scope="nav"]:not([data-ready]) a[aria-current]) { position: relative; }
 :where([data-scope="nav"]:not([data-ready])[data-axis="x"] a[aria-current])::after { content: ""; position: absolute; inset-inline: 0; inset-block-end: 0; block-size: var(--_bar); background: var(--warp-nav-underline,var(--warp-config-part-nav-underline,var(--warp-color-accent-solid))); }
+/* warp-theme-only:start */
+:where([data-scope="nav"]) {
+  --_warp-nav-padding-block: var(--warp-nav-padding-block,var(--warp-config-part-nav-padding-block));
+  --_warp-nav-duration: calc(var(--warp-nav-duration,var(--warp-config-part-nav-duration)) * var(--warp-motion-scale));
+}
+:where([data-scope="nav"]:hover) { --_warp-nav-gap-hover: var(--warp-nav-gap-hover,var(--warp-config-part-nav-gap-hover)); }
+:where([data-scope="nav"]:has(a[aria-current])) { --_warp-nav-gap-active: var(--warp-nav-gap-active,var(--warp-config-part-nav-gap-active)); }
+:where([data-scope="nav"] :not([data-scope="nav"])) { --_warp-nav-padding-block: inherit; --_warp-nav-duration: inherit; }
+/* warp-theme-only:end */
 :where([data-scope="nav"]:not([data-ready])[data-axis="y"] a[aria-current])::after { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: var(--_bar); background: var(--warp-nav-underline,var(--warp-config-part-nav-underline,var(--warp-color-accent-solid))); }
 
 /* -- Reduced motion (review 02 M6, review 03 M11). warp.base stops every loop under reduce

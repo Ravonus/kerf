@@ -1,0 +1,160 @@
+/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
+@layer warp.inputs {
+/* =========================================================================
+   8 · MORE PICKERS AND FORM MECHANICS (COVERAGE §2.1 gaps)
+   Every one keeps the shell: a swept host, the floating/classic label, the message line.
+   ====================================================================== */
+
+/* required / optional marks: opt-in per form or field; the mark is visual only (required is on the input) */
+:where([data-mark="required"] [data-scope="field"]:has(:required) > [data-part="control"] > [data-part="label"])::after,
+:where([data-mark="required"] [data-scope="group"]:has(:required) > legend)::after { content: "*" / ""; margin-inline-start: 2px; color: var(--warp-color-critical-text); }
+:where([data-scope="group"] > [data-part="description"]) { margin: -2px 0 2px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+
+/* password rules checklist: each rule ticks as it is met (the meter is advice; the rules are the contract) */
+:where([data-scope="rules"]) { display: grid; gap: 4px; margin: 6px 0 0; padding: 0; list-style: none; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="rules"] li) { display: flex; gap: 6px; align-items: center; }
+:where([data-scope="rules"] li) > svg { inline-size: 12px; block-size: 12px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="rules"] li)::before { content: ""; inline-size: 5px; block-size: 5px; margin-inline: 3.5px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+:where([data-scope="rules"] li[data-met]) { color: var(--warp-color-positive-text); }
+:where([data-scope="rules"] li[data-met])::before { display: none; }
+:where([data-scope="rules"] li:not([data-met])) > svg { display: none; }
+:where([data-scope="rules"] li[data-met]) > svg { stroke-dashoffset: 0; }
+
+/* knob / angle slider (and the hue wheel variant): the arc is a rail; the ring sweeps like any box */
+:where([data-scope="knob"]) {
+  --_v: 0; --warp-sweep-radius: 50%; --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  position: relative; inline-size: 64px; block-size: 64px; flex: none; border-radius: 50%; cursor: grab; touch-action: none;
+  background: var(--warp-color-surface-raised);
+}
+:where([data-scope="knob"]) > [data-part="arc"] {
+  position: absolute; inset: 5px; border-radius: 50%;
+  background: conic-gradient(var(--warp-color-accent-solid) calc(var(--_v) * 1turn), var(--warp-color-surface-sunken) 0);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5.5px));
+  transition: filter var(--warp-duration-fast);
+}
+:where([data-scope="knob"]:is(:hover, :focus-within)) > [data-part="arc"] { filter: brightness(1.12) saturate(1.1); }
+:where([data-scope="knob"][data-variant="hue"]) > [data-part="arc"] { background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); }
+:where([data-scope="knob"]) > [data-part="pointer"] {
+  position: absolute; inset: 5px; rotate: calc(var(--_v) * 1turn); pointer-events: none;
+}
+:where([data-scope="knob"]) > [data-part="pointer"]::before {
+  content: ""; position: absolute; inset-inline-start: 50%; inset-block-start: -2px; inline-size: 12px; block-size: 12px; translate: -50% 0;
+  box-sizing: border-box; border-radius: 50%; background: var(--warp-color-surface-raised); border: 2px solid var(--warp-color-accent-solid); box-shadow: var(--warp-elevation-1);
+}
+:where([data-scope="knob"][data-variant="hue"]) > [data-part="pointer"]::before { background: var(--_c, transparent); border-color: white; outline: 1px solid rgb(0 0 0 / 0.3); }
+:where([data-scope="knob"]) > [data-part="value"] { position: absolute; inset: 0; display: grid; place-items: center; z-index: 3; font: 500 12px/1 var(--warp-font-mono); font-variant-numeric: tabular-nums; }
+:where([data-scope="knob"]:focus-visible) { outline: none; }
+:where([data-scope="knob"][data-dragging]) { cursor: grabbing; }
+:where([data-scope="knob-row"]) { display: flex; gap: var(--warp-space-group); align-items: center; }
+:where([data-scope="knob-row"] [data-part="caption"]) { display: grid; gap: 2px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="knob-row"] [data-part="caption"] b) { font: 600 10px/1.4 var(--warp-label-font); letter-spacing: var(--warp-label-float-tracking); text-transform: uppercase; color: var(--warp-color-label-active); }
+
+/* XY pad: a swept box; one thumb (hollow ring) with two values; crosshair rails */
+:where([data-scope="xy-pad"]) {
+  --_x: 0.5; --_y: 0.5; --warp-sweep-radius: var(--warp-radius-control); --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  position: relative; aspect-ratio: 16 / 9; border-radius: var(--warp-radius-control); cursor: crosshair; touch-action: none;
+  background:
+    linear-gradient(var(--warp-color-border) 0 0) center / 1px 100% no-repeat,
+    linear-gradient(var(--warp-color-border) 0 0) center / 100% 1px no-repeat,
+    radial-gradient(circle, var(--warp-color-border) 1px, transparent 1.5px) 0 0 / 12.5% 25%,
+    var(--warp-color-field);
+}
+:where([data-scope="xy-pad"]) > [data-part="cross"] { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+:where([data-scope="xy-pad"]) > [data-part="cross"]::before, :where([data-scope="xy-pad"]) > [data-part="cross"]::after { content: ""; position: absolute; background: var(--warp-color-accent-solid); opacity: 0.35; }
+:where([data-scope="xy-pad"]) > [data-part="cross"]::before { inset-block: 0; inset-inline-start: calc(var(--_x) * 100%); inline-size: 1px; }
+:where([data-scope="xy-pad"]) > [data-part="cross"]::after { inset-inline: 0; inset-block-start: calc((1 - var(--_y)) * 100%); block-size: 1px; }
+:where([data-scope="xy-pad"]) > [data-part="thumb"] {
+  position: absolute; z-index: 3; inset-inline-start: calc(var(--_x) * 100%); inset-block-start: calc((1 - var(--_y)) * 100%);
+  inline-size: 18px; block-size: 18px; translate: -50% -50%; box-sizing: border-box; border-radius: 50%;
+  background: var(--warp-color-surface-raised); border: 2px solid var(--warp-color-accent-solid); box-shadow: var(--warp-elevation-1);
+}
+:where([data-scope="xy-pad"]) > [data-part="thumb"]::after { content: ""; position: absolute; inset: min(-13px, calc((100% - var(--warp-hit-min)) / 2)); }
+:where([data-scope="xy-pad"][data-dragging]) > [data-part="thumb"] { background: var(--warp-color-accent-solid); }
+:where([data-scope="xy-pad"]) > [data-part="thumb"]:focus-visible { outline: 2px solid var(--warp-color-focus); outline-offset: 3px; }
+
+/* histogram range slider: bars above the track; bars inside the range take the accent */
+:where([data-scope="histogram"]) { display: flex; align-items: end; gap: 2px; block-size: 48px; margin-block-end: -6px; padding-inline: 1px; }
+:where([data-scope="histogram"] i) { flex: 1; block-size: calc(var(--h) * 100%); min-block-size: 2px; border-radius: 2px 2px 0 0; background: var(--warp-color-border-strong); transition: background-color var(--warp-duration-base); }
+:where([data-scope="histogram"] i[data-in]) { background: color-mix(in oklab, var(--warp-color-accent-solid) 70%, transparent); }
+
+/* cascader and tree select: the select shell, a wider popup */
+:where([data-scope="popup"][data-kind="cascade"]:not([hidden])) { inset-inline-end: auto; min-inline-size: 100%; display: grid; grid-template-columns: repeat(2, minmax(150px, 1fr)); gap: 4px; }
+:where([data-scope="popup"][data-kind="cascade"]) > [data-scope="listbox"] + [data-scope="listbox"] { border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); padding-inline-start: 4px; }
+:where([data-scope="popup"][data-kind="cascade"] [role="option"][aria-haspopup]) > [data-part="item-check"] { display: none; }
+:where([data-scope="popup"][data-kind="cascade"] [role="option"]) > [data-part="chev"] { margin-inline-start: auto; inline-size: 14px; block-size: 14px; color: var(--warp-color-text-subtle); }
+:where([data-scope="popup"][data-kind="cascade"] [role="option"][data-trail]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
+:where([role="tree"][data-scope="tree"]) { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; outline: none; }
+:where([data-scope="tree"] [role="group"]) { display: grid; gap: 1px; margin: 0; padding: 0 0 0 22px; list-style: none; }
+:where([data-scope="tree"] [role="treeitem"][aria-expanded="false"]) > [role="group"] { display: none; }
+:where([data-scope="tree"] [data-part="row"]) {
+  position: relative; display: flex; gap: 8px; align-items: center; min-block-size: 32px; padding-inline: 6px 8px; border-radius: calc(var(--warp-radius-control) - 2px); cursor: pointer;
+}
+:where([data-scope="tree"] [data-part="row"]:hover),
+:where([data-scope="tree"] [role="treeitem"][data-highlighted] > [data-part="row"]) { background: var(--warp-color-accent-soft); }
+:where([data-scope="tree"] [role="treeitem"][data-highlighted] > [data-part="row"])::after { content: ""; position: absolute; inset-block: 6px; inset-inline-start: 0; inline-size: 2px; border-radius: 2px; background: var(--warp-color-accent-solid); }
+:where([data-scope="tree"] [data-part="twisty"]) { inline-size: 14px; block-size: 14px; flex: none; color: var(--warp-color-text-subtle); transition: rotate var(--warp-duration-fast) var(--warp-ease-out); }
+:where([data-scope="tree"] [role="treeitem"]:not([aria-expanded])) > [data-part="row"] [data-part="twisty"] { visibility: hidden; }
+:where([data-scope="tree"] [role="treeitem"][aria-expanded="true"]) > [data-part="row"] [data-part="twisty"] { rotate: 90deg; }
+:where([data-scope="tree"] [data-part="box"]) {
+  position: relative; inline-size: 16px; block-size: 16px; flex: none; box-sizing: border-box; border: 1.5px solid var(--warp-color-border-control); border-radius: 4px; display: grid; place-items: center;
+}
+:where([data-scope="tree"] [aria-checked="true"] > [data-part="row"] [data-part="box"]),
+:where([data-scope="tree"] [aria-checked="mixed"] > [data-part="row"] [data-part="box"]) { border-color: var(--warp-color-accent-solid); color: var(--warp-color-accent-solid); }
+:where([data-scope="tree"] [data-part="box"] svg) { inline-size: 12px; block-size: 12px; fill: none; stroke: currentColor; stroke-width: 2.6; }
+:where([data-scope="tree"] [data-part="box"] path) { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 420ms var(--warp-sweep-ease); }
+:where([data-scope="tree"] [aria-checked="true"] > [data-part="row"] [data-part="box"] [data-part="check"]),
+:where([data-scope="tree"] [aria-checked="mixed"] > [data-part="row"] [data-part="box"] [data-part="dash"]) { stroke-dashoffset: 0; }
+
+/* gradient editor: the bar previews the gradient; stops are slider thumbs on it */
+:where([data-scope="gradient"]) { display: grid; gap: var(--warp-space-group); }
+:where([data-scope="gradient"] [data-part="preview"]) { block-size: 72px; border-radius: var(--warp-radius-control); background: var(--_g); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08); }
+:where([data-scope="gradient"] [data-part="bar"]) { position: relative; block-size: 18px; margin-inline: 9px; border-radius: 9px; background: linear-gradient(90deg, var(--_stops)); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.1); cursor: copy; }
+:where([data-scope="gradient"] [data-part="stop"]) {
+  position: absolute; inset-block-start: 50%; inset-inline-start: calc(var(--_p) * 100%); inline-size: 18px; block-size: 26px; translate: -50% -50%;
+  box-sizing: border-box; border-radius: 6px; border: 2px solid var(--warp-color-surface-raised); background: var(--_c); box-shadow: 0 0 0 1px var(--warp-color-border-strong), var(--warp-elevation-1); cursor: grab; touch-action: none;
+}
+:where([data-scope="gradient"] [data-part="stop"][aria-current="true"]) { box-shadow: 0 0 0 2px var(--warp-color-accent-solid), var(--warp-elevation-1); }
+:where([data-scope="gradient"] [data-part="stop"]:focus-visible) { outline: 2px solid var(--warp-color-focus); outline-offset: 3px; }
+:where([data-scope="gradient"] [data-part="stop"])::after { content: ""; position: absolute; inset: min(-9px, calc((100% - var(--warp-hit-min)) / 2)) min(-13px, calc((100% - var(--warp-hit-min)) / 2)); }
+
+/* icon tile (the floating-border icon) and HoverScope: hovering anywhere in the scope sweeps the tile */
+:where([data-scope="icon-tile"]) {
+  --warp-sweep-radius: var(--warp-radius-control); --_base: var(--warp-color-sweep-base) /* ink, like fields: sweep-vs-base ≥ 3:1 (review 01 M7) */;
+  position: relative; display: grid; place-items: center; inline-size: 40px; block-size: 40px; flex: none;
+  border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
+}
+:where([data-scope="icon-tile"]) > [data-part="icon"] { position: relative; inline-size: 18px; block-size: 18px; display: grid; }
+:where([data-scope="icon-tile"]) > [data-part="icon"] > * { grid-area: 1 / 1; }
+:where([data-scope="icon-tile"]) > [data-part="icon"] svg { inline-size: 18px; block-size: 18px; }
+:where([data-scope="hover-scope"]) {
+  display: flex; gap: var(--warp-space-group); align-items: center; padding: 10px 12px; border-radius: var(--warp-radius-surface, 10px);
+  color: inherit; text-decoration: none; cursor: pointer; transition: background-color var(--warp-duration-fast);
+}
+:where([data-scope="hover-scope"]:hover),
+:where([data-scope="hover-scope"]:focus-visible) { background: var(--warp-color-surface-sunken); }
+:where([data-scope="hover-scope"]:focus-visible) { outline: 2px solid var(--warp-color-focus); outline-offset: 2px; }
+:where([data-scope="hover-scope"] [data-part="text"]) { display: grid; gap: 2px; min-inline-size: 0; }
+:where([data-scope="hover-scope"] [data-part="text"] small) { color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+
+/* unsaved-changes save bar: appears only while the form is dirty; it never covers the field being edited */
+:where([data-scope="save-bar"]) {
+  position: sticky; inset-block-end: 8px; z-index: 5; display: flex; gap: var(--warp-space-related); align-items: center;
+  padding: 8px 8px 8px 14px; border-radius: calc(var(--warp-radius-control) + 4px);
+  background: var(--warp-color-surface-inverse); color: var(--warp-color-on-inverse); box-shadow: var(--warp-elevation-2);
+  font-size: var(--warp-text-caption-size); clip-path: inset(0 0 0 0 round calc(var(--warp-radius-control) + 4px));
+  transition: clip-path var(--_warp-sweep-duration,var(--warp-sweep-duration)) var(--warp-sweep-ease), opacity var(--warp-duration-fast);
+}
+:where([data-scope="save-bar"][hidden]) { display: flex; visibility: hidden; opacity: 0; clip-path: inset(0 100% 0 0 round calc(var(--warp-radius-control) + 4px)); transition: clip-path var(--_warp-sweep-duration,var(--warp-sweep-duration)) var(--warp-sweep-ease), opacity var(--warp-duration-fast), visibility 0s var(--_warp-sweep-duration,var(--warp-sweep-duration)); }
+:where([data-scope="save-bar"]) > [data-part="text"] { margin-inline-end: auto; white-space: nowrap; display: flex; gap: 8px; align-items: center; }
+:where([data-scope="save-bar"]) > [data-part="text"]::before { content: ""; inline-size: 7px; block-size: 7px; border-radius: 50%; background: var(--warp-color-caution-solid); }
+
+/* autosave status: idle · saving · saved · failed; polite live region; failed offers Retry */
+:where([data-scope="autosave"]) { display: inline-flex; gap: 6px; align-items: center; min-block-size: 24px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="autosave"]) > svg { inline-size: 13px; block-size: 13px; fill: none; stroke: currentColor; stroke-width: 2; display: none; }
+:where([data-scope="autosave"][data-state="saving"]) > [data-part="spin"] { display: block; animation: warp-field-spin 0.8s linear infinite; }
+:where([data-scope="autosave"][data-state="saved"]) { color: var(--warp-color-positive-text); }
+:where([data-scope="autosave"][data-state="saved"]) > [data-part="ok"] { display: block; }
+:where([data-scope="autosave"][data-state="failed"]) { color: var(--warp-color-critical-text); }
+:where([data-scope="autosave"][data-state="failed"]) > [data-part="bad"] { display: block; }
+:where([data-scope="autosave"]:not([data-state="failed"])) > button { display: none; }
+}

@@ -172,10 +172,88 @@ themeNames.push(
   '--_warp-button-duration',
   '--_warp-button-shadow-press',
   '--_warp-field-radius',
+  '--warp-link-radius',
+  '--warp-config-part-link-radius',
+  '--warp-link-font-weight',
+  '--warp-config-part-link-font-weight',
+  '--_warp-nav-padding-block',
+  '--_warp-nav-duration',
+  '--_warp-nav-gap-hover',
+  '--_warp-nav-gap-active',
+  '--_warp-link-duration',
+  '--_warp-link-radius-hover',
+  '--_warp-link-radius-press',
+  '--_warp-link-font-weight-hover',
+  '--_warp-link-font-weight-press',
+  '--_warp-card-gap-hover',
+  '--_warp-card-padding-hover',
+  '--_warp-card-radius-hover',
+  '--_warp-pill-duration',
+
+  '--_warp-field-gap',
+  '--_warp-field-height',
+  '--_warp-field-padding-inline',
+  '--_warp-field-font-family',
+  '--_warp-field-font-size',
+  '--_warp-field-duration',
+
+  '--_warp-sweep-width',
+  '--_warp-sweep-duration',
   '--_warp-tabs-underline-width',
+  '--_warp-tabs-padding-inline',
+  '--_warp-tabs-radius',
+  '--_warp-tabs-font-family',
+  '--_warp-tabs-font-size',
+  '--_warp-tabs-font-weight',
+  '--_warp-tabs-height',
+  '--_warp-tabs-duration',
+  '--_warp-tabs-padding-inline-hover',
+  '--_warp-tabs-padding-inline-active',
+  '--_warp-tabs-radius-hover',
+  '--_warp-tabs-radius-active',
+  '--_warp-tabs-font-family-hover',
+  '--_warp-tabs-font-family-active',
+  '--_warp-tabs-font-size-hover',
+  '--_warp-tabs-font-size-active',
+  '--_warp-tabs-font-weight-hover',
+  '--_warp-tabs-font-weight-active',
+  '--_warp-tabs-height-hover',
+  '--_warp-tabs-height-active',
+
   '--_warp-pill-gap-hover',
   '--_warp-pill-gap-active',
 )
+
+const stateProperties = {
+  button: [
+    'gap',
+    'padding-inline',
+    'border-width',
+    'radius',
+    'font-family',
+    'font-size',
+    'font-weight',
+    'font-letter-spacing',
+  ],
+  pill: [
+    'height',
+    'padding-inline',
+    'border-width',
+    'radius',
+    'font-family',
+    'font-size',
+    'font-weight',
+    'font-line-height',
+  ],
+}
+for (const [part, properties] of Object.entries(stateProperties)) {
+  const states = part === 'button' ? ['hover', 'press'] : ['hover', 'active']
+  themeNames.push(
+    ...properties.flatMap((property) =>
+      states.map((state) => `--_warp-${part}-${property}-${state}`),
+    ),
+  )
+}
 
 // Lower only explicitly named theme wrappers, preserving every byte of their fallbacks.
 export function lowerTheme(css, names) {

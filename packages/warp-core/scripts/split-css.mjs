@@ -175,17 +175,21 @@ export function build() {
   if (files.get('warp.css') !== foundation) files.set('themed/warp.css', foundation)
   const canonical = readFileSync(join(spec, 'warp-components.css'), 'utf8')
   const themed = split(spec, 'warp-components.css', 'components')
+  const themedInputs = split(spec, 'warp-inputs.css', 'inputs')
   const temporary = mkdtempSync(join(tmpdir(), 'warp-lower-'))
-  let components
+  let components, inputs
   try {
     writeFileSync(join(temporary, 'warp-components.css'), lowerTheme(canonical, themeNames))
     components = split(temporary, 'warp-components.css', 'components')
+    const inputCss = readFileSync(join(spec, 'warp-inputs.css'), 'utf8')
+    writeFileSync(join(temporary, 'warp-inputs.css'), lowerTheme(inputCss, themeNames))
+    inputs = split(temporary, 'warp-inputs.css', 'inputs')
   } finally {
     rmSync(temporary, { recursive: true, force: true })
   }
   const parts = {
     components,
-    inputs: split(spec, 'warp-inputs.css', 'inputs'),
+    inputs,
     rich: split(spec, 'warp-inputs-rich.css', 'rich'),
   }
   for (const p of Object.values(parts)) for (const [k, v] of render(p)) files.set(k, v)
@@ -227,6 +231,18 @@ export function build() {
   )
   for (const [path, content] of renderRouted(themedData)) {
     if (files.get(path) !== content) files.set(`themed/${path}`, content)
+  }
+  const themedChoices = choices(themedInputs.files.get('choice'))
+  const themedText = new Map([['text-field', textFields(themedInputs.files.get('text'))]])
+  const inputSheets = [
+    themedInputs,
+    { ...themedInputs, files: themedChoices, shared: [] },
+    { ...themedInputs, files: themedText, shared: [] },
+  ]
+  for (const input of inputSheets) {
+    for (const [path, content] of render(input)) {
+      if (files.get(path) !== content) files.set(`themed/${path}`, content)
+    }
   }
   for (const [path, content] of render(themed)) {
     if (files.get(path) !== content) files.set(`themed/${path}`, content)

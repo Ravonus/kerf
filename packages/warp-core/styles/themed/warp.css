@@ -1,4 +1,187 @@
 /* warp-theme-only:start */
+@property --_warp-tabs-underline-width { syntax: "*"; inherits: false; }
+@property --warp-tabs-padding-inline { syntax: "*"; inherits: false; }
+@property --_warp-tabs-padding-inline { syntax: "*"; inherits: false; }
+@property --warp-tabs-radius { syntax: "*"; inherits: false; }
+@property --_warp-tabs-radius { syntax: "*"; inherits: false; }
+@property --warp-tabs-font-family { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-family { syntax: "*"; inherits: false; }
+@property --warp-tabs-font-size { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-size { syntax: "*"; inherits: false; }
+@property --warp-tabs-font-weight { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-weight { syntax: "*"; inherits: false; }
+@property --warp-tabs-height { syntax: "*"; inherits: false; }
+@property --_warp-tabs-height { syntax: "*"; inherits: false; }
+@property --warp-tabs-duration { syntax: "*"; inherits: false; }
+@property --_warp-tabs-duration { syntax: "*"; inherits: false; }
+@property --warp-tabs-padding-inline-hover { syntax: "*"; inherits: false; }
+@property --_warp-tabs-padding-inline-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-padding-inline-hover { syntax: "*"; inherits: false; }
+@property --warp-tabs-padding-inline-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-padding-inline-active-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-padding-inline-active { syntax: "*"; inherits: false; }
+@property --warp-tabs-radius-hover { syntax: "*"; inherits: false; }
+@property --_warp-tabs-radius-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-radius-hover { syntax: "*"; inherits: false; }
+@property --warp-tabs-radius-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-radius-active-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-radius-active { syntax: "*"; inherits: false; }
+@property --warp-tabs-font-family-hover { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-family-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-family-hover { syntax: "*"; inherits: false; }
+@property --warp-tabs-font-family-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-family-active-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-family-active { syntax: "*"; inherits: false; }
+@property --warp-tabs-font-size-hover { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-size-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-size-hover { syntax: "*"; inherits: false; }
+@property --warp-tabs-font-size-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-size-active-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-size-active { syntax: "*"; inherits: false; }
+@property --warp-tabs-font-weight-hover { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-weight-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-weight-hover { syntax: "*"; inherits: false; }
+@property --warp-tabs-font-weight-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-weight-active-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-font-weight-active { syntax: "*"; inherits: false; }
+@property --warp-tabs-height-hover { syntax: "*"; inherits: false; }
+@property --_warp-tabs-height-hover-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-height-hover { syntax: "*"; inherits: false; }
+@property --warp-tabs-height-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-height-active-input { syntax: "*"; inherits: false; }
+@property --_warp-tabs-height-active { syntax: "*"; inherits: false; }
+@property --warp-nav-padding-block { syntax: "*"; inherits: false; }
+@property --warp-nav-duration { syntax: "*"; inherits: false; }
+@property --warp-nav-gap-hover { syntax: "*"; inherits: false; }
+@property --warp-nav-gap-active { syntax: "*"; inherits: false; }
+@property --warp-link-radius { syntax: "*"; inherits: false; }
+@property --warp-link-font-weight { syntax: "*"; inherits: false; }
+@property --warp-link-duration { syntax: "*"; inherits: false; }
+@property --warp-link-radius-hover { syntax: "*"; inherits: false; }
+@property --warp-link-radius-press { syntax: "*"; inherits: false; }
+@property --warp-link-font-weight-hover { syntax: "*"; inherits: false; }
+@property --warp-link-font-weight-press { syntax: "*"; inherits: false; }
+@property --warp-card-gap-hover { syntax: "*"; inherits: false; }
+@property --warp-card-padding-hover { syntax: "*"; inherits: false; }
+@property --warp-card-radius-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-duration { syntax: "*"; inherits: false; }
+@property --warp-pill-duration-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-duration-active { syntax: "*"; inherits: false; }
+@property --_warp-nav-padding-block { syntax: "*"; inherits: false; }
+@property --_warp-nav-duration { syntax: "*"; inherits: false; }
+@property --_warp-nav-gap-hover { syntax: "*"; inherits: false; }
+@property --_warp-nav-gap-active { syntax: "*"; inherits: false; }
+@property --_warp-link-duration { syntax: "*"; inherits: false; }
+@property --_warp-link-radius-hover { syntax: "*"; inherits: false; }
+@property --_warp-link-radius-press { syntax: "*"; inherits: false; }
+@property --_warp-link-font-weight-hover { syntax: "*"; inherits: false; }
+@property --_warp-link-font-weight-press { syntax: "*"; inherits: false; }
+@property --_warp-card-gap-hover { syntax: "*"; inherits: false; }
+@property --_warp-card-padding-hover { syntax: "*"; inherits: false; }
+@property --_warp-card-radius-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-duration { syntax: "*"; inherits: false; }
+@property --_warp-pill-duration-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-duration-active { syntax: "*"; inherits: false; }
+@property --warp-button-gap-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-gap-hover { syntax: "*"; inherits: false; }
+@property --warp-button-gap-press { syntax: "*"; inherits: false; }
+@property --_warp-button-gap-press { syntax: "*"; inherits: false; }
+@property --warp-button-padding-inline-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-padding-inline-hover { syntax: "*"; inherits: false; }
+@property --warp-button-padding-inline-press { syntax: "*"; inherits: false; }
+@property --_warp-button-padding-inline-press { syntax: "*"; inherits: false; }
+@property --warp-button-border-width-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-border-width-hover { syntax: "*"; inherits: false; }
+@property --warp-button-border-width-press { syntax: "*"; inherits: false; }
+@property --_warp-button-border-width-press { syntax: "*"; inherits: false; }
+@property --warp-button-radius-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-radius-hover { syntax: "*"; inherits: false; }
+@property --warp-button-radius-press { syntax: "*"; inherits: false; }
+@property --_warp-button-radius-press { syntax: "*"; inherits: false; }
+@property --warp-button-font-family-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-font-family-hover { syntax: "*"; inherits: false; }
+@property --warp-button-font-family-press { syntax: "*"; inherits: false; }
+@property --_warp-button-font-family-press { syntax: "*"; inherits: false; }
+@property --warp-button-font-size-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-font-size-hover { syntax: "*"; inherits: false; }
+@property --warp-button-font-size-press { syntax: "*"; inherits: false; }
+@property --_warp-button-font-size-press { syntax: "*"; inherits: false; }
+@property --warp-button-font-weight-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-font-weight-hover { syntax: "*"; inherits: false; }
+@property --warp-button-font-weight-press { syntax: "*"; inherits: false; }
+@property --_warp-button-font-weight-press { syntax: "*"; inherits: false; }
+@property --warp-button-font-letter-spacing-hover { syntax: "*"; inherits: false; }
+@property --_warp-button-font-letter-spacing-hover { syntax: "*"; inherits: false; }
+@property --warp-button-font-letter-spacing-press { syntax: "*"; inherits: false; }
+@property --_warp-button-font-letter-spacing-press { syntax: "*"; inherits: false; }
+@property --warp-pill-height-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-height-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-height-active { syntax: "*"; inherits: false; }
+@property --_warp-pill-height-active { syntax: "*"; inherits: false; }
+@property --warp-pill-padding-inline-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-padding-inline-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-padding-inline-active { syntax: "*"; inherits: false; }
+@property --_warp-pill-padding-inline-active { syntax: "*"; inherits: false; }
+@property --warp-pill-border-width-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-border-width-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-border-width-active { syntax: "*"; inherits: false; }
+@property --_warp-pill-border-width-active { syntax: "*"; inherits: false; }
+@property --warp-pill-radius-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-radius-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-radius-active { syntax: "*"; inherits: false; }
+@property --_warp-pill-radius-active { syntax: "*"; inherits: false; }
+@property --warp-pill-font-family-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-font-family-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-font-family-active { syntax: "*"; inherits: false; }
+@property --_warp-pill-font-family-active { syntax: "*"; inherits: false; }
+@property --warp-pill-font-size-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-font-size-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-font-size-active { syntax: "*"; inherits: false; }
+@property --_warp-pill-font-size-active { syntax: "*"; inherits: false; }
+@property --warp-pill-font-weight-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-font-weight-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-font-weight-active { syntax: "*"; inherits: false; }
+@property --_warp-pill-font-weight-active { syntax: "*"; inherits: false; }
+@property --warp-pill-font-line-height-hover { syntax: "*"; inherits: false; }
+@property --_warp-pill-font-line-height-hover { syntax: "*"; inherits: false; }
+@property --warp-pill-font-line-height-active { syntax: "*"; inherits: false; }
+@property --_warp-pill-font-line-height-active { syntax: "*"; inherits: false; }
+@property --warp-field-local-height { syntax: "*"; inherits: false; }
+@property --warp-field-padding-inline { syntax: "*"; inherits: false; }
+@property --warp-field-font-family { syntax: "*"; inherits: false; }
+@property --warp-field-font-size { syntax: "*"; inherits: false; }
+@property --warp-field-font-weight { syntax: "*"; inherits: false; }
+@property --warp-field-shadow { syntax: "*"; inherits: false; }
+@property --warp-field-shadow-hover { syntax: "*"; inherits: false; }
+@property --warp-field-duration { syntax: "*"; inherits: false; }
+@property --warp-field-gap-hover { syntax: "*"; inherits: false; }
+@property --_warp-field-radius { syntax: "*"; inherits: false; }
+@property --_warp-field-gap { syntax: "*"; inherits: false; }
+@property --_warp-field-gap-hover { syntax: "*"; inherits: false; }
+@property --_warp-field-height { syntax: "*"; inherits: false; }
+@property --_warp-field-padding-inline { syntax: "*"; inherits: false; }
+@property --_warp-field-font-family { syntax: "*"; inherits: false; }
+@property --_warp-field-font-size { syntax: "*"; inherits: false; }
+@property --_warp-field-font-weight { syntax: "*"; inherits: false; }
+@property --_warp-field-shadow { syntax: "*"; inherits: false; }
+@property --_warp-field-shadow-hover { syntax: "*"; inherits: false; }
+@property --_warp-field-duration { syntax: "*"; inherits: false; }
+@property --warp-sweep-local-width { syntax: "*"; inherits: false; }
+@property --warp-sweep-local-width-hover { syntax: "*"; inherits: false; }
+@property --warp-sweep-local-width-active { syntax: "*"; inherits: false; }
+@property --warp-sweep-local-width-press { syntax: "*"; inherits: false; }
+@property --_warp-sweep-width { syntax: "*"; inherits: false; }
+@property --_warp-sweep-width-hover { syntax: "*"; inherits: false; }
+@property --_warp-sweep-width-active { syntax: "*"; inherits: false; }
+@property --_warp-sweep-width-press { syntax: "*"; inherits: false; }
+@property --warp-sweep-local-duration { syntax: "*"; inherits: false; }
+@property --warp-sweep-local-duration-hover { syntax: "*"; inherits: false; }
+@property --warp-sweep-local-duration-active { syntax: "*"; inherits: false; }
+@property --warp-sweep-local-duration-press { syntax: "*"; inherits: false; }
+@property --_warp-sweep-duration { syntax: "*"; inherits: false; }
+@property --_warp-sweep-duration-hover { syntax: "*"; inherits: false; }
+@property --_warp-sweep-duration-active { syntax: "*"; inherits: false; }
+@property --_warp-sweep-duration-press { syntax: "*"; inherits: false; }
 @property --warp-button-shadow { syntax: "*"; inherits: false; }
 @property --warp-button-shadow-hover { syntax: "*"; inherits: false; }
 @property --warp-button-shadow-press { syntax: "*"; inherits: false; }
@@ -1179,6 +1362,20 @@
    ======================================================================== */
 @layer warp.signature {
   :where([data-sweep]) { position: relative; --warp-sweep-radius: var(--warp-radius-control); --_on: 1; --_a: 0; }
+/* warp-theme-only:start */
+  :where([data-sweep]) {
+    --_warp-sweep-width: var(--_warp-sweep-width-press,var(--_warp-sweep-width-active,var(--_warp-sweep-width-hover,var(--warp-sweep-local-width,var(--warp-config-part-sweep-width)))));
+    --_warp-sweep-duration: calc(var(--_warp-sweep-duration-press,var(--_warp-sweep-duration-active,var(--_warp-sweep-duration-hover,var(--warp-sweep-local-duration,var(--warp-config-part-sweep-duration))))) * var(--warp-motion-scale));
+  }
+  :where([data-sweep]:hover) { --_warp-sweep-width-hover: var(--warp-sweep-local-width-hover,var(--warp-config-part-sweep-width-hover)); --_warp-sweep-duration-hover: var(--warp-sweep-local-duration-hover,var(--warp-config-part-sweep-duration-hover)); }
+  :where([data-sweep]:is([aria-current],[aria-selected="true"],[aria-pressed="true"],[data-state="open"])) { --_warp-sweep-width-active: var(--warp-sweep-local-width-active,var(--warp-config-part-sweep-width-active)); --_warp-sweep-duration-active: var(--warp-sweep-local-duration-active,var(--warp-config-part-sweep-duration-active)); }
+  :where([data-sweep]:is(:active,[data-press])) { --_warp-sweep-width-press: var(--warp-sweep-local-width-press,var(--warp-config-part-sweep-width-press)); --_warp-sweep-duration-press: var(--warp-sweep-local-duration-press,var(--warp-config-part-sweep-duration-press)); }
+  :where([data-sweep] :not([data-sweep])),
+  :where([data-sweep])::before, :where([data-sweep] :not([data-sweep]))::before,
+  :where([data-sweep])::after, :where([data-sweep] :not([data-sweep]))::after {
+    --_warp-sweep-width: inherit; --_warp-sweep-duration: inherit;
+  }
+/* warp-theme-only:end */
 
   /* -- the switch: --_a is 1 while a host is active. Hover (not touch), focus, a held state, a pass. The only state.
      Hover and focus are the browser's, so the sweep runs with no script and no write to the DOM. */
@@ -1233,11 +1430,11 @@
               + (1 - var(--_kk)) * (min(4 * var(--_tp) * var(--_tp) * var(--_tp), 0.5) + max(0, 0.5 - 4 * (1 - var(--_tp)) * (1 - var(--_tp)) * (1 - var(--_tp)))));
     /* once the tail is all the way out, the head goes back to the start too: at rest both edges sit at the right, as ever */
     --_sl: calc(var(--_td) * 100%); --_sr: calc((1 - var(--_hd) * (1 - clamp(0, (var(--_td) - 0.999) * 1000, 1))) * 100%);
-    --_edges: --_kc calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear calc((1 - var(--_a, 0)) * 2 * var(--warp-sweep-duration)),
-              --_kh calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear calc((1 - var(--_a, 0)) * var(--warp-sweep-duration)),
-              --_ks calc(var(--_a, 0) * 3 * var(--warp-sweep-duration)) linear,
-              --_kx calc((1 - var(--_a, 0)) * 3 * var(--warp-sweep-duration)) linear,
-              --_kw calc(((1 - var(--_a, 0)) * 1.5 + var(--_a, 0) * 0.5) * var(--warp-sweep-duration)) linear;
+    --_edges: --_kc calc(var(--_a, 0) * 3 * var(--_warp-sweep-duration,var(--warp-sweep-duration))) linear calc((1 - var(--_a, 0)) * 2 * var(--_warp-sweep-duration,var(--warp-sweep-duration))),
+              --_kh calc(var(--_a, 0) * 3 * var(--_warp-sweep-duration,var(--warp-sweep-duration))) linear calc((1 - var(--_a, 0)) * var(--_warp-sweep-duration,var(--warp-sweep-duration))),
+              --_ks calc(var(--_a, 0) * 3 * var(--_warp-sweep-duration,var(--warp-sweep-duration))) linear,
+              --_kx calc((1 - var(--_a, 0)) * 3 * var(--_warp-sweep-duration,var(--warp-sweep-duration))) linear,
+              --_kw calc(((1 - var(--_a, 0)) * 1.5 + var(--_a, 0) * 0.5) * var(--_warp-sweep-duration,var(--warp-sweep-duration))) linear;
     transition: var(--_edges);
   }
   /* two stacked 1px borders (or any content, e.g. an icon) */
@@ -1246,7 +1443,7 @@
     position: absolute; inset: 0; box-sizing: border-box; pointer-events: none;
     border-radius: inherit;
   }
-  :where([data-part="sweep"]:empty) { border: var(--warp-sweep-width) solid currentColor; }
+  :where([data-part="sweep"]:empty) { border: var(--_warp-sweep-width,var(--warp-sweep-width)) solid currentColor; }
   :where([data-part="sweep-base"]:empty) { border: var(--warp-sweep-base-width) solid currentColor; }
   /* the clip's corners, physical (top-left, top-right, bottom-right, bottom-left): a joined item squares its start
      (--_js: 0) or end (--_je: 0) corners; a vertical group sets --_round to top, top, bottom, bottom */
@@ -1346,10 +1543,10 @@
     position: absolute; inline-size: var(--warp-frame-corner); block-size: var(--warp-frame-corner);
     box-sizing: border-box; border: 0 solid currentColor;
   }
-  :where([data-part$="corners"]) > i:nth-child(1) { inset-block-start: 0; inset-inline-start: 0; border-block-start-width: var(--warp-frame-weight); border-inline-start-width: var(--warp-frame-weight); }
-  :where([data-part$="corners"]) > i:nth-child(2) { inset-block-start: 0; inset-inline-end: 0;   border-block-start-width: var(--warp-frame-weight); border-inline-end-width: var(--warp-frame-weight); }
-  :where([data-part$="corners"]) > i:nth-child(3) { inset-block-end: 0;   inset-inline-start: 0; border-block-end-width: var(--warp-frame-weight);   border-inline-start-width: var(--warp-frame-weight); }
-  :where([data-part$="corners"]) > i:nth-child(4) { inset-block-end: 0;   inset-inline-end: 0;   border-block-end-width: var(--warp-frame-weight);   border-inline-end-width: var(--warp-frame-weight); }
+  :where([data-part$="corners"]) > i:nth-child(1) { inset-block-start: 0; inset-inline-start: 0; border-block-start-width: var(--_warp-sweep-width,var(--warp-frame-weight)); border-inline-start-width: var(--_warp-sweep-width,var(--warp-frame-weight)); }
+  :where([data-part$="corners"]) > i:nth-child(2) { inset-block-start: 0; inset-inline-end: 0;   border-block-start-width: var(--_warp-sweep-width,var(--warp-frame-weight)); border-inline-end-width: var(--_warp-sweep-width,var(--warp-frame-weight)); }
+  :where([data-part$="corners"]) > i:nth-child(3) { inset-block-end: 0;   inset-inline-start: 0; border-block-end-width: var(--_warp-sweep-width,var(--warp-frame-weight));   border-inline-start-width: var(--_warp-sweep-width,var(--warp-frame-weight)); }
+  :where([data-part$="corners"]) > i:nth-child(4) { inset-block-end: 0;   inset-inline-end: 0;   border-block-end-width: var(--_warp-sweep-width,var(--warp-frame-weight));   border-inline-end-width: var(--_warp-sweep-width,var(--warp-frame-weight)); }
   :where([data-part="sweep-corners"]),
   :where([data-part="sweep-content"]) {
     color: var(--warp-sweep-stroke,var(--warp-config-part-sweep-stroke,var(--_tone, var(--warp-color-sweep)))); opacity: var(--_on);
@@ -1363,7 +1560,7 @@
   /* each segment: offset o along the route, length n; route length L = w + h
      (h/2 up the left, w across, h/2 down the right — same as M1 50 V1 H99 V50) */
   :where([data-part="sweep-outline"]) > i {
-    --_L: calc(100cqw + 100cqh); --_s: calc(var(--warp-frame-stroke) * 1px);
+    --_L: calc(100cqw + 100cqh); --_s: var(--_warp-sweep-width,calc(var(--warp-frame-stroke) * 1px));
     --_u0: clamp(0px, calc(var(--warp-frame-tail) * var(--_L) - var(--_o)), var(--_n));
     --_u1: clamp(0px, calc(var(--warp-frame-head) * var(--_L) - var(--_o)), var(--_n));
     position: absolute; background: var(--warp-sweep-stroke,var(--warp-config-part-sweep-stroke,var(--_tone, var(--warp-color-sweep))));
@@ -1416,7 +1613,7 @@
   }
   :where([data-part="rail-fill"]) {
     background: var(--warp-color-accent-solid); clip-path: inset(0 100% 0 0 round var(--warp-sweep-radius));
-    transition: clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
+    transition: clip-path var(--_warp-sweep-duration,var(--warp-sweep-duration)) var(--warp-sweep-ease);
   }
   :where([data-on] > [data-part="rail-fill"]),
   :where(:checked + [data-part="track"] > [data-part="rail-fill"]) { clip-path: inset(0 round var(--warp-sweep-radius)); }
@@ -1433,18 +1630,46 @@
   }
 
   /* -- 2 · the floating border field ------------------------------------ */
-  :where([data-scope="field"]) { display: grid; gap: var(--warp-field-gap,var(--warp-config-part-field-gap,0)); min-inline-size: 0; }
+  :where([data-scope="field"]) { display: grid; gap: var(--_warp-field-gap,var(--warp-field-gap,var(--warp-config-part-field-gap,0))); min-inline-size: 0; }
 /* warp-theme-only:start */
-  :where([data-scope="field"]) { --_warp-field-radius: var(--warp-field-radius,var(--warp-config-part-field-radius)); }
+  :where([data-scope="field"]) {
+    --_warp-field-radius: var(--warp-field-radius,var(--warp-config-part-field-radius));
+    --_warp-field-gap: var(--_warp-field-gap-hover,var(--warp-field-gap,var(--warp-config-part-field-gap)));
+    --_warp-field-height: max(var(--warp-field-local-height,var(--warp-config-part-field-height)),var(--warp-target-min));
+    --_warp-field-padding-inline: var(--warp-field-padding-inline,var(--warp-config-part-field-padding-inline));
+    --_warp-field-font-family: var(--warp-field-font-family,var(--warp-config-part-field-font-family));
+    --_warp-field-font-size: var(--warp-field-font-size,var(--warp-config-part-field-font-size));
+    --_warp-field-font-weight: var(--warp-field-font-weight,var(--warp-config-part-field-font-weight));
+    --_warp-field-shadow: var(--_warp-field-shadow-hover,var(--warp-field-shadow,var(--warp-config-part-field-shadow)));
+    --_warp-field-duration: calc(var(--warp-field-duration,var(--warp-config-part-field-duration)) * var(--warp-motion-scale));
+  }
+  :where([data-scope="field"]:has(> [data-part="control"]:hover)) {
+    --_warp-field-gap-hover: var(--warp-field-gap-hover,var(--warp-config-part-field-gap-hover));
+    --_warp-field-shadow-hover: var(--warp-field-shadow-hover,var(--warp-config-part-field-shadow-hover));
+  }
+  :where([data-scope="field"] :not([data-scope="field"])) {
+    --_warp-field-radius: inherit;
+    --_warp-field-gap: inherit;
+    --_warp-field-height: inherit;
+    --_warp-field-padding-inline: inherit;
+    --_warp-field-font-family: inherit;
+    --_warp-field-font-size: inherit;
+    --_warp-field-font-weight: inherit;
+    --_warp-field-shadow: inherit;
+    --_warp-field-duration: inherit;
+  }
+  :where([data-scope="field"] > [data-part="control"]) {
+    font-weight: var(--_warp-field-font-weight,inherit); box-shadow: var(--_warp-field-shadow,none);
+  }
 /* warp-theme-only:end */
   :where([data-scope="field"] > [data-part="control"]) {
     --_lead: var(--warp-pad-control);
     position: relative; display: block; min-inline-size: 0;
-    block-size: var(--warp-field-height);
+    block-size: var(--_warp-field-height,var(--warp-field-height));
     border-radius: var(--_warp-field-radius,var(--warp-radius-control)); --warp-sweep-radius: var(--_warp-field-radius,var(--warp-radius-control));
     background: var(--warp-color-field);
-    font-family: var(--warp-label-font);
-    transition: background-color var(--warp-duration-base) var(--warp-ease-out);
+    font-family: var(--_warp-field-font-family,var(--warp-label-font));
+    transition: background-color var(--_warp-field-duration,var(--warp-duration-base)) var(--warp-ease-out);
   }
   :where([data-scope="field"] > [data-part="control"]:has(> [data-part="icon"])) { --_lead: calc(var(--warp-pad-control) + 28px); }
   /* the accent tint arrives with the sweep: hover, focus, or an open picker */
@@ -1455,7 +1680,7 @@
   :where([data-scope="field"] [data-part="input"]) {
     all: unset; box-sizing: border-box; position: relative; z-index: 3;
     inline-size: 100%; block-size: 100%; padding-inline: var(--_lead) var(--warp-pad-control);
-    border-radius: inherit; font: inherit; font-size: var(--warp-text-control-size);
+    border-radius: inherit; font: inherit; font-size: var(--_warp-field-font-size,var(--warp-text-control-size));
     color: var(--warp-color-text);
   }
   :where([data-scope="field"] [data-part="input"])::placeholder { color: transparent; transition: color var(--warp-duration-fast); }
