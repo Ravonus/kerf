@@ -4,13 +4,11 @@ import { Button, Tabs } from '@weft-js/warp'
 import {
   compile,
   configSource,
-  keepConfig,
-  loadConfig,
-  ratio,
-  shareLink,
   STUDIO_PALETTE,
   type StudioConfig,
 } from '../../lib/studio'
+import { ratio } from '../../lib/contrast'
+import { keepConfig, loadConfig, shareLink } from '../../lib/studio-store'
 import { JsonPanel, PartsEditor, TokensEditor } from './Advanced'
 import {
   ColourControls,
