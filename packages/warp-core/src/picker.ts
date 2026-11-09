@@ -3,6 +3,7 @@
 import { dialog, popover, type PopoverOptions } from './overlays'
 import { addDays, addMonths, monthStart, type DateRange, type IsoDate } from './temporal'
 import { place, pushLayer, type Align, type Side } from './layers'
+import { leave, stay } from './motion'
 
 /** How a picker opens: anchored, as a sheet, or whichever fits. */
 export type Presentation = 'auto' | 'popover' | 'sheet'
@@ -57,7 +58,6 @@ export function pickerPanel(el: HTMLDialogElement, opts: PanelOptions) {
       cur.update({ open: false, trigger: o.trigger, onClose: close })
       cur.destroy()
       cur = null
-      delete el.dataset.state
     }
   }
   sync()
@@ -149,7 +149,12 @@ export function comboPopup(
     if (o.open === shown) return
     shown = o.open
     if (shown) {
+      const back = stay(el)
       el.dataset.state = 'open'
+      if (back) {
+        remove = pushLayer({ el, trigger: o.anchor, close: () => o.onClose() })
+        return
+      }
       el.style.minInlineSize = `${o.anchor.getBoundingClientRect().width}px`
       el.showPopover?.()
       reposition()
@@ -159,11 +164,13 @@ export function comboPopup(
     } else off()
   }
   const off = () => {
-    delete el.dataset.state
-    if (el.matches?.(':popover-open')) el.hidePopover?.()
-    win.removeEventListener('resize', reposition)
-    win.removeEventListener('scroll', reposition, true)
     remove?.()
+    remove = undefined
+    leave(el, () => {
+      if (el.matches?.(':popover-open')) el.hidePopover?.()
+      win.removeEventListener('resize', reposition)
+      win.removeEventListener('scroll', reposition, true)
+    })
   }
   sync()
   return {

@@ -56,6 +56,7 @@ export const ENTRIES = {
   Drawer: ['Drawer', '<Drawer open={open} title="T">x</Drawer>'],
   HamburgerMenu: ['HamburgerMenu', '<HamburgerMenu links={[{ href: "/", label: "Home" }]} />'],
   SideNavTitle: ['SideNavTitle', '<SideNavTitle title="Docs">weft</SideNavTitle>'],
+  Presence: ['Presence', '<Presence when={true}>x</Presence>'],
   Toaster: ['Toaster', '<Toaster />'],
   Table: [
     'Table',

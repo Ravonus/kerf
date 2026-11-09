@@ -102,6 +102,10 @@ const components = [
     'App shell: bottom bar, rail or sidebar by its own width; header, account menu, More sheet, focus variant',
   ],
   [
+    'Presence',
+    'Show and hide with an entrance and an exit (collapse, fade, rise, pop, slide-*); no-JS form: hidden + data-collapse / data-presence',
+  ],
+  [
     'SideNavTitle',
     'Header brand that slides to the open SideNav\'s title on phones; pair with SideNav overlay="under"',
   ],

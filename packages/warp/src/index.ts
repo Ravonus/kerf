@@ -83,6 +83,7 @@ export {
 /** A docs sidebar: one left panel whose sections fold and remember; docked from 900px, opened over the page on phones. */
 export { SideNav, type SideNavProps, type SideNavSection, type SideNavLink } from './SideNav'
 export { SideNavTitle, type SideNavTitleProps } from './SideNavTitle'
+export { Presence, type PresenceMotion, type PresenceProps } from './Presence'
 export { Icon, type IconName, type IconRef } from './Icon'
 export { Chart, type ChartFrame } from './Chart'
 export {

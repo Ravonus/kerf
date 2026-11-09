@@ -40,4 +40,6 @@ export {
   SideNavGuide,
   SideNavFilter,
   HamburgerSite,
+  PresenceToggle,
+  PresenceRise,
 } from './moving/index'

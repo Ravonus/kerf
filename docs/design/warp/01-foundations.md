@@ -258,6 +258,37 @@ into a strobe. `--warp-loop-play` (`running`, `paused` under reduced motion) is 
 `animation-play-state` when it should hold its frame rather than restart. Never fake a pause by dividing a
 duration by `max(motion-scale, 0.001)`: that keeps a compositor animation alive.
 
+### Open and close
+
+Everything that opens closes with motion too. A close is never a cut.
+
+| | Enter | Exit |
+|---|---|---|
+| Duration | the part's token (`fast` tips, `base` popovers and menus, `slow` dialogs, sheets, collapses) | × `exit-k` (0.7) |
+| Easing | `ease.out` (`ease.pop` / spring on vivid) | `ease.in` |
+| Travel | `motion.distance` from where it came from (the anchor, the edge, the opener) | half the distance, back the way it came |
+| Scale | from `motion.scale-from` | to `motion.scale-from` |
+| Reduced motion | a 120ms fade, no travel | the same fade |
+
+**One contract, three ways in:**
+
+1. **Top layer** (popovers, menus, dialogs, sheets, pickers): while open the element has `data-state="open"`; while
+   it leaves it has `data-state="closed"`. warp's overlay actions (`dialog()`, `popover()`, the pickers) run
+   `leave(el, done)` from `@weft-js/warp-core/motion`: it sets `closed`, waits for whatever animation or transition
+   the CSS gives that state, then hides the element. Focus returns once it is gone. Reopening before the exit ends
+   cancels it (`stay(el)`). Style your own exit with one rule:
+   `[data-scope="x"][data-state="closed"] { animation: my-out 140ms var(--warp-ease-in) both; }`. A part styled on
+   `:popover-open` / `[open]` with `transition-behavior: allow-discrete` on `display` and `overlay` gets its exit
+   from that transition instead; both work.
+2. **In the flow** (a section, a panel, a row of fields): toggle `hidden` and add `data-collapse` (grows from nothing
+   to its height) or `data-presence="fade|rise|pop|slide-up|slide-down|slide-left|slide-right"` (keeps its size).
+   No script. The exit plays before `display: none` lands. `<Presence when={open} motion="rise">` is the component
+   form.
+3. **Anything else**: `leave(el, () => el.remove())` from a script, with your exit in CSS on `[data-state="closed"]`.
+
+Never close by unmounting (`{open && <Panel />}`) when the thing had an entrance: the exit has nothing left to play
+on. Keep it mounted and hidden (`Presence`), or call `leave()` first.
+
 ### Signature: sweep, frame, rails, floating field (`@layer warp.signature`)
 
 | Token | quiet · balanced · vivid | Notes |
