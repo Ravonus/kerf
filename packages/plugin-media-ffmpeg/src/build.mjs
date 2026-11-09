@@ -1,5 +1,3 @@
-// media.encode@1 over ffmpeg (research 15 §3.3–3.4, §6.1). One encoder per key; `encode` takes a file and a recipe and
-// gives the bytes back. The pipeline that decides what to encode is @weft-js/plugin-media's; here is only how.
 //   Video: yuv420p, even dimensions, frames passed through with their own timestamps, so a GIF's delays survive.
 //   Audio: Opus at 96 kbps, AAC-LC at 128 kbps; never dropped unless the recipe says so.
 //   Metadata is stripped (phones write GPS into videos), and MP4 gets `moov` first and WebM its cues first.

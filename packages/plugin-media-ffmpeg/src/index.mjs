@@ -1,4 +1,4 @@
-// mediaFfmpeg() for weft.config.ts (research 15 §6): provides media.encode@1 for the video and audio keys. It runs an
+// mediaFfmpeg() for weft.config.ts: provides media.encode@1 for the video and audio keys. It runs an
 // ffmpeg you installed, or the one `binary` names (with `sha256`, refused unless the file matches). weft ships no ffmpeg:
 // builds with x264/x265 are GPL, and H.264, HEVC and AAC fall under patent pools, so that choice stays with the app.
 import { fileURLToPath } from 'node:url'
