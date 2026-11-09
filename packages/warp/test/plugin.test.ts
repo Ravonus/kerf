@@ -330,35 +330,35 @@ test('Button candidate rejects unsupported properties and low-contrast text', ()
   ).toBe('D010')
 })
 
-test('middle Button background still fails its white sweep stroke on a light surface', () => {
-  try {
-    run({ parts: { button: { bg: '#757575', text: '#ffffff' } } })
-    throw new Error('expected rejection')
-  } catch (error) {
-    const failure = error as {
-      code: string
-      failures: {
-        combo: string
-        fg: string
-        fgHex: string
-        bgHex: string
-        ratio: number
-        site: string
-      }[]
-    }
-    expect(failure.code).toBe('D010')
-    expect(failure.failures).toContainEqual(
-      expect.objectContaining({
-        combo: 'light/quiet',
-        fg: '--warp-button-text',
-        fgHex: '#ffffff',
-        bgHex: '#fbfdff',
-        site: 'stroke-surface',
-        ratio: expect.closeTo(1.02, 2),
-      }),
-    )
-    expect(failure.failures.some((row) => row.site === 'base-surface')).toBe(false)
+test('accepts checked Button colours and emits themed CSS aliases', () => {
+  const result = warp({
+    colors: { ink: '#ffffff', shade: '#757575' },
+    parts: { button: { bg: 'shade', text: 'ink' } },
+  }).contribute({ command: 'build', mode: 'production', root: '/tmp/theme-app' }) as unknown as {
+    tokens: { css: string; alias: Record<string, string> }
   }
+  expect(result.tokens.css).toContain('--warp-config-part-button-bg:#757575')
+  expect(result.tokens.css).toContain('--warp-config-part-button-text:#ffffff')
+  expect(result.tokens.alias['@weft-js/warp/tailwind.css']).toBe(
+    '/tmp/theme-app/.weft/tokens/warp.tailwind.css',
+  )
+  for (const [name, part] of [
+    ['@weft-js/warp-core/styles/warp.css', 'warp.css'],
+    ['@weft-js/warp-core/styles/components/button.css', 'components/button.css'],
+  ]) {
+    const target = result.tokens.alias[name]
+    expect(target).toContain(`/styles/themed/${part}`)
+    expect(readFileSync(target, 'utf8')).toContain('--warp-config-part-')
+  }
+  expect(code(() => run({ parts: { button: { bg: '#757575', text: '#757575' } } }))).toBe('D010')
+  expect(
+    code(() =>
+      run({
+        parts: { button: { bg: '#757575', text: '#ffffff' } },
+        tokens: { '--warp-button-bg-hover': '#ffffff' },
+      }),
+    ),
+  ).toBe('P115')
 })
 
 test('explicit sweep values take precedence and are checked against their actual neighbors', () => {
@@ -401,7 +401,7 @@ test('Button sweep checks include modes reachable under a local theme override',
     expect(failure.failures).toContainEqual(
       expect.objectContaining({
         combo: 'dark/balanced',
-        site: 'stroke-surface',
+        site: 'stroke-base',
       }),
     )
   }

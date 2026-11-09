@@ -11,7 +11,7 @@ import { definePlugin } from '@weft-js/core/plugin'
 import { hex, luminance, toLinear } from './tokens/color.mjs'
 import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
-import { DEFAULT, RADII, FONTS, bad, options } from './src/plugin/themes-options.mjs'
+import { DEFAULT, RADII, FONTS, options } from './src/plugin/themes-options.mjs'
 import { buttonPairs } from './src/plugin/themes-contrast.mjs'
 import { tailwindTheme } from './src/plugin/tailwind.mjs'
 
@@ -311,13 +311,7 @@ export const warp = definePlugin({
     else if (declarations) checkSeed(seed, declarations, o.dials)
     if (o.buttonCandidate) {
       checkButtonCandidate(o.buttonCandidate, contrast(seed, declarations).resolved, o.tokens)
-      throw Object.assign(
-        bad(
-          'parts.button',
-          'unsupported until Button animation and sweep contrast coverage is complete',
-        ),
-        { code: 'P115' },
-      )
+      declarations += `${declarations ? ';' : ''}--warp-config-part-button-bg:${o.buttonCandidate.bg};--warp-config-part-button-text:${o.buttonCandidate.text}`
     }
     const note = o.asked && landed(seed, declarations, o.asked)
     const dials = Object.entries(o.dials ?? {})
@@ -339,8 +333,23 @@ export const warp = definePlugin({
         ...(css && { css }),
         ...(o.namedColors && {
           cssEntries: { tailwind: tailwindTheme({ colors: o.namedColors }) },
+        }),
+        ...((o.namedColors || o.buttonCandidate) && {
           alias: {
-            '@weft-js/warp/tailwind.css': join(resolve(env.root), '.weft/tokens/warp.tailwind.css'),
+            ...(o.namedColors && {
+              '@weft-js/warp/tailwind.css': join(
+                resolve(env.root),
+                '.weft/tokens/warp.tailwind.css',
+              ),
+            }),
+            ...(o.buttonCandidate && {
+              '@weft-js/warp-core/styles/warp.css': fileURLToPath(
+                new URL('styles/themed/warp.css', core),
+              ),
+              '@weft-js/warp-core/styles/components/button.css': fileURLToPath(
+                new URL('styles/themed/components/button.css', core),
+              ),
+            }),
           },
         }),
         values: {

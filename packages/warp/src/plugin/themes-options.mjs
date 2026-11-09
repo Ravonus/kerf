@@ -137,7 +137,16 @@ function options(input) {
   const colors = namedColors(input)
   if (colors) out.namedColors = colors
   const button = buttonCandidate(input)
-  if (button) out.buttonCandidate = button
+  if (button) {
+    for (const token of Object.keys(input.tokens ?? {})) {
+      if (
+        /^--warp-(?:button-|config-part-button-|btn-|sweep-|config-part-sweep-)/.test(token) &&
+        !/^--warp-(?:sweep|config-part-sweep)-(?:base|stroke|label|text)$/.test(token)
+      )
+        throw bad(`tokens.${token}`, 'unsupported with Button colours')
+    }
+    out.buttonCandidate = button
+  }
   if (input.fields !== undefined && input.fields !== 'floating' && input.fields !== 'classic')
     throw Object.assign(new Error(`must be 'floating' or 'classic'`), { path: 'fields' })
   if (input.seed !== undefined) {
