@@ -1,5 +1,4 @@
-// keel() for weft.config.ts (PLAN §5, research 33 §5): the `keel-pixel` surface kind. KEEL's renderer is ~27 KB br, so it
-// stays behind the slot's `import()` and only pages that mount a `keel-pixel` surface load it.
+// KEEL's renderer stays behind the slot's `import()` so only pages that mount it load it.
 import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
 
 const renderer = defineSlot({
