@@ -44,7 +44,7 @@ const sites = [
   ['sweep', 'stroke-base'],
   ['sweep', 'stroke-surface'],
   ['sweep', 'base-surface'],
-]
+] as const
 
 test('keeps all canonical checks and thresholds', () => {
   const result = run()
