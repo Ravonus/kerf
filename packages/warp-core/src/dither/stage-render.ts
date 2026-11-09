@@ -277,7 +277,7 @@ function paintPieces(
   st.current = undefined
 }
 
-function paintOverlay(st: StageState, sc: Scene, rampId: RampId, { threshold, set, fill }: Brush) {
+function paintOverlay(st: StageState, sc: Scene, rampId: RampId, brush: Brush) {
   // A press rings out from where it landed, over everything, in the ripple's inks.
   if (st.o.ripple !== false) {
     const id = rampId(st.o.ripple ?? 'accent')
@@ -286,15 +286,15 @@ function paintOverlay(st: StageState, sc: Scene, rampId: RampId, { threshold, se
         reach = Math.ceil(rad + 2)
       for (let y = Math.max(0, Math.floor(py - reach)); y < Math.min(st.rows, py + reach); y++)
         for (let x = Math.max(0, Math.floor(px - reach)); x < Math.min(st.cols, px + reach); x++) {
-          if (Math.abs(Math.hypot(x - px, y - py) - rad) < 1.4 && threshold(x, y) > age)
-            set(x, y, 1, id)
+          if (Math.abs(Math.hypot(x - px, y - py) - rad) < 1.4 && brush.threshold(x, y) > age)
+            brush.set(x, y, 1, id)
         }
     }
   }
   if (sc.rail) {
     const { x, top, len, drag } = sc.rail
-    fill(st.cols - 3, 0, 2, st.rows, 0, (_, y) => (y & 1 ? -1 : S))
-    fill(Math.min(x, st.cols - 3), top, 2, len, 0, drag ? K : T, rampId('accent'))
+    brush.fill(st.cols - 3, 0, 2, st.rows, 0, (_, y) => (y & 1 ? -1 : S))
+    brush.fill(Math.min(x, st.cols - 3), top, 2, len, 0, drag ? K : T, rampId('accent'))
   }
 }
 
@@ -316,7 +316,7 @@ function paintOutput(st: StageState, ctx: CanvasRenderingContext2D) {
 
 export function stageRenderer(st: StageState) {
   const { rampId, retheme } = stageRamps(st)
-  const { brush, grow, threshold, set, fill, ring } = stageSurface(st, rampId)
+  const { brush, grow, threshold, fill, ring } = stageSurface(st, rampId)
   const details = stageDetails(st, fill, ring)
   function paint(sc: Scene) {
     const { ctx, width, height, time: now, live } = sc
