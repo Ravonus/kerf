@@ -78,19 +78,32 @@ function textInputs(input) {
   return out
 }
 
+/** Return a checked shadow or a reference to a configured elevation. */
+export function shadowValue(value, path) {
+  if (value === 'none') return value
+  if (typeof value === 'string' && Object.hasOwn(elevation, value)) {
+    const index = elevation[value]
+    return `var(--warp-config-system-elevation-${index},var(--warp-elevation-${index}))`
+  }
+  if (
+    typeof value !== 'string' ||
+    !/^(?:none|(?:inset\s+)?(?:0|-?(?:\d+(?:\.\d+)?|\.\d+)(?:px|rem|em))\s+(?:0|-?(?:\d+(?:\.\d+)?|\.\d+)(?:px|rem|em))(?:\s+(?:0|(?:\d+(?:\.\d+)?|\.\d+)(?:px|rem|em)))?(?:\s+#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8}))?)$/i.test(
+      value,
+    )
+  )
+    throw bad(path, 'must be none or a supported shadow')
+  return value
+}
+
 function shadowInputs(input) {
   if (!plain(input)) throw bad('system.shadow', 'must be a plain object')
   return Object.entries(input).map(([name, value]) => {
     const path = `system.shadow.${name}`
     if (!Object.hasOwn(elevation, name)) throw bad(path, 'unsupported elevation')
-    if (
-      typeof value !== 'string' ||
-      !/^(?:none|(?:inset\s+)?(?:0|-?(?:\d+(?:\.\d+)?|\.\d+)(?:px|rem|em))\s+(?:0|-?(?:\d+(?:\.\d+)?|\.\d+)(?:px|rem|em))(?:\s+(?:0|(?:\d+(?:\.\d+)?|\.\d+)(?:px|rem|em)))?(?:\s+#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8}))?)$/i.test(
-        value,
-      )
-    )
-      throw bad(path, 'must be none or a supported shadow')
-    return `--warp-config-system-elevation-${elevation[name]}:${value}`
+    // System values must be literal; self-references would create a CSS cycle.
+    const css = value === 'none' ? value : shadowValue(value, path)
+    if (css.startsWith('var(')) throw bad(path, 'shadow scale references are not supported here')
+    return `--warp-config-system-elevation-${elevation[name]}:${css}`
   })
 }
 

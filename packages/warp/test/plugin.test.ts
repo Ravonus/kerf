@@ -624,7 +624,7 @@ test('rejects invalid bound non-colour values and unbound parts', () => {
     { system: { motion: { duration: { sweep: -2 } } } },
     { parts: { button: { gap: 'missing' } } },
     { parts: { button: { font: { weight: -1 } } } },
-    { parts: { nav: { gap: 4 } } },
+    { parts: { nav: { radius: 4 } } },
   ])
     expect(code(() => run(config as WarpOptions))).toBe('P115')
 })
@@ -638,7 +638,7 @@ test('Button colours can be combined with bound layout and errors retain paths',
   for (const [config, path] of [
     [{ system: { motion: { duration: { sweep: -1 } } } }, 'system.motion.duration.sweep'],
     [{ parts: { button: { font: { size: 'missing' } } } }, 'parts.button.font.size'],
-    [{ parts: { field: { height: 32 } } }, 'parts.field'],
+    [{ parts: { field: { height: 32 } } }, 'parts.field.height'],
   ] as const) {
     try {
       warp(config as WarpOptions)
@@ -647,4 +647,64 @@ test('Button colours can be combined with bound layout and errors retain paths',
       expect(error).toMatchObject({ code: 'P115', path })
     }
   }
+})
+
+test('mapped parts and states emit exact contract inputs and seven themed aliases', () => {
+  const result = run({
+    parts: {
+      button: {
+        shadow: '0 0 2px #f00',
+        duration: 123,
+        hover: { shadow: '0 0 3px #00f' },
+        press: { shadow: 'none', scale: 0.8 },
+      },
+      nav: { gap: 24, underline: { width: 7 } },
+      tabs: { gap: 21, underline: { width: 8 } },
+      link: { underline: { width: 4, offset: 5 } },
+      pill: {
+        gap: 9,
+        height: 42,
+        paddingInline: 6,
+        borderWidth: 2,
+        radius: 13,
+        font: { family: 'Inter', size: 19, weight: 600, lineHeight: 1.2 },
+        hover: { gap: 23 },
+        active: { gap: 29 },
+      },
+      field: { gap: 11, radius: 14 },
+      card: {
+        gap: 16,
+        padding: 18,
+        radius: 12,
+        shadow: '0 0 5px #f00',
+        hover: { shadow: '0 0 6px #00f' },
+      },
+    },
+  })
+  for (const declaration of [
+    '--warp-config-part-button-shadow-hover:0 0 3px #00f',
+    '--warp-config-part-button-scale-press:0.8',
+    '--warp-config-part-button-duration:123ms',
+    '--warp-config-part-nav-underline-width:7px',
+    '--warp-config-part-tabs-gap:21px',
+    '--warp-config-part-link-underline-offset:5px',
+    '--warp-config-part-pill-gap-hover:23px',
+    '--warp-config-part-pill-gap-active:29px',
+    '--warp-config-part-pill-font-line-height:1.2',
+    '--warp-config-part-field-radius:14px',
+    '--warp-config-part-card-padding:18px',
+    '--warp-config-part-card-shadow-hover:0 0 6px #00f',
+  ])
+    expect(result.tokens.css).toContain(declaration)
+  const aliases = (result.tokens as unknown as { alias: Record<string, string> }).alias
+  for (const path of [
+    'warp.css',
+    'components/button.css',
+    'components/nav.css',
+    'components/tabs.css',
+    'components/link.css',
+    'components/pill.css',
+    'data/card.css',
+  ])
+    expect(aliases[`@weft-js/warp-core/styles/${path}`]).toContain(`/styles/themed/${path}`)
 })

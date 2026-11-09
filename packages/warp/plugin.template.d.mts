@@ -19,6 +19,10 @@ interface ButtonLayout {
   paddingInline?: number | string
   borderWidth?: number | string
   radius?: number | string
+  shadow?: string
+  duration?: number | string
+  hover?: { shadow?: string }
+  press?: { shadow?: string; scale?: number }
   font?: {
     family?: string
     size?: number | string
@@ -100,6 +104,27 @@ export type WarpOptions = WarpCommonOptions &
         /** Resting Button colours are supported together; empty dictionaries are accepted. */
         parts?: {
           button?: ButtonLayout & ({ bg?: never; text?: never } | { bg: string; text: string })
+          nav?: { gap?: number | string; underline?: { width?: number | string } }
+          tabs?: { gap?: number | string; underline?: { width?: number | string } }
+          link?: { underline?: { width?: number | string; offset?: number | string } }
+          pill?: {
+            gap?: number | string
+            height?: number | string
+            paddingInline?: number | string
+            borderWidth?: number | string
+            radius?: number | string
+            font?: { family?: string; size?: number | string; weight?: number; lineHeight?: number }
+            hover?: { gap?: number | string }
+            active?: { gap?: number | string }
+          }
+          field?: { gap?: number | string; radius?: number | string }
+          card?: {
+            gap?: number | string
+            padding?: number | string
+            radius?: number | string
+            shadow?: string
+            hover?: { shadow?: string }
+          }
         }
         /**
          * The brand's hue family: `{ accent: '#rrggbb' }`, or a hue and chroma. Each theme solves its own lightness, and the build

@@ -155,8 +155,8 @@ const unsupportedSystem: WarpOptions = {
 }
 const unsupportedPart: WarpOptions = {
   parts: {
-    // @ts-expect-error Only Button is supported.
-    link: {},
+    // @ts-expect-error Sweep geometry is not yet supported.
+    sweep: { width: 2 },
   },
 }
 const unsupportedHover: WarpOptions = {
@@ -244,3 +244,25 @@ const unknownTextRole: WarpOptions = {
   },
 }
 void unknownTextRole
+
+const mappedParts: WarpOptions = {
+  parts: {
+    button: { shadow: 'sm', duration: 100, hover: { shadow: 'none' }, press: { scale: 0.8 } },
+    nav: { gap: 4, underline: { width: 2 } },
+    tabs: { gap: 4, underline: { width: 2 } },
+    link: { underline: { width: 2, offset: 3 } },
+    pill: { gap: 4, font: { lineHeight: 1.2 }, hover: { gap: 6 }, active: { gap: 8 } },
+    field: { gap: 4, radius: 8 },
+    card: { padding: 8, shadow: 'sm', hover: { shadow: 'none' } },
+  },
+}
+void mappedParts
+const unsupportedCardState: WarpOptions = {
+  parts: {
+    card: {
+      // @ts-expect-error Card press has no mapped reader.
+      press: { shadow: 'none' },
+    },
+  },
+}
+void unsupportedCardState

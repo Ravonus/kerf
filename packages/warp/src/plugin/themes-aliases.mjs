@@ -7,14 +7,21 @@ export function themeAliases(options, env, core) {
     ...(options.namedColors && {
       '@weft-js/warp/tailwind.css': join(resolve(env.root), '.weft/tokens/warp.tailwind.css'),
     }),
-    ...((options.buttonCandidate || options.systemInputs || options.partInputs) && {
-      '@weft-js/warp-core/styles/warp.css': fileURLToPath(new URL('styles/themed/warp.css', core)),
-    }),
-    ...((options.buttonCandidate || options.partInputs) && {
-      '@weft-js/warp-core/styles/components/button.css': fileURLToPath(
-        new URL('styles/themed/components/button.css', core),
-      ),
-    }),
+    ...((options.buttonCandidate || options.systemInputs || options.partInputs) &&
+      Object.fromEntries(
+        [
+          'warp.css',
+          'components/button.css',
+          'components/nav.css',
+          'components/tabs.css',
+          'components/link.css',
+          'components/pill.css',
+          'data/card.css',
+        ].map((path) => [
+          `@weft-js/warp-core/styles/${path}`,
+          fileURLToPath(new URL(`styles/themed/${path}`, core)),
+        ]),
+      )),
   }
 }
 

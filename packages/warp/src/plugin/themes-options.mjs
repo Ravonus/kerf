@@ -76,8 +76,6 @@ function buttonCandidate(input) {
     Object.getPrototypeOf(parts) !== Object.prototype
   )
     throw bad('parts', 'must be a plain object')
-  for (const part of Object.keys(parts))
-    if (part !== 'button') throw bad(`parts.${part}`, 'unsupported part')
   if (!Object.hasOwn(parts, 'button')) return undefined
   const button = parts.button
   if (
