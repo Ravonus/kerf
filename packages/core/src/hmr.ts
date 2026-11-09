@@ -39,6 +39,11 @@ interface Frame {
 const entries = new Map<string, Entry>()
 let frame: Frame | null = null
 
+/** Dev server: a module the runner re-evaluates may define its scopes again, which is a re-run, not a duplicate. */
+export function acceptScopeReruns() {
+  scopes.on = true
+}
+
 /** For tests: instances re-run by updates so far (callers reset it). */
 export const hmrStats = { reruns: 0 }
 

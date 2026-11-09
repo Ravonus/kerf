@@ -1863,9 +1863,17 @@
     :where([data-scope="codeblock"])::after,
     :where([data-flow="code"])::after {
       content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transform-origin: 100% 50%;
-      background: color-mix(in oklab, var(--warp-color-accent-soft) 50%, var(--warp-color-surface-sunken));
-      --_flow-scan: inherit; scale: var(--_flow-scan) 1;
-      transition: scale calc((1 - var(--_flow-scan)) * var(--warp-duration-slow) * 2) var(--warp-ease-out);
+      /* a soft leading edge and a fade as it goes: a hard slab edge reads as a seam against whatever sits beside it */
+      background: linear-gradient(to right, transparent,
+        color-mix(in oklab, var(--warp-color-accent-soft) 50%, var(--warp-color-surface-sunken)) 35%);
+      --_flow-scan: inherit; scale: var(--_flow-scan) 1; opacity: var(--_flow-scan);
+      transition-property: scale, opacity;
+      transition-duration: calc((1 - var(--_flow-scan)) * var(--warp-duration-slow) * 2);
+      transition-timing-function: var(--warp-ease-out);
+    }
+    /* a short screen shows a block a slice at a time, so the scan would cross it as a stripe */
+    @media (max-height: 600px) {
+      :where([data-scope="codeblock"])::after, :where([data-flow="code"])::after { content: none; }
     }
   } }
 

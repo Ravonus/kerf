@@ -21,7 +21,7 @@ ${dev ? '' : `import { parse, purge } from ${JSON.stringify(purgeFile)}\n`}const
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
   onDiagnostic: d => console.warn(\`[weft] \${d.code} \${d.severity}\${d.route ? \` (\${d.route})\` : ''}: \${d.message.replace(/^[A-Z]{1,3}\\d{3}:? /, '')}\`) })
 export default { fetch }
-`
+${dev ? "import { acceptScopeReruns } from '@weft-js/core/hmr'\nacceptScopeReruns()\n" : ''}`
 }
 
 /**
