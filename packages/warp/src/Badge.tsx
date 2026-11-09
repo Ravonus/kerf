@@ -1,4 +1,4 @@
-import type { Tone } from './Button'
+import type { ThemeTone } from './theme-tone'
 import './styles'
 import '@weft-js/warp-core/styles/components/badge.css'
 
@@ -15,7 +15,7 @@ export function Badge({
   children,
   ...rest
 }: {
-  tone?: Tone | undefined
+  tone?: ThemeTone | undefined
   emphasis?: 'soft' | 'solid' | 'outline'
   count?: boolean | undefined
   dot?: boolean
