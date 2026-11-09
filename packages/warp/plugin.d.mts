@@ -107,7 +107,7 @@ export interface PartProps {
   text?: Color
   border?: Color
   borderWidth?: Len
-  radius?: Len | 'control' | 'surface' | 'mark' | 'round' | 'pill' | 'none'
+  radius?: number | 'control' | 'surface' | 'mark' | 'round' | 'pill' | 'none' | (string & {})
   padding?: Len
   paddingX?: Len
   paddingY?: Len

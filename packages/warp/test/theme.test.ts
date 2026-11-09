@@ -8,9 +8,9 @@ import { allParts, PARTS, PROPS, STATES } from '../src/plugin/theme-parts.mjs'
 const { warp } = plugin
 type Out = { tokens: { css?: string; cssEntries?: { tailwind: string } } }
 // the tests feed deliberately wrong options, so the options aren't typed
-type Loose = Parameters<typeof warp>[0] | Record<string, unknown>
+type Loose = Record<string, unknown>
 const run = (opts?: Loose) =>
-  warp(opts as Parameters<typeof warp>[0]).contribute({
+  warp(opts).contribute({
     command: 'build',
     mode: 'production',
     root: '',
