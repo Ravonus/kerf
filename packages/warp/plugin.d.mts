@@ -243,6 +243,20 @@ interface WarpDials {
   theme?: 'light' | 'dark'
 }
 
+/** The non-colour Button properties currently bound by the themed stylesheet. */
+interface ButtonLayout {
+  gap?: number | string
+  paddingInline?: number | string
+  borderWidth?: number | string
+  radius?: number | string
+  font?: {
+    family?: string
+    size?: number | string
+    weight?: number
+    letterSpacing?: number | string
+  }
+}
+
 /** Options shared by the base and named-palette configurations. */
 interface WarpCommonOptions {
   /** Inherited space, radius and font scale inputs. */
@@ -250,6 +264,52 @@ interface WarpCommonOptions {
     space?: Record<string, number | string>
     radius?: Record<string, number | string>
     font?: Record<string, string>
+    text?: {
+      display?: {
+        family?: string
+        size?: number | string
+        weight?: number
+        lineHeight?: number
+        letterSpacing?: number | string
+      }
+      title?: {
+        family?: string
+        size?: number | string
+        weight?: number
+        lineHeight?: number
+        letterSpacing?: number | string
+      }
+      heading?: {
+        family?: string
+        size?: number | string
+        weight?: number
+        lineHeight?: number
+        letterSpacing?: number | string
+      }
+      body?: { family?: string; size?: number | string; weight?: number; lineHeight?: number }
+      caption?: { size?: number | string; lineHeight?: number }
+      code?: { family?: string; size?: number | string; lineHeight?: number }
+      label?: {
+        family?: string
+        size?: number | string
+        weight?: number
+        lineHeight?: number
+        letterSpacing?: number | string
+        transform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
+      }
+      button?: {
+        family?: string
+        size?: number | string
+        weight?: number
+        lineHeight?: number
+        letterSpacing?: number | string
+        transform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
+      }
+    }
+    shadow?: { none?: string; sm?: string; md?: string; lg?: string }
+    motion?: {
+      duration?: { spring?: number | string; sweep?: number | string; frame?: number | string }
+    }
   }
   /** Named hex colours or aliases to other named colours. */
   colors?: Record<string, string>
@@ -268,7 +328,9 @@ export type WarpOptions = WarpCommonOptions &
         /** No named palettes; an empty dictionary is accepted. */
         themes?: Record<string, never>
         /** Resting Button colours are supported together; empty dictionaries are accepted. */
-        parts?: { button?: { bg?: never; text?: never } | { bg: string; text: string } }
+        parts?: {
+          button?: ButtonLayout & ({ bg?: never; text?: never } | { bg: string; text: string })
+        }
         /**
          * The brand's hue family: `{ accent: '#rrggbb' }`, or a hue and chroma. Each theme solves its own lightness, and the build
          * prints where it landed. `neutral` tints pages, surfaces and text the same way. Checked at the stops `dials` leave (D010).

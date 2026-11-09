@@ -537,7 +537,7 @@ test('a root seed applies to every named palette', () => {
   const base = run({ seed })
   const themed = run({ seed, themes: { ocean: {} }, dials: { palette: 'ocean' } })
   expect(base.tokens.css).toContain('--warp-seed-accent-h:100;--warp-seed-accent-c:0.1')
-  expect(themed.tokens.css).toContain(base.tokens.css!)
+  expect(themed.tokens.css).toContain(base.tokens.css)
   expect(themed.tokens.css).toContain('--warp-palette-current:ocean')
   expect(themed.tokens.css).toContain('[data-palette]{--warp-palette-current:default}')
 })
@@ -566,4 +566,85 @@ test('root system scales emit inherited inputs and reject invalid references', (
     { motion: { scale: 1 } },
   ])
     expect(code(() => run({ system } as WarpOptions))).toBe('P115')
+})
+
+test('bound system roles and resting Button layout emit configured inputs', () => {
+  const result = run({
+    system: {
+      space: { group: 12 },
+      radius: { card: 8 },
+      text: {
+        body: { family: 'Inter', size: 17, lineHeight: 1.4 },
+        button: { transform: 'uppercase' },
+      },
+      shadow: { sm: '0 1px 2px #000' },
+      motion: { duration: { sweep: 450, frame: '0.7s' } },
+    },
+    parts: {
+      button: {
+        gap: 'group',
+        radius: 'card',
+        paddingInline: 8,
+        borderWidth: 2,
+        font: { family: 'Inter', size: 14, weight: 600, letterSpacing: 1 },
+      },
+    },
+  })
+  for (const declaration of [
+    '--warp-config-system-text-body-font:Inter',
+    '--warp-config-system-text-body-size:17px',
+    '--warp-config-system-text-body-leading:1.4',
+    '--warp-config-system-text-button-case:uppercase',
+    '--warp-config-system-elevation-1:0 1px 2px #000',
+    '--warp-config-system-sweep-duration:450ms',
+    '--warp-config-system-frame-duration:0.7s',
+    '--warp-config-part-button-gap:var(--warp-config-system-space-group,var(--warp-space-group))',
+    '--warp-config-part-button-radius:var(--warp-config-system-radius-surface,var(--warp-radius-surface))',
+    '--warp-config-part-button-padding-inline:8px',
+    '--warp-config-part-button-border-width:2px',
+    '--warp-config-part-button-font-family:Inter',
+    '--warp-config-part-button-font-size:14px',
+    '--warp-config-part-button-font-weight:600',
+    '--warp-config-part-button-font-letter-spacing:1px',
+  ])
+    expect(result.tokens.css).toContain(declaration)
+  const aliases = (result.tokens as unknown as { alias: Record<string, string> }).alias
+  expect(aliases['@weft-js/warp-core/styles/warp.css']).toContain('/styles/themed/warp.css')
+  expect(aliases['@weft-js/warp-core/styles/components/button.css']).toContain(
+    '/styles/themed/components/button.css',
+  )
+  expect(run({ system: {}, parts: { button: {} } }).tokens).toEqual(run().tokens)
+})
+
+test('rejects invalid bound non-colour values and unbound parts', () => {
+  for (const config of [
+    { system: { text: { caption: { weight: 400 } } } },
+    { system: { text: { body: { size: -2 } } } },
+    { system: { shadow: { sm: 'none; color:red' } } },
+    { system: { motion: { duration: { sweep: -2 } } } },
+    { parts: { button: { gap: 'missing' } } },
+    { parts: { button: { font: { weight: -1 } } } },
+    { parts: { nav: { gap: 4 } } },
+  ])
+    expect(code(() => run(config as WarpOptions))).toBe('P115')
+})
+
+test('Button colours can be combined with bound layout and errors retain paths', () => {
+  const css = run({
+    parts: { button: { bg: '#757575', text: '#ffffff', gap: 8 } },
+  }).tokens.css
+  expect(css).toContain('--warp-config-part-button-bg:#757575')
+  expect(css).toContain('--warp-config-part-button-gap:8px')
+  for (const [config, path] of [
+    [{ system: { motion: { duration: { sweep: -1 } } } }, 'system.motion.duration.sweep'],
+    [{ parts: { button: { font: { size: 'missing' } } } }, 'parts.button.font.size'],
+    [{ parts: { field: { height: 32 } } }, 'parts.field'],
+  ] as const) {
+    try {
+      warp(config as WarpOptions)
+      throw new Error('expected rejection')
+    } catch (error) {
+      expect(error).toMatchObject({ code: 'P115', path })
+    }
+  }
 })

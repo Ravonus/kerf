@@ -149,8 +149,8 @@ void unsupportedTheme
 
 const unsupportedSystem: WarpOptions = {
   system: {
-    // @ts-expect-error Nonempty system overrides are not supported.
-    space: { group: 2 },
+    // @ts-expect-error Other motion settings are not yet supported.
+    motion: { scale: 2 },
   },
 }
 const unsupportedPart: WarpOptions = {
@@ -211,14 +211,12 @@ const paletteWithButton: WarpOptions = {
   themes: { ocean: {} },
   parts: { button: { bg: '#000000', text: '#ffffff' } },
 }
-// @ts-expect-error Named palettes cannot be combined with a root seed.
 const paletteWithSeed: WarpOptions = { themes: { ocean: {} }, seed: { hue: 120, chroma: 0.1 } }
 // @ts-expect-error Named palettes cannot be combined with root token overrides.
 const paletteWithTokens: WarpOptions = {
   themes: { ocean: {} },
   tokens: { '--warp-example': 'red' },
 }
-// @ts-expect-error A palette dial also activates the bounded palette form.
 const paletteDialWithSeed: WarpOptions = {
   dials: { palette: 'auto' },
   seed: { hue: 120, chroma: 0.1 },
@@ -227,3 +225,22 @@ void paletteWithButton
 void paletteWithSeed
 void paletteWithTokens
 void paletteDialWithSeed
+
+const boundLayout: WarpOptions = {
+  system: {
+    text: { body: { family: 'Inter', size: 17, lineHeight: 1.4 } },
+    shadow: { sm: 'none' },
+    motion: { duration: { sweep: 450 } },
+  },
+  parts: { button: { gap: 'group', radius: 8, font: { size: 14, weight: 600 } } },
+}
+void boundLayout
+const unknownTextRole: WarpOptions = {
+  system: {
+    text: {
+      // @ts-expect-error Unbound text roles are not supported.
+      unknown: { size: 12 },
+    },
+  },
+}
+void unknownTextRole

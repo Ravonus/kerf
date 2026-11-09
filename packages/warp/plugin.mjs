@@ -16,7 +16,7 @@ import { buttonPairs } from './src/plugin/themes-contrast.mjs'
 import { tailwindTheme } from './src/plugin/tailwind.mjs'
 import { paletteCss } from './src/plugin/themes-palettes.mjs'
 import { namedToneCss } from './src/plugin/themes-tones.mjs'
-import { themeAliases } from './src/plugin/themes-aliases.mjs'
+import { dialInputs, inheritedInputs, themeAliases } from './src/plugin/themes-aliases.mjs'
 const core = new URL('../warp-core/', import.meta.url)
 const checks = new WeakMap() // Each options object owns checks for its exact inputs.
 // The spec's scope roots (warp.css §2): every one recomputes the sys tokens, so an override has to land on each.
@@ -333,16 +333,13 @@ export const warp = definePlugin({
       declarations += `${declarations ? ';' : ''}--warp-config-part-button-bg:${o.buttonCandidate.bg};--warp-config-part-button-text:${o.buttonCandidate.text}`
     }
     const note = o.asked && landed(seed, declarations, o.asked, cache)
-    const dials = Object.entries(o.dials ?? {})
-      .filter(([dial]) => dial !== 'palette')
-      .map(([dial, value]) => dialCss(dial, value))
-      .join('')
+    const dials = dialInputs(o, dialCss)
     const css =
       (custom ? seedCss(seed) : '') +
       (o.fields === 'classic' ? classicCss() : '') +
       dials +
       overrideCss(declarations) +
-      (o.systemInputs ? `@layer warp.tokens{:root{${o.systemInputs}}}\n` : '') +
+      inheritedInputs(o) +
       (o.palettes ? paletteCss(o.palettes) : '') +
       (o.namedColors
         ? namedToneCss(o, {
@@ -366,7 +363,9 @@ export const warp = definePlugin({
         ...(o.namedColors && {
           cssEntries: { tailwind: tailwindTheme({ colors: o.namedColors }) },
         }),
-        ...((o.namedColors || o.buttonCandidate) && { alias: themeAliases(o, env, core) }),
+        ...((o.namedColors || o.buttonCandidate || o.systemInputs || o.partInputs) && {
+          alias: themeAliases(o, env, core),
+        }),
         values: {
           seed: { hue: seed.hue, chroma: seed.chroma },
           fields: o.fields ?? 'floating',

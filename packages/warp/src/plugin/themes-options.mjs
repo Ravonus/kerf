@@ -1,9 +1,9 @@
 // Validate warp configuration before producing any contribution.
-import { themeSchema } from '@weft-js/warp-core/theme-schema'
 import { fromHex } from '../../tokens/color.mjs'
 import { resolveThemes } from './themes.mjs'
 import { preparePalettes } from './themes-palettes.mjs'
 import { systemInputs } from './themes-system.mjs'
+import { partInputs } from './themes-parts.mjs'
 
 const DEFAULT = { hue: 152, chroma: 0.115 }
 const DIALS = {
@@ -87,17 +87,14 @@ function buttonCandidate(input) {
     Object.getPrototypeOf(button) !== Object.prototype
   )
     throw bad('parts.button', 'must be a plain object')
-  for (const key of Object.keys(button)) {
-    const group = themeSchema.groups.find((row) => row.id === `button.rest.${key}`)
-    if (!group) throw bad(`parts.button.${key}`, 'unknown property or unsupported state')
-    if (!['bg', 'text'].includes(key) || group.domain !== 'color')
-      throw bad(`parts.button.${key}`, 'unsupported Button property')
-  }
-  if (!Object.keys(button).length) return undefined
+  if (!Object.hasOwn(button, 'bg') && !Object.hasOwn(button, 'text')) return undefined
   for (const key of ['bg', 'text'])
     if (!Object.hasOwn(button, key))
       throw bad(`parts.button.${key}`, 'both bg and text are required')
-  const resolved = resolveThemes({ colors: input.colors ?? {}, parts }).default.parts.button
+  const resolved = resolveThemes({
+    colors: input.colors ?? {},
+    parts: { button: { bg: button.bg, text: button.text } },
+  }).default.parts.button
   for (const key of ['bg', 'text'])
     if (typeof resolved[key] !== 'string' || !/^#[0-9a-f]{6}$/i.test(resolved[key]))
       throw bad(`parts.button.${key}`, 'only hex colours or aliases to hex are supported yet')
@@ -128,6 +125,8 @@ function options(input) {
   if (system) out.systemInputs = system
   const colors = namedColors(input)
   if (colors) out.namedColors = colors
+  const part = partInputs(input.parts, input.system)
+  if (part) out.partInputs = part
   const button = buttonCandidate(input)
   if (button) {
     for (const token of Object.keys(input.tokens ?? {})) {

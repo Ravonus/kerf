@@ -1,4 +1,5 @@
 // Resolve the supported inherited system inputs before emitting CSS.
+import { extraSystemInputs } from './themes-system-more.mjs'
 const builtins = {
   space: ['hair', 'tight', 'related', 'group', 'section', 'page'],
   radius: ['control', 'surface', 'mark', 'round'],
@@ -17,8 +18,10 @@ export function systemInputs(system) {
   if (!plain(system)) throw bad('system', 'must be a plain object')
   const result = []
   for (const [kind, input] of Object.entries(system)) {
-    if (!['space', 'radius', 'font'].includes(kind))
-      throw bad(`system.${kind}`, 'unsupported system scale')
+    if (!['space', 'radius', 'font'].includes(kind)) {
+      result.push(...extraSystemInputs(kind, input))
+      continue
+    }
     if (!plain(input)) throw bad(`system.${kind}`, 'must be a plain object')
     const values = {}
     for (const [key, value] of Object.entries(input)) {
