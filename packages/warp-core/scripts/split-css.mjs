@@ -169,7 +169,24 @@ function render({ layer, family, files, shared }) {
   return result
 }
 
+function themedLinks(css) {
+  const declarations =
+    'color: var(--warp-color-accent-text); text-decoration-thickness: var(--warp-border-hairline); text-underline-offset: 0.22em;'
+  const state = (property, fallback) => {
+    let value = `var(--warp-link-${property},var(--warp-config-part-link-${property},${fallback}))`
+    for (const name of ['hover', 'focus', 'press'])
+      value = `var(--_warp-link-${property}-${name},${value})`
+    return value
+  }
+  if (!css.includes(declarations)) throw new Error('The bare Link source changed')
+  const base = `color: ${state('text', 'var(--warp-color-accent-text)')}; text-decoration-thickness: ${state('underline-width', 'var(--warp-border-hairline)')}; text-underline-offset: ${state('underline-offset', '0.22em')};`
+  const extra = `/* warp-theme-only:start */\n:where(a:any-link) { text-decoration-color: ${state('underline', 'currentColor')}; font-weight: var(--_warp-link-font-weight-press,var(--_warp-link-font-weight-hover,var(--warp-link-font-weight,var(--warp-config-part-link-font-weight,inherit)))); border-radius: var(--_warp-link-radius-press,var(--_warp-link-radius-hover,var(--warp-link-radius,var(--warp-config-part-link-radius,0)))); transition: text-decoration-color var(--_warp-link-duration,0s); }\n/* warp-theme-only:end */\n`
+  return css.replace(declarations, base).replace(/}\n$/, `${extra}}\n`)
+}
+
 export function build() {
+  const links = readFileSync(join(root, '../warp/src/links.css'), 'utf8')
+  const shims = new Map([['links-themed.css', themedLinks(links)]])
   const foundation = readFileSync(join(spec, 'warp.css'), 'utf8')
   const files = new Map([['warp.css', lowerTheme(foundation, themeNames)]])
   if (files.get('warp.css') !== foundation) files.set('themed/warp.css', foundation)
@@ -197,12 +214,17 @@ export function build() {
   for (const [k, v] of render({ ...parts.inputs, files: choiceFiles, shared: [] })) files.set(k, v)
   const textFiles = new Map([['text-field', textFields(parts.inputs.files.get('text'))]])
   for (const [k, v] of render({ ...parts.inputs, files: textFiles, shared: [] })) files.set(k, v)
-  const themedData = route('warp-data.css', 'data')
-  const dataCss = readFileSync(join(spec, 'warp-data.css'), 'utf8')
+  const themeFamilies = ['data', 'layout', 'app']
+  const themedRouted = themeFamilies.map((family) => route(`warp-${family}.css`, family))
+  const lowerRouted = (family) => {
+    const file = `warp-${family}.css`
+    const css = readFileSync(join(spec, file), 'utf8')
+    return route(file, family, lowerTheme(css, themeNames))
+  }
   const routed = {
-    data: route('warp-data.css', 'data', lowerTheme(dataCss, themeNames)),
-    layout: route('warp-layout.css', 'layout'),
-    app: route('warp-app.css', 'app'),
+    data: lowerRouted('data'),
+    layout: lowerRouted('layout'),
+    app: lowerRouted('app'),
     flows: route('warp-flows.css', 'flows'),
     canvas: route('warp-canvas.css', 'canvas'),
   }
@@ -229,8 +251,10 @@ export function build() {
       1,
     ) + '\n',
   )
-  for (const [path, content] of renderRouted(themedData)) {
-    if (files.get(path) !== content) files.set(`themed/${path}`, content)
+  for (const family of themedRouted) {
+    for (const [path, content] of renderRouted(family)) {
+      if (files.get(path) !== content) files.set(`themed/${path}`, content)
+    }
   }
   const themedChoices = choices(themedInputs.files.get('choice'))
   const themedText = new Map([['text-field', textFields(themedInputs.files.get('text'))]])
@@ -247,11 +271,11 @@ export function build() {
   for (const [path, content] of render(themed)) {
     if (files.get(path) !== content) files.set(`themed/${path}`, content)
   }
-  return { files, parts, routed }
+  return { files, parts, routed, shims }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const { files } = build()
+  const { files, shims } = build()
   const read = (dir) =>
     readdirSync(dir, { recursive: true, withFileTypes: true })
       .filter((d) => d.isFile())
@@ -262,6 +286,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       for (const [k, v] of files) if (readFileSync(join(out, k), 'utf8') !== v) stale.push(k)
     } catch (e) {
       stale.push(e.path)
+    }
+    for (const [path, content] of shims) {
+      if (readFileSync(join(root, '../warp/src', path), 'utf8') !== content) stale.push(path)
     }
     const extra = read(out)
       .map((p) => p.slice(out.length + 1))
@@ -278,6 +305,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       mkdirSync(dirname(join(out, k)), { recursive: true })
       writeFileSync(join(out, k), v)
     }
+    for (const [path, content] of shims) writeFileSync(join(root, '../warp/src', path), content)
     console.log(`wrote ${files.size} files to styles/`)
   }
 }

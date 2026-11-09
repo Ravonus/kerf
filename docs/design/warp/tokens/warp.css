@@ -1,4 +1,44 @@
 /* warp-theme-only:start */
+@property --warp-link-text { syntax: "*"; inherits: false; }
+@property --warp-link-underline { syntax: "*"; inherits: false; }
+@property --warp-link-text-hover { syntax: "*"; inherits: false; }
+@property --_warp-link-text-hover { syntax: "*"; inherits: false; }
+@property --warp-link-text-focus { syntax: "*"; inherits: false; }
+@property --_warp-link-text-focus { syntax: "*"; inherits: false; }
+@property --warp-link-text-press { syntax: "*"; inherits: false; }
+@property --_warp-link-text-press { syntax: "*"; inherits: false; }
+@property --warp-link-underline-hover { syntax: "*"; inherits: false; }
+@property --_warp-link-underline-hover { syntax: "*"; inherits: false; }
+@property --warp-link-underline-focus { syntax: "*"; inherits: false; }
+@property --_warp-link-underline-focus { syntax: "*"; inherits: false; }
+@property --warp-link-underline-press { syntax: "*"; inherits: false; }
+@property --_warp-link-underline-press { syntax: "*"; inherits: false; }
+@property --warp-link-underline-width-hover { syntax: "*"; inherits: false; }
+@property --_warp-link-underline-width-hover { syntax: "*"; inherits: false; }
+@property --warp-link-underline-width-focus { syntax: "*"; inherits: false; }
+@property --_warp-link-underline-width-focus { syntax: "*"; inherits: false; }
+@property --warp-link-underline-width-press { syntax: "*"; inherits: false; }
+@property --_warp-link-underline-width-press { syntax: "*"; inherits: false; }
+@property --warp-link-underline-offset-hover { syntax: "*"; inherits: false; }
+@property --_warp-link-underline-offset-hover { syntax: "*"; inherits: false; }
+@property --warp-link-underline-offset-focus { syntax: "*"; inherits: false; }
+@property --_warp-link-underline-offset-focus { syntax: "*"; inherits: false; }
+@property --warp-link-underline-offset-press { syntax: "*"; inherits: false; }
+@property --_warp-link-underline-offset-press { syntax: "*"; inherits: false; }
+@property --warp-nav-padding-block-hover { syntax: "*"; inherits: false; }
+@property --_warp-nav-padding-block-hover { syntax: "*"; inherits: false; }
+@property --_warp-nav-padding-block-hover-input { syntax: "*"; inherits: false; }
+@property --warp-nav-padding-block-active { syntax: "*"; inherits: false; }
+@property --_warp-nav-padding-block-active { syntax: "*"; inherits: false; }
+@property --_warp-nav-padding-block-active-input { syntax: "*"; inherits: false; }
+@property --warp-tabs-gap-hover { syntax: "*"; inherits: false; }
+@property --_warp-tabs-gap-hover { syntax: "*"; inherits: false; }
+@property --warp-tabs-gap-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-gap-active { syntax: "*"; inherits: false; }
+@property --warp-tabs-duration-hover { syntax: "*"; inherits: false; }
+@property --_warp-tabs-duration-hover { syntax: "*"; inherits: false; }
+@property --warp-tabs-duration-active { syntax: "*"; inherits: false; }
+@property --_warp-tabs-duration-active { syntax: "*"; inherits: false; }
 @property --warp-nav-underline-width-hover { syntax: "*"; inherits: false; }
 @property --_warp-nav-underline-width-hover { syntax: "*"; inherits: false; }
 @property --warp-nav-underline-width-active { syntax: "*"; inherits: false; }
@@ -469,6 +509,35 @@
 @layer warp, app, theme, base, components, utilities;
 @layer warp.tokens, warp.base, warp.signature, warp.layout, warp.components, warp.inputs, warp.inputs-rich, warp.data, warp.app, warp.flows, warp.marketing, warp.canvas, warp.flow;
 
+/* warp-theme-only:start */
+@layer warp.base {
+:where(a:any-link) { --_warp-link-duration: calc(var(--_warp-link-duration-press,var(--_warp-link-duration-hover,var(--warp-link-duration,var(--warp-config-part-link-duration)))) * var(--warp-motion-scale)); }
+:where(a:any-link:hover) {
+  --_warp-link-text-hover: var(--warp-link-text-hover,var(--warp-link-text,var(--warp-config-part-link-text-hover)));
+  --_warp-link-underline-hover: var(--warp-link-underline-hover,var(--warp-link-underline,var(--warp-config-part-link-underline-hover)));
+  --_warp-link-underline-width-hover: var(--warp-link-underline-width-hover,var(--warp-link-underline-width,var(--warp-config-part-link-underline-width-hover)));
+  --_warp-link-underline-offset-hover: var(--warp-link-underline-offset-hover,var(--warp-link-underline-offset,var(--warp-config-part-link-underline-offset-hover)));
+  --_warp-link-radius-hover: var(--warp-link-radius-hover,var(--warp-link-radius,var(--warp-config-part-link-radius-hover)));
+  --_warp-link-font-weight-hover: var(--warp-link-font-weight-hover,var(--warp-link-font-weight,var(--warp-config-part-link-font-weight-hover)));
+  --_warp-link-duration-hover: var(--warp-link-duration-hover,var(--warp-link-duration,var(--warp-config-part-link-duration-hover)));
+}
+:where(a:any-link:focus-visible) {
+  --_warp-link-text-focus: var(--warp-link-text-focus,var(--warp-link-text,var(--warp-config-part-link-text-focus)));
+  --_warp-link-underline-focus: var(--warp-link-underline-focus,var(--warp-link-underline,var(--warp-config-part-link-underline-focus)));
+  --_warp-link-underline-width-focus: var(--warp-link-underline-width-focus,var(--warp-link-underline-width,var(--warp-config-part-link-underline-width-focus)));
+  --_warp-link-underline-offset-focus: var(--warp-link-underline-offset-focus,var(--warp-link-underline-offset,var(--warp-config-part-link-underline-offset-focus)));
+}
+:where(a:any-link:active) {
+  --_warp-link-text-press: var(--warp-link-text-press,var(--warp-link-text,var(--warp-config-part-link-text-press)));
+  --_warp-link-underline-press: var(--warp-link-underline-press,var(--warp-link-underline,var(--warp-config-part-link-underline-press)));
+  --_warp-link-underline-width-press: var(--warp-link-underline-width-press,var(--warp-link-underline-width,var(--warp-config-part-link-underline-width-press)));
+  --_warp-link-underline-offset-press: var(--warp-link-underline-offset-press,var(--warp-link-underline-offset,var(--warp-config-part-link-underline-offset-press)));
+  --_warp-link-radius-press: var(--warp-link-radius-press,var(--warp-link-radius,var(--warp-config-part-link-radius-press)));
+  --_warp-link-font-weight-press: var(--warp-link-font-weight-press,var(--warp-link-font-weight,var(--warp-config-part-link-font-weight-press)));
+  --_warp-link-duration-press: var(--warp-link-duration-press,var(--warp-link-duration,var(--warp-config-part-link-duration-press)));
+}
+}
+/* warp-theme-only:end */
 /* -- metric-matched fallback faces (01 §2 "Font loading"; research 11 §8.2) ------------------
    Each brand face gets a local system face scaled to the same advance widths and vertical metrics
    (Capsize metrics, computed by `weft tokens build`). The stacks list "<Family> Fallback" right after the
@@ -1022,7 +1091,7 @@
   --warp-text-display-leading: var(--warp-config-system-text-display-leading,1.04);
   --warp-text-display-weight: var(--warp-config-system-text-display-weight,var(--warp-ref-display-weight));
   --warp-text-display-tracking: var(--warp-config-system-text-display-tracking,var(--warp-ref-display-tracking));
-  --warp-text-display-variation: var(--warp-ref-display-variation);   /* vivid: "opsz" pinned to max */
+  --warp-text-display-variation: var(--warp-config-system-text-display-variation,var(--warp-ref-display-variation));   /* vivid: "opsz" pinned to max */
   --warp-text-display-trim: var(--warp-ref-trim-display);
   --warp-text-display-trim-k: var(--warp-ref-trim-display-k);         /* 1 where display trims (vivid) */
   --warp-text-title-font: var(--warp-config-system-text-title-font,var(--warp-ref-title-font));
@@ -1044,8 +1113,8 @@
   --warp-text-body-size: var(--warp-config-system-text-body-size,var(--warp-ref-type-body));
   --warp-text-body-leading: var(--warp-config-system-text-body-leading,var(--warp-ref-body-leading));
   --warp-text-body-weight: var(--warp-config-system-text-body-weight,400);
-  --warp-text-prose-size: var(--warp-ref-type-prose);
-  --warp-text-prose-leading: 1.65;
+  --warp-text-prose-size: var(--warp-config-system-text-prose-size,var(--warp-ref-type-prose));
+  --warp-text-prose-leading: var(--warp-config-system-text-prose-leading,1.65);
   --warp-text-prose-wrap: var(--warp-ref-prose-wrap);                  /* quiet: wrap; else pretty */
   --warp-text-editable-wrap: var(--warp-ref-editable-wrap);            /* vivid: stable */
   /* measure: 72 · 66 · 60ch of the brand face. Plain `ch` follows whichever face is rendering, so a
@@ -1059,19 +1128,19 @@
   --warp-text-label-weight: var(--warp-config-system-text-label-weight,500);
   --warp-text-label-tracking: var(--warp-config-system-text-label-tracking,var(--warp-ref-label-tracking));
   --warp-text-label-case: var(--warp-config-system-text-label-case,var(--warp-ref-label-case));
-  --warp-text-eyebrow-font: var(--warp-ref-eyebrow-font);
-  --warp-text-eyebrow-size: calc(var(--warp-ref-type-label) + var(--warp-ref-eyebrow-adjust));
-  --warp-text-eyebrow-leading: 1.25;
-  --warp-text-eyebrow-weight: 500;
-  --warp-text-eyebrow-tracking: var(--warp-ref-eyebrow-tracking);
-  --warp-text-eyebrow-case: var(--warp-ref-eyebrow-case);
+  --warp-text-eyebrow-font: var(--warp-config-system-text-eyebrow-font,var(--warp-ref-eyebrow-font));
+  --warp-text-eyebrow-size: var(--warp-config-system-text-eyebrow-size,calc(var(--warp-ref-type-label) + var(--warp-ref-eyebrow-adjust)));
+  --warp-text-eyebrow-leading: var(--warp-config-system-text-eyebrow-leading,1.25);
+  --warp-text-eyebrow-weight: var(--warp-config-system-text-eyebrow-weight,500);
+  --warp-text-eyebrow-tracking: var(--warp-config-system-text-eyebrow-tracking,var(--warp-ref-eyebrow-tracking));
+  --warp-text-eyebrow-case: var(--warp-config-system-text-eyebrow-case,var(--warp-ref-eyebrow-case));
   --warp-text-caption-size: var(--warp-config-system-text-caption-size,var(--warp-ref-type-caption));
   --warp-text-caption-leading: var(--warp-config-system-text-caption-leading,1.45);
   --warp-text-code-font: var(--warp-config-system-text-code-font,var(--warp-font-mono));
   --warp-text-code-size: var(--warp-config-system-text-code-size,var(--warp-ref-type-code));
   --warp-text-code-leading: var(--warp-config-system-text-code-leading,1.55);
-  --warp-text-control-size: max(var(--warp-ref-type-body), var(--warp-input-font-min));
-  --warp-text-control-leading: 1.25;
+  --warp-text-control-size: max(var(--warp-config-system-text-control-size,var(--warp-ref-type-body)), var(--warp-input-font-min));
+  --warp-text-control-leading: var(--warp-config-system-text-control-leading,1.25);
   --warp-text-button-font: var(--warp-config-system-text-button-font,var(--warp-ref-button-font));
   --warp-text-button-size: var(--warp-config-system-text-button-size,calc(var(--warp-ref-type-body) + var(--warp-ref-button-adjust)));
   --warp-text-button-leading: var(--warp-config-system-text-button-leading,1);
@@ -1134,11 +1203,11 @@
 
   /* -- motion ---------------------------------------------------------- */
   --_mk: calc(var(--warp-ref-motion-k) * (0.6 + 0.4 * var(--warp-motion-scale)));
-  --warp-duration-instant: 80ms;                                 /* press */
-  --warp-duration-fast:    calc(120ms * var(--_mk));             /* hover, colour */
-  --warp-duration-base:    calc(200ms * var(--_mk));             /* popover, menu, toast */
-  --warp-fill-duration:    520ms;                                /* vivid button: the two blobs close and part */
-  --warp-duration-slow:    calc(320ms * var(--_mk));             /* sheet, dialog, page */
+  --warp-duration-instant: var(--warp-config-system-duration-instant,80ms);                                 /* press */
+  --warp-duration-fast:    calc(var(--warp-config-system-duration-fast,120ms) * var(--_mk));             /* hover, colour */
+  --warp-duration-base:    calc(var(--warp-config-system-duration-base,200ms) * var(--_mk));             /* popover, menu, toast */
+  --warp-fill-duration:    var(--warp-config-system-fill-duration,520ms);                                /* vivid button: the two blobs close and part */
+  --warp-duration-slow:    calc(var(--warp-config-system-duration-slow,320ms) * var(--_mk));             /* sheet, dialog, page */
   --warp-duration-exit-k:  0.5;                                  /* exits are half of enters (redesign §3) */
   --warp-ease-out:    var(--warp-ref-ease-out);                  /* enter, settle */
   --warp-ease-in:     cubic-bezier(0.4, 0, 1, 1);                /* exit, leave */
@@ -1147,7 +1216,7 @@
   --warp-ease-sheet:  cubic-bezier(0.32, 0.72, 0, 1);            /* drawers: long, rare, heavy */
   --warp-ease-spring: var(--warp-ref-spring);                    /* release, arrivals: the stop's tension */
   --warp-spring-duration: calc(var(--warp-config-system-spring-duration,var(--warp-ref-spring-ms)) * var(--warp-motion-scale));
-  --warp-touch-out: calc(var(--warp-ref-touch-out) * var(--_mk));/* hover: instant in, this long out */
+  --warp-touch-out: calc(var(--warp-config-system-touch-out,var(--warp-ref-touch-out)) * var(--_mk));/* hover: instant in, this long out */
   --warp-press: calc(1 - (1 - var(--warp-ref-press)) * var(--warp-motion-scale));
   --warp-offset: calc(var(--warp-ref-offset) * 1);               /* vivid's hard ink shadow; it is depth, so it stays under reduced motion */
   --warp-offset-color: light-dark(#000, #fff);                   /* that shadow's colour: the page's opposite, black on light, white on dark. Set it to brand the pull-out */
@@ -1186,10 +1255,10 @@
   --warp-label-float-weight: 600;
   --warp-label-float-tracking: 0.12em;
   --warp-label-float-offset: -7px;        /* top of the floated label vs the top border */
-  --warp-label-float-duration: calc(520ms * var(--warp-motion-scale));
+  --warp-label-float-duration: calc(var(--warp-config-system-label-float-duration,520ms) * var(--warp-motion-scale));
   --warp-label-float-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --warp-label-fade: calc(120ms * (1 - var(--warp-motion-scale)));   /* reduced-motion substitute */
-  --warp-label-char-duration: 120ms;
+  --warp-label-char-duration: var(--warp-config-system-label-char-duration,120ms);
   --warp-label-stagger: var(--warp-motion-scale);                    /* 0 = no per-char delay */
   --warp-color-label: var(--warp-color-text-subtle);                 /* resting inside the field */
   --warp-color-label-rest: light-dark(                               /* floated, idle: accent + 40% black */
@@ -1198,7 +1267,7 @@
   --warp-color-label-active: light-dark(                              /* hover/focus: the sweep's own accent, */
     var(--warp-color-sweep),                                         /* lifted in dark to stay ≥ 4.5:1 as text */
     oklch(0.7 min(max(calc(var(--_ac) * 1.35), 0.14), 0.16) var(--_ah)));
-  --warp-message-duration: calc(180ms * var(--warp-motion-scale));
+  --warp-message-duration: calc(var(--warp-config-system-message-duration,180ms) * var(--warp-motion-scale));
 
   /* -- layers, opacity --------------------------------------------------- */
   --warp-z-base: 0; --warp-z-raised: 1; --warp-z-sticky: 100; --warp-z-dock: 200;

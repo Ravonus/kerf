@@ -1,0 +1,7 @@
+/* A bare `<a>` is never the browser's blue: warp's link ink and hairline underline (05 §4), in warp.base so every component's own link and app CSS win. */
+@layer warp.base {
+:where(a:any-link) { color: var(--_warp-link-text-press,var(--_warp-link-text-focus,var(--_warp-link-text-hover,var(--warp-link-text,var(--warp-config-part-link-text,var(--warp-color-accent-text)))))); text-decoration-thickness: var(--_warp-link-underline-width-press,var(--_warp-link-underline-width-focus,var(--_warp-link-underline-width-hover,var(--warp-link-underline-width,var(--warp-config-part-link-underline-width,var(--warp-border-hairline)))))); text-underline-offset: var(--_warp-link-underline-offset-press,var(--_warp-link-underline-offset-focus,var(--_warp-link-underline-offset-hover,var(--warp-link-underline-offset,var(--warp-config-part-link-underline-offset,0.22em))))); }
+/* warp-theme-only:start */
+:where(a:any-link) { text-decoration-color: var(--_warp-link-underline-press,var(--_warp-link-underline-focus,var(--_warp-link-underline-hover,var(--warp-link-underline,var(--warp-config-part-link-underline,currentColor))))); font-weight: var(--_warp-link-font-weight-press,var(--_warp-link-font-weight-hover,var(--warp-link-font-weight,var(--warp-config-part-link-font-weight,inherit)))); border-radius: var(--_warp-link-radius-press,var(--_warp-link-radius-hover,var(--warp-link-radius,var(--warp-config-part-link-radius,0)))); transition: text-decoration-color var(--_warp-link-duration,0s); }
+/* warp-theme-only:end */
+}

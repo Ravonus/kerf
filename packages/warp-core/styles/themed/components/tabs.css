@@ -1,7 +1,7 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.components {
 /* -- Tabs: line (default) · pill · enclosed --------------------------------- */
-:where([data-scope="tabs"][data-part="root"]) { display: grid; gap: var(--warp-tabs-gap,var(--warp-config-part-tabs-gap,var(--warp-space-group))); min-inline-size: 0; }
+:where([data-scope="tabs"][data-part="root"]) { display: grid; gap: var(--_warp-tabs-gap,var(--warp-tabs-gap,var(--warp-config-part-tabs-gap,var(--warp-space-group)))); min-inline-size: 0; }
 /* warp-theme-only:start */
 :where([data-scope="tabs"]) { --_warp-tabs-underline-width: var(--_warp-tabs-underline-width-active,var(--_warp-tabs-underline-width-hover,var(--warp-tabs-underline-width,var(--warp-config-part-tabs-underline-width)))); }
 :where([data-scope="tabs"]:has(> [data-part="list"] > [data-part="trigger"]:hover)) { --_warp-tabs-underline-width-hover: var(--warp-tabs-underline-width-hover,var(--warp-tabs-underline-width,var(--warp-config-part-tabs-underline-width-hover))); }
@@ -59,7 +59,7 @@
 :where([data-scope="tabs"][data-variant="pill"] > [data-part="list"] > [data-part="trigger"]) { z-index: 1; block-size: var(--_warp-tabs-height-active,var(--_warp-tabs-height-hover,var(--_warp-tabs-height,calc(var(--warp-control-md) - 6px)))); padding-inline: var(--_warp-tabs-padding-inline-active,var(--_warp-tabs-padding-inline-hover,var(--_warp-tabs-padding-inline,var(--warp-pad-control)))); border-radius: var(--_warp-tabs-radius-active,var(--_warp-tabs-radius-hover,var(--_warp-tabs-radius,var(--warp-radius-control)))); }
 :where([data-scope="tabs"][data-variant="pill"] > [data-part="list"] > [data-part="indicator"]) {
   inset-block: 2px; block-size: auto; background: var(--warp-color-surface-raised); border-radius: var(--_warp-tabs-radius,var(--warp-radius-control));
-  box-shadow: var(--_warp-tabs-shadow,0 0 0 var(--warp-border-hairline) var(--warp-color-border), var(--warp-elevation-1));
+  box-shadow: var(--_warp-tabs-shadow-active,var(--_warp-tabs-shadow-hover,var(--_warp-tabs-shadow,0 0 0 var(--warp-border-hairline) var(--warp-color-border), var(--warp-elevation-1))));
 }
 /* enclosed */
 :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"]) { gap: var(--_warp-tabs-gap,0); }
@@ -71,7 +71,7 @@
   box-shadow: var(--_warp-tabs-shadow-active,var(--_warp-tabs-shadow-hover,var(--_warp-tabs-shadow,0 var(--warp-border-hairline) 0 var(--warp-color-surface-raised))));
 }
 :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="list"] > [data-part="indicator"]) { inset-block: 0 auto; }
-:where([data-scope="tabs"][data-variant="enclosed"][data-part="root"]) { gap: var(--warp-tabs-gap,var(--warp-config-part-tabs-gap,0)); }
+:where([data-scope="tabs"][data-variant="enclosed"][data-part="root"]) { gap: var(--_warp-tabs-gap,var(--warp-tabs-gap,var(--warp-config-part-tabs-gap,0))); }
 :where([data-scope="tabs"][data-variant="enclosed"] > [data-part="content"]) {
   padding: var(--warp-pad-surface); background: var(--warp-color-surface-raised);
   border: var(--_warp-tabs-border-width-active,var(--_warp-tabs-border-width-hover,var(--_warp-tabs-border-width,var(--warp-border-hairline)))) solid var(--warp-color-border); border-block-start: 0;
@@ -80,7 +80,7 @@
 
 /* warp-theme-only:start */
 :where([data-scope="tabs"]) {
-  --_warp-tabs-gap: var(--warp-tabs-gap,var(--warp-config-part-tabs-gap));
+  --_warp-tabs-gap: var(--_warp-tabs-gap-active,var(--_warp-tabs-gap-hover,var(--warp-tabs-gap,var(--warp-config-part-tabs-gap))));
   --_warp-tabs-border-width: var(--warp-tabs-border-width,var(--warp-config-part-tabs-border-width));
   --_warp-tabs-border-width-hover-input: var(--warp-tabs-border-width-hover,var(--warp-tabs-border-width,var(--warp-config-part-tabs-border-width-hover)));
   --_warp-tabs-border-width-active-input: var(--warp-tabs-border-width-active,var(--warp-tabs-border-width,var(--warp-config-part-tabs-border-width-active)));
@@ -93,7 +93,7 @@
   --_warp-tabs-font-size: var(--warp-tabs-font-size,var(--warp-config-part-tabs-font-size));
   --_warp-tabs-font-weight: var(--warp-tabs-font-weight,var(--warp-config-part-tabs-font-weight));
   --_warp-tabs-height: var(--warp-tabs-height,var(--warp-config-part-tabs-height));
-  --_warp-tabs-duration: calc(var(--warp-tabs-duration,var(--warp-config-part-tabs-duration)) * var(--warp-motion-scale));
+  --_warp-tabs-duration: calc(var(--_warp-tabs-duration-active,var(--_warp-tabs-duration-hover,var(--warp-tabs-duration,var(--warp-config-part-tabs-duration)))) * var(--warp-motion-scale));
   --_warp-tabs-padding-inline-hover-input: var(--warp-tabs-padding-inline-hover,var(--warp-tabs-padding-inline,var(--warp-config-part-tabs-padding-inline-hover)));
   --_warp-tabs-padding-inline-active-input: var(--warp-tabs-padding-inline-active,var(--warp-tabs-padding-inline,var(--warp-config-part-tabs-padding-inline-active)));
   --_warp-tabs-radius-hover-input: var(--warp-tabs-radius-hover,var(--warp-tabs-radius,var(--warp-config-part-tabs-radius-hover)));
@@ -107,6 +107,16 @@
   --_warp-tabs-height-hover-input: var(--warp-tabs-height-hover,var(--warp-tabs-height,var(--warp-config-part-tabs-height-hover)));
   --_warp-tabs-height-active-input: var(--warp-tabs-height-active,var(--warp-tabs-height,var(--warp-config-part-tabs-height-active)));
 }
+:where([data-scope="tabs"]:has(> [data-part="list"] > [data-part="trigger"]:hover)) {
+  --_warp-tabs-gap-hover: var(--warp-tabs-gap-hover,var(--warp-tabs-gap,var(--warp-config-part-tabs-gap-hover)));
+  --_warp-tabs-duration-hover: var(--warp-tabs-duration-hover,var(--warp-tabs-duration,var(--warp-config-part-tabs-duration-hover)));
+}
+:where([data-scope="tabs"][data-variant="pill"]:has(> [data-part="list"] > [data-part="trigger"]:hover) > [data-part="list"] > [data-part="indicator"]) { --_warp-tabs-shadow-hover: var(--_warp-tabs-shadow-hover-input); }
+:where([data-scope="tabs"]:has(> [data-part="list"] > [data-part="trigger"][aria-selected="true"])) {
+  --_warp-tabs-gap-active: var(--warp-tabs-gap-active,var(--warp-tabs-gap,var(--warp-config-part-tabs-gap-active)));
+  --_warp-tabs-duration-active: var(--warp-tabs-duration-active,var(--warp-tabs-duration,var(--warp-config-part-tabs-duration-active)));
+}
+:where([data-scope="tabs"][data-variant="pill"]:has(> [data-part="list"] > [data-part="trigger"][aria-selected="true"]) > [data-part="list"] > [data-part="indicator"]) { --_warp-tabs-shadow-active: var(--_warp-tabs-shadow-active-input); }
 :where([data-scope="tabs"] :not([data-scope="tabs"])) {
   --_warp-tabs-underline-width: inherit;
   --_warp-tabs-gap: inherit;

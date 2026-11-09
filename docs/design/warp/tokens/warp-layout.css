@@ -59,9 +59,9 @@
     --warp-layout-wide: 1440px;                                       /* marketing bands */
     /* navigation motion: push distance × motion-scale (0 under reduced) */
     --warp-motion-push: calc(var(--warp-ref-push) * var(--warp-motion-scale));
-    --warp-duration-route: var(--warp-duration-base);
-    --warp-duration-push: var(--warp-duration-slow);
-    --warp-duration-sheet: var(--warp-duration-slow);
+    --warp-duration-route: var(--warp-config-system-duration-route,var(--warp-duration-base));
+    --warp-duration-push: var(--warp-config-system-duration-push,var(--warp-duration-slow));
+    --warp-duration-sheet: var(--warp-config-system-duration-sheet,var(--warp-duration-slow));
   }
 }
 
