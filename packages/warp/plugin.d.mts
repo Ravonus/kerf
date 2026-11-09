@@ -1,9 +1,6 @@
 // Theme schema digest: 76b5e0def0bfee0b6848e3d4604cf29be82e13a0b39bab0ac49a767d0019aae6
 import type { PluginInstance } from '@weft-js/core/plugin'
 
-/** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
-export const dialScript: string
-
 import type { ThemeParts1 } from './src/theme-parts-1.mjs'
 import type { ThemeParts2 } from './src/theme-parts-2.mjs'
 import type { ThemeParts3 } from './src/theme-parts-3.mjs'
@@ -235,12 +232,17 @@ export interface ThemeSystem {
   }
 }
 
+/** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
+export const dialScript: string
+
 /** What `warp()` takes in weft.config: the seed, the default dials, radius, fonts and any token. */
 export interface WarpOptions {
   /** Type and space scales from the classified shim consumers. */
   system?: ThemeSystem
   /** Named hex colours or aliases to other named colours. */
   colors?: Record<string, string>
+  /** Named themes are not yet supported; an empty dictionary is accepted. */
+  themes?: Record<string, never>
   /** Part overrides from the explicit theme table. */
   parts?: ThemeParts
   /**

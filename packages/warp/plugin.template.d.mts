@@ -1,9 +1,9 @@
 import type { PluginInstance } from '@weft-js/core/plugin'
 
+/* THEME_TYPES */
+
 /** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
 export const dialScript: string
-
-/* THEME_TYPES */
 
 /** What `warp()` takes in weft.config: the seed, the default dials, radius, fonts and any token. */
 export interface WarpOptions {
@@ -11,6 +11,8 @@ export interface WarpOptions {
   system?: ThemeSystem
   /** Named hex colours or aliases to other named colours. */
   colors?: Record<string, string>
+  /** Named themes are not yet supported; an empty dictionary is accepted. */
+  themes?: Record<string, never>
   /** Part overrides from the explicit theme table. */
   parts?: ThemeParts
   /**
