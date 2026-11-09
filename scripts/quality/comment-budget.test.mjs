@@ -21,3 +21,28 @@ test('consecutive line comments form a block', () => {
   const result = analyzeComments(`${code}\n${Array(7).fill('// reason').join('\n')}`)
   assert.equal(result.warnings.some((item) => item.rule === 'block'), true)
 })
+
+test('Rust strings, raw strings, characters and lifetimes are not comments', () => {
+  const text = `${code}\nlet a = "// not a comment";\nlet b = r###"/* no */ // no"###;\nlet c = br#"// no"#;\nlet d = '\\'';\nfn f<'a>(s: &'a str) {}\n// SAFETY: the pointer is valid`
+  const result = analyzeComments(text, 'sample.rs')
+  assert.equal(result.commentLines, 1)
+  assert.deepEqual(result.warnings, [])
+})
+
+test('Rust nested comments and narration are analyzed', () => {
+  const result = analyzeComments('/* outer /* inner */\n Sprint 9\n*/\nfn main() {}', 'sample.rs')
+  assert.equal(result.commentLines, 3)
+  assert.deepEqual(result.warnings.map((item) => item.rule), ['narration', 'ratio'])
+})
+
+test('Rust documentation and safety comments are counted', () => {
+  const result = analyzeComments('/// Public API.\n// SAFETY: valid pointer.\nunsafe fn f() {}', 'sample.rs')
+  assert.equal(result.commentLines, 2)
+  assert.equal(result.warnings.some((item) => item.rule === 'ratio'), true)
+})
+
+test('Rust doc examples can exceed six lines', () => {
+  const doc = ['/// Example:', '/// ```', '/// one', '/// two', '/// three', '/// four', '/// ```'].join('\n')
+  const result = analyzeComments(`${code}\n${doc}\nfn example() {}`, 'sample.rs')
+  assert.equal(result.warnings.some((item) => item.rule === 'block'), false)
+})
