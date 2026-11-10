@@ -86,7 +86,8 @@ function nearest(objs) {
   let best = Infinity
   for (const o of objs) {
     const along = [0]
-    for (let i = 1; i < o.length; i++) along.push(along[i - 1] + Math.hypot(o[i][0] - o[i - 1][0], o[i][1] - o[i - 1][1]))
+    for (let i = 1; i < o.length; i++)
+      along.push(along[i - 1] + Math.hypot(o[i][0] - o[i - 1][0], o[i][1] - o[i - 1][1]))
     for (let i = 0; i < o.length; i += 2)
       for (let j = i + 2; j < o.length; j += 2) {
         const d = Math.hypot(o[i][0] - o[j][0], o[i][1] - o[j][1])
@@ -96,7 +97,8 @@ function nearest(objs) {
   for (let i = 0; i < objs.length; i++)
     for (let j = i + 1; j < objs.length; j++) {
       let d = Infinity
-      for (const a of objs[i]) for (const b of objs[j]) d = Math.min(d, Math.hypot(a[0] - b[0], a[1] - b[1]))
+      for (const a of objs[i])
+        for (const b of objs[j]) d = Math.min(d, Math.hypot(a[0] - b[0], a[1] - b[1]))
       if (d > 0.3) best = Math.min(best, d)
     }
   return best
