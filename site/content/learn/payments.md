@@ -270,9 +270,12 @@ export const placeOrder = mutation({
     items: z.array(z.object({ id: z.int(), quantity: z.int() })),
   }),
   run: async ({ input, ctx }) => {
-    const lines = await priceCart(ctx.db, input.items) // names and amounts from your tables
-    const ref = await saveOrder(ctx.db, input.email, lines) // the order row, unpaid
-    redirect(await pay.order(ctx, { ref, lines, email: input.email }), 303)
+    // names and amounts from your tables
+    const lines = await priceCart(ctx.db, input.items)
+    // the order row, unpaid
+    const { email } = input
+    const ref = await saveOrder(ctx.db, email, lines)
+    redirect(await pay.order(ctx, { ref, lines, email }), 303)
   },
 })
 
@@ -292,8 +295,14 @@ event, which `definePay` hands to `onOrder`:
 export default definePay({
   catalog,
   store: drizzlePayStore(db, { purchases, payEvents }),
-  urls: { success: '/', cancel: '/', order: '/order/{ref}', orderCancel: '/cart' },
-  onOrder: ({ ref, state }) => markOrder(db, ref, state), // 'active' is paid, 'refunded' is refunded
+  urls: {
+    success: '/',
+    cancel: '/',
+    order: '/order/{ref}',
+    orderCancel: '/cart',
+  },
+  // 'active' is paid, 'refunded' is refunded
+  onOrder: ({ ref, state }) => markOrder(db, ref, state),
 })
 ```
 

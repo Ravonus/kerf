@@ -33,7 +33,10 @@ export default function Pricing() {
   const mine = entitlements.live()
   return (
     <section>
-      <button type="button" onClick={() => checkout({ product: 'pro', plan: 'year' })}>
+      <button
+        type="button"
+        onClick={() => checkout({ product: 'pro', plan: 'year' })}
+      >
         Go Pro · {price(pro, 'year').display}
       </button>
       <button type="button" onClick={() => portal()}>

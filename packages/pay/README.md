@@ -192,7 +192,8 @@ export const entitlements = query({
 export const checkout = mutation({
   auth: 'user',
   input: pay.input,
-  run: async ({ input, ctx }) => redirect(await pay.checkout(ctx, input), 303),
+  run: async ({ input, ctx }) =>
+    redirect(await pay.checkout(ctx, input), 303),
 })
 
 export const portal = mutation({
@@ -213,7 +214,10 @@ export default function Pricing() {
   const mine = entitlements.live()
   return (
     <section>
-      <button type="button" onClick={() => checkout({ product: 'pro', plan: 'year' })}>
+      <button
+        type="button"
+        onClick={() => checkout({ product: 'pro', plan: 'year' })}
+      >
         Go Pro · {price(pro, 'year').display}
       </button>
       <button type="button" onClick={() => portal()}>
