@@ -18,6 +18,28 @@ afterEach(() => {
 })
 
 describe('navigation pointer admission', () => {
+  it('lets a touch wait for its click: no navigation on touch pointerdown, one on the tap', () => {
+    history.replaceState(null, '', '/from')
+    document.body.innerHTML = '<a href="/next">go</a>'
+    const anchor = document.querySelector('a')!
+    const go = vi.fn()
+    const dispose = routeClicks(document, routes, go)
+    try {
+      for (const type of ['touch', 'pen']) {
+        const down = pointer('pointerdown')
+        Object.defineProperty(down, 'pointerType', { value: type })
+        anchor.dispatchEvent(down)
+        expect(go).not.toHaveBeenCalled()
+      }
+      const click = pointer('click', { detail: 1 })
+      anchor.dispatchEvent(click)
+      expect(click.defaultPrevented).toBe(true)
+      expect(go).toHaveBeenCalledOnce()
+    } finally {
+      dispose()
+    }
+  })
+
   it('accepts pointerdown once and suppresses the matching click after anchor removal', () => {
     history.replaceState(null, '', '/from')
     document.body.innerHTML = '<a href="/next"><span>go</span></a>'

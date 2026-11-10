@@ -44,6 +44,9 @@ export function routeClicks(
   let accepted: { id: number; anchor: HTMLAnchorElement } | undefined
   const down = (event: PointerEvent) => {
     accepted = undefined
+    // A mouse press starts the navigation early. A finger or pen waits for its click: a touch that lands on a link may
+    // turn into a scroll, and swapping the page under it mid-tap loses the click that menus and sheets close on.
+    if (event.pointerType === 'touch' || event.pointerType === 'pen') return
     const target = admitLink(event, routes)
     if (!target) return
     accepted = { id: event.pointerId, anchor: target.anchor }
