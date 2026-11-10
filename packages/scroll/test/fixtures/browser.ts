@@ -82,7 +82,7 @@ export function run(cases: Record<string, Case>) {
     let page: Playwright.Page
     beforeAll(async () => {
       await load()
-    browser = await pw[name].launch()
+      browser = await pw[name].launch()
     })
     afterAll(async () => {
       await browser?.close()

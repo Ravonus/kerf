@@ -17,12 +17,17 @@ const at = (p) => fileURLToPath(new URL(p, import.meta.url))
 const build = await rolldown({ input: at('../test/fixtures/browser-entry.ts') })
 const code = (await build.generate({ format: 'iife', name: 'scroll_' })).output[0].code
 const css = readFileSync(at('../styles/scroll.css'), 'utf8')
-const rows = Array.from({ length: 200 }, (_, i) => `<p style="margin:0;height:40px">Row ${i}</p>`).join('')
+const rows = Array.from(
+  { length: 200 },
+  (_, i) => `<p style="margin:0;height:40px">Row ${i}</p>`,
+).join('')
 const area = `<div id="r" style="width:400px;height:400px"><div data-part="viewport" style="height:100%;overflow:auto"><div data-part="content">${rows}</div></div></div>`
 
 async function inspect(browser, mode) {
   const p = await browser.newPage({ viewport: { width: 500, height: 500 }, deviceScaleFactor: 2 })
-  await p.setContent(`<!doctype html><style>body{margin:0}${mode === 'plain' ? '' : css}</style>${area}`)
+  await p.setContent(
+    `<!doctype html><style>body{margin:0}${mode === 'plain' ? '' : css}</style>${area}`,
+  )
   await p.addScriptTag({ content: code })
   if (mode !== 'plain')
     await p.evaluate((m) => {
@@ -45,7 +50,8 @@ async function inspect(browser, mode) {
     })
   })
   const { root } = await cdp.send('DOM.getDocument', { depth: -1 })
-  const find = async (sel) => (await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: sel })).nodeId
+  const find = async (sel) =>
+    (await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: sel })).nodeId
   const backend = async (sel) => {
     const id = await find(sel)
     return id ? (await cdp.send('DOM.describeNode', { nodeId: id })).node.backendNodeId : -1
@@ -54,7 +60,10 @@ async function inspect(browser, mode) {
     const own = layers.filter((l) => l.backendNodeId === node)
     const out = []
     for (const l of own)
-      out.push(...(await cdp.send('LayerTree.compositingReasons', { layerId: l.layerId })).compositingReasonIds)
+      out.push(
+        ...(await cdp.send('LayerTree.compositingReasons', { layerId: l.layerId }))
+          .compositingReasonIds,
+      )
     return out
   }
   const vp = await reasons(await backend('#r [data-part="viewport"]'))
@@ -62,12 +71,18 @@ async function inspect(browser, mode) {
   let blocking = 0
   for (const sel of ['#r [data-part="viewport"]', '#r', 'body', 'html']) {
     const { object } = await cdp.send('DOM.resolveNode', { nodeId: await find(sel) })
-    const { listeners } = await cdp.send('DOMDebugger.getEventListeners', { objectId: object.objectId })
-    blocking += listeners.filter((l) => /^(wheel|mousewheel|touchstart|touchmove)$/.test(l.type) && !l.passive).length
+    const { listeners } = await cdp.send('DOMDebugger.getEventListeners', {
+      objectId: object.objectId,
+    })
+    blocking += listeners.filter(
+      (l) => /^(wheel|mousewheel|touchstart|touchmove)$/.test(l.type) && !l.passive,
+    ).length
   }
   const win = await cdp.send('Runtime.evaluate', { expression: 'window' })
   const top = await cdp.send('DOMDebugger.getEventListeners', { objectId: win.result.objectId })
-  const tops = top.listeners.filter((l) => /^(wheel|mousewheel|touchstart|touchmove)$/.test(l.type) && !l.passive)
+  const tops = top.listeners.filter(
+    (l) => /^(wheel|mousewheel|touchstart|touchmove)$/.test(l.type) && !l.passive,
+  )
   blocking += tops.length
   await p.close()
   return {

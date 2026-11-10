@@ -30,7 +30,9 @@ const cases: Record<string, Case> = {
     const st = await page.evaluate(() => ({
       y: window.s.state().y,
       heard: window.log.length,
-      visible: document.querySelector('[data-orientation="vertical"]')!.hasAttribute('data-visible'),
+      visible: document
+        .querySelector('[data-orientation="vertical"]')!
+        .hasAttribute('data-visible'),
     }))
     expect(st.y).toBe(await top(page))
     expect(st.heard).toBeGreaterThan(0)
@@ -44,9 +46,7 @@ const cases: Record<string, Case> = {
       return {
         supported: CSS.supports('animation-timeline: --a') && CSS.supports('timeline-scope: --a'),
         on: document.getElementById('root')!.hasAttribute('data-timeline'),
-        animations: thumb
-          .getAnimations()
-          .map((a) => a.timeline?.constructor.name ?? 'none'),
+        animations: thumb.getAnimations().map((a) => a.timeline?.constructor.name ?? 'none'),
       }
     })
     expect(tl.on).toBe(tl.supported)
