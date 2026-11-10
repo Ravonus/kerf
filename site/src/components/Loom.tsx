@@ -212,7 +212,11 @@ function mountLoom(getBox: () => HTMLCanvasElement) {
   }
   let first = true
   const sized = new ResizeObserver(() => {
-    if (first) return void ((first = false), build())
+    if (first) {
+      first = false
+      build()
+      return
+    }
     clearTimeout(wait)
     wait = window.setTimeout(rebuild, 300)
   })
