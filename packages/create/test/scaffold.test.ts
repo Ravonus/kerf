@@ -19,6 +19,13 @@ const tmp = fileURLToPath(new URL('./.tmp/', import.meta.url))
 // A check plus a dev server: a few seconds alone, but the release run has every package's tests going at once, and
 // the first app (warp, the largest) pays the cold start at seven to ten times that.
 const serves = { timeout: 180_000 }
+// Nitro waits 30 s for the first server import, then answers 503. A warp app's takes about 9 s, past 30 on a loaded gate.
+async function firstPage(url: string) {
+  for (let i = 0; ; i++) {
+    const res = await fetch(url)
+    if (res.status !== 503 || i === 3) return res
+  }
+}
 const pkgs = fileURLToPath(new URL('../../', import.meta.url))
 afterAll(() => rmSync(tmp, { recursive: true, force: true }))
 
@@ -63,7 +70,7 @@ describe.each([
 
     const server = await devCommand(dir, { port: await freePort() })
     try {
-      const res = await fetch(server.resolvedUrls.local[0])
+      const res = await firstPage(server.resolvedUrls.local[0])
       expect(res.status).toBe(200)
       const html = await res.text()
       expect(html).toMatch(card)
