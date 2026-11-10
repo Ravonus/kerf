@@ -11,18 +11,18 @@
 }
 :where([data-scope="tile"] [data-scope="avatar"]) { --_s: clamp(40px, 28cqi, 88px); font-size: calc(var(--_s) * 0.36); }
 :where([data-scope="tile"]) { container-type: size; }
-:where([data-scope="tile"] [data-part="name"]) {
+:where([data-scope="tile"] [data-part="name"]:not([data-scope="tile"] :is([data-scope="layers"],[data-scope="persona"],[data-scope="plan-card"],[data-scope="tool-call"],[data-scope="uploads"]) *:not([data-scope="tile"] :is([data-scope="layers"],[data-scope="persona"],[data-scope="plan-card"],[data-scope="tool-call"],[data-scope="uploads"]) [data-scope="tile"] *))) {
   position: absolute; inset-inline-start: 8px; inset-block-end: 8px; z-index: 2; max-inline-size: calc(100% - 16px);
   display: inline-flex; align-items: center; gap: 6px; block-size: 24px; padding-inline: 8px; border-radius: var(--warp-radius-control);
   background: color-mix(in oklab, var(--warp-color-surface-overlay) 82%, transparent); backdrop-filter: blur(var(--warp-blur-overlay));
   font: 500 12px/1 var(--warp-text-body-font); white-space: nowrap; overflow: clip; text-overflow: ellipsis;
 }
-:where([data-scope="tile"] [data-part="name"] svg[data-icon]) { inline-size: 13px; block-size: 13px; }
+:where([data-scope="tile"] [data-part="name"]:not([data-scope="tile"] :is([data-scope="layers"],[data-scope="persona"],[data-scope="plan-card"],[data-scope="tool-call"],[data-scope="uploads"]) *:not([data-scope="tile"] :is([data-scope="layers"],[data-scope="persona"],[data-scope="plan-card"],[data-scope="tool-call"],[data-scope="uploads"]) [data-scope="tile"] *)) svg[data-icon]) { inline-size: 13px; block-size: 13px; }
 :where([data-scope="tile"] [data-part="video"]) { position: absolute; inset: 0; z-index: 1; }
 :where([data-scope="tile"] [data-part="video"] > :is(video)),
 :where([data-scope="tile"] [data-part="video"] > :is(img)),
 :where([data-scope="tile"] [data-part="video"] > :is(canvas)) { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; }
-:where([data-scope="tile"] [data-part="level"]) { color: var(--warp-color-sweep); }
+:where([data-scope="tile"] [data-part="level"]:not([data-scope="tile"] [data-scope="speech"] *:not([data-scope="tile"] [data-scope="speech"] [data-scope="tile"] *))) { color: var(--warp-color-sweep); }
 :where([data-scope="tile"] [data-part="flags"]) { position: absolute; inset-inline-end: 8px; inset-block-start: 8px; z-index: 2; display: flex; gap: 4px; }
 :where([data-scope="tile"] [data-part="flag"]) {
   display: inline-grid; place-items: center; inline-size: 26px; block-size: 26px; border-radius: var(--warp-radius-control);

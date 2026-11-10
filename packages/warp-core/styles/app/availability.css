@@ -8,10 +8,10 @@
   border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
 }
 :where([data-scope="availability"] [data-part="ranges"]) { display: grid; gap: 6px; }
-:where([data-scope="availability"] [data-part="range"]) { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-:where([data-scope="availability"] [data-part="range"] > [data-scope="field"]) { inline-size: 118px; flex: none; }
-:where([data-scope="availability"] [data-part="range"] > [data-part="error"]) { flex-basis: 100%; }
-:where([data-scope="availability"] [data-part="error"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-critical-text); }
+:where([data-scope="availability"] [data-part="range"]:not([data-scope="availability"] :is([data-scope="meter"],[data-scope="progress"],[data-scope="slider"]) *:not([data-scope="availability"] :is([data-scope="meter"],[data-scope="progress"],[data-scope="slider"]) [data-scope="availability"] *))) { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+:where([data-scope="availability"] [data-part="range"]:not([data-scope="availability"] :is([data-scope="meter"],[data-scope="progress"],[data-scope="slider"]) *:not([data-scope="availability"] :is([data-scope="meter"],[data-scope="progress"],[data-scope="slider"]) [data-scope="availability"] *)) > [data-scope="field"]) { inline-size: 118px; flex: none; }
+:where([data-scope="availability"] [data-part="range"]:not([data-scope="availability"] :is([data-scope="meter"],[data-scope="progress"],[data-scope="slider"]) *:not([data-scope="availability"] :is([data-scope="meter"],[data-scope="progress"],[data-scope="slider"]) [data-scope="availability"] *)) > [data-part="error"]) { flex-basis: 100%; }
+:where([data-scope="availability"] [data-part="error"]:not([data-scope="availability"] :is([data-scope="import-preview"],[data-scope="stack"]) *:not([data-scope="availability"] :is([data-scope="import-preview"],[data-scope="stack"]) [data-scope="availability"] *))) { font-size: var(--warp-text-caption-size); color: var(--warp-color-critical-text); }
 :where([data-scope="availability"] [data-part="off"]) { align-self: center; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="availability"] [data-part="overrides"]) { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 :where([data-scope="availability"] [data-part="overrides"] li) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 10px; padding: 8px 10px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font-size: 13px; }

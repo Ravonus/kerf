@@ -10,7 +10,7 @@
   /* the body carries the lead itself, and fills the control */
   :where([data-scope="field"] > [data-part="control"]:has(> [data-part="body"])) { padding-inline: 0; }
   :where([data-scope="field"] > [data-part="control"] > [data-part="body"]) { flex: 1; inline-size: 100%; }
-  :where([data-scope="field"] [data-part="body"] > [data-part="input"]) { flex: 1; inline-size: auto; min-inline-size: 0; padding-inline: 0; font-family: var(--warp-text-body-font); }
+  :where([data-scope="field"] [data-part="body"]:not([data-scope="field"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="field"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="field"] *)) > [data-part="input"]) { flex: 1; inline-size: auto; min-inline-size: 0; padding-inline: 0; font-family: var(--warp-text-body-font); }
   :where([data-scope="field"][data-multiline] > [data-part="control"]) { block-size: auto; }
   :where([data-scope="field"][data-multiline] > [data-part="control"] > [data-part="body"]) { flex-direction: column; align-items: stretch; gap: 0; padding: 0; }
   /* typed-entry placeholders wait for the label to rise (float mode) */

@@ -35,14 +35,14 @@
 :where([data-scope="stat"][data-interactive]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
 :where([data-scope="stat"] dt) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 :where([data-scope="stat"] dd) { margin: 0; }
-:where([data-scope="stat"] [data-part="value"]) {
+:where([data-scope="stat"] [data-part="value"]:not([data-scope="stat"] :is([data-scope="countdown"],[data-scope="field"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stopwatch"],[data-scope="surface"]) *:not([data-scope="stat"] :is([data-scope="countdown"],[data-scope="field"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stopwatch"],[data-scope="surface"]) [data-scope="stat"] *))) {
   display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
   font-family: var(--warp-data-num-font); font-weight: var(--warp-text-title-weight);
   font-size: calc(var(--warp-text-title-size) * 1.08); letter-spacing: var(--warp-text-title-tracking); line-height: 1.05;
   font-variant-numeric: tabular-nums;
 }
-:where([data-expression="vivid"] [data-scope="stat"] [data-part="value"] > span:first-child) { color: var(--warp-color-accent-text); }
-:where([data-scope="stat"] [data-part="caption"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-expression="vivid"] [data-scope="stat"] [data-part="value"]:not([data-scope="stat"] :is([data-scope="countdown"],[data-scope="field"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stopwatch"],[data-scope="surface"]) *:not([data-scope="stat"] :is([data-scope="countdown"],[data-scope="field"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stopwatch"],[data-scope="surface"]) [data-scope="stat"] *)) > span:first-child) { color: var(--warp-color-accent-text); }
+:where([data-scope="stat"] [data-part="caption"]:not([data-scope="stat"] :is([data-scope="calendar"],[data-scope="knob-row"]) *:not([data-scope="stat"] :is([data-scope="calendar"],[data-scope="knob-row"]) [data-scope="stat"] *))) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="stat"] [data-part="spark"]) { display: block; inline-size: 100%; block-size: 36px; margin-block-start: 4px; overflow: visible; }
 /* the display serif (vivid) has no tnum: a value that updates live uses the heading sans,
    so digits never jitter (00 §4: tabular numerals at every stop). Static values keep the serif. */

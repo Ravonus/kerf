@@ -1,18 +1,21 @@
 // @vitest-environment node
-// The split keeps the spec's CSS exactly: every rule ships verbatim, in the spec's order within its file, and the
-// files on disk are what the splitter produces from docs/design/warp/tokens today.
+// The split keeps the spec's CSS exactly, apart from the part fences (scripts/split-css/parts.mjs): every rule ships,
+// in the spec's order within its file, and the files on disk are what the splitter produces from the spec today.
 import { readdirSync, readFileSync } from 'node:fs'
 import { transform } from 'lightningcss'
-import { build } from '../scripts/split-css.mjs'
+import { build, partContext } from '../scripts/split-css.mjs'
+import { guard } from '../scripts/split-css/parts.mjs'
 
 const { files, parts, routed } = build()
+// what ships is the spec with each descendant part rule fenced at its own component (test/parts.test.ts)
+const ctx = partContext()
 const spec = (name: string) =>
   readFileSync(new URL(`../../../docs/design/warp/tokens/${name}`, import.meta.url), 'utf8')
 const disk = (name: string) => readFileSync(new URL(`../styles/${name}`, import.meta.url), 'utf8')
 
 test('styles/ is the split of the current spec (node scripts/split-css.mjs)', () => {
   for (const [name, text] of files) expect(disk(name), name).toBe(text)
-  expect(disk('warp.css')).toBe(spec('warp.css'))
+  expect(disk('warp.css')).toBe(guard(spec('warp.css'), ctx))
 })
 
 test('every rule of the rule-routed families ships verbatim, in spec order, and every rule ships somewhere', () => {
@@ -82,7 +85,7 @@ test('every spec rule outside the tail lands in exactly one file; tail rules lan
       .filter(([k]) => k.startsWith(`${family}/`))
       .map(([, v]) => v)
       .join('\n')
-    const css = spec(source)
+    const css = guard(spec(source), ctx)
     const body = css.slice(css.indexOf('{', css.search(/@layer [\w.-]+ \{/)) + 1)
     // the top-level selectors of the spec body all appear in what ships
     for (const m of body.matchAll(/^(:where\([^\n{]{0,60})/gm))

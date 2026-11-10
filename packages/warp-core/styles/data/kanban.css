@@ -15,7 +15,7 @@
    at any stop; data-flair="sweep" shows them), even when they are links or draggable. Their
    hover/focus feedback is the fill change and the focus ring. */
 :where([data-scope="card"][data-sweep]),
-:where([data-scope="kanban"] [data-part="card"][data-sweep]) {
+:where([data-scope="kanban"] [data-part="card"][data-sweep]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) {
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface);
 }
 /* opt-in (warp.css §4): any data-sweep but "surface" sweeps at every stop */
@@ -23,7 +23,7 @@
 :where([data-scope="stat"]):where([data-sweep]:not([data-sweep="surface"])),
 :where([data-scope="card"]):where([data-sweep]:not([data-sweep="surface"])),
 :where([data-scope="kanban"] [data-part="card"]):where([data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
-:where([data-scope="kanban"] [data-part="card"][data-sweep]) { --warp-sweep-radius: var(--warp-radius-control); }
+:where([data-scope="kanban"] [data-part="card"][data-sweep]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) { --warp-sweep-radius: var(--warp-radius-control); }
 /* data surfaces rest on the decorative hairline, not the field's ink border */
 :where([data-scope="panel"], [data-scope="stat"], [data-scope="card"], [data-scope="kanban"] [data-part="card"]):where([data-sweep]) {
   --warp-color-sweep-base: var(--warp-color-border);
@@ -41,23 +41,23 @@
 :where([data-scope="kanban"] [data-part="column-head"]) { display: flex; align-items: center; gap: 8px; padding: 2px 4px; }
 :where([data-scope="kanban"] [data-part="column-head"] :is(h3)),
 :where([data-scope="kanban"] [data-part="column-head"] :is(h4)) { margin: 0; font-size: var(--warp-text-body-size); font-weight: 600; }
-:where([data-scope="kanban"] [data-part="column-head"] [data-part="count"]) { font: 500 11px/1.25 var(--warp-font-mono); color: var(--warp-color-text-subtle); }
+:where([data-scope="kanban"] [data-part="column-head"] [data-part="count"]:not([data-scope="kanban"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="pill"],[data-scope="segmented"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="kanban"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="pill"],[data-scope="segmented"],[data-scope="table"],[data-scope="tour"]) [data-scope="kanban"] *))) { font: 500 11px/1.25 var(--warp-font-mono); color: var(--warp-color-text-subtle); }
 :where([data-scope="kanban"] [data-part="column-head"] i) { inline-size: 8px; block-size: 8px; border-radius: 2px; background: var(--_dc); }
 /* a column's cards are a window: the column scrolls them, and a row mounting on scroll isn't an arrival */
 :where([data-scope="kanban"] [data-part="cards"]) { min-block-size: 0; overflow: auto; overscroll-behavior: contain; }
-:where([data-scope="kanban"] [data-part="column-head"] [data-part="count"][data-over]) { color: var(--warp-color-caution-text); }
+:where([data-scope="kanban"] [data-part="column-head"] [data-part="count"][data-over]:not([data-scope="kanban"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="pill"],[data-scope="segmented"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="kanban"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="pill"],[data-scope="segmented"],[data-scope="table"],[data-scope="tour"]) [data-scope="kanban"] *))) { color: var(--warp-color-caution-text); }
 :where([data-scope="kanban"] ol) { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; align-content: start; min-block-size: 60px; }
-:where([data-scope="kanban"] [data-part="card"]) {
+:where([data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) {
   position: relative; display: grid; gap: 8px; padding: 12px; cursor: grab;
   background: var(--warp-color-surface-raised); border-radius: var(--warp-radius-control); box-shadow: var(--warp-elevation-1);
   animation: warp-enter var(--warp-duration-base) var(--warp-ease-out);
 }
-:where([data-scope="kanban"] [data-part="card"][data-virtual]) { animation: none; }
-:where([data-scope="kanban"] [data-part="card"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
-:where([data-scope="kanban"] [data-part="card"][data-dragging]) { opacity: 0.4; cursor: grabbing; }
-:where([data-scope="kanban"] [data-part="card"] :is(h4)),
-:where([data-scope="kanban"] [data-part="card"] :is(h5)) { margin: 0; font-size: var(--warp-text-body-size); font-weight: 500; line-height: 1.35; padding-inline-end: 36px; }
-:where([data-scope="kanban"] [data-part="card"] footer) { display: flex; align-items: center; gap: 8px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="kanban"] [data-part="card"][data-virtual]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) { animation: none; }
+:where([data-scope="kanban"] [data-part="card"]:focus-visible:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: var(--warp-focus-offset); }
+:where([data-scope="kanban"] [data-part="card"][data-dragging]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) { opacity: 0.4; cursor: grabbing; }
+:where([data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *)) :is(h4)),
+:where([data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *)) :is(h5)) { margin: 0; font-size: var(--warp-text-body-size); font-weight: 500; line-height: 1.35; padding-inline-end: 36px; }
+:where([data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *)) footer) { display: flex; align-items: center; gap: 8px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="kanban"] [data-part="move"]) {
   all: unset; box-sizing: border-box; position: absolute; z-index: 4; inset-block-start: 4px; inset-inline-end: 4px; display: grid; place-items: center; cursor: pointer;
   inline-size: max(30px, var(--warp-hit-min)); block-size: max(30px, var(--warp-hit-min)); border-radius: var(--warp-radius-mark); color: var(--warp-color-text-subtle);
@@ -65,19 +65,19 @@
 :where([data-scope="kanban"] [data-part="move"]:hover) { background: color-mix(in oklab, currentColor 9%, transparent); color: var(--warp-color-text); }
 :where([data-scope="kanban"] [data-part="move"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); }
 :where([data-scope="kanban"] [data-part="move"] svg) { inline-size: 16px; block-size: 16px; }
-:where([data-scope="kanban"] [data-part="menu"]) {
+:where([data-scope="kanban"] [data-part="menu"]:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) *:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) [data-scope="kanban"] *))) {
   position: absolute; z-index: 30; inset-block-start: 38px; inset-inline-end: 4px; min-inline-size: 170px; padding: 4px;
   display: grid; background: var(--warp-color-surface-overlay); border: 1px solid var(--warp-color-border);
   border-radius: var(--warp-radius-control); box-shadow: var(--warp-elevation-2); animation: warp-enter var(--warp-duration-base) var(--warp-ease-out);
 }
-:where([data-scope="kanban"] [data-part="menu"][hidden]) { display: none; }
-:where([data-scope="kanban"] [data-part="menu"] button) {
+:where([data-scope="kanban"] [data-part="menu"][hidden]:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) *:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) [data-scope="kanban"] *))) { display: none; }
+:where([data-scope="kanban"] [data-part="menu"]:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) *:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) [data-scope="kanban"] *)) button) {
   all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 10px; cursor: pointer;
   min-block-size: max(32px, var(--warp-hit-min)); border-radius: calc(var(--warp-radius-control) - 2px); font-size: var(--warp-text-caption-size);
 }
-:where([data-scope="kanban"] [data-part="menu"] button:is(:hover)),
-:where([data-scope="kanban"] [data-part="menu"] button:is(:focus-visible)) { background: var(--warp-color-surface-hover); }
-:where([data-scope="kanban"] [data-part="menu"] button[aria-disabled="true"]) { opacity: var(--warp-opacity-disabled); cursor: default; }
+:where([data-scope="kanban"] [data-part="menu"]:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) *:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) [data-scope="kanban"] *)) button:is(:hover)),
+:where([data-scope="kanban"] [data-part="menu"]:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) *:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) [data-scope="kanban"] *)) button:is(:focus-visible)) { background: var(--warp-color-surface-hover); }
+:where([data-scope="kanban"] [data-part="menu"]:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) *:not([data-scope="kanban"] :is([data-scope="shell"],[data-scope="topnav"]) [data-scope="kanban"] *)) button[aria-disabled="true"]) { opacity: var(--warp-opacity-disabled); cursor: default; }
 :where([data-scope="kanban"] [data-part="placeholder"]) { block-size: 4px; border-radius: 2px; background: var(--warp-color-accent-solid); }
 :where([data-scope="kanban"] [data-part="label-chip"]) { display: inline-flex; align-items: center; gap: 5px; font: 500 11px/1 var(--warp-text-body-font); color: var(--warp-color-text-subtle); }
 :where([data-scope="kanban"] [data-part="label-chip"] i) { inline-size: 7px; block-size: 7px; border-radius: 2px; background: var(--_dc); }
@@ -91,6 +91,6 @@
 /* kanban cards: draggable; 8px apart in a column, so the block-axis expander never meets the next card.
    A container target: the expander sits under the card's own content (isolation + z-index −1), so a
    button inside the card keeps its taps */
-:where([data-scope="kanban"] [data-part="card"]) { isolation: isolate; }
+:where([data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) { isolation: isolate; }
 :where([data-scope="kanban"] [data-part="card"])::after { content: ""; position: absolute; z-index: -1; inset-inline: 0; inset-block: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
 }

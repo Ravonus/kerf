@@ -21,7 +21,7 @@
 @media (forced-colors: active) {
 :where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range]),
   :where([data-scope="reactions"] button[aria-pressed="true"]),
-  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]),
+  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]:not([data-scope="call-controls"] :is([data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) *:not([data-scope="call-controls"] :is([data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) [data-scope="call-controls"] *))),
   :where([data-scope="question"] label:has(:checked)),
   :where([data-scope="versions"] li[aria-current="true"]),
   :where([data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }

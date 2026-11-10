@@ -37,8 +37,8 @@
 @media (pointer: coarse) { :where(:root:not([data-pointer])) :where([data-scope="field"] [data-part="stepper"] button) { inline-size: 40px; block-size: 40px; } }
 /* in-field icon buttons on coarse: a 40px box with no negative margin, so two side by side (reveal + generate)
    each keep a full 44px area instead of one expander covering the other */
-:where([data-pointer="coarse"]) :where([data-scope="field"] :is([data-part="action"], [data-part="clear"])) { --_s: 40px; margin-inline: 0; }
-@media (pointer: coarse) { :where(:root:not([data-pointer])) :where([data-scope="field"] :is([data-part="action"], [data-part="clear"])) { --_s: 40px; margin-inline: 0; } }
+:where([data-pointer="coarse"]) :where([data-scope="field"] :is([data-part="action"]:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *)), [data-part="clear"]:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *)))) { --_s: 40px; margin-inline: 0; }
+@media (pointer: coarse) { :where(:root:not([data-pointer])) :where([data-scope="field"] :is([data-part="action"]:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *)), [data-part="clear"]:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *)))) { --_s: 40px; margin-inline: 0; } }
 :where([data-scope="field"][data-kind="number"]) { --_num: tabular-nums; }
 :where([data-scope="field"] [data-part="scrub"]) { cursor: ew-resize; user-select: none; touch-action: pan-y; }
 :where([data-pointer="coarse"]) :where([data-scope="field"] [data-part="scrub"]) { cursor: default; }
@@ -50,7 +50,7 @@
 }
 :where([data-scope="field"] [data-part="mask"] em) { font-style: normal; color: var(--warp-color-text-subtle); opacity: 0.7; }
 :where([data-scope="field"] > [data-part="control"]:is(:focus-within, [data-filled])) > :where([data-part="mask"]) { opacity: 1; }
-:where([data-scope="field"][data-kind="mask"] [data-part="input"]) { font-variant-numeric: tabular-nums; }
+:where([data-scope="field"][data-kind="mask"] [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) { font-variant-numeric: tabular-nums; }
 
 /* quantity: [−] 3 [+] as one swept box */
 :where([data-scope="quantity"]) {
@@ -76,7 +76,7 @@
   position: absolute; inset: 0; z-index: 4; opacity: 0.001; border: 0; padding: 0; margin: 0; color: transparent; background: transparent;
   caret-color: transparent; font-size: 16px; letter-spacing: 2em; outline: none;
 }
-:where([data-scope="otp"] [data-part="cell"]) {
+:where([data-scope="otp"] [data-part="cell"]:not([data-scope="otp"] [data-scope="scroll-grid"] *:not([data-scope="otp"] [data-scope="scroll-grid"] [data-scope="otp"] *))) {
   max-inline-size: calc(var(--warp-control-lg) - 2px); block-size: calc(var(--warp-field-height) + 6px);
   display: grid; place-items: center; flex: 1 1 0; min-inline-size: 28px;
   border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); background: var(--warp-color-field);
@@ -86,23 +86,23 @@
 :where([data-scope="otp"] [data-part="cell"][data-pin] [data-part="char"]:empty)::after {
   content: ""; display: block; inline-size: 1.5px; block-size: 22px; background: var(--warp-color-sweep); animation: warp-caret 1s steps(2, jump-none) infinite;
 }
-:where([data-scope="otp"] [data-part="sep"]) { inline-size: 8px; block-size: 1px; background: var(--warp-color-border-strong); flex: none; }
+:where([data-scope="otp"] [data-part="sep"]:not([data-scope="otp"] [data-scope="rte"] *:not([data-scope="otp"] [data-scope="rte"] [data-scope="otp"] *))) { inline-size: 8px; block-size: 1px; background: var(--warp-color-border-strong); flex: none; }
 :where([data-scope="otp"][data-masked] [data-part="char"]:not(:empty)) { font-size: 0; }
 :where([data-scope="otp"][data-masked] [data-part="char"]:not(:empty))::before { content: ""; display: block; inline-size: 9px; block-size: 9px; border-radius: 50%; background: currentColor; }
 
 /* inline edit (InlineEdit): the preview sweeps on hover like a field (no resting edge), then swaps to a field */
 :where([data-scope="editable"]) { display: flex; align-items: center; gap: var(--warp-space-related); min-block-size: var(--warp-field-height); min-inline-size: 0; }
-:where([data-scope="editable"] [data-part="preview"]) {
+:where([data-scope="editable"] [data-part="preview"]:not([data-scope="editable"] :is([data-scope="artifact"],[data-scope="emoji"],[data-scope="gradient"],[data-scope="prejoin"]) *:not([data-scope="editable"] :is([data-scope="artifact"],[data-scope="emoji"],[data-scope="gradient"],[data-scope="prejoin"]) [data-scope="editable"] *))) {
   all: unset; box-sizing: border-box; position: relative; display: inline-flex; align-items: center; gap: 6px; min-block-size: var(--warp-control-md); padding-inline: 8px; margin-inline: -8px;
   border-radius: var(--warp-radius-control); --warp-sweep-radius: var(--warp-radius-control); --_base: transparent; cursor: text; max-inline-size: 100%;
 }
-:where([data-scope="editable"] [data-part="preview"] > svg) { position: relative; z-index: 3; inline-size: 14px; block-size: 14px; color: var(--warp-color-text-subtle); opacity: 0; transition: opacity var(--warp-duration-fast); }
-:where([data-scope="editable"] [data-part="preview"]:is(:hover, :focus-visible) > svg) { opacity: 1; color: var(--warp-color-sweep); }
-:where([data-scope="editable"] [data-part="text"]) { position: relative; z-index: 3; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
-:where([data-scope="editable"] [data-part="editor"]) { display: flex; gap: 4px; flex: 1; align-items: center; min-inline-size: 0; }
-:where([data-scope="editable"][data-editing] [data-part="preview"]),
-:where([data-scope="editable"]:not([data-editing]) [data-part="editor"]) { display: none; }
-:where([data-scope="editable"] [data-part="editor"] > [data-scope="field"]) { flex: 1; }
+:where([data-scope="editable"] [data-part="preview"]:not([data-scope="editable"] :is([data-scope="artifact"],[data-scope="emoji"],[data-scope="gradient"],[data-scope="prejoin"]) *:not([data-scope="editable"] :is([data-scope="artifact"],[data-scope="emoji"],[data-scope="gradient"],[data-scope="prejoin"]) [data-scope="editable"] *)) > svg) { position: relative; z-index: 3; inline-size: 14px; block-size: 14px; color: var(--warp-color-text-subtle); opacity: 0; transition: opacity var(--warp-duration-fast); }
+:where([data-scope="editable"] [data-part="preview"]:is(:hover, :focus-visible):not([data-scope="editable"] :is([data-scope="artifact"],[data-scope="emoji"],[data-scope="gradient"],[data-scope="prejoin"]) *:not([data-scope="editable"] :is([data-scope="artifact"],[data-scope="emoji"],[data-scope="gradient"],[data-scope="prejoin"]) [data-scope="editable"] *)) > svg) { opacity: 1; color: var(--warp-color-sweep); }
+:where([data-scope="editable"] [data-part="text"]:not([data-scope="editable"] :is([data-scope="announcement"],[data-scope="hover-scope"],[data-scope="linkcard"],[data-scope="notification"],[data-scope="palette"],[data-scope="save-bar"],[data-scope="sortable"],[data-scope="truncate"]) *:not([data-scope="editable"] :is([data-scope="announcement"],[data-scope="hover-scope"],[data-scope="linkcard"],[data-scope="notification"],[data-scope="palette"],[data-scope="save-bar"],[data-scope="sortable"],[data-scope="truncate"]) [data-scope="editable"] *))) { position: relative; z-index: 3; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="editable"] [data-part="editor"]:not([data-scope="editable"] [data-scope="table"] *:not([data-scope="editable"] [data-scope="table"] [data-scope="editable"] *))) { display: flex; gap: 4px; flex: 1; align-items: center; min-inline-size: 0; }
+:where([data-scope="editable"][data-editing] [data-part="preview"]:not([data-scope="editable"] :is([data-scope="artifact"],[data-scope="emoji"],[data-scope="gradient"],[data-scope="prejoin"]) *:not([data-scope="editable"] :is([data-scope="artifact"],[data-scope="emoji"],[data-scope="gradient"],[data-scope="prejoin"]) [data-scope="editable"] *))),
+:where([data-scope="editable"]:not([data-editing]) [data-part="editor"]:not([data-scope="editable"] [data-scope="table"] *:not([data-scope="editable"] [data-scope="table"] [data-scope="editable"] *))) { display: none; }
+:where([data-scope="editable"] [data-part="editor"]:not([data-scope="editable"] [data-scope="table"] *:not([data-scope="editable"] [data-scope="table"] [data-scope="editable"] *)) > [data-scope="field"]) { flex: 1; }
 
 /* input group (InputGroup): fields, add-ons and buttons joined edge to edge */
 :where([data-scope="input-group"]) { display: flex; align-items: flex-end; min-inline-size: 0; }

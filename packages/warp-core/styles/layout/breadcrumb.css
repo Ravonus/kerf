@@ -11,9 +11,9 @@
 }
 :where([data-scope="breadcrumb"] a:hover) { color: var(--warp-color-text); background: var(--warp-color-surface-hover); }
 :where([data-scope="breadcrumb"] [aria-current]) { color: var(--warp-color-text); font-weight: 500; overflow: clip; text-overflow: ellipsis; padding-inline: 4px; }
-:where([data-scope="breadcrumb"] [data-part="ellipsis"]) { display: none; }
+:where([data-scope="breadcrumb"] [data-part="ellipsis"]:not([data-scope="breadcrumb"] [data-scope="breadcrumbs"] *:not([data-scope="breadcrumb"] [data-scope="breadcrumbs"] [data-scope="breadcrumb"] *))) { display: none; }
 @container (max-width: 999.98px) {
 :where([data-scope="breadcrumb"] li[data-collapse]) { display: none; }
-:where([data-scope="breadcrumb"] [data-part="ellipsis"]) { display: flex; }
+:where([data-scope="breadcrumb"] [data-part="ellipsis"]:not([data-scope="breadcrumb"] [data-scope="breadcrumbs"] *:not([data-scope="breadcrumb"] [data-scope="breadcrumbs"] [data-scope="breadcrumb"] *))) { display: flex; }
 }
 }

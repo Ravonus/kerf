@@ -5,7 +5,7 @@
   display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr) auto;
   block-size: 100%; min-block-size: 0; background: var(--warp-color-page); color: var(--warp-color-text);
 }
-:where([data-scope="room"] [data-part="header"]) { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--warp-space-related); padding: 10px var(--warp-space-group); }
+:where([data-scope="room"] [data-part="header"]:not([data-scope="room"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="sheet"],[data-scope="shell"]) *:not([data-scope="room"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="sheet"],[data-scope="shell"]) [data-scope="room"] *))) { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--warp-space-related); padding: 10px var(--warp-space-group); }
 :where([data-scope="room"] [data-part="rec"]) { display: inline-flex; align-items: center; gap: 6px; font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-critical-text); text-transform: uppercase; letter-spacing: 0.08em; }
 :where([data-scope="room"] [data-part="stage"]) { grid-column: 1; grid-row: 2; position: relative; min-block-size: 0; padding: 0 var(--warp-space-related) var(--warp-space-related); display: grid; }
 :where([data-scope="room"] [data-part="stage"][data-layout="gallery"]) {

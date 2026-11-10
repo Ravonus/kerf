@@ -15,12 +15,12 @@
   --_row: var(--warp-table-row); --_px: var(--warp-table-pad-x);
   position: relative; display: grid; gap: var(--warp-space-related); min-inline-size: 0;
 }
-:where([data-scope="table"] [data-part="toolbar"]) {
+:where([data-scope="table"] [data-part="toolbar"]:not([data-scope="table"] [data-scope="year"] *:not([data-scope="table"] [data-scope="year"] [data-scope="table"] *))) {
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--warp-space-related); padding-block-start: 8px;
 }
-:where([data-scope="table"] [data-part="toolbar"] [data-scope="field"]) { flex: 1 1 220px; max-inline-size: 340px; }
-:where([data-scope="table"] [data-part="toolbar"] [data-part="spacer"]) { flex: 1; }
-:where([data-scope="table"] [data-part="count"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="table"] [data-part="toolbar"]:not([data-scope="table"] [data-scope="year"] *:not([data-scope="table"] [data-scope="year"] [data-scope="table"] *)) [data-scope="field"]) { flex: 1 1 220px; max-inline-size: 340px; }
+:where([data-scope="table"] [data-part="toolbar"]:not([data-scope="table"] [data-scope="year"] *:not([data-scope="table"] [data-scope="year"] [data-scope="table"] *)) [data-part="spacer"]:not([data-scope="table"] :is([data-scope="composer"],[data-scope="status-bar"],[data-scope="virtual"]) *:not([data-scope="table"] :is([data-scope="composer"],[data-scope="status-bar"],[data-scope="virtual"]) [data-scope="table"] *))) { flex: 1; }
+:where([data-scope="table"] [data-part="count"]:not([data-scope="table"] :is([data-scope="checklist"],[data-scope="kanban"],[data-scope="pill"],[data-scope="segmented"],[data-scope="tour"]) *:not([data-scope="table"] :is([data-scope="checklist"],[data-scope="kanban"],[data-scope="pill"],[data-scope="segmented"],[data-scope="tour"]) [data-scope="table"] *))) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 /* more columns off a side: an edge shadow over the viewport on that side (warp-core's table() writes data-overflow and
    the viewport's place, --_vt/--_vh). A pinned first column has its own shadow, so the start one stands down. */
 :where([data-scope="table"])::before, :where([data-scope="table"])::after {
@@ -37,7 +37,7 @@
 :where([data-scope="table"][data-phone="cards"])::before, :where([data-scope="table"][data-phone="cards"])::after { display: none; }
 /* stacked cards don't scroll sideways */
 /* viewport: the one scroll container; sticky header + first column live in it */
-:where([data-scope="table"] [data-part="viewport"]) {
+:where([data-scope="table"] [data-part="viewport"]:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"]) *:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"]) [data-scope="table"] *))) {
   position: relative; overflow: auto; max-block-size: var(--warp-table-max-h, none); overscroll-behavior-x: contain;
   border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
   background: var(--warp-color-surface-raised);
@@ -67,7 +67,7 @@
 :where([data-scope="table"] [data-align="center"]) { text-align: center; }
 :where([data-scope="table"] [data-numeric]) { text-align: end; font-variant-numeric: tabular-nums; }
 :where([data-scope="table"] [data-part="primary"]) { font-weight: 500; }
-:where([data-scope="table"] [data-part="secondary"]) { display: block; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+:where([data-scope="table"] [data-part="secondary"]:not([data-scope="table"] [data-scope="persona"] *:not([data-scope="table"] [data-scope="persona"] [data-scope="table"] *))) { display: block; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 :where([data-scope="table"] [data-part="mono"]) { font-family: var(--warp-font-mono); font-size: calc(var(--warp-text-code-size) - 1px); color: var(--warp-color-text-subtle); }
 /* sticky first column (pinned) */
 :where([data-scope="table"] [data-pinned]) { position: sticky; inset-inline-start: var(--_pin-x, 0px); z-index: 1; }
@@ -94,7 +94,7 @@
 :where([data-scope="table"] th[aria-sort="descending"] [data-part="sort-icon"]) { transform: rotate(180deg); }
 :where([data-scope="table"] th[aria-sort]) { color: var(--warp-color-text); }
 /* column resize: a 1px hairline that widens to a handle; keyboard: ←/→ */
-:where([data-scope="table"] [data-part="resize"]) {
+:where([data-scope="table"] [data-part="resize"]:not([data-scope="table"] :is([data-scope="board"],[data-scope="calendar"]) *:not([data-scope="table"] :is([data-scope="board"],[data-scope="calendar"]) [data-scope="table"] *))) {
   position: absolute; inset-block: 0; inset-inline-end: -6px; z-index: 4; inline-size: 12px; cursor: col-resize;
   display: grid; place-items: center; touch-action: none; border: 0; padding: 0; background: none;
 }
@@ -105,7 +105,7 @@
 :where([data-scope="table"] [data-part="resize"]:is(:hover))::before,
 :where([data-scope="table"] [data-part="resize"]:is(:focus-visible))::before,
 :where([data-scope="table"] [data-part="resize"]:is([data-active]))::before { block-size: 100%; inline-size: 2px; background: var(--warp-color-accent-solid); }
-:where([data-scope="table"] [data-part="resize"]:focus-visible) { outline: none; }
+:where([data-scope="table"] [data-part="resize"]:focus-visible:not([data-scope="table"] :is([data-scope="board"],[data-scope="calendar"]) *:not([data-scope="table"] :is([data-scope="board"],[data-scope="calendar"]) [data-scope="table"] *))) { outline: none; }
 :where([data-scope="table"] th:has([data-part="resize"])) { position: sticky; }
 /* rows: hover = state layer; selected = accent soft + emphasis line on the leading edge */
 :where([data-scope="table"] tbody tr:hover > td),
@@ -116,8 +116,8 @@
 :where([data-scope="table"] tbody tr[data-selected] > th:first-child) { box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-accent-solid); }
 :where([data-scope="table"] tbody tr[data-clickable]) { cursor: pointer; }
 :where([data-scope="table"] tbody tr:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
-:where([data-scope="table"] [data-part="select"]) { inline-size: calc(20px + var(--_px) * 2); padding-inline: var(--_px); }
-:where([data-scope="table"] [data-part="select"] [data-scope="checkbox"]) { vertical-align: middle; }
+:where([data-scope="table"] [data-part="select"]:not([data-scope="table"] [data-scope="stage"] *:not([data-scope="table"] [data-scope="stage"] [data-scope="table"] *))) { inline-size: calc(20px + var(--_px) * 2); padding-inline: var(--_px); }
+:where([data-scope="table"] [data-part="select"]:not([data-scope="table"] [data-scope="stage"] *:not([data-scope="table"] [data-scope="stage"] [data-scope="table"] *)) [data-scope="checkbox"]) { vertical-align: middle; }
 :where([data-scope="table"] [data-part="select"] [data-scope="checkbox"])::after { content: ""; position: absolute; inset: calc((20px - var(--warp-hit-min)) / 2); }
 /* expandable rows */
 :where([data-scope="table"] [data-part="expand"]) {
@@ -129,7 +129,7 @@
 :where([data-scope="table"] [data-part="expand"][aria-expanded="true"] svg) { transform: rotate(90deg); }
 :where([data-scope="table"] [data-part="expand"]:hover) { color: var(--warp-color-text); background: color-mix(in oklab, currentColor 8%, transparent); }
 :where([data-scope="table"] [data-part="expand"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); }
-:where([data-scope="table"] tr[data-part="detail"] > td) {
+:where([data-scope="table"] tr[data-part="detail"]:not([data-scope="table"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="timeline"],[data-scope="year"]) *:not([data-scope="table"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="timeline"],[data-scope="year"]) [data-scope="table"] *)) > td) {
   white-space: normal; block-size: auto; padding-block: 0; background: var(--warp-color-surface);
 }
 :where([data-scope="table"] [data-part="slide"]) {
@@ -148,7 +148,7 @@
 :where([data-scope="table"] [data-editable]) { cursor: text; }
 :where([data-scope="table"] [data-editable]:hover) { box-shadow: inset 0 0 0 1px var(--warp-color-border-strong); }
 :where([data-scope="table"] [data-editable]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
-:where([data-scope="table"] [data-part="editor"]) {
+:where([data-scope="table"] [data-part="editor"]:not([data-scope="table"] [data-scope="editable"] *:not([data-scope="table"] [data-scope="editable"] [data-scope="table"] *))) {
   all: unset; box-sizing: border-box; inline-size: 100%; block-size: calc(var(--_row) - 8px); padding-inline: 8px; margin-inline: -8px;
   background: var(--warp-color-surface-overlay); border-radius: var(--warp-radius-mark);
   box-shadow: inset 0 0 0 1px var(--warp-color-focus), 0 0 0 1px var(--warp-color-focus);
@@ -176,21 +176,21 @@
 :where([data-scope="table"] [data-part="bulk"] [data-scope="button"]) { color: var(--warp-color-on-inverse); }
 :where([data-scope="table"] [data-part="bulk"] b) { font-weight: 600; margin-inline-end: auto; font-variant-numeric: tabular-nums; }
 /* footer + pagination (page or cursor) */
-:where([data-scope="table"] [data-part="footer"]) {
+:where([data-scope="table"] [data-part="footer"]:not([data-scope="table"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="tour"]) *:not([data-scope="table"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="tour"]) [data-scope="table"] *))) {
   display: flex; align-items: center; justify-content: space-between; gap: var(--warp-space-related); flex-wrap: wrap;
   font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle);
 }
-:where([data-scope="table"] [data-part="skeleton"]) { block-size: 10px; inline-size: var(--w, 70%); }
-:where([data-scope="table"] [data-part="state"]) {
+:where([data-scope="table"] [data-part="skeleton"]:not([data-scope="table"] [data-scope="chart"] *:not([data-scope="table"] [data-scope="chart"] [data-scope="table"] *))) { block-size: 10px; inline-size: var(--w, 70%); }
+:where([data-scope="table"] [data-part="state"]:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) *:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) [data-scope="table"] *))) {
   display: grid; justify-items: center; gap: var(--warp-space-related); text-align: center;
   padding: var(--warp-space-section) var(--warp-space-group); white-space: normal;
 }
-:where([data-scope="table"] [data-part="state"] svg) { inline-size: 72px; block-size: 40px; overflow: visible; }
-:where([data-scope="table"] [data-part="state"] svg line) { stroke: var(--warp-color-border-strong); stroke-width: 1; }
-:where([data-scope="table"] [data-part="state"] svg path) { stroke: var(--warp-color-accent-solid); stroke-width: 2; fill: none; }
-:where([data-scope="table"] [data-part="state"][data-kind="error"] svg path) { stroke: var(--warp-color-critical-solid); }
-:where([data-scope="table"] [data-part="state"] h4) { margin: 0; font-size: var(--warp-text-body-size); font-weight: 600; }
-:where([data-scope="table"] [data-part="state"] p) { margin: 0; max-inline-size: 42ch; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
+:where([data-scope="table"] [data-part="state"]:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) *:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) [data-scope="table"] *)) svg) { inline-size: 72px; block-size: 40px; overflow: visible; }
+:where([data-scope="table"] [data-part="state"]:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) *:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) [data-scope="table"] *)) svg line) { stroke: var(--warp-color-border-strong); stroke-width: 1; }
+:where([data-scope="table"] [data-part="state"]:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) *:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) [data-scope="table"] *)) svg path) { stroke: var(--warp-color-accent-solid); stroke-width: 2; fill: none; }
+:where([data-scope="table"] [data-part="state"][data-kind="error"]:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) *:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) [data-scope="table"] *)) svg path) { stroke: var(--warp-color-critical-solid); }
+:where([data-scope="table"] [data-part="state"]:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) *:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) [data-scope="table"] *)) h4) { margin: 0; font-size: var(--warp-text-body-size); font-weight: 600; }
+:where([data-scope="table"] [data-part="state"]:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) *:not([data-scope="table"] :is([data-scope="chart"],[data-scope="uploads"]) [data-scope="table"] *)) p) { margin: 0; max-inline-size: 42ch; color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size); }
 /* density: one attribute on the table root (or any ancestor) */
 :where([data-scope="table"][data-density="compact"]) { --_px: calc(var(--warp-table-pad-x) * 0.85); }
 /* -- responsive: priority columns (all modes) --------------------------------
@@ -206,7 +206,7 @@
    Same <table>, explicit ARIA roles keep the semantics when display changes.
    Each cell labels itself from data-label. */
 @container (max-width: 599.98px) {
-:where([data-scope="table"][data-phone="cards"] [data-part="viewport"]) { border: 0; background: none; overflow: visible; max-block-size: none; }
+:where([data-scope="table"][data-phone="cards"] [data-part="viewport"]:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"]) *:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"]) [data-scope="table"] *))) { border: 0; background: none; overflow: visible; max-block-size: none; }
 :where([data-scope="table"][data-phone="cards"] :is(table)),
   :where([data-scope="table"][data-phone="cards"] :is(tbody)) { display: block; }
 :where([data-scope="table"][data-phone="cards"] thead) { display: none; }
@@ -235,9 +235,9 @@
   :where([data-scope="table"][data-phone="cards"] tbody tr > th:has(> [data-part="expand"])) { grid-column: 3; grid-row: 2; justify-content: end; padding: 0; }
 :where([data-scope="table"][data-phone="cards"] tbody tr > td[data-card="title"])::before,
   :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-card="title"])::before { content: none; }
-:where([data-scope="table"][data-phone="cards"] tbody tr[data-part="detail"] > td) { display: block; padding-inline: 14px; text-align: start; }
-:where([data-scope="table"][data-phone="cards"] tbody tr > td[data-part="select"]),
-  :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-part="select"]) { grid-column: 1; grid-row: 1; inline-size: auto; padding: 0 0 6px;
+:where([data-scope="table"][data-phone="cards"] tbody tr[data-part="detail"]:not([data-scope="table"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="timeline"],[data-scope="year"]) *:not([data-scope="table"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="timeline"],[data-scope="year"]) [data-scope="table"] *)) > td) { display: block; padding-inline: 14px; text-align: start; }
+:where([data-scope="table"][data-phone="cards"] tbody tr > td[data-part="select"]:not([data-scope="table"] [data-scope="stage"] *:not([data-scope="table"] [data-scope="stage"] [data-scope="table"] *))),
+  :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-part="select"]:not([data-scope="table"] [data-scope="stage"] *:not([data-scope="table"] [data-scope="stage"] [data-scope="table"] *))) { grid-column: 1; grid-row: 1; inline-size: auto; padding: 0 0 6px;
     min-block-size: var(--warp-target-min); min-inline-size: var(--warp-target-min); align-items: center; justify-content: center; }
 :where([data-scope="table"][data-phone="cards"] tbody tr > td[data-card="badge"]),
   :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-card="badge"]) { grid-column: 3; grid-row: 1; padding-block-end: 6px; }
@@ -248,23 +248,23 @@
 :where([data-scope="table"][data-phone="cards"] tbody tr > td[data-card="hide"]),
   :where([data-scope="table"][data-phone="cards"] tbody tr > th[data-card="hide"]) { display: none; }
 :where([data-scope="table"][data-phone="cards"] tbody tr[data-selected]) { border-color: var(--warp-color-accent-border); box-shadow: inset var(--warp-border-emphasis) 0 0 var(--warp-color-accent-solid); }
-:where([data-scope="table"][data-phone="cards"] [data-part="resize"]) { display: none; }
+:where([data-scope="table"][data-phone="cards"] [data-part="resize"]:not([data-scope="table"] :is([data-scope="board"],[data-scope="calendar"]) *:not([data-scope="table"] :is([data-scope="board"],[data-scope="calendar"]) [data-scope="table"] *))) { display: none; }
 }
 :where([data-scope="table"] [data-part="sortbar"]) { display: none; align-items: center; gap: var(--warp-space-related); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 @container (max-width: 599.98px) {
 :where([data-scope="table"] [data-part="sortbar"]) { display: flex; }
 }
 /* -- tablet: detail sheet (fewer columns; the row opens every field) ------- */
-:where([data-scope="table"] [data-part="sheet"]) {
+:where([data-scope="table"] [data-part="sheet"]:not([data-scope="table"] [data-scope="shell"] *:not([data-scope="table"] [data-scope="shell"] [data-scope="table"] *))) {
   position: absolute; inset-block: 0; inset-inline-end: 0; z-index: 20; inline-size: min(380px, 92%);
   display: grid; grid-template-rows: auto 1fr; background: var(--warp-color-surface-overlay);
   border-inline-start: var(--warp-border-hairline) solid var(--warp-color-border); box-shadow: var(--warp-elevation-3);
   border-radius: var(--warp-radius-surface) 0 0 var(--warp-radius-surface);
   animation: warp-table-sheet-in var(--warp-duration-slow) var(--warp-ease-out);
 }
-:where([data-scope="table"] [data-part="sheet"][hidden]) { display: none; }
-:where([data-scope="table"] [data-part="sheet"] > header) { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; border-block-end: 1px solid var(--warp-color-border); }
-:where([data-scope="table"] [data-part="sheet"] > div) { overflow: auto; padding: 16px; }
+:where([data-scope="table"] [data-part="sheet"][hidden]:not([data-scope="table"] [data-scope="shell"] *:not([data-scope="table"] [data-scope="shell"] [data-scope="table"] *))) { display: none; }
+:where([data-scope="table"] [data-part="sheet"]:not([data-scope="table"] [data-scope="shell"] *:not([data-scope="table"] [data-scope="shell"] [data-scope="table"] *)) > header) { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 16px; border-block-end: 1px solid var(--warp-color-border); }
+:where([data-scope="table"] [data-part="sheet"]:not([data-scope="table"] [data-scope="shell"] *:not([data-scope="table"] [data-scope="shell"] [data-scope="table"] *)) > div) { overflow: auto; padding: 16px; }
 /* grid: header drag-reorder, group rows, aggregate rows, filter row ---------- */
 :where([data-scope="table"] table:is([role="grid"], [role="treegrid"]) tbody :is(td):focus-visible),
 :where([data-scope="table"] table:is([role="grid"], [role="treegrid"]) tbody :is(th):focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
@@ -276,17 +276,17 @@
 }
 :where([data-scope="table"] th[data-drop-before])::before { inset-inline-start: -1px; }
 :where([data-scope="table"] th[data-drop-after])::before { inset-inline-end: -1px; }
-:where([data-scope="table"] tr[data-part="group"] > td),
-:where([data-scope="table"] tr[data-part="group"] > th) {
+:where([data-scope="table"] tr[data-part="group"]:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) *:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) [data-scope="table"] *)) > td),
+:where([data-scope="table"] tr[data-part="group"]:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) *:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) [data-scope="table"] *)) > th) {
   background: var(--warp-color-surface-sunken); font-weight: 600; block-size: calc(var(--warp-table-row) - 4px);
   position: sticky; inset-block-start: var(--warp-table-head); z-index: 1;
 }
-:where([data-scope="table"] tr[data-part="group"] button) {
+:where([data-scope="table"] tr[data-part="group"]:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) *:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) [data-scope="table"] *)) button) {
   all: unset; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-block-size: var(--warp-hit-min);
 }
-:where([data-scope="table"] tr[data-part="group"] button svg) { inline-size: 14px; block-size: 14px; transition: rotate var(--warp-duration-fast) var(--warp-ease-out); }
-:where([data-scope="table"] tr[data-part="group"] button[aria-expanded="true"] svg) { rotate: 90deg; }
-:where([data-scope="table"] tr[data-part="group"] button:focus-visible) { outline: 2px solid var(--warp-color-focus); outline-offset: 2px; border-radius: 3px; }
+:where([data-scope="table"] tr[data-part="group"]:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) *:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) [data-scope="table"] *)) button svg) { inline-size: 14px; block-size: 14px; transition: rotate var(--warp-duration-fast) var(--warp-ease-out); }
+:where([data-scope="table"] tr[data-part="group"]:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) *:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) [data-scope="table"] *)) button[aria-expanded="true"] svg) { rotate: 90deg; }
+:where([data-scope="table"] tr[data-part="group"]:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) *:not([data-scope="table"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="suggest"]) [data-scope="table"] *)) button:focus-visible) { outline: 2px solid var(--warp-color-focus); outline-offset: 2px; border-radius: 3px; }
 :where([data-scope="table"] tr[data-part="aggregate"] > td),
 :where([data-scope="table"] tr[data-part="aggregate"] > th) { border-block-start: 1px solid var(--warp-color-border-strong); font-weight: 600; background: var(--warp-color-surface-raised); }
 :where([data-scope="table"] tr[data-part="filters"] th) { padding-block: 4px; background: var(--warp-color-surface); }
@@ -344,18 +344,18 @@
 :where([data-scope="table"][data-tree] tr[data-context] > th) { color: var(--warp-color-text-subtle); }
 /* an ancestor shown only because a descendant matches the filter */
 /* the toggle: a 24px chevron box (pointer only; the row's aria-expanded is the state), hit-min on coarse */
-:where([data-scope="table"][data-tree] [data-part="toggle"]) {
+:where([data-scope="table"][data-tree] [data-part="toggle"]:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) *:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) [data-scope="table"] *))) {
   position: relative; display: inline-grid; place-items: center; flex: none; inline-size: 24px; block-size: 24px;
   border-radius: var(--warp-radius-mark); color: var(--warp-color-text-subtle); cursor: pointer;
 }
 :where([data-scope="table"][data-tree] [data-part="toggle"])::after { content: ""; position: absolute; inset: min(0px, calc((24px - var(--warp-hit-min)) / 2)); }
-:where([data-scope="table"][data-tree] [data-part="toggle"]:hover) { color: var(--warp-color-text); background: color-mix(in oklab, currentColor 8%, transparent); }
-:where([data-scope="table"][data-tree] [data-part="toggle"] svg) { inline-size: 14px; block-size: 14px; transition: rotate var(--warp-duration-base) var(--warp-ease-out); }
-:where([data-scope="table"][data-tree] [data-part="toggle"]:dir(rtl) svg) { scale: -1 1; }
-:where([data-scope="table"][data-tree] tr[aria-expanded="true"] [data-part="toggle"] svg) { rotate: 90deg; }
-:where([data-scope="table"][data-tree] tr[aria-expanded="true"] [data-part="toggle"]:dir(rtl) svg) { rotate: -90deg; }
-:where([data-scope="table"][data-tree] [data-part="toggle"][data-leaf]) { visibility: hidden; }
-:where([data-scope="table"][data-tree] tr[aria-busy="true"] [data-part="toggle"] svg) { opacity: 0.4; }
+:where([data-scope="table"][data-tree] [data-part="toggle"]:hover:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) *:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) [data-scope="table"] *))) { color: var(--warp-color-text); background: color-mix(in oklab, currentColor 8%, transparent); }
+:where([data-scope="table"][data-tree] [data-part="toggle"]:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) *:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) [data-scope="table"] *)) svg) { inline-size: 14px; block-size: 14px; transition: rotate var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="table"][data-tree] [data-part="toggle"]:dir(rtl):not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) *:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) [data-scope="table"] *)) svg) { scale: -1 1; }
+:where([data-scope="table"][data-tree] tr[aria-expanded="true"] [data-part="toggle"]:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) *:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) [data-scope="table"] *)) svg) { rotate: 90deg; }
+:where([data-scope="table"][data-tree] tr[aria-expanded="true"] [data-part="toggle"]:dir(rtl):not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) *:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) [data-scope="table"] *)) svg) { rotate: -90deg; }
+:where([data-scope="table"][data-tree] [data-part="toggle"][data-leaf]:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) *:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) [data-scope="table"] *))) { visibility: hidden; }
+:where([data-scope="table"][data-tree] tr[aria-busy="true"] [data-part="toggle"]:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) *:not([data-scope="table"] :is([data-scope="layers"],[data-scope="truncate"]) [data-scope="table"] *)) svg) { opacity: 0.4; }
 /* focus: a row or a cell (APG treegrid). The row ring is drawn by its cells (a tr outline is unreliable
    with border-collapse: separate); forced colours use a real outline (box-shadow is dropped there) */
 :where([data-scope="table"][data-tree] tbody tr:focus-visible > td),
@@ -375,7 +375,7 @@
 /* lazy children: one loading row at the child level until they arrive */
 :where([data-scope="table"][data-tree] tr[data-part="loading"] > td),
 :where([data-scope="table"][data-tree] tr[data-part="loading"] > th) { color: var(--warp-color-text-subtle); }
-:where([data-scope="table"][data-tree] tr[data-part="loading"] [data-part="skeleton"]) { display: inline-block; vertical-align: middle; inline-size: 96px; margin-inline-start: var(--warp-space-related); }
+:where([data-scope="table"][data-tree] tr[data-part="loading"] [data-part="skeleton"]:not([data-scope="table"] [data-scope="chart"] *:not([data-scope="table"] [data-scope="chart"] [data-scope="table"] *))) { display: inline-block; vertical-align: middle; inline-size: 96px; margin-inline-start: var(--warp-space-related); }
 :where([data-scope="table"][data-tree] tr[data-enter] > td),
 :where([data-scope="table"][data-tree] tr[data-enter] > th) {
   animation: warp-tree-in var(--warp-duration-base) var(--warp-ease-out) both;

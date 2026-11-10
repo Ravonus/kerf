@@ -2,8 +2,8 @@
 @layer warp.components {
 /* -- Persona: avatar + name + secondary + presence ring */
 :where([data-scope="persona"]) { display: inline-flex; align-items: center; gap: 10px; min-inline-size: 0; }
-:where([data-scope="persona"] [data-part="name"]) { font-weight: 500; display: block; }
-:where([data-scope="persona"] [data-part="secondary"]) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); display: block; }
+:where([data-scope="persona"] [data-part="name"]:not([data-scope="persona"] :is([data-scope="layers"],[data-scope="plan-card"],[data-scope="tile"],[data-scope="tool-call"],[data-scope="uploads"]) *:not([data-scope="persona"] :is([data-scope="layers"],[data-scope="plan-card"],[data-scope="tile"],[data-scope="tool-call"],[data-scope="uploads"]) [data-scope="persona"] *))) { font-weight: 500; display: block; }
+:where([data-scope="persona"] [data-part="secondary"]:not([data-scope="persona"] [data-scope="table"] *:not([data-scope="persona"] [data-scope="table"] [data-scope="persona"] *))) { font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); display: block; }
 :where([data-scope="avatar"][data-presence]) { box-shadow: 0 0 0 2px var(--warp-color-surface), 0 0 0 calc(2px + var(--warp-border-emphasis)) var(--_ring); }
 :where([data-scope="avatar"][data-presence="online"]) { --_ring: var(--warp-color-positive-solid); }
 :where([data-scope="avatar"][data-presence="away"]) { --_ring: var(--warp-color-caution-solid); }

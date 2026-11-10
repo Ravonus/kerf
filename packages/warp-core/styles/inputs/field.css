@@ -45,21 +45,21 @@
 }
 :where([data-scope="field"][data-size="sm"]) { --warp-field-height: max(calc(var(--warp-control-sm) + 4px), var(--warp-target-min)); }
 :where([data-scope="field"][data-size="lg"]) { --warp-field-height: max(calc(var(--warp-control-lg) + 6px), var(--warp-target-min)); }
-:where([data-scope="field"] [data-part="input"]) {
+:where([data-scope="field"] [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) {
   padding-inline: 0; flex: 1; min-inline-size: 0; inline-size: auto; block-size: auto; align-self: stretch;
   caret-color: var(--warp-color-sweep); font-variant-numeric: var(--_num, normal); text-align: var(--_align, start);
 }
-:where([data-scope="field"] input[data-part="input"]) { min-block-size: calc(var(--warp-field-height) - 2px); }
+:where([data-scope="field"] input[data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) { min-block-size: calc(var(--warp-field-height) - 2px); }
 :where([data-scope="field"] [data-part="input"][type="search"])::-webkit-search-cancel-button { display: none; }
-:where([data-scope="field"] [data-part="input"][type="number"]) { appearance: textfield; }
+:where([data-scope="field"] [data-part="input"][type="number"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) { appearance: textfield; }
 :where([data-scope="field"] [data-part="input"][type="number"])::-webkit-inner-spin-button, :where([data-scope="field"] [data-part="input"][type="number"])::-webkit-outer-spin-button { appearance: none; margin: 0; }
-:where([data-scope="field"] [data-part="input"]:-webkit-autofill) { -webkit-text-fill-color: var(--warp-color-text); transition: background-color 600000s 0s; }
+:where([data-scope="field"] [data-part="input"]:-webkit-autofill:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) { -webkit-text-fill-color: var(--warp-color-text); transition: background-color 600000s 0s; }
 
 /* textarea: grows from its rows (--_rows, 3) to 10 or its rows; label and icon rest on the first line. field-sizing:
    content ignores the rows attribute, so Textarea writes --_rows */
 :where([data-scope="field"] > [data-part="control"]:has(> textarea)),
 :where([data-scope="field"] > [data-part="control"][data-wrap]) { align-items: flex-start; }
-:where([data-scope="field"] textarea[data-part="input"]) {
+:where([data-scope="field"] textarea[data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) {
   white-space: pre-wrap; overflow-wrap: anywhere; resize: none; field-sizing: content; line-height: 1.5;
   padding-block: calc((var(--warp-field-height) - 1.5em) / 2);
   min-block-size: calc(1.5em * var(--_rows, 3) + var(--warp-field-height) - 1.5em); max-block-size: calc(1.5em * max(10, var(--_rows, 3)) + var(--warp-field-height) - 1.5em); overflow: auto;
@@ -71,7 +71,7 @@
 :where([data-scope="field"] > [data-part="control"]) > :where(:not([data-part="sweep"], [data-part="sweep-base"], [data-part="icon"], [data-part="label"], [data-part="mask"], [data-part="carrier"], [data-scope="popup"], [data-scope="select"])) { position: relative; z-index: 3; }
 
 /* prefix / suffix: fixed text, not submitted. Floating: shown once the label has lifted. Classic: always. */
-:where([data-scope="field"] :is([data-part="prefix"])),
+:where([data-scope="field"] :is([data-part="prefix"]:not([data-scope="field"] [data-scope="api-key"] *:not([data-scope="field"] [data-scope="api-key"] [data-scope="field"] *)))),
 :where([data-scope="field"] :is([data-part="suffix"])) {
   flex: none; color: var(--warp-color-text-subtle); font-size: var(--warp-text-control-size); white-space: nowrap; user-select: none;
   opacity: 0; transition: opacity var(--warp-duration-fast);
@@ -82,12 +82,12 @@
 :where([data-scope="field"]:is([data-lift], [data-variant="classic"]) > [data-part="control"] > :is([data-part="suffix"])),
 :where([data-fields="classic"] [data-scope="field"]:not([data-variant="floating"]) > [data-part="control"] > :is([data-part="prefix"])),
 :where([data-fields="classic"] [data-scope="field"]:not([data-variant="floating"]) > [data-part="control"] > :is([data-part="suffix"])) { opacity: 1; }
-:where([data-scope="field"] [data-part="prefix"]) { margin-inline-end: calc(var(--warp-space-related) * -1 + 1px); }
+:where([data-scope="field"] [data-part="prefix"]:not([data-scope="field"] [data-scope="api-key"] *:not([data-scope="field"] [data-scope="api-key"] [data-scope="field"] *))) { margin-inline-end: calc(var(--warp-space-related) * -1 + 1px); }
 :where([data-scope="field"] [data-part="suffix"]) { margin-inline-start: calc(var(--warp-space-related) * -1 + 1px); }
 
 /* icon buttons inside the control: 24px visual, ≥ hit-min touch area */
-:where([data-scope="field"] :is([data-part="action"])),
-:where([data-scope="field"] :is([data-part="clear"])) {
+:where([data-scope="field"] :is([data-part="action"]:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *)))),
+:where([data-scope="field"] :is([data-part="clear"]:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *)))) {
   --_s: 24px; flex: none; display: inline-grid; place-items: center;
   inline-size: var(--_s); block-size: var(--_s); margin-inline: -4px; padding: 0;
   border: 0; border-radius: var(--warp-radius-mark); background: transparent;
@@ -96,40 +96,40 @@
 }
 :where([data-scope="field"] :is([data-part="action"]))::before,
 :where([data-scope="field"] :is([data-part="clear"]))::before { content: ""; position: absolute; inset: min(0px, calc((var(--_s) - var(--warp-hit-min)) / 2)); }
-:where([data-scope="field"] :is([data-part="action"]):hover),
-:where([data-scope="field"] :is([data-part="clear"]):hover) { color: var(--warp-color-text); background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 100%), transparent); }
-:where([data-scope="field"] :is([data-part="action"]):focus-visible),
-:where([data-scope="field"] :is([data-part="clear"]):focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 0; }
-:where([data-scope="field"] :is([data-part="action"], [data-part="clear"], [data-part="end"], [data-part="indicator"]) svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); }
-:where([data-scope="field"] [data-part="action"][aria-pressed="true"]) { color: var(--warp-color-sweep); }
-:where([data-scope="field"] > [data-part="control"]:has([data-part="input"]:placeholder-shown) [data-part="clear"]) { visibility: hidden; opacity: 0; }
-:where([data-scope="field"] [data-part="end"]) { flex: none; display: inline-flex; color: var(--warp-color-text-subtle); }
+:where([data-scope="field"] :is([data-part="action"]):hover:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *))),
+:where([data-scope="field"] :is([data-part="clear"]):hover:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *))) { color: var(--warp-color-text); background: color-mix(in oklab, currentColor calc(var(--warp-state-hover) * 100%), transparent); }
+:where([data-scope="field"] :is([data-part="action"]):focus-visible:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *))),
+:where([data-scope="field"] :is([data-part="clear"]):focus-visible:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *))) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 0; }
+:where([data-scope="field"] :is([data-part="action"]:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *)), [data-part="clear"]:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *)), [data-part="end"]:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="setting"]) *:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="setting"]) [data-scope="field"] *)), [data-part="indicator"]:not([data-scope="field"] :is([data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-scope="field"] :is([data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-scope="field"] *))) svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); }
+:where([data-scope="field"] [data-part="action"][aria-pressed="true"]:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *))) { color: var(--warp-color-sweep); }
+:where([data-scope="field"] > [data-part="control"]:has([data-part="input"]:placeholder-shown) [data-part="clear"]:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *))) { visibility: hidden; opacity: 0; }
+:where([data-scope="field"] [data-part="end"]:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="setting"]) *:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="setting"]) [data-scope="field"] *))) { flex: none; display: inline-flex; color: var(--warp-color-text-subtle); }
 
 /* async: spinner + the one success tick worth showing */
-:where([data-scope="field"] [data-part="spinner"]) {
+:where([data-scope="field"] [data-part="spinner"]:not([data-scope="field"] [data-scope="button"] *:not([data-scope="field"] [data-scope="button"] [data-scope="field"] *))) {
   flex: none; inline-size: 14px; block-size: 14px; border-radius: 50%;
   border: 1.5px solid var(--warp-color-border-strong); border-block-start-color: var(--warp-color-sweep);
   animation: warp-field-spin calc(700ms / max(0.4, var(--warp-motion-scale))) linear infinite;
 }
-:where([data-scope="field"]:not([data-loading]) [data-part="spinner"]) { display: none; }
+:where([data-scope="field"]:not([data-loading]) [data-part="spinner"]:not([data-scope="field"] [data-scope="button"] *:not([data-scope="field"] [data-scope="button"] [data-scope="field"] *))) { display: none; }
 /* reduced motion (review 03 M11): no rotation, only a slow opacity pulse; the field's aria-busy carries the state */
-:where([data-motion="reduce"]) :where([data-scope="field"] [data-part="spinner"]) { animation: warp-field-pulse 1.6s ease-in-out infinite alternate; border-color: var(--warp-color-sweep); }
-@media (prefers-reduced-motion: reduce) { :where(:root:not([data-motion="full"])) :where([data-scope="field"] [data-part="spinner"]) { animation: warp-field-pulse 1.6s ease-in-out infinite alternate; border-color: var(--warp-color-sweep); } }
+:where([data-motion="reduce"]) :where([data-scope="field"] [data-part="spinner"]:not([data-scope="field"] [data-scope="button"] *:not([data-scope="field"] [data-scope="button"] [data-scope="field"] *))) { animation: warp-field-pulse 1.6s ease-in-out infinite alternate; border-color: var(--warp-color-sweep); }
+@media (prefers-reduced-motion: reduce) { :where(:root:not([data-motion="full"])) :where([data-scope="field"] [data-part="spinner"]:not([data-scope="field"] [data-scope="button"] *:not([data-scope="field"] [data-scope="button"] [data-scope="field"] *))) { animation: warp-field-pulse 1.6s ease-in-out infinite alternate; border-color: var(--warp-color-sweep); } }
 @keyframes warp-field-pulse { from { opacity: 1; } to { opacity: 0.45; } }
-:where([data-scope="field"] [data-part="status"]) { flex: none; display: none; color: var(--warp-color-positive-text); }
-:where([data-scope="field"][data-valid]:not([data-loading]) [data-part="status"]) { display: inline-flex; animation: warp-fade-in var(--warp-duration-base) var(--warp-ease-out); }
-:where([data-scope="field"] [data-part="status"] svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); }
+:where([data-scope="field"] [data-part="status"]:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) *:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) [data-scope="field"] *))) { flex: none; display: none; color: var(--warp-color-positive-text); }
+:where([data-scope="field"][data-valid]:not([data-loading]) [data-part="status"]:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) *:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) [data-scope="field"] *))) { display: inline-flex; animation: warp-fade-in var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="field"] [data-part="status"]:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) *:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) [data-scope="field"] *)) svg) { inline-size: var(--warp-icon-md); block-size: var(--warp-icon-md); }
 
 /* message row: hint OR error (error replaces the hint and slides in), counter last */
 :where([data-scope="field"] > [data-part="message"]) {
   display: flex; align-items: baseline; gap: var(--warp-space-related); min-inline-size: 0; padding-inline: 2px;
 }
 :where([data-scope="field"]:not([data-invalid]) > [data-part="message"]:not(:has([data-part="hint"], [data-part="counter"]))) { display: none; }
-:where([data-scope="field"] [data-part="hint"]) { color: var(--warp-color-text-subtle); }
-:where([data-scope="field"] [data-part="error"]) { display: none; color: var(--warp-color-critical-text); gap: 5px; align-items: flex-start; }
-:where([data-scope="field"] [data-part="error"] svg) { flex: none; inline-size: 13px; block-size: 13px; margin-block-start: 0.05em; }
-:where([data-scope="field"][data-invalid] [data-part="error"]) { display: inline-flex; animation: warp-msg-in var(--warp-message-duration) var(--warp-label-float-ease); }
-:where([data-scope="field"][data-invalid] [data-part="hint"]) { display: none; }
+:where([data-scope="field"] [data-part="hint"]:not([data-scope="field"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) [data-scope="field"] *))) { color: var(--warp-color-text-subtle); }
+:where([data-scope="field"] [data-part="error"]:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) *:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) [data-scope="field"] *))) { display: none; color: var(--warp-color-critical-text); gap: 5px; align-items: flex-start; }
+:where([data-scope="field"] [data-part="error"]:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) *:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) [data-scope="field"] *)) svg) { flex: none; inline-size: 13px; block-size: 13px; margin-block-start: 0.05em; }
+:where([data-scope="field"][data-invalid] [data-part="error"]:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) *:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) [data-scope="field"] *))) { display: inline-flex; animation: warp-msg-in var(--warp-message-duration) var(--warp-label-float-ease); }
+:where([data-scope="field"][data-invalid] [data-part="hint"]:not([data-scope="field"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) [data-scope="field"] *))) { display: none; }
 :where([data-scope="field"] [data-part="counter"]) { margin-inline-start: auto; flex: none; color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
 :where([data-scope="field"] [data-part="counter"][data-level="near"]) { color: var(--warp-color-caution-text); }
 :where([data-scope="field"] [data-part="counter"][data-level="over"]) { color: var(--warp-color-critical-text); font-weight: 500; }
@@ -149,7 +149,7 @@
  :where([data-scope="otp"][data-shake]) { animation: none; } }
 
 /* specimens only: force the floated label (data-lift) and its hover tint (data-lift="active"), floating fields only */
-:where([data-scope="field"][data-lift]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="label"]) {
+:where([data-scope="field"][data-lift]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *))) {
   inset-block-start: var(--warp-label-float-offset); inset-inline-start: calc(var(--warp-pad-control) - 4px);
   transform: none; padding-inline: 4px;
   font-size: var(--warp-label-float-size); font-weight: var(--warp-label-float-weight);
@@ -177,16 +177,26 @@
   border-top-width: var(--warp-sweep-width);
 }
 :where([data-scope="field"][data-appearance="line"] > [data-part="control"]:focus-within) > :where([data-part="sweep"]) { border-top-width: calc(var(--warp-sweep-width) + 1px); }
-:where([data-scope="field"][data-appearance="line"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="label"]) { background: none; padding-inline: 0; }
-:where([data-scope="field"][data-appearance="line"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]) {
+:where([data-scope="field"][data-appearance="line"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *))) { background: none; padding-inline: 0; }
+:where([data-scope="field"][data-appearance="line"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *))) {
   inset-block-start: -4px; inset-inline-start: 0;
+}
+
+/* classic, said again after the floating-only rules above (the textarea's resting label, data-lift, line). They name
+   classic inside a :not(), and an app that makes classic its default (warp({ fields: 'classic' })) gets a copy of each
+   rule keyed on [data-fields="classic"] for its root: a :not() can't be copied that way, so the textarea's label sat
+   on its top border. This rule is keyed positively, so the copy lands after them and the label stays above the box. */
+:where([data-scope="field"][data-variant="classic"],
+       [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) > [data-part="control"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *)) {
+  inset-block-start: auto; inset-inline-start: 0; transform: none; padding: 0; background: none;
+  font-size: var(--warp-text-label-size); font-weight: var(--warp-text-label-weight); letter-spacing: 0; text-transform: none;
 }
 
 
 
 /* the typing input of a tag field is 28px inside a padded wrap control: it grows to hit-min and
    gives the growth back with negative margins, so the control's height doesn't move */
-:where([data-scope="field"] > [data-part="control"][data-wrap] [data-part="input"]) {
+:where([data-scope="field"] > [data-part="control"][data-wrap] [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) {
   --_grow: max(0px, calc((var(--warp-hit-min) - 28px) / 2));
   min-block-size: calc(28px + 2 * var(--_grow)); margin-block: calc(-1 * var(--_grow));
 }

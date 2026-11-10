@@ -223,6 +223,16 @@
   inset-block-start: -4px; inset-inline-start: 0;
 }
 
+/* classic, said again after the floating-only rules above (the textarea's resting label, data-lift, line). They name
+   classic inside a :not(), and an app that makes classic its default (warp({ fields: 'classic' })) gets a copy of each
+   rule keyed on [data-fields="classic"] for its root: a :not() can't be copied that way, so the textarea's label sat
+   on its top border. This rule is keyed positively, so the copy lands after them and the label stays above the box. */
+:where([data-scope="field"][data-variant="classic"],
+       [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) > [data-part="control"] [data-part="label"] {
+  inset-block-start: auto; inset-inline-start: 0; transform: none; padding: 0; background: none;
+  font-size: var(--warp-text-label-size); font-weight: var(--warp-text-label-weight); letter-spacing: 0; text-transform: none;
+}
+
 /* ===========================================================================
    2 · TEXT FAMILY EXTRAS
    ======================================================================== */

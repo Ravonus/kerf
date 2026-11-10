@@ -15,7 +15,6 @@ import '@weft-js/warp-core/styles/rich/helpers.css'
 import '@weft-js/warp-core/styles/layout/tokens.css'
 import '@weft-js/warp-core/styles/layout/row.css'
 import '@weft-js/warp-core/styles/layout/stack.css'
-import '@weft-js/warp-core/styles/flows/meter.css' // the result mark
 import '@weft-js/warp-core/styles/flows/confirm.css'
 
 /** The danger zone (09 §4.4): the one critical-bordered section. Rows are SettingRows. */

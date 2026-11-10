@@ -1058,7 +1058,7 @@
   display: flex; align-items: center; justify-content: space-between; min-block-size: var(--warp-target-min); cursor: pointer; list-style: none;
   font: 500 var(--warp-text-eyebrow-size)/var(--warp-text-eyebrow-leading) var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle);
 }
-:where([data-scope="filter-panel"] summary::-webkit-details-marker) { display: none; }
+:where([data-scope="filter-panel"] summary)::-webkit-details-marker { display: none; }
 :where([data-scope="filter-panel"] summary)::after { content: "+"; font: 400 16px/1 var(--warp-text-body-font); }
 :where([data-scope="filter-panel"] details[open] summary)::after { content: "−"; }
 :where([data-scope="filter-panel"] summary:focus-visible) { outline: 2px solid var(--warp-color-focus); border-radius: 4px; }

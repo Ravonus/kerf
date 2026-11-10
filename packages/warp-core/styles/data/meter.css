@@ -28,11 +28,11 @@
 :where([data-scope="meter"] .tick) { stroke: var(--warp-color-text-subtle); stroke-width: 1.5; }
 :where([data-scope="meter"][data-level="caution"]) { --_dc: var(--warp-color-caution-solid); }
 :where([data-scope="meter"][data-level="critical"]) { --_dc: var(--warp-color-critical-solid); }
-:where([data-scope="meter"] [data-part="readout"]),
-:where([data-scope="ring"] [data-part="readout"]) {
+:where([data-scope="meter"] [data-part="readout"]:not([data-scope="meter"] :is([data-scope="calendar"],[data-scope="ring"]) *:not([data-scope="meter"] :is([data-scope="calendar"],[data-scope="ring"]) [data-scope="meter"] *))),
+:where([data-scope="ring"] [data-part="readout"]:not([data-scope="ring"] :is([data-scope="calendar"],[data-scope="meter"]) *:not([data-scope="ring"] :is([data-scope="calendar"],[data-scope="meter"]) [data-scope="ring"] *))) {
   position: absolute; inset-inline: 0; text-align: center; line-height: 1;
   font-family: var(--warp-data-num-font); font-size: calc(var(--warp-text-title-size) * 0.85); font-variant-numeric: tabular-nums;
 }
-:where([data-scope="meter"] [data-part="readout"]) { position: static; margin-block-start: -18px; }
-:where([data-scope="meter"] [data-part="readout"] small) { display: block; margin-block-start: 6px; font: 500 10px/1 var(--warp-font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
+:where([data-scope="meter"] [data-part="readout"]:not([data-scope="meter"] :is([data-scope="calendar"],[data-scope="ring"]) *:not([data-scope="meter"] :is([data-scope="calendar"],[data-scope="ring"]) [data-scope="meter"] *))) { position: static; margin-block-start: -18px; }
+:where([data-scope="meter"] [data-part="readout"]:not([data-scope="meter"] :is([data-scope="calendar"],[data-scope="ring"]) *:not([data-scope="meter"] :is([data-scope="calendar"],[data-scope="ring"]) [data-scope="meter"] *)) small) { display: block; margin-block-start: 6px; font: 500 10px/1 var(--warp-font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
 }

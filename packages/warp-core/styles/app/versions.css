@@ -12,8 +12,8 @@
 :where([data-arrive])::after,
   :where([data-scope="calendar"] [data-part="now"])::before,
   :where([data-scope="calendar"] [data-part="now-label"]),
-  :where([data-scope="agenda"] [data-part="now"] i),
-  :where([data-scope="agenda"] [data-part="now"] i::before),
+  :where([data-scope="agenda"] [data-part="now"]:not([data-scope="agenda"] [data-scope="calendar"] *:not([data-scope="agenda"] [data-scope="calendar"] [data-scope="agenda"] *)) i),
+  :where([data-scope="agenda"] [data-part="now"] i)::before,
   :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
   :where([data-scope="run"] > li[data-state="done"])::before,
   :where([data-scope="tool-call"][data-state="running"])::before,
@@ -21,7 +21,7 @@
   :where([data-scope="notification"] [data-part="unread"]) { forced-color-adjust: none; background: Highlight; }
 :where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range]),
   :where([data-scope="reactions"] button[aria-pressed="true"]),
-  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]),
+  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]:not([data-scope="call-controls"] :is([data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) *:not([data-scope="call-controls"] :is([data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) [data-scope="call-controls"] *))),
   :where([data-scope="question"] label:has(:checked)),
   :where([data-scope="versions"] li[aria-current="true"]),
   :where([data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }

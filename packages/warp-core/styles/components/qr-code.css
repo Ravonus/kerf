@@ -13,14 +13,14 @@
 }
 :where([data-scope="qr"] svg) { display: block; inline-size: 100%; block-size: 100%; }
 :where([data-scope="qr"] [data-part="modules"]) { fill: currentColor; shape-rendering: crispEdges; }
-:where([data-scope="qr"] [data-part="dots"]) { fill: currentColor; display: none; }
+:where([data-scope="qr"] [data-part="dots"]:not([data-scope="qr"] :is([data-scope="typing"],[data-scope="year"]) *:not([data-scope="qr"] :is([data-scope="typing"],[data-scope="year"]) [data-scope="qr"] *))) { fill: currentColor; display: none; }
 /* eyes follow the stop's corners (in module units): soft at quiet, slight at balanced, square at vivid */
 :where([data-scope="qr"] [data-part="eye"]) { fill: none; stroke: currentColor; stroke-width: 1; rx: 1.25; }
 :where([data-scope="qr"] [data-part="pupil"]) { fill: currentColor; rx: 0.5; }
 :where([data-expression="quiet"] [data-scope="qr"] [data-part="eye"]) { rx: 2; }
 :where([data-expression="quiet"] [data-scope="qr"] [data-part="pupil"]) { rx: 0.9; }
 :where([data-expression="vivid"] [data-scope="qr"] [data-part="modules"]) { display: none; }
-:where([data-expression="vivid"] [data-scope="qr"] [data-part="dots"]) { display: inline; }
+:where([data-expression="vivid"] [data-scope="qr"] [data-part="dots"]:not([data-scope="qr"] :is([data-scope="typing"],[data-scope="year"]) *:not([data-scope="qr"] :is([data-scope="typing"],[data-scope="year"]) [data-scope="qr"] *))) { display: inline; }
 :where([data-expression="vivid"] [data-scope="qr"] [data-part="eye"]) { rx: 0; }
 :where([data-expression="vivid"] [data-scope="qr"] [data-part="pupil"]) { rx: 0; fill: var(--warp-color-accent-text); }
 :where([data-scope="qr"] > [data-part="value"]) { font: 500 var(--warp-text-caption-size)/1.3 var(--warp-font-mono); color: var(--warp-color-text-subtle); overflow-wrap: anywhere; text-align: center; max-inline-size: var(--_size); }

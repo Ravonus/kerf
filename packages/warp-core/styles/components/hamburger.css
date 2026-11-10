@@ -2,30 +2,30 @@
 @layer warp.components {
 /* -- Hamburger ([data-hamburger] on a ghost icon button): three bars become an X. The middle bar sweeps out to the right (never reverses). */
 :where([data-hamburger]) { --_bar: 16px; --_gap: 5px; }
-:where([data-hamburger] [data-part="bars"]) { position: relative; inline-size: var(--_bar); block-size: calc(var(--_gap) * 2 + 1.5px); display: block; }
-:where([data-hamburger] [data-part="bars"] > i) {
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *))) { position: relative; inline-size: var(--_bar); block-size: calc(var(--_gap) * 2 + 1.5px); display: block; }
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i) {
   position: absolute; inset-inline: 0; block-size: 1.5px; border-radius: 2px; background: currentColor;
   transition: translate var(--warp-duration-base) var(--warp-ease-in-out), rotate var(--warp-duration-base) var(--warp-ease-in-out),
               clip-path var(--warp-sweep-duration) var(--warp-sweep-ease);
 }
-:where([data-hamburger] [data-part="bars"] > i:nth-child(1)) { inset-block-start: 0; }
-:where([data-hamburger] [data-part="bars"] > i:nth-child(2)) { inset-block-start: var(--_gap); clip-path: inset(0); }
-:where([data-hamburger] [data-part="bars"] > i:nth-child(3)) { inset-block-start: calc(var(--_gap) * 2); }
-:where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(1)) { translate: 0 var(--_gap); rotate: 45deg; }
-:where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(2)) { clip-path: inset(0 0 0 100%); }
-:where([data-hamburger][aria-expanded="true"] [data-part="bars"] > i:nth-child(3)) { translate: 0 calc(var(--_gap) * -1); rotate: -45deg; }
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(1)) { inset-block-start: 0; }
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(2)) { inset-block-start: var(--_gap); clip-path: inset(0); }
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(3)) { inset-block-start: calc(var(--_gap) * 2); }
+:where([data-hamburger][aria-expanded="true"] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(1)) { translate: 0 var(--_gap); rotate: 45deg; }
+:where([data-hamburger][aria-expanded="true"] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(2)) { clip-path: inset(0 0 0 100%); }
+:where([data-hamburger][aria-expanded="true"] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(3)) { translate: 0 calc(var(--_gap) * -1); rotate: -45deg; }
 /* as the close in a menu-screen, the X wipes to the accent like the close cross (dialog): each bar carries it as a
    layer over its own colour, grown from the left and shrunk into the right */
-:where([data-scope="button"][data-part="close"][data-hamburger] [data-part="bars"] > i) {
+:where([data-scope="button"][data-part="close"][data-hamburger] [data-part="bars"]:not(:is([data-hamburger],[data-scope="button"]) :is([data-scope="tracker"],[data-scope="transport"]) *:not(:is([data-hamburger],[data-scope="button"]) :is([data-scope="tracker"],[data-scope="transport"]) :is([data-hamburger],[data-scope="button"]) *)) > i) {
   background: linear-gradient(var(--warp-color-accent-text) 0 0) right / 0% 100% no-repeat, currentColor;
   transition: translate var(--warp-duration-base) var(--warp-ease-in-out), rotate var(--warp-duration-base) var(--warp-ease-in-out),
               clip-path var(--warp-sweep-duration) var(--warp-sweep-ease), background-size var(--warp-sweep-duration) var(--warp-sweep-ease);
 }
-:where([data-scope="button"][data-part="close"][data-hamburger]:is(:hover, :focus-visible) [data-part="bars"] > i) {
+:where([data-scope="button"][data-part="close"][data-hamburger]:is(:hover, :focus-visible) [data-part="bars"]:not(:is([data-hamburger],[data-scope="button"]) :is([data-scope="tracker"],[data-scope="transport"]) *:not(:is([data-hamburger],[data-scope="button"]) :is([data-scope="tracker"],[data-scope="transport"]) :is([data-hamburger],[data-scope="button"]) *)) > i) {
   background-position: left, 0 0; background-size: 100% 100%, auto;
 }
 @starting-style {
-  :where([data-scope="menu-screen"][open] [data-hamburger] [data-part="bars"] > i) { translate: 0 0; rotate: 0deg; clip-path: inset(0); }
+  :where([data-scope="menu-screen"][open] [data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i) { translate: 0 0; rotate: 0deg; clip-path: inset(0); }
 }
 
 /* HamburgerMenu: a full-screen menu that opens as a circle from its button and closes back into it */
@@ -52,27 +52,27 @@
 :where([data-scope="menu-screen"] > [data-part="body"]) {
   display: grid; gap: var(--warp-space-section); padding: var(--warp-space-group) var(--warp-pad-surface) var(--warp-space-section);
 }
-:where([data-scope="menu-screen"] [data-part="links"]) { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--warp-space-tight); }
-:where([data-scope="menu-screen"] [data-part="links"] a) {
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *))) { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--warp-space-tight); }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) a) {
   display: block; padding-block: var(--warp-space-tight); color: var(--warp-color-text); text-decoration: none;
   font: 500 clamp(1.75rem, 8vw, 2.75rem)/1.1 var(--warp-text-heading-font); letter-spacing: -0.02em;
 }
-:where([data-scope="menu-screen"] [data-part="links"] a:hover) { color: var(--warp-color-accent-text); }
-:where([data-scope="menu-screen"] [data-part="links"] a[aria-current]) { color: var(--warp-color-accent-text); }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) a:hover) { color: var(--warp-color-accent-text); }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) a[aria-current]) { color: var(--warp-color-accent-text); }
 /* the links rise in one after another, and leave together */
-:where([data-scope="menu-screen"] [data-part="body"] > *, [data-scope="menu-screen"] [data-part="links"] > li) {
+:where([data-scope="menu-screen"] [data-part="body"]:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="menu-screen"] *)) > *, [data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li) {
   transition: opacity var(--warp-duration-base) var(--warp-ease-out), translate var(--warp-duration-base) var(--warp-ease-out);
 }
-:where([data-scope="menu-screen"][open] [data-part="links"] > li) { transition-delay: calc(80ms + var(--_i, 0) * 40ms); }
-:where([data-scope="menu-screen"] [data-part="links"] > li:nth-child(2)) { --_i: 1; }
-:where([data-scope="menu-screen"] [data-part="links"] > li:nth-child(3)) { --_i: 2; }
-:where([data-scope="menu-screen"] [data-part="links"] > li:nth-child(4)) { --_i: 3; }
-:where([data-scope="menu-screen"] [data-part="links"] > li:nth-child(5)) { --_i: 4; }
-:where([data-scope="menu-screen"] [data-part="links"] > li:nth-child(n + 6)) { --_i: 5; }
-:where([data-scope="menu-screen"]:not([open]) :is([data-part="links"] > li, [data-part="body"] > :not([data-part="links"]))) { opacity: 0; }
+:where([data-scope="menu-screen"][open] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li) { transition-delay: calc(80ms + var(--_i, 0) * 40ms); }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li:nth-child(2)) { --_i: 1; }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li:nth-child(3)) { --_i: 2; }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li:nth-child(4)) { --_i: 3; }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li:nth-child(5)) { --_i: 4; }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li:nth-child(n + 6)) { --_i: 5; }
+:where([data-scope="menu-screen"]:not([open]) :is([data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li, [data-part="body"]:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="menu-screen"] *)) > :not([data-part="links"]))) { opacity: 0; }
 @starting-style {
-  :where([data-scope="menu-screen"][open] [data-part="links"] > li) { opacity: 0; translate: 0 12px; }
-  :where([data-scope="menu-screen"][open] [data-part="body"] > :not([data-part="links"])) { opacity: 0; }
+  :where([data-scope="menu-screen"][open] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li) { opacity: 0; translate: 0 12px; }
+  :where([data-scope="menu-screen"][open] [data-part="body"]:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="menu-screen"] *)) > :not([data-part="links"])) { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   :where(dialog[data-scope="menu-screen"], dialog[data-scope="menu-screen"][open]) { clip-path: none; transition: opacity var(--warp-duration-base), overlay var(--warp-duration-base) allow-discrete, display var(--warp-duration-base) allow-discrete; }

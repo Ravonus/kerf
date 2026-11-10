@@ -8,7 +8,7 @@ import '@weft-js/warp-core/styles/rich/helpers.css'
 import '@weft-js/warp-core/styles/layout/tokens.css'
 import '@weft-js/warp-core/styles/layout/row.css'
 import '@weft-js/warp-core/styles/layout/stack.css'
-import '@weft-js/warp-core/styles/flows/meter.css'
+import '@weft-js/warp-core/styles/flows/result.css' // the result mark
 import '@weft-js/warp-core/styles/flows/confirmation.css'
 import '@weft-js/warp-core/styles/flows/tracker.css'
 
@@ -87,7 +87,7 @@ export function OrderConfirmation({
   })
   return (
     <div ref={(n) => (root = n)} data-scope="confirmation">
-      <span data-part="mark" data-tone="positive">
+      <span data-scope="result" data-tone="positive">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path pathLength="1" data-draw="" d="m5 12.5 4.5 4.5L19 7.5" />
         </svg>

@@ -16,20 +16,20 @@
 :where([data-scope="run"] > li[data-state="approval"] [data-part="dot"]) { background: var(--warp-color-caution-solid); color: var(--warp-color-caution-on-solid); box-shadow: none; }
 :where([data-scope="run"] > li[data-state="failed"] [data-part="dot"]) { background: var(--warp-color-critical-solid); color: var(--warp-color-critical-on-solid); box-shadow: none; }
 :where([data-scope="run"] > li[data-state="pending"]) { color: var(--warp-color-text-subtle); }
-:where([data-scope="run"] [data-part="label"]) { font-weight: 500; }
-:where([data-scope="run"] [data-part="detail"]) { grid-column: 2 / -1; font-size: 12.5px; color: var(--warp-color-text-subtle); }
+:where([data-scope="run"] [data-part="label"]:not([data-scope="run"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="field"],[data-scope="prefs"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="run"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="field"],[data-scope="prefs"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="run"] *))) { font-weight: 500; }
+:where([data-scope="run"] [data-part="detail"]:not([data-scope="run"] :is([data-scope="master-detail"],[data-scope="table"],[data-scope="timeline"],[data-scope="year"]) *:not([data-scope="run"] :is([data-scope="master-detail"],[data-scope="table"],[data-scope="timeline"],[data-scope="year"]) [data-scope="run"] *))) { grid-column: 2 / -1; font-size: 12.5px; color: var(--warp-color-text-subtle); }
 :where([data-scope="run"] time) { font: 500 11px/1.6 var(--warp-font-mono); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
-:where([data-scope="run"] [data-part="approve"]) {
+:where([data-scope="run"] [data-part="approve"]:not([data-scope="run"] [data-scope="tool-call"] *:not([data-scope="run"] [data-scope="tool-call"] [data-scope="run"] *))) {
   grid-column: 2 / -1; display: grid; gap: 8px; margin-block-start: 6px; padding: 10px 12px; border-radius: var(--warp-radius-control);
   background: var(--warp-color-caution-soft); box-shadow: inset 0 0 0 1px var(--warp-color-caution-border); font-size: 13px;
 }
-:where([data-scope="run"] [data-part="approve"] div) { display: flex; gap: 6px; flex-wrap: wrap; }
+:where([data-scope="run"] [data-part="approve"]:not([data-scope="run"] [data-scope="tool-call"] *:not([data-scope="run"] [data-scope="tool-call"] [data-scope="run"] *)) div) { display: flex; gap: 6px; flex-wrap: wrap; }
 @media (forced-colors: active) {
 :where([data-arrive])::after,
   :where([data-scope="calendar"] [data-part="now"])::before,
   :where([data-scope="calendar"] [data-part="now-label"]),
-  :where([data-scope="agenda"] [data-part="now"] i),
-  :where([data-scope="agenda"] [data-part="now"] i::before),
+  :where([data-scope="agenda"] [data-part="now"]:not([data-scope="agenda"] [data-scope="calendar"] *:not([data-scope="agenda"] [data-scope="calendar"] [data-scope="agenda"] *)) i),
+  :where([data-scope="agenda"] [data-part="now"] i)::before,
   :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
   :where([data-scope="run"] > li[data-state="done"])::before,
   :where([data-scope="tool-call"][data-state="running"])::before,
@@ -38,12 +38,12 @@
 :where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"])),
   :where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-selected="true"])),
   :where([data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b),
-  :where([data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b),
-  :where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"])),
-  :where([data-scope="booking"] [data-part="slot"]:is([aria-checked="true"])),
+  :where([data-scope="agenda"] [data-part="strip"]:not([data-scope="agenda"] :is([data-scope="room"],[data-scope="speech"]) *:not([data-scope="agenda"] :is([data-scope="room"],[data-scope="speech"]) [data-scope="agenda"] *)) button[aria-selected="true"] b),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"]):not([data-scope="booking"] [data-scope="pay-frame"] *:not([data-scope="booking"] [data-scope="pay-frame"] [data-scope="booking"] *))),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-checked="true"]):not([data-scope="booking"] [data-scope="pay-frame"] *:not([data-scope="booking"] [data-scope="pay-frame"] [data-scope="booking"] *))),
   :where([data-scope="run"] > li[data-state="done"] [data-part="dot"]),
-  :where([data-scope="plan"] li[data-state="done"] [data-part="box"]),
-  :where([data-scope="message"][data-mine] [data-part="bubble"]),
+  :where([data-scope="plan"] li[data-state="done"] [data-part="box"]:not([data-scope="plan"] [data-scope="tree"] *:not([data-scope="plan"] [data-scope="tree"] [data-scope="plan"] *))),
+  :where([data-scope="message"][data-mine] [data-part="bubble"]:not([data-scope="message"] [data-scope="slider"] *:not([data-scope="message"] [data-scope="slider"] [data-scope="message"] *))),
   :where([data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
 }
 }

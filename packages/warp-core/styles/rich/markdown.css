@@ -22,9 +22,9 @@
   :where([data-scope="markdown"] hr) { border: 0; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
   :where([data-scope="markdown"] a) { color: var(--warp-color-accent-text); text-underline-offset: 2px; }
   :where(.lab-f) { padding-block-start: 10px; }
-  :where([data-scope="field"][data-multiline] [data-part="body"] > textarea[data-part="input"]) { box-sizing: border-box; padding: 14px var(--warp-pad-control) 10px; resize: vertical; line-height: 1.55; min-block-size: 6lh; }
+  :where([data-scope="field"][data-multiline] [data-part="body"]:not([data-scope="field"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="field"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="field"] *)) > textarea[data-part="input"]) { box-sizing: border-box; padding: 14px var(--warp-pad-control) 10px; resize: vertical; line-height: 1.55; min-block-size: 6lh; }
   :where(.code-in) { padding: 14px var(--warp-pad-control) 10px; }
-  :where([data-scope="signature"] [data-part="typed"]::placeholder) { transition: color var(--warp-duration-fast); }
-  :where([data-scope="field"] > [data-part="control"]:not(:hover, :focus-within, [data-filled]) [data-scope="signature"] [data-part="typed"]::placeholder),
-  :where([data-scope="signature"] [data-scope="field"] > [data-part="control"]:not(:hover, :focus-within, [data-filled]) [data-part="typed"]::placeholder) { color: transparent; }
+  :where([data-scope="signature"] [data-part="typed"])::placeholder { transition: color var(--warp-duration-fast); }
+  :where([data-scope="field"] > [data-part="control"]:not(:hover, :focus-within, [data-filled]) [data-scope="signature"] [data-part="typed"])::placeholder,
+  :where([data-scope="signature"] [data-scope="field"] > [data-part="control"]:not(:hover, :focus-within, [data-filled]) [data-part="typed"])::placeholder { color: transparent; }
 }

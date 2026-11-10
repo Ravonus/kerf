@@ -9,7 +9,7 @@
 }
 :where([data-scope="status-bar"] > *) { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 0; border-radius: 4px; background: none; color: inherit; font: inherit; }
 :where([data-scope="status-bar"] > button:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
-:where([data-scope="status-bar"] [data-part="spacer"]) { flex: 1; padding: 0; }
+:where([data-scope="status-bar"] [data-part="spacer"]:not([data-scope="status-bar"] :is([data-scope="composer"],[data-scope="pagination"],[data-scope="table"],[data-scope="virtual"]) *:not([data-scope="status-bar"] :is([data-scope="composer"],[data-scope="pagination"],[data-scope="table"],[data-scope="virtual"]) [data-scope="status-bar"] *))) { flex: 1; padding: 0; }
 :where([data-scope="status-bar"] [data-tone="accent"]) { color: var(--warp-color-accent-text); }
 @container (max-width: 599.98px) {
 :where([data-scope="status-bar"] [data-optional]) { display: none; }

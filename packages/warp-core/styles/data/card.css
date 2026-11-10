@@ -4,7 +4,7 @@
    at any stop; data-flair="sweep" shows them), even when they are links or draggable. Their
    hover/focus feedback is the fill change and the focus ring. */
 :where([data-scope="card"][data-sweep]),
-:where([data-scope="kanban"] [data-part="card"][data-sweep]) {
+:where([data-scope="kanban"] [data-part="card"][data-sweep]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) {
   --_on: var(--warp-sweep-surfaces); --warp-sweep-radius: var(--warp-radius-surface);
 }
 /* opt-in (warp.css §4): any data-sweep but "surface" sweeps at every stop */

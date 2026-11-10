@@ -29,8 +29,8 @@
 
 /* in-field icon buttons on coarse: a 40px box with no negative margin, so two side by side (reveal + generate)
    each keep a full 44px area instead of one expander covering the other */
-:where([data-pointer="coarse"]) :where([data-scope="field"] :is([data-part="action"], [data-part="clear"])) { --_s: 40px; margin-inline: 0; }
-@media (pointer: coarse) { :where(:root:not([data-pointer])) :where([data-scope="field"] :is([data-part="action"], [data-part="clear"])) { --_s: 40px; margin-inline: 0; } }
+:where([data-pointer="coarse"]) :where([data-scope="field"] :is([data-part="action"]:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *)), [data-part="clear"]:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *)))) { --_s: 40px; margin-inline: 0; }
+@media (pointer: coarse) { :where(:root:not([data-pointer])) :where([data-scope="field"] :is([data-part="action"]:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *)), [data-part="clear"]:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *)))) { --_s: 40px; margin-inline: 0; } }
 
 
 

@@ -2,11 +2,11 @@
 @layer warp.data {
 /* query builder ----------------------------------------------------------------- */
 :where([data-scope="query"]) { display: grid; gap: 8px; }
-:where([data-scope="query"] [data-part="group"]) {
+:where([data-scope="query"] [data-part="group"]:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) *:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) [data-scope="query"] *))) {
   display: grid; gap: 8px; padding: 10px 10px 10px 14px; border-radius: var(--warp-radius-control);
   border: 1px solid var(--warp-color-border); border-inline-start: 3px solid var(--_dc, var(--warp-color-accent-solid)); background: var(--warp-color-surface);
 }
-:where([data-scope="query"] [data-part="group"] [data-part="group"]) { --_dc: var(--warp-color-data-7); background: var(--warp-color-surface-raised); }
+:where([data-scope="query"] [data-part="group"]:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) *:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) [data-scope="query"] *)) [data-part="group"]:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) *:not([data-scope="query"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="settings-section"],[data-scope="suggest"],[data-scope="table"]) [data-scope="query"] *))) { --_dc: var(--warp-color-data-7); background: var(--warp-color-surface-raised); }
 :where([data-scope="query"] [data-part="rule"]) { display: grid; grid-template-columns: 52px repeat(3, minmax(0, 1fr)) auto; gap: 6px; align-items: center; }
 :where([data-scope="query"] [data-part="join"]) { font: 500 10px/1.25 var(--warp-font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--warp-color-text-subtle); text-align: center; }
 :where([data-scope="query"] select),

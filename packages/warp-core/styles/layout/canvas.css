@@ -19,7 +19,7 @@
   position: absolute; inset-inline-end: var(--warp-space-related); inset-block-end: var(--warp-space-related); inline-size: 120px; aspect-ratio: 4 / 3;
   background: var(--warp-color-surface-overlay); border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-control); overflow: clip;
 }
-:where([data-scope="canvas"] > [data-part="minimap"] [data-part="viewport"]) { position: absolute; border: 1.5px solid var(--warp-color-accent-solid); border-radius: 2px; background: var(--warp-color-accent-soft); }
+:where([data-scope="canvas"] > [data-part="minimap"] [data-part="viewport"]:not([data-scope="canvas"] :is([data-scope="agenda"],[data-scope="table"]) *:not([data-scope="canvas"] :is([data-scope="agenda"],[data-scope="table"]) [data-scope="canvas"] *))) { position: absolute; border: 1.5px solid var(--warp-color-accent-solid); border-radius: 2px; background: var(--warp-color-accent-soft); }
 @container (max-width: 599.98px) {
 :where([data-scope="canvas"] > [data-part="minimap"]) { display: none; }
 }

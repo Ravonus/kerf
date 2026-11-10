@@ -3,7 +3,7 @@
 /* AnchorNav — in-page "On this page". Sticky aside ≥ 1000 with a moving
    emphasis line (aria-current="location"); a disclosure above the content below. */
 :where([data-scope="anchor-nav"]) { font-size: var(--warp-text-caption-size); min-inline-size: 0; }
-:where([data-scope="anchor-nav"] [data-part="label"]) {
+:where([data-scope="anchor-nav"] [data-part="label"]:not([data-scope="anchor-nav"] :is([data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="field"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="anchor-nav"] :is([data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="field"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="anchor-nav"] *))) {
   margin: 0 0 var(--warp-space-related); font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500;
   letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle);
 }
@@ -39,8 +39,8 @@
 }
 @media print {
 :where([data-scope="shell"] [data-part="dock"]),
-  :where([data-scope="shell"] [data-part="menu"]),
-  :where([data-scope="shell"] [data-part="sheet"]),
+  :where([data-scope="shell"] [data-part="menu"]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="sheet"]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))),
   :where([data-scope="shell"] [data-part="palette"]),
   :where([data-scope="consent"]),
   :where([data-scope="announcement"]),

@@ -13,16 +13,16 @@
 :where(button[data-scope="surface"]:hover) { box-shadow: var(--warp-elevation-2); transition-duration: 0ms, var(--warp-spring-duration); }
 :where(a[data-scope="surface"]:active),
 :where(button[data-scope="surface"]:active) { scale: calc((1 + var(--warp-press) * 3) / 4 + 0.0025); transition-duration: 0ms; }
-:where([data-scope="surface"] [data-part="eyebrow"]) {
+:where([data-scope="surface"] [data-part="eyebrow"]:not([data-scope="surface"] [data-scope="page-header"] *:not([data-scope="surface"] [data-scope="page-header"] [data-scope="surface"] *))) {
   font-family: var(--warp-text-eyebrow-font); font-size: var(--warp-text-eyebrow-size); font-weight: 500;
   letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle);
 }
-:where([data-scope="surface"] [data-part="title"]) {
+:where([data-scope="surface"] [data-part="title"]:not([data-scope="surface"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="surface"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="toast"],[data-scope="year"]) [data-scope="surface"] *))) {
   margin: 0; font-family: var(--warp-text-heading-font); font-weight: var(--warp-text-heading-weight); font-size: var(--warp-text-heading-size);
   letter-spacing: var(--warp-text-heading-tracking); line-height: 1.2; color: var(--warp-color-text);
 }
 :where([data-scope="surface"]) { color: var(--warp-color-text-subtle); line-height: var(--warp-text-body-leading); }
-:where([data-scope="surface"] [data-part="value"]) {
+:where([data-scope="surface"] [data-part="value"]:not([data-scope="surface"] :is([data-scope="countdown"],[data-scope="field"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stat"],[data-scope="stopwatch"]) *:not([data-scope="surface"] :is([data-scope="countdown"],[data-scope="field"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stat"],[data-scope="stopwatch"]) [data-scope="surface"] *))) {
   font-family: var(--warp-text-title-font); font-weight: var(--warp-text-title-weight); font-size: var(--warp-text-title-size);
   letter-spacing: var(--warp-text-title-tracking); line-height: 1; font-variant-numeric: tabular-nums;
 }

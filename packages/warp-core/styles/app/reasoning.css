@@ -5,15 +5,15 @@
   display: inline-flex; align-items: center; gap: 8px; block-size: 28px; padding-inline: 2px 8px; border-radius: var(--warp-radius-control);
   color: var(--warp-color-text-subtle); cursor: pointer; list-style: none; font-weight: 500;
 }
-:where([data-scope="reasoning"] summary::-webkit-details-marker) { display: none; }
+:where([data-scope="reasoning"] summary)::-webkit-details-marker { display: none; }
 :where([data-scope="reasoning"] summary:hover) { color: var(--warp-color-text); }
-:where([data-scope="reasoning"] [data-part="chev"]) { transition: rotate var(--warp-duration-base) var(--warp-ease-out); }
-:where([data-scope="reasoning"][open] [data-part="chev"]) { rotate: 90deg; }
-:where([data-scope="reasoning"] [data-part="body"]) {
+:where([data-scope="reasoning"] [data-part="chev"]:not([data-scope="reasoning"] [data-scope="tool-call"] *:not([data-scope="reasoning"] [data-scope="tool-call"] [data-scope="reasoning"] *))) { transition: rotate var(--warp-duration-base) var(--warp-ease-out); }
+:where([data-scope="reasoning"][open] [data-part="chev"]:not([data-scope="reasoning"] [data-scope="tool-call"] *:not([data-scope="reasoning"] [data-scope="tool-call"] [data-scope="reasoning"] *))) { rotate: 90deg; }
+:where([data-scope="reasoning"] [data-part="body"]:not([data-scope="reasoning"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="reasoning"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="reasoning"] *))) {
   margin: 4px 0 2px 7px; padding: 2px 0 2px 14px; border-inline-start: var(--warp-border-emphasis) solid var(--warp-color-border-strong);
   color: var(--warp-color-text-subtle); line-height: 1.6; font-size: 13px; max-block-size: 180px; overflow: auto;
 }
-:where([data-scope="reasoning"][data-state="streaming"] [data-part="body"]) { border-inline-start-color: var(--warp-color-sweep); }
+:where([data-scope="reasoning"][data-state="streaming"] [data-part="body"]:not([data-scope="reasoning"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="reasoning"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="reasoning"] *))) { border-inline-start-color: var(--warp-color-sweep); }
 :where([data-scope="prompt"] [data-part="model"]),
 :where([data-scope="reasoning"] summary) { block-size: max(28px, var(--warp-hit-min)); }
 }

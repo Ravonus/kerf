@@ -10,8 +10,8 @@
   border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3);
   animation: warp-enter var(--warp-duration-slow) var(--warp-ease-out) both;
 }
-:where([data-scope="consent"] [data-part="actions"]) { display: grid; grid-template-columns: 1fr 1fr; gap: var(--warp-space-related); }
-:where([data-scope="consent"] [data-part="actions"] > :last-child:nth-child(3)) { grid-column: 1 / -1; }
+:where([data-scope="consent"] [data-part="actions"]:not([data-scope="consent"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) *:not([data-scope="consent"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) [data-scope="consent"] *))) { display: grid; grid-template-columns: 1fr 1fr; gap: var(--warp-space-related); }
+:where([data-scope="consent"] [data-part="actions"]:not([data-scope="consent"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) *:not([data-scope="consent"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) [data-scope="consent"] *)) > :last-child:nth-child(3)) { grid-column: 1 / -1; }
 @container (max-width: 599.98px) {
 :where([data-scope="consent"]) {
     inset-inline: 0; inset-block-end: var(--_dock, 0px); inline-size: auto; border-radius: calc(var(--warp-radius-surface) + 6px) calc(var(--warp-radius-surface) + 6px) 0 0;
@@ -21,8 +21,8 @@
 }
 @media print {
 :where([data-scope="shell"] [data-part="dock"]),
-  :where([data-scope="shell"] [data-part="menu"]),
-  :where([data-scope="shell"] [data-part="sheet"]),
+  :where([data-scope="shell"] [data-part="menu"]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="sheet"]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))),
   :where([data-scope="shell"] [data-part="palette"]),
   :where([data-scope="consent"]),
   :where([data-scope="announcement"]),

@@ -24,13 +24,13 @@
   background: var(--warp-color-page); color: var(--warp-color-text); border-color: var(--warp-color-border); margin-block-end: -1px; padding-block-end: 1px;
 }
 :where([data-scope="doc-tabs"] [role="tab"][data-dirty] [data-part="close"])::before { content: "●"; font-size: 9px; }
-:where([data-scope="doc-tabs"] [data-part="close"]) {
+:where([data-scope="doc-tabs"] [data-part="close"]:not([data-scope="doc-tabs"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="sheet"]) *:not([data-scope="doc-tabs"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="sheet"]) [data-scope="doc-tabs"] *))) {
   display: inline-grid; place-items: center; inline-size: 22px; block-size: 22px; border-radius: 4px; color: inherit; opacity: 0.6;
 }
-:where([data-scope="doc-tabs"] [data-part="close"]:hover) { opacity: 1; background: var(--warp-color-surface-hover); }
+:where([data-scope="doc-tabs"] [data-part="close"]:hover:not([data-scope="doc-tabs"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="sheet"]) *:not([data-scope="doc-tabs"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="sheet"]) [data-scope="doc-tabs"] *))) { opacity: 1; background: var(--warp-color-surface-hover); }
 :where([data-scope="doc-tabs"] [role="tab"][data-dragging]) { opacity: 0.5; }
 @media (pointer: coarse) {
-:where([data-scope="doc-tabs"] [data-part="close"]) { position: relative; inline-size: 32px; block-size: 32px; opacity: 0.8; }
+:where([data-scope="doc-tabs"] [data-part="close"]:not([data-scope="doc-tabs"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="sheet"]) *:not([data-scope="doc-tabs"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="sheet"]) [data-scope="doc-tabs"] *))) { position: relative; inline-size: 32px; block-size: 32px; opacity: 0.8; }
 :where([data-scope="doc-tabs"] [data-part="close"])::after { content: ""; position: absolute; inset: calc((32px - var(--warp-hit-min)) / 2); }
 }
 }

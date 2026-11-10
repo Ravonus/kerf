@@ -8,12 +8,12 @@
 }
 :where([data-scope="tag"]:not(:has([data-part="remove"]))) { padding-inline-end: 8px; }
 :where([data-scope="tag"] > [data-part="swatch"]) { inline-size: 8px; block-size: 8px; border-radius: 2px; background: var(--_solid); }
-:where([data-scope="tag"] [data-part="remove"]) {
+:where([data-scope="tag"] [data-part="remove"]:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) *:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) [data-scope="tag"] *))) {
   position: relative; display: grid; place-items: center; inline-size: 18px; block-size: 18px; padding: 0; border: 0; border-radius: var(--warp-radius-mark);
   background: transparent; color: var(--warp-color-text-subtle); cursor: pointer;
 }
 :where([data-scope="tag"] [data-part="remove"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
-:where([data-scope="tag"] [data-part="remove"]:hover) { background: color-mix(in oklab, currentColor 12%, transparent); color: var(--warp-color-text); }
-:where([data-scope="tag"] [data-part="remove"] svg) { inline-size: 12px; block-size: 12px; }
+:where([data-scope="tag"] [data-part="remove"]:hover:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) *:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) [data-scope="tag"] *))) { background: color-mix(in oklab, currentColor 12%, transparent); color: var(--warp-color-text); }
+:where([data-scope="tag"] [data-part="remove"]:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) *:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) [data-scope="tag"] *)) svg) { inline-size: 12px; block-size: 12px; }
 :where([data-scope="tag"][data-state="removed"]) { animation: warp-exit calc(var(--warp-duration-fast) * var(--warp-duration-exit-k)) var(--warp-ease-in) forwards; }
 }

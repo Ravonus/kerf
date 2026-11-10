@@ -639,8 +639,11 @@
   "components/popover.css",
   "rich/body.css",
   "rich/popover.css",
+  "rich/listbox.css",
+  "rich/phone.css",
   "rich/filter-bar.css",
-  "rich/datetime.css"
+  "rich/datetime.css",
+  "rich/timezone.css"
  ],
  "popup": [
   "inputs/field.css",
@@ -725,6 +728,9 @@
   "components/number.css",
   "components/menubar.css",
   "components/ai-label.css"
+ ],
+ "result": [
+  "flows/result.css"
  ],
  "results": [
   "data/results.css"
@@ -1058,6 +1064,7 @@
   "inputs/pickers.css"
  ],
  "year": [
-  "app/year.css"
+  "app/year.css",
+  "rich/calendar-grid.css"
  ]
 }

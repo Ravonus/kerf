@@ -24,13 +24,13 @@
   transform: translateY(calc(-100% - var(--warp-safe-top) - 12px)); opacity: 0;   /* off-screen past the notch */
 }
 :where([data-scope="shell"] [data-part="skip"]:focus-visible) { transform: none; opacity: 1; }
-:where([data-scope="shell"] [data-part="layout"]) {
+:where([data-scope="shell"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) {
   display: grid; min-block-size: var(--warp-viewport-block);
   grid-template: "header" auto "main" 1fr "nav" auto / minmax(0, 1fr);
   background: var(--warp-color-page);
 }
 /* -- header / top bar --------------------------------------------------- */
-:where([data-scope="shell"] [data-part="header"]) {
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *))) {
   grid-area: header; position: sticky; inset-block-start: 0; z-index: var(--warp-z-sticky);
   display: flex; align-items: center; gap: var(--warp-space-related);
   block-size: var(--_barh); padding-block-start: var(--warp-safe-top);
@@ -49,22 +49,22 @@
 :where([data-scope="shell"][data-routing] [data-part="header"])::after {
   animation: warp-route-line var(--warp-sweep-duration) var(--warp-ease-in-out) both;
 }
-:where([data-scope="shell"] [data-part="brand"]) {
+:where([data-scope="shell"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) {
   display: flex; align-items: center; gap: 10px; flex: none; min-inline-size: 0;
   font-weight: 600; letter-spacing: -0.01em; color: var(--warp-color-text); text-decoration: none;
 }
-:where([data-scope="shell"] [data-part="brand"] svg) { inline-size: 22px; block-size: 22px; flex: none; }
-:where([data-scope="shell"] [data-part="header"] [data-part="title"]) {
+:where([data-scope="shell"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *)) svg) { inline-size: 22px; block-size: 22px; flex: none; }
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *)) [data-part="title"]:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="shell"] *))) {
   flex: 1; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap;
   font-family: var(--warp-text-heading-font); font-size: var(--warp-text-heading-size);
   font-weight: var(--warp-text-heading-weight); letter-spacing: var(--warp-text-heading-tracking);
 }
 :where([data-scope="shell"] [data-part="crumbs"]) { display: none; flex: 1; min-inline-size: 0; }
 :where([data-scope="shell"] [data-part="brand-name"]) { display: none; }
-:where([data-scope="shell"] [data-part="header"] [data-part="actions"]) { display: flex; align-items: center; gap: var(--warp-space-tight); margin-inline-start: auto; flex: none; }
-:where([data-scope="shell"] [data-part="back"]) { display: none; }
-:where([data-scope="shell"][data-depth="child"] [data-part="back"]) { display: inline-flex; margin-inline-start: -8px; }
-:where([data-scope="shell"][data-depth="child"] [data-part="brand"]) { display: none; }
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *)) [data-part="actions"]:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="consent"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="consent"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) [data-scope="shell"] *))) { display: flex; align-items: center; gap: var(--warp-space-tight); margin-inline-start: auto; flex: none; }
+:where([data-scope="shell"] [data-part="back"]:not([data-scope="shell"] [data-scope="breadcrumbs"] *:not([data-scope="shell"] [data-scope="breadcrumbs"] [data-scope="shell"] *))) { display: none; }
+:where([data-scope="shell"][data-depth="child"] [data-part="back"]:not([data-scope="shell"] [data-scope="breadcrumbs"] *:not([data-scope="shell"] [data-scope="breadcrumbs"] [data-scope="shell"] *))) { display: inline-flex; margin-inline-start: -8px; }
+:where([data-scope="shell"][data-depth="child"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) { display: none; }
 /* command palette entry. Phone: a round icon button. Tablet+: a floating-border
    field (sweep + floating label). The label is never removed, so the name survives. */
 :where([data-scope="shell"] [data-part="command"]) {
@@ -81,7 +81,7 @@
   position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
 }
 /* -- nav: bottom bar by default ---------------------------------------- */
-:where([data-scope="shell"] [data-part="nav"]) {
+:where([data-scope="shell"] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) {
   grid-area: nav; position: sticky; inset-block-end: 0; z-index: var(--warp-z-dock);
   display: flex; flex-direction: column;
   padding-block-end: var(--warp-safe-bottom);
@@ -132,7 +132,7 @@
 }
 /* the keyboard is up: the bottom bar steps aside so the focused field and
    its action bar own the space (shell sets data-keyboard from visualViewport) */
-:where([data-scope="shell"][data-keyboard] [data-part="nav"]) { display: none; }
+:where([data-scope="shell"][data-keyboard] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) { display: none; }
 /* -- main ----------------------------------------------------------------- */
 /* the shell's own main only (root > layout > main): a data-part="main" inside a page (a calendar's grid, an auth
    card) is not the shell's and must not pick up its grid area, container or viewport height */
@@ -154,21 +154,21 @@
 }
 /* -- tablet: rail ------------------------------------------------------- */
 @container warp-shell (min-width: 600px) {
-:where([data-scope="shell"] [data-part="layout"]) {
+:where([data-scope="shell"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) {
     --_navw: var(--warp-layout-rail);
     grid-template: "header header" auto "nav main" 1fr / var(--_navw) minmax(0, 1fr);
     transition: grid-template-columns calc(var(--warp-duration-slow) * var(--warp-motion-scale)) var(--warp-ease-in-out);
   }
-:where([data-scope="shell"] [data-part="header"]) { padding-inline-start: 0; gap: var(--warp-space-group); }
-:where([data-scope="shell"] [data-part="brand"]) {
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *))) { padding-inline-start: 0; gap: var(--warp-space-group); }
+:where([data-scope="shell"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) {
     inline-size: var(--_navw); justify-content: center; padding-inline: 0;
     transition: inline-size calc(var(--warp-duration-slow) * var(--warp-motion-scale)) var(--warp-ease-in-out);
   }
 :where([data-scope="shell"] [data-part="brand-name"]) { display: none; }
-:where([data-scope="shell"] [data-part="header"] [data-part="title"]) { display: none; }
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *)) [data-part="title"]:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="shell"] *))) { display: none; }
 :where([data-scope="shell"] [data-part="crumbs"]) { display: block; }
-:where([data-scope="shell"][data-depth="child"] [data-part="back"]) { display: none; }
-:where([data-scope="shell"][data-depth="child"] [data-part="brand"]) { display: flex; }
+:where([data-scope="shell"][data-depth="child"] [data-part="back"]:not([data-scope="shell"] [data-scope="breadcrumbs"] *:not([data-scope="shell"] [data-scope="breadcrumbs"] [data-scope="shell"] *))) { display: none; }
+:where([data-scope="shell"][data-depth="child"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) { display: flex; }
 :where([data-scope="shell"] [data-part="command"]) {
     /* a field: it rests on the ink sweep-base like every field (review 01 M7). `inherit` takes the
        sys --warp-color-sweep-base back from the shell, undoing the phone ring's transparent base. */
@@ -203,7 +203,7 @@
   }
 :where([data-pointer="coarse"] [data-scope="shell"] [data-part="command"] kbd) { display: none; }
 @media (pointer: coarse) { :where([data-scope="shell"] [data-part="command"] kbd) { display: none; } }
-:where([data-scope="shell"] [data-part="nav"]) {
+:where([data-scope="shell"] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) {
     position: sticky; inset-block-start: var(--_barh); align-self: start;
     block-size: calc(var(--warp-viewport-block) - var(--_barh)); inline-size: var(--_navw);
     padding: var(--warp-space-related) 0 max(var(--warp-space-related), var(--warp-safe-bottom)) var(--warp-safe-left);
@@ -223,7 +223,7 @@
   }
 :where([data-scope="shell"] [data-part="nav-toggle"]:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
 :where([data-scope="shell"] [data-part="nav-toggle"] svg) { inline-size: 18px; block-size: 18px; transition: transform var(--warp-duration-base) var(--warp-ease-out); }
-:where([data-scope="shell"][data-nav-open] [data-part="nav"]) {
+:where([data-scope="shell"][data-nav-open] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) {
     inline-size: var(--warp-layout-sidebar); z-index: var(--warp-z-overlay);
     box-shadow: var(--warp-elevation-3); border-inline-end-color: var(--warp-color-border-strong);
     animation: warp-rail-open var(--warp-duration-base) var(--warp-ease-out) both;
@@ -252,11 +252,11 @@
   :where([data-scope="shell"][data-nav-open] [data-part="nav-foot"] > a) { flex: 1; }
 }
 @container warp-shell (min-width: 1000px) {
-:where([data-scope="shell"]:not([data-collapsed]) [data-part="layout"]) { --_navw: var(--warp-layout-sidebar); }
-:where([data-scope="shell"]:not([data-collapsed]) [data-part="brand"]) { justify-content: flex-start; padding-inline-start: 20px; }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) { --_navw: var(--warp-layout-sidebar); }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) { justify-content: flex-start; padding-inline-start: 20px; }
 :where([data-scope="shell"]:not([data-collapsed]) [data-part="brand-name"]) { display: inline; }
 :where([data-scope="shell"] [data-part="command"]) { inline-size: 300px; }
-:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav"]) { padding-block-start: var(--warp-space-group); }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) { padding-block-start: var(--warp-space-group); }
 :where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-group"]),
   :where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-extra"]) { display: block; }
 :where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-item"]) {
@@ -275,7 +275,7 @@
 :where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-foot"]) { flex-direction: row; align-items: center; }
 :where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-foot"] > a) { flex: 1; }
 :where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-toggle"] svg) { transform: scaleX(-1); }
-:where([data-scope="shell"][data-nav-open]:not([data-collapsed]) [data-part="nav"]) { animation: none; box-shadow: none; }
+:where([data-scope="shell"][data-nav-open]:not([data-collapsed]) [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) { animation: none; box-shadow: none; }
 }
 :where([data-scope="shell"] [data-part="nav-group"]) {
   margin: var(--warp-space-group) 0 var(--warp-space-tight); padding-inline: 20px;
@@ -290,9 +290,9 @@
    sidebar. The old pull-out tab had no state; this one does. ≥ 600 only. */
 :where([data-scope="shell"] [data-part="edge-tab"]) { display: none; }
 @container warp-shell (min-width: 600px) {
-:where([data-scope="shell"][data-collapsed="hidden"] [data-part="layout"]) { --_navw: 0px; }
-:where([data-scope="shell"][data-collapsed="hidden"]:not([data-nav-open]) [data-part="nav"]) { visibility: hidden; }
-:where([data-scope="shell"][data-collapsed="hidden"] [data-part="brand"]) { inline-size: auto; padding-inline: 16px 0; }
+:where([data-scope="shell"][data-collapsed="hidden"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) { --_navw: 0px; }
+:where([data-scope="shell"][data-collapsed="hidden"]:not([data-nav-open]) [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) { visibility: hidden; }
+:where([data-scope="shell"][data-collapsed="hidden"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) { inline-size: auto; padding-inline: 16px 0; }
 :where([data-scope="shell"][data-collapsed="hidden"] [data-part="edge-tab"]) {
     position: fixed; z-index: calc(var(--warp-z-overlay) + 1); inset-inline-start: max(0px, var(--warp-safe-left)); inset-block-start: 50%;
     display: grid; place-items: center; inline-size: 20px; block-size: 64px; padding: 0; translate: 0 -50%;
@@ -310,18 +310,18 @@
 }
 /* -- focus variant (wizard, checkout): no nav, title always shown -------- */
 @container warp-shell (min-width: 600px) {
-:where([data-scope="shell"][data-variant="focus"] [data-part="layout"]) { --_navw: 0px; }
-:where([data-scope="shell"][data-variant="focus"] [data-part="header"]) { padding-inline-start: var(--_gut); }
+:where([data-scope="shell"][data-variant="focus"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) { --_navw: 0px; }
+:where([data-scope="shell"][data-variant="focus"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *))) { padding-inline-start: var(--_gut); }
 }
-:where([data-scope="shell"][data-variant="focus"] [data-part="header"] [data-part="title"]) { display: block; }
-:where([data-scope="shell"][data-variant="focus"] [data-part="brand"]) { display: none; }
-:where([data-scope="shell"][data-variant="focus"] [data-part="nav"]) { display: none; }
+:where([data-scope="shell"][data-variant="focus"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *)) [data-part="title"]:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="shell"] *))) { display: block; }
+:where([data-scope="shell"][data-variant="focus"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) { display: none; }
+:where([data-scope="shell"][data-variant="focus"] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) { display: none; }
 /* -- dock: a sticky action bar that clears the bottom bar, safe area and keyboard */
 :where([data-scope="shell"]) { --_dock: calc(var(--warp-layout-tabbar) + var(--warp-safe-bottom)); }
 :where([data-scope="shell"][data-variant="focus"]),
 :where([data-scope="shell"][data-keyboard]) { --_dock: 0px; }
 @container warp-shell (min-width: 600px) {
-:where([data-scope="shell"] [data-part="layout"]) { --_dock: 0px; }
+:where([data-scope="shell"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) { --_dock: 0px; }
 }
 :where([data-scope="shell"] [data-part="dock"]) {
   position: sticky; inset-block-end: var(--_dock); z-index: calc(var(--warp-z-sticky) - 1);
@@ -335,12 +335,12 @@
   padding-block-end: max(var(--warp-space-related), var(--warp-safe-bottom));
 }
 /* -- overlays: scrim, account menu, more sheet, palette ------------------- */
-:where([data-scope="shell"] [data-part="scrim"]) {
+:where([data-scope="shell"] [data-part="scrim"]:not([data-scope="shell"] [data-scope="popover"] *:not([data-scope="shell"] [data-scope="popover"] [data-scope="shell"] *))) {
   position: fixed; inset: 0; z-index: calc(var(--warp-z-overlay) - 1); background: var(--warp-color-scrim);
   animation: warp-fade-in var(--warp-duration-base) var(--warp-ease-out) both;
 }
-:where([data-scope="shell"] [data-part="scrim"][data-for="nav"]) { background: color-mix(in oklab, var(--warp-color-scrim) 60%, transparent); }
-:where([data-scope="shell"] [data-part="menu"]) {
+:where([data-scope="shell"] [data-part="scrim"][data-for="nav"]:not([data-scope="shell"] [data-scope="popover"] *:not([data-scope="shell"] [data-scope="popover"] [data-scope="shell"] *))) { background: color-mix(in oklab, var(--warp-color-scrim) 60%, transparent); }
+:where([data-scope="shell"] [data-part="menu"]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))) {
   position: fixed; z-index: var(--warp-z-menu);
   inset-block-start: calc(var(--_barh) + 6px); inset-inline-end: max(12px, var(--warp-safe-right));
   inline-size: 264px; padding: var(--warp-space-tight);
@@ -356,10 +356,10 @@
   border-radius: var(--warp-radius-surface); box-shadow: var(--warp-elevation-3); overflow: clip;
   animation: warp-enter var(--warp-duration-base) var(--warp-ease-out) both;
 }
-:where([data-scope="shell"] [data-part="sheet"]) { display: none; }
+:where([data-scope="shell"] [data-part="sheet"]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))) { display: none; }
 @container warp-shell (max-width: 599.98px) {
-:where([data-scope="shell"] [data-part="menu"]),
-  :where([data-scope="shell"] [data-part="sheet"]) {
+:where([data-scope="shell"] [data-part="menu"]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="sheet"]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))) {
     display: block; position: fixed; z-index: var(--warp-z-modal);
     inset: auto 0 0 0; inline-size: auto; max-block-size: calc(var(--warp-viewport-block) - var(--_barh));
     padding: 6px var(--warp-space-related) calc(var(--warp-space-group) + var(--warp-safe-bottom));
@@ -372,8 +372,8 @@
     content: ""; display: block; inline-size: 36px; block-size: 4px; margin: 4px auto 10px;
     border-radius: 999px; background: var(--warp-color-border-strong);
   }
-:where([data-scope="shell"] [data-part="sheet"][hidden]),
-  :where([data-scope="shell"] [data-part="menu"][hidden]) { display: none; }
+:where([data-scope="shell"] [data-part="sheet"][hidden]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="menu"][hidden]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))) { display: none; }
 :where([data-scope="shell"] [data-part="palette"]) {
     inset: 0; translate: none; inline-size: auto; border-radius: 0; border: 0;
     padding-block-start: var(--warp-safe-top); padding-block-end: var(--warp-keyboard);
@@ -395,19 +395,19 @@
     background: var(--warp-color-surface); color: var(--warp-color-text); font: inherit; text-align: start; cursor: pointer;
   }
 }
-:where([data-scope="shell"] [data-part="page"][data-enter]) {
+:where([data-scope="shell"] [data-part="page"][data-enter]:not([data-scope="shell"] :is([data-scope="agenda"],[data-scope="pagination"]) *:not([data-scope="shell"] :is([data-scope="agenda"],[data-scope="pagination"]) [data-scope="shell"] *))) {
   animation: warp-route-in var(--warp-duration-route) var(--warp-ease-out) both;
 }
 @media print {
-:where([data-scope="shell"] [data-part="header"]),
-  :where([data-scope="shell"] [data-part="nav"]),
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))),
   :where([data-scope="shell"] [data-part="skip"]),
-  :where([data-scope="shell"] [data-part="scrim"]),
+  :where([data-scope="shell"] [data-part="scrim"]:not([data-scope="shell"] [data-scope="popover"] *:not([data-scope="shell"] [data-scope="popover"] [data-scope="shell"] *))),
   :where([data-scope="master-detail"] > [data-part="list"]) { display: none !important; }
-:where([data-scope="shell"] [data-part="layout"]) { display: block; min-block-size: 0; }
+:where([data-scope="shell"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) { display: block; min-block-size: 0; }
 :where([data-scope="shell"] [data-part="dock"]),
-  :where([data-scope="shell"] [data-part="menu"]),
-  :where([data-scope="shell"] [data-part="sheet"]),
+  :where([data-scope="shell"] [data-part="menu"]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="sheet"]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))),
   :where([data-scope="shell"] [data-part="palette"]),
   :where([data-scope="consent"]),
   :where([data-scope="announcement"]),

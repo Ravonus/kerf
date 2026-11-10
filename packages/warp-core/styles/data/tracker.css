@@ -1,24 +1,24 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.data {
 :where([data-scope="tracker"]) { display: grid; gap: 8px; }
-:where([data-scope="tracker"] [data-part="bars"]) { display: flex; gap: clamp(1px, 0.25vw, 2px); block-size: 32px; }
-:where([data-scope="tracker"] [data-part="bars"] > *) {
+:where([data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *))) { display: flex; gap: clamp(1px, 0.25vw, 2px); block-size: 32px; }
+:where([data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *)) > *) {
   all: unset; flex: 1; min-inline-size: 1px; border-radius: 2px; background: var(--_dc, var(--warp-color-positive-solid)); cursor: default;
 }
-:where([data-scope="tracker"] [data-part="bars"] > [data-state="degraded"]) { --_dc: var(--warp-color-caution-solid); }
-:where([data-scope="tracker"] [data-part="bars"] > [data-state="down"]) { --_dc: var(--warp-color-critical-solid); block-size: 100%; }
-:where([data-scope="tracker"] [data-part="bars"] > [data-state="none"]) { --_dc: var(--warp-color-surface-sunken); }
-:where([data-scope="tracker"] [data-part="bars"] > [data-state="degraded"]) { background: repeating-linear-gradient(135deg, var(--_dc) 0 3px, color-mix(in oklab, var(--_dc) 55%, var(--warp-color-surface)) 3px 5px); }
-:where([data-scope="tracker"] [data-part="bars"] > :is(:hover)),
-:where([data-scope="tracker"] [data-part="bars"] > :is(:focus-visible)),
-:where([data-scope="tracker"] [data-part="bars"] > :is([data-active])) { outline: 2px solid var(--warp-color-text); outline-offset: 1px; }
+:where([data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *)) > [data-state="degraded"]) { --_dc: var(--warp-color-caution-solid); }
+:where([data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *)) > [data-state="down"]) { --_dc: var(--warp-color-critical-solid); block-size: 100%; }
+:where([data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *)) > [data-state="none"]) { --_dc: var(--warp-color-surface-sunken); }
+:where([data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *)) > [data-state="degraded"]) { background: repeating-linear-gradient(135deg, var(--_dc) 0 3px, color-mix(in oklab, var(--_dc) 55%, var(--warp-color-surface)) 3px 5px); }
+:where([data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *)) > :is(:hover)),
+:where([data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *)) > :is(:focus-visible)),
+:where([data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *)) > :is([data-active])) { outline: 2px solid var(--warp-color-text); outline-offset: 1px; }
 /* touch: 90 bars are ~3px wide on a phone, so the bars stop taking touches and the strip is one
    44px scrubber (drag → nearest day, the tooltip follows). Keyboard keeps its roving bar. */
 @media (pointer: coarse) {
-:where(:root:not([data-pointer="fine"]) [data-scope="tracker"] [data-part="bars"]) { block-size: max(32px, var(--warp-hit-min)); touch-action: pan-y; }
-:where(:root:not([data-pointer="fine"]) [data-scope="tracker"] [data-part="bars"] > button) { pointer-events: none; }
+:where(:root:not([data-pointer="fine"]) [data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *))) { block-size: max(32px, var(--warp-hit-min)); touch-action: pan-y; }
+:where(:root:not([data-pointer="fine"]) [data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *)) > button) { pointer-events: none; }
 }
-:where([data-pointer="coarse"] [data-scope="tracker"] [data-part="bars"]) { block-size: max(32px, var(--warp-hit-min)); touch-action: pan-y; }
-:where([data-pointer="coarse"] [data-scope="tracker"] [data-part="bars"] > button) { pointer-events: none; }
+:where([data-pointer="coarse"] [data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *))) { block-size: max(32px, var(--warp-hit-min)); touch-action: pan-y; }
+:where([data-pointer="coarse"] [data-scope="tracker"] [data-part="bars"]:not([data-scope="tracker"] [data-scope="transport"] *:not([data-scope="tracker"] [data-scope="transport"] [data-scope="tracker"] *)) > button) { pointer-events: none; }
 :where([data-scope="tracker"] footer) { display: flex; justify-content: space-between; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
 }

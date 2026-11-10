@@ -15,16 +15,16 @@
   border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-round);
   font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); background: var(--warp-color-surface-raised);
 }
-:where([data-scope="calendar"] [data-part="layout"]) { display: grid; grid-template-columns: minmax(0, 1fr); min-block-size: 0; }
+:where([data-scope="calendar"] [data-part="layout"]:not([data-scope="calendar"] :is([data-scope="auth"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"],[data-scope="shell"]) *:not([data-scope="calendar"] :is([data-scope="auth"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"],[data-scope="shell"]) [data-scope="calendar"] *))) { display: grid; grid-template-columns: minmax(0, 1fr); min-block-size: 0; }
 @container calendar (min-width: 1000px) {
-:where([data-scope="calendar"] [data-part="layout"]) { grid-template-columns: 232px minmax(0, 1fr); }
+:where([data-scope="calendar"] [data-part="layout"]:not([data-scope="calendar"] :is([data-scope="auth"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"],[data-scope="shell"]) *:not([data-scope="calendar"] :is([data-scope="auth"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"],[data-scope="shell"]) [data-scope="calendar"] *))) { grid-template-columns: 232px minmax(0, 1fr); }
 }
-:where([data-scope="calendar"] [data-part="rail"]) {
+:where([data-scope="calendar"] [data-part="rail"]:not([data-scope="calendar"] :is([data-scope="checklist"],[data-scope="conn"],[data-scope="meter"],[data-scope="room"],[data-scope="tracker"]) *:not([data-scope="calendar"] :is([data-scope="checklist"],[data-scope="conn"],[data-scope="meter"],[data-scope="room"],[data-scope="tracker"]) [data-scope="calendar"] *))) {
   display: none; align-content: start; gap: var(--warp-space-group); padding: var(--warp-space-group);
   border-inline-end: var(--warp-border-hairline) solid var(--warp-color-border); overflow: auto;
 }
 @container calendar (min-width: 1000px) {
-:where([data-scope="calendar"] [data-part="rail"]) { display: grid; }
+:where([data-scope="calendar"] [data-part="rail"]:not([data-scope="calendar"] :is([data-scope="checklist"],[data-scope="conn"],[data-scope="meter"],[data-scope="room"],[data-scope="tracker"]) *:not([data-scope="calendar"] :is([data-scope="checklist"],[data-scope="conn"],[data-scope="meter"],[data-scope="room"],[data-scope="tracker"]) [data-scope="calendar"] *))) { display: grid; }
 }
 /* mini month (the rich CalendarGrid in read-only "navigator" mode) */
 :where([data-scope="calendar"] [data-part="mini"]) { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px 0; font-size: 12px; text-align: center; }
@@ -39,29 +39,29 @@
 :where([data-scope="calendar"] [data-part="sources"] input) { appearance: none; margin: 0; inline-size: 14px; block-size: 14px; border-radius: var(--warp-radius-mark); border: 1.5px solid var(--_c); background: var(--_c); }
 :where([data-scope="calendar"] [data-part="sources"] input:not(:checked)) { background: transparent; }
 /* the time grid */
-:where([data-scope="calendar"] [data-part="grid"]) {
+:where([data-scope="calendar"] [data-part="grid"]:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) *:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) [data-scope="calendar"] *))) {
   --_days: 7;
   display: grid; grid-template-rows: auto auto minmax(0, 1fr); min-block-size: 0; min-inline-size: 0; position: relative;
 }
-:where([data-scope="calendar"] [data-part="head"]),
+:where([data-scope="calendar"] [data-part="head"]:not([data-scope="calendar"] :is([data-scope="artifact"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="sidenav"],[data-scope="transport"],[data-scope="truncate"]) *:not([data-scope="calendar"] :is([data-scope="artifact"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="sidenav"],[data-scope="transport"],[data-scope="truncate"]) [data-scope="calendar"] *))),
 :where([data-scope="calendar"] [data-part="allday"]),
-:where([data-scope="calendar"] [data-part="cols"]) {
+:where([data-scope="calendar"] [data-part="cols"]:not([data-scope="calendar"] [data-scope="checkout"] *:not([data-scope="calendar"] [data-scope="checkout"] [data-scope="calendar"] *))) {
   display: grid; grid-template-columns: var(--_tracks, var(--warp-cal-gutter) repeat(var(--_days), minmax(0, 1fr)));
 }
 /* Week and Day: one scroller for both axes. A day never gets narrower than --warp-cal-day-min (wider for a day whose events
    overlap; Calendar writes --_tracks and --_week-w), so a narrow box scrolls the week sideways under its hours, which stay
    put, and the day heads and all-day row stay on top as the hours scroll */
-:where([data-scope="calendar"] [data-part="grid"][data-view="time"]) { grid-template-rows: minmax(0, 1fr); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"]:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) *:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) [data-scope="calendar"] *))) { grid-template-rows: minmax(0, 1fr); }
 /* Calendar keeps the hour in view itself as the grid refits; the browser's anchoring would chase a moving event instead */
-:where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"]) { overflow-anchor: none; }
-:where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"] > :is([data-part="top"])),
-:where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"] > :is([data-part="cols"])) { min-inline-size: var(--_week-w, 0px); }
-:where([data-scope="calendar"] [data-part="grid"][data-view="time"] [data-part="top"]) { position: sticky; inset-block-start: 0; z-index: 9; background: var(--warp-color-surface); }
-:where([data-scope="calendar"] [data-part="grid"][data-view="time"] :is([data-part="head"] > [data-part="corner"], [data-part="allday"] > [data-part="gutter-label"])) {
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"]:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) *:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) [data-scope="calendar"] *)) > [data-part="scroller"]) { overflow-anchor: none; }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"]:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) *:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) [data-scope="calendar"] *)) > [data-part="scroller"] > :is([data-part="top"])),
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"]:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) *:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) [data-scope="calendar"] *)) > [data-part="scroller"] > :is([data-part="cols"])) { min-inline-size: var(--_week-w, 0px); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"]:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) *:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) [data-scope="calendar"] *)) [data-part="top"]) { position: sticky; inset-block-start: 0; z-index: 9; background: var(--warp-color-surface); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"]:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) *:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) [data-scope="calendar"] *)) :is([data-part="head"]:not([data-scope="calendar"] :is([data-scope="artifact"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="sidenav"],[data-scope="transport"],[data-scope="truncate"]) *:not([data-scope="calendar"] :is([data-scope="artifact"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="sidenav"],[data-scope="transport"],[data-scope="truncate"]) [data-scope="calendar"] *)) > [data-part="corner"], [data-part="allday"] > [data-part="gutter-label"])) {
   position: sticky; inset-inline-start: 0; z-index: 8; background: var(--warp-color-surface);
 }
-:where([data-scope="calendar"] [data-part="grid"][data-view="time"] [data-part="allday"] > [data-part="gutter-label"]) { align-self: stretch; justify-self: stretch; display: flex; align-items: center; justify-content: end; }
-:where([data-scope="calendar"] [data-part="head"]) { border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"]:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) *:not([data-scope="calendar"] :is([data-scope="emoji"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) [data-scope="calendar"] *)) [data-part="allday"] > [data-part="gutter-label"]) { align-self: stretch; justify-self: stretch; display: flex; align-items: center; justify-content: end; }
+:where([data-scope="calendar"] [data-part="head"]:not([data-scope="calendar"] :is([data-scope="artifact"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="sidenav"],[data-scope="transport"],[data-scope="truncate"]) *:not([data-scope="calendar"] :is([data-scope="artifact"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="sidenav"],[data-scope="transport"],[data-scope="truncate"]) [data-scope="calendar"] *))) { border-block-end: var(--warp-border-hairline) solid var(--warp-color-border); }
 :where([data-scope="calendar"] [data-part="dayhead"]) {
   /* a narrow day (a quiet weekend in a week that fits its box) puts its date under its name */
   display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 2px 6px; padding-block: 10px 8px;
@@ -80,7 +80,7 @@
 :where([data-scope="calendar"] [data-part="scroller"]) {
   position: relative; overflow: auto; overscroll-behavior: contain; min-block-size: 0;
 }
-:where([data-scope="calendar"] [data-part="cols"]) { position: relative; block-size: calc(var(--warp-cal-hour) * var(--_hours, 24)); }
+:where([data-scope="calendar"] [data-part="cols"]:not([data-scope="calendar"] [data-scope="checkout"] *:not([data-scope="calendar"] [data-scope="checkout"] [data-scope="calendar"] *))) { position: relative; block-size: calc(var(--warp-cal-hour) * var(--_hours, 24)); }
 /* the hours stay put as a wide week scrolls sideways under them */
 :where([data-scope="calendar"] [data-part="gutter"]) { position: sticky; inset-inline-start: 0; z-index: 8; background: var(--warp-color-surface); }
 :where([data-scope="calendar"] [data-part="hour"]) {
@@ -153,7 +153,7 @@
 }
 :where([data-scope="calendar"] [data-part="event"][data-state="moving"]) { z-index: 6; box-shadow: inset var(--warp-cal-bar) 0 0 var(--_c), var(--warp-elevation-2); outline: var(--warp-focus-width) dashed var(--warp-color-focus); }
 :where([data-scope="calendar"] [data-part="event"][data-locked]) { cursor: default; }
-:where([data-scope="calendar"] [data-part="resize"]) {
+:where([data-scope="calendar"] [data-part="resize"]:not([data-scope="calendar"] :is([data-scope="board"],[data-scope="table"]) *:not([data-scope="calendar"] :is([data-scope="board"],[data-scope="table"]) [data-scope="calendar"] *))) {
   position: absolute; inset-inline: 0; inset-block-end: 0; block-size: 8px; cursor: ns-resize; z-index: 3;
 }
 :where([data-scope="calendar"] [data-part="resize"])::after {
@@ -179,7 +179,7 @@
   box-shadow: var(--warp-elevation-2);
 }
 /* drag readout follows the pointer's slot (also read by the live region) */
-:where([data-scope="calendar"] [data-part="readout"]) {
+:where([data-scope="calendar"] [data-part="readout"]:not([data-scope="calendar"] :is([data-scope="meter"],[data-scope="ring"]) *:not([data-scope="calendar"] :is([data-scope="meter"],[data-scope="ring"]) [data-scope="calendar"] *))) {
   position: absolute; z-index: 7; inset-inline-start: 4px; translate: 0 calc(-100% - 4px); padding: 3px 7px; border-radius: var(--warp-radius-mark);
   background: var(--warp-color-surface-inverse); color: var(--warp-color-on-inverse); font: 500 11px/1.2 var(--warp-font-mono); white-space: nowrap; pointer-events: none;
 }
@@ -240,7 +240,7 @@
 :where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"]) { display: flex; inline-size: 8px; block-size: 8px; padding: 0; background: none; font-size: 0; line-height: 0; }
 :where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"])::before { margin: 0; inline-size: 8px; block-size: 8px; }
 }
-:where([data-scope="calendar"] [data-part="more"]) { block-size: 18px; font: 500 11px/18px var(--warp-font-mono); color: var(--warp-color-text-subtle); padding-inline: 4px; background: none; border: 0; text-align: start; }
+:where([data-scope="calendar"] [data-part="more"]:not([data-scope="calendar"] :is([data-scope="avatar-group"],[data-scope="feedback"]) *:not([data-scope="calendar"] :is([data-scope="avatar-group"],[data-scope="feedback"]) [data-scope="calendar"] *))) { block-size: 18px; font: 500 11px/18px var(--warp-font-mono); color: var(--warp-color-text-subtle); padding-inline: 4px; background: none; border: 0; text-align: start; }
 /* resource / timeline view: rows are people or rooms, time runs across */
 /* an hour never gets narrower than --warp-cal-hour-w: past that the hours scroll sideways under the names, which stay
    put, and the edges box (layout) shades the side with more */
@@ -259,7 +259,7 @@
 }
 :where([data-scope="calendar"] [data-part="lane-label"]) { display: flex; align-items: center; gap: 8px; padding: 8px; min-inline-size: 0; overflow: clip; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); }
 :where([data-scope="calendar"] [data-part="lane-label"] > *) { white-space: nowrap; overflow: clip; text-overflow: ellipsis; max-inline-size: 100%; }
-:where([data-scope="calendar"] [data-part="lane"]) {
+:where([data-scope="calendar"] [data-part="lane"]:not([data-scope="calendar"] [data-scope="transport"] *:not([data-scope="calendar"] [data-scope="transport"] [data-scope="calendar"] *))) {
   /* five-minute columns (--_cols): a booking spans its minutes, and the row grows to the tallest name in it; bookings
      that overlap in one row stack */
   position: relative; display: grid; grid-template-columns: repeat(var(--_cols, 120), minmax(0, 1fr)); grid-auto-flow: row dense;
@@ -267,25 +267,25 @@
   border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
   background-image: repeating-linear-gradient(to right, var(--warp-color-border) 0 1px, transparent 1px calc(100% / var(--_slots, 10)));
 }
-:where([data-scope="calendar"] [data-part="lane"] [data-part="event"]) {
+:where([data-scope="calendar"] [data-part="lane"]:not([data-scope="calendar"] [data-scope="transport"] *:not([data-scope="calendar"] [data-scope="transport"] [data-scope="calendar"] *)) [data-part="event"]) {
   position: relative; inset: auto; block-size: auto; min-block-size: 40px; inline-size: auto; min-inline-size: 0; margin-inline-end: 2px;
   /* a booking reads its own width: its whole name, broken only between words (Calendar widens the hours when a word
      needs it), with its times under it when there's room; or only its start when it is too narrow for a word */
   container: cal-event / inline-size; flex-flow: column nowrap; align-items: stretch; justify-content: center; gap: 1px;
   padding-block: 4px; padding-inline: calc(4px + var(--warp-cal-bar)) 3px;
 }
-:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-title"]) {
+:where([data-scope="calendar"] [data-part="lane"]:not([data-scope="calendar"] [data-scope="transport"] *:not([data-scope="calendar"] [data-scope="transport"] [data-scope="calendar"] *)) [data-part="event"] [data-part="event-title"]) {
   display: block; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: normal; line-height: 1.25;
 }
-:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-time"]) { display: none; }
+:where([data-scope="calendar"] [data-part="lane"]:not([data-scope="calendar"] [data-scope="transport"] *:not([data-scope="calendar"] [data-scope="transport"] [data-scope="calendar"] *)) [data-part="event"] [data-part="event-time"]) { display: none; }
 @container cal-event (min-width: 100px) {
-:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-time"]) { display: block; }
+:where([data-scope="calendar"] [data-part="lane"]:not([data-scope="calendar"] [data-scope="transport"] *:not([data-scope="calendar"] [data-scope="transport"] [data-scope="calendar"] *)) [data-part="event"] [data-part="event-time"]) { display: block; }
 }
 @container cal-event (max-width: 33.98px) {
-:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-title"]) { display: none; }
-:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-start"]) { display: block; }
+:where([data-scope="calendar"] [data-part="lane"]:not([data-scope="calendar"] [data-scope="transport"] *:not([data-scope="calendar"] [data-scope="transport"] [data-scope="calendar"] *)) [data-part="event"] [data-part="event-title"]) { display: none; }
+:where([data-scope="calendar"] [data-part="lane"]:not([data-scope="calendar"] [data-scope="transport"] *:not([data-scope="calendar"] [data-scope="transport"] [data-scope="calendar"] *)) [data-part="event"] [data-part="event-start"]) { display: block; }
 }
-:where([data-scope="calendar"] [data-part="lane"][data-busy]) { background-color: color-mix(in oklab, var(--warp-color-text) 3%, transparent); }
+:where([data-scope="calendar"] [data-part="lane"][data-busy]:not([data-scope="calendar"] [data-scope="transport"] *:not([data-scope="calendar"] [data-scope="transport"] [data-scope="calendar"] *))) { background-color: color-mix(in oklab, var(--warp-color-text) 3%, transparent); }
 :where([data-scope="calendar"] [data-part="mini"] [role="row"]),
 :where([data-scope="calendar"] [data-part="month"] [role="row"]),
 :where([data-scope="calendar"] [data-part="timeline"] [role="row"]) { display: contents; }
@@ -303,8 +303,8 @@
 :where([data-arrive])::after,
   :where([data-scope="calendar"] [data-part="now"])::before,
   :where([data-scope="calendar"] [data-part="now-label"]),
-  :where([data-scope="agenda"] [data-part="now"] i),
-  :where([data-scope="agenda"] [data-part="now"] i::before),
+  :where([data-scope="agenda"] [data-part="now"]:not([data-scope="agenda"] [data-scope="calendar"] *:not([data-scope="agenda"] [data-scope="calendar"] [data-scope="agenda"] *)) i),
+  :where([data-scope="agenda"] [data-part="now"] i)::before,
   :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
   :where([data-scope="run"] > li[data-state="done"])::before,
   :where([data-scope="tool-call"][data-state="running"])::before,
@@ -313,16 +313,16 @@
 :where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"])),
   :where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-selected="true"])),
   :where([data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b),
-  :where([data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b),
-  :where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"])),
-  :where([data-scope="booking"] [data-part="slot"]:is([aria-checked="true"])),
+  :where([data-scope="agenda"] [data-part="strip"]:not([data-scope="agenda"] :is([data-scope="room"],[data-scope="speech"]) *:not([data-scope="agenda"] :is([data-scope="room"],[data-scope="speech"]) [data-scope="agenda"] *)) button[aria-selected="true"] b),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"]):not([data-scope="booking"] [data-scope="pay-frame"] *:not([data-scope="booking"] [data-scope="pay-frame"] [data-scope="booking"] *))),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-checked="true"]):not([data-scope="booking"] [data-scope="pay-frame"] *:not([data-scope="booking"] [data-scope="pay-frame"] [data-scope="booking"] *))),
   :where([data-scope="run"] > li[data-state="done"] [data-part="dot"]),
-  :where([data-scope="plan"] li[data-state="done"] [data-part="box"]),
-  :where([data-scope="message"][data-mine] [data-part="bubble"]),
+  :where([data-scope="plan"] li[data-state="done"] [data-part="box"]:not([data-scope="plan"] [data-scope="tree"] *:not([data-scope="plan"] [data-scope="tree"] [data-scope="plan"] *))),
+  :where([data-scope="message"][data-mine] [data-part="bubble"]:not([data-scope="message"] [data-scope="slider"] *:not([data-scope="message"] [data-scope="slider"] [data-scope="message"] *))),
   :where([data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
 :where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range]),
   :where([data-scope="reactions"] button[aria-pressed="true"]),
-  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]),
+  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]:not([data-scope="call-controls"] :is([data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) *:not([data-scope="call-controls"] :is([data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) [data-scope="call-controls"] *))),
   :where([data-scope="question"] label:has(:checked)),
   :where([data-scope="versions"] li[aria-current="true"]),
   :where([data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }

@@ -1,12 +1,21 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.app {
+/* audio level: 3 bars driven by a --level custom property (0..1), no loop */
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"]) { display: inline-flex; align-items: center; gap: 2px; block-size: 12px; }
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { inline-size: 2px; border-radius: 2px; background: currentColor; block-size: calc(3px + 9px * var(--level, 0) * var(--k, 1)); transition: block-size 90ms linear; }
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i:nth-child(1)),
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i:nth-child(3)) { --k: 0.6; }
+:where([data-motion="reduce"] :is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
+@media (prefers-reduced-motion: reduce) {
+:where(:root:not([data-motion="full"]) :is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
+}
 /* SpeechInput: the composer's mic becomes a capture strip; transcript streams like tokens */
 :where([data-scope="speech"]) { display: grid; gap: 10px; }
-:where([data-scope="speech"] [data-part="strip"]) {
+:where([data-scope="speech"] [data-part="strip"]:not([data-scope="speech"] :is([data-scope="agenda"],[data-scope="room"]) *:not([data-scope="speech"] :is([data-scope="agenda"],[data-scope="room"]) [data-scope="speech"] *))) {
   position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px;
   min-block-size: var(--warp-control-md); padding: 6px 8px 6px 6px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-raised);
 }
-:where([data-scope="speech"] [data-part="strip"]) { --warp-sweep-radius: var(--warp-radius-control); }
+:where([data-scope="speech"] [data-part="strip"]:not([data-scope="speech"] :is([data-scope="agenda"],[data-scope="room"]) *:not([data-scope="speech"] :is([data-scope="agenda"],[data-scope="room"]) [data-scope="speech"] *))) { --warp-sweep-radius: var(--warp-radius-control); }
 :where([data-scope="speech"] [data-part="wave"]) { display: flex; align-items: center; gap: 2px; block-size: 24px; overflow: clip; color: var(--warp-color-text-subtle); }
 :where([data-scope="speech"][data-state="listening"] [data-part="wave"]) { color: var(--warp-color-accent-text); }
 :where([data-scope="speech"] [data-part="wave"] i) { flex: none; inline-size: 2px; border-radius: 2px; background: currentColor; block-size: calc(3px + 19px * var(--a, 0)); transition: block-size 90ms linear; }
@@ -18,10 +27,10 @@
 :where([data-scope="speech"] [data-part="transcript"]) { min-block-size: 3em; padding: 8px 10px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); font-size: var(--warp-text-body-size); line-height: 1.5; }
 :where([data-scope="speech"] [data-part="transcript"] [data-part="interim"]) { color: var(--warp-color-text-subtle); }
 :where([data-scope="speech"] [data-part="mic"]) { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
-:where([data-scope="speech"] [data-part="mic"] [data-part="level"]) { color: var(--warp-color-positive-text); }
+:where([data-scope="speech"] [data-part="mic"] [data-part="level"]:not([data-scope="speech"] [data-scope="tile"] *:not([data-scope="speech"] [data-scope="tile"] [data-scope="speech"] *))) { color: var(--warp-color-positive-text); }
 @media (forced-colors: active) {
 :where([data-scope="speech"] [data-part="wave"] i),
-  :where([data-part="level"] i) { forced-color-adjust: none; background: CanvasText; }
+  :where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { forced-color-adjust: none; background: CanvasText; }
 :where([data-scope="speech"][data-state="listening"] [data-part="wave"] i) { background: Highlight; }
 }
 }

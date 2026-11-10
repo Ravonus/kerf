@@ -29,13 +29,13 @@
   background: var(--warp-color-surface-overlay); border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-control); box-shadow: var(--warp-elevation-2); font-size: var(--warp-text-caption-size);
 }
 :where([data-scope="map"] [data-part="popup"] b) { display: block; font-size: var(--warp-text-body-size); }
-:where([data-scope="map"] [data-part="controls"]) { position: absolute; inset-block-start: 10px; inset-inline-end: 10px; display: grid; gap: 6px; }
-:where([data-scope="map"] [data-part="controls"] button) {
+:where([data-scope="map"] [data-part="controls"]:not([data-scope="map"] [data-scope="canvas"] *:not([data-scope="map"] [data-scope="canvas"] [data-scope="map"] *))) { position: absolute; inset-block-start: 10px; inset-inline-end: 10px; display: grid; gap: 6px; }
+:where([data-scope="map"] [data-part="controls"]:not([data-scope="map"] [data-scope="canvas"] *:not([data-scope="map"] [data-scope="canvas"] [data-scope="map"] *)) button) {
   all: unset; display: grid; place-items: center; inline-size: max(32px, var(--warp-hit-min)); block-size: max(32px, var(--warp-hit-min)); cursor: pointer;
   background: var(--warp-color-surface-overlay); border: 1px solid var(--warp-color-border); border-radius: var(--warp-radius-control); box-shadow: var(--warp-elevation-1); font-weight: 600;
 }
-:where([data-scope="map"] [data-part="controls"] button:focus-visible) { outline: 2px solid var(--warp-color-focus); }
-:where([data-scope="map"] [data-part="controls"] button[aria-pressed="true"]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
+:where([data-scope="map"] [data-part="controls"]:not([data-scope="map"] [data-scope="canvas"] *:not([data-scope="map"] [data-scope="canvas"] [data-scope="map"] *)) button:focus-visible) { outline: 2px solid var(--warp-color-focus); }
+:where([data-scope="map"] [data-part="controls"]:not([data-scope="map"] [data-scope="canvas"] *:not([data-scope="map"] [data-scope="canvas"] [data-scope="map"] *)) button[aria-pressed="true"]) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); }
 :where([data-scope="map"] [data-part="attribution"]) { position: absolute; inset-block-end: 4px; inset-inline-end: 6px; font: 400 10px/1.25 var(--warp-text-body-font); color: var(--warp-color-text-subtle); }
 /* map pins and clusters: free-floating, both axes (overlapping pins resolve by paint order, like the pins) */
 :where([data-scope="map"] :is([data-part="marker"]))::after,

@@ -8,7 +8,7 @@
   /* touch targets (review 02 M7), after the all: unset rules they extend */
   :where([data-scope="codetabs"] [role="tab"]),
   :where([data-scope="emoji"] [role="tab"]) { min-block-size: var(--warp-hit-min); box-sizing: border-box; display: inline-flex; align-items: center; }
-  :where([data-scope="prose"] [data-part="anchor"]) { display: inline-grid; place-items: center; min-inline-size: var(--warp-hit-min); min-block-size: var(--warp-hit-min); margin-block: calc((1lh - var(--warp-hit-min)) / 2); vertical-align: middle; }
+  :where([data-scope="prose"] [data-part="anchor"]:not([data-scope="prose"] [data-scope="anchor-heading"] *:not([data-scope="prose"] [data-scope="anchor-heading"] [data-scope="prose"] *))) { display: inline-grid; place-items: center; min-inline-size: var(--warp-hit-min); min-block-size: var(--warp-hit-min); margin-block: calc((1lh - var(--warp-hit-min)) / 2); vertical-align: middle; }
   :where([data-scope="jsontree"] .jt-row) { min-block-size: max(22px, calc(var(--warp-hit-min) - 8px)); }
   :where(.crop-ctl input[type="range"]) { block-size: var(--warp-hit-min); }
   :where([data-scope="codetabs"] [data-scope="codeblock"]) { border-start-start-radius: 0; }

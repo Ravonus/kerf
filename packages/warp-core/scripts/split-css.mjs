@@ -23,10 +23,35 @@ import { body, scopesOf } from './split-css/parse.mjs'
 import { split } from './split-css/sections.mjs'
 import { choices } from './split-css/choices.mjs'
 import { textFields } from './split-css/text.mjs'
+import { guard, owners, selectors } from './split-css/parts.mjs'
+import { fromSelectors, fromSources } from './split-css/composes.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const spec = join(root, '../../docs/design/warp/tokens')
 const out = join(root, 'styles')
+
+// the sheets that ship (warp-marketing.css is the spec's showcase, not a package)
+const SHEETS = [
+  'warp.css',
+  'warp-components.css',
+  'warp-inputs.css',
+  'warp-inputs-rich.css',
+  'warp-data.css',
+  'warp-layout.css',
+  'warp-app.css',
+  'warp-flows.css',
+  'warp-canvas.css',
+]
+
+/** What a part fence needs to know: which scopes have each part, and which components each is built from. */
+export function partContext() {
+  const sheets = SHEETS.map((f) => readFileSync(join(spec, f), 'utf8'))
+  const composes = fromSelectors(
+    fromSources(join(root, '../warp/src')),
+    sheets.flatMap((css) => selectors(css).map((s) => s.text)),
+  )
+  return { owners: owners(sheets), composes }
+}
 
 // the scope that opens each selector in a rule's selector list (a compound's later [data-scope] is a descendant)
 function homes(rule) {
@@ -198,6 +223,9 @@ export function build() {
       for (const i of list)
         if (i.kind === 'rule')
           for (const s of scopesOf(i.text)) (scopes[s] ??= new Set()).add(`${p.family}/${name}.css`)
+  // a part belongs to the nearest scope above it: fence every descendant part selector against nested components
+  const ctx = partContext()
+  for (const [k, v] of files) if (k.endsWith('.css')) files.set(k, guard(v, ctx))
   files.set(
     'manifest.json',
     JSON.stringify(

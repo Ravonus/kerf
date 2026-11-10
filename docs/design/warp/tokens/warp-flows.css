@@ -58,7 +58,7 @@
 @keyframes warp-flow-in  { from { opacity: 0; transform: translateX(calc(var(--_dir) * var(--warp-flow-distance))); } }
 @keyframes warp-flow-out { to   { opacity: 0; transform: translateX(calc(var(--_dir) * var(--warp-flow-distance) * -0.5)); } }
 /* a step's heading takes focus on arrival; it must not show a ring for that */
-:where([data-part="step-title"]):focus,
+:where([data-scope="checkout"] [data-part="step-title"]):focus,
 :where([data-part-title]):focus,
 :where([data-part="title"][tabindex="-1"]):focus { outline: none; }
 /* entering waits for ~40% of the exit so the two steps never read on top of each other */
@@ -127,15 +127,15 @@
 :where([data-scope="auth"] [data-part="brand"] blockquote em) { font-style: var(--warp-text-emphasis-style, normal); color: var(--warp-color-on-inverse); text-decoration: underline; text-decoration-color: var(--warp-color-accent-solid); text-decoration-thickness: calc(1px + var(--warp-x) * 1.5px); text-underline-offset: 0.14em; }   /* 03 m12: accent ink on inverse was 2.85:1; the accent moves to the underline */
 :where([data-scope="auth"] [data-part="brand"] cite) { display: block; margin-block-start: 14px; font: 500 var(--warp-text-eyebrow-size)/1.3 var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: uppercase; font-style: normal; opacity: 0.72; }
 /* the weave: warp threads + a few weft threads that draw in once on mount */
-:where([data-part="weave"]) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; }
-:where([data-part="weave"] line) { stroke: currentColor; stroke-width: 1; opacity: 0.16; vector-effect: non-scaling-stroke; }
-:where([data-part="weave"] path) {
+:where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"]) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; }
+:where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"] line) { stroke: currentColor; stroke-width: 1; opacity: 0.16; vector-effect: non-scaling-stroke; }
+:where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"] path) {
   fill: none; stroke: var(--warp-color-accent-solid); stroke-width: calc(1px + var(--warp-x) * 1px); vector-effect: non-scaling-stroke;
   stroke-dasharray: 1; stroke-dashoffset: 1;
   animation: warp-weave-draw calc(var(--warp-sweep-duration) * 2) var(--warp-sweep-ease) forwards;
   animation-delay: calc(var(--i, 0) * var(--warp-stagger) * 3);
 }
-:where([data-part="weave"] path[data-broken]) { stroke: var(--warp-color-critical-solid); }
+:where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"] path[data-broken]) { stroke: var(--warp-color-critical-solid); }
 @keyframes warp-weave-draw { to { stroke-dashoffset: 0; } }
 
 /* SSO + passkey: a stack of neutral outline buttons with a provider glyph */
@@ -160,16 +160,17 @@
 :where([data-part="code-label"]) { display: block; margin-block-end: 8px; font: 500 var(--warp-text-label-size)/1.3 var(--warp-text-body-font); color: var(--warp-color-text); }
 
 /* sent / verified states: a mark, a heading, one sentence, one action */
-/* the result mark (auth sent/verified, alert dialogs, the gate): not 05 Meter's threshold mark */
-:where([data-part="mark"]:not([data-scope="meter"] *)) {
+/* the result mark (auth sent/verified, the gate, an order's confirmation) is its own scope: as a bare "mark" part its
+   rule reached every checkbox's tick and 05 Meter's threshold mark on the page */
+:where([data-scope="result"]) {
   display: grid; flex: none; place-items: center; inline-size: 44px; block-size: 44px; border-radius: var(--warp-radius-control);
   background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text);
 }
-:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="positive"]) { background: var(--warp-color-positive-soft); color: var(--warp-color-positive-text); }
-:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="caution"]) { background: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
-:where([data-part="mark"]:not([data-scope="meter"] *)[data-tone="critical"]) { background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text); }
-:where([data-part="mark"]:not([data-scope="meter"] *) svg) { inline-size: 20px; block-size: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-:where([data-part="mark"] svg [data-draw]) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: warp-weave-draw calc(480ms * var(--warp-motion-scale) + 1ms) var(--warp-sweep-ease) 160ms forwards; }
+:where([data-scope="result"][data-tone="positive"]) { background: var(--warp-color-positive-soft); color: var(--warp-color-positive-text); }
+:where([data-scope="result"][data-tone="caution"]) { background: var(--warp-color-caution-soft); color: var(--warp-color-caution-text); }
+:where([data-scope="result"][data-tone="critical"]) { background: var(--warp-color-critical-soft); color: var(--warp-color-critical-text); }
+:where([data-scope="result"] svg) { inline-size: 20px; block-size: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+:where([data-scope="result"] svg [data-draw]) { stroke-dasharray: 1; stroke-dashoffset: 1; animation: warp-weave-draw calc(480ms * var(--warp-motion-scale) + 1ms) var(--warp-sweep-ease) 160ms forwards; }
 
 /* SignGate (the original's flow / blocker / badge, rebuilt) */
 :where([data-scope="gate"]) { position: relative; isolation: isolate; border-radius: var(--warp-radius-surface); overflow: clip; }
@@ -438,15 +439,15 @@
   list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer;
   min-block-size: var(--warp-hit-min); font-weight: 500;
 }
-:where([data-scope="checkout"] [data-part="summary"] > summary::-webkit-details-marker) { display: none; }
+:where([data-scope="checkout"] [data-part="summary"] > summary)::-webkit-details-marker { display: none; }
 :where([data-scope="checkout"] [data-part="summary"] > summary svg) { inline-size: 14px; block-size: 14px; transition: transform var(--warp-duration-base) var(--warp-ease-out); }
 :where([data-scope="checkout"] [data-part="summary"][open] > summary svg) { transform: rotate(180deg); }
 :where([data-scope="checkout"] [data-part="summary"][open] > summary ~ *) { animation: warp-enter var(--warp-duration-base) var(--warp-ease-out) both; }
 :where([data-scope="checkout"] h3[data-part="step-title"]) { margin: 0; font: var(--warp-text-heading-weight) var(--warp-text-heading-size)/1.25 var(--warp-text-heading-font); }
 :where([data-scope="checkout"] [data-part="step-body"]) { display: grid; gap: 14px; }
 :where([data-scope="checkout"] [data-part="nav"]) { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-block-start: 6px; flex-wrap: wrap-reverse; }
-:where([data-part="cols"]) { display: grid; gap: 14px; }
-@container checkout (min-width: 520px) { :where([data-part="cols"]) { grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); } }
+:where([data-scope="checkout"] [data-part="cols"]) { display: grid; gap: 14px; }
+@container checkout (min-width: 520px) { :where([data-scope="checkout"] [data-part="cols"]) { grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); } }
 
 :where([data-scope="line-item"]) { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding-block: 10px; border-block-start: 1px solid var(--warp-color-border); }
 :where([data-scope="line-item"]:first-child) { border-block-start: 0; }
@@ -575,10 +576,10 @@
    ------------------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   :where(:root:not([data-motion="full"])) :where([data-scope="otp"][data-state="success"] [data-part="cell"] > *) { transition-delay: 0ms; }
-  :where(:root:not([data-motion="full"])) :where([data-part="weave"] path) { animation: none; stroke-dashoffset: 0; }
+  :where(:root:not([data-motion="full"])) :where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"] path) { animation: none; stroke-dashoffset: 0; }
 }
 :where([data-motion="reduce"]) :where([data-scope="otp"][data-state="success"] [data-part="cell"] > *) { transition-delay: 0ms; }
-:where([data-motion="reduce"]) :where([data-part="weave"] path) { animation: none; stroke-dashoffset: 0; }
+:where([data-motion="reduce"]) :where(:is([data-scope="auth"], [data-scope="system-page"]) [data-part="weave"] path) { animation: none; stroke-dashoffset: 0; }
 :where([data-motion="reduce"]) :where([data-scope="tracker"] *) { transition-delay: 0ms; }
 
 } /* @layer warp.flows */

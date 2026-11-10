@@ -818,7 +818,7 @@
     animation: warp-ring calc(120ms * var(--warp-motion-scale)) var(--warp-ease-out);   /* the ring is drawn out from the edge */
   }
   @keyframes warp-ring { from { outline-offset: 0px; outline-color: transparent; } }
-  :where(::selection) {
+  ::selection {
     background: var(--warp-color-accent-soft);
     color: var(--warp-color-text);
   }
@@ -1075,8 +1075,8 @@
   @media (prefers-reduced-motion: reduce) {
     :where(:root:not([data-motion="full"]) *) { scroll-behavior: auto !important; }
     :where(:root:not([data-motion="full"]) *),
-    :where(:root:not([data-motion="full"]) *::before),
-    :where(:root:not([data-motion="full"]) *::after) { animation-iteration-count: 1 !important; }
+    :where(:root:not([data-motion="full"]) *)::before,
+    :where(:root:not([data-motion="full"]) *)::after { animation-iteration-count: 1 !important; }
     :where(:root:not([data-motion="full"])) :where([data-shimmer]),
     :where(:root:not([data-motion="full"])) :where([data-scope="skeleton"]),
     :where(:root:not([data-motion="full"])) :where([data-part="skeleton"]),
@@ -1104,8 +1104,8 @@
     }
   }
   :where([data-motion="reduce"] *),
-  :where([data-motion="reduce"] *::before),
-  :where([data-motion="reduce"] *::after) { animation-iteration-count: 1 !important; }
+  :where([data-motion="reduce"] *)::before,
+  :where([data-motion="reduce"] *)::after { animation-iteration-count: 1 !important; }
   :where([data-motion="reduce"]) :where([data-shimmer]),
   :where([data-motion="reduce"]) :where([data-scope="skeleton"]),
   :where([data-motion="reduce"]) :where([data-part="skeleton"]),
@@ -1563,7 +1563,7 @@
   :where([data-scope="comment-thread"]):where([data-sweep]):not([data-pin], [data-confirm]),
   :where([data-scope="artifact"]):where([data-sweep]):not([data-pin], [data-confirm]),
   :where([data-part="tool-frame"]):where([data-sweep]):not([data-pin], [data-confirm]),
-  :where([data-part="strip"]):where([data-sweep]):not([data-pin], [data-confirm]) { --_on: 0; }
+  :where([data-scope="speech"] [data-part="strip"]):where([data-sweep]):not([data-pin], [data-confirm]) { --_on: 0; }
 
   /* focus: the sweep is the indicator for fields; everything else keeps the ring */
   :where([data-scope="field"] [data-part="input"]:focus-visible),
@@ -1588,7 +1588,7 @@
     :where([data-part="rail-fill"]),
     :where([data-part="rail-hover"]),
     :where([data-part="thumb"]),
-    :where([data-part="indicator"]) { forced-color-adjust: none; }
+    :where(:is([data-scope="tabs"] > [data-part="list"], [data-scope="segmented"], [data-scope="toggle-group"]) > [data-part="indicator"]) { forced-color-adjust: none; }
     :where([data-part="sweep-base"]) { color: CanvasText; }
     :where([data-part="sweep"]) { color: Highlight; opacity: 1; }
     :where([data-part="sweep"]:empty) { border-width: 2px; }
@@ -1623,9 +1623,7 @@
     :where(:checked + [data-part="track"] [data-part="thumb"]),
     :where([data-on] > [data-part="thumb"]) { background: HighlightText; }
     :where(:checked + [data-part="track"], [data-on]) > :where([data-part="sweep"]) { visibility: visible; color: CanvasText; }
-    :where([data-part="indicator"]) ~ :where([aria-checked="true"]),
-    :where([data-part="indicator"]) ~ :where([aria-selected="true"]),
-    :where([data-part="indicator"]) ~ :where([aria-pressed="true"]) { forced-color-adjust: none; color: HighlightText; }
+    :where(:is([data-scope="tabs"] > [data-part="list"], [data-scope="segmented"], [data-scope="toggle-group"]) > [data-part="indicator"]) ~ :where([aria-checked="true"], [aria-selected="true"], [aria-pressed="true"]) { forced-color-adjust: none; color: HighlightText; }
     /* checkbox mark */
     :where([data-scope="checkbox"][data-part="control"] svg) { forced-color-adjust: none; stroke: CanvasText; }
   }

@@ -16,11 +16,11 @@
 :where([data-scope="comparison"] tbody :is(td)) { padding: 11px 14px; border-block-end: 1px solid var(--warp-color-border); }
 :where([data-scope="comparison"] tbody td) { text-align: center; }
 :where([data-scope="comparison"] tbody td[data-featured]) { background: color-mix(in oklab, var(--warp-color-accent-soft) 55%, transparent); }
-:where([data-scope="comparison"] tr[data-part="section"] th) { padding-block: 20px 8px; font: 500 var(--warp-text-eyebrow-size)/var(--warp-text-eyebrow-leading) var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle); }
-:where([data-scope="comparison"] [data-part="yes"]) { color: var(--warp-color-positive-text); }
-:where([data-scope="comparison"] [data-part="no"]) { color: var(--warp-color-text-subtle); }
-:where([data-scope="comparison"] [data-part="yes"] svg),
-:where([data-scope="comparison"] [data-part="no"] svg) { inline-size: 18px; block-size: 18px; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 2; }
+:where([data-scope="comparison"] tr[data-part="section"]:not([data-scope="comparison"] [data-scope="form"] *:not([data-scope="comparison"] [data-scope="form"] [data-scope="comparison"] *)) th) { padding-block: 20px 8px; font: 500 var(--warp-text-eyebrow-size)/var(--warp-text-eyebrow-leading) var(--warp-text-eyebrow-font); letter-spacing: var(--warp-text-eyebrow-tracking); text-transform: var(--warp-text-eyebrow-case); color: var(--warp-color-text-subtle); }
+:where([data-scope="comparison"] [data-part="yes"]:not([data-scope="comparison"] [data-scope="roles-matrix"] *:not([data-scope="comparison"] [data-scope="roles-matrix"] [data-scope="comparison"] *))) { color: var(--warp-color-positive-text); }
+:where([data-scope="comparison"] [data-part="no"]:not([data-scope="comparison"] [data-scope="roles-matrix"] *:not([data-scope="comparison"] [data-scope="roles-matrix"] [data-scope="comparison"] *))) { color: var(--warp-color-text-subtle); }
+:where([data-scope="comparison"] [data-part="yes"]:not([data-scope="comparison"] [data-scope="roles-matrix"] *:not([data-scope="comparison"] [data-scope="roles-matrix"] [data-scope="comparison"] *)) svg),
+:where([data-scope="comparison"] [data-part="no"]:not([data-scope="comparison"] [data-scope="roles-matrix"] *:not([data-scope="comparison"] [data-scope="roles-matrix"] [data-scope="comparison"] *)) svg) { inline-size: 18px; block-size: 18px; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 2; }
 :where([data-scope="comparison"] [data-part="picker"]) { display: none; }
 @container (max-width: 620px) {
 :where([data-scope="comparison"] [data-part="picker"]) { display: flex; margin-block-end: 10px; }

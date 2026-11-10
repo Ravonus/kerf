@@ -755,7 +755,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 }
 /* alert dialog: a tone mark, no close button, footer without a rule */
 :where(dialog[role="alertdialog"]) { --_w: 440px; }
-:where(dialog[role="alertdialog"] [data-part="footer"]) { border: 0; background: transparent; padding-block-start: 0; }
+:where([data-scope="dialog"][role="alertdialog"] [data-part="footer"]) { border: 0; background: transparent; padding-block-start: 0; }
 :where([data-scope="dialog"] [data-part="mark"]) {
   inline-size: 36px; block-size: 36px; display: grid; place-items: center; border-radius: var(--warp-radius-control);
   background: var(--_soft); color: var(--_text); margin-block-end: var(--warp-space-related);

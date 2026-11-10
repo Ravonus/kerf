@@ -11,6 +11,6 @@
     all: unset; position: absolute; inset-inline: 20px; inset-block-end: 44px; box-sizing: border-box; z-index: 2;
     font: italic 400 40px/1.1 "Instrument Serif", Georgia, serif; color: var(--warp-color-text);
   }
-  :where([data-scope="signature"] [data-part="typed"]::placeholder) { color: var(--warp-color-text-subtle); }
-  :where([data-scope="signature"] [data-part="empty"]) { position: absolute; inset-block-start: 14px; inset-inline-start: 16px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); pointer-events: none; transition: opacity var(--warp-duration-fast); }
+  :where([data-scope="signature"] [data-part="typed"])::placeholder { color: var(--warp-color-text-subtle); }
+  :where([data-scope="signature"] [data-part="empty"]:not([data-scope="signature"] :is([data-scope="palette"],[data-scope="popup"],[data-scope="select"],[data-scope="shortcuts"],[data-scope="sidenav"]) *:not([data-scope="signature"] :is([data-scope="palette"],[data-scope="popup"],[data-scope="select"],[data-scope="shortcuts"],[data-scope="sidenav"]) [data-scope="signature"] *))) { position: absolute; inset-block-start: 14px; inset-inline-start: 16px; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); pointer-events: none; transition: opacity var(--warp-duration-fast); }
 }

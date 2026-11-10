@@ -37,10 +37,10 @@
   }
 }
 @media print {
-:where([data-scope="shell"] [data-part="header"]),
-  :where([data-scope="shell"] [data-part="nav"]),
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))),
   :where([data-scope="shell"] [data-part="skip"]),
-  :where([data-scope="shell"] [data-part="scrim"]),
+  :where([data-scope="shell"] [data-part="scrim"]:not([data-scope="shell"] [data-scope="popover"] *:not([data-scope="shell"] [data-scope="popover"] [data-scope="shell"] *))),
   :where([data-scope="master-detail"] > [data-part="list"]) { display: none !important; }
 :where([data-scope="master-detail"]) { display: block; block-size: auto; position: static; }
 :where([data-scope="scroll-area"]),

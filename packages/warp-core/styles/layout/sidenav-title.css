@@ -13,8 +13,8 @@
   :where([data-scope="sidenav"] > [data-part="panel"]),
   :where([data-scope="sidenav"] > [data-part="backdrop"]),
   :where([data-scope="sidenav"] [data-part="scroll"]),
-  :where([data-scope="sidenav"] [data-part="bar"]),
-  :where([data-scope="sidenav"] [data-part="bar"] svg),
+  :where([data-scope="sidenav"] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *))),
+  :where([data-scope="sidenav"] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *)) svg),
   :where([data-scope="sidenav-title"] > *) { transition: none; }
 }
 }

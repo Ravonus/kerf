@@ -818,7 +818,7 @@
     animation: warp-ring calc(120ms * var(--warp-motion-scale)) var(--warp-ease-out);   /* the ring is drawn out from the edge */
   }
   @keyframes warp-ring { from { outline-offset: 0px; outline-color: transparent; } }
-  :where(::selection) {
+  ::selection {
     background: var(--warp-color-accent-soft);
     color: var(--warp-color-text);
   }
@@ -884,7 +884,7 @@
     :where(h4),
     :where(h5),
     :where(h6) { --warp-trim-k: var(--warp-text-heading-trim-k); }
-    :where([data-scope="hero"] [data-part="title"]),
+    :where([data-scope="hero"] [data-part="title"]:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="hero"] *))),
     :where([data-trim="display"]) { --warp-trim-k: var(--warp-text-display-trim-k); }
     /* an accordion / disclosure heading holds a block button, not lines of its own: nothing to trim */
     :where(h1):where(:has(> button[aria-expanded])),
@@ -899,7 +899,7 @@
     :where(h4),
     :where(h5),
     :where(h6),
-    :where([data-scope="hero"] [data-part="title"]),
+    :where([data-scope="hero"] [data-part="title"]:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="hero"] *))),
     :where([data-trim]) {
       --warp-trim-fix: calc(var(--warp-trim-k, 0) * var(--warp-ref-trim-swap));
     }
@@ -919,7 +919,7 @@
       :where(h4),
       :where(h5),
       :where(h6),
-      :where([data-scope="hero"] [data-part="title"]),
+      :where([data-scope="hero"] [data-part="title"]:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="hero"] *))),
       :where([data-trim]) {
         padding-block-start: max(0px, var(--warp-trim-fix));
       }
@@ -931,7 +931,7 @@
       :where(h4),
       :where(h5),
       :where(h6),
-      :where([data-scope="hero"] [data-part="title"]),
+      :where([data-scope="hero"] [data-part="title"]:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="hero"] *))),
       :where([data-trim]) {
         block-size: calc-size(auto, size + min(0px, var(--warp-trim-fix)));
       }
@@ -1075,8 +1075,8 @@
   @media (prefers-reduced-motion: reduce) {
     :where(:root:not([data-motion="full"]) *) { scroll-behavior: auto !important; }
     :where(:root:not([data-motion="full"]) *),
-    :where(:root:not([data-motion="full"]) *::before),
-    :where(:root:not([data-motion="full"]) *::after) { animation-iteration-count: 1 !important; }
+    :where(:root:not([data-motion="full"]) *)::before,
+    :where(:root:not([data-motion="full"]) *)::after { animation-iteration-count: 1 !important; }
     :where(:root:not([data-motion="full"])) :where([data-shimmer]),
     :where(:root:not([data-motion="full"])) :where([data-scope="skeleton"]),
     :where(:root:not([data-motion="full"])) :where([data-part="skeleton"]),
@@ -1099,13 +1099,13 @@
     :where(:root:not([data-motion="full"])) :where([data-scope="shimmer"])::after,
     :where(:root:not([data-motion="full"])) :where([data-part="shimmer"])::after,
     :where(:root:not([data-motion="full"])) :where([data-loop])::after { animation: none !important; }
-    :where(:root:not([data-motion="full"])) :where([data-scope="spinner"], [data-part="spinner"], [data-part="spin"], [data-scope="progress"][data-state="indeterminate"] [data-part="range"]) {
+    :where(:root:not([data-motion="full"])) :where([data-scope="spinner"], [data-part="spinner"], [data-part="spin"], [data-scope="progress"][data-state="indeterminate"] [data-part="range"]:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) *:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) [data-scope="progress"] *))) {
       animation: warp-pulse 1.2s ease-in-out infinite alternate !important;
     }
   }
   :where([data-motion="reduce"] *),
-  :where([data-motion="reduce"] *::before),
-  :where([data-motion="reduce"] *::after) { animation-iteration-count: 1 !important; }
+  :where([data-motion="reduce"] *)::before,
+  :where([data-motion="reduce"] *)::after { animation-iteration-count: 1 !important; }
   :where([data-motion="reduce"]) :where([data-shimmer]),
   :where([data-motion="reduce"]) :where([data-scope="skeleton"]),
   :where([data-motion="reduce"]) :where([data-part="skeleton"]),
@@ -1128,7 +1128,7 @@
   :where([data-motion="reduce"]) :where([data-scope="shimmer"])::after,
   :where([data-motion="reduce"]) :where([data-part="shimmer"])::after,
   :where([data-motion="reduce"]) :where([data-loop])::after { animation: none !important; }
-  :where([data-motion="reduce"]) :where([data-scope="spinner"], [data-part="spinner"], [data-part="spin"], [data-scope="progress"][data-state="indeterminate"] [data-part="range"]) {
+  :where([data-motion="reduce"]) :where([data-scope="spinner"], [data-part="spinner"], [data-part="spin"], [data-scope="progress"][data-state="indeterminate"] [data-part="range"]:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) *:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) [data-scope="progress"] *))) {
     animation: warp-pulse 1.2s ease-in-out infinite alternate !important;
   }
 }
@@ -1424,22 +1424,22 @@
   :where([data-scope="field"] > [data-part="control"]:is(:focus-within)),
   :where([data-scope="field"][data-open] > [data-part="control"]) { background: var(--warp-color-field-active); }
   :where([data-scope="field"][data-invalid] > [data-part="control"]) { background: var(--warp-color-field-invalid); }
-  :where([data-scope="field"] [data-part="input"]) {
+  :where([data-scope="field"] [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) {
     all: unset; box-sizing: border-box; position: relative; z-index: 3;
     inline-size: 100%; block-size: 100%; padding-inline: var(--_lead) var(--warp-pad-control);
     border-radius: inherit; font: inherit; font-size: var(--warp-text-control-size);
     color: var(--warp-color-text);
   }
   :where([data-scope="field"] [data-part="input"])::placeholder { color: transparent; transition: color var(--warp-duration-fast); }
-  :where([data-scope="field"] [data-part="icon"]) {
+  :where([data-scope="field"] [data-part="icon"]:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="toast"],[data-scope="xy-pad"]) *:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="toast"],[data-scope="xy-pad"]) [data-scope="field"] *))) {
     position: absolute; z-index: 4; inset-block-start: 50%; inset-inline-start: var(--warp-pad-control);
     inline-size: 16px; block-size: 16px; margin-block-start: -8px; --warp-sweep-radius: 0px; pointer-events: none;
   }
-  :where([data-scope="field"] [data-part="icon"] svg) { inline-size: 16px; block-size: 16px; display: block; }
-  :where([data-scope="field"] [data-part="icon"] > [data-part="sweep-base"]) { color: var(--warp-color-text-subtle); }
+  :where([data-scope="field"] [data-part="icon"]:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="toast"],[data-scope="xy-pad"]) *:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="toast"],[data-scope="xy-pad"]) [data-scope="field"] *)) svg) { inline-size: 16px; block-size: 16px; display: block; }
+  :where([data-scope="field"] [data-part="icon"]:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="toast"],[data-scope="xy-pad"]) *:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="toast"],[data-scope="xy-pad"]) [data-scope="field"] *)) > [data-part="sweep-base"]) { color: var(--warp-color-text-subtle); }
 
   /* label at rest: inside, at the field's own text size */
-  :where([data-scope="field"] [data-part="label"]) {
+  :where([data-scope="field"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *))) {
     /* block, not flex: flex items are blockified, which spells the accessible name letter by letter */
     position: absolute; z-index: 5; display: block; pointer-events: none; user-select: none; white-space: nowrap;
     inset-block-start: 50%; inset-inline-start: var(--_lead); transform: translateY(-50%);
@@ -1452,8 +1452,8 @@
     animation: warp-label-a var(--warp-label-fade) linear;
   }
   /* floated: on hover, focus or value — or always, in fixed mode */
-  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-part="label"]),
-  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]) {
+  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *))),
+  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *))) {
     inset-block-start: var(--warp-label-float-offset); inset-inline-start: calc(var(--warp-pad-control) - 4px);
     transform: none; padding-inline: 4px;
     font-size: var(--warp-label-float-size); font-weight: var(--warp-label-float-weight);
@@ -1476,7 +1476,7 @@
      The letters are generated content (::before from data-c), so the accessible name AND textContent are
      the plain "Alt text": not spelled out, and not the floated uppercase "ALT TEXT" (Chrome applies
      text-transform to names). The older form (bare inline <span data-char>A</span>) still works. */
-  :where([data-scope="field"] [data-part="label"] [data-part="label-text"]),
+  :where([data-scope="field"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *)) [data-part="label-text"]),
   :where([data-part="label-text"]:has(+ [data-part="label-chars"])) {
     position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%);
     white-space: nowrap; text-transform: none; letter-spacing: normal;
@@ -1489,7 +1489,7 @@
   /* per-character tint that travels with the sweep: --d = x / sweep speed.
      The spans are INLINE: an inline-block per letter makes Chrome compute the label's accessible name
      (and innerText, copy, find) as "F I R S T  N A M E". Colour transitions need no box. */
-  :where([data-scope="field"] [data-part="label"] [data-char]) {
+  :where([data-scope="field"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *)) [data-char]) {
     display: inline; white-space: pre; color: var(--warp-color-label);
     transition: color var(--warp-label-char-duration) linear;
     transition-delay: calc(var(--d, 0ms) * var(--warp-label-stagger));
@@ -1507,7 +1507,7 @@
   :where([data-scope="field"][data-variant="classic"]),
   :where([data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) { padding-block-start: calc(var(--warp-text-label-size) * 1.25 + var(--warp-space-tight)); }
   :where([data-scope="field"][data-variant="classic"],
-         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) > [data-part="control"] [data-part="label"] {
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) > [data-part="control"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *)) {
     inset-block-start: auto; inset-block-end: calc(100% + var(--warp-space-tight));
     inset-inline-start: 0; transform: none; padding: 0; background: none;
     font-family: var(--warp-text-label-font); font-size: var(--warp-text-label-size);
@@ -1516,7 +1516,7 @@
     pointer-events: auto; cursor: default;   /* above the box, a <label for> click focuses the input */
   }
   :where([data-scope="field"][data-variant="classic"],
-         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) [data-part="input"]::placeholder { color: var(--warp-color-text-subtle); }
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))::placeholder { color: var(--warp-color-text-subtle); }
   :where([data-scope="field"][data-variant="classic"],
          [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) [data-char] { color: var(--warp-color-text); }
   :where([data-scope="field"][data-variant="classic"] > [data-part="control"]:is(:hover, :focus-within),
@@ -1563,11 +1563,11 @@
   :where([data-scope="comment-thread"]):where([data-sweep]):not([data-pin], [data-confirm]),
   :where([data-scope="artifact"]):where([data-sweep]):not([data-pin], [data-confirm]),
   :where([data-part="tool-frame"]):where([data-sweep]):not([data-pin], [data-confirm]),
-  :where([data-part="strip"]):where([data-sweep]):not([data-pin], [data-confirm]) { --_on: 0; }
+  :where([data-scope="speech"] [data-part="strip"]):where([data-sweep]):not([data-pin], [data-confirm]) { --_on: 0; }
 
   /* focus: the sweep is the indicator for fields; everything else keeps the ring */
-  :where([data-scope="field"] [data-part="input"]:focus-visible),
-  :where([data-scope="palette"] [data-part="input"]:focus-visible) { outline: none; }
+  :where([data-scope="field"] [data-part="input"]:focus-visible:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))),
+  :where([data-scope="palette"] [data-part="input"]:focus-visible:not([data-scope="palette"] [data-scope="field"] *:not([data-scope="palette"] [data-scope="field"] [data-scope="palette"] *))) { outline: none; }
 
   /* -- 5 · forced colours (Windows High Contrast and friends) ------------
      The UA repaints every colour with a few system colours, so "accent over ink" collapses to
@@ -1588,7 +1588,7 @@
     :where([data-part="rail-fill"]),
     :where([data-part="rail-hover"]),
     :where([data-part="thumb"]),
-    :where([data-part="indicator"]) { forced-color-adjust: none; }
+    :where(:is([data-scope="tabs"] > [data-part="list"], [data-scope="segmented"], [data-scope="toggle-group"]) > [data-part="indicator"]) { forced-color-adjust: none; }
     :where([data-part="sweep-base"]) { color: CanvasText; }
     :where([data-part="sweep"]) { color: Highlight; opacity: 1; }
     :where([data-part="sweep"]:empty) { border-width: 2px; }
@@ -1600,13 +1600,13 @@
     :where([data-scope="field"][data-invalid] > [data-part="control"] > [data-part="sweep"]),
     :where([data-invalid] > [data-part="sweep"]),
     :where([data-invalid] > [data-sweep] > [data-part="sweep"]) { color: CanvasText; border-style: double; border-width: 3px; }
-    :where([data-scope="field"] [data-part="label"]) { forced-color-adjust: none; color: CanvasText; background-color: Canvas; background-image: none; }
-    :where([data-scope="field"] [data-part="label"] [data-char]) { color: inherit; }
+    :where([data-scope="field"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *))) { forced-color-adjust: none; color: CanvasText; background-color: Canvas; background-image: none; }
+    :where([data-scope="field"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *)) [data-char]) { color: inherit; }
     /* the UA would force the transparent resting placeholder to GrayText, under the resting label */
     :where([data-scope="field"] [data-part="input"])::placeholder { forced-color-adjust: none; color: transparent; }
     :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="input"])::placeholder,
-    :where([data-fields="classic"] [data-scope="field"], [data-scope="field"][data-variant="classic"]) [data-part="input"]::placeholder { color: GrayText; }
-    :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="label"]) { color: Highlight; }
+    :where([data-fields="classic"] [data-scope="field"], [data-scope="field"][data-variant="classic"]) [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))::placeholder { color: GrayText; }
+    :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"]) [data-scope="field"] *))) { color: Highlight; }
     /* frame button: corners at rest, outline + active corners in Highlight; the label copy is redundant */
     :where([data-part="frame-corners"]) { color: CanvasText; }
     :where([data-part="sweep-corners"]) { color: Highlight; opacity: 1; }
@@ -1623,9 +1623,7 @@
     :where(:checked + [data-part="track"] [data-part="thumb"]),
     :where([data-on] > [data-part="thumb"]) { background: HighlightText; }
     :where(:checked + [data-part="track"], [data-on]) > :where([data-part="sweep"]) { visibility: visible; color: CanvasText; }
-    :where([data-part="indicator"]) ~ :where([aria-checked="true"]),
-    :where([data-part="indicator"]) ~ :where([aria-selected="true"]),
-    :where([data-part="indicator"]) ~ :where([aria-pressed="true"]) { forced-color-adjust: none; color: HighlightText; }
+    :where(:is([data-scope="tabs"] > [data-part="list"], [data-scope="segmented"], [data-scope="toggle-group"]) > [data-part="indicator"]) ~ :where([aria-checked="true"], [aria-selected="true"], [aria-pressed="true"]) { forced-color-adjust: none; color: HighlightText; }
     /* checkbox mark */
     :where([data-scope="checkbox"][data-part="control"] svg) { forced-color-adjust: none; stroke: CanvasText; }
   }
@@ -1799,7 +1797,7 @@
   :where([data-flow="stat"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-fade; view-timeline: --warp-flow-host block; }
   :where([data-scope="chart"]),
   :where([data-flow="chart"]) { --_flow-in: warp-in-chart; --_flow-out: warp-out-chart; --_flow-o: 50% 100%; }
-  :where([data-scope="gallery"] [data-part="item"]),
+  :where([data-scope="gallery"] [data-part="item"]:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"]) *:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"]) [data-scope="gallery"] *))),
   :where(figure),
   :where([data-flow="image"]) { --_flow-in: warp-in-image; --_flow-out: warp-out-image; }
   /* a heading leaves as its section's words do, by fading where they fade, without a move: left standing over a section
@@ -1817,7 +1815,7 @@
   :where([data-scope="form"] > *),
   :where([data-scope="field"]),
   :where([data-flow="form"]) { --_flow-in: warp-in-fade; --_flow-out: warp-out-none; }
-  :where([data-scope="kanban"] [data-part="card"]),
+  :where([data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))),
   :where([data-flow="deal"]) { --_flow-in: warp-in-deal; --_flow-out: warp-out-card; --_flow-o: 50% 0%; }
   /* hosts for a live example, one motion per kind of thing shown. A specimen (one component on its bench) grows in
      about its centre, with no travel, and recedes the same way; a block (a page's section) unfolds down from its top edge and folds back up; a plot
@@ -1828,14 +1826,14 @@
   /* a glyph in a grid: pops in by column, shrinks away */
   :where([data-flow="icon"]) { --_flow-in: warp-in-icon; --_flow-out: warp-out-icon; }
 
-  :where([data-scope="kanban"] [data-part="card"]:nth-child(even)) { --_flow-s: -1; }
+  :where([data-scope="kanban"] [data-part="card"]:nth-child(even):not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) { --_flow-s: -1; }
 
   @media screen { @supports (animation-timeline: view()) {
     :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
       [data-scope="table"] tbody > tr, [data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li,
-      [data-scope="stat"], [data-scope="chart"], [data-scope="gallery"] [data-part="item"], figure,
+      [data-scope="stat"], [data-scope="chart"], [data-scope="gallery"] [data-part="item"]:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"]) *:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"]) [data-scope="gallery"] *)), figure,
       [data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3, p, ul, ol, dl, blockquote, pre, table, figure), [data-scope="codeblock"],
-      [data-scope="form"] > *, [data-scope="field"], [data-scope="kanban"] [data-part="card"], [data-flow]:not([data-flow="off"])) {
+      [data-scope="form"] > *, [data-scope="field"], [data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *)), [data-flow]:not([data-flow="off"])) {
       --_flow-r: var(--warp-flow-reach, var(--warp-ref-flow-reach));
       --_flow-e: var(--warp-flow-out, var(--warp-ref-flow-out));
       --_flow-w: min(100%, max(var(--_flow-e), 45%));
@@ -1887,9 +1885,9 @@
       :where([data-scope="listing"]),
       :where([data-scope="plan"]),
       :where([data-scope="stat"]),
-      :where([data-scope="gallery"] [data-part="item"]),
+      :where([data-scope="gallery"] [data-part="item"]:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"]) *:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"]) [data-scope="gallery"] *))),
       :where([data-scope="form"] > *),
-      :where([data-scope="kanban"] [data-part="card"]),
+      :where([data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))),
       :where([data-flow="icon"]) {
         --_flow-i: mod(calc(sibling-index() - 1), var(--warp-flow-cols, 4));
       }
@@ -1899,7 +1897,7 @@
     @supports (width: calc(sibling-index() * 1px)) {
       :where([data-scope="table"]:has(> [data-part="viewport"]) tbody > tr) { --_flow-i: min(calc(sibling-index() - 1), 12); }
     }
-    :where([data-scope="stat"] [data-part="value"]) {
+    :where([data-scope="stat"] [data-part="value"]:not([data-scope="stat"] :is([data-scope="countdown"],[data-scope="field"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stopwatch"],[data-scope="surface"]) *:not([data-scope="stat"] :is([data-scope="countdown"],[data-scope="field"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stopwatch"],[data-scope="surface"]) [data-scope="stat"] *))) {
       --_flow-settle-time: var(--warp-duration-slow);
       display: block; animation: var(--warp-flow-gate, warp-in-value) auto var(--warp-ref-flow-ease) backwards;
       animation-timeline: --warp-flow-host; animation-range: entry 0 cover var(--warp-ref-flow-reach);

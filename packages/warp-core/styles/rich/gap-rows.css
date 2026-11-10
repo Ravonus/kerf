@@ -11,23 +11,23 @@
   :where(.emoji-anchor) { position: relative; }
   :where([data-scope="emoji"]) { inline-size: min(320px, 86vw); display: grid; gap: 6px; }
   :where([data-presentation="sheet"] [data-scope="emoji"]) { inline-size: auto; }
-  :where([data-scope="emoji"] [data-part="grid"]) { display: grid; gap: 2px; max-block-size: 210px; overflow: auto; }
+  :where([data-scope="emoji"] [data-part="grid"]:not([data-scope="emoji"] :is([data-scope="calendar"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) *:not([data-scope="emoji"] :is([data-scope="calendar"],[data-scope="form"],[data-scope="plans"],[data-scope="prefs-matrix"]) [data-scope="emoji"] *))) { display: grid; gap: 2px; max-block-size: 210px; overflow: auto; }
   :where([data-scope="emoji"] [role="row"]) { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
   :where([data-scope="emoji"] [role="gridcell"]) { all: unset; display: grid; place-items: center; block-size: 38px; border-radius: var(--warp-radius-control); font-size: 22px; cursor: pointer; }
   :where([data-pointer="coarse"] [data-scope="emoji"] [role="gridcell"]) { block-size: 44px; }
   :where([data-scope="emoji"] [role="gridcell"]:hover) { background: var(--warp-color-surface-hover); }
   :where([data-scope="emoji"] [role="gridcell"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: -2px; }
-  :where([data-scope="emoji"] [data-part="tabs"]) { display: flex; gap: 2px; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); padding-block-start: 6px; overflow-x: auto; }
+  :where([data-scope="emoji"] [data-part="tabs"]:not([data-scope="emoji"] [data-scope="md-editor"] *:not([data-scope="emoji"] [data-scope="md-editor"] [data-scope="emoji"] *))) { display: flex; gap: 2px; border-block-start: var(--warp-border-hairline) solid var(--warp-color-border); padding-block-start: 6px; overflow-x: auto; }
   :where([data-scope="emoji"] [role="tab"]) { all: unset; padding: 6px 8px; border-radius: var(--warp-radius-control); font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); cursor: pointer; }
   :where([data-scope="emoji"] [role="tab"][aria-selected="true"]) { color: var(--warp-color-accent-text); background: var(--warp-color-accent-soft); }
   :where([data-scope="emoji"] [role="tab"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); }
-  :where([data-scope="emoji"] [data-part="preview"]) { margin: 0; min-block-size: 1.4em; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
+  :where([data-scope="emoji"] [data-part="preview"]:not([data-scope="emoji"] :is([data-scope="artifact"],[data-scope="editable"],[data-scope="gradient"],[data-scope="prejoin"]) *:not([data-scope="emoji"] :is([data-scope="artifact"],[data-scope="editable"],[data-scope="gradient"],[data-scope="prejoin"]) [data-scope="emoji"] *))) { margin: 0; min-block-size: 1.4em; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); }
   :where(.rx-pill) { display: inline-flex; gap: 4px; align-items: center; padding: 2px 8px; border-radius: 999px; background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); font-size: 13px; }
   :where(.crop) { position: relative; border-radius: var(--warp-radius-surface); overflow: clip; background: var(--warp-color-surface-sunken); cursor: grab; touch-action: none; outline: none; }
   :where(.crop:active) { cursor: grabbing; }
   :where(.crop:focus-visible) { box-shadow: 0 0 0 var(--warp-focus-width) var(--warp-color-focus); }
   :where(.crop canvas) { display: block; inline-size: 100%; block-size: auto; }
-  :where(.crop [data-part="frame"]) { position: absolute; inset: 50% auto auto 50%; translate: -50% -50%; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 0 0 9999px rgb(0 0 0 / .5); pointer-events: none; transition: inline-size var(--warp-duration-base) var(--warp-ease-out), block-size var(--warp-duration-base) var(--warp-ease-out); }
+  :where(.crop [data-part="frame"]:not([data-scope=".crop"] :is([data-scope="cropper"],[data-scope="embed"],[data-scope="rte"]) *:not([data-scope=".crop"] :is([data-scope="cropper"],[data-scope="embed"],[data-scope="rte"]) [data-scope=".crop"] *))) { position: absolute; inset: 50% auto auto 50%; translate: -50% -50%; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 0 0 9999px rgb(0 0 0 / .5); pointer-events: none; transition: inline-size var(--warp-duration-base) var(--warp-ease-out), block-size var(--warp-duration-base) var(--warp-ease-out); }
   :where(.crop [data-part="frame"])::before, :where(.crop [data-part="frame"])::after { content: ""; position: absolute; inset: 33.3% 0; border-block: 1px solid rgb(255 255 255 / .35); }
   :where(.crop [data-part="frame"])::after { inset: 0 33.3%; border-block: 0; border-inline: 1px solid rgb(255 255 255 / .35); }
   :where(.crop-ctl) { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }

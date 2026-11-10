@@ -24,12 +24,12 @@
   opacity: 0; pointer-events: none; transition: opacity var(--warp-duration-base) var(--warp-ease-out);
 }
 :where([data-scope="sidenav"][data-open] > [data-part="backdrop"]) { opacity: 1; pointer-events: auto; }
-:where([data-scope="sidenav"] [data-part="head"]) {
+:where([data-scope="sidenav"] [data-part="head"]:not([data-scope="sidenav"] :is([data-scope="artifact"],[data-scope="calendar"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="transport"],[data-scope="truncate"]) *:not([data-scope="sidenav"] :is([data-scope="artifact"],[data-scope="calendar"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="transport"],[data-scope="truncate"]) [data-scope="sidenav"] *))) {
   display: flex; align-items: center; justify-content: space-between; gap: var(--warp-space-related);
   min-block-size: var(--warp-layout-bar); padding-inline: var(--warp-space-group) var(--warp-space-tight);
   border-block-end: var(--warp-border-hairline) solid var(--warp-color-border);
 }
-:where([data-scope="sidenav"] [data-part="title"]) { margin: 0; font-weight: 600; color: var(--warp-color-text); }
+:where([data-scope="sidenav"] [data-part="title"]:not([data-scope="sidenav"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="sidenav"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="sidenav"] *))) { margin: 0; font-weight: 600; color: var(--warp-color-text); }
 :where([data-scope="sidenav"] [data-part="scroll"]) {
   display: grid; align-content: start; gap: var(--warp-space-related); flex: 1; min-block-size: 0;
   overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: var(--warp-space-related);
@@ -38,11 +38,11 @@
 :where([data-scope="sidenav"] [data-scope="navlist"]) { gap: var(--warp-space-related); font-size: inherit; }
 :where([data-scope="sidenav"] [data-part="sections"]) { gap: 2px; }
 :where([data-scope="sidenav"] [data-part="sections"] > li > [data-part="group-label"]) { margin-block: var(--warp-space-tight) 2px; }
-:where([data-scope="sidenav"] [data-scope="navlist"] [data-part="item"]) { min-block-size: 32px; }
-:where([data-scope="sidenav"] [data-part="item"][data-fold]) { color: var(--warp-color-text); font-weight: 600; }
-:where([data-scope="sidenav"] [data-part="item"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); }
-:where([data-scope="sidenav"] [data-part="chevron"]) { display: inline-flex; color: var(--warp-color-text-subtle); }
-:where([data-scope="sidenav"] [data-part="chevron"] svg) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
+:where([data-scope="sidenav"] [data-scope="navlist"] [data-part="item"]:not([data-scope="navlist"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"]) *:not([data-scope="navlist"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"]) [data-scope="navlist"] *))) { min-block-size: 32px; }
+:where([data-scope="sidenav"] [data-part="item"][data-fold]:not([data-scope="sidenav"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sortable"],[data-scope="steps"]) *:not([data-scope="sidenav"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sortable"],[data-scope="steps"]) [data-scope="sidenav"] *))) { color: var(--warp-color-text); font-weight: 600; }
+:where([data-scope="sidenav"] [data-part="item"]:focus-visible:not([data-scope="sidenav"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sortable"],[data-scope="steps"]) *:not([data-scope="sidenav"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sortable"],[data-scope="steps"]) [data-scope="sidenav"] *))) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); }
+:where([data-scope="sidenav"] [data-part="chevron"]:not([data-scope="sidenav"] :is([data-scope="accordion"],[data-scope="disclosure"],[data-scope="menu"]) *:not([data-scope="sidenav"] :is([data-scope="accordion"],[data-scope="disclosure"],[data-scope="menu"]) [data-scope="sidenav"] *))) { display: inline-flex; color: var(--warp-color-text-subtle); }
+:where([data-scope="sidenav"] [data-part="chevron"]:not([data-scope="sidenav"] :is([data-scope="accordion"],[data-scope="disclosure"],[data-scope="menu"]) *:not([data-scope="sidenav"] :is([data-scope="accordion"],[data-scope="disclosure"],[data-scope="menu"]) [data-scope="sidenav"] *)) svg) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); }
 /* The sliding bar (warp-core nav.ts), as Nav draws it: one face, moved by transform. Before script the current link's
    static edge stands in; once the bar takes over, the edge goes. */
 :where([data-scope="sidenav"] [data-scope="navlist"][data-bar]) { position: relative; --_bar: var(--warp-sweep-width); }
@@ -54,7 +54,7 @@
 }
 :where([data-scope="sidenav"] [data-scope="navlist"][data-bar][data-ready] > [data-part="indicator"]) { opacity: 1; }
 :where([data-scope="sidenav"] [data-scope="navlist"][data-bar] > [data-part="indicator"][data-instant]) { transition: none; }
-:where([data-scope="sidenav"] [data-scope="navlist"][data-bar][data-ready] [data-part="item"][aria-current]) { box-shadow: none; }
+:where([data-scope="sidenav"] [data-scope="navlist"][data-bar][data-ready] [data-part="item"][aria-current]:not([data-scope="navlist"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"]) *:not([data-scope="navlist"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"]) [data-scope="navlist"] *))) { box-shadow: none; }
 :where([data-scope="sidenav"] [data-part="sections"] > li > ul) { margin-block: 2px var(--warp-space-tight); }
 :where([data-scope="sidenav"] [data-part="filter"]) {
   inline-size: 100%; box-sizing: border-box; min-block-size: var(--warp-control-sm); padding: 0 var(--warp-space-related);
@@ -62,10 +62,10 @@
   background: var(--warp-color-field); color: var(--warp-color-text); font: inherit;
 }
 :where([data-scope="sidenav"] [data-part="filter"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: 0; }
-:where([data-scope="sidenav"] [data-part="empty"]) { margin: 0; padding-inline: 10px; color: var(--warp-color-text-subtle); }
+:where([data-scope="sidenav"] [data-part="empty"]:not([data-scope="sidenav"] :is([data-scope="palette"],[data-scope="popup"],[data-scope="select"],[data-scope="shortcuts"],[data-scope="signature"]) *:not([data-scope="sidenav"] :is([data-scope="palette"],[data-scope="popup"],[data-scope="select"],[data-scope="shortcuts"],[data-scope="signature"]) [data-scope="sidenav"] *))) { margin: 0; padding-inline: 10px; color: var(--warp-color-text-subtle); }
 /* The bar, on a phone: outside the panel's box, past its border, so it shows while the panel waits off screen (a
    strip down the left, under whatever sticks above) and rides out with it. It stays visible when the panel is not. */
-:where([data-scope="sidenav"] [data-part="bar"]) {
+:where([data-scope="sidenav"] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *))) {
   position: absolute; inset-block: var(--warp-sidenav-top, 0px) 0; inset-inline-start: calc(100% + var(--warp-border-hairline)); z-index: 1; visibility: visible;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--warp-space-tight);
   inline-size: var(--warp-sidenav-bar, 28px); box-sizing: border-box; margin: 0; padding: var(--warp-space-related) 0;
@@ -74,17 +74,17 @@
   font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
   transition: color var(--warp-duration-fast), background-color var(--warp-duration-fast);
 }
-:where([data-scope="sidenav"] [data-part="bar"]:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
-:where([data-scope="sidenav"] [data-part="bar"]:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); color: var(--warp-color-text); }
-:where([data-scope="sidenav"] [data-part="bar"] svg) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); flex: none; transition: transform var(--warp-duration-sheet, 240ms) var(--warp-ease-out); }
+:where([data-scope="sidenav"] [data-part="bar"]:hover:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *))) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
+:where([data-scope="sidenav"] [data-part="bar"]:focus-visible:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *))) { outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1); color: var(--warp-color-text); }
+:where([data-scope="sidenav"] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *)) svg) { inline-size: var(--warp-icon-sm); block-size: var(--warp-icon-sm); flex: none; transition: transform var(--warp-duration-sheet, 240ms) var(--warp-ease-out); }
 :where([data-scope="sidenav"] [data-part="bar-label"]) {
   writing-mode: vertical-rl; max-block-size: 50%; overflow: clip; overflow-clip-margin: 4px; text-overflow: ellipsis; white-space: nowrap;
   font-weight: 600; letter-spacing: 0.02em; transition: opacity var(--warp-duration-base) var(--warp-ease-out);
 }
 /* Open, the bar is the panel's edge: the chevron points back, and the title is the panel's head, so the label goes
    (from sight only: it stays the button's name). */
-:where([data-scope="sidenav"][data-open] [data-part="bar"] svg) { transform: rotate(180deg); }
-:where([data-scope="sidenav"][data-open] [data-part="bar"]) { box-shadow: none; }
+:where([data-scope="sidenav"][data-open] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *)) svg) { transform: rotate(180deg); }
+:where([data-scope="sidenav"][data-open] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *))) { box-shadow: none; }
 :where([data-scope="sidenav"][data-open] [data-part="bar-label"]) { opacity: 0; }
 @media (min-width: 900px) {
 :where([data-scope="sidenav"]) { display: block; min-inline-size: 0; position: sticky; inset-block-start: var(--warp-sidenav-top, 0px); align-self: start; }
@@ -93,7 +93,7 @@
     padding: 0; background: none; border: 0; box-shadow: none; transform: none; visibility: visible; transition: none;
   }
 :where([data-scope="sidenav"] > [data-part="backdrop"]),
-  :where([data-scope="sidenav"] [data-part="head"]) { display: none; }
+  :where([data-scope="sidenav"] [data-part="head"]:not([data-scope="sidenav"] :is([data-scope="artifact"],[data-scope="calendar"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="transport"],[data-scope="truncate"]) *:not([data-scope="sidenav"] :is([data-scope="artifact"],[data-scope="calendar"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="transport"],[data-scope="truncate"]) [data-scope="sidenav"] *))) { display: none; }
 :where([data-scope="sidenav"] [data-part="scroll"]) { padding: var(--warp-space-group) var(--warp-space-tight) var(--warp-space-group) 0; }
 :where([data-scope="sidenav"] [data-part="scroll"] > [data-part="filter"]) { position: sticky; inset-block-start: 0; z-index: 1; }
 :where([data-scope="sidenav"][data-collapsible]) {
@@ -108,13 +108,13 @@
 :where([data-scope="sidenav"][data-collapsed] [data-part="scroll"]) {
     opacity: 0; visibility: hidden; transition: opacity var(--warp-duration-base) var(--warp-ease-out), visibility 0s linear var(--warp-duration-base);
   }
-:where([data-scope="sidenav"] [data-part="bar"]) { inset-block: 0; inset-inline: auto 0; background: none; box-shadow: none; }
-:where([data-scope="sidenav"] [data-part="bar"]:hover) { background: var(--warp-color-surface-hover); }
-:where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"] svg) { transform: rotate(180deg); }
+:where([data-scope="sidenav"] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *))) { inset-block: 0; inset-inline: auto 0; background: none; box-shadow: none; }
+:where([data-scope="sidenav"] [data-part="bar"]:hover:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *))) { background: var(--warp-color-surface-hover); }
+:where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *)) svg) { transform: rotate(180deg); }
 @media (hover: hover) {
-    :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"] svg) { opacity: 0; transition: transform var(--warp-duration-sheet, 240ms) var(--warp-ease-out), opacity var(--warp-duration-base) var(--warp-ease-out); }
-    :where([data-scope="sidenav"]:not([data-collapsed]):hover [data-part="bar"] svg),
-    :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"]:focus-visible svg) { opacity: 1; }
+    :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *)) svg) { opacity: 0; transition: transform var(--warp-duration-sheet, 240ms) var(--warp-ease-out), opacity var(--warp-duration-base) var(--warp-ease-out); }
+    :where([data-scope="sidenav"]:not([data-collapsed]):hover [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *)) svg),
+    :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar"]:focus-visible:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *)) svg) { opacity: 1; }
   }
 :where([data-scope="sidenav"]:not([data-collapsed]) [data-part="bar-label"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); }
 }
@@ -125,7 +125,7 @@
   :where([data-scope="sidenav"][data-overlay="under"] > [data-part="backdrop"]) { inset-block-start: var(--warp-sidenav-top, 0px); padding-block-start: 0; }
 :where([data-scope="sidenav"][data-overlay="under"] > [data-part="panel"] > [data-part="head"]) { display: none; }
 :where([data-scope="sidenav"][data-overlay="under"] [data-part="scroll"]) { padding: var(--warp-space-group); }
-:where([data-scope="sidenav"][data-overlay="under"] [data-part="bar"]) { inset-block-start: 0; }
+:where([data-scope="sidenav"][data-overlay="under"] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *))) { inset-block-start: 0; }
 }
 :root:has([data-scope="sidenav"][data-overlay="under"][data-open]) :where([data-scope="sidenav-title"] > [data-part="home"]) { translate: 0 -0.5em; opacity: 0; }
 :root:has([data-scope="sidenav"][data-overlay="under"][data-open]) :where([data-scope="sidenav-title"] > [data-part="title"]) { translate: none; opacity: 1; transition-delay: 60ms; }
@@ -137,8 +137,8 @@
   :where([data-scope="sidenav"] > [data-part="panel"]),
   :where([data-scope="sidenav"] > [data-part="backdrop"]),
   :where([data-scope="sidenav"] [data-part="scroll"]),
-  :where([data-scope="sidenav"] [data-part="bar"]),
-  :where([data-scope="sidenav"] [data-part="bar"] svg),
+  :where([data-scope="sidenav"] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *))),
+  :where([data-scope="sidenav"] [data-part="bar"]:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) *:not([data-scope="sidenav"] :is([data-scope="distribution"],[data-scope="gradient"],[data-scope="tests"]) [data-scope="sidenav"] *)) svg),
   :where([data-scope="sidenav-title"] > *) { transition: none; }
 }
 @media print {

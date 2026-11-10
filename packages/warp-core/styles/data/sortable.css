@@ -8,14 +8,14 @@
   transition: translate var(--warp-duration-base) var(--warp-ease-out), box-shadow var(--warp-duration-fast);
 }
 :where([data-scope="sortable"] > li[data-grabbed]) { box-shadow: 0 0 0 2px var(--warp-color-accent-solid), var(--warp-elevation-2); position: relative; z-index: 2; transition: none; }
-:where([data-scope="sortable"] [data-part="handle"]) {
+:where([data-scope="sortable"] [data-part="handle"]:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) *:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) [data-scope="sortable"] *))) {
   all: unset; display: grid; place-items: center; inline-size: 28px; block-size: max(32px, var(--warp-hit-min)); cursor: grab; touch-action: none; color: var(--warp-color-text-subtle); border-radius: 4px;
 }
-:where([data-scope="sortable"] [data-part="handle"]:focus-visible) { outline: 2px solid var(--warp-color-focus); }
-:where([data-scope="sortable"] [data-part="handle"][aria-pressed="true"]) { color: var(--warp-color-accent-text); background: var(--warp-color-accent-soft); }
+:where([data-scope="sortable"] [data-part="handle"]:focus-visible:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) *:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) [data-scope="sortable"] *))) { outline: 2px solid var(--warp-color-focus); }
+:where([data-scope="sortable"] [data-part="handle"][aria-pressed="true"]:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) *:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) [data-scope="sortable"] *))) { color: var(--warp-color-accent-text); background: var(--warp-color-accent-soft); }
 :where([data-scope="sortable"] [data-part="rank"]) { font: 500 11px/1.25 var(--warp-font-mono); color: var(--warp-color-text-subtle); }
 /* drag handles in sortable lists and layers: 28px wide, hit-min tall; the expander adds the inline axis
    (the neighbours are the rank and the name, which aren't targets) */
-:where([data-scope="sortable"] [data-part="handle"]) { position: relative; }
+:where([data-scope="sortable"] [data-part="handle"]:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) *:not([data-scope="sortable"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sheet"]) [data-scope="sortable"] *))) { position: relative; }
 :where([data-scope="sortable"] [data-part="handle"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--warp-hit-min)) / 2)); }
 }

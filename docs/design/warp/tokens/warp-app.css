@@ -448,7 +448,7 @@
 :where([data-scope="agenda"] [data-part="strip"] button[data-today] b) { box-shadow: inset 0 0 0 var(--warp-border-emphasis) var(--warp-color-sweep); }
 :where([data-scope="agenda"] [data-part="strip"] button[data-today][aria-selected="true"] b) { background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid); box-shadow: none; }
 :where([data-scope="agenda"] [data-part="strip"] button i) { display: flex; gap: 2px; block-size: 4px; }
-:where([data-scope="agenda"] [data-part="strip"] button i::before) { content: none; }
+:where([data-scope="agenda"] [data-part="strip"] button i)::before { content: none; }
 :where([data-scope="agenda"] [data-part="strip"] button i em) { inline-size: 4px; block-size: 4px; border-radius: 9px; background: var(--_c); }
 :where([data-scope="agenda"] [data-part="viewport"]) { position: relative; overflow: clip; min-block-size: 0; touch-action: pan-y; }
 :where([data-scope="agenda"] [data-part="track"]) {
@@ -569,10 +569,10 @@
 :where([data-scope="tile"][data-speaking])::after { clip-path: inset(0 0 0 0 round var(--warp-radius-surface)); }
 :where([data-scope="tile"][data-speaking-out])::after { clip-path: inset(0 0 0 100% round var(--warp-radius-surface)); }
 /* audio level: 3 bars driven by a --level custom property (0..1), no loop */
-:where([data-part="level"]) { display: inline-flex; align-items: center; gap: 2px; block-size: 12px; }
-:where([data-part="level"] i) { inline-size: 2px; border-radius: 2px; background: currentColor; block-size: calc(3px + 9px * var(--level, 0) * var(--k, 1)); transition: block-size 90ms linear; }
-:where([data-part="level"] i:nth-child(1)),
-:where([data-part="level"] i:nth-child(3)) { --k: 0.6; }
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"]) { display: inline-flex; align-items: center; gap: 2px; block-size: 12px; }
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { inline-size: 2px; border-radius: 2px; background: currentColor; block-size: calc(3px + 9px * var(--level, 0) * var(--k, 1)); transition: block-size 90ms linear; }
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i:nth-child(1)),
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i:nth-child(3)) { --k: 0.6; }
 :where([data-scope="tile"][data-network="poor"]) { box-shadow: inset 0 0 0 1px var(--warp-color-caution-border); }
 :where([data-scope="tile"][data-network="poor"] [data-scope="avatar"]) { filter: saturate(0.6); }
 :where([data-scope="tile"][data-cam="off"] [data-part="video"]) { display: none; }
@@ -851,7 +851,7 @@
 :where([data-scope="assistant"] [data-part="content"]) { min-inline-size: 0; display: grid; gap: 10px; font-size: var(--warp-text-prose-size); line-height: var(--warp-text-prose-leading); }
 :where([data-scope="assistant"] [data-part="content"] p) { margin: 0; }
 :where([data-scope="assistant"] [data-part="content"] ul) { margin: 0; padding-inline-start: 1.2em; list-style: disc; display: grid; gap: 4px; }
-:where([data-scope="assistant"] [data-part="content"] ul li::marker) { color: var(--warp-color-sweep); }
+:where([data-scope="assistant"] [data-part="content"] ul li)::marker { color: var(--warp-color-sweep); }
 :where([data-scope="assistant"] [data-part="content"] code:not(pre code)) { padding: 1px 5px; border-radius: var(--warp-radius-mark); background: var(--warp-color-surface-sunken); font-size: 0.86em; }
 :where([data-scope="assistant"] pre) {
   margin: 0; padding: 12px 14px; overflow: auto; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken);
@@ -911,7 +911,7 @@
 :where([data-scope="tool-call"]) > :where([data-part="sweep"]),
 :where([data-scope="tool-call"]) > :where([data-part="sweep-base"]) { inset: 0; }
 :where([data-scope="tool-call"] summary) { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: 8px; min-block-size: 38px; padding: 0 10px; cursor: pointer; list-style: none; position: relative; z-index: 3; }
-:where([data-scope="tool-call"] summary::-webkit-details-marker) { display: none; }
+:where([data-scope="tool-call"] summary)::-webkit-details-marker { display: none; }
 :where([data-scope="tool-call"] [data-part="name"]) { font: 500 12.5px/1 var(--warp-font-mono); color: var(--warp-color-text); }
 :where([data-scope="tool-call"] [data-part="arg"]) { color: var(--warp-color-text-subtle); font: 400 12px/1 var(--warp-font-mono); overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
 :where([data-scope="tool-call"] [data-part="dur"]) { font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
@@ -1018,7 +1018,7 @@
   display: inline-flex; align-items: center; gap: 8px; block-size: 28px; padding-inline: 2px 8px; border-radius: var(--warp-radius-control);
   color: var(--warp-color-text-subtle); cursor: pointer; list-style: none; font-weight: 500;
 }
-:where([data-scope="reasoning"] summary::-webkit-details-marker) { display: none; }
+:where([data-scope="reasoning"] summary)::-webkit-details-marker { display: none; }
 :where([data-scope="reasoning"] summary:hover) { color: var(--warp-color-text); }
 :where([data-scope="reasoning"] [data-part="chev"]) { transition: rotate var(--warp-duration-base) var(--warp-ease-out); }
 :where([data-scope="reasoning"][open] [data-part="chev"]) { rotate: 90deg; }
@@ -1241,9 +1241,9 @@
    warp.css (an opacity pulse under reduce). Audio levels stop moving in height
    and read as opacity instead. End states are unchanged.
    ------------------------------------------------------------------------ */
-:where([data-motion="reduce"] [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
+:where([data-motion="reduce"] :is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
 @media (prefers-reduced-motion: reduce) {
-  :where(:root:not([data-motion="full"]) [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
+  :where(:root:not([data-motion="full"]) :is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
 }
 
 /* ---------------------------------------------------------------------------
@@ -1342,7 +1342,7 @@
   :where([data-scope="calendar"] [data-part="now"])::before,
   :where([data-scope="calendar"] [data-part="now-label"]),
   :where([data-scope="agenda"] [data-part="now"] i),
-  :where([data-scope="agenda"] [data-part="now"] i::before),
+  :where([data-scope="agenda"] [data-part="now"] i)::before,
   :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
   :where([data-scope="run"] > li[data-state="done"])::before,
   :where([data-scope="tool-call"][data-state="running"])::before,
@@ -1378,7 +1378,7 @@
   :where([data-scope="calendar"] [data-part="sources"] input) { forced-color-adjust: none; border-color: CanvasText; background: Canvas; }
   :where([data-scope="calendar"] [data-part="sources"] input:checked) { border-color: Highlight; background: Highlight; }
   :where([data-scope="speech"] [data-part="wave"] i),
-  :where([data-part="level"] i) { forced-color-adjust: none; background: CanvasText; }
+  :where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { forced-color-adjust: none; background: CanvasText; }
   :where([data-scope="speech"][data-state="listening"] [data-part="wave"] i) { background: Highlight; }
 }
 

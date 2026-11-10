@@ -15,7 +15,7 @@
 :where([data-scope="conn"] [data-part="msg"]) { flex: 1 1 220px; min-inline-size: 0; }
 :where([data-scope="conn"] [data-part="msg"] b) { font-weight: 600; }
 :where([data-scope="conn"] svg) { inline-size: 16px; block-size: 16px; flex: none; }
-:where([data-scope="conn"] [data-part="rail"]) { flex: 1 0 100%; block-size: 2px; box-shadow: none; background: color-mix(in oklab, currentColor 18%, transparent); }
-:where([data-scope="conn"] [data-part="rail"] [data-part="rail-fill"]) { background: currentColor; clip-path: none; transform-origin: 0 50%; transform: scaleX(var(--p, 1)); transition: transform 1s linear; }
+:where([data-scope="conn"] [data-part="rail"]:not([data-scope="conn"] :is([data-scope="calendar"],[data-scope="checklist"],[data-scope="meter"],[data-scope="room"],[data-scope="tracker"]) *:not([data-scope="conn"] :is([data-scope="calendar"],[data-scope="checklist"],[data-scope="meter"],[data-scope="room"],[data-scope="tracker"]) [data-scope="conn"] *))) { flex: 1 0 100%; block-size: 2px; box-shadow: none; background: color-mix(in oklab, currentColor 18%, transparent); }
+:where([data-scope="conn"] [data-part="rail"]:not([data-scope="conn"] :is([data-scope="calendar"],[data-scope="checklist"],[data-scope="meter"],[data-scope="room"],[data-scope="tracker"]) *:not([data-scope="conn"] :is([data-scope="calendar"],[data-scope="checklist"],[data-scope="meter"],[data-scope="room"],[data-scope="tracker"]) [data-scope="conn"] *)) [data-part="rail-fill"]:not([data-scope="conn"] :is([data-scope="meter"],[data-scope="switch"],[data-scope="tracker"]) *:not([data-scope="conn"] :is([data-scope="meter"],[data-scope="switch"],[data-scope="tracker"]) [data-scope="conn"] *))) { background: currentColor; clip-path: none; transform-origin: 0 50%; transform: scaleX(var(--p, 1)); transition: transform 1s linear; }
 @keyframes warp-conn-in { from { opacity: 0; transform: translateY(calc(-6px * var(--warp-motion-scale))); } }
 }

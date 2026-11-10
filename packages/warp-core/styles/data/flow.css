@@ -23,12 +23,12 @@
 :where([data-scope="flow"] [data-part="node"] b i) { inline-size: 8px; block-size: 8px; border-radius: 2px; background: var(--_dc); }
 :where([data-scope="flow"] [data-part="node"]:focus-visible) { outline: 2px solid var(--warp-color-focus); outline-offset: 2px; }
 :where([data-scope="flow"] [data-part="node"][aria-selected="true"]) { box-shadow: 0 0 0 2px var(--warp-color-accent-solid), var(--warp-elevation-2); }
-:where([data-scope="flow"] [data-part="handle"]) {
+:where([data-scope="flow"] [data-part="handle"]:not([data-scope="flow"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="select"],[data-scope="sheet"],[data-scope="sortable"]) *:not([data-scope="flow"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="select"],[data-scope="sheet"],[data-scope="sortable"]) [data-scope="flow"] *))) {
   position: absolute; inset-block-start: 50%; translate: 0 -50%; inline-size: 12px; block-size: 12px; border-radius: 50%;
   background: var(--warp-color-surface-raised); border: 2px solid var(--warp-color-accent-solid);
 }
-:where([data-scope="flow"] [data-part="handle"][data-side="in"]) { inset-inline-start: -7px; }
-:where([data-scope="flow"] [data-part="handle"][data-side="out"]) { inset-inline-end: -7px; }
+:where([data-scope="flow"] [data-part="handle"][data-side="in"]:not([data-scope="flow"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="select"],[data-scope="sheet"],[data-scope="sortable"]) *:not([data-scope="flow"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="select"],[data-scope="sheet"],[data-scope="sortable"]) [data-scope="flow"] *))) { inset-inline-start: -7px; }
+:where([data-scope="flow"] [data-part="handle"][data-side="out"]:not([data-scope="flow"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="select"],[data-scope="sheet"],[data-scope="sortable"]) *:not([data-scope="flow"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="select"],[data-scope="sheet"],[data-scope="sortable"]) [data-scope="flow"] *))) { inset-inline-end: -7px; }
 /* interactive surfaces always answer hover with a fill step (the sweep adds to it only when the surface opts in).
    Last in the layer so it beats each surface's own background. */
 :where([data-scope="card"], [data-scope="stat"][data-interactive], [data-scope="kanban"] [data-part="card"], [data-scope="flow"] [data-part="node"]):where(:hover) {

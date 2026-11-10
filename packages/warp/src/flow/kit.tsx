@@ -15,7 +15,7 @@ import { toast } from '../Toast'
 import '../styles'
 import '@weft-js/warp-core/styles/flows/tokens.css'
 import '@weft-js/warp-core/styles/flows/base.css'
-import '@weft-js/warp-core/styles/flows/meter.css' // the result mark
+import '@weft-js/warp-core/styles/flows/result.css' // the result mark
 import '@weft-js/warp-core/styles/layout/stack.css'
 
 export type Heading = 'h1' | 'h2' | 'h3'
@@ -61,7 +61,7 @@ export function Mark({
   children?: unknown
 }) {
   return (
-    <span data-part="mark" data-tone={tone}>
+    <span data-scope="result" data-tone={tone}>
       {draw ? (
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path pathLength="1" data-draw="" d="m5 12.5 4.5 4.5L19 7.5" />

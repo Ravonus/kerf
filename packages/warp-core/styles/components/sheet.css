@@ -62,7 +62,7 @@
 /* the grabber: a 24px strip holding a 36×4 bar; its hit area reaches hit-min (44px on touch)
    by overlapping the header, which is a drag area anyway. Focus rings the bar, not the strip
    (review 02 M4: the strip's own ring drew a full-width box across the sheet's top edge). */
-:where([data-scope="sheet"] [data-part="handle"]) {
+:where([data-scope="sheet"] [data-part="handle"]:not([data-scope="sheet"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sortable"]) *:not([data-scope="sheet"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sortable"]) [data-scope="sheet"] *))) {
   display: none; position: relative; justify-self: stretch; block-size: 24px; margin: 0; padding: 0; border: 0;
   background: transparent; cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent; outline: none;
 }
@@ -83,21 +83,21 @@
    markDevice sets from more than the width; before script, a coarse pointer that can't hover), and there the X gives
    way to it. The X stays in the accessibility tree, so a screen reader can still close the sheet. On a desktop there's
    no grabber and the X closes */
-:where(:root[data-device="mobile"] [data-scope="sheet"][data-side="bottom"] [data-part="handle"]) { display: block; }
-:where(:root[data-device="mobile"] [data-scope="sheet"][data-side="bottom"] [data-part="close"]) {
+:where(:root[data-device="mobile"] [data-scope="sheet"][data-side="bottom"] [data-part="handle"]:not([data-scope="sheet"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sortable"]) *:not([data-scope="sheet"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sortable"]) [data-scope="sheet"] *))) { display: block; }
+:where(:root[data-device="mobile"] [data-scope="sheet"][data-side="bottom"] [data-part="close"]:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="doc-tabs"]) *:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="doc-tabs"]) [data-scope="sheet"] *))) {
   position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
 }
 @media (hover: none) and (pointer: coarse) {
-  :where(:root:not([data-device]) [data-scope="sheet"][data-side="bottom"] [data-part="handle"]) { display: block; }
-  :where(:root:not([data-device]) [data-scope="sheet"][data-side="bottom"] [data-part="close"]) {
+  :where(:root:not([data-device]) [data-scope="sheet"][data-side="bottom"] [data-part="handle"]:not([data-scope="sheet"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sortable"]) *:not([data-scope="sheet"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="popover"],[data-scope="select"],[data-scope="sortable"]) [data-scope="sheet"] *))) { display: block; }
+  :where(:root:not([data-device]) [data-scope="sheet"][data-side="bottom"] [data-part="close"]:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="doc-tabs"]) *:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="doc-tabs"]) [data-scope="sheet"] *))) {
     position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
   }
 }
-:where([data-scope="sheet"][data-side="bottom"] [data-part="header"]) { padding-block-start: var(--warp-space-tight); touch-action: none; }
+:where([data-scope="sheet"][data-side="bottom"] [data-part="header"]:not([data-scope="sheet"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="shell"]) *:not([data-scope="sheet"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="shell"]) [data-scope="sheet"] *))) { padding-block-start: var(--warp-space-tight); touch-action: none; }
 /* initial focus lands on the title (tabindex="-1"), never the grabber; a programmatic
    landing spot needs no ring of its own */
-:where([data-scope="sheet"] [data-part="title"][tabindex="-1"]:focus),
-:where([data-scope="dialog"] [data-part="title"][tabindex="-1"]:focus) { outline: none; }
+:where([data-scope="sheet"] [data-part="title"][tabindex="-1"]:focus:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="sheet"] *))),
+:where([data-scope="dialog"] [data-part="title"][tabindex="-1"]:focus:not([data-scope="dialog"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="dialog"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="dialog"] *))) { outline: none; }
 /* snap points: the sheet is one 92% panel translated down by --_drag. The footer is lifted by
    --_lift (the resting snap's offset, set on snap, not per drag frame), so the primary action sits
    at the bottom of the visible part at every snap point, above the safe area. It moves on the

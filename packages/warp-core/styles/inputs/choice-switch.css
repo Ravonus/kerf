@@ -52,15 +52,15 @@
 }
 :where([data-scope="switch"]) > [data-part="track"] > [data-part="rail-fill"] { overflow: clip; }
 :where([data-scope="switch"]) > input:checked + [data-part="track"] { --_base: var(--warp-color-accent-solid); }
-:where([data-scope="switch"] [data-part="thumb"]) {
+:where([data-scope="switch"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *))) {
   position: absolute; z-index: 3; inset-block-start: 3px; inset-inline-start: 3px; inline-size: 18px; block-size: 18px;
   border-radius: var(--warp-radius-round); background: var(--warp-color-text-subtle); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);   /* the knob's corners follow the track's */
 }
-:where([data-scope="switch"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(20px); background: var(--warp-color-accent-on-solid); }
+:where([data-scope="switch"]) > input:checked + [data-part="track"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *)) { transform: translateX(20px); background: var(--warp-color-accent-on-solid); }
 :where([data-scope="switch"]) > input:focus-visible + [data-part="track"] > [data-part="sweep"] { border-width: calc(var(--warp-sweep-width) + 1px); }
 :where([data-scope="switch"][data-size="sm"]) > [data-part="track"] { inline-size: 36px; block-size: 20px; }
-:where([data-scope="switch"][data-size="sm"] [data-part="thumb"]) { inline-size: 14px; block-size: 14px; }
-:where([data-scope="switch"][data-size="sm"]) > input:checked + [data-part="track"] [data-part="thumb"] { transform: translateX(16px); }
+:where([data-scope="switch"][data-size="sm"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *))) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="switch"][data-size="sm"]) > input:checked + [data-part="track"] [data-part="thumb"]:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) *:not([data-scope="switch"] :is([data-scope="line-item"],[data-scope="scroll-rail"],[data-scope="slider"],[data-scope="uploads"],[data-scope="xy-pad"]) [data-scope="switch"] *)) { transform: translateX(16px); }
 :where([data-scope="switch"][data-placement="end"]) { grid-template-columns: minmax(0, 1fr) auto; justify-self: stretch; }
 :where([data-scope="switch"][data-placement="end"]) > [data-part="track"] { grid-column: 2; grid-row: 1; }
 :where([data-scope="switch"][data-placement="end"]) > input { grid-area: 1 / 2 / 2 / 3; }

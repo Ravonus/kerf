@@ -1050,8 +1050,8 @@ page theme.
 - **data (06):** the "3px status-bar buttons" in review 02 are the data tracker, not app.
 - **flows (09):** the role/permission matrix and SignGate stay in 09 (see the scope note at the top). The 403 state
   lives here (`app.html#sys-403`, §6.5) because it belongs to sharing; 09 §5.1 can link to it from its system pages.
-  `app.html` doesn't load `warp-flows.css` (the `field` / `plan` scopes and the global `mark` / `rail` parts would
-  collide), so `warp-app.css` §13 mirrors the `system-page` anatomy with the same values; where both load, flows wins.
+  `app.html` doesn't load `warp-flows.css` (the `field` / `plan` scopes would collide; the global `mark` part is now
+  its own `result` scope, 01 §10), so `warp-app.css` §13 mirrors the `system-page` anatomy with the same values; where both load, flows wins.
 - **realtime (PLAN §4.2, research 07 §9.5):** the transport picker shows no polling fallback because Weft v0 has none.
   If a long-poll fallback or a `transport` option lands, add it as a Network outcome and a wire card, not before.
   `server.network({ latency, loss, blockUpgrade })` in §4.7 is a proposed `@weft-js/core/test` addition.

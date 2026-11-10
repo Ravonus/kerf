@@ -15,7 +15,7 @@
 :where([data-scope="chip"]:is(:active)),
 :where([data-scope="chip"]:is([data-press])) { scale: var(--warp-press); transition-duration: 0ms; }
 /* A choice's box presses in, here or (data-press, from `ui`) in another pane, tab or client. */
-:where(label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):is(:active, [data-press]) [data-part="control"]) { scale: var(--warp-press); transition-duration: 0ms; }
+:where(label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):is(:active, [data-press]) [data-part="control"]:not(:is([data-scope="checkbox"],[data-scope="radio"],[data-scope="switch"]) :is([data-scope="call-controls"],[data-scope="field"],[data-scope="setting-row"]) *:not(:is([data-scope="checkbox"],[data-scope="radio"],[data-scope="switch"]) :is([data-scope="call-controls"],[data-scope="field"],[data-scope="setting-row"]) :is([data-scope="checkbox"],[data-scope="radio"],[data-scope="switch"]) *))) { scale: var(--warp-press); transition-duration: 0ms; }
 :where([data-scope="toggle"]:hover),
 :where([data-scope="chip"]:hover) { transition-duration: 0ms, 0ms, 0ms, var(--warp-spring-duration); }
 :where([data-scope="toggle"])::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: 0; transition: opacity var(--warp-duration-fast); }

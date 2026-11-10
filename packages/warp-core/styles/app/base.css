@@ -41,11 +41,6 @@
 :where([data-cal="6"]) { --_c: var(--warp-color-data-6); }
 :where([data-cal="7"]) { --_c: var(--warp-color-data-7); }
 :where([data-cal="8"]) { --_c: var(--warp-color-data-8); }
-/* audio level: 3 bars driven by a --level custom property (0..1), no loop */
-:where([data-part="level"]) { display: inline-flex; align-items: center; gap: 2px; block-size: 12px; }
-:where([data-part="level"] i) { inline-size: 2px; border-radius: 2px; background: currentColor; block-size: calc(3px + 9px * var(--level, 0) * var(--k, 1)); transition: block-size 90ms linear; }
-:where([data-part="level"] i:nth-child(1)),
-:where([data-part="level"] i:nth-child(3)) { --k: 0.6; }
 :where([data-part="countdown"]) { display: flex; gap: 6px; font: 500 28px/1 var(--warp-font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 :where([data-part="countdown"] span) { display: grid; justify-items: center; gap: 6px; min-inline-size: 52px; padding: 10px 6px 8px; border-radius: var(--warp-radius-control); background: var(--warp-color-surface-sunken); }
 :where([data-part="countdown"] small) { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--warp-color-text-subtle); }
@@ -76,10 +71,6 @@
 :where([data-following]) { box-shadow: inset 0 0 0 calc(var(--warp-border-emphasis) + 1px) var(--_pc); }
 /* InteractionRelay: a peer's press/hover replayed with the component's own visuals + a colour ring */
 :where([data-relay]) { outline: var(--warp-border-emphasis) solid var(--_pc); outline-offset: 2px; transition: outline-color var(--warp-duration-base); }
-:where([data-motion="reduce"] [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
-@media (prefers-reduced-motion: reduce) {
-:where(:root:not([data-motion="full"]) [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
-}
 /* `hidden` must beat component display rules */
 :where([data-scope][hidden]),
 :where([data-part][hidden]) { display: none; }
@@ -87,15 +78,13 @@
 :where([data-arrive])::after,
   :where([data-scope="calendar"] [data-part="now"])::before,
   :where([data-scope="calendar"] [data-part="now-label"]),
-  :where([data-scope="agenda"] [data-part="now"] i),
-  :where([data-scope="agenda"] [data-part="now"] i::before),
+  :where([data-scope="agenda"] [data-part="now"]:not([data-scope="agenda"] [data-scope="calendar"] *:not([data-scope="agenda"] [data-scope="calendar"] [data-scope="agenda"] *)) i),
+  :where([data-scope="agenda"] [data-part="now"] i)::before,
   :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
   :where([data-scope="run"] > li[data-state="done"])::before,
   :where([data-scope="tool-call"][data-state="running"])::before,
   :where([data-scope="versions"] li[data-named] > i),
   :where([data-scope="notification"] [data-part="unread"]) { forced-color-adjust: none; background: Highlight; }
-:where([data-scope="speech"] [data-part="wave"] i),
-  :where([data-part="level"] i) { forced-color-adjust: none; background: CanvasText; }
 }
 @keyframes warp-arrive {
   from { opacity: 0; translate: 0 calc(var(--warp-motion-distance) * -1); }

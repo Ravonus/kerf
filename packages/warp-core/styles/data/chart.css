@@ -11,15 +11,15 @@
 :where([data-scope="list"]),
 :where([data-scope="desc"]),
 :where([data-scope="timeline"]) { font-variant-numeric: tabular-nums; }
-:where([data-scope="chart"] [data-part="skeleton"]) { flex: 1; block-size: var(--h, 60%); border-end-start-radius: 0; border-end-end-radius: 0; }
+:where([data-scope="chart"] [data-part="skeleton"]:not([data-scope="chart"] [data-scope="table"] *:not([data-scope="chart"] [data-scope="table"] [data-scope="chart"] *))) { flex: 1; block-size: var(--h, 60%); border-end-start-radius: 0; border-end-end-radius: 0; }
 :where([data-scope="chart"]) { position: relative; display: grid; gap: var(--warp-space-related); min-inline-size: 0; margin: 0; }
-:where([data-scope="chart"] [data-part="head"]) { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+:where([data-scope="chart"] [data-part="head"]:not([data-scope="chart"] :is([data-scope="artifact"],[data-scope="calendar"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="sidenav"],[data-scope="transport"],[data-scope="truncate"]) *:not([data-scope="chart"] :is([data-scope="artifact"],[data-scope="calendar"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="monthgrid"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="sidenav"],[data-scope="transport"],[data-scope="truncate"]) [data-scope="chart"] *))) { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
 :where([data-scope="chart"] [data-part="plot"]) { position: relative; min-inline-size: 0; touch-action: pan-y; }
 :where([data-scope="chart"] svg[data-part="svg"]) { display: block; inline-size: 100%; block-size: auto; overflow: visible; font-family: var(--warp-text-body-font); }
 :where([data-scope="chart"] svg[data-part="svg"]:focus-visible) { outline: none; }
 :where([data-scope="chart"][data-view="table"] [data-part="plot"]) { display: none; }
 :where([data-scope="chart"]:not([data-view="table"]) [data-part="table"]) { display: none; }
-:where([data-scope="chart"] [data-part="summary"]) { margin: 0; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); max-inline-size: 70ch; }
+:where([data-scope="chart"] [data-part="summary"]:not([data-scope="chart"] :is([data-scope="checkout"],[data-scope="pagination"],[data-scope="tests"]) *:not([data-scope="chart"] :is([data-scope="checkout"],[data-scope="pagination"],[data-scope="tests"]) [data-scope="chart"] *))) { margin: 0; font-size: var(--warp-text-caption-size); color: var(--warp-color-text-subtle); max-inline-size: 70ch; }
 /* chrome: hairline grid, caption-size axis, no borders on the plot */
 :where([data-scope="chart"] .grid line) { stroke: var(--warp-color-data-grid); stroke-width: 1; shape-rendering: crispEdges; }
 :where([data-scope="chart"] .grid line.zero) { stroke: var(--warp-color-border-strong); }
@@ -92,7 +92,7 @@
 :where([data-scope="chart"] [data-part="table"] :is(td):first-child) { text-align: start; }
 :where([data-scope="chart"] [data-part="table"] thead th) { position: sticky; inset-block-start: 0; background: var(--warp-color-surface); color: var(--warp-color-text-subtle); font-weight: 500; }
 /* chart states: same frame size, no layout jump */
-:where([data-scope="chart"] [data-part="state"]) {
+:where([data-scope="chart"] [data-part="state"]:not([data-scope="chart"] :is([data-scope="table"],[data-scope="uploads"]) *:not([data-scope="chart"] :is([data-scope="table"],[data-scope="uploads"]) [data-scope="chart"] *))) {
   display: grid; place-items: center; align-content: center; gap: 6px; text-align: center; min-block-size: 200px;
   color: var(--warp-color-text-subtle); font-size: var(--warp-text-caption-size);
 }
