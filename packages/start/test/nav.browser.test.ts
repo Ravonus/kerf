@@ -340,6 +340,8 @@ test('a drag from the bare page onto a control after a fade has ended does not c
   const { page } = await open('/')
   await link(page, '/about')
   await page.waitForFunction(() => location.pathname === '/about')
+  // settled: on a loaded machine the page's data can land late and start a second fade, and a press during one is replayed
+  await page.waitForLoadState('networkidle')
   await page.waitForFunction(() => !document.activeViewTransition)
   await page.waitForTimeout(100)
   await page.evaluate(() => {
