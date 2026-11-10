@@ -102,10 +102,51 @@ function Output(props: { cfg: Cfg }) {
   )
 }
 
+/** The controls: presets, then the guided rows, parts and tokens, or the raw JSON. */
+function ControlsPanel(props: { cfg: Cfg }) {
+  const cfg = props.cfg
+  const panel = state<Panel>('guided')
+  return (
+    <aside data-studio="controls" aria-label="Theme controls">
+      <Presets cfg={cfg} />
+      <Tabs
+        label="Controls"
+        variant="pill"
+        value={panel.value}
+        onChange={(v) => (panel.value = v)}
+        options={[
+          { value: 'guided', label: 'Guided' },
+          { value: 'parts', label: 'Parts and tokens' },
+          { value: 'json', label: 'JSON' },
+        ]}
+      >
+        {(v) =>
+          v === 'guided' ? (
+            <>
+              <ColourControls cfg={cfg} />
+              <DialControls cfg={cfg} />
+              <ShapeControls cfg={cfg} />
+              <TypeControls cfg={cfg} />
+              <SpaceControls cfg={cfg} />
+              <MotionControls cfg={cfg} />
+            </>
+          ) : v === 'parts' ? (
+            <>
+              <PartsEditor cfg={cfg} />
+              <TokensEditor cfg={cfg} />
+            </>
+          ) : (
+            <JsonPanel cfg={cfg} />
+          )
+        }
+      </Tabs>
+    </aside>
+  )
+}
+
 /** The theme studio. */
 export function ThemeStudio() {
   const cfg = state<StudioConfig>({})
-  const panel = state<Panel>('guided')
   const built = derived(() => compile(cfg.value))
   let stage: HTMLElement | undefined
   onMount(() => {
@@ -117,40 +158,7 @@ export function ThemeStudio() {
   return (
     <div data-site="studio" id="studio">
       <style>{built.value.css}</style>
-      <aside data-studio="controls" aria-label="Theme controls">
-        <Presets cfg={cfg} />
-        <Tabs
-          label="Controls"
-          variant="pill"
-          value={panel.value}
-          onChange={(v) => (panel.value = v)}
-          options={[
-            { value: 'guided', label: 'Guided' },
-            { value: 'parts', label: 'Parts and tokens' },
-            { value: 'json', label: 'JSON' },
-          ]}
-        >
-          {(v) =>
-            v === 'guided' ? (
-              <>
-                <ColourControls cfg={cfg} />
-                <DialControls cfg={cfg} />
-                <ShapeControls cfg={cfg} />
-                <TypeControls cfg={cfg} />
-                <SpaceControls cfg={cfg} />
-                <MotionControls cfg={cfg} />
-              </>
-            ) : v === 'parts' ? (
-              <>
-                <PartsEditor cfg={cfg} />
-                <TokensEditor cfg={cfg} />
-              </>
-            ) : (
-              <JsonPanel cfg={cfg} />
-            )
-          }
-        </Tabs>
-      </aside>
+      <ControlsPanel cfg={cfg} />
       <div data-studio="main">
         <div data-studio="bar">
           <WearIt />
