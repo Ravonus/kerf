@@ -165,6 +165,25 @@ function onTheme(doc: Document, measure: () => void) {
   }
 }
 
+/** Runs `go` once `el` comes within 200px of the screen (at once where there's no IntersectionObserver); returns a stop. */
+function whenNear(el: Element, go: () => void) {
+  const win = el.ownerDocument.defaultView!
+  if (typeof win.IntersectionObserver !== 'function') {
+    go()
+    return () => {}
+  }
+  const near = new win.IntersectionObserver(
+    (list) => {
+      if (!list.some((e) => e.isIntersecting)) return
+      near.disconnect()
+      go()
+    },
+    { rootMargin: '200px' },
+  )
+  near.observe(el)
+  return () => near.disconnect()
+}
+
 /**
  * Action on a `[data-scope="field"]`: measures the label's per-character delays and notch after layout, again when
  * the label's size settles (font swap, float), the field resizes or the theme changes, and keeps `data-filled` on the control in step
@@ -194,31 +213,42 @@ export function floatingLabel(host: HTMLElement) {
   label.addEventListener('transitionend', onSize)
   input?.addEventListener('input', fill)
   input?.addEventListener('change', fill)
-  // only felt once the label moves, so the first read waits until after paint rather than force a layout before it
-  let wait = 0
-  let frame = win.requestAnimationFrame(() => {
-    wait = win.setTimeout(measure)
-  })
+  // Only felt once the label moves, so the first read waits until after paint rather than force a layout before it,
+  // and until the field is near the screen: off screen (in a `content-visibility: auto` section, say) a measurement
+  // would force that whole part of the page to be styled and laid out, all for a label nobody can see yet.
+  let wait = 0,
+    frame = 0,
+    live = false
+  const first = () => {
+    live = true
+    frame = win.requestAnimationFrame(() => {
+      wait = win.setTimeout(measure)
+    })
+  }
+  const far = whenNear(host, first)
   const resize =
     typeof win.ResizeObserver === 'function'
       ? new win.ResizeObserver(() => {
+          if (!live) return
           win.clearTimeout(wait)
           win.cancelAnimationFrame(frame)
           frame = win.requestAnimationFrame(measure)
         })
       : null
   resize?.observe(box)
-  const unwatch = onTheme(host.ownerDocument, () => notch(host))
+  const unwatch = onTheme(host.ownerDocument, () => live && notch(host))
   return {
     /** Re-measure (after a dial change) and re-read the value (after a programmatic write). */
     update() {
       fill()
+      if (!live) return
       win.cancelAnimationFrame(frame)
       frame = win.requestAnimationFrame(measure)
     },
     destroy() {
       win.cancelAnimationFrame(frame)
       win.clearTimeout(wait)
+      far()
       resize?.disconnect()
       unwatch()
       label.removeEventListener('transitionend', onSize)

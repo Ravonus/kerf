@@ -108,6 +108,23 @@ const run = (r: Later) =>
     .catch(console.error)
     .then(drain))
 
+/** Islands that load with the page, claimed one per task in page order, so no one task holds them all; `wake` jumps the queue. */
+const turns: Later[] = []
+let turning: Promise<void> | undefined
+function turn(r: Later) {
+  turns.push(r)
+  turning ??= new Promise<void>((done) => {
+    const next = () => {
+      const up = turns.shift()
+      if (!up) return done((turning = undefined))
+      void run(up).then(() => setTimeout(next))
+    }
+    setTimeout(next)
+  })
+}
+/** Resolves once every island that loads with the page has had its turn. */
+export const settled = () => turning ?? Promise.resolve()
+
 /** Claims the island `el` is in now, without waiting for what it was waiting for. */
 export function wake(el: Element) {
   const r = waiting(el)
@@ -200,7 +217,12 @@ function drop(c: Comment, close: Node) {
   c.parentNode?.removeChild(c)
 }
 
-function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<unknown>) {
+function mountIslands(
+  nodes: Node[],
+  load: Load,
+  wait?: (id: string) => Promise<unknown>,
+  page?: boolean,
+) {
   const found: [Comment, boolean][] = []
   const tops = new Set(nodes)
   let nested = 0
@@ -229,7 +251,8 @@ function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<
       if (top && !hydration.trash.includes(close as ChildNode)) onCleanup(() => drop(c, close!))
       else hydration.trash.push(c)
     }
-    if (!when || !wait) {
+    // With the level's own claim, unless the page is loading and the capture script can hold what comes first (`turn`).
+    if (!wait || (!when && (!page || !held()))) {
       mount()
       continue
     }
@@ -237,7 +260,7 @@ function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<
     const data = rt.data
     const r: Later = {
       key,
-      when,
+      when: when ?? '',
       wait: () => wait(id),
       mount() {
         const range = siblings(open, close)
@@ -253,9 +276,10 @@ function mountIslands(nodes: Node[], load: Load, wait?: (id: string) => Promise<
       if (r.el) near?.unobserve(r.el)
       if (top) drop(c, close!)
     })
+    if (!when) turn(r)
     // No capture script (a strict CSP, say): nothing would ever wake it, so it doesn't wait.
     // oxlint-disable-next-line typescript/no-misused-promises -- `run` retries and then marks the island stale itself; a `void` here costs bytes on every page with an island
-    if (!held()) setTimeout(() => run(r))
+    else if (!held()) setTimeout(() => run(r))
     else if (!held()!.d) watch(r, c)
     // Not part of this pass: `hydrate` would call them unclaimed.
     if (DEV)
@@ -335,7 +359,7 @@ export function level(
       : undefined
   const scope = resume
   resume = undefined
-  const islands = () => mountIslands(nodes, load, wait)
+  const islands = () => mountIslands(nodes, load, wait, page)
   page ? islands() : claiming(nodes, data, islands)
   resume = scope
   hydration.trash.push(...own.filter((n) => !anchors.has(n)))

@@ -42,7 +42,7 @@ export {
 } from './dom-next'
 export { first, hchild, htpl, next } from './claim'
 export { hydrate, hydration } from './hydrate'
-export { drain, enter, level, wake } from './island'
+export { drain, enter, level, settled, wake } from './island'
 export { egg } from './egg'
 
 type Mountable = Element | DocumentFragment

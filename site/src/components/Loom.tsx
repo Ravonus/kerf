@@ -1,4 +1,4 @@
-import { flush, onCleanup, onMount, state, watch } from '@weft-js/core'
+import { onCleanup, onMount } from '@weft-js/core'
 import { weaver } from '../lib/loom/weaver'
 import { COLOURS, LIGHT_COLOURS, threads } from '../lib/loom/threads'
 
@@ -12,37 +12,54 @@ const low = () => {
   )
 }
 
+/** The most the loom works in one go, in ms: a tap or a key never waits longer than this for it. */
+const SLICE = 2
+
+const later = (fn: () => void) =>
+  'requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 1000 }) : setTimeout(fn, 50)
+
+/** Scenery starts once the page has loaded and gone quiet: nothing the page needs waits behind it. */
+const quiet = (fn: () => void) => {
+  const go = () => later(fn)
+  if (document.readyState === 'complete') go()
+  else addEventListener('load', go, { once: true })
+}
+
+/** A palette as pixels, `[r, g, b, a]` packed the way a little-endian ImageData reads them. */
+const pack = (colours: number[][]) =>
+  Uint32Array.from(
+    colours,
+    ([r = 0, g = 0, b = 0, a = 0]) => ((a << 24) | (b << 16) | (g << 8) | r) >>> 0,
+  )
+const DARK = pack(COLOURS)
+const LIGHT = pack(LIGHT_COLOURS)
+
 type LoomRun = {
   raf: number
   dead: boolean
   stops: (() => void)[]
-  ink: string[]
+  lut: Uint32Array
   repaint: () => void
 }
 
-const later = (fn: (d?: IdleDeadline) => void) =>
-  'requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 400 }) : setTimeout(fn, 16)
-
-type LoomScene = {
+/** The cloth's cells: a palette index each, and the pixels they paint. */
+type Cloth = {
   canvas: HTMLCanvasElement
   hero: HTMLElement
-  cloth: ReturnType<typeof weaver>
+  weave: ReturnType<typeof weaver>
   cols: number
   rows: number
-  cells: ReturnType<typeof state<number>>[]
+  ink: Uint8Array
+  px: Uint32Array
+  put: (from: number, to: number) => void
   run: LoomRun
 }
 
-function animateLoom(scene: LoomScene) {
-  const { canvas, hero, cloth, cols, rows, cells, run } = scene
-  const start = performance.now()
-  let row = 0,
-    last = 0,
-    awake = 0,
-    lx = -1,
-    ly = -1,
-    gap = 90,
-    stride = 2
+/** Pointer moves pull the cloth and a press shocks it; both wake the loom to full speed for a while. */
+function feel(cloth: Cloth, wake: () => void) {
+  const { canvas, hero, weave, cols, rows, run } = cloth
+  let lx = -1,
+    ly = -1
   const spot = (e: PointerEvent): [number, number] => {
     const r = canvas.getBoundingClientRect()
     return [((e.clientX - r.left) / r.width) * cols, ((e.clientY - r.top) / r.height) * rows]
@@ -50,52 +67,62 @@ function animateLoom(scene: LoomScene) {
   const point = (e: PointerEvent) => {
     const [x, y] = spot(e)
     if (lx >= 0)
-      cloth.pull(x, y, Math.max(-3, Math.min(3, x - lx)), Math.max(-3, Math.min(3, y - ly)))
+      weave.pull(x, y, Math.max(-3, Math.min(3, x - lx)), Math.max(-3, Math.min(3, y - ly)))
     lx = x
     ly = y
-    awake = performance.now()
+    wake()
   }
   const press = (e: PointerEvent) => {
-    const [x, y] = spot(e)
-    cloth.shock(x, y)
-    awake = performance.now()
+    weave.shock(...spot(e))
+    wake()
   }
+  hero.addEventListener('pointermove', point, { passive: true })
+  hero.addEventListener('pointerdown', press, { passive: true })
+  run.stops.push(() => {
+    hero.removeEventListener('pointermove', point)
+    hero.removeEventListener('pointerdown', press)
+  })
+}
+
+/**
+ * A pass over the cloth runs a few rows a frame, never more than `SLICE` ms, and paints just those rows. A new pass
+ * starts a few times a second, or every other frame or so while the pointer is on it.
+ */
+function animateLoom(cloth: Cloth) {
+  const { canvas, weave, cols, rows, ink, px, put, run } = cloth
+  const start = performance.now()
+  let row = 0,
+    last = 0,
+    awake = 0,
+    t = 0,
+    clock = 0
   const frame = (now: number) => {
     run.raf = requestAnimationFrame(frame)
-    const hot = now - awake < 1500 || cloth.moving()
-    if (now - last < (hot ? Math.max(33, gap / 3) : gap)) return
-    last = now
-    const began = performance.now()
-    cloth.step()
-    const t = now / 2200,
+    if (row === 0) {
+      const hot = now - awake < 1500 || weave.moving()
+      if (now - last < (hot ? 33 : 90)) return
+      last = now
+      weave.step()
+      t = now / 2200
       clock = (now - start) / 1000
-    for (let y = row; y < rows; y += stride)
-      for (let x = 0; x < cols; x++) {
-        const v = cloth.at(x, y, t, clock),
-          cell = cells[y * cols + x]!
-        if (cell.value !== v) cell.value = v
-      }
-    row = (row + 1) % stride
-    flush()
-    const took = performance.now() - began
-    if (took > 8 && stride < 8) {
-      stride *= 2
-      gap = Math.min(250, gap * 1.5)
-      row = 0
     }
+    const from = row,
+      end = performance.now() + SLICE
+    for (; row < rows && performance.now() < end; row++)
+      for (let x = 0, i = row * cols; x < cols; x++, i++) {
+        const v = weave.at(x, row, t, clock)
+        if (ink[i] !== v) px[i] = run.lut[(ink[i] = v)]!
+      }
+    put(from, row)
+    if (row >= rows) row = 0
   }
+  feel(cloth, () => (awake = performance.now()))
   const seen = new IntersectionObserver(([e]) => {
     cancelAnimationFrame(run.raf)
     if (e!.isIntersecting) run.raf = requestAnimationFrame(frame)
   })
   seen.observe(canvas)
-  hero.addEventListener('pointermove', point, { passive: true })
-  hero.addEventListener('pointerdown', press, { passive: true })
-  run.stops.push(() => {
-    seen.disconnect()
-    hero.removeEventListener('pointermove', point)
-    hero.removeEventListener('pointerdown', press)
-  })
+  run.stops.push(() => seen.disconnect())
 }
 
 /** The hero's page colour decides the ramp, so a named theme gets the right one whatever its name. A 1×1 canvas reads
@@ -105,7 +132,7 @@ const inks = (hero: HTMLElement) => {
   probe.fillStyle = getComputedStyle(hero).backgroundColor
   probe.fillRect(0, 0, 1, 1)
   const [r = 0, g = 0, b = 0] = probe.getImageData(0, 0, 1, 1).data
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 140 ? LIGHT_COLOURS : COLOURS
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 140 ? LIGHT : DARK
 }
 
 /**
@@ -133,46 +160,55 @@ const fits = (canvas: HTMLCanvasElement, box: DOMRect, wide: boolean) => {
   return box.width >= 900 === wide && height >= box.height - 1 && height <= box.height * room
 }
 
-function buildLoom(canvas: HTMLCanvasElement, run: LoomRun) {
-  const CHUNK = 400
-  const paint = canvas.getContext('2d', { alpha: true })!
+/** Where the mark sits and how big: in the room right of the words, or under 900px in a band above them (site.css). */
+function frameOf(canvas: HTMLCanvasElement) {
   const { rect, cols, rows } = measure(canvas)
-  const hero = canvas.parentElement!
-  // In the room right of the words; under 900px the hero gives it a band of its own above them (site.css).
-  const words = hero.querySelector('[data-part="say"]')!.getBoundingClientRect()
+  const words = canvas.parentElement!.querySelector('[data-part="say"]')!.getBoundingClientRect()
   const room = (rect.right - words.right) / rect.width
   const wide = rect.width >= 900
   const size = wide ? Math.min(0.96, (room * cols * 0.86) / rows) : 0.96
-  const cloth = weaver(cols, rows, null, threads(cols, rows, 0.2, wide ? 1 - room / 2 : 0.5, size))
-  const total = cols * rows
-  const cells: ReturnType<typeof state<number>>[] = []
-  const fill = (x: number, y: number, v: number) => {
-    paint.clearRect(x, y, 1, 1)
-    paint.fillStyle = run.ink[v]!
-    paint.fillRect(x, y, 1, 1)
-  }
-  run.repaint = () => cells.forEach((c, i) => fill(i % cols, (i / cols) | 0, c.value))
-  const slice = (deadline?: IdleDeadline) => {
+  return { cols, rows, centre: wide ? 1 - room / 2 : 0.5, size }
+}
+
+/**
+ * The cloth for the canvas's size, set up and then woven in idle time, each step its own task: measuring, laying the
+ * threads, the lattice, then the cells a slice at a time. Then it's shown and set moving.
+ */
+function buildLoom(canvas: HTMLCanvasElement, run: LoomRun) {
+  const { cols, rows, centre, size } = frameOf(canvas)
+  later(() => {
     if (run.dead) return
-    do {
-      for (const end = Math.min(total, cells.length + CHUNK); cells.length < end;) {
-        const i = cells.length,
-          x = i % cols,
-          y = (i / cols) | 0
-        const cell = state(cloth.at(x, y, 0, 0))
-        fill(x, y, cell.value)
-        watch(
-          () => cell.value,
-          (v) => fill(x, y, v),
-        )
-        cells.push(cell)
-      }
-    } while (cells.length < total && (deadline?.timeRemaining() ?? 0) > 2)
-    if (cells.length < total) return void later(slice)
-    canvas.dataset.live = ''
-    begin()
+    const mark = threads(cols, rows, 0.2, centre, size)
+    later(() => {
+      if (!run.dead) weaveLoom(canvas, run, weaver(cols, rows, null, mark))
+    })
+  })
+}
+
+function weaveLoom(canvas: HTMLCanvasElement, run: LoomRun, weave: ReturnType<typeof weaver>) {
+  const { width: cols, height: rows } = canvas
+  const paint = canvas.getContext('2d')!
+  const image = paint.createImageData(cols, rows)
+  const px = new Uint32Array(image.data.buffer)
+  const ink = new Uint8Array(cols * rows)
+  const put = (from: number, to: number) => {
+    if (to > from) paint.putImageData(image, 0, 0, 0, from, cols, to - from)
   }
-  const begin = () => animateLoom({ canvas, hero, cloth, cols, rows, cells, run })
+  run.repaint = () => {
+    for (let i = 0; i < ink.length; i++) px[i] = run.lut[ink[i]!]!
+    put(0, rows)
+  }
+  let row = 0
+  const slice = () => {
+    if (run.dead) return
+    for (const end = performance.now() + SLICE; row < rows && performance.now() < end; row++)
+      for (let x = 0, i = row * cols; x < cols; x++, i++)
+        px[i] = run.lut[(ink[i] = weave.at(x, row, 0, 0))]!
+    if (row < rows) return void later(slice)
+    put(0, rows)
+    canvas.dataset.live = ''
+    animateLoom({ canvas, hero: canvas.parentElement!, weave, cols, rows, ink, px, put, run })
+  }
   later(slice)
 }
 
@@ -183,25 +219,25 @@ const stop = (run: LoomRun) => {
 }
 
 /** Builds the cloth for the hero's size, and builds it again when that size changes, so the mark never stretches. */
-function mountLoom(getBox: () => HTMLCanvasElement) {
-  if (low()) return
-  const canvas = getBox(),
-    hero = canvas.parentElement!
-  const fresh = (): LoomRun => ({
-    raf: 0,
-    dead: false,
-    stops: [],
-    ink: inks(hero),
-    repaint: () => {},
-  })
+function startLoom(canvas: HTMLCanvasElement) {
+  const hero = canvas.parentElement!
+  const fresh = (): LoomRun => ({ raf: 0, dead: false, stops: [], lut: DARK, repaint() {} })
   // The poster has the canvas's own box (site.css sizes both), and unlike the canvas it is never resized by the loom.
   const box = hero.querySelector<HTMLElement>('[data-part="poster"]') ?? hero
   let run = fresh(),
     wide = false,
     wait = 0
   const build = () => {
-    wide = box.getBoundingClientRect().width >= 900
-    later(() => buildLoom(canvas, run))
+    const now = run
+    later(() => {
+      if (now.dead) return
+      now.lut = inks(hero)
+      later(() => {
+        if (now.dead) return
+        wide = box.getBoundingClientRect().width >= 900
+        buildLoom(canvas, now)
+      })
+    })
   }
   const rebuild = () => {
     if (fits(canvas, box.getBoundingClientRect(), wide)) return
@@ -222,7 +258,7 @@ function mountLoom(getBox: () => HTMLCanvasElement) {
   })
   sized.observe(box)
   const recolour = () => {
-    run.ink = inks(hero)
+    run.lut = inks(hero)
     run.repaint()
   }
   const themes = new MutationObserver(recolour)
@@ -232,22 +268,34 @@ function mountLoom(getBox: () => HTMLCanvasElement) {
   })
   const scheme = matchMedia('(prefers-color-scheme: dark)')
   scheme.addEventListener('change', recolour)
-  onCleanup(() => {
+  return () => {
     clearTimeout(wait)
     sized.disconnect()
     themes.disconnect()
     scheme.removeEventListener('change', recolour)
     stop(run)
-  })
+  }
 }
 
 /* @weft visible */
 /**
- * The logo, woven, behind the hero. Scenery: it never holds up the page. It builds in idle time, runs a few ticks a
- * second until the pointer moves, slows down if a tick costs too much, and on a small machine the poster simply stays.
+ * The logo, woven, behind the hero. Scenery: it never holds up the page. It waits until the page has loaded and is
+ * idle, weaves in slices of a few ms, runs a few passes a second until the pointer moves, and on a small machine the
+ * poster simply stays.
  */
 export function Loom() {
   let box: HTMLCanvasElement | undefined
-  onMount(() => mountLoom(() => box!))
+  onMount(() => {
+    if (low()) return
+    let gone = false,
+      off = () => {}
+    quiet(() => {
+      if (!gone) off = startLoom(box!)
+    })
+    onCleanup(() => {
+      gone = true
+      off()
+    })
+  })
   return <canvas ref={(el) => (box = el)} data-site="loom" aria-hidden="true"></canvas>
 }

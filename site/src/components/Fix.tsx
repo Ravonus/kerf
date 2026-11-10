@@ -25,6 +25,7 @@ function Live(props: { count: number }) {
   return <b>{total.value}</b>
 }
 
+/* @weft visible */
 /** The compiler's real W001 on real code, as four steps that open broken, with the component it breaks running beside it. */
 export function Fix() {
   const step = state(0)

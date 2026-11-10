@@ -16,12 +16,11 @@ export const CORAL = [
 ]
 const ramp = (r: number[][]) => [PALETTE[0]!, ...r.map((c) => [...c, 255])]
 const RAMPS = [PALETTE, ramp(TEAL), ramp(CORAL)]
-const css = ([r, g, b, a]: number[]) => `rgba(${r},${g},${b},${a! / 255})`
 const tint = (c: number[], k: number) =>
   c.map((v, i) => (i < 3 ? Math.round(v + (255 - v) * k) : v))
 
-/** Index = level + band × STEPS. Bands: the field's green, teal, coral. Each ramp runs to near white, for a dark page. */
-export const COLOURS = RAMPS.flat().map(css)
+/** Index = level + band × STEPS, as [r, g, b, a]. Bands: the field's green, teal, coral. Each ramp runs to near white, for a dark page. */
+export const COLOURS = RAMPS.flat()
 
 /**
  * The same indices for a light page: the field fades to pale tints and the lit levels take the ramp's own greens and
@@ -34,7 +33,7 @@ export const LIGHT_COLOURS = RAMPS.flatMap((r) => [
   r[4]!,
   r[3]!,
   r[2]!,
-]).map(css)
+])
 
 export type Threads = { cover: Float32Array; born: Float32Array; band: Uint8Array }
 

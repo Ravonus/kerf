@@ -20,7 +20,8 @@ const FRAMES = [
 ] as const
 const ARENA_BUILD = '../benchmarks/arena/build.mjs'
 
-const n = (v: number) => v.toLocaleString('en-US')
+// Thousands by hand: the first `toLocaleString` on a page sets up Intl, which costs more than this whole island.
+const n = (v: number) => String(Math.round(v)).replace(/\B(?=(\d{3})+$)/g, ',')
 const kb = (size: number) => `${(size / 1024).toFixed(1)} KB`
 /** Needs a real run: a few presses are too few to compare, so the row stays empty until the 60 a second has run for a while. */
 const ENOUGH = 300
@@ -30,6 +31,7 @@ const time = (v: number) => (v < 0.01 ? '<0.01' : v < 10 ? v.toFixed(2) : v.toFi
 const us = (v: number) => `${Math.round(v)} µs`
 const top = Math.max(...FRAMES.map((f) => bytes[f.id]))
 
+/* @weft visible */
 /** The same app built three times, each in its own frame. All readouts come from the frames' own harness. */
 export function Arena() {
   const model = arenaState()
