@@ -97,7 +97,7 @@ From the repository root, `pnpm run setup` installs every package and builds the
 `packages/core`:
 
 ```bash
-pnpm run build:native  # rebuild the addon and WebAssembly into native/ after a compiler change
+pnpm run build:native  # after a compiler change
 pnpm test
 node scripts/size.mjs  # brotli sizes against the budgets
 ```

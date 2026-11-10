@@ -73,13 +73,14 @@ build time:
 
 ```ts
 warp({
-  seed: { accent: '#e8590c' },            // the hue family; each theme solves its own lightness
+  seed: { accent: '#e8590c' }, // the hue; each theme solves lightness
   dials: { expression: 'vivid', density: 'cozy' },
-  radius: 'round',                        // sharp, soft or round
+  radius: 'round', // sharp, soft or round
   fonts: { display: 'Fraunces, serif' },
-  colors: { brand: '#e8590c' },           // a named colour: --warp-color-brand and tone="brand"
+  colors: { brand: '#e8590c' }, // --warp-color-brand, tone="brand"
   parts: { button: { radius: 999, case: 'uppercase' } },
-  themes: { ocean: { seed: { accent: '#0b7285' } } }, // under data-palette="ocean"
+  // a named theme, under data-palette="ocean"
+  themes: { ocean: { seed: { accent: '#0b7285' } } },
 })
 ```
 

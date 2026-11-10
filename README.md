@@ -69,12 +69,17 @@ export default function Counter() {
 of its value and computing from a prop once, and it says:
 
 ```text
-src/routes/counter.tsx:5:17  W001 error  `props` is read once when the component is set up, so this never updates.
-    fix: `const x = props.y` stays live on its own, but this does more than name a prop: wrap it in `derived(() => …)`,
-    move it into `watch`, or use `untrack()` if a snapshot is intended. (autofix)
-src/routes/counter.tsx:8:8  W015 error  `count` is a box; JSX needs its value.
-    fix: Read `count.value`. (autofix)
+src/routes/counter.tsx:5:17  W001 error
+  `props` is read once when the component is set up,
+  so this never updates.
+  fix: wrap it in `derived(() => …)`, move it into
+  `watch`, or use `untrack()` for a snapshot. (autofix)
+src/routes/counter.tsx:8:8  W015 error
+  `count` is a box; JSX needs its value.
+  fix: Read `count.value`. (autofix)
 ```
+
+(Shortened to fit here: each diagnostic prints on one line, with its fix under it.)
 
 Every code has a page (`npx weft docs W001`), `npx weft fix` applies the safe fixes, and `--json` gives the same thing
 to a tool. Codes cover reactivity (W), plugins (P), design (D), page metadata (H), deploys (E) and built pages (L).
