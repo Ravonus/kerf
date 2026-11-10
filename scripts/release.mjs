@@ -40,7 +40,7 @@ const publish = argv.includes('--publish')
 const registry = flag('registry') ?? 'https://registry.npmjs.org/'
 const local = !registry.includes('registry.npmjs.org')
 const useOtp = argv.includes('--otp')
-let otp
+let otp = process.env.WEFT_OTP // set it, even empty, and nothing is asked
 /** One line from the terminal, even with stdin redirected. */
 const ask = (prompt) =>
   execFileSync('bash', ['-c', `read -r -p "${prompt}" a </dev/tty >/dev/tty; echo "$a"`], {
@@ -236,8 +236,9 @@ const isUp = (name, version) =>
 /** Exits non-zero on the first refusal: everything after it depends on it. */
 function send(tgz, name, version) {
   if (isUp(name, version)) return say(`${name}@${version} is already up`)
-  if (useOtp && publish && !otp) otp = ask('6-digit code from your authenticator app: ')
-  const auth = local ? [] : useOtp ? [`--otp=${otp}`] : ['--auth-type=web']
+  if (useOtp && publish && otp === undefined)
+    otp = ask('6-digit code from your authenticator app: ')
+  const auth = local ? [] : useOtp ? (otp ? [`--otp=${otp}`] : []) : ['--auth-type=web']
   const r = spawnSync(
     npm,
     [
@@ -254,12 +255,14 @@ function send(tgz, name, version) {
       ...(publish ? [] : ['--dry-run']),
     ],
     {
-      stdio: ['inherit', 'inherit', 'pipe'],
+      stdio: useOtp ? ['inherit', 'inherit', 'pipe'] : 'inherit', // web auth prints its link and ENTER prompt here
       encoding: 'utf8',
       shell: process.platform === 'win32',
     },
   )
   process.stderr.write(r.stderr ?? '')
+  if (r.status !== 0 && /previously (published|staged)|EPUBLISHCONFLICT/.test(r.stderr ?? ''))
+    return say(`${name}@${version} is already up`)
   if (r.status !== 0 && useOtp && /EOTP/.test(r.stderr ?? '')) {
     otp = undefined
     return send(tgz, name, version)
