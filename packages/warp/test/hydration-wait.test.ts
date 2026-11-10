@@ -2,7 +2,7 @@
 // warp's components let the islands that hold them wait (hydration.json `loads`, H010). A page whose islands hold only
 // Card, Badge or Button loads none of them with the page: `./styles` is CSS alone, and Button passing its node on to
 // the `ref` it was given is not work of its own (the caller's `ref` is checked where the caller wrote it).
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
@@ -13,6 +13,16 @@ const warp = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const require = createRequire(join(warp, 'package.json'))
 const { transform } = require('@weft-js/core/compiler')
 const EXT = ['', '.ts', '.tsx', '/index.ts', '/index.tsx']
+
+const isFile = (f: string) => existsSync(f) && statSync(f).isFile()
+function find(spec: string, from: string) {
+  if (spec.startsWith('.')) return EXT.map((e) => resolve(dirname(from), spec) + e).find(isFile)
+  try {
+    return require.resolve(spec)
+  } catch {
+    return undefined
+  }
+}
 
 const dirs: string[] = []
 afterAll(() => {
@@ -27,17 +37,7 @@ async function plan(route: string) {
     entries: [join(root, 'route.tsx')],
     transform,
     rel: (f: string) => relative(root, f),
-    resolve: async (spec: string, from: string) => {
-      if (spec.startsWith('.')) {
-        const base = resolve(dirname(from), spec)
-        return EXT.map((e) => base + e).find((f) => existsSync(f) && !f.endsWith('/'))
-      }
-      try {
-        return require.resolve(spec)
-      } catch {
-        return undefined
-      }
-    },
+    resolve: (spec: string, from: string) => Promise.resolve(find(spec, from)),
   })
 }
 

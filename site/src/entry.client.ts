@@ -5,4 +5,4 @@ import { flow } from '@weft-js/warp-core'
 import * as routes from 'virtual:weft/routes'
 
 flow()
-start(routes as any)
+void start(routes)
