@@ -1,4 +1,4 @@
 {
-  "extends": "../../tsconfig.realtime.json",
+  "extends": "../tsconfig.realtime.json",
   "include": ["src", "test", "*.mjs", "*.cjs", "*.mts", "*.ts"]
 }

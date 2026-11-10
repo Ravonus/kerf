@@ -51,7 +51,7 @@ for (const file of files) {
         '--edition',
         editionFor(file),
         '--config-path',
-        join(root, 'rustfmt.toml'),
+        join(root, 'crates', 'rustfmt.toml'),
         '--config',
         'skip_children=true',
         file,

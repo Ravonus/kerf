@@ -170,7 +170,7 @@ multiplayer, media processing, fonts and realtime transports. See [1.0 package s
 
 [CONTRIBUTING.md](CONTRIBUTING.md) has the setup and the one command to run before a change goes in. To use your
 checkout in an app of your own, see [Using a Weft checkout](docs/getting-started.md). Report security problems
-privately, as [SECURITY.md](SECURITY.md) says.
+privately, as [SECURITY.md](.github/SECURITY.md) says.
 
 ## Licence
 

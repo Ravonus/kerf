@@ -40,7 +40,7 @@ app built with Weft gets.
 ## The rules
 
 CI runs `pnpm run check`, so a pull request has to pass it. The rules are all in the repo: [.oxlintrc.json](.oxlintrc.json),
-[tsconfig.base.json](tsconfig.base.json), the `[lints]` table in each `Cargo.toml`, [deny.toml](deny.toml) and
+[tsconfig.base.json](tsconfig.base.json), the `[lints]` table in each `Cargo.toml`, [deny.toml](crates/deny.toml) and
 [scripts/quality/](scripts/quality/).
 
 **TypeScript.** `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride` and `exactOptionalPropertyTypes` are all on. No
@@ -86,7 +86,7 @@ speed: in the hot paths of `packages/core/src` and the compiler, a narrow disabl
 Source uses 100 columns; runnable site samples use 58, with one JSX attribute per line. Markdown samples
 use 70 columns. The source formatter skips generated and vendor files, archived evaluation results, snapshots,
 and documentation content. Run `node scripts/quality/format.mjs` to check its tracked source files without writing them.
-Rust formatting covers every tracked `.rs` file, using its manifest edition and the root `rustfmt.toml`.
+Rust formatting covers every tracked `.rs` file, using its manifest edition and `crates/rustfmt.toml`.
 Run `node scripts/quality/rust-format.mjs` to check, or add `--write` to format those files.
 
 ## Speed and size
@@ -168,7 +168,7 @@ each commit in a pull request. If you forgot: `git rebase --signoff main`.
 
 ## Reporting a security problem
 
-Please don't open a public issue. [SECURITY.md](SECURITY.md) says how to report it privately.
+Please don't open a public issue. [SECURITY.md](.github/SECURITY.md) says how to report it privately.
 
 ## Licence
 

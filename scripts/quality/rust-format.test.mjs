@@ -26,7 +26,8 @@ function fixture(t) {
   mkdirSync(join(dir, 'scripts/quality'), { recursive: true })
   copyFileSync(source, join(dir, 'scripts/quality/rust-format.mjs'))
   cpSync(join(dirname(source), '..', 'lib'), join(dir, 'scripts/lib'), { recursive: true })
-  writeFileSync(join(dir, 'rustfmt.toml'), 'max_width = 100\n')
+  mkdirSync(join(dir, 'crates'), { recursive: true })
+  writeFileSync(join(dir, 'crates', 'rustfmt.toml'), 'max_width = 100\n')
   assert.equal(command(dir, 'git', ['init', '-q']).status, 0)
   return dir
 }
