@@ -1,0 +1,53 @@
+{
+  "name": "@weft-js/scroll",
+  "version": "0.1.3",
+  "description": "Scrolling in JavaScript: native-feeling wheel, touch, keys and focus, with scrollbars drawn in the DOM or on a canvas",
+  "keywords": [
+    "canvas",
+    "scroll",
+    "scrollbar",
+    "weft"
+  ],
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/scroll#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/scroll"
+  },
+  "files": [
+    "src",
+    "styles",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./canvas": "./src/canvas.ts",
+    "./styles.css": "./styles/scroll.css"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "bench": "node bench/native.mjs"
+  },
+  "devDependencies": {
+    "axe-core": "4.14.0",
+    "jsdom": "30.1.3",
+    "playwright-core": "1.64.1",
+    "rolldown": "1.2.16",
+    "vitest": "5.0.5"
+  },
+  "engines": {
+    "node": ">=26"
+  }
+}

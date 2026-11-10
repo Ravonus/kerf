@@ -41,6 +41,7 @@ export const BROWSER = {
   warp: ['.', './skeleton', './ui'],
   'warp-icons': ['.', './all', './quiet', './balanced', './vivid', './names', './icon', './late'],
   text: ['./measure'],
+  scroll: ['.', './canvas'],
   multiplayer: ['.', './ui'],
   start: ['./client'],
 }

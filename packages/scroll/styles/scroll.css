@@ -1,0 +1,153 @@
+/* @weft-js/scroll: the root, viewport and bars. Every look is a custom property, so a theme or the `bar` options
+   restyle DOM bars and canvas bars alike. Before the script runs the viewport scrolls natively. */
+:where([data-scroll]) {
+  --scroll-width: 6px;
+  --scroll-hover-width: 10px;
+  --scroll-inset: 2px;
+  --scroll-radius: 999px;
+  --scroll-color: color-mix(in srgb, currentColor 32%, transparent);
+  --scroll-hover-color: color-mix(in srgb, currentColor 48%, transparent);
+  --scroll-active-color: color-mix(in srgb, currentColor 60%, transparent);
+  --scroll-track: transparent;
+  --scroll-hover-track: color-mix(in srgb, currentColor 8%, transparent);
+  --scroll-fade: 200ms;
+  --scroll-track-size: calc(
+    max(var(--scroll-width), var(--scroll-hover-width)) + 2 * var(--scroll-inset)
+  );
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+:where([data-scroll] > [data-part='viewport']) {
+  block-size: 100%;
+  inline-size: 100%;
+  overflow: auto;
+  box-sizing: border-box;
+  outline-offset: -2px;
+}
+:where([data-scroll][data-axes='y'] > [data-part='viewport']) {
+  overflow-x: hidden;
+}
+:where([data-scroll][data-axes='x'] > [data-part='viewport']) {
+  overflow-y: hidden;
+}
+:where([data-scroll][data-ready] > [data-part='viewport']) {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+:where([data-scroll][data-ready] > [data-part='viewport'][data-touch='js']) {
+  touch-action: pinch-zoom;
+}
+:where([data-scroll] [data-part='viewport']:focus:not(:focus-visible)) {
+  outline: none;
+}
+
+/* gutter: room is kept beside the content for each axis that scrolls, as `scrollbar-gutter: stable` does. */
+:where([data-scroll][data-layout='gutter']:not([data-axes='x'])) {
+  padding-inline-end: var(--scroll-track-size);
+}
+:where([data-scroll][data-layout='gutter']:not([data-axes='y'])) {
+  padding-block-end: var(--scroll-track-size);
+}
+
+:where([data-scroll] > [data-part='scrollbar']) {
+  position: absolute;
+  z-index: 1;
+  opacity: 0;
+  transition:
+    opacity var(--scroll-fade) ease-out,
+    background-color var(--scroll-fade);
+  background: var(--scroll-track);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+:where([data-scroll] > [data-part='scrollbar'][data-orientation='vertical']) {
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: var(--scroll-track-size);
+}
+:where([data-scroll] > [data-part='scrollbar'][data-orientation='horizontal']) {
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: var(--scroll-track-size);
+}
+:where(
+  [data-scroll][data-overflow-x][data-overflow-y]
+    > [data-part='scrollbar'][data-orientation='vertical']
+) {
+  inset-block-end: var(--scroll-track-size);
+}
+:where(
+  [data-scroll][data-overflow-x][data-overflow-y]
+    > [data-part='scrollbar'][data-orientation='horizontal']
+) {
+  inset-inline-end: var(--scroll-track-size);
+}
+:where([data-scroll] > [data-part='scrollbar'][data-visible]) {
+  opacity: 1;
+  transition-duration: calc(var(--scroll-fade) / 2);
+}
+:where([data-scroll] > [data-part='scrollbar'][data-none]),
+:where([data-scroll][data-show='never'] > [data-part='scrollbar']) {
+  visibility: hidden;
+  pointer-events: none;
+}
+:where([data-scroll]:not([data-ready]) > [data-part='scrollbar']) {
+  display: none;
+}
+:where([data-scroll] > [data-part='scrollbar']:is([data-hover], [data-active])) {
+  background: var(--scroll-hover-track);
+}
+
+:where([data-scroll] [data-part='scrollbar'] > [data-part='thumb']) {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  border-radius: var(--scroll-radius);
+  background: var(--scroll-color);
+  will-change: transform;
+  transition:
+    inline-size var(--scroll-fade) ease-out,
+    block-size var(--scroll-fade) ease-out,
+    background-color var(--scroll-fade);
+}
+:where([data-scroll] [data-part='scrollbar'][data-orientation='vertical'] > [data-part='thumb']) {
+  inset-inline-start: auto;
+  inset-inline-end: var(--scroll-inset);
+  inline-size: var(--scroll-width);
+  transition-property: inline-size, background-color;
+}
+:where([data-scroll] [data-part='scrollbar'][data-orientation='horizontal'] > [data-part='thumb']) {
+  inset-block-start: auto;
+  inset-block-end: var(--scroll-inset);
+  left: 0;
+  right: auto;
+  block-size: var(--scroll-width);
+  transition-property: block-size, background-color;
+}
+:where(
+  [data-scroll]
+    [data-part='scrollbar']:is([data-hover], [data-active])[data-orientation='vertical']
+    > [data-part='thumb']
+) {
+  inline-size: var(--scroll-hover-width);
+}
+:where(
+  [data-scroll]
+    [data-part='scrollbar']:is([data-hover], [data-active])[data-orientation='horizontal']
+    > [data-part='thumb']
+) {
+  block-size: var(--scroll-hover-width);
+}
+:where([data-scroll] [data-part='scrollbar'][data-hover] > [data-part='thumb']) {
+  background: var(--scroll-hover-color);
+}
+:where([data-scroll] [data-part='scrollbar'][data-active] > [data-part='thumb']) {
+  background: var(--scroll-active-color);
+}
+@media (prefers-reduced-motion: reduce) {
+  :where([data-scroll]) {
+    --scroll-fade: 0ms;
+  }
+}
