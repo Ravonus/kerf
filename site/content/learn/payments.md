@@ -425,12 +425,7 @@ in `plugins` with any plugin for the `pay.rail` slot. A rail implements `PayRail
 `portal`, `verify`, and optionally `refund`) and passes `payRailSuite` from `@weft-js/pay/test`. `verify` gets the exact
 bytes received and throws `PayError('PAY011', …)` for anything it can't prove.
 
-Two rails ship: Stripe, and Square for one-time payments, so a shop's web orders land in the same Square account as its
-card readers. Swap `stripe()` for `square()` from `@weft-js/pay/square/plugin`; it reads `SQUARE_ACCESS_TOKEN` and
-`SQUARE_LOCATION_ID`, and for its webhook at `/_weft/x/pay/square` (subscribe it to `payment.created` and
-`payment.updated`) `SQUARE_WEBHOOK_SIGNATURE_KEY` and `SQUARE_WEBHOOK_URL`, the exact URL you gave Square, which is part of
-what it signs. `SQUARE_ENV=sandbox` uses Square's sandbox. A subscription or `portal` on the Square rail is **PAY022**:
-sell those through Stripe. App-store rails, store policy and a `weft pay sync` command aren't built.
+Stripe is the only rail that ships today. App-store rails, store policy and a `weft pay sync` command aren't built.
 
 ## Recap
 

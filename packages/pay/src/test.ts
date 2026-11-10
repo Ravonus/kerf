@@ -277,26 +277,16 @@ export async function payRailSuite({
   check('no signature is refused', await refused({ body: good.body, headers: new Headers() }))
   if (tolerance)
     check('an old delivery is refused as a replay', await refused(delivery(tolerance + 60_000)))
-  const subscriptions = rail.modes?.includes('subscription') ?? true
-  const line = subscriptions
-    ? ({
-        product: 'pro',
-        name: 'Pro',
-        amount: 999,
-        currency: 'usd',
-        mode: 'subscription',
-        plan: 'month',
-        interval: 'month',
-        quantity: 1,
-      } as const)
-    : ({
-        product: 'pie',
-        name: 'Pie',
-        amount: 2400,
-        currency: 'usd',
-        mode: 'payment',
-        quantity: 1,
-      } as const)
+  const line = {
+    product: 'pro',
+    name: 'Pro',
+    amount: 999,
+    currency: 'usd',
+    mode: 'subscription',
+    plan: 'month',
+    interval: 'month',
+    quantity: 1,
+  } as const
   const { url } = await rail.checkout({
     user: 'u1',
     line,
@@ -305,9 +295,7 @@ export async function payRailSuite({
     idempotencyKey: 'k1',
   })
   check('`checkout` answers an absolute URL', /^https?:\/\//.test(url), url)
-  if (subscriptions) {
-    const portal = await rail.portal({ customer: 'c1', returnUrl: 'https://app.test/account' })
-    check('`portal` answers an absolute URL', /^https?:\/\//.test(portal.url), portal.url)
-  }
+  const portal = await rail.portal({ customer: 'c1', returnUrl: 'https://app.test/account' })
+  check('`portal` answers an absolute URL', /^https?:\/\//.test(portal.url), portal.url)
   return out
 }

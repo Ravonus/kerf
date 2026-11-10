@@ -235,8 +235,6 @@ export interface RailEvent {
  */
 export interface PayRail {
   readonly id: string
-  /** What it can sell. Default both; a rail without `subscription` has no portal to offer. */
-  readonly modes?: readonly ('payment' | 'subscription')[]
   checkout(request: CheckoutRequest): Promise<{ url: string }>
   /** Where a buyer manages or cancels. */
   portal(request: { customer: string; returnUrl: string }): Promise<{ url: string }>
