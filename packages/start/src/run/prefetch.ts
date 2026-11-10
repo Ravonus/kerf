@@ -1,7 +1,8 @@
 import type { RouteCache, Read } from './cache'
 import { ask } from './helpers'
 
-type Intent = 'hover' | 'focus'
+/** hover is a guess; focus and a press (the button is down, the click is coming) are near certain */
+type Intent = 'hover' | 'focus' | 'press'
 type Network = { saveData?: boolean; effectiveType?: string }
 type Job = { ctrl: AbortController; promise: Promise<Read | undefined>; promoted: boolean }
 

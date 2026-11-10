@@ -1,15 +1,28 @@
 // @vitest-environment jsdom
 // @vitest-environment-options {"url":"http://localhost/"}
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, expect, it, vi } from 'vitest'
 import type { ClientRoutes } from '../src/run'
 import { routeClicks } from '../src/run/admission'
 
 const routes: ClientRoutes = { table: [{ id: '/next', pattern: '/next', layouts: [] }], load: {} }
 
-function pointer(type: string, options: MouseEventInit = {}, id = 7) {
+function pointer(type: string, options: MouseEventInit = {}, kind = 'mouse') {
   const event = new MouseEvent(type, { bubbles: true, cancelable: true, button: 0, ...options })
-  Object.defineProperties(event, { pointerId: { value: id }, isPrimary: { value: true } })
+  Object.defineProperties(event, {
+    pointerId: { value: 7 },
+    isPrimary: { value: true },
+    pointerType: { value: kind },
+  })
   return event
+}
+
+function setup(html = '<a href="/next"><span>go</span></a>') {
+  history.replaceState(null, '', '/from')
+  document.body.innerHTML = html
+  const go = vi.fn()
+  const warm = vi.fn()
+  const dispose = routeClicks(document, routes, go, warm)
+  return { anchor: document.querySelector('a')!, go, warm, dispose }
 }
 
 afterEach(() => {
@@ -17,143 +30,75 @@ afterEach(() => {
   history.replaceState(null, '', '/from')
 })
 
-describe('navigation pointer admission', () => {
-  it('lets a touch wait for its click: no navigation on touch pointerdown, one on the tap', () => {
-    history.replaceState(null, '', '/from')
-    document.body.innerHTML = '<a href="/next">go</a>'
-    const anchor = document.querySelector('a')!
-    const go = vi.fn()
-    const dispose = routeClicks(document, routes, go)
-    try {
-      for (const type of ['touch', 'pen']) {
-        const down = pointer('pointerdown')
-        Object.defineProperty(down, 'pointerType', { value: type })
-        anchor.dispatchEvent(down)
-        expect(go).not.toHaveBeenCalled()
-      }
-      const click = pointer('click', { detail: 1 })
+it('a press only warms the route; the click navigates, for every pointer', () => {
+  const { anchor, go, warm, dispose } = setup()
+  try {
+    for (const kind of ['mouse', 'touch', 'pen']) {
+      go.mockClear()
+      anchor.querySelector('span')!.dispatchEvent(pointer('pointerdown', {}, kind))
+      // the page does not change while the button is down: the click has to land on the link
+      expect(go).not.toHaveBeenCalled()
+      expect(warm).toHaveBeenLastCalledWith(new URL('/next', location.href))
+      const click = pointer('click', { detail: 1 }, kind)
       anchor.dispatchEvent(click)
       expect(click.defaultPrevented).toBe(true)
       expect(go).toHaveBeenCalledOnce()
-    } finally {
-      dispose()
     }
-  })
+  } finally {
+    dispose()
+  }
+})
 
-  it('accepts pointerdown once and suppresses the matching click after anchor removal', () => {
-    history.replaceState(null, '', '/from')
-    document.body.innerHTML = '<a href="/next"><span>go</span></a>'
-    const anchor = document.querySelector('a')!
-    const go = vi.fn()
-    const dispose = routeClicks(document, routes, go)
-    try {
-      anchor.querySelector('span')!.dispatchEvent(pointer('pointerdown'))
-      expect(go).toHaveBeenCalledOnce()
-      expect(go).toHaveBeenCalledWith(new URL('/next', location.href).href)
-      anchor.remove()
-      const click = pointer('click', { detail: 1 })
-      document.documentElement.dispatchEvent(click)
-      expect(click.defaultPrevented).toBe(true)
-      expect(go).toHaveBeenCalledOnce()
-    } finally {
-      dispose()
-    }
-  })
+it("the link's own click handlers run first and see the click", () => {
+  const { anchor, go, dispose } = setup()
+  const heard = vi.fn()
+  anchor.addEventListener('click', heard)
+  try {
+    anchor.dispatchEvent(pointer('pointerdown'))
+    anchor.dispatchEvent(pointer('click', { detail: 1 }))
+    expect(heard).toHaveBeenCalledOnce()
+    expect(go).toHaveBeenCalledOnce()
+  } finally {
+    dispose()
+  }
+})
 
-  it('preserves excluded links and admits keyboard clicks independently', () => {
-    document.body.innerHTML = '<a href="/next">go</a>'
-    const anchor = document.querySelector('a')!
-    const go = vi.fn()
-    const dispose = routeClicks(document, routes, go)
-    try {
-      anchor.dispatchEvent(pointer('pointerdown', { ctrlKey: true }))
-      expect(go).not.toHaveBeenCalled()
-      anchor.setAttribute('data-navigation', 'off')
+it('leaves excluded links to the browser and admits keyboard clicks', () => {
+  const { anchor, go, warm, dispose } = setup('<a href="/next">go</a>')
+  try {
+    for (const [name, value] of [
+      ['data-navigation', 'off'],
+      ['target', '_blank'],
+      ['download', ''],
+      ['rel', 'EXTERNAL'],
+    ] as const) {
+      anchor.setAttribute(name, value)
       anchor.dispatchEvent(pointer('pointerdown'))
-      expect(go).not.toHaveBeenCalled()
-      anchor.removeAttribute('data-navigation')
-      anchor.setAttribute('target', '_blank')
-      anchor.dispatchEvent(pointer('pointerdown'))
-      expect(go).not.toHaveBeenCalled()
-      anchor.removeAttribute('target')
-      anchor.setAttribute('download', '')
-      anchor.dispatchEvent(pointer('pointerdown'))
-      anchor.removeAttribute('download')
-      anchor.setAttribute('rel', 'EXTERNAL')
-      anchor.dispatchEvent(pointer('pointerdown'))
-      anchor.removeAttribute('rel')
-      expect(go).not.toHaveBeenCalled()
-      anchor.setAttribute('href', '/unknown')
-      anchor.dispatchEvent(pointer('pointerdown'))
-      expect(go).not.toHaveBeenCalled()
-      anchor.setAttribute('href', '/next')
-      const keyboard = pointer('click', { detail: 0 })
-      anchor.dispatchEvent(keyboard)
-      expect(keyboard.defaultPrevented).toBe(true)
-      expect(go).toHaveBeenCalledOnce()
-    } finally {
-      dispose()
+      anchor.dispatchEvent(pointer('click', { detail: 1 }))
+      anchor.removeAttribute(name)
     }
-  })
+    anchor.dispatchEvent(pointer('click', { detail: 1, ctrlKey: true }))
+    anchor.setAttribute('href', '/unknown')
+    anchor.dispatchEvent(pointer('click', { detail: 1 }))
+    expect(go).not.toHaveBeenCalled()
+    expect(warm).not.toHaveBeenCalled()
+    anchor.setAttribute('href', '/next')
+    const keyboard = pointer('click', { detail: 0 })
+    anchor.dispatchEvent(keyboard)
+    expect(keyboard.defaultPrevented).toBe(true)
+    expect(go).toHaveBeenCalledOnce()
+  } finally {
+    dispose()
+  }
+})
 
-  it('does not consume a later independent modified gesture after a drag', () => {
-    document.body.innerHTML = '<a href="/next">go</a>'
-    const anchor = document.querySelector('a')!
-    const go = vi.fn()
-    const dispose = routeClicks(document, routes, go)
-    try {
-      anchor.dispatchEvent(pointer('pointerdown'))
-      anchor.dispatchEvent(pointer('pointerdown', { ctrlKey: true }))
-      const click = pointer('click', { detail: 1, ctrlKey: true })
-      anchor.dispatchEvent(click)
-      expect(click.defaultPrevented).toBe(false)
-      expect(go).toHaveBeenCalledOnce()
-    } finally {
-      dispose()
-    }
-  })
-
-  it('suppresses the matching click after completion, then accepts a new gesture', async () => {
-    document.body.innerHTML = '<a href="/next">go</a><a href="/next">other</a>'
-    const [anchor, other] = [...document.querySelectorAll('a')]
-    const go = vi.fn(async () => {})
-    const dispose = routeClicks(document, routes, go)
-    try {
-      anchor!.dispatchEvent(pointer('pointerdown'))
-      await Promise.resolve()
-      anchor!.remove()
-      const click = pointer('click', { detail: 1 })
-      other!.dispatchEvent(click)
-      expect(click.defaultPrevented).toBe(true)
-      expect(go).toHaveBeenCalledOnce()
-      other!.dispatchEvent(pointer('pointerdown'))
-      expect(go).toHaveBeenCalledTimes(2)
-      const next = pointer('click', { detail: 1 })
-      other!.dispatchEvent(next)
-      expect(next.defaultPrevented).toBe(true)
-      expect(go).toHaveBeenCalledTimes(2)
-    } finally {
-      dispose()
-    }
-  })
-
-  it('clears pointer cancellation and honors prevented pointerdown', () => {
-    document.body.innerHTML = '<a href="/next">go</a>'
-    const anchor = document.querySelector('a')!
-    const go = vi.fn()
-    const dispose = routeClicks(document, routes, go)
-    try {
-      const prevent = (event: Event) => event.preventDefault()
-      anchor.addEventListener('pointerdown', prevent, { once: true })
-      anchor.dispatchEvent(pointer('pointerdown'))
-      expect(go).not.toHaveBeenCalled()
-      anchor.dispatchEvent(pointer('pointerdown'))
-      anchor.dispatchEvent(pointer('pointercancel'))
-      const click = pointer('click', { detail: 1 })
-      anchor.dispatchEvent(click)
-      expect(go).toHaveBeenCalledTimes(2)
-    } finally {
-      dispose()
-    }
-  })
+it('a click its own handler prevented is left alone', () => {
+  const { anchor, go, dispose } = setup()
+  anchor.addEventListener('click', (e) => e.preventDefault())
+  try {
+    anchor.dispatchEvent(pointer('click', { detail: 1 }))
+    expect(go).not.toHaveBeenCalled()
+  } finally {
+    dispose()
+  }
 })

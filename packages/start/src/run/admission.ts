@@ -35,49 +35,33 @@ export function admitLink(event: Event, routes: ClientRoutes) {
   }
 }
 
-/** Pointer admission and its click fallback; the returned disposer removes only these listeners. */
+/**
+ * Links go on their click. A press (pointerdown) only warms the route: it starts the fetch the click will claim, so the
+ * head start is kept, but the page never changes under a pointer that is still down. Swapping it on the press lost the
+ * click itself (the button came up on the new page, so the click landed on <html> or never fired), and with it every
+ * click handler: a menu that closes when its link is followed, a sheet, an analytics hook. The returned disposer
+ * removes only these listeners.
+ */
 export function routeClicks(
   doc: Document,
   routes: ClientRoutes,
   go: (href: string) => void | Promise<void>,
+  warm?: (url: URL) => void,
 ) {
-  let accepted: { id: number; anchor: HTMLAnchorElement } | undefined
   const down = (event: PointerEvent) => {
-    accepted = undefined
-    // A mouse press starts the navigation early. A finger or pen waits for its click: a touch that lands on a link may
-    // turn into a scroll, and swapping the page under it mid-tap loses the click that menus and sheets close on.
-    if (event.pointerType === 'touch' || event.pointerType === 'pen') return
     const target = admitLink(event, routes)
-    if (!target) return
-    accepted = { id: event.pointerId, anchor: target.anchor }
-    if (!target.noop) void Promise.resolve(go(target.url.href)).catch(() => {})
-  }
-  const cancel = (event: PointerEvent) => {
-    if (accepted?.id === event.pointerId) accepted = undefined
+    if (target && !target.noop) warm?.(target.url)
   }
   const click = (event: MouseEvent) => {
-    const record = accepted
-    accepted = undefined
-    const pointer = event as PointerEvent
-    if (
-      record &&
-      event.detail > 0 &&
-      (pointer.pointerId === record.id || event.composedPath().includes(record.anchor))
-    ) {
-      event.preventDefault()
-      return
-    }
     const target = admitLink(event, routes)
     if (!target) return
     event.preventDefault()
-    if (!target.noop) void go(target.url.href)
+    if (!target.noop) void Promise.resolve(go(target.url.href)).catch(() => {})
   }
   doc.addEventListener('pointerdown', down)
-  doc.addEventListener('pointercancel', cancel)
   doc.addEventListener('click', click)
   return () => {
     doc.removeEventListener('pointerdown', down)
-    doc.removeEventListener('pointercancel', cancel)
     doc.removeEventListener('click', click)
   }
 }
