@@ -398,8 +398,7 @@ Those are what [Effects](/learn/effects) is for.
 
 ## The diagnostics
 
-Several of the patterns on this page have codes. `weft check` and your editor point at the first five; W003, W004 and
-W012 are in the catalog, but this Weft doesn't report them yet.
+Several of the patterns on this page have codes, and `weft check` and your editor point at each one.
 
 | Code | What it catches | Instead |
 |---|---|---|
@@ -412,10 +411,6 @@ W012 are in the catalog, but this Weft doesn't report them yet.
 | W004 | A `watch` that only copies one value into another box | `derived` |
 | W012 | `derived(async …)` | `resource` |
 
-:::note
-The last three are in Weft's diagnostics catalog, but this version of the compiler doesn't report them yet. Each code's
-page in [Reference: diagnostics](/reference/diagnostics) says whether your version does.
-:::
 
 ## Recap
 

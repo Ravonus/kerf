@@ -1,6 +1,6 @@
 # @weft-js/start
 
-> **Early release (0.1.1).** APIs will change between minor versions.
+> **Early release (0.1.x).** APIs can change between minor versions.
 
 The full-stack part of Weft: routes from files, server functions, server rendering with streaming, a database, auth and
 realtime. It runs on Node, Bun or Deno, and doesn't need Rust. An app made with `npm create @weft-js` already has it.
@@ -37,6 +37,20 @@ export default function Hello() {
 ```
 
 `npx weft dev` serves it at `/hello`.
+
+## What you get
+
+- **Routes from files.** `src/routes/shop/[id].tsx` is `/shop/:id`, with `_layout.tsx` for layouts, `load` for a page's
+  data, `notFound()` and `redirect()`, and `meta` for titles, descriptions and share cards.
+- **Server functions.** `query` and `mutation` validate their input with a schema, run with `ctx` (the request, the
+  user, the database) and come back typed. Mutations name the tags they invalidate, and `optimistic` updates the page
+  before the server answers. Forms post to them without JavaScript.
+- **Streaming SSR and hydration**, with `<Boundary>` sending each part when its data is ready.
+- **A database.** `ctx.db` over Drizzle, Prisma or plain SQL (`@weft-js/db`) on SQLite, Postgres or MySQL. `weft db generate`
+  writes the migration, which applies on the next request.
+- **Auth** through Better Auth or your own, with `ctx.user` in every server function.
+- **Live data.** A page that reads a table updates when another user changes it, from the database's change feed.
+- **Any runtime.** `weft build` targets Node, Bun or Deno, or a host preset (Netlify, Vercel, Cloudflare, Fly, Render).
 
 ## Docs
 

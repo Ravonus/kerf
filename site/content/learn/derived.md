@@ -259,12 +259,12 @@ Don't. This version has three problems that `derived` doesn't:
   The catalog calls that **W003**.
 - **It's more state.** `total` is now a box anyone can write to, and nothing stops it from disagreeing with `qty`.
 
-The catalog names a `watch` that only copies one value into another **W004**, with `derived` as the fix. This Weft
-doesn't report W003 or W004 yet, so watch for them yourself. Keep `watch` for the outside world; see
+The compiler reports a `watch` that only copies one value into another as **W004**, with `derived` as the fix, and
+reports W003 too. Keep `watch` for the outside world; see
 [Effects](/learn/effects) and [You might not need an effect](/learn/you-might-not-need-an-effect).
 
 The same goes for writing to state *inside* a `derived`. A derived value computes; it doesn't change anything. A write in
-one is **W002** in the catalog, also not reported yet.
+one is **W002**.
 
 ## Data that arrives later
 

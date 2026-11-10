@@ -17,9 +17,8 @@ watching for: a component runs **once**, state is a **box** you read and write t
 from state are **derived**. Those three ideas carry most of what makes Weft different.
 
 :::note Running the examples on your own machine
-Weft isn't on npm yet. Once it is, `npm create @weft-js` will make an app. Until then you make one from a checkout of the
-repository with `node packages/create/scripts/local.mjs new my-app`. [Installation](/learn/installation) has every
-step. You don't need an app to read this page: the examples run right here.
+`npm create @weft-js my-app` makes an app, and `npx weft dev` runs it. [Installation](/learn/installation) has every
+option. You don't need an app to read this page: the examples run right here.
 :::
 
 ## Creating and nesting components
@@ -234,7 +233,7 @@ Because the body runs once:
 
 - There are no hook rules and no dependency lists. `state` is a plain function call.
 - A plain `let` that a handler changes won't update the page, because the markup that read it was set up once. Make it
-  `state`. This Weft doesn't report it yet (W041 in the catalog), so watch for it.
+  `state`. The compiler reports it as **W041**.
 - You always write `.value`, in markup too. `{cups}` without it renders the box itself, which is **W015**.
 
 :::deepdive How is this different from useState?

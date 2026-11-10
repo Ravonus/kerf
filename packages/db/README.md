@@ -1,6 +1,6 @@
 # @weft-js/db
 
-> **Early release (0.1.1).** APIs will change between minor versions.
+> **Early release (0.1.x).** APIs can change between minor versions.
 
 Database layers and list sources for [`@weft-js/start`](../start). Each driver is an optional peer dependency, and each
 subpath loads only its own.

@@ -124,7 +124,7 @@ every comparison: `status.value === 'sucess'` is a type error.
 :::note A function like this isn't a hook
 The function above only groups four boxes. There are no hook rules in Weft: a function that makes state can be called
 from a component body in any order, even inside an `if`. Don't name it `useSomething`, though: Weft's catalog counts a
-`useX()` call as a React habit (W020–W029; not reported yet). See [Reusing logic](/learn/reusing-logic).
+`useX()` call as a React habit (W020). See [Reusing logic](/learn/reusing-logic).
 :::
 
 ## Step 5: connect the handlers
@@ -213,7 +213,7 @@ if (status === 'success') return <h2>That's right!</h2>
 
 In Weft that's a bug. The component body runs **once**, when the component is made. The `if` is checked once, while the
 status is still `'typing'`, and never again: the success message would never appear. The compiler reports an early
-`return` that depends on state as **W001** (the catalog's own code for it, W040, isn't reported yet).
+`return` that depends on state as **W040**.
 
 Put the branch inside the JSX instead, as the example does with a ternary. Every `{expression}` in JSX is live: when
 `status` changes, Weft re-evaluates the branch and swaps what's on screen.

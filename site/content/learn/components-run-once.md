@@ -153,11 +153,10 @@ export function Counter() {
 }
 ```
 
-:::pitfall The compiler doesn't catch the `let` counter yet
-Weft's diagnostic catalogue has a code for this mistake, W041 ("a `let` mutated in a handler and read in JSX"), but the
-compiler doesn't report it yet. Until it does, look for it yourself: if a variable is changed in a handler and shown in
-the markup, it should be `state`. A `let` that names a prop is a different thing, a writable alias, and works: see
-[Passing props](/learn/passing-props).
+:::pitfall The `let` counter
+The compiler reports this mistake as **W041** ("a `let` mutated in a handler and read in JSX"): if a variable is changed
+in a handler and shown in the markup, it should be `state`. A `let` that names a prop is a different thing, a writable
+alias, and works: see [Passing props](/learn/passing-props).
 :::
 
 ## No hook rules, no dependency arrays

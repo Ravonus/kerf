@@ -63,9 +63,9 @@ Each key is a role of your choosing; `body` and `display` are the usual two. Eac
 Beside `fonts`, `text()` takes `subsets` (default `['latin']`; also `latin-ext`, `cyrillic`, `greek`, `vietnamese` and
 their extended sets) and `trim` (default `true`, below). The [Fonts reference](/reference/fonts) has every option.
 
-:::note Weft isn't on npm yet
-`@weft-js/text` isn't published on its own yet. `weft add text` works in an app made from a Weft checkout, which is how
-apps are made today ([Installation](/learn/installation)).
+:::note @weft-js/text isn't on npm yet
+Weft's core packages are on npm, but `@weft-js/text` isn't published yet. Until it is, `weft add text` works in an app
+made from a Weft checkout ([Using a Weft checkout](https://github.com/Ravonus/weft/blob/main/docs/getting-started.md)).
 :::
 
 ## What the build does

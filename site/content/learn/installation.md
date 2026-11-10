@@ -8,9 +8,8 @@
 - What changes if you're coming from React
 :::
 
-This page takes you from an empty folder to a running Weft app, then walks through what you got. You need Node 26 and
-npm. Once Weft is published, Bun or Deno can take Node's place: the CLI, `weft dev` and `weft build` all run on either one,
-with no Node installed.
+This page takes you from an empty folder to a running Weft app, then walks through what you got. You need Node 26, or Bun
+or Deno in its place: the generator, the CLI, `weft dev` and `weft build` all run on either one, with no Node installed.
 
 Rust isn't needed to use Weft. The compiler comes with it as WebAssembly, which runs anywhere, and a native addon for your
 platform installs by itself and makes builds faster. Rust only comes in if you choose to write
@@ -19,36 +18,26 @@ builds of the compiler.
 
 ## Create an app
 
-Weft isn't on npm yet, so for now an app is made from a checkout of the repo, and building that checkout's compiler does
-take Rust (`cargo`). Once Weft is published, `npm create @weft-js` replaces the first two steps and no Rust is involved.
-
-### 1. Get the repo
-
-```bash
-git clone https://github.com/Ravonus/weft.git
-```
-
-### 2. Create the app
-
-Run this from the folder that holds `weft`. It builds what's out of date, packs each package as a tarball and creates
-`my-app` beside the repo, wired to those tarballs.
-
-```bash
-node weft/packages/create/scripts/local.mjs new my-app --yes --db none
-```
-
-`--db none` leaves out the database so there's nothing to set up. Leave off `--yes` and it asks you each question in turn,
-with the default already picked: arrow keys move, Enter chooses.
-
-Once Weft is published, the same app is one command, and it takes the same flags:
+### 1. Create it
 
 ```bash
 npm create @weft-js -- my-app --yes --db none
 ```
 
-`bun create @weft-js` and `deno run -A npm:@weft-js/create` will do the same for those runtimes.
+`--db none` leaves out the database so there's nothing to set up. Leave off `--yes` and it asks you each question in
+turn, with the default already picked: arrow keys move, Enter chooses. With npm, the flags go after `--`.
 
-### 3. Start it
+The other package managers and runtimes take the same flags:
+
+```bash
+pnpm create @weft-js my-app --yes --db none
+bun create @weft-js my-app --yes --db none
+deno run -A npm:@weft-js/create my-app --yes --db none
+```
+
+It installs the dependencies with the package manager you ran it with, and starts a git repository.
+
+### 2. Start it
 
 ```bash
 cd my-app
@@ -57,7 +46,7 @@ npx weft dev
 
 Open the address it prints. You'll see a card with a button that counts your clicks.
 
-### 4. Change something
+### 3. Change something
 
 Open `src/routes/index.tsx`. Add `derived` to the import from `@weft-js/core`, and work out a new value under `count`:
 
@@ -83,6 +72,7 @@ Each question the generator asks has a flag, so an agent or a CI job never sees 
 | Flag | Values | Default | What it does |
 |---|---|---|---|
 | `[dir]` | a folder name | asked, `my-weft-app` with `--yes` | Where the app goes. It must be missing or empty |
+| `--template` | `todo`, `admin`, `catalog`, `landing` | none | A fuller app to start from, on Postgres (below) |
 | `--ui` | `warp`, `headless`, `tailwind`, `none` | `warp` | The UI kit. `headless` gives you Warp's behaviour and tokens under your own markup |
 | `--db` | `sqlite`, `postgres`, `mysql`, `none` | `sqlite` | A database, and a todo page that uses it |
 | `--layer` | `drizzle`, `prisma`, `native` | `drizzle` | How the app talks to the database. `native` is SQL migrations with no ORM |
@@ -91,8 +81,8 @@ Each question the generator asks has a flag, so an agent or a CI job never sees 
 | `--runtime` | `node`, `bun`, `deno` | whichever is running the generator | What `weft build` targets |
 | `--config` | `ts`, `json`, `yaml` | `ts` | The format of `weft.config` |
 | `--pm` | `npm`, `pnpm`, `bun`, `deno`, `yarn` | the one you ran it with | The package manager for the install |
-| `--git`, `--no-git` | | on | Start a git repository |
-| `--install`, `--no-install` | | on | Install the dependencies |
+| `--git`, `--no-git` | | on (off with no terminal, unless `--yes`) | Start a git repository |
+| `--install`, `--no-install` | | on (off with no terminal, unless `--yes`) | Install the dependencies |
 | `--name` | a package name | the folder's name | The `name` in `package.json` |
 | `--yes`, `-y` | | | Take the defaults for anything not given |
 
@@ -101,21 +91,24 @@ stops and says so. A few combinations, to give you the idea:
 
 ```bash
 # a static-looking site with Tailwind and no server data
-node weft/packages/create/scripts/local.mjs new site --yes \
-  --ui tailwind --db none
+npm create @weft-js -- site --yes --ui tailwind --db none
 
 # Postgres through Prisma, no sign-in, built for Bun
-node weft/packages/create/scripts/local.mjs new shop --yes \
+npm create @weft-js -- shop --yes \
   --db postgres --layer prisma --no-auth --runtime bun
+
+# a fuller app to start from: a shop on Postgres
+npm create @weft-js -- store --yes --template catalog
 ```
 
-`local.mjs new` always installs with npm, because that's what the tarballs are wired up for: `--pm` and `--install` are
-for the published generator.
+`--template` starts from a fuller app on Postgres: `todo` (sign-in and a todo list), `admin` (an orders admin behind
+sign-in), `catalog` (categories, product pages and a cart) or `landing` (a landing page with pricing and a sign-up list).
 
 :::note Making it from a checkout
-`local.mjs` keeps the packed tarballs in `~/.weft/local` (set `WEFT_LOCAL_DIR` to move it). After you pull new changes to
-Weft, run `node weft/packages/create/scripts/local.mjs refresh my-app` to rebuild what changed and put the new
-tarballs in the app, then restart `weft dev`.
+Working on Weft itself? `node weft/packages/create/scripts/local.mjs new my-app` takes the same flags and wires the app to
+tarballs packed from your checkout, which needs Rust to build the compiler. After you pull new changes, `local.mjs refresh
+my-app` puts the new tarballs in the app. [Using a Weft checkout](https://github.com/Ravonus/weft/blob/main/docs/getting-started.md)
+has the rest.
 :::
 
 ## What's in a new app
@@ -233,21 +226,12 @@ You don't need `@weft-js/start` to use Weft. A Vite app can use Weft's component
 routes, and the same checks work on it.
 
 You need Vite 8, and two packages: `@weft-js/core` (the runtime and its Vite plugin) and `@weft-js/cli` as a dev
-dependency (the `weft` command). Until they're published, add them to your `package.json` by name and let `local.mjs`
-point them at your checkout's tarballs:
-
-```json
-{
-  "dependencies": { "@weft-js/core": "0.1.0" },
-  "devDependencies": { "@weft-js/cli": "0.1.0", "vite": "8.3.5" }
-}
-```
+dependency (the `weft` command):
 
 ```bash
-node weft/packages/create/scripts/local.mjs refresh my-vite-app
+npm install @weft-js/core
+npm install -D @weft-js/cli vite@8
 ```
-
-`refresh` works with npm only, and stops if it finds another package manager's lockfile.
 
 Add the plugin to `vite.config.ts`. It compiles `.tsx` and `.jsx` files with Weft's compiler:
 
@@ -320,12 +304,11 @@ Most of what you write in TSX carries over. Weft accepts React's prop names on n
 [From React](/reference/react) reference lists each one.
 
 What doesn't carry over is the model underneath. A component runs once, state is a box you read with `.value`, and the
-compiler wires each read to the DOM. So the habits that come with hooks have no place. `weft check` reports most of
-them; the hooks themselves are in the catalog but not reported yet, so look for those yourself:
+compiler wires each read to the DOM. So the habits that come with hooks have no place, and `weft check` reports them:
 
 | A React habit | What Weft reports | The Weft way |
 |---|---|---|
-| `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`, a custom `useX()` hook, a dependency array | W020–W029 (in the catalog, not reported yet) | `state`, `watch`, `derived`, `ref={el}`, plain functions |
+| `useState`, `useEffect`, `useMemo`, `useRef`, `useCallback`, a custom `useX()` hook, a dependency array | W020: no hooks in Weft | `state`, `watch`, `derived`, `ref={el}`, plain functions |
 | `useState(props.value)` written as `state(props.value)` | W005: the box never follows the prop | `state.linked(() => props.value)` |
 | Computing from a prop in the component body | W001: the body runs once | `derived(() => …)`, or compute in the JSX |
 | `{count}` for a state value | W015: that renders the box | `{count.value}` |
@@ -346,8 +329,7 @@ the other just works.
 
 ## Recap
 
-- `local.mjs new my-app` makes an app from a checkout today; `npm create @weft-js` will once Weft is published. Both take
-  the same flags, and `--yes` takes every default.
+- `npm create @weft-js` (or pnpm, bun or deno) makes an app; `--yes` takes every default, and every question has a flag.
 - `src/routes` is your pages, `src/server` your server functions, and `.server.ts` files never reach the browser.
 - `weft dev` runs the app, `weft check` checks it, `weft build` builds it and `weft start` runs the build.
 - Node, Bun and Deno all work: `runtime` in the config picks what the build targets.

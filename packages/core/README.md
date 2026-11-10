@@ -1,6 +1,6 @@
 # @weft-js/core
 
-> **Early release (0.1.1).** APIs will change between minor versions.
+> **Early release (0.1.x).** APIs can change between minor versions.
 
 Weft's runtime, compiler binding, Vite plugin, server renderer and test utilities. An app made with `npm create @weft-js`
 already has it, wired up.
@@ -22,6 +22,17 @@ export default function Counter() {
   )
 }
 ```
+
+## The model
+
+- **A component runs once.** Its body sets things up; it isn't a render function, so there are no hooks and no
+  dependency arrays.
+- **State is a box.** `state(0)` gives `{ value }`. Read `.value` in JSX and that spot updates when it changes; write
+  `.value` and nothing else re-runs.
+- **Anything computed is `derived`.** `derived(() => a.value + b.value)` follows what it reads. `watch` runs a side effect
+  when its input changes, and `resource` loads async data that `<Boundary>` waits for.
+- **Props stay live.** Read `props.x` where you use it, or name it (`const { x } = props`); the compiler keeps it
+  live. Computing from a prop once is W001, with the fix.
 
 TSX files need `"jsx": "preserve"` and `"jsxImportSource": "@weft-js/core"` in `tsconfig.json`, and the Vite plugin from
 `@weft-js/core/vite` to compile them.
@@ -82,13 +93,12 @@ is using.
 
 ## Working on it
 
-Run these in `packages/core`. Building the compiler needs Rust.
+From the repository root, `pnpm run setup` installs every package and builds the compiler, which needs Rust. Then, in
+`packages/core`:
 
 ```bash
-npm ci
-# Build the addon and WebAssembly into native/.
-npm run build:native
-npm test
+pnpm run build:native  # rebuild the addon and WebAssembly into native/ after a compiler change
+pnpm test
 node scripts/size.mjs  # brotli sizes against the budgets
 ```
 
@@ -96,4 +106,5 @@ node scripts/size.mjs  # brotli sizes against the budgets
 Node runs it without a TypeScript loader.
 
 `size.mjs` holds the whole runtime to 13.37 KB of brotli and the `@weft-js/core` entry to 6.90 KB. Today the entry is
-4.76 KB.
+5.63 KB and hello world is 1.60 KB. `src/egg.ts` pads the full runtime to exactly 13.37 KB; run `node scripts/egg.mjs` last,
+after any merge that changes the runtime.

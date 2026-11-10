@@ -325,7 +325,8 @@ Automated tests can't hear a page. Before a release, spend five minutes on each 
   pass contrast at every dial stop.
 - You own the structure (headings, landmarks, `lang`), the words (labels, errors, alt text) and anything built from plain
   elements.
-- `weft check` reports the mistakes it can see as D030–D039 and D011, each with its WCAG criterion.
+- `weft check` reports the mistakes it can see as D030–D039, D041 and D011, each with its WCAG criterion, and `weft build`
+  and `weft audit` run axe's WCAG rules on the built pages (L-codes).
 - Find elements by role and name in tests, so a lost name fails a test. Then use the app with a keyboard and a screen
   reader.
 

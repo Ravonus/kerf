@@ -2,18 +2,22 @@
 
 Three levels, in order. Stop at the first that gets you there; each one keeps the contrast check.
 
-1. `warp({ seed, dials, radius, fonts, tokens })` in the weft config. Checked by D010 at the stops `dials` leave.
+1. `warp({ seed, dials, fields, radius, fonts, tokens })` in the weft config. Checked by D010 at the stops `dials` leave.
    For your own names, per-element looks and named themes: `colors`, `system`, `parts`, `themes` (below).
 2. `src/theme.css`, unlayered: `[data-scope]` and `[data-part]` rules beat warp with no `!important`.
 3. Your own component, with warp's tokens.
+
+The Theme studio on the docs site (`/components/theme-studio`) edits level 1 with live components and contrast
+ratios, and copies the result as `weft.config.ts`.
 
 ## warp() options
 
 | Option | Does |
 |---|---|
-| `seed.accent` | The hue family, `#rrggbb`. Each theme solves its own lightness, and `weft build` prints where it landed |
+| `seed.accent` | The hue family: `#rrggbb`, a name from `colors`, or `{ hue, chroma }`. Each theme solves its own lightness, and `weft build` prints where it landed |
 | `seed.neutral` | The tint of pages, surfaces and text, `#rrggbb` or `{ hue, chroma }` |
 | `dials` | Default `expression` (quiet balanced vivid), `density`, `flair`, `theme`. With `theme: 'light'`, dark isn't checked |
+| `fields` | `floating` (the default: the label floats in a notch) or `classic` (the label above the box) |
 | `radius` | `sharp` (2px), `soft`, `round`. Below 2px, set the radius tokens |
 | `fonts` | `body`, `display`, `mono`: a family or a whole stack |
 | `tokens` | Any `--warp-*`, set on every scope. Colours are `#rrggbb`, `oklch()`, `color-mix()` or `light-dark()` |

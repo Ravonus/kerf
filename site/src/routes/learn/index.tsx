@@ -31,18 +31,18 @@ export default function LearnHome(props: RouteProps<typeof load>) {
 
       <section data-site="quick-start">
         <h2 id="quick-start">Quick start</h2>
-        <p>Once Weft is on npm, one command makes an app:</p>
+        <p>One command makes an app, and a second runs it:</p>
         <pre data-part="cmd">
-          <code>npm create @weft-js</code>
+          <code>npm create @weft-js my-app</code>
+        </pre>
+        <pre data-part="cmd">
+          <code>cd my-app && npx weft dev</code>
         </pre>
         <p>
-          weft isn't on npm yet. For now, run this from a checkout of the repo.{' '}
-          <Link href="/learn/installation">Installation</Link> has every step, and{' '}
-          <Link href="/learn/quick-start">Quick start</Link> tours the main ideas in a few minutes.
+          pnpm, bun and deno work the same way. <Link href="/learn/installation">Installation</Link>{' '}
+          has every option, and <Link href="/learn/quick-start">Quick start</Link> tours the main
+          ideas in a few minutes.
         </p>
-        <pre data-part="cmd">
-          <code>node packages/create/scripts/local.mjs new my-app</code>
-        </pre>
         <p>
           A component is a function that returns TSX. This one keeps a count in{' '}
           <code data-scope="code">state</code> and shows it. The code is the code running beside it.

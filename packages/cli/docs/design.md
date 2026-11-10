@@ -100,7 +100,7 @@ the config turns these off.
 
 ## Tokens
 
-The theme is `warp({ seed, dials, radius, fonts, tokens })`: every value goes through the contrast check. `weft docs theme`
+The theme is `warp({ seed, dials, fields, radius, fonts, tokens })`: every value goes through the contrast check. `weft docs theme`
 has worked looks and the button channels. `weft tokens`
 writes the resolved tokens to `.weft/tokens/` as DTCG 2025.10, one file per theme × expression plus a resolver, for
 Figma, Style Dictionary or Terrazzo.

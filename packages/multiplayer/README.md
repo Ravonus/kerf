@@ -1,12 +1,10 @@
 # @weft-js/multiplayer
 
-> **Early release (0.1.1).** APIs will change between minor versions.
+> **Not released yet.** This add-on is private and isn't on npm. An app made from a Weft checkout can use it: see
+> [Using a Weft checkout](../../docs/getting-started.md).
 
 Presence, cursors anchored to elements, a typed interaction relay and synced scroll on `channel`. A library, not a plugin.
 
-```bash
-npm install @weft-js/multiplayer
-```
 
 ## End-to-end tests
 

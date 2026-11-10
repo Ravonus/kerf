@@ -11,8 +11,8 @@ each page with its data already in it. `@weft-js/start` is that half of Weft. It
 that run on the server and that components call like local ones, a database, sign-in, forms that work without
 JavaScript, and live updates, all typed from end to end.
 
-An app made with `create-weft` already has it. It runs on Node, Bun or Deno, and needs no Rust. Once Weft is published,
-`npm create @weft-js` makes one; until then, [Installation](/learn/installation) shows how to make one from a checkout.
+An app made with `npm create @weft-js` already has it ([Installation](/learn/installation)). It runs on Node, Bun or
+Deno, and needs no Rust.
 With a database and sign-in chosen, a new app is a small working todo list, and the examples in this chapter build on
 it.
 

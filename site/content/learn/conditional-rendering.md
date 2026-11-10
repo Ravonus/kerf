@@ -174,8 +174,7 @@ export function Inbox() {
 }
 ```
 
-This mistake has a diagnostic code reserved for it, W011, but the compiler doesn't report it yet, so check for it
-yourself. There's a second reason to prefer `count.value > 0`: the test is tracked on its own, so with
+The compiler reports this mistake as **W011**. There's a second reason to prefer `count.value > 0`: the test is tracked on its own, so with
 `count.value > 0` the badge is built once and its number updates in place, while with `count.value &&` the test's
 result changes on every new count, and the badge is rebuilt each time.
 :::

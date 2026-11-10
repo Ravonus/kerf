@@ -296,16 +296,16 @@ commands for your app. `CONTRIBUTING.md` says when to run them.
 
 The repository builds the same dashboard in six stacks: a shell with a sidebar and menus, and a 200-row table with
 sorting, filtering, selection, paging and a live cell. Each uses the latest stable versions and a plain `vite build`.
-These are the numbers from the run on 2 November 2026, as the home page shows them, which always has the latest:
+These are the numbers from the run on 6 November 2026, as the home page shows them, which always has the latest:
 
 | Stack | JS (brotli) | CSS (brotli) | First paint |
 |---|---|---|---|
-| Weft, no Warp | 6.6 KB | 1.4 KB | 88 ms |
-| Weft + Warp | 23.1 KB | 19.3 KB | 156 ms |
-| Solid + Kobalte | 47.4 KB | 1.4 KB | 124 ms |
-| React + Radix | 98.3 KB | 1.4 KB | 200 ms |
-| React + Zustand | 98.4 KB | 1.4 KB | 204 ms |
-| React + MUI | 239.6 KB | (in JS) | 508 ms |
+| Weft, no Warp | 7.1 KB | 1.4 KB | 100 ms |
+| Weft + Warp | 28.9 KB | 22.1 KB | 208 ms |
+| Solid + Kobalte | 47.4 KB | 1.4 KB | 152 ms |
+| React + Radix | 98.3 KB | 1.4 KB | 216 ms |
+| React + Zustand | 98.4 KB | 1.4 KB | 212 ms |
+| React + MUI | 239.6 KB | (in JS) | 516 ms |
 
 Read them with their limits:
 
@@ -313,7 +313,7 @@ Read them with their limits:
   the fair framework comparison. Warp and MUI each bring a design system, so compare those two as kits. Warp ships more
   CSS than the rest because it's a whole design system, where the others share one small sheet (MUI keeps its styles in
   its JavaScript).
-- **Smaller isn't always faster to paint.** Weft + Warp is a quarter of the JavaScript of React + Radix, but Solid +
+- **Smaller isn't always faster to paint.** Weft + Warp is under a third of the JavaScript of React + Radix, but Solid +
   Kobalte paints its first frame sooner. The table has both columns for that reason.
 - **Kits differ in what they do.** Radix and Kobalte add menu keyboard handling and focus traps that the no-warp Weft page
   doesn't have, and Warp keeps some closed menus mounted. `benchmarks/compare/README.md` lists every difference.

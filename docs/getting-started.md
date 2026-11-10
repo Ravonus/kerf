@@ -1,10 +1,12 @@
 # Using a Weft checkout in your apps
 
-Weft isn't on npm yet. Until it is, `packages/create/scripts/local.mjs` lets any app on your machine use a checkout of
-this repo. It builds what's stale, packs every package as a tarball and points the app at those tarballs, so the app gets
+An app made with `npm create @weft-js` uses the released packages. To try changes you've made to Weft itself, or the
+add-ons that aren't released yet, `packages/create/scripts/local.mjs` lets any app on your machine use a checkout of
+this repo instead. It builds what's stale, packs every package as a tarball and points the app at those tarballs, so the app gets
 what a consumer would get, not workspace links.
 
-This page is for working on Weft. For a first app, follow [Installation](../site/content/learn/installation.md).
+This page is for working on Weft. For a first app, use `npm create @weft-js` and follow
+[Installation](../site/content/learn/installation.md).
 
 ## What you need
 

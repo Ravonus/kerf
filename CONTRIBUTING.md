@@ -102,11 +102,11 @@ Speed comes first, then bytes. If you change the compiler, the runtime, Warp or 
 
 A diagnostic is a stable code, one line of why, a fix, and an autofix when the change is mechanical.
 
-1. Pick the next free code in its family in `packages/cli/src/catalog.mjs`, and add an entry with `catches`, `fix` and an
+1. Pick the next free code in its family in `packages/cli/src/catalog/<family>.mjs`, and add an entry with `catches`, `fix` and an
    `example` that triggers it. The catalog's `probe()` runs the examples, so docs only claim what the compiler really reports.
-2. Report it. Compiler diagnostics use `Diagnostic::new` in `crates/weft-compiler/src/analyze.rs`. CLI ones go in the matching
+2. Report it. Compiler diagnostics use `Diagnostic::new` in a pass under `crates/weft-compiler/src/analyze/`. CLI ones go in the matching
    `packages/cli/src/*-checks.mjs`.
-3. Add a test that it fires, and one that the right code stays quiet: `crates/weft-compiler/tests/compile.rs`, or
+3. Add a test that it fires, and one that the right code stays quiet: `crates/weft-compiler/tests/compile/`, or
    `packages/cli/test/`.
 4. If the rule is new to users, document it in `packages/cli/docs/rules.md`.
 
@@ -114,10 +114,11 @@ After a compiler change, rebuild with `pnpm run build:native` in `packages/core`
 
 ## Adding a Warp component
 
-1. Behaviour that isn't tied to a framework goes in `packages/warp-core/src`, and its CSS in
-   `packages/warp-core/styles/components/`. Run `pnpm run build:css` there.
+1. Behaviour that isn't tied to a framework goes in `packages/warp-core/src`. Its CSS goes in the spec's stylesheets in
+   `docs/design/warp/tokens/`, under a `/* -- Name` header; `pnpm run build:css` in `packages/warp-core` splits them into
+   `styles/components/`.
 2. The component goes in `packages/warp/src/<Name>.tsx`, using `data-scope` and `data-part` the way its neighbours do.
-3. Export it from `packages/warp/src/index.ts` with a doc comment, and register it in `packages/warp/plugin.mjs` and
+3. Export it from `packages/warp/src/index.ts` with a doc comment, and register it in `packages/warp/src/plugin/catalog.mjs` and
    `packages/warp/scripts/size.mjs`.
 4. Add a test in `packages/warp/test/`, including hydration if it has state. Keyboard use and screen readers count: see
    `packages/warp/test/a11y/`.

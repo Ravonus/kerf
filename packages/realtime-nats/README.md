@@ -1,9 +1,6 @@
 # @weft-js/realtime-nats
 
-> **Early release (0.1.1).** APIs will change between minor versions.
+> **Not released yet.** This add-on is private and isn't on npm. An app made from a Weft checkout can use it: see
+> [Using a Weft checkout](../../docs/getting-started.md).
 
 The realtime.bus provider for core NATS.
-
-```bash
-npm install @weft-js/realtime-nats
-```

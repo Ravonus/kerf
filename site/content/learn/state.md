@@ -42,8 +42,7 @@ export function Gallery() {
 Pressing Next changes `index`, but the heading never moves. The component body ran once, built the heading from `index`
 as it was then, and finished. Nothing reads `index` again, and nothing knows it changed.
 
-The fix is to make it state. The catalog names a `let` that a handler changes and JSX reads **W041**, but this Weft
-doesn't report it yet, so watch for it yourself. (A `let` that names a prop is different, and allowed: see
+The fix is to make it state. The compiler reports a `let` that a handler changes and JSX reads as **W041**. (A `let` that names a prop is different, and allowed: see
 [Passing props](/learn/passing-props).)
 
 To update the page, a value needs two things:
@@ -129,7 +128,7 @@ export function makeBoxes() {
 attributes: `disabled={busy.value}`, not `disabled={busy}`.
 
 When you pass a box to another component, pass `.value` unless the child should write it. Passing a box where the child
-expects a number, or the other way round, is **W008** in the catalog (not reported yet). See
+expects a number, or the other way round, is **W008**. See
 [Writing to a parent with bind:](/learn/bind) for the cases where passing the box is the point.
 :::
 
@@ -218,8 +217,8 @@ share it app-wide:
 
 :::note A box at module level
 A box made outside any component, at the top of a module, is shared by everything that imports it. That's handy in a
-small client-only demo, but on a server it would be shared by every request: the catalog names that **W030**, though this
-Weft doesn't report it yet. Use `defineState` for state that should be app-wide.
+small client-only demo, but on a server it would be shared by every request: `weft check` reports that as
+**W030**. Use `defineState` for state that should be app-wide.
 :::
 
 ## Names in the dev tools

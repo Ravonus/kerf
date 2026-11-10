@@ -85,9 +85,11 @@ the code and its message are enough to act on. This is a map for when you wonder
 | **H** | Page metadata and share cards: titles, descriptions, images | `weft check` and `weft routes --meta` |
 | **Q** | Server functions and the database | `@weft-js/start` as it serves, and `weft check` |
 | **A**, **C**, **F** | Auth, the server contract, forms | `@weft-js/start` as it serves, and `weft check` |
-| **R** | Realtime (R001–R023) and Rust server functions (R101–R109) | `weft check`, `weft doctor` and the server |
+| **R** | Realtime (R001–R024) and Rust server functions (R101–R109) | `weft check`, `weft doctor` and the server |
 | **S**, **U** | State that crosses to the server; shared hover and focus | `weft check`, and the runtime in dev |
 | **X**, **I**, **M** | Text, fonts and surfaces; icons; media | `weft check`, the runtime in dev, and plugins |
+| **E** | Deploys: which hosts fit, the CDN in front, uploads (E001–E014) | `weft deploy hosts`, `weft deploy` and `weft doctor` |
+| **L** | Built pages: axe's WCAG rules, console errors, the head, sideways scroll, layout shift | `weft build` and `weft audit` |
 
 A plugin can add codes of its own, under its own name, such as `<short-name>/<CODE>`. They read the same way.
 
@@ -223,7 +225,7 @@ the box never follows the prop.
 
 **Fix:** `state.linked(() => prop)`, or `untrack` for a one-time copy.
 
-**Status in weft@0.1.0:** reported, suggested edit.
+**Status in weft@0.1.1:** reported, suggested edit.
 
 Triggers it:
 
@@ -243,8 +245,7 @@ in your install.
 **Errors** are code that doesn't do what it says: a value that never updates, a list that rebuilds every row, a button
 nobody can reach with a keyboard. They fail `weft check`, and a compiler error stops that file in `weft dev`.
 
-**Warnings** are likely mistakes that can be right: a `watch` that could be a `derived` (W004, not reported
-yet), two solid buttons side by side (D038). They're reported, and nothing fails.
+**Warnings** are likely mistakes that can be right: a `watch` that could be a `derived` (W004), two solid buttons side by side (D038). They're reported, and nothing fails.
 
 **Info** is something you might want to know, such as an icon name only known when the app runs (I002).
 
@@ -335,8 +336,8 @@ const [open, setOpen] = useState(false)
 ```
 
 There are no hooks. `useState` is `state`, `useMemo` is `derived`, `useEffect` is `watch` or `onMount`, `useRef` is
-`ref={el}`, and `useCallback` is a plain function. These codes are in the catalog, but this Weft doesn't report them
-yet, so look for hooks yourself.
+`ref={el}`, and `useCallback` is a plain function. `weft check` reports a hook, a hook import or a dependency array as
+W020, and an empty dependency array on `derived` has a safe autofix.
 
 ### W061: `bind:` in the wrong place
 
@@ -377,7 +378,7 @@ return <button onClick={() => clicks++}>{clicks}</button>
 ```
 
 A plain variable changes, but nothing re-reads it, so the button shows `0` forever. Make it `state(0)` and read
-`clicks.value`. W041 is in the catalog, but this Weft doesn't report it yet, so watch for it yourself.
+`clicks.value`.
 
 :::deepdive Diagnostics written for agents
 Weft was built with AI agents writing much of its code, and the diagnostics are designed for them as much as for you.

@@ -1,6 +1,6 @@
 # @weft-js/warp-icons
 
-> **Early release (0.1.1).** APIs will change between minor versions.
+> **Early release (0.1.x).** APIs can change between minor versions.
 
 Weft's own icon set: 651 icons in Warp's three expression tiers, each with a hollow and a solid form. `@weft-js/warp`
 depends on it, so an app with Warp already has it.
@@ -24,5 +24,5 @@ An icon you don't import costs nothing, and one you do adds about 164 B of brotl
 `weft docs icons` has the names and variants, sizes, tiers, `icons({ tier })` for `weft.config.ts`, and what happens with
 a name the build can't follow. Its source is [packages/cli/docs/icons.md](../cli/docs/icons.md).
 
-`npm run sheet` in this folder writes `contact-sheet.html`, where you can browse every icon by tier, variant, size and
+`pnpm run sheet` in this folder writes `contact-sheet.html`, where you can browse every icon by tier, variant, size and
 theme.

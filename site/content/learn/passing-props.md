@@ -367,8 +367,8 @@ export function Checkout() {
 }
 ```
 
-Passing a box where a value is expected, or a value where a box is expected, is **W008** in the catalog (this Weft
-doesn't report it yet): the fix is `count.value` or `count`.
+Passing a box where a value is expected, or a value where a box is expected, is **W008**: the fix is `count.value` or
+`count`.
 
 ## Prop types
 

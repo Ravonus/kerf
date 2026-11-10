@@ -28,19 +28,16 @@ There are two ways to follow along.
 **Read and play here.** Every client step runs on this page. Press the buttons, read the code, and compare it with the
 step before. That's enough to learn everything until the server part.
 
-**Build it in your own app.** Weft isn't on npm yet, so you make an app from a checkout of the repository, as
-[Installation](/learn/installation) explains:
+**Build it in your own app.** Make one, as [Installation](/learn/installation) explains:
 
 ```bash
-git clone https://github.com/Ravonus/weft.git
-node weft/packages/create/scripts/local.mjs new my-shop --yes
+npm create @weft-js -- my-shop --yes
 cd my-shop
 npx weft dev
 ```
 
 `--yes` takes the defaults: Warp for the UI and a SQLite database, which you won't need for this tutorial, though the
-server part uses `zod`, which comes with it. Once Weft is published, `npm create @weft-js -- my-shop --yes` will do the
-same in one step.
+server part uses `zod`, which comes with it.
 
 Then create `src/routes/shop.tsx`, paste each step's code into it, and open `/shop` in the browser. A file in
 `src/routes` is a page, and its default export is what the page shows. When you save, `weft dev` swaps the new code in

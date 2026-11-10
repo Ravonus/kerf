@@ -84,7 +84,7 @@ export default function Home() {
         <section data-part="end">
           <h2 data-flow="heading">Build something</h2>
           <p data-part="intro">
-            Make an app from a checkout, then work through Learn a chapter at a time.
+            Make an app with one command, then work through Learn a chapter at a time.
           </p>
           <div data-part="next">
             <Link data-scope="button" data-size="lg" href="/learn">
@@ -241,8 +241,8 @@ function hero() {
           </Link>
         </div>
         <p data-part="install">
-          <code>node packages/create/scripts/local.mjs new my-app</code>
-          <span>Weft is not on npm yet, so run this from a checkout of the repo.</span>
+          <code>npm create @weft-js my-app</code>
+          <span>Then run npx weft dev in it. Works on Node 26, Bun or Deno.</span>
         </p>
       </div>
     </section>

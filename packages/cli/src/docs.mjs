@@ -26,7 +26,7 @@ export const topics = {
   lists: 'Keyed lists, conditionals and stable items; W010, W011, W013, W014',
   async: 'resource, <Boundary pending error>, @weft-js/core/ssr and hydrate; W012',
   start:
-    'full stack: routes, load, query, mutation, the database, auth, realtime, runtimes; Q001–Q016, A001–A004, C001–C002, F001–F003, R001–R023',
+    'full stack: routes, load, query, mutation, the database, auth, realtime, runtimes; Q001–Q016, A001–A005, C001–C002, F001–F003, R001–R024',
   rust: 'Rust bodies: native() addons with a WASM fallback, remote() sidecars, weft add rust, impl, the weft crate, build.rs, Ctx, touch, weft dev reload, deployment; R101–R109',
   deploy:
     'Deploy: which hosts can run the app, weft deploy hosts/init, the push workflow, Netlify, Vercel, Cloudflare, Fly, Render, CDN and Cloudinary; E001–E014',
@@ -46,13 +46,13 @@ export const topics = {
   icons: '@weft-js/warp-icons: per-icon exports, iconSet, the three tiers, icons({ tier }), sizes',
   fonts:
     'Fonts with @weft-js/text: text({ fonts }), what the build makes, using a face in CSS, budgets; X020, X021, X022, X023',
-  meta: 'Page metadata and share cards: route `meta`, what is automatic, `site.url`, `.og.tsx`, `weft routes --meta`; H001–H008, H011–H016',
+  meta: 'Page metadata and share cards: route `meta`, what is automatic, `site.url`, `.og.tsx`, `weft routes --meta`; H001–H017',
   config: 'weft.config.ts: scope, tasks, environments, reserved plugins/slots; P-codes',
   design:
-    'The design language: Stack, Row, Heading, Text, Link, the closed vocabulary, `weft fix`, `weft tokens`; D001–D007, D011, D030–D039',
+    'The design language: Stack, Row, Heading, Text, Link, the closed vocabulary, `weft fix`, `weft tokens`; D001–D007, D011, D012, D030–D041',
   style:
     'Style groups (@weft-js/core/style): group(), axes, parts, accents, weft style find/explain, .weft/styles.json; D020–D025, W060',
-  diagnostics: 'Every W-, T-, P-, H- and D-code, and which ones the installed weft reports',
+  diagnostics: 'Every diagnostic code, from W to L, and which ones the installed weft reports',
   commands: "This project's commands and tasks (from `weft tasks`)",
   agents: 'The generated AGENTS.md',
 }

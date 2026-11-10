@@ -1,6 +1,6 @@
 # @weft-js/warp-core
 
-> **Early release (0.1.1).** APIs will change between minor versions.
+> **Early release (0.1.x).** APIs can change between minor versions.
 
 Warp's behaviour, tokens and CSS, with no components: plain TypeScript over the DOM. `@weft-js/warp` builds its components
 on it. Nothing in the main entry imports a framework, so it works under Weft, React, Solid or no framework at all.

@@ -101,11 +101,13 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   db live             a migration with change triggers for the tables in \`changes\`
   db listen           the change feed as its own process, for an app on functions
   routes [--meta]     the route table; --meta: every route's merged metadata, tags, card mode and H-diagnostics
+  surfaces            the canvas and WebGL surfaces this project already defines
   tasks               commands and project tasks
   run <task>          run a project task from weft.config.ts
   docs [topic|code]   docs for agents (rules, props, lists, async, testing, config, diagnostics, commands, W014…)
   agents-md [--check] write AGENTS.md (--check: exit 1 when stale; --stdout: print it)
   map [--stdout]      write .weft/map.md and .json: a matrix of what to call in this app
+  icons publish <dir>  every icon and variant as static .svg files with a manifest.json, for a CDN
   add <feature>       install a plugin and wire it into the config; also tailwind, auth, db [engine] [--layer drizzle|prisma|native], and rust [name] [--remote] [--dry-run] [--no-install]
   plugins [list]      plugins, the slots they provide and bind, permissions, diagnostics
   plugins explain <slot>  binding chain: config → plugin → module → .weft/slots/<id>.ts
@@ -116,7 +118,8 @@ const usage = `usage: weft <command> [--json] [--root <dir>]
   style explain <group|selector> [--<axis> <value>] [--states a,b] [--accent intent:token] [--part p]
                       resolved CSS for one variation, and where each value came from
   style matrix        write .weft/styles.json (every group: axes, parts, accents, resolved CSS, uses)
-  mcp                 MCP server on stdio: docs, check, tasks, style_find, style_explain, test_gate, browser_*`
+  mcp                 MCP server on stdio: docs, check, audit, routes_meta, map, tasks, surfaces, style_find,
+                      style_explain, test_gate, browser_*`
 
 /** Flags that take a value (`--base main` or `--base=main`), and boolean flags, beyond the global ones. */
 const valued = new Set([
