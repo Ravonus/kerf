@@ -4,8 +4,8 @@
    Only with a fine pointer: there the native bar steps aside; touch screens keep their own overlay bar. */
 :where([data-scope="scroll-rail"]) { display: none; }
 @media (pointer: fine) {
-:where(html:has(> body [data-scope="scroll-rail"])) { scrollbar-width: none; }
-:where(html:has(> body [data-scope="scroll-rail"]))::-webkit-scrollbar { display: none; }
+:where(html:has(> body [data-scope="scroll-rail"])) { scrollbar-width: none !important; }
+:where(html:has(> body [data-scope="scroll-rail"]))::-webkit-scrollbar { display: none !important; }
 :where([data-scope="scroll-rail"]) {
     display: block; position: fixed; inset-block: var(--warp-scroll-rail-top, 0px) 0; inset-inline-end: 0;
     inline-size: 12px; z-index: var(--warp-z-sticky); touch-action: none;
