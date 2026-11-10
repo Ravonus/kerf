@@ -62,9 +62,17 @@ export function render(p: PageState) {
 }
 
 /** The head down to the fonts, after metadata is complete. */
+/**
+ * A full load between pages that opt into cross-document view transitions (warp does) brings the browser's own
+ * transition. When the browser skips one ("invalid state"), its three promises reject, and the page reveals before the
+ * runtime's module runs: so this listens from the head, on every page that has code.
+ */
+const REVEAL = `<script>(f=>["pagereveal","pageswap"].forEach(n=>addEventListener(n,e=>{var t=e.viewTransition;t&&[t.ready,t.finished,t.updateCallbackDone].forEach(q=>q.catch(f))})))(()=>{})</script>\n`
+
 export function top(p: PageState) {
   return (
     `<!doctype html>\n<html${p.lang}>\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
+    (p.assets.entry ? REVEAL : '') +
     metaTags(p.r.head, p.url.pathname) +
     '\n' +
     (p.site.head ? p.site.head + '\n' : '') +

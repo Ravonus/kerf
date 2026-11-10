@@ -12,12 +12,8 @@ export function listeners(nav: Navigation, hot: () => Hot | undefined) {
   addEventListener('pagehide', nav.dispose)
   // A page restored from the back/forward cache was disposed on the way out: let it prefetch again.
   addEventListener('pageshow', (e) => e.persisted && nav.prefetch.resume())
-  // A full load between pages that opt into cross-document view transitions (warp does) brings the browser's own
-  // transition. When the browser skips it ("invalid state"), its promises reject, and nothing else is listening.
-  type Reveal = Event & { viewTransition?: ViewTransition | null }
-  addEventListener('pagereveal', (e) => settle((e as Reveal).viewTransition))
-  // The page being left has its own half of that transition, which an abort rejects the same way.
-  addEventListener('pageswap', (e) => settle((e as Reveal).viewTransition))
+  // A cross-document transition's pagereveal and pageswap are settled from the head (page-stream.tsx `REVEAL`): the page
+  // reveals before this runs. One still going when it does is settled here too.
   settle((document as Document & { activeViewTransition?: ViewTransition }).activeViewTransition)
   if (hot()) hot()!.on('weft:refresh', (changed) => void nav.reloaded(changed))
   client.invalidated = nav.invalidated
