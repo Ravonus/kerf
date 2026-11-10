@@ -1,7 +1,6 @@
 {
   "name": "@weft-js/realtime-socketio",
-  "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "@weft-js/realtime-socketio: cursors through a Socket.IO relay you run, with tickets the room signs",
   "license": "MIT",
   "repository": {

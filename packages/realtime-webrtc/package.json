@@ -1,7 +1,6 @@
 {
   "name": "@weft-js/realtime-webrtc",
-  "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "@weft-js/realtime-webrtc: cursors over WebRTC data channels, signalled through the room",
   "license": "MIT",
   "repository": {

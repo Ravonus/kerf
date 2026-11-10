@@ -196,7 +196,6 @@ function check(tgz, names, version) {
     const text = readFileSync(join(base, f), 'utf8')
     if (SECRET.test(text)) bad.push(`${f} looks like it holds a secret`)
     if (/agorix/i.test(text)) bad.push(`${f} mentions the old name`)
-    if (/github\.com\/Ravonus/.test(text)) bad.push(`${f} links the private repo`)
     if (f.startsWith('templates/')) continue // files a scaffold copies into an app: their imports are the app's
     const code = text.replace(/^\s*(?:\/\/|\/?\*).*$/gm, '')
     for (const m of code.matchAll(

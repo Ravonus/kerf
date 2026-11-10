@@ -1,7 +1,6 @@
 {
   "name": "@weft-js/realtime-livekit",
-  "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "@weft-js/realtime-livekit: cursors over a LiveKit room, with the token signed by the room",
   "license": "MIT",
   "repository": {

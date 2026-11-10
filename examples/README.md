@@ -1,4 +1,50 @@
-# Real apps, any stack
+<p align="center">
+  <a href="https://github.com/Ravonus/weft">
+    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  </a>
+</p>
+
+<h1 align="center">Weft examples</h1>
+
+<p align="center">
+  <strong>Real apps, each built in Weft and in other stacks, benchmarked on production builds.</strong><br>
+  Point the bench at an app and its other versions; it reports how Weft compares and what to tune in Weft or Warp.
+</p>
+
+<p align="center">
+  <a href="#examples">Examples</a> ·
+  <a href="#real-apps-any-stack">Run the bench</a> ·
+  <a href="#what-it-measures">What it measures</a> ·
+  <a href="#honesty-rules">Honesty rules</a> ·
+  <a href="https://github.com/Ravonus/weft">GitHub</a>
+</p>
+
+> [!NOTE]
+> Everything in `examples/` is private and unpublished: the folder's `package.json` is `"private": true`, and none of
+> these apps or tools is on npm. The Weft variants of the database sites aren't stored here at all; they are generated
+> from `@weft-js/create` templates on every run.
+
+## Examples
+
+| Folder | What it is | Variants |
+| --- | --- | --- |
+| [`admin/`](./admin/README.md) | A signed-in back office over 10,000 orders, plus nested, per-row and slow-panel load shapes. | weft (template), solid, next |
+| [`catalog/`](./catalog/README.md) | The holdout: 5,000 public products and a cart behind Suspense. | weft (template), solid, next |
+| [`landing/`](./landing/README.md) | A marketing site with one waitlist form that works with JavaScript off. | weft (template), solid, next |
+| [`todo/`](./todo/README.md) | The race flagship: per-user todos, optimistic writes, six race probes. | weft (template), solid, next |
+| [`lemonstand/`](./lemonstand/README.md) | A real marketing site: animated hero, audience tabs, coach demo, two forms. | next and weft (outside the repo), solid |
+| [`dashboard/`](./dashboard/README.md) | A manifest only: the `benchmarks/compare` screen run through this bench. | weft-warp, weft-plain, solid, react-radix, react-zustand, react-mui |
+| [`style-groups/`](./style-groups/README.md) | Source fixture for core's style-group and SSR round-trip tests. | none: not benchmarked |
+| [`bench/`](./bench/README.md) | The run loop behind `bench.mjs`: `run.mjs` and `samples.mjs`. | tooling |
+| [`lib/`](./lib/README.md) | The harness: build, serve, measure, flow, race, diagnose, stats, e2e kit and its tests. | tooling |
+| [`shared/`](./shared/README.md) | Postgres for the database sites: schema, seed, per-variant clones and the latency proxy. | tooling |
+
+The scripts at this level: `bench.mjs` (benchmark apps), `e2e.mjs` (run an app's end-to-end test against one variant),
+`show.mjs` (serve the last Weft builds from port 5501 to click through), and `chart.mjs` (rewrite
+`../evals/results/apps.html` from `chart.html`, `results.json` and the history). `stacks.json` lists the stacks bench can
+detect.
+
+## Real apps, any stack
 
 `benchmarks/compare` is one synthetic screen. This is the other half: point it at a real app and its other versions, and it reports
 how weft compares and what to tune in weft or warp because of it. Run it after converting an app, and after changing weft.

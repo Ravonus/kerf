@@ -1,7 +1,6 @@
 {
   "name": "@weft-js/plugin-media",
-  "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "@weft-js/plugin-media: the media.build@1 provider (sharp + SVGO: AVIF plus a compatible fallback, an SSIMULACRA2 quality search, width ladders, placeholders), the media.server@1 route provider, and M001–M018",
   "license": "MIT",
   "repository": {
@@ -45,8 +44,6 @@
   ],
   "files": [
     "src",
-    "plugin.mjs",
-    "plugin.d.mts",
     "README.md",
     "LICENSE"
   ],

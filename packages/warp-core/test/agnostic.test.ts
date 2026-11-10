@@ -30,7 +30,7 @@ test('the package requires no framework: weft is an optional peer, for the one b
   const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
   expect(pkg.dependencies ?? {}).toEqual({})
   expect(Object.keys(pkg.peerDependencies)).toEqual(['@weft-js/core'])
-  expect(pkg.peerDependenciesMeta.weft.optional).toBe(true)
+  expect(pkg.peerDependenciesMeta['@weft-js/core'].optional).toBe(true)
 })
 
 test('src never reaches the binding, so the main entry stays framework-free', () => {

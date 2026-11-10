@@ -225,7 +225,7 @@ the box never follows the prop.
 
 **Fix:** `state.linked(() => prop)`, or `untrack` for a one-time copy.
 
-**Status in weft@0.1.2:** reported, suggested edit.
+**Status in weft@0.1.3:** reported, suggested edit.
 
 Triggers it:
 

@@ -3,6 +3,26 @@
 Every `@weft-js` package is released together, at one version. Early releases (0.1.x) can change APIs between
 minor versions.
 
+## 0.1.3 (2026-11-10)
+
+### Packages
+
+- The add-ons are released with the framework again, at 0.1.3: `text`, `pay`, `multiplayer`, `plugin-media`,
+  `plugin-media-ffmpeg`, `plugin-surface-keel` and the six `realtime-*` buses. `npm create @weft-js --template landing`
+  installs, since it needs `text` and `plugin-media`.
+- `@weft-js/warp-core` marks `@weft-js/core` as an optional peer, as intended. It named the old package before.
+
+### Docs
+
+- Every package has a full README: what it's for, setup, the API in tables, real examples, troubleshooting and links
+  to npm and the source. The compiler addons, the crates, the examples, the site and the scripts have one too.
+- `packages/README.md` lists every package, and the root README lists the add-ons.
+
+### Release
+
+- `scripts/release.mjs` publishes without asking for a one-time code it doesn't need (`WEFT_OTP`), and a re-run skips
+  what npm already has or is still processing.
+
 ## 0.1.2 (2026-11-09)
 
 ### Compiler

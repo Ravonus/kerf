@@ -16,7 +16,7 @@
 |---|---|
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Setup, `pnpm run check`, the rules and what a good pull request looks like. |
 | [ROADMAP-1.0.md](ROADMAP-1.0.md) | The road to the 1.0 open-source release: the audit, the rules and the sprints. |
-| [getting-started.md](getting-started.md) | Using a checkout of this repo in your own apps: unreleased changes and add-ons. |
+| [getting-started.md](getting-started.md) | Using a checkout of this repo in your own apps, to try changes before they are released. |
 | [SECURITY.md](../.github/SECURITY.md) | Reporting a security problem. |
 | [benchmarks/compare/README.md](../benchmarks/compare/README.md) | How speed and size are measured against other stacks. |
 

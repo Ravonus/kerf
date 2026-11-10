@@ -1,6 +1,6 @@
 {
   "name": "@weft-js/start",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "weft Start: file routes, server functions, streaming SSR, a database and auth",
   "keywords": [
     "weft"
