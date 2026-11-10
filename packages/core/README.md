@@ -1042,27 +1042,50 @@ A page with one `<Media>` is about 8 KB of brotli in all (see
 
 ## Content Security Policy
 
-A client-rendered Weft build works under a strict policy with no
-exceptions:
+A client-rendered Weft build works under a strict policy:
 
 ```text
 default-src 'self'; script-src 'self'; style-src 'self'
 ```
 
 The build writes every script and stylesheet to a file, so nothing is
-inline. At run time, a `style` value from an expression
-(`style={{ color: c }}` or `style={css}`) is applied through the CSSOM
-(`el.style`), which CSP allows. An expression is for a value that
-changes: it sets up a binding per element, so for a fixed style a class
-is faster.
+inline. A `style` value from an expression that changes
+(`style={{ color: c }}`) is applied through the CSSOM (`el.style`), which
+CSP allows.
 
-Three things need more than that:
+Fixed styles are the one catch. `style="color:red"` and
+`style={{ color: 'red' }}` with constant values both go into the
+element's HTML template, which is the fastest way to write them, and a
+policy without `'unsafe-inline'` blocks style attributes in HTML. Turn on
+strict mode and the compiler moves them out for you:
 
-| What | Why | What to do |
-| --- | --- | --- |
-| A literal `style="color:red"` in JSX | It is part of the element's HTML template, and `style-src` without `'unsafe-inline'` blocks style attributes in HTML | Use a class. It costs the same as the literal: both are part of the template |
-| Server-rendered pages | Every `style` value is written into the HTML as an attribute, `<Media>`'s box included | Add `style-src-attr 'unsafe-inline'` (style attributes only; still no inline `<style>` or script) |
-| `<Media>`'s default placeholder | It's a `data:` URL | `media({ placeholder: 'file' })`, or add `data:` to `img-src` |
+```ts
+// vite.config.ts, for @weft-js/core on its own
+weft({ csp: 'strict' })
+```
+
+```ts
+// weft.config.ts, for an @weft-js/start app
+export default defineConfig({
+  site: { csp: 'strict' },
+})
+```
+
+| What you wrote | What strict mode makes of it |
+| --- | --- |
+| A fixed style, on an element whose `class` is fixed or absent | A generated class (`ws-` and a hash) in the app's stylesheet. It costs what the attribute did: it's part of the template |
+| A fixed style, on an element whose `class` changes at run time | One `el.style.cssText` write when the element is made. No binding |
+| A style that changes | Unchanged: CSSOM writes in the browser. A server writes it as an attribute, which needs `style-src-attr 'unsafe-inline'` |
+
+Each generated rule marks its declarations `!important`, so it wins over
+other stylesheet rules the way an inline style does. The same style
+anywhere in the app is the same class. An element with a spread
+(`{...props}`) is left as it is, since the spread could set either.
+
+| Still needs more | What to do |
+| --- | --- |
+| A server-rendered style that changes | `style-src-attr 'unsafe-inline'` (style attributes only; still no inline `<style>` or script), or a class per state |
+| `<Media>`'s default placeholder | `media({ placeholder: 'file' })`, or add `data:` to `img-src` |
 
 ## Testing
 

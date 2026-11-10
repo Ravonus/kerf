@@ -69,6 +69,9 @@ pub struct Options {
     pub cwd: Option<String>,
     /// `WEFT_OFF`, for a build with no environment of its own (the WASM binding).
     pub off: Option<String>,
+    /// `"strict"`: output for a Content-Security-Policy with no `'unsafe-inline'` styles. Fixed `style` values become
+    /// generated classes in a stylesheet (emit/csp.rs) instead of style attributes. Anything else: off.
+    pub csp: String,
 }
 
 impl Default for Options {
@@ -89,6 +92,7 @@ impl Default for Options {
             islands: None,
             cwd: None,
             off: None,
+            csp: String::new(),
         }
     }
 }
@@ -324,6 +328,7 @@ fn finish_output(
         ssr,
         hydratable: options.hydratable,
         dev: options.dev,
+        csp: options.csp == "strict",
         origins,
         map: points.as_ref().map(|p| (p, source)),
     };

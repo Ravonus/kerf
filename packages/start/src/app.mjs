@@ -49,7 +49,7 @@ function config({
       define: { __WEFT_SOCKETS__: JSON.stringify(holdsSockets(preset)) },
     }),
     plugins: [
-      weft({ hydratable: true }),
+      weft({ hydratable: true, csp: site?.csp }),
       weftStart({ root, site, hydration }),
       runner && devSockets(),
       nitro({

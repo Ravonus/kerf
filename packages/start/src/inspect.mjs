@@ -136,7 +136,7 @@ export async function routesMeta({ root, site = {}, preset }) {
     logLevel: 'silent',
     appType: 'custom',
     server: { middlewareMode: true, hmr: false, ws: false },
-    plugins: [weft({ hydratable: true }), weftStart({ root, site })],
+    plugins: [weft({ hydratable: true, csp: site?.csp }), weftStart({ root, site })],
   })
   try {
     const { manifest, modules } = await server.ssrLoadModule('virtual:weft/routes')

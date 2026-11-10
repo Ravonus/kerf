@@ -26,10 +26,12 @@ mod attrs;
 mod children;
 mod component;
 mod constants;
+mod csp;
 mod helpers;
 mod list;
 mod lower;
 mod props;
+mod static_style;
 mod template;
 mod values;
 mod walk;
@@ -130,6 +132,8 @@ pub struct EmitOptions<'a> {
     pub hydratable: bool,
     /// Dev output: a `// file:line <tag>` comment per template, and the location passed to `tpl` for warnings.
     pub dev: bool,
+    /// Strict CSP: fixed styles become generated classes (csp.rs).
+    pub csp: bool,
     /// Each JSX node's (line, column) in the authored file, in `JsxOrder` (`None`: made by the pre-pass).
     pub origins: Vec<Option<(u32, u32)>>,
     /// Write a source map to the authored file through codegen's map of the printed program (`srcmap::points`).
@@ -207,6 +211,7 @@ pub fn emit(code: &str, o: &EmitOptions) -> Result<Emitted, Error> {
         explained: Vec::new(),
         keys: Vec::new(),
         scoping,
+        csp: o.csp.then(std::collections::BTreeMap::new),
     };
     let mut top = Outermost::default();
     top.visit_program(&program);
@@ -239,6 +244,7 @@ fn finish(
     if e.uses_for && !imports_binding(program, "For") {
         let _ = writeln!(head, "import {{ For }} from {module:?};");
     }
+    head.push_str(&csp::imports(e.csp.as_ref()));
     // Templates go after the module's imports, so a reader meets the imports first.
     let mut out = head + imports;
     if split > 0 && !code[..split].ends_with('\n') {
@@ -339,6 +345,8 @@ struct Emitter<'t> {
     /// key can't change while the row lives, so a hole or attribute that is exactly its key is written once.
     keys: Vec<String>,
     scoping: Option<oxc_semantic::Scoping>,
+    /// Strict CSP: the generated class rules this module needs, class name → rule (csp.rs).
+    csp: Option<std::collections::BTreeMap<String, String>>,
 }
 
 /// One template being built: its HTML, the node references it needs, and the operations after cloning.
