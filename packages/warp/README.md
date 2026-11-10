@@ -49,6 +49,20 @@ export default function Product() {
 
 Every field takes a `label`, and leaving it out is a type error, so no input ships without a name.
 
+Warp's components run no code as they load, so an island holding them can wait for the screen or a tap. Scroll motion
+(`data-flow`) belongs to the page, so the app arms it once, in `src/entry.client.ts`:
+
+```ts
+import { start } from '@weft-js/start/client'
+import { flow } from '@weft-js/warp-core'
+import * as routes from 'virtual:weft/routes'
+
+flow()
+start(routes)
+```
+
+Without it the page stays still, with every word in place.
+
 ## What's in it
 
 | Kind | Components |
