@@ -46,7 +46,7 @@ export const topics = {
   icons: '@weft-js/warp-icons: per-icon exports, iconSet, the three tiers, icons({ tier }), sizes',
   fonts:
     'Fonts with @weft-js/text: text({ fonts }), what the build makes, using a face in CSS, budgets; X020, X021, X022, X023',
-  meta: 'Page metadata and share cards: route `meta`, what is automatic, `site.url`, `.og.tsx`, `weft routes --meta`; H001–H017',
+  meta: 'Page metadata and share cards: route `meta`, what is automatic, `site.url`, `.og.tsx`, `weft routes --meta`; H001–H010, H011 (no description) to H017',
   config: 'weft.config.ts: scope, tasks, environments, reserved plugins/slots; P-codes',
   design:
     'The design language: Stack, Row, Heading, Text, Link, the closed vocabulary, `weft fix`, `weft tokens`; D001–D007, D011, D012, D030–D041',
