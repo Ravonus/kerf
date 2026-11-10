@@ -119,7 +119,14 @@ function options(input) {
       fail('quality.scorer', "the SSIMULACRA2 command, or 'none' for fixed qualities")
     out.quality = { target, scorer }
   }
-  if (input.placeholder !== undefined) out.placeholder = !!input.placeholder
+  if (input.placeholder !== undefined) {
+    if (![true, false, 'inline', 'file'].includes(input.placeholder))
+      fail(
+        'placeholder',
+        "true or 'inline' (a data: URL), 'file' (its own file, for a strict CSP), or false",
+      )
+    out.placeholder = input.placeholder === 'inline' ? true : input.placeholder
+  }
   if (input.gifLimit !== undefined) out.gifLimit = input.gifLimit
   return out
 }

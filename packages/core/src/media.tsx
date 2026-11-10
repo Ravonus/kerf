@@ -23,7 +23,7 @@ export interface MediaAsset {
   sources: { type: string; srcset: string }[]
   /** #rrggbb */
   dominant?: string
-  /** A tiny inline WebP (data: URL) shown until the image paints. */
+  /** A tiny WebP shown until the image paints: a data: URL, or a file URL with `placeholder: 'file'`. */
   placeholder?: string
   /** The source file name (M007: `alt` must say more than this). */
   name: string

@@ -1,6 +1,5 @@
 // Pads the full runtime to exactly 13,691 B of brotli (13.37 KB in size.mjs) with src/egg.ts, then checks that it did.
 // Run it last, after any merge: everything else in the runtime moves this number.
-import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -11,20 +10,33 @@ const target = 13691
 const json = join(here, '.egg-size.json')
 const file = join(here, '../src/egg.ts')
 
-/** Noise: brotli can't shrink it much, so a length maps steadily to bytes. The same length gives the same text. */
-const noise = (n) => {
-  let out = ''
-  for (let i = 0; out.length < n; i++)
-    out += createHash('sha256').update(`weft ${i}`).digest('base64url')
-  return out.slice(0, n)
+/**
+ * The first n digits of π after "3.", by Machin's formula in BigInt. Digits are padding anyone can check (and
+ * brotli can't shrink them much), unlike random bytes, which read like an obfuscated payload in an audit.
+ */
+const pi = (n) => {
+  const scale = 10n ** BigInt(n + 10)
+  const arctan = (x) => {
+    let sum = 0n
+    let term = scale / x
+    const x2 = x * x
+    for (let k = 1n; term !== 0n; k += 2n) {
+      sum += ((k - 1n) / 2n) % 2n ? -term / k : term / k
+      term /= x2
+    }
+    return sum
+  }
+  return (4n * (4n * arctan(5n) - arctan(239n))).toString().slice(1, n + 1)
 }
 const write = (n) =>
   writeFileSync(
     file,
-    `/** Not code. The owner likes 13.37 KB, and this pads the full runtime to it (scripts/egg.mjs). It's an export nothing
- * reads, so no app ships it and it does nothing at runtime. */
+    `/**
+ * Not code: the digits of π after "3.", ${n} of them. The owner likes 13.37 KB, and this pads the full runtime to it
+ * (scripts/egg.mjs writes it). Nothing reads this export, so no app ships it and it does nothing at runtime.
+ */
 export const egg =
-  '${noise(n)}'
+  '${pi(n)}'
 `,
   )
 const measure = (n) => {
@@ -39,7 +51,7 @@ const measure = (n) => {
 }
 
 let lo = 0,
-  hi = 8000
+  hi = 16000
 while (lo < hi) {
   const mid = (lo + hi + 1) >> 1
   if (measure(mid) <= target) lo = mid

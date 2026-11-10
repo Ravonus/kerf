@@ -3,9 +3,20 @@
 Every `@weft-js` package is released together, at one version. Early releases (0.1.x) can change APIs between
 minor versions.
 
-## Unreleased
+## 0.1.4 (2026-11-10)
+
+From an outside team's trial of 0.1.3: their feedback, each point acted on.
 
 ### Packages
+
+- Every package runs on Node 24 LTS: `engines` is `>=24` (was `>=26`). Nothing a user runs needed 26; working on Weft
+  itself still uses Node 26. The runtime matrix builds and serves the same app on Node 24 as well.
+- `@weft-js/plugin-media`: `placeholder: 'file'` writes the 16 px placeholder as its own hashed `.webp` instead of a
+  `data:` URL, for a CSP whose `img-src` has no `data:`. Images and video posters both take it.
+- `@weft-js/core` ships the reference pages `weft docs` prints, in `docs/`, so they can be read offline and match the
+  installed version.
+- `@weft-js/core`: the padding that keeps the full runtime at 13.37 KB is now the digits of π rather than random
+  characters, which read like an obfuscated payload in a security review. It is still an export nothing reads.
 
 - New: `@weft-js/scroll`, custom scrollbars over real scroll offsets, so find-in-page, anchors, sticky
   positioning, screen readers and `scroll` listeners keep working. In native mode, the default, the browser scrolls
@@ -15,6 +26,18 @@ minor versions.
   the DOM or, with `@weft-js/scroll/canvas`, on a canvas, and take a fixed-size thumb, colours, widths, auto-hide,
   overlay or gutter.
 - `@weft-js/warp`: `ScrollView`, the Weft component over `@weft-js/scroll`, with a docs page and examples.
+
+### Docs
+
+- `@weft-js/core` README:
+  - **What installing runs:** no install scripts, what the native and WASM compilers can reach, and how to keep native
+    code out (`--omit=optional`, `WEFT_COMPILER=wasm`).
+  - **Content Security Policy:** client builds work under `script-src 'self'; style-src 'self'`, and the table says
+    what needs more.
+  - **Images and video with Media**, with a note on the placeholder and CSP.
+  - **A static site** recipe.
+  - **Sizes:** what each entry adds to a page.
+- The quick start's `package.json` sets `"type": "module"`, without which Vite 8 warns.
 
 ## 0.1.3 (2026-11-10)
 

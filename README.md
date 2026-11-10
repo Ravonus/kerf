@@ -15,7 +15,7 @@
   <a href="https://www.npmjs.com/package/@weft-js/core"><img src="https://img.shields.io/npm/v/@weft-js/core?color=145c3c&label=npm" alt="npm version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
   <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
-  <img src="https://img.shields.io/badge/node-%3E%3D26-145c3c" alt="Node 26 or later">
+  <img src="https://img.shields.io/badge/node-%3E%3D24-145c3c" alt="Node 24 or later">
 </p>
 
 <p align="center">
@@ -95,7 +95,7 @@ npx weft db generate   # the first migration
 npx weft dev
 ```
 
-You need Node 26, or Bun or Deno in its place. [`@weft-js/create`](packages/create) lists every flag and template, and
+You need Node 24 or later, or Bun or Deno in its place. [`@weft-js/create`](packages/create) lists every flag and template, and
 [Installation](site/content/learn/installation.md) walks through every file in a new app.
 
 ## A component

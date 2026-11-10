@@ -47,3 +47,4 @@ packages/create/test/.tmp-templates/
 /packages/cli/.vitest/
 /evals/results/sites/first-run-*.json
 /benchmarks/speed/lab.json
+packages/core/docs/

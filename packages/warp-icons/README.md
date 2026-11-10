@@ -106,7 +106,7 @@ export default defineConfig({ plugins: [icons()] })
 ```
 
 `@weft-js/core` and `vite` are peer dependencies: icons are Weft components, and the name pass runs in Weft's Vite
-plugin. Node 26 or later is required.
+plugin. Node 24 or later is required.
 
 ## Quick start
 

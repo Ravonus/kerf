@@ -105,7 +105,7 @@ import { media } from '@weft-js/plugin-media'
 
 | Need | Why |
 | --- | --- |
-| Node 26 or later | `engines` in package.json |
+| Node 24 or later | `engines` in package.json |
 | `sharp` (a dependency of this package) | Every raster encode. For the media route, the **app** needs `sharp` in its own dependencies so the built server can load it; a build without it warns with M017. |
 | `ssimulacra2` on `PATH` (optional) | The quality search. It's the SSIMULACRA2 tool from libjxl. Without it, fixed qualities are used. |
 | A disk that outlives deploys (for uploads) | The media route stores files in `.weft/media`, or `WEFT_MEDIA_DIR`. |
@@ -172,7 +172,7 @@ All options are optional. `media()` with none is the configuration the defaults 
 | `widths` | `number[]` | `[320, 640, 960, 1280, 1920, 2560]` | The width ladder, sorted for you. The largest also caps the output width. |
 | `quality.target` | `number` (1–100) | `80` | The SSIMULACRA2 score each format is searched to. 80 is about visually lossless at normal viewing. |
 | `quality.scorer` | `string` | `'ssimulacra2'` | The scorer command, or `'none'` to use fixed qualities. |
-| `placeholder` | `boolean` | `true` | Adds `dominant` (a `#rrggbb` colour) and `placeholder` (a 16 px WebP data URL). |
+| `placeholder` | `boolean` · `'inline'` · `'file'` | `true` | Adds `dominant` (a `#rrggbb` colour) and `placeholder`, a 16 px WebP. `true` or `'inline'`: a `data:` URL. `'file'`: its own hashed file, for a CSP without `data:` in `img-src`. `false`: neither. |
 | `gifLimit` | `number` (bytes) | `262144` (256 KB) | A GIF over this is M004, at build and in `weft check`. |
 | `encoder` | `'off' \| 'compatible' \| 'server'` | `'off'` | See [The `encoder` modes](#the-encoder-modes). |
 | `swap` | `'intent' \| 'idle' \| 'never'` | `'intent'` | When the compatible copy swaps in. Only valid with `encoder: 'compatible'`. |
@@ -400,6 +400,17 @@ media({ formats: ['avif', 'webp'], widths: [480, 960, 1440] })
 media({ quality: { scorer: 'none' } })
 ```
 
+**A strict CSP: the placeholder as a file**
+
+```ts
+media({ placeholder: 'file' })
+```
+
+The default placeholder is a `data:` URL, which `img-src 'self'` blocks.
+With `'file'` each image and video poster gets a `name-placeholder-<hash>.webp`
+of a few hundred bytes next to its ladder, and the record points at it.
+Uploads through the media route still inline theirs.
+
 **Uploads on a mounted volume**
 
 ```bash
@@ -448,6 +459,7 @@ export const Logo = () => (
 | `M017` in the server log | No `media()` in `plugins`, or the app doesn't list `sharp` in its own dependencies. |
 | `M018` on upload | Over `server.maxBytes` (20 MB by default), not an image sharp can read, or a video with no encoder installed. |
 | `P101 … needs media.encode` | A video or audio `?media` import with no `mediaFfmpeg()` in `plugins`. |
+| CSP reports a blocked `data:image/webp` | The inline placeholder. Set `placeholder: 'file'`, or add `data:` to `img-src`. |
 | Uploaded images vanish after a deploy | The store isn't on persistent storage. Point `WEFT_MEDIA_DIR` at a volume. |
 
 ## Related packages

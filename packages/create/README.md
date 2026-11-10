@@ -15,7 +15,7 @@
   <a href="https://www.npmjs.com/package/@weft-js/create"><img src="https://img.shields.io/npm/v/@weft-js/create?color=145c3c&label=npm" alt="npm version"></a>
   <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
   <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
-  <img src="https://img.shields.io/badge/node-%3E%3D26-145c3c" alt="Node 26 or later">
+  <img src="https://img.shields.io/badge/node-%3E%3D24-145c3c" alt="Node 24 or later">
 </p>
 
 <p align="center">
@@ -97,7 +97,7 @@ npx weft dev
 The last thing it prints is the exact commands for your package manager. Open the URL `weft dev` prints, sign up, and
 the todo list at `/todos` is yours.
 
-You need Node 26 or later, or Bun or Deno in its place.
+You need Node 24 or later, or Bun or Deno in its place.
 
 ## Flags
 

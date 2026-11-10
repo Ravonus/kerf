@@ -10,7 +10,7 @@ This page is for working on Weft. For a first app, use `npm create @weft-js` and
 
 ## What you need
 
-- Node 26 and npm. Other package managers aren't supported here.
+- Node 24 or later, and npm. Other package managers aren't supported here.
 - Rust (`cargo`), because a checkout builds its own compiler. An app doesn't need Rust: it gets the WASM compiler, plus a
   native addon where one fits. `npx weft doctor` says which one is running.
 

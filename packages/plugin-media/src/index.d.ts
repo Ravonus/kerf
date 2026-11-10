@@ -8,8 +8,11 @@ export interface MediaOptions {
   widths?: number[]
   /** `target`: the SSIMULACRA2 score each format is searched to (default 80). `scorer`: the command, or 'none'. */
   quality?: { target?: number; scorer?: string }
-  /** Dominant colour and a 16 px WebP placeholder. Default true. */
-  placeholder?: boolean
+  /**
+   * Dominant colour and a 16 px WebP placeholder. `true` or 'inline' (the default) inlines it as a `data:` URL; 'file'
+   * writes it as its own file, for a CSP whose `img-src` has no `data:`; `false` leaves both out.
+   */
+  placeholder?: boolean | 'inline' | 'file'
   /** Bytes over which a GIF is M004. Default 256 KB. */
   gifLimit?: number
   /** 'server': `?media` imports are encoded on first request by the media route, not at build. 'compatible': the page shows the efficient file, and a compatible copy swaps in so saving gives a file that opens anywhere. Default 'off'. */

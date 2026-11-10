@@ -15,7 +15,7 @@
   <a href="https://www.npmjs.com/package/@weft-js/warp-core"><img src="https://img.shields.io/npm/v/@weft-js/warp-core?color=145c3c&label=npm" alt="npm version"></a>
   <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
   <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
-  <img src="https://img.shields.io/badge/node-%3E%3D26-145c3c" alt="Node 26 or later">
+  <img src="https://img.shields.io/badge/node-%3E%3D24-145c3c" alt="Node 24 or later">
 </p>
 
 <p align="center">
@@ -101,7 +101,7 @@ bun add @weft-js/warp-core
 
 > [!NOTE]
 > The package exports TypeScript source (`src/index.ts`), so your bundler must compile TypeScript from `node_modules`.
-> `@weft-js/core` is listed as a peer dependency; only the `@weft-js/warp-core/weft` entry imports it. Node 26 or later
+> `@weft-js/core` is listed as a peer dependency; only the `@weft-js/warp-core/weft` entry imports it. Node 24 or later
 > is required.
 
 ## Quick start

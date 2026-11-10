@@ -61,6 +61,18 @@ describe('photos', () => {
     )
     expect([asset.width, asset.height]).toEqual([300, 400])
   })
+
+  it("placeholder: 'file' writes the placeholder as a file, for a CSP without data:", async () => {
+    const { asset, files } = await createMediaBuild({
+      widths: [320],
+      quality: { scorer: 'none' },
+      placeholder: 'file',
+    }).build({ file: '/x/a.jpg', bytes: await photo(400, 300) }, { cacheDir })
+    expect(asset.placeholder).toMatch(/^a-placeholder-[0-9a-f]{8}\.webp$/)
+    const file = files.find((f: { name: string }) => f.name === asset.placeholder)
+    expect((await sharp(file.bytes).metadata()).format).toBe('webp')
+    expect(asset.dominant).toMatch(/^#[0-9a-f]{6}$/)
+  })
 })
 
 function registerScoredPhoto() {
@@ -220,5 +232,8 @@ it('media() validates options as P115 and provides media.build with the M namesp
   )
   expect(() => media({ quality: { target: 120 } })).toThrow(
     expect.objectContaining({ code: 'P115', path: 'quality.target' }),
+  )
+  expect(() => media({ placeholder: 'url' as never })).toThrow(
+    expect.objectContaining({ code: 'P115', path: 'placeholder' }),
   )
 })

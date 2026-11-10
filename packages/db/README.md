@@ -102,7 +102,7 @@ npm install kysely            # kysely list source, plugin-native/auth
 npm install @aws-sdk/client-dynamodb @aws-sdk/lib-dynamodb
 ```
 
-SQLite needs no driver: it uses `node:sqlite` on Node and Deno and `bun:sqlite` on Bun. The package requires Node 26 or
+SQLite needs no driver: it uses `node:sqlite` on Node and Deno and `bun:sqlite` on Bun. The package requires Node 24 or
 later (the `engines` field).
 
 ## Quick start

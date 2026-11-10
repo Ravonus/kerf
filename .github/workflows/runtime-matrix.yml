@@ -42,6 +42,11 @@ jobs:
           pnpm install --no-frozen-lockfile
           pnpm exec weft db generate
       - run: node packages/start/scripts/runtime-matrix.mjs "$RUNNER_TEMP/app"
+      # Apps may run on Node 24 LTS (the packages' engines say >=24), so build and serve the same app on it too.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with: { node-version: 24 }
+      - name: The same app on Node 24
+        run: node packages/start/scripts/runtime-matrix.mjs "$RUNNER_TEMP/app" --runtimes node
       - name: Packed gate
         run: |
           sudo apt-get update

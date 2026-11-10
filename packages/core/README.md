@@ -60,7 +60,10 @@ what the scaffold set up for you.
 ## Contents
 
 - [Install](#install)
+  - [What installing runs](#what-installing-runs)
+  - [The reference, offline](#the-reference-offline)
 - [Quick start](#quick-start)
+  - [A static site](#a-static-site)
 - [The model](#the-model)
   - [A component runs once](#a-component-runs-once)
   - [State is a box](#state-is-a-box)
@@ -77,6 +80,8 @@ what the scaffold set up for you.
 - [Entry points](#entry-points)
 - [The Vite plugin](#the-vite-plugin)
 - [Server rendering](#server-rendering)
+- [Images and video with Media](#images-and-video-with-media)
+- [Content Security Policy](#content-security-policy)
 - [Testing](#testing)
 - [The compiler: native and WASM](#the-compiler-native-and-wasm)
 - [TypeScript setup](#typescript-setup)
@@ -111,7 +116,7 @@ bun add @weft-js/core
 bun add -d vite
 ```
 
-The package declares `node >= 26`. It ships its runtime as TypeScript source, so build with Vite and the `weft()`
+The package declares `node >= 24`. It ships its runtime as TypeScript source, so build with Vite and the `weft()`
 plugin, which compiles your `.tsx` and the runtime together.
 
 For tests, add the optional peers:
@@ -121,9 +126,57 @@ npm install -D vitest jsdom \
   @testing-library/dom @testing-library/user-event
 ```
 
+### What installing runs
+
+Nothing. No Weft package has an `install` or `postinstall` script, and
+`@weft-js/core` has one runtime dependency, `dom-accessibility-api`, which
+has none either.
+
+What does run is the compiler, at build time, inside Vite:
+
+| Build | Where it comes from | What it can reach |
+| --- | --- | --- |
+| Native addon | `@weft-js/compiler-<platform>`, an optional dependency: a prebuilt `.node` file of about 4 MB | Native code in the Vite process. It reads the source text it's given and returns code; it opens no files or sockets |
+| WASM | `native/weft-compiler.wasm`, in this package | Nothing. The module has no imports, so it can only turn the input text into output text |
+
+Both come from the same Rust source in
+[`crates/weft-compiler`](https://github.com/Ravonus/weft/tree/main/crates/weft-compiler)
+and produce byte-identical output. To keep native code out of your builds
+entirely, skip the optional dependencies and pin WASM:
+
+```bash
+npm install @weft-js/core --omit=optional
+WEFT_COMPILER=wasm npx vite build
+```
+
+`--omit=optional` alone is enough: with no addon installed the loader
+falls back to WASM. `WEFT_COMPILER=wasm` makes that a rule, so an addon
+that arrives later is still ignored. `--ignore-scripts` doesn't change
+which build runs, because an addon needs no install script.
+
+### The reference, offline
+
+The reference pages that `npx weft docs <topic>` prints ship in this
+package too, as Markdown in `node_modules/@weft-js/core/docs/`, with an
+index in its `README.md`. They match the installed version, and need no
+network or CLI. The links in this README go to the same pages on GitHub.
+
 ## Quick start
 
-A complete client-only app in four files.
+A complete client-only app in five files.
+
+```json
+// package.json
+{
+  "type": "module",
+  "scripts": { "dev": "vite", "build": "vite build" },
+  "dependencies": { "@weft-js/core": "^0.1.4" },
+  "devDependencies": { "vite": "^8.0.0" }
+}
+```
+
+`"type": "module"` matters: without it Vite 8 warns that
+`vite.config.ts` uses ESM syntax.
 
 ```ts
 // vite.config.ts
@@ -182,8 +235,28 @@ function Counter() {
 render(() => <Counter />, document.getElementById('root')!)
 ```
 
-Run `npx vite`. `Counter` runs once. Each click writes `count.value`, and only the two text nodes that read `count` and
-`doubled` change. `render` returns a function that unmounts the app.
+Run `npm run dev`. `Counter` runs once. Each click writes `count.value`, and only the two text nodes that read `count`
+and `doubled` change. `render` returns a function that unmounts the app.
+
+### A static site
+
+The quick start is already a static site. `npm run build` writes `dist/`:
+`index.html`, one hashed JS file per entry and chunk, and the CSS. There is
+no server and no inline script or style, so `dist/` deploys to any static
+host as it is: Cloudflare (Workers static assets or Pages), Netlify,
+Vercel, GitHub Pages, S3 or an nginx folder.
+
+- **Several pages.** Give Vite more HTML inputs with
+  `build.rolldownOptions.input`, one per page, each with its own
+  `render(...)`.
+- **Client routes.** A single-page app with its own router needs the host
+  to serve `index.html` for unknown paths (Cloudflare's
+  `not_found_handling = "single-page-application"`, Netlify's
+  `/* /index.html 200`).
+- **Pre-rendered HTML.** For pages that arrive as HTML and then hydrate,
+  use [`@weft-js/start`](https://www.npmjs.com/package/@weft-js/start):
+  a route with `prerender` is written as a static page at build time.
+- **A strict CSP.** See [Content Security Policy](#content-security-policy).
 
 ## The model
 
@@ -916,6 +989,79 @@ On the client, pass the data explicitly: `hydrate(() => <App />, el, { data: win
 
 </details>
 
+## Images and video with Media
+
+`<Media>` from `@weft-js/core/media` renders an image or video import with
+its width and height, a placeholder, `srcset` and `sizes`, so nothing
+shifts while it loads.
+
+```tsx
+import { Media } from '@weft-js/core/media'
+import hero from './hero.jpg?media'
+
+export const Hero = () => (
+  <Media
+    src={hero}
+    alt="The harbour at dawn"
+    priority
+    width="1/2"
+  />
+)
+```
+
+What a `?media` import gives you depends on the plugins in
+`weft.config.ts`:
+
+| Setup | Images | Video and audio |
+| --- | --- | --- |
+| No media plugin | Dimensions from the file header; the original file, no ladder | Not supported |
+| [`@weft-js/plugin-media`](https://www.npmjs.com/package/@weft-js/plugin-media) | AVIF (and WebP) width ladders tuned to a quality target, a fallback, the dominant colour and a 16 px placeholder | Not supported |
+| plus [`@weft-js/plugin-media-ffmpeg`](https://www.npmjs.com/package/@weft-js/plugin-media-ffmpeg) | As above | AV1 and H.264 ladders, a poster, GIFs turned into video |
+
+| Prop | What it does |
+| --- | --- |
+| `src` | The `?media` import |
+| `alt` | Required. What the image shows; `alt=""` with `decorative` for purely visual media (`M007`) |
+| `priority` | The route's one LCP image: eager, `fetchpriority="high"` (`M008`, `M009`) |
+| `width` | Rendered width for `sizes`: a fraction of the viewport (`"1/3"`) or a CSS length (`"240px"`) |
+| `sizes` | An explicit `sizes`, which wins over `width` |
+| `focus` | Focal point, `[x, y]` from 0 to 1, as `object-position` |
+
+A page with one `<Media>` is about 8 KB of brotli in all (see
+[Size](#size)). The plugin's README has every option:
+[`@weft-js/plugin-media`](https://github.com/Ravonus/weft/tree/main/packages/plugin-media).
+
+> [!NOTE]
+> **The placeholder and CSP.** By default the 16 px placeholder is inlined
+> as a `data:` URL, which `img-src 'self'` blocks. Set
+> `media({ placeholder: 'file' })` and it is written as its own small
+> hashed `.webp` next to the other files instead; `placeholder: false`
+> leaves it and the dominant colour out. The box `<Media>` sets is a
+> `style` value, which needs the note on style attributes below when the
+> page is server-rendered.
+
+## Content Security Policy
+
+A client-rendered Weft build works under a strict policy with no
+exceptions:
+
+```text
+default-src 'self'; script-src 'self'; style-src 'self'
+```
+
+The build writes every script and stylesheet to a file, so nothing is
+inline. At run time, a `style` value from an expression
+(`style={{ color: c }}` or `style={css}`) is applied through the CSSOM
+(`el.style`), which CSP allows.
+
+Three things need more than that:
+
+| What | Why | What to do |
+| --- | --- | --- |
+| A literal `style="color:red"` in JSX | It is part of the element's HTML template, and `style-src` without `'unsafe-inline'` blocks style attributes in HTML | Use a class, or an expression: `style={{ color: 'red' }}` |
+| Server-rendered pages | Every `style` value is written into the HTML as an attribute, `<Media>`'s box included | Add `style-src-attr 'unsafe-inline'` (style attributes only; still no inline `<style>` or script) |
+| `<Media>`'s default placeholder | It's a `data:` URL | `media({ placeholder: 'file' })`, or add `data:` to `img-src` |
+
 ## Testing
 
 `@weft-js/core/test` is a Vitest toolkit: it mounts components into jsdom with a fresh app each time, queries by
@@ -1005,6 +1151,9 @@ both builds, in every mode, and fails on any difference in output or diagnostics
 | Windows x64 | `@weft-js/compiler-win32-x64` | native |
 | Anything else, including Windows on Arm | none | WASM |
 
+The native addon is native code running in your build process, even when you install with `--ignore-scripts`: it
+needs no script to load. To keep it out, see [What installing runs](#what-installing-runs).
+
 `npx weft doctor` says which build an app is using. In code, `backend` from `@weft-js/core/compiler` reports
 `{ kind: 'native' | 'wasm', file, … }`; a WASM backend also lists the addons it wanted and why each was skipped.
 `WEFT_COMPILER=native` or `WEFT_COMPILER=wasm` pins one build; with `native`, a missing addon is an error rather than a
@@ -1070,7 +1219,7 @@ that stay live, plain `.map` instead of `<For>`, and checks that run in the comp
 
 ## Size
 
-Brotli sizes of production builds, as `node scripts/size.mjs` in this package reports them, measured on 2026-11-09.
+Brotli sizes of production builds, as `node scripts/size.mjs` in this package reports them, measured on 2026-11-10.
 `size.mjs` fails when an entry with a budget goes over it.
 
 | Build | Brotli | Budget |
@@ -1081,10 +1230,23 @@ Brotli sizes of production builds, as `node scripts/size.mjs` in this package re
 | `<Boundary>` + `resource` | 5.00 KB | |
 | The `@weft-js/core` entry, every export | 5.63 KB | 6.90 KB |
 | A reference shop app | 6.20 KB | 10.00 KB |
+| The same app with `defineState` | 7.17 KB | 10.00 KB |
+| The same app, hydrating server HTML | 7.23 KB | 10.00 KB |
+| js-framework-benchmark (keyed rows) | 5.45 KB | |
 | The whole runtime, every entry's exports | 13.37 KB | 13.37 KB |
 
-The full runtime lands on exactly 13.37 KB on purpose: `src/egg.ts` pads it with data no app ships. Apps pay only for
-what they import, so the rows above it are what a real page costs.
+What each entry adds to a page, as whole pages measured with and without it:
+
+| Entry | A page with it | The same page without it | It adds |
+| --- | --- | --- | --- |
+| `@weft-js/core/head` (`setHead`) | 0.64 KB on its own | | 0.64 KB |
+| `pending="shape"` (`@weft-js/core/shape`) | 6.40 KB | 6.06 KB | 0.34 KB |
+| `<Surface>`, canvas 2D | 7.29 KB | 2.64 KB | 4.65 KB |
+| `<Surface>`, WebGL2 | 7.31 KB | 2.64 KB | 4.67 KB |
+| `<Media>` (`@weft-js/core/media`) | 8.06 KB | 1.60 KB (hello world) | about 6.5 KB |
+
+The full runtime lands on exactly 13.37 KB on purpose. `src/egg.ts` pads it with the digits of π, in an export nothing
+reads, so no app ships them. Apps pay only for what they import, so the other rows are what a real page costs.
 
 ## Troubleshooting
 

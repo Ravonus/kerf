@@ -271,6 +271,9 @@ function mediaOutput(ctx, out, store) {
     })),
   }
   if (asset.poster) asset.poster = store.url(asset.poster)
+  // `placeholder: 'file'` names a file; the default is a data: URL, which stays as it is.
+  if (asset.placeholder && !asset.placeholder.startsWith('data:'))
+    asset.placeholder = store.url(asset.placeholder)
   if (asset.copy) asset.copy = { ...asset.copy, src: store.url(asset.copy.src) }
   return `export default ${JSON.stringify(asset)}\n`
 }

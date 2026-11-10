@@ -101,7 +101,7 @@ pnpm add @weft-js/start @weft-js/core
 bun add @weft-js/start @weft-js/core
 ```
 
-Start needs Node 26 or later (the `engines` field), Bun or Deno. Drizzle, Better Auth, Zod and the database drivers are
+Start needs Node 24 or later (the `engines` field), Bun or Deno. Drizzle, Better Auth, Zod and the database drivers are
 optional peer dependencies: install the ones your app uses, or let `weft add db` and `weft add auth` do it.
 
 ## Quick start

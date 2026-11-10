@@ -37,3 +37,13 @@ export const hex = ({ r, g, b }) =>
 export const isPhoto = (meta) =>
   ['jpeg', 'jpg', 'avif', 'heif', 'tiff', 'webp'].includes(meta.format) &&
   !(meta.format === 'webp' && meta.hasAlpha)
+
+/**
+ * The 16 px placeholder. Inline it's a `data:` URL; with `placeholder: 'file'` it's a file of its own next to the
+ * ladder, for a CSP whose `img-src` has no `data:`. `name` is the file's name when it is one.
+ */
+export const placeholderOf = (tiny, stem, o, short) => {
+  if (o.placeholder !== 'file') return { url: `data:image/webp;base64,${tiny.toString('base64')}` }
+  const name = `${stem}-placeholder-${short(tiny)}.webp`
+  return { url: name, file: { name, bytes: new Uint8Array(tiny) } }
+}
