@@ -14,7 +14,8 @@ registerHooks({
   },
 })
 const { PALETTE } = await import('../src/lib/field.ts')
-const { CORAL, WARPS, WEFTS } = await import('../src/lib/loom/threads.ts')
+const { CORAL, MIDDLE, WARPS, WARP_SPAN, WEFTS, WEFT_SPAN } =
+  await import('../src/lib/loom/threads.ts')
 
 /** Index 0 is empty; 1–3 the hero's greens, dark to bright; 4–6 its coral, dark to bright. */
 export const INKS = [
@@ -32,15 +33,17 @@ const span = (c, w, step) => {
 }
 
 function lay(size, scale, width, step) {
-  const o = size / 2 - 12 * scale
-  const across = (u) => span(o + u * scale, width, step)
-  const snap = (u) => step * Math.round((o + u * scale) / step)
-  const along = (from, to) => ({ a: snap(from), b: snap(to) })
+  const [ox, oy] = MIDDLE.map((m) => size / 2 - m * scale)
+  const across = (o) => (u) => span(o + u * scale, width, step)
+  const snap = (o, u) => step * Math.round((o + u * scale) / step)
+  const warps = WARPS.map(across(ox))
+  // The wefts overhang the outer warps by the same whole number of cells on each side, whatever the rounding.
+  const over = step * Math.round(((WARPS[0] - WEFT_SPAN[0]) * scale - width / 2) / step)
   return {
-    warps: WARPS.map(across),
-    wefts: WEFTS.map(across),
-    long: along(3, 21),
-    wide: along(2, 22),
+    warps,
+    wefts: WEFTS.map(across(oy)),
+    long: { a: snap(oy, WARP_SPAN[0]), b: snap(oy, WARP_SPAN[1]) },
+    wide: { a: warps[0].a - over, b: warps.at(-1).b + over },
   }
 }
 

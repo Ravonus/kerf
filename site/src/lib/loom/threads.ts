@@ -41,6 +41,11 @@ export type Threads = { cover: Float32Array; born: Float32Array; band: Uint8Arra
 // The house mark in its 24-unit box: four warps, two wefts.
 export const WARPS = [5, 10, 15, 20]
 export const WEFTS = [9, 15]
+/** Where each kind of thread runs, in units: the wefts overhang the outer warps by the same 2.5 units each side. */
+export const WARP_SPAN = [3, 21]
+export const WEFT_SPAN = [2.5, 22.5]
+/** The middle of the threads (x, y), which is what gets centred: the warps' midpoint is 12.5, not the box's 12. */
+export const MIDDLE = [12.5, 12]
 
 type Frame = {
   ox: number
@@ -56,7 +61,7 @@ const edge = (half: number, d: number) => Math.min(1, Math.max(0, half + 0.5 - M
 function warpThreads({ ox, oy, unit, half, delay, put }: Frame) {
   WARPS.forEach((wx, w) => {
     const cx = ox + wx * unit
-    for (let y = Math.ceil(oy + 3 * unit); y < oy + 21 * unit; y++) {
+    for (let y = Math.ceil(oy + WARP_SPAN[0]! * unit); y < oy + WARP_SPAN[1]! * unit; y++) {
       const at = delay + w * 0.12 + ((y - oy) / (24 * unit)) * 0.9
       for (let x = Math.floor(cx - half - 1); x <= cx + half + 1; x++)
         put(x, y, edge(half, x - cx), at, 0)
@@ -67,7 +72,7 @@ function warpThreads({ ox, oy, unit, half, delay, put }: Frame) {
 function weftThreads({ ox, oy, unit, half, delay, put }: Frame) {
   WEFTS.forEach((wy, j) => {
     const cy = oy + wy * unit
-    for (let x = Math.ceil(ox + 2 * unit); x < ox + 22 * unit; x++) {
+    for (let x = Math.ceil(ox + WEFT_SPAN[0]! * unit); x < ox + WEFT_SPAN[1]! * unit; x++) {
       const at = delay + 0.9 + j * 0.16 + ((x - ox) / (24 * unit)) * 0.9
       // The gap the weft leaves where it dives under a warp scales with the mark, or a small one loses its wefts.
       const gap = half + Math.min(1.5, 0.4 * unit)
@@ -99,8 +104,8 @@ export function threads(
     if (a > 0.5) band[i] = b
   }
   const frame = {
-    ox: cols * centre - 12 * unit,
-    oy: rows / 2 - 12 * unit,
+    ox: cols * centre - MIDDLE[0]! * unit,
+    oy: rows / 2 - MIDDLE[1]! * unit,
     unit,
     half: Math.max(0.9, 0.62 * unit), // the mark's own proportion, down to threads two cells wide
     delay,

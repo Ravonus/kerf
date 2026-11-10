@@ -108,7 +108,10 @@ const inks = (hero: HTMLElement) => {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b > 140 ? LIGHT_COLOURS : COLOURS
 }
 
-/** Whole square cells: the canvas takes exactly `cols × rows` cells and the hero clips the last part-cell. */
+/**
+ * Whole square cells: the canvas takes `cols × rows` cells and the hero clips the last part-cell. Its width is a share
+ * of the hero's and its height follows from its own ratio, so as the page resizes the cloth grows and shrinks evenly.
+ */
 function measure(canvas: HTMLCanvasElement) {
   canvas.style.inlineSize = canvas.style.blockSize = ''
   const rect = canvas.getBoundingClientRect()
@@ -117,9 +120,17 @@ function measure(canvas: HTMLCanvasElement) {
     rows = Math.ceil(rect.height / CELL)
   canvas.width = cols
   canvas.height = rows
-  canvas.style.inlineSize = `${cols * CELL}px`
-  canvas.style.blockSize = `${rows * CELL}px`
+  canvas.style.inlineSize = `${((cols * CELL) / rect.width) * 100}%`
+  canvas.style.blockSize = 'auto'
   return { rect, cols, rows }
+}
+
+/** Scaling keeps the shape, so the cloth is only rewoven once it no longer fits its space or the layout changes. */
+const fits = (canvas: HTMLCanvasElement, box: DOMRect, wide: boolean) => {
+  const { height } = canvas.getBoundingClientRect()
+  // Beside the words the hero clips a taller cloth; in the band above them it would reach the heading.
+  const room = wide ? 1.15 : 1.04
+  return box.width >= 900 === wide && height >= box.height - 1 && height <= box.height * room
 }
 
 function buildLoom(canvas: HTMLCanvasElement, run: LoomRun) {
@@ -183,27 +194,29 @@ function mountLoom(getBox: () => HTMLCanvasElement) {
     ink: inks(hero),
     repaint: () => {},
   })
+  // The poster has the canvas's own box (site.css sizes both), and unlike the canvas it is never resized by the loom.
+  const box = hero.querySelector<HTMLElement>('[data-part="poster"]') ?? hero
   let run = fresh(),
-    width = 0,
-    height = 0,
+    wide = false,
     wait = 0
+  const build = () => {
+    wide = box.getBoundingClientRect().width >= 900
+    later(() => buildLoom(canvas, run))
+  }
   const rebuild = () => {
+    if (fits(canvas, box.getBoundingClientRect(), wide)) return
     stop(run)
     delete canvas.dataset.live
     run = fresh()
-    later(() => buildLoom(canvas, run))
+    build()
   }
-  const sized = new ResizeObserver(([e]) => {
-    const { width: w, height: h } = e!.contentRect
-    if (Math.abs(w - width) < 1 && Math.abs(h - height) < 1) return
-    const first = !width
-    width = w
-    height = h
+  let first = true
+  const sized = new ResizeObserver(() => {
+    if (first) return void ((first = false), build())
     clearTimeout(wait)
-    wait = first ? 0 : window.setTimeout(rebuild, 200)
-    if (first) later(() => buildLoom(canvas, run))
+    wait = window.setTimeout(rebuild, 300)
   })
-  sized.observe(hero)
+  sized.observe(box)
   const recolour = () => {
     run.ink = inks(hero)
     run.repaint()
