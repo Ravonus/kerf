@@ -94,7 +94,7 @@ test('the fence: a dialog mark rule misses a checkbox mark inside it, and still 
   const out = guard(css, ctx)
   expect(out).toContain('[data-scope="checkbox"]')
   const [f] = partsOf(out.slice(0, out.indexOf('{')))
-  expect(f.fenced).toBe(true)
+  expect(f?.fenced).toBe(true)
   expect(loose(out, ctx)).toEqual([])
   expect(loose(css, ctx).map((b) => b.how)).toEqual(['descendant'])
 })

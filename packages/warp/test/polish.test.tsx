@@ -149,11 +149,11 @@ describe('rules with no jsdom layout to prove them', () => {
     expect(rule).toMatch(
       /:where\(\[data-scope="call-controls"\]\) \{ grid-column: 1 \/ -1; display: flex; flex-wrap: wrap;/,
     )
-    expect(rule).toMatch(/\[data-part="group"\]\) \{ display: flex; flex-wrap: wrap;/)
+    expect(rule).toMatch(/\[data-part="group"\][^{]*\) \{ display: flex; flex-wrap: wrap;/)
   })
   test("ScrollGrid: padding stays inside a head's width", () => {
     expect(flat('data/scroll-grid.css')).toMatch(
-      /\[data-part="corner"\]\) \{ position: absolute; inset-block-start: 0; inset-inline-start: 0; box-sizing: border-box;/,
+      /\[data-part="corner"\][^{]*\) \{ position: absolute; inset-block-start: 0; inset-inline-start: 0; box-sizing: border-box;/,
     )
   })
   test('Center: fills a flex parent up to its max', () => {

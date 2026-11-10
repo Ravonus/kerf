@@ -262,9 +262,10 @@ duration by `max(motion-scale, 0.001)`: that keeps a compositor animation alive.
 `prefers-reduced-motion: no-preference`, never under the OS `reduce` setting or `data-motion="reduce"` (an app that set
 `data-motion="full"` keeps it). In-page anchors and skip links glide; a route change jumps, because weft's router
 scrolls to the top or the hash target with `behavior: "instant"` (scripted page-level scrolls should do the same).
-`:root` also sets `scroll-padding-block-start: var(--warp-scroll-offset)`, by default the top bar (`control-md` + 12px)
+Every `[id]` gets `scroll-margin-block-start: var(--warp-scroll-offset)`, by default the top bar (`control-md` + 12px)
 plus `space-related`, so an anchor lands below the sticky header, not under it. A page with a taller header, or none,
-sets `--warp-scroll-offset`.
+sets `--warp-scroll-offset`. It is a margin on the targets, not the root's `scroll-padding`: a `view()` timeline's
+default inset is the scroller's scroll-padding, which would shift every scroll-driven animation on the page.
 
 ### Open and close
 

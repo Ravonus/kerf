@@ -177,7 +177,7 @@ export const fence = (scopes, other) => {
 export function selectors(css) {
   const out = []
   const text = css.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '))
-  const walk = (from, to) => {
+  const scan = (from, to) => {
     let i = from
     while (i < to) {
       const open = text.indexOf('{', i)
@@ -194,7 +194,7 @@ export function selectors(css) {
       const head = prelude.trim()
       if (head.startsWith('@')) {
         if (/^@(media|container|supports|layer|scope|starting-style|document)\b/.test(head))
-          walk(open + 1, j)
+          scan(open + 1, j)
       } else if (head && !/^(from|to|\d)/.test(head))
         out.push({ text: text.slice(start, open).trimEnd(), at: start })
       i = j + 1
@@ -210,7 +210,7 @@ export function selectors(css) {
         i = semi + 1
     }
   }
-  walk(0, text.length)
+  scan(0, text.length)
   return out
 }
 

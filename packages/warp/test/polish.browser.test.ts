@@ -166,7 +166,7 @@ test('a table wider than its box scrolls and shows an edge shadow on the side wi
   ).toBe('')
 })
 
-test('vivid: the pointer fill on a solid button is clearly lighter than its rest; balanced is unchanged', async () => {
+test('vivid: the pointer fill on a solid button is clearly deeper than its rest, in its own hue; balanced is unchanged', async () => {
   const lum = (c: string) => {
     const m = c.match(/[\d.]+/g)!.map(Number)
     const f = (x: number) => {
@@ -210,13 +210,16 @@ test('vivid: the pointer fill on a solid button is clearly lighter than its rest
   const [vr, vh] = await sample('#solid')
   const rest = lum(await px(vr)),
     hover = lum(await px(vh))
-  expect(hover / rest).toBeGreaterThan(1.12)
+  // its own colour, deeper (an ink overlay): a fill that leaned to the highlight turned a brown key olive
+  expect(hover / rest).toBeLessThan(0.88)
   // ink on the landed fill still reads: on-solid vs the fill stays at 4.5:1
   const ink = await page.evaluate(
     () => getComputedStyle(document.querySelector<HTMLElement>('#solid button')!).color,
   )
+  // the same hue: each channel goes down together, so the channels keep their order
   const [a, b] = [await px(vr), await px(vh)].map((c) => c.match(/\d+/g)!.map(Number))
-  expect(Math.hypot(a![0]! - b![0]!, a![1]! - b![1]!, a![2]! - b![2]!)).toBeGreaterThan(40) // a different, brighter ink, not a shade
+  const order = (c: number[]) => [0, 1, 2].sort((i, j) => c[j]! - c[i]!).join('')
+  expect(order(b!)).toBe(order(a!))
   const inkL = lum(ink.startsWith('rgb') ? ink : 'rgb(250,250,250)')
   expect((Math.max(inkL, hover) + 0.05) / (Math.min(inkL, hover) + 0.05)).toBeGreaterThanOrEqual(
     4.5,

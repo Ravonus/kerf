@@ -116,7 +116,7 @@ test('families move differently, and the arrival is long enough to see', async (
   const at = async (inView: number) => {
     await page.evaluate((y) => {
       const top = document.getElementById('card')!.offsetTop
-      window.scrollTo(0, top - innerHeight + y)
+      window.scrollTo({ top: top - innerHeight + y, behavior: 'instant' })
     }, inView)
     await page.waitForTimeout(100)
     return opacity()

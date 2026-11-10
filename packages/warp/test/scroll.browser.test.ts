@@ -19,11 +19,12 @@ async function root(reducedMotion: 'reduce' | 'no-preference', attrs = '', style
   const page = await browser.newPage()
   await page.emulateMedia({ reducedMotion })
   await page.setContent(
-    `<!doctype html><html ${attrs} style="${style}"><style>${css}</style><body><p>x</p></body></html>`,
+    `<!doctype html><html ${attrs} style="${style}"><style>${css}</style><body><h2 id="t">x</h2></body></html>`,
   )
   const out = await page.evaluate(() => {
     const s = getComputedStyle(document.documentElement)
-    return { behavior: s.scrollBehavior, padding: s.scrollPaddingTop }
+    const t = getComputedStyle(document.getElementById('t')!)
+    return { behavior: s.scrollBehavior, margin: t.scrollMarginTop, padding: s.scrollPaddingTop }
   })
   await page.close()
   return out
@@ -43,6 +44,8 @@ test('an app that chose data-motion="full" keeps it', async () => {
 })
 
 test('anchors land below the top bar, and a page sets its own offset', async () => {
-  expect(parseFloat((await root('no-preference')).padding)).toBeGreaterThanOrEqual(48)
-  expect((await root('no-preference', '', '--warp-scroll-offset: 0px')).padding).toBe('0px')
+  expect(parseFloat((await root('no-preference')).margin)).toBeGreaterThanOrEqual(48)
+  expect((await root('no-preference', '', '--warp-scroll-offset: 0px')).margin).toBe('0px')
+  // never the root's scroll-padding: a view() timeline insets by it, and every flow exit would move
+  expect((await root('no-preference')).padding).toBe('auto')
 })

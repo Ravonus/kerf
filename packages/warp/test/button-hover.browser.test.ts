@@ -84,7 +84,7 @@ const contrast = (a: number[], b: number[]) => {
   return (x! + 0.05) / (y! + 0.05)
 }
 /** oklch [l, c, h] from sRGB bytes */
-function oklch([r, g, b]: number[]) {
+function oklch([r, g, b]: number[]): [number, number, number] {
   const [R, G, B] = [lin(r!), lin(g!), lin(b!)]
   const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B)
   const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B)
@@ -115,7 +115,7 @@ describe.each(['light', 'dark'] as const)('%s', (theme) => {
           const gap = solid ? hueGap(r[k], r.solid) : hueGap(r[k], r.pa)
           if (gap > 6) bad.push(`${r.name} ${k}: hue moved ${gap.toFixed(1)}° from the tone`)
           if (solid) {
-            if (oklch(r[k])[0]! >= oklch(r.solid)[0]!)
+            if (oklch(r[k])[0] >= oklch(r.solid)[0])
               bad.push(`${r.name} ${k}: not darker than the rest`)
             const ratio = contrast(r.ink, r[k])
             if (ratio < 4.5) bad.push(`${r.name} ${k}: ink ${ratio.toFixed(2)}:1`)

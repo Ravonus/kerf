@@ -3,6 +3,9 @@ import type { PluginInstance } from '@weft-js/core/plugin'
 /** For `site.head`: restores `setDial(…, { persist: true })` before the first paint. */
 export const dialScript: string
 
+/** Every spec rule keyed on `[data-fields="classic"]`, re-scoped to the root: classic fields as the default. */
+export function classicCss(): string
+
 /** What `warp()` takes in weft.config: the seed, the default dials, radius, fonts and any token. */
 export interface WarpOptions {
   /**
