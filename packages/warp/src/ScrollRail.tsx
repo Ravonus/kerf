@@ -7,14 +7,26 @@ import '@weft-js/warp-core/styles/layout/scroll-rail.css'
  * still scrolls, so keys, anchors, scroll restore and a phone's collapsing address bar work as ever; with a mouse or
  * trackpad the native bar steps aside and this thumb shows where you are, drags and jumps by a page on a press. Touch
  * screens keep their own overlay bar. Put one in the root layout.
+ *
+ * `below` names the sticky header (a CSS selector). The rail then starts at that header's bottom edge wherever it is:
+ * under a banner that scrolls away, at a height that changes with the width, or as it shrinks on scroll. Without it,
+ * the rail starts at `--warp-scroll-rail-top`.
  */
-export function ScrollRail() {
+export function ScrollRail(props: { below?: string } = {}) {
   let rail!: HTMLElement
   let thumb!: HTMLElement
   onMount(() => {
     const doc = document.documentElement
     let frame = 0
     let idle: ReturnType<typeof setTimeout> | undefined
+    // the rail's top follows the header's bottom edge, measured as the page moves
+    let top = -1
+    const place = () => {
+      const header = props.below ? document.querySelector(props.below) : null
+      if (!header) return
+      const edge = Math.max(0, Math.round(header.getBoundingClientRect().bottom))
+      if (edge !== top) rail.style.insetBlockStart = `${(top = edge)}px`
+    }
     const size = () => {
       const track = rail.clientHeight
       const total = doc.scrollHeight - innerHeight
@@ -23,6 +35,7 @@ export function ScrollRail() {
     }
     const draw = () => {
       frame = 0
+      place()
       const { track, total, h } = size()
       rail.toggleAttribute('data-none', total <= 1)
       thumb.style.blockSize = `${h}px`
