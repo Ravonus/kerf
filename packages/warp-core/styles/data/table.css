@@ -37,7 +37,7 @@
 :where([data-scope="table"][data-phone="cards"])::before, :where([data-scope="table"][data-phone="cards"])::after { display: none; }
 /* stacked cards don't scroll sideways */
 /* viewport: the one scroll container; sticky header + first column live in it */
-:where([data-scope="table"] [data-part="viewport"]:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"]) *:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"]) [data-scope="table"] *))) {
+:where([data-scope="table"] [data-part="viewport"]:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"],[data-scope="scroll-view"]) *:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"],[data-scope="scroll-view"]) [data-scope="table"] *))) {
   position: relative; overflow: auto; max-block-size: var(--warp-table-max-h, none); overscroll-behavior-x: contain;
   border: var(--warp-border-hairline) solid var(--warp-color-border); border-radius: var(--warp-radius-surface);
   background: var(--warp-color-surface-raised);
@@ -206,7 +206,7 @@
    Same <table>, explicit ARIA roles keep the semantics when display changes.
    Each cell labels itself from data-label. */
 @container (max-width: 599.98px) {
-:where([data-scope="table"][data-phone="cards"] [data-part="viewport"]:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"]) *:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"]) [data-scope="table"] *))) { border: 0; background: none; overflow: visible; max-block-size: none; }
+:where([data-scope="table"][data-phone="cards"] [data-part="viewport"]:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"],[data-scope="scroll-view"]) *:not([data-scope="table"] :is([data-scope="agenda"],[data-scope="canvas"],[data-scope="scroll-view"]) [data-scope="table"] *))) { border: 0; background: none; overflow: visible; max-block-size: none; }
 :where([data-scope="table"][data-phone="cards"] :is(table)),
   :where([data-scope="table"][data-phone="cards"] :is(tbody)) { display: block; }
 :where([data-scope="table"][data-phone="cards"] thead) { display: none; }
