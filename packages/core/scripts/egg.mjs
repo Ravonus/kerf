@@ -23,7 +23,8 @@ const write = (n) =>
     file,
     `/** Not code. The owner likes 13.37 KB, and this pads the full runtime to it (scripts/egg.mjs). It's an export nothing
  * reads, so no app ships it and it does nothing at runtime. */
-export const egg = '${noise(n)}'
+export const egg =
+  '${noise(n)}'
 `,
   )
 const measure = (n) => {
