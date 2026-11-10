@@ -94,7 +94,6 @@ Or let the `weft` CLI install it and add it to `weft.config.ts` in one step:
 npx weft add pay
 ```
 
-
 `weft add pay` needs a database and auth in the app, and stops without changes if either is missing. It also adds the
 Stripe rail (`@weft-js/pay/stripe`) to `plugins`, so `weft.config.ts` ends up with:
 
@@ -114,14 +113,14 @@ export default defineConfig({
 
 ### What `weft add pay` writes
 
-| File | What it holds |
-| --- | --- |
-| `src/pay/catalog.ts` | A `pro` subscription: `month` at `{ usd: 999 }`, `year` at `{ usd: 7999, trialDays: 7 }`, granting `pro`. Client-safe. |
-| `src/pay.server.ts` | `export default definePay({ catalog, store, urls: { success: '/', cancel: '/' } })` |
-| `src/server/pay.ts` | The `entitlements` query and the `checkout` and `portal` mutations. |
-| `src/db/pay.schema.ts` | The `purchases` and `pay_events` tables, for SQLite, Postgres or MySQL. Drizzle apps only. |
-| `src/env.server.ts` | `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` added to the `server` block. |
-| `.env`, `.env.example` | `STRIPE_SECRET_KEY=sk_test_placeholder`, `STRIPE_WEBHOOK_SECRET=whsec_placeholder` |
+| File                   | What it holds                                                                                                          |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `src/pay/catalog.ts`   | A `pro` subscription: `month` at `{ usd: 999 }`, `year` at `{ usd: 7999, trialDays: 7 }`, granting `pro`. Client-safe. |
+| `src/pay.server.ts`    | `export default definePay({ catalog, store, urls: { success: '/', cancel: '/' } })`                                    |
+| `src/server/pay.ts`    | The `entitlements` query and the `checkout` and `portal` mutations.                                                    |
+| `src/db/pay.schema.ts` | The `purchases` and `pay_events` tables, for SQLite, Postgres or MySQL. Drizzle apps only.                             |
+| `src/env.server.ts`    | `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` added to the `server` block.                                           |
+| `.env`, `.env.example` | `STRIPE_SECRET_KEY=sk_test_placeholder`, `STRIPE_WEBHOOK_SECRET=whsec_placeholder`                                     |
 
 On Drizzle, `src/pay.server.ts` uses `drizzlePayStore(db, { purchases, payEvents })`; then run `npx weft db generate` and
 the migration applies on the next request. On another data layer it starts on `memoryPayStore()`, and you write a
@@ -129,13 +128,13 @@ the migration applies on the next request. On another data layer it starts on `m
 
 ### Setup checklist
 
-| Need | Where | Notes |
-| --- | --- | --- |
-| A database | `weft add` refuses without one | Holds the ledger. |
-| Auth | `weft add` refuses without it | A purchase belongs to `ctx.user.id`. |
-| `STRIPE_SECRET_KEY` | `.env`, server only | Replace the placeholder with a real test key. The placeholder is refused before anything is sent (PAY003). |
-| `STRIPE_WEBHOOK_SECRET` | `.env`, server only | Without it every webhook is refused (PAY011). |
-| A Stripe webhook endpoint | Stripe dashboard | URL `https://<your-app>/_weft/x/pay/stripe`. Events: `customer.subscription.*`, `checkout.session.*`, `charge.refunded`, `charge.dispute.*`. |
+| Need                      | Where                          | Notes                                                                                                                                        |
+| ------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| A database                | `weft add` refuses without one | Holds the ledger.                                                                                                                            |
+| Auth                      | `weft add` refuses without it  | A purchase belongs to `ctx.user.id`.                                                                                                         |
+| `STRIPE_SECRET_KEY`       | `.env`, server only            | Replace the placeholder with a real test key. The placeholder is refused before anything is sent (PAY003).                                   |
+| `STRIPE_WEBHOOK_SECRET`   | `.env`, server only            | Without it every webhook is refused (PAY011).                                                                                                |
+| A Stripe webhook endpoint | Stripe dashboard               | URL `https://<your-app>/_weft/x/pay/stripe`. Events: `customer.subscription.*`, `checkout.session.*`, `charge.refunded`, `charge.dispute.*`. |
 
 Nothing calls Stripe until a user checks out.
 
@@ -193,8 +192,7 @@ export const entitlements = query({
 export const checkout = mutation({
   auth: 'user',
   input: pay.input,
-  run: async ({ input, ctx }) =>
-    redirect(await pay.checkout(ctx, input), 303),
+  run: async ({ input, ctx }) => redirect(await pay.checkout(ctx, input), 303),
 })
 
 export const portal = mutation({
@@ -215,16 +213,10 @@ export default function Pricing() {
   const mine = entitlements.live()
   return (
     <section>
-      <button
-        type="button"
-        onClick={() => checkout({ product: 'pro', plan: 'year' })}
-      >
+      <button type="button" onClick={() => checkout({ product: 'pro', plan: 'year' })}>
         Go Pro · {price(pro, 'year').display}
       </button>
-      <button
-        type="button"
-        onClick={() => portal()}
-      >
+      <button type="button" onClick={() => portal()}>
         Manage
       </button>
       {mine.value?.includes('pro') && <p>You have Pro.</p>}
@@ -253,16 +245,16 @@ The buyer clicks, lands on Stripe Checkout, pays, and comes back to `urls.succes
 
 `product(def)` checks a definition and returns it frozen. It is the only place products are defined.
 
-| Field | Type | Default | What it does |
-| --- | --- | --- | --- |
-| `id` | `string` | required | Lowercase letters, digits and dashes (PAY021 otherwise). What `checkout` and `requires` name. |
-| `kind` | `'subscription' \| 'one-time' \| 'consumable'` | required | A subscription renews, a one-time purchase stays, a consumable is used up. |
-| `use` | `'digital' \| 'physical' \| 'service'` | required | What the buyer gets. |
-| `name` | `string` | the `id` | Display name at checkout. |
-| `plans` | `Record<string, Plan>` | none | Subscriptions only, and required for them. Each plan is `Amounts` plus optional `trialDays` and `interval`. |
-| `price` | `Amounts` | none | One-time and consumable products only. |
-| `grants` | `string[]` | `[]` | Entitlements a live purchase gives. |
-| `shipping` | `boolean` | `false` | Collect a shipping address at checkout. |
+| Field      | Type                                           | Default  | What it does                                                                                                |
+| ---------- | ---------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------- |
+| `id`       | `string`                                       | required | Lowercase letters, digits and dashes (PAY021 otherwise). What `checkout` and `requires` name.               |
+| `kind`     | `'subscription' \| 'one-time' \| 'consumable'` | required | A subscription renews, a one-time purchase stays, a consumable is used up.                                  |
+| `use`      | `'digital' \| 'physical' \| 'service'`         | required | What the buyer gets.                                                                                        |
+| `name`     | `string`                                       | the `id` | Display name at checkout.                                                                                   |
+| `plans`    | `Record<string, Plan>`                         | none     | Subscriptions only, and required for them. Each plan is `Amounts` plus optional `trialDays` and `interval`. |
+| `price`    | `Amounts`                                      | none     | One-time and consumable products only.                                                                      |
+| `grants`   | `string[]`                                     | `[]`     | Entitlements a live purchase gives.                                                                         |
+| `shipping` | `boolean`                                      | `false`  | Collect a shipping address at checkout.                                                                     |
 
 `Amounts` is `Record<currency, number>`: lowercase ISO codes, non-negative whole minor units. `{ usd: 999 }` is $9.99.
 A plan's interval is its name when the name is `day`, `week`, `month` or `year`; any other name needs `interval`.
@@ -297,32 +289,32 @@ three) for the reader's locale. Show `price(pro, 'month').display` instead of ty
 plugin mounts it as a `server.extension` at `/_weft/x/pay/...`. An app with no `src/pay.server.ts` has no route and no code
 from any of this.
 
-| Option | Type | Default | What it does |
-| --- | --- | --- | --- |
-| `catalog` | `Product[]` or `Record<string, Product>` | required | `import * as catalog from './pay/catalog'` works. |
-| `store` | `PayStore` | required | Where purchases and seen events live. |
-| `urls` | `{ success, cancel, portal? }` | required | Paths or URLs a buyer returns to. Never from the client. The portal returns to `portal`, else `cancel`. |
-| `user` | `(ctx) => string \| null \| undefined` | `ctx.user?.id` | Who a request is. |
-| `rail` | `string` | the only bound rail | Which rail takes payments when several are bound (PAY022 otherwise). |
-| `origin` | `string` | the request's origin | Absolute origin for `urls`, behind a proxy. |
-| `leeway` | `number` (ms) | 3 days | How long past a paid period access lasts, while a late renewal event arrives. |
-| `slot` | `() => Promise<…>` | `weft:slot/pay.rail` | Where rails come from. Leave it alone outside tests. |
+| Option    | Type                                     | Default              | What it does                                                                                            |
+| --------- | ---------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------- |
+| `catalog` | `Product[]` or `Record<string, Product>` | required             | `import * as catalog from './pay/catalog'` works.                                                       |
+| `store`   | `PayStore`                               | required             | Where purchases and seen events live.                                                                   |
+| `urls`    | `{ success, cancel, portal? }`           | required             | Paths or URLs a buyer returns to. Never from the client. The portal returns to `portal`, else `cancel`. |
+| `user`    | `(ctx) => string \| null \| undefined`   | `ctx.user?.id`       | Who a request is.                                                                                       |
+| `rail`    | `string`                                 | the only bound rail  | Which rail takes payments when several are bound (PAY022 otherwise).                                    |
+| `origin`  | `string`                                 | the request's origin | Absolute origin for `urls`, behind a proxy.                                                             |
+| `leeway`  | `number` (ms)                            | 3 days               | How long past a paid period access lasts, while a late renewal event arrives.                           |
+| `slot`    | `() => Promise<…>`                       | `weft:slot/pay.rail` | Where rails come from. Leave it alone outside tests.                                                    |
 
 What it returns, besides the `server.extension` members Weft uses:
 
-| Member | What it does |
-| --- | --- |
-| `pay.input` | A Standard Schema validator for a checkout mutation's `input`: `{ product, plan?, currency?, quantity? }`, checked against the catalog. `quantity` is a whole number under 1000. |
-| `pay.checkout(ctx, input)` | The hosted checkout URL for this buyer. Grants nothing. |
-| `pay.portal(ctx)` | Where this buyer manages or cancels. |
-| `pay.entitlements(userId)` | `{ has(id), list() }` for any user, as a job or webhook would read it. |
-| `pay.forContext(ctx)` | The same, for a request: what `ctx.entitlements` is. |
-| `pay.purchases(userId)` | The user's `Purchase` rows. |
-| `pay.refund(purchaseId)` | Asks the purchase's rail to refund it. |
-| `pay.webhook(rail, request, report?)` | One verified delivery: `{ response, tags }`. |
-| `pay.ingest(rail, events, report?)` | Apply events that were already verified. Anything else goes through `webhook`. |
-| `pay.use(rail)` / `pay.reset()` | Swap in a rail directly (what `fakePay` does), and go back to the slot. |
-| `pay.catalog` | The products, as a list. |
+| Member                                | What it does                                                                                                                                                                     |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pay.input`                           | A Standard Schema validator for a checkout mutation's `input`: `{ product, plan?, currency?, quantity? }`, checked against the catalog. `quantity` is a whole number under 1000. |
+| `pay.checkout(ctx, input)`            | The hosted checkout URL for this buyer. Grants nothing.                                                                                                                          |
+| `pay.portal(ctx)`                     | Where this buyer manages or cancels.                                                                                                                                             |
+| `pay.entitlements(userId)`            | `{ has(id), list() }` for any user, as a job or webhook would read it.                                                                                                           |
+| `pay.forContext(ctx)`                 | The same, for a request: what `ctx.entitlements` is.                                                                                                                             |
+| `pay.purchases(userId)`               | The user's `Purchase` rows.                                                                                                                                                      |
+| `pay.refund(purchaseId)`              | Asks the purchase's rail to refund it.                                                                                                                                           |
+| `pay.webhook(rail, request, report?)` | One verified delivery: `{ response, tags }`.                                                                                                                                     |
+| `pay.ingest(rail, events, report?)`   | Apply events that were already verified. Anything else goes through `webhook`.                                                                                                   |
+| `pay.use(rail)` / `pay.reset()`       | Swap in a rail directly (what `fakePay` does), and go back to the slot.                                                                                                          |
+| `pay.catalog`                         | The products, as a list.                                                                                                                                                         |
 
 ## Checkout, portal and webhooks
 
@@ -336,14 +328,14 @@ PAY024 (404).
 
 **Webhooks.** The rail posts to `/_weft/x/pay/<rail>`. For each delivery:
 
-| Step | Result |
-| --- | --- |
-| Not a `POST` | 405 |
-| No rail bound under that name | 404 |
-| Body over 1 MiB | 413 |
-| `verify` throws (bad or missing signature, a replay) | 400, and the reason goes to the server log, not the response |
-| `ingest` fails | 500, so the rail delivers it again |
-| Otherwise | `{"received":true}`, and the affected `entitlements:<user>` tags are invalidated |
+| Step                                                 | Result                                                                           |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Not a `POST`                                         | 405                                                                              |
+| No rail bound under that name                        | 404                                                                              |
+| Body over 1 MiB                                      | 413                                                                              |
+| `verify` throws (bad or missing signature, a replay) | 400, and the reason goes to the server log, not the response                     |
+| `ingest` fails                                       | 500, so the rail delivers it again                                               |
+| Otherwise                                            | `{"received":true}`, and the affected `entitlements:<user>` tags are invalidated |
 
 An event applies when it is newer than the purchase's last one by the rail's clock. On a tie, a terminal state wins: a
 refund and a renewal in the same second is a refund. The event id is recorded after the purchase is saved, so a crash in
@@ -353,10 +345,10 @@ between means a redelivery, not a lost event.
 
 The same on every rail:
 
-| State | Gives access |
-| --- | --- |
-| `active`, `trial`, `grace` | Yes, until `expires` plus `leeway` |
-| `pending`, `billing-retry`, `paused`, `expired`, `refunded`, `revoked` | No |
+| State                                                                  | Gives access                       |
+| ---------------------------------------------------------------------- | ---------------------------------- |
+| `active`, `trial`, `grace`                                             | Yes, until `expires` plus `leeway` |
+| `pending`, `billing-retry`, `paused`, `expired`, `refunded`, `revoked` | No                                 |
 
 ## Entitlements
 
@@ -370,12 +362,12 @@ import { redirect } from '@weft-js/start'
 if (!(await ctx.entitlements.has('pro'))) redirect('/pricing')
 ```
 
-| Way | Where | What happens without the entitlement |
-| --- | --- | --- |
-| `requires: ['pro']` | any `query` or `mutation` | A 403 with code `ENTITLEMENT_REQUIRED` |
-| `await ctx.entitlements.has(id)` | `query`, `mutation`, `load` | Whatever you do: redirect, hide, refuse |
-| `await ctx.entitlements.list()` | same | The sorted list |
-| `entitlementTag(userId)` | a query's `tags` | The tag a verified event invalidates: `entitlements:<user>` |
+| Way                              | Where                       | What happens without the entitlement                        |
+| -------------------------------- | --------------------------- | ----------------------------------------------------------- |
+| `requires: ['pro']`              | any `query` or `mutation`   | A 403 with code `ENTITLEMENT_REQUIRED`                      |
+| `await ctx.entitlements.has(id)` | `query`, `mutation`, `load` | Whatever you do: redirect, hide, refuse                     |
+| `await ctx.entitlements.list()`  | same                        | The sorted list                                             |
+| `entitlementTag(userId)`         | a query's `tags`            | The tag a verified event invalidates: `entitlements:<user>` |
 
 What the client shows is decoration; a check only on the client is PAY013. A query with `cache: { life }` needs
 `scope: 'user'` to read entitlements.
@@ -386,13 +378,13 @@ What the client shows is decoration; a check only on the client is PAY013. A que
 Checkout and the billing portal over Stripe's REST API, server side only, and verifies webhooks itself with WebCrypto
 HMAC-SHA256 on `<t>.<raw body>`, accepting any of several `v1` signatures while a secret rolls.
 
-| Option | Type | Default | What it does |
-| --- | --- | --- | --- |
-| `prices` | `Record<string, string>` | none | Stripe Price ids by `<product>.<plan>` or `<product>`. Without an entry the amount comes from the catalog as `price_data`. |
-| `api` | `string` | `https://api.stripe.com` | The API origin; point it at a local mock. |
-| `apiVersion` | `string` | `2025-09-30.clover` | Pinned, so an account's default version can't reshape the calls. |
-| `tolerance` | `number` (s) | `300` | How old a signed delivery may be before it is refused as a replay. |
-| `shippingCountries` | `string[]` | `['US', 'CA']` | Where a `shipping` product delivers. |
+| Option              | Type                     | Default                  | What it does                                                                                                               |
+| ------------------- | ------------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `prices`            | `Record<string, string>` | none                     | Stripe Price ids by `<product>.<plan>` or `<product>`. Without an entry the amount comes from the catalog as `price_data`. |
+| `api`               | `string`                 | `https://api.stripe.com` | The API origin; point it at a local mock.                                                                                  |
+| `apiVersion`        | `string`                 | `2025-09-30.clover`      | Pinned, so an account's default version can't reshape the calls.                                                           |
+| `tolerance`         | `number` (s)             | `300`                    | How old a signed delivery may be before it is refused as a replay.                                                         |
+| `shippingCountries` | `string[]`               | `['US', 'CA']`           | Where a `shipping` product delivers.                                                                                       |
 
 Keys come from the server environment, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. Don't pass a key as an option:
 plugin options are written into `.weft/slots/`, a generated file (PAY003).
@@ -415,12 +407,12 @@ export default defineConfig({
 
 How Stripe events map to the ledger:
 
-| Stripe event | Ledger effect |
-| --- | --- |
-| `customer.subscription.*` | `active`, `trialing` → `trial`, `past_due` → `grace`, `unpaid` → `billing-retry`, `paused`, `canceled` and `incomplete_expired` → `expired`, `incomplete` → `pending`; `expires` from the period end |
-| `checkout.session.completed`, `…async_payment_succeeded`, `…async_payment_failed` | One-time payments only: `active`, `pending` while unpaid, or `expired` on failure |
-| `charge.refunded` | `refunded`, for a full refund only; a partial refund keeps what was bought |
-| `charge.dispute.created` / `.closed` | `revoked`, then `active` again if the dispute is won |
+| Stripe event                                                                      | Ledger effect                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `customer.subscription.*`                                                         | `active`, `trialing` → `trial`, `past_due` → `grace`, `unpaid` → `billing-retry`, `paused`, `canceled` and `incomplete_expired` → `expired`, `incomplete` → `pending`; `expires` from the period end |
+| `checkout.session.completed`, `…async_payment_succeeded`, `…async_payment_failed` | One-time payments only: `active`, `pending` while unpaid, or `expired` on failure                                                                                                                    |
+| `charge.refunded`                                                                 | `refunded`, for a full refund only; a partial refund keeps what was bought                                                                                                                           |
+| `charge.dispute.created` / `.closed`                                              | `revoked`, then `active` again if the dispute is won                                                                                                                                                 |
 
 Who bought what travels in metadata (`weft_user`, `weft_product`, `weft_plan`) on the session, the subscription and the
 payment intent. `pay.refund()` refunds one-time payments (`pi_…`); a subscription is cancelled in the portal.
@@ -429,13 +421,13 @@ payment intent. `pay.refund()` refunds one-time payments (`pi_…`); a subscript
 
 A `PayStore` is five methods:
 
-| Method | What it does |
-| --- | --- |
-| `seen(eventId)` | Whether an event was already applied. |
-| `mark(eventId, at)` | Record that it was. |
-| `purchase(id)` | One `Purchase` by id, or `null`. |
-| `save(purchase)` | Insert or replace by `id`. |
-| `byUser(user)` | Every purchase of a user. |
+| Method              | What it does                          |
+| ------------------- | ------------------------------------- |
+| `seen(eventId)`     | Whether an event was already applied. |
+| `mark(eventId, at)` | Record that it was.                   |
+| `purchase(id)`      | One `Purchase` by id, or `null`.      |
+| `save(purchase)`    | Insert or replace by `id`.            |
+| `byUser(user)`      | Every purchase of a user.             |
 
 `drizzlePayStore(db, { purchases, payEvents })` from `@weft-js/pay/drizzle` implements it on Postgres, SQLite or MySQL, with
 the tables `weft add pay` writes (times are milliseconds, so they need a 64-bit integer column on Postgres and MySQL). It
@@ -450,13 +442,13 @@ and `user`, `product` and `plan` stay `null` until an event names them (a disput
 
 A rail is a plugin that provides the `pay.rail` slot for the `server` side and implements `PayRail` from `@weft-js/pay`:
 
-| Member | What it does |
-| --- | --- |
-| `id` | The rail's name, and its webhook path: `/_weft/x/pay/<id>`. |
-| `checkout(request)` | Open a hosted page for a `CheckoutRequest` (user, optional customer, the catalog line, return URLs, an idempotency key). Returns `{ url }`. |
-| `portal({ customer, returnUrl })` | Returns `{ url }`. |
-| `verify({ body, headers })` | Gets the exact bytes received and returns normalised `RailEvent`s, or throws `PayError('PAY011', …)` for anything it can't prove. |
-| `refund({ purchase })` | Optional. |
+| Member                            | What it does                                                                                                                                |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                              | The rail's name, and its webhook path: `/_weft/x/pay/<id>`.                                                                                 |
+| `checkout(request)`               | Open a hosted page for a `CheckoutRequest` (user, optional customer, the catalog line, return URLs, an idempotency key). Returns `{ url }`. |
+| `portal({ customer, returnUrl })` | Returns `{ url }`.                                                                                                                          |
+| `verify({ body, headers })`       | Gets the exact bytes received and returns normalised `RailEvent`s, or throws `PayError('PAY011', …)` for anything it can't prove.           |
+| `refund({ purchase })`            | Optional.                                                                                                                                   |
 
 Hold it to the contract with `payRailSuite` from `@weft-js/pay/test`:
 
@@ -509,31 +501,31 @@ test('checkout grants nothing; the verified event does', async () => {
 })
 ```
 
-| Member | What it does |
-| --- | --- |
-| `complete(user?)` | The buyer finishes the newest open checkout, or that user's. Returns the purchase id. |
-| `abandon(user?)` | The buyer closes the page. Nothing is delivered. |
-| `buy(user, product, plan?)` | A whole purchase with no page in the way. |
-| `simulate(what, purchase?)` | `renewal`, `renewal-failed`, `grace-expired`, `recovered`, `cancel`, `pause`, `resume`, `refund`, `revoke`. Defaults to the newest purchase. `renewal` and `renewal-failed` move `clock` to the period's end when it is installed. |
-| `redeliver()` | The last event again. |
-| `deliver(event, { forged? })` | Any event, in any order. `forged: true` signs with the wrong key, so it answers 400. |
-| `sessions`, `deliveries` | Every checkout opened, and every delivery with the status the app answered. |
-| `entitlements(user)`, `purchases(user)` | Read the ledger. |
-| `pay`, `rail` | The ledger in use and the fake rail. |
+| Member                                  | What it does                                                                                                                                                                                                                       |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `complete(user?)`                       | The buyer finishes the newest open checkout, or that user's. Returns the purchase id.                                                                                                                                              |
+| `abandon(user?)`                        | The buyer closes the page. Nothing is delivered.                                                                                                                                                                                   |
+| `buy(user, product, plan?)`             | A whole purchase with no page in the way.                                                                                                                                                                                          |
+| `simulate(what, purchase?)`             | `renewal`, `renewal-failed`, `grace-expired`, `recovered`, `cancel`, `pause`, `resume`, `refund`, `revoke`. Defaults to the newest purchase. `renewal` and `renewal-failed` move `clock` to the period's end when it is installed. |
+| `redeliver()`                           | The last event again.                                                                                                                                                                                                              |
+| `deliver(event, { forged? })`           | Any event, in any order. `forged: true` signs with the wrong key, so it answers 400.                                                                                                                                               |
+| `sessions`, `deliveries`                | Every checkout opened, and every delivery with the status the app answered.                                                                                                                                                        |
+| `entitlements(user)`, `purchases(user)` | Read the ledger.                                                                                                                                                                                                                   |
+| `pay`, `rail`                           | The ledger in use and the fake rail.                                                                                                                                                                                               |
 
 `fakePay` registers the ledger with `net.extension`, which resets it after each test. A live key in a test is PAY031.
 
 ## API reference
 
-| Entry | Side | Exports |
-| --- | --- | --- |
-| `@weft-js/pay` | client and server | `product`, `price`, `entitlementTag`, `PayError`; types `Product`, `ProductDef`, `ProductKind`, `ProductUse`, `Plan`, `Amounts`, `Interval`, `Price`, `PurchaseState`, `PayRail`, `RailEvent`, `CheckoutRequest`, `CheckoutLine` |
-| `@weft-js/pay/server` | server | `definePay`, `memoryPayStore`, `extension`; types `Pay`, `PayOptions`, `PayStore`, `Purchase`, `Entitlements`, `CheckoutInput`, `PayContext`, `PayReport` |
-| `@weft-js/pay/drizzle` | server | `drizzlePayStore` |
-| `@weft-js/pay/test` | tests | `fakePay`, `payRailSuite`; types `FakePay`, `PayScenario`, `PayRailSuiteOptions`, `Check` |
-| `@weft-js/pay/plugin` | config | `pay` (default and named): the `server.extension`, the PAY checks, `weft docs pay` and `weft add pay` |
-| `@weft-js/pay/stripe` | server | `stripeRail`; type `StripeOptions` |
-| `@weft-js/pay/stripe/plugin` | config | `stripe` (default and named): the `pay.rail` provider |
+| Entry                        | Side              | Exports                                                                                                                                                                                                                          |
+| ---------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@weft-js/pay`               | client and server | `product`, `price`, `entitlementTag`, `PayError`; types `Product`, `ProductDef`, `ProductKind`, `ProductUse`, `Plan`, `Amounts`, `Interval`, `Price`, `PurchaseState`, `PayRail`, `RailEvent`, `CheckoutRequest`, `CheckoutLine` |
+| `@weft-js/pay/server`        | server            | `definePay`, `memoryPayStore`, `extension`; types `Pay`, `PayOptions`, `PayStore`, `Purchase`, `Entitlements`, `CheckoutInput`, `PayContext`, `PayReport`                                                                        |
+| `@weft-js/pay/drizzle`       | server            | `drizzlePayStore`                                                                                                                                                                                                                |
+| `@weft-js/pay/test`          | tests             | `fakePay`, `payRailSuite`; types `FakePay`, `PayScenario`, `PayRailSuiteOptions`, `Check`                                                                                                                                        |
+| `@weft-js/pay/plugin`        | config            | `pay` (default and named): the `server.extension`, the PAY checks, `weft docs pay` and `weft add pay`                                                                                                                            |
+| `@weft-js/pay/stripe`        | server            | `stripeRail`; type `StripeOptions`                                                                                                                                                                                               |
+| `@weft-js/pay/stripe/plugin` | config            | `stripe` (default and named): the `pay.rail` provider                                                                                                                                                                            |
 
 Importing `@weft-js/pay/server` or `@weft-js/pay/drizzle` from client code is PAY017.
 
@@ -609,44 +601,44 @@ amount; `price(pro, 'month', { currency: 'eur' }).display` shows it.
 
 `weft check` and `weft build` run the PAY checks. `weft docs PAY012` prints any code's page.
 
-| Code | When | Fix |
-| --- | --- | --- |
-| PAY003 | A Stripe key in source, a server secret read in client code, a key in plugin options, or the placeholder key still in `.env` at run time | Move it to the server env; roll any real key that was committed |
-| PAY004 | Paid state written on the client after `checkout()` | Read `entitlements`: a grant arrives from a verified event |
-| PAY005 | A price typed into a page that sells something (warning) | `price(product, plan).display` |
-| PAY008 | A float or currency-less amount in `product()` | Whole minor units: `{ usd: 999 }` |
-| PAY010 | A checkout mutation without `auth: 'user'`, or a checkout with no signed-in user (401) | Add `auth: 'user'` |
+| Code   | When                                                                                                                                                  | Fix                                                                |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| PAY003 | A Stripe key in source, a server secret read in client code, a key in plugin options, or the placeholder key still in `.env` at run time              | Move it to the server env; roll any real key that was committed    |
+| PAY004 | Paid state written on the client after `checkout()`                                                                                                   | Read `entitlements`: a grant arrives from a verified event         |
+| PAY005 | A price typed into a page that sells something (warning)                                                                                              | `price(product, plan).display`                                     |
+| PAY008 | A float or currency-less amount in `product()`                                                                                                        | Whole minor units: `{ usd: 999 }`                                  |
+| PAY010 | A checkout mutation without `auth: 'user'`, or a checkout with no signed-in user (401)                                                                | Add `auth: 'user'`                                                 |
 | PAY011 | A webhook handler with no signature check, a `verify` that ignores `headers`, no `STRIPE_WEBHOOK_SECRET`, or a delivery that fails verification (400) | Delete the handler: `/_weft/x/pay/<rail>` verifies. Set the secret |
-| PAY012 | A rail's price or product id in client code | Name the catalog; map ids in `stripe({ prices })` |
-| PAY013 | An entitlement checked only on the client | `requires: [...]`, or `await ctx.entitlements.has(...)` |
-| PAY014 | The plugin with no `src/pay.server.ts`: no webhook is mounted | Default-export `definePay({ … })` from it |
-| PAY015 | `ctx.entitlements.has()` without `await` | Await it (`weft fix` does, in an `async` function) |
-| PAY016 | `memoryPayStore()` in `src/pay.server.ts` (warning); a production server refuses to start | `drizzlePayStore` or your own `PayStore` |
-| PAY017 | `@weft-js/pay/server` or `/drizzle` imported in client code | Import them in a server module |
-| PAY018 | `src/pay.server.ts` with no `pay.rail` provider | `weft add pay-stripe` |
-| PAY031 | A live key in a test | `fakePay` |
+| PAY012 | A rail's price or product id in client code                                                                                                           | Name the catalog; map ids in `stripe({ prices })`                  |
+| PAY013 | An entitlement checked only on the client                                                                                                             | `requires: [...]`, or `await ctx.entitlements.has(...)`            |
+| PAY014 | The plugin with no `src/pay.server.ts`: no webhook is mounted                                                                                         | Default-export `definePay({ … })` from it                          |
+| PAY015 | `ctx.entitlements.has()` without `await`                                                                                                              | Await it (`weft fix` does, in an `async` function)                 |
+| PAY016 | `memoryPayStore()` in `src/pay.server.ts` (warning); a production server refuses to start                                                             | `drizzlePayStore` or your own `PayStore`                           |
+| PAY017 | `@weft-js/pay/server` or `/drizzle` imported in client code                                                                                           | Import them in a server module                                     |
+| PAY018 | `src/pay.server.ts` with no `pay.rail` provider                                                                                                       | `weft add pay-stripe`                                              |
+| PAY031 | A live key in a test                                                                                                                                  | `fakePay`                                                          |
 
 At run time:
 
-| Code | Status | Means |
-| --- | --- | --- |
-| PAY021 | 404 | No such product, plan or currency in the catalog (also thrown by `product()` for a bad definition) |
-| PAY022 | 500 / 501 / 400 | No rail chosen while several are bound, a named rail isn't bound, or the rail can't refund this purchase |
-| PAY023 | 409 | The user already holds this subscription |
-| PAY024 | 404 | Nothing to manage or refund |
-| PAY030 | 502 / 503 | Stripe refused the call (503 when it rate-limited) |
-| P101 | 500 | `pay.rail` has no provider in `plugins` |
-| `ENTITLEMENT_REQUIRED` | 403 | A `requires` entitlement is missing |
-| `E_PAY` | 500 | Applying a verified delivery failed; the rail will redeliver |
+| Code                   | Status          | Means                                                                                                    |
+| ---------------------- | --------------- | -------------------------------------------------------------------------------------------------------- |
+| PAY021                 | 404             | No such product, plan or currency in the catalog (also thrown by `product()` for a bad definition)       |
+| PAY022                 | 500 / 501 / 400 | No rail chosen while several are bound, a named rail isn't bound, or the rail can't refund this purchase |
+| PAY023                 | 409             | The user already holds this subscription                                                                 |
+| PAY024                 | 404             | Nothing to manage or refund                                                                              |
+| PAY030                 | 502 / 503       | Stripe refused the call (503 when it rate-limited)                                                       |
+| P101                   | 500             | `pay.rail` has no provider in `plugins`                                                                  |
+| `ENTITLEMENT_REQUIRED` | 403             | A `requires` entitlement is missing                                                                      |
+| `E_PAY`                | 500             | Applying a verified delivery failed; the rail will redeliver                                             |
 
 ## Related packages
 
-| Package | What it is |
-| --- | --- |
+| Package                                                          | What it is                                                                      |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | [`@weft-js/start`](https://www.npmjs.com/package/@weft-js/start) | Server functions, `ctx`, `server.extension` and live queries that pay builds on |
-| [`@weft-js/core`](https://www.npmjs.com/package/@weft-js/core) | The plugin API (`definePlugin`, slots) and the test kit (`net`, `clock`) |
-| [`@weft-js/db`](https://www.npmjs.com/package/@weft-js/db) | The database layer `drizzlePayStore` runs on |
-| [`@weft-js/cli`](https://www.npmjs.com/package/@weft-js/cli) | `weft add pay`, `weft check`, `weft docs pay` and `weft docs plugins` |
+| [`@weft-js/core`](https://www.npmjs.com/package/@weft-js/core)   | The plugin API (`definePlugin`, slots) and the test kit (`net`, `clock`)        |
+| [`@weft-js/db`](https://www.npmjs.com/package/@weft-js/db)       | The database layer `drizzlePayStore` runs on                                    |
+| [`@weft-js/cli`](https://www.npmjs.com/package/@weft-js/cli)     | `weft add pay`, `weft check`, `weft docs pay` and `weft docs plugins`           |
 
 ## Contributing
 

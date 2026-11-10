@@ -22,6 +22,7 @@ export const pro = product({
 ```
 
 <!-- example: skip needs what `weft add pay` writes -->
+
 ```tsx
 // a page
 import { price } from '@weft-js/pay'
@@ -32,10 +33,7 @@ export default function Pricing() {
   const mine = entitlements.live()
   return (
     <section>
-      <button
-        type="button"
-        onClick={() => checkout({ product: 'pro', plan: 'year' })}
-      >
+      <button type="button" onClick={() => checkout({ product: 'pro', plan: 'year' })}>
         Go Pro · {price(pro, 'year').display}
       </button>
       <button type="button" onClick={() => portal()}>
@@ -64,6 +62,7 @@ redelivers. Each order event pokes `orders` and `orderTag(ref)`. `urls.order` an
 **Enforce on the server.** What the client shows is decoration (PAY013):
 
 <!-- example: skip fragments of a server module -->
+
 ```ts
 export const report = query({
   auth: 'user',
@@ -91,6 +90,11 @@ changes. A rail implements `PayRail` from `@weft-js/pay`: `checkout`, `portal`, 
 `server` side, and passes `payRailSuite` from `@weft-js/pay/test`. `verify` gets the exact body and throws
 `PayError('PAY011', …)` for anything it can't prove. An app with no `src/pay.server.ts` has no route and no code from any
 of this.
+
+`square({ environment?, api?, apiVersion? })` from `@weft-js/pay/square/plugin` is the Square rail: one-time payments
+through payment links, so web orders land beside the shop's card readers. Env: `SQUARE_ACCESS_TOKEN`, `SQUARE_LOCATION_ID`,
+`SQUARE_WEBHOOK_SIGNATURE_KEY`, `SQUARE_WEBHOOK_URL` (the exact URL given to Square, which it signs), `SQUARE_ENV=sandbox`.
+Subscribe the webhook to `payment.created` and `payment.updated`. Subscriptions and `portal` are PAY022 on it.
 
 `stripe({ prices?, api?, apiVersion?, tolerance?, shippingCountries? })` from `@weft-js/pay/stripe/plugin`. It reads
 `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` from the server env. Don't put a key in its options: they land in a
@@ -121,22 +125,22 @@ installed. `fake.redeliver()`, `fake.deliver(event, { forged: true })`, `fake.de
 
 ## Diagnostics
 
-| Code | Catches |
-|---|---|
-| PAY003 | A key in the source, or a server secret in client code |
-| PAY004 | Paid state written on the client after `checkout()` |
-| PAY005 | A price typed into a page that sells something (warning) |
-| PAY008 | A float or a currency-less amount in `product()` |
-| PAY010 | A checkout mutation without `auth: 'user'` |
-| PAY011 | A webhook left unverified, or no `STRIPE_WEBHOOK_SECRET` |
-| PAY012 | A rail's price or product id in client code |
-| PAY013 | An entitlement checked only on the client |
-| PAY014 | A rail bound with no `src/pay.server.ts` |
-| PAY015 | `ctx.entitlements.has()` tested without `await` |
-| PAY016 | `memoryPayStore()` in `src/pay.server.ts` (warning) |
+| Code   | Catches                                                     |
+| ------ | ----------------------------------------------------------- |
+| PAY003 | A key in the source, or a server secret in client code      |
+| PAY004 | Paid state written on the client after `checkout()`         |
+| PAY005 | A price typed into a page that sells something (warning)    |
+| PAY008 | A float or a currency-less amount in `product()`            |
+| PAY010 | A checkout mutation without `auth: 'user'`                  |
+| PAY011 | A webhook left unverified, or no `STRIPE_WEBHOOK_SECRET`    |
+| PAY012 | A rail's price or product id in client code                 |
+| PAY013 | An entitlement checked only on the client                   |
+| PAY014 | A rail bound with no `src/pay.server.ts`                    |
+| PAY015 | `ctx.entitlements.has()` tested without `await`             |
+| PAY016 | `memoryPayStore()` in `src/pay.server.ts` (warning)         |
 | PAY017 | `@weft-js/pay/server` or `/drizzle` imported in client code |
-| PAY018 | `src/pay.server.ts` with no `pay.rail` provider |
-| PAY031 | A live key in a test |
+| PAY018 | `src/pay.server.ts` with no `pay.rail` provider             |
+| PAY031 | A live key in a test                                        |
 
 At run time: PAY021 (not in the catalog), PAY022 (no rail chosen), PAY023 (already subscribed, 409), PAY024 (nothing to
 manage or refund), PAY030 (the rail refused). Native rails, store policy and `weft pay sync` aren't built.
