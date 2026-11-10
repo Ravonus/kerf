@@ -109,7 +109,7 @@ export async function poster({ enc, source, stem, width, duration, o }) {
   if (o.placeholder) {
     const stats = await sharp(png).stats()
     asset.dominant = `#${['r', 'g', 'b'].map((c) => stats.dominant[c].toString(16).padStart(2, '0')).join('')}`
-    await withPlaceholder(asset, files, sharp(png), stem, o, short)
+    await withPlaceholder(asset, files, sharp(png), stem, o)
   }
   return { asset, files }
 }

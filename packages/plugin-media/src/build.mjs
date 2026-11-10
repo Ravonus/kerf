@@ -288,7 +288,7 @@ async function raster({ bytes, name, stem, audio }, o, encode) {
   }
   if (o.placeholder) {
     asset.dominant = hex((await base().stats()).dominant)
-    await withPlaceholder(asset, files, base(), stem, o, short)
+    await withPlaceholder(asset, files, base(), stem, o)
   }
   return { asset, files, diagnostics }
 }
