@@ -26,7 +26,10 @@ export class Engine {
   last = 0
   dispatching = false
   measured = false
+  /** DOM thumbs follow a CSS scroll timeline, on the compositor: frames leave their position alone. */
+  timeline = false
   private dirty = false
+  private seen = 0
   /** Runs after each frame's writes: the bars draw here. */
   onFrame: (now: number) => boolean = () => false
   /** Runs after an autoscroll step, so a held selection can follow the content. */
@@ -234,15 +237,21 @@ export class Engine {
 
   /** The browser moved the viewport (focus, find, an anchor, someone else's scrollTop): adopt it. */
   adopt() {
+    const t = performance.now()
+    const dt = t - this.seen
+    this.seen = t
     for (const a of this.axes) {
       const now = a.axis === 'y' ? this.vp.scrollTop : this.vp.scrollLeft
       if (Math.abs(now - a.written) <= 1) continue
+      a.v = dt > 0 && dt < 100 ? (now - a.pos) / dt : 0
       a.anim = null
       a.pos = a.written = now
       this.source = 'native'
       this.dirty = true
     }
-    if (this.dirty) this.wake()
+    if (!this.dirty) return
+    this.onActivity()
+    this.wake()
   }
 
   private step(a: AxisState, now: number, dt: number) {
@@ -329,7 +338,8 @@ export class Engine {
         x.over || y.over ? `translate3d(${-x.over}px, ${-y.over}px, 0)` : ''
       moved = true
     }
-    if (moved && this.o.syncEvents) {
+    // The browser fires its own in native mode, in the frame it draws.
+    if (moved && this.o.syncEvents && this.o.mode === 'engine') {
       this.dispatching = true
       this.vp.dispatchEvent(new Event('scroll'))
       this.dispatching = false

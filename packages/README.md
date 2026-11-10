@@ -62,7 +62,7 @@ where it has one.
 | [`@weft-js/plugin-media`](https://www.npmjs.com/package/@weft-js/plugin-media) | Image encoding at build time (sharp and SVGO: AVIF with a fallback, a quality search, width ladders, placeholders), the upload route, and checks M001–M019. | Published on npm | [plugin-media/](https://github.com/Ravonus/weft/tree/main/packages/plugin-media) |
 | [`@weft-js/plugin-media-ffmpeg`](https://www.npmjs.com/package/@weft-js/plugin-media-ffmpeg) | Video and audio encoding (AV1, VP9, HEVC, H.264, Opus, AAC) through an ffmpeg you install. | Published on npm | [plugin-media-ffmpeg/](https://github.com/Ravonus/weft/tree/main/packages/plugin-media-ffmpeg) |
 | [`@weft-js/plugin-surface-keel`](https://www.npmjs.com/package/@weft-js/plugin-surface-keel) | The `keel-pixel` surface kind: KEEL's WebGL2 pixel renderer and theme recipes. | Published on npm | [plugin-surface-keel/](https://github.com/Ravonus/weft/tree/main/packages/plugin-surface-keel) |
-| [`@weft-js/scroll`](https://www.npmjs.com/package/@weft-js/scroll) | Scrolling run in JavaScript: native-feeling wheel, touch, keys and focus, with bars drawn in the DOM or on a canvas. | Next release | [scroll/](https://github.com/Ravonus/weft/tree/main/packages/scroll) |
+| [`@weft-js/scroll`](https://www.npmjs.com/package/@weft-js/scroll) | Custom scrollbars in the DOM or on a canvas, over the browser's scrolling (on the compositor) or a JavaScript engine. | Next release | [scroll/](https://github.com/Ravonus/weft/tree/main/packages/scroll) |
 
 ### Payments
 

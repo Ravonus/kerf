@@ -36,7 +36,8 @@ export function touchInput(e: Engine) {
   const onDown = (ev: PointerEvent) => {
     if (g?.id === ev.pointerId || !ev.isPrimary) return
     const mouse = ev.pointerType === 'mouse'
-    if (mouse ? !e.o.grab || ev.button !== 0 : e.o.touch !== 'js') return
+    const js = e.o.touch === 'js' && e.o.mode === 'engine'
+    if (mouse ? !e.o.grab || ev.button !== 0 : !js) return
     const chain = chainFrom(e)
     let caught = false
     for (const s of chain)

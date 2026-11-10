@@ -1,80 +1,23 @@
 // @vitest-environment node
-// The scroller in real browsers, from its real source and stylesheet: wheel, keys, focus, the bars, touch, nesting,
+// Engine mode in real browsers, from the real source and stylesheet: wheel, keys, focus, the bars, touch, nesting,
 // selection autoscroll, right-to-left, reduced motion, accessibility and a 100,000-row virtual list.
-import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
-import { rolldown } from 'rolldown'
 import type * as Playwright from 'playwright-core'
 import type * as Scroll from '../src/index'
-import type * as Canvas from '../src/canvas'
 import type * as Virtual from '../../warp-core/src/virtual'
+import { AREA, open as openArea, rows, run, settle, top, type Case } from './fixtures/browser'
 
-declare global {
-  interface Window {
-    scroll_: typeof Scroll & typeof Canvas & typeof Virtual
-    s: Scroll.Scroller
-    log: Scroll.ScrollState[]
-  }
-}
-
-const pw = createRequire(import.meta.url)('playwright-core') as typeof Playwright
-vi.setConfig({ testTimeout: 30_000, hookTimeout: 120_000 })
-
-const at = (p: string) => fileURLToPath(new URL(p, import.meta.url))
-const css = readFileSync(at('../styles/scroll.css'), 'utf8')
-let bundle = ''
-beforeAll(async () => {
-  const entry = at('./fixtures/browser-entry.ts')
-  const build = await rolldown({ input: entry })
-  bundle = (await build.generate({ format: 'iife', name: 'scroll_' })).output[0].code
-})
-
-const rows = (n: number, tag = 'p') =>
-  Array.from(
-    { length: n },
-    (_, i) => `<${tag} style="margin:0;height:40px">Row ${i}</${tag}>`,
-  ).join('')
-const AREA = (inner: string, style = 'width:300px;height:200px') =>
-  `<div id="root" style="${style}"><div data-part="viewport"><div data-part="content">${inner}</div></div></div>`
-
-async function open(
+/** Every case here runs the engine's own input. */
+const open = (
   page: Playwright.Page,
   body: string,
-  options: object = {},
+  options: Scroll.ScrollOptions = {},
   dir = 'ltr',
   paint = false,
-) {
-  await page.setContent(
-    `<!doctype html><html dir="${dir}"><head><style>body{margin:0;font:16px/1 sans-serif}${css}</style></head><body>${body}</body></html>`,
-  )
-  await page.addScriptTag({ content: bundle })
-  await page.evaluate(
-    ([o, canvas]) => {
-      window.log = []
-      const opts: Scroll.ScrollOptions = { ...o, onScroll: (st) => window.log.push(st) }
-      if (canvas) opts.renderer = window.scroll_.canvas()
-      window.s = window.scroll_.scroller(document.getElementById('root')!, opts)
-    },
-    [options, paint] as const,
-  )
-  await page.evaluate(
-    () =>
-      new Promise<void>((r) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => r()))
-      }),
-  )
-}
-const top = (page: Playwright.Page, sel = '#root [data-part="viewport"]') =>
-  page.$eval(sel, (el) => el.scrollTop)
-const settle = (page: Playwright.Page, ms = 450) => page.waitForTimeout(ms)
-
-const engines = process.env.WEFT_WEBKIT
-  ? (['chromium', 'firefox', 'webkit'] as const)
-  : (['chromium', 'firefox'] as const)
+) => openArea(page, body, { mode: 'engine', ...options }, dir, paint)
 
 /** Each case gets a fresh page in each browser. */
-const cases: Record<string, (page: Playwright.Page) => Promise<void>> = {
+const cases: Record<string, Case> = {
   'no native bar takes room, and the wheel scrolls with the thumb following': async (page) => {
     await open(page, AREA(rows(50)))
     const widths = await page.$eval('#root [data-part="viewport"]', (el: HTMLElement) => [
@@ -223,7 +166,9 @@ const cases: Record<string, (page: Playwright.Page) => Promise<void>> = {
     async (page) => {
       const inner = `<div id="inner" style="width:200px;height:100px"><div data-part="viewport"><div data-part="content">${rows(5)}</div></div></div>`
       await open(page, AREA(`${inner}${rows(30)}`))
-      await page.evaluate(() => window.scroll_.scroller(document.getElementById('inner')!))
+      await page.evaluate(() =>
+        window.scroll_.scroller(document.getElementById('inner')!, { mode: 'engine' }),
+      )
       await page.mouse.move(50, 50)
       await page.mouse.wheel(0, 500)
       await settle(page)
@@ -373,20 +318,4 @@ const cases: Record<string, (page: Playwright.Page) => Promise<void>> = {
   },
 }
 
-describe.each(engines)('%s', (name) => {
-  let browser: Playwright.Browser
-  let page: Playwright.Page
-  beforeAll(async () => {
-    browser = await pw[name].launch()
-  })
-  afterAll(async () => {
-    await browser?.close()
-  })
-  beforeEach(async () => {
-    page = await browser.newPage({ viewport: { width: 800, height: 600 } })
-  })
-  afterEach(async () => {
-    await page.close()
-  })
-  for (const [title, run] of Object.entries(cases)) test(title, () => run(page))
-})
+run(cases)

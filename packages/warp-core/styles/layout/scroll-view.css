@@ -1,6 +1,6 @@
 /* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
 @layer warp.layout {
-/* ScrollView — scrolling run in JavaScript by @weft-js/scroll, whose stylesheet lays out the bars. Here they take
+/* ScrollView — custom bars by @weft-js/scroll, whose stylesheet lays out the bars. Here they take
    Warp's ink, focus ring and timing; a page can still set any --scroll-* property itself. */
 :where([data-scope="scroll-view"]) {
   --scroll-color: color-mix(in oklab, var(--warp-color-text) 24%, transparent);

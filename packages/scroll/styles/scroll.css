@@ -1,6 +1,7 @@
 /* @weft-js/scroll: the root, viewport and bars. Every look is a custom property, so a theme or the `bar` options
    restyle DOM bars and canvas bars alike. Nothing here declares them, so any layer or theme may: the defaults are the
-   fallbacks. Before the script runs the viewport scrolls natively. */
+   fallbacks. Before the script runs the viewport scrolls natively, with its own bars; in native mode it keeps
+   scrolling natively after, with those bars hidden. */
 :where([data-scroll]) {
   position: relative;
   overflow: hidden;
@@ -12,6 +13,7 @@
   overflow: auto;
   box-sizing: border-box;
   outline-offset: -2px;
+  scroll-behavior: auto;
 }
 :where([data-scroll][data-axes='y'] > [data-part='viewport']) {
   overflow-x: hidden;
@@ -19,12 +21,21 @@
 :where([data-scroll][data-axes='x'] > [data-part='viewport']) {
   overflow-y: hidden;
 }
-:where([data-scroll][data-ready] > [data-part='viewport']) {
+:where([data-scroll][data-ready][data-mode='engine'] > [data-part='viewport']) {
   overflow: hidden;
   overscroll-behavior: contain;
 }
-:where([data-scroll][data-ready] > [data-part='viewport'][data-touch='js']) {
+:where([data-scroll][data-ready][data-mode='engine'] > [data-part='viewport'][data-touch='js']) {
   touch-action: pinch-zoom;
+}
+:where([data-scroll][data-ready][data-mode='native'] > [data-part='viewport']) {
+  scrollbar-width: none;
+}
+:where([data-scroll][data-ready][data-mode='native'] > [data-part='viewport'])::-webkit-scrollbar {
+  display: none;
+}
+:where([data-scroll][data-ready][data-mode='native'][data-chain='contain'] > [data-part='viewport']) {
+  overscroll-behavior: contain;
 }
 :where([data-scroll] [data-part='viewport']:focus:not(:focus-visible)) {
   outline: none;
@@ -146,6 +157,41 @@
 :where([data-scroll] [data-part='scrollbar'][data-active] > [data-part='thumb']) {
   background: var(--scroll-active-color, color-mix(in srgb, currentColor 60%, transparent));
 }
+/* Native mode with DOM bars: the viewport's scroll position drives each thumb through a scroll timeline, which the
+   browser runs on the compositor, so the thumb keeps up while the main thread is busy. The script sets the two ends
+   and only sets `data-timeline` where the browser supports it; elsewhere it moves the thumb itself. */
+:where([data-scroll][data-timeline]) {
+  timeline-scope: --scroll-timeline-y, --scroll-timeline-x;
+}
+:where([data-scroll][data-timeline] > [data-part='viewport']) {
+  scroll-timeline-name: --scroll-timeline-y, --scroll-timeline-x;
+  scroll-timeline-axis: y, x;
+}
+:where([data-scroll][data-timeline] > [data-part='scrollbar'][data-orientation='vertical'] > [data-part='thumb']) {
+  animation: scroll-thumb-y linear both;
+  animation-timeline: --scroll-timeline-y;
+}
+:where([data-scroll][data-timeline] > [data-part='scrollbar'][data-orientation='horizontal'] > [data-part='thumb']) {
+  animation: scroll-thumb-x linear both;
+  animation-timeline: --scroll-timeline-x;
+}
+@keyframes scroll-thumb-y {
+  from {
+    transform: translate3d(0, var(--scroll-thumb-start, 0px), 0);
+  }
+  to {
+    transform: translate3d(0, var(--scroll-thumb-end, 0px), 0);
+  }
+}
+@keyframes scroll-thumb-x {
+  from {
+    transform: translate3d(var(--scroll-thumb-start, 0px), 0, 0);
+  }
+  to {
+    transform: translate3d(var(--scroll-thumb-end, 0px), 0, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :where([data-scroll]) {
     --scroll-fade: 0ms;

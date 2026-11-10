@@ -4,12 +4,12 @@ export const scrolling: Doc[] = [
   {
     component: 'ScrollView',
     summary:
-      'A scroll area run in JavaScript: native feel, the same in every browser, bars you style or paint.',
+      'A scroll area with bars you style or paint, kept moving by the compositor while the page is busy.',
     use: {
       when: [
         'A panel, list or log whose scrollbar must look the same on every platform',
         'A thumb of a fixed size, bars in your own colours, or bars painted on a canvas',
-        'Snap points, custom easing or custom momentum',
+        'Snap points, or (with `mode="engine"`) your own easing and momentum',
       ],
       instead: [
         { name: 'ScrollRail', why: 'it is the whole page that scrolls' },
@@ -24,7 +24,7 @@ export const scrolling: Doc[] = [
           {
             id: 'ScrollViewRows',
             title: 'A panel',
-            note: 'Wheel, trackpad, touch, keys and focus scroll it as they would a native one. The bar shows while it moves or is hovered.',
+            note: 'The browser scrolls it, so wheel, trackpad, touch and find work as anywhere else, and the thumb follows on the compositor. The bar shows while it moves or is hovered.',
             stage: 'fill',
             height: 240,
           },
@@ -45,7 +45,7 @@ export const scrolling: Doc[] = [
           {
             id: 'ScrollViewSnap',
             title: 'Snap points',
-            note: '`snap` rests on each `[data-slide]`, as CSS scroll snapping does: a flick, a wheel notch or an arrow key moves one slide.',
+            note: '`snap` rests on each `[data-slide]` once scrolling stops, as CSS scroll snapping does. An arrow key moves one slide.',
             stage: 'fill',
             height: 190,
           },

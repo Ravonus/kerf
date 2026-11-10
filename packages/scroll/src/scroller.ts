@@ -22,13 +22,16 @@ export interface Setup {
   remeasure: () => void
   /** Rebuild the bars, for a change of axes. */
   rebar: () => void
+  /** Attach the inputs again, for a change of mode. */
+  reinput: () => void
 }
 
 /**
- * Scrolling run in JavaScript on `root`, which holds a `[data-part="viewport"]` element (and, inside that, the
- * content). The viewport keeps native scroll offsets with `overflow: hidden`, so the browser's own focus, find and
- * anchor scrolling still land and `scroll` listeners still hear every move. Bars are found as
- * `[data-part="scrollbar"][data-orientation]` children of `root`, or made. Load `@weft-js/scroll/styles.css`.
+ * Custom scrolling on `root`, which holds a `[data-part="viewport"]` element (and, inside that, the content). In the
+ * default `native` mode the browser scrolls the viewport, with its own bars hidden, and this draws the bars; in
+ * `engine` mode the viewport is `overflow: hidden` and every input runs here. Either way it keeps real scroll offsets,
+ * so focus, find, anchors and `scroll` listeners still work. Bars are found as `[data-part="scrollbar"]
+ * [data-orientation]` children of `root`, or made. Load `@weft-js/scroll/styles.css`.
  */
 export function scroller(root: HTMLElement, options: ScrollOptions = {}): Scroller {
   const vp = root.querySelector<HTMLElement>(':scope > [data-part="viewport"]') ?? root
@@ -55,6 +58,7 @@ export function scroller(root: HTMLElement, options: ScrollOptions = {}): Scroll
       e.wake()
     },
     rebar: () => {},
+    reinput: () => {},
   }
   vp.setAttribute('data-scroll-viewport', '')
   configure(s)
@@ -83,12 +87,21 @@ export function scroller(root: HTMLElement, options: ScrollOptions = {}): Scroll
   }
   hooks.push(watching.stop, listen(s))
   let barsOff = barInput(e, vis)
-  hooks.push(wheelInput(e), keyInput(e), touchInput(e), autoscroll(e), () => barsOff())
+  let inputsOff = inputs(e)
+  s.reinput = () => {
+    inputsOff()
+    inputsOff = inputs(e)
+  }
+  hooks.push(
+    () => inputsOff(),
+    () => barsOff(),
+  )
   hooks.push(() => {
     vis.destroy()
     if (e.frame) cancelAnimationFrame(e.frame)
     if (e.content) e.content.style.transform = ''
-    root.removeAttribute('data-ready')
+    for (const name of ['data-ready', 'data-timeline', 'data-mode', 'data-chain'])
+      root.removeAttribute(name)
     vp.removeAttribute('data-scroll-viewport')
     registry.delete(vp)
   })
@@ -97,9 +110,36 @@ export function scroller(root: HTMLElement, options: ScrollOptions = {}): Scroll
   return api(s, () => configure(s))
 }
 
+/**
+ * The engine's input. In native mode even a wheel or touch listener that does nothing would cost the compositor its
+ * scrolling, so only keys (which reach the page first in any case, and which some browsers don't scroll a focused
+ * area for) and a mouse `grab` are attached.
+ */
+function inputs(e: Engine) {
+  const native = e.o.mode === 'native'
+  const offs = native
+    ? [keyInput(e), e.o.grab ? touchInput(e) : () => {}]
+    : [wheelInput(e), keyInput(e), touchInput(e), autoscroll(e)]
+  return () => offs.forEach((f) => f())
+}
+
+let timelines: boolean | undefined
+/** Whether CSS can drive the thumbs from the viewport's scroll position, as a named, scoped scroll timeline. */
+const canTimeline = () =>
+  (timelines ??=
+    typeof CSS !== 'undefined' &&
+    CSS.supports('animation-timeline: --a') &&
+    CSS.supports('timeline-scope: --a'))
+
 /** Options into attributes and custom properties on the root and viewport. */
-function configure({ e, options }: Setup) {
+function configure({ e, options, renderer }: Setup) {
   const { root, vp } = e
+  root.dataset.mode = e.o.mode
+  root.dataset.chain = e.o.chain
+  const timeline = e.o.mode === 'native' && renderer === domRenderer && canTimeline()
+  if (timeline !== e.timeline) for (const a of e.axes) a.drawn = ''
+  e.timeline = timeline
+  root.toggleAttribute('data-timeline', timeline)
   e.ax.y.on = e.o.axes !== 'x'
   e.ax.x.on = e.o.axes !== 'y'
   root.dataset.scroll ??= ''
@@ -159,8 +199,22 @@ function watch(s: Setup) {
 
 /** The browser's own scrolling, the pointer over the area, and the reduced-motion setting. */
 function listen({ e, vis, options }: Setup) {
+  let idle: ReturnType<typeof setTimeout> | undefined
+  // In native mode the browser's scroll has ended: rest on a snap point, as the engine does after its own input.
+  const settle = () => {
+    if (e.o.mode !== 'native') return
+    for (const a of e.axes) {
+      a.v = 0
+      e.settle(a.axis)
+    }
+  }
+  const ends = typeof window !== 'undefined' && 'onscrollend' in window
   const onNative = () => {
-    if (!e.dispatching) e.adopt()
+    if (e.dispatching) return
+    e.adopt()
+    if (ends) return
+    clearTimeout(idle)
+    idle = setTimeout(settle, 150)
   }
   const inside = (on: boolean) => () => {
     vis.inside = on
@@ -171,11 +225,14 @@ function listen({ e, vis, options }: Setup) {
   const motion = reduceQuery()
   const onMotion = () => writeVars(e.root, options.bar, e.reduced())
   e.vp.addEventListener('scroll', onNative, { passive: true })
+  e.vp.addEventListener('scrollend', settle)
   e.root.addEventListener('pointerenter', enter)
   e.root.addEventListener('pointerleave', leave)
   motion?.addEventListener?.('change', onMotion)
   return () => {
+    clearTimeout(idle)
     e.vp.removeEventListener('scroll', onNative)
+    e.vp.removeEventListener('scrollend', settle)
     e.root.removeEventListener('pointerenter', enter)
     e.root.removeEventListener('pointerleave', leave)
     motion?.removeEventListener?.('change', onMotion)

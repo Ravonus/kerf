@@ -66,6 +66,7 @@ export function api(s: Setup, configure: () => void): Scroller {
         s.renderer = wanted
       }
       configure()
+      s.reinput()
       if (e.o.axes !== axes) s.rebar()
       else s.remeasure()
     },

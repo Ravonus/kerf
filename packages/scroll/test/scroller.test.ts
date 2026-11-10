@@ -53,7 +53,7 @@ function area(o: ScrollOptions = {}, size = { w: 200, h: 100, sw: 200, sh: 1000 
   document.body.append(root)
   const vp = root.firstElementChild as HTMLElement
   box(vp, [size.w, size.h, size.sw, size.sh])
-  const s = scroller(root, o)
+  const s = scroller(root, { mode: 'engine', ...o })
   return { root, vp, s }
 }
 const key = (el: Element, k: string, init: KeyboardEventInit = {}) => {
@@ -150,7 +150,7 @@ test('nested: the inner area scrolls first, and at its edge the outer one takes 
   outer.vp.firstElementChild!.append(innerRoot)
   const innerVp = innerRoot.firstElementChild as HTMLElement
   box(innerVp, [100, 50, 100, 80])
-  scroller(innerRoot)
+  scroller(innerRoot, { mode: 'engine' })
   wheel(innerVp, { deltaY: 20 })
   vi.advanceTimersByTime(16)
   expect(innerVp.scrollTop).toBe(20)
@@ -235,7 +235,7 @@ test('right-to-left content scrolls into negative scrollLeft, with the thumb fro
   document.body.append(root)
   const vp = root.firstElementChild as HTMLElement
   box(vp, [100, 100, 400, 100], true)
-  const s = scroller(root, { axes: 'x' })
+  const s = scroller(root, { mode: 'engine', axes: 'x' })
   expect(s.state()).toMatchObject({ maxX: -300, progressX: 0 })
   key(vp, 'ArrowLeft')
   vi.advanceTimersByTime(400)
@@ -271,4 +271,41 @@ test('only the axes that scroll get a bar, and changing axes rebuilds them', () 
   s.update({ axes: 'x' })
   const bars = [...root.querySelectorAll('[role="scrollbar"]')]
   expect(bars.map((b) => b.getAttribute('aria-orientation'))).toEqual(['horizontal'])
+})
+
+test('native mode leaves the wheel to the browser and follows where it scrolls', () => {
+  const seen: ScrollState[] = []
+  const { root, vp, s } = area({ mode: 'native', onScroll: (st) => seen.push(st) })
+  vi.advanceTimersByTime(16)
+  expect(root.dataset.mode).toBe('native')
+  expect(wheel(vp, { deltaY: 100 }).defaultPrevented).toBe(false)
+  vp.scrollTop = 300
+  vp.dispatchEvent(new Event('scroll'))
+  vi.advanceTimersByTime(16)
+  expect(s.state()).toMatchObject({ y: 300, source: 'native' })
+  expect(seen.at(-1)?.y).toBe(300)
+  expect(root.querySelector('[data-orientation="vertical"]')!.hasAttribute('data-visible')).toBe(
+    true,
+  )
+  // Keys still run here: they reach the page before any scrolling, and not every browser scrolls a focused area.
+  expect(key(vp, 'ArrowDown').defaultPrevented).toBe(true)
+})
+
+test('native mode rests on a snap point once the browser stops', () => {
+  const { vp } = area({ mode: 'native', snap: { points: [0, 400, 800], type: 'mandatory' } })
+  vi.advanceTimersByTime(16)
+  vp.scrollTop = 260
+  vp.dispatchEvent(new Event('scroll'))
+  vp.dispatchEvent(new Event('scrollend'))
+  vi.advanceTimersByTime(600)
+  expect(vp.scrollTop).toBe(400)
+})
+
+test('update moves between modes and the inputs follow', () => {
+  const { root, vp, s } = area({ mode: 'native' })
+  s.update({ mode: 'engine' })
+  expect(root.dataset.mode).toBe('engine')
+  expect(wheel(vp, { deltaY: 100 }).defaultPrevented).toBe(true)
+  s.update({ mode: 'native' })
+  expect(wheel(vp, { deltaY: 100 }).defaultPrevented).toBe(false)
 })

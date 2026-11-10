@@ -674,7 +674,7 @@ props, live examples and keyboard table. `weft plugins` lists the core catalogue
 | `PaginationBar` | Rows per page, range, page buttons and Go to; collapses when narrow |
 | `LoadMore` | An infinite-scroll sentinel with a button that is always there as the fallback |
 | `ScrollRail` | The page scrollbar drawn below a sticky header instead of over it |
-| `ScrollView` | A scroll area run in JavaScript by [`@weft-js/scroll`](https://www.npmjs.com/package/@weft-js/scroll): native feel, Warp's bars in the DOM or on a canvas |
+| `ScrollView` | A scroll area with Warp's bars, in the DOM or on a canvas, by [`@weft-js/scroll`](https://www.npmjs.com/package/@weft-js/scroll): the browser scrolls, the thumb keeps up on the compositor |
 
 </details>
 

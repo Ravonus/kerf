@@ -60,6 +60,12 @@ export interface SnapOptions {
 
 /** What a scroller does and how it looks. Every field is optional. */
 export interface ScrollOptions {
+  /**
+   * Who moves the content. `native` (default): the browser scrolls it, on the compositor, so it keeps moving while
+   * the main thread is busy; this draws the bars and runs the API, and the wheel, touch and key options are the
+   * browser's own. `engine`: every input runs here, with this package's easing, momentum, rubber band and keys.
+   */
+  mode?: 'native' | 'engine'
   /** Which axes scroll. Default `both`: an axis whose content fits shows no bar. */
   axes?: Axis | 'both'
   thumb?: ThumbOptions
@@ -129,6 +135,8 @@ export interface BarFrame {
   hover: boolean
   active: boolean
   progress: number
+  /** The thumb's offset along the track at the scroll start and at the end, px: what a scroll timeline animates. */
+  span: { start: number; end: number }
   rtl: boolean
   bar: Required<Omit<BarOptions, 'radius'>> & { radius: number }
 }

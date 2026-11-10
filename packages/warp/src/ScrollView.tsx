@@ -14,10 +14,10 @@ export interface ScrollViewProps extends ScrollOptions {
 }
 
 /**
- * A scroll area whose scrolling runs in JavaScript (`@weft-js/scroll`): wheel, trackpad, touch with inertia, keys,
- * focus and nested hand-off behave as native ones do, the same in every browser, and the bars are Warp's, drawn in
- * the DOM or, with `renderer={canvas()}` from `@weft-js/scroll/canvas`, on a canvas. Give it a height. Before its
- * script runs it scrolls natively, so the server's HTML works on its own.
+ * A scroll area with Warp's bars (`@weft-js/scroll`), drawn in the DOM or, with `renderer={canvas()}` from
+ * `@weft-js/scroll/canvas`, on a canvas. By default the browser scrolls it and the thumb follows on the compositor;
+ * `mode="engine"` runs wheel, touch and momentum in JavaScript instead. Give it a height. Before its script runs it
+ * scrolls natively with the browser's own bar, so the server's HTML works on its own.
  */
 export function ScrollView(props: ScrollViewProps) {
   let root: HTMLDivElement | undefined

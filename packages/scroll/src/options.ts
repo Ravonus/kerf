@@ -31,6 +31,7 @@ export function resolve(o: ScrollOptions): Resolved {
   const bar = { ...BAR_DEFAULTS, ...defined(o.bar ?? {}) }
   if (o.bar?.radius === undefined) bar.radius = bar.width / 2
   return {
+    mode: o.mode ?? 'native',
     axes: o.axes ?? 'both',
     thumb: o.thumb ?? {},
     bar,

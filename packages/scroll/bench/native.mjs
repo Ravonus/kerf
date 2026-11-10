@@ -1,5 +1,6 @@
 // @weft-js/scroll against the browser's own scrolling, in Chromium. Each run builds the package from source, opens
-// one page per mode (native overflow, scroll with DOM bars, scroll with canvas bars) and measures:
+// one page per mode (plain `overflow: auto`; this package in native mode with DOM bars and with canvas bars; and in
+// engine mode) and measures:
 //   mount     ms to make 200 areas of 50 rows and lay them out
 //   wheel     a 2 s stream of trackpad-sized wheel events at 60 Hz over a 2,000-row area: main-thread ms per frame
 //             (CDP task time), frames over 20 ms, input-to-scroll-event latency, and px covered
@@ -39,18 +40,24 @@ const area = (id, n) =>
 const start = (mode) => {
   const roots = [...document.querySelectorAll('[data-area]')]
   for (const r of roots) {
-    if (mode === 'native') {
+    if (mode === 'browser') {
       r.querySelector('[data-part="viewport"]').style.cssText = 'height:100%;overflow:auto'
       r.style.overflow = 'hidden'
-    } else
-      window.scroll_.scroller(r, mode === 'canvas' ? { renderer: window.scroll_.canvas() } : {})
+    } else window.scroll_.scroller(r, window.__options(mode))
   }
 }
+const options = (mode) =>
+  mode === 'canvas'
+    ? { renderer: window.scroll_.canvas() }
+    : mode === 'engine'
+      ? { mode: 'engine' }
+      : {}
 
 async function page(browser, mode, body) {
   const p = await browser.newPage({ viewport: { width: 800, height: 600 } })
   await p.setContent(`<!doctype html><style>body{margin:0}${css}</style>${body}`)
   await p.addScriptTag({ content: mode === 'canvas' ? canvasCode : code })
+  await p.addScriptTag({ content: `window.__options = ${options.toString()}` })
   return p
 }
 
@@ -132,14 +139,15 @@ async function smooth(browser, mode) {
   const out = await p.evaluate(async (m) => {
     const root = document.getElementById('big')
     const vp = root.querySelector('[data-part="viewport"]')
-    if (m === 'native') window.__start(m)
-    const opts = m === 'canvas' ? { renderer: window.scroll_.canvas() } : {}
-    const s = m === 'native' ? vp : window.scroll_.scroller(root, opts)
+    if (m === 'browser') window.__start(m)
+    const s = m === 'browser' ? vp : window.scroll_.scroller(root, window.__options(m))
     const t = performance.now()
     let frames = 0
     s.scrollTo({ top: 4000, behavior: 'smooth' })
     while (Math.abs(vp.scrollTop - 4000) > 1 && performance.now() - t < 3000) {
-      await new Promise((r) => requestAnimationFrame(r))
+      await new Promise((r) => {
+        requestAnimationFrame(r)
+      })
       frames++
     }
     return { ms: performance.now() - t, frames }
@@ -150,7 +158,7 @@ async function smooth(browser, mode) {
 
 const median = (xs) => [...xs].sort((a, b) => a - b)[xs.length >> 1]
 const browser = await chromium.launch()
-const modes = ['native', 'dom', 'canvas']
+const modes = ['browser', 'native', 'canvas', 'engine']
 const results = {}
 for (const mode of modes) {
   const r = { mount: [], wheel: [], smooth: [] }
@@ -176,6 +184,6 @@ else {
   console.log(
     `median of ${runs} runs, Chromium headless; bytes brotli: entry ${bytes.entry}, canvas ${bytes.canvas}`,
   )
-  console.log(['mode', ...Object.keys(results.native)].join('\t'))
+  console.log(['mode', ...Object.keys(results.browser)].join('\t'))
   for (const m of modes) console.log([m, ...Object.values(results[m]).map(fmt)].join('\t'))
 }

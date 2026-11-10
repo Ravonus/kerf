@@ -7,8 +7,8 @@
 <h1 align="center">@weft-js/scroll</h1>
 
 <p align="center">
-  <strong>Scrolling run in JavaScript, with bars drawn in the DOM or on a canvas.</strong><br>
-  Wheel, trackpad, touch, keys and focus behave like native scrolling, the same in every browser, and every part of the bar is yours to style.
+  <strong>Custom scrollbars, drawn in the DOM or on a canvas, that never freeze.</strong><br>
+  By default the browser scrolls and the thumb follows on its compositor, so both keep moving while the main thread is busy. Engine mode runs every input in JavaScript instead, the same in every browser. Every part of the bar is yours to style.
 </p>
 
 <p align="center">
@@ -35,15 +35,24 @@ design asks. Libraries that replace them usually move the content with a transfo
 for free: focus scrolling into view, find-in-page, anchors, sticky headers, screen readers, and every library that
 listens for `scroll`.
 
-`@weft-js/scroll` keeps the browser's scroll offsets. The viewport is still a real scroll container, set to
-`overflow: hidden`, and the engine writes `scrollTop` and `scrollLeft` itself. Input runs in JavaScript, so it
-feels the same in Chrome, Firefox and Safari, and the bars are plain elements or a canvas that you style or paint.
+`@weft-js/scroll` keeps the browser's scroll offsets: the viewport is always a real scroll container, and the bars
+are plain elements or a canvas that you style or paint. It has two modes:
+
+- **Native** (the default): the browser scrolls the viewport, with its own bar hidden. Wheel, trackpad and touch
+  run on the compositor, and a CSS scroll timeline moves the DOM thumb there too, so a long task on the main
+  thread stalls neither.
+- **Engine**: the viewport is `overflow: hidden` and every input runs in JavaScript, with this package's easing,
+  momentum, rubber band and nested hand-off, the same in Chrome, Firefox and Safari. It runs on the main thread.
+
 Nothing in it imports a framework. Warp's [`ScrollView`](https://github.com/Ravonus/weft/blob/main/packages/warp/src/ScrollView.tsx)
 is the Weft component over it.
 
 ## Highlights
 
-- **Native feel.** Notched wheels animate each step, trackpad pixels apply as they come (the OS's momentum
+- **Never frozen by default.** Native mode scrolls on the compositor and moves the thumb with a CSS scroll
+  timeline, so neither waits for the main thread. Where scroll timelines aren't supported yet the thumb follows
+  `scroll` events.
+- **Native feel in engine mode too.** Notched wheels animate each step, trackpad pixels apply as they come (the OS's momentum
   included), touch drags coast with inertia and rubber-band past the edges, and `deltaMode` lines and pages are
   converted as browsers do.
 - **The keys browsers use.** Arrows, Page Up and Page Down, Home and End, Space and Shift+Space, with the same step
@@ -54,7 +63,8 @@ is the Weft component over it.
   area outside, or to the page, as native scrolling chains.
 - **Any bar you like.** A fixed-size thumb, min and max sizes, colours, radius, width, inset, hover and active
   states, auto-hide timing, overlay or gutter. Or paint the bar on a canvas with your own `draw`.
-- **Behaviour you can tune.** Easing, duration, friction, momentum, wheel speed and snap points.
+- **Behaviour you can tune.** Snap points, smooth-scroll duration and easing in both modes; friction, momentum,
+  wheel speed and rubber band in engine mode.
 - **Long lists.** The viewport fires `scroll` in the same frame it moves, so a virtualizer draws with it. A test
   scrolls 100,000 rows on Warp's virtualizer.
 - **Right to left, reduced motion, accessibility.** `scrollLeft` runs negative in RTL as the DOM's does; reduced
@@ -67,6 +77,7 @@ is the Weft component over it.
 - [Quick start](#quick-start)
 - [Guide](#guide)
   - [How it works](#how-it-works)
+  - [Native or engine mode](#native-or-engine-mode)
   - [Markup](#markup)
   - [In Weft: Warp's ScrollView](#in-weft-warps-scrollview)
   - [In another framework](#in-another-framework)
@@ -92,7 +103,8 @@ is the Weft component over it.
 | A panel, list or log whose bar looks the same everywhere, or is drawn your way | This package, or Warp's `ScrollView` in a Weft app |
 | The page's own scrollbar restyled below a sticky header | Warp's `ScrollRail`: the document keeps native scrolling |
 | A thin native bar, with no change to how scrolling works | CSS: `scrollbar-width` and `scrollbar-color` |
-| Scrolling that keeps going while the main thread is busy | Native scrolling: it runs on the compositor (see [Performance](#performance)) |
+| Custom bars that keep up while the main thread is busy | This package in native mode, the default (see [Performance](#performance)) |
+| Your own wheel and touch physics, the same in every browser | This package in engine mode |
 
 ## Install
 
@@ -143,14 +155,41 @@ Give the area a height, as you would any scroller.
 
 ### How it works
 
-The root is `position: relative; overflow: hidden`. Inside it the viewport fills the root and is a scroll container
-with `overflow: hidden`, so the browser draws no bar and handles no wheel, touch or key input, but still scrolls it
-for focus, find, anchors and `scrollIntoView`. The engine listens for input, animates a position, and writes it to
-`scrollTop` and `scrollLeft` once per frame. When the browser moves the viewport itself, the engine adopts the new
-position and the bar follows.
+The root is `position: relative; overflow: hidden`. Inside it the viewport fills the root and is a scroll container,
+so the browser still scrolls it for focus, find, anchors and `scrollIntoView`, and every `scroll` listener hears it.
 
-Before the script runs, the stylesheet leaves the viewport on `overflow: auto`, so server-rendered HTML scrolls
-natively until the engine takes over.
+- **Native mode:** the viewport stays `overflow: auto` with `scrollbar-width: none`. The browser scrolls it, and
+  the engine follows its `scroll` events to draw the bars, run `onScroll` and settle on snap points. For DOM bars,
+  the viewport also names a scroll timeline, and each thumb's `transform` is an animation on it, so the browser
+  moves the thumb in the same compositor frame as the content. The engine attaches no wheel or touch listener here:
+  a blocking one would send scrolling back through the main thread.
+- **Engine mode:** the viewport is `overflow: hidden`, so the browser handles no wheel or touch input. The engine
+  listens for it, animates a position, and writes `scrollTop` and `scrollLeft` once per frame.
+
+In both modes the keys, the bars' drag and track presses, and the API run here. When something else moves the
+viewport, the engine adopts the new position and the bar follows.
+
+Before the script runs, the stylesheet leaves the viewport on `overflow: auto` with the browser's own bar, so
+server-rendered HTML scrolls natively until the script takes over.
+
+### Native or engine mode
+
+| | Native (default) | Engine |
+|---|---|---|
+| Wheel, trackpad, touch | The browser's, on the compositor | This package's, on the main thread |
+| During a long task | Content and DOM thumb keep moving | Both wait for it to end |
+| Friction, momentum, wheel speed, rubber band | The browser's | The options here |
+| Nested areas | The browser's scroll chaining | Latching and hand-off here |
+| Keys, bar drag, track press, snap, API | Here | Here |
+| Canvas bars | Redrawn on each `scroll` event | Redrawn each frame |
+
+```ts
+scroller(el) // native
+scroller(el, { mode: 'engine', friction: 0.995 })
+```
+
+Native mode is the one to start with. Engine mode is for physics that must match across browsers, or a host where
+the browser's own scrolling isn't wanted. `update({ mode })` switches at any time.
 
 ### Markup
 
@@ -310,6 +349,9 @@ doesn't depend on the renderer, so a painted bar drags and pages like a DOM one.
 
 ### Feel: easing, friction, momentum
 
+`duration` and `easing` shape smooth `scrollTo`, keys, track presses and snapping in both modes. The rest apply in
+engine mode; in native mode the browser's own wheel and touch handling decides them.
+
 | Option | What it does | Default |
 |---|---|---|
 | `duration` | ms for a wheel notch, a key and a smooth `scrollTo` | `220` |
@@ -335,8 +377,9 @@ scroller(el, {
 ### Snap points
 
 Like CSS scroll snapping. `mandatory` always rests on a point; `proximity` only when within `proximity` px (120 by
-default). A fling glides to the point nearest where it would have stopped, and a wheel notch or an arrow key moves
-one point under `mandatory`.
+default). In native mode the area glides to a point once the browser's scroll ends. In engine mode a fling glides
+to the point nearest where it would have stopped, and a wheel notch or an arrow key moves one point under
+`mandatory`.
 
 ```ts
 scroller(el, {
@@ -354,15 +397,17 @@ scroller(el, {
 
 ### Nested areas
 
-An area inside another scrolls first. A gesture latches to the area it started in for as long as it continues, as
+In native mode the browser chains nested areas as it does any scrollers, and `chain: 'contain'` sets
+`overscroll-behavior: contain`. In engine mode an area inside another scrolls first. A gesture latches to the area it started in for as long as it continues, as
 browsers do: one that reaches the inner edge midway stops there, and the next gesture at that edge moves the outer
 area, or the page. A natively scrolling element inside an area keeps its own scrolling. `chain: 'contain'` keeps
 every gesture in the area, like `overscroll-behavior: contain`.
 
 ### Long lists
 
-The engine fires a `scroll` event on the viewport in the frame it writes a position (`syncEvents`, on by
-default), so a virtualizer listening for `scroll` places its rows before that frame paints. Hand the viewport to
+In native mode the browser fires `scroll` in the frame it draws. In engine mode the engine fires one on the
+viewport in the frame it writes a position (`syncEvents`, on by default). Either way a virtualizer listening for
+`scroll` places its rows before that frame paints. Hand the viewport to
 the virtualizer as its scroller:
 
 ```ts
@@ -409,6 +454,7 @@ Moves `el`'s children into a viewport and content wrapper, then calls `scroller(
 
 | Option | Type | Default |
 |---|---|---|
+| `mode` | `'native' \| 'engine'` ([Native or engine mode](#native-or-engine-mode)) | `'native'` |
 | `axes` | `'x' \| 'y' \| 'both'` | `'both'` |
 | `thumb` | `{ size?, min?, max? }` | proportional, `min` 24 |
 | `bar` | `BarOptions` ([Styling the bars](#styling-the-bars)) | see above |
@@ -421,7 +467,7 @@ Moves `el`'s children into a viewport and content wrapper, then calls `scroller(
 | `autoscroll` | `boolean`: selection and drag autoscroll | `true` |
 | `motion` | `'auto' \| 'reduce' \| 'full'` | `'auto'` |
 | `label` | `string`: the viewport's accessible name | none |
-| `syncEvents` | `boolean`: fire `scroll` in the frame of each write | `true` |
+| `syncEvents` | `boolean`: in engine mode, fire `scroll` in the frame of each write | `true` |
 | `onScroll` | `(state: ScrollState) => void`, once per frame that moved | none |
 
 ### `Scroller`
@@ -464,36 +510,42 @@ Pure functions the engine uses, exported for your own bars and tests: `thumbLeng
 
 ## Performance
 
-`node bench/native.mjs` in this package compares the browser's own scrolling with this package's DOM and canvas
-bars, in headless Chromium on an M4 Max, median of 5 runs:
+Two scripts in this package measure it in headless Chromium on an M4 Max. `node bench/native.mjs` times the main
+thread (median of 5 runs) and `node bench/compositor.mjs` reads Chromium's layer tree to see what runs without it:
 
-| | Native | DOM bars | Canvas bars |
-|---|---|---|---|
-| Mount 200 areas of 50 rows, with layout | 6.5 ms | 18 ms | 20 ms |
-| Main-thread time per frame during a 2 s trackpad stream | 0.18 ms | 0.28 ms | 0.26 ms |
-| Frames over 20 ms in that stream | 0 | 0 | 0 |
-| Wheel event to `scroll` event, median | 32 ms | 32 ms | 32 ms |
-| Smooth scroll of 4,000 px | 1,040 ms | 210 ms | 204 ms |
-| Size, brotli | 0 | 9.0 KB | + 0.9 KB |
+| | Browser alone | Native mode | Native, canvas bars | Engine mode |
+|---|---|---|---|---|
+| Content scrolls on the compositor | yes | yes | yes | no |
+| Thumb moves on the compositor | (its own bar) | yes | no | no |
+| Blocking wheel or touch listeners added | 0 | 0 | 0 | 1 |
+| Mount 200 areas of 50 rows, with layout | 6.3 ms | 22 ms | 15 ms | 19 ms |
+| Main-thread time per frame during a 2 s trackpad stream | 0.17 ms | 0.30 ms | 0.24 ms | 0.28 ms |
+| Frames over 20 ms in that stream | 0 | 0 | 0 | 0 |
+| Wheel event to `scroll` event, median | 32 ms | 32 ms | 32 ms | 32 ms |
+| Smooth scroll of 4,000 px | 1,039 ms | 208 ms | 205 ms | 208 ms |
+| Size, brotli | 0 | 9.2 KB | + 0.9 KB | 9.2 KB |
 
 What that means:
 
-- Input reaches the screen as fast as native, and a frame costs about a tenth of a millisecond more.
-- Mounting costs about 0.06 ms more per area. Most of it is the browser styling and laying out the bars; the
-  engine's own setup is about 0.04 ms. An area makes bars only for the axes it scrolls.
+- In native mode a long task on the main thread doesn't stop scrolling: the content and the DOM thumb both move
+  on the compositor, as the browser's own bar does. A canvas bar, or a browser without scroll timelines (Firefox
+  keeps them behind a flag), still scrolls the content there; only the bar waits for the main thread.
+- Engine mode runs on the main thread, so a long task stalls it as it stalls any animation in JavaScript. That is
+  the price of running every input here; keep long work off the main thread when you use it.
+- Input reaches the screen as fast as the browser's own, and a frame costs about a tenth of a millisecond more:
+  the bars' upkeep and `onScroll`.
+- Mounting costs about 0.05 to 0.08 ms more per area. Most of it is the browser styling and laying out the bars,
+  and an area makes bars only for the axes it scrolls.
 - The smooth-scroll row is a choice, not a speed: Chrome takes a second for 4,000 px, the default `duration` is
   220 ms. Set `duration` to taste.
-- The one real cost: native scrolling runs on the compositor, so it keeps moving while the main thread is busy.
-  This runs on the main thread, so a long task stalls it as it stalls any animation in JavaScript. Keep long work
-  off the main thread, or leave the page's own scrolling native (Warp's `ScrollRail`) and use this for panels.
 
 ## Troubleshooting
 
 **The area doesn't scroll.** The root needs a height (or a parent that gives it one), and the stylesheet must be
 loaded: without it the viewport isn't sized to the root.
 
-**Nothing happens on touch screens.** Check for a `touch-action` set on an ancestor. Or pass `touch: 'native'` to
-let the browser handle touch.
+**Nothing happens on touch screens in engine mode.** Check for a `touch-action` set on an ancestor. Or pass
+`touch: 'native'` to let the browser handle touch, or use native mode.
 
 **The bar doesn't change colour with my theme.** Set the `--scroll-*` properties in your theme rather than passing
 colours as options: options are written inline and win over CSS.

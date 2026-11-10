@@ -20,6 +20,9 @@ export const domRenderer: Renderer = {
       ? `translate3d(0,${f.thumb.y}px,0)`
       : `translate3d(${f.thumb.x}px,0,0)`
     thumb.style[y ? 'height' : 'width'] = `${y ? f.thumb.height : f.thumb.width}px`
+    // What the stylesheet's scroll-timeline animation runs between, where the browser supports one.
+    thumb.style.setProperty('--scroll-thumb-start', `${f.span.start}px`)
+    thumb.style.setProperty('--scroll-thumb-end', `${f.span.end}px`)
   },
   unmount(track) {
     const thumb = track.querySelector<HTMLElement>('[data-part="thumb"]')
@@ -89,7 +92,9 @@ export function drawBars(e: Engine, renderer: Renderer, dt: number) {
       busy ||= a.grow !== target
     }
     const f = frame(e, a)
-    const key = `${f.thumb.x}|${f.thumb.y}|${f.thumb.width}|${f.thumb.height}|${a.grow}|${a.hover}|${a.active}|${f.track.width}|${f.track.height}`
+    // On a timeline the compositor moves the thumb, so only its span and size are worth a draw.
+    const at = e.timeline ? `${f.span.start}|${f.span.end}` : `${f.thumb.x}|${f.thumb.y}`
+    const key = `${at}|${f.thumb.width}|${f.thumb.height}|${a.grow}|${a.hover}|${a.active}|${f.track.width}|${f.track.height}`
     if (key !== a.drawn) {
       a.drawn = key
       renderer.draw(a.track, f)
@@ -117,9 +122,10 @@ function frame(e: Engine, a: AxisState): BarFrame {
     Math.min(8, a.trackLen),
     thumbLength(a.trackLen, a.view, a.total, e.o.thumb) - Math.abs(a.over) * 0.6,
   )
-  const off =
-    bar.inset +
-    (a.over > 0 ? a.trackLen - len : a.over < 0 ? 0 : thumbOffset(a.trackLen, len, progress))
+  const along = (p: number) => bar.inset + thumbOffset(a.trackLen, len, p)
+  const off = a.over > 0 ? bar.inset + a.trackLen - len : a.over < 0 ? bar.inset : along(progress)
+  // Right to left, a horizontal scroll starts at the right end.
+  const flip = a.axis === 'x' && e.rtl
   a.thumbOff = off
   a.thumbLen = len
   const thick = bar.width + (bar.hoverWidth - bar.width) * a.grow
@@ -136,7 +142,8 @@ function frame(e: Engine, a: AxisState): BarFrame {
     grow: a.grow,
     hover: a.hover,
     active: a.active,
-    progress: a.axis === 'x' && e.rtl ? 1 - progress : progress,
+    progress: flip ? 1 - progress : progress,
+    span: { start: along(flip ? 1 : 0), end: along(flip ? 0 : 1) },
     rtl: e.rtl,
     bar,
   }
