@@ -3,8 +3,8 @@
 use super::{
     ArrowFunctionExpression, Attr, CallExpression, Class, Collect, Expression, Function,
     IdentifierReference, ImportExpression, JSXAttributeItem, JSXChild, JSXElement, Kids, MOVES,
-    Site, StaticMemberExpression, TSType, Visit, WINDOW, add, attr_kind, attr_name, calls,
-    component_tag, has_kids, is_handler, kids_closed, line_col, walk,
+    Site, StaticMemberExpression, TSType, Visit, WINDOW, add, attr_kind, attr_name, component_tag,
+    has_kids, is_handler, kids_closed, line_col, walk,
 };
 
 impl<'a> Visit<'a> for Collect<'_> {
@@ -126,7 +126,7 @@ impl Collect<'_> {
             if name.eq_ignore_ascii_case("autofocus") {
                 self.early(format!("`autofocus` (line {line})"));
             }
-            if name == "ref" && a.value.as_ref().is_some_and(calls) {
+            if name == "ref" && a.value.as_ref().is_some_and(|v| self.calls(v)) {
                 self.early(format!("a `ref` callback that does work (line {line})"));
             }
         }
@@ -205,6 +205,7 @@ impl Collect<'_> {
                         kind: "spread".into(),
                         uses: f.uses,
                         own: f.own,
+                        early: None,
                     });
                 }
                 JSXAttributeItem::Attribute(a) => {
@@ -214,9 +215,13 @@ impl Collect<'_> {
                     }
                     handler |= is_handler(&name);
                     let kind = attr_kind(self.scoping, a).to_string();
-                    if name == "ref" && a.value.as_ref().is_some_and(calls) {
-                        let line = line_col(self.source, a.span.start).0;
-                        self.early(format!("a `ref` callback that does work (line {line})"));
+                    let early = (name == "ref" && a.value.as_ref().is_some_and(|v| self.calls(v)))
+                        .then(|| {
+                            let line = line_col(self.source, a.span.start).0;
+                            format!("a `ref` callback that does work (line {line})")
+                        });
+                    if let Some(why) = &early {
+                        self.early(why.clone());
                     }
                     let f = self.framed(|c| {
                         let on = name != "ref" && is_handler(&name);
@@ -231,6 +236,7 @@ impl Collect<'_> {
                         kind,
                         uses: f.uses,
                         own: f.own,
+                        early,
                     });
                 }
             }

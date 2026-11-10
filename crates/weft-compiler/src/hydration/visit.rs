@@ -35,12 +35,39 @@ pub(super) const MOVES: &[&str] = &[
 ];
 pub(super) const WINDOW: &[&str] = &["window", "globalThis", "self"];
 
-#[derive(Default)]
-pub(super) struct Calls(pub(super) bool);
+/// Whether a `ref`'s value calls anything. Passing the node on to the component's own `ref` prop (`ref?.(n)`,
+/// `props.ref?.(n)`) isn't work here: the caller wrote that `ref`, and its call site is checked for it.
+pub(super) struct Calls<'s> {
+    pub(super) scoping: &'s Scoping,
+    pub(super) refs: &'s [SymbolId],
+    pub(super) objects: &'s [SymbolId],
+    pub(super) found: bool,
+}
 
-impl<'a> Visit<'a> for Calls {
-    fn visit_call_expression(&mut self, _: &CallExpression<'a>) {
-        self.0 = true;
+impl Calls<'_> {
+    fn holds(&self, e: &Expression<'_>, list: &[SymbolId]) -> bool {
+        matches!(e.get_inner_expression(), Expression::Identifier(id) if id.reference_id.get().and_then(|r| self.scoping.get_reference(r).symbol_id()).is_some_and(|s| list.contains(&s)))
+    }
+
+    fn forwards(&self, callee: &Expression<'_>) -> bool {
+        match callee.get_inner_expression() {
+            Expression::StaticMemberExpression(m) => {
+                m.property.name == "ref" && self.holds(&m.object, self.objects)
+            }
+            e => self.holds(e, self.refs),
+        }
+    }
+}
+
+impl<'a> Visit<'a> for Calls<'_> {
+    fn visit_call_expression(&mut self, it: &CallExpression<'a>) {
+        if self.forwards(&it.callee) {
+            for a in &it.arguments {
+                self.visit_argument(a);
+            }
+        } else {
+            self.found = true;
+        }
     }
 }
 
@@ -59,6 +86,8 @@ pub(super) struct Collect<'s> {
     pub(super) depth: u32,
     pub(super) handlers: Vec<SymbolId>,
     pub(super) objects: Vec<SymbolId>,
+    /// The component's own `ref` prop, when it's read as a name (`{ ref }`): a call to it passes the node on.
+    pub(super) refs: Vec<SymbolId>,
 }
 
 impl Collect<'_> {
@@ -79,6 +108,7 @@ impl Collect<'_> {
         }
         self.handlers.clear();
         self.objects.clear();
+        self.refs.clear();
         if !self.component {
             return;
         }
@@ -97,6 +127,9 @@ impl Collect<'_> {
                         && is_handler(&key)
                     {
                         self.handlers.push(id.symbol_id());
+                        if key == "ref" {
+                            self.refs.push(id.symbol_id());
+                        }
                     }
                 }
                 if let Some(BindingPattern::BindingIdentifier(id)) =
@@ -120,6 +153,20 @@ impl Collect<'_> {
         self.objects.retain(|s| !arguments && !gone.contains(s));
         self.handlers
             .retain(|s| !arguments && !scoping.symbol_is_mutated(*s));
+        let handlers = &self.handlers;
+        self.refs.retain(|s| handlers.contains(s));
+    }
+
+    /// Whether a `ref`'s value does work: see [`Calls`].
+    pub(super) fn calls(&self, v: &JSXAttributeValue<'_>) -> bool {
+        let mut c = Calls {
+            scoping: self.scoping,
+            refs: &self.refs,
+            objects: &self.objects,
+            found: false,
+        };
+        c.visit_jsx_attribute_value(v);
+        c.found
     }
 
     pub(super) fn holds(&self, e: &Expression<'_>, list: &[SymbolId]) -> bool {

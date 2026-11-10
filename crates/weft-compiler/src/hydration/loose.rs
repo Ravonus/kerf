@@ -1,10 +1,10 @@
 //! Loose for hydration.
 
 use super::{
-    ArrowFunctionExpression, BindingIdentifier, BindingPattern, CallExpression, Calls,
+    ArrowFunctionExpression, BindingIdentifier, BindingPattern, CallExpression,
     ExportDefaultDeclaration, ExportDefaultDeclarationKind, ExportSpecifier, Expression, Function,
-    HashSet, IdentifierReference, JSXAttributeValue, JSXClosingElement, JSXElement, JSXElementName,
-    JSXFragment, JSXMemberExpressionObject, NewExpression, ReferenceId, Scoping, TSType,
+    HashSet, IdentifierReference, JSXClosingElement, JSXElement, JSXElementName, JSXFragment,
+    JSXMemberExpressionObject, NewExpression, ReferenceId, Scoping, TSType,
     TaggedTemplateExpression, ThisExpression, VariableDeclarator, Visit, add, walk,
 };
 
@@ -134,12 +134,6 @@ fn reads_this(e: &Expression<'_>) -> bool {
     let mut t = This::default();
     t.visit_expression(e);
     t.0
-}
-
-pub(super) fn calls(v: &JSXAttributeValue<'_>) -> bool {
-    let mut c = Calls::default();
-    c.visit_jsx_attribute_value(v);
-    c.0
 }
 
 pub(super) fn hatch(source: &str, from: u32, to: u32) -> Option<String> {

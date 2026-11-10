@@ -38,9 +38,9 @@ mod visit;
 use self::escapes::Escapes;
 pub use self::facts::facts;
 pub use self::islands::{by_index, hoisted, mark, marked};
-use self::loose::{Loose, TagRefs, calls, hatch};
+use self::loose::{Loose, TagRefs, hatch};
 use self::scan::{attr_kind, attr_name, component_tag, has_kids, is_handler, kids_closed};
-use self::visit::{Calls, Collect, MOVES, WINDOW, add};
+use self::visit::{Collect, MOVES, WINDOW, add};
 
 use std::collections::{HashMap, HashSet};
 
@@ -131,6 +131,9 @@ pub struct Attr {
     pub kind: String,
     pub uses: Vec<String>,
     pub own: Option<String>,
+    /// A `ref` here that does work: it runs as the island starts, so the island can't wait.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub early: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]

@@ -11,6 +11,13 @@ export const timing = (n, s, local, rel) => {
   }
   const look = (owner, names) => lookAt(owner, names, { local, at, halt, visit, marks })
   const site = (owner, x) => {
+    // the caller's own `ref` on a component runs as the island starts (the component only passes the node on)
+    const early = x.attrs.find((a) => a.early)?.early
+    if (early)
+      halt(
+        `${early} on <${x.member ?? x.tag}> in ${at(owner)}`,
+        `keep the \`ref\` to storing the node, and do the work in a handler`,
+      )
     look(
       owner,
       x.attrs.flatMap((a) => a.uses),

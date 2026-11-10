@@ -205,6 +205,46 @@ test("moving focus can't wait, and neither can autofocus or a ref that works", a
   ).toBe('load')
 })
 
+test("passing the node on to the component's own `ref` isn't work: the caller's `ref` is checked where it's written", async () => {
+  const forward = async (c: string, route = '<C onClick={() => {}} />') => {
+    const { plan } = await project({
+      'c.tsx': c,
+      'route.tsx': `import { C } from './c'\nexport default function R() { return <main>${route}</main> }`,
+    })
+    return plan.loads[0]!
+  }
+  const named = `export function C({ ref, onClick }) { let host; return <button ref={(n) => { host = n; ref?.(n) }} onClick={onClick} /> }`
+  expect((await forward(named)).when).toBe('interaction')
+  expect(
+    (
+      await forward(
+        `export function C(props) { return <button ref={(n) => props.ref?.(n)} onClick={props.onClick} /> }`,
+      )
+    ).when,
+  ).toBe('interaction')
+  // passing it on and working too still works
+  expect(
+    (
+      await forward(
+        `export function C({ ref, onClick }) { return <button ref={(n) => { ref?.(n); n.focus() }} onClick={onClick} /> }`,
+      )
+    ).when,
+  ).toBe('load')
+  // a prop that isn't `ref` isn't known to be the caller's ref
+  expect(
+    (
+      await forward(
+        `export function C({ el, onClick }) { return <button ref={(n) => el?.(n)} onClick={onClick} /> }`,
+      )
+    ).when,
+  ).toBe('load')
+  const caller = await forward(named, '<C ref={(n) => n.focus()} onClick={() => {}} />')
+  expect(caller).toMatchObject({
+    when: 'load',
+    why: expect.stringMatching(/`ref` callback that does work \(line 2\) on <C>/),
+  })
+})
+
 test('what a child does counts, through the props the island keeps', async () => {
   const load = (
     await at(

@@ -25,6 +25,7 @@ pub fn facts(program: &Program<'_>, scoping: &Scoping, source: &str) -> Hydratio
         depth: 0,
         handlers: Vec::new(),
         objects: Vec::new(),
+        refs: Vec::new(),
     };
     let mut gap = 0u32;
     for stmt in &program.body {
