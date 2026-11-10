@@ -68,5 +68,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   const navigation = new Navigation(routes, page)
   client.navigate = navigation.go
   listeners(navigation, () => (import.meta as Hot).hot)
+  // The router follows links from here: the browser's prefetching for full loads (capture.ts `speculate`) stops.
+  document.getElementById('weft-speculate')?.remove()
   return page.route
 }

@@ -315,6 +315,43 @@ test("a page that's only read runs no client at all; the first click brings it, 
   await page.close()
 })
 
+test('a page whose code waits lets the browser prefetch a link on hover, until the router takes its links', async () => {
+  const page = await browser.newPage()
+  const prefetched: string[] = []
+  page.on('request', (r) => {
+    if (/prefetch/.test(r.headers()['sec-purpose'] ?? ''))
+      prefetched.push(new URL(r.url()).pathname)
+  })
+  await page.goto(url + '/lazy?boot')
+  const rules = () =>
+    page.evaluate(() => document.querySelector('script[type="speculationrules"]')?.textContent)
+  const set = JSON.parse((await rules())!)
+  expect(set.prerender).toBeUndefined() // a prerender would run the next page's code unseen
+  expect(set.prefetch[0].eagerness).toBe('moderate')
+  // At the top: one at the bottom would scroll an island that wants to run into view, and bring the client.
+  await page.evaluate(() =>
+    document.body.prepend(
+      Object.assign(document.createElement('a'), {
+        href: '/about',
+        id: 'plain',
+        textContent: 'plain',
+      }),
+    ),
+  )
+  await page.hover('#plain')
+  await expect.poll(() => prefetched, { timeout: 5_000 }).toContain('/about')
+  // The first click brings the client; its router follows links from then on, so the rules go.
+  await page.click('.tap[data-id=one]')
+  await page.waitForFunction(() => window.__weft?.hydrated)
+  expect(await rules()).toBeUndefined()
+  await page.close()
+  // A page whose code starts at once has no rules at all.
+  const eager = await browser.newPage()
+  await eager.goto(url + '/islands')
+  expect(await eager.$('script[type="speculationrules"]')).toBeNull()
+  await eager.close()
+})
+
 test('scrolling to an island that wants to run brings the client, and a link is a plain link until then', async () => {
   const page = await browser.newPage()
   await page.goto(url + '/lazy?boot')

@@ -1,6 +1,6 @@
 // Render first when no remembered head can be sent yet.
 import { LAYER_ORDER, pageStyles, type keptSheets } from '../inline.mjs'
-import { capture } from '../capture'
+import { capture, speculate } from '../capture'
 import { whole } from './compression'
 import { withHeaders } from './request'
 import { esc } from './text'
@@ -28,7 +28,7 @@ function coldHead(
     (t
       ? `<style>${LAYER_ORDER}${p.assets.pieces!.layers}${t.rules(p.stream.shell)}</style>\n`
       : styles!.head) +
-    (capturing ? `<script>${capture(shape.now)}</script>\n` : '') +
+    (capturing ? `<script>${capture(shape.now)}</script>\n` + speculate(shape) : '') +
     p.dev +
     (p.assets.entry && !shape.streaming
       ? `<script type="module" src="${esc(p.assets.entry)}"></script>\n`

@@ -1,6 +1,6 @@
 // A known head can go out before the new render finishes.
 import { LAYER_ORDER, pageStyles, type keptSheets } from '../inline.mjs'
-import { capture } from '../capture'
+import { capture, speculate } from '../capture'
 import { withHeaders } from './request'
 import { esc } from './text'
 import { pageShell, render, rest, shaped, table, top } from './page-stream'
@@ -38,7 +38,9 @@ async function warmContent(
   const lead =
     (t ? (rules ? `<style>${rules}</style>\n` : '') : styles!.late(shape.sheets, p.stream.shell)) +
     more +
-    (capturing && !known.capture ? `<script>${capture(shape.now)}</script>\n` : '')
+    (capturing && !known.capture
+      ? `<script>${capture(shape.now)}</script>\n` + speculate(shape)
+      : '')
   controller.enqueue(
     p.enc.encode(
       lead +
@@ -94,7 +96,7 @@ export async function warmPage(
     known.preloads +
     (p.assets.entry ? `<link rel="modulepreload" href="${esc(p.assets.entry)}">\n` : '') +
     (styles ? styles.head : `<style>${LAYER_ORDER}${p.assets.pieces!.layers}</style>\n`) +
-    (known.capture ? `<script>${capture(known.now)}</script>\n` : '') +
+    (known.capture ? `<script>${capture(known.now)}</script>\n` + speculate(known) : '') +
     p.dev +
     '</head>\n<body>\n'
   const init = {

@@ -13,3 +13,36 @@ const CODE = `(n=>{var d=document,c=navigator.connection,q=window.__wq={q:[],n:n
 
 /** The script's text. `now`: the page has work that can't wait, so its code loads straight away. */
 export const capture = (now: boolean) => `${CODE}(${now ? 1 : 0})`
+
+/**
+ * A page that runs no client until it's needed follows its links with full loads, so the browser prefetches the one the
+ * pointer rests on (`moderate`). Not a prerender, which would run the next page's code unseen. An island's links go
+ * through the router once its code comes, so they're left out, as is `/_weft/` and anything under `data-preload="off"`;
+ * `start()` takes the rules down when the router takes over, so nothing is fetched twice.
+ */
+const RULES = JSON.stringify({
+  prefetch: [
+    {
+      source: 'document',
+      where: {
+        and: [
+          { href_matches: '/*' },
+          { not: { href_matches: '/_weft/*' } },
+          {
+            not: {
+              selector_matches:
+                '[wk] a, a[wk], [data-preload="off"] a, a[data-preload="off"], a[download]',
+            },
+          },
+        ],
+      },
+      eagerness: 'moderate',
+    },
+  ],
+})
+
+/** The rules, for a page whose code waits (`now` false, nothing streaming). */
+export const speculate = (shape: { now: boolean; streaming?: boolean }) =>
+  shape.now || shape.streaming
+    ? ''
+    : `<script type="speculationrules" id="weft-speculate">${RULES}</script>\n`
