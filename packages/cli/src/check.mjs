@@ -33,7 +33,7 @@ import { surfaceChecks } from './surface-checks.mjs'
 import { textChecks } from './text-checks.mjs'
 import { loadCompiler, resolveWeft } from './weft.mjs'
 import { dbLayer } from './db-layer.mjs'
-import { routeDiagnostics, schemaHash, siteOf, start } from './start.mjs'
+import { loadEnv, routeDiagnostics, schemaHash, siteOf, start } from './start.mjs'
 import { deployChecks } from './deploy/index.mjs'
 import { rustChecks, liveChecks, socketChecks, hygiene } from './check/runtime.mjs'
 
@@ -118,6 +118,8 @@ async function routeChecks(root, loaded, given, reported) {
     return []
   if (given?.length && !given.some((f) => f.startsWith('src/routes/'))) return []
   let inspect
+  // The routes run as they do under `weft dev`, so they get the same `.env` (an env schema throws without it).
+  loadEnv(root)
   try {
     inspect = await start(root, 'inspect')
   } catch {

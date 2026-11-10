@@ -7,7 +7,10 @@ export const load = ({ ctx }: LoadArgs) => {
   if (ctx.user) redirect('/admin')
 }
 
-export const meta: Meta = { title: 'Create the owner account' }
+export const meta: Meta = {
+  title: 'Create the owner account',
+  description: 'The first account owns the store. Sign-up closes after it.',
+}
 
 export default function Signup() {
   return (

@@ -31,6 +31,8 @@ export const controls = (ui) =>
         button: (label, onClick, extra = '') =>
           `<Button emphasis="ghost" ${extra}onClick={${onClick}}>${label}</Button>`,
         error: (box) => `{${box}.value && <Alert tone="critical" live>{${box}.value}</Alert>}`,
+        row: `<Checkbox checked={t.done} onChange={() => toggleTodo({ id: t.id })}>{t.title}</Checkbox>
+          <Button emphasis="ghost" tone="neutral" size="sm" icon="x" aria-label={\`Delete \${t.title}\`} onClick={() => deleteTodo({ id: t.id })} />`,
       }
     : {
         imports: '',
@@ -43,6 +45,10 @@ export const controls = (ui) =>
         button: (label, onClick, extra = '') =>
           `<button${attr(ui, 'button')} type="button" ${extra}onClick={${onClick}}>${label}</button>`,
         error: (box) => `{${box}.value && <p role="alert">{${box}.value}</p>}`,
+        row: `<label>
+            <input type="checkbox" checked={t.done} onChange={() => toggleTodo({ id: t.id })} /> {t.title}
+          </label>
+          <button type="button" aria-label={\`Delete \${t.title}\`} onClick={() => deleteTodo({ id: t.id })}>×</button>`,
       }
 
 /** `/todos`: the list on the server functions, written for this `--ui`. */
@@ -52,7 +58,7 @@ export function todosPage(ui) {
 import { Boundary, state } from '@weft-js/core'
 ${c.imports}import { addTodo, deleteTodo, listTodos, toggleTodo } from '#/server/todos'
 
-export const meta: Meta = { title: 'Todos' }
+export const meta: Meta = { title: 'Todos', description: 'Your todo list: add, tick off and delete.' }
 
 // The query is made in here, inside the Boundary, so the Boundary sees it: it shows \`pending\` until the list arrives.
 function TodoList() {
@@ -61,10 +67,7 @@ function TodoList() {
     <ul class="todos">
       {(todos.value ?? []).map(t => (
         <li key={t.id} class={t.done ? 'done' : 'open'}>
-          <label>
-            <input type="checkbox" checked={t.done} onChange={() => toggleTodo({ id: t.id })} /> {t.title}
-          </label>
-          <button type="button" aria-label={\`Delete \${t.title}\`} onClick={() => deleteTodo({ id: t.id })}>×</button>
+          ${c.row}
         </li>
       ))}
     </ul>
@@ -112,7 +115,7 @@ export const load = ({ ctx }: LoadArgs) => {
   if (ctx.user) redirect('/todos')
 }
 
-export const meta: Meta = { title: 'Sign in' }
+export const meta: Meta = { title: 'Sign in', description: 'Sign in, or make an account.' }
 
 export default function Login() {
   const creating = state(false)

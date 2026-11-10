@@ -141,7 +141,9 @@ describe.each(written)('--template %s', (name) => {
               { code: 'H016', route: '/c/[slug]', severity: 'info' },
               { code: 'H016', route: '/p/[slug]', severity: 'info' },
             ]
-          : [],
+          : name === 'admin'
+            ? [{ code: 'H016', route: '/admin/orders/[id]', severity: 'info' }]
+            : [],
       )
     } finally {
       if (previous === undefined) delete process.env.WEFT_SITE_URL

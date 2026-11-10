@@ -7,7 +7,10 @@ export const load = ({ ctx }: LoadArgs) => {
   if (ctx.user) redirect('/todos')
 }
 
-export const meta: Meta = { title: 'Create an account' }
+export const meta: Meta = {
+  title: 'Create an account',
+  description: "An email and a password. That's all it takes.",
+}
 
 export default function Signup() {
   return (

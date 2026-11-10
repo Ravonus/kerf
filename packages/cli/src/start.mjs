@@ -68,7 +68,7 @@ export const hostRuntime = () =>
   process.versions.deno ? 'deno' : process.versions.bun ? 'bun' : 'node'
 
 /** `.env` under what's already set. Not `process.loadEnvFile`: on Deno the file wins. */
-function loadEnv(root) {
+export function loadEnv(root) {
   const file = join(root, '.env')
   if (existsSync(file))
     for (const [key, value] of Object.entries(parseEnv(readFileSync(file, 'utf8'))))

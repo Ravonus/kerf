@@ -114,7 +114,7 @@ function configFile(format, { ui, label, runtime, layer, warp }) {
 
 /**
  * The files for an app, as `{ path: text }`.
- * @param {{ ui?: string, name?: string, version?: string, db?: string, layer?: string, auth?: boolean | 'custom', runtime?: string, config?: string, secret?: string, template?: string }} [options]
+ * @param {{ ui?: string, name?: string, version?: string, db?: string, layer?: string, auth?: boolean | 'custom', runtime?: string, config?: string, secret?: string, template?: string, pm?: string }} [options]
  */
 export function template(options = {}) {
   const {
@@ -164,6 +164,8 @@ export function template(options = {}) {
     auth,
   })
   Object.assign(files, pluginLock({ ui, layer }))
+  if (options.pm === 'pnpm')
+    files['pnpm-workspace.yaml'] = pnpmSettings(db !== 'none' && layer === 'prisma')
   if (ui !== 'warp') files['src/app.css'] = css(ui)
   if (ui === 'tailwind') files['vite.config.ts'] = TAILWIND_VITE
   if (db !== 'none') {
@@ -184,6 +186,11 @@ export function template(options = {}) {
   }
   return files
 }
+
+// pnpm 11 and later stop an install at a dependency's build script that nobody has allowed or refused. None is needed:
+// esbuild ships its binary as an optional package, and the app's own postinstall runs `prisma generate`.
+const pnpmSettings = (prisma) =>
+  `allowBuilds:\n  esbuild: false\n${prisma ? "  '@prisma/engines': false\n  prisma: false\n" : ''}`
 
 function baseFiles({
   name,
@@ -281,6 +288,10 @@ function shell(ui, { db, auth: which }) {
       : (ui === 'headless' ? `import '@weft-js/warp-core/styles/warp.css'\n` : '') +
         `import '../app.css'\n`
   const links = db === 'none' ? '' : `\n        <Link href="/todos">Todos</Link>`
+  const signOut =
+    ui === 'warp'
+      ? '<Button emphasis="ghost" size="sm" onClick={() => signOut()}>Sign out</Button>'
+      : '<button type="button" onClick={() => signOut()}>Sign out</button>'
   if (!auth) {
     return `${imports}import { Link, type RouteProps } from '@weft-js/start'
 
@@ -297,7 +308,7 @@ export default function Root(props: RouteProps) {
 }
 `
   }
-  return `${imports}import { Link, type LoadArgs, type RouteProps } from '@weft-js/start'
+  return `${imports}${ui === 'warp' ? "import { Button } from '@weft-js/warp'\n" : ''}import { Link, type LoadArgs, type RouteProps } from '@weft-js/start'
 import { me, signOut } from '#/server/session'
 
 export const load = ({ ctx }: LoadArgs) => me.fetch()
@@ -308,7 +319,7 @@ export default function Root(props: RouteProps<typeof load>) {
       <nav>
         <Link href="/">Home</Link>
         <Link href="/about">About</Link>${links}
-        {props.data ? <button type="button" onClick={() => signOut()}>Sign out</button> : <Link href="/login">Sign in</Link>}
+        {props.data ? ${signOut} : <Link href="/login">Sign in</Link>}
       </nav>
       <main>{props.children}</main>
     </>
