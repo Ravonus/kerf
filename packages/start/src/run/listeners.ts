@@ -30,6 +30,7 @@ export function listeners(nav: Navigation, hot: () => Hot | undefined) {
   const q = (window as Window & { __wq?: Held }).__wq
   if (q) {
     q.w = wake
+    q.s = 1
     if (q.l) wake(q.l)
     drain()
   }

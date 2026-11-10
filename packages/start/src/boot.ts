@@ -8,6 +8,8 @@ export interface Held {
   p: (held: unknown) => void
   w?: (k: Element, lead?: 1) => void
   r?: 1
+  /** The page is running: a page that hydrates whole stops holding events off its islands. */
+  s?: 1
   n?: unknown
   l?: Element
   d?: unknown
