@@ -65,9 +65,11 @@ export function render(p: PageState) {
 /**
  * A full load between pages that opt into cross-document view transitions (warp does) brings the browser's own
  * transition. When the browser skips one ("invalid state"), its three promises reject, and the page reveals before the
- * runtime's module runs: so this listens from the head, on every page that has code.
+ * runtime's module runs: so this listens from the head, on every page that has code. Chrome can also reject one the
+ * page never sees (a skipped outgoing transition), so a rejection that says only that a transition was aborted or
+ * skipped is marked handled too; nothing else is touched.
  */
-const REVEAL = `<script>(f=>["pagereveal","pageswap"].forEach(n=>addEventListener(n,e=>{var t=e.viewTransition;t&&[t.ready,t.finished,t.updateCallbackDone].forEach(q=>q.catch(f))})))(()=>{})</script>\n`
+const REVEAL = `<script>(f=>{["pagereveal","pageswap"].forEach(n=>addEventListener(n,e=>{var t=e.viewTransition;t&&[t.ready,t.finished,t.updateCallbackDone].forEach(q=>q.catch(f))}));addEventListener("unhandledrejection",e=>{/^Transition was (aborted|skipped)/.test(e.reason&&e.reason.message)&&e.preventDefault()})})(()=>{})</script>\n`
 
 export function top(p: PageState) {
   return (
