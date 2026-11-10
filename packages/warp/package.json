@@ -1,6 +1,6 @@
 {
   "name": "@weft-js/warp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "warp, the UI toolkit for weft: components over @weft-js/warp-core",
   "license": "MIT",
   "type": "module",

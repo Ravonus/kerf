@@ -272,10 +272,6 @@ importers:
       zod:
         specifier: 4.6.7
         version: 4.6.7
-    optionalDependencies:
-      '@weft-js/compiler-darwin-arm64':
-        specifier: 0.1.1
-        version: 0.1.1
 
   packages/create:
     devDependencies:
@@ -3148,11 +3144,6 @@ packages:
 
   '@vitest/spy@5.0.5':
     resolution: {integrity: sha512-lwJRExuH417257Q5wv9QYugN9IMJkoxcrKrYxGPQkBzl7wlNpTUxD/5yNX4ESKVUIShKPgkGchYPFMWOOk0wzw==}
-
-  '@weft-js/compiler-darwin-arm64@0.1.1':
-    resolution: {integrity: sha512-RKW+DUXV2nhgtvUR5MfFmSQDlnW22Kq5EGbBpB65TTtL9ooqfTyowvvug6I2A0jGy/NzAbg7xECVDr/QmDynWw==}
-    cpu: [arm64]
-    os: [darwin]
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -7163,9 +7154,6 @@ snapshots:
       vite: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   '@vitest/spy@5.0.5': {}
-
-  '@weft-js/compiler-darwin-arm64@0.1.1':
-    optional: true
 
   abort-controller@3.0.0:
     dependencies:

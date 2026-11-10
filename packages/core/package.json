@@ -1,6 +1,6 @@
 {
   "name": "@weft-js/core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "weft: a fine-grained reactive TSX framework. Runtime, compiler binding, Vite plugin and test utilities.",
   "keywords": [
     "weft"
@@ -119,14 +119,14 @@
     }
   },
   "optionalDependencies": {
-    "@weft-js/compiler-darwin-arm64": "0.1.1",
-    "@weft-js/compiler-darwin-x64": "0.1.1",
-    "@weft-js/compiler-linux-arm64-gnu": "0.1.1",
-    "@weft-js/compiler-linux-arm64-musl": "0.1.1",
-    "@weft-js/compiler-linux-x64-gnu": "0.1.1",
-    "@weft-js/compiler-linux-x64-musl": "0.1.1",
-    "@weft-js/compiler-win32-arm64": "0.1.1",
-    "@weft-js/compiler-win32-x64": "0.1.1"
+    "@weft-js/compiler-darwin-arm64": "0.1.2",
+    "@weft-js/compiler-darwin-x64": "0.1.2",
+    "@weft-js/compiler-linux-arm64-gnu": "0.1.2",
+    "@weft-js/compiler-linux-arm64-musl": "0.1.2",
+    "@weft-js/compiler-linux-x64-gnu": "0.1.2",
+    "@weft-js/compiler-linux-x64-musl": "0.1.2",
+    "@weft-js/compiler-win32-arm64": "0.1.2",
+    "@weft-js/compiler-win32-x64": "0.1.2"
   },
   "engines": {
     "node": ">=26"

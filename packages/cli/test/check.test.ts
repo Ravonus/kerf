@@ -22,7 +22,7 @@ describe('weft check on evals/reference-v3/weft', () => {
     ])
     expect(r.diagnostics).toEqual([])
     expect(r.config).toBeNull()
-    expect(r.weft.version).toBe('0.1.1')
+    expect(r.weft.version).toBe('0.1.2')
   })
 
   it('reports slot bindings: defaults are named, never silent', async () => {

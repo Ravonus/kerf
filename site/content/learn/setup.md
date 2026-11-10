@@ -267,7 +267,7 @@ npx weft doctor
 ```
 
 ```text
-weft 0.1.1 on Node v26.1.0
+weft 0.1.2 on Node v26.1.0
 compiler: native addon (@weft-js/compiler-darwin-arm64)
 rust: no cargo on PATH. Not needed for weft; only `weft add rust`
 sidecars and native() use it
