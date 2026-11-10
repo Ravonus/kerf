@@ -12,6 +12,7 @@ import {
 import { importedShapes, thinShape } from './vite/shapes.mjs'
 import { purgeCss } from './vite/purge.mjs'
 import { styleGroups } from './vite/style-groups.mjs'
+import { cspStyles } from './vite/csp.mjs'
 import { shapeGroupCss } from './vite/shape-styles.mjs'
 import { shapeWatch } from './vite/shape-watch.mjs'
 import { icons } from './vite/icons.mjs'
@@ -34,9 +35,23 @@ const { transform } = createRequire(import.meta.url)('./compiler.cjs')
  * `hmr` (default: when serving, outside vitest): client modules register their components with @weft-js/core/hmr and accept
  * their own updates (research 21). Never for SSR output.
  */
+/** The compiler's diagnostics as Vite errors and warnings, at their place in the file. */
+function report(ctx, id, diagnostics) {
+  for (const d of diagnostics) {
+    const text = `${d.code} ${d.message}\n  help: ${d.help}`
+    const loc = { file: id, line: d.line, column: d.column - 1 }
+    if (d.severity === 'error') ctx.error({ message: text, loc })
+    else ctx.warn({ message: text, loc })
+  }
+}
+
+/*
+ * `csp: 'strict'`: output for a Content-Security-Policy with no `'unsafe-inline'` styles. Fixed `style` values become
+ * generated classes in a stylesheet (vite/csp.mjs) instead of style attributes.
+ */
 /**
  * The Vite plugin: compiles TSX, wires hydration, styles and purging, and relays `weft browser` in dev.
- * @param {{ dev?: boolean, hydratable?: boolean, hmr?: boolean, style?: { taggedParts?: boolean, matrix?: boolean }, purge?: false | { keep?: string[] }, off?: string[] }} [options]
+ * @param {{ dev?: boolean, hydratable?: boolean, hmr?: boolean, style?: { taggedParts?: boolean, matrix?: boolean }, purge?: false | { keep?: string[] }, off?: string[], csp?: 'strict' }} [options]
  */
 export default function weft({
   dev,
@@ -45,6 +60,7 @@ export default function weft({
   style: styleOptions,
   purge: purgeOptions,
   off,
+  csp,
 } = {}) {
   let isDev = false
   let isHot = false
@@ -99,13 +115,9 @@ export default function weft({
           groups,
           shapes,
           taggedParts: !!styleOptions?.taggedParts,
+          csp: csp === 'strict' ? 'strict' : '',
         })
-        for (const d of out.diagnostics) {
-          const text = `${d.code} ${d.message}\n  help: ${d.help}`
-          const loc = { file: id, line: d.line, column: d.column - 1 }
-          if (d.severity === 'error') this.error({ message: text, loc })
-          else this.warn({ message: text, loc })
-        }
+        report(this, id, out.diagnostics)
         if (!out.code) return null
         const generated = standalone
           ? shapeGroupCss(out.facts, groups, id.replace(/\?.*$/, ''), {
@@ -142,6 +154,7 @@ export default function weft({
     main,
     features,
     style.plugin,
+    cspStyles(),
     agent(),
     slots(),
     tokens(),

@@ -233,7 +233,7 @@ async function withFns({ root, site = {} }, fn) {
       logLevel: 'silent',
       appType: 'custom',
       server: { middlewareMode: true, hmr: false, ws: false },
-      plugins: [weft({ hydratable: true }), weftStart({ root, site })],
+      plugins: [weft({ hydratable: true, csp: site?.csp }), weftStart({ root, site })],
     })
     await server.ssrLoadModule('virtual:weft/fns')
     const { fns } = await server.ssrLoadModule(join(startDir, 'data.ts'))

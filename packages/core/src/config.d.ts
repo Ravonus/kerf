@@ -45,6 +45,12 @@ export interface PluginEntry {
 export interface SiteConfig {
   /** Response headers by route, static files included: `{ '/arena/**': { 'x-frame-options': 'DENY' } }`. */
   headers?: Record<string, Record<string, string>>
+  /**
+   * `'strict'`: pages that work under a Content-Security-Policy with no `'unsafe-inline'` styles. Fixed `style` values
+   * compile to generated classes instead of style attributes. Dynamic styles a server writes still need
+   * `style-src-attr 'unsafe-inline'`.
+   */
+  csp?: 'strict'
   name?: string
   /** Absolute `http(s)` origin (and base path) for canonical, og:url and relative images. Without it a relative image is H001. */
   url?: string

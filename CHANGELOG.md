@@ -13,6 +13,12 @@ From an outside team's trial of 0.1.3: their feedback, each point acted on.
   itself still uses Node 26. The runtime matrix builds and serves the same app on Node 24 as well.
 - `@weft-js/plugin-media`: `placeholder: 'file'` writes the 16 px placeholder as its own hashed `.webp` instead of a
   `data:` URL, for a CSP whose `img-src` has no `data:`. Images and video posters both take it.
+- The compiler writes a `style={{ … }}` whose values are all constant into the element's template, like a literal
+  `style="…"`, instead of binding it. 3,000 cards with fixed style objects render and lay out about 25% faster in
+  Chromium (27–31 ms to 22 ms) and the page's JS is 21% smaller.
+- Strict CSP: `weft({ csp: 'strict' })`, or `site: { csp: 'strict' }` in `weft.config.ts`, compiles fixed styles to
+  generated classes in the app's stylesheet, so a page needs no `'unsafe-inline'` in `style-src`. A fixed style on an
+  element with a changing `class` becomes one CSSOM write.
 - `@weft-js/core` ships the reference pages `weft docs` prints, in `docs/`, so they can be read offline and match the
   installed version.
 - `@weft-js/core`: the padding that keeps the full runtime at 13.37 KB is now the digits of π rather than random
@@ -32,8 +38,8 @@ From an outside team's trial of 0.1.3: their feedback, each point acted on.
 - `@weft-js/core` README:
   - **What installing runs:** no install scripts, what the native and WASM compilers can reach, and how to keep native
     code out (`--omit=optional`, `WEFT_COMPILER=wasm`).
-  - **Content Security Policy:** client builds work under `script-src 'self'; style-src 'self'`, and the table says
-    what needs more.
+  - **Content Security Policy:** what works under `script-src 'self'; style-src 'self'`, strict mode, and what
+    still needs more.
   - **Images and video with Media**, with a note on the placeholder and CSP.
   - **A static site** recipe.
   - **Sizes:** what each entry adds to a page.

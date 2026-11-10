@@ -60,6 +60,7 @@ function baseSchemas(z) {
     inlineCss: z.boolean().optional(),
     criticalCss: z.boolean().optional(),
     criticalKeep: z.array(z.string()).optional(),
+    csp: z.literal('strict').optional(),
     image: z.union([z.literal('auto'), z.literal(false), z.string().min(1), image]).optional(),
     card: card.optional(),
     head: z.string().optional(),

@@ -1,10 +1,13 @@
 //! Attributes on intrinsic elements.
 
+use super::static_style::static_style;
 use super::{
     Build, DELEGATED, Emitter, Expression, GetSpan, JSXAttribute, JSXAttributeItem,
     JSXAttributeName, JSXAttributeValue, JSXElement, PROPERTIES, Piece, Static, attr_expression,
     decode_entities, escape_attr, flag_off, js_string, react, static_value,
 };
+
+mod strict;
 
 struct Attributes<'a> {
     b: &'a mut Build,
@@ -13,6 +16,11 @@ struct Attributes<'a> {
     has_kids: bool,
     dynamic: Vec<(&'static str, String, String)>,
     content: Option<String>,
+    /// Strict CSP: the class the element's fixed style became, added to its `class`.
+    moved: Option<String>,
+    /// Strict CSP: the element's `class` is written at run time, so a fixed style can't join it.
+    dynamic_class: bool,
+    class_written: bool,
 }
 
 impl Emitter<'_> {
@@ -31,12 +39,21 @@ impl Emitter<'_> {
             has_kids,
             dynamic: Vec::new(),
             content: None,
+            moved: None,
+            dynamic_class: false,
+            class_written: false,
         };
+        if self.csp.is_some() {
+            self.plan_csp(el, &mut state);
+        }
         for item in &el.opening_element.attributes {
             let JSXAttributeItem::Attribute(attr) = item else {
                 continue;
             };
             self.attribute(attr, &mut state);
+        }
+        if let Some(class) = state.moved.take().filter(|_| !state.class_written) {
+            Self::put(state.b, &format!(" class=\"{class}\""));
         }
         (state.dynamic, state.content)
     }
@@ -203,11 +220,8 @@ impl Emitter<'_> {
             None if react::takes_words(&name) => Self::put(state.b, &format!(" {html}=\"true\"")),
             None => Self::put(state.b, &format!(" {html}")),
             Some(JSXAttributeValue::StringLiteral(s)) => {
-                let text = &self.text[s.span.start as usize + 1..s.span.end as usize - 1];
-                Self::put(
-                    state.b,
-                    &format!(" {html}=\"{}\"", text.replace('"', "&quot;")),
-                );
+                let raw = &self.text[s.span.start as usize + 1..s.span.end as usize - 1];
+                self.put_text(state, &html, &raw.replace('"', "&quot;"), &s.value);
             }
             Some(JSXAttributeValue::ExpressionContainer(c)) => {
                 let Some(expr) = c.expression.as_expression() else {
@@ -238,12 +252,17 @@ impl Emitter<'_> {
             Expression::BooleanLiteral(v) if react::takes_words(&name) => {
                 Some(Static::Text(v.value.to_string()))
             }
+            Expression::ObjectExpression(_) if name == "style" => static_style(expr).map(|css| {
+                if css.is_empty() {
+                    Static::Absent
+                } else {
+                    Static::Text(css)
+                }
+            }),
             _ => static_value(expr),
         };
         match known {
-            Some(Static::Text(t)) => {
-                Self::put(state.b, &format!(" {html}=\"{}\"", escape_attr(&t)));
-            }
+            Some(Static::Text(t)) => self.put_text(state, html, &escape_attr(&t), &t),
             Some(Static::True) => Self::put(state.b, &format!(" {html}")),
             Some(Static::Absent) => {}
             None => self.dynamic_attribute(attr, state, name, html, raw, expr),
