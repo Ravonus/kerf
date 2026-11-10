@@ -1,7 +1,7 @@
 // `scroller`: puts the engine, its inputs and its bars on a root element. `scroller-api.ts` is what it returns.
 import { autoscroll } from './autoscroll'
 import { barInput } from './bar-input'
-import { Engine, registry } from './engine'
+import { Engine, reduceQuery, registry } from './engine'
 import { keyInput } from './keys'
 import { resolve, writeVars } from './options'
 import { domRenderer, drawBars, mountBars, Visibility } from './render'
@@ -20,6 +20,8 @@ export interface Setup {
   options: ScrollOptions
   renderer: Renderer
   remeasure: () => void
+  /** Rebuild the bars, for a change of axes. */
+  rebar: () => void
 }
 
 /**
@@ -39,29 +41,49 @@ export function scroller(root: HTMLElement, options: ScrollOptions = {}): Scroll
   const vis = new Visibility(e)
   const hooks = e.destroyHooks
   const tabStop = focusable(vp, hooks)
+  // Reads happen in one place (measure, from the ResizeObserver batch) and writes in the frame, so a page that mounts
+  // many scrollers lays out once, not once per scroller.
+  let stale = true
   const s: Setup = {
     e,
     vis,
     options,
     renderer: e.o.renderer ?? domRenderer,
     remeasure: () => {
-      tabStop()
       e.measure()
-      vis.apply()
+      stale = true
       e.wake()
     },
+    rebar: () => {},
   }
   vp.setAttribute('data-scroll-viewport', '')
   configure(s)
   tabStop()
-  hooks.push(mountBars(e, () => s.renderer))
+  let unbar = mountBars(e, () => s.renderer)
+  hooks.push(() => unbar())
   root.toggleAttribute('data-ready', true)
-  e.measure()
-  vis.apply()
+  if (typeof ResizeObserver !== 'function') e.measure()
   e.onActivity = () => vis.moved()
-  e.onFrame = (now) => drawBars(e, s.renderer, e.last ? now - e.last : 16)
-  hooks.push(watch(s), listen(s))
-  hooks.push(wheelInput(e), keyInput(e), touchInput(e), autoscroll(e), barInput(e, vis))
+  e.onFrame = (now) => {
+    if (stale && e.measured) {
+      stale = false
+      tabStop()
+      vis.apply()
+    }
+    return drawBars(e, s.renderer, e.last ? now - e.last : 16)
+  }
+  const watching = watch(s)
+  s.rebar = () => {
+    unbar()
+    unbar = mountBars(e, () => s.renderer)
+    barsOff()
+    barsOff = barInput(e, vis)
+    watching.observe()
+    s.remeasure()
+  }
+  hooks.push(watching.stop, listen(s))
+  let barsOff = barInput(e, vis)
+  hooks.push(wheelInput(e), keyInput(e), touchInput(e), autoscroll(e), () => barsOff())
   hooks.push(() => {
     vis.destroy()
     if (e.frame) cancelAnimationFrame(e.frame)
@@ -126,9 +148,12 @@ function watch(s: Setup) {
         })
       : null
   mo?.observe(e.vp, { childList: true })
-  return () => {
-    ro?.disconnect()
-    mo?.disconnect()
+  return {
+    observe,
+    stop: () => {
+      ro?.disconnect()
+      mo?.disconnect()
+    },
   }
 }
 
@@ -143,8 +168,7 @@ function listen({ e, vis, options }: Setup) {
   }
   const enter = inside(true)
   const leave = inside(false)
-  const motion =
-    typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null
+  const motion = reduceQuery()
   const onMotion = () => writeVars(e.root, options.bar, e.reduced())
   e.vp.addEventListener('scroll', onNative, { passive: true })
   e.root.addEventListener('pointerenter', enter)

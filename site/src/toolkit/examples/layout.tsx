@@ -57,4 +57,8 @@ export {
   RowTile,
   SplitTile,
   FrameTile,
+  ScrollViewRows,
+  ScrollViewFixedThumb,
+  ScrollViewCanvas,
+  ScrollViewSnap,
 } from './layout/index'

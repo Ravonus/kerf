@@ -25,8 +25,10 @@ interface Painted {
 }
 const canvases = new WeakMap<HTMLElement, Painted>()
 const COLORS = ['color', 'hoverColor', 'activeColor', 'track', 'hoverTrack'] as const
+let scheme: MediaQueryList | null | undefined
 const dark = () =>
-  typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches
+  !!(scheme ??=
+    typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null)?.matches
 
 /** A CSS colour as the canvas can take it: `color-mix()`, `currentColor` and `var()` resolve against `el`. */
 export function cssColor(el: HTMLElement, css: string) {

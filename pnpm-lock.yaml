@@ -784,6 +784,9 @@ importers:
       '@weft-js/core':
         specifier: workspace:*
         version: link:../packages/core
+      '@weft-js/scroll':
+        specifier: workspace:*
+        version: link:../packages/scroll
       '@weft-js/start':
         specifier: workspace:*
         version: link:../packages/start

@@ -9,6 +9,12 @@ import type { Axis, ScrollSource, ScrollState } from './types'
 
 export type { AxisState } from './axis'
 
+let query: MediaQueryList | null | undefined
+/** One shared query for every scroller: making a MediaQueryList costs more than the rest of a scroller's setup. */
+export const reduceQuery = () =>
+  (query ??=
+    typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null)
+
 /** Every live scroller by its viewport, so nested ones can find the one outside them. */
 export const registry = new WeakMap<Element, Engine>()
 
@@ -19,9 +25,8 @@ export class Engine {
   frame = 0
   last = 0
   dispatching = false
+  measured = false
   private dirty = false
-  private reduceQuery: MediaQueryList | null =
-    typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null
   /** Runs after each frame's writes: the bars draw here. */
   onFrame: (now: number) => boolean = () => false
   /** Runs after an autoscroll step, so a held selection can follow the content. */
@@ -43,7 +48,7 @@ export class Engine {
   }
 
   reduced() {
-    return this.o.motion === 'reduce' || (this.o.motion === 'auto' && !!this.reduceQuery?.matches)
+    return this.o.motion === 'reduce' || (this.o.motion === 'auto' && !!reduceQuery()?.matches)
   }
 
   parent(): Engine | null {
@@ -53,6 +58,7 @@ export class Engine {
 
   /** Read sizes and the position from the DOM. Only call where layout is already clean or a read is wanted. */
   measure() {
+    this.measured = true
     const { vp } = this
     this.rtl = getComputedStyle(vp).direction === 'rtl'
     const { x, y } = this.ax
@@ -100,7 +106,13 @@ export class Engine {
     }
   }
 
+  /** Measure now if no ResizeObserver has yet: input or an API call before the first layout batch. */
+  ready() {
+    if (!this.measured) this.measure()
+  }
+
   canMove(axis: Axis, dir: number) {
+    this.ready()
     const a = this.ax[axis]
     if (!a.on || a.max - a.min < 1) return false
     return dir > 0 ? a.pos < a.max - 0.5 : dir < 0 ? a.pos > a.min + 0.5 : false
@@ -124,6 +136,7 @@ export class Engine {
 
   /** Move straight there: a trackpad delta, a finger, a thumb drag. */
   moveTo(axis: Axis, to: number, source: ScrollSource) {
+    this.ready()
     const a = this.ax[axis]
     if (a.anim?.kind !== 'spring') a.anim = null
     a.pos = clamp(to, a.min, a.max)
@@ -139,6 +152,7 @@ export class Engine {
     dur = this.o.duration,
     ease = this.o.easing,
   ) {
+    this.ready()
     const a = this.ax[axis]
     const end = clamp(to, a.min, a.max)
     this.source = source
@@ -168,6 +182,7 @@ export class Engine {
 
   /** Where a drag would start from now, overscroll included, so catching a bounce doesn't jump. */
   rawPos(axis: Axis) {
+    this.ready()
     const a = this.ax[axis]
     return a.pos + unrubber(a.over, a.view)
   }
@@ -323,6 +338,7 @@ export class Engine {
   }
 
   state(): ScrollState {
+    this.ready()
     const { x, y } = this.ax
     const px = x.max - x.min > 0 ? (x.pos - x.min) / (x.max - x.min) : 0
     return {

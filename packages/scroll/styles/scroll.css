@@ -32,10 +32,14 @@
 
 /* gutter: room is kept beside the content for each axis that scrolls, as `scrollbar-gutter: stable` does. */
 :where([data-scroll][data-layout='gutter']:not([data-axes='x'])) {
-  padding-inline-end: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
+  padding-inline-end: calc(
+    max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px)
+  );
 }
 :where([data-scroll][data-layout='gutter']:not([data-axes='y'])) {
-  padding-block-end: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
+  padding-block-end: calc(
+    max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px)
+  );
 }
 
 :where([data-scroll] > [data-part='scrollbar']) {
@@ -53,24 +57,32 @@
 :where([data-scroll] > [data-part='scrollbar'][data-orientation='vertical']) {
   inset-block: 0;
   inset-inline-end: 0;
-  inline-size: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
+  inline-size: calc(
+    max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px)
+  );
 }
 :where([data-scroll] > [data-part='scrollbar'][data-orientation='horizontal']) {
   inset-inline: 0;
   inset-block-end: 0;
-  block-size: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
+  block-size: calc(
+    max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px)
+  );
 }
 :where(
   [data-scroll][data-overflow-x][data-overflow-y]
     > [data-part='scrollbar'][data-orientation='vertical']
 ) {
-  inset-block-end: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
+  inset-block-end: calc(
+    max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px)
+  );
 }
 :where(
   [data-scroll][data-overflow-x][data-overflow-y]
     > [data-part='scrollbar'][data-orientation='horizontal']
 ) {
-  inset-inline-end: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
+  inset-inline-end: calc(
+    max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px)
+  );
 }
 :where([data-scroll] > [data-part='scrollbar'][data-visible]) {
   opacity: 1;

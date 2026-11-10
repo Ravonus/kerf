@@ -73,6 +73,7 @@ test('the viewport is focusable, the bars are scrollbars that name it', () => {
   expect(vp.tabIndex).toBe(-1)
   vp.querySelector('input')!.remove()
   s.refresh()
+  vi.advanceTimersByTime(16)
   expect(vp.tabIndex).toBe(0)
   expect(vp.getAttribute('role')).toBe('region')
   expect(vp.getAttribute('aria-label')).toBe('Messages')
@@ -260,4 +261,14 @@ test('wrap turns plain children into a scroll area and destroy puts them back', 
   expect(el.querySelector('[data-part="viewport"] [data-part="content"] p')).not.toBeNull()
   s.destroy()
   expect(el.innerHTML).toBe('<p>one</p><p>two</p>')
+})
+
+test('only the axes that scroll get a bar, and changing axes rebuilds them', () => {
+  const { root, s } = area({ axes: 'y' })
+  expect(root.querySelectorAll('[role="scrollbar"]')).toHaveLength(1)
+  s.update({ axes: 'both' })
+  expect(root.querySelectorAll('[role="scrollbar"]')).toHaveLength(2)
+  s.update({ axes: 'x' })
+  const bars = [...root.querySelectorAll('[role="scrollbar"]')]
+  expect(bars.map((b) => b.getAttribute('aria-orientation'))).toEqual(['horizontal'])
 })

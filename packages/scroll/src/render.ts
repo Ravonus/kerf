@@ -29,6 +29,14 @@ export const domRenderer: Renderer = {
 }
 
 let ids = 0
+const ARIA = [
+  'role',
+  'aria-controls',
+  'aria-orientation',
+  'aria-valuemin',
+  'aria-valuemax',
+  'aria-valuenow',
+]
 
 /** Find or make each bar's track, give it scrollbar semantics, and hand it to the renderer. */
 export function mountBars(e: Engine, current: () => Renderer) {
@@ -36,6 +44,7 @@ export function mountBars(e: Engine, current: () => Renderer) {
   const made: HTMLElement[] = []
   if (!e.vp.id) e.vp.id = `scroll-${(ids++).toString(36)}-${Math.random().toString(36).slice(2, 6)}`
   for (const a of e.axes) {
+    if (!a.on) continue
     const orientation = a.axis === 'y' ? 'vertical' : 'horizontal'
     let track = e.root.querySelector<HTMLElement>(
       `:scope > [data-part="scrollbar"][data-orientation="${orientation}"]`,
@@ -57,7 +66,14 @@ export function mountBars(e: Engine, current: () => Renderer) {
     renderer.mount(track, a.axis)
   }
   return () => {
-    for (const a of e.axes) if (a.track) current().unmount(a.track)
+    for (const a of e.axes) {
+      if (!a.track) continue
+      current().unmount(a.track)
+      for (const name of ARIA) a.track.removeAttribute(name)
+      a.track = null
+      a.drawn = ''
+      a.aria = -1
+    }
     for (const t of made) t.remove()
   }
 }

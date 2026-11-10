@@ -53,6 +53,7 @@ export function api(s: Setup, configure: () => void): Scroller {
     refresh: s.remeasure,
     update(next) {
       s.options = { ...s.options, ...next }
+      const axes = e.o.axes
       e.o = resolve(s.options)
       const wanted = next.renderer
       if (wanted && wanted !== s.renderer) {
@@ -65,7 +66,8 @@ export function api(s: Setup, configure: () => void): Scroller {
         s.renderer = wanted
       }
       configure()
-      s.remeasure()
+      if (e.o.axes !== axes) s.rebar()
+      else s.remeasure()
     },
     destroy: () => e.destroyHooks.splice(0).forEach((f) => f()),
   }
