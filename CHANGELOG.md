@@ -3,6 +3,17 @@
 Every `@weft-js` package is released together, at one version. Early releases (0.1.x) can change APIs between
 minor versions.
 
+## Unreleased
+
+### Packages
+
+- New: `@weft-js/scroll`, scrolling run in JavaScript. Wheel, trackpad, touch (with inertia and overscroll), keys,
+  focus, nested hand-off and selection autoscroll behave like native scrolling, the same in every browser. The
+  viewport keeps real scroll offsets, so find-in-page, anchors, sticky positioning, screen readers and `scroll`
+  listeners keep working. Bars are drawn in the DOM or, with `@weft-js/scroll/canvas`, on a canvas, and take a
+  fixed-size thumb, colours, widths, auto-hide, overlay or gutter, snap points, easing and friction.
+- `@weft-js/warp`: `ScrollView`, the Weft component over `@weft-js/scroll`, with a docs page and examples.
+
 ## 0.1.3 (2026-11-10)
 
 ### Packages

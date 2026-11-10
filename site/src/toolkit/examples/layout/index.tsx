@@ -1,3 +1,4 @@
+import * as fixedThumb from './ScrollViewFixedThumb'
 export { GridPlay } from './GridPlay'
 export { GridMinSizes } from './GridMinSizes'
 export { GridCols } from './GridCols'
@@ -57,6 +58,6 @@ export { RowTile } from './RowTile'
 export { SplitTile } from './SplitTile'
 export { FrameTile } from './FrameTile'
 export { ScrollViewRows } from './ScrollViewRows'
-export { ScrollViewFixedThumb } from './ScrollViewFixedThumb'
+export const { ScrollViewFixedThumb } = fixedThumb
 export { ScrollViewCanvas } from './ScrollViewCanvas'
 export { ScrollViewSnap } from './ScrollViewSnap'

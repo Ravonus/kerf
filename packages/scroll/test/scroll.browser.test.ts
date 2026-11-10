@@ -117,7 +117,10 @@ const cases: Record<string, (page: Playwright.Page) => Promise<void>> = {
   },
 
   'focus moving below the fold brings it into view, and the bar follows': async (page) => {
-    await open(page, `<button id="a">a</button>${AREA(`${rows(20)}<button id="far">far</button>`)}`)
+    await open(
+      page,
+      `<input id="a" aria-label="a">${AREA(`${rows(20)}<input id="far" aria-label="far">`)}`,
+    )
     await page.focus('#a')
     await page.keyboard.press('Tab')
     await settle(page, 100)
