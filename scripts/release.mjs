@@ -120,11 +120,14 @@ function published(pkg, names, version) {
   }
 }
 
+/** What `pnpm pack --json` reports. A `prepack` that logs (core's rebuilds say so) writes ahead of the JSON. */
+const packJson = (text) => JSON.parse(text.slice(text.search(/^\{/m)))
+
 /** Pack in place (its `prepack` runs), rewrite the manifest in a copy, pack that with no scripts. */
 function stage(item, names, version, work) {
   const tmp = mkdtempSync(join(work, 'pack-'))
   const packed = basename(
-    JSON.parse(run(pnpm, ['pack', '--json', '--pack-destination', tmp], item.dir)).filename,
+    packJson(run(pnpm, ['pack', '--json', '--pack-destination', tmp], item.dir)).filename,
   )
   run('tar', ['xzf', packed], tmp)
   const dir = join(tmp, 'package')
@@ -133,7 +136,7 @@ function stage(item, names, version, work) {
     `${JSON.stringify(published(read(join(dir, 'package.json')), names, version), null, 2)}\n`,
   )
   const file = basename(
-    JSON.parse(run(pnpm, ['pack', '--json', '--ignore-scripts', '--pack-destination', out], dir))
+    packJson(run(pnpm, ['pack', '--json', '--ignore-scripts', '--pack-destination', out], dir))
       .filename,
   )
   rmSync(tmp, { recursive: true })
