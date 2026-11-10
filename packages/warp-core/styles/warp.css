@@ -803,7 +803,17 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     accent-color: var(--warp-color-accent-solid);
+    /* an in-page anchor lands below the sticky top bar (warp's own: 48 · 56) with a breath of room, not under it. A
+       page with a taller header, or none, sets --warp-scroll-offset */
+    scroll-padding-block-start: var(--warp-scroll-offset, calc(var(--warp-control-md) + 12px + var(--warp-space-related)));
   }
+  /* in-page anchors and skip links glide to their target. Only when nobody asked for less motion: not under the OS
+     reduced-motion setting (the block below also forces auto there), not under data-motion="reduce"; an app that
+     chose data-motion="full" keeps it. A route change still jumps: weft's router scrolls with behavior: "instant" */
+  @media (prefers-reduced-motion: no-preference) {
+    :where(:root:not([data-motion="reduce"])) { scroll-behavior: smooth; }
+  }
+  :where(:root[data-motion="full"]) { scroll-behavior: smooth; }
   /* a scope that changes theme or expression repaints its own ink and font */
   :where([data-theme]),
   :where([data-expression]) {

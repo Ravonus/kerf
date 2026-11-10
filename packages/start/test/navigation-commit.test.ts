@@ -195,3 +195,24 @@ it('keeps a reentrant navigation from setup during a real commit', async () => {
   f.nav.dispose()
   f.dispose()
 })
+
+it('a route change jumps to the top, and to a hash target, without the page smooth scroll', async () => {
+  const f = fixture()
+  const scrollTo = vi.fn()
+  vi.stubGlobal('scrollTo', scrollTo)
+  const pending = f.nav.go('/other')
+  answer(0, '/other', '/other', {})
+  await pending
+  expect(scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: 'instant' })
+  const target = document.createElement('h2')
+  target.id = 'later'
+  document.body.append(target)
+  const into = vi.fn()
+  target.scrollIntoView = into
+  const hashed = f.nav.go('/third#later')
+  answer(1, '/third', '/third', {})
+  await hashed
+  expect(into).toHaveBeenCalledWith({ behavior: 'instant' })
+  f.nav.dispose()
+  f.dispose()
+})

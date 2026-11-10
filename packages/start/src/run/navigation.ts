@@ -123,7 +123,10 @@ export class Navigation {
       if (!current()) return
       if (scroll) {
         const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)))
-        target ? target.scrollIntoView() : window.scrollTo(0, 0)
+        // a new page arrives where it starts, at once: warp makes the root scroll smooth for in-page anchors, and a
+        // route change that glided down from the old page's offset read as the old page scrolling away
+        if (target) target.scrollIntoView({ behavior: 'instant' })
+        else window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
       }
     }
   }

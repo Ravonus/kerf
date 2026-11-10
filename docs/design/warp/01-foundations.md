@@ -258,6 +258,14 @@ into a strobe. `--warp-loop-play` (`running`, `paused` under reduced motion) is 
 `animation-play-state` when it should hold its frame rather than restart. Never fake a pause by dividing a
 duration by `max(motion-scale, 0.001)`: that keeps a compositor animation alive.
 
+**The page scrolls smoothly by default** (`warp.base`): `:root` gets `scroll-behavior: smooth` under
+`prefers-reduced-motion: no-preference`, never under the OS `reduce` setting or `data-motion="reduce"` (an app that set
+`data-motion="full"` keeps it). In-page anchors and skip links glide; a route change jumps, because weft's router
+scrolls to the top or the hash target with `behavior: "instant"` (scripted page-level scrolls should do the same).
+`:root` also sets `scroll-padding-block-start: var(--warp-scroll-offset)`, by default the top bar (`control-md` + 12px)
+plus `space-related`, so an anchor lands below the sticky header, not under it. A page with a taller header, or none,
+sets `--warp-scroll-offset`.
+
 ### Open and close
 
 Everything that opens closes with motion too. A close is never a cut.
@@ -541,6 +549,16 @@ wrapped in `:where()` (specificity 0). Rules of the road:
   }
   ```
 - **Other layered systems** (Panda, vanilla-extract): declare `warp` before their layers.
+- **A part belongs to its own component.** Every `[data-part]` rule hangs from its scope: in the same compound
+  (`[data-scope="result"]`), as a child chain (`[data-scope="checkbox"] > [data-part="control"] > [data-part="mark"]`),
+  or as a descendant. A descendant rule is fenced at split time (`warp-core/scripts/split-css/parts.mjs`): it gets
+  `:not(X S *:not(X S X *))`, where S is every other component with a part of that name that X doesn't render
+  itself, so `[data-scope="dialog"] [data-part="mark"]` styles the Modal's mark and not the tick of a checkbox inside
+  the Modal. Never write a bare part, and never "scope" one by exclusion (`[data-part="mark"]:not([data-scope="meter"]
+  *)` matches every other component's mark on the page). The only bare parts are the signature's shared primitives
+  (sweep, rail, track, thumb, shuttle, label-chars…) and a short list of standalone names no component shares;
+  `warp-core/test/parts.test.ts` fails on anything else, and `warp/test/compose*.browser.test.ts` render every
+  component inside a Modal, Card, Popover and Alert and compare it with the component on its own.
 - `!important` appears only in `warp.base`, for accessibility guarantees: the reduced-motion rules (§2 Motion),
   and keeping a loading button's label in the accessibility tree (its children hide by `opacity`, never
   `visibility`). In the second layer, those beat any later layer's `!important`.

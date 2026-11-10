@@ -125,7 +125,11 @@ function capture() {
     const scroll = () => {
       for (const s of scrolled) {
         const el = find(s)
-        if (el) {
+        // instant: a smooth root (warp's default) would glide back to where the edit left it
+        if (!el) continue
+        if (typeof el.scrollTo === 'function')
+          el.scrollTo({ top: s.top, left: s.left, behavior: 'instant' })
+        else {
           el.scrollTop = s.top
           el.scrollLeft = s.left
         }

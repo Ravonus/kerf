@@ -532,6 +532,14 @@ start(routes)
 Without it the page stays still, with every word in place. Until the first scroll the page holds still and whole, so
 the first screen, a crawler and an audit all read every word at full contrast.
 
+The page itself scrolls smoothly by default: in-page anchors and skip links glide, unless the visitor asked for reduced
+motion (or the app set `data-motion="reduce"`). A route change still jumps to the top, or to its hash target, at once.
+Anchors land below the sticky top bar; a page with a taller header, or none, sets `--warp-scroll-offset`:
+
+```css
+:root { --warp-scroll-offset: 96px; }
+```
+
 ## Component catalogue
 
 Every component exported from `@weft-js/warp`, grouped by what it is for. The docs site has a page for each one with its
