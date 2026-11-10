@@ -39,11 +39,15 @@ export const isPhoto = (meta) =>
   !(meta.format === 'webp' && meta.hasAlpha)
 
 /**
- * The 16 px placeholder. Inline it's a `data:` URL; with `placeholder: 'file'` it's a file of its own next to the
- * ladder, for a CSP whose `img-src` has no `data:`. `name` is the file's name when it is one.
+ * Adds the 16 px placeholder from `img` (a sharp pipeline) to `asset`. Inline it's a `data:` URL; with
+ * `placeholder: 'file'` it's a file of its own pushed to `files`, for a CSP whose `img-src` has no `data:`.
  */
-export const placeholderOf = (tiny, stem, o, short) => {
-  if (o.placeholder !== 'file') return { url: `data:image/webp;base64,${tiny.toString('base64')}` }
-  const name = `${stem}-placeholder-${short(tiny)}.webp`
-  return { url: name, file: { name, bytes: new Uint8Array(tiny) } }
+export async function withPlaceholder(asset, files, img, stem, o, short) {
+  const tiny = await img.resize(16, 16, { fit: 'inside' }).webp({ quality: 40 }).toBuffer()
+  if (o.placeholder !== 'file') {
+    asset.placeholder = `data:image/webp;base64,${tiny.toString('base64')}`
+    return
+  }
+  asset.placeholder = `${stem}-placeholder-${short(tiny)}.webp`
+  files.push({ name: asset.placeholder, bytes: new Uint8Array(tiny) })
 }

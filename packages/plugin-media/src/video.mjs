@@ -12,7 +12,7 @@ import { join } from 'node:path'
 import { promisify } from 'node:util'
 import sharp from 'sharp'
 import { errored, need, onDisk, short } from './video/common.mjs'
-import { placeholderOf } from './shared.mjs'
+import { withPlaceholder } from './shared.mjs'
 
 export { audioFile } from './video/audio.mjs'
 
@@ -105,16 +105,13 @@ export async function poster({ enc, source, stem, width, duration, o }) {
   const bytes = await sharp(png).webp({ quality: 80 }).toBuffer()
   const name = `${stem}-poster-${short(bytes)}.webp`
   const asset = { poster: name }
-  const extra = []
+  const files = [{ name, bytes: new Uint8Array(bytes) }]
   if (o.placeholder) {
     const stats = await sharp(png).stats()
     asset.dominant = `#${['r', 'g', 'b'].map((c) => stats.dominant[c].toString(16).padStart(2, '0')).join('')}`
-    const tiny = await sharp(png).resize(16, 16, { fit: 'inside' }).webp({ quality: 40 }).toBuffer()
-    const ph = placeholderOf(tiny, stem, o, short)
-    asset.placeholder = ph.url
-    if (ph.file) extra.push(ph.file)
+    await withPlaceholder(asset, files, sharp(png), stem, o, short)
   }
-  return { asset, file: { name, bytes: new Uint8Array(bytes) }, extra }
+  return { asset, files }
 }
 
 export const ladderOf = (o, width) => {
@@ -175,7 +172,7 @@ function chosen(sets) {
 
 function finish(asset, sets, cover, diagnostics) {
   const files = sets.flatMap((s) => s.rungs.map((r) => ({ name: r.name, bytes: r.bytes })))
-  if (cover) files.push(cover.file, ...cover.extra)
+  if (cover) files.push(...cover.files)
   const compatible = sets.at(-1)
   const top = compatible.rungs.at(-1)
   const out = {

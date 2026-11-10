@@ -14,7 +14,7 @@ import sharp from 'sharp'
 import { optimize } from 'svgo'
 import { probe } from '@weft-js/core/media-probe'
 import { createMediaServer } from './server.mjs'
-import { DEFAULTS, FIXED, encoders, hex, isPhoto, MIME, placeholderOf } from './shared.mjs'
+import { DEFAULTS, FIXED, encoders, hex, isPhoto, MIME, withPlaceholder } from './shared.mjs'
 import { unsafeSvg } from './svg.mjs'
 import { AUDIO, audioFile, gif, VIDEO, video } from './video.mjs'
 
@@ -288,10 +288,7 @@ async function raster({ bytes, name, stem, audio }, o, encode) {
   }
   if (o.placeholder) {
     asset.dominant = hex((await base().stats()).dominant)
-    const tiny = await base().resize(16, 16, { fit: 'inside' }).webp({ quality: 40 }).toBuffer()
-    const ph = placeholderOf(tiny, stem, o, short)
-    asset.placeholder = ph.url
-    if (ph.file) files.push(ph.file)
+    await withPlaceholder(asset, files, base(), stem, o, short)
   }
   return { asset, files, diagnostics }
 }

@@ -28,9 +28,10 @@ export function createVideo({
       stem: 'poster',
       width,
       duration: info.duration,
-      o,
+      // The route serves only the poster and rungs, so an upload's placeholder stays inline.
+      o: { ...o, placeholder: !!o.placeholder },
     })
-    writeFileSync(join(dir, hash, 'poster.webp'), cover.file.bytes)
+    writeFileSync(join(dir, hash, 'poster.webp'), cover.files[0].bytes)
     const top = url(hash, plan.rungs.at(-1)[0], 'mp4')
     const asset = compatible({
       kind: 'video',

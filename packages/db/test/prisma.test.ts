@@ -24,7 +24,7 @@ beforeAll(async () => {
   execFileSync('pnpm', ['exec', 'prisma', 'db', 'push'], { env, stdio: 'pipe' })
   const { PrismaClient } = await import('./generated/client')
   const { PrismaLibSql } = await import('@prisma/adapter-libsql')
-  prisma = new PrismaClient({ adapter: new PrismaLibSql({ url }) })
+  prisma = new PrismaClient({ adapter: new PrismaLibSql({ url }) }) as unknown as Client
 })
 afterAll(async () => {
   await prisma?.$disconnect()
