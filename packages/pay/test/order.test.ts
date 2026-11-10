@@ -115,9 +115,9 @@ test('Stripe charges each line and mails the guest a receipt', async () => {
   const calls: URLSearchParams[] = []
   const rail = stripeRail({
     secretKey: 'sk_test_x',
-    fetch: async (_url, init) => {
-      calls.push(new URLSearchParams(String(init!.body)))
-      return new Response(JSON.stringify({ url: 'https://checkout.mock/s/1' }))
+    fetch: (_url, init) => {
+      calls.push(new URLSearchParams(init!.body as string))
+      return Promise.resolve(new Response(JSON.stringify({ url: 'https://checkout.mock/s/1' })))
     },
   })
   const pay = definePay({

@@ -27,7 +27,7 @@ function mock(
   const fetcher = ((url: string, init: RequestInit) => {
     if (!url.startsWith('https://connect.squareup'))
       return Promise.reject(new Error(`unexpected request to ${url}`))
-    const body = init.body ? JSON.parse(String(init.body)) : undefined
+    const body = init.body ? JSON.parse(init.body as string) : undefined
     calls.push({ url, method: String(init.method), body })
     const answer = url.includes('/payment-links')
       ? { payment_link: { url: 'https://square.link/u/abc', order_id: 'ord_1' } }
