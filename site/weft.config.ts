@@ -42,7 +42,7 @@ export default defineConfig({
     description:
       'TSX that compiles to direct DOM bindings. Component bodies run once, and the compiler explains its errors to agents.',
     locale: 'en_US',
-    head: `<link rel="icon" href="/favicon.svg" type="image/svg+xml">${dialHead}`,
+    head: `<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${dialHead}`,
   },
   plugins: [
     // The named themes the Appearance menu and each example frame switch (src/lib/palettes.ts).

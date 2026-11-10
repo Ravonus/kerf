@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { deflateSync } from 'node:zlib'
 import { catalog } from '../../../packages/cli/src/catalog.mjs'
 import { loadCompiler, resolveWeft } from '../../../packages/cli/src/weft.mjs'
 import { highlight, level, PALETTE, site, repo, pub } from './context.mjs'
 import { write, readData } from './docs-catalog.mjs'
+import { INKS, markCells, png } from '../mark.mjs'
 
 /** Every drawing, from the set's generated source: `{ name: [hollow, solid] }`, content-addressed in `public/`. */
 function buildIcons() {
@@ -39,25 +39,19 @@ function buildIcons() {
 
 // ------------------------------------------------------------------ art
 
-/** A palette PNG, by hand: the poster is a few KB of cells, sized up with `image-rendering: pixelated`. */
 /** The share card's picture: the hero's field, fading out towards the words, with the mark woven on it. 10 px cells. */
 function cardArt() {
   const cols = 120,
     rows = 63,
     CELL = 10
-  const unit = 2.4,
-    ox = 62,
-    oy = 3
-  const warps = [5, 10, 15, 20].map((u) => ox + u * unit),
-    wefts = [9, 15].map((u) => oy + u * unit)
-  const near = (v, at) => Math.abs(v + 0.5 - at) <= 1.5
+  const ox = 62,
+    oy = 3,
+    size = 58
+  const mark = markCells(size, 2.4, 3)
   const cell = (x, y) => {
-    const warp = warps.findIndex((at) => near(x, at)),
-      weft = wefts.findIndex((at) => near(y, at))
-    const inWarp = warp >= 0 && y >= oy + 3 * unit && y < oy + 21 * unit
-    const inWeft = weft >= 0 && x >= ox + 2 * unit && x < ox + 22 * unit
-    if (inWarp && (!inWeft || (warp + weft) % 2 === 1)) return 4
-    if (inWeft) return 6
+    const ink =
+      x >= ox && x < ox + size && y >= oy && y < oy + size ? mark[(y - oy) * size + x - ox] : 0
+    if (ink) return PALETTE.length - 1 + ink
     return level({
       x,
       y,
@@ -71,45 +65,8 @@ function cardArt() {
     cols * CELL,
     rows * CELL,
     (x, y) => Math.max(0, cell((x / CELL) | 0, (y / CELL) | 0)),
-    [...PALETTE, [250, 120, 90, 255]],
+    [...PALETTE, ...INKS.slice(1)],
   )
-}
-
-function png(width, height, pixel, palette) {
-  const crcTable = Int32Array.from({ length: 256 }, (_, n) => {
-    let c = n
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
-    return c
-  })
-  const crc = (buf) => {
-    let c = -1
-    for (const b of buf) c = crcTable[(c ^ b) & 255] ^ (c >>> 8)
-    return (c ^ -1) >>> 0
-  }
-  const chunk = (type, data) => {
-    const head = Buffer.alloc(4)
-    head.writeUInt32BE(data.length)
-    const body = Buffer.concat([Buffer.from(type), data])
-    const tail = Buffer.alloc(4)
-    tail.writeUInt32BE(crc(body))
-    return Buffer.concat([head, body, tail])
-  }
-  const ihdr = Buffer.alloc(13)
-  ihdr.writeUInt32BE(width, 0)
-  ihdr.writeUInt32BE(height, 4)
-  ihdr[8] = 8
-  ihdr[9] = 3
-  const raw = Buffer.alloc((width + 1) * height)
-  for (let y = 0; y < height; y++)
-    for (let x = 0; x < width; x++) raw[y * (width + 1) + 1 + x] = pixel(x, y)
-  return Buffer.concat([
-    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
-    chunk('IHDR', ihdr),
-    chunk('PLTE', Buffer.from(palette.flatMap((c) => c.slice(0, 3)))),
-    chunk('tRNS', Buffer.from(palette.map((c) => c[3]))),
-    chunk('IDAT', deflateSync(raw, { level: 9 })),
-    chunk('IEND', Buffer.alloc(0)),
-  ])
 }
 
 const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]

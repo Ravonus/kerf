@@ -2,7 +2,7 @@ import { derived } from '@weft-js/core'
 import { currentPath, Link } from '@weft-js/start'
 import { SideNavTitle } from '@weft-js/warp'
 import { NAV } from '../lib/nav'
-import { Mark } from './Mark'
+import { Mark } from './Mark.gen'
 
 const labelFor = (top: string) => NAV.find((n) => n.href === `/${top}`)?.label ?? ''
 

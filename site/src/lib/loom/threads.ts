@@ -7,7 +7,7 @@ const TEAL = [
   [90, 220, 225],
   [220, 255, 250],
 ]
-const CORAL = [
+export const CORAL = [
   [48, 22, 18],
   [110, 40, 30],
   [190, 70, 50],
@@ -15,17 +15,32 @@ const CORAL = [
   [255, 225, 200],
 ]
 const ramp = (r: number[][]) => [PALETTE[0]!, ...r.map((c) => [...c, 255])]
+const RAMPS = [PALETTE, ramp(TEAL), ramp(CORAL)]
+const css = ([r, g, b, a]: number[]) => `rgba(${r},${g},${b},${a! / 255})`
+const tint = (c: number[], k: number) =>
+  c.map((v, i) => (i < 3 ? Math.round(v + (255 - v) * k) : v))
 
-/** Index = level + band × STEPS. Bands: the field's green, teal, coral. */
-export const COLOURS = [PALETTE, ramp(TEAL), ramp(CORAL)]
-  .flat()
-  .map(([r, g, b, a]) => `rgba(${r},${g},${b},${a! / 255})`)
+/** Index = level + band × STEPS. Bands: the field's green, teal, coral. Each ramp runs to near white, for a dark page. */
+export const COLOURS = RAMPS.flat().map(css)
+
+/**
+ * The same indices for a light page: the field fades to pale tints and the lit levels take the ramp's own greens and
+ * coral, darkest last, so the mark keeps the hero's exact colours rather than an inverted guess at them.
+ */
+export const LIGHT_COLOURS = RAMPS.flatMap((r) => [
+  r[0]!,
+  tint(r[3]!, 0.85),
+  tint(r[3]!, 0.6),
+  r[4]!,
+  r[3]!,
+  r[2]!,
+]).map(css)
 
 export type Threads = { cover: Float32Array; born: Float32Array; band: Uint8Array }
 
 // The house mark in its 24-unit box: four warps, two wefts.
-const WARPS = [5, 10, 15, 20]
-const WEFTS = [9, 15]
+export const WARPS = [5, 10, 15, 20]
+export const WEFTS = [9, 15]
 
 type Frame = {
   ox: number
@@ -54,7 +69,9 @@ function weftThreads({ ox, oy, unit, half, delay, put }: Frame) {
     const cy = oy + wy * unit
     for (let x = Math.ceil(ox + 2 * unit); x < ox + 22 * unit; x++) {
       const at = delay + 0.9 + j * 0.16 + ((x - ox) / (24 * unit)) * 0.9
-      const warp = WARPS.findIndex((wx) => Math.abs(x - (ox + wx * unit)) <= half + 1.5)
+      // The gap the weft leaves where it dives under a warp scales with the mark, or a small one loses its wefts.
+      const gap = half + Math.min(1.5, 0.4 * unit)
+      const warp = WARPS.findIndex((wx) => Math.abs(x - (ox + wx * unit)) <= gap)
       const under = warp >= 0 && (warp + j) % 2 === 1 // over and under: a real weave
       for (let y = Math.floor(cy - half - 1); y <= cy + half + 1; y++)
         if (!under) put(x, y, edge(half, y - cy), at, 2)
@@ -85,7 +102,7 @@ export function threads(
     ox: cols * centre - 12 * unit,
     oy: rows / 2 - 12 * unit,
     unit,
-    half: Math.max(1.4, 0.62 * unit),
+    half: Math.max(0.9, 0.62 * unit), // the mark's own proportion, down to threads two cells wide
     delay,
     put,
   }

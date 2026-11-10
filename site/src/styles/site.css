@@ -153,13 +153,7 @@ p {
   flex: 1;
 }
 [data-site='mark'] {
-  fill: none;
-  stroke: var(--warp-color-text);
-  stroke-width: 1.5;
-}
-[data-site='mark'] [data-weft] {
-  stroke: var(--warp-color-accent-solid);
-  stroke-width: 2;
+  flex: none;
 }
 /* Search is a quiet field, not a button: a sunken ground and a hairline, no sweep or fill. Its shortcut is one small
    line of mono at the end, out of sight until the hand or the keyboard comes to the field. */
@@ -338,20 +332,27 @@ p {
 [data-site='loom'][data-live] {
   opacity: 0.85;
 }
-/* The mark's ramp runs to near white, for a dark page. Inverted, it runs to near black and keeps its hues. */
+/* The loom paints a light page's own ramp (Loom.tsx), so it needs no filter. The poster is the dark field alone: on a
+   light page it is inverted while it waits, then gives way, so nothing dark shows through the loom's empty cells. */
 @media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) [data-site='loom'] {
-    filter: invert(1) hue-rotate(180deg) saturate(1.1);
-  }
   :root:not([data-theme='dark']) [data-site='loom'][data-live] {
     opacity: 1;
   }
-}
-:root[data-theme='light'] [data-site='loom'] {
-  filter: invert(1) hue-rotate(180deg) saturate(1.1);
+  :root:not([data-theme='dark']) [data-site='hero'] [data-part='poster'] {
+    filter: invert(1) hue-rotate(180deg);
+  }
+  :root:not([data-theme='dark']) [data-site='hero']:has([data-site='loom'][data-live]) [data-part='poster'] {
+    opacity: 0;
+  }
 }
 :root[data-theme='light'] [data-site='loom'][data-live] {
   opacity: 1;
+}
+:root[data-theme='light'] [data-site='hero'] [data-part='poster'] {
+  filter: invert(1) hue-rotate(180deg);
+}
+:root[data-theme='light'] [data-site='hero']:has([data-site='loom'][data-live]) [data-part='poster'] {
+  opacity: 0;
 }
 [data-site='hero'] [data-part='say'] {
   display: grid;
@@ -953,8 +954,8 @@ p {
   block-size: 48px;
 }
 
-/* A phone has no room beside the words, so the art takes a band above them. */
-@media (max-width: 719.98px) {
+/* Under 900px there is no room beside the words (Loom.tsx's `wide`), so the art takes a band above them. */
+@media (max-width: 899.98px) {
   [data-site='hero'] {
     align-items: start;
     padding-block-start: 236px;

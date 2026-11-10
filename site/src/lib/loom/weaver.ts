@@ -42,7 +42,14 @@ function cellAt(scene: Scene, x: number, y: number, t: number, clock: number) {
   const lift = (word ? word[i]! * 0.98 : 0) + thread * 0.5 + flash + energy * 0.8 + shed
   let band = bandOf(scene, i, energy, thread)
   const inWord = word && word[i]! > 0.5 && energy < 0.14
-  if (!band && !inWord && Math.sin((x / cols) * 3.1 + (y / rows) * 1.7 - t * 0.5) > 0.86) band = 1
+  // A slow teal sheen crosses the field, never the mark: its threads keep their own green and coral.
+  if (
+    !band &&
+    !inWord &&
+    thread <= 0.5 &&
+    Math.sin((x / cols) * 3.1 + (y / rows) * 1.7 - t * 0.5) > 0.86
+  )
+    band = 1
   return level({ x, y, cols, rows, t, lift }) + band * STEPS
 }
 

@@ -1,6 +1,6 @@
 import { flush, onCleanup, onMount, state, watch } from '@weft-js/core'
 import { weaver } from '../lib/loom/weaver'
-import { COLOURS, threads } from '../lib/loom/threads'
+import { COLOURS, LIGHT_COLOURS, threads } from '../lib/loom/threads'
 
 const low = () => {
   const n = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } }
@@ -12,7 +12,13 @@ const low = () => {
   )
 }
 
-type LoomRun = { raf: number; dead: boolean; stops: (() => void)[] }
+type LoomRun = {
+  raf: number
+  dead: boolean
+  stops: (() => void)[]
+  ink: string[]
+  repaint: () => void
+}
 
 const later = (fn: (d?: IdleDeadline) => void) =>
   'requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 400 }) : setTimeout(fn, 16)
@@ -92,18 +98,36 @@ function animateLoom(scene: LoomScene) {
   })
 }
 
-function buildLoom(getBox: () => HTMLCanvasElement, run: LoomRun) {
-  const CHUNK = 400
-  const canvas = getBox()
-  const paint = canvas.getContext('2d', { alpha: true })!
+/** The hero's page colour decides the ramp, so a named theme gets the right one whatever its name. A 1×1 canvas reads
+ * any CSS colour (oklch included) back as sRGB. */
+const inks = (hero: HTMLElement) => {
+  const probe = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!
+  probe.fillStyle = getComputedStyle(hero).backgroundColor
+  probe.fillRect(0, 0, 1, 1)
+  const [r = 0, g = 0, b = 0] = probe.getImageData(0, 0, 1, 1).data
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 140 ? LIGHT_COLOURS : COLOURS
+}
+
+/** Whole square cells: the canvas takes exactly `cols × rows` cells and the hero clips the last part-cell. */
+function measure(canvas: HTMLCanvasElement) {
+  canvas.style.inlineSize = canvas.style.blockSize = ''
   const rect = canvas.getBoundingClientRect()
   const CELL = rect.width < 700 ? 8 : 10
   const cols = Math.ceil(rect.width / CELL),
     rows = Math.ceil(rect.height / CELL)
   canvas.width = cols
   canvas.height = rows
+  canvas.style.inlineSize = `${cols * CELL}px`
+  canvas.style.blockSize = `${rows * CELL}px`
+  return { rect, cols, rows }
+}
+
+function buildLoom(canvas: HTMLCanvasElement, run: LoomRun) {
+  const CHUNK = 400
+  const paint = canvas.getContext('2d', { alpha: true })!
+  const { rect, cols, rows } = measure(canvas)
   const hero = canvas.parentElement!
-  // In the room right of the words; on a narrow page it sits behind them, under a veil.
+  // In the room right of the words; under 900px the hero gives it a band of its own above them (site.css).
   const words = hero.querySelector('[data-part="say"]')!.getBoundingClientRect()
   const room = (rect.right - words.right) / rect.width
   const wide = rect.width >= 900
@@ -111,6 +135,12 @@ function buildLoom(getBox: () => HTMLCanvasElement, run: LoomRun) {
   const cloth = weaver(cols, rows, null, threads(cols, rows, 0.2, wide ? 1 - room / 2 : 0.5, size))
   const total = cols * rows
   const cells: ReturnType<typeof state<number>>[] = []
+  const fill = (x: number, y: number, v: number) => {
+    paint.clearRect(x, y, 1, 1)
+    paint.fillStyle = run.ink[v]!
+    paint.fillRect(x, y, 1, 1)
+  }
+  run.repaint = () => cells.forEach((c, i) => fill(i % cols, (i / cols) | 0, c.value))
   const slice = (deadline?: IdleDeadline) => {
     if (run.dead) return
     do {
@@ -119,15 +149,10 @@ function buildLoom(getBox: () => HTMLCanvasElement, run: LoomRun) {
           x = i % cols,
           y = (i / cols) | 0
         const cell = state(cloth.at(x, y, 0, 0))
-        paint.fillStyle = COLOURS[cell.value]!
-        paint.fillRect(x, y, 1, 1)
+        fill(x, y, cell.value)
         watch(
           () => cell.value,
-          (v) => {
-            paint.clearRect(x, y, 1, 1)
-            paint.fillStyle = COLOURS[v]!
-            paint.fillRect(x, y, 1, 1)
-          },
+          (v) => fill(x, y, v),
         )
         cells.push(cell)
       }
@@ -140,14 +165,62 @@ function buildLoom(getBox: () => HTMLCanvasElement, run: LoomRun) {
   later(slice)
 }
 
+const stop = (run: LoomRun) => {
+  run.dead = true
+  cancelAnimationFrame(run.raf)
+  run.stops.forEach((f) => f())
+}
+
+/** Builds the cloth for the hero's size, and builds it again when that size changes, so the mark never stretches. */
 function mountLoom(getBox: () => HTMLCanvasElement) {
   if (low()) return
-  const run: LoomRun = { raf: 0, dead: false, stops: [] }
-  later(() => buildLoom(getBox, run))
+  const canvas = getBox(),
+    hero = canvas.parentElement!
+  const fresh = (): LoomRun => ({
+    raf: 0,
+    dead: false,
+    stops: [],
+    ink: inks(hero),
+    repaint: () => {},
+  })
+  let run = fresh(),
+    width = 0,
+    height = 0,
+    wait = 0
+  const rebuild = () => {
+    stop(run)
+    delete canvas.dataset.live
+    run = fresh()
+    later(() => buildLoom(canvas, run))
+  }
+  const sized = new ResizeObserver(([e]) => {
+    const { width: w, height: h } = e!.contentRect
+    if (Math.abs(w - width) < 1 && Math.abs(h - height) < 1) return
+    const first = !width
+    width = w
+    height = h
+    clearTimeout(wait)
+    wait = first ? 0 : window.setTimeout(rebuild, 200)
+    if (first) later(() => buildLoom(canvas, run))
+  })
+  sized.observe(hero)
+  const recolour = () => {
+    run.ink = inks(hero)
+    run.repaint()
+  }
+  const themes = new MutationObserver(recolour)
+  themes.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme', 'class', 'style'],
+  })
+  const scheme = matchMedia('(prefers-color-scheme: dark)')
+  scheme.addEventListener('change', recolour)
   onCleanup(() => {
-    run.dead = true
-    cancelAnimationFrame(run.raf)
-    run.stops.forEach((f) => f())
+    clearTimeout(wait)
+    sized.disconnect()
+    themes.disconnect()
+    scheme.removeEventListener('change', recolour)
+    stop(run)
   })
 }
 
