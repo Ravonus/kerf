@@ -192,29 +192,26 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"]) {
   --_x: var(--warp-mx, 50%); --_y: var(--warp-my, 50%); --_ptr: 0;
   --_pa: var(--_solid-hover);
-  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 9%, var(--_solid-hover));
-  /* the hard offset: the page's opposite (--warp-offset-color), so the pull-out reads on any ground */
-  --_off: var(--warp-offset-color);
+  --_pb: var(--_solid-hover);
+  /* the hard offset: the page's opposite (--warp-offset-color) carrying a third of the button's own hue, so the
+     pull-out reads on any ground as the button's shadow, never a black slab under a coloured key */
+  --_off: color-mix(in oklab, var(--warp-offset-color) 68%, var(--_solid));
 }
 :where([data-scope="button"][data-follow]) { --_ptr: 1; }
-:where([data-scope="button"][data-tone="neutral"]) { --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 5%, var(--_solid-hover)); }
-/* a solid's fill is lighter, brighter ink than its rest, spreading from the hand: the hover shade (darker in light) next to
-   the rest read as nothing happening. The fill leans to the highlight, and on light its lightness stops at 0.53, where the
-   on-solid ink still has 4.5:1 (on dark the lift only adds contrast). Without relative colour, a smaller safe mix. Only
-   vivid draws it (--warp-btn-fill). */
+/* a solid's hover fill is its own colour, deeper: the same hue and chroma at a lower lightness, spreading from the hand
+   (an ink overlay). It never leans to another hue: a fill mixed toward the highlight turned a brown key olive. Darker
+   only adds contrast to a light ink; the dark inks (dark-theme solids, caution) sit on fills above 0.6, and 0.07 down
+   keeps them over 4.5:1 (test/button-hover.browser.test.ts). Without relative colour, a black mix, which also keeps
+   the hue. Only vivid draws it (--warp-btn-fill). */
 :where([data-scope="button"]:not([data-emphasis])) {
-  --_pa: color-mix(in oklab, var(--warp-color-highlight-solid) 8%, var(--_solid));
-  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 11%, var(--_solid));
+  --_pa: color-mix(in oklab, black 9%, var(--_solid));
+  --_pb: color-mix(in oklab, black 13%, var(--_solid));
 }
 @supports (color: oklch(from red l c h)) {
   :where([data-scope="button"]:not([data-emphasis])) {
-    --_pa: light-dark(oklch(from color-mix(in oklab, var(--warp-color-highlight-solid) 30%, var(--_solid)) min(l, 0.53) c h), color-mix(in oklab, var(--warp-color-highlight-solid) 30%, var(--_solid)));
-    --_pb: light-dark(oklch(from color-mix(in oklab, var(--warp-color-highlight-solid) 48%, var(--_solid)) min(l, 0.53) calc(c * 1.1) h), color-mix(in oklab, var(--warp-color-highlight-solid) 48%, var(--_solid)));
+    --_pa: oklch(from var(--_solid) calc(l - 0.05) c h);
+    --_pb: oklch(from var(--_solid) calc(l - 0.07) c h);
   }
-}
-:where([data-scope="button"][data-tone="neutral"]:not([data-emphasis])) {
-  --_pa: color-mix(in oklab, white 10%, var(--_solid));
-  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 6%, color-mix(in oklab, white 16%, var(--_solid)));
 }
 /* the primary action reads the stop's primary, which is ink at quiet */
 :where([data-scope="button"]:not([data-emphasis], [data-tone])) {
@@ -230,7 +227,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"]:is([data-emphasis="outline"])),
 :where([data-scope="button"]:is([data-emphasis="ghost"])) {
   --_pa: color-mix(in oklab, var(--_solid) 22%, var(--warp-color-surface));
-  --_pb: color-mix(in oklab, var(--warp-color-highlight-solid) 10%, var(--_pa));
+  --_pb: color-mix(in oklab, var(--_solid) 28%, var(--warp-color-surface));   /* the tone, a step deeper: no other hue */
 }
 :where([data-scope="button"]:is([data-emphasis="frame"])),
 :where([data-scope="button"]:is([data-emphasis="link"])),
