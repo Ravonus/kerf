@@ -14,7 +14,7 @@ import {
 import { join } from 'node:path'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
-import { afterAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { check } from '../../cli/src/check.mjs'
 import { scaffold, template as templateSource, TEMPLATES } from '../src/index.mjs'
 import type * as TS from '../../cli/node_modules/typescript/lib/typescript.js'
@@ -35,6 +35,15 @@ const here = new URL('../', import.meta.url)
 const tmp = fileURLToPath(new URL('./.tmp-templates/', import.meta.url))
 const pkgs = fileURLToPath(new URL('../../', import.meta.url))
 afterAll(() => rmSync(tmp, { recursive: true, force: true }))
+// One site address for every check here, set once: a check that set and restored its own could clear it under another.
+const previousUrl = process.env.WEFT_SITE_URL
+beforeAll(() => {
+  process.env.WEFT_SITE_URL = 'https://example.test'
+})
+afterAll(() => {
+  if (previousUrl === undefined) delete process.env.WEFT_SITE_URL
+  else process.env.WEFT_SITE_URL = previousUrl
+})
 
 // Package folders match their npm name without the scope.
 const home = (dep: string) => join(pkgs, dep.replace('@weft-js/', ''))
@@ -131,25 +140,18 @@ describe.each(written)('--template %s', (name) => {
   it('weft check is clean', async () => {
     const uninstalled = (d: { code: string; route?: string; why: string }) =>
       d.code === 'H016' && d.route === '*' && !d.why.includes('@weft-js/')
-    const previous = process.env.WEFT_SITE_URL
-    process.env.WEFT_SITE_URL = 'https://example.test'
-    try {
-      const diagnostics = (await check(app(name))).diagnostics.filter((d) => !uninstalled(d))
-      expect(diagnostics.map(({ code, route, severity }) => ({ code, route, severity }))).toEqual(
-        name === 'catalog'
-          ? [
-              { code: 'H016', route: '/c/[slug]', severity: 'info' },
-              { code: 'H016', route: '/p/[slug]', severity: 'info' },
-            ]
-          : name === 'admin'
-            ? [{ code: 'H016', route: '/admin/orders/[id]', severity: 'info' }]
-            : [],
-      )
-    } finally {
-      if (previous === undefined) delete process.env.WEFT_SITE_URL
-      else process.env.WEFT_SITE_URL = previous
-    }
-  })
+    const diagnostics = (await check(app(name))).diagnostics.filter((d) => !uninstalled(d))
+    expect(diagnostics.map(({ code, route, severity }) => ({ code, route, severity }))).toEqual(
+      name === 'catalog'
+        ? [
+            { code: 'H016', route: '/c/[slug]', severity: 'info' },
+            { code: 'H016', route: '/p/[slug]', severity: 'info' },
+          ]
+        : name === 'admin'
+          ? [{ code: 'H016', route: '/admin/orders/[id]', severity: 'info' }]
+          : [],
+    )
+  }, 180_000) // a check builds the app's routes: seconds alone, over a minute on a loaded gate
 
   it.each(['json', 'yaml'])(
     'refuses a %s config, which has no place for its plugin options',
