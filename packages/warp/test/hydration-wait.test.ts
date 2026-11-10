@@ -79,3 +79,19 @@ export default function R() {
     why: expect.stringMatching(/`ref` callback that does work/),
   })
 })
+
+test("no warp component's own `ref` counts as work: each one only keeps the node, or passes it on", async () => {
+  const { loads } =
+    await plan(`import { DateField, Menu, NumberField, TimeField } from '@weft-js/warp'
+export default function R() {
+  return <main>
+    <NumberField label="Seats" onValueChange={() => {}} />
+    <Menu label="More" items={[{ label: 'Copy', onSelect: () => {} }]} />
+    <DateField label="Day" onValueChange={() => {}} />
+    <TimeField label="At" onValueChange={() => {}} />
+  </main>
+}
+`)
+  const refs = loads.filter((l: { why: string }) => /`ref` callback that does work/.test(l.why))
+  expect(refs.map((l: { tag: string; why: string }) => `${l.tag}: ${l.why}`)).toEqual([])
+})

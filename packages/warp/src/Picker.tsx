@@ -133,14 +133,14 @@ export function Panel({
 
 /** The trigger at the end of a composite: a calendar or clock icon button (aria-haspopup, aria-expanded). */
 export function Trigger({
-  el,
+  ref,
   icon,
   label,
   open,
   disabled,
   onToggle,
 }: {
-  el?: (el: HTMLButtonElement) => void
+  ref?: (el: HTMLButtonElement) => void
   icon: IconRef
   label: string
   open: boolean
@@ -149,7 +149,7 @@ export function Trigger({
 }) {
   return (
     <button
-      ref={(n) => el?.(n)}
+      ref={(n) => ref?.(n)}
       type="button"
       data-part="trigger"
       aria-haspopup="dialog"

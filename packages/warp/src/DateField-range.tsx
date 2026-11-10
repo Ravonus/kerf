@@ -235,7 +235,7 @@ function RangeDateControl({
         onEdit={editEnd}
       />
       <Trigger
-        el={setTrigger}
+        ref={setTrigger}
         icon={CalendarIcon}
         label={t.value.chooseRange + (v.value.start && v.value.end ? `, ${summary.value}` : '')}
         open={pop.value}

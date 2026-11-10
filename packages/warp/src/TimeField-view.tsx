@@ -79,7 +79,7 @@ function timeControls(m: Model) {
         onEdit={onEdit}
       />
       <Trigger
-        el={(n: HTMLButtonElement) => (refs.trigger = n)}
+        ref={(n: HTMLButtonElement) => (refs.trigger = n)}
         icon={ClockIcon}
         label={
           text.value.chooseTime +

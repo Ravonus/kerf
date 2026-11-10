@@ -128,7 +128,7 @@ export function NumberField({
       }
       control={(p) => (
         <input
-          ref={(n) => setInput(n)}
+          ref={setInput}
           data-part="input"
           id={p.id}
           role="spinbutton"

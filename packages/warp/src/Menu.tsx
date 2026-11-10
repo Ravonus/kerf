@@ -152,7 +152,7 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
         emphasis="outline"
         tone="neutral"
         {...(trigger ?? {})}
-        ref={(el: HTMLButtonElement) => setButton(el)}
+        ref={setButton}
         id={`${id}-b`}
         aria-haspopup="menu"
         aria-expanded={open.value ? 'true' : 'false'}
@@ -166,7 +166,7 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
         {label}
       </Button>
       <div
-        ref={(n) => setPanel(n)}
+        ref={setPanel}
         data-scope="menu"
         data-part="content"
         role="menu"
@@ -179,7 +179,7 @@ export function Menu({ label, items, trigger, side = 'bottom', align = 'start' }
         }}
         onPointerMove={(e: PointerEvent) => pointMenu(e)}
       >
-        <span ref={(n) => setFace(n)} data-part="shuttle" aria-hidden="true"></span>
+        <span ref={setFace} data-part="shuttle" aria-hidden="true"></span>
         {items.map((e, i) =>
           'separator' in e ? (
             <div key={i} data-part="separator" role="separator"></div>

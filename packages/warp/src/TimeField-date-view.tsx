@@ -101,7 +101,7 @@ function dateTimeControls(m: Model) {
         onEdit={onTime}
       />
       <Trigger
-        el={(n: HTMLButtonElement) => (refs.trigger = n)}
+        ref={(n: HTMLButtonElement) => (refs.trigger = n)}
         icon={CalendarIcon}
         label="Choose date and time"
         open={pop.value}

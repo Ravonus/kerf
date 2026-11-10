@@ -188,7 +188,7 @@ function SingleDateControl({
         onBlurPartial={() => (own.value = 'Enter a complete date, or pick one from the calendar.')}
       />
       <Trigger
-        el={setTrigger}
+        ref={setTrigger}
         icon={CalendarIcon}
         label={
           t.value.choose +
