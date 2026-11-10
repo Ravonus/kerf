@@ -8,6 +8,7 @@ it('a page that hydrates whole holds a click made before its code runs, and repl
   document.body.innerHTML =
     '<button>menu</button><a href="/menu">menu</a><div wk><i>island</i></div>'
   window.matchMedia ??= (() => ({ matches: false })) as unknown as typeof matchMedia
+  // oxlint-disable-next-line no-new-func, no-implied-eval -- capture() is the page's inline script: running its source text as the page would is the test
   new Function(capture(true))()
   const q = (window as Window & { __wq?: Q }).__wq!
   const button = document.querySelector('button')!
