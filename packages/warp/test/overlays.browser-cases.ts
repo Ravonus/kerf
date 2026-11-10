@@ -333,7 +333,8 @@ function overlayOneAlreadyShowingMovesIn({
     await page.waitForTimeout(200)
     await page.keyboard.press('Escape')
     await page.waitForTimeout(300)
-    expect(await where(page)).toEqual({ dialog: null, popover: false, top: false })
+    // back on the page: the region is a popover everywhere, so it stays in the top layer
+    expect(await where(page)).toEqual({ dialog: null, popover: true, top: true })
     await undo(page)
     await page.close()
   }

@@ -114,7 +114,7 @@ export function icons() {
               )
           }
           if (/node_modules|packages\/(warp-icons|warp)\/src\//.test(id)) return null
-          const p = await load(this, id)
+          const p = await load(this, await nearIcons(this, id))
           return p ? p.rewrite(code, id.replace(/\?.*$/, ''), p.catalog) : null
         },
       },
@@ -123,22 +123,34 @@ export function icons() {
   }
 }
 
+/**
+ * Where an app file can reach @weft-js/warp-icons from. Warp's components put icon imports in the app's own files, and
+ * under a strict layout (pnpm) an app that only lists @weft-js/warp can't see warp's dependency: then warp's entry can.
+ */
+async function nearIcons(ctx, importer) {
+  const own = await ctx.resolve('@weft-js/warp-icons/compile', importer, { skipSelf: true })
+  if (own) return importer
+  const warp = await ctx.resolve('@weft-js/warp', importer, { skipSelf: true })
+  return warp?.id ?? importer
+}
+
 function iconResolve(state, drawings) {
   const { load } = state
   return {
     name: 'weft:icons',
     enforce: 'pre',
     resolveId: {
-      filter: {
-        id: /^(@weft-js\/warp-icons(\/names|\/quiet|\/balanced|\/vivid)?$|\0weft:icon\/)/,
-      },
+      filter: { id: /^(@weft-js\/warp-icons(\/[\w.-]+)?$|\0weft:icon\/)/ },
       async handler(source, importer) {
         if (source.startsWith(ONE)) return source
-        if (state.config.command !== 'build' || !importer) return null
-        const p = await load(this, importer)
-        if (!p) return null
-        fail(this, p)
-        return source === '@weft-js/warp-icons/names' ? NAMES : null
+        if (!importer) return null
+        const from = await nearIcons(this, importer)
+        if (state.config.command === 'build') {
+          const p = await load(this, from)
+          if (p) fail(this, p)
+          if (p && source === '@weft-js/warp-icons/names') return NAMES
+        }
+        return from === importer ? null : this.resolve(source, from, { skipSelf: true })
       },
     },
     load: {
