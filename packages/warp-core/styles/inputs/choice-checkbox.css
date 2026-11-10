@@ -47,11 +47,11 @@
 }
 :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::before {
   z-index: 1; color: var(--warp-color-sweep-base); border: var(--warp-sweep-base-width) solid currentColor;
-  clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--warp-sweep-radius));
+  clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)));   /* square: the box is rounded already, and a rounded seam left a gap */
 }
 :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after {
   z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on); border: var(--warp-sweep-width) solid currentColor;
-  clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
+  clip-path: inset(0 var(--_sr) 0 var(--_sl));
 }
 :where([data-scope="checkbox"][data-invalid]) > [data-part="control"][data-sweep]::after { color: var(--warp-color-sweep-critical); opacity: 1; }
 /* the mark: the check's stroke runs left to right, so a wipe that way draws it */
@@ -128,6 +128,13 @@
 
 
 
+
+/* an option with a count (a price, a tally) stacks it under the name, whole: side by side they fought for the width */
+
+
+/* a grid item's minimum is its content's: without this, a long option widened the group past its container */
+
+/* data-fill: the group spans its container, each option an equal share */
    /* full ink: 0.8 opacity fell to 4.0:1 (review 03 m12) */
 
 /* the ink turns with the shuttle: the arriving item as its head lands, the leaving one as its tail goes */

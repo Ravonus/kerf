@@ -948,6 +948,9 @@
   "app/system-page.css",
   "flows/system-page.css"
  ],
+ "tab-bar": [
+  "layout/tab-bar.css"
+ ],
  "table": [
   "data/table.css"
  ],

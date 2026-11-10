@@ -71,6 +71,7 @@
 @property --warp-my { syntax: "<percentage>"; inherits: true;  initial-value: 50%; }
 @property --_fo     { syntax: "<number>";     inherits: false; initial-value: 1; }     /* button fill: 1 parked, 0 met */
 @property --_fr     { syntax: "<number>";     inherits: false; initial-value: 0; }     /* button fill: size */
+@property --_wp     { syntax: "<number>";     inherits: false; initial-value: 0; }     /* button fill: how much of the wipe shows */
 @property --_flow-dx  { syntax: "<length>"; inherits: false; initial-value: 0px; }      /* warp.flow's move, see the note at its keyframes */
 @property --_flow-dy  { syntax: "<length>"; inherits: false; initial-value: 0px; }
 @property --_flow-sx  { syntax: "<number>"; inherits: false; initial-value: 1; }
@@ -1251,11 +1252,13 @@
   /* the base wipes away ahead of the stroke and is back the moment the host lets go */
   :where([data-part="sweep-base"]) {
     z-index: 1; color: var(--warp-color-sweep-base);
-    clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--_round, var(--warp-sweep-radius)));
+    /* square-edged: the layer is already rounded (border-radius: inherit). A rounded clip rounded the moving seam too,
+       and where both layers' seams curved away neither border painted: a notch ran round with the stroke */
+    clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)));
   }
   :where([data-part="sweep"]) {
     z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on);
-    clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--_round, var(--warp-sweep-radius)));
+    clip-path: inset(0 var(--_sr) 0 var(--_sl));
   }
   /* error: pinned in by the switch, painted critical */
   :where([data-invalid] > [data-part="sweep"]),

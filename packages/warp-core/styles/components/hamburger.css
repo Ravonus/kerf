@@ -2,6 +2,14 @@
 @layer warp.components {
 /* -- Hamburger ([data-hamburger] on a ghost icon button): three bars become an X. The middle bar sweeps out to the right (never reverses). */
 :where([data-hamburger]) { --_bar: 16px; --_gap: 5px; }
+/* its hover is quiet: no fill, only the bottom bar drawing in a little and the ink deepening, a hint that it opens.
+   The button's wipe and pull-out are for words on a key; on three lines in a circle they read as a smear and a jump. */
+:where([data-hamburger])::before, :where([data-hamburger]) > :where([data-part="sweep"]) { display: none; }   /* no fill or ring at all: a wipe or a tint behind three lines read as a smear */
+@media (hover: hover) {
+  :where([data-hamburger]:hover) { translate: none; box-shadow: none; }
+}
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(3)) { clip-path: inset(0); }
+:where([data-hamburger]:hover:not([aria-expanded="true"]) [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(3)) { clip-path: inset(0 0 0 38%); }
 :where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *))) { position: relative; inline-size: var(--_bar); block-size: calc(var(--_gap) * 2 + 1.5px); display: block; }
 :where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i) {
   position: absolute; inset-inline: 0; block-size: 1.5px; border-radius: 2px; background: currentColor;

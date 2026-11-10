@@ -106,6 +106,7 @@ export function MiniMonth({ c }: { c: Ctx }) {
           size="sm"
           icon={LeftIcon}
           label="Previous month"
+          direction="back"
           onClick={() => (cursor.value = stepDate('month', cursor.value, -1))}
         />
         <Button

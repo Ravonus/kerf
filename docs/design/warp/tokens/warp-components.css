@@ -256,7 +256,11 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
   /* the under-layer rises with the blobs, so nothing shows between them mid-frame */
   background-color: color-mix(in oklab, var(--warp-tone-layer, var(--_layer)) calc((1 - var(--warp-btn-fill)) * 100%), color-mix(in oklab, var(--_pa) calc((1 - var(--_fo) * var(--_ptr)) * 100%), transparent));
   opacity: calc(var(--warp-btn-fill) + (1 - var(--warp-btn-fill)) * var(--_layer-a));
-  transform: scaleX(calc(var(--warp-btn-fill) * var(--_ptr))); transform-origin: right center;
+  /* the wipe is a clip, not a scale: a scaled layer squashed its own rounded corners and a thin sliver stood past the
+     button's curve. A rectangle cut from the unscaled rounded layer never leaves the shape. --_wp is how much shows,
+     --_wo the anchor (1: grows from the start edge, 0: holds to the end edge); the anchor only jumps at 0 and 1 */
+  --_wp: calc(var(--warp-btn-fill) * var(--_ptr)); --_wo: 0;
+  clip-path: inset(0 calc((1 - var(--_wp)) * 100% * var(--_wo)) 0 calc((1 - var(--_wp)) * 100% * (1 - var(--_wo))));
   background-origin: border-box;
   background-image:
     radial-gradient(ellipse calc(var(--_fb) * 0.44) 95% at calc(var(--_x) + var(--_fb) * 0.44 + var(--_fo) * var(--_fb)) calc(var(--_y) - 42% + (var(--_y) - 50%) * 0.35),
@@ -266,7 +270,7 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
     radial-gradient(ellipse calc((var(--_fa) + var(--_fu)) * 0.5) 260% at calc(var(--_x) - (var(--_fa) - var(--_fu)) * 0.5 - var(--_fo) * var(--_fa) * 1.35) calc(var(--_y) + var(--_fr) * 3%),
       var(--_pa) 0 66%, color-mix(in oklab, var(--_pa) 50%, transparent) 84%, transparent 100%);
   transition:
-    transform var(--warp-sweep-duration) var(--warp-sweep-ease),     /* the wipe runs on the stroke's clock, both ways */
+    --_wp var(--warp-sweep-duration) var(--warp-sweep-ease),         /* the wipe runs on the stroke's clock, both ways */
     --_fo var(--_D) var(--warp-sweep-ease-in),                 /* both ways: the exit is the enter */
     --_fr 1ms linear calc((1 - var(--_a, 0)) * var(--_D));     /* snaps in; collapses unseen after the exit */
 }
@@ -275,9 +279,13 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"][data-hold])::before,
 :where([data-scope="button"][data-state="open"])::before,
 :where([data-scope="button"][aria-expanded="true"])::before {
-  transform: scaleX(1); transform-origin: left center;
+  --_wp: 1; --_wo: 1;
   transition-duration: var(--warp-sweep-duration), var(--_D), 1ms;
 }
+/* data-wipe="back": the mirror, for a step backwards (Prev, minus, undo). It comes in from the end edge and leaves by
+   the start, and the frame's sweep fill turns round with it */
+:where([data-scope="button"][data-wipe="back"])::before { --_wo: 1; }
+:where([data-scope="button"][data-wipe="back"]:is(:hover, :focus-visible, [data-hold], [data-state="open"], [aria-expanded="true"]))::before { --_wo: 0; }
 /* a tap is shorter than the fill, so a finger gets it at once and watches it part */
 @media (hover: none) { :where([data-scope="button"]:active)::before { transition-duration: var(--warp-duration-base), 0ms, 1ms; } }
 /* soft + outline draw the signature border sweep (a [data-part="sweep"] child); tone sets --warp-color-sweep on the host */
@@ -308,6 +316,15 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 :where([data-scope="button"] > [data-part="sweep-fill"]) {
   transform: none; clip-path: inset(0 calc(var(--_sr) * var(--_on, 1)) 0 calc(var(--_sl) * var(--_on, 1)));
 }
+:where([data-scope="button"][data-wipe="back"] > [data-part="sweep-fill"]) {
+  clip-path: inset(0 calc(var(--_sl) * var(--_on, 1)) 0 calc(var(--_sr) * var(--_on, 1)));
+}
+/* the ink edge, the base under it and the frame's corners turn round too: every inset swapped side for side */
+:where([data-scope="button"][data-wipe="back"]) > :where([data-part="sweep"]) { clip-path: inset(0 var(--_sl) 0 var(--_sr)); }
+:where([data-scope="button"][data-wipe="back"]) > :where([data-part="sweep-base"]) {
+  clip-path: inset(0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) 0 0);
+}
+:where([data-scope="button"][data-wipe="back"]) > :where([data-part="sweep-corners"], [data-part="sweep-content"]) { clip-path: inset(0 var(--_sl) 0 var(--_sr)); }
 /* touch: the hit area reaches hit-min even when the visual is smaller */
 :where([data-scope="button"])::after {
   content: ""; position: absolute; pointer-events: auto;
@@ -817,6 +834,15 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
     translate: calc(var(--_tx) * 100% * var(--warp-motion-scale)) calc(var(--_ty) * 100% * var(--warp-motion-scale));
   }
 }
+:where(dialog[data-scope="sheet"][data-detent]:not([data-dragging])) {
+  /* between stops the height glides; a drag follows the hand with no transition (the rule below) */
+  transition: block-size calc(var(--warp-duration-slow) * 1.5) var(--warp-ease-sheet), translate calc(var(--warp-duration-slow) * 1.5) var(--warp-ease-sheet),
+              opacity var(--warp-duration-slow) var(--warp-ease-out), overlay var(--warp-duration-slow) allow-discrete, display var(--warp-duration-slow) allow-discrete;
+}
+/* at the half stop the page above is still the page: a lighter scrim, no blur */
+:where(dialog[data-scope="sheet"])[data-detent="half"][open]::backdrop { background: color-mix(in oklab, var(--warp-color-scrim) 45%, transparent); backdrop-filter: none; }
+/* peek: at the half stop the sheet is not modal, so it leaves the top layer; it still stands over the page */
+:where(dialog[data-scope="sheet"][open]:not(:modal)) { z-index: var(--warp-z-modal); }
 :where(dialog[data-scope="sheet"][data-dragging]) { transition: none; user-select: none; }
 :where(dialog[data-scope="sheet"][data-side="right"]),
 :where(dialog[data-scope="sheet"]:not([data-side])) {
@@ -1592,6 +1618,14 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
 
 /* -- Hamburger ([data-hamburger] on a ghost icon button): three bars become an X. The middle bar sweeps out to the right (never reverses). */
 :where([data-hamburger]) { --_bar: 16px; --_gap: 5px; }
+/* its hover is quiet: no fill, only the bottom bar drawing in a little and the ink deepening, a hint that it opens.
+   The button's wipe and pull-out are for words on a key; on three lines in a circle they read as a smear and a jump. */
+:where([data-hamburger])::before, :where([data-hamburger]) > :where([data-part="sweep"]) { display: none; }   /* no fill or ring at all: a wipe or a tint behind three lines read as a smear */
+@media (hover: hover) {
+  :where([data-hamburger]:hover) { translate: none; box-shadow: none; }
+}
+:where([data-hamburger] [data-part="bars"] > i:nth-child(3)) { clip-path: inset(0); }
+:where([data-hamburger]:hover:not([aria-expanded="true"]) [data-part="bars"] > i:nth-child(3)) { clip-path: inset(0 0 0 38%); }
 :where([data-hamburger] [data-part="bars"]) { position: relative; inline-size: var(--_bar); block-size: calc(var(--_gap) * 2 + 1.5px); display: block; }
 :where([data-hamburger] [data-part="bars"] > i) {
   position: absolute; inset-inline: 0; block-size: 1.5px; border-radius: 2px; background: currentColor;

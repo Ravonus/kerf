@@ -31,6 +31,8 @@ export interface ButtonProps {
   fill?: boolean
   /** At vivid the fill spreads from where the pointer arrives and parts back out, instead of wiping in from the left. Not on frame or link. */
   follow?: boolean
+  /** Which way the fill wipes: `back` comes in from the end edge and leaves by the start, for Prev, minus and undo. */
+  direction?: 'forward' | 'back' | undefined
   full?: boolean
   /** Icon only: `label` is then required (it is the accessible name). */
   icon?: IconRef | undefined
@@ -59,6 +61,7 @@ export function Button({
   size,
   fill,
   follow,
+  direction,
   full,
   icon,
   collapse,
@@ -100,6 +103,7 @@ export function Button({
       data-size={size === 'md' ? undefined : size}
       data-fill={emphasis === 'frame' && fill ? '' : undefined}
       data-follow={follow && emphasis !== 'frame' && emphasis !== 'link' ? '' : undefined}
+      data-wipe={direction === 'back' ? 'back' : undefined}
       data-full={full ? '' : undefined}
       data-icon-only={glyph.value && !children ? '' : undefined}
       data-collapse={glyph.value && children ? collapse : undefined}

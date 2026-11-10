@@ -2,6 +2,34 @@ import { onCleanup, onMount } from '@weft-js/core'
 import './styles'
 import '@weft-js/warp-core/styles/layout/scroll-rail.css'
 
+type Size = { track: number; total: number; h: number }
+
+/** The thumb follows the pointer: the page scrolls as far as the thumb moves, scaled from the track to the page. */
+function dragThumb(
+  e: PointerEvent,
+  { rail, thumb }: { rail: HTMLElement; thumb: HTMLElement },
+  { track, total, h }: Size,
+) {
+  const from = e.clientY
+  const start = scrollY
+  thumb.setPointerCapture(e.pointerId)
+  rail.setAttribute('data-dragging', '')
+  const move = (m: PointerEvent) =>
+    scrollTo({
+      top: start + ((m.clientY - from) * total) / Math.max(1, track - h),
+      behavior: 'instant',
+    })
+  const up = () => {
+    rail.removeAttribute('data-dragging')
+    thumb.removeEventListener('pointermove', move)
+    thumb.removeEventListener('pointerup', up)
+    thumb.removeEventListener('pointercancel', up)
+  }
+  thumb.addEventListener('pointermove', move)
+  thumb.addEventListener('pointerup', up)
+  thumb.addEventListener('pointercancel', up)
+}
+
 /**
  * The page's scrollbar, drawn from below a sticky header (`--warp-scroll-rail-top`) instead of over it. The document
  * still scrolls, so keys, anchors, scroll restore and a phone's collapsing address bar work as ever; with a mouse or
@@ -55,25 +83,7 @@ export function ScrollRail(props: { below?: string } = {}) {
         scrollBy({ top: (below ? 1 : -1) * innerHeight * 0.9 })
         return
       }
-      const { track, total, h } = size()
-      const from = e.clientY
-      const start = scrollY
-      thumb.setPointerCapture(e.pointerId)
-      rail.setAttribute('data-dragging', '')
-      const move = (m: PointerEvent) =>
-        scrollTo({
-          top: start + ((m.clientY - from) * total) / Math.max(1, track - h),
-          behavior: 'instant',
-        })
-      const up = () => {
-        rail.removeAttribute('data-dragging')
-        thumb.removeEventListener('pointermove', move)
-        thumb.removeEventListener('pointerup', up)
-        thumb.removeEventListener('pointercancel', up)
-      }
-      thumb.addEventListener('pointermove', move)
-      thumb.addEventListener('pointerup', up)
-      thumb.addEventListener('pointercancel', up)
+      dragThumb(e, { rail, thumb }, size())
     }
     const grows = new ResizeObserver(moved)
     grows.observe(document.body)

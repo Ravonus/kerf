@@ -1,5 +1,5 @@
 import { CloseX } from './CloseX'
-import { dialog, uid } from '@weft-js/warp-core'
+import { dialog, sheet, uid, type Detent } from '@weft-js/warp-core'
 import { derived, type State, untrack } from '@weft-js/core'
 import { use } from '@weft-js/warp-core/weft'
 import './styles'
@@ -13,8 +13,37 @@ type DrawerProps = {
   description?: unknown
   footer?: unknown
   side?: 'auto' | 'right' | 'left' | 'bottom' | 'top'
+  /** A bottom sheet's opening height when its content is taller than half the window: half (the page stays in view) or full. */
+  at?: Detent
+  /** At the half stop the page behind stays live: a reader can scroll it and tap in it while the sheet waits. */
+  peek?: boolean
   /** Drawn open in the page's flow, not over it: no top layer, scrim or focus trap. For docs and previews. */ inline?: boolean
   children?: unknown
+}
+
+/** Where `side` puts the sheet now: auto is the bottom under 600px, decided as it opens. */
+const placed = (side: NonNullable<DrawerProps['side']>) =>
+  side === 'auto' ? (typeof innerWidth === 'number' && innerWidth < 600 ? 'bottom' : 'right') : side
+
+/** The dialog (top layer, focus, Escape) and, at the bottom, the hand that drags it between its stops. */
+function bind(
+  props: {
+    open: State<boolean>
+    side: NonNullable<DrawerProps['side']>
+    at: Detent
+    peek: boolean
+  },
+  el: () => HTMLDialogElement | undefined,
+) {
+  const { open, side, at, peek } = props
+  use(dialog, el, () => {
+    const on = open.value
+    const node = el()
+    if (on && node) node.dataset.side = placed(side)
+    return { open: on, onClose: () => (open.value = false) }
+  })
+  // registered after dialog, so data-side is set before the sheet measures on opening
+  use(sheet, el, () => ({ open: open.value, at, peek, onClose: () => (open.value = false) }))
 }
 
 /**
@@ -29,6 +58,8 @@ export function Drawer({
   description,
   footer,
   side = 'auto',
+  at = 'half',
+  peek,
   inline,
   children,
 }: DrawerProps) {
@@ -36,22 +67,11 @@ export function Drawer({
   const hasDescription = derived(() => description !== undefined)
   const foot = derived(() => footer) // one build of the footer, however often it is read
   let el: HTMLDialogElement | undefined
-  const placed = () =>
-    side === 'auto'
-      ? typeof innerWidth === 'number' && innerWidth < 600
-        ? 'bottom'
-        : 'right'
-      : side
   const flat = untrack(() => !!inline)
   if (!flat)
-    use(
-      dialog,
+    bind(
+      untrack(() => ({ open, side, at, peek: !!peek })),
       () => el,
-      () => {
-        const on = open.value
-        if (on && el) el.dataset.side = placed()
-        return { open: on, onClose: () => (open.value = false) }
-      },
     )
   const closer = (e: Event) => {
     if (flat && (e.target as Element).closest?.('[data-close]')) open.value = false

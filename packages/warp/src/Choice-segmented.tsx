@@ -25,6 +25,7 @@ export function Segmented<V extends string>({
   options,
   size,
   name,
+  fill,
 }: {
   label: string
   value: V
@@ -32,6 +33,8 @@ export function Segmented<V extends string>({
   options: SegmentedOption<V>[]
   size?: 'sm' | 'md' | undefined
   name?: string | undefined
+  /** Span the container, each option an equal share. */
+  fill?: boolean | undefined
 }) {
   const group = untrack(() => name) ?? uid('seg')
   let root: HTMLDivElement | undefined
@@ -47,6 +50,7 @@ export function Segmented<V extends string>({
       role="radiogroup"
       aria-label={label}
       data-size={size === 'sm' ? 'sm' : undefined}
+      data-fill={fill ? '' : undefined}
     >
       <span data-part="indicator" aria-hidden="true" data-instant=""></span>
       {options.map((o) => (

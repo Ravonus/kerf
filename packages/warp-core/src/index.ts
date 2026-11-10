@@ -39,6 +39,7 @@ export {
   type Align,
 } from './layers'
 export { dialog, popover, tooltip, type DialogOptions, type PopoverOptions } from './overlays'
+export { sheet, type Detent, type SheetOptions } from './sheet'
 export { isMobileDevice, markDevice } from './device'
 export { edges, indicator, overflow, type IndicatorOptions } from './indicator'
 export { moveShuttle, type Across } from './shuttle'

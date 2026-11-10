@@ -51,6 +51,7 @@ export function CalendarToolbar({ p, c, nav, actions, id }: Props) {
         size="sm"
         icon={LeftIcon}
         label={`Previous ${nav.unit.value}`}
+        direction="back"
         onClick={() => nav.step(-1)}
       />
       <Button

@@ -56,6 +56,7 @@ export function YearView(p: YearViewProps) {
           size="sm"
           icon={LeftIcon}
           label="Previous year"
+          direction="back"
           onClick={() => go(addMonths(focus.value, -12), false)}
         />
         <h3 data-part="title" id={`${id}-t`} aria-live="polite">

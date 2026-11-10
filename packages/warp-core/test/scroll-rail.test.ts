@@ -10,7 +10,11 @@ const css = readFileSync(join(__dirname, '../styles/layout/scroll-rail.css'), 'u
 
 describe('ScrollRail hides the native page bar for good', () => {
   it('hides it with !important, so an app rule on :root cannot bring it back', () => {
-    expect(css).toMatch(/html:has\(> body \[data-scope="scroll-rail"\]\)\)\s*\{\s*scrollbar-width:\s*none !important;/)
-    expect(css).toMatch(/\[data-scope="scroll-rail"\]\)\)::-webkit-scrollbar\s*\{\s*display:\s*none !important;/)
+    expect(css).toMatch(
+      /html:has\(> body \[data-scope="scroll-rail"\]\)\)\s*\{\s*scrollbar-width:\s*none !important;/,
+    )
+    expect(css).toMatch(
+      /\[data-scope="scroll-rail"\]\)\)::-webkit-scrollbar\s*\{\s*display:\s*none !important;/,
+    )
   })
 })

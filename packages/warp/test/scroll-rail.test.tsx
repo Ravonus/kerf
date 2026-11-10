@@ -22,7 +22,9 @@ test('the rail starts at the header named by `below`, and follows it as the page
     expect(rail.style.insetBlockStart).toBe('100px')
     bottom = 61 // the banner above has scrolled away; the header stuck at the top
     dispatchEvent(new Event('scroll'))
-    await new Promise((r) => requestAnimationFrame(() => r(null)))
+    await new Promise((r) => {
+      requestAnimationFrame(() => r(null))
+    })
     expect(rail.style.insetBlockStart).toBe('61px')
   } finally {
     header.remove()
@@ -31,5 +33,7 @@ test('the rail starts at the header named by `below`, and follows it as the page
 
 test('without `below` the rail keeps --warp-scroll-rail-top', () => {
   const { container } = render(() => <ScrollRail />)
-  expect(container.querySelector<HTMLElement>('[data-scope="scroll-rail"]')!.style.insetBlockStart).toBe('')
+  expect(
+    container.querySelector<HTMLElement>('[data-scope="scroll-rail"]')!.style.insetBlockStart,
+  ).toBe('')
 })

@@ -23,6 +23,10 @@ const REASONS = [
   [/data-fx-paused|data-fx-offscreen/, 'paused effects: the motion governor beats every effect'],
   [/skeleton-scope/, 'loading: a skeleton paints over any component inside it'],
   [
+    /scroll-rail/,
+    'one page bar: while the rail draws it, no app scrollbar rule may bring the native one back',
+  ],
+  [
     /data-collapse[\]=]|data-loading\]|data-settling\]/,
     'a state that keeps a component usable whatever an app sets',
   ],

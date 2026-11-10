@@ -104,13 +104,11 @@ test('the edges are logical: in RTL the first item draws its right edge', async 
   expect(await edges('rtl-a')).toEqual({ drawn: 'Top Right Bottom', round: 'TopRight BottomRight' })
   expect(await edges('rtl-b')).toEqual({ drawn: 'Top Bottom', round: '' })
   expect(await edges('rtl-c')).toEqual({ drawn: 'Left Top Bottom', round: 'TopLeft BottomLeft' })
-  // the clip's corners follow, physically
-  const round = (id: string) =>
-    page
-      .locator(`#${id} > [data-part="sweep"]`)
-      .evaluate((n) => getComputedStyle(n).clipPath.split(' round ')[1])
-  expect(await round('rtl-a')).toMatch(/^0px [1-9]\S* [1-9]\S* 0px\)$/)
-  expect(await round('size-sm')).toMatch(/^[1-9]\S* 0px 0px [1-9]\S*\)$/)
+  // the clip is square-edged: the corners are the layer's own border-radius above, so the moving seam never notches
+  const clip = (id: string) =>
+    page.locator(`#${id} > [data-part="sweep"]`).evaluate((n) => getComputedStyle(n).clipPath)
+  expect(await clip('rtl-a')).not.toContain('round')
+  expect(await clip('size-sm')).not.toContain('round')
 })
 
 test('toggle group, attached button group and any [data-joined] row join the same way', async () => {

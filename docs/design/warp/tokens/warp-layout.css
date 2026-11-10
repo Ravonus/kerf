@@ -1134,6 +1134,65 @@
   :where([data-scope="scroll-rail"][data-dragging] > [data-part="thumb"]) { opacity: 1; inline-size: 8px; background: color-mix(in oklab, var(--warp-color-text) 40%, transparent); }
 }
 
+/* TabBar — a site's bottom navigation on a phone: four or five destinations under the thumb, one of them the main
+   action (data-primary, raised in the accent). Fixed to the bottom over the safe area, glass like the shell's bar. It
+   slips away while the page scrolls down and comes back on any scroll up, and steps aside for the keyboard. While it
+   shows, the page pads its end by its height so nothing sits under it. Wider than --warp-tab-bar-max it is not drawn. */
+:where([data-scope="tab-bar"]) { display: none; }
+@media (max-width: 759.98px) {
+  :where(html:has(> body [data-scope="tab-bar"]:not([data-off]))) {
+    --warp-tab-bar-space: calc(var(--warp-layout-tabbar) + var(--warp-safe-bottom));
+    scroll-padding-block-end: var(--warp-tab-bar-space);
+  }
+  :where(body:has([data-scope="tab-bar"]:not([data-off]))) { padding-block-end: var(--warp-tab-bar-space); }
+  :where([data-scope="tab-bar"]) {
+    display: block; position: fixed; inset: auto 0 0 0; z-index: var(--warp-z-dock);
+    padding: 0 var(--warp-safe-right) var(--warp-safe-bottom) var(--warp-safe-left);
+    /* solid: glass let the page's colour bleed through the labels as it scrolled under them */
+    background: var(--warp-color-surface-raised);
+    border-block-start: var(--warp-border-hairline) solid var(--warp-color-border);
+    box-shadow: 0 -1px 12px color-mix(in oklab, var(--warp-color-text) 6%, transparent);
+    translate: 0 0; transition: translate var(--warp-duration-slow) var(--warp-ease-out);
+  }
+  :where([data-scope="tab-bar"][data-tucked]) { translate: 0 100%; transition-timing-function: var(--warp-ease-in); }
+  :where([data-scope="tab-bar"][data-off]) { display: none; }
+}
+:where([data-scope="tab-bar"] > ul) { display: flex; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="tab-bar"] > ul > li) { display: flex; flex: 1 1 0; min-inline-size: 0; }
+:where([data-scope="tab-bar"] [data-part="item"]) {
+  position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; min-block-size: var(--warp-layout-tabbar); padding: 6px 2px;
+  color: var(--warp-color-text-subtle); text-decoration: none; background: none; border: 0; font: inherit;
+  font-size: var(--warp-text-caption-size); line-height: 1.2; font-weight: 500;
+  cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  transition: color var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-scope="tab-bar"] [data-part="icon"]) {
+  position: relative; display: grid; place-items: center; inline-size: 52px; block-size: 28px; border-radius: var(--warp-radius-round);
+  transition: background-color var(--warp-duration-fast) var(--warp-ease-out), scale var(--warp-duration-fast) var(--warp-ease-out);
+}
+:where([data-scope="tab-bar"] [data-part="icon"] svg) { inline-size: 20px; block-size: 20px; }
+:where([data-scope="tab-bar"] [data-part="label"]) { overflow: clip; text-overflow: ellipsis; white-space: nowrap; max-inline-size: 100%; }
+:where([data-scope="tab-bar"] [data-part="item"]:active [data-part="icon"]) { scale: 0.92; }
+:where([data-scope="tab-bar"] [data-part="item"][aria-current]) { color: var(--warp-color-text); }
+:where([data-scope="tab-bar"] [data-part="item"][aria-current] [data-part="icon"]) { background: var(--warp-color-accent-soft); color: var(--warp-color-accent-text); }
+:where([data-scope="tab-bar"] [data-part="item"]:focus-visible) { outline-offset: -3px; border-radius: var(--warp-radius-control); }
+/* the main action: a raised accent disc that sits a little above the bar */
+:where([data-scope="tab-bar"] [data-part="item"][data-primary] [data-part="icon"]) {
+  inline-size: 48px; block-size: 48px; margin-block-start: -20px;
+  background: var(--warp-color-accent-solid); color: var(--warp-color-accent-on-solid);
+  box-shadow: 0 0 0 4px var(--warp-color-surface), var(--warp-shadow-raised, 0 4px 12px rgb(0 0 0 / 0.18));
+}
+:where([data-scope="tab-bar"] [data-part="count"]) {
+  position: absolute; inset-block-start: -4px; inset-inline-start: calc(50% + 6px);
+  min-inline-size: 16px; block-size: 16px; padding-inline: 4px; border-radius: var(--warp-radius-round); box-sizing: border-box;
+  background: var(--warp-color-critical-solid, var(--warp-color-accent-solid)); color: var(--warp-color-critical-on-solid, var(--warp-color-accent-on-solid));
+  font: 600 10.5px/16px var(--warp-text-body-font); text-align: center; font-variant-numeric: tabular-nums;
+}
+:where([data-scope="tab-bar"] [data-part="count-label"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { :where([data-scope="tab-bar"]) { transition: none; } }
+@media print { :where([data-scope="tab-bar"]) { display: none !important; } }
+
 /* Docs layout — TopNav over NavList | article | AnchorNav. (Not "content": warp.signature claims that part name.) It names itself
    warp-page so page-level parts (AnchorNav) decide by the page, not their pane.
    < 1000: the NavList moves into the TopNav menu; AnchorNav becomes a disclosure. */

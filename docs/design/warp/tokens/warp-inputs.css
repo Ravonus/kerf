@@ -52,8 +52,8 @@
 }
 :where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"]:empty) { border-width: var(--warp-sweep-width); }
 :where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep-base"]:empty) { border-width: var(--warp-sweep-base-width); }
-:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep-base"]) { z-index: 1; color: var(--_base, var(--warp-color-sweep-base)); clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0)) round var(--_round, var(--warp-sweep-radius))); }
-:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"]) { z-index: 2; color: var(--_tint, var(--warp-color-sweep)); opacity: 1; clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--_round, var(--warp-sweep-radius))); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep-base"]) { z-index: 1; color: var(--_base, var(--warp-color-sweep-base)); clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0))); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"]) { z-index: 2; color: var(--_tint, var(--warp-color-sweep)); opacity: 1; clip-path: inset(0 var(--_sr) 0 var(--_sl)); }
 /* the field icon: two copies of the glyph, the accent copy clips in with the border */
 :where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > [data-part="icon"] > :where([data-part="sweep"]),
 :where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > [data-part="icon"] > :where([data-part="sweep-base"]) {
@@ -401,11 +401,11 @@
 }
 :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::before {
   z-index: 1; color: var(--warp-color-sweep-base); border: var(--warp-sweep-base-width) solid currentColor;
-  clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)) round var(--warp-sweep-radius));
+  clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)));   /* square: the box is rounded already, and a rounded seam left a gap */
 }
 :where([data-scope="checkbox"]) > [data-part="control"][data-sweep]::after {
   z-index: 2; color: var(--warp-color-sweep); opacity: var(--_on); border: var(--warp-sweep-width) solid currentColor;
-  clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--warp-sweep-radius));
+  clip-path: inset(0 var(--_sr) 0 var(--_sl));
 }
 :where([data-scope="checkbox"][data-invalid]) > [data-part="control"][data-sweep]::after { color: var(--warp-color-sweep-critical); opacity: 1; }
 /* the mark: the check's stroke runs left to right, so a wipe that way draws it */
@@ -509,12 +509,21 @@
 :where([data-scope="segmented"] input) { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 :where([data-scope="segmented"] [data-part="item"]) {
   flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  block-size: calc(var(--warp-control-md) - 8px); padding-inline: var(--warp-pad-control);
-  font-weight: 500; font-size: var(--warp-text-body-size); color: var(--warp-color-text-subtle); white-space: nowrap;
+  /* a label longer than its share wraps between words, balanced and centred, and the row grows; a word never breaks */
+  min-inline-size: 0; min-block-size: calc(var(--warp-control-md) - 8px); padding: 2px var(--warp-pad-control);
+  font-weight: 500; font-size: var(--warp-text-body-size); line-height: 1.2; color: var(--warp-color-text-subtle);
+  text-align: center; text-wrap: balance;
   border-radius: var(--warp-radius-control); transition: color var(--warp-shuttle-tail) var(--warp-ease-out);
 }
 :where([data-scope="segmented"] [data-part="item"] svg) { inline-size: 14px; block-size: 14px; }
-:where([data-scope="segmented"] [data-part="count"]) { font: 500 11px/1.25 var(--warp-font-mono); }   /* full ink: 0.8 opacity fell to 4.0:1 (review 03 m12) */
+:where([data-scope="segmented"] [data-part="count"]) { font: 500 11px/1.25 var(--warp-font-mono); }
+/* an option with a count (a price, a tally) stacks it under the name, whole: side by side they fought for the width */
+:where([data-scope="segmented"] [data-part="item"]:has(> [data-part="count"])) { flex-direction: column; gap: 1px; padding-block: 4px; }
+:where([data-scope="segmented"] [data-part="count"]) { white-space: nowrap; opacity: 0.85; }
+/* a grid item's minimum is its content's: without this, a long option widened the group past its container */
+:where([data-scope="segmented"] > label) { min-inline-size: 0; }
+/* data-fill: the group spans its container, each option an equal share */
+:where([data-scope="segmented"][data-fill]) { display: grid; inline-size: 100%; justify-self: stretch; }   /* full ink: 0.8 opacity fell to 4.0:1 (review 03 m12) */
 :where([data-scope="segmented"] label:hover [data-part="item"]) { color: var(--warp-color-text); }
 /* the ink turns with the shuttle: the arriving item as its head lands, the leaving one as its tail goes */
 :where([data-scope="segmented"] input:checked + [data-part="item"]) { color: var(--warp-color-accent-on-solid); transition-duration: var(--warp-shuttle-head); }
