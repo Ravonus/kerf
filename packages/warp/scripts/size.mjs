@@ -58,6 +58,7 @@ export const ENTRIES = {
   SideNavTitle: ['SideNavTitle', '<SideNavTitle title="Docs">weft</SideNavTitle>'],
   Presence: ['Presence', '<Presence when={true}>x</Presence>'],
   ScrollRail: ['ScrollRail', '<ScrollRail />'],
+  ScrollView: ['ScrollView', '<ScrollView style="height:200px">x</ScrollView>'],
   Toaster: ['Toaster', '<Toaster />'],
   Table: [
     'Table',

@@ -711,6 +711,9 @@ importers:
 
   packages/warp:
     dependencies:
+      '@weft-js/scroll':
+        specifier: workspace:*
+        version: link:../scroll
       '@weft-js/warp-core':
         specifier: workspace:*
         version: link:../warp-core

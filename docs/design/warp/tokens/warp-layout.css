@@ -295,6 +295,20 @@
   100% { --_warp-fs: 24px; --_warp-fe: 0px; }
 }
 
+/* ScrollView — scrolling run in JavaScript by @weft-js/scroll, whose stylesheet lays out the bars. Here they take
+   Warp's ink, focus ring and timing; a page can still set any --scroll-* property itself. */
+:where([data-scope="scroll-view"]) {
+  --scroll-color: color-mix(in oklab, var(--warp-color-text) 24%, transparent);
+  --scroll-hover-color: color-mix(in oklab, var(--warp-color-text) 42%, transparent);
+  --scroll-active-color: color-mix(in oklab, var(--warp-color-text) 56%, transparent);
+  --scroll-hover-track: color-mix(in oklab, var(--warp-color-text) 6%, transparent);
+  --scroll-fade: var(--warp-duration-slow);
+  min-inline-size: 0; min-block-size: 0;
+}
+:where([data-scope="scroll-view"] > [data-part="viewport"]:focus-visible) {
+  outline: var(--warp-focus-width) solid var(--warp-color-focus); outline-offset: calc(var(--warp-focus-width) * -1);
+}
+
 /* ===========================================================================
    3 · SHELL — one element tree, three presentations
    DOM order (all forms): skip link → header → nav → main → overlays

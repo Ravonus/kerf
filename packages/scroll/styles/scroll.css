@@ -1,19 +1,7 @@
 /* @weft-js/scroll: the root, viewport and bars. Every look is a custom property, so a theme or the `bar` options
-   restyle DOM bars and canvas bars alike. Before the script runs the viewport scrolls natively. */
+   restyle DOM bars and canvas bars alike. Nothing here declares them, so any layer or theme may: the defaults are the
+   fallbacks. Before the script runs the viewport scrolls natively. */
 :where([data-scroll]) {
-  --scroll-width: 6px;
-  --scroll-hover-width: 10px;
-  --scroll-inset: 2px;
-  --scroll-radius: 999px;
-  --scroll-color: color-mix(in srgb, currentColor 32%, transparent);
-  --scroll-hover-color: color-mix(in srgb, currentColor 48%, transparent);
-  --scroll-active-color: color-mix(in srgb, currentColor 60%, transparent);
-  --scroll-track: transparent;
-  --scroll-hover-track: color-mix(in srgb, currentColor 8%, transparent);
-  --scroll-fade: 200ms;
-  --scroll-track-size: calc(
-    max(var(--scroll-width), var(--scroll-hover-width)) + 2 * var(--scroll-inset)
-  );
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
@@ -44,10 +32,10 @@
 
 /* gutter: room is kept beside the content for each axis that scrolls, as `scrollbar-gutter: stable` does. */
 :where([data-scroll][data-layout='gutter']:not([data-axes='x'])) {
-  padding-inline-end: var(--scroll-track-size);
+  padding-inline-end: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
 }
 :where([data-scroll][data-layout='gutter']:not([data-axes='y'])) {
-  padding-block-end: var(--scroll-track-size);
+  padding-block-end: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
 }
 
 :where([data-scroll] > [data-part='scrollbar']) {
@@ -55,9 +43,9 @@
   z-index: 1;
   opacity: 0;
   transition:
-    opacity var(--scroll-fade) ease-out,
-    background-color var(--scroll-fade);
-  background: var(--scroll-track);
+    opacity var(--scroll-fade, 200ms) ease-out,
+    background-color var(--scroll-fade, 200ms);
+  background: var(--scroll-track, transparent);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -65,28 +53,28 @@
 :where([data-scroll] > [data-part='scrollbar'][data-orientation='vertical']) {
   inset-block: 0;
   inset-inline-end: 0;
-  inline-size: var(--scroll-track-size);
+  inline-size: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
 }
 :where([data-scroll] > [data-part='scrollbar'][data-orientation='horizontal']) {
   inset-inline: 0;
   inset-block-end: 0;
-  block-size: var(--scroll-track-size);
+  block-size: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
 }
 :where(
   [data-scroll][data-overflow-x][data-overflow-y]
     > [data-part='scrollbar'][data-orientation='vertical']
 ) {
-  inset-block-end: var(--scroll-track-size);
+  inset-block-end: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
 }
 :where(
   [data-scroll][data-overflow-x][data-overflow-y]
     > [data-part='scrollbar'][data-orientation='horizontal']
 ) {
-  inset-inline-end: var(--scroll-track-size);
+  inset-inline-end: calc(max(var(--scroll-width, 6px), var(--scroll-hover-width, 10px)) + 2 * var(--scroll-inset, 2px));
 }
 :where([data-scroll] > [data-part='scrollbar'][data-visible]) {
   opacity: 1;
-  transition-duration: calc(var(--scroll-fade) / 2);
+  transition-duration: calc(var(--scroll-fade, 200ms) / 2);
 }
 :where([data-scroll] > [data-part='scrollbar'][data-none]),
 :where([data-scroll][data-show='never'] > [data-part='scrollbar']) {
@@ -97,33 +85,33 @@
   display: none;
 }
 :where([data-scroll] > [data-part='scrollbar']:is([data-hover], [data-active])) {
-  background: var(--scroll-hover-track);
+  background: var(--scroll-hover-track, color-mix(in srgb, currentColor 8%, transparent));
 }
 
 :where([data-scroll] [data-part='scrollbar'] > [data-part='thumb']) {
   position: absolute;
   inset-block-start: 0;
   inset-inline-start: 0;
-  border-radius: var(--scroll-radius);
-  background: var(--scroll-color);
+  border-radius: var(--scroll-radius, 999px);
+  background: var(--scroll-color, color-mix(in srgb, currentColor 32%, transparent));
   will-change: transform;
   transition:
-    inline-size var(--scroll-fade) ease-out,
-    block-size var(--scroll-fade) ease-out,
-    background-color var(--scroll-fade);
+    inline-size var(--scroll-fade, 200ms) ease-out,
+    block-size var(--scroll-fade, 200ms) ease-out,
+    background-color var(--scroll-fade, 200ms);
 }
 :where([data-scroll] [data-part='scrollbar'][data-orientation='vertical'] > [data-part='thumb']) {
   inset-inline-start: auto;
-  inset-inline-end: var(--scroll-inset);
-  inline-size: var(--scroll-width);
+  inset-inline-end: var(--scroll-inset, 2px);
+  inline-size: var(--scroll-width, 6px);
   transition-property: inline-size, background-color;
 }
 :where([data-scroll] [data-part='scrollbar'][data-orientation='horizontal'] > [data-part='thumb']) {
   inset-block-start: auto;
-  inset-block-end: var(--scroll-inset);
+  inset-block-end: var(--scroll-inset, 2px);
   left: 0;
   right: auto;
-  block-size: var(--scroll-width);
+  block-size: var(--scroll-width, 6px);
   transition-property: block-size, background-color;
 }
 :where(
@@ -131,20 +119,20 @@
     [data-part='scrollbar']:is([data-hover], [data-active])[data-orientation='vertical']
     > [data-part='thumb']
 ) {
-  inline-size: var(--scroll-hover-width);
+  inline-size: var(--scroll-hover-width, 10px);
 }
 :where(
   [data-scroll]
     [data-part='scrollbar']:is([data-hover], [data-active])[data-orientation='horizontal']
     > [data-part='thumb']
 ) {
-  block-size: var(--scroll-hover-width);
+  block-size: var(--scroll-hover-width, 10px);
 }
 :where([data-scroll] [data-part='scrollbar'][data-hover] > [data-part='thumb']) {
-  background: var(--scroll-hover-color);
+  background: var(--scroll-hover-color, color-mix(in srgb, currentColor 48%, transparent));
 }
 :where([data-scroll] [data-part='scrollbar'][data-active] > [data-part='thumb']) {
-  background: var(--scroll-active-color);
+  background: var(--scroll-active-color, color-mix(in srgb, currentColor 60%, transparent));
 }
 @media (prefers-reduced-motion: reduce) {
   :where([data-scroll]) {

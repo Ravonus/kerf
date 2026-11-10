@@ -37,6 +37,7 @@
     "dither": "node scripts/dither.mjs"
   },
   "dependencies": {
+    "@weft-js/scroll": "workspace:*",
     "@weft-js/warp-core": "workspace:*",
     "@weft-js/warp-icons": "workspace:*"
   },

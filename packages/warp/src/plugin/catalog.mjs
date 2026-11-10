@@ -106,6 +106,10 @@ const components = [
     'The page scrollbar drawn from below a sticky header (--warp-scroll-rail-top); fine pointers only, touch keeps native',
   ],
   [
+    'ScrollView',
+    'Scrolling run in JavaScript (@weft-js/scroll): native-feeling wheel, touch, keys and focus, bars drawn in the DOM or on a canvas, fixed-size thumb, snap points',
+  ],
+  [
     'Presence',
     'Show and hide with an entrance and an exit (collapse, fade, rise, pop, slide-*); no-JS form: hidden + data-collapse / data-presence',
   ],
