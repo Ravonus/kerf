@@ -907,7 +907,14 @@ html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
     position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
   }
 }
-:where([data-scope="sheet"][data-side="bottom"] [data-part="header"]) { padding-block-start: var(--warp-space-tight); touch-action: none; }
+:where([data-scope="sheet"][data-side="bottom"] [data-part="header"]) { touch-action: none; }
+/* the grabber stands above the title, so the header gives up its top padding to it; with no grabber (a desktop at a
+   narrow width) the header keeps its padding, and the X sits inside the sheet's rounded top, not cut off above it */
+:where(:root[data-device="mobile"] [data-scope="sheet"][data-side="bottom"] [data-part="header"]) { padding-block-start: var(--warp-space-tight); }
+@media (hover: none) and (pointer: coarse) {
+  :where(:root:not([data-device]) [data-scope="sheet"][data-side="bottom"] [data-part="header"]) { padding-block-start: var(--warp-space-tight); }
+}
+:where([data-scope="sheet"][data-side="bottom"] [data-part="close"]) { margin-block-start: -8px; margin-inline-end: -6px; }
 /* initial focus lands on the title (tabindex="-1"), never the grabber; a programmatic
    landing spot needs no ring of its own */
 :where([data-scope="sheet"] [data-part="title"][tabindex="-1"]:focus),
