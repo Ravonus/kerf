@@ -1052,13 +1052,15 @@ default-src 'self'; script-src 'self'; style-src 'self'
 The build writes every script and stylesheet to a file, so nothing is
 inline. At run time, a `style` value from an expression
 (`style={{ color: c }}` or `style={css}`) is applied through the CSSOM
-(`el.style`), which CSP allows.
+(`el.style`), which CSP allows. An expression is for a value that
+changes: it sets up a binding per element, so for a fixed style a class
+is faster.
 
 Three things need more than that:
 
 | What | Why | What to do |
 | --- | --- | --- |
-| A literal `style="color:red"` in JSX | It is part of the element's HTML template, and `style-src` without `'unsafe-inline'` blocks style attributes in HTML | Use a class, or an expression: `style={{ color: 'red' }}` |
+| A literal `style="color:red"` in JSX | It is part of the element's HTML template, and `style-src` without `'unsafe-inline'` blocks style attributes in HTML | Use a class. It costs the same as the literal: both are part of the template |
 | Server-rendered pages | Every `style` value is written into the HTML as an attribute, `<Media>`'s box included | Add `style-src-attr 'unsafe-inline'` (style attributes only; still no inline `<style>` or script) |
 | `<Media>`'s default placeholder | It's a `data:` URL | `media({ placeholder: 'file' })`, or add `data:` to `img-src` |
 
