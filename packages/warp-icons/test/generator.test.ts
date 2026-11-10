@@ -49,7 +49,7 @@ test('generated file inventory agrees with the tracked files', async () => {
     .sort()
   expect(tracked).toEqual(expected)
   expect([...tracked, 'all-orphan.tsx'].sort()).not.toEqual(expected)
-})
+}, 30_000) // it renders every icon: about 1.5 s alone, over 5 s on a loaded gate
 
 test('the generator check rejects every missing and stale icon module', async () => {
   const files = Object.keys(await outputs()).filter((name) => /^all-.*\.tsx$/.test(name))

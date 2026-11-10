@@ -160,7 +160,8 @@ async function hydrationChecks({ check, eq, fail, titles }, a) {
             return c.outerHTML.replaceAll('<!---->', '')
           }
           window.__server = window.__plain(ul)
-          const marker = (n) => n.nodeType === 8 && (n.data === '[' || n.data === ']')
+          // `[` `]` bound a list; `,` separates texts; an empty one marks a hole whose value turned out static (claim.ts)
+          const marker = (n) => n.nodeType === 8 && ['[', ']', ',', ''].includes(n.data)
           const swept = (x) =>
             x.type === 'attributes'
               ? x.attributeName === 'wk' && !x.target.hasAttribute('wk')
