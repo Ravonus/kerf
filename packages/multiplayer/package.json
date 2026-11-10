@@ -7,6 +7,15 @@
     "weft"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/multiplayer"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/multiplayer#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "files": [
     "src",
     "plugin.mjs",

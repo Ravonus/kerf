@@ -4,6 +4,15 @@
   "version": "0.1.2",
   "description": "@weft-js/realtime-socketio: cursors through a Socket.IO relay you run, with tickets the room signs",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/realtime-socketio"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/realtime-socketio#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

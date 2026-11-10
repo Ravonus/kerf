@@ -3,6 +3,15 @@
   "version": "0.1.2",
   "description": "warp, the UI toolkit for weft: components over @weft-js/warp-core",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/warp"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/warp#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "type": "module",
   "sideEffects": [
     "*.css",

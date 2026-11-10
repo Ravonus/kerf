@@ -153,6 +153,7 @@ multiplayer, media processing, fonts and realtime transports. See [1.0 package s
 - [Learn](site/content/learn): the tutorial, from your first component to deploying.
 - [Reference](packages/cli/docs): every API, command and config key. An app gets the same pages with `npx weft docs`.
 - [docs/](docs/README.md): working on Weft, and the design notes and decisions behind it.
+- [CHANGELOG.md](CHANGELOG.md): what changed in each release.
 
 ## In this repo
 

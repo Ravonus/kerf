@@ -4,6 +4,15 @@
   "version": "0.1.2",
   "description": "@weft-js/realtime-durable-object: a Cloudflare Durable Object as the realtime bus, on cloudflare_durable",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/realtime-durable-object"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/realtime-durable-object#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

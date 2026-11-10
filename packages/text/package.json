@@ -4,6 +4,15 @@
   "version": "0.1.2",
   "description": "weft's text: fonts for the build (subsets, matched fallbacks) and exact line breaking in the browser, on Pretext by Cheng Lou (@chenglou/pretext 1.0.0, MIT)",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/text"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/text#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "type": "module",
   "sideEffects": [
     "./gen/*/pack-*.ts",

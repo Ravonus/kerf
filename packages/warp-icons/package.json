@@ -3,6 +3,15 @@
   "version": "0.1.2",
   "description": "Icons for warp and weft",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/warp-icons"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/warp-icons#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "type": "module",
   "sideEffects": [
     "*.css"

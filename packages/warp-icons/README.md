@@ -26,3 +26,10 @@ a name the build can't follow. Its source is [packages/cli/docs/icons.md](../cli
 
 `pnpm run sheet` in this folder writes `contact-sheet.html`, where you can browse every icon by tier, variant, size and
 theme.
+
+## Links
+
+- [Source](https://github.com/Ravonus/weft/tree/main/packages/warp-icons)
+- [Weft on GitHub](https://github.com/Ravonus/weft): the framework, the docs and every package
+- [Changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md)
+- [Issues](https://github.com/Ravonus/weft/issues)

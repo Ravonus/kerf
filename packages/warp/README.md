@@ -120,3 +120,10 @@ and copies the result as `weft.config.ts`.
 An app built with Warp has a ceiling of 50 KB of brotli JavaScript and CSS. `evals/gates/warp-exit.mjs` builds the
 shop app from the evals with Warp and checks it against that. `pnpm run size` in this folder prints what each component
 costs on its own and on a page with the others.
+
+## Links
+
+- [Source](https://github.com/Ravonus/weft/tree/main/packages/warp)
+- [Weft on GitHub](https://github.com/Ravonus/weft): the framework, the docs and every package
+- [Changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md)
+- [Issues](https://github.com/Ravonus/weft/issues)

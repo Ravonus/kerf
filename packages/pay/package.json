@@ -4,6 +4,15 @@
   "version": "0.1.2",
   "description": "@weft-js/pay: products, one ledger for every rail, and entitlements. weft's reference plugin: read it to build your own",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/pay"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/pay#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

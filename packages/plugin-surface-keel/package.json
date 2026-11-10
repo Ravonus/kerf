@@ -4,6 +4,15 @@
   "version": "0.1.2",
   "description": "@weft-js/plugin-surface-keel: the `keel-pixel` surface kind (surface.renderer@1): KEEL's WebGL2 pixel renderer and theme recipes.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/plugin-surface-keel"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/plugin-surface-keel#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "type": "module",
   "exports": {
     ".": {

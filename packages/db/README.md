@@ -29,3 +29,10 @@ The layers and the list sources each have a `/plugin` subpath for `weft.config.t
 ## Docs
 
 `weft docs start` covers the database: `ctx.db`, migrations with `weft db generate`, and change feeds.
+
+## Links
+
+- [Source](https://github.com/Ravonus/weft/tree/main/packages/db)
+- [Weft on GitHub](https://github.com/Ravonus/weft): the framework, the docs and every package
+- [Changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md)
+- [Issues](https://github.com/Ravonus/weft/issues)

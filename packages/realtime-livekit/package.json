@@ -4,6 +4,15 @@
   "version": "0.1.2",
   "description": "@weft-js/realtime-livekit: cursors over a LiveKit room, with the token signed by the room",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/realtime-livekit"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/realtime-livekit#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

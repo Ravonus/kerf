@@ -6,6 +6,15 @@
     "weft"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/start"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/start#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "files": [
     "src",
     "crate",

@@ -66,3 +66,10 @@ From the repository, `pnpm --filter @weft-js/start test:e2e <built-app>` runs th
 Pass `--e2e <path>` to select another scenario in `test/e2e`. The live database scripts in that
 folder run directly with Node and require the database environment shown in each script. They keep
 `.mjs` because Node and the runtime matrix load them without a test transform.
+
+## Links
+
+- [Source](https://github.com/Ravonus/weft/tree/main/packages/start)
+- [Weft on GitHub](https://github.com/Ravonus/weft): the framework, the docs and every package
+- [Changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md)
+- [Issues](https://github.com/Ravonus/weft/issues)

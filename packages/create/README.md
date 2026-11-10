@@ -69,3 +69,10 @@ A template is a fuller app on Postgres. It sets `--db postgres` and the sign-in 
 
 [Installation](https://github.com/Ravonus/weft/blob/main/site/content/learn/installation.md) walks through every file in
 a new app, and how to run, check, build and deploy it.
+
+## Links
+
+- [Source](https://github.com/Ravonus/weft/tree/main/packages/create)
+- [Weft on GitHub](https://github.com/Ravonus/weft): the framework, the docs and every package
+- [Changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md)
+- [Issues](https://github.com/Ravonus/weft/issues)

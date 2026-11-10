@@ -23,13 +23,20 @@ export function writePlatformPackage(platform, binary, dir) {
   copyFileSync(binary, join(dir, 'weft-compiler.node'))
   writeFileSync(
     join(dir, 'README.md'),
-    `# ${name}\n\nThe weft compiler as a Node addon for ${platform.name}. @weft-js/core installs it by itself where it fits and runs its WASM build where it doesn't: same output, a little slower. Don't depend on this directly.\n`,
+    `# ${name}\n\nThe weft compiler as a Node addon for ${platform.name}. @weft-js/core installs it by itself where it fits and runs its WASM build where it doesn't: same output, a little slower. Don't depend on this directly.\n\nSource: https://github.com/Ravonus/weft (the compiler is in crates/weft-compiler).\n`,
   )
   const pkg = {
     name,
     version: version(),
     description: `weft compiler addon for ${platform.name}`,
     license: 'MIT',
+    repository: {
+      type: 'git',
+      url: 'git+https://github.com/Ravonus/weft.git',
+      directory: 'crates/weft-compiler',
+    },
+    homepage: 'https://github.com/Ravonus/weft/tree/main/packages/core#readme',
+    bugs: { url: 'https://github.com/Ravonus/weft/issues' },
     publishConfig: { access: 'public' },
     main: 'weft-compiler.node',
     files: ['weft-compiler.node'],

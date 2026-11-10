@@ -3,6 +3,15 @@
   "version": "0.1.2",
   "description": "warp core: tokens, CSS and framework-agnostic behaviour",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/warp-core"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/warp-core#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "type": "module",
   "sideEffects": [
     "*.css"

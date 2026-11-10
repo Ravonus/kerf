@@ -108,3 +108,10 @@ Node runs it without a TypeScript loader.
 `size.mjs` holds the whole runtime to 13.37 KB of brotli and the `@weft-js/core` entry to 6.90 KB. Today the entry is
 5.63 KB and hello world is 1.60 KB. `src/egg.ts` pads the full runtime to exactly 13.37 KB; run `node scripts/egg.mjs` last,
 after any merge that changes the runtime.
+
+## Links
+
+- [Source](https://github.com/Ravonus/weft/tree/main/packages/core)
+- [Weft on GitHub](https://github.com/Ravonus/weft): the framework, the docs and every package
+- [Changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md)
+- [Issues](https://github.com/Ravonus/weft/issues)

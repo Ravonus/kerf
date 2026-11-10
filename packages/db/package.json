@@ -3,6 +3,15 @@
   "version": "0.1.2",
   "description": "weft's data layers and list sources in one package: each driver is an optional peer, and a subpath loads only its own",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/weft.git",
+    "directory": "packages/db"
+  },
+  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/db#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/weft/issues"
+  },
   "type": "module",
   "exports": {
     "./sql": "./src/sql.ts",

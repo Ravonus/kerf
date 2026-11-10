@@ -178,3 +178,10 @@ export function AccountMenu() {
   )
 }
 ```
+
+## Links
+
+- [Source](https://github.com/Ravonus/weft/tree/main/packages/warp-core)
+- [Weft on GitHub](https://github.com/Ravonus/weft): the framework, the docs and every package
+- [Changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md)
+- [Issues](https://github.com/Ravonus/weft/issues)

@@ -90,3 +90,10 @@ The source of each page is in [docs/](docs). Adding a diagnostic is in [CONTRIBU
 - `fix.edits` (`{ file, span, offset, text }`) is there when there's a mechanical change, and `fix.safe` says whether
   `weft fix` applies it without asking.
 - `project: true` marks a result that needed more than one file to find.
+
+## Links
+
+- [Source](https://github.com/Ravonus/weft/tree/main/packages/cli)
+- [Weft on GitHub](https://github.com/Ravonus/weft): the framework, the docs and every package
+- [Changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md)
+- [Issues](https://github.com/Ravonus/weft/issues)
