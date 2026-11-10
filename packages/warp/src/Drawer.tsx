@@ -42,6 +42,8 @@ function bind(
     if (on && node) node.dataset.side = placed(side)
     return { open: on, onClose: () => (open.value = false) }
   })
+  // a drawer fixed at a side never sits at the bottom: no sheet, and no second run on every open
+  if (side !== 'bottom' && side !== 'auto') return
   // registered after dialog, so data-side is set before the sheet measures on opening
   use(sheet, el, () => ({ open: open.value, at, peek, onClose: () => (open.value = false) }))
 }

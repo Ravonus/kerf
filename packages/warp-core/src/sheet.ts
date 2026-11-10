@@ -59,7 +59,8 @@ function part(s: Hand, t: EventTarget | null, ...names: string[]) {
 function settle(s: Hand, d: Detent | null) {
   const { el } = s
   s.at = d
-  el.style.setProperty('--_drag', '0px')
+  // the stylesheet's own 0px: writing it would be one more mutation on every open
+  el.style.removeProperty('--_drag')
   if (!d) {
     el.style.removeProperty('--_sheet-h')
     delete el.dataset.detent
@@ -97,8 +98,8 @@ function start(s: Hand) {
 
 function down(s: Hand, e: PointerEvent) {
   if (!bottom(s) || e.button !== 0 || !part(s, e.target, 'handle', 'header')) return
-  if ((e.target as Element).closest('button:not([data-part="handle"]), a, input, select, textarea'))
-    return
+  const t = e.target as Element | null
+  if (t?.closest?.('button:not([data-part="handle"]), a, input, select, textarea')) return
   const h = s.el.getBoundingClientRect().height
   s.drag = { y: e.clientY, h, last: e.clientY, t: e.timeStamp, v: 0, moved: false, id: e.pointerId }
 }
