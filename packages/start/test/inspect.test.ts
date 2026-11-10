@@ -145,7 +145,7 @@ test('H003, H004, H005, H008: each one found on what the routes really produce',
   const card = r.diagnostics.filter((d) => d.route === '/meta/badcard')
   expect(card.map((d) => d.code).sort()).toEqual(['H005', 'H008'])
   expect(card.find((d) => d.code === 'H008')!.why).toMatch(/not allowed/)
-})
+}, 120_000) // about 4 s alone; it builds the fixture's routes, and a loaded gate runs many builds at once
 
 test('metaExport: H014 needs to know whether `meta` reads anything', () => {
   expect(metaExport('export default function A() {}', 'a.tsx')).toEqual({

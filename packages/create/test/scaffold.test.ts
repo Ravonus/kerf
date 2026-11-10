@@ -19,11 +19,14 @@ const tmp = fileURLToPath(new URL('./.tmp/', import.meta.url))
 // A check plus a dev server: a few seconds alone, but the release run has every package's tests going at once, and
 // the first app (warp, the largest) pays the cold start at seven to ten times that.
 const serves = { timeout: 180_000 }
-// Nitro waits 30 s for the first server import, then answers 503. A warp app's takes about 9 s, past 30 on a loaded gate.
+// Nitro waits 30 s for the first server import, then fails the request ("Vite environment ssr is unavailable", which the
+// error page answers as a 500). A warp app's import takes about 9 s, past 30 on a loaded gate.
 async function firstPage(url: string) {
   for (let i = 0; ; i++) {
     const res = await fetch(url)
-    if (res.status !== 503 || i === 3) return res
+    if (res.status < 500 || i === 3) return res
+    const body = await res.text()
+    if (!body.includes('is unavailable')) return new Response(body, { status: res.status })
   }
 }
 const pkgs = fileURLToPath(new URL('../../', import.meta.url))
