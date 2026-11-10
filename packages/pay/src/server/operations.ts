@@ -1,6 +1,7 @@
-import { PayError, type PayRail, type Product, type RailEvent } from '../index'
+import { PayError, type CheckoutLine, type PayRail, type Product, type RailEvent } from '../index'
 import type {
   CheckoutInput,
+  OrderInput,
   PayContext,
   PayOptions,
   PayReport,
@@ -8,6 +9,7 @@ import type {
   Purchase,
 } from '../server'
 import { lineOf } from './catalog'
+import { ORDER } from './ledger'
 
 const BODY = 1 << 20
 const hex = async (s: string) =>
@@ -139,4 +141,75 @@ export function webhookFor(
     }
   }
   return webhook
+}
+
+const REF = /^[A-Za-z0-9_-]{1,64}$/
+
+/** Check an order's lines, which the app priced on the server, and sum them into the ledger's one line. */
+export function orderLines(input: OrderInput): { line: CheckoutLine; lines: CheckoutLine[] } {
+  const { ref, currency = 'usd' } = input
+  if (!REF.test(ref))
+    throw new PayError(
+      'PAY021',
+      `order ref \`${ref}\` must be 1–64 letters, digits, \`-\` or \`_\``,
+    )
+  if (!/^[a-z]{3}$/.test(currency))
+    throw new PayError('PAY008', `\`${currency}\` isn't a lowercase ISO currency`)
+  if (!input.lines.length || input.lines.length > 100)
+    throw new PayError('PAY021', `order \`${ref}\` needs 1 to 100 lines`)
+  const lines = input.lines.map((l): CheckoutLine => {
+    const quantity = l.quantity ?? 1
+    if (!Number.isSafeInteger(l.amount) || l.amount < 0)
+      throw new PayError(
+        'PAY008',
+        `\`${l.name}\`: ${l.amount} isn't whole minor units (999 is $9.99)`,
+      )
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999)
+      throw new PayError('PAY021', `\`${l.name}\`: quantity ${quantity} is out of range`)
+    return {
+      product: ORDER,
+      plan: ref,
+      name: l.name.slice(0, 250),
+      amount: l.amount,
+      currency,
+      mode: 'payment',
+      quantity,
+    }
+  })
+  const total = lines.reduce((sum, l) => sum + l.amount * l.quantity, 0)
+  if (total <= 0) throw new PayError('PAY021', `order \`${ref}\` totals nothing`)
+  return {
+    line: {
+      product: ORDER,
+      plan: ref,
+      name: input.title ?? `Order ${ref}`,
+      amount: total,
+      currency,
+      mode: 'payment',
+      quantity: 1,
+    },
+    lines,
+  }
+}
+
+/** Create the order operation: one payment for lines the app priced, signed in or not. */
+export function orderFor<P extends Product>({ options, urls, userOf, railFor }: Services<P>) {
+  async function order(ctx: PayContext, input: OrderInput) {
+    const { line, lines } = orderLines(input)
+    const rail = await railFor()
+    const origin = options.origin ?? new URL(ctx.request.url).origin
+    const back = (path: string) => new URL(path.replaceAll('{ref}', input.ref), origin).href
+    const { url } = await rail.checkout({
+      user: userOf(ctx) ?? `guest:${input.ref}`,
+      line,
+      lines,
+      ...(input.email && { email: input.email }),
+      successUrl: back(urls.order ?? urls.success),
+      cancelUrl: back(urls.orderCancel ?? urls.cancel),
+      // One session per order: paying twice for the same ref can't happen from a double click.
+      idempotencyKey: await hex(JSON.stringify(['order', input.ref, line.amount])),
+    })
+    return url
+  }
+  return order
 }

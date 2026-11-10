@@ -1,14 +1,23 @@
-import { entitlementTag, type Product, type PurchaseState, type RailEvent } from '../index'
-import type { Entitlements, PayReport, PayStore, Purchase } from '../server'
+import {
+  entitlementTag,
+  orderTag,
+  type Product,
+  type PurchaseState,
+  type RailEvent,
+} from '../index'
+import type { Entitlements, OrderHook, PayReport, PayStore, Purchase } from '../server'
 
 const ACCESS: ReadonlySet<PurchaseState> = new Set(['active', 'trial', 'grace'])
 const FINAL: ReadonlySet<PurchaseState> = new Set(['refunded', 'revoked'])
+/** The product id every `pay.order` is recorded under; its plan is the app's order ref. */
+export const ORDER = 'order'
 
 /** Derive access and apply verified events against one store. */
 export function makeLedger<P extends Product>(
   store: PayStore,
   byId: Map<string, P>,
   leeway: number,
+  onOrder?: OrderHook,
 ) {
   const live = (p: Purchase) =>
     ACCESS.has(p.state) && (p.expires === null || Date.now() < p.expires + leeway)
@@ -27,7 +36,7 @@ export function makeLedger<P extends Product>(
   }
 
   /** One event onto its purchase. Identity always merges; state moves only forward on the rail's clock. */
-  async function apply(rail: string, e: RailEvent, report?: PayReport): Promise<string | null> {
+  async function apply(rail: string, e: RailEvent, report?: PayReport): Promise<string[]> {
     const id = `${rail}:${e.purchase}`
     const had = await store.purchase(id)
     const newer =
@@ -44,13 +53,19 @@ export function makeLedger<P extends Product>(
       expires: newer ? (e.expires ?? had?.expires ?? null) : had.expires,
     }
     await store.save(next)
+    // An order (`pay.order`) grants nothing: the app hears its state, before the event is marked, so a throw redelivers.
+    if (next.product === ORDER && next.plan) {
+      if (newer && had?.state !== next.state)
+        await onOrder?.({ ref: next.plan, state: next.state, purchase: next })
+      return ['orders', orderTag(next.plan)]
+    }
     if (next.product && !byId.has(next.product))
       report?.({
         code: 'PAY021',
         severity: 'warning',
         message: `purchase \`${id}\` is for \`${next.product}\`, which isn't in the catalog: it grants nothing`,
       })
-    return next.user && entitlementTag(next.user)
+    return next.user ? [entitlementTag(next.user)] : []
   }
 
   async function ingest(rail: string, events: RailEvent[], report?: PayReport) {
@@ -58,9 +73,9 @@ export function makeLedger<P extends Product>(
     for (const e of events) {
       const key = `${rail}:${e.id}`
       if (await store.seen(key)) continue
-      const tag = await apply(rail, e, report)
+      const poked = await apply(rail, e, report)
       await store.mark(key, e.at)
-      if (tag) tags.add(tag)
+      for (const t of poked) tags.add(t)
     }
     return [...tags]
   }
