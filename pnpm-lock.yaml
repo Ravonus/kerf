@@ -272,28 +272,6 @@ importers:
       zod:
         specifier: 4.6.7
         version: 4.6.7
-    optionalDependencies:
-      '@weft-js/compiler-darwin-arm64':
-        specifier: 0.1.3
-        version: 0.1.3
-      '@weft-js/compiler-darwin-x64':
-        specifier: 0.1.3
-        version: 0.1.3
-      '@weft-js/compiler-linux-arm64-gnu':
-        specifier: 0.1.3
-        version: 0.1.3
-      '@weft-js/compiler-linux-arm64-musl':
-        specifier: 0.1.3
-        version: 0.1.3
-      '@weft-js/compiler-linux-x64-gnu':
-        specifier: 0.1.3
-        version: 0.1.3
-      '@weft-js/compiler-linux-x64-musl':
-        specifier: 0.1.3
-        version: 0.1.3
-      '@weft-js/compiler-win32-x64':
-        specifier: 0.1.3
-        version: 0.1.3
 
   packages/create:
     devDependencies:
@@ -3190,45 +3168,6 @@ packages:
 
   '@vitest/spy@5.0.5':
     resolution: {integrity: sha512-lwJRExuH417257Q5wv9QYugN9IMJkoxcrKrYxGPQkBzl7wlNpTUxD/5yNX4ESKVUIShKPgkGchYPFMWOOk0wzw==}
-
-  '@weft-js/compiler-darwin-arm64@0.1.3':
-    resolution: {integrity: sha512-Y/syAY7RjpbInXZ7jkWssocLxrnDvC6kCUWCYVbiaEdz91E4L3X3t5yLZmgt4BQMcf0ZFT3zbgDV23L6Az+ULA==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@weft-js/compiler-darwin-x64@0.1.3':
-    resolution: {integrity: sha512-pyIoNf6U7GHo1+fQkT3cWpL+/Do5T7hEdtj3Nd2XuSvF+LzLdBt6Tm1I2OZttO6XyKmzEZcJ5ZcTw+3mWXej8Q==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@weft-js/compiler-linux-arm64-gnu@0.1.3':
-    resolution: {integrity: sha512-/sluA1lzbLj7YzmMeczt8cDN5vi0FBPXoVWtmvQZCrG/sD4MgruRLVY7mGEE4ZXXck529RbZGLHkABLQWSov9w==}
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
-
-  '@weft-js/compiler-linux-arm64-musl@0.1.3':
-    resolution: {integrity: sha512-sTD/wezFzAqgrk0fdJNjtiSItVsliwfin/SSBKExuxSIpFR86bkiuD+bzL6yb3kiNaQZkK9I1yFXyR0TrLzPJQ==}
-    cpu: [arm64]
-    os: [linux]
-    libc: [musl]
-
-  '@weft-js/compiler-linux-x64-gnu@0.1.3':
-    resolution: {integrity: sha512-E+YMz7GxPjB7vT1C8ugavyCSDY4W9JsUw0FnlIyD2nGoiZjXSMWxkqNPK7ZkSXQAjR+AWAKMIq6JrFr/zNUh8A==}
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
-
-  '@weft-js/compiler-linux-x64-musl@0.1.3':
-    resolution: {integrity: sha512-AeglG5svAfqoMVWTTLomUmhnzJr2pi8d76PnA27pSk8nqrXM7cuv4vEtAuX0XGeS4dGw3TLuGkbOv3OukNEatg==}
-    cpu: [x64]
-    os: [linux]
-    libc: [musl]
-
-  '@weft-js/compiler-win32-x64@0.1.3':
-    resolution: {integrity: sha512-otG1SMt+sNvITd6Qa7tTHcvJqRWnZOJJ2v7yC3L30ogiQdDwXFMvD6BcL2GFUbXnUS2YMawSeeyYrDR9IuwfGg==}
-    cpu: [x64]
-    os: [win32]
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -7239,27 +7178,6 @@ snapshots:
       vite: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
 
   '@vitest/spy@5.0.5': {}
-
-  '@weft-js/compiler-darwin-arm64@0.1.3':
-    optional: true
-
-  '@weft-js/compiler-darwin-x64@0.1.3':
-    optional: true
-
-  '@weft-js/compiler-linux-arm64-gnu@0.1.3':
-    optional: true
-
-  '@weft-js/compiler-linux-arm64-musl@0.1.3':
-    optional: true
-
-  '@weft-js/compiler-linux-x64-gnu@0.1.3':
-    optional: true
-
-  '@weft-js/compiler-linux-x64-musl@0.1.3':
-    optional: true
-
-  '@weft-js/compiler-win32-x64@0.1.3':
-    optional: true
 
   abort-controller@3.0.0:
     dependencies:
