@@ -53,6 +53,19 @@ export function packAll(dest) {
 }
 
 /** `pkg` with its weft dependencies on the tarballs. The overrides reach the ones packages declare for each other. */
+/**
+ * The same overrides in the app's own pnpm-workspace.yaml, when create wrote one: that file makes the app its own
+ * workspace root, and pnpm reads overrides only from there (not from package.json, nor from a workspace above it).
+ */
+export function pinWorkspace(dir, tarballs) {
+  const file = join(dir, 'pnpm-workspace.yaml')
+  if (!existsSync(file) || !Object.keys(tarballs).length) return
+  const lines = Object.entries(tarballs)
+    .map(([name, spec]) => `  ${JSON.stringify(name)}: ${JSON.stringify(spec)}\n`)
+    .join('')
+  writeFileSync(file, `${readFileSync(file, 'utf8')}overrides:\n${lines}`)
+}
+
 export function pin(pkg, tarballs) {
   for (const deps of [pkg.dependencies, pkg.devDependencies])
     for (const name in deps) if (tarballs[name]) deps[name] = tarballs[name]

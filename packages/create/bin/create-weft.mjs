@@ -18,7 +18,7 @@ import {
   withTemplate,
 } from '../src/index.mjs'
 import { resolveChoices } from '../src/wizard.mjs'
-import { pin } from '../scripts/tarballs.mjs'
+import { pin, pinWorkspace } from '../scripts/tarballs.mjs'
 
 const usage = `Usage: npm create @weft-js -- [dir] [--template ${TEMPLATES.join('|')}] [--ui ${UI.join('|')}] [--db ${DB.join('|')}] [--layer ${LAYERS.join('|')}] [--[no-]auth] [--auth-provider better-auth|custom] [--runtime ${RUNTIMES.join('|')}] [--config ${CONFIGS.join('|')}] [--pm <manager>] [--[no-]git] [--[no-]install] [--name <name>] [--tarballs <dir>] [--yes]`
 const string = { type: 'string' },
@@ -92,17 +92,9 @@ try {
   // Before the install: a checkout's packages aren't on npm, so `local.mjs new` needs them wired in from the start.
   if (tarballs) {
     const file = join(dir, 'package.json')
-    writeFileSync(
-      file,
-      JSON.stringify(
-        pin(
-          JSON.parse(readFileSync(file, 'utf8')),
-          JSON.parse(readFileSync(join(tarballs, 'tarballs.json'), 'utf8')),
-        ),
-        null,
-        2,
-      ),
-    )
+    const map = JSON.parse(readFileSync(join(tarballs, 'tarballs.json'), 'utf8'))
+    writeFileSync(file, JSON.stringify(pin(JSON.parse(readFileSync(file, 'utf8')), map), null, 2))
+    pinWorkspace(dir, map)
   }
   console.log(`\nCreated ${files.length} files in ${dir}`)
   if (choices.git) step('git init', 'git', ['init', '--quiet'], dir)
