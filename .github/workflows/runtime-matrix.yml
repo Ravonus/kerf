@@ -38,7 +38,8 @@ jobs:
             pkg.dependencies["@weft-js/core"] = `link:${process.env.GITHUB_WORKSPACE}/packages/core`
             writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n")
           '
-          cp "$GITHUB_WORKSPACE/pnpm-workspace.yaml" pnpm-workspace.yaml
+          # the repo's settings, less its patches: they're paths into the repo, and the app has no playwright to patch
+          sed '/^patchedDependencies:/,/^$/d' "$GITHUB_WORKSPACE/pnpm-workspace.yaml" > pnpm-workspace.yaml
           pnpm install --no-frozen-lockfile
           pnpm exec weft db generate
       - run: node packages/start/scripts/runtime-matrix.mjs "$RUNNER_TEMP/app"

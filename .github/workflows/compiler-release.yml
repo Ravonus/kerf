@@ -1,10 +1,14 @@
-# The prebuilt compiler packages and the WASM build, one job per platform. The repo has no CI yet (runtime-matrix.yml says
-# why), so this is the definition for when it does, and it stops at artifacts: nothing here publishes. Locally the same
+# The prebuilt compiler packages and the WASM build, one job per platform. It stops at artifacts: nothing here publishes.
+# nightly.yml calls it with a version and a commit, then publishes what it built. Locally the same
 # work is `node packages/core/scripts/build-platform.mjs --target all`, which cross-builds with cargo-zigbuild and
 # cargo-xwin; each job below calls that script with one target.
 name: compiler-release
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref: { type: string, required: false, default: '' }
+      version: { type: string, required: false, default: '' }
 permissions: {}
 jobs:
   addon:
@@ -25,6 +29,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.ref }}' }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 26 }
       - run: rustup target add ${{ matrix.target }}
@@ -33,6 +38,9 @@ jobs:
         run: |
           python3 -m pip install ziglang
           cargo install cargo-zigbuild --locked
+      # the platform package takes the core's version as it's written
+      - if: inputs.version != ''
+        run: node scripts/set-version.mjs ${{ inputs.version }}
       - run: node packages/core/scripts/build-platform.mjs --target ${{ matrix.name }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -44,6 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.ref }}' }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 26 }
       - run: node packages/core/scripts/build-wasm.mjs
@@ -58,10 +67,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with: { ref: '${{ inputs.ref }}' }
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with: { node-version: 26 }
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with: { path: artifacts }
+      - if: inputs.version != ''
+        run: node scripts/set-version.mjs ${{ inputs.version }}
       - run: |
           mkdir -p packages/core/native packages/core/dist/platform
           cp artifacts/wasm/* packages/core/native/

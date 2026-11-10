@@ -116,6 +116,9 @@ bun add @weft-js/core
 bun add -d vite
 ```
 
+Every night the newest `main` that passed its checks goes out under the `next` tag (`npm install @weft-js/core@next`,
+versions like `0.1.5-nightly.20261111.12`). `latest` is the last release, run through the full release gate.
+
 The package declares `node >= 24`. It ships its runtime as TypeScript source, so build with Vite and the `weft()`
 plugin, which compiles your `.tsx` and the runtime together.
 

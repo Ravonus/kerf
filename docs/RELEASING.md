@@ -1,6 +1,35 @@
 # Releasing
 
-Only the owner publishes. Publishing runs on the owner's machine, never in CI.
+Only the owner cuts a release, and a release runs on the owner's machine. The one exception is the nightly, which
+CI publishes on its own (below).
+
+## Channels
+
+| npm tag  | What it is                                                       | Version                      | Install                   |
+| -------- | ---------------------------------------------------------------- | ---------------------------- | ------------------------- |
+| `latest` | The last release the owner cut, after the full release gate      | `0.1.4`                      | `npm i @weft-js/start`      |
+| `next`   | Every night, the newest `main` that passed `quality`             | `0.1.5-nightly.20261111.12`  | `npm i @weft-js/start@next` |
+
+Before 1.0 there is no separate stable line: `latest` is the stable one, and a release is a nightly the owner has
+run the full release gate on. A minor (0.2.0) may break things; a patch (0.1.5) should not.
+
+## Nightly
+
+[.github/workflows/nightly.yml](../.github/workflows/nightly.yml) runs at 09:00 UTC, or by hand from the Actions tab
+(with `force` to publish a commit again). It picks the newest commit on `main` whose `quality` run passed, builds the
+compilers for every platform at the nightly's version, and publishes all the packages under `next`. A night with
+nothing new publishes nothing; the `nightly` git tag marks the last commit that went out.
+
+It publishes by npm's trusted publishing: npm trusts that workflow file in this repo, and no token is stored. Each
+package has to trust it once, from a terminal logged in to npm (`npm login --auth-type=web`):
+
+```bash
+node scripts/trust-nightly.mjs
+```
+
+A package that isn't on npm yet can't be trusted, so a new package goes out by hand once first. That's why the
+nightly leaves out the `win32-arm64` compiler, as the hand release does: it has never been published, and Windows on
+ARM runs the WASM build.
 
 ## Before a release
 
@@ -8,8 +37,8 @@ Only the owner publishes. Publishing runs on the owner's machine, never in CI.
    scaffold and runtime-matrix checks and the packed-install check
    (`node packages/create/scripts/packed.mjs <dir>`). Run the app builds after the check, not
    beside it: the browser tests' timings don't hold on a machine that is also building apps.
-2. Set the version in each public package's `package.json` (for the first release candidate,
-   `1.0.0-rc.0`) and commit.
+2. Set the version with `node scripts/set-version.mjs 0.1.5` (every public package, and the core's
+   pins on its compilers) and commit.
 
 ## Dry run
 
@@ -50,4 +79,4 @@ packages are never published.
 - Instant navigation shows its skeleton in about 15-30 ms on 3G, but the
   layout still shifts by about 0.20 between skeleton and content. The
   target is 0; the check fails above 0.25.
-- Changesets is not set up. Versions are set by hand before each release.
+- Changesets is not set up. A release's version is set with `scripts/set-version.mjs`.

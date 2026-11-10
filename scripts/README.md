@@ -57,6 +57,8 @@ pnpm run fix       # what a machine can fix safely; check explains the rest
 | [`fix.mjs`](fix.mjs) | `pnpm run fix` | When `check` reports lint, Clippy or format problems |
 | [`jobs.mjs`](jobs.mjs) | imported, or `--jobs=N` / `WEFT_JOBS=N` | To limit how much a gate runs at once |
 | [`release.mjs`](release.mjs) | `node scripts/release.mjs [--publish]` | To build, stage, check and (with `--publish`) publish the packages |
+| [`set-version.mjs`](set-version.mjs) | `node scripts/set-version.mjs <version> \| --nightly <n>` | Before a release, or in the nightly: every public package at one version |
+| [`trust-nightly.mjs`](trust-nightly.mjs) | `node scripts/trust-nightly.mjs` | Once, so the nightly workflow may publish each package by trusted publishing |
 | [`release-e2e.mjs`](release-e2e.mjs) | `node scripts/release-e2e.mjs <tgz dir> <empty dir>` | After `release.mjs`, to prove a fresh install works |
 | [`intel/proof.mjs`](intel/proof.mjs) | `pnpm run proof:intel` | To prove the darwin-x64 install on an Apple Silicon Mac |
 | [`quality/prove.mjs`](quality/prove.mjs) | `pnpm run check:prove` | After changing a check, to prove each rule still fails on a planted violation |
@@ -193,6 +195,7 @@ node scripts/release.mjs                      # build, stage, check, then `npm p
 node scripts/release.mjs --publish            # the same, then publish to npmjs.org. You approve in a browser
 node scripts/release.mjs --publish --otp      # one 6-digit authenticator code covers every package
 node scripts/release.mjs --publish --registry http://localhost:4873/   # a local registry instead
+node scripts/release.mjs --publish --no-build --ci   # from GitHub Actions by trusted publishing (the nightly)
 ```
 
 | Flag | Default | What it does |

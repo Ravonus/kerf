@@ -10,6 +10,7 @@
 //
 //   --out <dir>       where tarballs go (default .release/, gitignored)
 //   --no-build        use the wasm, text and platform builds already on disk
+//   --ci              publish from GitHub Actions by trusted publishing (OIDC): no browser, no code, provenance attached
 //
 // Platform packages come from packages/core/dist/platform/<name>/ (scripts/build-platform.mjs). A platform that isn't
 // there is left out of the core's optionalDependencies, and that platform runs the WASM build.
@@ -40,6 +41,7 @@ const publish = argv.includes('--publish')
 const registry = flag('registry') ?? 'https://registry.npmjs.org/'
 const local = !registry.includes('registry.npmjs.org')
 const useOtp = argv.includes('--otp')
+const ci = argv.includes('--ci')
 let otp = process.env.WEFT_OTP // set it, even empty, and nothing is asked
 /** One line from the terminal, even with stdin redirected. */
 const ask = (prompt) =>
@@ -237,7 +239,7 @@ function send(tgz, name, version) {
   if (isUp(name, version)) return say(`${name}@${version} is already up`)
   if (useOtp && publish && otp === undefined)
     otp = ask('6-digit code from your authenticator app: ')
-  const auth = local ? [] : useOtp ? (otp ? [`--otp=${otp}`] : []) : ['--auth-type=web']
+  const auth = local || ci ? [] : useOtp ? (otp ? [`--otp=${otp}`] : []) : ['--auth-type=web']
   const r = spawnSync(
     npm,
     [
@@ -307,7 +309,7 @@ if (failed) {
 }
 
 say(`order: ${staged.map((i) => i.pkg.name).join(' > ')}`)
-if (publish && !local)
+if (publish && !local && !ci)
   say(
     `publishing ${staged.length} packages to npmjs.org. Each may open a browser for your passkey: tick "don't ask again for 5 minutes" if it's offered.`,
   )
