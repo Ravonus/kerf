@@ -4,9 +4,9 @@
 
 import type { Context } from '@weft-js/start'
 import { makeRails } from './server/rails'
-import { makeLedger } from './server/ledger'
+import { makeLedger, ORDER } from './server/ledger'
 import { checkoutInput } from './server/catalog'
-import { checkoutFor, portalFor, webhookFor } from './server/operations'
+import { checkoutFor, orderFor, portalFor, webhookFor } from './server/operations'
 import type { ServerExtension } from '@weft-js/start/extension'
 import { PayError, type PayRail, type Product, type PurchaseState, type RailEvent } from './index'
 
@@ -91,8 +91,10 @@ export interface PayOptions<P extends Product> {
   /** `import * as catalog from './pay/catalog'`, or a list. */
   catalog: readonly P[] | Record<string, P>
   store: PayStore
-  /** Paths or URLs a buyer comes back to. They never come from the client. */
-  urls: { success: string; cancel: string; portal?: string }
+  /** Paths or URLs a buyer comes back to. They never come from the client. `order` and `orderCancel` may hold `{ref}`. */
+  urls: { success: string; cancel: string; portal?: string; order?: string; orderCancel?: string }
+  /** Hears each state an order (`pay.order`) moves to, from verified events only: mark it paid here. A throw redelivers. */
+  onOrder?: OrderHook
   /** Who a request is. Default `ctx.user?.id`. */
   user?: (ctx: PayContext) => string | null | undefined
   /** With several rails bound, the one that takes payments. One rail needs no choosing. */
@@ -116,6 +118,34 @@ export interface CheckoutInput<P extends Product = Product> {
   quantity?: number
 }
 
+/** One line of an order, priced by the app on the server: never from the client. */
+export interface OrderLine {
+  name: string
+  /** Whole minor units, each. */
+  amount: number
+  quantity?: number
+}
+
+/** What `pay.order` takes: the app's own order id and the lines it priced. */
+export interface OrderInput {
+  /** The app's order id, 1–64 of `A-Z a-z 0-9 - _`. It comes back in `onOrder` and in `orderTag(ref)`. */
+  ref: string
+  lines: readonly OrderLine[]
+  /** Lowercase ISO. Default `usd`. */
+  currency?: string
+  /** What the ledger's one line is called. Default `Order <ref>`. */
+  title?: string
+  /** A guest's email, for the rail's receipt. */
+  email?: string
+}
+
+/** `onOrder`: an order's new state, and its row in the ledger. */
+export type OrderHook = (order: {
+  ref: string
+  state: PurchaseState
+  purchase: Purchase
+}) => Promise<void> | void
+
 /** What `definePay` returns: the ledger's calls, and a `server.extension` that carries them to the server. */
 export interface Pay<P extends Product = Product> extends ServerExtension {
   readonly catalog: readonly P[]
@@ -130,6 +160,8 @@ export interface Pay<P extends Product = Product> extends ServerExtension {
   }
   /** The hosted checkout's URL, for this buyer. Grants nothing. */
   checkout(ctx: PayContext, input: CheckoutInput<P>): Promise<string>
+  /** The hosted page for one order the app priced, signed in or a guest. Pays nothing until `onOrder` hears `active`. */
+  order(ctx: PayContext, input: OrderInput): Promise<string>
   /** Where this buyer manages or cancels. */
   portal(ctx: PayContext): Promise<string>
   /** Read for a user id, as a webhook or a job would. In a request, `ctx.entitlements`. */
@@ -160,6 +192,11 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
     Array.isArray(options.catalog) ? options.catalog : Object.values(options.catalog)
   ) as P[]
   const byId = new Map(catalog.map((p) => [p.id, p]))
+  if (byId.has(ORDER))
+    throw new PayError(
+      'PAY021',
+      `\`${ORDER}\` is the id \`pay.order\` records under: name the product something else`,
+    )
   const { store, urls, leeway = 3 * DAY } = options
   const userOf = options.user ?? ((ctx) => ctx?.user?.id)
   const slot =
@@ -172,12 +209,13 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
   const rails = makeRails(options, slot)
   const { railFor } = rails
 
-  const { live, entitlements, ingest } = makeLedger(store, byId, leeway)
+  const { live, entitlements, ingest } = makeLedger(store, byId, leeway, options.onOrder)
 
   const pay: Pay<P> = {
     catalog,
     input: checkoutInput(byId),
     checkout: checkoutFor({ options, urls, userOf, store, railFor, live, byId }),
+    order: orderFor({ options, urls, userOf, store, railFor, live, byId }),
     portal: portalFor({ options, urls, userOf, store, railFor, live, byId }),
     entitlements,
     forContext: (ctx) => entitlements(userOf(ctx)),

@@ -163,6 +163,9 @@ export function price<P extends string>(
 /** What a query reads, tagged so a verified event pokes it: `tags: (_, ctx) => [entitlementTag(ctx.user.id)]`. */
 export const entitlementTag = (user: string) => `entitlements:${user}`
 
+/** What a verified event pokes for one order: `tags: (input) => [orderTag(input.ref)]`. Every order also pokes `orders`. */
+export const orderTag = (ref: string) => `order:${ref}`
+
 // ---- pay.rail@1 ---------------------------------------------------------------------------------------------------
 
 /** What a purchase is doing now, on any rail. */
@@ -198,6 +201,10 @@ export interface CheckoutRequest {
   /** This user's id on the rail, when a purchase gave one. */
   customer?: string
   line: CheckoutLine
+  /** An order's own lines, priced on the server (`pay.order`): charged in place of `line`, which sums them. */
+  lines?: readonly CheckoutLine[]
+  /** A guest's email, for the receipt, when the rail has no customer for them. */
+  email?: string
   successUrl: string
   cancelUrl: string
   /** The same click twice gives one session. */

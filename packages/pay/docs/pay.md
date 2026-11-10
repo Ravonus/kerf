@@ -56,6 +56,11 @@ verified on the exact bytes, applied to `purchases`, and pokes `entitlements:<us
 Delivery is at least once and in any order: a repeat is a no-op, and an old event changes nothing, by the rail's own clock.
 A bad signature answers 400; a failure answers 500, so the rail delivers it again.
 
+**A cart the server prices.** `pay.order(ctx, { ref, lines: [{ name, amount, quantity? }], currency?, email?, title? })`
+opens one payment for lines your server priced from its own tables, for a guest or a signed-in buyer. It grants nothing.
+`definePay({ onOrder({ ref, state, purchase }) })` hears each verified state, before the event is marked, so a throw
+redelivers. Each order event pokes `orders` and `orderTag(ref)`. `urls.order` and `urls.orderCancel` may hold `{ref}`.
+
 **Enforce on the server.** What the client shows is decoration (PAY013):
 
 <!-- example: skip fragments of a server module -->

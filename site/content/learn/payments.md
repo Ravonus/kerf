@@ -249,6 +249,63 @@ request before anything reads the body, and it can invalidate tags like a mutati
 reaches your live readers. An app with no `src/pay.server.ts` has no such route and none of this code.
 :::
 
+## Orders: a cart the server prices
+
+A shop, a café or a bakery doesn't sell a fixed catalog to signed-in users. It sells a cart: items from its own database,
+with sizes and add-ons, often to a guest. `pay.order` covers that. The server prices each line from its own tables and
+gives the order its own id, the *ref*; the client never sends an amount:
+
+<!-- example: skip fragments of an app's server modules -->
+```ts
+// src/server/order.ts
+import { orderTag } from '@weft-js/pay'
+import { mutation, query, redirect } from '@weft-js/start'
+import { z } from 'zod'
+import pay from '../pay.server'
+import { priceCart, saveOrder } from './cart'
+
+export const placeOrder = mutation({
+  input: z.object({
+    email: z.email(),
+    items: z.array(z.object({ id: z.int(), quantity: z.int() })),
+  }),
+  run: async ({ input, ctx }) => {
+    const lines = await priceCart(ctx.db, input.items) // names and amounts from your tables
+    const ref = await saveOrder(ctx.db, input.email, lines) // the order row, unpaid
+    redirect(await pay.order(ctx, { ref, lines, email: input.email }), 303)
+  },
+})
+
+export const orderStatus = query({
+  input: z.object({ ref: z.string() }),
+  tags: (input) => [orderTag(input.ref)],
+  run: ({ input, ctx }) => readOrder(ctx.db, input.ref),
+})
+```
+
+Like `checkout`, `order` only opens the rail's page, and no sign-in is needed. What marks the order paid is a verified
+event, which `definePay` hands to `onOrder`:
+
+<!-- example: skip a fragment of src/pay.server.ts -->
+```ts
+// src/pay.server.ts
+export default definePay({
+  catalog,
+  store: drizzlePayStore(db, { purchases, payEvents }),
+  urls: { success: '/', cancel: '/', order: '/order/{ref}', orderCancel: '/cart' },
+  onOrder: ({ ref, state }) => markOrder(db, ref, state), // 'active' is paid, 'refunded' is refunded
+})
+```
+
+`onOrder` runs before the event is recorded, so if it throws, the webhook answers 500 and the rail sends the event again.
+A repeat of the same event doesn't call it twice. Each order event also pokes the tags `orders` and `order:<ref>`, so a
+kitchen screen reading `orders` and the buyer's receipt page reading `orderTag(ref)` both update by themselves with
+`.live()`.
+
+Each line is `{ name, amount, quantity? }` in whole minor units. A ref is 1 to 64 letters, digits, `-` or `_`. `{ref}` in
+`urls.order` and `urls.orderCancel` becomes the order's ref. Orders are recorded in the ledger under the product id
+`order`, which a catalog product can't use, and they grant no entitlements.
+
 ## Enforce on the server
 
 What the client shows is decoration. Anyone can call a server function directly, so the server decides. There are two
@@ -377,6 +434,8 @@ Stripe is the only rail that ships today. App-store rails, store policy and a `w
 - Products are whole minor units with a currency. Show prices with `price(product, plan)`, never typed into the page.
 - `checkout` only opens the provider's page. A verified event at `/_weft/x/pay/<rail>` is the only grant, and it pokes
   `entitlements:<user>`, so `.live()` readers update by themselves.
+- A cart is `pay.order(ctx, { ref, lines })`: the server prices the lines, a guest can pay, and `onOrder` hears the
+  verified result.
 - Enforce on the server: `requires: ['pro']` on a function, or `await ctx.entitlements.has('pro')` in a `load`.
 - Try the real flow with Stripe's test keys; test it automatically with `fakePay`, which runs your real webhook and
   ledger with no network.

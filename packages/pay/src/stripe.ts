@@ -4,7 +4,7 @@
 
 import {
   PayError,
-  type CheckoutRequest,
+  type CheckoutLine,
   type PayRail,
   type PurchaseState,
   type RailEvent,
@@ -241,7 +241,7 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
   const fetcher = options.fetch ?? ((...args: Parameters<typeof fetch>) => fetch(...args))
   const call = stripeCall(options, api, apiVersion, fetcher)
 
-  function lineItem({ line }: CheckoutRequest) {
+  function lineItem(line: CheckoutLine) {
     const known = prices[line.plan ? `${line.product}.${line.plan}` : line.product]
     if (known) return { price: known, quantity: line.quantity }
     return {
@@ -268,11 +268,12 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
         '/v1/checkout/sessions',
         {
           mode: line.mode,
-          line_items: [lineItem(request)],
+          line_items: (request.lines ?? [line]).map(lineItem),
           success_url: request.successUrl,
           cancel_url: request.cancelUrl,
           client_reference_id: user,
           customer,
+          customer_email: customer ? undefined : request.email,
           metadata,
           // What the later events carry: a charge and a subscription don't inherit the session's metadata.
           ...(line.mode === 'subscription'
