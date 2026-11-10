@@ -59,7 +59,6 @@ export default defineConfig({
           family: 'Inter',
           src: `${FILES}-variable/inter/files/inter-latin-wght-normal.woff2`,
           fallback: 'Arial',
-          preload: false,
           axes: { wght: [100, 900] },
         },
         display: {
