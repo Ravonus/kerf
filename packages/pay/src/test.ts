@@ -125,7 +125,6 @@ async function open(
   next: (prefix: string) => string,
   deliver: FakePay['deliver'],
   event: (b: Bought) => RailEvent,
-  payer?: Payer,
 ) {
   const { line, user } = s
   const b: Bought = {
@@ -140,7 +139,7 @@ async function open(
   if (b.interval)
     b.expires = Date.now() + (line.trialDays ? line.trialDays * DAY : PERIOD[b.interval])
   purchases.set(b.id, b)
-  await deliver({ ...event(b), ...(payer && { payer }) })
+  await deliver(event(b))
   return b.id
 }
 
@@ -152,6 +151,12 @@ function take(sessions: CheckoutRequest[], user?: string) {
     )
   return sessions.splice(i, 1)[0]!
 }
+
+/** A delivery that says who paid, when the test gave one. */
+const paidBy =
+  (deliver: FakePay['deliver'], payer?: Payer): FakePay['deliver'] =>
+  (e, o) =>
+    deliver({ ...e, ...(payer && { payer }) }, o)
 
 /** `fakePay(pay)` with the app's own `definePay`, or `fakePay({ catalog })`. It backs `ctx.entitlements` for this test. */
 export function fakePay(
@@ -211,7 +216,8 @@ export function fakePay(
     deliveries,
     deliver,
     simulate,
-    complete: (user, payer) => open(take(sessions, user), purchases, next, deliver, event, payer),
+    complete: (user, payer) =>
+      open(take(sessions, user), purchases, next, paidBy(deliver, payer), event),
     abandon: (user) => void take(sessions, user),
     async buy(user, product, plan) {
       await pay.checkout(
