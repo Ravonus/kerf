@@ -32,6 +32,7 @@
     "./charts": "./src/charts/index.ts",
     "./canvas": "./src/canvas.ts",
     "./stage": "./src/stage.ts",
+    "./scenes": "./src/scenes.ts",
     "./dither": "./src/dither/index.ts",
     "./paint": "./src/paint/index.ts",
     "./search": "./src/search.ts",
