@@ -91,9 +91,11 @@ that never reaches that line never downloads it.
 | `voxel-dither` | The dithered pixel look: palettes, screens, outlines, cel light. |
 | `lit-finish` | The realism look: ambient occlusion, aerial haze, light through leaves, TAA, bloom, tone map, grade. |
 | `band` | A seeded generative band in eight styles on plain Web Audio, layered by an energy dial. |
-| `quality`, `device-profile` | Detail levels by device, and a frame-time governor. |
+| `quality`, `device-profile` | Detail levels by device, a frame-time governor, and the page levers a scene spends. |
 | `tracks` | Keyed tracks sampled at a position, eased by cubic-bezier handles. |
 | `camera-rail` | A camera on keyed tracks, with pointer pan and tilt. |
+| `scene-blend` | A hand-over between two lit scenes: line work and a seeded noise or radial reveal, or a plain fade. |
+| `section-post` | A section's pass after the finish: a paper panel with a straight or torn edge, darkening, blur and grain. |
 
 `vendor/modules/<id>.inputs.json` lists the settings a module offers a host, as `keel-module-inputs@1`.
 
@@ -148,11 +150,34 @@ export const orchard = defineScene({
 The stage builds a scene when its section comes near and frees it two scenes away. Tracks that key a `camera`
 target drive the camera through `camera-rail`; `at` gets the other sampled values, with `this` the object
 `build` returned. A scene also takes `modules` (loaded before `build`), `setQuality(levers)`, `render()` for a
-finish of its own and `dispose()`; the stage's meshes, materials and textures are freed for it.
+finish of its own and `dispose()`; the stage's meshes, materials and textures are freed for it. `hold` (a position, or
+`'first'` or `'last'` for its tracks' first or last key) is where it stands under reduced motion and on a low tier,
+where `keelGovernor()` holds scenes still.
 
 `keelGovernor()` from `@weft-js/plugin-keel/governor` is the stage's governor: `device-profile` picks the
-tier, the tier the levers, the fps cap (30 on low) and the widest canvas (3840, 1920 or 1280 px), and
-`quality` lowers the render scale while frames run slow: `<Stage governor={keelGovernor()}>`.
+tier, the tier the fps cap (30 on low) and the widest canvas (3840, 1920 or 1280 px), and `quality` the level,
+its page levers (`quality.levers`) and a render scale it lowers while frames run slow:
+`<Stage governor={keelGovernor()}>`.
+
+`keelBlend()` from `@weft-js/plugin-keel/blend` is the stage's blend: `<Stage blend={keelBlend()}>`. Every scene
+is drawn through `lit-finish`. A hand-over goes through `scene-blend`: the incoming scene arrives as line work
+and fills in through seeded noise, or out from its `<Scene centre>` with `mode="radial"`, and the less visible
+scene is drawn by a lighter finish at the levers' `blendScale`. The active section's pass goes through
+`section-post`: a paper panel with a straight or torn edge, and darkening and blur, from `<Scene post>` or from
+tracks on a `post` target:
+
+```ts
+tracks: [
+  {
+    target: 'post',
+    property: 'progress',
+    keys: [[1, 0], [2, 1], [3, 2]],
+  },
+  { target: 'post', property: 'tear', keys: [[0, 1]] },
+]
+```
+
+`keelBlend({ finish, blend, post })` passes settings to each module: `blend: { seed: 7, lineColour: '#ffffff' }`.
 
 ## Music
 
@@ -173,7 +198,8 @@ Styles: `ambient`, `lofi`, `synthwave`, `chiptune`, `house`, `cinematic`, `folk`
 
 `demo/` is a pinned grove scrubbed by the scroll: the camera flies in while spring turns to autumn and
 morning to evening, in either look, with the band joining in as you go deeper. `demo/stage.html` is three sections over one
-stage, each with a scene of its own, handing over as each section arrives.
+stage, each with a scene of its own, blending into the next as its section arrives, with a straight-edged paper
+panel over the second scene and a torn one over the third. `stage.html?measure` times every frame drawn.
 
 ```bash
 node test/serve.mjs 4179

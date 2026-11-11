@@ -127,18 +127,42 @@ const scrub = async (page, to) => {
   await page.context().close()
 }
 
+/** Where a paper panel's top edge stands down the canvas, column by column: the first row up from the bottom that is
+ * not paper. Also the share of the frame that is paper. */
+const edgeScript = `globalThis.edgeOf = () => {
+  const canvas = document.querySelector('[data-surface] canvas')
+  clock.seek(clock.seconds)
+  const w = canvas.width, h = canvas.height
+  const x = new OffscreenCanvas(w, h).getContext('2d', { willReadFrequently: true })
+  x.drawImage(canvas, 0, 0)
+  const d = x.getImageData(0, 0, w, h).data
+  const paper = (i) => d[i] > 205 && d[i + 1] > 200 && d[i + 2] > 190
+  const rows = []
+  let covered = 0
+  for (let c = 0; c < 48; c++) {
+    const col = Math.round(w * (0.1 + 0.8 * c / 47))
+    let y = h - 1
+    while (y >= 0 && paper((y * w + col) * 4)) y--
+    rows.push(y)
+    covered += (h - 1 - y) / h / 48
+  }
+  rows.sort((a, b) => a - b)
+  return { spread: rows[43] - rows[4], middle: rows[24] / h, covered }
+}`
+
 // The scene stage: three sections over one pinned canvas.
-const openStage = async (options = {}) => {
+const openStage = async (options = {}, query = '') => {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, ...options })
   const page = await ctx.newPage()
   await page.addInitScript(inkScript)
+  await page.addInitScript(edgeScript)
   page.problems = []
   page.on('pageerror', (e) => page.problems.push(e.message))
   page.on('console', (m) => {
     if (['error', 'warning'].includes(m.type()) && !/GL Driver Message/.test(m.text()))
       page.problems.push(m.text())
   })
-  await page.goto(`${served.base}/stage.html`)
+  await page.goto(`${served.base}/stage.html${query}`)
   await page.waitForFunction(
     () => document.querySelector('[data-surface]')?.style.opacity === '1',
     null,
@@ -165,7 +189,8 @@ const settle = (page, k, p) =>
     ([index, at]) => {
       const a = globalThis.stageDemo.active
       const near = (value) => Math.abs(value - at) < 0.01
-      return a && (a.active === index || a.to === index) && near(a.to === index ? a.t : a.position)
+      if (a?.to === index && a.from !== index) return near(a.t)
+      return a?.active === index && a.from === a.to && near(a.position)
     },
     [k, p],
   )
@@ -183,12 +208,21 @@ const settle = (page, k, p) =>
   const before = await page.evaluate(() => ({
     ...globalThis.stageDemo.active,
     ink: globalThis.inkOf(),
+    handover: globalThis.stageDemo.handover,
   }))
   ok(
     'before the switch the first scene is active and drawn',
     before.active === 0,
     JSON.stringify(before),
   )
+  ok(
+    'the next scene blends in as line work out from a point',
+    before.handover?.mode === 'radial' &&
+      before.handover.lines &&
+      Math.abs(before.handover.t - 0.3) < 0.02,
+    JSON.stringify(before.handover),
+  )
+  ok('a blended frame is neither scene alone', before.ink.hash !== first.hash)
   await stand(page, 1, 0.7)
   await settle(page, 1, 0.7)
   const after = await page.evaluate(() => ({
@@ -197,7 +231,27 @@ const settle = (page, k, p) =>
     ink: globalThis.inkOf(),
   }))
   ok('past 0.5 the incoming scene is active', after.active === 1 && after.marked === 'Rings')
-  ok('and the canvas cuts to it', after.ink.hash !== before.ink.hash)
+  ok('and the canvas moves on to it', after.ink.hash !== before.ink.hash)
+  await stand(page, 1, 1.2)
+  await settle(page, 1, 1.2)
+  const straight = await page.evaluate(() => globalThis.edgeOf())
+  ok(
+    'a straight-edged panel rises over the second scene, its edge one line',
+    straight.spread <= 3 && Math.abs(straight.middle - 0.5) < 0.08,
+    JSON.stringify(straight),
+  )
+  await stand(page, 1, 1.5)
+  await settle(page, 1, 1.5)
+  const over = await page.evaluate(() => globalThis.edgeOf())
+  ok('half-way through its sweep it covers the frame', over.covered > 0.97, JSON.stringify(over))
+  await stand(page, 2, 1.2)
+  await settle(page, 2, 1.2)
+  const torn = await page.evaluate(() => globalThis.edgeOf())
+  ok(
+    "the third scene's tracks bring a torn panel, its edge jagged",
+    torn.spread > 4 && Math.abs(torn.middle - 0.5) < 0.08,
+    JSON.stringify(torn),
+  )
   await stand(page, 2, 1.5)
   await page.waitForFunction(() => {
     const { built, active } = globalThis.stageDemo
@@ -233,6 +287,44 @@ const settle = (page, k, p) =>
     Math.abs(raw.position - 1.6) < 0.01,
     `${raw.position}`,
   )
+  await stand(page, 1, 0.8)
+  await page.waitForFunction(() => globalThis.stageDemo.handover !== null)
+  const fade = await page.evaluate(() => globalThis.stageDemo.handover)
+  ok(
+    'a new active scene dissolves in, plainly',
+    fade.mode === 'fade' && !fade.lines,
+    JSON.stringify(fade),
+  )
+  ok('no errors or warnings', page.problems.length === 0, page.problems.join(' | '))
+  await page.context().close()
+}
+
+{
+  console.log('the blended frame, timed')
+  const page = await openStage({}, '?measure')
+  /** Repaints `n` times at once and gives the median and p95 of the frames of `kind`, in ms. */
+  const time = (kind, n = 120) =>
+    page.evaluate(
+      ([k, count]) => {
+        const kept = globalThis.stageDemo.timings[k]
+        kept.length = 0
+        for (let i = 0; i < count; i++) globalThis.clock.seek(globalThis.clock.seconds)
+        const sorted = [...kept].sort((a, b) => a - b)
+        const at = (q) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))]
+        return { frames: sorted.length, median: at(0.5), p95: at(0.95) }
+      },
+      [kind, n],
+    )
+  await stand(page, 0, 1.6)
+  await settle(page, 0, 1.6)
+  const alone = await time('alone')
+  await stand(page, 1, 0.3)
+  await settle(page, 1, 0.3)
+  const blended = await time('blended')
+  const ms = (r) => `median ${r.median.toFixed(2)} ms, p95 ${r.p95.toFixed(2)} ms over ${r.frames}`
+  console.log(`  one scene: ${ms(alone)}`)
+  console.log(`  a blended hand-over: ${ms(blended)}`)
+  ok('every repaint of a hand-over was blended', blended.frames === 120, `${blended.frames}`)
   ok('no errors or warnings', page.problems.length === 0, page.problems.join(' | '))
   await page.context().close()
 }

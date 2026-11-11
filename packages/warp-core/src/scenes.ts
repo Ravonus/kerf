@@ -5,10 +5,11 @@
 export interface Levers {
   /** Pixels drawn, as a share of the canvas's width and height. */
   readonly renderScale: number
-  readonly bloom: boolean
+  /** Bloom, as a share of a scene's own: 0 turns it off. */
+  readonly bloom: number
   /** The share of particles drawn, 0 to 1. */
   readonly motes: number
-  /** The outgoing scene's render scale during a hand-over. */
+  /** The less visible scene's render scale during a hand-over, as a share of `renderScale`. */
   readonly blendScale: number
   readonly taa: boolean
   /** The share of instanced detail drawn, 0 to 1. */
@@ -18,7 +19,7 @@ export interface Levers {
 /** Everything at full: the levers before a governor answers, or without one. */
 export const FULL: Levers = {
   renderScale: 1,
-  bloom: true,
+  bloom: 1,
   motes: 1,
   blendScale: 1,
   taa: true,

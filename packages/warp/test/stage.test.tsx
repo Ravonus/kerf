@@ -4,19 +4,36 @@
 import { renderToString } from '@weft-js/core/ssr'
 import { clock } from '@weft-js/core/surface'
 import { clock as time, flush, render } from '@weft-js/core/test'
-import { Scene, Stage, type StageGovernor, type StageSceneDef } from '@weft-js/warp/scenes'
+import {
+  Scene,
+  Stage,
+  type BlendOptions,
+  type StageGovernor,
+  type StagePost,
+  type StageScene,
+  type StageSceneDef,
+} from '@weft-js/warp/scenes'
 import { FULL } from '@weft-js/warp-core/scenes'
+import { dissolve, heldAt } from '../src/Stage-look'
 
 const log: string[] = []
+/** Each built stand-in's name, and the section pass its tracks give. */
+const named = new WeakMap<StageScene, string>()
+const tracked: Record<string, StagePost | null> = {}
 const scene = (name: string): StageSceneDef => ({
   build({ seed }) {
     log.push(`build ${name} ${seed}`)
-    return Promise.resolve({
+    const live: StageScene = {
+      get post() {
+        return tracked[name] ?? null
+      },
       at: (position) => log.push(`at ${name} ${position.toFixed(2)}`),
       setQuality: (levers) => log.push(`quality ${name} ${levers.density}`),
       render: () => log.push(`render ${name}`),
       dispose: () => log.push(`dispose ${name}`),
-    })
+    }
+    named.set(live, name)
+    return Promise.resolve(live)
   },
 })
 const NAMES = ['a', 'b', 'c', 'd']
@@ -61,6 +78,7 @@ function page(governor: StageGovernor = UNGOVERNED) {
 
 beforeEach(() => {
   log.length = 0
+  for (const name of NAMES) tracked[name] = null
   tops = [0, 1, 2, 3]
   time.install()
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(box)
@@ -153,4 +171,143 @@ test('a lost context frees every scene, and a restored one builds them again', a
   // The shared clock may be parked by an earlier test's fake timers: a seek paints every surface now.
   clock.seek(clock.seconds)
   expect(log).toContain('render a')
+})
+
+/** A blend that records each frame it is asked to draw. */
+function recorder() {
+  const drawn: { a: string; b: string; t: number; options: BlendOptions }[] = []
+  return {
+    drawn,
+    blend: () => ({
+      draw: (a: StageScene, b: StageScene, t: number, options: BlendOptions) =>
+        drawn.push({ a: named.get(a)!, b: named.get(b)!, t, options }),
+    }),
+  }
+}
+
+function blended(blend: ReturnType<typeof recorder>['blend'], governor = UNGOVERNED) {
+  return render(() => (
+    <Stage label="Blended" kind="canvas2d" governor={governor} blend={blend}>
+      <Scene use={SCENES[0]!} early={0} post={(position) => ({ progress: position, tear: 1 })}>
+        <h2>a</h2>
+      </Scene>
+      <Scene use={SCENES[1]!} early={0} mode="radial" centre={{ x: 0.5, y: -0.25 }} lines={false}>
+        <h2>b</h2>
+      </Scene>
+      <Scene use={SCENES[2]!} early={0}>
+        <h2>c</h2>
+      </Scene>
+    </Stage>
+  ))
+}
+
+test('a blend draws every frame: one scene alone at t = 1, a hand-over as the incoming scene asks', async () => {
+  const { drawn, blend } = recorder()
+  blended(blend, { ...UNGOVERNED, levers: { ...FULL, blendScale: 0.5 } })
+  await frames()
+  expect(drawn.at(-1)).toMatchObject({ a: 'a', b: 'a', t: 1 })
+  expect(log.filter((l) => l.startsWith('render'))).toEqual([])
+  place([-0.6, 0.6, 1.6])
+  await frames()
+  const { a, b, t, options } = drawn.at(-1)!
+  expect([a, b]).toEqual(['a', 'b'])
+  expect(t).toBeGreaterThan(0)
+  expect(t).toBeLessThan(1)
+  expect(options).toMatchObject({ mode: 'radial', centre: { x: 0.5, y: -0.25 }, lines: false })
+  expect(options.levers.blendScale).toBe(0.5)
+})
+
+test("the active section's pass comes from its `post`, under what its scene's tracks give", async () => {
+  const { drawn, blend } = recorder()
+  blended(blend)
+  place([-0.3, 0.7, 1.7])
+  await frames()
+  const post = drawn.at(-1)!.options.post!
+  expect(post.tear).toBe(1)
+  expect(post.progress).toBeCloseTo(1.3, 1)
+  tracked.a = { tear: 0, darken: 0.4 }
+  place([-0.31, 0.69, 1.69])
+  await frames()
+  expect(drawn.at(-1)!.options.post).toMatchObject({ tear: 0, darken: 0.4 })
+  place([-3, -2, -0.5])
+  await frames()
+  expect(drawn.at(-1)).toMatchObject({ a: 'c', b: 'c', options: { post: null } })
+})
+
+test('under reduced motion the stage ignores the scroll hand-over and dissolves into a new scene over 300 ms', async () => {
+  const reduce = (query: string) => ({ matches: query.includes('reduce') }) as MediaQueryList
+  vi.spyOn(window, 'matchMedia').mockImplementation(reduce)
+  const { drawn, blend } = recorder()
+  blended(blend)
+  await frames()
+  place([-0.1, 0.9, 1.9])
+  await frames()
+  expect(drawn.at(-1)).toMatchObject({ a: 'a', b: 'a', t: 1 })
+  place([-0.7, 0.3, 1.3])
+  await frames(30)
+  const fade = drawn.filter((d) => d.a === 'a' && d.b === 'b')
+  // About 300 ms of frames 17 ms apart, each a plain dissolve further on than the last.
+  expect(fade.length).toBeGreaterThan(12)
+  expect(fade.length).toBeLessThan(20)
+  expect(fade.every((d) => d.options.mode === 'fade' && !d.options.lines)).toBe(true)
+  expect(fade.every((d, i) => d.t < 1 && (i === 0 || d.t > fade[i - 1]!.t))).toBe(true)
+  expect(drawn.at(-1)).toMatchObject({ a: 'b', b: 'b', t: 1 })
+})
+
+test('a dissolve starts when the active scene changes, and is skipped when the scene before is gone', () => {
+  const h = { active: 1, from: 0, to: 1, t: 0.6 }
+  const first = dissolve(null, { ...h, active: 0, to: 0, t: 1 }, 0, () => true)
+  expect(first).toMatchObject({ moving: false, shown: { from: 0, to: 0, t: 1 } })
+  const half = dissolve(first.fade, h, 150, () => true)
+  expect(half).toMatchObject({ moving: true, shown: { from: 0, to: 1, t: 0 } })
+  expect(dissolve(half.fade, h, 300, () => true).shown).toMatchObject({ from: 0, to: 1, t: 0.5 })
+  expect(dissolve(half.fade, h, 450, () => true)).toMatchObject({
+    moving: false,
+    shown: { from: 1, to: 1 },
+  })
+  expect(dissolve(first.fade, h, 150, (i) => i !== 0)).toMatchObject({
+    moving: false,
+    shown: { from: 1 },
+  })
+})
+
+test('each section carries its scene position as `--scene-position`, for its own styles', async () => {
+  const { container } = page()
+  await frames()
+  place([-0.25, 0.75, 1.75, 2.75])
+  await frames(40)
+  const read = (i: number) =>
+    Number(container.querySelectorAll('section')[i]!.style.getPropertyValue('--scene-position'))
+  expect(read(0)).toBeCloseTo(1.25, 2)
+  expect(read(1)).toBeCloseTo(0.25, 2)
+})
+
+test('a scene with a `hold` stands there under reduced motion or a holding governor, and follows the scroll otherwise', async () => {
+  const posed = async (governor: StageGovernor) => {
+    log.length = 0
+    const { unmount } = render(() => (
+      <Stage label="Held" kind="canvas2d" governor={governor}>
+        <Scene use={SCENES[0]!} early={0} hold={0.4}>
+          <h2>a</h2>
+        </Scene>
+      </Stage>
+    ))
+    place([-0.5])
+    await frames(30)
+    unmount()
+    return log.filter((l) => l.startsWith('at a')).at(-1)
+  }
+  expect(await posed(UNGOVERNED)).toBe('at a 1.50')
+  expect(await posed({ ...UNGOVERNED, hold: true })).toBe('at a 0.40')
+  vi.spyOn(window, 'matchMedia').mockImplementation(
+    (query) => ({ matches: query.includes('reduce') }) as MediaQueryList,
+  )
+  expect(await posed(UNGOVERNED)).toBe('at a 0.40')
+})
+
+test("a `<Scene hold>` wins over its scene's own, which stands in without one", () => {
+  const live = { hold: 2 } as StageScene
+  expect(heldAt({}, live, 1, true)).toBe(2)
+  expect(heldAt({ hold: 0.5 }, live, 1, true)).toBe(0.5)
+  expect(heldAt({ hold: 0.5 }, live, 1, false)).toBe(1)
 })

@@ -5,8 +5,10 @@ import { onCleanup, onMount, state, untrack, type State } from '@weft-js/core'
 import { defineSurface, Surface, type SurfaceBase } from '@weft-js/core/surface'
 import { progress, type Progress } from '@weft-js/scroll/timeline'
 import { FULL, handover, sceneWindow, type Handover, type Levers } from '@weft-js/warp-core/scenes'
+import { dissolve, heldAt, lookOf, postOf, type Fade } from './Stage-look'
 import type {
   ActiveScene,
+  SceneLook,
   StageBlend,
   StageGovernor,
   StagePointer,
@@ -33,7 +35,7 @@ export interface StageProps {
 }
 
 /** `<Scene>`'s props. */
-export interface SceneProps {
+export interface SceneProps extends SceneLook {
   use: StageSceneDef
   /** A colour or an image URL, shown until the scene draws, and where it can't. */
   poster?: string
@@ -42,8 +44,6 @@ export interface SceneProps {
   /** How many viewports before the section enters its position starts. Default 0.2. */
   early?: number
   seed?: number
-  /** How the hand-over into this scene looks. Default `noise`. */
-  mode?: 'noise' | 'radial'
   id?: string
   class?: string
   label?: string
@@ -76,6 +76,8 @@ interface Director {
   frame: number
   last: number
   active: ActiveScene | null
+  /** Under reduced motion, the timed dissolve into the active scene. */
+  fade: Fade | null
   /** Whether the canvas shows, so a still frame writes nothing. */
   shown: boolean | null
   root?: HTMLElement
@@ -134,26 +136,44 @@ function show(d: Director, drawn: boolean) {
   d.s.el.style.opacity = drawn ? '1' : '0'
 }
 
+function look(d: Director, p: Handover, positions: readonly number[]) {
+  const active = d.entries[p.active]!
+  const post = postOf(active.props, active.live, positions[p.active]!)
+  return lookOf(d.entries[p.to]!.props, {
+    reduced: d.reduced,
+    pointer: d.pointer,
+    levers: d.levers,
+    post,
+  })
+}
+
 function draw(d: Director, h: Handover, positions: readonly number[]) {
   const frame = {
     pointer: d.pointer,
     velocity: (d.entries[h.active]?.scroll.velocity ?? 0) * 1000,
     time: d.s!.clock.seconds,
   }
-  const a = d.entries[h.from]!.live
-  const b = d.entries[h.to]!.live
-  const cut = h.t < 0.5 ? h.from : h.to
-  if (h.from !== h.to && a && b && d.blend) {
-    a.at(positions[h.from]!, frame)
-    b.at(positions[h.to]!, frame)
-    const mode = d.reduced ? 'fade' : (d.entries[h.to]!.props.mode ?? 'noise')
-    d.blend.draw(a, b, h.t, { mode, pointer: d.pointer, lines: !d.reduced })
-    return show(d, true)
+  let p = h
+  if (d.reduced) {
+    const fade = dissolve(d.fade, h, performance.now(), (i) => !!d.entries[i]?.live)
+    d.fade = fade.fade
+    if (fade.moving) d.s!.invalidate()
+    p = fade.shown
   }
-  const one = d.entries[cut]!.live
-  one?.at(positions[cut]!, frame)
-  one?.render()
-  show(d, !!one)
+  const holding = d.reduced || !!d.props.governor?.hold
+  const pose = (i: number) => {
+    const { live, props } = d.entries[i]!
+    live?.at(heldAt(props, live, positions[i]!, holding), frame)
+    return live
+  }
+  const a = pose(p.from)
+  const b = p.to === p.from ? a : pose(p.to)
+  const one = p.t < 0.5 ? a : b
+  if (!d.blend) one?.render()
+  // With a blend every frame goes through it, so a scene looks the same alone as in a hand-over.
+  else if (a && b) d.blend.draw(a, b, p.t, look(d, p, positions))
+  else if (one) d.blend.draw(one, one, 1, look(d, p, positions))
+  show(d, !!one || !!(d.blend && a && b))
 }
 
 /** Writes where the page stands: `data-active` on the active section, and `onActive` when anything moved. */
@@ -272,6 +292,7 @@ function director(props: StageProps): Director {
     frame: -1e9,
     last: 0,
     active: null,
+    fade: null,
     shown: null,
   }
 }
@@ -317,7 +338,8 @@ function enter(d: Director, entry: Entry) {
 
 /**
  * A section with a scene, inside a `<Stage>`. Its poster is pinned behind it while it is on screen: the page's
- * first paint, and what shows without WebGL2 or before the scene is built.
+ * first paint, and what shows without WebGL2 or before the scene is built. The section's `--scene-position` is its
+ * scene's position, for styles that move with it.
  */
 export function Scene(props: SceneProps) {
   let el!: HTMLElement
@@ -329,7 +351,11 @@ export function Scene(props: SceneProps) {
       early: props.early ?? 0.2,
       damp: 0.5,
       touch: 'raw',
-      onChange: () => d.s?.invalidate(),
+      // The position goes to the section too, for its own styles: `--scene-position`, canvas or none.
+      onChange: (value) => {
+        el.style.setProperty('--scene-position', String(Math.round(value * 1e4) / 1e4))
+        d.s?.invalidate()
+      },
     })
     // The entry keeps the live props: the stage reads `use`, `hero` and `mode` where it needs them.
     enter(

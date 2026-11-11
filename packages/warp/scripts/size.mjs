@@ -15,7 +15,7 @@ import weft from '@weft-js/core/vite'
 const br = (text) =>
   brotliCompressSync(Buffer.from(text), { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 
-// name → JSX that renders it with its required props
+// name → JSX that renders it with its required props, and the subpath it comes from when not the main entry
 export const ENTRIES = {
   runtime: ['', '<div />'],
   // the shared foundation every component pulls in once: warp.css (tokens, base, signature) and the components base
@@ -157,14 +157,19 @@ export const ENTRIES = {
   RichTextEditor: ['RichTextEditor', '<RichTextEditor label="Notes" />'],
   Markdown: ['Markdown', '<Markdown source="# Hi" />'],
   MarkdownEditor: ['MarkdownEditor', '<MarkdownEditor label="Body" />'],
+  Stage: [
+    'Stage,Scene',
+    '<Stage label="Scenes"><Scene use={{ build: async () => ({ at() {}, setQuality() {}, render() {}, dispose() {} }) }}>x</Scene></Stage>',
+    '@weft-js/warp/scenes',
+  ],
 }
 
-async function measure(name, [imp, jsx]) {
+async function measure(name, [imp, jsx, from = '@weft-js/warp']) {
   const id = '\0size-entry.tsx'
   const imps = imp
     .split(',')
     .filter(Boolean)
-    .map((i) => (i.startsWith('.') ? `import '${i}'\n` : `import { ${i} } from '@weft-js/warp'\n`))
+    .map((i) => (i.startsWith('.') ? `import '${i}'\n` : `import { ${i} } from '${from}'\n`))
     .join('')
   const code = `import { render } from '@weft-js/core/dom'\nimport { state } from '@weft-js/core'\n${imps}const open = state(false)\nrender(() => ${jsx}, document.body)\n`
   const out = await build({
@@ -198,7 +203,10 @@ async function measure(name, [imp, jsx]) {
   return { name, js: br(js), css: css ? br(css) : 0 }
 }
 
-const COMPONENTS = Object.keys(ENTRIES).filter((n) => n !== 'runtime' && n !== 'foundation')
+// The page views hold the main entry's components; a subpath's (the scene stage) is measured alone.
+const COMPONENTS = Object.keys(ENTRIES).filter(
+  (n) => n !== 'runtime' && n !== 'foundation' && !ENTRIES[n][2],
+)
 // one page with every component but `skip`
 const page = (skip) => {
   const on = COMPONENTS.filter((n) => n !== skip)

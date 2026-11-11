@@ -559,11 +559,21 @@ import { orchard, harbour } from './scenes'
 </Stage>
 ```
 
-Each scene's position is in viewports since its section began to enter. The stage keeps the active scene and its
-neighbours built and frees one two away. As a section arrives its scene blends in over `hero` viewports; the
+Each scene's position is in viewports since its section began to enter. Its section carries it as
+`--scene-position`, so the section's own styles can move with the scene without a second `progress()`. The
+stage keeps the active scene and its neighbours built and frees one two away. As a section arrives its scene blends in over `hero` viewports; the
 active scene moves at the half-way point. Without a `blend` the stage cuts there. A `governor` sets the levers,
 the pixel ratio and the frame rate. A scene's `poster` is pinned behind its section: the first paint, and what
 shows without WebGL2.
+
+A `blend` (`keelBlend()` from `@weft-js/plugin-keel/blend`) draws every frame: each `<Scene>` says how it arrives
+(`mode="radial"`, a `centre`, `lines={false}`), and the less visible scene is drawn at the levers' `blendScale`.
+It also lays the active section's pass over the frame: a paper panel's `progress`, `position`, `tear` and
+`colour`, and the `darken` and `blur` under it. Give them as `<Scene post={{ tear: 1 }}>`, as a function of the
+position, or from the scene's own tracks. Under reduced motion the scroll moves no hand-over: the active scene
+changes at the half-way point with a 300 ms dissolve. A scene with a `hold` (`<Scene hold={1.2}>`, or its scene's
+own) stands at that position under reduced motion and where the governor holds scenes still (a low tier),
+whatever the scroll.
 
 ## Component catalogue
 
