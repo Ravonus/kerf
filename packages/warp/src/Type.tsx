@@ -1,9 +1,10 @@
 // Type by role (01 §2, PLAN §6): the spec defines the roles as tokens and leaves the element to the app, so these
 // are what an app reads them through. A size, weight or colour is never a prop.
+// The role rules and the app's tokens are all these load: a page that has warp's sheet from any other component gets
+// warp's own role values with it, and a page that loads `weft:tokens/warp` alone sets its roles there.
 import { untrack } from '@weft-js/core'
 import type { TextRole, Tone } from '@weft-js/core/ds'
-import './styles'
-import '@weft-js/warp-core/styles/components/link.css'
+import 'weft:tokens/warp'
 import './type.css'
 
 type Open = { children?: unknown; [attr: string]: unknown }
@@ -100,37 +101,5 @@ export function Text({
     <p data-scope="text" data-role={role} data-tone={tone} data-ink={ink()} {...rest}>
       {children}
     </p>
-  )
-}
-
-/**
- * A link (05 §4): underlined, with the underline sweep. `subtle` takes the surrounding ink, and `external` opens a new
- * tab and says so. A bare `<a>` gets Warp's colour from the base layer; this adds the rest, and D007 points to it.
- */
-export function Link({
-  href,
-  subtle,
-  external,
-  children,
-  ...rest
-}: Open & { href: string; subtle?: boolean | undefined; external?: boolean | undefined }) {
-  if (untrack(() => external))
-    return (
-      <a
-        data-scope="link"
-        data-variant={subtle ? 'subtle' : undefined}
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        {...rest}
-      >
-        {children}
-        <span class="vh"> (opens in a new tab)</span>
-      </a>
-    )
-  return (
-    <a data-scope="link" data-variant={subtle ? 'subtle' : undefined} href={href} {...rest}>
-      {children}
-    </a>
   )
 }

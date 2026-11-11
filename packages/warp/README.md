@@ -238,6 +238,10 @@ as D001–D007.
 `gap` is a relationship, not a size: `none hair tight related group section page`. There are no breakpoint props,
 because boxes answer to their container.
 
+`Heading` and `Text` load only their role rules and your tokens (`weft:tokens/warp`), so a page that sets its look
+with warp's tokens alone can use them for a few hundred bytes. warp's own role values, and `tone`, come with warp's
+sheet, which every other component loads.
+
 Components share three intent props:
 
 | Prop | Values | Default |

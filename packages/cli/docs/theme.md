@@ -127,7 +127,8 @@ Any property can change with the viewport: `base` holds below the first breakpoi
 in px. `size` and `tracking` can also be fluid, `{ min, max, from, to }` in px: `min` at the `from` width, `max` at
 `to`, held outside them. Inside a breakpoint, `from` is the breakpoint. Each breakpoint is a media query that sets the
 tokens, so there is no script; a fluid line runs on `vw` to meet them, in the user's rem (`--warp-rem`). A page that
-imports `weft:tokens/warp` without warp's stylesheet gets `--warp-rem: 1rem` from the tokens, so its fluid sizes hold.
+imports `weft:tokens/warp` without warp's stylesheet gets `--warp-rem: 1rem` from the tokens, so its fluid sizes
+hold, and `<Heading>` and `<Text>` bring only their role rules there, not warp's sheet.
 
 ```ts
 warp({
