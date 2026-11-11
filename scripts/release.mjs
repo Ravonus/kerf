@@ -148,6 +148,20 @@ function stage(item, names, version, work) {
 
 const BUILTIN = new Set([...builtinModules, ...builtinModules.map((m) => `node:${m}`)])
 
+/** Whether the tarball holds what a relative import names. `from` is the importing file, `at` the path it names. */
+function ships(has, from, at) {
+  if (
+    ['', '.ts', '.tsx', '.mjs', '.js', '.d.ts', '/index.ts', '/index.tsx'].some((e) =>
+      has.has(at + e),
+    )
+  )
+    return true
+  // TypeScript reads `./x.js` as x.ts or x.d.ts: declarations that ship without their scripts name them so.
+  if (!/\.[cm]?tsx?$/.test(from) || !/\.[cm]?js$/.test(at)) return false
+  const stem = at.replace(/\.[cm]?js$/, '')
+  return ['.ts', '.tsx', '.d.ts', '.d.mts'].some((e) => has.has(stem + e))
+}
+
 /** Everything wrong with one tarball. `names` is what's being published. */
 function check(tgz, names, version) {
   const bad = []
@@ -207,12 +221,7 @@ function check(tgz, names, version) {
       const spec = m[1]
       if ((code.slice(0, m.index).match(/(?<!\\)`/g)?.length ?? 0) % 2) continue // text a scaffold writes, not an import
       if (spec.startsWith('.')) {
-        const at = join(dirname(f), spec).split(sep).join('/')
-        if (
-          !['', '.ts', '.tsx', '.mjs', '.js', '.d.ts', '/index.ts', '/index.tsx'].some((e) =>
-            has.has(at + e),
-          )
-        )
+        if (!ships(has, f, join(dirname(f), spec).split(sep).join('/')))
           bad.push(`${f} imports ${spec}, which isn't shipped`)
       } else if (!BUILTIN.has(spec) && !spec.startsWith('#') && !spec.includes(':')) {
         const name = spec
