@@ -146,19 +146,19 @@ export function outsideIslands(h: string) {
     out += h.slice(at, open)
     at = open
     if (!h.startsWith('<!--[-->', open)) continue
-    let depth = 0,
+    let nest = 0,
       j = open
     for (;;) {
       const a = h.indexOf('<!--[-->', j),
         b = h.indexOf('<!--]-->', j)
       if (b < 0) return out + h.slice(at) // unbalanced: all of it counts
       if (a >= 0 && a < b) {
-        depth++
+        nest++
         j = a + 8
       } else {
-        depth--
+        nest--
         j = b + 8
-        if (!depth) break
+        if (!nest) break
       }
     }
     at = j
