@@ -57,6 +57,10 @@ export interface WarpTheme {
 }
 
 type Len = number | string
+/** The handles of `cubic-bezier(x1, y1, x2, y2)`, the same shape a scroll timeline's key takes. */
+export type Handles = readonly [x1: number, y1: number, x2: number, y2: number]
+/** A CSS easing, or cubic-bezier handles. */
+type Ease = string | Handles
 type Color = string
 /** Text roles warp sets type for. */
 type TextRole =
@@ -72,6 +76,32 @@ type TextRole =
   | 'prose'
   | 'title'
 
+/**
+ * A length on a line: `min` px at the `from` width, `max` px at `to`, held outside them (a `clamp()` on `vw`). Inside a
+ * breakpoint, `from` is the breakpoint.
+ */
+export interface Fluid {
+  min: number
+  max: number
+  from?: number
+  to: number
+}
+/** A value by viewport width: `base` below the first breakpoint, then one from each min-width in px. */
+export type ByWidth<T> = { base?: T; [minWidth: number]: T }
+
+/**
+ * One text role's type. A number is px for `size` and `tracking`. Any property can change by width
+ * (`{ base: 16, 768: 14 }`); `size` and `tracking` can also be `Fluid`: `{ base: 72, 768: { min: 120, max: 220, to: 1680 } }`.
+ */
+export interface TextStyle {
+  size?: Len | Fluid | ByWidth<Len | Fluid>
+  weight?: number | string | ByWidth<number | string>
+  leading?: number | string | ByWidth<number | string>
+  tracking?: Len | Fluid | ByWidth<Len | Fluid>
+  case?: string | ByWidth<string>
+  font?: string | ByWidth<string>
+}
+
 /** The design system's own scales, retuned app-wide: `system.radius.control`, `system.space.related`, `system.text.button`. */
 export interface WarpSystem {
   radius?: { control?: Len; surface?: Len; mark?: Len; round?: Len }
@@ -79,29 +109,16 @@ export interface WarpSystem {
   pad?: { control?: Len; surface?: Len }
   control?: { sm?: Len; md?: Len; lg?: Len }
   font?: { sans?: string; display?: string; mono?: string }
-  text?: Partial<
-    Record<
-      TextRole,
-      {
-        size?: Len
-        weight?: number | string
-        leading?: number | string
-        tracking?: Len
-        case?: string
-        font?: string
-      }
-    >
-  >
+  /** warp's roles, and any role the app names (`narrative`): each becomes `--warp-text-<role>-*` and `data-role="<role>"`. */
+  text?: { [R in TextRole]?: TextStyle } & Record<string, TextStyle>
   shadow?: { 0?: string; 1?: string; 2?: string; 3?: string; sm?: string; md?: string; lg?: string }
-  duration?: { instant?: Len; fast?: Len; base?: Len; slow?: Len }
-  ease?: {
-    in?: string
-    out?: string
-    'in-out'?: string
-    pop?: string
-    spring?: string
-    sheet?: string
-  }
+  /** warp's steps, and any the app names (`glide: 300`): `--warp-duration-<name>`, exact, ms for a number. */
+  duration?: { instant?: Len; fast?: Len; base?: Len; slow?: Len } & Record<string, Len>
+  /** warp's curves, and any the app names: `--warp-ease-<name>`, a CSS easing or cubic-bezier handles. */
+  ease?: { [E in 'in' | 'out' | 'in-out' | 'pop' | 'spring' | 'sheet']?: Ease } & Record<
+    string,
+    Ease
+  >
   border?: { hairline?: Len; emphasis?: Len }
   icon?: { sm?: Len; md?: Len; stroke?: number | string }
 }
@@ -125,8 +142,10 @@ export interface PartProps {
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 0 | 1 | 2 | 3 | (string & {})
   opacity?: number
   scale?: number
+  /** ms for a number; a name from `system.duration` reads its token. */
   duration?: Len
-  easing?: string
+  /** A name from `system.ease`, a CSS easing, or cubic-bezier handles. */
+  easing?: Ease
   font?: 'sans' | 'display' | 'mono' | (string & {})
   fontSize?: Len
   weight?: number | string

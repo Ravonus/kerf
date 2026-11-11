@@ -28,6 +28,7 @@ describe('theming', () => {
   test('no theming options writes no theming CSS', () => {
     const css = run().tokens.css ?? ''
     expect(css).not.toContain('warp.theme')
+    expect(css).not.toContain('warp.layout{')
     expect(css).not.toContain('--warp-color-brand')
     expect(run().tokens.cssEntries).toBeUndefined()
   })
@@ -93,6 +94,131 @@ describe('theming', () => {
   })
 })
 
+describe('text roles', () => {
+  test("an app's own role gets tokens and a rule; warp's roles get tokens only", () => {
+    const css =
+      run({
+        system: {
+          text: {
+            narrative: { size: 28, leading: 0.96, font: 'Georgia, serif' },
+            display: { size: 72, weight: 700 },
+          },
+        },
+        themes: { print: { system: { text: { initial: { size: 70 } } } } },
+      }).tokens.css ?? ''
+    expect(css).toContain('--warp-text-narrative-size:28px;--warp-text-narrative-leading:0.96')
+    expect(css).toContain('--warp-text-narrative-font:Georgia, serif')
+    // a family name gets a stack; a stack or a variable stays as written
+    const fonts = run({
+      system: { text: { initial: { font: 'var(--font-script)' }, eyebrow: { font: 'Inter' } } },
+    }).tokens.css
+    expect(fonts).toContain('--warp-text-initial-font:var(--font-script)')
+    expect(fonts).toContain('--warp-text-eyebrow-font:"Inter", ui-sans-serif')
+    expect(css).toContain(
+      '@layer warp.layout{:where([data-scope="text"][data-role="narrative"]){font-size:var(--warp-text-narrative-size);line-height:var(--warp-text-narrative-leading);font-family:var(--warp-text-narrative-font)}',
+    )
+    // a role first named by a theme is applied everywhere; its value lands under the palette
+    expect(css).toContain(':where([data-scope="text"][data-role="initial"]){font-size:')
+    expect(css).toContain('--warp-text-display-size:72px')
+    expect(css).not.toContain('[data-role="display"]')
+  })
+
+  test('refuses a role it cannot name and a property warp has no token for', () => {
+    expect(fails({ system: { text: { Narrative: { size: 20 } } } }).path).toBe(
+      'system.text.Narrative',
+    )
+    expect(fails({ system: { text: { narrative: { colour: 'red' } } } }).path).toBe(
+      'system.text.narrative.colour',
+    )
+    expect(fails({ system: { text: { body: { tracking: '1px' } } } }).message).toMatch(
+      /warp has no --warp-text-body-tracking/,
+    )
+  })
+})
+
+describe('text roles by width', () => {
+  test('a value by width: a base, then a step or a fluid line from each min-width', () => {
+    const css =
+      run({
+        system: {
+          text: {
+            display: { size: { base: 72, 768: { min: 120, max: 220, to: 1680 } } },
+            body: { size: { base: 16, 768: 14 } },
+            narrative: { size: { min: 28, max: 48, from: 390, to: 1680 } },
+          },
+        },
+        themes: { print: { system: { text: { body: { size: { 1200: 15 } } } } } },
+      }).tokens.css ?? ''
+    // 120 at 768 to 220 at 1680: 35.79px + 10.965vw, in the user's rem (warp's root is the body size)
+    const rem = (n: number) => `${n} * var(--warp-rem)`
+    const fluid = `clamp(calc(${rem(7.5)}), calc(${rem(2.2368)} + 10.9649vw), calc(${rem(13.75)}))`
+    expect(css).toContain('--warp-text-display-size:72px')
+    expect(css).toContain('--warp-text-body-size:16px')
+    expect(css).toMatch(
+      new RegExp(
+        `@media \\(min-width:768px\\)\\{@layer warp\\.base\\{:root,[^{]+\\{--warp-text-display-size:${fluid.replace(/[()+.*-]/g, '\\$&')};--warp-text-body-size:14px\\}\\}\\}`,
+      ),
+    )
+    expect(css).toContain(
+      `--warp-text-narrative-size:clamp(calc(${rem(1.75)}), calc(${rem(1.3721)} + 1.5504vw), calc(${rem(3)}))`,
+    )
+    expect(css).toMatch(
+      /@media \(min-width:1200px\)\{@layer warp\.theme\{\[data-palette="print"\],[^{]+\{--warp-text-body-size:15px\}/,
+    )
+    // the base block comes first, so a breakpoint wins over it in the same layer
+    expect(css.indexOf('--warp-text-body-size:16px')).toBeLessThan(
+      css.indexOf('--warp-text-body-size:14px'),
+    )
+  })
+
+  test('refuses a breakpoint it cannot read and a fluid line it cannot draw', () => {
+    expect(fails({ system: { text: { body: { size: { wide: 14 } } } } }).path).toBe(
+      'system.text.body.size.wide',
+    )
+    expect(
+      fails({ system: { text: { body: { size: { min: 14, max: 18, to: 900 } } } } }).path,
+    ).toBe('system.text.body.size')
+    expect(
+      fails({ system: { text: { body: { leading: { 768: { min: 1, max: 2, to: 900 } } } } } })
+        .message,
+    ).toMatch(/only size and tracking/)
+  })
+})
+
+describe('motion tokens', () => {
+  test('the app names durations and curves; parts and themes read them by name', () => {
+    const css =
+      run({
+        system: {
+          duration: { state: 150, glide: 300, fast: 150 },
+          ease: { ui: [0.4, 0, 0.2, 1], scrub: 'cubic-bezier(0.65, 0, 0.35, 1)' },
+        },
+        parts: { button: { duration: 'glide', easing: 'ui' }, card: { easing: [0.2, 0, 0, 1] } },
+        themes: {
+          calm: { system: { duration: { linger: 900 } }, parts: { card: { duration: 'linger' } } },
+        },
+      }).tokens.css ?? ''
+    expect(css).toContain('--warp-duration-state:150ms;--warp-duration-glide:300ms')
+    expect(css).toContain('--warp-duration-fast:150ms')
+    expect(css).toContain('--warp-ease-ui:cubic-bezier(0.4, 0, 0.2, 1)')
+    expect(css).toContain('--warp-ease-scrub:cubic-bezier(0.65, 0, 0.35, 1)')
+    expect(css).toContain(
+      'transition-duration:var(--warp-duration-glide);transition-timing-function:var(--warp-ease-ui)',
+    )
+    expect(css).toContain('transition-timing-function:cubic-bezier(0.2, 0, 0, 1)')
+    expect(css).toContain('--warp-duration-linger:900ms')
+    expect(css).toContain('transition-duration:var(--warp-duration-linger)')
+  })
+
+  test("refuses a name warp already uses, a name it can't read and handles out of range", () => {
+    expect(fails({ system: { duration: { 'exit-k': 2 } } }).path).toBe('system.duration.exit-k')
+    expect(fails({ system: { duration: { Glide: 300 } } }).path).toBe('system.duration.Glide')
+    expect(fails({ system: { ease: { ui: [2, 0, 0, 1] } } }).path).toBe('system.ease.ui')
+    expect(fails({ system: { ease: { ui: [0.4, 0] } } }).path).toBe('system.ease.ui')
+    expect(fails({ parts: { card: { duration: [1, 2, 3, 4] } } }).path).toBe('parts.card.duration')
+  })
+})
+
 describe('theming checks', () => {
   test('refuses what it cannot read', () => {
     expect(fails({ colors: { Brand: '#e8590c' } }).path).toMatch(/colors/)
@@ -141,7 +267,13 @@ describe('the parts table', () => {
 
 describe('the compiler without the plugin', () => {
   test('runs from the stylesheet facts alone, with no Node import', async () => {
-    for (const f of ['theme.mjs', 'theme-css.mjs', 'theme-parts.mjs', 'seed.mjs'])
+    for (const f of [
+      'theme.mjs',
+      'theme-css.mjs',
+      'theme-parts.mjs',
+      'theme-values.mjs',
+      'seed.mjs',
+    ])
       expect(readFileSync(new URL(`../src/plugin/${f}`, import.meta.url), 'utf8')).not.toMatch(
         /from 'node:/,
       )

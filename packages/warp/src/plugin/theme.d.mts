@@ -21,6 +21,8 @@ export interface CheckedTheme {
   colors: Record<string, string>
   system: Record<string, string>
   rows: PartRow[]
+  /** Tokens a breakpoint sets, by min-width in px. */
+  media?: Record<string, Record<string, string>>
 }
 
 /** `colors`, `system`, `parts` and `themes` after checking, ready for themeCss(). */
@@ -30,6 +32,10 @@ export interface ThemeOptions {
   rows: PartRow[]
   themes: Record<string, CheckedTheme>
   default?: string
+  /** The app's own text roles (not warp's), each with the properties it sets. */
+  roles?: Record<string, Set<string>>
+  /** Tokens a breakpoint sets, by min-width in px. */
+  media?: Record<string, Record<string, string>>
 }
 
 /** Checks `colors`, `system`, `parts` and `themes`; throws an Error with `path` on the first bad value. */

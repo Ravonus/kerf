@@ -259,7 +259,7 @@ test('every config in `weft docs theme` passes D010', () => {
   const looks = [...doc.matchAll(/```ts\nwarp\((\{[\s\S]*?\})\)\n```/g)].map((m) =>
     literal((parseAst(`(${m[1]})`).body[0] as unknown as { expression: LiteralNode }).expression),
   )
-  expect(looks).toHaveLength(4)
+  expect(looks).toHaveLength(6)
   for (const look of looks)
     expect(
       code(() => run(look as WarpOptions)),

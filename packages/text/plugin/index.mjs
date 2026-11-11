@@ -3,6 +3,7 @@
 // `.weft/slots/font.build.build.json`; the engine (src/measure.mjs) loads only when something measures.
 import { fileURLToPath } from 'node:url'
 import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
+import { matcher } from './glyphs.mjs'
 
 const fontBuild = defineSlot({ id: 'font.build', version: 1, cardinality: 'one', sides: ['build'] })
 const textMeasure = defineSlot({
@@ -30,6 +31,22 @@ const fail = (path, message) => {
   throw Object.assign(new Error(message), { path })
 }
 
+/** `glyphs`: the characters, or `{ selector, first? }` for the text of the elements a selector matches. */
+function glyphs(g, at) {
+  if (typeof g === 'string' && g) return
+  if (!g || typeof g !== 'object' || typeof g.selector !== 'string')
+    fail(at, 'expected the characters the face draws, like "ABC", or { selector, first }')
+  for (const key of Object.keys(g))
+    if (key !== 'selector' && key !== 'first') fail(`${at}.${key}`, 'unknown option')
+  if (g.first !== undefined && typeof g.first !== 'boolean')
+    fail(`${at}.first`, 'must be true or false')
+  try {
+    matcher(g.selector)
+  } catch (error) {
+    fail(`${at}.selector`, /** @type {Error} */ (error).message)
+  }
+}
+
 function face(role, f) {
   const at = `fonts.${role}`
   if (!f || typeof f !== 'object') fail(at, 'expected { family, src, fallback }')
@@ -37,7 +54,17 @@ function face(role, f) {
     if (typeof f[key] !== 'string' || !f[key]) fail(`${at}.${key}`, 'expected a non-empty string')
   for (const key of Object.keys(f))
     if (
-      !['family', 'src', 'fallback', 'display', 'weight', 'style', 'axes', 'preload'].includes(key)
+      ![
+        'family',
+        'src',
+        'fallback',
+        'display',
+        'weight',
+        'style',
+        'axes',
+        'preload',
+        'glyphs',
+      ].includes(key)
     )
       fail(`${at}.${key}`, 'unknown option')
   const display = f.display ?? 'swap'
@@ -55,7 +82,9 @@ function face(role, f) {
     if (!Array.isArray(range) || range.length !== 2 || !range.every(Number.isFinite))
       fail(`${at}.axes.${axis}`, 'expected [min, max]')
   }
+  if (f.glyphs !== undefined) glyphs(f.glyphs, `${at}.glyphs`)
   return {
+    ...(f.glyphs !== undefined && { glyphs: f.glyphs }),
     family: f.family,
     src: f.src,
     fallback: f.fallback,

@@ -14,6 +14,7 @@ import { brotliCompressSync } from 'node:zlib'
 import { fromBuffer } from '@capsizecss/unpack'
 import fontverter from 'fontverter'
 import subsetFont from 'subset-font'
+import { scopedText } from './glyphs.mjs'
 
 /** Google Fonts' subset ranges (the same tables @fontsource ships). */
 export const RANGES = {
@@ -160,7 +161,7 @@ export function fallbackFace(font, fallback) {
 }
 
 /**
- * @param {{ fonts: Record<string, { family: string, src: string, fallback: string, display: string, weight: number, style: string, axes: Record<string, [number, number]>, preload: boolean }>, subsets: string[] }} options
+ * @param {{ fonts: Record<string, { family: string, src: string, fallback: string, display: string, weight: number, style: string, axes: Record<string, [number, number]>, preload: boolean, glyphs?: string | { selector: string, first?: boolean } }>, subsets: string[] }} options
  */
 export function createFontBuild({ fonts, subsets, trim = true }) {
   return {
@@ -178,7 +179,7 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
       const seen = new Map() // family+src → its preload flag, so two roles on one face emit it once
 
       for (const [role, f] of Object.entries(fonts)) {
-        const key = `${f.family}\0${f.src}\0${f.weight}\0${f.style}`
+        const key = `${f.family}\0${f.src}\0${f.weight}\0${f.style}\0${JSON.stringify(f.glyphs ?? '')}`
         if (seen.has(key)) {
           if (f.preload && !seen.get(key).preload) seen.get(key).preload = true
           continue
@@ -197,7 +198,8 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
         const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 16)
         const pins = trimming ? pinned(await readAxes(bytes), f.axes, scan) : {}
         entry.pins = pins
-        for (const { subset, text, range } of subsets.flatMap(parts)) {
+        const cuts = faceCuts(f, { source, entry }) ?? subsets.flatMap(parts)
+        for (const { subset, text, range } of cuts) {
           const inputs = createHash('sha256')
             .update(text)
             .update(JSON.stringify(pins))
@@ -238,6 +240,24 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
       }
     },
   }
+}
+
+/**
+ * A face that draws only its `glyphs`: one file, and a `unicode-range` that leaves every other character to the stack.
+ * A scope reads them from the source; dev has none, and text it can't read keeps the face whole (noted in the report).
+ */
+function faceCuts(f, { source, entry }) {
+  if (!f.glyphs) return null
+  let text = f.glyphs
+  if (typeof text !== 'string') {
+    if (!source) return null
+    const scoped = scopedText(source, f.glyphs)
+    entry.unread = scoped.unread
+    if (!scoped.text) return null
+    text = scoped.text
+  }
+  text = [...new Set(text)].join('')
+  return [{ subset: 'glyphs', text, range: toRange(text) }]
 }
 
 function subsetParts(source, trimming) {
@@ -316,6 +336,7 @@ function faceReport(faces) {
     family: f.family,
     role: f.role,
     pinned: f.pins,
+    ...(f.unread && { glyphs: `kept whole: ${f.unread}` }),
     files: f.files.map(({ subset, bytes }) => ({ subset, bytes })),
   }))
 }

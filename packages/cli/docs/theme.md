@@ -30,7 +30,7 @@ sets a dial, such as a Table's density.
 | Option | Does |
 |---|---|
 | `colors` | `{ brand: '#e8590c' }`: `--warp-color-brand`, a tone (`tone="brand"`), and `bg-brand` via `.weft/tokens/warp.tailwind.css`. Lowercase names, `#rrggbb` |
-| `system` | The scales: `radius`, `space`, `pad`, `control`, `font`, `shadow`, `duration`, `ease`, `border`, `icon`, `text.<role>` |
+| `system` | The scales: `radius`, `space`, `pad`, `control`, `font`, `shadow`, `duration`, `ease`, `border`, `icon`, `text.<role>` (warp's roles or your own, below) |
 | `parts` | One element, at rest and per state (`hover focus press active open disabled`). Numbers are px (ms for `duration`); names are system steps or `colors` |
 | `themes` | `{ ocean: { seed, colors, system, parts } }` under `[data-palette="ocean"]`. `dials.palette` sets the default; `setPalette()` switches |
 
@@ -96,6 +96,86 @@ warp({
     },
   },
 })
+```
+
+## Text roles
+
+`system.text` retunes warp's roles (`display title heading body label caption eyebrow code prose control button`) and
+names your own. Each property becomes a token, `--warp-text-<role>-<property>`. A role of your own also gets a rule, so
+`<Text role="narrative">` or any element with `data-scope="text" data-role="narrative"` takes it:
+
+```ts
+warp({
+  system: {
+    text: {
+      display: { size: 72, weight: 700, leading: 0.9 },
+      narrative: {
+        size: 28,
+        leading: 0.96,
+        tracking: '-0.05em',
+        font: '"Fraunces", "Fraunces Fallback", Georgia, serif',
+      },
+    },
+  },
+})
+```
+
+The properties are `size weight leading tracking case font`. A number is px for `size` and `tracking`. A role's name is
+lowercase. warp's own roles take only the tokens warp has for them.
+
+Any property can change with the viewport: `base` holds below the first breakpoint, and each other key is a min-width
+in px. `size` and `tracking` can also be fluid, `{ min, max, from, to }` in px: `min` at the `from` width, `max` at
+`to`, held outside them. Inside a breakpoint, `from` is the breakpoint. Each breakpoint is a media query that sets the
+tokens, so there is no script; a fluid line runs on `vw` to meet them, in the user's rem.
+
+```ts
+warp({
+  system: {
+    text: {
+      // 72 below 768, then 120 at 768 to 220 at 1680
+      display: {
+        size: { base: 72, 768: { min: 120, max: 220, to: 1680 } },
+      },
+      body: { size: { base: 16, 768: 14 } },
+    },
+  },
+})
+```
+
+## Motion tokens
+
+`system.duration` and `system.ease` retune warp's steps (`instant fast base slow`) and curves (`in out in-out pop
+spring sheet`) and name your own. Each becomes `--warp-duration-<name>` or `--warp-ease-<name>`. A duration is ms for a
+number and exact: no dial rescales it. A curve is a CSS easing or cubic-bezier handles, `[x1, y1, x2, y2]`. A part's
+`duration` and `easing` take the names:
+
+```ts
+import { defineConfig } from '@weft-js/core/config'
+import { warp } from '@weft-js/warp/plugin'
+import { ui } from './src/motion'
+
+export default defineConfig({
+  plugins: [
+    warp({
+      system: {
+        duration: { state: 150, glide: 300 },
+        ease: { ui, scrub: [0.65, 0, 0.35, 1] },
+      },
+      parts: { button: { duration: 'state', easing: 'ui' } },
+    }),
+  ],
+})
+```
+
+Your own CSS reads them as `transition: opacity var(--warp-duration-glide) var(--warp-ease-ui)`. The handles are the
+shape a scroll timeline's key takes, so one constant serves both:
+
+```ts
+// src/motion.ts
+import { timeline } from '@weft-js/scroll/timeline'
+
+export const ui = [0.4, 0, 0.2, 1] as const
+export const reveal = timeline({ opacity: [[0, 0], [1, 1, ui]] })
 ```
 
 ## Brutalist
