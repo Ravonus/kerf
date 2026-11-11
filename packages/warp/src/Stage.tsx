@@ -244,6 +244,16 @@ function follow(d: Director) {
   })
 }
 
+/** The stage's one surface. Its kind is read once: a stage keeps its surface for life. */
+function surfaceOf(d: Director) {
+  return defineSurface({
+    name: 'stage',
+    kind: d.props.kind ?? 'keel-lit',
+    maxDpr: d.dpr,
+    setup: (s) => attach(d, s),
+  })
+}
+
 function director(props: StageProps): Director {
   const reduced =
     typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -273,15 +283,7 @@ function director(props: StageProps): Director {
 export function Stage(props: StageProps) {
   // The director keeps the live props and reads each where it is used.
   const d = untrack(() => director(props))
-  // The kind is read once: one stage keeps one surface.
-  const def = untrack(() =>
-    defineSurface({
-      name: 'stage',
-      kind: props.kind ?? 'keel-lit',
-      maxDpr: d.dpr,
-      setup: (s) => attach(d, s),
-    }),
-  )
+  const def = surfaceOf(d)
   onMount(() => follow(d))
   return (
     <div ref={(el: HTMLElement) => STAGES.set((d.root = el), d)} data-stage class={props.class}>
