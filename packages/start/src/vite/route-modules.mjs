@@ -199,16 +199,22 @@ export function shapeSignature(file) {
 
 /**
  * The routes table's stylesheets and `shapeEntry`. A stylesheet edit in `weft dev` lands here instead of reloading the
- * page: a shape reads its CSS when it's shown.
+ * page: a shape reads its CSS when it's shown. `lazy` (a build): the text is `shapeStyles()`, which the router calls once
+ * the page is up. A shape is for a navigation, so the page's own code doesn't carry a second copy of its sheets.
  */
-function shapeStyles(files) {
+function shapeStyles(files, lazy) {
   const requests = files.map((file) => JSON.stringify(file + '?inline'))
   const accept = requests.length
     ? `if (import.meta.hot) import.meta.hot.accept([${requests.join(', ')}], (mods) => mods.forEach((m, i) => { if (m) styles[i] = m.default }))\n`
     : ''
-  return `${requests.map((request, i) => `import style${i} from ${request}`).join('\n')}
+  const load = lazy
+    ? `const styles = []
+export const shapeStyles = () => Promise.all([${requests.map((r) => `import(${r})`).join(', ')}]).then((mods) => mods.forEach((m, i) => { styles[i] = m.default }))
+`
+    : `${requests.map((request, i) => `import style${i} from ${request}`).join('\n')}
 const styles = [${requests.map((_, i) => `style${i}`).join(', ')}]
-${accept}const shapeEntry = (module, sheets, name, kind) => {
+${accept}`
+  return `${load}const shapeEntry = (module, sheets, name, kind) => {
   const component = Reflect.get(module, name)
   const groupCss = Reflect.get(module, '$weftShapeCss')
   const lead = typeof groupCss === 'string' && groupCss ? [groupCss] : []
@@ -279,7 +285,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
       `${JSON.stringify(i.id)}: () => import(${JSON.stringify(i.file)}).then(({ $i${i.index}: d }) => ({ default: d }))`,
   )
   return `${shapeImports.join('\n')}
-${shapeStyles([...styleFiles.keys()])}
+${shapeStyles([...styleFiles.keys()], css.lazy)}
 export const shapes = { ${shapes.join(', ')} }
 export const build = ${JSON.stringify(css.build ?? null)}
 export const table = ${JSON.stringify(table)}

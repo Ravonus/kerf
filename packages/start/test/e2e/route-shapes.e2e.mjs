@@ -357,6 +357,34 @@ void test('direct sizing CSS travels as partial data without importing route cod
   assert.equal(routes.shapes['/'].bytes, null)
 })
 
+void test("a build's routes table loads the shapes' stylesheet text when shapeStyles is called", async (t) => {
+  const f = fixture(t)
+  f.write('page.tsx', 'export default () => <main class="panel" />')
+  const levels = { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] }
+  const sheets = [f.abs('entry.css'), f.abs('size.css')]
+  const css = {
+    entry: [sheets[0]],
+    levels: new Map([[f.abs('page.tsx'), [sheets[1]]]]),
+    lazy: true,
+  }
+  const source = clientRoutes(levels, f.abs, undefined, css)
+  assert.ok(!/^import style\d+ from/m.test(source))
+  assert.ok(!source.includes('import.meta.hot'))
+  for (const file of sheets)
+    assert.ok(source.includes(`import(${JSON.stringify(`${file}?inline`)})`))
+  const code = source.replace(
+    /import\(("[^"]+\?inline")\)/g,
+    (_, spec) => `Promise.resolve({ default: ${JSON.stringify(`text of ${JSON.parse(spec)}`)} })`,
+  )
+  const routes = await manifestModule(code)
+  assert.deepEqual(routes.shapes['/'].cssText, [undefined, undefined])
+  await routes.shapeStyles()
+  assert.deepEqual(
+    routes.shapes['/'].cssText,
+    sheets.map((file) => `text of ${file}?inline`),
+  )
+})
+
 void test('Vite transforms an inline CSS request to data without injecting a stylesheet', async (t) => {
   const f = fixture(t)
   f.write('size.css', '.panel { min-height: 12rem }')

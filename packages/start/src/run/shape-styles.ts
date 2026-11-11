@@ -23,7 +23,9 @@ export function acquireShapeStyles(
   build: string | null | undefined,
   text: string[],
 ): SheetLease | null {
-  if (!doc.head || text.some((css) => /@import\b/i.test(css))) return null
+  // A sheet that hasn't arrived yet (`shapeStyles`, after the page) leaves no shape, and the old page stays up.
+  if (!doc.head || text.some((css) => typeof css !== 'string' || /@import\b/i.test(css)))
+    return null
   const key = JSON.stringify([build ?? null, text])
   const entries = sheets.get(doc) ?? new Map<string, SheetEntry>()
   if (!sheets.has(doc)) sheets.set(doc, entries)

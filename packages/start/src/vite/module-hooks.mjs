@@ -279,6 +279,7 @@ async function clientRoutesModule(ctx, s, p, run) {
     levels: new Map(files.map((file, i) => [file, sources[i].styles])),
     overrides,
     build: s.build || null,
+    lazy: s.dev === false,
   }
   const output = clientRoutes(s.manifest, s.abs, p, css)
   s.shapeEntrySignatures = shared.signatures

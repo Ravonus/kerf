@@ -102,6 +102,23 @@ describe('route shape style preparation', () => {
     }
   })
 
+  it('prepares nothing while a sheet is still loading, and the shape once it has arrived', () => {
+    const f = fixture()
+    try {
+      const shape = f.routes.shapes!['/generated']!
+      if (shape.kind !== 'generated') throw new Error('fixture')
+      const styles: string[] = []
+      Object.defineProperty(shape, 'cssText', { get: () => [styles[0]] })
+      expect(prepareRouteShape(f.routes, '/generated', f.doc)).toBeNull()
+      expect([...f.doc.head.querySelectorAll('style')].map((style) => style.id)).toEqual(['app'])
+      styles[0] = '.box { width: 2px }'
+      expect(prepareRouteShape(f.routes, '/generated', f.doc)).not.toBeNull()
+      expect(f.doc.querySelector('style[data-weft-shape-style]')!.textContent).toBe(styles[0])
+    } finally {
+      f.dom.window.close()
+    }
+  })
+
   it('does not share sheets across build identities and releases only owned sheets', () => {
     const f = fixture()
     try {

@@ -55,6 +55,8 @@ export interface ClientRoutes {
   load: Record<string, () => Promise<{ default?: Component }>>
   /** Eager shape metadata, keyed by route or layout id. */
   shapes?: RouteShapes
+  /** Loads the shapes' stylesheet text, in a build: the router calls it once the page is up. */
+  shapeStyles?: () => Promise<unknown>
   /** Each island's code, by id: all a static level loads (PLAN §11). */
   islands?: Record<string, () => Promise<{ default: Component }>>
 }
@@ -65,6 +67,7 @@ export async function start(routes: ClientRoutes, options: { container?: Element
   await Promise.all(prepared.loads)
   const page = mount(prepared)
   page.route.prepareShape = (id) => prepareRouteShape(routes, id, document)
+  void routes.shapeStyles?.().catch(() => {})
   const navigation = new Navigation(routes, page)
   client.navigate = navigation.go
   listeners(navigation, () => (import.meta as Hot).hot)
