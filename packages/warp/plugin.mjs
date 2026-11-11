@@ -14,7 +14,7 @@ import { componentCatalog } from './src/plugin/catalog.mjs'
 import { dtcgTokens } from './src/plugin/dtcg.mjs'
 import { DEFAULT, normalizeSeed, seedByName } from './src/plugin/seed.mjs'
 import { checkTokens, tailwindTheme, themed, themeOptions } from './src/plugin/theme.mjs'
-import { themeContext } from './src/plugin/theme-context.mjs'
+import { themeContext, withRem } from './src/plugin/theme-context.mjs'
 
 const core = new URL('../warp-core/', import.meta.url)
 const DIALS = {
@@ -122,10 +122,6 @@ function overrides({ seed, radius, icons, fonts = {}, tokens = {}, theme }) {
 // In warp.base, a later layer than warp.tokens, so a token set here beats every dial stop and every copied default.
 const overrideCss = (declarations) =>
   declarations ? `@layer warp.base{${SCOPES}{${declarations}}}\n` : ''
-
-// A fluid role is written in the user's rem, --warp-rem. warp.css sets it beside its root font-size; a page that loads
-// these tokens alone keeps the browser's root size, where it is 1rem. `:where` lets warp.css's own value win.
-const REM = '@layer warp.tokens{:where(:root){--warp-rem:1rem}}\n'
 
 const seedCss = (s) =>
   `@layer warp.tokens{:root{--warp-seed-accent-h:${s.hue};--warp-seed-accent-c:${s.chroma}}}\n`
@@ -360,17 +356,16 @@ export const warp = definePlugin({
     const dials = Object.entries(o.dials ?? {})
       .map(([dial, value]) => dialCss(dial, value))
       .join('')
-    const made =
+    const css =
       (custom ? seedCss(seed) : '') +
       (o.fields === 'classic' ? classicCss() : '') +
       dials +
       overrideCss(declarations) +
       theming
-    const css = (made.includes('var(--warp-rem)') ? REM : '') + made
     return {
       tokens: {
         namespace: 'warp',
-        ...(css && { css }),
+        ...(css && { css: withRem(css) }),
         ...(tailwind && { cssEntries: { tailwind } }),
         values: {
           seed: { hue: seed.hue, chroma: seed.chroma },

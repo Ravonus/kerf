@@ -6,6 +6,7 @@ import { progress } from '@weft-js/scroll/timeline'
 import { isMobileDevice } from '@weft-js/warp-core'
 import { PINNED, posterLayer, posterOf } from './Stage-poster'
 import { director, handleOf, type Director, type Entry } from './Stage-state'
+import type { LiveSurface } from './Stage-live'
 import type { SceneProps, StageProps } from './Stage-types'
 
 export type * from './Stage-types'
@@ -16,7 +17,7 @@ export const STAGE = Symbol.for('weft.stage')
 
 const STAGES = new WeakMap<Element, Director>()
 /** The surface and its frames (Stage-live), once a stage on this page is live. */
-let Live: (typeof import('./Stage-live'))['LiveSurface'] | undefined
+let Live: typeof LiveSurface | undefined
 
 /** `auto`'s answer: posters on a phone or tablet, or where the governor rates the device `low`. */
 async function tierOf(d: Director) {

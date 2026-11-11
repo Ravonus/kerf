@@ -6,15 +6,18 @@ import { attach } from './Stage-director'
 import type { Director } from './Stage-state'
 
 /** The stage's one surface. Its kind is read once: a stage keeps its surface for life. */
+function surfaceOf(d: Director) {
+  return defineSurface({
+    name: 'stage',
+    kind: d.props.kind ?? 'keel-lit',
+    maxDpr: d.dpr,
+    setup: (s) => attach(d, s),
+  })
+}
+
+/** The surface a live stage draws on; Stage renders it once the tier is `live` and this module has loaded. */
 export function LiveSurface(props: { d: Director; label: string }) {
-  const def = untrack(() =>
-    defineSurface({
-      name: 'stage',
-      kind: props.d.props.kind ?? 'keel-lit',
-      maxDpr: props.d.dpr,
-      setup: (s) => attach(props.d, s),
-    }),
-  )
+  const def = surfaceOf(untrack(() => props.d))
   return (
     <Surface
       use={def}

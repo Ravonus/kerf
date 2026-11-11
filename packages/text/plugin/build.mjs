@@ -215,11 +215,9 @@ export function createFontBuild({ fonts, subsets, trim = true }) {
 
         const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 16)
         const axes = trimming ? await readAxes(bytes) : []
-        const pins = pinned(axes, f.axes, scan)
-        const limits = limited(axes, f.axes)
-        const variationAxes = { ...pins, ...limits }
-        entry.pins = pins
-        entry.limits = limits
+        entry.pins = pinned(axes, f.axes, scan)
+        entry.limits = limited(axes, f.axes)
+        const variationAxes = { ...entry.pins, ...entry.limits }
         const cuts = faceCuts(f, { source, entry }) ?? subsets.flatMap(parts)
         for (const { subset, text, range } of cuts) {
           const inputs = createHash('sha256')

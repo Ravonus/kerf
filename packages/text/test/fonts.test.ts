@@ -313,6 +313,42 @@ describe('axes', () => {
     expect(pinned([SOFT, WONK], {}, scanAxes('a{font-variation-settings:var(--x)}'))).toEqual({})
   })
 
+  it('reads fvar, and finds none in a static face', async () => {
+    const axis = (tag: string, min: number, def: number, max: number) => {
+      const b = Buffer.alloc(20)
+      b.write(tag, 'latin1')
+      b.writeInt32BE(min * 65536, 4)
+      b.writeInt32BE(def * 65536, 8)
+      b.writeInt32BE(max * 65536, 12)
+      return b
+    }
+    const fvar = Buffer.alloc(16)
+    fvar.writeUInt16BE(16, 4)
+    fvar.writeUInt16BE(2, 8)
+    fvar.writeUInt16BE(20, 10)
+    const dir = Buffer.alloc(28)
+    dir.writeUInt32BE(0x00010000, 0)
+    dir.writeUInt16BE(1, 4)
+    dir.write('fvar', 12, 'latin1')
+    dir.writeUInt32BE(28, 20)
+    dir.writeUInt32BE(56, 24)
+    expect(
+      await readAxes(
+        Buffer.concat([dir, fvar, axis('wght', 100, 400, 900), axis('SOFT', 0, 0, 100)]),
+      ),
+    ).toEqual([
+      { tag: 'wght', min: 100, default: 400, max: 900 },
+      { tag: 'SOFT', min: 0, default: 0, max: 100 },
+    ])
+    expect(await readAxes(readFileSync(inter(400)))).toEqual([])
+  })
+})
+
+describe('declared axes', () => {
+  const SOFT = { tag: 'SOFT', min: 0, default: 0, max: 100 }
+  const WGHT = { tag: 'wght', min: 100, default: 400, max: 900 }
+  const OPSZ = { tag: 'opsz', min: 9, default: 14, max: 144 }
+
   it('cuts a declared axis to its range, clamped to the font, and to one value for a point', () => {
     expect(limited([WGHT, OPSZ, SOFT], { wght: [500, 700], SOFT: [0, 100] })).toEqual({
       wght: { min: 500, max: 700 },
@@ -361,36 +397,6 @@ describe('axes', () => {
     } finally {
       rmSync(cacheDir, { recursive: true, force: true })
     }
-  })
-
-  it('reads fvar, and finds none in a static face', async () => {
-    const axis = (tag: string, min: number, def: number, max: number) => {
-      const b = Buffer.alloc(20)
-      b.write(tag, 'latin1')
-      b.writeInt32BE(min * 65536, 4)
-      b.writeInt32BE(def * 65536, 8)
-      b.writeInt32BE(max * 65536, 12)
-      return b
-    }
-    const fvar = Buffer.alloc(16)
-    fvar.writeUInt16BE(16, 4)
-    fvar.writeUInt16BE(2, 8)
-    fvar.writeUInt16BE(20, 10)
-    const dir = Buffer.alloc(28)
-    dir.writeUInt32BE(0x00010000, 0)
-    dir.writeUInt16BE(1, 4)
-    dir.write('fvar', 12, 'latin1')
-    dir.writeUInt32BE(28, 20)
-    dir.writeUInt32BE(56, 24)
-    expect(
-      await readAxes(
-        Buffer.concat([dir, fvar, axis('wght', 100, 400, 900), axis('SOFT', 0, 0, 100)]),
-      ),
-    ).toEqual([
-      { tag: 'wght', min: 100, default: 400, max: 900 },
-      { tag: 'SOFT', min: 0, default: 0, max: 100 },
-    ])
-    expect(await readAxes(readFileSync(inter(400)))).toEqual([])
   })
 })
 

@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs'
 import * as plugin from '../plugin.mjs'
 import { allParts, PARTS, PROPS, STATES } from '../src/plugin/theme-parts.mjs'
-import { themeContext } from '../src/plugin/theme-context.mjs'
+import { themeContext as warpFacts } from '../src/plugin/theme-context.mjs'
 import { toneChannels } from '../src/plugin/theme-css.mjs'
 
 const { warp } = plugin
@@ -40,24 +40,6 @@ describe('theming', () => {
     expect(css).toContain('--warp-color-brand:#e8590c')
     expect(css).toContain('[data-tone="brand"]')
     expect(css).toMatch(/@layer warp\.tokens,.*warp\.theme;/)
-  })
-
-  test('each tone holds its hue family, and the one shared rule solves its channels as toneChannels does', () => {
-    const colors = { brand: '#e8590c', pay: '#8051ff', ink: '#1b1b1f' }
-    const css = run({ colors }).tokens.css ?? ''
-    const { formulas } = themeContext(new URL('../../warp-core/', import.meta.url))
-    const all = Object.keys(colors)
-      .map((n) => `\\[data-tone="${n}"\\]`)
-      .join(',')
-    const shared = new RegExp(`:where\\(${all}\\)\\{([^}]*)\\}`).exec(css)![1]!
-    for (const [name, hex] of Object.entries(colors)) {
-      const own = new RegExp(
-        `:where\\(\\[data-tone="${name}"\\]\\)\\{--_tc:([^;]+);--_th:([^}]+)\\}`,
-      ).exec(css)!
-      const solved = shared.replaceAll('var(--_tc)', own[1]!).replaceAll('var(--_th)', own[2]!)
-      expect(solved).toBe(toneChannels(hex, formulas))
-    }
-    expect(css.match(/--_solid:/g)).toHaveLength(1)
   })
 
   test('a part moves its tone channels, rest before hover', () => {
@@ -143,6 +125,40 @@ describe('text roles', () => {
     expect(css).not.toContain('[data-role="display"]')
   })
 
+  test('refuses a role it cannot name and a property warp has no token for', () => {
+    expect(fails({ system: { text: { Narrative: { size: 20 } } } }).path).toBe(
+      'system.text.Narrative',
+    )
+    expect(fails({ system: { text: { narrative: { colour: 'red' } } } }).path).toBe(
+      'system.text.narrative.colour',
+    )
+    expect(fails({ system: { text: { body: { tracking: '1px' } } } }).message).toMatch(
+      /warp has no --warp-text-body-tracking/,
+    )
+  })
+})
+
+describe('named colours as tones', () => {
+  test('each tone holds its hue family, and the one shared rule solves its channels as toneChannels does', () => {
+    const colors = { brand: '#e8590c', pay: '#8051ff', ink: '#1b1b1f' }
+    const css = run({ colors }).tokens.css ?? ''
+    const { formulas } = warpFacts(new URL('../../warp-core/', import.meta.url))
+    const all = Object.keys(colors)
+      .map((n) => `\\[data-tone="${n}"\\]`)
+      .join(',')
+    const shared = new RegExp(`:where\\(${all}\\)\\{([^}]*)\\}`).exec(css)![1]!
+    for (const [name, hex] of Object.entries(colors)) {
+      const own = new RegExp(
+        `:where\\(\\[data-tone="${name}"\\]\\)\\{--_tc:([^;]+);--_th:([^}]+)\\}`,
+      ).exec(css)!
+      const solved = shared.replaceAll('var(--_tc)', own[1]!).replaceAll('var(--_th)', own[2]!)
+      expect(solved).toBe(toneChannels(hex, formulas))
+    }
+    expect(css.match(/--_solid:/g)).toHaveLength(1)
+  })
+})
+
+describe('text roles: optical size and first letter', () => {
   test('opsz sets the optical size on any role, by width too; auto leaves it to the size', () => {
     const css =
       run({
@@ -189,18 +205,6 @@ describe('text roles', () => {
     )
     expect(fails({ system: { text: { initial: { firstLetter: 'yes' } } } }).path).toBe(
       'system.text.initial.firstLetter',
-    )
-  })
-
-  test('refuses a role it cannot name and a property warp has no token for', () => {
-    expect(fails({ system: { text: { Narrative: { size: 20 } } } }).path).toBe(
-      'system.text.Narrative',
-    )
-    expect(fails({ system: { text: { narrative: { colour: 'red' } } } }).path).toBe(
-      'system.text.narrative.colour',
-    )
-    expect(fails({ system: { text: { body: { tracking: '1px' } } } }).message).toMatch(
-      /warp has no --warp-text-body-tracking/,
     )
   })
 })
