@@ -194,6 +194,15 @@ export function defineScene<M extends ModuleId = never, B extends Built = Built>
         ? modules['camera-rail']!.createCameraRail(sampleTracks, { ...spec.rail, tracks })
         : null
       const apply = modules['camera-rail']?.applyView
+      let aspect = 0
+      // The stage's surface resizes under the scene: its camera follows the canvas's shape.
+      const fit = () => {
+        const { width, height } = host.surface.size.value
+        if (!width || !height || width / height === aspect) return
+        aspect = width / height
+        built.camera.aspect = aspect
+        built.camera.updateProjectionMatrix()
+      }
       return {
         stage: built.stage,
         camera: built.camera,
@@ -202,8 +211,11 @@ export function defineScene<M extends ModuleId = never, B extends Built = Built>
           spec.at?.call(built, position, frame, sample(position, frame.time))
         },
         setQuality: (levers) => spec.setQuality?.call(built, levers),
-        render: () =>
-          spec.render ? spec.render.call(built) : renderer.render(built.stage, built.camera),
+        render() {
+          fit()
+          if (spec.render) spec.render.call(built)
+          else renderer.render(built.stage, built.camera)
+        },
         dispose() {
           spec.dispose?.call(built)
           disposeTree(built.stage)

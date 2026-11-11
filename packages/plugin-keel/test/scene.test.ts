@@ -18,6 +18,7 @@ function node() {
     children,
     position: { x: 0, y: 0, z: 0, set: vi.fn() },
     fov: 30,
+    aspect: 1,
     lookAt: vi.fn(),
     rotateZ: vi.fn(),
     updateProjectionMatrix: vi.fn(),
@@ -33,7 +34,11 @@ function host() {
   const renderer = { render: vi.fn() }
   return {
     renderer,
-    host: { surface: { lit: {}, renderer }, seed: 3, quality: LEVERS } as never as SceneHost,
+    host: {
+      surface: { lit: {}, renderer, size: { value: { width: 200, height: 100 } } },
+      seed: 3,
+      quality: LEVERS,
+    } as never as SceneHost,
   }
 }
 
@@ -86,6 +91,7 @@ describe('defineScene', () => {
     const live = await scene.build(h)
     live.render()
     expect(renderer.render).toHaveBeenCalledWith(stage, live.camera)
+    expect(live.camera.aspect).toBe(2)
     live.setQuality({ ...LEVERS, density: 0.5 })
     expect(setQuality).toHaveBeenCalledWith({ ...LEVERS, density: 0.5 })
     live.dispose()
