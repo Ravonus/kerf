@@ -95,7 +95,11 @@ import { Card, Text } from '@weft-js/warp'
 
 export function Sidebar() {
   return (
-    <aside data-theme="dark" data-density="compact">
+    <aside
+      data-theme="dark"
+      data-paint
+      data-density="compact"
+    >
       <Card title="Today">
         <Text subtle>
           Dark and compact, whatever the page around it is.

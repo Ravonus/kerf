@@ -56,6 +56,7 @@ export default function Dials() {
           this div reads its tokens from them. */}
       <div
         data-theme={theme.value}
+        data-paint
         data-expression={expression.value}
         data-density={density.value}
       >
