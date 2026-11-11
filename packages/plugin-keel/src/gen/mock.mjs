@@ -99,10 +99,10 @@ function paint(request) {
   if (Object.hasOwn(FAILURES, simulate)) throw new GenFailure(...FAILURES[simulate])
   const guide = request.inputs.find((input) => input.role !== 'mask')
   const image = guide && decodePng(guide.bytes ?? readFileSync(guide.path))
-  let [width, height] =
+  const [asked, height] =
     sizeOf(request.size) ?? (image ? [image.width, image.height] : [MAKE_SIZE, MAKE_SIZE])
-  if (simulate === 'wrong-size')
-    [width, height] = [Math.max(1, width >> 1), Math.max(1, height >> 1)]
+  // Another shape, not only another size: a size that keeps the shape is a model's nearest supported size.
+  const width = simulate === 'wrong-size' ? Math.max(1, asked >> 1) : asked
   const digest = requestDigest(request)
   const outputs = []
   for (let i = 0; i < request.n; i++) {

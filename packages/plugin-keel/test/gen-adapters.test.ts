@@ -135,7 +135,7 @@ describe('the mock adapter', () => {
     expect(await outcome('timeout')).toBe('timeout')
     expect(await outcome('429')).toBe('rate-limited')
     const small = await mock.run(request({ size: '20x10', params: { simulate: 'wrong-size' } }))
-    expect(decodePng(small.outputs[0]!)).toMatchObject({ width: 10, height: 5 })
+    expect(decodePng(small.outputs[0]!)).toMatchObject({ width: 10, height: 10 })
   })
 })
 

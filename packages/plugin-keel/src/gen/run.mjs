@@ -117,13 +117,16 @@ function guardCall(run, slot, request, digest) {
   }
 }
 
-/** Why the outputs are not what was asked for, or `undefined`. */
+/**
+ * Why the outputs are not what was asked for, or `undefined`. A size is a shape: a model that paints at its nearest
+ * supported size (1254 for 1024) is right, so only the aspect ratio has to match, within 2%.
+ */
 function wrongOutputs(result, request) {
   if (!result.outputs?.length) return 'no outputs'
   const [width, height] = request.size?.split('x').map(Number) ?? []
   for (const bytes of result.outputs) {
     const got = pngSize(bytes)
-    if (width !== undefined && (got.width !== width || got.height !== height))
+    if (width !== undefined && Math.abs((got.width * height) / (got.height * width) - 1) > 0.02)
       return `asked for ${request.size}, got ${got.width}x${got.height}`
   }
   return undefined

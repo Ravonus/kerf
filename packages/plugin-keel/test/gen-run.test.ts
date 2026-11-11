@@ -192,7 +192,7 @@ describe('failures', () => {
       ['small', 'failed'],
       ['fine', 'made'],
     ])
-    expect(result.slots[1]!.error).toBe('asked for 32x32, got 16x16')
+    expect(result.slots[1]!.error).toBe('asked for 32x32, got 16x32')
     expect(ledger(p.cacheDir).map((line) => [line.slot, line.outcome, line.calls])).toEqual([
       ['no', 'refused', 1],
       ['small', 'wrong-size', 1],

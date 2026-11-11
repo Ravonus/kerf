@@ -12,6 +12,8 @@ const criticModel = () => process.env.WEFT_GEN_CRITIC_MODEL
 /** A call that takes longer than this has stalled. The run's wall cap can cut it shorter. */
 const CALL_MS = 10 * 60_000
 const WALL_ESTIMATE_MS = 90_000
+/** Seat tokens one image call used when measured (a 1024 swatch, low effort): about 54k in, 0.2k out. */
+const SEAT_ESTIMATE = 55_000
 const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]'])
 
 const token = () => process.env.WEFT_GEN_BRIDGE_TOKEN
@@ -79,7 +81,7 @@ export function createBridgeAdapter({ base = BRIDGE, cacheDir }) {
     id: 'bridge',
     model: 'bridge',
     capabilities: () => ({ ops: ['make', 'over'], maxInputs: 4, seed: false }),
-    estimate: () => ({ calls: 1, wallMs: WALL_ESTIMATE_MS, seatTokens: 0 }),
+    estimate: () => ({ calls: 1, wallMs: WALL_ESTIMATE_MS, seatTokens: SEAT_ESTIMATE }),
     async run(request, { signal } = {}) {
       const images = request.inputs.map((input) => pathOf(cacheDir, input))
       const prompt = request.negative
