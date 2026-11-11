@@ -9,7 +9,7 @@ import {
 } from '../data'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
-import { echoed, withHeaders } from './request'
+import { bodyLimit, echoed, limited, withHeaders } from './request'
 import type { HandlerOptions } from './types'
 export function makeForm(
   options: HandlerOptions,
@@ -34,7 +34,14 @@ export function makeForm(
       })
       return new Response('Forbidden', { status: 403 })
     }
-    const fields = await request.formData()
+    let fields: FormData
+    try {
+      fields = await (await limited(request, bodyLimit(options.site?.limits, request))).formData()
+    } catch (e) {
+      if (!(e instanceof StartError)) throw e
+      options.onDiagnostic?.({ code: e.code, severity: 'error', message: e.message })
+      return new Response('Payload too large', { status: 413 })
+    }
     const named = fields.get('$fn')
     const id = typeof named === 'string' ? named : ''
     const f = fns.get(id)

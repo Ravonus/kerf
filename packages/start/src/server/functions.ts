@@ -2,7 +2,7 @@ import { sessionChanged } from '../auth'
 import { fns, isRedirect, FnError, StartError } from '../data'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
-import { multipartBody, withHeaders } from './request'
+import { bodyLimit, limited, multipartBody, withHeaders } from './request'
 import type { HandlerOptions } from './types'
 
 /** `/_weft/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
@@ -14,8 +14,11 @@ export async function serverFunction(
 ): Promise<Response> {
   const id = decodeURIComponent(url.pathname.slice('/_weft/fn/'.length))
   const f = fns.get(id)
-  const out = (body: unknown, status = 200) =>
-    withHeaders(Response.json(body, { status, headers: { 'cache-control': 'no-store' } }), scope)
+  const out = (body: unknown, status = 200) => {
+    const res = withHeaders(Response.json(body, { status }), scope)
+    res.headers.set('cache-control', 'no-store') // a function's answer is never stored, whatever it set
+    return res
+  }
   const fail = (
     code: string,
     message: string,
@@ -63,9 +66,10 @@ export async function serverFunction(
         `Q010: mutation \`${id}\` without the CSRF proof (POST + JSON + \`x-weft: 1\`, same origin): call it through its stub`,
         403,
       )
+    const read = await limited(request, bodyLimit(options.site?.limits, request))
     const body = multipart
-      ? await multipartBody(request)
-      : ((await request.json()) as { i?: unknown; f?: [string, unknown][]; c?: 1 })
+      ? await multipartBody(read)
+      : ((await read.json()) as { i?: unknown; f?: [string, unknown][]; c?: 1 })
     fromForm = !!body.c
     // A token opens only the functions listed for it, and what a mutation refreshes would run as that token too.
     const refresh =

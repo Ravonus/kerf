@@ -28,6 +28,10 @@ export interface Site {
   criticalKeep?: string[] | undefined
   /** Raw HTML for every page's head, before the stylesheets: what has to run before the first paint. Not escaped. */
   head?: string | undefined
+  /** Request body limits in bytes (Start): `body` for JSON (1 MB), `upload` for multipart (25 MB). Past them, 413. */
+  limits?: { body?: number | undefined; upload?: number | undefined } | undefined
+  /** Default security headers on Start's responses: override one by name, `false` drops one, `false` drops all. */
+  security?: false | Record<string, string | false> | undefined
 }
 
 /** One colour scheme of the generated card. */

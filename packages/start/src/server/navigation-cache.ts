@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { etagMatches } from './request'
 
 /** Prevent retention of a route response. */
 export function noRetention(response: Response): Response {
@@ -69,12 +70,6 @@ export function validateNavigation(
     .update(JSON.stringify([build ?? '', body]))
     .digest('hex')}"`
   headers.set('etag', tag)
-  const candidates = (request.headers.get('if-none-match') ?? '').split(',')
-  if (
-    candidates.some(
-      (candidate) => candidate.trim().replace(/^W\//, '') === tag || candidate.trim() === '*',
-    )
-  )
-    return new Response(null, { status: 304, headers })
+  if (etagMatches(request, tag)) return new Response(null, { status: 304, headers })
   return response
 }

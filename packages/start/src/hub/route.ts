@@ -1,4 +1,5 @@
 import { StartError } from '../data'
+import { limited } from '../server/request'
 import { sessionOf } from '../mux-session'
 import type { Scope } from '../exec'
 import type { Body, Conn, Hub, Sink } from '../hub'
@@ -67,13 +68,13 @@ export async function handleRoute(
       403,
     )
   const h = hub()
-  const raw = await request.text()
-  if (raw.length > h.limits.body)
-    return refuse(
-      'R008',
-      `R008: a realtime request of ${raw.length} bytes; the limit is ${h.limits.body}`,
-      413,
-    )
+  let raw: string
+  try {
+    raw = await (await limited(request, h.limits.body)).text()
+  } catch (e) {
+    if (!(e instanceof StartError)) throw e
+    return refuse('R008', `R008: a realtime request over ${h.limits.body} bytes`, 413)
+  }
   let body: Body
   try {
     body = JSON.parse(raw)

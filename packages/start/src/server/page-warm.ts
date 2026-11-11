@@ -103,7 +103,8 @@ export async function warmPage(
     status: p.status,
     headers: {
       'content-type': 'text/html; charset=utf-8',
-      'cache-control': 'no-cache',
+      // Never stored by a shared cache: the page can carry the signed-in user. A route's own header replaces it.
+      'cache-control': 'private, no-cache',
       ...(known.fold && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }),
     },
   }

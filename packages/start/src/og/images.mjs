@@ -27,9 +27,58 @@ export function imageCache(maxBytes = 32 << 20) {
   }
 }
 
+/** Whether an IP address is one the open internet can't reach: loopback, private, link-local (cloud metadata), CGNAT… */
+export function privateAddress(ip) {
+  const v4 = /^(?:::ffff:)?(\d+)\.(\d+)\.(\d+)\.(\d+)$/i.exec(ip)
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])]
+    return (
+      a === 0 ||
+      a === 10 ||
+      a === 127 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      (a === 198 && (b === 18 || b === 19)) ||
+      a >= 224
+    )
+  }
+  const v6 = ip.toLowerCase().replace(/^\[|\]$/g, '')
+  return (
+    v6 === '::' ||
+    v6 === '::1' ||
+    ['fc', 'fd'].some((p) => v6.startsWith(p)) || // unique local
+    ['fe8', 'fe9', 'fea', 'feb'].some((p) => v6.startsWith(p)) || // link-local
+    v6.startsWith('ff') || // multicast
+    v6.startsWith('::ffff:') // mapped v4 in hex form: refused rather than decoded
+  )
+}
+
 /**
- * Fetches every remote `src` in the tree. `allow(url)` decides which hosts a card may load from (the on-demand route
- * renders data from `load`, so this is the SSRF guard); the default allows any https URL.
+ * The default `allow`: https only, to a host whose every address is public, so a card can't be pointed at the
+ * server's own network (`localhost`, `10.…`, `169.254.169.254`). Where there's no DNS module, literal addresses only.
+ */
+export async function publicHttps(url) {
+  if (url.protocol !== 'https:') return false
+  const host = url.hostname.replace(/^\[|\]$/g, '')
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.internal'))
+    return false
+  if (/^[\d.]+$/.test(host) || host.includes(':')) return !privateAddress(host)
+  let dns
+  try {
+    dns = await import('node:dns/promises')
+  } catch {
+    return true
+  }
+  const addresses = await dns.lookup(host, { all: true, verbatim: true })
+  return addresses.length > 0 && addresses.every((a) => !privateAddress(a.address))
+}
+
+/**
+ * Fetches every remote `src` in the tree. `allow(url)` (may be async) decides which hosts a card may load from (the
+ * on-demand route renders data from `load`, so this is the SSRF guard); the default, `publicHttps`, allows https to
+ * public addresses only.
  * Returns the images Takumi needs, and the srcs that failed.
  */
 export async function loadImages(
@@ -38,7 +87,7 @@ export async function loadImages(
     cache,
     timeoutMs = 1500,
     maxBytes = 4 << 20,
-    allow = (u) => u.protocol === 'https:',
+    allow = publicHttps,
     fetch = globalThis.fetch,
   } = {},
 ) {
@@ -51,7 +100,7 @@ export async function loadImages(
       if (hit) return void images.push({ src, data: hit })
       try {
         const url = new URL(src)
-        if (!allow(url)) throw new Error('not allowed')
+        if (!(await allow(url))) throw new Error('not allowed')
         const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs), redirect: 'error' })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         if (!res.headers.get('content-type')?.startsWith('image/')) throw new Error('not an image')

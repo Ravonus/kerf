@@ -1,4 +1,4 @@
-import { CLIENT_IP, decodeForm } from '../data'
+import { CLIENT_IP, decodeForm, StartError } from '../data'
 import type { Scope } from '../exec'
 
 /** The request with the socket's address in CLIENT_IP, replacing any the client sent. Nitro's server sets `.ip`. */
@@ -59,9 +59,25 @@ export function echoed(input: Record<string, unknown>): Record<string, unknown> 
   )
 }
 
-/** The cookies and headers server functions set (`ctx.response.headers`), on the response. */
+/**
+ * The cookies and headers server functions set (`ctx.response.headers`), on the response. Cookies add up and `Vary`
+ * merges; any other header the app set replaces Weft's default (a route's `cache-control` over `private, no-cache`).
+ */
 export function withHeaders(res: Response, scope: Scope): Response {
-  for (const [k, v] of scope.headers) res.headers.append(k, v)
+  for (const cookie of scope.headers.getSetCookie()) res.headers.append('set-cookie', cookie)
+  for (const [k, v] of scope.headers) {
+    if (k === 'set-cookie') continue
+    if (k !== 'vary') res.headers.set(k, v)
+    else {
+      const names = (res.headers.get('vary') ?? '')
+        .split(',')
+        .map((n) => n.trim())
+        .filter(Boolean)
+      for (const name of v.split(',').map((n) => n.trim()))
+        if (name && !names.some((n) => n.toLowerCase() === name.toLowerCase())) names.push(name)
+      res.headers.set('vary', names.join(', '))
+    }
+  }
   return res
 }
 
@@ -95,4 +111,66 @@ export function redirectBody(
   if (location === undefined) res.headers.delete('location')
   else res.headers.set('location', location)
   return res
+}
+
+/** Whether `If-None-Match` names `etag` (a list, weak `W/` forms and `*` included). No ETag never matches. */
+export function etagMatches(request: Request, etag: string | null): boolean {
+  if (!etag) return false
+  const header = request.headers.get('if-none-match')
+  if (!header) return false
+  return header.split(',').some((candidate) => {
+    const tag = candidate.trim()
+    return tag === '*' || tag.replace(/^W\//, '') === etag.replace(/^W\//, '')
+  })
+}
+
+/** The default request body limits: JSON 1 MB, multipart (a form with files) 25 MB. `site.limits` changes them. */
+export const LIMITS = { body: 1 << 20, upload: 25 << 20 }
+
+/** The limit for this request's body under `site.limits`: multipart bodies get `upload`, others `body`. */
+export function bodyLimit(
+  limits: { body?: number | undefined; upload?: number | undefined } | undefined,
+  request: Request,
+) {
+  const multipart = (request.headers.get('content-type') ?? '').startsWith('multipart/form-data')
+  return multipart ? (limits?.upload ?? LIMITS.upload) : (limits?.body ?? LIMITS.body)
+}
+
+const tooLarge = (max: number) =>
+  new StartError(
+    'Q018',
+    `the request body is over ${max} bytes`,
+    'send less, or raise `site.limits`',
+    {
+      status: 413,
+    },
+  )
+
+/**
+ * The request with its body read up to `max` bytes: a declared `Content-Length` over it is refused before any is
+ * read, and a stream that runs past it is cancelled there (Q018, 413), so a huge body never sits in memory.
+ */
+export async function limited(request: Request, max: number): Promise<Request> {
+  if (Number(request.headers.get('content-length')) > max) throw tooLarge(max)
+  if (!request.body) return request
+  const reader = request.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > max) {
+      void reader.cancel()
+      throw tooLarge(max)
+    }
+    chunks.push(value)
+  }
+  const body = new Uint8Array(total)
+  let at = 0
+  for (const chunk of chunks) {
+    body.set(chunk, at)
+    at += chunk.byteLength
+  }
+  return new Request(request.url, { method: request.method, headers: request.headers, body })
 }

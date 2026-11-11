@@ -43,7 +43,11 @@ export function makePrerender(
    */
   let listing: Promise<string[][]> | undefined
   async function prerenderList(request: Request, url: URL): Promise<Response> {
-    const pages = await (listing ??= prerenderPaths(request).then((p) => pathPages(p)))
+    // Only the build's prerender asks for this list (Nitro marks its requests); to anyone else the route isn't there.
+    if (!request.headers.has('x-nitro-prerender')) return new Response('Not found', { status: 404 })
+    // The list is remembered, so it's worked out as no one: no cookie or token of whoever asked first shapes it.
+    const anonymous = new Request(url.origin + '/', { headers: { 'x-nitro-prerender': '/' } })
+    const pages = await (listing ??= prerenderPaths(anonymous).then((p) => pathPages(p)))
     const n = Number(url.searchParams.get('page') ?? 0)
     const paths = [
       ...(pages[n] ?? []),

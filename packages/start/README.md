@@ -1135,6 +1135,8 @@ export default defineConfig({
 | -------------------- | ---------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------- |
 | `site`               | object                                         |                | Metadata defaults: `name`, `url`, `title` (with `%s`), `description`, `locale`, `image`, `twitter`, `card` |
 | `site.headers`       | `{ [pattern]: headers }`                       |                | Response headers by route pattern, static files included                                     |
+| `site.security`      | `false` \| `{ [header]: string \| false }`     | see below      | Headers every response gets unless it sets its own; name one to change it, `false` drops it |
+| `site.limits`        | `{ body, upload }` (bytes)                     | 1 MB, 25 MB    | Largest JSON and multipart (file) request body; past it, 413 (Q018) before the rest is read |
 | `site.inlineCss`     | `boolean`                                      | `true`         | First-paint CSS in a `<style>`; `false` for plain links (strict CSP)                         |
 | `site.criticalCss`   | `boolean`                                      | `true`         | One hashed sheet plus first-paint CSS; `false` splits by chunk and inlines up to 48 KB       |
 | `site.criticalKeep`  | `string[]`                                     |                | Classes a head script sets, kept in the first paint                                          |
@@ -1144,6 +1146,15 @@ export default defineConfig({
 | `deploy`             | `{ target, <host>, ci, branch, cdn }`          |                | The host `weft build` and `weft deploy` target                                               |
 | `live.targets`       | `{ [name]: { url, db, production } }`          |                | Where a live query's `verify` runs its round trip                                            |
 | `rust`               | `{ unions, services }`                         |                | Server functions with a Rust body (`weft docs rust`)                                         |
+
+Every response Start sends carries `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`,
+`X-Frame-Options: SAMEORIGIN` and `Cross-Origin-Opener-Policy: same-origin-allow-popups`, plus
+`Strict-Transport-Security: max-age=31536000` over https outside dev. None of them can break a page. A
+Content-Security-Policy is left to the app (it lists the app's own sources): set it in `site.security` or `site.headers`.
+
+Pages are sent `private, no-cache`, so no shared cache or CDN keeps one user's page for another. A route that sets its
+own `cache-control` (`ctx.response.headers.set(...)` in `load`) replaces that default; server function answers stay
+`no-store`.
 
 The full key list is [`weft docs config`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/config.md).
 
@@ -1263,6 +1274,7 @@ from the environment only: one written into the config or a host file is E008. A
 | Q014                                 | A table or column is missing                                             | `weft db generate`, then reload                                         |
 | Q015                                 | `src/db/schema.ts` changed since the last generate                       | `weft db generate`                                                      |
 | Q016 (503)                           | The database is down, or a migration failed                              | Start it, check `DATABASE_URL`, or fix the migration; no restart needed |
+| Q018 (413)                           | A request body over `site.limits`                                        | Send less, or raise `site.limits.body` / `.upload`                      |
 | A001                                 | The auth secret is missing or under 32 characters in production          | Set `BETTER_AUTH_SECRET`                                                |
 | A002 (401)                           | `auth: 'user'` called with no session                                    | Sign in first, or guard the route in a layout's `load`                  |
 | A004                                 | A mutation changed the session cookie without a redirect                 | `redirect()` after sign-in or sign-out                                  |

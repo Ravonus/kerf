@@ -1,3 +1,18 @@
+/** `site.limits` and `site.security`: what Start's server does with requests and responses. */
+function serverSite(z) {
+  return {
+    limits: z
+      .strictObject({
+        body: z.int().positive().optional(),
+        upload: z.int().positive().optional(),
+      })
+      .optional(),
+    security: z
+      .union([z.literal(false), z.record(z.string(), z.union([z.string(), z.literal(false)]))])
+      .optional(),
+  }
+}
+
 function baseSchemas(z) {
   const zodSchema = z.custom(
     (v) => v != null && typeof v === 'object' && ('_zod' in v || '~standard' in v),
@@ -61,6 +76,7 @@ function baseSchemas(z) {
     criticalCss: z.boolean().optional(),
     criticalKeep: z.array(z.string()).optional(),
     csp: z.literal('strict').optional(),
+    ...serverSite(z),
     image: z.union([z.literal('auto'), z.literal(false), z.string().min(1), image]).optional(),
     card: card.optional(),
     head: z.string().optional(),

@@ -1,5 +1,6 @@
 import type { HandlerOptions } from './types'
 import type { MediaServer } from '../exec'
+import { etagMatches } from './request'
 export function makeMedia(
   options: HandlerOptions,
   mediaServer: () => Promise<MediaServer> | undefined,
@@ -41,7 +42,7 @@ export function makeMedia(
       headers.set('cache-control', 'no-store')
       headers.delete('etag')
     }
-    if (request.headers.get('if-none-match') === headers.get('etag'))
+    if (etagMatches(request, headers.get('etag')))
       return new Response(null, { status: 304, headers })
     const range =
       /^(video|audio)\//.test(out.type) &&

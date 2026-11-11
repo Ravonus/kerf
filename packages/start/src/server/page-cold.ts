@@ -75,7 +75,8 @@ export async function coldPage(
     status: p.status,
     headers: {
       'content-type': 'text/html; charset=utf-8',
-      'cache-control': 'no-cache',
+      // Never stored by a shared cache: the page can carry the signed-in user. A route's own header replaces it.
+      'cache-control': 'private, no-cache',
       ...(shape.parts.fold.length && { vary: 'Save-Data, Sec-CH-Prefers-Reduced-Data' }),
     },
   }
