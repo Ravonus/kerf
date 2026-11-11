@@ -2,11 +2,10 @@
 // stage reads each section's scroll position, keeps the active scene and its neighbours built, hands over from one
 // scene to the next, and owns the pixel ratio and frame rate. Scenes come from a renderer's bridge.
 import { onCleanup, onMount, state, untrack, type State } from '@weft-js/core'
-import { defineSurface, Surface } from '@weft-js/core/surface'
 import { progress } from '@weft-js/scroll/timeline'
 import { isMobileDevice } from '@weft-js/warp-core'
-import { attach, director, handleOf, type Director, type Entry } from './Stage-director'
 import { PINNED, posterLayer, posterOf } from './Stage-poster'
+import { director, handleOf, type Director, type Entry } from './Stage-state'
 import type { SceneProps, StageProps } from './Stage-types'
 
 export type * from './Stage-types'
@@ -16,6 +15,8 @@ export { bakedPosters } from './Stage-poster'
 export const STAGE = Symbol.for('weft.stage')
 
 const STAGES = new WeakMap<Element, Director>()
+/** The surface and its frames (Stage-live), once a stage on this page is live. */
+let Live: (typeof import('./Stage-live'))['LiveSurface'] | undefined
 
 /** `auto`'s answer: posters on a phone or tablet, or where the governor rates the device `low`. */
 async function tierOf(d: Director) {
@@ -30,9 +31,10 @@ async function decide(d: Director, live: State<boolean>) {
   const tier = await tierOf(d)
   d.tier = tier
   d.root?.setAttribute('data-stage-tier', tier)
-  live.value = tier === 'live'
   if (tier === 'poster') return d.root?.setAttribute('data-stage-ready', 'poster')
   void (d.started ??= d.props.governor?.start())?.then(() => d.s?.invalidate())
+  Live ??= (await import('./Stage-live')).LiveSurface
+  live.value = true
 }
 
 function follow(d: Director) {
@@ -48,16 +50,6 @@ function follow(d: Director) {
   })
 }
 
-/** The stage's one surface. Its kind is read once: a stage keeps its surface for life. */
-function surfaceOf(d: Director) {
-  return defineSurface({
-    name: 'stage',
-    kind: d.props.kind ?? 'keel-lit',
-    maxDpr: d.dpr,
-    setup: (s) => attach(d, s),
-  })
-}
-
 function root(d: Director, el: HTMLElement) {
   STAGES.set((d.root = el), d)
   Object.defineProperty(el, STAGE, { value: handleOf(d), configurable: true })
@@ -69,9 +61,8 @@ function root(d: Director, el: HTMLElement) {
  */
 export function Stage(props: StageProps) {
   const d = untrack(() => director(props))
-  const def = surfaceOf(d)
-  // Only a stage told `live` renders its surface before it mounts: `auto` waits for the device.
-  const live = state(d.tier === 'live')
+  // The surface comes once the page is up: it shows nothing before a scene has drawn, and on posters it never loads.
+  const live = state(false)
   onMount(() => {
     follow(d)
     void decide(d, live)
@@ -79,13 +70,7 @@ export function Stage(props: StageProps) {
   return (
     <div ref={(el: HTMLElement) => root(d, el)} data-stage class={props.class}>
       <div data-stage-viewport style={`${PINNED};overflow:hidden;z-index:0`}>
-        {live.value ? (
-          <Surface
-            use={def}
-            label={props.label}
-            style="position:absolute;inset:0;aspect-ratio:auto;transition:opacity .3s"
-          />
-        ) : null}
+        {live.value && Live ? <Live d={d} label={props.label} /> : null}
       </div>
       <div style="position:relative">{props.children}</div>
     </div>
