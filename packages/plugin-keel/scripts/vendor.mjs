@@ -26,6 +26,7 @@ export const PINS = {
 
 /** The keel-modules this package ships, each its own lazily loaded file. */
 export const MODULES = [
+  'butterflies',
   'camera-rail',
   'device-profile',
   'lit-finish',

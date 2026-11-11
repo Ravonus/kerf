@@ -1,0 +1,73 @@
+{
+  "protocol": "keel-module-inputs@1",
+  "fields": [
+    {
+      "key": "count",
+      "label": "Butterflies",
+      "required": false,
+      "type": "number",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "control": "slider",
+      "default": 4
+    },
+    {
+      "key": "scale",
+      "label": "Wingspan",
+      "required": false,
+      "type": "number",
+      "min": 0,
+      "max": 2,
+      "step": 0.005,
+      "unit": "world units",
+      "default": 0.06
+    },
+    {
+      "key": "flapHz",
+      "label": "Wingbeats",
+      "required": false,
+      "type": "number",
+      "min": 0,
+      "max": 20,
+      "step": 0.5,
+      "unit": "Hz",
+      "default": 6
+    },
+    {
+      "key": "speed",
+      "label": "Wander speed",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 4,
+      "step": 0.05,
+      "unit": "rad/s",
+      "default": 0.3
+    },
+    {
+      "key": "glow",
+      "label": "Edge glow",
+      "required": false,
+      "help": "Over about 1 the wing edges reach a bloom threshold of 1.",
+      "type": "number",
+      "min": 0,
+      "max": 4,
+      "step": 0.05,
+      "control": "slider",
+      "default": 1.5
+    },
+    {
+      "key": "seed",
+      "label": "Seed",
+      "required": false,
+      "placement": "advanced",
+      "type": "number",
+      "min": 0,
+      "max": 2147483647,
+      "step": 1,
+      "default": 1
+    }
+  ]
+}

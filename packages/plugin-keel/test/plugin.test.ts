@@ -105,3 +105,13 @@ describe('the motes module', () => {
     expect(field).not.toEqual(motes.placeMotes({ seed: 5 }))
   })
 })
+
+describe('the butterflies module', () => {
+  it('plans the same flock from the same seed and flies it on the clock it is given', async () => {
+    const flock = await import('../vendor/modules/butterflies.mjs')
+    const flights = flock.planFlights({ seed: 3 })
+    expect(flights).toEqual(flock.planFlights({ seed: 3 }))
+    expect(flock.flyAt(flights[0]!, 2)).toEqual(flock.flyAt(flights[0]!, 2))
+    expect(flock.flyAt(flights[0]!, 2)).not.toEqual(flock.flyAt(flights[0]!, 3))
+  })
+})

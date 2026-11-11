@@ -6,6 +6,7 @@ import type { RailOptions } from '../vendor/modules/camera-rail.mjs'
 import type { Levers } from '../vendor/modules/quality.mjs'
 import type { Sampled, Track } from '../vendor/modules/tracks.mjs'
 import type * as Band from '../vendor/modules/band.mjs'
+import type * as ButterfliesModule from '../vendor/modules/butterflies.mjs'
 import type * as CameraRail from '../vendor/modules/camera-rail.mjs'
 import type * as DeviceProfile from '../vendor/modules/device-profile.mjs'
 import type * as LitFinish from '../vendor/modules/lit-finish.mjs'
@@ -23,6 +24,7 @@ import type * as WorldLight from '../vendor/modules/world-light.mjs'
 /** The modules a scene can ask for, each loaded once, when the first scene that names it is built. */
 export interface KeelModules {
   band: typeof Band
+  butterflies: typeof ButterfliesModule
   'camera-rail': typeof CameraRail
   'device-profile': typeof DeviceProfile
   'lit-finish': typeof LitFinish
@@ -159,6 +161,7 @@ export interface SceneDef {
 
 const LOAD: { [K in ModuleId]: () => Promise<KeelModules[K]> } = {
   band: () => import('../vendor/modules/band.mjs'),
+  butterflies: () => import('../vendor/modules/butterflies.mjs'),
   'camera-rail': () => import('../vendor/modules/camera-rail.mjs'),
   'device-profile': () => import('../vendor/modules/device-profile.mjs'),
   'lit-finish': () => import('../vendor/modules/lit-finish.mjs'),

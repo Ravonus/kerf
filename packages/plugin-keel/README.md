@@ -97,6 +97,7 @@ that never reaches that line never downloads it.
 | `scene-blend` | A hand-over between two lit scenes: line work and a seeded noise or radial reveal, or a plain fade. |
 | `section-post` | A section's pass after the finish: a paper panel with a straight or torn edge, darkening, blur and grain. |
 | `motes` | Dust, light motes and sparkles on one instanced quad, drifting and blinking on the page's clock. |
+| `butterflies` | A small flock of glowing butterflies with Shape wings, wandering on a seed and the page's clock. |
 
 `vendor/modules/<id>.inputs.json` lists the settings a module offers a host, as `keel-module-inputs@1`.
 
