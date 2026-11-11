@@ -56,7 +56,12 @@ export function makeLedger<P extends Product>(
     // An order (`pay.order`) grants nothing: the app hears its state, before the event is marked, so a throw redelivers.
     if (next.product === ORDER && next.plan) {
       if (newer && had?.state !== next.state)
-        await onOrder?.({ ref: next.plan, state: next.state, purchase: next })
+        await onOrder?.({
+          ref: next.plan,
+          state: next.state,
+          purchase: next,
+          ...(e.payer && { payer: e.payer }),
+        })
       return ['orders', orderTag(next.plan)]
     }
     if (next.product && !byId.has(next.product))

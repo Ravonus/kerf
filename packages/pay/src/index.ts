@@ -211,6 +211,22 @@ export interface CheckoutRequest {
   idempotencyKey: string
 }
 
+/** Who paid, as the rail saw it: for matching a buyer to the app's own customers. Every field is optional. */
+export interface Payer {
+  email?: string
+  name?: string
+  phone?: string
+  /** The card used. `fingerprint` is the rail's stable id for the card number (the same card gives the same one, never
+   *  the number itself): what lets an app know a returning card without asking for anything. */
+  card?: {
+    fingerprint?: string
+    brand?: string
+    last4?: string
+    expMonth?: number
+    expYear?: number
+  }
+}
+
 /** A rail's event, normalised. `checkout` and these are all that a rail and the ledger say to each other. */
 export interface RailEvent {
   /** The rail's own id for the event: what makes a redelivery a no-op. */
@@ -227,6 +243,8 @@ export interface RailEvent {
   customer?: string
   /** When a paid period ends, in ms. */
   expires?: number
+  /** Who paid, when the event says. Never stored in the ledger: it goes to `onOrder` and no further. */
+  payer?: Payer
 }
 
 /**

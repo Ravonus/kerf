@@ -62,6 +62,13 @@ opens one payment for lines your server priced from its own tables, for a guest 
 `definePay({ onOrder({ ref, state, purchase }) })` hears each verified state, before the event is marked, so a throw
 redelivers. Each order event pokes `orders` and `orderTag(ref)`. `urls.order` and `urls.orderCancel` may hold `{ref}`.
 
+**Who paid.** A paid order's `onOrder` also gets `payer` when the rail says: `{ email?, name?, phone?, card?: { fingerprint,
+brand, last4, expMonth, expYear } }`. The card's `fingerprint` is the rail's stable id for that card number, never the
+number: the same card paying again gives the same one, so an app can know a returning customer (loyalty, a member's
+card on file) without asking them for anything. Stripe reads it from the payment's charge (one API read per paid
+checkout; if that read fails the order is still paid, without the card), Square from the payment. The ledger keeps none
+of it. `fakePay(pay).complete(user, payer)` delivers one in tests.
+
 **Enforce on the server.** What the client shows is decoration (PAY013):
 
 <!-- example: skip fragments of a server module -->

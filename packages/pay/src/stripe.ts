@@ -9,6 +9,7 @@ import {
   type PurchaseState,
   type RailEvent,
 } from './index'
+import { stripePayer } from './payer'
 
 /** Options of `stripeRail()`. The keys default to the environment, which is where they belong. */
 export interface StripeOptions {
@@ -137,6 +138,7 @@ interface StripeObject {
   refunded?: boolean
   current_period_end?: number | null
   items?: { data?: { current_period_end?: number | null }[] } | null
+  customer_details?: { email?: string | null; name?: string | null; phone?: string | null } | null
 }
 interface StripeEvent {
   id?: string
@@ -255,13 +257,24 @@ function stripeCall(
     return data
   }
 
-  return call
+  /** A read: no body, no idempotency. */
+  async function get(path: string) {
+    const res = await fetcher(`${api}${path}`, {
+      method: 'GET',
+      headers: { authorization: `Bearer ${secret()}`, 'stripe-version': apiVersion },
+    })
+    if (!res.ok) throw new PayError('PAY030', `Stripe refused ${path}: ${res.status}`, 502)
+    return (await res.json()) as unknown
+  }
+
+  return Object.assign(call, { get })
 }
 
 async function verifyStripe(
   options: StripeOptions,
   tolerance: number,
   { body, headers }: Parameters<PayRail['verify']>[0],
+  get: (path: string) => Promise<unknown>,
 ) {
   const signing = options.webhookSecret ?? env('STRIPE_WEBHOOK_SECRET')
   if (!signing)
@@ -278,8 +291,19 @@ async function verifyStripe(
     throw new PayError('PAY011', 'the signature does not match this body')
   if (Math.abs(Date.now() / 1000 - t) > tolerance)
     throw new PayError('PAY011', 'the signature is too old: a replay, or a clock adrift')
-  const event = normalise(JSON.parse(body) as StripeEvent)
-  return event ? [event] : []
+  const raw = JSON.parse(body) as StripeEvent
+  const event = normalise(raw)
+  if (!event) return []
+  // a paid checkout says who paid: the session has their details, the payment's charge has the card
+  if (
+    event.state === 'active' &&
+    raw.type.startsWith('checkout.session.') &&
+    event.purchase.startsWith('pi_')
+  ) {
+    const payer = await stripePayer(raw.data!.object!.customer_details, event.purchase, get)
+    if (payer) event.payer = payer
+  }
+  return [event]
 }
 
 /** Test mode or not, for `rail.sandbox`; undefined while it can't tell, or the keys disagree (every call says PAY032). */
@@ -359,7 +383,7 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
       const session = await call('/v1/billing_portal/sessions', { customer, return_url: returnUrl })
       return { url: session!.url! }
     },
-    verify: (delivery) => verifyStripe(options, tolerance, delivery),
+    verify: (delivery) => verifyStripe(options, tolerance, delivery, call.get),
     async refund({ purchase }) {
       if (!purchase.startsWith('pi_'))
         throw new PayError(

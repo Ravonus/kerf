@@ -5,6 +5,7 @@ import {
   PayError,
   type CheckoutRequest,
   type Interval,
+  type Payer,
   type PayRail,
   type Product,
   type PurchaseState,
@@ -51,8 +52,9 @@ export interface FakePay {
   readonly sessions: CheckoutRequest[]
   /** Every delivery and how the app answered. */
   readonly deliveries: { event: RailEvent; status: number }[]
-  /** The buyer finishes the hosted page: the newest open session, or the one for `user`. */
-  complete(user?: string): Promise<string>
+  /** The buyer finishes the hosted page: the newest open session, or the one for `user`. `payer` is who the rail says
+   *  paid (a card's fingerprint, an email), as `onOrder` hears it. */
+  complete(user?: string, payer?: Payer): Promise<string>
   /** The buyer closes the page. Nothing happens, as nothing does on a real rail. */
   abandon(user?: string): void
   /** A whole purchase, with no checkout screen in the way. */
@@ -150,6 +152,12 @@ function take(sessions: CheckoutRequest[], user?: string) {
   return sessions.splice(i, 1)[0]!
 }
 
+/** A delivery that says who paid, when the test gave one. */
+const paidBy =
+  (deliver: FakePay['deliver'], payer?: Payer): FakePay['deliver'] =>
+  (e, o) =>
+    deliver({ ...e, ...(payer && { payer }) }, o)
+
 /** `fakePay(pay)` with the app's own `definePay`, or `fakePay({ catalog })`. It backs `ctx.entitlements` for this test. */
 export function fakePay(
   app: Pay | (Pick<PayOptions<Product>, 'catalog'> & Partial<PayOptions<Product>>),
@@ -208,7 +216,8 @@ export function fakePay(
     deliveries,
     deliver,
     simulate,
-    complete: (user) => open(take(sessions, user), purchases, next, deliver, event),
+    complete: (user, payer) =>
+      open(take(sessions, user), purchases, next, paidBy(deliver, payer), event),
     abandon: (user) => void take(sessions, user),
     async buy(user, product, plan) {
       await pay.checkout(

@@ -8,7 +8,14 @@ import { makeLedger, ORDER } from './server/ledger'
 import { checkoutInput } from './server/catalog'
 import { checkoutFor, orderFor, portalFor, webhookFor } from './server/operations'
 import type { ServerExtension } from '@weft-js/start/extension'
-import { PayError, type PayRail, type Product, type PurchaseState, type RailEvent } from './index'
+import {
+  PayError,
+  type Payer,
+  type PayRail,
+  type Product,
+  type PurchaseState,
+  type RailEvent,
+} from './index'
 
 declare module '@weft-js/start' {
   interface Context {
@@ -144,6 +151,8 @@ export type OrderHook = (order: {
   ref: string
   state: PurchaseState
   purchase: Purchase
+  /** Who paid, when the rail says: email, name, phone and the card's brand, last four and fingerprint. */
+  payer?: Payer
 }) => Promise<void> | void
 
 /** What `definePay` returns: the ledger's calls, and a `server.extension` that carries them to the server. */
@@ -271,4 +280,4 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
 /** The `server.extension` provider: `src/pay.server.ts` already built it, so this hands it over. */
 export const extension = (app: Pay): ServerExtension => app
 
-export type { PayRail, RailEvent } from './index'
+export type { Payer, PayRail, RailEvent } from './index'
