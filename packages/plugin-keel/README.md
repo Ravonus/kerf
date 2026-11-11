@@ -169,6 +169,30 @@ tier, the tier the fps cap (30 on low) and the widest canvas (3840, 1920 or 1280
 its page levers (`quality.levers`) and a render scale it lowers while frames run slow:
 `<Stage governor={keelGovernor()}>`.
 
+`keelBlend()` from `@weft-js/plugin-keel/blend` is the stage's blend: `<Stage blend={keelBlend()}>`. Every scene
+is drawn through `lit-finish`. A hand-over goes through `scene-blend`: the incoming scene arrives as line work
+and fills in through seeded noise, or out from its `<Scene centre>` with `mode="radial"`, and the less visible
+scene is drawn by a lighter finish at the levers' `blendScale`. The active section's pass goes through
+`section-post`: a paper panel with a straight or torn edge, and darkening and blur, from `<Scene post>` or from
+tracks on a `post` target:
+
+```ts
+tracks: [
+  {
+    target: 'post',
+    property: 'progress',
+    keys: [
+      [1, 0],
+      [2, 1],
+      [3, 2],
+    ],
+  },
+  { target: 'post', property: 'tear', keys: [[0, 1]] },
+]
+```
+
+`keelBlend({ finish, blend, post })` passes settings to each module: `blend: { seed: 7, lineColour: '#ffffff' }`.
+
 ## Music
 
 ```ts
@@ -186,7 +210,8 @@ Styles: `ambient`, `lofi`, `synthwave`, `chiptune`, `house`, `cinematic`, `folk`
 
 `demo/` is a pinned grove scrubbed by the scroll: the camera flies in while spring turns to autumn and
 morning to evening, in either look, with the band joining in as you go deeper. `demo/stage.html` is three sections over one
-stage, each with a scene of its own, handing over as each section arrives.
+stage, each with a scene of its own, blending into the next as its section arrives, with a straight-edged paper
+panel over the second scene and a torn one over the third. `stage.html?measure` times every frame drawn.
 
 ```bash
 node test/serve.mjs 4179
