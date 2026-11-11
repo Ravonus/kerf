@@ -6,6 +6,8 @@ import type { Context, Redirect } from '../data'
 import type { MediaServer, Store } from '../exec'
 import type { RealtimeOptions } from '../hub'
 import type { Pieces } from '../first-paint'
+import type { Diagnostic } from './log'
+import type { CronJobs } from '../cron'
 
 /** A page route from the file tree. */
 export interface RouteEntry {
@@ -116,6 +118,8 @@ export interface HandlerOptions {
   migrations?: () => { tag: string; sql: string }[]
   /** The `media.server` provider (`virtual:weft/media`), loaded on first use. */
   media?: () => Promise<MediaServer>
+  /** `src/cron.server.ts`'s default export: jobs on a schedule, run by a server preset (not in a build). */
+  cron?: CronJobs
   /** `src/realtime.server.ts`'s default export: the bus, origins and limits. */
   realtime?: RealtimeOptions
   /** `false`: never build URLs on the request's origin (`weft routes --meta`, whose requests aren't real). */
@@ -123,7 +127,7 @@ export interface HandlerOptions {
   /** Queries marked `live: { required: true }` (`scanRequired`, at build). */
   liveRequired?: string[]
   /** Dev and tests: diagnostics found while serving (H005–H008, Q002–Q010). */
-  onDiagnostic?: (d: { code: string; severity: string; message: string; route?: string }) => void
+  onDiagnostic?: (d: Diagnostic) => void
 }
 
 /** One matched route level, with its module and the data before serialising. */

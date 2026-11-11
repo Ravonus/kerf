@@ -42,6 +42,7 @@ export function createDb<S extends Record<string, unknown>>({
   const handle: DbHandle = {
     dialect: 'mysql',
     exempt: new Set(),
+    ping: () => pool.query('select 1'),
     async migrate(list: Migration[]) {
       const c = await pool.getConnection()
       try {

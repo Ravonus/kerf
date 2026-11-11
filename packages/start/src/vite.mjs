@@ -14,6 +14,7 @@
 //   virtual:weft/media          server: the `media.server` provider when one is bound (research 29 §6)
 //   virtual:weft/realtime       server: `src/realtime.server.ts`'s default export (the bus, origins and limits)
 //   virtual:weft/cache          server: `src/cache.server.ts`'s default export (the shared cache's store)
+//   virtual:weft/cron           server: `src/cron.server.ts`'s default export (jobs on a schedule)
 //   virtual:weft/extensions     server: each `server.extension` provider with its `src/<key>.server.ts` (extension.ts)
 //
 // Server modules (`src/server/**`, `*.server.ts`, research 27 §2): each `query`/`mutation`/`stream`/`channel` export

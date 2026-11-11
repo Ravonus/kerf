@@ -4,6 +4,7 @@
     ".": "./src/index.ts",
     "./data": "./src/data.ts",
     "./cache": "./src/cache.ts",
+    "./cron": "./src/cron.ts",
     "./derive": "./src/derive.mjs",
     "./media": "./src/media.ts",
     "./hub": "./src/hub.ts",

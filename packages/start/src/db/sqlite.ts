@@ -116,6 +116,7 @@ export function createDb<S extends Record<string, unknown>>({
   const handle: DbHandle = {
     dialect: 'sqlite',
     exempt: new Set(),
+    ping: async () => (await connect()).query('select 1', [], 'all'),
     migrate: (list) => migrateSqlite(connect, list),
     changes: (tables, o) =>
       import('./changes-sqlite').then((m) => m.sqliteChanges({ ...o, path, open, tables })),

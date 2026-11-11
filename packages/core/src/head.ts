@@ -34,6 +34,8 @@ export interface Site {
   security?: false | Record<string, string | false> | undefined
   /** Behind a load balancer or CDN: `true` (one proxy) or how many, so rate limits read the client from `X-Forwarded-For`. */
   trustProxy?: boolean | number | undefined
+  /** The server log's lines (Start): `'text'` (default) for people, `'json'` for a log collector. */
+  log?: 'text' | 'json' | undefined
 }
 
 /** One colour scheme of the generated card. */

@@ -51,6 +51,27 @@ for _, key in ipairs(KEYS) do redis.call('SET', key, redis.call('INCR', ARGV[1])
 return 0
 `
 
+const CONSUME = `
+local n = redis.call('INCR', KEYS[1])
+if n == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
+if n > tonumber(ARGV[2]) then return redis.call('TTL', KEYS[1]) end
+return -1
+`
+
+/** One call against `key` in a fixed window, on Redis: what `redisStore().consume` and `redisRateLimit()` share. */
+async function count(client: Redis, key: string, rule: { window: number; max: number }) {
+  const wait = (await client.eval(
+    CONSUME,
+    1,
+    key,
+    Math.max(1, Math.ceil(rule.window)),
+    rule.max,
+  )) as number
+  return wait < 0
+    ? { allowed: true, retryAfter: null }
+    : { allowed: false, retryAfter: Math.max(1, wait) }
+}
+
 /**
  * The shared cache on Redis: `export default redisStore()` in `src/cache.server.ts`. Values are JSON (what a query
  * already sends), kept until their `life` runs out; tags are versioned in Redis, so every instance sees a bump.
@@ -77,15 +98,9 @@ export function redisStore(options: RedisStoreOptions = {}): Store {
     async bump(tags) {
       if (tags.length) await client().eval(BUMP, tags.length, ...tags.map(tag), counter)
     },
+    consume: (key, rule) => count(client(), `${prefix}rl:${key}`, rule),
   }
 }
-
-const CONSUME = `
-local n = redis.call('INCR', KEYS[1])
-if n == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
-if n > tonumber(ARGV[2]) then return redis.call('TTL', KEYS[1]) end
-return -1
-`
 
 /**
  * Better Auth's rate limit on Redis, so every instance counts the same attempts:
@@ -95,17 +110,7 @@ export function redisRateLimit(options: RedisStoreOptions = {}) {
   const prefix = options.prefix ?? 'weft:'
   const client = connect(options, 'redisRateLimit')
   return {
-    async consume(key: string, rule: { window: number; max: number }) {
-      const wait = (await client().eval(
-        CONSUME,
-        1,
-        `${prefix}rl:${key}`,
-        Math.max(1, Math.ceil(rule.window)),
-        rule.max,
-      )) as number
-      return wait < 0
-        ? { allowed: true, retryAfter: null }
-        : { allowed: false, retryAfter: Math.max(1, wait) }
-    },
+    consume: (key: string, rule: { window: number; max: number }) =>
+      count(client(), `${prefix}rl:${key}`, rule),
   }
 }

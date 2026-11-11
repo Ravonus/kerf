@@ -17,6 +17,8 @@ export interface ScopeEntry {
 
 export interface Scope {
   request: Request
+  /** This request's id: the `x-request-id` response header, and on every diagnostic it raises. */
+  requestId?: string
   entries: Map<string, ScopeEntry>
   /** Tags a mutation or `invalidate()` dropped during this request. */
   invalidated: Set<string>
@@ -166,6 +168,16 @@ export interface Store {
   /** The current version of each tag (0 for one never bumped). */
   versions(tags: string[]): number[] | Promise<number[]>
   bump(tags: string[]): void | Promise<void>
+  /**
+   * Count one call against `key` in a fixed window of `window` seconds: allowed while the count is at most `max`,
+   * else how many seconds until the window ends. Server functions' `limit` uses it; a store without it limits nothing.
+   */
+  consume?(
+    key: string,
+    rule: { window: number; max: number },
+  ):
+    | { allowed: boolean; retryAfter: number | null }
+    | Promise<{ allowed: boolean; retryAfter: number | null }>
 }
 /** One value in the shared cache: the result, its tags and their versions when it ran, and when it expires. */
 export interface Stored {
@@ -194,7 +206,25 @@ export function memoryStore({
   const tags = new Map<string, number>()
   let counter = 0
   let floor = 0
+  const counts = new Map<string, { n: number; until: number }>()
   return {
+    consume(key, { window, max }) {
+      const now = Date.now()
+      let c = counts.get(key)
+      if (!c || c.until <= now) {
+        counts.delete(key)
+        // Full: expired windows go first, then the oldest, so a flood of new keys can't grow it without end.
+        if (counts.size >= most)
+          for (const [k, old] of counts)
+            if (old.until <= now || counts.size >= most) counts.delete(k)
+        c = { n: 0, until: now + window * 1000 }
+        counts.set(key, c)
+      }
+      c.n++
+      return c.n <= max
+        ? { allowed: true, retryAfter: null }
+        : { allowed: false, retryAfter: Math.max(1, Math.ceil((c.until - now) / 1000)) }
+    },
     get(k) {
       const hit = values.get(k)
       if (!hit) return undefined

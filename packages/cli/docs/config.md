@@ -64,6 +64,7 @@ export default defineConfig({
 | `site.headers` | Response headers by route pattern |
 | `site.security` | Headers every Start response gets unless it sets its own (`nosniff`, `Referrer-Policy`, `X-Frame-Options: SAMEORIGIN`, COOP, HSTS on https). Name a header to change it, `false` to drop it, or `security: false` for none |
 | `site.trustProxy` | `true` or a number: proxies in front of the server. The client's address comes from that many entries from the right of `X-Forwarded-For`, so auth's rate limit sees real clients. Leave it off with nothing in front |
+| `site.log` | `'text'` (default) or `'json'`: the server log's lines, readable or as JSON objects with `time`, `level`, `code`, `message`, `route` and `requestId` |
 | `site.limits` | `{ body, upload }` in bytes: the largest JSON (1 MB) and multipart (25 MB) request body. Past it, 413 (Q018) |
 | `runtime` | `node`, `bun` or `deno`: what `weft build` targets (`weft docs start`) |
 | `hydration` | `'lazy'` (default): islands load when needed; `'partial'`: every island loads with the page; `'full'`: every route hydrates whole |
