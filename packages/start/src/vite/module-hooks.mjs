@@ -94,7 +94,13 @@ export const load = (s) => ({
     if (which === V.server) return serverEntry(s.clientEntry(), s.dev, s.root)
     if (which === V.fns)
       return s.serverModules.map((f) => `import ${JSON.stringify(s.abs(f))}`).join('\n') + '\n'
-    if (which === V.context || which === V.auth || which === V.realtime || which === V.cache)
+    if (
+      which === V.context ||
+      which === V.auth ||
+      which === V.realtime ||
+      which === V.cache ||
+      which === V.cron
+    )
       return configModule(s, which)
     if (which === V.extensions) return extensionsModule(s.root, s.abs)
     if (which === V.migrations)

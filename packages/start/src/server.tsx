@@ -36,11 +36,13 @@ import { makeCore } from './server/core'
 import { makeServices } from './server/services'
 import { makeDispatch } from './server/dispatch'
 import { makeHandler } from './server/handler'
+import { lifecycle, withRequestIds } from './server/lifecycle'
 import { makeComplete } from './server/head'
 import { makePreview } from './server/preview'
 import { resolveRoute } from './server/resolver'
 import type { HandlerOptions } from './server/types'
 export { cardPath, hash } from './server/text'
+export { serverLog, type Diagnostic } from './server/log'
 export type {
   RouteEntry,
   LayoutEntry,
@@ -66,6 +68,7 @@ const PASSES = 1024
 
 /** The app as a `(Request) => Response`: pages, data, functions and cards. */
 export function createHandler(options: HandlerOptions) {
+  options = withRequestIds(options, () => als.getStore()?.requestId)
   const { manifest, site, byId, mod, comps, statics, heads, remember, originOf, stateOf, tree } =
     makeCore(options, als)
   const services = makeServices(options)
@@ -126,6 +129,7 @@ export function createHandler(options: HandlerOptions) {
     page,
   })
   const handler = makeHandler(options, als, services, route)
+  lifecycle(options, services, (scope, run) => als.run(scope, run))
   return Object.assign(handler, { resolve, inspect })
 }
 

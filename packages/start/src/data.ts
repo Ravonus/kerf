@@ -24,6 +24,7 @@ export type {
   SchemaResult,
   SchemaIssue,
   Life,
+  Limit,
   AuthScope,
   ImplCall,
   Impl,

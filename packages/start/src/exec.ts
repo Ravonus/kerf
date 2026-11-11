@@ -50,6 +50,7 @@ import { landed, shown, said } from './exec/landing'
 import { remember, rewarm, warms } from './exec/warm'
 import { callImpl } from './exec/impl'
 import { once } from './exec/once'
+import { limitCall } from './exec/limit'
 export {
   createScope,
   finishScope,
@@ -252,6 +253,7 @@ async function call(
   const { touched } = track
   const added = track.added ?? []
   await guard(fn, ctx)
+  await limitCall(fn, ctx, scope, storeOf(scope))
   claimed(fn, scope)
   try {
     for (const e of scope.options.extensions ?? [])

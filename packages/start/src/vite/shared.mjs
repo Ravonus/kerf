@@ -17,6 +17,7 @@ export const V = {
   media: 'virtual:weft/media',
   realtime: 'virtual:weft/realtime',
   cache: 'virtual:weft/cache',
+  cron: 'virtual:weft/cron',
   extensions: 'virtual:weft/extensions',
 }
 export const DEFAULT_FONTS = ['Inter:400,700']

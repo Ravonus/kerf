@@ -504,6 +504,7 @@ it. Read results in JSX as `(q().value ?? []).map(…)`; never copy query result
 | `tags`        | query             | Strings, or `(input, ctx) => string[]`. Every cache (client, request, shared) goes by these.          |
 | `invalidates` | mutation          | Tags whose queries the response refreshes in one round trip, or `(input, result) => string[]`.        |
 | `optimistic`  | mutation          | `({ input }, cache) => void`. Runs on the client; `cache.update(query, input, draft => …)` edits a cached value until the server answers. |
+| `limit`       | both              | `{ max, window, by? }`: at most `max` calls per `window` seconds per signed-in user (or per address, `by: 'ip'`); the next is 429 (Q019) with `Retry-After`. Counted in the cache store, so `redisStore()` shares it. |
 | `cache`       | query             | `{ life: 'seconds' \| 'minutes' \| 'hours' \| 'days' \| 'max' \| number }` shares one value across requests. It can't read `ctx.user` (Q006) unless you add `scope: 'user'`. |
 | `live`        | query             | `{ required: true }` fails the build on a target with no real change feed; `verify` proves it. See [Realtime](#realtime). |
 | `errors`      | both              | Named failures, raised with `raise(code, data)`; the client sees `FnError.code` and `.data`.          |
@@ -902,7 +903,10 @@ export const signIn = mutation({
 
 | `auth`                          | Who gets through                                    | Everyone else             |
 | ------------------------------- | --------------------------------------------------- | ------------------------- |
-| `'user'`                        | Anyone signed in                                    | A002 (401)                |
+| `'user'`                        | Anyone signed in                                    | Q019 (429)                           | A function's `limit` ran out for this caller                             | Wait `Retry-After` seconds, or raise `limit`                            |
+| J001                                 | A cron job threw                                                         | Fix the job; it runs again when next due                                |
+| J002                                 | A cron schedule that doesn't parse                                       | Five fields: `minute hour day month weekday`                            |
+| A002 (401)                |
 | `{ role: 'admin' }` or an array | A signed-in user with one of the roles              | A002 (401) or A006 (403)  |
 | `{ can: (ctx) => boolean }`     | A signed-in user your check passes (it may be async) | A002 (401) or A006 (403)  |
 | `'public'`                      | Anyone                                              |                           |
@@ -1182,6 +1186,7 @@ export default defineConfig({
 | `site.headers`       | `{ [pattern]: headers }`                       |                | Response headers by route pattern, static files included                                     |
 | `site.security`      | `false` \| `{ [header]: string \| false }`     | see below      | Headers every response gets unless it sets its own; name one to change it, `false` drops it |
 | `site.trustProxy`    | `boolean` \| `number`                          | `false`        | Proxies in front: the client's address comes from `X-Forwarded-For` (rate limits)          |
+| `site.log`           | `'text'` \| `'json'`                          | `'text'`       | The server log's lines: readable, or JSON objects for a log collector                       |
 | `site.limits`        | `{ body, upload }` (bytes)                     | 1 MB, 25 MB    | Largest JSON and multipart (file) request body; past it, 413 (Q018) before the rest is read |
 | `site.inlineCss`     | `boolean`                                      | `true`         | First-paint CSS in a `<style>`; `false` for plain links (strict CSP)                         |
 | `site.criticalCss`   | `boolean`                                      | `true`         | One hashed sheet plus first-paint CSS; `false` splits by chunk and inlines up to 48 KB       |
@@ -1203,6 +1208,41 @@ own `cache-control` (`ctx.response.headers.set(...)` in `load`) replaces that de
 `no-store`.
 
 The full key list is [`weft docs config`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/config.md).
+
+## Running in production
+
+**Health.** `GET /_weft/health` answers 200 when every database answers `select 1` (within 2 s) and live data is
+delivered as `live: { required }` needs, and 503 otherwise, as JSON: `{ ok, db: [{ dialect, ok, ms }], live }`. It
+runs before migrations, so a failed one still reports. Point a load balancer or uptime check at it.
+
+**Logs.** Problems the server finds go to stderr, one line each. `site.log: 'json'` makes them JSON objects (`time`,
+`level`, `code`, `message`, `route`, `requestId`) for a log collector. Every response carries `x-request-id`, and every
+line from that request names it, so a user's report leads to the line. Behind `site.trustProxy`, a proxy's own
+`x-request-id` is kept.
+
+**Shutdown.** On SIGTERM (a deploy or scale-down) the server stops taking requests and finishes the ones it has, the
+schedule stops, and realtime connections close as "going away", so open pages reconnect to an instance that's staying.
+
+**Scheduled jobs.** `src/cron.server.ts` default-exports the jobs:
+
+```ts
+// src/cron.server.ts
+import { defineCron } from '@weft-js/start/cron'
+
+export default defineCron({
+  // 03:00 UTC every day
+  cleanup: {
+    schedule: '0 3 * * *',
+    run: ({ ctx }) => ctx.db.delete(sessions).where(expired()),
+  },
+})
+```
+
+Schedules are five fields in UTC (`*`, `*/n`, `a-b` and lists), checked when the server starts (J002). A job runs with
+the app's `ctx` and no signed-in user; a failure is logged (J001) and the job runs again when it's next due. With
+several instances and `redisStore()` in `src/cache.server.ts`, each job runs on one of them per minute; with the memory
+store, every instance runs it. Jobs run on server presets (`node`, `bun`, `deno`), not on function hosts, which only
+wake for requests: there, call a mutation from the host's own scheduler.
 
 ## Runtimes, deploy targets and adapters
 

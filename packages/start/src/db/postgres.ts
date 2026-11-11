@@ -53,6 +53,7 @@ export function createDb<S extends Record<string, unknown>>({
   const handle: DbHandle = {
     dialect: 'postgresql',
     exempt: new Set(),
+    ping: () => client.unsafe('select 1'),
     async migrate(list: Migration[]) {
       await client.begin(async (tx) => {
         await tx.unsafe(`select pg_advisory_xact_lock(${LOCK})`)

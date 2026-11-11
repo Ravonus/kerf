@@ -41,6 +41,17 @@ export interface SchemaIssue {
   readonly path?: readonly (PropertyKey | { readonly key: PropertyKey })[] | undefined
 }
 
+/**
+ * At most `max` calls per `window` seconds, counted per signed-in user (`by: 'user'`, the default when someone is
+ * signed in) or per client address (`by: 'ip'`). The next call is refused with 429 (Q019) and `Retry-After`. The count
+ * lives in the cache store, so with `redisStore()` it holds across every instance.
+ */
+export interface Limit {
+  max: number
+  window: number
+  by?: 'user' | 'ip'
+}
+
 /** `'minutes'` etc. or seconds: how long the shared server cache keeps a value (research 27 §4). */
 export type Life = 'seconds' | 'minutes' | 'hours' | 'days' | 'max' | number
 
@@ -95,6 +106,8 @@ export interface QueryDef<S, O, A = undefined> extends FnOptions {
   output?: StandardSchemaV1
   /** Who may call it (`AuthScope`): `'user'`, `'public'`, `{ role }` or `{ can }`. The contract's auth scope. */
   auth?: A
+  /** How often one caller may call it (`Limit`): `{ max: 30, window: 60 }`. */
+  limit?: Limit
   /** An example result, for what `output` can't say: sizes a pending view (research 31 §2). */
   shape?: O extends (infer R)[] ? DeepPartial<R>[] : DeepPartial<O>
   /** What invalidates it: the client cache, the request cache and the shared cache all go by these. */
@@ -138,6 +151,8 @@ export interface MutationDef<S, O, A = undefined> extends FnOptions {
   output?: StandardSchemaV1
   /** Who may call it. In an app with auth (`ctx.user` exists) a mutation needs a signed-in user unless it says `'public'`. */
   auth?: A
+  /** How often one caller may call it (`Limit`): `{ max: 5, window: 60 }`. */
+  limit?: Limit
   /** Tags whose queries the response refreshes (single-flight) and whose cached values it drops. */
   invalidates?: Tags<[input: Out<S>, result: Awaited<O>]>
   /** Client only: predict the result. Each call's layers are re-applied on new values until it settles. */
@@ -213,6 +228,7 @@ export interface Fn {
     message?: StandardSchemaV1
     shape?: unknown
     auth?: AuthScope
+    limit?: Limit
     run?: (args: {
       input: unknown
       ctx: Context

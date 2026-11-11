@@ -60,6 +60,18 @@ test.skipIf(!binary)(
   },
 )
 
+// Needs a `redis-server` binary, named by `WEFT_TEST_REDIS`.
+test.skipIf(!binary)(
+  "redisStore's consume is the server-function limit, shared by every instance",
+  async () => {
+    const a = redisStore({ url, prefix: 'three:' })
+    const b = redisStore({ url, prefix: 'three:' })
+    const rule = { window: 10, max: 1 }
+    expect((await a.consume!('k', rule)).allowed).toBe(true)
+    expect((await b.consume!('k', rule)).allowed).toBe(false)
+  },
+)
+
 test('no URL is Q013, except in a build', () => {
   const was = process.env.REDIS_URL
   delete process.env.REDIS_URL

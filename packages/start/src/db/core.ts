@@ -16,6 +16,8 @@ export interface DbHandle {
   dialect: 'sqlite' | 'postgresql' | 'mysql'
   /** Apply what's new in `list`, in order. */
   migrate(list: Migration[]): Promise<void>
+  /** One round trip to the database, for a health check: rejects when it can't be reached. */
+  ping?(): Promise<unknown>
   /** Tables Q011 doesn't report (Better Auth's). */
   exempt: Set<string>
   /** `dbChanges`'s source: loaded on the first use, so a database with no live tables loads none of it. */
@@ -29,9 +31,14 @@ export interface DbHandle {
   }>
 }
 
+/** Every handle this process made, for the health route. */
+export const handles = new Set<DbHandle>()
+
 /** Attach Weft's handle to a client. */
-export const register = <D extends object>(db: D, handle: DbHandle): D & { $weft: DbHandle } =>
-  Object.assign(db, { $weft: handle })
+export const register = <D extends object>(db: D, handle: DbHandle): D & { $weft: DbHandle } => {
+  handles.add(handle)
+  return Object.assign(db, { $weft: handle })
+}
 
 /** The database can't be used: its connection, or a migration it needs. The client sees this; the server log gets the cause. */
 export const unavailable = (cause: unknown) =>
