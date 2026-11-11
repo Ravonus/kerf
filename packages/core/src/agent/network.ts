@@ -12,7 +12,7 @@ const netState = { online: true, latency: 0 }
 /**
  * The network as the app sees it: `offline()` makes `navigator.onLine` false, fires `offline`, fails `fetch` and new
  * sockets, and drops open WebSockets and EventSources; `latency(ms)` delays every `fetch`; `drop()` closes the open
- * sockets without going offline (a server restart). Same words as @weft-js/core/test's `net`. The dev server's own socket is
+ * sockets without going offline (a server restart). Same words as @kerf/core/test's `net`. The dev server's own socket is
  * never touched.
  */
 export const net = {
@@ -38,7 +38,7 @@ export const net = {
   },
   drop() {
     for (const s of sockets) {
-      if (s instanceof real.WebSocket) s.close(4000, 'weft: connection dropped')
+      if (s instanceof real.WebSocket) s.close(4000, 'kerf: connection dropped')
       else {
         s.close()
         s.dispatchEvent(new Event('error'))
@@ -59,7 +59,7 @@ export function patchNetwork() {
   if (real.fetch)
     g.fetch = async (...args: Parameters<typeof fetch>) => {
       if (netState.latency) await sleep(netState.latency)
-      if (!netState.online) throw new TypeError('Failed to fetch (weft: offline)')
+      if (!netState.online) throw new TypeError('Failed to fetch (kerf: offline)')
       return real.fetch(...args)
     }
   if (real.WebSocket)
@@ -69,7 +69,7 @@ export function patchNetwork() {
         if (!netState.online) {
           real.setTimeout(() => {
             this.dispatchEvent(new Event('error'))
-            this.close(4000, 'weft: offline')
+            this.close(4000, 'kerf: offline')
           }, 0)
           return
         }

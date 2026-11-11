@@ -14,6 +14,6 @@ export function skipWithoutUrl(
   if (!url)
     skip(
       sql ? ['app', 'poke', 'refetch', 'denied'] : ['app'],
-      'no URL target: the database half was tested, not the running app. Set `WEFT_STAGING_URL` or `verify.url`',
+      'no URL target: the database half was tested, not the running app. Set `KERF_STAGING_URL` or `verify.url`',
     )
 }

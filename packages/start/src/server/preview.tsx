@@ -1,5 +1,5 @@
 import type { AsyncLocalStorage } from 'node:async_hooks'
-import { renderToStream, type Merged } from '@weft-js/core/ssr'
+import { renderToStream, type Merged } from '@kerf/core/ssr'
 import type { createRouteState, RoutePayload } from '../router'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
@@ -53,7 +53,7 @@ export function makePreview({
     return complete(r, await shell(r, request).catch(() => undefined))
   }
 
-  /** `weft routes --meta`: one page's finished head, its HTML and where its words came from, in a request scope. */
+  /** `kerf routes --meta`: one page's finished head, its HTML and where its words came from, in a request scope. */
   const inspect = (path: string, request: Request) =>
     als.run(exec.createScope(request, scopeOptions), async () => {
       const r = await resolve(path, request)

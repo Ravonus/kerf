@@ -1,0 +1,436 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+:where([data-scope="shell"] [data-part="nav-item"][data-sweep]) {
+  --veneer-color-sweep-base: transparent; --veneer-sweep-radius: var(--veneer-radius-round);
+}
+/* the shell owns the viewport, so nothing may inset it */
+:where(body:has([data-scope="shell"])) { margin: 0; overflow-x: clip; }
+:where([data-scope="shell"]) {
+  /* also the page's container: main and the table are not containers, since each nested one costs the whole page
+     another style pass inside layout (about 50ms at 4x CPU on a 50-row admin table) */
+  container: veneer-shell veneer-page / inline-size;
+  --_navw: 0px;
+  --_barh: calc(var(--veneer-layout-bar) + var(--veneer-safe-top));
+  --_gut: max(calc(var(--veneer-space-page) - 4px), var(--veneer-safe-left));
+  /* chrome glass: translucent with blur at quiet, opaque and flat at vivid */
+  --_glass: color-mix(in oklab, var(--veneer-color-surface) calc(84% + 16% * var(--veneer-x)), transparent);
+  position: relative; min-inline-size: 0;
+}
+:where([data-scope="shell"] [data-part="skip"]) {
+  position: absolute; inset-block-start: calc(var(--veneer-safe-top) + 6px); inset-inline-start: 8px;
+  z-index: var(--veneer-z-tooltip); padding: 8px 12px; border-radius: var(--veneer-radius-control);
+  background: var(--veneer-color-surface-inverse); color: var(--veneer-color-on-inverse);
+  font-weight: 500; text-decoration: none;
+  transform: translateY(calc(-100% - var(--veneer-safe-top) - 12px)); opacity: 0;   /* off-screen past the notch */
+}
+:where([data-scope="shell"] [data-part="skip"]:focus-visible) { transform: none; opacity: 1; }
+:where([data-scope="shell"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) {
+  display: grid; min-block-size: var(--veneer-viewport-block);
+  grid-template: "header" auto "main" 1fr "nav" auto / minmax(0, 1fr);
+  background: var(--veneer-color-page);
+}
+/* -- header / top bar --------------------------------------------------- */
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *))) {
+  grid-area: header; position: sticky; inset-block-start: 0; z-index: var(--veneer-z-sticky);
+  display: flex; align-items: center; gap: var(--veneer-space-related);
+  block-size: var(--_barh); padding-block-start: var(--veneer-safe-top);
+  padding-inline: var(--_gut) max(calc(var(--veneer-space-page) - 4px), var(--veneer-safe-right));
+  background: var(--_glass);
+  backdrop-filter: blur(var(--veneer-blur-overlay)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--veneer-blur-overlay)) saturate(1.3);
+  border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border);
+}
+/* route progress line: the sweep, so it follows the dial (vivid) and flair */
+:where([data-scope="shell"] [data-part="header"])::after {
+  content: ""; position: absolute; inset-inline: 0; inset-block-end: -1px;
+  block-size: var(--veneer-border-emphasis); background: var(--veneer-color-accent-solid);
+  transform-origin: left; transform: scaleX(0); opacity: 0; pointer-events: none;
+}
+:where([data-scope="shell"][data-routing] [data-part="header"])::after {
+  animation: veneer-route-line var(--veneer-sweep-duration) var(--veneer-ease-in-out) both;
+}
+:where([data-scope="shell"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) {
+  display: flex; align-items: center; gap: 10px; flex: none; min-inline-size: 0;
+  font-weight: 600; letter-spacing: -0.01em; color: var(--veneer-color-text); text-decoration: none;
+}
+:where([data-scope="shell"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *)) svg) { inline-size: 22px; block-size: 22px; flex: none; }
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *)) [data-part="title"]:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="shell"] *))) {
+  flex: 1; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--veneer-text-heading-font); font-size: var(--veneer-text-heading-size);
+  font-weight: var(--veneer-text-heading-weight); letter-spacing: var(--veneer-text-heading-tracking);
+}
+:where([data-scope="shell"] [data-part="crumbs"]) { display: none; flex: 1; min-inline-size: 0; }
+:where([data-scope="shell"] [data-part="brand-name"]) { display: none; }
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *)) [data-part="actions"]:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="consent"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="consent"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) [data-scope="shell"] *))) { display: flex; align-items: center; gap: var(--veneer-space-tight); margin-inline-start: auto; flex: none; }
+:where([data-scope="shell"] [data-part="back"]:not([data-scope="shell"] [data-scope="breadcrumbs"] *:not([data-scope="shell"] [data-scope="breadcrumbs"] [data-scope="shell"] *))) { display: none; }
+:where([data-scope="shell"][data-depth="child"] [data-part="back"]:not([data-scope="shell"] [data-scope="breadcrumbs"] *:not([data-scope="shell"] [data-scope="breadcrumbs"] [data-scope="shell"] *))) { display: inline-flex; margin-inline-start: -8px; }
+:where([data-scope="shell"][data-depth="child"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) { display: none; }
+/* command palette entry. Phone: a round icon button. Tablet+: a floating-border
+   field (sweep + floating label). The label is never removed, so the name survives. */
+:where([data-scope="shell"] [data-part="command"]) {
+  --veneer-sweep-radius: var(--veneer-radius-round); --veneer-color-sweep-base: transparent;
+  position: relative; display: inline-flex; align-items: center; gap: var(--veneer-space-related);
+  block-size: var(--veneer-control-md); min-inline-size: var(--veneer-control-md); justify-content: center;
+  padding-inline: 0; border: 0; border-radius: var(--veneer-sweep-radius); background: transparent;
+  color: var(--veneer-color-text-subtle); font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+:where([data-scope="shell"] [data-part="command"] > svg) { inline-size: var(--veneer-icon-md); block-size: var(--veneer-icon-md); flex: none; color: var(--veneer-color-accent-text); }
+:where([data-scope="shell"] [data-part="command-label"]),
+:where([data-scope="shell"] [data-part="command-hint"]),
+:where([data-scope="shell"] [data-part="command"] kbd) {
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
+}
+/* -- nav: bottom bar by default ---------------------------------------- */
+:where([data-scope="shell"] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) {
+  grid-area: nav; position: sticky; inset-block-end: 0; z-index: var(--veneer-z-dock);
+  display: flex; flex-direction: column;
+  padding-block-end: var(--veneer-safe-bottom);
+  padding-inline: var(--veneer-safe-left) var(--veneer-safe-right);
+  background: var(--_glass);
+  backdrop-filter: blur(var(--veneer-blur-overlay)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--veneer-blur-overlay)) saturate(1.3);
+  border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+}
+:where([data-scope="shell"] [data-part="nav-list"]) { display: flex; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="shell"] [data-part="nav-list"] > li) { display: flex; flex: 1 1 0; min-inline-size: 0; }
+:where([data-scope="shell"] [data-part="nav-list"] > li:not([data-tab])) { display: none; }
+:where([data-scope="shell"] [data-part="nav-group"]),
+:where([data-scope="shell"] [data-part="nav-extra"]),
+:where([data-scope="shell"] [data-part="nav-foot"]) { display: none; }
+:where([data-scope="shell"] [data-part="nav-item"]) {
+  position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; min-block-size: var(--veneer-layout-tabbar); padding: 6px 2px;
+  color: var(--veneer-color-text-subtle); text-decoration: none; background: none; border: 0; font: inherit;
+  font-size: var(--veneer-text-caption-size); line-height: 1.2; font-weight: 500;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color var(--veneer-duration-fast) var(--veneer-ease-out);
+}
+:where([data-scope="shell"] [data-part="nav-item"] > [data-part="icon"]) {
+  position: relative; display: grid; place-items: center; inline-size: 52px; block-size: 28px;
+  border-radius: var(--veneer-radius-round);
+  transition: background-color var(--veneer-duration-fast) var(--veneer-ease-out);
+}
+:where([data-scope="shell"] [data-part="nav-item"] > [data-part="icon"] svg) { inline-size: 18px; block-size: 18px; }
+:where([data-scope="shell"] [data-part="nav-label"]) { overflow: clip; text-overflow: ellipsis; white-space: nowrap; max-inline-size: 100%; }
+:where([data-scope="shell"] [data-part="nav-item"]:hover) { color: var(--veneer-color-text); }
+:where([data-scope="shell"] [data-part="nav-item"]:hover > [data-part="icon"]) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="shell"] [data-part="nav-item"][aria-current]) { color: var(--veneer-color-text); }
+:where([data-scope="shell"] [data-part="nav-item"][aria-current] > [data-part="icon"]) {
+  background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text);
+}
+:where([data-scope="shell"] [data-part="nav-item"]:focus-visible) { outline-offset: -2px; border-radius: var(--veneer-radius-control); }
+:where([data-scope="shell"] [data-part="nav-item"] [data-part="nav-count"]) {
+  position: absolute; inset-block-start: 4px; inset-inline-start: calc(50% + 8px);
+  min-inline-size: 16px; block-size: 16px; padding-inline: 4px; border-radius: var(--veneer-radius-round);
+  background: var(--veneer-color-accent-solid); color: var(--veneer-color-accent-on-solid);
+  font: 600 10.5px/16px var(--veneer-text-body-font); text-align: center; font-variant-numeric: tabular-nums;
+}
+/* the count's spoken half ("12 new"): a visually hidden span, never aria-label on a span (review 03 m2) */
+:where([data-scope="shell"] [data-part="nav-count-label"]),
+:where([data-scope="doc-tabs"] [data-part="tab-state"]) {
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
+}
+/* the keyboard is up: the bottom bar steps aside so the focused field and
+   its action bar own the space (shell sets data-keyboard from visualViewport) */
+:where([data-scope="shell"][data-keyboard] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) { display: none; }
+/* -- main ----------------------------------------------------------------- */
+/* the shell's own main only (root > layout > main): a data-part="main" inside a page (a calendar's grid, an auth
+   card) is not the shell's and must not pick up its grid area, container or viewport height */
+:where([data-scope="shell"] > [data-part="layout"] > [data-part="main"]) {
+  grid-area: main; min-inline-size: 0; outline: none;
+  /* fill the viewport under the header so a short page still puts its dock at the bottom edge */
+  display: flex; flex-direction: column;
+  min-block-size: calc(var(--veneer-viewport-block) - var(--veneer-layout-bar) - var(--veneer-safe-top) - var(--_dock, 0px));
+}
+:where([data-scope="shell"] > [data-part="layout"] > [data-part="main"] > [data-part="page"]) { flex: 1 0 auto; }
+:where([data-scope="shell"] > [data-part="layout"] > [data-part="main"] > [data-part="page"]) {
+  padding: var(--veneer-space-section) max(var(--veneer-space-page), var(--veneer-safe-right)) var(--veneer-space-section) max(var(--veneer-space-page), var(--veneer-safe-left));
+  display: flex; flex-direction: column; gap: var(--veneer-space-section);
+  inline-size: 100%; max-inline-size: calc(var(--veneer-layout-content) + 2 * var(--veneer-space-page)); margin-inline: auto;
+  box-sizing: border-box;
+}
+@container veneer-shell (max-width: 599.98px) {
+:where([data-scope="shell"] > [data-part="layout"] > [data-part="main"] > [data-part="page"]) { padding-block-start: var(--veneer-space-group); gap: var(--veneer-space-group); }
+}
+/* -- tablet: rail ------------------------------------------------------- */
+@container veneer-shell (min-width: 600px) {
+:where([data-scope="shell"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) {
+    --_navw: var(--veneer-layout-rail);
+    grid-template: "header header" auto "nav main" 1fr / var(--_navw) minmax(0, 1fr);
+    transition: grid-template-columns calc(var(--veneer-duration-slow) * var(--veneer-motion-scale)) var(--veneer-ease-in-out);
+  }
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *))) { padding-inline-start: 0; gap: var(--veneer-space-group); }
+:where([data-scope="shell"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) {
+    inline-size: var(--_navw); justify-content: center; padding-inline: 0;
+    transition: inline-size calc(var(--veneer-duration-slow) * var(--veneer-motion-scale)) var(--veneer-ease-in-out);
+  }
+:where([data-scope="shell"] [data-part="brand-name"]) { display: none; }
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *)) [data-part="title"]:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="shell"] *))) { display: none; }
+:where([data-scope="shell"] [data-part="crumbs"]) { display: block; }
+:where([data-scope="shell"][data-depth="child"] [data-part="back"]:not([data-scope="shell"] [data-scope="breadcrumbs"] *:not([data-scope="shell"] [data-scope="breadcrumbs"] [data-scope="shell"] *))) { display: none; }
+:where([data-scope="shell"][data-depth="child"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) { display: flex; }
+:where([data-scope="shell"] [data-part="command"]) {
+    /* a field: it rests on the ink sweep-base like every field (review 01 M7). `inherit` takes the
+       sys --veneer-color-sweep-base back from the shell, undoing the phone ring's transparent base. */
+    --veneer-sweep-radius: var(--veneer-radius-control); --veneer-color-sweep-base: inherit;
+    padding-inline: 10px 6px; justify-content: flex-start; inline-size: 220px;
+    background: var(--veneer-color-surface-raised); color: var(--veneer-color-text-subtle);
+  }
+:where([data-scope="shell"] [data-part="command-label"]) {
+    position: absolute; inline-size: auto; block-size: auto; clip-path: none; overflow: visible;
+    inset-inline-start: 32px; inset-block-start: 50%; translate: 0 -50%; transform-origin: left center;
+    padding-inline: 0; color: var(--veneer-color-text-subtle); line-height: 1;
+    transition: inset-block-start var(--veneer-label-float-duration) var(--veneer-label-float-ease), inset-inline-start var(--veneer-label-float-duration) var(--veneer-label-float-ease),
+                font-size var(--veneer-label-float-duration) var(--veneer-label-float-ease), letter-spacing var(--veneer-label-float-duration) var(--veneer-label-float-ease),
+                color var(--veneer-sweep-duration) var(--veneer-sweep-ease);
+  }
+:where([data-scope="shell"] [data-part="command-hint"]) {
+    position: static; inline-size: auto; block-size: auto; clip-path: none; flex: 1; text-align: start;
+    overflow: clip; text-overflow: ellipsis; color: var(--veneer-color-text-subtle); opacity: 0;
+    transition: opacity var(--veneer-duration-fast) var(--veneer-ease-out);
+  }
+:where([data-scope="shell"] [data-part="command"]:is(:hover, :focus-visible) [data-part="command-label"]) {
+    inset-block-start: 0; inset-inline-start: 8px; padding-inline: 4px; font-size: 10px; font-weight: 600;
+    font-family: var(--veneer-text-display-font); text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--veneer-color-accent-text); background: var(--veneer-color-surface-raised);
+  }
+:where([data-scope="shell"] [data-part="command"]:is(:hover, :focus-visible) [data-part="command-hint"]) { opacity: 1; transition-delay: 80ms; }
+:where([data-scope="shell"] [data-part="command"]:focus-visible) { outline-offset: 3px; }
+:where([data-scope="shell"] [data-part="command"] kbd) {
+    position: static; inline-size: auto; block-size: auto; clip-path: none; margin-inline-start: auto;
+    padding: 1px 6px; border-radius: var(--veneer-radius-mark); border: 1px solid var(--veneer-color-border-strong);
+    background: var(--veneer-color-surface-sunken); font-size: 11px; line-height: 16px; color: var(--veneer-color-text-subtle);
+  }
+:where([data-pointer="coarse"] [data-scope="shell"] [data-part="command"] kbd) { display: none; }
+@media (pointer: coarse) { :where([data-scope="shell"] [data-part="command"] kbd) { display: none; } }
+:where([data-scope="shell"] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) {
+    position: sticky; inset-block-start: var(--_barh); align-self: start;
+    block-size: calc(var(--veneer-viewport-block) - var(--_barh)); inline-size: var(--_navw);
+    padding: var(--veneer-space-related) 0 max(var(--veneer-space-related), var(--veneer-safe-bottom)) var(--veneer-safe-left);
+    border-block-start: 0; border-inline-end: var(--veneer-border-hairline) solid var(--veneer-color-border);
+    background: var(--veneer-color-surface); backdrop-filter: none; -webkit-backdrop-filter: none;
+    overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; z-index: var(--veneer-z-dock);
+  }
+:where([data-scope="shell"] [data-part="nav-list"]) { flex-direction: column; gap: 2px; padding-inline: 8px; }
+:where([data-scope="shell"] [data-part="nav-list"] > li:not([data-tab])) { display: flex; }
+:where([data-scope="shell"] [data-part="nav-list"] > li[data-part="nav-more"]) { display: none; }
+:where([data-scope="shell"] [data-part="nav-item"]) { min-block-size: 60px; padding: 6px 0; border-radius: var(--veneer-radius-control); }
+:where([data-scope="shell"] [data-part="nav-item"]:hover) { background: none; }
+:where([data-scope="shell"] [data-part="nav-foot"]) { display: flex; flex-direction: column; gap: 2px; margin-block-start: auto; padding: var(--veneer-space-related) 8px 0; }
+:where([data-scope="shell"] [data-part="nav-toggle"]) {
+    display: grid; place-items: center; align-self: center; inline-size: var(--veneer-control-md); block-size: var(--veneer-control-md);
+    border: 0; border-radius: var(--veneer-radius-control); background: none; color: var(--veneer-color-text-subtle); cursor: pointer;
+  }
+:where([data-scope="shell"] [data-part="nav-toggle"]:hover) { background: var(--veneer-color-surface-hover); color: var(--veneer-color-text); }
+:where([data-scope="shell"] [data-part="nav-toggle"] svg) { inline-size: 18px; block-size: 18px; transition: transform var(--veneer-duration-base) var(--veneer-ease-out); }
+:where([data-scope="shell"][data-nav-open] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) {
+    inline-size: var(--veneer-layout-sidebar); z-index: var(--veneer-z-overlay);
+    box-shadow: var(--veneer-elevation-3); border-inline-end-color: var(--veneer-color-border-strong);
+    animation: veneer-rail-open var(--veneer-duration-base) var(--veneer-ease-out) both;
+  }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-toggle"] svg) { transform: scaleX(-1); }
+}
+/* the sidebar presentation: desktop (unless collapsed) and the tablet overlay */
+@container veneer-shell (min-width: 600px) {
+:where([data-scope="shell"][data-nav-open] [data-part="nav-group"]) { display: block; }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-extra"]) { display: block; }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-item"]) {
+    flex-direction: row; justify-content: flex-start; gap: 10px; min-block-size: var(--veneer-control-md);
+    padding: 0 10px 0 12px; font-size: var(--veneer-text-body-size);
+  }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-item"] > [data-part="icon"]) { position: static; inline-size: auto; block-size: auto; background: none; border-radius: var(--veneer-radius-control); }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-item"]) { --veneer-sweep-radius: var(--veneer-radius-control); }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-label"]) { animation: veneer-fade-in var(--veneer-duration-base) var(--veneer-ease-out) both; animation-delay: calc(var(--veneer-stagger) * 0.5); }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-item"]:hover) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-item"][aria-current]) {
+    background: var(--veneer-color-surface-hover); box-shadow: inset var(--veneer-border-emphasis) 0 0 var(--veneer-color-accent-solid);
+  }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-item"][aria-current] svg) { color: var(--veneer-color-accent-text); }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-count"]) { position: static; margin-inline-start: auto; }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-foot"]) { flex-direction: row; align-items: center; }
+:where([data-scope="shell"][data-nav-open] [data-part="nav-foot"] li),
+  :where([data-scope="shell"][data-nav-open] [data-part="nav-foot"] > a) { flex: 1; }
+}
+@container veneer-shell (min-width: 1000px) {
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) { --_navw: var(--veneer-layout-sidebar); }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) { justify-content: flex-start; padding-inline-start: 20px; }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="brand-name"]) { display: inline; }
+:where([data-scope="shell"] [data-part="command"]) { inline-size: 300px; }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) { padding-block-start: var(--veneer-space-group); }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-group"]),
+  :where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-extra"]) { display: block; }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-item"]) {
+    flex-direction: row; justify-content: flex-start; gap: 10px; min-block-size: var(--veneer-control-md);
+    padding: 0 10px 0 12px; font-size: var(--veneer-text-body-size);
+  }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-item"] > [data-part="icon"]) { position: static; inline-size: auto; block-size: auto; background: none; border-radius: var(--veneer-radius-control); }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-item"]) { --veneer-sweep-radius: var(--veneer-radius-control); }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-item"] > [data-part="icon"] svg) { inline-size: var(--veneer-icon-md); block-size: var(--veneer-icon-md); }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-item"]:hover) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-item"][aria-current]) {
+    background: var(--veneer-color-surface-hover); box-shadow: inset var(--veneer-border-emphasis) 0 0 var(--veneer-color-accent-solid);
+  }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-item"][aria-current] svg) { color: var(--veneer-color-accent-text); }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-count"]) { position: static; margin-inline-start: auto; }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-foot"]) { flex-direction: row; align-items: center; }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-foot"] > a) { flex: 1; }
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="nav-toggle"] svg) { transform: scaleX(-1); }
+:where([data-scope="shell"][data-nav-open]:not([data-collapsed]) [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) { animation: none; box-shadow: none; }
+}
+:where([data-scope="shell"] [data-part="nav-group"]) {
+  margin: var(--veneer-space-group) 0 var(--veneer-space-tight); padding-inline: 20px;
+  font-family: var(--veneer-text-eyebrow-font); font-size: var(--veneer-text-eyebrow-size); font-weight: 500;
+  letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: var(--veneer-text-eyebrow-case);
+  color: var(--veneer-color-text-subtle);
+}
+:where([data-scope="shell"] [data-part="nav-group"]:first-child) { margin-block-start: 0; }
+:where([data-scope="shell"] [data-part="nav-extra"] > [data-part="nav-group"]:first-child) { margin-block-start: var(--veneer-space-group); }
+/* -- hidden mode: collapsed="hidden" removes the rail too; an edge tab
+   (a real button: aria-expanded, aria-controls, a name) opens the overlay
+   sidebar. The old pull-out tab had no state; this one does. ≥ 600 only. */
+:where([data-scope="shell"] [data-part="edge-tab"]) { display: none; }
+@container veneer-shell (min-width: 600px) {
+:where([data-scope="shell"][data-collapsed="hidden"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) { --_navw: 0px; }
+:where([data-scope="shell"][data-collapsed="hidden"]:not([data-nav-open]) [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) { visibility: hidden; }
+:where([data-scope="shell"][data-collapsed="hidden"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) { inline-size: auto; padding-inline: 16px 0; }
+:where([data-scope="shell"][data-collapsed="hidden"] [data-part="edge-tab"]) {
+    position: fixed; z-index: calc(var(--veneer-z-overlay) + 1); inset-inline-start: max(0px, var(--veneer-safe-left)); inset-block-start: 50%;
+    display: grid; place-items: center; inline-size: 20px; block-size: 64px; padding: 0; translate: 0 -50%;
+    border: var(--veneer-border-hairline) solid var(--veneer-color-border); border-inline-start: 0; border-radius: 0 var(--veneer-radius-control) var(--veneer-radius-control) 0;
+    background: var(--veneer-color-surface-overlay); color: var(--veneer-color-text-subtle); box-shadow: var(--veneer-elevation-1); cursor: pointer;
+    transition: inline-size var(--veneer-duration-fast) var(--veneer-ease-out), color var(--veneer-duration-fast);
+  }
+:where([data-scope="shell"][data-collapsed="hidden"] [data-part="edge-tab"]:is(:hover)),
+  :where([data-scope="shell"][data-collapsed="hidden"] [data-part="edge-tab"]:is(:focus-visible)) { inline-size: 28px; color: var(--veneer-color-text); }
+:where([data-scope="shell"][data-collapsed="hidden"][data-nav-open] [data-part="edge-tab"]) { inset-inline-start: var(--veneer-layout-sidebar); }
+:where([data-scope="shell"][data-collapsed="hidden"][data-nav-open] [data-part="edge-tab"] svg) { transform: scaleX(-1); }
+}
+@media (pointer: coarse) {
+:where([data-scope="shell"] [data-part="edge-tab"]) { inline-size: 28px; block-size: var(--veneer-hit-min); min-block-size: 64px; }
+}
+/* -- focus variant (wizard, checkout): no nav, title always shown -------- */
+@container veneer-shell (min-width: 600px) {
+:where([data-scope="shell"][data-variant="focus"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) { --_navw: 0px; }
+:where([data-scope="shell"][data-variant="focus"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *))) { padding-inline-start: var(--_gut); }
+}
+:where([data-scope="shell"][data-variant="focus"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *)) [data-part="title"]:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="shell"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="shell"] *))) { display: block; }
+:where([data-scope="shell"][data-variant="focus"] [data-part="brand"]:not([data-scope="shell"] [data-scope="auth"] *:not([data-scope="shell"] [data-scope="auth"] [data-scope="shell"] *))) { display: none; }
+:where([data-scope="shell"][data-variant="focus"] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))) { display: none; }
+/* -- dock: a sticky action bar that clears the bottom bar, safe area and keyboard */
+:where([data-scope="shell"]) { --_dock: calc(var(--veneer-layout-tabbar) + var(--veneer-safe-bottom)); }
+:where([data-scope="shell"][data-variant="focus"]),
+:where([data-scope="shell"][data-keyboard]) { --_dock: 0px; }
+@container veneer-shell (min-width: 600px) {
+:where([data-scope="shell"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) { --_dock: 0px; }
+}
+:where([data-scope="shell"] [data-part="dock"]) {
+  position: sticky; inset-block-end: var(--_dock); z-index: calc(var(--veneer-z-sticky) - 1);
+  display: flex; align-items: center; gap: var(--veneer-space-related);
+  padding: var(--veneer-space-related) max(var(--veneer-space-page), var(--veneer-safe-right)) var(--veneer-space-related) max(var(--veneer-space-page), var(--veneer-safe-left));
+  background: var(--_glass); backdrop-filter: blur(var(--veneer-blur-overlay)); -webkit-backdrop-filter: blur(var(--veneer-blur-overlay));
+  border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  animation: veneer-sheet-in var(--veneer-duration-base) var(--veneer-ease-out) both;
+}
+:where([data-scope="shell"][data-variant="focus"]:not([data-keyboard]) [data-part="dock"]) {
+  padding-block-end: max(var(--veneer-space-related), var(--veneer-safe-bottom));
+}
+/* -- overlays: scrim, account menu, more sheet, palette ------------------- */
+:where([data-scope="shell"] [data-part="scrim"]:not([data-scope="shell"] [data-scope="popover"] *:not([data-scope="shell"] [data-scope="popover"] [data-scope="shell"] *))) {
+  position: fixed; inset: 0; z-index: calc(var(--veneer-z-overlay) - 1); background: var(--veneer-color-scrim);
+  animation: veneer-fade-in var(--veneer-duration-base) var(--veneer-ease-out) both;
+}
+:where([data-scope="shell"] [data-part="scrim"][data-for="nav"]:not([data-scope="shell"] [data-scope="popover"] *:not([data-scope="shell"] [data-scope="popover"] [data-scope="shell"] *))) { background: color-mix(in oklab, var(--veneer-color-scrim) 60%, transparent); }
+:where([data-scope="shell"] [data-part="menu"]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))) {
+  position: fixed; z-index: var(--veneer-z-menu);
+  inset-block-start: calc(var(--_barh) + 6px); inset-inline-end: max(12px, var(--veneer-safe-right));
+  inline-size: 264px; padding: var(--veneer-space-tight);
+  background: var(--veneer-color-surface-overlay); border: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-2);
+  transform-origin: top right; animation: veneer-enter var(--veneer-duration-base) var(--veneer-ease-out) both;
+}
+:where([data-scope="shell"] [data-part="palette"]) {
+  position: fixed; z-index: var(--veneer-z-modal);
+  inset-block-start: calc(var(--_barh) + 8%); inset-inline-start: 50%; translate: -50% 0;
+  inline-size: min(580px, calc(100% - 2 * var(--veneer-space-page)));
+  background: var(--veneer-color-surface-overlay); border: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-3); overflow: clip;
+  animation: veneer-enter var(--veneer-duration-base) var(--veneer-ease-out) both;
+}
+:where([data-scope="shell"] [data-part="sheet"]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))) { display: none; }
+@container veneer-shell (max-width: 599.98px) {
+:where([data-scope="shell"] [data-part="menu"]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="sheet"]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))) {
+    display: block; position: fixed; z-index: var(--veneer-z-modal);
+    inset: auto 0 0 0; inline-size: auto; max-block-size: calc(var(--veneer-viewport-block) - var(--_barh));
+    padding: 6px var(--veneer-space-related) calc(var(--veneer-space-group) + var(--veneer-safe-bottom));
+    background: var(--veneer-color-surface-overlay); border: 0; border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+    border-start-start-radius: calc(var(--veneer-radius-surface) + 6px); border-start-end-radius: calc(var(--veneer-radius-surface) + 6px);
+    box-shadow: var(--veneer-elevation-3); overflow-y: auto; overscroll-behavior: contain;
+    animation: veneer-sheet-in var(--veneer-duration-sheet) var(--veneer-ease-out) both;
+  }
+:where([data-scope="shell"] [data-part="menu"])::before, :where([data-scope="shell"] [data-part="sheet"])::before {
+    content: ""; display: block; inline-size: 36px; block-size: 4px; margin: 4px auto 10px;
+    border-radius: 999px; background: var(--veneer-color-border-strong);
+  }
+:where([data-scope="shell"] [data-part="sheet"][hidden]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="menu"][hidden]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))) { display: none; }
+:where([data-scope="shell"] [data-part="palette"]) {
+    inset: 0; translate: none; inline-size: auto; border-radius: 0; border: 0;
+    padding-block-start: var(--veneer-safe-top); padding-block-end: var(--veneer-keyboard);
+    display: flex; flex-direction: column;
+    animation: veneer-sheet-in var(--veneer-duration-sheet) var(--veneer-ease-out) both;
+  }
+}
+:where([data-scope="shell"] [hidden]) { display: none !important; }
+/* Workspace switcher — top of the sidebar; in rail and phone it lives in the account menu */
+:where([data-scope="shell"] [data-part="switcher"]) { display: none; }
+@container veneer-shell (min-width: 1000px) {
+:where([data-scope="shell"]:not([data-collapsed]) [data-part="switcher"]) {
+    /* a control: it rests on the ink sweep-base, drawn by sweep-base itself, so the host has no border
+       of its own (review 03 m13: the hairline was 1.31:1). */
+    --veneer-color-sweep-base: inherit; --veneer-sweep-radius: var(--veneer-radius-control);
+    position: relative; display: flex; align-items: center; gap: 10px; margin: 0 10px var(--veneer-space-group);
+    inline-size: calc(100% - 20px); min-block-size: calc(var(--veneer-control-md) + 8px); padding-inline: 8px;
+    border: 0; border-radius: var(--veneer-radius-control);
+    background: var(--veneer-color-surface); color: var(--veneer-color-text); font: inherit; text-align: start; cursor: pointer;
+  }
+}
+:where([data-scope="shell"] [data-part="page"][data-enter]:not([data-scope="shell"] :is([data-scope="agenda"],[data-scope="pagination"]) *:not([data-scope="shell"] :is([data-scope="agenda"],[data-scope="pagination"]) [data-scope="shell"] *))) {
+  animation: veneer-route-in var(--veneer-duration-route) var(--veneer-ease-out) both;
+}
+@media print {
+:where([data-scope="shell"] [data-part="header"]:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) *:not([data-scope="shell"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="nav"]:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="settings"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="skip"]),
+  :where([data-scope="shell"] [data-part="scrim"]:not([data-scope="shell"] [data-scope="popover"] *:not([data-scope="shell"] [data-scope="popover"] [data-scope="shell"] *))),
+  :where([data-scope="master-detail"] > [data-part="list"]) { display: none !important; }
+:where([data-scope="shell"] [data-part="layout"]:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) *:not([data-scope="shell"] :is([data-scope="auth"],[data-scope="calendar"],[data-scope="checkout"],[data-scope="prejoin"],[data-scope="settings"]) [data-scope="shell"] *))) { display: block; min-block-size: 0; }
+:where([data-scope="shell"] [data-part="dock"]),
+  :where([data-scope="shell"] [data-part="menu"]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="sheet"]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="palette"]),
+  :where([data-scope="consent"]),
+  :where([data-scope="announcement"]),
+  :where([data-scope="topnav"]),
+  :where([data-scope="float-panel"]),
+  :where([data-scope="back-to-top"]),
+  :where([data-scope="route-progress"]),
+  :where([data-scope="docs"] [data-part="sidenav"]),
+  :where([data-scope="anchor-nav"]) { display: none !important; }
+}
+@keyframes veneer-route-in {
+  from { opacity: 0; transform: translateY(calc(var(--veneer-motion-distance) * 0.75)); }
+}
+@keyframes veneer-sheet-in {
+  from { transform: translateY(calc(100% * var(--veneer-motion-scale))); opacity: calc(1 - var(--veneer-motion-scale)); }
+}
+@keyframes veneer-rail-open {
+  from { clip-path: inset(0 calc((100% - var(--veneer-layout-rail)) * var(--veneer-motion-scale)) 0 0); opacity: calc(1 - var(--veneer-motion-scale)); }
+  to   { clip-path: inset(0 -40px 0 0); }
+}
+@keyframes veneer-route-line {
+  0%   { transform: scaleX(0); opacity: var(--veneer-sweep-buttons); }
+  70%  { transform: scaleX(1); opacity: var(--veneer-sweep-buttons); transform-origin: left; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+}

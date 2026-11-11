@@ -1,8 +1,8 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
-import { DataIntegrity } from '@weft-js/warp'
+import { DataIntegrity } from '@kerf/veneer'
 
-import type { IntegrityEvent } from '@weft-js/warp'
+import type { IntegrityEvent } from '@kerf/veneer'
 
 import {
   INTEGRITY_EVENTS,

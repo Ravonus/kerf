@@ -20,12 +20,12 @@ import jobs from '${V.jobs}'
 import extensions from '${V.extensions}'
 import * as app from '${V.app}'
 import assets from '${clientEntry}?assets=client'
-import { preloads } from 'weft:fonts/preloads'
+import { preloads } from 'kerf:fonts/preloads'
 ${dev ? '' : `import { parse, purge } from ${JSON.stringify(purgeFile)}\n`}const fetch = createHandler({ manifest, modules, statics, chunks, lazy, context, auth, migrations, media, realtime, store: cache, cron, email, jobs, liveRequired: ${JSON.stringify(scanRequired(root).map((r) => r.name))}, extensions, site: app.site, build: app.build, dev: app.dev, fonts: app.fonts(), timeout: app.timeout, hold: app.hold, routeAssetBytes: ${dev ? 'null' : `'${ROUTE_ASSET_BYTES}'`}, assets: { entry: assets.entry, js: assets.js, get css() { return routeCss(assets.css) }, fonts: preloads, inline: ${dev ? 'undefined' : `'${INLINE_SHEETS}'`}, pieces: ${dev ? 'undefined' : `'${SHEET_PIECES}'`}, critical: ${dev ? 'undefined' : '{ parse, purge }'} },
   // H005–H008, Q002–Q014, A002–A004, F002–F003, M017 and R-codes found while serving: the server log, in dev and production.
   onDiagnostic: serverLog(app.site) })
 export default { fetch }
-${dev ? "import { acceptScopeReruns } from '@weft-js/core/hmr'\nacceptScopeReruns()\n" : ''}`
+${dev ? "import { acceptScopeReruns } from '@kerf/core/hmr'\nacceptScopeReruns()\n" : ''}`
 }
 
 /**
@@ -33,7 +33,7 @@ ${dev ? "import { acceptScopeReruns } from '@weft-js/core/hmr'\nacceptScopeRerun
  * the provider is loaded on the first request and handed that file's default export. No provider gives an empty list.
  */
 export function extensionsModule(root, abs) {
-  const slot = join(root, '.weft', 'slots', 'server.extension.ts')
+  const slot = join(root, '.kerf', 'slots', 'server.extension.ts')
   const keys = existsSync(slot)
     ? Object.entries(
         JSON.parse(/providers = (\{.*\}) as const/.exec(readFileSync(slot, 'utf8'))?.[1] ?? '{}'),
@@ -48,31 +48,31 @@ export function extensionsModule(root, abs) {
     return f ? [[key, abs(f)]] : []
   })
   if (!files.length) return 'export default []\n'
-  return `import { load } from 'weft:slot/server.extension'\n${files.map(([, f], i) => `import app${i} from ${JSON.stringify(f)}\n`).join('')}export default [${files.map(([key], i) => `{ key: ${JSON.stringify(key)}, load: () => load(${JSON.stringify(key)}).then(extend => extend(app${i})) }`).join(', ')}]\n`
+  return `import { load } from 'kerf:slot/server.extension'\n${files.map(([, f], i) => `import app${i} from ${JSON.stringify(f)}\n`).join('')}export default [${files.map(([key], i) => `{ key: ${JSON.stringify(key)}, load: () => load(${JSON.stringify(key)}).then(extend => extend(app${i})) }`).join(', ')}]\n`
 }
 
-/** Dev serves from the project; a built server from the directory it runs in (or `WEFT_MEDIA_DIR`). */
+/** Dev serves from the project; a built server from the directory it runs in (or `KERF_MEDIA_DIR`). */
 export function mediaModule(root, dev) {
-  const slot = join(root, '.weft', 'slots', 'media.server.ts')
+  const slot = join(root, '.kerf', 'slots', 'media.server.ts')
   if (!existsSync(slot) || readFileSync(slot, 'utf8').includes('provider = null'))
     return 'export default undefined\n'
   const at = dev ? JSON.stringify(root) : 'undefined'
-  if (!existsSync(join(root, '.weft', 'slots', 'media.encode.ts')))
-    return `import { load } from 'weft:slot/media.server'\nexport default () => load().then(m => m.at(${at}))\n`
-  return `import { load } from 'weft:slot/media.server'
-import { load as encoder, providers } from 'weft:slot/media.encode'
+  if (!existsSync(join(root, '.kerf', 'slots', 'media.encode.ts')))
+    return `import { load } from 'kerf:slot/media.server'\nexport default () => load().then(m => m.at(${at}))\n`
+  return `import { load } from 'kerf:slot/media.server'
+import { load as encoder, providers } from 'kerf:slot/media.encode'
 const encode = async () => Object.fromEntries(await Promise.all(Object.keys(providers).filter(k => providers[k]).map(async k => [k, await encoder(k)])))
 export default () => Promise.all([load(), encode()]).then(([m, e]) => m.at(${at}, e))
 `
 }
 
 export const busBound = (root) => {
-  const slot = join(root, '.weft', 'slots', 'realtime.bus.ts')
+  const slot = join(root, '.kerf', 'slots', 'realtime.bus.ts')
   return existsSync(slot) && readFileSync(slot, 'utf8').includes('provider = {')
 }
 
 /** A bus in `src/realtime.server.ts` wins over the plugin's, like any explicit choice. */
-export const busModule = (file, from) => `import { load, provider } from 'weft:slot/realtime.bus'
+export const busModule = (file, from) => `import { load, provider } from 'kerf:slot/realtime.bus'
 import { slotBus } from ${JSON.stringify(join(from, 'bus.ts'))}
 ${file ? `import own from ${JSON.stringify(file)}` : 'const own = undefined'}
 export default { ...own, bus: own?.bus ?? slotBus(provider.plugin, load) }
@@ -94,7 +94,7 @@ export function fonts() {
 
 /**
  * The fonts every card can use, resolved at build and shipped inside the server bundle (research 20 §4.2: a render
- * never fetches fonts). `Inter:400,700` → `@fontsource/inter`'s latin WOFF2 files, from the app or from @weft-js/start.
+ * never fetches fonts). `Inter:400,700` → `@fontsource/inter`'s latin WOFF2 files, from the app or from @kerf/start.
  */
 export function cardFonts(manifest, abs, defaults, root, own = {}) {
   const specs = new Set(defaults)
@@ -135,7 +135,7 @@ export function cardFonts(manifest, abs, defaults, root, own = {}) {
         .find(Boolean)
       if (!path)
         throw new Error(
-          `weft: card font \`${spec}\` needs \`@fontsource/${pkg}\` installed (looked for ${file})`,
+          `kerf: card font \`${spec}\` needs \`@fontsource/${pkg}\` installed (looked for ${file})`,
         )
       out.push({
         name: family,

@@ -1,8 +1,8 @@
-// What navigation shows for a level whose generated shape has no structure of its own (`$weftShapeThin`): a route
+// What navigation shows for a level whose generated shape has no structure of its own (`$kerfShapeThin`): a route
 // whose markup is one component the compiler can't see into. A page gets a page's outline, a layout stands aside for
 // its page's. A route's own `export const skeleton` is what fits exactly; this keeps the outlet from going blank.
 
-/** One placeholder bar. The colour is the fallback without Warp; Warp's skeleton styles paint and shimmer it. */
+/** One placeholder bar. The colour is the fallback without Veneer; Veneer's skeleton styles paint and shimmer it. */
 const bar = (height: string, width: string, gap = '0.75em') =>
   `display:block;block-size:${height};inline-size:${width};margin-block-end:${gap};border-radius:0.375em;background:color-mix(in srgb,currentColor 9%,transparent)`
 
@@ -15,7 +15,7 @@ export function PageSkeleton() {
       role="status"
       aria-label="Loading"
       inert
-      data-weft-page-skeleton=""
+      data-kerf-page-skeleton=""
       style="display:block;min-inline-size:0;padding-block:clamp(1.5rem,4vw,2.5rem)"
     >
       <span data-skeleton style={bar('2.25em', 'min(22ch,60%)', '1.25em')}></span>

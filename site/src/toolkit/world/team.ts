@@ -1,4 +1,4 @@
-import type { Role, Member, Invite } from '@weft-js/warp'
+import type { Role, Member, Invite } from '@kerf/veneer'
 import { PEOPLE } from './people'
 
 export const NOW = '2026-10-31T17:00:00Z'
@@ -36,7 +36,7 @@ export const TEAM_MEMBERS: Member[] = PEOPLE.map(
 export const TEAM_INVITES: Invite[] = [
   {
     id: 'dara',
-    email: 'dara@weft.dev',
+    email: 'dara@kerf.dev',
     role: 'member',
     sent: '2 days ago',
   },

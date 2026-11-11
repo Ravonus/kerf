@@ -62,16 +62,16 @@ function waiting(el: Element | null | undefined) {
  * that stays quiet looks alive and does nothing.
  */
 function stale() {
-  const key = `weft:reloaded:${location.pathname}`
+  const key = `kerf:reloaded:${location.pathname}`
   try {
     if (!sessionStorage.getItem(key)) {
       sessionStorage.setItem(key, '1')
       return location.reload()
     }
   } catch {}
-  if (document.querySelector('[data-weft-stale]')) return
+  if (document.querySelector('[data-kerf-stale]')) return
   const note = document.createElement('p')
-  note.setAttribute('data-weft-stale', '')
+  note.setAttribute('data-kerf-stale', '')
   note.setAttribute('role', 'alert')
   note.style.cssText =
     'position:fixed;inset:auto 1rem 1rem;z-index:2147483647;margin:0;padding:.75rem 1rem;background:#111;color:#fff;font:14px/1.4 system-ui,sans-serif'
@@ -309,7 +309,7 @@ function claiming(nodes: Node[], data: SsrData | undefined, fn: () => void) {
   } finally {
     if (hydration.misses > missed)
       console.warn(
-        'weft: rendered fresh, a key differs between server and client (see `weft docs W044`)',
+        'kerf: rendered fresh, a key differs between server and client (see `kerf docs W044`)',
       )
     Object.assign(keys, { on: false, hydrating: false, miss: false, p: '', n: 0 })
     rt.data = was.d
@@ -349,7 +349,7 @@ export function level(
     own = a && b ? [a, b] : []
     return a && b ? siblings(a, b) : []
   }
-  // oxlint-disable-next-line weft/no-html-sink -- `html` is the app's own server's render, streamed to this same page
+  // oxlint-disable-next-line kerf/no-html-sink -- `html` is the app's own server's render, streamed to this same page
   t.innerHTML = html
   let nodes = read()
   const [a, b] = bounds(nodes, d + 1)

@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
-import { Composer, Stack, Text } from '@weft-js/warp'
+import { Composer, Stack, Text } from '@kerf/veneer'
 
 import type {
   ComposerFile,
   ComposerSend,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 import { PEERS } from '../../world'
 

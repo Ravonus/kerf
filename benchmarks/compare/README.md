@@ -5,15 +5,15 @@ paging, column picker, inline details, a live cell). One data set and plain `vit
 
 | Stack           | Table                     | Overlays         | CSS                 |
 | --------------- | ------------------------- | ---------------- | ------------------- |
-| weft + warp     | warp                      | warp             | warp                |
-| weft, no warp   | hand-written              | native `popover` | `shared/design.css` |
+| kerf + veneer     | veneer                      | veneer             | veneer                |
+| kerf, no veneer   | hand-written              | native `popover` | `shared/design.css` |
 | Solid + Kobalte | TanStack                  | Kobalte          | `shared/design.css` |
 | React + Radix   | TanStack                  | Radix            | `shared/design.css` |
 | React + Zustand | TanStack, data in Zustand | Radix            | `shared/design.css` |
 | React + MUI     | X DataGrid                | MUI              | MUI's CSS-in-JS     |
 
 `shared/design.css` is one hand-written sheet, so those four stacks ship the same rules: compare frameworks there. The same-CSS
-stacks are the fair framework test; warp and MUI each bring a design system, so compare them as kits.
+stacks are the fair framework test; veneer and MUI each bring a design system, so compare them as kits.
 
     pnpm install         # every stack and design app, linked to this repo's packages
     node serve.mjs       # each built app on its own port, from 5401, to click through
@@ -26,7 +26,7 @@ stacks are the fair framework test; warp and MUI each bring a design system, so 
 
 Use Node 26 and pnpm. From the repository root, run `pnpm run setup`, verify
 that the compiler binary has the matching source stamp, then run
-`pnpm --filter @weft-js/text run build`. From this directory run `pnpm install`
+`pnpm --filter @kerf/text run build`. From this directory run `pnpm install`
 and `node measure.mjs`. Record the machine, OS, Chromium version, source revision
 and dirty state, compiler binary and source stamp, Node and pnpm versions, and
 dependency lockfile with the results. History records a commit and package dirty
@@ -50,25 +50,25 @@ upstream comparison result.
 ## The long list
 
 `feed/` in each stack is a second page, so it doesn't touch the dashboard's numbers: 10,000 rows of wrapped text
-(`shared/feed.ts`, `shared/feed.css`) on the stack's usual virtualiser. warp uses `VirtualList` with exact heights from
-`text.measure`; weft without warp uses `@weft-js/warp-core`'s `virtualizer`, measuring rows as they render; Solid, React + Radix and
+(`shared/feed.ts`, `shared/feed.css`) on the stack's usual virtualiser. veneer uses `VirtualList` with exact heights from
+`text.measure`; kerf without veneer uses `@kerf/veneer-core`'s `virtualizer`, measuring rows as they render; Solid, React + Radix and
 React + Zustand use TanStack Virtual with `measureElement`; MUI uses react-virtuoso. The script scrolls 120 px a frame down and
 then up, and reads back how far each on-screen row moved. Anything but 120 is a visible jump. It also jumps to row 7,777.
 
 ## One brief, built by an agent
 
 `design/` holds the apps a fresh agent built from one brief (`../../evals/gates/ds-exit.mjs`, Phase 4's exit check): the same three screens on
-each stack, in that stack's usual kit, plus weft on raw Tailwind. Git retains the original agent output. The React + MUI
+each stack, in that stack's usual kit, plus kerf on raw Tailwind. Git retains the original agent output. The React + MUI
 Customers and Pricing files now move parts of their JSX into local functions; the rendered screens and interactions stay the
 same. `measure.mjs`
 rebuilds and re-audits them (`design/audit.mjs`: axe, focus, reflow, distinct computed values and role drift, read only from the
-page in Chromium) when `pnpm install` has run here, so a change to warp shows up here. It can't see
+page in Chromium) when `pnpm install` has run here, so a change to veneer shows up here. It can't see
 whether a page looks good.
 
 ## The rule
 
-A new eval scenario, benchmark or size or speed claim gets built in every stack here, not only weft. Changes to weft's
-compiler or runtime, warp or warp-core end with a `node measure.mjs` run, and its history line and chart are committed with the
+A new eval scenario, benchmark or size or speed claim gets built in every stack here, not only kerf. Changes to kerf's
+compiler or runtime, veneer or veneer-core end with a `node measure.mjs` run, and its history line and chart are committed with the
 change. To add a stack, add a folder; to add a scenario, add it to every folder and to the script in `measure.mjs`.
 
 ## Reading DOM changes
@@ -77,8 +77,8 @@ The count is a MutationObserver on the whole document: every node added or remov
 can't see property writes (`input.value`, `checked`), shadow roots or CSSOM, and one `<style>` edit counts once however many
 cells it restyles. So read it with the CPU ms beside it, and each step also asserts the page shows the right result. Run `pnpm install` here first (one install covers every stack).
 
-weft without warp has no menu keyboard handling (arrow keys, typeahead) or focus trap beyond what native `popover` gives, where
-Radix and Kobalte add them, and it has no headless table library in its bundle. warp also keeps a phone sort bar and closed
+kerf without veneer has no menu keyboard handling (arrow keys, typeahead) or focus trap beyond what native `popover` gives, where
+Radix and Kobalte add them, and it has no headless table library in its bundle. veneer also keeps a phone sort bar and closed
 menus mounted, which the others don't. MUI's community DataGrid has no detail panel, so details open under the grid.
 
 ## Historical size attribution
@@ -86,7 +86,7 @@ menus mounted, which the others don't. MUI's community DataGrid has no detail pa
 Use an owned output directory for the pinned October 31 to November 3 audit:
 
 ```bash
-node history-bisect.mjs --out /tmp/weft-history-audit
+node history-bisect.mjs --out /tmp/kerf-history-audit
 node --test history-bisect.test.mjs
 ```
 

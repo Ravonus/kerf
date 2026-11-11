@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Card, Input } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Card, Input } from '@kerf/veneer'
 
 type Todo = { id: number; title: string; done: boolean }
 let nextId = 3

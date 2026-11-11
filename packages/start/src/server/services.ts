@@ -44,7 +44,7 @@ export function makeServices(options: HandlerOptions) {
   async function boot() {
     const list = options.migrations?.() ?? []
     if (applied !== list.length) {
-      options.auth?.$weft?.check()
+      options.auth?.$kerf?.check()
       for (const e of extensions.values()) e.check?.(options.dev)
       applied = list.length
       const report = (e: unknown) =>

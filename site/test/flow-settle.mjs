@@ -1,26 +1,26 @@
-// Run against the built icon page with WEFT_FLOW_URL, or the canonical CSS icon-grid fixture.
+// Run against the built icon page with KERF_FLOW_URL, or the canonical CSS icon-grid fixture.
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { createRequire, stripTypeScriptTypes } from 'node:module'
 import { after as afterAll, before as beforeAll, test } from 'node:test'
 
-const { chromium } = createRequire(new URL('../../packages/warp/package.json', import.meta.url))(
+const { chromium } = createRequire(new URL('../../packages/veneer/package.json', import.meta.url))(
   'playwright-core',
 )
 const css = readFileSync(
-  new URL('../../packages/warp-core/styles/warp.css', import.meta.url),
+  new URL('../../packages/veneer-core/styles/veneer.css', import.meta.url),
   'utf8',
 )
-const flowSource = process.env.WEFT_FLOW_ORIGINAL
+const flowSource = process.env.KERF_FLOW_ORIGINAL
   ? execFileSync(
       'git',
-      ['show', `${process.env.WEFT_FLOW_BASELINE ?? '1cbbad29'}:packages/warp-core/src/flow.ts`],
+      ['show', `${process.env.KERF_FLOW_BASELINE ?? '1cbbad29'}:packages/veneer-core/src/flow.ts`],
       {
         encoding: 'utf8',
       },
     )
-  : readFileSync(new URL('../../packages/warp-core/src/flow.ts', import.meta.url), 'utf8')
+  : readFileSync(new URL('../../packages/veneer-core/src/flow.ts', import.meta.url), 'utf8')
 const script = stripTypeScriptTypes(flowSource).replace(/^export /gm, '')
 let browser
 beforeAll(async () => {
@@ -37,7 +37,7 @@ async function open({
   kind = 'icon',
   fixture = false,
 } = {}) {
-  const site = process.env.WEFT_FLOW_URL && !fixture
+  const site = process.env.KERF_FLOW_URL && !fixture
   const context = await browser.newContext({
     viewport: { width: 800, height: 700 },
     reducedMotion: reduced ? 'reduce' : 'no-preference',
@@ -56,7 +56,7 @@ async function open({
     )
   })
   if (site) {
-    await page.goto(process.env.WEFT_FLOW_URL)
+    await page.goto(process.env.KERF_FLOW_URL)
     await page.evaluate(() => scrollTo(0, 1))
     await page.waitForTimeout(50)
   } else {
@@ -120,7 +120,7 @@ const sample = (page) =>
   })
 async function arrive(page, visible = 70) {
   await page.locator('[data-flow-probe]').evaluate((el, amount) => {
-    const entry = el.getAnimations().find((a) => a.animationName?.startsWith('warp-in-'))
+    const entry = el.getAnimations().find((a) => a.animationName?.startsWith('veneer-in-'))
     const source = entry?.timeline?.source ?? document.scrollingElement
     const bottom =
       source === document.scrollingElement ? innerHeight : source.getBoundingClientRect().bottom
@@ -177,13 +177,13 @@ void test('scrolling matches the original scrub, and settled departures still sc
     await arrive(candidate.page, 40)
     whole(await sample(candidate.page))
     const top = await candidate.page.locator('[data-flow-probe]').evaluate((el) => {
-      const exit = el.getAnimations().find((a) => a.animationName?.startsWith('warp-out-'))
+      const exit = el.getAnimations().find((a) => a.animationName?.startsWith('veneer-out-'))
       const source = exit?.timeline?.source ?? document.scrollingElement
       source.scrollTop += el.getBoundingClientRect().bottom - 35
       return source.scrollTop
     })
     await control.page.locator('[data-flow-probe]').evaluate((el, y) => {
-      const entry = el.getAnimations().find((a) => a.animationName?.startsWith('warp-in-'))
+      const entry = el.getAnimations().find((a) => a.animationName?.startsWith('veneer-in-'))
       const source = entry?.timeline?.source ?? document.scrollingElement
       source.scrollTop = y
     }, top)

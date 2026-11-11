@@ -1,8 +1,8 @@
 // The server's half of `interaction({ share })`, over `attach` with a fake peer: access, batching, snapshots, leaving.
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { memoryBus, realtime, type Context } from '@weft-js/start'
-import { configure, createHub, resetHub, type Hub } from '@weft-js/start/hub'
-import { runtime } from '@weft-js/start/data'
+import { memoryBus, realtime, type Context } from '@kerf/start'
+import { configure, createHub, resetHub, type Hub } from '@kerf/start/hub'
+import { runtime } from '@kerf/start/data'
 import { createScope, type Scope } from '../src/exec'
 import { attach } from '../src/socket'
 
@@ -33,7 +33,7 @@ async function client(ctx: object = {}, h?: Hub) {
     close: (c: number) => void (closed = c),
     backlog: () => 0,
   }
-  const r = new Request('http://app.test/_weft/ws')
+  const r = new Request('http://app.test/_kerf/ws')
   const a = await attach(peer, r, createScope(r, { context: () => ctx }), h)
   let ack = 0
   const c = {

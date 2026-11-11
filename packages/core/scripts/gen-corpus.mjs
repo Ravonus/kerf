@@ -1,4 +1,4 @@
-// Generate N realistic weft components (props, state, derived, keyed lists, conditionals, handlers, children).
+// Generate N realistic kerf components (props, state, derived, keyed lists, conditionals, handlers, children).
 // Usage: node scripts/gen-corpus.mjs [n=1000] [dir=bench/corpus]
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -45,7 +45,7 @@ function component(i) {
         ))}
       </ul>`,
   ).join('')
-  return `import { derived, state, watch } from '@weft-js/core'
+  return `import { derived, state, watch } from '@kerf/core'
 import { format } from './format'
 
 type Item = { id: string; ${fields.map((x) => `${x}: string | number`).join('; ')} }

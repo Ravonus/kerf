@@ -1,15 +1,15 @@
-import { createRoot, state, type Derived } from '@weft-js/core'
+import { createRoot, state, type Derived } from '@kerf/core'
 import { client } from '../router'
 import type * as Exec from '../exec'
 import type { Scope } from '../exec'
 import type { Fn, LiveStatus, LiveMode, NetControl, Transport } from './types'
 
 /** The typed "no query" input: `getTodo(() => (id.value ? { id: id.value } : skip))`. */
-export const skip: unique symbol = Symbol.for('weft.skip') as never
+export const skip: unique symbol = Symbol.for('kerf.skip') as never
 /** The marker a live query's input takes to subscribe to nothing yet. */
 export type Skip = typeof skip
 
-/** Every definition by id (the server answers `/_weft/fn/<id>` from it). */
+/** Every definition by id (the server answers `/_kerf/fn/<id>` from it). */
 export const fns = new Map<string, Fn>()
 let auto = 0
 export const nextAuto = () => ++auto
@@ -61,15 +61,15 @@ export const stale: Derived<boolean> = rt.stale
 export const go = (href: string, replace?: boolean) =>
   runtime.navigate ? runtime.navigate(href, replace) : void client.navigate?.(href, { replace })
 
-/** @weft-js/core/test's controls, when it's loaded; the first look registers the cache reset it runs after each test. */
+/** @kerf/core/test's controls, when it's loaded; the first look registers the cache reset it runs after each test. */
 export let registered = false
 let reset = () => {}
 export const configureReset = (fn: () => void) => {
   reset = fn
 }
-/** The test controls, once `@weft-js/core/test` has registered them. */
+/** The test controls, once `@kerf/core/test` has registered them. */
 export const net = () => {
-  const n = Reflect.get(globalThis, Symbol.for('weft.net')) as NetControl | undefined
+  const n = Reflect.get(globalThis, Symbol.for('kerf.net')) as NetControl | undefined
   if (n && !registered) {
     registered = true
     n.resets.push(() => {
@@ -79,9 +79,9 @@ export const net = () => {
   return n
 }
 
-export const FN = Symbol.for('weft.fn')
+export const FN = Symbol.for('kerf.fn')
 /** `<Form>`'s call: a mutation handle's `m(input)` with the input marked as coming from a form. */
-export const SUBMIT = Symbol.for('weft.submit')
+export const SUBMIT = Symbol.for('kerf.submit')
 /** The definition behind a query or mutation handle (also accepts the definition). */
 export const fnOf = (h: unknown): Fn => ((h as Record<symbol, Fn> | null)?.[FN] ?? h) as Fn
 

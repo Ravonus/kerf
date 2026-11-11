@@ -1,12 +1,12 @@
-// @weft-js/core/test: render, user-level queries and actions, flush, a deterministic clock, the work-budget assertion
-// (§7b, §10b), the page fakes for @weft-js/core/browser (`net`, `page`, `tabs`) and the leak check (T012).
+// @kerf/core/test: render, user-level queries and actions, flush, a deterministic clock, the work-budget assertion
+// (§7b, §10b), the page fakes for @kerf/core/browser (`net`, `page`, `tabs`) and the leak check (T012).
 //
 //   render(Counter)
 //   await user.click(screen.getByRole('button', { name: 'Add' }))             // ends in flush()
 //   await expect(() => fake.push('p100', 99)).toTouchAtMost(1)               // DOM mutations
 //   await expect(() => fake.push('p100', 99)).toTouchAtMost(1, { runs: 10 })  // and reactive re-runs
 //
-// `weft check` reports junk tests statically (T001–T009); a test here that never asserts also fails at runtime (T001).
+// `kerf check` reports junk tests statically (T001–T009); a test here that never asserts also fails at runtime (T001).
 
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { afterEach, expect } from 'vitest'
@@ -85,11 +85,11 @@ afterEach((context) => {
     context.task.result?.state === 'fail' || (context.task.result?.errors?.length ?? 0) > 0
   if (!failed && !context.task.fails && expect.getState().assertionCalls === 0)
     throw new Error(
-      `T001: "${context.task.name}" made no assertion, so it passes as long as nothing throws.\n  fix: assert what the user sees, e.g. expect(screen.getByRole('button').textContent).toBe('Count 1'). Docs: weft docs T001`,
+      `T001: "${context.task.name}" made no assertion, so it passes as long as nothing throws.\n  fix: assert what the user sees, e.g. expect(screen.getByRole('button').textContent).toBe('Count 1'). Docs: kerf docs T001`,
     )
 })
 
-// ---- @weft-js/core/browser: the leak check (T012) and the page fakes -----------------------------------------------------
+// ---- @kerf/core/browser: the leak check (T012) and the page fakes -----------------------------------------------------
 
 const fake = {
   online: true,
@@ -136,9 +136,9 @@ const fire = (target: EventTarget, type: string, init?: object) =>
   target.dispatchEvent(Object.assign(new Event(type), init))
 
 /**
- * The fake transport for @weft-js/start's server functions (research 27 §7). With @weft-js/core/test loaded, `query`/`mutation`
+ * The fake transport for @kerf/start's server functions (research 27 §7). With @kerf/core/test loaded, `query`/`mutation`
  * calls run in process through the server's executor (validation, request cache, tags, single-flight, a JSON round
- * trip) instead of HTTP. @weft-js/start finds these controls under a global symbol, so Weft doesn't depend on it.
+ * trip) instead of HTTP. @kerf/start finds these controls under a global symbol, so Kerf doesn't depend on it.
  */
 type FnRef = { $id: string } | string
 const fnId = (f: FnRef) => (typeof f === 'string' ? f : f.$id)
@@ -153,11 +153,11 @@ const transport = {
   inflight: new Set<Promise<unknown>>(),
   /** Inside a call, the fake request's scope: nested calls in a `run` are server calls, as on a real server. */
   als: new AsyncLocalStorage<unknown>(),
-  /** @weft-js/start registers its client cache reset here. */
+  /** @kerf/start registers its client cache reset here. */
   resets: [] as (() => void)[],
-  /** Subscriptions an owner holds: `assertNoLeaks` reads the same map as @weft-js/core/browser's. */
+  /** Subscriptions an owner holds: `assertNoLeaks` reads the same map as @kerf/core/browser's. */
   open,
-  /** The channel fake while a socket is open (@weft-js/start's channel.ts). */
+  /** The channel fake while a socket is open (@kerf/start's channel.ts). */
   ws: undefined as
     | undefined
     | {
@@ -167,7 +167,7 @@ const transport = {
       },
   /** What this client's sockets sent. */
   sent: [] as { id: string; name: string; msg: unknown }[],
-  /** The realtime fake while one is connected (@weft-js/start's live.ts). */
+  /** The realtime fake while one is connected (@kerf/start's live.ts). */
   rt: undefined as
     | undefined
     | {
@@ -181,7 +181,7 @@ const transport = {
   /** Server extensions for this test (`net.extension`): a plugin's fake runs through the real scope. */
   extensions: [] as { reset?(): void }[],
 }
-;(globalThis as unknown as Record<symbol, unknown>)[Symbol.for('weft.net')] = transport
+;(globalThis as unknown as Record<symbol, unknown>)[Symbol.for('kerf.net')] = transport
 
 function resetTransport() {
   for (const e of transport.extensions) e.reset?.()
@@ -195,7 +195,7 @@ function resetTransport() {
   for (const r of transport.resets) r()
 }
 
-/** The network as @weft-js/core/browser's `online()` and @weft-js/start's server functions see it. */
+/** The network as @kerf/core/browser's `online()` and @kerf/start's server functions see it. */
 export const net = {
   /** Offline: `online()` turns false, and server function calls reject with an `OfflineError`. */
   offline() {
@@ -330,11 +330,11 @@ if (typeof document !== 'undefined')
 export const tabs = {
   /** A message from another tab. */
   post(name: string, message: unknown) {
-    deliver(`weft:tab:${name}`, structuredClone(message))
+    deliver(`kerf:tab:${name}`, structuredClone(message))
     return flush()
   },
   /** What this page posted, in order. */
-  posted: (name: string) => (posted.get(`weft:tab:${name}`) ?? []).slice(),
+  posted: (name: string) => (posted.get(`kerf:tab:${name}`) ?? []).slice(),
 }
 
 const visibility = (to: DocumentVisibilityState) => {

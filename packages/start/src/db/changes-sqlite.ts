@@ -121,7 +121,7 @@ export function sqliteChanges({ path, open, tables, interval = 100 }: Options) {
   const triggers = (c: Conn) =>
     (
       c.query(
-        `select tbl_name from sqlite_master where type = 'trigger' and name like 'weft\\_changes\\_%\\_upd' escape '\\'`,
+        `select tbl_name from sqlite_master where type = 'trigger' and name like 'kerf\\_changes\\_%\\_upd' escape '\\'`,
         [],
         'values',
       ) as string[][]
@@ -152,7 +152,7 @@ export function sqliteChanges({ path, open, tables, interval = 100 }: Options) {
           mode: 'poll',
           via: 'sqlite-data-version',
           why: `no trigger on ${missing.map((t) => `\`${t}\``).join(', ')}: any commit pokes every table, unrelated ones included`,
-          fix: 'run `weft db live`',
+          fix: 'run `kerf db live`',
         }
       return { mode: 'feed', via: 'sqlite-data-version' }
     } finally {

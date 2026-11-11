@@ -3,7 +3,7 @@ import Lists from '../demos/lists'
 import Props from '../demos/props'
 import Rules from '../demos/rules'
 import UiState from '../demos/ui-state'
-import '@weft-js/warp-core/styles/rich/codeblock.css'
+import '@kerf/veneer-core/styles/rich/codeblock.css'
 import '../styles/example.css'
 
 /** What the route's loader sends for one example; none of it is in the page's script. */
@@ -36,7 +36,7 @@ export function PageExample(props: { examples: PageExampleData[] }) {
             <Demo id={e.id} />
             <div
               data-scope="codeblock"
-              // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from this repo's demos
+              // oxlint-disable-next-line kerf/no-html-sink -- highlighted at build time from this repo's demos
               innerHTML={e.code}
             ></div>
           </div>

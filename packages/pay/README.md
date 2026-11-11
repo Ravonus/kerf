@@ -1,58 +1,58 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
-<h1 align="center">@weft-js/pay</h1>
+<h1 align="center">@kerf/pay</h1>
 
 <p align="center">
-  <strong>Payments for Weft apps: products, one ledger for every rail, and entitlements you enforce on the server.</strong><br>
+  <strong>Payments for Kerf apps: products, one ledger for every rail, and entitlements you enforce on the server.</strong><br>
   App code names products, never a provider. Stripe is one line in <code>plugins</code>, and a grant only ever comes from a verified event.
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@weft-js/pay"><img src="https://img.shields.io/npm/v/@weft-js/pay?color=145c3c&label=npm" alt="npm version"></a>
-  <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
-  <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
+  <a href="https://www.npmjs.com/package/@kerf/pay"><img src="https://img.shields.io/npm/v/@kerf/pay?color=145c3c&label=npm" alt="npm version"></a>
+  <a href="https://github.com/Ravonus/kerf/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
+  <a href="https://github.com/Ravonus/kerf/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/kerf/quality.yml?branch=main&label=checks" alt="checks"></a>
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/docs">Docs</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/examples">Examples</a> ·
-  <a href="https://github.com/Ravonus/weft/blob/main/CHANGELOG.md">Changelog</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf/tree/main/docs">Docs</a> ·
+  <a href="https://github.com/Ravonus/kerf/tree/main/examples">Examples</a> ·
+  <a href="https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!IMPORTANT]
 > **Early release (0.1.x).** APIs can change between minor versions. Pin the version and read the
-> [changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md) before you upgrade.
+> [changelog](https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md) before you upgrade.
 
-`@weft-js/pay` sells subscriptions, one-time purchases and consumables from a Weft app. You define products once, in a
+`@kerf/pay` sells subscriptions, one-time purchases and consumables from a Kerf app. You define products once, in a
 catalog that is safe to ship to the browser. A checkout opens the payment provider's hosted page. The provider's signed
 webhook is verified on the exact bytes, written to one ledger, and turned into entitlements that `ctx.entitlements` and
 `requires: [...]` check on the server.
 
-It is also Weft's reference plugin. Nothing in `@weft-js/start` or the CLI names it, so reading
-[`plugin.mjs`](https://github.com/Ravonus/weft/blob/main/packages/pay/plugin.mjs) next to
-[`weft docs plugins`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/plugins.md) shows how to build your own.
+It is also Kerf's reference plugin. Nothing in `@kerf/start` or the CLI names it, so reading
+[`plugin.mjs`](https://github.com/Ravonus/kerf/blob/main/packages/pay/plugin.mjs) next to
+[`kerf docs plugins`](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/plugins.md) shows how to build your own.
 
 ## Highlights
 
 - **Products, not price ids.** `product()` takes whole minor units with an ISO currency (`{ usd: 999 }`) and rejects floats
   and missing currencies (PAY008). A rail's ids never reach client code (PAY012).
 - **A grant comes only from a verified event.** `checkout()` returns a URL and grants nothing. The rail's webhook at
-  `/_weft/x/pay/<rail>` is the only way a purchase changes.
+  `/_kerf/x/pay/<rail>` is the only way a purchase changes.
 - **At-least-once, any order.** Each event is applied by the rail's own clock, and its id is recorded after it applies, so a
   redelivery is a no-op and an old event changes nothing.
 - **Enforced on the server.** `requires: ['pro']` on any `query` or `mutation` answers a typed 403
   (`ENTITLEMENT_REQUIRED`). `await ctx.entitlements.has('pro')` works in any `query`, `mutation` or `load`.
 - **Live by default.** A verified event pokes the `entitlements:<user>` tag, so a page reading entitlements with `.live()`
   updates without a reload.
-- **One rail is one line.** `stripe()` from `@weft-js/pay/stripe/plugin` provides the `pay.rail` slot. Any plugin that
+- **One rail is one line.** `stripe()` from `@kerf/pay/stripe/plugin` provides the `pay.rail` slot. Any plugin that
   implements `PayRail` and passes `payRailSuite` replaces it, and app code stays the same.
-- **A real fake.** `fakePay` from `@weft-js/pay/test` signs its events and sends them through your own webhook and ledger, with
+- **A real fake.** `fakePay` from `@kerf/pay/test` signs its events and sends them through your own webhook and ledger, with
   renewals, refunds, pauses and disputes on demand. No key, no network.
 - **No Stripe code by default.** The `.`, `./server`, `./drizzle` and `./test` entries reach no Stripe file (a test holds
   that), and no page loads Stripe.js.
@@ -81,39 +81,39 @@ It is also Weft's reference plugin. Nothing in `@weft-js/start` or the CLI names
 
 ```bash
 # npm
-npm install @weft-js/pay
+npm install @kerf/pay
 
 # pnpm
-pnpm add @weft-js/pay
+pnpm add @kerf/pay
 
 # bun
-bun add @weft-js/pay
+bun add @kerf/pay
 ```
 
-Or let the `weft` CLI install it and add it to `weft.config.ts` in one step:
+Or let the `kerf` CLI install it and add it to `kerf.config.ts` in one step:
 
 ```bash
-npx weft add pay
+npx kerf add pay
 ```
 
-`weft add pay` needs a database and auth in the app, and stops without changes if either is missing. It also adds the
-Stripe rail (`@weft-js/pay/stripe`) to `plugins`, so `weft.config.ts` ends up with:
+`kerf add pay` needs a database and auth in the app, and stops without changes if either is missing. It also adds the
+Stripe rail (`@kerf/pay/stripe`) to `plugins`, so `kerf.config.ts` ends up with:
 
 ```ts
-// weft.config.ts
-import { defineConfig } from '@weft-js/core/config'
-import pay from '@weft-js/pay/plugin'
-import stripe from '@weft-js/pay/stripe/plugin'
+// kerf.config.ts
+import { defineConfig } from '@kerf/core/config'
+import pay from '@kerf/pay/plugin'
+import stripe from '@kerf/pay/stripe/plugin'
 
 export default defineConfig({
   plugins: [pay(), stripe()],
 })
 ```
 
-`weft add` writes a default import named after the package. Both plugin modules also have a named export (`{ pay }`,
+`kerf add` writes a default import named after the package. Both plugin modules also have a named export (`{ pay }`,
 `{ stripe }`), which works the same.
 
-### What `weft add pay` writes
+### What `kerf add pay` writes
 
 | File                   | What it holds                                                                                                          |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -124,7 +124,7 @@ export default defineConfig({
 | `src/env.server.ts`    | `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` added to the `server` block.                                           |
 | `.env`, `.env.example` | `STRIPE_MODE=test`, `STRIPE_SECRET_KEY=sk_test_placeholder`, `STRIPE_WEBHOOK_SECRET=whsec_placeholder`                  |
 
-On Drizzle, `src/pay.server.ts` uses `drizzlePayStore(db, { purchases, payEvents })`; then run `npx weft db generate` and
+On Drizzle, `src/pay.server.ts` uses `drizzlePayStore(db, { purchases, payEvents })`; then run `npx kerf db generate` and
 the migration applies on the next request. On another data layer it starts on `memoryPayStore()`, and you write a
 `PayStore` before production (PAY016).
 
@@ -132,12 +132,12 @@ the migration applies on the next request. On another data layer it starts on `m
 
 | Need                      | Where                          | Notes                                                                                                                                        |
 | ------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| A database                | `weft add` refuses without one | Holds the ledger.                                                                                                                            |
-| Auth                      | `weft add` refuses without it  | A purchase belongs to `ctx.user.id`.                                                                                                         |
+| A database                | `kerf add` refuses without one | Holds the ledger.                                                                                                                            |
+| Auth                      | `kerf add` refuses without it  | A purchase belongs to `ctx.user.id`.                                                                                                         |
 | `STRIPE_MODE`             | `.env`, server only            | `test` until launch: a live key is then refused (PAY032). Set `live` with the live keys. See [Sandbox and test mode](#sandbox-and-test-mode). |
 | `STRIPE_SECRET_KEY`       | `.env`, server only            | Replace the placeholder with a real test key. The placeholder is refused before anything is sent (PAY003).                                   |
 | `STRIPE_WEBHOOK_SECRET`   | `.env`, server only            | Without it every webhook is refused (PAY011).                                                                                                |
-| A Stripe webhook endpoint | Stripe dashboard               | URL `https://<your-app>/_weft/x/pay/stripe`. Events: `customer.subscription.*`, `checkout.session.*`, `charge.refunded`, `charge.dispute.*`. |
+| A Stripe webhook endpoint | Stripe dashboard               | URL `https://<your-app>/_kerf/x/pay/stripe`. Events: `customer.subscription.*`, `checkout.session.*`, `charge.refunded`, `charge.dispute.*`. |
 
 Nothing calls Stripe until a user checks out.
 
@@ -147,7 +147,7 @@ The catalog names what you sell. It reaches the client, so it holds names and am
 
 ```ts
 // src/pay/catalog.ts
-import { product } from '@weft-js/pay'
+import { product } from '@kerf/pay'
 
 export const pro = product({
   id: 'pro',
@@ -163,13 +163,13 @@ The ledger is the default export of `src/pay.server.ts`:
 
 ```ts
 // src/pay.server.ts
-import { drizzlePayStore } from '@weft-js/pay/drizzle'
-import { definePay } from '@weft-js/pay/server'
+import { drizzlePayStore } from '@kerf/pay/drizzle'
+import { definePay } from '@kerf/pay/server'
 import { db } from '#/db/index.server'
 import { payEvents, purchases } from '#/db/schema'
 import * as catalog from './pay/catalog'
 
-// Served at /_weft/x/pay/<rail>, the webhook URL to give your
+// Served at /_kerf/x/pay/<rail>, the webhook URL to give your
 // provider.
 export default definePay({
   catalog,
@@ -182,8 +182,8 @@ Server functions expose it to pages:
 
 ```ts
 // src/server/pay.ts
-import { entitlementTag } from '@weft-js/pay'
-import { mutation, query, redirect } from '@weft-js/start'
+import { entitlementTag } from '@kerf/pay'
+import { mutation, query, redirect } from '@kerf/start'
 import pay from '../pay.server'
 
 export const entitlements = query({
@@ -209,7 +209,7 @@ A page sells and reads, by product name:
 
 ```tsx
 // src/routes/pricing.tsx
-import { price } from '@weft-js/pay'
+import { price } from '@kerf/pay'
 import { pro } from '#/pay/catalog'
 import { checkout, entitlements, portal } from '#/server/pay'
 
@@ -236,7 +236,7 @@ And the server enforces it:
 
 ```ts
 // src/server/report.ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 
 export const report = query({
   auth: 'user',
@@ -246,7 +246,7 @@ export const report = query({
 ```
 
 The buyer clicks, lands on Stripe Checkout, pays, and comes back to `urls.success`. Stripe posts the event to
-`/_weft/x/pay/stripe`, the ledger records it, and the `.live()` reader on the page shows Pro.
+`/_kerf/x/pay/stripe`, the ledger records it, and the `.live()` reader on the page shows Pro.
 
 ## Products and prices
 
@@ -267,7 +267,7 @@ The buyer clicks, lands on Stripe Checkout, pays, and comes back to `urls.succes
 A plan's interval is its name when the name is `day`, `week`, `month` or `year`; any other name needs `interval`.
 
 ```ts
-import { product } from '@weft-js/pay'
+import { product } from '@kerf/pay'
 
 export const team = product({
   id: 'team',
@@ -292,8 +292,8 @@ three) for the reader's locale. Show `price(pro, 'month').display` instead of ty
 
 ## The ledger: `definePay`
 
-`definePay(options)` from `@weft-js/pay/server` is the app's one ledger. `src/pay.server.ts` default-exports it, and the
-plugin mounts it as a `server.extension` at `/_weft/x/pay/...`. An app with no `src/pay.server.ts` has no route and no code
+`definePay(options)` from `@kerf/pay/server` is the app's one ledger. `src/pay.server.ts` default-exports it, and the
+plugin mounts it as a `server.extension` at `/_kerf/x/pay/...`. An app with no `src/pay.server.ts` has no route and no code
 from any of this.
 
 | Option    | Type                                     | Default              | What it does                                                                                            |
@@ -305,9 +305,9 @@ from any of this.
 | `rail`    | `string`                                 | the only bound rail  | Which rail takes payments when several are bound (PAY022 otherwise).                                    |
 | `origin`  | `string`                                 | the request's origin | Absolute origin for `urls`, behind a proxy.                                                             |
 | `leeway`  | `number` (ms)                            | 3 days               | How long past a paid period access lasts, while a late renewal event arrives.                           |
-| `slot`    | `() => Promise<…>`                       | `weft:slot/pay.rail` | Where rails come from. Leave it alone outside tests.                                                    |
+| `slot`    | `() => Promise<…>`                       | `kerf:slot/pay.rail` | Where rails come from. Leave it alone outside tests.                                                    |
 
-What it returns, besides the `server.extension` members Weft uses:
+What it returns, besides the `server.extension` members Kerf uses:
 
 | Member                                | What it does                                                                                                                                                                     |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -333,7 +333,7 @@ catalog; the client sends names only.
 **Portal.** `pay.portal(ctx)` finds the user's customer id on the current rail. A user who has bought nothing there gets
 PAY024 (404).
 
-**Webhooks.** The rail posts to `/_weft/x/pay/<rail>`. For each delivery:
+**Webhooks.** The rail posts to `/_kerf/x/pay/<rail>`. For each delivery:
 
 | Step                                                 | Result                                                                           |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------- |
@@ -362,7 +362,7 @@ The same on every rail:
 Entitlements are the union of `grants` over a user's live purchases. On the server, in any `query`, `mutation` or `load`:
 
 ```ts
-import { redirect } from '@weft-js/start'
+import { redirect } from '@kerf/start'
 
 // Await it: a promise is truthy, so without `await` everyone passes
 // (PAY015).
@@ -381,7 +381,7 @@ What the client shows is decoration; a check only on the client is PAY013. A que
 
 ## Stripe
 
-`stripe(options?)` from `@weft-js/pay/stripe/plugin` provides the `pay.rail` slot under the key `stripe`. It uses Stripe
+`stripe(options?)` from `@kerf/pay/stripe/plugin` provides the `pay.rail` slot under the key `stripe`. It uses Stripe
 Checkout and the billing portal over Stripe's REST API, server side only, and verifies webhooks itself with WebCrypto
 HMAC-SHA256 on `<t>.<raw body>`, accepting any of several `v1` signatures while a secret rolls.
 
@@ -395,13 +395,13 @@ HMAC-SHA256 on `<t>.<raw body>`, accepting any of several `v1` signatures while 
 | `mode`              | `'test' \| 'live'`       | `STRIPE_MODE`, else the key | What the keys must be; one from the other mode is PAY032. See [Sandbox and test mode](#sandbox-and-test-mode).             |
 
 Keys come from the server environment, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. Don't pass a key as an option:
-plugin options are written into `.weft/slots/`, a generated file (PAY003).
+plugin options are written into `.kerf/slots/`, a generated file (PAY003).
 
 ```ts
-// weft.config.ts
-import { defineConfig } from '@weft-js/core/config'
-import pay from '@weft-js/pay/plugin'
-import stripe from '@weft-js/pay/stripe/plugin'
+// kerf.config.ts
+import { defineConfig } from '@kerf/core/config'
+import pay from '@kerf/pay/plugin'
+import stripe from '@kerf/pay/stripe/plugin'
 
 export default defineConfig({
   plugins: [
@@ -422,12 +422,12 @@ How Stripe events map to the ledger:
 | `charge.refunded`                                                                 | `refunded`, for a full refund only; a partial refund keeps what was bought                                                                                                                           |
 | `charge.dispute.created` / `.closed`                                              | `revoked`, then `active` again if the dispute is won                                                                                                                                                 |
 
-Who bought what travels in metadata (`weft_user`, `weft_product`, `weft_plan`) on the session, the subscription and the
+Who bought what travels in metadata (`kerf_user`, `kerf_product`, `kerf_plan`) on the session, the subscription and the
 payment intent. `pay.refund()` refunds one-time payments (`pi_…`); a subscription is cancelled in the portal.
 
 ## Square
 
-`square(options?)` from `@weft-js/pay/square/plugin` provides `pay.rail` under the key `square`: Square payment links for
+`square(options?)` from `@kerf/pay/square/plugin` provides `pay.rail` under the key `square`: Square payment links for
 one-time payments (`pay.order` and one-time products), so web orders land in the same Square account as the shop's card
 readers. Subscriptions and `portal` are PAY022 on it; sell those with Stripe.
 
@@ -438,7 +438,7 @@ readers. Subscriptions and `portal` are PAY022 on it; sell those with Stripe.
 | `apiVersion`  | `string`                     | `2025-10-16`                                   | Pinned `Square-Version`.                                        |
 
 Env, server only: `SQUARE_ACCESS_TOKEN`, `SQUARE_LOCATION_ID` (the shop the payments land in), and for the webhook at
-`/_weft/x/pay/square` `SQUARE_WEBHOOK_SIGNATURE_KEY` plus `SQUARE_WEBHOOK_URL`, the exact URL given to Square, which it
+`/_kerf/x/pay/square` `SQUARE_WEBHOOK_SIGNATURE_KEY` plus `SQUARE_WEBHOOK_URL`, the exact URL given to Square, which it
 signs. Subscribe the webhook to `payment.created` and `payment.updated`. `SQUARE_APPLICATION_ID` is optional and only
 checked against the environment.
 
@@ -465,7 +465,7 @@ Locally, forward webhooks with the Stripe CLI and use the `whsec_` it prints:
 
 ```bash
 stripe listen \
-  --forward-to localhost:5173/_weft/x/pay/stripe
+  --forward-to localhost:5173/_kerf/x/pay/stripe
 ```
 
 Pay on the hosted Checkout page with `4242 4242 4242 4242`, any future expiry, any CVC (`4000 0000 0000 9995` declines,
@@ -483,7 +483,7 @@ SQUARE_ACCESS_TOKEN=…       # the Sandbox tab's token
 SQUARE_LOCATION_ID=…        # a sandbox location
 SQUARE_APPLICATION_ID=sandbox-sq0idb-…  # optional, checked
 SQUARE_WEBHOOK_SIGNATURE_KEY=…  # the sandbox subscription's
-SQUARE_WEBHOOK_URL=https://<tunnel>/_weft/x/pay/square
+SQUARE_WEBHOOK_URL=https://<tunnel>/_kerf/x/pay/square
 ```
 
 At launch, swap in the production token and location with `SQUARE_ENVIRONMENT=production`; a `sandbox-` application id
@@ -491,7 +491,7 @@ is then refused.
 
 `SQUARE_ENVIRONMENT=sandbox` sends every call to `connect.squareupsandbox.com`; unset or `production`, to
 `connect.squareup.com`. A sandbox webhook needs a public URL, so run a tunnel (`cloudflared tunnel --url
-http://localhost:5173`) and give Square that URL plus `/_weft/x/pay/square`, the same string as `SQUARE_WEBHOOK_URL`.
+http://localhost:5173`) and give Square that URL plus `/_kerf/x/pay/square`, the same string as `SQUARE_WEBHOOK_URL`.
 Pay on the hosted sandbox page with `4111 1111 1111 1111`, any future expiry, CVV `111`, any ZIP. Square answers a
 token sent to the other environment's host with a bare 401, so that PAY030 names the host it hit.
 
@@ -507,11 +507,11 @@ skips without credentials and refuses a live key or a production Square environm
 
 ```bash
 export PAY_SANDBOX=1 STRIPE_SECRET_KEY=sk_test_…
-pnpm --filter @weft-js/pay test sandbox.live
+pnpm --filter @kerf/pay test sandbox.live
 
 export PAY_SANDBOX=1 SQUARE_ENVIRONMENT=sandbox \
   SQUARE_ACCESS_TOKEN=… SQUARE_LOCATION_ID=…
-pnpm --filter @weft-js/pay test sandbox.live
+pnpm --filter @kerf/pay test sandbox.live
 ```
 
 ## Storing the ledger
@@ -526,8 +526,8 @@ A `PayStore` is five methods:
 | `save(purchase)`    | Insert or replace by `id`.            |
 | `byUser(user)`      | Every purchase of a user.             |
 
-`drizzlePayStore(db, { purchases, payEvents })` from `@weft-js/pay/drizzle` implements it on Postgres, SQLite or MySQL, with
-the tables `weft add pay` writes (times are milliseconds, so they need a 64-bit integer column on Postgres and MySQL). It
+`drizzlePayStore(db, { purchases, payEvents })` from `@kerf/pay/drizzle` implements it on Postgres, SQLite or MySQL, with
+the tables `kerf add pay` writes (times are milliseconds, so they need a 64-bit integer column on Postgres and MySQL). It
 marks both tables as written by the webhook rather than by a server function.
 
 `memoryPayStore()` is for dev and tests. A production server refuses to start with it (PAY016).
@@ -537,20 +537,20 @@ and `user`, `product` and `plan` stay `null` until an event names them (a disput
 
 ## Writing another rail
 
-A rail is a plugin that provides the `pay.rail` slot for the `server` side and implements `PayRail` from `@weft-js/pay`:
+A rail is a plugin that provides the `pay.rail` slot for the `server` side and implements `PayRail` from `@kerf/pay`:
 
 | Member                            | What it does                                                                                                                                |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                              | The rail's name, and its webhook path: `/_weft/x/pay/<id>`.                                                                                 |
+| `id`                              | The rail's name, and its webhook path: `/_kerf/x/pay/<id>`.                                                                                 |
 | `checkout(request)`               | Open a hosted page for a `CheckoutRequest` (user, optional customer, the catalog line, return URLs, an idempotency key). Returns `{ url }`. |
 | `portal({ customer, returnUrl })` | Returns `{ url }`.                                                                                                                          |
 | `verify({ body, headers })`       | Gets the exact bytes received and returns normalised `RailEvent`s, or throws `PayError('PAY011', …)` for anything it can't prove.           |
 | `refund({ purchase })`            | Optional.                                                                                                                                   |
 
-Hold it to the contract with `payRailSuite` from `@weft-js/pay/test`:
+Hold it to the contract with `payRailSuite` from `@kerf/pay/test`:
 
 ```ts
-import { payRailSuite } from '@weft-js/pay/test'
+import { payRailSuite } from '@kerf/pay/test'
 import { myRail, signedDelivery } from '../src/rail'
 
 test('my rail passes pay.rail@1', async () => {
@@ -572,12 +572,12 @@ Swap rails by replacing `stripe()` in `plugins`. Nothing in app code changes.
 
 ## Testing with `fakePay`
 
-`fakePay` from `@weft-js/pay/test` is a rail with no key and no network. Its events are signed and go through your own
+`fakePay` from `@kerf/pay/test` is a rail with no key and no network. Its events are signed and go through your own
 webhook and ledger, and it pokes live queries, so a test sees what a user would:
 
 ```tsx
-import { net, render, screen, user } from '@weft-js/core/test'
-import { fakePay } from '@weft-js/pay/test'
+import { net, render, screen, user } from '@kerf/core/test'
+import { fakePay } from '@kerf/pay/test'
 import pay from '#/pay.server'
 
 test('checkout grants nothing; the verified event does', async () => {
@@ -616,17 +616,17 @@ test('checkout grants nothing; the verified event does', async () => {
 
 | Entry                        | Side              | Exports                                                                                                                                                                                                                          |
 | ---------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@weft-js/pay`               | client and server | `product`, `price`, `entitlementTag`, `PayError`; types `Product`, `ProductDef`, `ProductKind`, `ProductUse`, `Plan`, `Amounts`, `Interval`, `Price`, `PurchaseState`, `PayRail`, `RailEvent`, `CheckoutRequest`, `CheckoutLine` |
-| `@weft-js/pay/server`        | server            | `definePay`, `memoryPayStore`, `extension`; types `Pay`, `PayOptions`, `PayStore`, `Purchase`, `Entitlements`, `CheckoutInput`, `PayContext`, `PayReport`                                                                        |
-| `@weft-js/pay/drizzle`       | server            | `drizzlePayStore`                                                                                                                                                                                                                |
-| `@weft-js/pay/test`          | tests             | `fakePay`, `payRailSuite`; types `FakePay`, `PayScenario`, `PayRailSuiteOptions`, `Check`                                                                                                                                        |
-| `@weft-js/pay/plugin`        | config            | `pay` (default and named): the `server.extension`, the PAY checks, `weft docs pay` and `weft add pay`                                                                                                                            |
-| `@weft-js/pay/stripe`        | server            | `stripeRail`, `stripeKeyMode`; type `StripeOptions`                                                                                                                                                                                            |
-| `@weft-js/pay/stripe/plugin` | config            | `stripe` (default and named): the `pay.rail` provider                                                                                                                                                                            |
-| `@weft-js/pay/square`        | server            | `squareRail`, `squareSandbox`; type `SquareOptions`                                                                                                                                                                              |
-| `@weft-js/pay/square/plugin` | config            | `square` (default and named): the `pay.rail` provider                                                                                                                                                                            |
+| `@kerf/pay`               | client and server | `product`, `price`, `entitlementTag`, `PayError`; types `Product`, `ProductDef`, `ProductKind`, `ProductUse`, `Plan`, `Amounts`, `Interval`, `Price`, `PurchaseState`, `PayRail`, `RailEvent`, `CheckoutRequest`, `CheckoutLine` |
+| `@kerf/pay/server`        | server            | `definePay`, `memoryPayStore`, `extension`; types `Pay`, `PayOptions`, `PayStore`, `Purchase`, `Entitlements`, `CheckoutInput`, `PayContext`, `PayReport`                                                                        |
+| `@kerf/pay/drizzle`       | server            | `drizzlePayStore`                                                                                                                                                                                                                |
+| `@kerf/pay/test`          | tests             | `fakePay`, `payRailSuite`; types `FakePay`, `PayScenario`, `PayRailSuiteOptions`, `Check`                                                                                                                                        |
+| `@kerf/pay/plugin`        | config            | `pay` (default and named): the `server.extension`, the PAY checks, `kerf docs pay` and `kerf add pay`                                                                                                                            |
+| `@kerf/pay/stripe`        | server            | `stripeRail`, `stripeKeyMode`; type `StripeOptions`                                                                                                                                                                                            |
+| `@kerf/pay/stripe/plugin` | config            | `stripe` (default and named): the `pay.rail` provider                                                                                                                                                                            |
+| `@kerf/pay/square`        | server            | `squareRail`, `squareSandbox`; type `SquareOptions`                                                                                                                                                                              |
+| `@kerf/pay/square/plugin` | config            | `square` (default and named): the `pay.rail` provider                                                                                                                                                                            |
 
-Importing `@weft-js/pay/server` or `@weft-js/pay/drizzle` from client code is PAY017.
+Importing `@kerf/pay/server` or `@kerf/pay/drizzle` from client code is PAY017.
 
 <details>
 <summary><code>stripeRail(options)</code>: options the plugin doesn't document</summary>
@@ -642,7 +642,7 @@ global one). Use those in tests of the rail itself; in an app, keys stay in the 
 <summary><code>PayError</code></summary>
 
 `new PayError(code, message, status = 400)`. Every error this package throws has a stable `code`. `error.answer` is
-`{ code, message, status }`, the shape `@weft-js/start` sends a plugin's error to the client in.
+`{ code, message, status }`, the shape `@kerf/start` sends a plugin's error to the client in.
 
 </details>
 
@@ -651,7 +651,7 @@ global one). Use those in tests of the rail itself; in an app, keys stay in the 
 **Gate a page in `load`.**
 
 ```ts
-import { redirect } from '@weft-js/start'
+import { redirect } from '@kerf/start'
 
 export const load = async ({ ctx }) => {
   if (!(await ctx.entitlements.has('pro'))) redirect('/pricing')
@@ -661,7 +661,7 @@ export const load = async ({ ctx }) => {
 **Sell a one-time product with shipping.**
 
 ```ts
-import { product } from '@weft-js/pay'
+import { product } from '@kerf/pay'
 
 export const poster = product({
   id: 'poster',
@@ -687,7 +687,7 @@ amount; `price(pro, 'month', { currency: 'eur' }).display` shows it.
 
 ## Limits
 
-- Stripe is the only rail that ships. Native app-store rails, store policy and `weft pay sync` aren't built.
+- Stripe is the only rail that ships. Native app-store rails, store policy and `kerf pay sync` aren't built.
 - Delivery is at-least-once and unordered by design; ordering uses the rail's clock, so an event without a newer timestamp
   doesn't change state.
 - A webhook body over 1 MiB is refused (413).
@@ -699,7 +699,7 @@ amount; `price(pro, 'month', { currency: 'eur' }).display` shows it.
 
 ## Troubleshooting
 
-`weft check` and `weft build` run the PAY checks. `weft docs PAY012` prints any code's page.
+`kerf check` and `kerf build` run the PAY checks. `kerf docs PAY012` prints any code's page.
 
 | Code   | When                                                                                                                                                  | Fix                                                                |
 | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
@@ -708,14 +708,14 @@ amount; `price(pro, 'month', { currency: 'eur' }).display` shows it.
 | PAY005 | A price typed into a page that sells something (warning)                                                                                              | `price(product, plan).display`                                     |
 | PAY008 | A float or currency-less amount in `product()`                                                                                                        | Whole minor units: `{ usd: 999 }`                                  |
 | PAY010 | A checkout mutation without `auth: 'user'`, or a checkout with no signed-in user (401)                                                                | Add `auth: 'user'`                                                 |
-| PAY011 | A webhook handler with no signature check, a `verify` that ignores `headers`, no `STRIPE_WEBHOOK_SECRET`, or a delivery that fails verification (400) | Delete the handler: `/_weft/x/pay/<rail>` verifies. Set the secret |
+| PAY011 | A webhook handler with no signature check, a `verify` that ignores `headers`, no `STRIPE_WEBHOOK_SECRET`, or a delivery that fails verification (400) | Delete the handler: `/_kerf/x/pay/<rail>` verifies. Set the secret |
 | PAY012 | A rail's price or product id in client code                                                                                                           | Name the catalog; map ids in `stripe({ prices })`                  |
 | PAY013 | An entitlement checked only on the client                                                                                                             | `requires: [...]`, or `await ctx.entitlements.has(...)`            |
 | PAY014 | The plugin with no `src/pay.server.ts`: no webhook is mounted                                                                                         | Default-export `definePay({ … })` from it                          |
-| PAY015 | `ctx.entitlements.has()` without `await`                                                                                                              | Await it (`weft fix` does, in an `async` function)                 |
+| PAY015 | `ctx.entitlements.has()` without `await`                                                                                                              | Await it (`kerf fix` does, in an `async` function)                 |
 | PAY016 | `memoryPayStore()` in `src/pay.server.ts` (warning); a production server refuses to start                                                             | `drizzlePayStore` or your own `PayStore`                           |
-| PAY017 | `@weft-js/pay/server` or `/drizzle` imported in client code                                                                                           | Import them in a server module                                     |
-| PAY018 | `src/pay.server.ts` with no `pay.rail` provider                                                                                                       | `weft add pay-stripe`                                              |
+| PAY017 | `@kerf/pay/server` or `/drizzle` imported in client code                                                                                           | Import them in a server module                                     |
+| PAY018 | `src/pay.server.ts` with no `pay.rail` provider                                                                                                       | `kerf add pay-stripe`                                              |
 | PAY031 | A live key in a test                                                                                                                                  | `fakePay`                                                          |
 
 At run time:
@@ -736,17 +736,17 @@ At run time:
 
 | Package                                                          | What it is                                                                      |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| [`@weft-js/start`](https://www.npmjs.com/package/@weft-js/start) | Server functions, `ctx`, `server.extension` and live queries that pay builds on |
-| [`@weft-js/core`](https://www.npmjs.com/package/@weft-js/core)   | The plugin API (`definePlugin`, slots) and the test kit (`net`, `clock`)        |
-| [`@weft-js/db`](https://www.npmjs.com/package/@weft-js/db)       | The database layer `drizzlePayStore` runs on                                    |
-| [`@weft-js/cli`](https://www.npmjs.com/package/@weft-js/cli)     | `weft add pay`, `weft check`, `weft docs pay` and `weft docs plugins`           |
+| [`@kerf/start`](https://www.npmjs.com/package/@kerf/start) | Server functions, `ctx`, `server.extension` and live queries that pay builds on |
+| [`@kerf/core`](https://www.npmjs.com/package/@kerf/core)   | The plugin API (`definePlugin`, slots) and the test kit (`net`, `clock`)        |
+| [`@kerf/db`](https://www.npmjs.com/package/@kerf/db)       | The database layer `drizzlePayStore` runs on                                    |
+| [`@kerf/cli`](https://www.npmjs.com/package/@kerf/cli)     | `kerf add pay`, `kerf check`, `kerf docs pay` and `kerf docs plugins`           |
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Ravonus/weft/blob/main/CONTRIBUTING.md). From the repository root:
+See [CONTRIBUTING.md](https://github.com/Ravonus/kerf/blob/main/CONTRIBUTING.md). From the repository root:
 
 ```bash
-pnpm --filter @weft-js/pay test
+pnpm --filter @kerf/pay test
 ```
 
 The tests run the ledger end to end over `fakePay`, the Stripe rail against a mocked API, the PAY checks, and the
@@ -754,4 +754,4 @@ The tests run the ledger end to end over `fakePay`, the Stripe rail against a mo
 
 ## License
 
-[MIT](https://github.com/Ravonus/weft/blob/main/LICENSE)
+[MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)

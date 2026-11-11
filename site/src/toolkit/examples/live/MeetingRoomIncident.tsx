@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Card, MeetingRoom } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Card, MeetingRoom } from '@kerf/veneer'
 import { CALL, CALL_SELF } from '../../world'
 import { CHAT, SLIDE, INVITE } from './shared'
 

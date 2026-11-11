@@ -1,9 +1,9 @@
-import type { ModelOption } from '@weft-js/warp'
+import type { ModelOption } from '@kerf/veneer'
 
 export const MODELS: ModelOption[] = [
   {
     id: 'deep',
-    name: 'Weft Deep',
+    name: 'Kerf Deep',
     short: 'Deep',
     provider: 'Hosted',
     description: 'Long investigations',
@@ -13,7 +13,7 @@ export const MODELS: ModelOption[] = [
   },
   {
     id: 'swift',
-    name: 'Weft Swift',
+    name: 'Kerf Swift',
     short: 'Swift',
     provider: 'Hosted',
     description: 'Fast, good at config',

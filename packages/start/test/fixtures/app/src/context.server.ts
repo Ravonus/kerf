@@ -6,7 +6,7 @@ export default ({ request }: { request: Request }) => {
   return { db: todos, who: request.headers.get('x-user'), ...(user && { user: { id: user } }) }
 }
 
-declare module '@weft-js/start' {
+declare module '@kerf/start' {
   interface Context {
     db: typeof todos
     who: string | null

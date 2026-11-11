@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { interval } from '@weft-js/core/browser'
-import { Button, Card } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { interval } from '@kerf/core/browser'
+import { Button, Card } from '@kerf/veneer'
 
 const SYMBOLS = ['AAPL', 'MSFT', 'NVDA', 'TSLA']
 type Price = { symbol: string; price: number }

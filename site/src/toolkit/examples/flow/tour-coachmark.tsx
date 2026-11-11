@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   Coachmark,
@@ -6,7 +6,7 @@ import {
   Stack,
   Text,
   Tour,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 const firstDeployDescription =
   'Connect a repository and your first ' +
@@ -133,7 +133,7 @@ export function CoachmarkNewFeature() {
 export const FRAMEWORKS = [
   { value: 'vite', label: 'Vite' },
   { value: 'next', label: 'Next.js' },
-  { value: 'weft', label: 'weft' },
+  { value: 'kerf', label: 'kerf' },
 ]
 
 export const WIZARD = ['repo', 'build', 'review']

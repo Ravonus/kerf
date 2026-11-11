@@ -1,0 +1,4 @@
+/* A bare `<a>` is never the browser's blue: veneer's link ink and hairline underline (05 §4), in veneer.base so every component's own link and app CSS win. */
+@layer veneer.base {
+:where(a:any-link) { color: var(--veneer-color-accent-text); text-decoration-thickness: var(--veneer-border-hairline); text-underline-offset: 0.22em; }
+}

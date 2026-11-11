@@ -27,7 +27,7 @@ export function makeTopic<
   K extends StandardSchemaV1<unknown, string | number>,
   M extends StandardSchemaV1,
 >(name: string, def: { key?: K; message: M }, hub: () => Hub): Topic<Out<K>, Out<M>> {
-  const path = (key: unknown) => `weft:t:${name}:${String(key)}`
+  const path = (key: unknown) => `kerf:t:${name}:${String(key)}`
   return {
     name,
     message: def.message as StandardSchemaV1<unknown, Out<M>>,

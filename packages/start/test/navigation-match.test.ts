@@ -67,11 +67,11 @@ function serverRouter(path: string) {
 async function serverMatch(path: string): Promise<string[]> {
   const router = serverRouter(path)
   const [branch, params, found] = router.getMatchedRoutes(router.latestLocation.pathname)
-  const entry = found?.options as { weft?: { kind?: string } } | undefined
-  if (params['**'] || entry?.weft?.kind !== 'page') return []
+  const entry = found?.options as { kerf?: { kind?: string } } | undefined
+  if (params['**'] || entry?.kerf?.kind !== 'page') return []
   return branch.flatMap((item) => {
-    const weft = (item.options as { weft?: { id: string } }).weft
-    return weft ? [weft.id] : []
+    const kerf = (item.options as { kerf?: { id: string } }).kerf
+    return kerf ? [kerf.id] : []
   })
 }
 
@@ -221,7 +221,7 @@ it('reports a loader not-found after the pre-load route match', async () => {
   const result = await finalResolution('/users/new', {
     '/users/new': {
       load: () => {
-        // oxlint-disable-next-line typescript/only-throw-error -- loaders throw weft's notFound()/redirect() results by design
+        // oxlint-disable-next-line typescript/only-throw-error -- loaders throw kerf's notFound()/redirect() results by design
         throw notFound()
       },
     },
@@ -244,7 +244,7 @@ it('preserves router redirect status and headers from a loader', async () => {
   const result = await finalResolution('/users/new', {
     '/users/new': {
       load: () => {
-        // oxlint-disable-next-line typescript/only-throw-error -- loaders throw weft's notFound()/redirect() results by design
+        // oxlint-disable-next-line typescript/only-throw-error -- loaders throw kerf's notFound()/redirect() results by design
         throw routerRedirect({
           href: '/users/alice',
           statusCode: 302,
@@ -272,7 +272,7 @@ it('delivers router redirect headers and request-scope headers on both response 
   const result = await finalResolution('/users/new', {
     '/users/new': {
       load: () => {
-        // oxlint-disable-next-line typescript/only-throw-error -- loaders throw weft's notFound()/redirect() results by design
+        // oxlint-disable-next-line typescript/only-throw-error -- loaders throw kerf's notFound()/redirect() results by design
         throw routerRedirect({
           href: '/users/alice',
           statusCode: 302,
@@ -347,7 +347,7 @@ it.each(['page', 'navigation'] as const)(
     const result = await finalResolution('/users/new', {
       '/users/new': {
         load: () => {
-          // oxlint-disable-next-line typescript/only-throw-error -- loaders throw weft's notFound()/redirect() results by design
+          // oxlint-disable-next-line typescript/only-throw-error -- loaders throw kerf's notFound()/redirect() results by design
           throw routerRedirect({ href: '/users/alice', statusCode: 302, headers: native })
         },
       },

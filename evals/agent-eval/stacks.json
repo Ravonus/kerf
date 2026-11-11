@@ -1,14 +1,14 @@
 {
-  "weft-warp": {
-    "framework": "weft with the warp UI kit",
+  "kerf-veneer": {
+    "framework": "kerf with the veneer UI kit",
     "create": [
       [
         "pnpm",
         "dlx",
-        "@weft-js/create@0.1.1",
+        "create-kerf@0.1.1",
         "app",
         "--ui",
-        "warp",
+        "veneer",
         "--db",
         "none",
         "--no-git",
@@ -16,7 +16,7 @@
       ]
     ],
     "after": [["pnpm", "install", "--no-frozen-lockfile"]],
-    "serve": ["pnpm", "exec", "weft", "start"],
+    "serve": ["pnpm", "exec", "kerf", "start"],
     "portEnv": "PORT",
     "built": [".output"]
   },

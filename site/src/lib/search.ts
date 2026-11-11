@@ -5,14 +5,14 @@ import {
   type SearchHit,
   type SearchIndex,
   type SearchWire,
-} from '@weft-js/warp-core'
+} from '@kerf/veneer-core'
 import files from '../generated/search.json'
 
 // Two tiers (research 40 §2). T0, titles, stays in this module for the life of the page and answers a key press in the
 // same frame. T1, body text, lives in a worker. Both come from Cache Storage on a later visit, so search works offline
 // once it has loaded. `seen` makes a repeat query no work at all.
 
-const CACHE = 'weft-search-1'
+const CACHE = 'kerf-search-1'
 let index: SearchIndex | undefined
 let loading: Promise<SearchIndex> | undefined
 const seen = new Map<string, SearchHit[]>()

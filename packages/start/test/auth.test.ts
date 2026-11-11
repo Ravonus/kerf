@@ -2,8 +2,8 @@
 // through a mutation, the full load when the session changes, guards before children, per-user shared caches. The
 // passwords and secret are throwaway test values made here.
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { mutation, query, redirect, type Context, type StandardSchemaV1 } from '@weft-js/start'
-import { fnOf, StartError } from '@weft-js/start/data'
+import { mutation, query, redirect, type Context, type StandardSchemaV1 } from '@kerf/start'
+import { fnOf, StartError } from '@kerf/start/data'
 import { forward, session, sessionChanged } from '../src/auth'
 import { createAuth } from '../src/auth/better-auth'
 import { drizzleAuth } from '../src/auth/drizzle'
@@ -103,7 +103,7 @@ const as = (cookie?: string, method = 'GET') =>
 
 let cookie: string
 beforeAll(async () => {
-  await db.$weft.migrate([{ tag: 'auth', sql: ddl }])
+  await db.$kerf.migrate([{ tag: 'auth', sql: ddl }])
   ;({ cookie } = await signUp('ada@example.test'))
 })
 
@@ -195,7 +195,7 @@ test("forward(): cookies reach the response; a failure is an FnError with Better
 })
 
 test("createAuth exempts its tables from Q011 and keeps the app's options", () => {
-  expect([...db.$weft.exempt].sort()).toEqual([
+  expect([...db.$kerf.exempt].sort()).toEqual([
     'account',
     'jwks',
     'session',
@@ -212,17 +212,17 @@ test('A001: a short or missing secret on a production server; dev and tests pass
     secret: 'short',
     options: { database: drizzleAuth(db, schema), baseURL: base },
   })
-  expect(() => weak.$weft.check()).not.toThrow()
+  expect(() => weak.$kerf.check()).not.toThrow()
   vi.stubEnv('NODE_ENV', 'production')
   try {
-    expect(() => weak.$weft.check()).toThrow(StartError)
+    expect(() => weak.$kerf.check()).toThrow(StartError)
     expect(() =>
       createAuth({
         db,
         options: { database: drizzleAuth(db, schema), baseURL: base },
-      }).$weft.check(),
+      }).$kerf.check(),
     ).toThrow(/A001|secret/)
-    expect(() => auth.$weft.check()).not.toThrow()
+    expect(() => auth.$kerf.check()).not.toThrow()
   } finally {
     vi.unstubAllEnvs()
   }
@@ -234,11 +234,11 @@ test('A007: a production server with no URL of its own; BETTER_AUTH_URL or optio
   vi.stubEnv('NODE_ENV', 'production')
   try {
     const bare = createAuth({ db, secret, options: { database: drizzleAuth(db, schema) } })
-    expect(() => bare.$weft.check()).toThrow(/A007/)
-    expect(() => auth.$weft.check()).not.toThrow()
+    expect(() => bare.$kerf.check()).toThrow(/A007/)
+    expect(() => auth.$kerf.check()).not.toThrow()
     vi.stubEnv('BETTER_AUTH_URL', base)
     const fromEnv = createAuth({ db, secret, options: { database: drizzleAuth(db, schema) } })
-    expect(() => fromEnv.$weft.check()).not.toThrow()
+    expect(() => fromEnv.$kerf.check()).not.toThrow()
   } finally {
     vi.unstubAllEnvs()
     if (url !== undefined) process.env.BETTER_AUTH_URL = url
@@ -255,14 +255,14 @@ test('the JWT signing key rotates every 30 days unless the app says otherwise', 
 test('a build with no secret gives Better Auth one of its own, so a production build loads auth; a server still needs the real one', () => {
   const options = { database: drizzleAuth(db, schema), baseURL: base }
   expect(createAuth({ db, options }).options.secret).toBeUndefined()
-  vi.stubEnv('WEFT_BUILD', '1')
+  vi.stubEnv('KERF_BUILD', '1')
   vi.stubEnv('NODE_ENV', 'production')
   try {
     const built = createAuth({ db, options })
     expect(built.options.secret).toMatch(/^[0-9a-f]{64}$/)
     expect(createAuth({ db, options }).options.secret).not.toBe(built.options.secret)
     expect(createAuth({ db, secret, options }).options.secret).toBe(secret)
-    expect(() => built.$weft.check()).toThrow(/A001/)
+    expect(() => built.$kerf.check()).toThrow(/A001/)
   } finally {
     vi.unstubAllEnvs()
   }
@@ -328,11 +328,11 @@ function handlerFixture() {
   })
   const call = (name: string, cookieHeader?: string) =>
     handler(
-      new Request(`${base}/_weft/fn/${name}`, {
+      new Request(`${base}/_kerf/fn/${name}`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
-          'x-weft': '1',
+          'x-kerf': '1',
           ...(cookieHeader && { cookie: cookieHeader }),
         },
         body: JSON.stringify({ i: { email: 'ada@example.test', password } }),

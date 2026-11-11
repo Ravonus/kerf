@@ -1,4 +1,4 @@
-import { createRoot, derived, state } from '@weft-js/core'
+import { createRoot, derived, state } from '@kerf/core'
 import { FN, SUBMIT, fns, nextAuto } from './foundation'
 import { mutate } from './mutation'
 import { StartError } from './primitives'

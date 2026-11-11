@@ -1,4 +1,4 @@
-import { Split } from '@weft-js/warp'
+import { Split } from '@kerf/veneer'
 import { Box } from './shared'
 
 export const SplitTile = () => (

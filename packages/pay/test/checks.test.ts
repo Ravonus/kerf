@@ -1,5 +1,5 @@
 // The PAY-codes (research 10 §7, 37): each fires on the mistake and stays quiet on the fix. A check hook is a function of its
-// `ctx`, so most of this is a plain map of files; the last block runs it through a real `weft check` and `weft fix`.
+// `ctx`, so most of this is a plain map of files; the last block runs it through a real `kerf check` and `kerf fix`.
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -8,19 +8,19 @@ import { fix } from '../../cli/src/fix.mjs'
 import { project } from '../../cli/test/helpers.mjs'
 import pay from '../plugin.mjs'
 import { run as checks } from '../src/checks.mjs'
-import type { CheckContext, Finding, PluginEnv } from '@weft-js/core/plugin'
+import type { CheckContext, Finding, PluginEnv } from '@kerf/core/plugin'
 
 const runChecks = checks as (
   ctx: Pick<CheckContext, 'files' | 'read' | 'exists' | 'slots'>,
 ) => Finding[]
 
 const ledger =
-  "import { definePay } from '@weft-js/pay/server'\nexport default definePay({ catalog: [], store, urls: { success: '/', cancel: '/' } })\n"
+  "import { definePay } from '@kerf/pay/server'\nexport default definePay({ catalog: [], store, urls: { success: '/', cancel: '/' } })\n"
 const app = {
   'src/pay.server.ts': ledger,
   '.env.example': 'STRIPE_WEBHOOK_SECRET=whsec_placeholder\n',
 }
-const stripe = { 'pay.rail': { stripe: '@weft-js/pay/stripe' } }
+const stripe = { 'pay.rail': { stripe: '@kerf/pay/stripe' } }
 const hook = (files: Record<string, string>, slots: CheckContext['slots'] = stripe) =>
   runChecks({
     files: Object.keys(files),
@@ -56,7 +56,7 @@ describe('PAY003: keys', () => {
     expect(
       codes(
         await run({
-          'weft.config.ts':
+          'kerf.config.ts':
             'const stripe = (o: object) => ({ name: "x" })\nexport default { plugins: [stripe({ secretKey: process.env.K })] }\n',
         }),
       ),
@@ -108,7 +108,7 @@ describe('PAY011: webhooks', () => {
   })
   it('a rail whose `verify` never looks at a signature', async () => {
     const rail =
-      "import type { PayRail } from '@weft-js/pay'\nexport const rail: Partial<PayRail> = { verify: ({ body }) => JSON.parse(body) }\n"
+      "import type { PayRail } from '@kerf/pay'\nexport const rail: Partial<PayRail> = { verify: ({ body }) => JSON.parse(body) }\n"
     expect(codes(await run({ 'src/rail.server.ts': rail }))).toEqual(['PAY011'])
     expect(
       codes(await run({ 'src/rail.server.ts': rail.replace('({ body })', '({ body, headers })') })),
@@ -159,7 +159,7 @@ describe('PAY013: checked only on the client', () => {
 
 describe('PAY004: a grant on the client', () => {
   const page = (after: string) =>
-    `import { checkout } from '#/server/pay'\nimport { state } from '@weft-js/core'\nexport default function P() { const isPro = state(false); const busy = state(false)\n  const buy = async () => { busy.value = true; await checkout({ product: 'pro' }); ${after} }\n  return <button onClick={buy}>{isPro.value ? 'y' : 'n'}</button> }\n`
+    `import { checkout } from '#/server/pay'\nimport { state } from '@kerf/core'\nexport default function P() { const isPro = state(false); const busy = state(false)\n  const buy = async () => { busy.value = true; await checkout({ product: 'pro' }); ${after} }\n  return <button onClick={buy}>{isPro.value ? 'y' : 'n'}</button> }\n`
   it('paid state written after `checkout`', async () => {
     expect(codes(await run({ 'src/routes/index.tsx': page('isPro.value = true') }))).toEqual([
       'PAY004',
@@ -179,7 +179,7 @@ describe('PAY008: money', () => {
   it('a float, with the integer as a reviewable edit', async () => {
     const r = await run({
       'src/pay/catalog.ts':
-        "import { product } from '@weft-js/pay'\nexport const a = product({ id: 'a', kind: 'one-time', use: 'digital', price: { usd: 9.99 } })\n",
+        "import { product } from '@kerf/pay'\nexport const a = product({ id: 'a', kind: 'one-time', use: 'digital', price: { usd: 9.99 } })\n",
     })
     const d = r.diagnostics.find((x) => x.code === 'PAY008')
     expect(d!.fix!.edits[0]!.text).toBe('999')
@@ -236,7 +236,7 @@ describe('the wiring', () => {
     expect(wired({ ...files, '.env.example': app['.env.example'] })).toEqual(['PAY016'])
   })
   it('PAY010: a checkout anyone can start', async () => {
-    const open = `import { mutation } from '@weft-js/start'\n${server}export const go = mutation({ run: async ({ ctx }) => pay.checkout(ctx, { product: 'pro' }) })\n`
+    const open = `import { mutation } from '@kerf/start'\n${server}export const go = mutation({ run: async ({ ctx }) => pay.checkout(ctx, { product: 'pro' }) })\n`
     expect(codes(await run({ 'src/server/x.ts': open }))).toEqual(['PAY010'])
     expect(
       codes(
@@ -251,7 +251,7 @@ describe('the wiring', () => {
       codes(
         await run({
           'src/routes/index.tsx':
-            "import { definePay } from '@weft-js/pay/server'\nexport default () => <p>{String(definePay)}</p>\n",
+            "import { definePay } from '@kerf/pay/server'\nexport default () => <p>{String(definePay)}</p>\n",
         }),
       ),
     ).toEqual(['PAY017'])
@@ -280,14 +280,14 @@ describe('the wiring', () => {
   })
 })
 
-describe('through `weft check`', () => {
+describe('through `kerf check`', () => {
   const body =
-    "import { query } from '@weft-js/start'\nexport const r = query({ run: async ({ ctx }) => { if (ctx.entitlements.has('pro')) return 1; return 0 } })\n"
+    "import { query } from '@kerf/start'\nexport const r = query({ run: async ({ ctx }) => { if (ctx.entitlements.has('pro')) return 1; return 0 } })\n"
   const config =
     "import pay from '../../../../pay/plugin.mjs'\nexport default { plugins: [pay()] }\n"
-  it('reports what the hook found, and `weft fix` applies its edit', async () => {
+  it('reports what the hook found, and `kerf fix` applies its edit', async () => {
     const dir = project({
-      'weft.config.ts': config,
+      'kerf.config.ts': config,
       'src/pay.server.ts': ledger,
       'src/server/x.ts': body,
     })

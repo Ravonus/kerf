@@ -34,7 +34,7 @@ describe('the server log', () => {
   test('the default is a readable line carrying the request id', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     serverLog(undefined)(d)
-    expect(warn.mock.calls[0]![0]).toBe('[weft] Q019 error (/a) [r1]: too often')
+    expect(warn.mock.calls[0]![0]).toBe('[kerf] Q019 error (/a) [r1]: too often')
   })
 
   test("a proxy's x-request-id is kept only behind a trusted proxy, and only when it's plain", () => {
@@ -45,7 +45,7 @@ describe('the server log', () => {
   })
 })
 
-describe('/_weft/health', () => {
+describe('/_kerf/health', () => {
   afterEach(() => handles.clear())
   const handle = (ping: () => Promise<unknown>) =>
     ({ dialect: 'postgresql', exempt: new Set(), migrate: async () => {}, ping }) as never

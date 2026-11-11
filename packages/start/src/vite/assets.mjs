@@ -4,11 +4,11 @@ import { parse } from './syntax.mjs'
 import { isServerModule } from './server-functions.mjs'
 import { NOT_ASSET, ASSETS } from './shared.mjs'
 
-/** weft's own packages from an install: a static component's stylesheets are in them, and they ship source. */
-const KIT = /\/node_modules\/@weft-js\/.*\.[jt]sx?$/
+/** kerf's own packages from an install: a static component's stylesheets are in them, and they ship source. */
+const KIT = /\/node_modules\/@kerf\/.*\.[jt]sx?$/
 
 /**
- * The stylesheets a kit import reaches, in import order, written straight into the static module: chained `?weft-assets`
+ * The stylesheets a kit import reaches, in import order, written straight into the static module: chained `?kerf-assets`
  * modules from a package with `sideEffects` would be shaken away. `names` follows a barrel only to the components named,
  * so a page with one doesn't pull every component's sheet.
  */
@@ -52,7 +52,7 @@ async function kitAssets(ctx, file, names, seen, words) {
           : !all || (space && !wanted(space))
     )
       continue
-    if (/^@weft-js\/(?:core|start)($|\/)/.test(n.source.value)) continue
+    if (/^@kerf\/(?:core|start)($|\/)/.test(n.source.value)) continue
     const target = (await ctx.resolve(n.source.value, file, { skipSelf: true }))?.id
     if (!target) continue
     const bare = target.replace(/\?.*$/, '')
@@ -98,7 +98,7 @@ export async function assetsOnly(ctx, code, path, root, words) {
     )
       continue
     const spec = n.source.value
-    if (/^@weft-js\/(?:core|start)($|\/)/.test(spec)) continue
+    if (/^@kerf\/(?:core|start)($|\/)/.test(spec)) continue
     const file = (await ctx.resolve(spec, path, { skipSelf: true }))?.id
     if (!file) continue
     const bare = file.replace(/\?.*$/, '')
@@ -111,7 +111,7 @@ export async function assetsOnly(ctx, code, path, root, words) {
     )
       out.push(`import ${JSON.stringify(bare + ASSETS)}`)
   }
-  if (code.includes('@weft-js/core/style')) out.push(`import 'virtual:weft/groups.css'`)
+  if (code.includes('@kerf/core/style')) out.push(`import 'virtual:kerf/groups.css'`)
   out.push('export default null') // a chunk of only CSS is dropped, and the server looks this one up
   return out.join('\n') + '\n'
 }

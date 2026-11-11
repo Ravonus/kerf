@@ -1,13 +1,13 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 import {
   Row,
   Stack,
   Text,
   WeekPicker,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
-import type { IsoWeek } from '@weft-js/warp'
+import type { IsoWeek } from '@kerf/veneer'
 
 import {
   TODAY,

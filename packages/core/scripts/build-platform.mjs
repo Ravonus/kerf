@@ -3,7 +3,7 @@
 //
 //   node scripts/build-platform.mjs [--target <name>[,<name>…]|host|all] [--out <dir>]
 //   node scripts/build-platform.mjs --verify [--skip <name>[,<name>…]] [--out <dir>]
-//                                                              every package there against weft's optionalDependencies;
+//                                                              every package there against kerf's optionalDependencies;
 //                                                              a skipped platform may be missing (it runs the WASM build)
 //
 // A target other than the host goes through `cargo zigbuild` (Linux, needs zig and cargo-zigbuild) or `cargo xwin`
@@ -17,7 +17,7 @@ import { hostPlatform, writePlatformPackage } from './platform-package.mjs'
 
 const { platforms } = createRequire(import.meta.url)('../platforms.cjs')
 const here = dirname(fileURLToPath(import.meta.url))
-const crate = join(here, '..', '..', '..', 'crates', 'weft-compiler')
+const crate = join(here, '..', '..', '..', 'crates', 'kerf-compiler')
 const argv = process.argv.slice(2)
 const flag = (name) =>
   argv.includes(`--${name}`) ? argv[argv.indexOf(`--${name}`) + 1] : undefined
@@ -29,10 +29,10 @@ const dirOf = (p) => join(out, p.name)
 function build(p, host) {
   const library =
     p.os === 'win32'
-      ? 'weft_compiler.dll'
+      ? 'kerf_compiler.dll'
       : p.os === 'darwin'
-        ? 'libweft_compiler.dylib'
-        : 'libweft_compiler.so'
+        ? 'libkerf_compiler.dylib'
+        : 'libkerf_compiler.so'
   const tool =
     p.target === host
       ? ['build']
@@ -64,27 +64,27 @@ function build(p, host) {
 function verify() {
   const pkg = JSON.parse(readFileSync(join(here, '..', 'package.json'), 'utf8'))
   const wanted = Object.keys(pkg.optionalDependencies ?? {}).sort()
-  const table = platforms.map((p) => `@weft-js/compiler-${p.name}`).sort()
+  const table = platforms.map((p) => `@kerf/compiler-${p.name}`).sort()
   const bad = []
   if (wanted.join() !== table.join())
     bad.push(`optionalDependencies and platforms.cjs disagree: ${wanted.join()} / ${table.join()}`)
   for (const [name, version] of Object.entries(pkg.optionalDependencies ?? {}))
     if (version !== pkg.version)
-      bad.push(`${name} is pinned to ${version}, @weft-js/core is ${pkg.version}`)
+      bad.push(`${name} is pinned to ${version}, @kerf/core is ${pkg.version}`)
   const skip = new Set((flag('skip') ?? '').split(',').filter(Boolean))
   for (const p of platforms) {
     const file = join(dirOf(p), 'package.json')
     if (!existsSync(file)) {
       if (!skip.has(p.name)) bad.push(`${p.name}: not built`)
     } else if (JSON.parse(readFileSync(file, 'utf8')).version !== pkg.version)
-      bad.push(`${p.name}: a different version from weft`)
-    else if (!existsSync(join(dirOf(p), 'weft-compiler.node'))) bad.push(`${p.name}: no addon`)
+      bad.push(`${p.name}: a different version from kerf`)
+    else if (!existsSync(join(dirOf(p), 'kerf-compiler.node'))) bad.push(`${p.name}: no addon`)
   }
-  if (!existsSync(join(here, '..', 'native', 'weft-compiler.wasm')))
-    bad.push('no native/weft-compiler.wasm')
+  if (!existsSync(join(here, '..', 'native', 'kerf-compiler.wasm')))
+    bad.push('no native/kerf-compiler.wasm')
   for (const line of bad) console.error(line)
   if (bad.length) process.exit(1)
-  console.log(`${platforms.length} platforms and the WASM build agree with weft ${pkg.version}`)
+  console.log(`${platforms.length} platforms and the WASM build agree with kerf ${pkg.version}`)
 }
 
 if (argv.includes('--verify')) verify()

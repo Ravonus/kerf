@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { PaginationBar } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { PaginationBar } from '@kerf/veneer'
 
 export function PaginationBarOffset() {
   const page = state(6)

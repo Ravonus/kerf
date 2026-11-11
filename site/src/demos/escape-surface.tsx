@@ -1,9 +1,9 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   defineSurface,
   Surface,
-} from '@weft-js/core/surface'
-import { Card, Slider } from '@weft-js/warp'
+} from '@kerf/core/surface'
+import { Card, Slider } from '@kerf/veneer'
 
 // A canvas in layout. `setup` runs once;
 // `props.height` is read live on every frame.

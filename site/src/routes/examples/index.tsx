@@ -1,4 +1,4 @@
-import { Link, type Meta } from '@weft-js/start'
+import { Link, type Meta } from '@kerf/start'
 import { Example } from '../../components/Example'
 import { demos } from '../../demos'
 import { runs } from '../../demos/runs'
@@ -7,7 +7,7 @@ import Shop from '../../demos/shop-5'
 export const prerender = true
 export const meta: Meta = {
   title: 'Examples',
-  description: 'Small working Weft programs, each with its code, what to try and why it matters.',
+  description: 'Small working Kerf programs, each with its code, what to try and why it matters.',
 }
 
 function Run(props: { id: string }) {
@@ -20,7 +20,7 @@ export default function Examples() {
       <h1>Examples</h1>
       <p data-part="intro">
         Each of these is running on this page, and the code beside it is the code that is running.
-        New to weft? Start with the small ones under this shop.{' '}
+        New to kerf? Start with the small ones under this shop.{' '}
         <Link href="/learn/installation">Set up a project</Link> when you want to try one yourself.
       </p>
       <Example id="shop-5" title="A whole small shop" lead>

@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   Input,
@@ -6,7 +6,7 @@ import {
   Select,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { ROLES } from './shared'
 
 export function ModalInvite() {
@@ -38,7 +38,7 @@ export function ModalInvite() {
         title="Invite a teammate"
         description={
           'They get an email' +
-          ' with a link to join weft.'
+          ' with a link to join kerf.'
         }
         footer={
           <>
@@ -62,7 +62,7 @@ export function ModalInvite() {
           <Input
             label="Work email"
             type="email"
-            placeholder="noor@weft.dev"
+            placeholder="noor@kerf.dev"
             autofocus
             value={email.value}
             onInput={(e: Event) =>

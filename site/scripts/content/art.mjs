@@ -2,21 +2,21 @@ import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { catalog } from '../../../packages/cli/src/catalog.mjs'
-import { loadCompiler, resolveWeft } from '../../../packages/cli/src/weft.mjs'
+import { loadCompiler, resolveKerf } from '../../../packages/cli/src/kerf.mjs'
 import { highlight, level, PALETTE, site, repo, pub } from './context.mjs'
 import { write, readData } from './docs-catalog.mjs'
 import { INKS, markCells, png } from '../mark.mjs'
 
 /** Every drawing, from the set's generated source: `{ name: [hollow, solid] }`, content-addressed in `public/`. */
 function buildIcons() {
-  const icons = join(repo, 'packages/warp-icons/src/gen')
+  const icons = join(repo, 'packages/veneer-icons/src/gen')
   const entry = readFileSync(join(icons, 'all.tsx'), 'utf8')
   const source = [...entry.matchAll(/^export \* from '(\.\/all-[^']+)'$/gm)]
     .map(([, path]) => readFileSync(join(icons, `${path}.tsx`), 'utf8'))
     .join('\n')
   const names = JSON.parse(
     /names = (\[[^\]]*\])/.exec(
-      readFileSync(join(repo, 'packages/warp-icons/src/gen/names.ts'), 'utf8'),
+      readFileSync(join(repo, 'packages/veneer-icons/src/gen/names.ts'), 'utf8'),
     )[1],
   )
   const title = (n) => n.replace(/(^|-)(.)/g, (_, __, c) => c.toUpperCase())
@@ -90,8 +90,8 @@ function buildArt() {
 
 /** The landing's code moment and diagnostic, from the real compiler. */
 function buildShowcase() {
-  const compiler = loadCompiler(resolveWeft(site))
-  const source = `import { state } from '@weft-js/core'
+  const compiler = loadCompiler(resolveKerf(site))
+  const source = `import { state } from '@kerf/core'
 
 export function Counter() {
   const n = state(0)
@@ -131,7 +131,7 @@ export function Counter() {
 }`
   const habit = compiler
     .transform(
-      `import { state } from '@weft-js/core'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`,
+      `import { state } from '@kerf/core'\nfunction Price(props: { value: number }) {\n  const n = state(props.value)\n  return <b>{n.value}</b>\n}`,
       { filename: 'Price.tsx' },
     )
     .diagnostics.find((d) => d.code === 'W005')
@@ -145,10 +145,10 @@ export const products = query({
 // in Shop: the list now comes from the database
 const list = products()
 {(list.value ?? []).map(p => <Row key={p.id} product={p} />)}`
-  const size = readData('evals/results/summary.json').warpExit.size
+  const size = readData('evals/results/summary.json').veneerExit.size
   const kb = (n) => +(n / 1024).toFixed(2)
   write('showcase.json', {
-    receipt: { weft: kb(size.weft.js), kit: kb(size.kit), total: kb(size.weft.js + size.kit) },
+    receipt: { kerf: kb(size.kerf.js), kit: kb(size.kit), total: kb(size.kerf.js + size.kit) },
     server: block(server, 'tsx'),
     habit: {
       code: 'W005',
@@ -167,7 +167,7 @@ const list = products()
   })
 }
 
-/** The arena's table: benchmarks/speed's numbers whichever way they fall, including the rows weft loses. */
+/** The arena's table: benchmarks/speed's numbers whichever way they fall, including the rows kerf loses. */
 function buildSpeed() {
   const run = readData('benchmarks/speed/results.json')
   if (!run.valid) throw new Error('benchmarks/speed/results.json was measured under too much load')
@@ -185,12 +185,12 @@ function buildSpeed() {
     ['Update every 10th of 10,000', 'update 10000', 'every 10th, ms per tick'],
     ['Update all 10,000 cells', 'update 10000', 'every cell, ms per tick'],
   ].map(([label, group, key]) => {
-    const [weft, solid, react] = ['weft', 'solid-batch', 'react'].map(
+    const [kerf, solid, react] = ['kerf', 'solid-batch', 'react'].map(
       (s) => run.grid[s][group][key],
     )
     // Across the rounds: a row only goes to whoever's 95% interval against the other stays on one side of even.
-    const { lo, hi } = run.compared.weft[group][key]
-    return { label, weft, solid, react, fastest: hi < 1 ? 'weft' : lo > 1 ? 'Solid' : 'Too close' }
+    const { lo, hi } = run.compared.kerf[group][key]
+    return { label, kerf, solid, react, fastest: hi < 1 ? 'kerf' : lo > 1 ? 'Solid' : 'Too close' }
   })
   const arena = readData('benchmarks/speed/arena-site.json')
   write('speed.json', {
@@ -199,7 +199,7 @@ function buildSpeed() {
     solid: run.solid,
     when: run.when.slice(0, 10),
     rows,
-    wins: rows.filter((r) => r.fastest === 'weft').length,
+    wins: rows.filter((r) => r.fastest === 'kerf').length,
     losses: rows.filter((r) => r.fastest === 'Solid').length,
   })
 }
@@ -208,11 +208,11 @@ function buildSpeed() {
 
 function buildLlms(docs, learn) {
   const lines = [
-    '# weft',
+    '# kerf',
     '',
-    '> TSX compiled to direct DOM bindings, with warp, its UI toolkit, and a compiler that explains errors to agents.',
+    '> TSX compiled to direct DOM bindings, with veneer, its UI toolkit, and a compiler that explains errors to agents.',
     '',
-    'Every Learn and Reference page has a Markdown twin: add `.md` to its URL. `weft docs <topic>` prints the Reference text.',
+    'Every Learn and Reference page has a Markdown twin: add `.md` to its URL. `kerf docs <topic>` prints the Reference text.',
     '',
   ]
   for (const [base, nav] of [

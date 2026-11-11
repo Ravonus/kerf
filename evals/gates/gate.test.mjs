@@ -5,15 +5,15 @@ import { commands, eq, localPackages, makeCheck, repo, until } from '../lib/gate
 
 await test('local dependencies resolve to packages with the requested npm name', () => {
   const packageUrl = localPackages(repo)
-  for (const name of ['core', 'warp-icons', 'create']) {
-    const expected = `@weft-js/${name}`
+  for (const name of ['core', 'veneer-icons', 'create']) {
+    const expected = `@kerf/${name}`
     const manifest = JSON.parse(
       readFileSync(new URL(`${packageUrl(expected)}/package.json`), 'utf8'),
     )
     assert.equal(manifest.name, expected)
   }
   assert.throws(
-    () => readFileSync(new URL(`${packageUrl('@weft-js/missing')}/package.json`)),
+    () => readFileSync(new URL(`${packageUrl('@kerf/missing')}/package.json`)),
     /ENOENT/,
   )
 })

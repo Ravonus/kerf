@@ -18,11 +18,11 @@ const NAME = /^[a-z][a-z0-9_-]*$/
 /** The exports a `.wasm` built by the crate has. */
 interface Wasm {
   memory: WebAssembly.Memory
-  weft_init: () => void
-  weft_free: (ptr: number, len: number) => void
-  weft_alloc: (len: number) => number
-  weft_contract: () => bigint
-  weft_call: (
+  kerf_init: () => void
+  kerf_free: (ptr: number, len: number) => void
+  kerf_alloc: (len: number) => number
+  kerf_contract: () => bigint
+  kerf_call: (
     ...args: [i: number, il: number, c: number, cl: number, b: number, bl: number]
   ) => bigint
 }
@@ -54,13 +54,13 @@ const platform = () => {
   return `${p?.platform}-${p?.arch}`
 }
 
-/** `.output/server/rust/` from wherever the bundle put this code. `WEFT_NATIVE_DIR` is `weft dev`'s, and `weft build`'s. */
+/** `.output/server/rust/` from wherever the bundle put this code. `KERF_NATIVE_DIR` is `kerf dev`'s, and `kerf build`'s. */
 function nativeDir(origin: string): string | undefined {
   const fs = builtin('node:fs'),
     path = builtin('node:path')!,
     url = builtin('node:url')!
   if (!fs) return undefined
-  const set = env('WEFT_NATIVE_DIR')
+  const set = env('KERF_NATIVE_DIR')
   if (set) return set
   let dir = path.dirname(url.fileURLToPath(origin))
   for (let i = 0; i < 6; i++, dir = path.dirname(dir))
@@ -76,7 +76,7 @@ function addonEngine(file: string, hash: string, target: string): Engine {
     throw new StartError(
       'R103',
       `\`${target}\`'s library was built from contract ${built.hash}, and this app's is ${hash}`,
-      'rebuild it: `weft build`',
+      'rebuild it: `kerf build`',
       { status: 502 },
     )
   return { kind: 'addon', call: mod.exports.call }
@@ -95,35 +95,35 @@ async function wasmEngine(file: string, hash: string, target: string): Promise<E
     decoder.decode(new Uint8Array(x!.memory.buffer, ptr, len))
   const fresh = () => {
     x = new WebAssembly.Instance(module, {
-      weft: {
+      kerf: {
         now: () => performance.now(),
         panicked: (ptr: number, len: number) => {
           said = text(ptr, len)
         },
       },
     }).exports as unknown as Wasm
-    x.weft_init()
+    x.kerf_init()
   }
   const taken = (packed: bigint) => {
     const ptr = Number(packed >> 32n),
       len = Number(packed & 0xffffffffn)
     const out = text(ptr, len)
-    x!.weft_free(ptr, len)
+    x!.kerf_free(ptr, len)
     return out
   }
   const put = (s: string): [number, number] => {
     const bytes = encoder.encode(s)
-    const ptr = x!.weft_alloc(bytes.length)
+    const ptr = x!.kerf_alloc(bytes.length)
     new Uint8Array(x!.memory.buffer, ptr, bytes.length).set(bytes)
     return [ptr, bytes.length]
   }
   fresh()
-  const built = JSON.parse(taken(x!.weft_contract()))
+  const built = JSON.parse(taken(x!.kerf_contract()))
   if (built.hash !== hash)
     throw new StartError(
       'R103',
       `\`${target}\`'s library was built from contract ${built.hash}, and this app's is ${hash}`,
-      'rebuild it: `weft build`',
+      'rebuild it: `kerf build`',
       { status: 502 },
     )
   return {
@@ -134,9 +134,9 @@ async function wasmEngine(file: string, hash: string, target: string): Promise<E
         [c, cl] = put(ctx),
         [b, bl] = put(body)
       try {
-        const reply = taken(x!.weft_call(i, il, c, cl, b, bl))
-        x!.weft_free(i, il)
-        x!.weft_free(c, cl)
+        const reply = taken(x!.kerf_call(i, il, c, cl, b, bl))
+        x!.kerf_free(i, il)
+        x!.kerf_free(c, cl)
         return reply
       } catch (e) {
         if (!(e instanceof WebAssembly.RuntimeError)) throw e
@@ -164,7 +164,7 @@ async function load(dir: string, entry: Entry, target: string): Promise<Engine> 
     } catch (e) {
       if (e instanceof StartError) throw e
       console.warn(
-        `[weft] ${target}: the addon didn't load here (${String((e as { message?: unknown }).message).split('\n')[0]})${entry.wasm ? ': using its WASM' : ''}`,
+        `[kerf] ${target}: the addon didn't load here (${String((e as { message?: unknown }).message).split('\n')[0]})${entry.wasm ? ': using its WASM' : ''}`,
       )
     }
   }
@@ -180,7 +180,7 @@ async function load(dir: string, entry: Entry, target: string): Promise<Engine> 
 function engineFor(name: string, target: string, origin: string) {
   let loaded: Promise<Engine> | undefined, stamp: string | undefined
 
-  /** The engine for now. Under `weft dev` a rebuild is a new file: the next call loads it, and calls on the old one finish. */
+  /** The engine for now. Under `kerf dev` a rebuild is a new file: the next call loads it, and calls on the old one finish. */
   function engine(): Promise<Engine> {
     const fs = builtin('node:fs')!,
       path = builtin('node:path')!
@@ -189,11 +189,11 @@ function engineFor(name: string, target: string, origin: string) {
       throw new StartError(
         'R104',
         `\`${target}\` has nothing to load here`,
-        'this runtime has no file system, or the build has no `rust/` folder: use `remote()`, or run `weft build`',
+        'this runtime has no file system, or the build has no `rust/` folder: use `remote()`, or run `kerf build`',
         { status: 503 },
       )
     const file = path.join(dir, 'manifest.json')
-    const watching = !!env('WEFT_NATIVE_DIR')
+    const watching = !!env('KERF_NATIVE_DIR')
     // Its text, not its mtime: two writes can land in one tick of a coarse clock.
     const text: string | undefined =
       watching && fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : undefined
@@ -205,14 +205,14 @@ function engineFor(name: string, target: string, origin: string) {
       throw new StartError(
         'R104',
         `\`${target}\` isn't in this build`,
-        'run `weft build`, or check `crates/' + name + '`',
+        'run `kerf build`, or check `crates/' + name + '`',
         { status: 503 },
       )
     if (entry.failure)
       throw new StartError(
         'R103',
         `\`${target}\` didn't build: ${entry.failure}`,
-        'fix the crate: `weft dev` retries on every edit',
+        'fix the crate: `kerf dev` retries on every edit',
         { status: 503 },
       )
     stamp = text

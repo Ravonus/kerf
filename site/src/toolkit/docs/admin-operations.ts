@@ -3,7 +3,7 @@ import type { Doc } from '../types.ts'
 export const operationsDocs: Doc[] = [
   {
     component: 'PayFrame',
-    summary: 'The styled slot your payment provider fills. Warp never draws card fields itself.',
+    summary: 'The styled slot your payment provider fills. Veneer never draws card fields itself.',
     sections: [
       {
         kind: 'variants',
@@ -12,7 +12,7 @@ export const operationsDocs: Doc[] = [
           {
             id: 'PayFrameTestMode',
             title: 'Mounted, in test mode',
-            note: "`mount` gets the element and the Warp tokens for the provider's appearance API.",
+            note: "`mount` gets the element and the Veneer tokens for the provider's appearance API.",
             stage: 'narrow',
           },
         ],
@@ -174,7 +174,7 @@ export const operationsDocs: Doc[] = [
         examples: [
           {
             id: 'CartDrawerShop',
-            title: 'The Weft shop',
+            title: 'The Kerf shop',
             note: 'Taking the last one away removes the line and offers Undo.',
           },
         ],

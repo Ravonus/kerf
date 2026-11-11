@@ -21,8 +21,8 @@ function publish(list) {
   const text = JSON.stringify(list)
   if (text === last) return false
   last = text
-  mkdirSync(join(root, '.weft'), { recursive: true })
-  const file = join(root, '.weft', 'props.json')
+  mkdirSync(join(root, '.kerf'), { recursive: true })
+  const file = join(root, '.kerf', 'props.json')
   writeFileSync(`${file}.tmp`, `${JSON.stringify({ diagnostics: list }, null, 2)}\n`)
   renameSync(`${file}.tmp`, file)
   return true

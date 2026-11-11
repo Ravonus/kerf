@@ -1,4 +1,4 @@
-import type { ChatMessage } from '@weft-js/warp'
+import type { ChatMessage } from '@kerf/veneer'
 import { SAM, JUN, MARA, LENA } from './peers'
 
 export const AT = 1_793_460_000_000

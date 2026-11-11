@@ -1,4 +1,4 @@
-import { Inset, Row, Spacer } from '@weft-js/warp'
+import { Inset, Row, Spacer } from '@kerf/veneer'
 import { Box } from './shared'
 
 export const SpacerTwo = () => (

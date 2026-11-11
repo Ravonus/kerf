@@ -19,7 +19,7 @@ const outside = (file: string, sql: string) =>
     `const { DatabaseSync } = require('node:sqlite'); const d = new DatabaseSync(${JSON.stringify(file)}); d.exec('pragma busy_timeout = 5000'); d.exec(${JSON.stringify(sql)}); d.close()`,
   ])
 
-const dir = mkdtempSync(join(tmpdir(), 'weft-live-'))
+const dir = mkdtempSync(join(tmpdir(), 'kerf-live-'))
 const file = join(dir, 'app.db')
 afterAll(() => rmSync(dir, { recursive: true, force: true }))
 
@@ -103,7 +103,7 @@ test('10k rows are one table-level poke, and the log stays capped', async () => 
   expect(f.pokes[0]!.t).toContain('todos') // past the log's cap the watcher can't tell what else moved: every table
   expect(f.pokes[0]!.p).toContain('todos:')
   const c = await open(file)
-  const [[rows] = []] = c.query('select count(*) from __weft_changes', [], 'values') as number[][]
+  const [[rows] = []] = c.query('select count(*) from __kerf_changes', [], 'values') as number[][]
   c.close?.()
   expect(rows).toBeLessThanOrEqual(4097)
   await f.feed.stop()
@@ -153,7 +153,7 @@ test('no triggers: any commit pokes every table, and it says so', async () => {
   })
   const how = await s.probe()
   expect(how).toMatchObject({ mode: 'poll', via: 'sqlite-data-version' })
-  expect(how.fix).toMatch(/weft db live/)
+  expect(how.fix).toMatch(/kerf db live/)
   const f = feedOn(s)
   await f.feed.start(how)
   await outside(bare, 'insert into u (id) values (1)')

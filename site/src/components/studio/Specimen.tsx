@@ -1,5 +1,5 @@
-// What the studio's theme lands on: real Warp components, a little of everything the tokens reach.
-import { state } from '@weft-js/core'
+// What the studio's theme lands on: real Veneer components, a little of everything the tokens reach.
+import { state } from '@kerf/core'
 import {
   Alert,
   Badge,
@@ -18,7 +18,7 @@ import {
   Switch,
   Tabs,
   Tag,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 const EMPHASES = ['solid', 'soft', 'outline', 'ghost', 'link'] as const
 

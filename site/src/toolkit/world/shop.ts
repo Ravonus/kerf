@@ -8,7 +8,7 @@ export const SHOP_CART = [
   },
   {
     id: 'hoodie',
-    name: 'Weft hoodie',
+    name: 'Kerf hoodie',
     variant: 'Graphite · M',
     price: 64,
     quantity: 1,

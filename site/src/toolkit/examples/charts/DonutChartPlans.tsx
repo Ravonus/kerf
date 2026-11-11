@@ -1,4 +1,4 @@
-import { DonutChart } from '@weft-js/warp'
+import { DonutChart } from '@kerf/veneer'
 
 import { PLAN_MIX } from '../../world'
 

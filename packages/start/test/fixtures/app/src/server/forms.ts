@@ -1,6 +1,6 @@
 // The fixture's forms and uploads (research 29): every way a `<Form>` submit can end.
-import { invalid, mutation, query, redirect } from '@weft-js/start'
-import { z } from '@weft-js/start/media'
+import { invalid, mutation, query, redirect } from '@kerf/start'
+import { z } from '@kerf/start/media'
 
 const notes: { title: string; qty: number; urgent: boolean }[] = []
 let cover: unknown = null

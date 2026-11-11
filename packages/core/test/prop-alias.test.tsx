@@ -1,13 +1,13 @@
 // `const x = props.y` names the prop: client, server and hydration all read it live, and it costs no binding of its own.
-// weft-allow T005: framework test of compiled props; it reads the exact text and attribute the compiled child writes
+// kerf-allow T005: framework test of compiled props; it reads the exact text and attribute the compiled child writes
 import { screen } from '@testing-library/dom'
-import { bind, derived, state, untrack } from '@weft-js/core'
-import { renderToString } from '@weft-js/core/ssr'
-import { hydrate } from '@weft-js/core/dom'
-import { flush, render } from '@weft-js/core/test'
+import { bind, derived, state, untrack } from '@kerf/core'
+import { renderToString } from '@kerf/core/ssr'
+import { hydrate } from '@kerf/core/dom'
+import { flush, render } from '@kerf/core/test'
 // oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
-import { Price as ServerPrice } from './fixtures/ssr/Alias.tsx?weft-ssr'
-import { Price as ClientPrice } from './fixtures/ssr/Alias.tsx?weft-hydrate'
+import { Price as ServerPrice } from './fixtures/ssr/Alias.tsx?kerf-ssr'
+import { Price as ClientPrice } from './fixtures/ssr/Alias.tsx?kerf-hydrate'
 import { Price } from './fixtures/ssr/Alias'
 
 const start = () => ({

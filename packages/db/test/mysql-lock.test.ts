@@ -19,7 +19,7 @@ vi.mock('mysql2/promise', () => ({
 test("a lock it didn't get stops the migrations: two instances don't run one file", async () => {
   const db = createDb({ url: 'mysql://x/y', migrate: false })
   seen.got = 0
-  await expect(db.$weft.migrate([])).rejects.toThrow('migration lock')
+  await expect(db.$kerf.migrate([])).rejects.toThrow('migration lock')
   seen.got = 1
-  await expect(db.$weft.migrate([])).resolves.toBeUndefined()
+  await expect(db.$kerf.migrate([])).resolves.toBeUndefined()
 })

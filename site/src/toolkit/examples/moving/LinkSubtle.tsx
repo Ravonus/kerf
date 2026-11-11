@@ -1,4 +1,4 @@
-import { Link, Text } from '@weft-js/warp'
+import { Link, Text } from '@kerf/veneer'
 
 export const LinkSubtle = () => (
   <Text subtle>

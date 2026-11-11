@@ -32,7 +32,7 @@ export async function openApp(o: {
       failed.code === 'Q009'
         ? `the app doesn't know \`${id}\`: it runs another build`
         : failed.code === 'A002'
-          ? `\`${id}\` needs a signed-in user: set \`WEFT_STAGING_COOKIE\``
+          ? `\`${id}\` needs a signed-in user: set \`KERF_STAGING_COOKIE\``
           : `the subscription failed: ${failed.message}`,
     )
   return { ...a, tags: answer as string[] }

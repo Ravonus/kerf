@@ -1,10 +1,10 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { docs as weftDocs } from '../../../packages/cli/src/docs.mjs'
+import { docs as kerfDocs } from '../../../packages/cli/src/docs.mjs'
 import { catalog } from '../../../packages/cli/src/catalog.mjs'
 import { markdownToHtml, site, repo, out } from './context.mjs'
 
-/** warp's three areas of the site, by the group's file. Everything else is core components. */
+/** veneer's three areas of the site, by the group's file. Everything else is core components. */
 const AREAS = {
   charts: 'charts',
   agent: 'blocks',
@@ -19,7 +19,7 @@ const areaOf = (file) => AREAS[file] ?? 'components'
 const CHART_ACCESS =
   'Every chart has a text alternative and a table view of its numbers, so nothing depends on seeing the marks. See [Chart](/charts/chart) for its keyboard support.'
 const QUIET_ACCESS =
-  "This has no shortcuts of its own: controls inside it use Tab, Enter and Space as usual, and warp's parts keep their roles and labels."
+  "This has no shortcuts of its own: controls inside it use Tab, Enter and Space as usual, and veneer's parts keep their roles and labels."
 const hrefs = new Map()
 /** A `/toolkit/x` written anywhere in the words, as the page's real address. Paths like src/toolkit are left alone. */
 const live = (text) =>
@@ -39,7 +39,7 @@ function numbers() {
     .map((l) => JSON.parse(l))
     .sort((a, b) => a.at.localeCompare(b.at))
     .at(-1)
-  // a stack only in the design scenario (weft-tailwind) has no dashboard numbers
+  // a stack only in the design scenario (kerf-tailwind) has no dashboard numbers
   const stacks = Object.entries(results)
     .filter(([, s]) => s.size)
     .map(([id, s]) => ({
@@ -57,10 +57,10 @@ function numbers() {
 }
 
 const file = (path) => () => readFileSync(join(repo, path), 'utf8')
-const topic = (name) => async () => (await weftDocs(site, name)).text
+const topic = (name) => async () => (await kerfDocs(site, name)).text
 
 /**
- * The opening line of a page that starts straight in. `weft docs` is read by agents, whose context pays for every word, so
+ * The opening line of a page that starts straight in. `kerf docs` is read by agents, whose context pays for every word, so
  * these say what a page is for to someone arriving here, and stay out of that source.
  */
 /** Pages whose first paragraph is mostly code, so their `meta` is written here. */
@@ -71,21 +71,21 @@ const SUMMARIES = {
 
 const LEADS = {
   rules:
-    'Nine rules cover how every weft component behaves. The example below uses most of them. Nearly all carry a code, so when you break one, the build names it and says how to fix it.',
+    'Nine rules cover how every kerf component behaves. The example below uses most of them. Nearly all carry a code, so when you break one, the build names it and says how to fix it.',
   lists:
     'Lists and conditionals work as they do in React: `.map` with a `key`, `&&` and ternaries. This page covers the mistakes to avoid and the few habits that keep a long list fast.',
   async:
-    'Load data with `resource`, and say what to show while it loads with `Boundary`. On the server, weft can wait for that data so the first page arrives filled in.',
+    'Load data with `resource`, and say what to show while it loads with `Boundary`. On the server, kerf can wait for that data so the first page arrives filled in.',
   start:
-    '`@weft-js/start` is the full-stack part of weft: routes from files, server functions, a database, auth and realtime. A new app from `create-weft` already has it.',
+    '`@kerf/start` is the full-stack part of kerf: routes from files, server functions, a database, auth and realtime. A new app from `create-kerf` already has it.',
   browser:
-    "`@weft-js/core/browser` gives you the browser's changing values, such as being online or a tab being visible, as values you read in JSX. It handles the listeners and the cleanup.",
+    "`@kerf/core/browser` gives you the browser's changing values, such as being online or a tab being visible, as values you read in JSX. It handles the listeners and the cleanup.",
   testing:
-    '`@weft-js/core/test` renders components under vitest and drives them as a user would. `weft check` also flags tests that would pass whatever the code did.',
+    '`@kerf/core/test` renders components under vitest and drives them as a user would. `kerf check` also flags tests that would pass whatever the code did.',
 }
 
 /**
- * Reference: exact API, commands, config and codes. A page's source is `weft docs <topic>` wherever one exists, so the site
+ * Reference: exact API, commands, config and codes. A page's source is `kerf docs <topic>` wherever one exists, so the site
  * and the CLI read one file. Teaching goes in Learn (LEARN below), never here.
  */
 const SECTIONS = [
@@ -144,10 +144,10 @@ const LEARN = [
     [
       ['quick-start', 'Quick start'],
       ['tutorial', 'Tutorial: a shop with a server'],
-      ['thinking-in-weft', 'Thinking in weft'],
+      ['thinking-in-kerf', 'Thinking in kerf'],
       ['installation', 'Installation'],
       ['setup', 'Editor and TypeScript setup'],
-      ['diagnostics', 'Diagnostics and weft check'],
+      ['diagnostics', 'Diagnostics and kerf check'],
       ['working-with-agents', 'Working with AI agents'],
     ],
   ],
@@ -224,11 +224,11 @@ const LEARN = [
     ],
   ],
   [
-    'Styling and warp',
+    'Styling and veneer',
     [
-      ['styling-and-warp', 'Styling and warp'],
+      ['styling-and-veneer', 'Styling and veneer'],
       ['styling', 'Styling and style groups'],
-      ['warp', 'Using warp'],
+      ['veneer', 'Using veneer'],
       ['theming', 'Theming'],
       ['icons', 'Icons'],
       ['fonts', 'Fonts'],
@@ -272,7 +272,7 @@ function diagnosticsIndex() {
   const lines = [
     '# Diagnostics',
     '',
-    `Every code weft reports, ${catalog.length} in all. \`weft docs <code>\` prints the same page.`,
+    `Every code kerf reports, ${catalog.length} in all. \`kerf docs <code>\` prints the same page.`,
     '',
   ]
   for (const [letter, name] of Object.entries(families)) {

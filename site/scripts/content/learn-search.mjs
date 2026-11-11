@@ -1,10 +1,10 @@
-import { esc as escapeHtml } from '@weft-js/core/markup'
+import { esc as escapeHtml } from '@kerf/core/markup'
 import { createHash } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { brotliCompressSync } from 'node:zlib'
 import { catalog } from '../../../packages/cli/src/catalog.mjs'
-import { exportsOf } from '../../../packages/cli/src/weft.mjs'
+import { exportsOf } from '../../../packages/cli/src/kerf.mjs'
 import { buildIndex, markdownToHtml, site, repo, pub } from './context.mjs'
 import { slugify, write, LEARN, overviewOf, MOVED, inline } from './docs-catalog.mjs'
 import { plain, summary, codeBlock, linkify, renderer } from './markdown.mjs'
@@ -118,7 +118,7 @@ function buildLearn(reference) {
       box,
       blocks,
       toc,
-      description: summary(body) || `${p.title}: ${p.section} in Learn weft.`,
+      description: summary(body) || `${p.title}: ${p.section} in Learn kerf.`,
       prev: flat[i - 1] && { slug: flat[i - 1].slug, title: flat[i - 1].title },
       next: flat[i + 1] && { slug: flat[i + 1].slug, title: flat[i + 1].title },
     }
@@ -154,7 +154,7 @@ function sections(md) {
 /** Search groups: Learn is the guide, Reference is the API. */
 const GROUP = { learn: 'Guides', reference: 'API' }
 
-/** Every name `weft` exports, pointing at the section that first uses it, so "state" finds `state` before prose about it. */
+/** Every name `kerf` exports, pointing at the section that first uses it, so "state" finds `state` before prose about it. */
 function symbols(docs) {
   const dir = join(repo, 'packages/core')
   const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))

@@ -4,7 +4,7 @@ import {
   Select,
   SettingRow,
   SettingsSection,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { SettingsWidth, NODE_VERSIONS } from './shared'
 
 export const SettingRowControls = () => (

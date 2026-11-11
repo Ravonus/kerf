@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
+import { state } from '@kerf/core'
+import { render } from '@kerf/core/dom'
 
 function Page() {
   const on = state(false)

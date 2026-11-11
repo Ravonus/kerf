@@ -1,5 +1,5 @@
 // Public boxes, derivations, watchers and ownership (§3.1).
-// Compiler and runtime helpers live at @weft-js/core/internal.
+// Compiler and runtime helpers live at @kerf/core/internal.
 export type {
   Owner,
   Computation,

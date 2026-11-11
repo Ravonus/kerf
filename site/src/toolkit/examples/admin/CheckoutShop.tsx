@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { Checkout, Toaster } from '@weft-js/warp'
-import type { PlaceOrderResult } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Checkout, Toaster } from '@kerf/veneer'
+import type { PlaceOrderResult } from '@kerf/veneer'
 import { SHOP_CART, SHOP_SHIPPING } from '../../world'
 import { wait, PAYMENT_FRAME } from './shared'
 
@@ -18,7 +18,7 @@ export function CheckoutShop() {
         countries={['US', 'GB', 'DE']}
         taxRate={0.08}
         coupon={(code) =>
-          code === 'WEFT10'
+          code === 'KERF10'
             ? { code, percentOff: 10 }
             : undefined
         }

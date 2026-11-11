@@ -1,4 +1,4 @@
-// `box.get(key)`, `box.set(fn)` and `state.linked`. The `weft` entry always has them; under the Vite plugin a module pulls
+// `box.get(key)`, `box.set(fn)` and `state.linked`. The `kerf` entry always has them; under the Vite plugin a module pulls
 // them in by mentioning them, dotted, as `box['get']` or as `const { linked } = state` (vite.mjs `keyed`), so a page that uses
 // none doesn't pay for them. A name only known at run time (`box[name]`) or a renamed `state` can't be seen: import this module yourself.
 import { OWNKEYS } from './flags'

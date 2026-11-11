@@ -2,7 +2,7 @@
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { Server } from 'socket.io'
-import { transportSuite } from '@weft-js/multiplayer/test'
+import { transportSuite } from '@kerf/multiplayer/test'
 import { relay, socketioTicket } from '../src/relay'
 import { socketio } from '../src/index'
 

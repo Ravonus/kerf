@@ -1,4 +1,4 @@
-// @weft-js/scroll against the browser's own scrolling, in Chromium. Each run builds the package from source, opens
+// @kerf/scroll against the browser's own scrolling, in Chromium. Each run builds the package from source, opens
 // one page per mode (plain `overflow: auto`; this package in native mode with DOM bars and with canvas bars; and in
 // engine mode) and measures:
 //   mount     ms to make 200 areas of 50 rows and lay them out

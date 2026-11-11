@@ -1,4 +1,4 @@
-import { Center, Inset } from '@weft-js/warp'
+import { Center, Inset } from '@kerf/veneer'
 import { Box } from './shared'
 
 export const CenterGutter = () => (

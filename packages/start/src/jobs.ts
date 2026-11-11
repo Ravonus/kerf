@@ -1,4 +1,4 @@
-// `@weft-js/start/jobs`: work done after the request that asked for it. `src/jobs.server.ts` default-exports
+// `@kerf/start/jobs`: work done after the request that asked for it. `src/jobs.server.ts` default-exports
 // `defineJobs({ name: { input?, run } })`; a mutation calls `jobs.name.enqueue(input)`, and a server preset (node, bun,
 // deno) works the queue: each job runs at least once, is retried with backoff when it throws, and is set aside (J004)
 // when its retries run out.
@@ -16,7 +16,7 @@ export interface QueuedJob {
 
 /**
  * Where queued jobs wait: `memoryQueue()` by default (one process, lost on restart), `redisQueue()` from
- * `@weft-js/realtime-redis` to survive restarts and share the work between instances.
+ * `@kerf/realtime-redis` to survive restarts and share the work between instances.
  */
 export interface Queue {
   /** Adds a job. With `key`, false (and nothing added) while a job with that key is still waiting or running. */
@@ -83,7 +83,7 @@ export interface RunnerOptions {
   poll?: number
 }
 
-const STATE = Symbol.for('weft.jobs')
+const STATE = Symbol.for('kerf.jobs')
 /** What the runner reads off `defineJobs`'s result. */
 export interface JobsState {
   defs: JobDefs

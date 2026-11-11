@@ -4,7 +4,7 @@
 // as a prop). Rounds stop when nothing changes. A checker starts for inference or core box diagnostics.
 
 const { fileFacts, hashOf } = require('./facts.cjs')
-const CORE_IMPORT = /['"]@weft-js\/core['"]/
+const CORE_IMPORT = /['"]@kerf\/core['"]/
 const { shadow, toShadow } = require('./shadow.cjs')
 
 const { flows, collect, fromBody, infer } = require('./engine/flow.cjs')

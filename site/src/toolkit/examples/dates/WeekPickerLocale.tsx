@@ -1,4 +1,4 @@
-import { WeekPicker } from '@weft-js/warp'
+import { WeekPicker } from '@kerf/veneer'
 
 import { TODAY } from './shared-event'
 

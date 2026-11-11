@@ -1,6 +1,6 @@
 # The Rust half of bench/verify.mjs, kept in this package and out of `crates/` so the measurement can be rerun. Not shipped.
 [package]
-name = "weft-pay-verify"
+name = "kerf-pay-verify"
 version = "0.0.0"
 edition = "2021"
 publish = false

@@ -1,4 +1,4 @@
-import { createRoot, derived, state, untrack, type Derived, type State } from '@weft-js/core'
+import { createRoot, derived, state, untrack, type Derived, type State } from '@kerf/core'
 import { client, peers } from '../router'
 import { fnOf, fns, go, net, registered, runtime, server } from './foundation'
 import { FnError, isRedirect, keyOf, redirect } from './primitives'
@@ -219,7 +219,7 @@ export function setBase(e: Entry, v: unknown, tags: string[]) {
   })
 }
 
-/** Seed the cache from the server (the page's `#weft-cache`, a navigation's `c`). `since`: when that navigation left. */
+/** Seed the cache from the server (the page's `#kerf-cache`, a navigation's `c`). `since`: when that navigation left. */
 export function seed(list: Wire[] | null | undefined, since = Infinity) {
   for (const [id, input, v, tags] of list ?? []) {
     const e = entry(fns.get(id) ?? ({ $id: id } as Fn), input)
@@ -318,7 +318,7 @@ if (typeof document !== 'undefined' && !runtime.scope) {
   client.now = () => clock
   seed(client.seeds)
   client.seeds = undefined
-  const el = document.getElementById('weft-cache')
+  const el = document.getElementById('kerf-cache')
   if (el) seed(JSON.parse(el.textContent))
   // A stream's chunks say what landed: here is everything so far, and each one's script pushes the next.
   // They were read for this page, so anything written here since is newer.

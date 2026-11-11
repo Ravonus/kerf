@@ -16,7 +16,7 @@ describe('a plugin on the server', () => {
 })
 
 function extensionRouteTests() {
-  test('its routes are `/_weft/x/<key>/...`, loaded on first use, and it reports through the API', async () => {
+  test('its routes are `/_kerf/x/<key>/...`, loaded on first use, and it reports through the API', async () => {
     const report = vi.fn()
     const load = vi.fn((): Promise<ServerExtension> =>
       Promise.resolve({
@@ -34,11 +34,11 @@ function extensionRouteTests() {
       onDiagnostic: report,
     })
     expect(load).not.toHaveBeenCalled()
-    const res = await handler(new Request('http://x/_weft/x/kit/a/b', { method: 'POST' }))
+    const res = await handler(new Request('http://x/_kerf/x/kit/a/b', { method: 'POST' }))
     expect(await res.text()).toBe('POST a/b')
     expect(load).toHaveBeenCalledOnce()
     expect(
-      (await handler(new Request('http://x/_weft/x/other/a', { method: 'POST' }))).status,
+      (await handler(new Request('http://x/_kerf/x/other/a', { method: 'POST' }))).status,
     ).toBe(404)
   })
 
@@ -154,6 +154,6 @@ function extensionOptionTests() {
         },
       ],
     })
-    await expect(handler(new Request('http://x/_weft/x/kit/a'))).rejects.toThrow('not configured')
+    await expect(handler(new Request('http://x/_kerf/x/kit/a'))).rejects.toThrow('not configured')
   })
 }

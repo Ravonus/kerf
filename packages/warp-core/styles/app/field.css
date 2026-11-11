@@ -1,7 +1,0 @@
-/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
-@layer warp.app {
-/* Sweep colours come from warp.css (the part's `color`): full accent over the ink base for fields and
-   controls, critical when invalid. App surfaces only override the base, and only with `color:`. */
-:where([data-scope="field"] [data-part="control"]:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="checkbox"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="checkbox"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) [data-scope="field"] *))) > :where([data-part="sweep"]),
-:where([data-scope="field"] [data-part="control"]:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="checkbox"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="checkbox"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) [data-scope="field"] *))) > :where([data-part="sweep-base"]) { inset: 0; }
-}

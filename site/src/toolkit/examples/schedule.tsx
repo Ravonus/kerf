@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Agenda,
   AgendaDay,
@@ -16,13 +16,13 @@ import {
   Toaster,
   YearView,
   toast,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import type {
   BookingDetails,
   BookingSlot,
-} from '@weft-js/warp'
-import { at, clock } from '@weft-js/warp-core'
-import type { CalEvent, Slot } from '@weft-js/warp-core'
+} from '@kerf/veneer'
+import { at, clock } from '@kerf/veneer-core'
+import type { CalEvent, Slot } from '@kerf/veneer-core'
 import {
   DEPLOYS_BY_DAY,
   SCHEDULE_NOW,
@@ -325,7 +325,7 @@ export function MeetingPlannerReview() {
         attendees={TEAM_ROOM}
         loadAttendees={search}
         title="Capacity review"
-        link="meet.weft.dev/capacity"
+        link="meet.kerf.dev/capacity"
         tags={['Internal', 'Incident', 'Planning']}
         timeZone={TEAM_ZONE}
         today={TODAY}

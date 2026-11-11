@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 import {
   Button,
   ConflictAlert,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 import { JUN } from '../../world'
 

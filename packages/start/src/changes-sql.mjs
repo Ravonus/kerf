@@ -1,4 +1,4 @@
-// The change feed's triggers, as SQL (`weft db live`, and tests). A trigger says which table and which primary keys
+// The change feed's triggers, as SQL (`kerf db live`, and tests). A trigger says which table and which primary keys
 // changed, never a column of the row: a notification can be read by anyone who can LISTEN, and the hub only needs tags.
 //
 //   postgresql  statement triggers with transition tables, so 10k rows in one statement are one NOTIFY: up to 32 ids, or
@@ -6,8 +6,8 @@
 //   sqlite      no notify across processes: rows in a capped log, which the watcher reads when `data_version` moves.
 //   mysql       the same log, read on a timer. A MySQL trigger is per row and can't reach out.
 
-export const CHANNEL = 'weft_changes'
-export const LOG = '__weft_changes'
+export const CHANNEL = 'kerf_changes'
+export const LOG = '__kerf_changes'
 /** More ids than this in one statement is a table-level change. */
 export const MAX_IDS = 32
 /** Rows SQLite's log keeps. A reader further behind than this has lost its place, and pokes every table. */
@@ -20,13 +20,13 @@ const literal = (s) => `'${s.replaceAll("'", "''")}'`
 const safe = (t) => t.replace(/\W/g, '_')
 
 function postgres(tables) {
-  const fn = `CREATE OR REPLACE FUNCTION weft_changes_notify() RETURNS trigger AS $weft$
+  const fn = `CREATE OR REPLACE FUNCTION kerf_changes_notify() RETURNS trigger AS $kerf$
 DECLARE
   ids text[];
   body text;
 BEGIN
   IF TG_OP <> 'TRUNCATE' AND TG_NARGS > 0 THEN
-    EXECUTE format('SELECT array_agg(id) FROM (SELECT concat_ws(%L, %s) AS id FROM weft_rows LIMIT ${MAX_IDS + 1}) s', ':', (
+    EXECUTE format('SELECT array_agg(id) FROM (SELECT concat_ws(%L, %s) AS id FROM kerf_rows LIMIT ${MAX_IDS + 1}) s', ':', (
       SELECT string_agg(format('%I', a), ', ') FROM unnest(TG_ARGV) a
     )) INTO ids;
     IF ids IS NULL THEN RETURN NULL; END IF;
@@ -40,13 +40,13 @@ BEGIN
   PERFORM pg_notify(${literal(CHANNEL)}, body);
   RETURN NULL;
 END;
-$weft$ LANGUAGE plpgsql`
+$kerf$ LANGUAGE plpgsql`
   const list = tables.flatMap(({ name, pk }) => {
     const args = pk.map(literal).join(', ')
     const on = pgName(name)
     const trigger = (suffix, event, rows) => [
-      `DROP TRIGGER IF EXISTS weft_changes_${suffix} ON ${on}`,
-      `CREATE TRIGGER weft_changes_${suffix} AFTER ${event} ON ${on} ${rows ? `REFERENCING ${rows} TABLE AS weft_rows ` : ''}FOR EACH STATEMENT EXECUTE FUNCTION weft_changes_notify(${args})`,
+      `DROP TRIGGER IF EXISTS kerf_changes_${suffix} ON ${on}`,
+      `CREATE TRIGGER kerf_changes_${suffix} AFTER ${event} ON ${on} ${rows ? `REFERENCING ${rows} TABLE AS kerf_rows ` : ''}FOR EACH STATEMENT EXECUTE FUNCTION kerf_changes_notify(${args})`,
     ]
     return [
       ...trigger('ins', 'INSERT', 'NEW'),
@@ -64,8 +64,8 @@ function sqlite(tables) {
     const id = (row) =>
       pk.length ? pk.map((c) => `${row}.${pgName(c)}`).join(` || ':' || `) : 'NULL'
     const trigger = (suffix, event, row) => [
-      `DROP TRIGGER IF EXISTS weft_changes_${safe(name)}_${suffix}`,
-      `CREATE TRIGGER weft_changes_${safe(name)}_${suffix} AFTER ${event} ON ${pgName(name)} BEGIN
+      `DROP TRIGGER IF EXISTS kerf_changes_${safe(name)}_${suffix}`,
+      `CREATE TRIGGER kerf_changes_${safe(name)}_${suffix} AFTER ${event} ON ${pgName(name)} BEGIN
   INSERT INTO ${LOG} (tbl, pk) VALUES (${literal(name)}, ${id(row)});
   DELETE FROM ${LOG} WHERE seq <= last_insert_rowid() - ${LOG_ROWS};
 END`,
@@ -85,8 +85,8 @@ function mysql(tables) {
     const id = (row) =>
       pk.length ? `CONCAT_WS(':', ${pk.map((c) => `${row}.${myName(c)}`).join(', ')})` : 'NULL'
     const trigger = (suffix, event, row) => [
-      `DROP TRIGGER IF EXISTS weft_changes_${safe(name)}_${suffix}`,
-      `CREATE TRIGGER weft_changes_${safe(name)}_${suffix} AFTER ${event} ON ${myName(name)} FOR EACH ROW INSERT INTO ${LOG} (tbl, pk) VALUES (${literal(name)}, ${id(row)})`,
+      `DROP TRIGGER IF EXISTS kerf_changes_${safe(name)}_${suffix}`,
+      `CREATE TRIGGER kerf_changes_${safe(name)}_${suffix} AFTER ${event} ON ${myName(name)} FOR EACH ROW INSERT INTO ${LOG} (tbl, pk) VALUES (${literal(name)}, ${id(row)})`,
     ]
     return [
       ...trigger('ins', 'INSERT', 'NEW'),
@@ -112,4 +112,4 @@ export function changeStatements(dialect, tables) {
 
 /** A migration file, in drizzle-kit's format. */
 export const changeSql = (dialect, tables) =>
-  `-- weft: report changes to ${tables.map((t) => t.name).join(', ')} (\`weft db live\`). Ids only, never a row.\n${changeStatements(dialect, tables).join(`;${BREAK}`)};\n`
+  `-- kerf: report changes to ${tables.map((t) => t.name).join(', ')} (\`kerf db live\`). Ids only, never a row.\n${changeStatements(dialect, tables).join(`;${BREAK}`)};\n`

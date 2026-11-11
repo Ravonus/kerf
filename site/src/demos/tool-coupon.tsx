@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { derived, state } from '@kerf/core'
+import { Button, Card } from '@kerf/veneer'
 
 // Percent off by code. The fixed subtotal makes the
 // totals easy to check.

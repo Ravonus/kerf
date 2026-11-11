@@ -5,13 +5,13 @@ import { purge, words } from '../node/purge.mjs'
 /**
  * Removes CSS no built file can reach (node/purge.mjs). Runs last on the client build, and renames each stylesheet it
  * changes: a name hashed before purging would stay the same when the app starts using a new component, and browsers
- * would keep the old, smaller file. `weft({ purge: false })` turns it off; `purge: { keep: ['knob'] }` keeps names the
+ * would keep the old, smaller file. `kerf({ purge: false })` turns it off; `purge: { keep: ['knob'] }` keeps names the
  * app builds at run time.
  */
 export function purgeCss(keep = []) {
   const sources = []
   return {
-    name: 'weft:purge',
+    name: 'kerf:purge',
     /** `add(text)`: source that renders on the server only, whose class names the client's files don't hold. */
     api: { add: (text) => sources.push(text) },
     apply: 'build',

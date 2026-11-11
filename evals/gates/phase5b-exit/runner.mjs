@@ -5,9 +5,9 @@ import { join, relative } from 'node:path'
 import { createRequire } from 'node:module'
 
 export function buildRunner(ctx, runtime, ...more) {
-  const { must, weft, dir } = ctx
+  const { must, kerf, dir } = ctx
   const t = performance.now()
-  must(weft(), ['build', '--runtime', runtime, ...more], dir, { NODE_ENV: 'production' })
+  must(kerf(), ['build', '--runtime', runtime, ...more], dir, { NODE_ENV: 'production' })
   return Math.round(performance.now() - t)
 }
 
@@ -29,7 +29,7 @@ export function publicHashesRunner(ctx) {
 export async function startRunner(
   ctx,
   runtime,
-  command = [ctx.weft(), 'start', '--runtime', runtime],
+  command = [ctx.kerf(), 'start', '--runtime', runtime],
 ) {
   const { freePort, dir, until, sleep } = ctx
   const port = await freePort()
@@ -71,7 +71,7 @@ export async function startRunner(
 }
 
 export const linkRunner = (_ctx, id, input) =>
-  `/_weft/fn/${id}${input === undefined ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`
+  `/_kerf/fn/${id}${input === undefined ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`
 export const callRunner = async (ctx, url, id, input) => {
   const { link } = ctx
   const r = await fetch(`${url}${link(id, input)}`)
@@ -111,7 +111,7 @@ export async function browserRunRunner(ctx, url) {
     const errors = []
     page.on('pageerror', (e) => errors.push(e.message))
     page.on('request', (r) => {
-      if (r.url().includes('/_weft/fn/')) seen.push(new URL(r.url()).pathname)
+      if (r.url().includes('/_kerf/fn/')) seen.push(new URL(r.url()).pathname)
     })
     await page.goto('/thumb')
     await page.waitForLoadState('networkidle')

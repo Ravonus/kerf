@@ -1,7 +1,7 @@
 import type {
   PromptSuggestion,
   ContextUse,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { PEOPLE } from './people'
 
 export const COMMANDS: PromptSuggestion[] = [

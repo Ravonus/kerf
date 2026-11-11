@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // The Surfaces exit check (PLAN §9, "2. Surfaces"; research 33 §10): an agent adds a surface to a page from a one-line
-// request. The Keel half is `npm run test:e2e` in packages/plugin-surface-keel.
+// request. The Keel half is `npm run test:e2e` in packages/keel-pixel.
 //
 //   node evals/gates/surfaces-exit.mjs prepare <dir>     scaffold and install; prints the request
 //   (a fresh agent works in <dir>, from the request and what the app ships, and sees no e2e)
-//   node evals/gates/surfaces-exit.mjs verify <dir>      weft check, tsc, build, then the hidden checks in Chrome
+//   node evals/gates/surfaces-exit.mjs verify <dir>      kerf check, tsc, build, then the hidden checks in Chrome
 //
 // verify writes evals/results/surfaces-exit.md and .json; exit 1 if any part fails. Needs packages/core's native compiler.
 import { repoRoot } from '../../scripts/lib/helpers.mjs'
@@ -33,10 +33,10 @@ if (step === 'prepare') {
   must(
     'node',
     [
-      join(repo, 'packages/create/bin/create-weft.mjs'),
+      join(repo, 'packages/create-kerf/bin/create-kerf.mjs'),
       dir,
       '--ui',
-      'warp',
+      'veneer',
       '--db',
       'none',
       '--name',
@@ -48,16 +48,16 @@ if (step === 'prepare') {
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
   for (const deps of [pkg.dependencies, pkg.devDependencies])
     for (const name of Object.keys(deps ?? {}))
-      if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = packageUrl(name)
+      if (name === '@kerf/core' || name.startsWith('@kerf/')) deps[name] = packageUrl(name)
   writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
   must('npm', ['install', '--no-audit', '--no-fund'])
-  must('npx', ['weft', 'agents-md'])
+  must('npx', ['kerf', 'agents-md'])
   console.log(REQUEST)
   process.exit(0)
 }
 
 const parts = {}
-const check = JSON.parse(run('npx', ['weft', 'check', '--json']).stdout || '{}')
+const check = JSON.parse(run('npx', ['kerf', 'check', '--json']).stdout || '{}')
 parts.check = {
   ok: check.ok === true,
   summary: check.summary,
@@ -81,13 +81,13 @@ const errors = tsc.stdout.split('\n').filter((l) => /error TS/.test(l))
 const own = errors.filter((l) => l.startsWith('src/'))
 parts.types = { ok: !own.length, app: own, packages: errors.length - own.length }
 
-const built = run('npx', ['weft', 'build'])
+const built = run('npx', ['kerf', 'build'])
 parts.build = { ok: built.status === 0 }
 if (!parts.build.ok) console.error(built.stdout.slice(-3000), built.stderr.slice(-2000))
 
 const { chromium } = createRequire(join(repo, 'packages/text/package.json'))('playwright-core')
 const port = 4300 + Math.floor(Math.random() * 500)
-const server = spawn('npx', ['weft', 'start'], {
+const server = spawn('npx', ['kerf', 'start'], {
   cwd: dir,
   env: { ...process.env, PORT: String(port) },
   stdio: 'ignore',
@@ -246,19 +246,19 @@ writeFileSync(
   join(here, 'results/surfaces-exit.md'),
   `# Surfaces exit check
 
-${result.date}: **${ok_ ? 'PASS' : 'FAIL'}**. \`create-weft --ui warp\`, then a fresh agent given one line, from the app and its docs:
+${result.date}: **${ok_ ? 'PASS' : 'FAIL'}**. \`create-kerf --ui veneer\`, then a fresh agent given one line, from the app and its docs:
 
 > ${REQUEST}
 
-Then the hidden checks in \`evals/gates/surfaces-exit.mjs\`, against \`weft build\` + \`weft start\` in Chrome.
+Then the hidden checks in \`evals/gates/surfaces-exit.mjs\`, against \`kerf build\` + \`kerf start\` in Chrome.
 
 | Check | Result | Detail |
 |---|---|---|
 ${checks.map((c) => `| ${c.name} | ${c.ok ? 'pass' : 'FAIL'} | ${c.detail.replace(/\|/g, '\\|')} |`).join('\n')}
 
-- \`weft check\`: ${parts.check.ok ? 'no errors' : 'errors'} (${JSON.stringify(parts.check.summary)}).
+- \`kerf check\`: ${parts.check.ok ? 'no errors' : 'errors'} (${JSON.stringify(parts.check.summary)}).
 - \`tsc\` on the app: ${own.length} error(s) in \`src/\`, ${parts.types.packages} in linked packages.
-- \`weft build\`: ${parts.build.ok ? 'ok' : 'FAILED'}.
+- \`kerf build\`: ${parts.build.ok ? 'ok' : 'FAILED'}.
 - Surface kind the agent chose: ${result.kind ?? 'unknown'}.
 `,
 )

@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 import {
   Button,
@@ -6,13 +6,13 @@ import {
   ShareDialog,
   Stack,
   Toaster,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 import type {
   ShareLink,
   ShareMember,
   ShareRole,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 import { SHARE_MEMBERS, SHARE_PEOPLE } from '../../world'
 
@@ -64,7 +64,7 @@ export function ShareDialogRunbook() {
         members={members}
         people={SHARE_PEOPLE}
         link={link}
-        url="https://weft.dev/d/rollback-runbook"
+        url="https://kerf.dev/d/rollback-runbook"
         onInvite={invite}
         onRoleChange={change}
         onLinkAccess={(v) => (link.value = v)}

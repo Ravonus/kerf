@@ -1,4 +1,4 @@
-import type { StagePainter } from '@weft-js/warp'
+import type { StagePainter } from '@kerf/veneer'
 import type { Style, Hands } from './paint-primitives'
 import {
   stroke,
@@ -25,7 +25,7 @@ export function fieldPainters(
     },
     field(p, s) {
       const line = p.invalid
-        ? c(s, '--warp-color-critical-solid')
+        ? c(s, '--veneer-color-critical-solid')
         : c(s, p.focus > 0.5 ? st.accent : st.soft)
       body(p, s, {
         fill: c(s, st.paper),

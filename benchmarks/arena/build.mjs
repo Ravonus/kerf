@@ -11,10 +11,10 @@ rmSync(out, { recursive: true, force: true })
 const plugin = {
   react: async () => (await import('@vitejs/plugin-react')).default(),
   solid: async () => (await import('vite-plugin-solid')).default(),
-  weft: async () => (await import('../../site/node_modules/@weft-js/core/vite.mjs')).default(),
+  kerf: async () => (await import('../../site/node_modules/@kerf/core/vite.mjs')).default(),
 }
 const bytes = {}
-for (const name of ['react', 'solid', 'weft']) {
+for (const name of ['react', 'solid', 'kerf']) {
   const dir = join(out, name)
   await build({
     root: join(here, name),
@@ -47,7 +47,7 @@ await build({
   configFile: false,
   mode: 'development',
   plugins: [
-    (await import('../../site/node_modules/@weft-js/core/vite.mjs')).default({
+    (await import('../../site/node_modules/@kerf/core/vite.mjs')).default({
       dev: true,
       hmr: false,
     }),

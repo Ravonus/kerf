@@ -25,16 +25,16 @@ void test('inventory covers Git paths in every checked category', () => {
 })
 
 void test('check propagates tracked source, test, e2e and config violations', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-conventions-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-conventions-'))
   const env = { ...process.env, GIT_INDEX_FILE: join(dir, 'index') }
   delete env.NODE_TEST_CONTEXT
   const files = [
-    'packages/warp/src/conventions-t22-invalid.mjs',
-    'packages/warp/test/conventions-t22.test.mjs',
-    'packages/warp/test/conventions-t22.spec.ts',
-    'packages/warp/scripts/conventions-t22.test.ts',
-    'packages/warp/scripts/conventions-t22-e2e.mjs',
-    'packages/warp/vitest.config.mjs',
+    'packages/veneer/src/conventions-t22-invalid.mjs',
+    'packages/veneer/test/conventions-t22.test.mjs',
+    'packages/veneer/test/conventions-t22.spec.ts',
+    'packages/veneer/scripts/conventions-t22.test.ts',
+    'packages/veneer/scripts/conventions-t22-e2e.mjs',
+    'packages/veneer/vitest.config.mjs',
   ]
   try {
     execFileSync('git', ['read-tree', 'HEAD'], { cwd: root, env })
@@ -60,7 +60,7 @@ void test('check propagates tracked source, test, e2e and config violations', ()
     assert.match(result.stdout, /check: conventions failed/)
     execFileSync(
       'git',
-      ['update-index', '--force-remove', ...files, 'packages/warp/vitest.config.ts'],
+      ['update-index', '--force-remove', ...files, 'packages/veneer/vitest.config.ts'],
       {
         cwd: root,
         env,
@@ -74,7 +74,7 @@ void test('check propagates tracked source, test, e2e and config violations', ()
     assert.equal(missing.status, 1)
     assert.match(
       missing.stdout,
-      /packages\/warp\/package.json: Vitest package needs vitest.config.ts/,
+      /packages\/veneer\/package.json: Vitest package needs vitest.config.ts/,
     )
   } finally {
     for (const file of files) rmSync(join(root, file), { force: true })
@@ -83,7 +83,7 @@ void test('check propagates tracked source, test, e2e and config violations', ()
 })
 
 void test('Node entries allow their real import and URL closure but reject an orphan', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-node-entry-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-node-entry-'))
   const contents = {
     'packages/example/package.json': '{"name":"example"}',
     'packages/example/bin/run.mjs': "import '../src/entry.mjs'",

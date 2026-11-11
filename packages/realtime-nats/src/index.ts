@@ -1,9 +1,9 @@
 // Core NATS (research 32 §6): at-most-once, like every bus. Channels come from tags and keys, and a subject can't hold
-// `*`, `>` or a space, so a subject is `weft.<base64url of the channel>`. A reconnect is the `gap`.
+// `*`, `>` or a space, so a subject is `kerf.<base64url of the channel>`. A reconnect is the `gap`.
 
 import { connect, type NatsConnection } from '@nats-io/transport-node'
-import type { Bus } from '@weft-js/start/bus'
-import { StartError } from '@weft-js/start/data'
+import type { Bus } from '@kerf/start/bus'
+import { StartError } from '@kerf/start/data'
 
 /** Options of `natsBus()`: the servers, and the credentials if they ask for any. */
 export interface NatsBusOptions {
@@ -14,11 +14,11 @@ export interface NatsBusOptions {
   pass?: string
 }
 
-const subject = (channel: string) => `weft.${Buffer.from(channel).toString('base64url')}`
+const subject = (channel: string) => `kerf.${Buffer.from(channel).toString('base64url')}`
 
 /** A `Bus` over core NATS, connecting on first use. Throws Q013 without `servers`, except during a build. */
 export function natsBus(options: NatsBusOptions): Bus {
-  if (!options.servers?.length && process.env.WEFT_BUILD)
+  if (!options.servers?.length && process.env.KERF_BUILD)
     options = { ...options, servers: 'nats://localhost:4222' } // a build never connects
   if (!options.servers?.length)
     throw new StartError(

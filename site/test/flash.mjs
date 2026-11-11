@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
-const { chromium } = createRequire(new URL('../../packages/warp/package.json', import.meta.url))(
+const { chromium } = createRequire(new URL('../../packages/veneer/package.json', import.meta.url))(
   'playwright-core',
 )
 const base = process.argv[2] ?? 'http://localhost:3300'

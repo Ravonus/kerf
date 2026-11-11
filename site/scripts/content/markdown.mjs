@@ -1,6 +1,6 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { docs as weftDocs } from '../../../packages/cli/src/docs.mjs'
+import { docs as kerfDocs } from '../../../packages/cli/src/docs.mjs'
 import { catalog } from '../../../packages/cli/src/catalog.mjs'
 import {
   cleanText,
@@ -54,11 +54,11 @@ function summary(md) {
 }
 const CODE = /\b[WDTPHQSFIACRXM]\d{3}\b/g
 const known = new Set(catalog.map((e) => e.code))
-const REPO = 'https://github.com/Ravonus/weft/blob/main/'
+const REPO = 'https://github.com/Ravonus/kerf/blob/main/'
 
 const copyButton = `<button type="button" data-scope="button" data-emphasis="ghost" data-tone="neutral" data-size="sm" data-act="copy" data-copy="" aria-label="Copy code"><span data-part="indicator">${readIcon('copy')}${readIcon('check')}</span></button>`
 
-/** warp's CodeBlock markup, as a string: a docs page has no component to run. */
+/** veneer's CodeBlock markup, as a string: a docs page has no component to run. */
 function codeBlock(text, language) {
   const lang = language || 'text'
   const oneline = !text.trim().includes('\n')
@@ -71,7 +71,7 @@ function readIcon(name) {
     : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 12.5 10 17.5 19 7"/></svg>'
 }
 
-/** Codes and `weft docs x` become links, outside tags, links and code blocks. */
+/** Codes and `kerf docs x` become links, outside tags, links and code blocks. */
 function linkify(html, slugs) {
   return html
     .split(/(<pre[\s\S]*?<\/pre>|<a [\s\S]*?<\/a>|<[^>]+>)/)
@@ -81,7 +81,7 @@ function linkify(html, slugs) {
       }
       return part
         .replace(CODE, (c) => (known.has(c) ? `<a href="/reference/codes/${c}">${c}</a>` : c))
-        .replace(/weft docs ([a-z-]+)/g, (m, t) =>
+        .replace(/kerf docs ([a-z-]+)/g, (m, t) =>
           slugs.has(t) ? `<a href="/reference/${t}">${m}</a>` : m,
         )
     })
@@ -116,7 +116,7 @@ function renderer(slugs) {
   return { html, toc }
 }
 
-/** Reference: `weft docs` topics, the diagnostics index and one page per code. */
+/** Reference: `kerf docs` topics, the diagnostics index and one page per code. */
 async function buildReference() {
   const nav = []
   const pages = {}
@@ -139,7 +139,7 @@ async function buildReference() {
       description:
         SUMMARIES[slug] ||
         summary(LEADS[slug] ?? md.replace(/^# [^\n]*\n/, '')) ||
-        `${title}: ${section} in the weft reference.`,
+        `${title}: ${section} in the kerf reference.`,
     }
   }
   flat.forEach((p, i) => {
@@ -150,12 +150,12 @@ async function buildReference() {
     }
   })
   for (const e of catalog) {
-    const { text } = await weftDocs(site, e.code)
+    const { text } = await kerfDocs(site, e.code)
     pages[`codes/${e.code}`] = {
       ...render(`codes/${e.code}`, e.code, 'Diagnostics', text),
       description:
         opening(unmark(`${e.catches}.`)) ||
-        `${e.code}: what this weft diagnostic means and how to fix it.`,
+        `${e.code}: what this kerf diagnostic means and how to fix it.`,
       parent: { slug: 'diagnostics', title: 'Diagnostics' },
     }
   }

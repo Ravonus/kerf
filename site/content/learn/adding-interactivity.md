@@ -8,11 +8,11 @@
 :::
 
 Some things on the screen change in response to what people do. Typing in a search box filters a list; pressing a button
-adds to a cart; picking a picture in a gallery shows it. In Weft, data that changes over time is called *state*. Any
+adds to a cart; picking a picture in a gallery shows it. In Kerf, data that changes over time is called *state*. Any
 component can hold it in a box, and handlers change it. This chapter covers both, and what happens between a change and
 the page showing it.
 
-If you know React, most of this will look familiar, with one difference that runs through every page: a Weft component
+If you know React, most of this will look familiar, with one difference that runs through every page: a Kerf component
 runs once. There is no re-render. Each spot on the page that reads a box updates when that box changes, and nothing else
 does.
 
@@ -36,8 +36,8 @@ A component that should remember something keeps it in a box. `state(0)` makes o
 `.value`, in handlers and in JSX alike:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 export function Like() {
   const likes = state(0)
@@ -76,7 +76,7 @@ A box compares a new value with the old one using `Object.is`. Changing a proper
 the box, so nothing updates. Treat objects and arrays in boxes as read-only: make a new one, or let `set` copy it for you.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function makeTodos() {
   const todos = state([{ id: 0, title: 'Buy milk', done: false }])
@@ -103,8 +103,8 @@ A child can change its own props, but those changes stay in the child. When the 
 uses the child, with `bind:`:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 function Stepper(props: { value?: number }) {
   let { value = 0 } = props
@@ -130,7 +130,7 @@ instead.
 
 ## Forms and inputs
 
-Every input follows the same pattern: `value` shows the box, and a handler writes it. Warp's controls take the same
+Every input follows the same pattern: `value` shows the box, and a handler writes it. Veneer's controls take the same
 props, and some, like `Select` and `NumberField`, take the box itself:
 
 :::demo interact-controls

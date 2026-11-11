@@ -1,0 +1,22 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs-rich {
+/* -- code-input */
+  :where(.code-in) { display: grid; grid-template-columns: auto 1fr; flex: 1; align-self: stretch; min-inline-size: 0; font: 400 var(--veneer-text-code-size)/1.6 var(--veneer-font-mono); }
+  :where(.code-in .ln) { margin: 0 10px 0 0; padding: 0 10px 0 0; list-style: none; text-align: end; color: var(--veneer-color-text-subtle); overflow: clip; user-select: none; border-inline-end: var(--veneer-border-hairline) solid var(--veneer-color-border); }
+  :where(.code-in .ln [data-error]) { color: var(--veneer-color-critical-text); font-weight: 600; }
+  :where(.code-in [data-part="surface"]) { position: relative; min-inline-size: 0; overflow: clip; }
+  /* the layer repeats the text behind the textarea; its colours are ::highlight()s, so typing builds no spans */
+  :where(.code-in [data-part="layer"]) { position: absolute; inset: 0 auto auto 0; margin: 0; padding: 0; font: inherit; tab-size: var(--_tab, 2); white-space: pre; color: var(--veneer-color-text); pointer-events: none; visibility: hidden; }
+  :where(.code-in[data-wrap] [data-part="layer"]) { inline-size: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
+  :where(.code-in[data-painted] [data-part="layer"]) { visibility: visible; }
+  :where(.code-in textarea) { all: unset; box-sizing: border-box; position: relative; display: block; inline-size: 100%; white-space: pre; overflow: auto; tab-size: var(--_tab, 2); min-block-size: 11em; font: inherit; color: var(--veneer-color-text); caret-color: var(--veneer-color-accent-solid); }
+  :where(.code-in[data-wrap] textarea) { white-space: pre-wrap; overflow-wrap: anywhere; }
+  :where(.code-in[data-painted] textarea) { color: transparent; }
+  :where(.code-in textarea)::selection { background: color-mix(in oklab, var(--veneer-color-accent-solid) 30%, transparent); }
+  ::highlight(veneer-code-comment) { color: var(--veneer-color-text-subtle); }
+  ::highlight(veneer-code-string) { color: var(--veneer-color-accent-text); }
+  ::highlight(veneer-code-number) { color: var(--veneer-color-info-text); }
+  ::highlight(veneer-code-keyword) { color: var(--veneer-color-positive-text); }
+  @media (pointer: coarse) { :where(.code-in textarea),
+ :where(.code-in [data-part="layer"]) { font-size: 16px; } }
+}

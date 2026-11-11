@@ -5,7 +5,7 @@ import { inject } from 'vitest'
 import { fnId } from '../src/vite.mjs'
 
 const url = inject('url')
-const sharp = createRequire(new URL('../../plugin-media/package.json', import.meta.url))('sharp')
+const sharp = createRequire(new URL('../../media/package.json', import.meta.url))('sharp')
 const png = (color = { r: 200, g: 60, b: 20 }) =>
   sharp({ create: { width: 200, height: 100, channels: 3, background: color } })
     .png()
@@ -24,7 +24,7 @@ async function upload(bytes: BlobPart, name = 'cover.png', type = 'image/png') {
   })
 }
 const record = async () =>
-  (await (await fetch(`${url}/_weft/fn/${fnId('getCover', 'src/server/forms.ts')}`)).json()).v
+  (await (await fetch(`${url}/_kerf/fn/${fnId('getCover', 'src/server/forms.ts')}`)).json()).v
 const accepts = {
   avif: 'image/avif,image/webp,image/*,*/*;q=0.8',
   webp: 'image/webp,*/*;q=0.8',
@@ -42,7 +42,7 @@ test('an upload stores the original and the query returns the record', async () 
     name: 'cover.png',
     quality: 'fixed',
   })
-  expect(r.src).toMatch(/^\/_weft\/m\/[0-9a-f]{32}\/128\.auto$/) // the ladder caps the output
+  expect(r.src).toMatch(/^\/_kerf\/m\/[0-9a-f]{32}\/128\.auto$/) // the ladder caps the output
   expect(r.sources).toHaveLength(1)
   expect(r.sources[0].srcset).toMatch(/\/64\.auto 64w, .*\/128\.auto 128w$/)
   expect(r.dominant).toMatch(/^#[0-9a-f]{6}$/)
@@ -51,7 +51,7 @@ test('an upload stores the original and the query returns the record', async () 
 
 test('<Media> renders the record with no extra work', async () => {
   const html = await (await fetch(`${url}/cover`)).text()
-  expect(html).toMatch(/<img[^>]* srcset="\/_weft\/m\/[0-9a-f]{32}\/64\.auto 64w/)
+  expect(html).toMatch(/<img[^>]* srcset="\/_kerf\/m\/[0-9a-f]{32}\/64\.auto 64w/)
   expect(html).toMatch(/<img[^>]* width="200"/)
   expect(html).toMatch(/<img[^>]* height="100"/)
 })
@@ -100,9 +100,9 @@ test('only the ladder and the configured formats are served', async () => {
     `${base}/10000.auto`,
     `${base}/64.jpg`,
     `${base}/64.gif`,
-    `/_weft/m/${'0'.repeat(32)}/64.auto`,
-    '/_weft/m/..%2f..%2fetc/64.auto',
-    '/_weft/m/x',
+    `/_kerf/m/${'0'.repeat(32)}/64.auto`,
+    '/_kerf/m/..%2f..%2fetc/64.auto',
+    '/_kerf/m/x',
   ]) {
     expect((await fetch(url + path)).status).toBe(404)
   }

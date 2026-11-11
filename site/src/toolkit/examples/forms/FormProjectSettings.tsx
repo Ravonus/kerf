@@ -1,4 +1,4 @@
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 import {
   Button,
   Checkbox,
@@ -12,7 +12,7 @@ import {
   Textarea,
   Toaster,
   toast,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { SLUG, REGION_OPTIONS } from './shared'
 
 const initialAbout =

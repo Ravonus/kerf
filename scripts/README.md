@@ -1,13 +1,13 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
 <h1 align="center">scripts</h1>
 
 <p align="center">
-  <strong>The scripts for working on Weft itself: set up, check, fix, and release.</strong><br>
+  <strong>The scripts for working on Kerf itself: set up, check, fix, and release.</strong><br>
   One command per job, and every failure says how to fix it.
 </p>
 
@@ -20,8 +20,8 @@
 </p>
 
 > [!NOTE]
-> These scripts run on the Weft repository. They are not published, and they are not what an app gets: an app's rules
-> are `weft check`, in the compiler and the CLI.
+> These scripts run on the Kerf repository. They are not published, and they are not what an app gets: an app's rules
+> are `kerf check`, in the compiler and the CLI.
 
 ## Contents
 
@@ -55,7 +55,7 @@ pnpm run fix       # what a machine can fix safely; check explains the rest
 | [`setup.mjs`](setup.mjs) | `pnpm run setup` | After cloning, and after a pull that changes dependencies or generated inputs |
 | [`check.mjs`](check.mjs) | `pnpm run check [flags]` | Before every commit you push. CI runs it too |
 | [`fix.mjs`](fix.mjs) | `pnpm run fix` | When `check` reports lint, Clippy or format problems |
-| [`jobs.mjs`](jobs.mjs) | imported, or `--jobs=N` / `WEFT_JOBS=N` | To limit how much a gate runs at once |
+| [`jobs.mjs`](jobs.mjs) | imported, or `--jobs=N` / `KERF_JOBS=N` | To limit how much a gate runs at once |
 | [`release.mjs`](release.mjs) | `node scripts/release.mjs [--publish]` | To build, stage, check and (with `--publish`) publish the packages |
 | [`set-version.mjs`](set-version.mjs) | `node scripts/set-version.mjs <version> \| --nightly <n>` | Before a release, or in the nightly: every public package at one version |
 | [`trust-nightly.mjs`](trust-nightly.mjs) | `node scripts/trust-nightly.mjs` | Once, so the nightly workflow may publish each package by trusted publishing |
@@ -77,8 +77,8 @@ covers every package, the site and the arena. It runs, in order, and stops at th
 | `packages/text` | `node scripts/specialize.mjs` | Generated text code the package reads |
 | `packages/db` | `pnpm exec prisma generate` | The Prisma client that tests and types read. `DATABASE_URL` defaults to `file:./setup.db`, which Prisma never opens |
 | `site` | `node ../benchmarks/arena/build.mjs` | The arena builds the site's types read |
-| `site` | `pnpm exec weft plugins sync` | The site's plugin outputs |
-| `site` | `pnpm exec weft run content` | The site's generated docs and numbers |
+| `site` | `pnpm exec kerf plugins sync` | The site's plugin outputs |
+| `site` | `pnpm exec kerf run content` | The site's generated docs and numbers |
 
 It needs Node and Rust. rustup reads the `rust-toolchain.toml` in each crate, including the wasm target.
 
@@ -128,7 +128,7 @@ finish, because the test suites write temporary files into the tree that the sta
 | `types` | `tsc` on the root, the site and every package: strict, `noUncheckedIndexedAccess`, `noImplicitOverride`, `exactOptionalPropertyTypes` |
 | `api-snapshots` | The core and start export maps, and a reference page for each path |
 | `diagnostic-catalog` | Compiler diagnostic catalog against emit sites and compile-test assertions |
-| `boundaries` | warp-core imports no framework; browser entries reach no Node code, however deep |
+| `boundaries` | veneer-core imports no framework; browser entries reach no Node code, however deep |
 | `browser-apis` | Browser code never calls `crypto.randomUUID`, which plain http (a LAN address) lacks |
 | `rust-fmt` | `rustfmt --check` on all tracked Rust files |
 | `clippy` | Clippy with `-D warnings` on each crate: no unwrap outside tests, `SAFETY` comments on `unsafe`, reasons on allows |
@@ -146,7 +146,7 @@ finish, because the test suites write temporary files into the tree that the sta
 </details>
 
 Each failure prints up to 60 problem lines and a `how to fix:` line. Steps cover the three crates:
-`crates/weft-compiler`, `crates/weft-layout` and `crates/weft`.
+`crates/kerf-compiler`, `crates/kerf-layout` and `crates/kerf`.
 
 ## `check/`
 
@@ -176,7 +176,7 @@ It exits non-zero only if the Rust formatter fails. Run `pnpm run check` afterwa
 
 How many things a gate runs at once. `check.mjs` and other gates import it.
 
-- `--jobs=N` or `WEFT_JOBS=N` sets it. `1` runs everything one at a time. Anything but a whole number from 1 up throws.
+- `--jobs=N` or `KERF_JOBS=N` sets it. `1` runs everything one at a time. Anything but a whole number from 1 up throws.
 - The default is half the cores free right now, at most 8 and at least 1: `floor((cores - load) / 2)`. Load is the
   1-minute load average, or on Windows, where that is always 0, the CPU share in use over half a second.
 - `pool(items, limit, run)` runs at most `limit` at a time, keeps results in item order, and rejects on the first failure.
@@ -213,11 +213,11 @@ What it does:
    and that platform runs the WASM build.
 2. **One version.** All packages must share one version, or it stops.
 3. **Order.** Dependencies first, so nothing reaches the registry ahead of what it needs. A cycle stops it.
-4. **Stage.** `pnpm pack` in place, then the manifest is rewritten in a copy: sibling `@weft-js/*` dependencies become
+4. **Stage.** `pnpm pack` in place, then the manifest is rewritten in a copy: sibling `@kerf/*` dependencies become
    the release version (peer dependencies get `^version`), `devDependencies` and `scripts` are dropped, and the copy is
    packed again with `--ignore-scripts`.
 5. **Check each tarball.** Version and `private`, the repository URL, licence, README, `publishConfig.access: public`,
-   LICENSE (except compiler platform packages), no `file:`/`link:`/`workspace:` specs, no unpublished `@weft-js/*`
+   LICENSE (except compiler platform packages), no `file:`/`link:`/`workspace:` specs, no unpublished `@kerf/*`
    dependency, nothing from `quality/stray.mjs`, every `exports` and `bin` target present, no secret-looking text, no
    import of an undeclared package or an unshipped relative file. Any problem means nothing is published.
 6. **Send.** Prerelease versions (with a `-`) go to the `next` tag, others to `latest`. A version already on the
@@ -239,13 +239,13 @@ node scripts/release-e2e.mjs <dir of .tgz> <empty dir> [--registry-script <path>
 | Option | Default | What it does |
 | ------ | ------- | ------------ |
 | `--pm` | `npm` | The package manager and runtime to scaffold and run with: `npm`, `bun` or `deno` |
-| `--registry-script` | `packages/create/scripts/registry.mjs` | The local registry to serve the tarballs. Its folder must also hold `cdp.mjs` and `hot-checks.mjs` |
+| `--registry-script` | `packages/create-kerf/scripts/registry.mjs` | The local registry to serve the tarballs. Its folder must also hold `cdp.mjs` and `hot-checks.mjs` |
 | `--no-rust` | off | Removes every directory holding `cargo` or `rustc` from `PATH`, points `CARGO_HOME` and `RUSTUP_HOME` at nothing, and fails if cargo is still found |
-| `--expect-backend` | none | Fails unless `weft doctor --json` reports this compiler kind (for example `native`) |
+| `--expect-backend` | none | Fails unless `kerf doctor --json` reports this compiler kind (for example `native`) |
 
-The empty directory must be empty. The run creates an app, checks that it names only `@weft-js/*` packages that are in
-the tarball folder, installs it, runs `weft doctor --json` and `weft check --json`, adds a route with a counter and a
-live query, and runs `weft build`. Then it starts `weft dev` and `weft start` in turn, and in a real browser clicks the
+The empty directory must be empty. The run creates an app, checks that it names only `@kerf/*` packages that are in
+the tarball folder, installs it, runs `kerf doctor --json` and `kerf check --json`, adds a route with a counter and a
+live query, and runs `kerf build`. Then it starts `kerf dev` and `kerf start` in turn, and in a real browser clicks the
 page until its counter moves, with no error and each module loaded once. It ends with a JSON summary line of passed and
 failed steps. It needs
 Chrome or Edge, named by `CHROME` if it isn't found: serving HTML proves nothing about hydration, so with no browser the

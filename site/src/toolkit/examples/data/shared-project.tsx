@@ -1,6 +1,6 @@
-import { Badge, Row, Stack, Text } from '@weft-js/warp'
+import { Badge, Row, Stack, Text } from '@kerf/veneer'
 
-import type { Column } from '@weft-js/warp'
+import type { Column } from '@kerf/veneer'
 
 import {
   type DEPLOYS,

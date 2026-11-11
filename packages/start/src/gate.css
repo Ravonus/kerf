@@ -1,6 +1,6 @@
-/* The late half of the style gate: `firstPaint` hides `data-weft="styled"` in the page, and this shows it. */
-[data-weft="styled"] { visibility: visible; animation: none; }
+/* The late half of the style gate: `firstPaint` hides `data-kerf="styled"` in the page, and this shows it. */
+[data-kerf="styled"] { visibility: visible; animation: none; }
 @media (prefers-reduced-motion: no-preference) {
-  [data-weft="styled"] { animation: weft-reveal 160ms ease-out; }
+  [data-kerf="styled"] { animation: kerf-reveal 160ms ease-out; }
 }
-@keyframes weft-reveal { from { opacity: 0; } }
+@keyframes kerf-reveal { from { opacity: 0; } }

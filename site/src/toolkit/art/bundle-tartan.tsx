@@ -1,13 +1,13 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
-import { palette } from '@weft-js/warp-core/dither'
-import { state } from '@weft-js/core'
+import { Canvas, type CanvasFrame as Frame } from '@kerf/veneer'
+import { palette } from '@kerf/veneer-core/dither'
+import { state } from '@kerf/core'
 import { type ArtProps, type Meta } from './shared'
 import code from './bundle-tartan.tsx?raw'
 
 export const meta: Meta = {
   name: 'Bundle Tartan',
   description:
-    "warp's fourteen largest components, gzipped, set as a tartan: a stripe as wide as its bytes, crossed with itself. Hover to name a stripe.",
+    "veneer's fourteen largest components, gzipped, set as a tartan: a stripe as wide as its bytes, crossed with itself. Hover to name a stripe.",
   kind: 'data',
   code,
   wide: true,
@@ -33,12 +33,12 @@ const MODULES: [string, number][] = [
 ]
 const total = MODULES.reduce((n, m) => n + m[1], 0),
   SETT_INKS = [
-    '--warp-color-text',
-    '--warp-color-accent-solid',
-    '--warp-color-accent-soft',
-    '--warp-color-caution-solid',
-    '--warp-color-text-subtle',
-    '--warp-color-page',
+    '--veneer-color-text',
+    '--veneer-color-accent-solid',
+    '--veneer-color-accent-soft',
+    '--veneer-color-caution-solid',
+    '--veneer-color-text-subtle',
+    '--veneer-color-page',
   ]
 /** A sett reflects at each end, as a real tartan's does. */
 const SETT = [...MODULES.keys(), ...[...MODULES.keys()].reverse()]
@@ -64,7 +64,7 @@ export default function BundleTartan(_: ArtProps) {
       image = new ImageData(width, height)
       out = new Uint32Array(image.data.buffer)
       lay(Math.max(width, height))
-      // 2/2 twill: warp and weft take turns on a diagonal, which is why tartan's crossings read as a third colour
+      // 2/2 twill: veneer and kerf take turns on a diagonal, which is why tartan's crossings read as a third colour
       for (let y = 0, i = 0; y < height; y++)
         for (let x = 0; x < width; x++, i++)
           out[i] =
@@ -88,11 +88,11 @@ export default function BundleTartan(_: ArtProps) {
           inksNow = undefined
           image = undefined
         }}
-        label={`A tartan of warp's fourteen largest components, ${(total / 1000).toFixed(0)} kB gzipped`}
+        label={`A tartan of veneer's fourteen largest components, ${(total / 1000).toFixed(0)} kB gzipped`}
       />
       <p data-art="readout">{found.value}</p>
       <table data-art="table">
-        <caption>Gzipped size of warp's largest components</caption>
+        <caption>Gzipped size of veneer's largest components</caption>
         <thead>
           <tr>
             <th scope="col">Component</th>

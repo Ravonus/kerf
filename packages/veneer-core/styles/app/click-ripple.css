@@ -1,0 +1,5 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+:where([data-scope="click-ripple"]) { position: absolute; inline-size: 24px; block-size: 24px; margin: -12px 0 0 -12px; border-radius: 99px; box-shadow: 0 0 0 2px var(--_pc); pointer-events: none; animation: veneer-ripple calc(600ms * var(--veneer-motion-scale) + 1ms) var(--veneer-ease-out) forwards; }
+@keyframes veneer-ripple { from { scale: 0.3; opacity: 1; } to { scale: 1.6; opacity: 0; } }
+}

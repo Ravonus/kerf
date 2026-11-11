@@ -1,10 +1,10 @@
 // The server's executor for queries and mutations (research 27 §3–§4). No runtime imports beyond data.ts, so the
 // same code runs in the request handler (server.tsx, which finds the scope through AsyncLocalStorage) and in
-// @weft-js/core/test's in-process fake transport.
+// @kerf/core/test's in-process fake transport.
 //
 //   request scope  key → entry (promise, then value and tags): a query runs at most once per request; loaders, every
 //                  render pass of a streamed page and a mutation's refreshes share it. Its resolved entries are the
-//                  page's `#weft-cache`.
+//                  page's `#kerf-cache`.
 //   shared store   only for `cache: { life }`: a value is valid while every tag's version still matches (a mutation
 //                  bumps the versions of the tags it invalidates).
 
@@ -368,7 +368,7 @@ async function refreshed(scope: Scope, refresh: [string, unknown][], tags: strin
 }
 
 /** Drop `tags` for the rest of this request and bump them in the shared store. */
-/** Run a query or mutation by id as this scope's caller, guards and all, as a browser call would (`@weft-js/agent`). */
+/** Run a query or mutation by id as this scope's caller, guards and all, as a browser call would (`@kerf/agent`). */
 export async function callById(scope: Scope, id: string, input: unknown): Promise<unknown> {
   const fn = fns.get(id)
   if (!fn || (fn.kind !== 'query' && fn.kind !== 'mutation'))
@@ -390,7 +390,7 @@ export async function invalidate(scope: Scope, tags: string[]) {
     rewarm(scope, tags, fetchQuery, (request) => createScope(request, scope.options))
   // After the bump, and after `run`: a refetch reads committed data and misses the shared cache (research 30 §5).
   // A bus that's down costs open pages a refresh, not this request its result.
-  await runtime.poke?.(tags, scope.request.headers.get('x-weft-conn')).catch((e) =>
+  await runtime.poke?.(tags, scope.request.headers.get('x-kerf-conn')).catch((e) =>
     scope.options.onDiagnostic?.({
       code: 'E_RT',
       severity: 'error',

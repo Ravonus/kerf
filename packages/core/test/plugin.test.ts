@@ -1,17 +1,17 @@
-// @weft-js/core/plugin and the Vite side of slots: `weft:slot/<id>` resolves to the generated module (research 13 §2.6).
+// @kerf/core/plugin and the Vite side of slots: `kerf:slot/<id>` resolves to the generated module (research 13 §2.6).
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { build } from 'vite'
-import weft from '../vite.mjs'
-import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
+import kerf from '../vite.mjs'
+import { definePlugin, defineSlot, provide } from '@kerf/core/plugin'
 
 type Built = { output: { code: string }[] }
 
 test('definePlugin: plain data entry, frozen contributions, P115 on bad options', () => {
   const slot = defineSlot({ id: 'text.measure', version: 1, cardinality: 'one', sides: ['client'] })
   const text = definePlugin({
-    name: '@weft-js/text',
+    name: '@kerf/text',
     version: '0.1.0',
     options: (o: { engine?: string }) => {
       if (o.engine && o.engine !== 'slim')
@@ -24,7 +24,7 @@ test('definePlugin: plain data entry, frozen contributions, P115 on bad options'
   })
   const p = text()
   expect(JSON.parse(JSON.stringify(p))).toEqual({
-    name: '@weft-js/text',
+    name: '@kerf/text',
     version: '0.1.0',
     provides: ['text.measure'],
     options: { engine: 'slim' },
@@ -37,30 +37,30 @@ test('definePlugin: plain data entry, frozen contributions, P115 on bad options'
   )
 })
 
-test('weft:slot/<id> resolves to .weft/slots/<id>.ts, and a missing one is P101', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-slot-'))
+test('kerf:slot/<id> resolves to .kerf/slots/<id>.ts, and a missing one is P101', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'kerf-slot-'))
   try {
-    mkdirSync(join(root, '.weft/slots'), { recursive: true })
-    writeFileSync(join(root, '.weft/slots/a.b.ts'), 'export const load = () => 42\n')
+    mkdirSync(join(root, '.kerf/slots'), { recursive: true })
+    writeFileSync(join(root, '.kerf/slots/a.b.ts'), 'export const load = () => 42\n')
     writeFileSync(
       join(root, 'main.js'),
-      "import { load } from 'weft:slot/a.b'\nconsole.log(load())\n",
+      "import { load } from 'kerf:slot/a.b'\nconsole.log(load())\n",
     )
     const run = () =>
       build({
         root,
         logLevel: 'silent',
-        plugins: [weft()],
+        plugins: [kerf()],
         build: { write: false, lib: { entry: join(root, 'main.js'), formats: ['es'] } },
       })
     const out = (await run()) as unknown as Built[]
     expect(out[0]!.output[0]!.code).toContain('42')
-    writeFileSync(join(root, 'main.js'), "import { load } from 'weft:slot/c.d'\nload()\n")
-    await expect(run()).rejects.toThrow(/P101 weft:slot\/c\.d/)
-    // A slot @weft-js/core/surface imports builds without `weft plugins sync`, and fails only if it's used (research 33 §5).
+    writeFileSync(join(root, 'main.js'), "import { load } from 'kerf:slot/c.d'\nload()\n")
+    await expect(run()).rejects.toThrow(/P101 kerf:slot\/c\.d/)
+    // A slot @kerf/core/surface imports builds without `kerf plugins sync`, and fails only if it's used (research 33 §5).
     writeFileSync(
       join(root, 'main.js'),
-      "import { load } from 'weft:slot/text.measure'\nconsole.log(load())\n",
+      "import { load } from 'kerf:slot/text.measure'\nconsole.log(load())\n",
     )
     await expect(run()).resolves.toBeTruthy()
   } finally {
@@ -68,18 +68,18 @@ test('weft:slot/<id> resolves to .weft/slots/<id>.ts, and a missing one is P101'
   }
 })
 
-test('weft:keyed reads the code it is given: bracket forms bring it in, a quoted word alone does not', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-keyed-'))
+test('kerf:keyed reads the code it is given: bracket forms bring it in, a quoted word alone does not', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-keyed-'))
   const size = async (body: string) => {
     writeFileSync(
       join(dir, 'entry.ts'),
-      `import { state } from '@weft-js/core'\nconst box = state({ a: 1 })\n${body}\n`,
+      `import { state } from '@kerf/core'\nconst box = state({ a: 1 })\n${body}\n`,
     )
     const out = await build({
       configFile: false,
       logLevel: 'silent',
       root: dir,
-      plugins: [weft()],
+      plugins: [kerf()],
       build: {
         write: false,
         lib: { entry: join(dir, 'entry.ts'), formats: ['es'], fileName: 'entry' },

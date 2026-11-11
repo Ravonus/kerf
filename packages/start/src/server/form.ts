@@ -17,7 +17,7 @@ export function makeForm(
 ) {
   /**
    * A form POST to a page (research 29 §5): the mutation, then 303 (Post/Redirect/Get) or the page again with the
-   * errors and what was typed. A form can't send `x-weft`, so the CSRF proof is the browser's own origin headers.
+   * errors and what was typed. A form can't send `x-kerf`, so the CSRF proof is the browser's own origin headers.
    */
   return async function form(url: URL, request: Request, scope: Scope): Promise<Response> {
     const origin = request.headers.get('origin')

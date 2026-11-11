@@ -1,6 +1,6 @@
-// weft app state: defineState (PLAN §4.5, research 14 §2). Phase 1: client instances, names, $reset, $snapshot.
-// History (@weft-js/core/history, which also owns action transactions) and persistence (@weft-js/core/persist) are separate modules
-// that register here; the weft() Vite plugin imports each one into the modules that use its option, so an app that
+// kerf app state: defineState (PLAN §4.5, research 14 §2). Phase 1: client instances, names, $reset, $snapshot.
+// History (@kerf/core/history, which also owns action transactions) and persistence (@kerf/core/persist) are separate modules
+// that register here; the kerf() Vite plugin imports each one into the modules that use its option, so an app that
 // uses neither ships neither. Diagnostic text, dev names and the S004/S010 checks are dev-only.
 //
 // A scope is a named setup function over ordinary boxes. It runs once per app instance, lazily, on first access.
@@ -49,7 +49,7 @@ export interface StorageLike {
 }
 
 export interface AppOptions {
-  /** Persistence key prefix: `weft:<name>:<scope>.<box>`. */
+  /** Persistence key prefix: `kerf:<name>:<scope>.<box>`. */
   name?: string
   /** Seed values by scope and returned key, applied before setup returns (the SSR hydration path). */
   state?: Record<string, Record<string, unknown>>
@@ -79,7 +79,7 @@ export function createApp(options: AppOptions = {}): App {
 
 /**
  * Which app a handle means: the one its owner was rendered in, else the current one. The client has one app per tab;
- * `@weft-js/core/test` makes a fresh one per `render()`, and @weft-js/core/ssr one per render pass (one request, never shared).
+ * `@kerf/core/test` makes a fresh one per `render()`, and @kerf/core/ssr one per render pass (one request, never shared).
  */
 let current: App = createApp()
 const root = current
@@ -109,13 +109,13 @@ export function withApp<T>(app: App, fn: () => T): T {
   return appContext.provide(app, fn)
 }
 
-/** End an app: dispose every scope instance's owner (@weft-js/core/test, when a render unmounts). */
+/** End an app: dispose every scope instance's owner (@kerf/core/test, when a render unmounts). */
 export function disposeApp(app: App) {
   for (const inst of app.instances.values()) inst.dispose()
   app.instances.clear()
 }
 
-// ---- features: @weft-js/core/history and @weft-js/core/persist register here -------------------------------------------------------
+// ---- features: @kerf/core/history and @kerf/core/persist register here -------------------------------------------------------
 
 export interface Timeline {
   clear(): void
@@ -188,7 +188,7 @@ interface ScopeDef {
   h?: unknown
 }
 
-/** Set by @weft-js/core/hmr: a second `defineState` with a known name is a module re-run, not a duplicate. */
+/** Set by @kerf/core/hmr: a second `defineState` with a known name is a module re-run, not a duplicate. */
 export const hmr = { on: false }
 
 const defs = new Map<string, ScopeDef>()
@@ -213,8 +213,8 @@ export class Instance {
       if (DEV && !features.history)
         throw new StateError(
           'S009',
-          `\`${def.name}\` sets \`history\`, but @weft-js/core/history isn't loaded`,
-          "the weft() Vite plugin adds it; without the plugin, `import '@weft-js/core/history'`",
+          `\`${def.name}\` sets \`history\`, but @kerf/core/history isn't loaded`,
+          "the kerf() Vite plugin adds it; without the plugin, `import '@kerf/core/history'`",
         )
       this.history = features.history!.create(this, def.options.history.limit)
     }
@@ -235,7 +235,7 @@ export class Instance {
         named.set(v, key)
         if (DEV) writable++
       }
-      // Actions are transactions only where @weft-js/core/history is loaded; otherwise an action is the function itself.
+      // Actions are transactions only where @kerf/core/history is loaded; otherwise an action is the function itself.
       if (typeof v === 'function') {
         if (DEV) actions++
         this.api[key] = features.history
@@ -252,7 +252,7 @@ export class Instance {
 
     attachBoxes({ inst: this, boxes, named, app, def, features, owners, onWrite, StateError })
     if (DEV) {
-      // The dev graph (@weft-js/core/devtools): the scope's boxes and returned derived values, until the app ends.
+      // The dev graph (@kerf/core/devtools): the scope's boxes and returned derived values, until the app ends.
       const nodes: (Box<unknown> | Memo<unknown>['node'])[] = [...boxes]
       for (const [key, v] of Object.entries(this.api))
         if (v instanceof Memo) {

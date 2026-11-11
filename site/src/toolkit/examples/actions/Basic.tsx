@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, CommandPalette } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, CommandPalette } from '@kerf/veneer'
 import { COMMANDS } from './shared'
 
 export function CommandPaletteBasic() {

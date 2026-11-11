@@ -1,4 +1,4 @@
-import { Grid, Search } from '@weft-js/warp'
+import { Grid, Search } from '@kerf/veneer'
 import { Cell } from '../../world'
 
 export const SearchStates = () => (

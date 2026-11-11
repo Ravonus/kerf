@@ -1,7 +1,7 @@
 // Test cases in a test file, and what changed between two versions of one: which tests are new or edited (the ones
 // the gate must prove), and T020, an existing test deleted, skipped or loosened without a written reason.
 //
-//   // weft-allow T020: the old assertion pinned the bug this change fixes
+//   // kerf-allow T020: the old assertion pinned the bug this change fixes
 
 import ts from 'typescript'
 import { diagnostic, positions } from './diag.mjs'
@@ -214,6 +214,6 @@ function t020(rel, _text, line, why) {
     file: rel,
     span,
     why: `${why}. An existing test got weaker, so it may no longer catch what it used to.`,
-    help: 'Restore it; or, when the change really is intended (the old test pinned a bug), keep it with `// weft-allow T020: <reason>` on that test, where the reviewer sees it',
+    help: 'Restore it; or, when the change really is intended (the old test pinned a bug), keep it with `// kerf-allow T020: <reason>` on that test, where the reviewer sees it',
   })
 }

@@ -42,10 +42,10 @@ test('dead alternatives go from a :where() or :is() the rule keeps, however deep
 
 test('a dial tier the build never names goes, with the tokens only it read, and one it names stays', () => {
   const css =
-    ':root{--warp-a:1;--warp-b:2}[data-expression=vivid]{--warp-b:3}[data-fields=classic] p{color:var(--warp-a)}p{color:var(--warp-b)}'
-  expect(out(css)).toBe(':root{--warp-b:2}p{color:var(--warp-b)}')
+    ':root{--veneer-a:1;--veneer-b:2}[data-expression=vivid]{--veneer-b:3}[data-fields=classic] p{color:var(--veneer-a)}p{color:var(--veneer-b)}'
+  expect(out(css)).toBe(':root{--veneer-b:2}p{color:var(--veneer-b)}')
   expect(out(css, 'vivid')).toBe(
-    ':root{--warp-b:2}[data-expression=vivid]{--warp-b:3}p{color:var(--warp-b)}',
+    ':root{--veneer-b:2}[data-expression=vivid]{--veneer-b:3}p{color:var(--veneer-b)}',
   )
 })
 
@@ -71,12 +71,12 @@ test('at-rules empty after pruning go; layer order statements stay', () => {
 })
 
 test('custom properties go when nothing reads them, including through a chain', () => {
-  const css = ':root{--warp-a:1;--warp-b:var(--warp-a);--warp-c:2}p{top:var(--warp-c)}'
-  expect(out(css)).toBe(':root{--warp-c:2}p{top:var(--warp-c)}')
+  const css = ':root{--veneer-a:1;--veneer-b:var(--veneer-a);--veneer-c:2}p{top:var(--veneer-c)}'
+  expect(out(css)).toBe(':root{--veneer-c:2}p{top:var(--veneer-c)}')
 })
 
-test('a property the JS reads stays, and so does one not owned by warp', () => {
-  expect(out(':root{--warp-a:1;--brand:2}', '--warp-a')).toBe(':root{--warp-a:1;--brand:2}')
+test('a property the JS reads stays, and so does one not owned by veneer', () => {
+  expect(out(':root{--veneer-a:1;--brand:2}', '--veneer-a')).toBe(':root{--veneer-a:1;--brand:2}')
 })
 
 test('keyframes stay only while something runs them', () => {
@@ -87,7 +87,7 @@ test('keyframes stay only while something runs them', () => {
 
 test('keyframes inside a layer go when nothing runs them, and so do the tokens only they read', () => {
   const css =
-    '@layer warp.flow{:root{--warp-y:8px}[data-flow=tile]{animation:rise 1s}@keyframes rise{from{translate:0 var(--warp-y)}}}'
+    '@layer veneer.flow{:root{--veneer-y:8px}[data-flow=tile]{animation:rise 1s}@keyframes rise{from{translate:0 var(--veneer-y)}}}'
   expect(out(css, 'tile')).toBe(css)
   expect(out(css)).toBe('')
 })
@@ -119,8 +119,8 @@ test('keep and template stems save names built at run time', () => {
 
 test('a token or keyframes one sheet defines and another uses stays', () => {
   const sheets = [
-    ':root{--warp-a:1}@keyframes spin{to{top:0}}',
-    'p{top:var(--warp-a);animation:spin 1s}',
+    ':root{--veneer-a:1}@keyframes spin{to{top:0}}',
+    'p{top:var(--veneer-a);animation:spin 1s}',
   ]
   expect(purge(sheets, has())).toEqual(sheets)
 })
@@ -148,8 +148,8 @@ test('unnest keeps pseudo-elements, brackets and anything else it does not under
 
 test("with `base: './'`, a lazy chunk's preload list names the purged stylesheet, not the one it replaced", async () => {
   const { build } = await import('vite')
-  const { default: weft } = await import('../vite.mjs')
-  const root = mkdtempSync(join(tmpdir(), 'weft-purge-'))
+  const { default: kerf } = await import('../vite.mjs')
+  const root = mkdtempSync(join(tmpdir(), 'kerf-purge-'))
   writeFileSync(
     join(root, 'index.html'),
     '<!doctype html><script type="module" src="/main.js"></script>',
@@ -163,7 +163,7 @@ test("with `base: './'`, a lazy chunk's preload list names the purged stylesheet
     base: './',
     configFile: false,
     logLevel: 'silent',
-    plugins: [weft()],
+    plugins: [kerf()],
     build: { write: false, cssCodeSplit: true },
   })
   const files = (
@@ -181,7 +181,7 @@ test("with `base: './'`, a lazy chunk's preload list names the purged stylesheet
 }, 30000)
 
 describe('pieces', () => {
-  const css = `@layer warp.tokens,warp.base;@layer warp.tokens{:root{--warp-a:1px;--warp-b:var(--warp-c);--warp-c:2px;--warp-unused:3px}}@layer warp.base{[data-scope=knob]{width:var(--warp-b);animation:spin 1s}[data-scope=knob]:hover{color:red}[data-scope=dial]{height:1px}[data-theme=dark] b{color:blue}p{margin:0}}@keyframes spin{to{rotate:1turn}}@media print{p{color:#000}}`
+  const css = `@layer veneer.tokens,veneer.base;@layer veneer.tokens{:root{--veneer-a:1px;--veneer-b:var(--veneer-c);--veneer-c:2px;--veneer-unused:3px}}@layer veneer.base{[data-scope=knob]{width:var(--veneer-b);animation:spin 1s}[data-scope=knob]:hover{color:red}[data-scope=dial]{height:1px}[data-theme=dark] b{color:blue}p{margin:0}}@keyframes spin{to{rotate:1turn}}@media print{p{color:#000}}`
   const lookup = (html: string) => {
     const t = pieces([['a', css]])
     const present = markup(html),
@@ -204,10 +204,10 @@ describe('pieces', () => {
   test('a rendered component brings its rules, the tokens they read through others, and their keyframes', () => {
     const got = lookup('<div data-scope="knob"></div>')
     expect(got).toContain('[data-scope=knob]{width')
-    expect(got).toContain('--warp-b:')
-    expect(got).toContain('--warp-c:2px')
+    expect(got).toContain('--veneer-b:')
+    expect(got).toContain('--veneer-c:2px')
     expect(got).toContain('@keyframes spin')
-    expect(got).not.toContain('--warp-unused')
+    expect(got).not.toContain('--veneer-unused')
     expect(got).not.toContain('[data-scope=dial]')
   })
 
@@ -225,8 +225,8 @@ describe('pieces', () => {
   })
 
   test("layer order is the whole sheet's, whatever a page uses", () => {
-    expect(layerOrder(css)).toEqual(['warp.tokens', 'warp.base'])
-    expect(pieces([['a', css]]).layers).toBe('@layer warp.tokens,warp.base;')
+    expect(layerOrder(css)).toEqual(['veneer.tokens', 'veneer.base'])
+    expect(pieces([['a', css]]).layers).toBe('@layer veneer.tokens,veneer.base;')
   })
 
   test('`keep` holds a selector whatever the HTML has', () => {

@@ -1,4 +1,4 @@
-import type { Attendee } from '@weft-js/warp-core'
+import type { Attendee } from '@kerf/veneer-core'
 import { TEAM_ZONE } from './team-calendar'
 
 export const TEAM_ROOM: Attendee[] = [

@@ -1,5 +1,0 @@
-/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
-@layer warp.app {
-:where([data-scope="click-ripple"]) { position: absolute; inline-size: 24px; block-size: 24px; margin: -12px 0 0 -12px; border-radius: 99px; box-shadow: 0 0 0 2px var(--_pc); pointer-events: none; animation: warp-ripple calc(600ms * var(--warp-motion-scale) + 1ms) var(--warp-ease-out) forwards; }
-@keyframes warp-ripple { from { scale: 0.3; opacity: 1; } to { scale: 1.6; opacity: 0; } }
-}

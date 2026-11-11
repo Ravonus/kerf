@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Segmented } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Segmented } from '@kerf/veneer'
 import { PERIODS } from './shared'
 
 export function SegmentedSizes() {

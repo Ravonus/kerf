@@ -23,10 +23,10 @@ export function fingerprint(root, v) {
   return { hashes, files: newest.length }
 }
 
-/** The installed `weft` has to be the tarball, byte for byte, or the run is measuring some older checkout. */
+/** The installed `kerf` has to be the tarball, byte for byte, or the run is measuring some older checkout. */
 export function installedIsPacked(root, store) {
   const tarballs = JSON.parse(readFileSync(join(store, 'tarballs.json'), 'utf8')),
-    tgz = tarballs.weft.replace(/^file:/, '')
+    tgz = tarballs.kerf.replace(/^file:/, '')
   const tmp = mkdtempSync(join(tmpdir(), 'bench-tgz-'))
   try {
     execFileSync('tar', ['-xzf', tgz, '-C', tmp])
@@ -34,14 +34,14 @@ export function installedIsPacked(root, store) {
       wrong = []
     walkBuild(join(tmp, 'package'), (f) => {
       const r = relative(join(tmp, 'package'), f),
-        i = join(root, 'node_modules/@weft-js/core', r)
+        i = join(root, 'node_modules/@kerf/core', r)
       n++
       if (r !== 'package.json' && (!existsSync(i) || sha(readFileSync(f)) !== sha(readFileSync(i))))
         wrong.push(r)
     })
     if (wrong.length)
       throw new Error(
-        `node_modules/@weft-js/core doesn't match the packed tarball: ${wrong.slice(0, 3).join(', ')}`,
+        `node_modules/@kerf/core doesn't match the packed tarball: ${wrong.slice(0, 3).join(', ')}`,
       )
     return { tgz: sha(readFileSync(tgz)).slice(0, 12), files: n }
   } finally {
@@ -50,7 +50,7 @@ export function installedIsPacked(root, store) {
 }
 
 /** Everything this checkout's tarballs are made from: HEAD's trees, plus whatever isn't committed. */
-export function weftInputs() {
+export function kerfInputs() {
   const git = (...a) => execFileSync('git', a, { cwd: repo, encoding: 'utf8', maxBuffer: 1 << 28 })
   const h = createHash('sha256')
     .update(git('rev-parse', 'HEAD:packages', 'HEAD:crates'))

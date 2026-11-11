@@ -1,4 +1,4 @@
-import { ContextMeter } from '@weft-js/warp'
+import { ContextMeter } from '@kerf/veneer'
 
 export const ContextMeterLevels = () => (
   <>

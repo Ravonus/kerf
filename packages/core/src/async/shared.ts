@@ -10,5 +10,5 @@ export type Tracked = {
   shape?: ResourceOptions<unknown>['shape']
 }
 export const boundaries = context<{ add(r: Tracked): void } | undefined>(undefined)
-/** While a Boundary's `pending` renders: the resources it's waiting for (@weft-js/core/shape). */
+/** While a Boundary's `pending` renders: the resources it's waiting for (@kerf/core/shape). */
 export const waiting = context<Tracked[] | undefined>(undefined)

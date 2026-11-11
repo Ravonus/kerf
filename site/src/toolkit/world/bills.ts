@@ -1,4 +1,4 @@
-import type { Invoice } from '@weft-js/warp'
+import type { Invoice } from '@kerf/veneer'
 
 export const BILLS: Invoice[] = [
   {

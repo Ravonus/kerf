@@ -234,7 +234,7 @@ export const placement: Doc[] = [
           {
             id: 'CoverSignIn',
             title: 'A sign-in page',
-            note: "Previews pin the screen's height with `--warp-viewport-block`. In an app, leave that out.",
+            note: "Previews pin the screen's height with `--veneer-viewport-block`. In an app, leave that out.",
             stage: 'fill',
             height: 580,
           },

@@ -1,5 +1,5 @@
-import { Boundary, resource, state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { Boundary, resource, state } from '@kerf/core'
+import { Button, Card } from '@kerf/veneer'
 
 // Stands in for a network value arriving after `ms`.
 function later<T>(ms: number, value: T): Promise<T> {

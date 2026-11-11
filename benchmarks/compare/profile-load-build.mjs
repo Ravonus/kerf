@@ -64,7 +64,7 @@ async function buildOne(repo, name, log, root, signal) {
 
 /** Existing installs/text/compiler must already match; no install, native rebuild or canonical measure. */
 export async function buildProof(repo, args) {
-  process.env.WEFT_COMPILER = 'native'
+  process.env.KERF_COMPILER = 'native'
   assert.ok(!args['build-proof'], 'Build mode accepts only --out')
   const out = resolve(args.out),
     root = managerRoot(repo, out)

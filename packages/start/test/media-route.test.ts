@@ -13,7 +13,7 @@ const serve = (temporary: boolean) =>
     } as never),
   )
 const get = (route: ReturnType<typeof serve>, headers: Record<string, string> = {}) => {
-  const url = new URL(`http://localhost/_weft/m/${hash}/64.webp`)
+  const url = new URL(`http://localhost/_kerf/m/${hash}/64.webp`)
   return route(url, new Request(url, { headers }))
 }
 

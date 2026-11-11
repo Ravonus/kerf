@@ -1,10 +1,10 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
-<h1 align="center">@weft-js/scroll</h1>
+<h1 align="center">@kerf/scroll</h1>
 
 <p align="center">
   <strong>Custom scrollbars, drawn in the DOM or on a canvas, that never freeze.</strong><br>
@@ -12,30 +12,30 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@weft-js/scroll"><img src="https://img.shields.io/npm/v/@weft-js/scroll?color=145c3c&label=npm" alt="npm version"></a>
-  <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
-  <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
+  <a href="https://www.npmjs.com/package/@kerf/scroll"><img src="https://img.shields.io/npm/v/@kerf/scroll?color=145c3c&label=npm" alt="npm version"></a>
+  <a href="https://github.com/Ravonus/kerf/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
+  <a href="https://github.com/Ravonus/kerf/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/kerf/quality.yml?branch=main&label=checks" alt="checks"></a>
   <img src="https://img.shields.io/badge/node-%3E%3D24-145c3c" alt="Node 24 or later">
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
   <a href="#api">API</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/docs">Docs</a> ·
-  <a href="https://github.com/Ravonus/weft/blob/main/CHANGELOG.md">Changelog</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf/tree/main/docs">Docs</a> ·
+  <a href="https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!IMPORTANT]
 > **Early release (0.1.x).** APIs can change between minor versions. Pin the version and read the
-> [changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md) before you upgrade.
+> [changelog](https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md) before you upgrade.
 
 Native scrollbars look different on every system, can't be given a fixed-size thumb, and can't be drawn the way a
 design asks. Libraries that replace them usually move the content with a transform, and lose what the browser did
 for free: focus scrolling into view, find-in-page, anchors, sticky headers, screen readers, and every library that
 listens for `scroll`.
 
-`@weft-js/scroll` keeps the browser's scroll offsets: the viewport is always a real scroll container, and the bars
+`@kerf/scroll` keeps the browser's scroll offsets: the viewport is always a real scroll container, and the bars
 are plain elements or a canvas that you style or paint. It has two modes:
 
 - **Native** (the default): the browser scrolls the viewport, with its own bar hidden. Wheel, trackpad and touch
@@ -44,8 +44,8 @@ are plain elements or a canvas that you style or paint. It has two modes:
 - **Engine**: the viewport is `overflow: hidden` and every input runs in JavaScript, with this package's easing,
   momentum, rubber band and nested hand-off, the same in Chrome, Firefox and Safari. It runs on the main thread.
 
-Nothing in it imports a framework. Warp's [`ScrollView`](https://github.com/Ravonus/weft/blob/main/packages/warp/src/ScrollView.tsx)
-is the Weft component over it.
+Nothing in it imports a framework. Veneer's [`ScrollView`](https://github.com/Ravonus/kerf/blob/main/packages/veneer/src/ScrollView.tsx)
+is the Kerf component over it.
 
 ## Highlights
 
@@ -66,7 +66,7 @@ is the Weft component over it.
 - **Behaviour you can tune.** Snap points, smooth-scroll duration and easing in both modes; friction, momentum,
   wheel speed and rubber band in engine mode.
 - **Long lists.** The viewport fires `scroll` in the same frame it moves, so a virtualizer draws with it. A test
-  scrolls 100,000 rows on Warp's virtualizer.
+  scrolls 100,000 rows on Veneer's virtualizer.
 - **Right to left, reduced motion, accessibility.** `scrollLeft` runs negative in RTL as the DOM's does; reduced
   motion makes animated scrolls instant; the bars are `scrollbar`s with values, and axe finds nothing to fix.
 
@@ -79,7 +79,7 @@ is the Weft component over it.
   - [How it works](#how-it-works)
   - [Native or engine mode](#native-or-engine-mode)
   - [Markup](#markup)
-  - [In Weft: Warp's ScrollView](#in-weft-warps-scrollview)
+  - [In Kerf: Veneer's ScrollView](#in-kerf-veneers-scrollview)
   - [In another framework](#in-another-framework)
   - [A fixed-size thumb](#a-fixed-size-thumb)
   - [Styling the bars](#styling-the-bars)
@@ -101,8 +101,8 @@ is the Weft component over it.
 
 | You want | Use |
 |---|---|
-| A panel, list or log whose bar looks the same everywhere, or is drawn your way | This package, or Warp's `ScrollView` in a Weft app |
-| The page's own scrollbar restyled below a sticky header | Warp's `ScrollRail`: the document keeps native scrolling |
+| A panel, list or log whose bar looks the same everywhere, or is drawn your way | This package, or Veneer's `ScrollView` in a Kerf app |
+| The page's own scrollbar restyled below a sticky header | Veneer's `ScrollRail`: the document keeps native scrolling |
 | A thin native bar, with no change to how scrolling works | CSS: `scrollbar-width` and `scrollbar-color` |
 | Custom bars that keep up while the main thread is busy | This package in native mode, the default (see [Performance](#performance)) |
 | Your own wheel and touch physics, the same in every browser | This package in engine mode |
@@ -110,15 +110,15 @@ is the Weft component over it.
 ## Install
 
 ```bash
-npm install @weft-js/scroll
+npm install @kerf/scroll
 ```
 
 ```bash
-pnpm add @weft-js/scroll
+pnpm add @kerf/scroll
 ```
 
 ```bash
-bun add @weft-js/scroll
+bun add @kerf/scroll
 ```
 
 > [!NOTE]
@@ -130,8 +130,8 @@ bun add @weft-js/scroll
 With no framework: `wrap` turns an element's children into a scroll area in place.
 
 ```ts
-import { wrap } from '@weft-js/scroll'
-import '@weft-js/scroll/styles.css'
+import { wrap } from '@kerf/scroll'
+import '@kerf/scroll/styles.css'
 
 const log = document.querySelector<HTMLElement>('#log')!
 const area = wrap(log, {
@@ -211,8 +211,8 @@ the browser's own scrolling isn't wanted. `update({ mode })` switches at any tim
 ```
 
 ```ts
-import { scroller } from '@weft-js/scroll'
-import '@weft-js/scroll/styles.css'
+import { scroller } from '@kerf/scroll'
+import '@kerf/scroll/styles.css'
 
 const area = scroller(document.querySelector('#area')!, {
   axes: 'y',
@@ -222,10 +222,10 @@ const area = scroller(document.querySelector('#area')!, {
 The content element is what moves when the area rubber-bands, and what a `ResizeObserver` watches for size changes.
 Swap it and the engine watches the new one.
 
-### In Weft: Warp's ScrollView
+### In Kerf: Veneer's ScrollView
 
 ```tsx
-import { ScrollView } from '@weft-js/warp'
+import { ScrollView } from '@kerf/veneer'
 
 export function Log({ lines }: { lines: string[] }) {
   return (
@@ -243,7 +243,7 @@ export function Log({ lines }: { lines: string[] }) {
 }
 ```
 
-Every option is a prop. `controller` receives the scroller, for `scrollTo` and the rest. The bars take Warp's ink,
+Every option is a prop. `controller` receives the scroller, for `scrollTo` and the rest. The bars take Veneer's ink,
 focus ring and timing. Server HTML scrolls natively until the island runs.
 
 ### In another framework
@@ -252,7 +252,7 @@ The scroller is an action: make it on mount, `update` it when options change, `d
 
 ```tsx
 import { useEffect, useRef } from 'react'
-import { scroller, type ScrollOptions } from '@weft-js/scroll'
+import { scroller, type ScrollOptions } from '@kerf/scroll'
 
 export function Scroll(props: {
   options: ScrollOptions
@@ -323,13 +323,13 @@ The elements carry state for CSS: `data-visible`, `data-hover`, `data-active` an
 
 ### Bars on a canvas
 
-`canvas()` from `@weft-js/scroll/canvas` paints each bar into its own canvas, at the device's pixel ratio. Colours
+`canvas()` from `@kerf/scroll/canvas` paints each bar into its own canvas, at the device's pixel ratio. Colours
 resolve through the same custom properties, so `color-mix()` and `currentColor` work. Pass `draw` to paint it
 yourself; `paint` is the default look, to draw over or ignore.
 
 ```ts
-import { scroller } from '@weft-js/scroll'
-import { canvas } from '@weft-js/scroll/canvas'
+import { scroller } from '@kerf/scroll'
+import { canvas } from '@kerf/scroll/canvas'
 
 scroller(el, {
   renderer: canvas({
@@ -366,7 +366,7 @@ engine mode; in native mode the browser's own wheel and touch handling decides t
 | `touch` | `js` runs touch here; `native` leaves it to the browser | `js` |
 
 ```ts
-import { easings, scroller } from '@weft-js/scroll'
+import { easings, scroller } from '@kerf/scroll'
 
 scroller(el, {
   duration: 400,
@@ -412,8 +412,8 @@ viewport in the frame it writes a position (`syncEvents`, on by default). Either
 the virtualizer as its scroller:
 
 ```ts
-import { scroller } from '@weft-js/scroll'
-import { virtualizer } from '@weft-js/warp-core'
+import { scroller } from '@kerf/scroll'
+import { virtualizer } from '@kerf/veneer-core'
 
 const area = scroller(root)
 const list = virtualizer(area.viewport, {
@@ -426,14 +426,14 @@ const list = virtualizer(area.viewport, {
 
 ### Scrubbing a scene
 
-`@weft-js/scroll/timeline` drives a scene from how far a section has scrolled. It needs no scroll area: it
+`@kerf/scroll/timeline` drives a scene from how far a section has scrolled. It needs no scroll area: it
 reads the page's own scrolling, or any scroller's.
 
 `progress(el)` follows a section's position, 0 to 1, eased so the scene glides instead of stepping with the
 wheel. `timeline(tracks)` holds keyframes as data and gives every track's value at a position.
 
 ```ts
-import { progress, timeline } from '@weft-js/scroll/timeline'
+import { progress, timeline } from '@kerf/scroll/timeline'
 
 const tracks = timeline({
   zoom: [[0, 1], [0.6, 2.4], [1, 3, 'easeOut']],
@@ -539,10 +539,10 @@ Pure functions the engine uses, exported for your own bars and tests: `thumbLeng
 
 | Entry | What it has |
 |---|---|
-| `@weft-js/scroll` | `scroller`, `wrap`, `domRenderer`, the helpers and the types |
-| `@weft-js/scroll/canvas` | `canvas`, `paintBar`, `cssColor` |
-| `@weft-js/scroll/timeline` | `timeline`, `progress`, `progressOf` |
-| `@weft-js/scroll/styles.css` | The layout and look of the root, viewport and bars |
+| `@kerf/scroll` | `scroller`, `wrap`, `domRenderer`, the helpers and the types |
+| `@kerf/scroll/canvas` | `canvas`, `paintBar`, `cssColor` |
+| `@kerf/scroll/timeline` | `timeline`, `progress`, `progressOf` |
+| `@kerf/scroll/styles.css` | The layout and look of the root, viewport and bars |
 
 ## Performance
 
@@ -596,21 +596,21 @@ native scrolling does. `chain: 'contain'` keeps it in the area.
 
 | Package | What it is |
 |---|---|
-| [`@weft-js/warp`](https://www.npmjs.com/package/@weft-js/warp) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/warp)</sup> | Warp's components; `ScrollView` is this package as a Weft component |
-| [`@weft-js/warp-core`](https://www.npmjs.com/package/@weft-js/warp-core) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/warp-core)</sup> | Warp's behaviour without a framework, including the `virtualizer` for long lists |
-| [`@weft-js/core`](https://www.npmjs.com/package/@weft-js/core) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/core)</sup> | The Weft runtime |
-| [`@weft-js/create`](https://www.npmjs.com/package/@weft-js/create) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/create)</sup> | `npm create @weft-js` starts an app with Warp |
+| [`@kerf/veneer`](https://www.npmjs.com/package/@kerf/veneer) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/veneer)</sup> | Veneer's components; `ScrollView` is this package as a Kerf component |
+| [`@kerf/veneer-core`](https://www.npmjs.com/package/@kerf/veneer-core) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/veneer-core)</sup> | Veneer's behaviour without a framework, including the `virtualizer` for long lists |
+| [`@kerf/core`](https://www.npmjs.com/package/@kerf/core) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/core)</sup> | The Kerf runtime |
+| [`create-kerf`](https://www.npmjs.com/package/create-kerf) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/create-kerf)</sup> | `npm create kerf` starts an app with Veneer |
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Ravonus/weft/blob/main/CONTRIBUTING.md). In `packages/scroll`:
+See [CONTRIBUTING.md](https://github.com/Ravonus/kerf/blob/main/CONTRIBUTING.md). In `packages/scroll`:
 
 ```bash
 pnpm test             # unit tests, then Chromium and Firefox
-WEFT_WEBKIT=1 pnpm test   # WebKit too
+KERF_WEBKIT=1 pnpm test   # WebKit too
 pnpm run bench        # against native scrolling
 ```
 
 ## License
 
-[MIT](https://github.com/Ravonus/weft/blob/main/LICENSE)
+[MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)

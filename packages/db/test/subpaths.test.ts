@@ -78,14 +78,14 @@ afterEach(() => {
 test('a missing driver names the install command', async () => {
   await expect(
     // @ts-expect-error the point is a package that isn't there
-    driver('@weft-js/db/kysely', 'not-installed-driver', () => import('not-installed-driver')),
+    driver('@kerf/db/kysely', 'not-installed-driver', () => import('not-installed-driver')),
   ).rejects.toThrow(
-    "@weft-js/db/kysely needs the `not-installed-driver` driver, which isn't installed. Run: npm install not-installed-driver",
+    "@kerf/db/kysely needs the `not-installed-driver` driver, which isn't installed. Run: npm install not-installed-driver",
   )
 })
 
 test('a driver that fails for another reason keeps its own error', async () => {
   await expect(
-    driver('@weft-js/db/kysely', 'kysely', () => Promise.reject(new Error('boom'))),
+    driver('@kerf/db/kysely', 'kysely', () => Promise.reject(new Error('boom'))),
   ).rejects.toThrow('boom')
 })

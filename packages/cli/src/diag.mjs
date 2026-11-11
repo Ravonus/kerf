@@ -46,7 +46,7 @@ export function diagnostic({
   d.why = why
   d.fix = { text: help ?? known?.fix ?? '', ...fix }
   if (related?.length) d.related = related
-  d.docs = `weft docs ${code}`
+  d.docs = `kerf docs ${code}`
   return d
 }
 

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Stack, TagsInput, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Stack, TagsInput, Text } from '@kerf/veneer'
 
 export function TagsInputLabels() {
   const labels = state(['production', 'eu-west'])

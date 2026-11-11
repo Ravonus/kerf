@@ -31,13 +31,13 @@ export const ditherDocs: Doc[] = [
         kind: 'composition',
         title: 'Hybrid and your own',
         intro:
-          'Anything without a skin paints itself over the stage, so Warp components and canvas pieces share a page.',
+          'Anything without a skin paints itself over the stage, so Veneer components and canvas pieces share a page.',
         examples: [
           fill(
             'StageHybrid',
-            'Warp components on a stage',
+            'Veneer components on a stage',
             420,
-            "The card on the left is warp's; the one on the right is drawn in cells, with dithered type and a live `art` field.",
+            "The card on the left is veneer's; the one on the right is drawn in cells, with dithered type and a live `art` field.",
           ),
           fill(
             'StageOwnSkin',
@@ -275,7 +275,7 @@ export const ditherDocs: Doc[] = [
       example: 'DitherGlyphPlay',
       code: '<DitherGlyph{props} />',
       knobs: [
-        { prop: 'text', control: 'text', initial: 'weft', default: '' },
+        { prop: 'text', control: 'text', initial: 'kerf', default: '' },
         {
           prop: 'kind',
           control: 'select',

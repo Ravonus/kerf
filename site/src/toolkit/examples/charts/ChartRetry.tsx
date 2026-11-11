@@ -1,8 +1,8 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
-import { bar } from '@weft-js/warp-core/charts'
+import { bar } from '@kerf/veneer-core/charts'
 
-import { Button, Chart } from '@weft-js/warp'
+import { Button, Chart } from '@kerf/veneer'
 
 import { DEPLOYS_BY_TEAM } from '../../world'
 

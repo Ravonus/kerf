@@ -14,7 +14,7 @@ const {
   SqliteAdapter,
   SqliteIntrospector,
   SqliteQueryCompiler,
-} = await driver('@weft-js/db/plugin-native/auth', 'kysely', () => import('kysely'))
+} = await driver('@kerf/db/plugin-native/auth', 'kysely', () => import('kysely'))
 
 const PARTS = {
   sqlite: {
@@ -39,7 +39,7 @@ const PARTS = {
 
 /** Better Auth's `database` option on a Native client. It runs without transactions, which Better Auth treats as optional. */
 export function nativeAuth(db: NativeDb) {
-  const { adapter, compiler, introspector, type } = PARTS[db.$weft.dialect]
+  const { adapter, compiler, introspector, type } = PARTS[db.$kerf.dialect]
   const connection = {
     async executeQuery({ sql, parameters }: { sql: string; parameters: readonly unknown[] }) {
       const out = (await db.query(sql, [...parameters])) as unknown

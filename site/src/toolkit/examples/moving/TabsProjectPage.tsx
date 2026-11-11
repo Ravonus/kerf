@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Badge,
   Heading,
   Row,
   Stack,
   Tabs,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { SECTIONS, panel } from './shared'
 
 export function TabsProjectPage() {

@@ -7,9 +7,9 @@ const root = new URL('../tasks/medium-shop/', import.meta.url)
 
 test('every named medium mutant targets a reference and a real check', () => {
   const mutants = JSON.parse(readFileSync(new URL('mutants.json', root)))
-  const files = readdirSync(new URL('reference/weft-warp/src/routes/', root))
+  const files = readdirSync(new URL('reference/kerf-veneer/src/routes/', root))
   const sources = files.map((name) =>
-    readFileSync(new URL(`reference/weft-warp/src/routes/${name}`, root), 'utf8'),
+    readFileSync(new URL(`reference/kerf-veneer/src/routes/${name}`, root), 'utf8'),
   )
   assert.ok(mutants.length >= 30)
   for (const mutant of mutants) {

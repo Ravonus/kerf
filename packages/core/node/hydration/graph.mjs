@@ -34,7 +34,7 @@ export async function gather(entries, transform, resolve, cache) {
     for (const s of facts.side ?? []) await follow(mod, s)
   }
 
-  // An import for its effects counts only if what it runs has some: warp's `./styles` is nothing but CSS.
+  // An import for its effects counts only if what it runs has some: veneer's `./styles` is nothing but CSS.
   const effect = (mod, seen = new Set()) => {
     if (mod.facts.effects) return mod.facts.effects
     if (seen.has(mod)) return undefined
@@ -53,7 +53,7 @@ export async function gather(entries, transform, resolve, cache) {
 function external(spec, file) {
   return (
     file.includes('/node_modules/') &&
-    !/\/node_modules\/@weft-js\//.test(file) &&
+    !/\/node_modules\/@kerf\//.test(file) &&
     !spec.startsWith('.')
   )
 }

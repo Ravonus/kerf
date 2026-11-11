@@ -1,7 +1,7 @@
-// The studio's guided controls, a section per family of tokens. Everything they set is a `warp()` key; what they
+// The studio's guided controls, a section per family of tokens. Everything they set is a `veneer()` key; what they
 // can't reach, the parts and tokens editors and the JSON can.
-import { state } from '@weft-js/core'
-import { Button, Icon } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Icon } from '@kerf/veneer'
 import { ColourRow, DialRow, edit, NumberRow, PickRow, type Cfg } from './rows'
 
 const FONTS = [
@@ -29,7 +29,7 @@ function Group(props: { title: string; children?: unknown }) {
   )
 }
 
-/** Named colours: each becomes --warp-color-<name>, a tone (tone="name") and a value parts can use. */
+/** Named colours: each becomes --veneer-color-<name>, a tone (tone="name") and a value parts can use. */
 function NamedColours(props: { cfg: Cfg }) {
   const name = state('')
   const names = () => Object.keys(props.cfg.value.colors ?? {})

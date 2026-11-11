@@ -1,0 +1,16 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+:where([data-scope="setting-row"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding-block: 16px;
+  border-block-start: 1px solid var(--veneer-color-border);
+}
+:where([data-scope="setting-row"]:first-child) { border-block-start: 0; }
+:where([data-scope="setting-row"] b) { font-weight: 500; display: block; }
+:where([data-scope="setting-row"] p) { margin: 2px 0 0; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="setting-row"] [data-part="control"]:not([data-scope="setting-row"] :is([data-scope="call-controls"],[data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="switch"]) *:not([data-scope="setting-row"] :is([data-scope="call-controls"],[data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="switch"]) [data-scope="setting-row"] *))) { display: flex; align-items: center; gap: 8px; justify-content: flex-start; }
+@container settings (min-width: 520px) {
+:where([data-scope="setting-row"]) { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--veneer-space-group); }
+:where([data-scope="setting-row"][data-layout="stack"]) { grid-template-columns: minmax(0, 1fr); }
+:where([data-scope="setting-row"] [data-part="control"]:not([data-scope="setting-row"] :is([data-scope="call-controls"],[data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="switch"]) *:not([data-scope="setting-row"] :is([data-scope="call-controls"],[data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="switch"]) [data-scope="setting-row"] *))) { justify-content: flex-end; }
+}
+}

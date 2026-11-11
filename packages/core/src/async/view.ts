@@ -46,7 +46,7 @@ export function checkSwap(fallback: unknown, content: unknown) {
     if (Math.abs(dw) > 1 || Math.abs(dh) > 1) {
       const px = (n: number) => `${Math.round(n * 10) / 10}`
       console.warn(
-        `weft: X031 <Boundary> pending fallback was ${px(before.w)}×${px(before.h)} px, the content is ${px(after.w)}×${px(after.h)} px (Δ ${px(dw)}, ${px(dh)}): the swap shifts layout. Size the fallback like the content (warp's <Shape> with the content's counts), or fix the size.`,
+        `kerf: X031 <Boundary> pending fallback was ${px(before.w)}×${px(before.h)} px, the content is ${px(after.w)}×${px(after.h)} px (Δ ${px(dw)}, ${px(dh)}): the swap shifts layout. Size the fallback like the content (veneer's <Shape> with the content's counts), or fix the size.`,
       )
     }
   })

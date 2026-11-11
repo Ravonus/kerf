@@ -9,8 +9,8 @@
 
 In React, a state change asks React to render your component again: it calls your function, compares the new JSX with the
 old, and commits the difference to the DOM. Most of React's chapter on interactivity is about the consequences: render and
-commit, state as a snapshot, queueing updates. Weft takes a different path, and this page follows it from one write to
-the DOM. It's short, and once you've seen it most of Weft's behaviour stops being surprising.
+commit, state as a snapshot, queueing updates. Kerf takes a different path, and this page follows it from one write to
+the DOM. It's short, and once you've seen it most of Kerf's behaviour stops being surprising.
 
 ## Three steps from a write to the page
 
@@ -19,7 +19,7 @@ When a handler writes `count.value = 1`:
 1. **The box changes, now.** It stores the new value at once. Then it marks everything that read it: `derived` values that
    used it are marked stale, and the bits of DOM that showed it are put in a queue.
 2. **The queue runs once, soon.** On the next microtask, after your handler and anything else running with it has
-   finished, Weft runs the queued bindings in the order they were created. Each one reads its expression again and writes
+   finished, Kerf runs the queued bindings in the order they were created. Each one reads its expression again and writes
    its own DOM node: one text, one attribute, one class.
 3. **Derived values recompute when read.** A stale `derived` doesn't run on its own. It recomputes the next time
    something reads it, which is usually one of those bindings.
@@ -40,7 +40,7 @@ changed, and stopped there.
 The pieces that update are made by the compiler. Take this component:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Counter() {
   const count = state(0)
@@ -53,7 +53,7 @@ export function Counter() {
 }
 ```
 
-Weft's compiler turns it into something like this. The real output uses generated names, and its helpers are internal,
+Kerf's compiler turns it into something like this. The real output uses generated names, and its helpers are internal,
 but the shape is the same:
 
 ```js
@@ -86,12 +86,12 @@ the `child` binding reads `count.value` again and replaces one text node's conte
 expression again, and writes the attribute only if the result changed. The `<p>`, the button and the words around the
 number were made once, from the template, and are never touched again.
 
-That is why Weft has no virtual DOM and no diffing step for ordinary updates. Each binding already knows which node it
+That is why Kerf has no virtual DOM and no diffing step for ordinary updates. Each binding already knows which node it
 owns. (Lists are the one place that compares: a keyed list matches rows by `key`, so it can move, add and remove rows
 rather than rebuild them. See [Rendering lists](/learn/rendering-lists).)
 
 :::deepdive Push, then pull
-Weft's graph is *push-pull*. A write pushes a mark through everything downstream: direct readers are marked dirty, and
+Kerf's graph is *push-pull*. A write pushes a mark through everything downstream: direct readers are marked dirty, and
 their readers are marked "check". Nothing is computed during the push. Then the flush pulls: each queued binding asks its
 sources whether they really changed, and a `derived` marked "check" recomputes only if one of its own sources did.
 
@@ -119,15 +119,15 @@ Each line reads what the line before it wrote, so pressing +3 adds three.
 
 In React, the same three calls to `setScore(score + 1)` add one: `score` is that render's snapshot, fixed at the value it
 had when the render ran, so all three calls ask for the same number. React's answer is an updater function,
-`setScore(s => s + 1)`, which is queued and applied in order. Weft needs neither: there is no snapshot to work around,
+`setScore(s => s + 1)`, which is queued and applied in order. Kerf needs neither: there is no snapshot to work around,
 and no queue of updates to reason about. A box is a place, and `score.value` is what's in it now.
 
 The same holds for `derived`. A derived value read after a write in the same handler recomputes on that read and gives
 you the up-to-date answer, even though the DOM hasn't been updated yet:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { derived, state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 export function Basket() {
   const qty = state(1)
@@ -156,14 +156,14 @@ Usually you never notice. But code that reads the DOM in the handler, right afte
 :::demo interact-flush
 
 `count.value` is the new number at once. The `<strong>` still shows the old one until `flush()`. `flush()` from
-`@weft-js/core` runs the queue now, so the DOM matches your boxes before the next line.
+`@kerf/core` runs the queue now, so the DOM matches your boxes before the next line.
 
 You need it when the DOM itself is what you want next: focusing or scrolling to an element that a write just showed, or
 measuring one that a write just changed.
 
 ```tsx
-import { flush, state } from '@weft-js/core'
-import { Button, Input } from '@weft-js/warp'
+import { flush, state } from '@kerf/core'
+import { Button, Input } from '@kerf/veneer'
 
 export function Rename() {
   const editing = state(false)
@@ -201,7 +201,7 @@ exists so code ported from libraries where batching is opt-in can say so at the 
 the writes inside belong together:
 
 ```tsx
-import { batch, type State } from '@weft-js/core'
+import { batch, type State } from '@kerf/core'
 
 export function rename(
   name: { first: State<string>; last: State<string> },
@@ -224,7 +224,7 @@ Every `.value` read inside JSX, a `derived` or a `watch` source subscribes. Now 
 subscription: "use the unit as it is now, but don't recompute when it changes". Wrap that read in `untrack`:
 
 ```tsx
-import { derived, state, untrack } from '@weft-js/core'
+import { derived, state, untrack } from '@kerf/core'
 
 export function makeReading() {
   const celsius = state(20)
@@ -254,12 +254,12 @@ Putting it together, each piece of a component runs at its own time:
 | A handler | When the event happens. Never because state changed |
 | `onMount(fn)` | Once, after the component's DOM is in place |
 
-This table is the reason for most of Weft's rules. A value computed in the body is computed once and goes stale, so it
+This table is the reason for most of Kerf's rules. A value computed in the body is computed once and goes stale, so it
 belongs in `derived` (**W001**). An early `return` that depends on state is checked once
 (**W040**), so the branch belongs in JSX. A `let` counter changes but nothing re-reads it (**W041**). Each rule is the table, applied.
 
 :::deepdive Counting runs in a test
-`@weft-js/core/test` can count the reactive work an interaction does. `touches(fn)` reports the DOM mutations and the runs
+`@kerf/core/test` can count the reactive work an interaction does. `touches(fn)` reports the DOM mutations and the runs
 one interaction caused, and `toTouchAtMost(n, { runs })` turns that into an assertion, so a change that makes every row
 of a list re-run fails a test instead of slowing the app down later:
 
@@ -287,8 +287,8 @@ See [Testing](/reference/testing).
 What does this handler log, and what does the page show after the click?
 
 ```tsx
-import { derived, state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { derived, state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 export function Quiz() {
   const n = state(0)
@@ -317,8 +317,8 @@ once, after the handler.
 This list adds an item and should then focus its field, but the focus goes nowhere. Fix it.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button, Input } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Input } from '@kerf/veneer'
 
 export function Packing() {
   const items = state<{ id: number; name: string }[]>([])
@@ -348,8 +348,8 @@ The new row is only made when the queue runs, after `add` returns, so `last` sti
 nothing). Call `flush()` before focusing:
 
 ```tsx
-import { flush, state } from '@weft-js/core'
-import { Button, Input } from '@weft-js/warp'
+import { flush, state } from '@kerf/core'
+import { Button, Input } from '@kerf/veneer'
 
 export function Packing() {
   const items = state<{ id: number; name: string }[]>([])
@@ -380,7 +380,7 @@ export function Packing() {
 :::
 
 :::challenge A counter that adds three
-In React, this button adds one per click, not three. Write the Weft version that adds three, and explain why the React
+In React, this button adds one per click, not three. Write the Kerf version that adds three, and explain why the React
 version doesn't.
 
 ```tsx
@@ -394,8 +394,8 @@ const [count, setCount] = useState(0)
 ```
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 export function Plus() {
   const count = state(0)
@@ -408,6 +408,6 @@ export function Plus() {
 }
 ```
 
-In React, `count` is that render's snapshot, so each call asks for the same `count + 1`. In Weft each `count.value++`
+In React, `count` is that render's snapshot, so each call asks for the same `count + 1`. In Kerf each `count.value++`
 reads the box as the line before left it. The page still updates once, after the handler, and shows the total.
 :::

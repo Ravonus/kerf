@@ -19,7 +19,7 @@ export function makeRails<P extends Product>(
     if (!bound.length)
       throw new PayError(
         'P101',
-        '`pay.rail` has no provider: add one to `plugins` in weft.config.ts',
+        '`pay.rail` has no provider: add one to `plugins` in kerf.config.ts',
         500,
       )
     const pick = key ?? options.rail ?? (bound.length === 1 ? bound[0] : undefined)

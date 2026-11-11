@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Stack, Tabs, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Stack, Tabs, Text } from '@kerf/veneer'
 import { SECTIONS, WORDS } from './shared'
 
 export function TabsPlay({

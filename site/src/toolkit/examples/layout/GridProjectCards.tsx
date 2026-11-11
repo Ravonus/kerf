@@ -5,7 +5,7 @@ import {
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { PROJECTS, TONE_OF } from '../../world'
 
 export const GridProjectCards = () => (

@@ -52,7 +52,7 @@ async function measureLatency(getBrowser, open, measure, q) {
     // Both stamps on the survivor's clock: the leader's goodbye arriving, and the first frame of its own socket.
     await o.evaluate(() => {
       window.__bye = window.__hello = 0
-      new BroadcastChannel('weft:ui:1').onmessage = (e) => {
+      new BroadcastChannel('kerf:ui:1').onmessage = (e) => {
         if (e.data.t === 'bye') window.__bye ||= performance.now()
       }
       const Real = window.WebSocket

@@ -40,8 +40,8 @@ update orders o set total_cents = t.sum from (select order_id, sum(quantity * pr
 -- The account every variant signs in as (see the bench user in docs/research/40-site-benchmarks.md), and one whose rows it must
 -- never see. The password is Better Auth 1.7's hashPassword of the one in bench-user.json, a throwaway local test credential.
 insert into "user" (id, name, email, "emailVerified", "createdAt", "updatedAt")
-values ('bench-user', 'Bench User', 'bench@weft.dev', true, '2026-10-01 00:00:00+00', '2026-10-01 00:00:00+00'),
-  ('other-user', 'Other User', 'other@weft.dev', true, '2026-10-01 00:00:00+00', '2026-10-01 00:00:00+00');
+values ('bench-user', 'Bench User', 'bench@kerf.dev', true, '2026-10-01 00:00:00+00', '2026-10-01 00:00:00+00'),
+  ('other-user', 'Other User', 'other@kerf.dev', true, '2026-10-01 00:00:00+00', '2026-10-01 00:00:00+00');
 insert into account (id, "accountId", "providerId", "userId", password, "createdAt", "updatedAt")
 select 'account-' || id, id, 'credential', id,
   '10af2cf97b4dd3bd218a818f8eb1accd:fd8f2b3b8b10e2595ce80daf16ef1bc67972a8956628cd6d2e30c363f99b84c73414c78589012bfcbd59f34ef2c5f85683d1dac27f3ba366cfd5d37c2c44fe63',

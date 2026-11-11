@@ -1,10 +1,10 @@
-// @weft-js/core/surface: canvas and WebGL as layout children (PLAN §5, research 33). `setup` runs once on the client, props are
+// @kerf/core/surface: canvas and WebGL as layout children (PLAN §5, research 33). `setup` runs once on the client, props are
 // live, and a paint reads boxes like a binding does: when one changes, one paint is booked on the next frame and nothing
 // else runs. No app pays for this unless it imports it.
 // oxlint-disable-next-line typescript/triple-slash-reference -- slots.d.ts declares a wildcard module, so it has no exports for an `import` to name
 /// <reference path="./slots.d.ts" />
 
-import { onMount, untrack, type StandardSchema, type State } from '@weft-js/core'
+import { onMount, untrack, type StandardSchema, type State } from '@kerf/core'
 import { mountSurface, type Mounting } from './surface/mount'
 import type { clock } from './surface/clock'
 import type { SurfaceText, TextOptions } from './surface-text'
@@ -43,7 +43,7 @@ export interface SurfaceBase {
   /** The integer scale of a `pixel` surface. Live. */
   scale: State<number>
   clock: typeof clock
-  /** `s.tokens.accent`: `--accent`, else `--warp-accent`. Reads are tracked, so a theme change repaints. */
+  /** `s.tokens.accent`: `--accent`, else `--veneer-accent`. Reads are tracked, so a theme change repaints. */
   tokens: Record<string, Token>
   /** Paint when a box it read changes. */
   draw(fn: () => void): void

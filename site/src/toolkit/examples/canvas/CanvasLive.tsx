@@ -1,5 +1,5 @@
-import type { CanvasFrame } from '@weft-js/warp'
-import { Canvas } from '@weft-js/warp'
+import type { CanvasFrame } from '@kerf/veneer'
+import { Canvas } from '@kerf/veneer'
 import { token, STAGE } from './paint-primitives'
 
 // A live latency line with gridlines and a label: text on
@@ -24,8 +24,8 @@ export function drawLive({
   ctx.clearRect(0, 0, width, height)
   const { fontFamily } = getComputedStyle(ctx.canvas)
   ctx.font = `12px ${fontFamily}`
-  ctx.strokeStyle = token(ctx, '--warp-color-border')
-  ctx.fillStyle = token(ctx, '--warp-color-text-subtle')
+  ctx.strokeStyle = token(ctx, '--veneer-color-border')
+  ctx.fillStyle = token(ctx, '--veneer-color-text-subtle')
   ctx.lineWidth = 1
   for (const v of [0, 80, 160, 240]) {
     ctx.beginPath()
@@ -36,7 +36,7 @@ export function drawLive({
   }
   ctx.strokeStyle = token(
     ctx,
-    '--warp-color-accent-solid',
+    '--veneer-color-accent-solid',
   )
   ctx.lineWidth = 2
   ctx.beginPath()
@@ -52,7 +52,7 @@ export function drawLive({
       ),
     )
   ctx.stroke()
-  ctx.fillStyle = token(ctx, '--warp-color-text')
+  ctx.fillStyle = token(ctx, '--veneer-color-text')
   ctx.textAlign = 'right'
   ctx.fillText(
     `p95 ${Math.round(latency(time))} ms`,

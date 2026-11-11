@@ -1,0 +1,16 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* ScrollView — custom bars by @kerf/scroll, whose stylesheet lays out the bars. Here they take
+   Veneer's ink, focus ring and timing; a page can still set any --scroll-* property itself. */
+:where([data-scope="scroll-view"]) {
+  --scroll-color: color-mix(in oklab, var(--veneer-color-text) 24%, transparent);
+  --scroll-hover-color: color-mix(in oklab, var(--veneer-color-text) 42%, transparent);
+  --scroll-active-color: color-mix(in oklab, var(--veneer-color-text) 56%, transparent);
+  --scroll-hover-track: color-mix(in oklab, var(--veneer-color-text) 6%, transparent);
+  --scroll-fade: var(--veneer-duration-slow);
+  min-inline-size: 0; min-block-size: 0;
+}
+:where([data-scope="scroll-view"] > [data-part="viewport"]:focus-visible) {
+  outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: calc(var(--veneer-focus-width) * -1);
+}
+}

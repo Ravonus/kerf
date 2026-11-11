@@ -1,10 +1,10 @@
 # Fonts
 
-`@weft-js/text` is the one place an app's fonts are declared. `weft add text` installs it; then:
+`@kerf/text` is the one place an app's fonts are declared. `kerf add text` installs it; then:
 
 ```ts
-import { defineConfig } from '@weft-js/core/config'
-import { text } from '@weft-js/text'
+import { defineConfig } from '@kerf/core/config'
+import { text } from '@kerf/text'
 
 export default defineConfig({
   plugins: [
@@ -42,7 +42,7 @@ face sets `preload: false`, others only with `preload: true`. Other options: `di
 - Trims each face, in a build only. Font bytes are what hold back the largest paint on a text hero, so nothing here needs
   turning on, and neither cut changes how the page looks or which characters it can show:
   - **Axes.** A custom axis (`SOFT`, `WONK`, `GRAD`…) is pinned to the one value your `font-variation-settings` give it, or
-    to the font's default if the source never sets it. An axis set to two values stays. A value weft can't read from the
+    to the font's default if the source never sets it. An axis set to two values stays. A value kerf can't read from the
     source (`var()`, a template, an expression) keeps every axis. `wght`, `wdth`, `opsz`, `slnt` and `ital` are never
     pinned: CSS drives them. A pinned value applies to every use of the face, so a face used both with and without the
     setting needs the axis declared.
@@ -51,11 +51,11 @@ face sets `preload: false`, others only with `preload: true`. Other options: `di
     characters, so text from a database still gets the face, after a fallback-matched swap.
 
 Keep one axis by naming it in `axes`, such as `axes: { SOFT: [0, 100] }`, for values set at runtime or by a dependency's CSS
-(only your own source is read). `trim: false` turns all of it off. `weft dev` always serves whole faces, so an axis you are
+(only your own source is read). `trim: false` turns all of it off. `kerf dev` always serves whole faces, so an axis you are
 editing responds.
 
-**There is nothing to import.** `@weft-js/core/vite` loads the generated CSS in the client entry (Start) or the page (an HTML app).
-`import 'weft:fonts'` still works and changes nothing. `import { preloads } from 'weft:fonts/preloads'` gives the preload
+**There is nothing to import.** `@kerf/core/vite` loads the generated CSS in the client entry (Start) or the page (an HTML app).
+`import 'kerf:fonts'` still works and changes nothing. `import { preloads } from 'kerf:fonts/preloads'` gives the preload
 list to a custom server.
 
 ## Using a face
@@ -77,4 +77,4 @@ h1 { font-family: "Fraunces", "Fraunces Fallback", Georgia, serif; }
 | X023 | A preload no `@font-face` uses |
 
 The plugin also provides `text.measure`, line breaking for canvas text and exact row heights. It loads only when something
-measures; `measure: 'off'` removes it. See `weft docs surface`.
+measures; `measure: 'off'` removes it. See `kerf docs surface`.

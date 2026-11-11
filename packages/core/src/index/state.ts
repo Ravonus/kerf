@@ -83,7 +83,7 @@ export class Box<T> implements State<T> {
   }
 }
 
-/** A box. `.linked`, `.get` and `.set` come with @weft-js/core/keyed, which the `weft` entry and the Vite plugin bring in. */
+/** A box. `.linked`, `.get` and `.set` come with @kerf/core/keyed, which the `kerf` entry and the Vite plugin bring in. */
 export const state: {
   <T>(init: T, options?: StateOptions<T>): State<T>
   linked<T>(source: () => T, options?: { key: () => unknown }): Linked<T>
@@ -100,12 +100,12 @@ export class Memo<T> implements Derived<T> {
   }
 }
 
-/** Dev only: named boxes and derived values that are alive now, for the graph (@weft-js/core/devtools). */
+/** Dev only: named boxes and derived values that are alive now, for the graph (@kerf/core/devtools). */
 export const named = new Set<Box<unknown> | Computation>()
 
 /**
  * Dev builds: the compiler wraps component `state`/`derived` as `name(state(0), "Cart.count")`. The graph
- * (`weft browser snapshot`, the overlay) shows the value under that name; the entry goes when its owner does.
+ * (`kerf browser snapshot`, the overlay) shows the value under that name; the entry goes when its owner does.
  */
 export function name<T>(value: T, label: string): T {
   if (!DEV) return value

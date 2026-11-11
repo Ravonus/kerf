@@ -2,7 +2,7 @@ import type {
   Version,
   ShareMember,
   ShareContact,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import {
   MARA,
   JUN,
@@ -40,13 +40,13 @@ export const VERSIONS: Version[] = [
 ]
 
 export const SHARE_MEMBERS: ShareMember[] = [
-  { ...MARA, email: 'mara@weft.dev', role: 'owner' },
-  { ...JUN, email: 'jun@weft.dev', role: 'editor' },
-  { ...LENA, email: 'lena@weft.dev', role: 'commenter' },
+  { ...MARA, email: 'mara@kerf.dev', role: 'owner' },
+  { ...JUN, email: 'jun@kerf.dev', role: 'editor' },
+  { ...LENA, email: 'lena@kerf.dev', role: 'commenter' },
 ]
 
 export const SHARE_PEOPLE: ShareContact[] = [
-  { ...PRIYA, email: 'priya@weft.dev' },
-  { ...TOMAS, email: 'tomas@weft.dev' },
-  { ...SAM, email: 'sam@weft.dev' },
+  { ...PRIYA, email: 'priya@kerf.dev' },
+  { ...TOMAS, email: 'tomas@kerf.dev' },
+  { ...SAM, email: 'sam@kerf.dev' },
 ]

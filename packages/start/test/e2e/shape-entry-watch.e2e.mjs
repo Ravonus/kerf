@@ -8,7 +8,7 @@ import { shapeHotUpdate } from '../../src/vite.mjs'
 import { load as moduleLoad } from '../../src/vite/module-hooks.mjs'
 
 async function setup(t) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-entry-watch-')))
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-entry-watch-')))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = (name) => join(root, name)
   writeFileSync(
@@ -66,7 +66,7 @@ async function setup(t) {
     environment: { config: { consumer: 'client' } },
     resolve: (...args) => server.environments.client.pluginContainer.resolveId(...args),
   }
-  const refresh = () => moduleLoad(state).handler.call(ctx, '\0virtual:weft/routes')
+  const refresh = () => moduleLoad(state).handler.call(ctx, '\0virtual:kerf/routes')
   return { root, file, state, events, server, refresh }
 }
 

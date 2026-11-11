@@ -1,8 +1,8 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
-import { interval } from '@weft-js/core/browser'
+import { interval } from '@kerf/core/browser'
 
-import { StreamChart } from '@weft-js/warp'
+import { StreamChart } from '@kerf/veneer'
 
 import {
   seed,

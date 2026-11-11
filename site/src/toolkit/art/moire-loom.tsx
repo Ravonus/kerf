@@ -1,4 +1,4 @@
-import { DitherField } from '@weft-js/warp'
+import { DitherField } from '@kerf/veneer'
 import { type ArtProps, type Meta } from './shared'
 import code from './moire-loom.tsx?raw'
 

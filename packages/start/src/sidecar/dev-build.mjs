@@ -30,7 +30,7 @@ export function devBuilder(deps) {
     if (closed() || !child || child.stopped || s.current !== child) return
     s.current = undefined
     const wait = Math.min(100 * 2 ** (s.crashes = (s.crashes ?? 0) + 1), 5_000)
-    log(`[weft] ${service} exited (${signal ?? code}): restarting in ${wait} ms`)
+    log(`[kerf] ${service} exited (${signal ?? code}): restarting in ${wait} ms`)
     setTimeout(() => {
       if (closed() || s.current || s.building) return
       void rebuild(service) // cargo finds nothing to do, and the binary starts again
@@ -54,7 +54,7 @@ export async function once(service, s, deps, exited) {
     if (isNative(contract(), service) && !s.loaded) publish()
     return
   }
-  log(`[weft] ${service}: built in ${Math.round(performance.now() - t)} ms`)
+  log(`[kerf] ${service}: built in ${Math.round(performance.now() - t)} ms`)
   if (isNative(contract(), service)) {
     s.generation = (s.generation ?? 0) + 1
     s.loaded = { hash, addon: `${stem(service)}-${s.generation}.node` }
@@ -75,7 +75,7 @@ export async function once(service, s, deps, exited) {
     })
   } catch (e) {
     s.failure = e.message
-    log(`[weft] ${e.message}`)
+    log(`[kerf] ${e.message}`)
     return overlay(e.message)
   }
   // The swap: new calls go to `next` from here; the old child finishes what it has, then goes.

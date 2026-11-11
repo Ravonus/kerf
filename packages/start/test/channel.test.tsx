@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-// `channel` and `sharedState` over @weft-js/core/test's fake socket (research 32 §7): the real socket.ts and hub, the real client,
+// `channel` and `sharedState` over @kerf/core/test's fake socket (research 32 §7): the real socket.ts and hub, the real client,
 // a memory bus, no sockets. `test/channel-ws.test.ts` runs the protocol over a real WebSocket.
-import { createRoot, defineState, state } from '@weft-js/core'
-import { clock, flush, net, render, screen } from '@weft-js/core/test'
+import { createRoot, defineState, state } from '@kerf/core'
+import { clock, flush, net, render, screen } from '@kerf/core/test'
 import {
   channel,
   sharedState,
@@ -10,8 +10,8 @@ import {
   StartError,
   type Context,
   type StandardSchemaV1,
-} from '@weft-js/start'
-import { hub } from '@weft-js/start/hub'
+} from '@kerf/start'
+import { hub } from '@kerf/start/hub'
 import { keepOpen } from '../src/channel'
 
 const any: StandardSchemaV1<unknown> = {
@@ -218,7 +218,7 @@ describe('what multiplayer needs of a room', () => {
     await net.settle()
     await click('tick')
     expect(seen).toEqual([{ n: 1 }])
-    const ch = hub().channel('weft:c:chat.lively:{"roomId":"a"}')
+    const ch = hub().channel('kerf:c:chat.lively:{"roomId":"a"}')
     expect(ch.ring).toHaveLength(0)
   })
 })
@@ -391,7 +391,7 @@ function channelReplayTests() {
     render(Chat, { roomId: 'a' })
     await net.settle()
     await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
-    const ch = hub().channel(`weft:c:chat.room:${JSON.stringify({ roomId: 'a' })}`)
+    const ch = hub().channel(`kerf:c:chat.room:${JSON.stringify({ roomId: 'a' })}`)
     const seq = ch.ring.length
     await net.drop()
     expect(net.reconnects()).toBe(1)
@@ -406,7 +406,7 @@ function channelReplayTests() {
     render(Chat, { roomId: 'a' })
     await net.settle()
     await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
-    const name = `weft:c:chat.room:${JSON.stringify({ roomId: 'a' })}`
+    const name = `kerf:c:chat.room:${JSON.stringify({ roomId: 'a' })}`
     await net.offline()
     await hub().bus.publish(name, JSON.stringify({ n: 'said', m: { id: 2, text: 'gap' } }))
     await flush()
@@ -431,7 +431,7 @@ function channelReplayTests() {
     await net.publish(room, { roomId: 'a' }, 'said', { id: 1, text: 'one' })
     expect(screen.getByLabelText('n').textContent).toBe('1')
     await net.offline()
-    hub().channel(`weft:c:chat.room:${JSON.stringify({ roomId: 'a' })}`).floor =
+    hub().channel(`kerf:c:chat.room:${JSON.stringify({ roomId: 'a' })}`).floor =
       Number.MAX_SAFE_INTEGER
     await net.online()
     await net.settle()
@@ -544,7 +544,7 @@ function channelLifecycleTests() {
       room.connect({ roomId: 'a' })
     })
     await net.settle()
-    const { leaks } = await import('@weft-js/core/test')
+    const { leaks } = await import('@kerf/core/test')
     expect(leaks().join()).toContain('chat.room')
     close()
   })

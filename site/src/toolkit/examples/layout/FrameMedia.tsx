@@ -1,4 +1,4 @@
-import { Frame, Grid } from '@weft-js/warp'
+import { Frame, Grid } from '@kerf/veneer'
 import { art } from './shared'
 
 export const FrameMedia = () => (

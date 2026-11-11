@@ -31,16 +31,16 @@ src/routes/todos/_layout.tsx  guards /todos for signed-in users
 .env                        BETTER_AUTH_SECRET and BETTER_AUTH_URL
 ```
 
-An app made without it gets the same with `weft add auth`, as long as it has a database (`weft add db` first). Run
-`weft db generate` afterwards, because it adds tables.
+An app made without it gets the same with `kerf add auth`, as long as it has a database (`kerf add db` first). Run
+`kerf db generate` afterwards, because it adds tables.
 
-The provider is a few lines. `createAuth` makes a Better Auth instance with Weft's defaults (email and password on,
+The provider is a few lines. `createAuth` makes a Better Auth instance with Kerf's defaults (email and password on,
 telemetry off), stored through Drizzle in your own database:
 
 ```ts
 // src/auth.server.ts
-import { createAuth } from '@weft-js/start/auth/better-auth'
-import { drizzleAuth } from '@weft-js/start/auth/drizzle'
+import { createAuth } from '@kerf/start/auth/better-auth'
+import { drizzleAuth } from '@kerf/start/auth/drizzle'
 import { db } from '#/db/index.server'
 import * as schema from '#/db/schema'
 import { env } from '#/env.server'
@@ -52,7 +52,7 @@ export default createAuth({
 })
 ```
 
-Weft serves Better Auth's own routes under `/api/auth/*`. Anything in `options` goes to Better Auth as is, and wins over
+Kerf serves Better Auth's own routes under `/api/auth/*`. Anything in `options` goes to Better Auth as is, and wins over
 the defaults, so its plugins and settings (social sign-in, email verification, session length) are configured here, as its
 docs describe. A provider with no store is **A005**.
 
@@ -62,7 +62,7 @@ Every request runs `src/context.server.ts` once, before any server function or `
 
 ```ts
 // src/context.server.ts
-import { session } from '@weft-js/start/auth'
+import { session } from '@kerf/start/auth'
 import auth from '#/auth.server'
 import { db } from '#/db/index.server'
 
@@ -73,7 +73,7 @@ export default async ({ request }: { request: Request }) => ({
 
 type Session = Awaited<ReturnType<typeof auth.session>>
 
-declare module '@weft-js/start' {
+declare module '@kerf/start' {
   interface Context {
     db: typeof db
     user: Session['user']
@@ -86,7 +86,7 @@ declare module '@weft-js/start' {
 visitor who isn't signed in both are `null`. The `declare module` block types them, so `ctx.user.email` is checked
 everywhere.
 
-A request with no session cookie costs nothing: Weft answers `{ user: null, session: null }` without asking the
+A request with no session cookie costs nothing: Kerf answers `{ user: null, session: null }` without asking the
 database. Pages for visitors stay as cheap as pages without auth.
 
 ## Signing up, in and out
@@ -95,8 +95,8 @@ Sign-in is a mutation, like any other write. This is the one a new app has:
 
 ```ts
 // src/server/session.ts
-import { mutation, query, redirect } from '@weft-js/start'
-import { forward } from '@weft-js/start/auth'
+import { mutation, query, redirect } from '@kerf/start'
+import { forward } from '@kerf/start/auth'
 import { z } from 'zod'
 import auth from '#/auth.server'
 
@@ -170,8 +170,8 @@ import {
   type FormApi,
   type LoadArgs,
   type Meta,
-} from '@weft-js/start'
-import { Alert, Button, Card, Input } from '@weft-js/warp'
+} from '@kerf/start'
+import { Alert, Button, Card, Input } from '@kerf/veneer'
 import { signIn } from '#/server/session'
 
 // Someone already signed in has nothing to do here.
@@ -223,8 +223,8 @@ export default function SignIn() {
 To show who is signed in, read `me`. The root layout is a good place, since every page has it:
 
 ```tsx
-import { Link, type RouteProps } from '@weft-js/start'
-import { Button } from '@weft-js/warp'
+import { Link, type RouteProps } from '@kerf/start'
+import { Button } from '@kerf/veneer'
 import { me, signOut } from '#/server/session'
 
 export const load = () => me.fetch()
@@ -266,7 +266,7 @@ protection goes on the function. `auth: 'user'` refuses a call with no signed-in
 (status 401), and narrows `ctx.user` to non-null:
 
 ```ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 import { eq } from 'drizzle-orm'
 import { todos } from '#/db/schema'
 
@@ -285,7 +285,7 @@ way is to put the rule in the query's `where`, so rows that aren't theirs never 
 rows, check in `run` and refuse with an `FnError`:
 
 ```ts
-import { FnError, query } from '@weft-js/start'
+import { FnError, query } from '@kerf/start'
 import { count } from 'drizzle-orm'
 import { user } from '#/db/schema'
 
@@ -318,7 +318,7 @@ import {
   redirect,
   type LoadArgs,
   type RouteProps,
-} from '@weft-js/start'
+} from '@kerf/start'
 
 export const load = ({ ctx }: LoadArgs) => {
   if (!ctx.user) redirect('/login')
@@ -344,7 +344,7 @@ Two values in `.env`:
   one under 32 characters, refuses to start (**A001**); make one with `openssl rand -base64 32` and set it in the host's
   environment, not in the repository.
 - **`BETTER_AUTH_URL`** is the address the app runs at, `http://localhost:5173` by default. If the app runs somewhere
-  else, such as `weft dev --port 3000` or a deployed domain, change it to match, or sign-in answers `INVALID_ORIGIN`.
+  else, such as `kerf dev --port 3000` or a deployed domain, change it to match, or sign-in answers `INVALID_ORIGIN`.
 
 ## Your own auth provider
 
@@ -353,7 +353,7 @@ who a request is, and `handler(request)`, which serves the provider's own routes
 `defineAuth` as `src/auth.server.ts`'s default export, and `ctx.user` and `auth: 'user'` work with whatever it returns:
 
 ```ts
-import { defineAuth } from '@weft-js/start/auth'
+import { defineAuth } from '@kerf/start/auth'
 
 type User = { id: string; name: string }
 
@@ -381,7 +381,7 @@ the token against a store, or verify a signed one; this sketch keeps a map to sh
 
 ## Recap
 
-- With `--auth` or `weft add auth`, Better Auth runs on your database; its routes are under `/api/auth`.
+- With `--auth` or `kerf add auth`, Better Auth runs on your database; its routes are under `/api/auth`.
 - `src/context.server.ts` puts `ctx.user` and `ctx.session` on every request. With no session cookie, they're `null` and
   no query runs.
 - Sign-up, sign-in and sign-out are mutations that `forward` Better Auth's response and then `redirect()`. Without the
@@ -399,8 +399,8 @@ After signing in as a second user, the page still shows the first user's todos u
 with A004. What's missing?
 
 ```ts
-import { mutation } from '@weft-js/start'
-import { forward } from '@weft-js/start/auth'
+import { mutation } from '@kerf/start'
+import { forward } from '@kerf/start/auth'
 import { z } from 'zod'
 import auth from '#/auth.server'
 
@@ -422,8 +422,8 @@ export const quickSignIn = mutation({
 A redirect after the session changes:
 
 ```ts
-import { mutation, redirect } from '@weft-js/start'
-import { forward } from '@weft-js/start/auth'
+import { mutation, redirect } from '@kerf/start'
+import { forward } from '@kerf/start/auth'
 import { z } from 'zod'
 import auth from '#/auth.server'
 
@@ -456,7 +456,7 @@ import {
   redirect,
   type LoadArgs,
   type RouteProps,
-} from '@weft-js/start'
+} from '@kerf/start'
 
 export const load = ({ ctx }: LoadArgs) => {
   if (!ctx.user) redirect('/login')
@@ -476,7 +476,7 @@ covered without a change. The queries those pages read still carry `auth: 'user'
 only the todo's owner can, and anyone else gets "Not yours." with status 403.
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'
@@ -496,7 +496,7 @@ export const editTodo = mutation({
 Add the owner to the `where`, and refuse when nothing matched:
 
 ```ts
-import { FnError, mutation } from '@weft-js/start'
+import { FnError, mutation } from '@kerf/start'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'

@@ -3,7 +3,7 @@
 //   node packages/start/scripts/runtime-matrix.mjs <app> --e2e packages/start/test/e2e/e2e-realtime.mjs
 //
 // The app is `node packages/start/test/e2e/e2e-realtime.mjs prepare <dir>`: a scaffold plus test/fixtures/app's
-// `src/server/feed.ts` and `/live` route. With `WEFT_RT_POSTGRES` set the build uses the postgres bus, and this file
+// `src/server/feed.ts` and `/live` route. With `KERF_RT_POSTGRES` set the build uses the postgres bus, and this file
 // also proves a NOTIFY from outside the process reaches a connection.
 import { repoRoot } from '../../../../scripts/lib/helpers.mjs'
 import { spawnSync } from 'node:child_process'
@@ -31,7 +31,7 @@ export default async function run({ url, log }) {
     'rtStats',
   ].map(id)
   const open = async () =>
-    (await fetch(`${url}/_weft/fn/${stats}`).then((r) => r.json())).v.connections
+    (await fetch(`${url}/_kerf/fn/${stats}`).then((r) => r.json())).v.connections
 
   check(
     'a page reading .live carries its cursor',
@@ -76,9 +76,9 @@ export default async function run({ url, log }) {
 
 async function finishRealtime({ url, check, b, counter, open }) {
   await b.until('a') // the resumed subscription's own
-  const change = await fetch(`${url}/_weft/rt`, {
+  const change = await fetch(`${url}/_kerf/rt`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-weft': '1' },
+    headers: { 'content-type': 'application/json', 'x-kerf': '1' },
     body: JSON.stringify({ k: (await b.until('h')).k, s: [[3, 'q', counter]] }),
   })
   check(
@@ -87,19 +87,19 @@ async function finishRealtime({ url, check, b, counter, open }) {
     change.status,
   )
 
-  const refused = await fetch(`${url}/_weft/rt`, {
+  const refused = await fetch(`${url}/_kerf/rt`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-weft': '1', origin: 'http://evil.example' },
+    headers: { 'content-type': 'application/json', 'x-kerf': '1', origin: 'http://evil.example' },
     body: '{}',
   })
   check('another origin is refused', refused.status === 403, refused.status)
 
-  if (process.env.WEFT_RT_POSTGRES) {
+  if (process.env.KERF_RT_POSTGRES) {
     const { default: postgres } = await import(
       pathToFileURL(join(repo, 'packages/start/node_modules/postgres/src/index.js')).href
     )
-    const sql = postgres(process.env.WEFT_RT_POSTGRES, { max: 1 })
-    await sql.notify('weft_bus', `=weft:poke\n${JSON.stringify({ t: ['counter'] })}`)
+    const sql = postgres(process.env.KERF_RT_POSTGRES, { max: 1 })
+    await sql.notify('kerf_bus', `=kerf:poke\n${JSON.stringify({ t: ['counter'] })}`)
     await sql.end()
     check(
       'a NOTIFY from another process reaches the client',
@@ -125,7 +125,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === 'p
   must(
     'node',
     [
-      join(repo, 'packages/create/bin/create-weft.mjs'),
+      join(repo, 'packages/create-kerf/bin/create-kerf.mjs'),
       dir,
       '--db',
       'none',
@@ -140,11 +140,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === 'p
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
   for (const deps of [pkg.dependencies, pkg.devDependencies])
     for (const name of Object.keys(deps ?? {}))
-      if (name === '@weft-js/core' || name.startsWith('@weft-js/'))
-        deps[name] = `file:${join(repo, 'packages', name.replace('@weft-js/', ''))}`
+      if (name === '@kerf/core' || name.startsWith('@kerf/'))
+        deps[name] = `file:${join(repo, 'packages', name.replace('@kerf/', ''))}`
   pkg.dependencies.postgres = '4.0.0'
-  pkg.dependencies['@weft-js/realtime-redis'] = `file:${join(repo, 'packages/realtime-redis')}`
-  pkg.dependencies['@weft-js/realtime-nats'] = `file:${join(repo, 'packages/realtime-nats')}`
+  pkg.dependencies['@kerf/realtime-redis'] = `file:${join(repo, 'packages/realtime-redis')}`
+  pkg.dependencies['@kerf/realtime-nats'] = `file:${join(repo, 'packages/realtime-nats')}`
   writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
   const fixture = join(here, '../fixtures/app/src')
   cpSync(join(fixture, 'server/feed.ts'), join(dir, 'src/server/feed.ts'))
@@ -154,11 +154,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv[2] === 'p
   cpSync(join(fixture, 'routes/chat.tsx'), join(dir, 'src/routes/chat.tsx'))
   writeFileSync(
     join(dir, 'src/realtime.server.ts'),
-    `import { realtime } from '@weft-js/start'
-import { postgresBus } from '@weft-js/start/bus/postgres'
-import { redisBus } from '@weft-js/realtime-redis'
-import { natsBus } from '@weft-js/realtime-nats'
-const { WEFT_RT_POSTGRES: pg, WEFT_RT_REDIS: redis, WEFT_RT_NATS: nats } = process.env
+    `import { realtime } from '@kerf/start'
+import { postgresBus } from '@kerf/start/bus/postgres'
+import { redisBus } from '@kerf/realtime-redis'
+import { natsBus } from '@kerf/realtime-nats'
+const { KERF_RT_POSTGRES: pg, KERF_RT_REDIS: redis, KERF_RT_NATS: nats } = process.env
 export default realtime(pg ? { bus: postgresBus({ url: pg }) } : redis ? { bus: redisBus({ url: redis }) } : nats ? { bus: natsBus({ servers: nats }) } : {})
 `,
   )

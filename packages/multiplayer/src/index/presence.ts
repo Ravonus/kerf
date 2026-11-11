@@ -1,4 +1,4 @@
-import { effect, onCleanup, untrack, type Derived, type State } from '@weft-js/core'
+import { effect, onCleanup, untrack, type Derived, type State } from '@kerf/core'
 import type { CursorAt, Peer, PeerLink, PeerTransport } from '../index'
 import { applyPeer, readCursor } from './peer'
 import { hear, silent, type Conn } from './shared'

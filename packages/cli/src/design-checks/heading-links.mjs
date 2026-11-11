@@ -1,10 +1,10 @@
-import { WARP } from './values.mjs'
+import { VENEER } from './values.mjs'
 import { positions } from '../diag.mjs'
 import { allowed, addImport, headingSite } from './rules.mjs'
 
-export function checkHeadingLinks({ el, f, report, warpName, looks, localComponents, scan }) {
+export function checkHeadingLinks({ el, f, report, veneerName, looks, localComponents, scan }) {
   const bare = /^h[1-6]$/.test(el.name)
-  if (bare || (el.name === 'Heading' && warpName('Heading'))) {
+  if (bare || (el.name === 'Heading' && veneerName('Heading'))) {
     const site = headingSite(el, bare)
     if (site && !allowed(f.text).has(`D006:${positions(f.text).lineCol(el.start)[0]}`))
       looks.set(site.level, [
@@ -13,7 +13,7 @@ export function checkHeadingLinks({ el, f, report, warpName, looks, localCompone
       ])
   }
   if (
-    el.attr('data-weft')?.value === 'styled' &&
+    el.attr('data-kerf')?.value === 'styled' &&
     (/^(?:main|h1|article)$/.test(el.name) ||
       el.attr('role')?.value === 'main' ||
       el.attr('data-vt')?.value === 'main')
@@ -23,7 +23,7 @@ export function checkHeadingLinks({ el, f, report, warpName, looks, localCompone
       el.start,
       el.tagEnd,
       `The style gate on <${el.name}>: this is the page's main content, and the first paint would leave it hidden until the stylesheet lands.`,
-      'Mark a secondary part, or remove `data-weft="styled"`',
+      'Mark a secondary part, or remove `data-kerf="styled"`',
     )
   }
   if (
@@ -38,13 +38,13 @@ export function checkHeadingLinks({ el, f, report, warpName, looks, localCompone
   ) {
     const taken =
       localComponents.has('Link') ||
-      scan.imports.some((i) => i.local === 'Link' && i.source !== WARP)
+      scan.imports.some((i) => i.local === 'Link' && i.source !== VENEER)
     const close = f.text.lastIndexOf('</', el.end - 1)
     report(
       'D007',
       el.start,
       el.tagEnd,
-      "A bare <a> in a warp app: it gets warp's link colour but no underline sweep or touch target, and nav links read as prose. Use <Link>, or `Shell`'s `nav` for navigation.",
+      "A bare <a> in a veneer app: it gets veneer's link colour but no underline sweep or touch target, and nav links read as prose. Use <Link>, or `Shell`'s `nav` for navigation.",
       !taken && f.text.slice(el.start, el.end).includes('</a')
         ? {
             description: 'Use <Link>',

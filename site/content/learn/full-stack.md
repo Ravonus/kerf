@@ -1,17 +1,17 @@
 # Full-stack apps
 
 :::learn
-- How `@weft-js/start` turns a folder of components into an app with pages, data and users
+- How `@kerf/start` turns a folder of components into an app with pages, data and users
 - How routes, server functions, the database, auth and forms fit together
 - Where realtime data, uploads, payments, metadata, rendering and deploying come in
 :::
 
 Everything so far ran in the browser. A real app also has a server: it stores data, knows who is signed in, and sends
-each page with its data already in it. `@weft-js/start` is that half of Weft. It gives you pages from files, functions
+each page with its data already in it. `@kerf/start` is that half of Kerf. It gives you pages from files, functions
 that run on the server and that components call like local ones, a database, sign-in, forms that work without
 JavaScript, and live updates, all typed from end to end.
 
-An app made with `npm create @weft-js` already has it ([Installation](/learn/installation)). It runs on Node, Bun or
+An app made with `npm create kerf` already has it ([Installation](/learn/installation)). It runs on Node, Bun or
 Deno, and needs no Rust.
 With a database and sign-in chosen, a new app is a small working todo list, and the examples in this chapter build on
 it.
@@ -31,7 +31,7 @@ src/routes/_layout.tsx       the nav every page shares
 ```
 
 ```tsx
-import { Link, type RouteProps } from '@weft-js/start'
+import { Link, type RouteProps } from '@kerf/start'
 
 export default function Root(props: RouteProps) {
   return (
@@ -57,7 +57,7 @@ A route can export `load`, which runs on the server before the page is sent. Wha
 typed:
 
 ```tsx
-import type { RouteProps } from '@weft-js/start'
+import type { RouteProps } from '@kerf/start'
 import { listTodos } from '#/server/todos'
 
 export const load = async () => ({ todos: await listTodos.fetch() })
@@ -87,7 +87,7 @@ server, so a component calls them like functions:
 
 ```ts
 // src/server/notes.ts
-import { mutation, query } from '@weft-js/start'
+import { mutation, query } from '@kerf/start'
 import { z } from 'zod'
 
 const notes: string[] = []
@@ -105,7 +105,7 @@ export const addNote = mutation({
 ```
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 import { addNote, listNotes } from '#/server/notes'
 
 export function Notes() {
@@ -137,7 +137,7 @@ The database is Drizzle on SQLite, Postgres or MySQL. Tables are in `src/db/sche
 the client as `ctx.db`:
 
 ```ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 import { asc, eq } from 'drizzle-orm'
 import { todos } from '#/db/schema'
 
@@ -153,7 +153,7 @@ export const myTodos = query({
 })
 ```
 
-To change a table, edit the schema and run `weft db generate`. The migration applies itself on the next request.
+To change a table, edit the schema and run `kerf db generate`. The migration applies itself on the next request.
 
 Read **[Database](/learn/database)** to learn about reading, writing, transactions, migrations and choosing a database.
 
@@ -167,7 +167,7 @@ import {
   redirect,
   type LoadArgs,
   type RouteProps,
-} from '@weft-js/start'
+} from '@kerf/start'
 
 export const load = ({ ctx }: LoadArgs) => {
   if (!ctx.user) redirect('/login')
@@ -188,8 +188,8 @@ form works before the page's JavaScript has loaded. This demo simulates the expe
 :::demo stack-form
 
 ```tsx
-import { Form, type FormApi } from '@weft-js/start'
-import { Button, Input } from '@weft-js/warp'
+import { Form, type FormApi } from '@kerf/start'
+import { Button, Input } from '@kerf/veneer'
 import { addTodo } from '#/server/todos'
 
 export function AddTodo() {
@@ -250,8 +250,8 @@ A file in a form arrives in a mutation like any other field. With the media plug
 record with its dimensions, dominant colour, a placeholder and a `srcset` of sizes, ready for `<Media>`:
 
 ```ts
-import { mutation } from '@weft-js/start'
-import { z } from '@weft-js/start/media'
+import { mutation } from '@kerf/start'
+import { z } from '@kerf/start/media'
 
 export const setAvatar = mutation({
   input: z.object({ file: z.file() }),
@@ -264,10 +264,10 @@ Read **[Uploads and media](/learn/uploads-and-media)** to learn how to accept fi
 
 ## Payments
 
-`weft add pay` adds checkout and subscriptions through a plugin. Products are named in your code, and a server
+`kerf add pay` adds checkout and subscriptions through a plugin. Products are named in your code, and a server
 function can require what a purchase grants:
 
-<!-- example: skip needs what `weft add pay` writes: `requires` is an option the pay plugin adds -->
+<!-- example: skip needs what `kerf add pay` writes: `requires` is an option the pay plugin adds -->
 ```ts
 export const report = query({
   auth: 'user',
@@ -280,11 +280,11 @@ Read **[Payments](/learn/payments)** to learn about products, checkout and entit
 
 ## Metadata and share images
 
-Each route says what it is with `meta`: a title and a sentence, from what's on the page. Weft adds the rest of the head,
+Each route says what it is with `meta`: a title and a sentence, from what's on the page. Kerf adds the rest of the head,
 and draws a share card for link previews:
 
 ```tsx
-import type { Meta } from '@weft-js/start'
+import type { Meta } from '@kerf/start'
 
 export const meta: Meta = {
   title: 'Pricing',
@@ -302,7 +302,7 @@ data and custom cards.
 
 ## SSR, islands and hydration
 
-The server renders every page to HTML, and streams the slow parts in. In the browser, Weft takes that HTML over without
+The server renders every page to HTML, and streams the slow parts in. In the browser, Kerf takes that HTML over without
 building it again. A component with no handler, effect or state needs no JavaScript at all, and the compiler leaves it
 out on its own, so a mostly static page ships little code.
 
@@ -311,12 +311,12 @@ islands, and when their code loads.
 
 ## Runtimes and deploying
 
-`weft build` writes a server for Node, Bun or Deno to `.output/`, and `weft start` runs it. A preset targets a host
+`kerf build` writes a server for Node, Bun or Deno to `.output/`, and `kerf start` runs it. A preset targets a host
 instead, such as Vercel or Cloudflare:
 
 ```bash
-npx weft build --runtime bun
-npx weft start
+npx kerf build --runtime bun
+npx kerf start
 ```
 
 Read **[Runtimes and deploying](/learn/deploying)** to learn about runtimes, presets and what changes on each host.

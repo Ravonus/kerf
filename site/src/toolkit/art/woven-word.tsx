@@ -1,4 +1,4 @@
-import { DitherGlyph } from '@weft-js/warp'
+import { DitherGlyph } from '@kerf/veneer'
 import { type ArtProps, type Meta } from './shared'
 import code from './woven-word.tsx?raw'
 
@@ -14,7 +14,7 @@ export const meta: Meta = {
 export default function WovenWord({ live = true }: ArtProps) {
   return (
     <DitherGlyph
-      text="weft"
+      text="kerf"
       reveal={1.4}
       pointer="ripple"
       spark="neutral"

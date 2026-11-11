@@ -1,10 +1,10 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Heading,
   Stack,
   Switch,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 export function StackNotifications() {
   const deploys = state(true)
@@ -15,7 +15,7 @@ export function StackNotifications() {
       <Stack gap="hair">
         <Heading level={3}>Notifications</Heading>
         <Text subtle>
-          Choose what weft tells you about.
+          Choose what kerf tells you about.
         </Text>
       </Stack>
       <Stack

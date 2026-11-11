@@ -1,4 +1,4 @@
-import type { RouteProps } from '@weft-js/start'
+import type { RouteProps } from '@kerf/start'
 import { Counter, Fold, Label, Reveal, Stocked, Twice } from '../components/islands'
 
 export const load = async () => ({

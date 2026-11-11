@@ -1,8 +1,8 @@
-import { onCleanup, onMount, state } from '@weft-js/core'
+import { onCleanup, onMount, state } from '@kerf/core'
 
-import { Table } from '@weft-js/warp'
+import { Table } from '@kerf/veneer'
 
-import type { Column } from '@weft-js/warp'
+import type { Column } from '@kerf/veneer'
 
 import {
   type Project,

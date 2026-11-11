@@ -1,4 +1,4 @@
-import type { Stream } from '@weft-js/core/ssr'
+import type { Stream } from '@kerf/core/ssr'
 import type { RoutePayload } from '../router'
 import type { Wire } from '../data'
 import * as exec from '../exec'
@@ -66,9 +66,9 @@ export function payloadOf(r: Resolved, withHead: boolean, options?: HandlerOptio
 }
 
 export const dataTags = (data: unknown, cached: Wire[]) =>
-  `<script type="application/json" id="weft-data">${json(data)}</script>\n` +
+  `<script type="application/json" id="kerf-data">${json(data)}</script>\n` +
   (cached.length
-    ? `<script type="application/json" id="weft-cache">${json(cached)}</script>\n`
+    ? `<script type="application/json" id="kerf-cache">${json(cached)}</script>\n`
     : '')
 
 /** A render's data as a page may carry it: what failed says only what `exec.shown` let through. */

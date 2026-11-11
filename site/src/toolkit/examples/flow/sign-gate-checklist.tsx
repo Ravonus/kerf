@@ -1,4 +1,4 @@
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 import {
   Button,
   Card,
@@ -8,8 +8,8 @@ import {
   SignGateBadge,
   Stack,
   Toaster,
-} from '@weft-js/warp'
-import type { SignStatus } from '@weft-js/warp'
+} from '@kerf/veneer'
+import type { SignStatus } from '@kerf/veneer'
 
 // -- signature gate --
 

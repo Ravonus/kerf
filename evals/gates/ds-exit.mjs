@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Phase 4's exit check (PLAN §9, "4. Design"; research 37): @weft-js/core/ds against raw Tailwind on consistency and a11y, from
+// Phase 4's exit check (PLAN §9, "4. Design"; research 37): @kerf/core/ds against raw Tailwind on consistency and a11y, from
 // one brief given to a fresh agent, and repeated on every stack in benchmarks/compare (CLAUDE.md).
 //
 //   node evals/gates/ds-exit.mjs prepare <dir> [--models sonnet,haiku] [--samples 3]    one workspace per stack × model under <dir>
@@ -8,7 +8,7 @@
 //   node evals/gates/ds-exit.mjs keep <dir>     copy the Sonnet apps to compare/design, which measure.mjs re-audits on every run
 //
 // The brief names no accessibility or consistency goal, on purpose: prompting for them is known not to help (research
-// 03 §1.1), and the claim is that the good result comes by construction. Exit 1 if @weft-js/core/ds doesn't beat raw Tailwind.
+// 03 §1.1), and the claim is that the good result comes by construction. Exit 1 if @kerf/core/ds doesn't beat raw Tailwind.
 import { execFile, execFileSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -261,8 +261,8 @@ async function verify(dir) {
       brief: mean(rs.map((r) => r.audit.briefPassed)),
     }
   }
-  const ds = score('weft-ds'),
-    tw = score('weft-tailwind')
+  const ds = score('kerf-ds'),
+    tw = score('kerf-tailwind')
   const verdict = {
     a11y: ds.axe < tw.axe,
     consistency: ds.distinct < tw.distinct && ds.drift <= tw.drift,
@@ -278,7 +278,7 @@ async function verify(dir) {
     ) + '\n',
   )
   const md = [
-    `# Phase 4 exit check: @weft-js/core/ds vs raw Tailwind`,
+    `# Phase 4 exit check: @kerf/core/ds vs raw Tailwind`,
     '',
     `Run ${new Date().toISOString().slice(0, 10)}. ${ids.length} fresh-agent sessions, one brief. **${pass ? 'Met' : 'Not met'}.** a11y: ${verdict.a11y ? 'yes' : 'no'} (${ds.axe?.toFixed(1)} vs ${tw.axe?.toFixed(1)} axe nodes), consistency: ${verdict.consistency ? 'yes' : 'no'} (${ds.distinct?.toFixed(0)} vs ${tw.distinct?.toFixed(0)} distinct values, ${ds.drift?.toFixed(0)} vs ${tw.drift?.toFixed(0)} role looks), brief: ${verdict.brief ? 'yes' : 'no'} (${ds.brief?.toFixed(1)} vs ${tw.brief?.toFixed(1)}).`,
     '',
@@ -305,7 +305,7 @@ function keep(dir) {
       'package.json',
       'vite.config.ts',
       'tsconfig.json',
-      'weft.config.ts',
+      'kerf.config.ts',
     ])
       if (existsSync(join(from, f))) cpSync(join(from, f), join(to, f), { recursive: true })
     const p = JSON.parse(readFileSync(join(to, 'package.json'), 'utf8'))

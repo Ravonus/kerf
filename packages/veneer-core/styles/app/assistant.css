@@ -1,0 +1,64 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+:where([data-scope="assistant"]) { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 0 12px; padding-block: 10px; }
+:where([data-scope="assistant"] [data-part="mark"]:not([data-scope="assistant"] :is([data-scope="checkbox"],[data-scope="dialog"],[data-scope="meter"],[data-scope="push-ask"]) *:not([data-scope="assistant"] :is([data-scope="checkbox"],[data-scope="dialog"],[data-scope="meter"],[data-scope="push-ask"]) [data-scope="assistant"] *))) {
+  display: grid; place-items: center; inline-size: 28px; block-size: 28px; border-radius: var(--veneer-radius-control);
+  background: var(--veneer-color-surface-inverse); color: var(--veneer-color-on-inverse);
+}
+:where([data-scope="assistant"] [data-part="mark"]:not([data-scope="assistant"] :is([data-scope="checkbox"],[data-scope="dialog"],[data-scope="meter"],[data-scope="push-ask"]) *:not([data-scope="assistant"] :is([data-scope="checkbox"],[data-scope="dialog"],[data-scope="meter"],[data-scope="push-ask"]) [data-scope="assistant"] *)) svg) { inline-size: 16px; block-size: 16px; }
+:where([data-scope="assistant"] [data-part="content"]:not([data-scope="assistant"] :is([data-scope="accordion"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="settings"],[data-scope="tabs"]) *:not([data-scope="assistant"] :is([data-scope="accordion"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="settings"],[data-scope="tabs"]) [data-scope="assistant"] *))) { min-inline-size: 0; display: grid; gap: 10px; font-size: var(--veneer-text-prose-size); line-height: var(--veneer-text-prose-leading); }
+:where([data-scope="assistant"] [data-part="content"]:not([data-scope="assistant"] :is([data-scope="accordion"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="settings"],[data-scope="tabs"]) *:not([data-scope="assistant"] :is([data-scope="accordion"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="settings"],[data-scope="tabs"]) [data-scope="assistant"] *)) p) { margin: 0; }
+:where([data-scope="assistant"] [data-part="content"]:not([data-scope="assistant"] :is([data-scope="accordion"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="settings"],[data-scope="tabs"]) *:not([data-scope="assistant"] :is([data-scope="accordion"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="settings"],[data-scope="tabs"]) [data-scope="assistant"] *)) ul) { margin: 0; padding-inline-start: 1.2em; list-style: disc; display: grid; gap: 4px; }
+:where([data-scope="assistant"] [data-part="content"] ul li)::marker { color: var(--veneer-color-sweep); }
+:where([data-scope="assistant"] [data-part="content"]:not([data-scope="assistant"] :is([data-scope="accordion"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="settings"],[data-scope="tabs"]) *:not([data-scope="assistant"] :is([data-scope="accordion"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="settings"],[data-scope="tabs"]) [data-scope="assistant"] *)) code:not(pre code)) { padding: 1px 5px; border-radius: var(--veneer-radius-mark); background: var(--veneer-color-surface-sunken); font-size: 0.86em; }
+:where([data-scope="assistant"] pre) {
+  margin: 0; padding: 12px 14px; overflow: auto; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--veneer-color-border); font-size: var(--veneer-text-code-size); line-height: 1.6;
+}
+:where([data-scope="assistant"] pre .k) { color: var(--veneer-color-data-7); }
+:where([data-scope="assistant"] pre .s) { color: var(--veneer-color-positive-text); }
+:where([data-scope="assistant"] pre .c) { color: var(--veneer-color-text-subtle); }
+:where([data-scope="assistant"] pre .f) { color: var(--veneer-color-info-text); }
+/* the streaming caret: a 2px accent bar after the last token; it blinks only while waiting, never while tokens flow */
+:where([data-scope="assistant"] > [data-part="actions"]) { grid-column: 2; display: flex; align-items: center; gap: 0; margin-block-start: 6px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="assistant"] [data-part="content"]:not([data-scope="assistant"] :is([data-scope="accordion"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="settings"],[data-scope="tabs"]) *:not([data-scope="assistant"] :is([data-scope="accordion"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="settings"],[data-scope="tabs"]) [data-scope="assistant"] *)) > *) { min-inline-size: 0; }
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(p):last-child)::after,
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(ul):last-child)::after,
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(ol):last-child)::after,
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(pre):last-child)::after {
+  content: ""; display: inline-block; inline-size: 0.5em; block-size: 1.05em; margin-inline-start: 2px; vertical-align: -0.15em;
+  background: var(--veneer-color-sweep); border-radius: 1px;
+}
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p):last-child)::after,
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ul):last-child)::after,
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ol):last-child)::after,
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(pre):last-child)::after {
+  content: ""; display: inline-block; inline-size: 0.5em; block-size: 1.05em; vertical-align: -0.15em; background: var(--veneer-color-sweep);
+  animation: veneer-caret 1s steps(1) infinite;
+}
+:where([data-scope="assistant"] [data-part="token"]) { animation: veneer-fade-in calc(var(--veneer-duration-fast) * var(--veneer-motion-scale)) linear; }
+:where([data-scope="assistant"] [data-part="actions"]:not([data-scope="assistant"] :is([data-scope="banner"],[data-scope="consent"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) *:not([data-scope="assistant"] :is([data-scope="banner"],[data-scope="consent"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) [data-scope="assistant"] *)) [data-scope="button"][aria-pressed="true"]) { color: var(--veneer-color-accent-text); }
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p):last-child)::after,
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ul):last-child)::after,
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ol):last-child)::after,
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(pre):last-child)::after { animation: none; opacity: 0.6; }
+@media (prefers-reduced-motion: reduce) {
+:where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p):last-child)::after,
+ :where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ul):last-child)::after,
+ :where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ol):last-child)::after,
+ :where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(pre):last-child)::after { animation: none; opacity: 0.6; }
+}
+@media (forced-colors: active) {
+:where([data-arrive])::after,
+  :where([data-scope="calendar"] [data-part="now"])::before,
+  :where([data-scope="calendar"] [data-part="now-label"]),
+  :where([data-scope="agenda"] [data-part="now"]:not([data-scope="agenda"] [data-scope="calendar"] *:not([data-scope="agenda"] [data-scope="calendar"] [data-scope="agenda"] *)) i),
+  :where([data-scope="agenda"] [data-part="now"] i)::before,
+  :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
+  :where([data-scope="run"] > li[data-state="done"])::before,
+  :where([data-scope="tool-call"][data-state="running"])::before,
+  :where([data-scope="versions"] li[data-named] > i),
+  :where([data-scope="notification"] [data-part="unread"]) { forced-color-adjust: none; background: Highlight; }
+}
+@keyframes veneer-caret { 50% { opacity: 0; } }
+}

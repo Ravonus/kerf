@@ -30,16 +30,16 @@ const env = { ...process.env }
 delete env.NODE_TEST_CONTEXT
 function ready() {
   for (;;) {
-    const disk = execFileSync('df', ['-Pk', process.env.WEFT_T06_JOB ?? repo], { encoding: 'utf8' })
+    const disk = execFileSync('df', ['-Pk', process.env.KERF_T06_JOB ?? repo], { encoding: 'utf8' })
     const free = Number(disk.trim().split('\n').at(-1).trim().split(/\s+/)[3])
     if (!Number.isFinite(free) || free < 10 * 1024 * 1024)
       throw new Error('free space below 10 GiB')
     const footprint = Number(
-      execFileSync('du', ['-sk', process.env.WEFT_T06_JOB ?? repo], { encoding: 'utf8' })
+      execFileSync('du', ['-sk', process.env.KERF_T06_JOB ?? repo], { encoding: 'utf8' })
         .trim()
         .split(/\s+/)[0],
     )
-    const golden = join(process.env.WEFT_T06_JOB ?? repo, 'state/golden/weft-warp/app')
+    const golden = join(process.env.KERF_T06_JOB ?? repo, 'state/golden/kerf-veneer/app')
     const copy = existsSync(golden)
       ? Number(execFileSync('du', ['-sk', golden], { encoding: 'utf8' }).trim().split(/\s+/)[0])
       : 0
@@ -69,7 +69,7 @@ const run = (args, label) => {
       process.execPath,
       [join(repo, 'evals/agent-eval/run.mjs'), 'calibrate', task, ...args],
       {
-        cwd: process.env.WEFT_T06_JOB ? join(process.env.WEFT_T06_JOB, 'projects') : repo,
+        cwd: process.env.KERF_T06_JOB ? join(process.env.KERF_T06_JOB, 'projects') : repo,
         env,
         stdio: ['ignore', out, err],
         timeout: 300_000,

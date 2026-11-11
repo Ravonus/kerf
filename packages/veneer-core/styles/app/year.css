@@ -1,0 +1,71 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* -- Year view (07 §2.7): 12 mini months, 1 → 4 columns by container ------- */
+:where([data-scope="year"]) { container: year / inline-size; display: grid; gap: var(--veneer-space-group); min-inline-size: 0; }
+:where([data-scope="year"] [data-part="toolbar"]:not([data-scope="year"] [data-scope="table"] *:not([data-scope="year"] [data-scope="table"] [data-scope="year"] *))) { display: flex; align-items: center; gap: var(--veneer-space-related); flex-wrap: wrap; }
+:where([data-scope="year"] [data-part="title"]:not([data-scope="year"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"]) *:not([data-scope="year"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"]) [data-scope="year"] *))) {
+  margin: 0; min-inline-size: 4ch; text-align: center; font-family: var(--veneer-text-title-font); font-weight: var(--veneer-text-title-weight);
+  font-size: calc(var(--veneer-text-heading-size) * 1.1); line-height: 1.1; letter-spacing: var(--veneer-text-title-tracking); font-variant-numeric: tabular-nums;
+}
+:where([data-scope="year"] [data-part="legend"]) { display: inline-flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; margin-inline-start: auto; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="year"] [data-part="legend"] > span) { display: inline-flex; align-items: center; gap: 4px; }
+:where([data-scope="year"] [data-part="months"]:not([data-scope="year"] [data-scope="calendar"] *:not([data-scope="year"] [data-scope="calendar"] [data-scope="year"] *))) {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--veneer-space-group) * 1.25) var(--veneer-space-group);
+  transition: opacity var(--veneer-duration-fast) var(--veneer-ease-out);
+}
+:where([data-scope="year"] [data-part="months"][data-swapping]:not([data-scope="year"] [data-scope="calendar"] *:not([data-scope="year"] [data-scope="calendar"] [data-scope="year"] *))) { opacity: 0; }
+@container year (min-width: 480px) {
+:where([data-scope="year"] [data-part="months"]:not([data-scope="year"] [data-scope="calendar"] *:not([data-scope="year"] [data-scope="calendar"] [data-scope="year"] *))) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container year (min-width: 720px) {
+:where([data-scope="year"] [data-part="months"]:not([data-scope="year"] [data-scope="calendar"] *:not([data-scope="year"] [data-scope="calendar"] [data-scope="year"] *))) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container year (min-width: 960px) {
+:where([data-scope="year"] [data-part="months"]:not([data-scope="year"] [data-scope="calendar"] *:not([data-scope="year"] [data-scope="calendar"] [data-scope="year"] *))) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+:where([data-scope="year"] [data-part="year-month"]) { display: grid; gap: 4px; align-content: start; min-inline-size: 0; }
+:where([data-scope="year"] [data-part="month-title"]) {
+  all: unset; box-sizing: border-box; display: flex; align-items: baseline; gap: 8px; justify-self: start; min-block-size: var(--veneer-hit-min);
+  padding-inline: 6px; margin-inline-start: -6px; border-radius: var(--veneer-radius-control); cursor: pointer;
+  font: var(--veneer-text-heading-weight) calc(var(--veneer-text-body-size) + 1px)/1.2 var(--veneer-text-heading-font);
+}
+:where([data-scope="year"] [data-part="month-title"] small) { font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="year"] [data-part="month-title"]:hover) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="year"] [data-part="month-title"]:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 1px; }
+:where([data-scope="year"] [data-part="year-month"][data-current] [data-part="month-title"]) { color: var(--veneer-color-accent-text); }
+:where([data-scope="year"] [role="grid"]) { display: grid; grid-template-columns: repeat(7, minmax(28px, 1fr)); }
+:where([data-scope="year"] [role="row"]) { display: contents; }
+:where([data-scope="year"] [role="columnheader"]) { display: grid; place-items: center; block-size: 20px; font: 500 10.5px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+:where([data-scope="year"] [role="columnheader"] abbr) { text-decoration: none; }
+:where([data-scope="year"] [role="gridcell"]) {
+  position: relative; display: grid; place-items: center; align-content: center; gap: 1px;
+  block-size: max(30px, var(--veneer-hit-min)); border-radius: var(--veneer-radius-control);
+  font: 500 12px/1 var(--veneer-text-body-font); font-variant-numeric: tabular-nums; color: var(--veneer-color-text); cursor: pointer;
+}
+:where([data-scope="year"] [role="gridcell"][data-weekend]) { color: var(--veneer-color-text-subtle); }
+:where([data-scope="year"] [role="gridcell"][data-outside]) { cursor: default; }
+:where([data-scope="year"] [role="gridcell"]:not([data-outside]):hover) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="year"] [role="gridcell"] [data-part="num"]) { display: grid; place-items: center; inline-size: 22px; block-size: 20px; border-radius: var(--veneer-radius-round); }
+:where([data-scope="year"] [role="gridcell"][aria-current="date"] [data-part="num"]) { background: var(--veneer-color-accent-solid); color: var(--veneer-color-accent-on-solid); }
+:where([data-scope="year"] [role="gridcell"][aria-selected="true"]) { box-shadow: inset 0 0 0 var(--veneer-border-emphasis) var(--veneer-color-accent-solid); }
+:where([data-scope="year"] [role="gridcell"]:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 0; z-index: 1; }
+/* density: n dots (1–3), so the level never rides on colour alone */
+:where([data-scope="year"] [data-part="dots"]:not([data-scope="year"] :is([data-scope="qr"],[data-scope="typing"]) *:not([data-scope="year"] :is([data-scope="qr"],[data-scope="typing"]) [data-scope="year"] *))) {
+  display: block; block-size: 4px; inline-size: calc(var(--_n, 0) * 5px - 1px);
+  background: radial-gradient(circle at 2px 2px, var(--veneer-color-accent-solid) 1.6px, transparent 2px) 0 0 / 5px 4px repeat-x;
+}
+:where([data-scope="year"] [data-part="legend"] [data-part="dots"]:not([data-scope="year"] :is([data-scope="qr"],[data-scope="typing"]) *:not([data-scope="year"] :is([data-scope="qr"],[data-scope="typing"]) [data-scope="year"] *))) { inline-size: max(4px, calc(var(--_n, 0) * 5px - 1px)); }
+:where([data-scope="year"] [data-part="legend"] [data-part="dots"][data-zero]:not([data-scope="year"] :is([data-scope="qr"],[data-scope="typing"]) *:not([data-scope="year"] :is([data-scope="qr"],[data-scope="typing"]) [data-scope="year"] *))) { background: none; box-shadow: inset 0 0 0 1px var(--veneer-color-border-strong); border-radius: 2px; }
+:where([data-scope="year"] [data-part="detail"]:not([data-scope="year"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="table"],[data-scope="timeline"]) *:not([data-scope="year"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="table"],[data-scope="timeline"]) [data-scope="year"] *))) {
+  display: grid; gap: 6px; min-block-size: 3.2em; padding: 10px 12px; border-radius: var(--veneer-radius-control);
+  background: var(--veneer-color-surface-sunken); font-size: var(--veneer-text-body-size);
+}
+:where([data-scope="year"] [data-part="detail"]:not([data-scope="year"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="table"],[data-scope="timeline"]) *:not([data-scope="year"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="table"],[data-scope="timeline"]) [data-scope="year"] *)) ul) { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="year"] [data-part="detail"]:not([data-scope="year"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="table"],[data-scope="timeline"]) *:not([data-scope="year"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="table"],[data-scope="timeline"]) [data-scope="year"] *)) li) { display: flex; gap: 8px; align-items: center; }
+:where([data-scope="year"] [data-part="detail"]:not([data-scope="year"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="table"],[data-scope="timeline"]) *:not([data-scope="year"] :is([data-scope="master-detail"],[data-scope="run"],[data-scope="table"],[data-scope="timeline"]) [data-scope="year"] *)) li > i) { inline-size: 8px; block-size: 8px; border-radius: 2px; background: var(--_c, var(--veneer-color-accent-solid)); flex: none; }
+@media (forced-colors: active) {
+:where([data-scope="year"] [role="gridcell"][aria-current="date"] [data-part="num"]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+:where([data-scope="year"] [role="gridcell"][aria-selected="true"]) { outline: 2px solid Highlight; outline-offset: -2px; box-shadow: none; }
+:where([data-scope="year"] [data-part="dots"]:not([data-scope="year"] :is([data-scope="qr"],[data-scope="typing"]) *:not([data-scope="year"] :is([data-scope="qr"],[data-scope="typing"]) [data-scope="year"] *))) { forced-color-adjust: none; background: radial-gradient(circle at 2px 2px, CanvasText 1.6px, transparent 2px) 0 0 / 5px 4px repeat-x; }
+}
+}

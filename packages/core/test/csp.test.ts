@@ -3,20 +3,20 @@
 // generated classes, so the page needs no style attribute or inline style at all.
 import { join } from 'node:path'
 import { build } from 'vite'
-import weft from '../vite.mjs'
+import kerf from '../vite.mjs'
 
 const entry = join(import.meta.dirname, 'fixtures/csp/main.tsx')
 
-async function built(options: Parameters<typeof weft>[0]) {
+async function built(options: Parameters<typeof kerf>[0]) {
   const out = await build({
     root: join(import.meta.dirname, 'fixtures/csp'),
     configFile: false,
     logLevel: 'silent',
-    plugins: [weft({ ...options, purge: false })],
+    plugins: [kerf({ ...options, purge: false })],
     resolve: {
       alias: [
-        { find: /^@weft-js\/core\/dom$/, replacement: join(import.meta.dirname, '../src/dom.ts') },
-        { find: /^@weft-js\/core$/, replacement: join(import.meta.dirname, '../src/index.ts') },
+        { find: /^@kerf\/core\/dom$/, replacement: join(import.meta.dirname, '../src/dom.ts') },
+        { find: /^@kerf\/core$/, replacement: join(import.meta.dirname, '../src/index.ts') },
       ],
     },
     build: {

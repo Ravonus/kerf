@@ -8,7 +8,7 @@ import { test } from 'node:test'
 import { check } from './shared-helpers.mjs'
 
 void test('checks tracked setup files and rejects duplicate helpers', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-helpers-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-helpers-'))
   const git = (...args) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' })
   try {
     git('init', '-q')
@@ -45,18 +45,18 @@ void test('checks tracked setup files and rejects duplicate helpers', () => {
 })
 
 void test('rejects tracked full HTML esc and repository root calculations', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-helper-source-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-helper-source-'))
   const git = (...args) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' })
   try {
     git('init', '-q')
     const examples = {
       'scripts/copy.mjs': `export const repoRoot = "/copied/root"\nexport const esc = s => s.replace(/[&<>"]/g, c => c)\n`,
       'packages/demo/src/sequential.ts': `const escapeHtml = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')`,
-      'packages/warp-core/src/charts/scene.ts': `export const esc = (v: string) => v.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]!)`,
-      'evals/gates/warp-exit.mjs': `import {join,dirname} from 'node:path'; import {fileURLToPath} from 'node:url'; const root = join(dirname(fileURLToPath(import.meta.url)), '..'); const repo = join(root, '..')`,
+      'packages/veneer-core/src/charts/scene.ts': `export const esc = (v: string) => v.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]!)`,
+      'evals/gates/veneer-exit.mjs': `import {join,dirname} from 'node:path'; import {fileURLToPath} from 'node:url'; const root = join(dirname(fileURLToPath(import.meta.url)), '..'); const repo = join(root, '..')`,
       'packages/start/test/e2e/e2e-realtime.mjs': `import {dirname,resolve} from 'node:path'; import {fileURLToPath} from 'node:url'; const here = dirname(fileURLToPath(import.meta.url)); const repo = resolve(here, '../../../..')`,
       'packages/core/scripts/parity.mjs': `import {join,dirname} from 'node:path'; import {fileURLToPath} from 'node:url'; const here = dirname(fileURLToPath(import.meta.url)); const pkg = join(here, '..'); const repo = join(pkg, '..', '..')`,
-      'packages/warp/scripts/dither.mjs': `import {join,resolve,dirname} from 'node:path'; import {fileURLToPath} from 'node:url'; const pkg = join(dirname(fileURLToPath(import.meta.url)), '..'); const repo = resolve(pkg, '../..')`,
+      'packages/veneer/scripts/dither.mjs': `import {join,resolve,dirname} from 'node:path'; import {fileURLToPath} from 'node:url'; const pkg = join(dirname(fileURLToPath(import.meta.url)), '..'); const repo = resolve(pkg, '../..')`,
       'packages/demo/scripts/alias.mjs': `import {resolve as r, dirname as d} from 'node:path'; import {fileURLToPath as f} from 'node:url'; const here = d(f(import.meta.url)); const home = r(here, '../../..')`,
     }
     for (const [path, source] of Object.entries(examples)) {
@@ -92,7 +92,7 @@ void test('rejects tracked full HTML esc and repository root calculations', () =
       "import {resolve as r, dirname as d} from 'node:path'; import {fileURLToPath as f} from 'node:url'; const here = d(f(import.meta.url)); const packageRoot = r(here, '..')\n",
     )
     writeFileSync(
-      join(dir, 'packages/warp-core/src/charts/scene.ts'),
+      join(dir, 'packages/veneer-core/src/charts/scene.ts'),
       'const esc = (v: string) => v.replace(/[&<]/g, c => c)\n',
     )
     assert.deepEqual(check(dir).problems, [])
@@ -151,7 +151,7 @@ for (const [name, source, expected, suffix] of [
   ],
 ]) {
   void test(`binding-aware root detection: ${name}`, () => {
-    const dir = mkdtempSync(join(tmpdir(), 'weft-helper-binding-'))
+    const dir = mkdtempSync(join(tmpdir(), 'kerf-helper-binding-'))
     try {
       execFileSync('git', ['init', '-q', dir])
       mkdirSync(join(dir, 'scripts'))
@@ -208,7 +208,7 @@ for (const [name, path, source] of [
   ['full escape', 'site/scripts/full.mjs', `const esc = t => t.replace(/[&<>"]/g, c => c)`],
 ]) {
   void test(`site helper gate rejects ${name}`, () => {
-    const dir = mkdtempSync(join(tmpdir(), 'weft-site-helper-'))
+    const dir = mkdtempSync(join(tmpdir(), 'kerf-site-helper-'))
     try {
       execFileSync('git', ['init', '-q', dir])
       mkdirSync(join(dir, path, '..'), { recursive: true })
@@ -229,14 +229,14 @@ for (const [name, path, source] of [
 }
 
 void test('site helper gate accepts canonical delegates and distinct escape policies', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-site-distinct-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-site-distinct-'))
   try {
     execFileSync('git', ['init', '-q', dir])
     mkdirSync(join(dir, 'site/scripts'), { recursive: true })
     writeFileSync(
       join(dir, 'site/scripts/valid.mjs'),
       `
-import { esc as canonical } from '@weft-js/core/markup'
+import { esc as canonical } from '@kerf/core/markup'
 const esc = s => canonical(s, 'text')
 const numeric = v => v.replace(/[&<]/g, c => '&#' + c.charCodeAt(0) + ';')
 const partial = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;')

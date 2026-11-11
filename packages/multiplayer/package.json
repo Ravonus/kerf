@@ -1,19 +1,19 @@
 {
-  "name": "@weft-js/multiplayer",
-  "version": "0.1.4",
-  "description": "@weft-js/multiplayer: presence, cursors anchored to elements, a typed interaction relay and synced scroll on `channel`. A library, not a plugin",
+  "name": "@kerf/multiplayer",
+  "version": "0.1.0",
+  "description": "@kerf/multiplayer: presence, cursors anchored to elements, a typed interaction relay and synced scroll on `channel`. A library, not a plugin",
   "keywords": [
-    "weft"
+    "kerf"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/multiplayer"
   },
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/multiplayer#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/multiplayer#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "files": [
     "src",
@@ -37,15 +37,15 @@
   "devDependencies": {
     "@testing-library/dom": "10.4.2",
     "@testing-library/user-event": "14.6.8",
-    "@weft-js/core": "workspace:*",
-    "@weft-js/start": "workspace:*",
+    "@kerf/core": "workspace:*",
+    "@kerf/start": "workspace:*",
     "jsdom": "30.1.3",
     "playwright-core": "1.64.1",
     "vitest": "5.0.5"
   },
   "peerDependencies": {
-    "@weft-js/core": "*",
-    "@weft-js/start": "*"
+    "@kerf/core": "*",
+    "@kerf/start": "*"
   },
   "engines": {
     "node": ">=24"

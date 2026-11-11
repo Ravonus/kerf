@@ -1,4 +1,4 @@
-import { Box } from '@weft-js/core/internal'
+import { Box } from '@kerf/core/internal'
 import {
   DEV,
   collect as boxes,
@@ -10,7 +10,7 @@ import {
   untrack,
   type Derived,
   type State,
-} from '@weft-js/core'
+} from '@kerf/core'
 import { currentScope, FnError, skip, StartError, track, type Fn } from '../data'
 import type { ChannelStatus, ConnectOptions, Connection, SharedBox } from '../channel'
 import {
@@ -72,7 +72,7 @@ function owned(fn: Fn) {
     )
 }
 
-/** `@weft-js/start/share`'s way in: a join that nothing on the page declared, so a tab shares this socket and its lifecycle. */
+/** `@kerf/start/share`'s way in: a join that nothing on the page declared, so a tab shares this socket and its lifecycle. */
 export const connectBuiltIn = ($id: string) =>
   connect({ kind: 'channel', $id, def: {} }, undefined, { keep: 0 })
 

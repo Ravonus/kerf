@@ -1,7 +1,7 @@
 // `interaction()` (research 45): UI state as plain boxes. `hover`, `focus` and `pressed` are this page's and
 // nothing else's, so an effect on them can't run for somebody else's hover and can't echo: what arrives from elsewhere
 // is only ever written to `remote`, and only the three local boxes are sent. `share` makes one row per key on this page
-// (same page = same box); `@weft-js/start/share` carries it further. Neither `weft` nor a warp component pulls this in.
+// (same page = same box); `@kerf/start/share` carries it further. Neither `kerf` nor a veneer component pulls this in.
 
 import {
   DEV,
@@ -42,7 +42,7 @@ export interface Interaction {
 /** How `interaction` behaves. */
 export interface InteractionOptions {
   /**
-   * Share it. Same key, same row: on this page at once, across tabs and clients in a `@weft-js/start` app. Read once: a
+   * Share it. Same key, same row: on this page at once, across tabs and clients in a `@kerf/start` app. Read once: a
    * function is how a prop goes in (`share: () => \`todo:${props.id}\``), and a new key is a new `key` on the component.
    */
   share?: string | (() => string)
@@ -54,7 +54,7 @@ export interface ShareLine {
   leave(): void
 }
 
-/** `@weft-js/warp/ui` and `@weft-js/start/share` plug in here, as `@weft-js/core/sync` does for `features.sync`. */
+/** `@kerf/veneer/ui` and `@kerf/start/share` plug in here, as `@kerf/core/sync` does for `features.sync`. */
 export const seams: {
   attach?: (el: HTMLElement, ui: Interaction) => Action
   line?: ((key: string, heard: (counts: Counts) => void) => ShareLine) | undefined
@@ -74,7 +74,7 @@ function row(): Interaction & { remote: State<Counts> } {
     remote: state(NONE),
     attach(el) {
       if (DEV && !seams.attach)
-        throw new Error("interaction(): nothing draws `ui`\n  fix: import '@weft-js/warp/ui'")
+        throw new Error("interaction(): nothing draws `ui`\n  fix: import '@kerf/veneer/ui'")
       return seams.attach!(el, made)
     },
   }

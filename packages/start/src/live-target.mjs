@@ -1,11 +1,11 @@
-// What a deploy target can do for live data, from its preset and config alone: `weft check`, `weft build` and `weft
+// What a deploy target can do for live data, from its preset and config alone: `kerf check`, `kerf build` and `kerf
 // doctor` read this. What only a running server can know (a pooler, a missing trigger) the server probes at startup.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const LISTENER =
-  "run `weft db listen` on any always-on host (a VPS, Fly, Railway), publishing into a shared bus, and set `dbChanges(db, tables, { listener: 'external' })`"
+  "run `kerf db listen` on any always-on host (a VPS, Fly, Railway), publishing into a shared bus, and set `dbChanges(db, tables, { listener: 'external' })`"
 const SERVER =
   'deploy to a server preset (`node_server`, `bun`, `deno_server`, or a container on Fly, Railway or Render)'
 const POLLED = 'or poll the query yourself by reloading: `.live()` still updates on mutations'
@@ -37,7 +37,7 @@ export const holdsSockets = (preset = 'node') =>
   liveTarget(preset).held || /^(cloudflare[-_]durable|deno[-_]deploy)/.test(preset)
 
 /**
- * Whether the page dials a socket (`__WEFT_SOCKETS__`): only when the server answers one, an app with a channel or
+ * Whether the page dials a socket (`__KERF_SOCKETS__`): only when the server answers one, an app with a channel or
  * shared state (`sockets`) on a host that can hold it. A socket nobody serves never fails, so a page that dialed one
  * would wait on it for good; without one, streams and live queries go straight to SSE.
  * @param {{ sockets: boolean, build: boolean, preset?: string }} app
@@ -45,7 +45,7 @@ export const holdsSockets = (preset = 'node') =>
 export const pageSockets = ({ sockets, build, preset }) =>
   sockets && (!build || holdsSockets(preset))
 
-const SKIP = new Set(['node_modules', '.weft', '.output', 'dist'])
+const SKIP = new Set(['node_modules', '.kerf', '.output', 'dist'])
 
 /** `live: { required: true }` on a query, and `.live(input, { required: true })` in a component, with where. */
 export function scanRequired(root) {
@@ -74,7 +74,7 @@ export function scanRequired(root) {
 }
 
 /**
- * What this deploy gets, for `weft doctor`, and the diagnostics `weft check` and `weft build` report.
+ * What this deploy gets, for `kerf doctor`, and the diagnostics `kerf check` and `kerf build` report.
  * @param {{ preset?: string, source?: { name: string, external?: boolean, tables: string[] }, required?: { name: string, file: string }[] }} input
  */
 export function livePlan({ preset, source, required = [] }) {
@@ -149,29 +149,29 @@ const dbNameOf = (url) => {
 }
 
 const HOWTO =
-  'Set `WEFT_STAGING_URL` to a running staging app, `STAGING_DATABASE_URL` to its database, or both for the whole chain.'
+  'Set `KERF_STAGING_URL` to a running staging app, `STAGING_DATABASE_URL` to its database, or both for the whole chain.'
 
 /**
- * Where a `verify` points, from the query's declaration, `live.targets` in weft.config.ts and the environment.
+ * Where a `verify` points, from the query's declaration, `live.targets` in kerf.config.ts and the environment.
  * @returns {{ name: string, url?: string, db?: string, marked: boolean } | { missing: string }}
  */
 export function resolveTarget(verify, { targets = {}, env = process.env } = {}) {
   if (typeof verify === 'object' && verify.target !== undefined)
     return resolveTarget(verify.target, { targets, env })
   if (verify === true) {
-    const url = env.WEFT_STAGING_URL,
+    const url = env.KERF_STAGING_URL,
       db = env.STAGING_DATABASE_URL
     return url || db
       ? { name: 'staging', url, db, marked: false }
       : {
-          missing: `\`verify: true\` found neither \`WEFT_STAGING_URL\` nor \`STAGING_DATABASE_URL\`. ${HOWTO}`,
+          missing: `\`verify: true\` found neither \`KERF_STAGING_URL\` nor \`STAGING_DATABASE_URL\`. ${HOWTO}`,
         }
   }
   if (typeof verify === 'string') {
     const t = targets[verify]
     if (!t)
       return {
-        missing: `\`verify: '${verify}'\` names no target. Add it to weft.config.ts: \`live: { targets: { ${verify}: { url: 'https://…', db: 'STAGING_DATABASE_URL', production: false } } }\``,
+        missing: `\`verify: '${verify}'\` names no target. Add it to kerf.config.ts: \`live: { targets: { ${verify}: { url: 'https://…', db: 'STAGING_DATABASE_URL', production: false } } }\``,
       }
     const db = t.db && (t.db.includes('://') ? t.db : env[t.db])
     if (t.db && !db)
@@ -196,11 +196,11 @@ export function refusal(target, { targets = {} } = {}) {
     target.name !== 'staging' &&
     targets[target.name]?.production !== false
   )
-    return `target \`${target.name}\` isn't marked: add \`production: false\` to it in weft.config.ts`
+    return `target \`${target.name}\` isn't marked: add \`production: false\` to it in kerf.config.ts`
   if (target.marked) return
   const unsure = hosts.find((h) => !NOT_PRODUCTION.test(h))
   if (unsure)
-    return `nothing says \`${unsure}\` isn't production. Name it in weft.config.ts: \`live: { targets: { staging: { db: 'STAGING_DATABASE_URL', production: false } } }\`, and use \`verify: 'staging'\``
+    return `nothing says \`${unsure}\` isn't production. Name it in kerf.config.ts: \`live: { targets: { staging: { db: 'STAGING_DATABASE_URL', production: false } } }\`, and use \`verify: 'staging'\``
 }
 
 const PASSWORD = /[a-z][a-z0-9+.-]*:\/\/[^\s'"`/:@]+:[^\s'"`/@]+@/i
@@ -225,7 +225,7 @@ export function literalSecrets(root) {
     }
   }
   if (existsSync(join(root, 'src'))) walk(join(root, 'src'))
-  for (const f of ['weft.config.ts', 'weft.config.js', 'weft.config.mjs'])
+  for (const f of ['kerf.config.ts', 'kerf.config.js', 'kerf.config.mjs'])
     if (existsSync(join(root, f))) look(join(root, f))
   return out
 }

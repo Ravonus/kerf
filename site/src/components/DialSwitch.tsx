@@ -1,5 +1,5 @@
-import { getDial, Segmented, setDial, type SegmentedOption } from '@weft-js/warp'
-import { onMount, state } from '@weft-js/core'
+import { getDial, Segmented, setDial, type SegmentedOption } from '@kerf/veneer'
+import { onMount, state } from '@kerf/core'
 import { shownExpression } from '../lib/dial'
 
 type Tier = 'quiet' | 'balanced' | 'vivid'

@@ -35,7 +35,7 @@ async function open(path: string, options?: Parameters<Playwright.Browser['newCo
   )
   await page.goto(url + path)
   if (!!options?.javaScriptEnabled || options?.javaScriptEnabled !== false)
-    await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+    await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
   return { page, errors, posts, context }
 }
 
@@ -43,7 +43,7 @@ const unique = (name: string) => `${name} ${Math.random().toString(36).slice(2, 
 
 test('a page with a form hydrates 0/0', async () => {
   const { page, errors, context } = await open('/notes')
-  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   expect(errors).toEqual([])
   await context.close()
 })
@@ -51,7 +51,7 @@ test('a page with a form hydrates 0/0', async () => {
 test('a submit stays in the page: pending, the refreshed list, the reset fields, no page load', async () => {
   const { page, errors, posts, context } = await open('/notes')
   await page.evaluate(() => (window.__same = true))
-  await page.route('**/_weft/fn/**', async (r) => {
+  await page.route('**/_kerf/fn/**', async (r) => {
     await new Promise((ok) => {
       setTimeout(ok, 200)
     })
@@ -77,7 +77,7 @@ test('a submit stays in the page: pending, the refreshed list, the reset fields,
   )
   expect(await page.inputValue('input[name=title]')).toBe('')
   expect(await page.evaluate(() => window.__same)).toBe(true)
-  expect(posts).toEqual(['/_weft/fn/addNote'])
+  expect(posts).toEqual(['/_kerf/fn/addNote'])
   expect(await page.textContent('.note-form output')).toMatch(/^\d+$/)
   expect(errors).toEqual([])
   await context.close()
@@ -128,18 +128,18 @@ test('the 422 page hydrates as it was rendered, then submits in place', async ()
     HTMLFormElement.prototype.submit.call(f)
   })
   await page.waitForFunction(
-    () => document.querySelector('.title-error')?.textContent && window.__weft?.hydrated,
+    () => document.querySelector('.title-error')?.textContent && window.__kerf?.hydrated,
     null,
     { timeout: 15_000 },
   )
-  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   expect(await page.inputValue('input[name=title]')).toBe('x')
-  expect(await page.$('#weft-form')).toBeNull()
+  expect(await page.$('#kerf-form')).toBeNull()
   posts.length = 0
   await page.fill('input[name=title]', unique('Recovered'))
   await page.click('.note-form button')
   await page.waitForFunction(() => document.querySelector('.title-error')!.textContent === '')
-  expect(posts).toEqual(['/_weft/fn/addNote'])
+  expect(posts).toEqual(['/_kerf/fn/addNote'])
   expect(errors.filter((e) => !/422/.test(e))).toEqual([])
   await context.close()
 })
@@ -164,26 +164,26 @@ test('a cookie box: server-rendered, hydrated 0/0, and it survives a reload', as
   expect(await page.textContent('.theme')).toBe('light')
   await page.click('.theme')
   await page.waitForFunction(() => document.querySelector('.theme')!.textContent === 'dark')
-  await page.waitForFunction(() => document.cookie.includes('weft.app.prefs.theme'))
+  await page.waitForFunction(() => document.cookie.includes('kerf.app.prefs.theme'))
   const raw = await (await context.request.get(`${url}/prefs`)).text() // as a crawler with the cookie sees it
   expect(raw).toContain('data-theme="dark"')
   await page.reload()
-  await page.waitForFunction(() => window.__weft?.hydrated)
-  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  await page.waitForFunction(() => window.__kerf?.hydrated)
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   expect(await page.textContent('.theme')).toBe('dark')
   expect(errors).toEqual([])
   await context.close()
 })
 
 test('an upload with JS stays in the page, over multipart, and hydrates 0/0', async () => {
-  const sharp = createRequire(new URL('../../plugin-media/package.json', import.meta.url))('sharp')
+  const sharp = createRequire(new URL('../../media/package.json', import.meta.url))('sharp')
   const bytes = await sharp({
     create: { width: 200, height: 100, channels: 3, background: { r: 20, g: 90, b: 180 } },
   })
     .png()
     .toBuffer()
   const { page, errors, posts, context } = await open('/cover')
-  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   await page.evaluate(() => {
     window.__same = true
   })
@@ -194,10 +194,10 @@ test('an upload with JS stays in the page, over multipart, and hydrates 0/0', as
   })
   await page.click('.cover-form button')
   await page.waitForFunction(() =>
-    document.querySelector('main img')?.getAttribute('srcset')?.includes('/_weft/m/'),
+    document.querySelector('main img')?.getAttribute('srcset')?.includes('/_kerf/m/'),
   )
   expect(await page.evaluate(() => window.__same)).toBe(true)
-  expect(posts.at(-1)).toMatch(/^\/_weft\/fn\//)
+  expect(posts.at(-1)).toMatch(/^\/_kerf\/fn\//)
   expect(errors).toEqual([])
   await context.close()
 })

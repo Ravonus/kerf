@@ -31,12 +31,12 @@ const CONFIG_FILES = new Set([V.context, V.auth, V.realtime, V.cache, V.cron, V.
 
 export const resolveId = (s) => ({
   filter: {
-    id: /^(virtual:weft\/|@weft-js\/start\/(db|auth|bus|list|rust|sidecar)(\/|$)|@weft-js\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/,
+    id: /^(virtual:kerf\/|@kerf\/start\/(db|auth|bus|list|rust|sidecar)(\/|$)|@kerf\/(realtime-(redis|nats|durable-object)|db-[\w-]+)$|sharp$)/,
   },
   handler(source, importer) {
     // Sharp's addon can't be bundled, so it stays external and Nitro traces it, which it can only do from the app.
     if (source === 'sharp') {
-      if (s.dev || !importer?.includes('plugin-media')) return
+      if (s.dev || !/[\\/](@kerf[\\/]media|packages[\\/]media)[\\/]/.test(importer ?? '')) return
       try {
         createRequire(join(s.root, 'package.json')).resolve('sharp')
       } catch {
@@ -47,7 +47,7 @@ export const resolveId = (s) => ({
       }
       return { id: 'sharp', external: true }
     }
-    if (source.startsWith('@weft-js/')) {
+    if (source.startsWith('@kerf/')) {
       if (this.environment?.config.consumer === 'client')
         this.error(
           `Q012: \`${source}\` reached the client graph${importer ? ` from ${relative(s.root, importer)}` : ''}: the database, auth and buses run on the server only.\n  fix: import it from a server module (src/server/**, *.server.ts) or a route's \`load\``,
@@ -58,20 +58,20 @@ export const resolveId = (s) => ({
     if (
       Object.values(V).includes(base) ||
       base.startsWith(ISLAND) ||
-      base.startsWith('virtual:weft/shape-override/')
+      base.startsWith('virtual:kerf/shape-override/')
     )
       return s.id(source)
   },
 })
 
 export const load = (s) => ({
-  filter: { id: /^\0virtual:weft\// },
+  filter: { id: /^\0virtual:kerf\// },
   async handler(raw) {
-    // `virtual:weft/entry-client?assets=client` (no src/entry.client.ts) is Nitro's assets plugin's to load.
+    // `virtual:kerf/entry-client?assets=client` (no src/entry.client.ts) is Nitro's assets plugin's to load.
     if (/[?&]assets\b/.test(raw)) return
     const which = raw.slice(1).replace(/\?.*$/, '')
     const client = this.environment?.config.consumer === 'client'
-    if (which.startsWith('virtual:weft/shape-override/'))
+    if (which.startsWith('virtual:kerf/shape-override/'))
       return overrideModule(this, s, which, client)
     if (which.startsWith(ISLAND)) {
       const { islands } = await s.hydration(this)
@@ -110,7 +110,7 @@ export const load = (s) => ({
 })
 
 export const transform = (s) => ({
-  filter: { id: /\.[jt]sx?(\?weft-assets)?$|\/vite\/dist\/client\/client\.mjs$/ },
+  filter: { id: /\.[jt]sx?(\?kerf-assets)?$|\/vite\/dist\/client\/client\.mjs$/ },
   async handler(code, file) {
     const path = file.replace(/\?.*$/, '')
     if (file.endsWith(ASSETS))
@@ -142,7 +142,7 @@ export const transform = (s) => ({
       return
     if (s.dev) s.loaders.set(file, serverExports(code, file))
     const out = stripServerExports(code, file)
-    // @weft-js/core/hmr saw the server exports and left this to Vite, but they're gone and the rest is components.
+    // @kerf/core/hmr saw the server exports and left this to Vite, but they're gone and the rest is components.
     if (
       s.dev &&
       out !== code &&
@@ -178,13 +178,13 @@ function unusableSkeleton(ctx, s, root, file) {
     `${relative(root, file)}: \`export const skeleton\` can't be used, so this route shows no skeleton. ` +
       'Name a function in this file (or one imported from its own file) whose JSX is plain markup: div, span, section, ' +
       'article, main, header, footer, p, h1-h6, ul, ol, li, with only string class and data-* attributes. ' +
-      '`export const skeleton = false` turns it off. `weft docs start` has an example.',
+      '`export const skeleton = false` turns it off. `kerf docs start` has an example.',
   )
 }
 
 async function overrideModule(ctx, s, which, client) {
   if (!client || !which.endsWith('.tsx')) ctx.error('Invalid skeleton override request')
-  const file = decodeURIComponent(which.slice('virtual:weft/shape-override/'.length, -4))
+  const file = decodeURIComponent(which.slice('virtual:kerf/shape-override/'.length, -4))
   const levels = [...s.manifest.layouts, ...s.manifest.routes]
   if (!levels.some((level) => s.abs(level.file) === file)) ctx.error('Unknown skeleton override')
   const imported = await resolveImportedOverride(ctx, file, s.root ?? dirname(file))
@@ -196,7 +196,7 @@ async function overrideModule(ctx, s, which, client) {
 }
 
 function configModule(s, which) {
-  const name = which.slice('virtual:weft/'.length)
+  const name = which.slice('virtual:kerf/'.length)
   const f = ['ts', 'mts', 'js', 'mjs']
     .map((x) => `src/${name}.server.${x}`)
     .find((x) => existsSync(s.abs(x)))

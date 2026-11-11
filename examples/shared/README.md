@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
@@ -29,7 +29,7 @@ same rows. That only means something if the rows are identical, each variant has
 query costs a real network round trip. `shared/pg` provides all four.
 
 > [!WARNING]
-> `env.mjs` only ever creates, clones or drops databases named `weft_bench_*`, and refuses any other name. It still runs
+> `env.mjs` only ever creates, clones or drops databases named `kerf_bench_*`, and refuses any other name. It still runs
 > `drop database ... with (force)` on those, so don't keep anything you care about under that prefix.
 
 ## Files
@@ -62,14 +62,14 @@ outside these databases.
 | Export | What it does |
 | --- | --- |
 | `seedHash()` | The first 12 hex characters of a SHA-256 over `schema.sql` and `seed.sql`. It joins the build key of database apps. |
-| `seedName()` | `weft_bench_seed_<hash>`: the template database. |
-| `dbName(app, variant)` | `weft_bench_<app>_<variant>`, with `_<BENCH_TAG>` appended when set, lower-cased and limited to `[a-z0-9_]`. |
+| `seedName()` | `kerf_bench_seed_<hash>`: the template database. |
+| `dbName(app, variant)` | `kerf_bench_<app>_<variant>`, with `_<BENCH_TAG>` appended when set, lower-cased and limited to `[a-z0-9_]`. |
 | `ensureSeed()` | Builds the template once per seed hash: creates it under a private name, loads both files, then renames it, so a half-seeded template can never be cloned. |
 | `clone(name, from)` | Drops `name` and recreates it with `CREATE DATABASE ... TEMPLATE`, retrying briefly when two clones collide on the template lock. This is also the reset: it cuts the app's connections, and its pool reopens them. |
 | `provision(app, variant, { rtt })` | Ensures the seed, clones the variant's database, starts a latency proxy, and returns `env` (`DATABASE_URL` through the proxy, `BETTER_AUTH_SECRET`), `reset`, `sql`, `rows`, `counted`, `rtt`, `measureRtt` and `stop`. |
 | `psql(db, sql)`, `rows(db, sql)` | Run SQL through `psql`; `rows` returns objects by going through `json_agg`. |
 | `contentHash(db)` | One hash over every row of every public table: what "the same data" means in tests. |
-| `countQueries(name, proxy, fn)` | Queries and rows caused by `fn`. Uses `pg_stat_statements` deltas (kept in a separate `weft_bench_stats` database, skipping `BEGIN`, `COMMIT`, `SET` and the like) when the server preloads it; otherwise the proxy's count of Query and Execute messages, with rows `null` and `source: 'proxy'`. |
+| `countQueries(name, proxy, fn)` | Queries and rows caused by `fn`. Uses `pg_stat_statements` deltas (kept in a separate `kerf_bench_stats` database, skipping `BEGIN`, `COMMIT`, `SET` and the like) when the server preloads it; otherwise the proxy's count of Query and Execute messages, with rows `null` and `source: 'proxy'`. |
 | `measureRtt(db, proxyPort)` | Median `select 1` time through the proxy and directly, by `psql`'s own timing, and the difference. |
 | `serverInfo()` | The Postgres version and which query counter is in use. |
 | `benchUser`, `PSQL` | The parsed `bench-user.json`, and the `psql` binary in use. |
@@ -102,9 +102,9 @@ You don't run these files directly; the scripts that need a database provision i
 
 ```bash
 cd examples
-node e2e.mjs todo weft                 # provisions weft_bench_todo_weft, tests, drops it
+node e2e.mjs todo kerf                 # provisions kerf_bench_todo_kerf, tests, drops it
 node bench.mjs admin                   # one clone per variant, reset between passes
-node show.mjs                          # clones weft_bench_<app>_show for each built app
+node show.mjs                          # clones kerf_bench_<app>_show for each built app
 ```
 
 To load the same rows into a database of your own for a comparison variant:

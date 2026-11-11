@@ -1,5 +1,0 @@
-/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
-@layer warp.app {
-:where([data-scope="receipts"]) { display: flex; justify-content: flex-end; align-items: center; gap: 6px; font-size: 11.5px; color: var(--warp-color-text-subtle); }
-:where([data-scope="receipts"] [data-scope="avatar"]) { --_s: 16px; font-size: 7px; }
-}

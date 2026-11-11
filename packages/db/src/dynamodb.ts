@@ -11,13 +11,13 @@ import {
   type ListParams,
   type ListSource,
   type SourceSpec,
-} from '@weft-js/start/list'
-import { StartError } from '@weft-js/start/data'
+} from '@kerf/start/list'
+import { StartError } from '@kerf/start/data'
 import { driver } from './driver'
 
 const { DeleteCommand, GetCommand, PutCommand, QueryCommand, ScanCommand, UpdateCommand } =
   await driver(
-    '@weft-js/db/dynamodb',
+    '@kerf/db/dynamodb',
     '@aws-sdk/lib-dynamodb',
     () => import('@aws-sdk/lib-dynamodb'),
   )

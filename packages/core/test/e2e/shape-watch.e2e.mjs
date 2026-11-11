@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { shapeWatch } from '../../vite/shape-watch.mjs'
 
 void test('shape group edits and deletion invalidate only current dependents', (t) => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-shape-watch-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-shape-watch-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const group = join(root, 'group.ts')
   const replacement = join(root, 'replacement.ts')
@@ -15,8 +15,8 @@ void test('shape group edits and deletion invalidate only current dependents', (
   const calls = []
   const watched = []
   const tracker = shapeWatch((file) => calls.push(['forget', file]))
-  const shapeA = `${join(root, 'a.tsx')}?weft-shape`
-  const shapeB = `${join(root, 'b.tsx')}?weft-shape`
+  const shapeA = `${join(root, 'a.tsx')}?kerf-shape`
+  const shapeB = `${join(root, 'b.tsx')}?kerf-shape`
   const modA = { id: shapeA }
   const modB = { id: shapeB }
   const existing = { id: 'other-module' }
@@ -77,7 +77,7 @@ void test('shape group edits and deletion invalidate only current dependents', (
 
 void test('Vite retransforms an affected shape module after a group edit', async (t) => {
   const { createServer } = await import('vite')
-  const root = mkdtempSync(join(tmpdir(), 'weft-shape-graph-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-shape-graph-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const dep = join(root, 'group.ts')
   const route = join(root, 'page.js')
@@ -97,7 +97,7 @@ void test('Vite retransforms an affected shape module after a group edit', async
       {
         name: 'shape-watch-test',
         transform(code, id) {
-          if (!id.endsWith('?weft-shape')) return
+          if (!id.endsWith('?kerf-shape')) return
           count++
           shapeId = id
           tracker.replace(id, [dep], this)
@@ -108,7 +108,7 @@ void test('Vite retransforms an affected shape module after a group edit', async
   })
   try {
     const env = server.environments.client
-    const url = '/page.js?weft-shape'
+    const url = '/page.js?kerf-shape'
     assert.ok(await env.transformRequest(url))
     assert.equal(count, 1)
     const mod = env.moduleGraph.getModuleById(shapeId)
@@ -128,7 +128,7 @@ void test('Vite retransforms an affected shape module after a group edit', async
 void test('Vite watcher handles group edit, deletion, recreation and owner deletion', async (t) => {
   const { createServer } = await import('vite')
   const { existsSync, realpathSync } = await import('node:fs')
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-shape-events-')))
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-shape-events-')))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const dep = join(root, 'group.ts')
   const route = join(root, 'page.js')
@@ -146,7 +146,7 @@ void test('Vite watcher handles group edit, deletion, recreation and owner delet
       {
         name: 'shape-watcher-test',
         transform(code, id) {
-          if (!id.endsWith('?weft-shape')) return
+          if (!id.endsWith('?kerf-shape')) return
           const deps = new Set()
           if (code.includes('GROUP')) {
             if (existsSync(dep)) deps.add(dep)
@@ -178,7 +178,7 @@ void test('Vite watcher handles group edit, deletion, recreation and owner delet
     events.slice(from).find((e) => e.file === file && e.type === type)
   try {
     const env = server.environments.client
-    const url = '/page.js?weft-shape'
+    const url = '/page.js?kerf-shape'
     assert.ok(await env.transformRequest(url))
     await wait(() => (server.watcher.getWatched()[root] ?? []).includes('group.ts'), 'watcher')
     let from = events.length
@@ -223,7 +223,7 @@ for (const initial of ['nongroup', 'missing']) {
   void test(`Vite watcher tracks an initially ${initial} group candidate`, async (t) => {
     const { createServer } = await import('vite')
     const { realpathSync } = await import('node:fs')
-    const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-shape-candidate-')))
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-shape-candidate-')))
     t.after(() => rmSync(root, { recursive: true, force: true }))
     const file = join(root, 'group.ts')
     const unrelated = join(root, 'other.ts')
@@ -246,7 +246,7 @@ for (const initial of ['nongroup', 'missing']) {
             tracker.attach(dev)
           },
           async transform(code, id) {
-            if (!id.endsWith('?weft-shape')) return
+            if (!id.endsWith('?kerf-shape')) return
             const deps = new Set()
             if (code.includes("from './group'")) {
               const hit = await this.resolve('./group', route, { skipSelf: true })
@@ -278,7 +278,7 @@ for (const initial of ['nongroup', 'missing']) {
       events.slice(from).find((e) => e.file === path && e.type === type)
     try {
       const env = server.environments.client
-      const url = '/page.js?weft-shape'
+      const url = '/page.js?kerf-shape'
       assert.ok(await env.transformRequest(url))
       await wait(() => (server.watcher.getWatched()[root] ?? []).includes('other.ts'), 'watcher')
       let from = events.length
@@ -306,11 +306,11 @@ for (const initial of ['nongroup', 'missing']) {
 }
 
 void test('extensionless index candidates invalidate each environment and remove stale edges', (t) => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-shape-index-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-shape-index-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const candidate = join(root, 'missing')
   const created = join(candidate, 'index.ts')
-  const id = `${join(root, 'page.tsx')}?weft-shape`
+  const id = `${join(root, 'page.tsx')}?kerf-shape`
   const tracker = shapeWatch(() => {})
   const dirs = []
   tracker.attach({ watcher: { add: (dir) => dirs.push(dir) } })
@@ -346,12 +346,12 @@ void test('extensionless index candidates invalidate each environment and remove
 })
 
 void test('environment ownership keeps divergent dependencies and deletion separate', (t) => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-shape-env-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-shape-env-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const clientFile = join(root, 'client.ts')
   const serverFile = join(root, 'server.ts')
   for (const file of [clientFile, serverFile]) writeFileSync(file, 'export const x = 1')
-  const id = `${join(root, 'page.tsx')}?weft-shape`
+  const id = `${join(root, 'page.tsx')}?kerf-shape`
   const tracker = shapeWatch(() => {})
   const clientMod = { id, env: 'client' }
   const serverMod = { id, env: 'server' }
@@ -412,11 +412,11 @@ void test('environment ownership keeps divergent dependencies and deletion separ
 })
 
 void test('close and restart clears shape ownership from the previous server', (t) => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-shape-restart-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-shape-restart-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = join(root, 'group.ts')
   writeFileSync(file, 'export const card = 1')
-  const id = `${join(root, 'page.tsx')}?weft-shape`
+  const id = `${join(root, 'page.tsx')}?kerf-shape`
   const mod = { id }
   const environment = { moduleGraph: { getModuleById: () => mod, invalidateModule() {} } }
   const tracker = shapeWatch(() => {})

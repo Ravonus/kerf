@@ -1,7 +1,7 @@
 import type {
   CursorPeer,
   ViewportPeer,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { JUN, LENA, SAM } from './peers'
 
 export const CURSOR_PEERS: CursorPeer[] = [

@@ -46,8 +46,8 @@ function dependencies(repo, ref) {
           entry.path,
         ) &&
         (/^[^/]+$/.test(entry.path) ||
-          /^packages\/(weft|core|warp|ui-core|warp-core)\/[^/]+$/.test(entry.path) ||
-          /^evals\/compare\/(weft-warp|weft-plain|solid-kobalte|react-radix|react-zustand|react-mui)\/[^/]+$/.test(
+          /^packages\/(kerf|core|veneer|ui-core|veneer-core)\/[^/]+$/.test(entry.path) ||
+          /^evals\/compare\/(kerf-veneer|kerf-plain|solid-kobalte|react-radix|react-zustand|react-mui)\/[^/]+$/.test(
             entry.path,
           )),
     )
@@ -83,7 +83,7 @@ export function auditHistory(repo, options) {
   const intervals = receiptIntervals(records, [from, ...edges.map((edge) => edge.commit)], steps)
   const largest = intervals.toSorted((a, b) => {
     const size = (row) =>
-      (row.archivedDelta['weft-warp']?.js ?? 0) + (row.archivedDelta['weft-warp']?.css ?? 0)
+      (row.archivedDelta['kerf-veneer']?.js ?? 0) + (row.archivedDelta['kerf-veneer']?.css ?? 0)
     return size(b) - size(a)
   })[0]
   const pins = [...new Set([from, firstSix.source, largest.from, ...largest.inputChanges, to])].map(

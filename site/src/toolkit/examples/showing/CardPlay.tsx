@@ -1,4 +1,4 @@
-import { Stack, Card, Text } from '@weft-js/warp'
+import { Stack, Card, Text } from '@kerf/veneer'
 
 export const CardPlay = (p: {
   eyebrow: string

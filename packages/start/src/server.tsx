@@ -1,7 +1,7 @@
 // The request handler (research 25 §3–§5): match the path and run the loaders on @tanstack/router-core, merge the
 // metadata (research 20 §1: awaited before the first byte, plain data), then stream the page: the head with every
 // tag and the shell first, each Boundary's content as it resolves, the page data last. The same resolve step answers
-// client navigations (`/_weft/data/<path>`) and renders share cards (`/_weft/og/<path>.png`).
+// client navigations (`/_kerf/data/<path>`) and renders share cards (`/_kerf/og/<path>.png`).
 //
 // Status codes are decided before the first byte: 404 when nothing matches or a loader returns `notFound()`, 500 when
 // a loader or `meta` throws, 307 (or the given status) when a loader calls `redirect()`. 404 and 500 render inside
@@ -12,16 +12,16 @@
 // the sheet is there and doesn't apply it twice.
 //
 // Server functions (research 27): each request gets a scope (AsyncLocalStorage), so `q.fetch()` in loaders and `q()`
-// in the render share one request cache; `/_weft/fn/<id>` answers the client's calls; the page ends with the
-// scope's resolved entries (`#weft-cache`) so the client cache starts seeded and hydration fetches nothing.
+// in the render share one request cache; `/_kerf/fn/<id>` answers the client's calls; the page ends with the
+// scope's resolved entries (`#kerf-cache`) so the client cache starts seeded and hydration fetches nothing.
 //
 // Forms and media (research 29): a form POST to a page URL runs its mutation, then answers 303 or the page with the
-// errors in it, so `<Form>` works without JS. `/_weft/m/<hash>/<width>.<fmt>` serves media through the `media.server`
+// errors in it, so `<Form>` works without JS. `/_kerf/m/<hash>/<width>.<fmt>` serves media through the `media.server`
 // provider. The request's cookies reach `persist: 'cookie'` boxes, and the `rt.isolated` below makes a scope reached
 // outside a render S002: this process serves many users, so it has no "the tab's app".
 
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { rt } from '@weft-js/core/internal'
+import { rt } from '@kerf/core/internal'
 import { runtime } from './data'
 import * as exec from './exec'
 import type { Scope } from './exec'
@@ -135,4 +135,4 @@ export function createHandler(options: HandlerOptions) {
   return Object.assign(handler, { resolve, inspect })
 }
 
-export { headTags } from '@weft-js/core/ssr'
+export { headTags } from '@kerf/core/ssr'

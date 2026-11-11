@@ -1,4 +1,4 @@
-// What `weft add agent` writes, as data: `weft add` does the writing, so a dry run and a refusal come for free. Plain
+// What `kerf add agent` writes, as data: `kerf add` does the writing, so a dry run and a refusal come for free. Plain
 // JS strings, because this loads with the config.
 
 /** The five tables `drizzleAgentStore` reads: times in ms, JSON in text, flags in integers. */
@@ -72,13 +72,13 @@ export const agentTokens = ${table}('agent_tokens', {
 
 const server = (
   drizzle,
-) => `${drizzle ? "import { drizzleAgentStore } from '@weft-js/agent/drizzle'\n" : ''}import { anthropic } from '@weft-js/agent/anthropic'
-import { claudeCli } from '@weft-js/agent/cli'
-import { defineAgent${drizzle ? '' : ', memoryAgentStore'} } from '@weft-js/agent/server'
+) => `${drizzle ? "import { drizzleAgentStore } from '@kerf/agent/drizzle'\n" : ''}import { anthropic } from '@kerf/agent/anthropic'
+import { claudeCli } from '@kerf/agent/cli'
+import { defineAgent${drizzle ? '' : ', memoryAgentStore'} } from '@kerf/agent/server'
 ${drizzle ? "import { db } from '#/db/index.server'\nimport { agentConversations, agentMessages, agentPending, agentTokens, agentUsage } from '#/db/schema'\n" : ''}
 // The app's assistant. A query or mutation becomes one of its tools by saying so: \`agent: { say: '…' }\` beside
 // \`auth\`. Each runs as the person asking, through their own \`auth\`, and only if the grant below allows it.
-// Outside agents (Claude Code, Codex) connect to /_weft/x/agent/mcp with a token made in the app.
+// Outside agents (Claude Code, Codex) connect to /_kerf/x/agent/mcp with a token made in the app.
 export default defineAgent({
   store: ${drizzle ? 'drizzleAgentStore(db, { conversations: agentConversations, messages: agentMessages, usage: agentUsage, pending: agentPending, tokens: agentTokens })' : 'memoryAgentStore()'},
   // first available answers by default: the API with ANTHROPIC_API_KEY set, else the \`claude\` CLI on this machine
@@ -89,8 +89,8 @@ export default defineAgent({
 })
 `
 
-const functions = `import { mutation, query, stream, topic } from '@weft-js/start'
-import type { TurnEvent } from '@weft-js/agent'
+const functions = `import { mutation, query, stream, topic } from '@kerf/start'
+import type { TurnEvent } from '@kerf/agent'
 import { z } from 'zod'
 import agent from '../agent.server'
 
@@ -221,7 +221,7 @@ export const setup = {
       env: {},
       next: [
         ...(drizzle
-          ? ['`weft db generate`, then reload: the migration applies on the next request']
+          ? ['`kerf db generate`, then reload: the migration applies on the next request']
           : []),
         "offer a function to the assistant: `agent: { say: 'What it does' }` beside `auth`, and `confirm: true` on one the owner should approve each time",
         'set ANTHROPIC_API_KEY, or sign in to the `claude` CLI on this machine',

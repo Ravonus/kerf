@@ -1,0 +1,43 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.tokens {
+/* -- environment inputs (inherit; set once on :root, override per frame) */
+  :root {
+    --veneer-safe-top: env(safe-area-inset-top, 0px);
+    --veneer-safe-right: env(safe-area-inset-right, 0px);
+    --veneer-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --veneer-safe-left: env(safe-area-inset-left, 0px);
+    /* VirtualKeyboard API overlay height; the shell writes a measured value
+       only when the browser did NOT already shrink the layout viewport. */
+    --veneer-keyboard: env(keyboard-inset-height, 0px);
+    /* the "screen" a shell fills; previews and embeds pin it in px */
+    --veneer-viewport-block: 100dvh;
+  }
+  @supports not (height: 100dvh) { :root { --veneer-viewport-block: 100vh; } }
+
+  /* -- per-stop inputs for navigation motion ----------------------------- */
+  :root, [data-expression="balanced"] { --veneer-ref-push: 32%; }
+  [data-expression="quiet"]           { --veneer-ref-push: 16%; }
+  [data-expression="vivid"]           { --veneer-ref-push: 100%; }
+
+  /* -- layout sys tokens (re-derived on every scope root, like veneer.css) - */
+  :root, [data-expression], [data-density], [data-form], [data-pointer],
+  [data-motion], [data-flair], [data-theme], [data-palette], [data-veneer] {
+    --veneer-layout-bar: calc(var(--veneer-control-md) + 12px);          /* header / top bar: 48 · 56 coarse */
+    --veneer-layout-tabbar: max(56px, calc(var(--veneer-hit-min) + 12px)); /* bottom bar, before safe area */
+    --veneer-layout-rail: 80px;                                         /* icon + 12px label, 64px item */
+    --veneer-layout-sidebar: 248px;
+    --veneer-layout-list: 340px;                                        /* master pane (300 below 1000) */
+    --veneer-layout-aside: 300px;                                       /* split side, inspector */
+    --veneer-layout-measure: var(--veneer-measure);                       /* prose: the dial's measure, 72 · 66 · 60ch (01 §2 Type) */
+    --veneer-layout-narrow: 440px;                                      /* auth, single forms */
+    --veneer-layout-content: 1160px;                                    /* page content max */
+    --veneer-layout-wide: 1440px;                                       /* marketing bands */
+    /* navigation motion: push distance × motion-scale (0 under reduced) */
+    --veneer-motion-push: calc(var(--veneer-ref-push) * var(--veneer-motion-scale));
+    --veneer-duration-route: var(--veneer-duration-base);
+    --veneer-duration-push: var(--veneer-duration-slow);
+    --veneer-duration-sheet: var(--veneer-duration-slow);
+  }
+}
+@property --_veneer-fs { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --_veneer-fe { syntax: "<length>"; inherits: false; initial-value: 0px; }

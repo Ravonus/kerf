@@ -1,6 +1,6 @@
 // Keep the shared world available to the example reader.
 import { REGIONS as _REGIONS } from '../../world'
-import { NumberField } from '@weft-js/warp'
+import { NumberField } from '@kerf/veneer'
 
 /** Money: a prefix for the currency, and steps of 50.
  * PageUp and PageDown move by ten steps. */

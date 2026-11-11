@@ -1,0 +1,18 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.tokens {
+:root, [data-expression], [data-density], [data-form], [data-pointer],
+  [data-motion], [data-flair], [data-theme], [data-palette], [data-veneer] {
+    --veneer-cal-hour: calc(48px * var(--veneer-density-k));          /* 36 · 48 · 60 px per hour */
+    --veneer-cal-gutter: 52px;
+    --veneer-cal-hour-w: 64px;                                       /* a timeline hour's least width: past it the rows scroll sideways */
+    --veneer-cal-day-min: 128px;                                     /* a week day's least width (more for a day of overlaps): past it the week scrolls sideways */
+    --veneer-cal-max-h: 100dvh;                                      /* the calendar's own bound when no parent gives it a height */
+    --veneer-cal-bar: calc(var(--veneer-border-emphasis) + 1px);      /* event colour edge 2 · 2.5 · 3 */
+    --veneer-cal-tint: 15%;                                          /* event fill = category over surface */
+    --veneer-arrive-duration: var(--veneer-duration-slow);
+    --veneer-arrive-sweep: calc(var(--veneer-sweep-duration) * 0.9);
+    --veneer-tile-gap: calc(6px * var(--veneer-density-k));
+    --veneer-bubble-radius: max(var(--veneer-radius-surface), calc(14px - 12px * var(--veneer-x)));
+    --veneer-avatar-sm: 24px; --veneer-avatar-md: 32px; --veneer-avatar-lg: 40px;
+  }
+}

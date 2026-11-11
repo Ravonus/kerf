@@ -30,7 +30,7 @@ export function className(node: Element, value: unknown, prev?: unknown) {
   for (const k in value) if ((value as Bag)[k] && !p[k]) node.classList.add(k)
 }
 
-// The compiler resolves names it can see (crates/weft-compiler/src/react.rs); a spread's arrive here. DASHED leaves out
+// The compiler resolves names it can see (crates/kerf-compiler/src/react.rs); a spread's arrive here. DASHED leaves out
 // SVG font attributes and other names no browser reads, so a spread keeps those as written.
 const NAMES: Record<string, string> = {
   className: 'class',

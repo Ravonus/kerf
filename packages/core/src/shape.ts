@@ -25,7 +25,7 @@ const warned = new Set<string>()
 const once = (id: string, message: string) => {
   if (warned.has(id)) return
   warned.add(id)
-  console.warn(`weft: ${message}`)
+  console.warn(`kerf: ${message}`)
 }
 
 /** Letters to same-width stand-ins (`n` is the common lowercase width), spaces kept: lines wrap as the text did, and no text reaches the DOM (§4). */
@@ -116,7 +116,7 @@ export function shapeRead(of: unknown): {
   shape: unknown
   refresh(): void
 } {
-  const fn = (of as Record<symbol, unknown> | null | undefined)?.[Symbol.for('weft.fn')] ?? of
+  const fn = (of as Record<symbol, unknown> | null | undefined)?.[Symbol.for('kerf.fn')] ?? of
   const r = waiting.use?.find((t) => t.shape?.of === fn)
   const shape = r?.shape?.read()
   return {

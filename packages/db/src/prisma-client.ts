@@ -1,10 +1,10 @@
-// Prisma: `withWeft(client, dialect)` returns the same client with the handle the server
+// Prisma: `withKerf(client, dialect)` returns the same client with the handle the server
 // migrates and Q011 reads. Migrations are `prisma/migrations`, applied here because `prisma migrate deploy` isn't in a
 // production bundle. Interactive transactions keep the lock and the statements on one connection. It stays Prisma's own
-// client, so weft can't hold a statement: the server runs the gate per request instead, and a failed run doesn't fail it.
+// client, so kerf can't hold a statement: the server runs the gate per request instead, and a failed run doesn't fail it.
 
-import { gate, register, touch, type DbHandle, type Migration } from '@weft-js/start/db/core'
-import { runtime } from '@weft-js/start/data'
+import { gate, register, touch, type DbHandle, type Migration } from '@kerf/start/db/core'
+import { runtime } from '@kerf/start/data'
 
 type Dialect = DbHandle['dialect']
 interface Tx {
@@ -26,12 +26,12 @@ const statements = (sql: string) =>
     .map((s) => s.replace(/^(\s*--.*\n)+/, '').trim())
     .filter(Boolean)
 
-/** The same client, with `$weft`: the handle the server migrates and Q011 reads. */
-export function withWeft<C extends object>(
+/** The same client, with `$kerf`: the handle the server migrates and Q011 reads. */
+export function withKerf<C extends object>(
   client: C,
   dialect: Dialect,
   { migrate = true }: { migrate?: boolean | undefined } = {},
-): C & { $weft: DbHandle } {
+): C & { $kerf: DbHandle } {
   const c = client as unknown as Client
   const handle: DbHandle = {
     dialect,
@@ -43,32 +43,32 @@ export function withWeft<C extends object>(
             await tx.$queryRawUnsafe(`select pg_advisory_xact_lock(${LOCK})::text`)
           if (dialect === 'mysql') {
             const got = await tx.$queryRawUnsafe<{ got: unknown }[]>(
-              `select get_lock('weft_migrations', 60) as got`,
+              `select get_lock('kerf_migrations', 60) as got`,
             )
             if (Number(got[0]?.got) !== 1)
               throw new Error('another instance held the migration lock for 60s')
           }
           try {
             await tx.$executeRawUnsafe(
-              'create table if not exists __weft_migrations (tag varchar(255) primary key)',
+              'create table if not exists __kerf_migrations (tag varchar(255) primary key)',
             )
             const done = new Set(
               (
-                await tx.$queryRawUnsafe<{ tag: string }[]>('select tag from __weft_migrations')
+                await tx.$queryRawUnsafe<{ tag: string }[]>('select tag from __kerf_migrations')
               ).map((r) => r.tag),
             )
             for (const m of list) {
               if (done.has(m.tag)) continue
               for (const s of statements(m.sql)) await tx.$executeRawUnsafe(s)
               await tx.$executeRawUnsafe(
-                `insert into __weft_migrations (tag) values (${dialect === 'postgresql' ? '$1' : '?'})`,
+                `insert into __kerf_migrations (tag) values (${dialect === 'postgresql' ? '$1' : '?'})`,
                 m.tag,
               )
             }
           } finally {
             // MySQL's lock belongs to the connection, not the transaction: a failed run would keep it in the pool.
             if (dialect === 'mysql')
-              await tx.$queryRawUnsafe(`select release_lock('weft_migrations')`).catch(() => {})
+              await tx.$queryRawUnsafe(`select release_lock('kerf_migrations')`).catch(() => {})
           }
         },
         { maxWait: 60_000, timeout: 120_000 },

@@ -1,17 +1,17 @@
 // A page's stylesheets. All of them inline while the document fits the first flight; past that, the rules the server's
 // HTML can reach, with every sheet behind them as an immutable link that doesn't hold the paint.
 
-import { esc } from '@weft-js/core/markup'
+import { esc } from '@kerf/core/markup'
 
 /**
- * The one order every app shares. Layers rank by first appearance, so this goes before any sheet: warp's own too, or the
+ * The one order every app shares. Layers rank by first appearance, so this goes before any sheet: veneer's own too, or the
  * order would follow whichever component's sheet a page lists first.
  */
 export const LAYER_ORDER =
-  '@layer warp,app,theme,base,components,utilities;@layer warp.tokens,warp.base,warp.signature,warp.layout,warp.components,warp.inputs,warp.inputs-rich,warp.data,warp.app,warp.flows,warp.marketing,warp.canvas,warp.flow;'
+  '@layer veneer,app,theme,base,components,utilities;@layer veneer.tokens,veneer.base,veneer.signature,veneer.layout,veneer.components,veneer.inputs,veneer.inputs-rich,veneer.data,veneer.app,veneer.flows,veneer.marketing,veneer.canvas,veneer.flow;'
 /** Head plus shell, in compressed bytes: about what a first flight carries, less headers and TLS. */
 export const FIRST_PAINT_BYTES = 12 * 1024
-/** Compression at the server's brotli 5, measured on built warp pages (5.9 to 6.2 for CSS, 3.7 to 4 for HTML). */
+/** Compression at the server's brotli 5, measured on built veneer pages (5.9 to 6.2 for CSS, 3.7 to 4 for HTML). */
 const CSS_RATIO = 6
 const HTML_RATIO = 4
 const CRITICAL_MAX = 64
@@ -29,7 +29,7 @@ const SELECTOR_WORD =
 const ENTITY = /&(?!(?:amp|quot|lt|gt);)/
 const ANY_VALUE = '=*'
 // Set on <html> by a script or `setDial`, so the server's HTML can't vouch for them.
-const ROOT_ATTR = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields|warp|scope)$/
+const ROOT_ATTR = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields|veneer|scope)$/
 // `dialScript` restores these before the first paint, so the server's HTML doesn't show their values.
 const DIAL = /^data-(?:theme|expression|density|form|pointer|motion|flair|fields)$/
 // Rules that can't paint until someone acts, so the late sheet is soon enough for them. A state the server can render
@@ -150,7 +150,7 @@ function firstPaint(css, parse, found) {
   return walk(css)
 }
 
-/** `@font-face` rules no remaining rule names: warp's metric fallbacks for families this page doesn't set. */
+/** `@font-face` rules no remaining rule names: veneer's metric fallbacks for families this page doesn't set. */
 function usedFaces(css, parse) {
   const rest = print(parse(css).filter((n) => !n.head.startsWith('@font-face')))
   return print(
@@ -242,29 +242,29 @@ export function sheetId(href) {
 }
 
 /**
- * Browser: lists the stylesheets it now has, by `sheetId`, in the `weft-css` cookie (the latest 32). A page whose sheets
+ * Browser: lists the stylesheets it now has, by `sheetId`, in the `kerf-css` cookie (the latest 32). A page whose sheets
  * are all there is sent links, not rules to paint with first (`pageStyles`). Sent as its source, so it reads nothing else.
  */
 function keepSheets(id) {
-  const c = document.cookie.match(/(?:^|; )weft-css=([^;]*)/),
+  const c = document.cookie.match(/(?:^|; )kerf-css=([^;]*)/),
     s = c ? c[1].split('.') : []
   document.querySelectorAll('link[rel=stylesheet]').forEach(function (l) {
     const x = l.sheet && id(l.getAttribute('href'))
     if (x && s.indexOf(x) < 0) s.push(x)
   })
-  document.cookie = 'weft-css=' + s.slice(-32).join('.') + ';path=/;max-age=31536000;samesite=lax'
+  document.cookie = 'kerf-css=' + s.slice(-32).join('.') + ';path=/;max-age=31536000;samesite=lax'
 }
 
-/** The sheet ids the request's `weft-css` cookie lists. */
+/** The sheet ids the request's `kerf-css` cookie lists. */
 export function keptSheets(cookie) {
-  const m = cookie && /(?:^|;\s*)weft-css=([^;]*)/.exec(cookie)
+  const m = cookie && /(?:^|;\s*)kerf-css=([^;]*)/.exec(cookie)
   return m ? new Set(m[1].split('.')) : undefined
 }
 
 /**
  * Switches on the head's deferred sheets once they're all here, or after 3s without the one that failed. One at a time,
  * each is a restyle of the whole page, and 20 of them cost a table of 50 rows more than all its script. `keep`: then
- * lists them in `weft-css` (`keepSheets`), for a visitor who already has the site's cookies: one without gets none.
+ * lists them in `kerf-css` (`keepSheets`), for a visitor who already has the site's cookies: one without gets none.
  */
 const lateSheets = (keep) =>
   `(a=>Promise.race([Promise.all(a.map(l=>l.sheet||new Promise(r=>{l.addEventListener('load',r);l.addEventListener('error',r)}))),new Promise(r=>setTimeout(r,3e3))]).then(()=>{a.forEach(l=>l.media='all')${keep ? `;(${keepSheets.toString()})(${sheetId.toString()})` : ''}}))([...document.querySelectorAll('link[data-late]')])`
@@ -277,7 +277,7 @@ const MOVE = `(s=>{var d=document,l=d.head.querySelector('link[rel=stylesheet]')
 const blocking = (href) => `<link rel="stylesheet" href="${esc(href)}">\n`
 
 /**
- * `assets.inline` is `{ href: css }`, and `assets.critical` weft's `{ parse, purge }` (none in dev). Returns the head's
+ * `assets.inline` is `{ href: css }`, and `assets.critical` kerf's `{ parse, purge }` (none in dev). Returns the head's
  * stylesheets, and `late(sheets, chunk)`: what a streamed chunk needs in front of it. A parser-inserted link holds all
  * that follows until it loads, so a sheet the head has already asked for is never one: the chunk brings the rules its own
  * HTML reaches, and they move in front of those sheets, which have to keep winning once they load. A sheet the head
@@ -318,7 +318,7 @@ export function pageStyles(assets, css = [], html = '', extra = {}) {
     split &&
     (seen
       ? new Set(seen.found)
-      : read([html, head ?? ''], known, new Set(head?.includes('warp:dials') ? known.dials : [])))
+      : read([html, head ?? ''], known, new Set(head?.includes('veneer:dials') ? known.dials : [])))
   const tags = split
     ? `<style>${criticalCss(inline, sent, assets.critical)}</style>\n` +
       css
@@ -349,7 +349,7 @@ export function pageStyles(assets, css = [], html = '', extra = {}) {
       if (!split) return links
       const found = read([chunk], known, new Set(sent))
       if (found.size === sent.size) return links
-      // All of them, repeats too: warp's rules weigh nothing, so order decides, and new ones alone would land after the head's.
+      // All of them, repeats too: veneer's rules weigh nothing, so order decides, and new ones alone would land after the head's.
       const rules = criticalCss(inline, found, assets.critical)
       sent = found
       return links + (rules && `<style>${rules}</style><script>${MOVE}</script>\n`)

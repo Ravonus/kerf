@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
-import { Kanban } from '@weft-js/warp'
+import { Kanban } from '@kerf/veneer'
 
 import { money as _Shared0 } from './shared-project'
 

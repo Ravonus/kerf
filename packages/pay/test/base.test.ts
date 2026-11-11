@@ -1,4 +1,4 @@
-// The base loads no Stripe code: a rail is chosen by the plugin an app adds, never by importing `@weft-js/pay`.
+// The base loads no Stripe code: a rail is chosen by the plugin an app adds, never by importing `@kerf/pay`.
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

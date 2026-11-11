@@ -1,8 +1,8 @@
 // The publishing helpers: `cache: { warm }` refills the shared store after an invalidation, a preview request never
 // touches the shared store, and `after` runs once the response is finished.
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { after, mutation, preview, query } from '@weft-js/start'
-import { fnOf, runtime } from '@weft-js/start/data'
+import { after, mutation, preview, query } from '@kerf/start'
+import { fnOf, runtime } from '@kerf/start/data'
 import * as exec from '../src/exec'
 import { forgetWarm } from '../src/exec/warm'
 
@@ -74,12 +74,12 @@ test('a preview request neither reads nor writes the shared cache', async () => 
     })
   expect((await exec.fetchQuery(make(), read, undefined)).v).toBe('published')
   value = 'draft'
-  const p = make('a=1; weft-preview=7')
+  const p = make('a=1; kerf-preview=7')
   expect(p.preview).toBe(true)
   expect((await exec.fetchQuery(p, read, undefined)).v).toBe('draft') // fresh, not the stored value
   value = 'published'
   expect((await exec.fetchQuery(make(), read, undefined)).v).toBe('published') // the draft never reached the store
-  expect(scope('weft-previewx=1').preview).toBe(false)
+  expect(scope('kerf-previewx=1').preview).toBe(false)
 })
 
 test('after runs once the response body is read to the end, and never before', async () => {
@@ -127,7 +127,7 @@ test("a mutation's refreshes read with the preview the response leaves on, or wi
   )
   const post = (cookie: string) =>
     exec.createScope(
-      new Request('http://localhost/_weft', { method: 'POST', headers: { cookie } }),
+      new Request('http://localhost/_kerf', { method: 'POST', headers: { cookie } }),
       { store: exec.memoryStore() },
     )
   const refresh: [string, unknown][] = [[read.$id, undefined]]
@@ -141,7 +141,7 @@ test("a mutation's refreshes read with the preview the response leaves on, or wi
     return als.run(s, () => exec.runMutation(s, fn, undefined, refresh))
   }
   try {
-    expect((await mutate('s=1; weft-preview=9', leave)).c?.[0]?.[2]).toBe('live')
+    expect((await mutate('s=1; kerf-preview=9', leave)).c?.[0]?.[2]).toBe('live')
     expect((await mutate('s=1', open)).c?.[0]?.[2]).toBe('draft')
   } finally {
     Object.assign(runtime, was)

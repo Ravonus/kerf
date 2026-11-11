@@ -1,5 +1,5 @@
-import { Boundary, resource } from '@weft-js/core'
-import type { RouteProps } from '@weft-js/start'
+import { Boundary, resource } from '@kerf/core'
+import type { RouteProps } from '@kerf/start'
 import { later } from '../db'
 
 // `title` is awaited (meta reads it); `reviews` and `stock` are deferred: they stream into their Boundaries.

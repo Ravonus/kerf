@@ -1,4 +1,4 @@
-import { ControlBar, Stack, Text } from '@weft-js/warp'
+import { ControlBar, Stack, Text } from '@kerf/veneer'
 import { useControls } from './shared'
 
 export function ControlBarCompact() {

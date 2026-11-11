@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { ModelPicker, Stack, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { ModelPicker, Stack, Text } from '@kerf/veneer'
 import { MODELS } from '../../world'
 
 export function ModelPickerChoose() {

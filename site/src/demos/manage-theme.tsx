@@ -1,5 +1,5 @@
-import { context, state, type State } from '@weft-js/core'
-import { Button, Card, Row, Switch } from '@weft-js/warp'
+import { context, state, type State } from '@kerf/core'
+import { Button, Card, Row, Switch } from '@kerf/veneer'
 
 // A box, so a change reaches every reader. The
 // fallback serves anything outside a provider.

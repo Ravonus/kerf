@@ -1,4 +1,4 @@
-import { ComboChart } from '@weft-js/warp'
+import { ComboChart } from '@kerf/veneer'
 
 import { TRAFFIC } from '../../world'
 

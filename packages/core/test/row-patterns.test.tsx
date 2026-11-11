@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
-import { state } from '@weft-js/core'
-import { flush, render, screen } from '@weft-js/core/test'
+import { state } from '@kerf/core'
+import { flush, render, screen } from '@kerf/core/test'
 
 function Rows({ rows }: { rows: () => [string, { name: [string] }, ...number[]][] }) {
   return (

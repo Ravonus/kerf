@@ -1,4 +1,4 @@
-import { Invoices } from '@weft-js/warp'
+import { Invoices } from '@kerf/veneer'
 import { BILLS } from '../../world'
 
 export const InvoicesHistory = () => (

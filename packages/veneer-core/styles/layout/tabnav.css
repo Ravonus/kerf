@@ -1,0 +1,36 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* tabs-as-nav: links with aria-current, not role=tab (they change the URL) */
+:where([data-scope="tabnav"]) { min-inline-size: 0; }
+:where([data-scope="tabnav"]:not([data-sticky])) { position: relative; }
+:where([data-scope="tabnav"] ul) {
+  display: flex; gap: var(--veneer-space-tight); margin: 0; padding: 0; list-style: none;
+  border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain;
+}
+:where([data-scope="tabnav"] a) {
+  position: relative; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  block-size: var(--veneer-control-md); padding-inline: var(--veneer-pad-control);
+  color: var(--veneer-color-text-subtle); text-decoration: none; font-weight: 500;
+  border-radius: var(--veneer-radius-control) var(--veneer-radius-control) 0 0;
+  transition: color var(--veneer-duration-fast) var(--veneer-ease-out), background-color var(--veneer-duration-fast);
+}
+:where([data-scope="tabnav"] a:hover) { color: var(--veneer-color-text); background: var(--veneer-color-surface-hover); }
+:where([data-scope="tabnav"] a[aria-current]) { color: var(--veneer-color-text); }
+:where([data-scope="tabnav"] a)::after {
+  content: ""; position: absolute; inset-inline: var(--veneer-pad-control); inset-block-end: -1px;
+  block-size: var(--veneer-border-emphasis); background: var(--veneer-color-accent-solid);
+  transform: scaleX(0); transition: transform var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="tabnav"] a[aria-current])::after { transform: scaleX(1); }
+:where([data-scope="tabnav"] a:focus-visible) { outline-offset: -2px; }
+@container veneer-page (min-width: 1000px) {
+:where([data-scope="tabnav"][data-orientation="auto"] ul) { flex-direction: column; gap: 2px; border: 0; }
+:where([data-scope="tabnav"][data-orientation="auto"] a) { inline-size: 100%; box-sizing: border-box; border-radius: var(--veneer-radius-control); }
+:where([data-scope="tabnav"][data-orientation="auto"] a)::after {
+    inset: 6px auto 6px 0; inline-size: var(--veneer-border-emphasis); block-size: auto; transform: scaleY(0);
+  }
+:where([data-scope="tabnav"][data-orientation="auto"] a[aria-current]) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="tabnav"][data-orientation="auto"] a[aria-current])::after { transform: scaleY(1); }
+}
+}

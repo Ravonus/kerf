@@ -1,4 +1,4 @@
-import { Menu, Row, Stack, Text } from '@weft-js/warp'
+import { Menu, Row, Stack, Text } from '@kerf/veneer'
 
 export const MenuRowActions = () => (
   <Row

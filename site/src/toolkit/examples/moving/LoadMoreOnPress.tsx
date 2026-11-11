@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { LoadMore, Shape, Stack } from '@weft-js/warp'
+import { derived, state } from '@kerf/core'
+import { LoadMore, Shape, Stack } from '@kerf/veneer'
 import { PROJECTS } from '../../world'
 import { ProjectRow } from './shared'
 

@@ -151,7 +151,7 @@ function languageHost(ts, service, sync = () => {}) {
         length: d.length ?? 0,
         code: d.code,
         text: ts.flattenDiagnosticMessageText(d.messageText, '\n'),
-        weft: derivedWrite(ts, s.getProgram(), d) ?? boxMismatch(ts, s.getProgram(), d),
+        kerf: derivedWrite(ts, s.getProgram(), d) ?? boxMismatch(ts, s.getProgram(), d),
       }))
     },
     close() {},

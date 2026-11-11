@@ -1,4 +1,4 @@
-// Copy a variant out of its folder (read only), install, and build it in the work area. Weft variants always go through
+// Copy a variant out of its folder (read only), install, and build it in the work area. Kerf variants always go through
 // local.mjs, so they're on tarballs of this checkout whatever their package.json says.
 import { repoRoot } from '../../scripts/lib/helpers.mjs'
 import { createHash } from 'node:crypto'
@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { quote } from './serve.mjs'
 import { spread } from './stats.mjs'
 import { SECRET, SKIP, files } from './build/copy.mjs'
-import { fingerprint, sha, weftInputs } from './build/fingerprint.mjs'
+import { fingerprint, sha, kerfInputs } from './build/fingerprint.mjs'
 import { buildWithMaps } from './build/maps.mjs'
 import { linesOfCode, repoState } from './build/repo.mjs'
 import { install, localMjs, placeVariant, reuseStamp, stageSource } from './build/stage.mjs'
@@ -17,7 +17,7 @@ const repo = repoRoot
 
 /** One pack per checkout state, however many variants and runs: the tarballs only change when the packages do. */
 export async function packOnce(store, log) {
-  const inputs = weftInputs(),
+  const inputs = kerfInputs(),
     stamp = join(store, 'inputs')
   mkdirSync(store, { recursive: true })
   if (
@@ -28,7 +28,7 @@ export async function packOnce(store, log) {
     return { inputs, packed: false }
   await run(`${quote(process.execPath)} ${quote(localMjs)} pack`, {
     cwd: repo,
-    env: { WEFT_LOCAL_DIR: store, npm_config_min_release_age: '3' },
+    env: { KERF_LOCAL_DIR: store, npm_config_min_release_age: '3' },
     log,
   })
   writeFileSync(stamp, inputs)
@@ -36,7 +36,7 @@ export async function packOnce(store, log) {
 }
 
 /** What decides a build's output. Same key, same build: it's reused rather than made again. */
-function buildKey(v, app, weft) {
+function buildKey(v, app, kerf) {
   const h = createHash('sha256').update(
     JSON.stringify([
       process.version,
@@ -46,7 +46,7 @@ function buildKey(v, app, weft) {
       v.env,
       app.env,
       app.setup,
-      v.tarballs && weft,
+      v.tarballs && kerf,
       ...(app.db ? [app.db.hash] : []),
     ]),
   )
@@ -61,10 +61,10 @@ function buildKey(v, app, weft) {
 export async function prepare(
   app,
   v,
-  { work, runId, store, weft, buildRuns, rebuild, quick = false },
+  { work, runId, store, kerf, buildRuns, rebuild, quick = false },
 ) {
   placeVariant(app, v, work)
-  const key = buildKey(v, app, weft),
+  const key = buildKey(v, app, kerf),
     stamp = join(work, 'apps', app.name, `${v.name}.build.json`)
   const reused = !rebuild && reuseStamp({ v, stamp, key, quick })
   if (reused) return { build: reused.build, reused: true, key }
@@ -79,7 +79,7 @@ export async function prepare(
       key,
       quick,
       canary: v.canary,
-      weft: v.weft,
+      kerf: v.kerf,
       maps: v.maps,
       build,
       hashes: sha([...v.fresh.hashes].sort().join()),

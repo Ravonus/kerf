@@ -1,5 +1,5 @@
-import type { StagePainter } from '@weft-js/warp'
-import { CanvasStage } from '@weft-js/warp'
+import type { StagePainter } from '@kerf/veneer'
+import { CanvasStage } from '@kerf/veneer'
 
 // -- CanvasStage
 
@@ -14,8 +14,8 @@ export const PLAIN: Record<string, StagePainter> = {
   button(p, s) {
     s.ctx.fillStyle = s.color(
       p.hover
-        ? '--warp-color-accent-solid-hover'
-        : '--warp-color-accent-solid',
+        ? '--veneer-color-accent-solid-hover'
+        : '--veneer-color-accent-solid',
     )
     s.ctx.beginPath()
     s.ctx.roundRect(p.x, p.y + p.press * 2, p.w, p.h, p.r)
@@ -25,7 +25,7 @@ export const PLAIN: Record<string, StagePainter> = {
     s.ctx.shadowColor = 'rgb(0 0 0 / 0.18)'
     s.ctx.shadowBlur = 12 + p.hover * 12
     s.ctx.shadowOffsetY = 4 + p.hover * 4
-    s.ctx.fillStyle = s.color('--warp-color-surface')
+    s.ctx.fillStyle = s.color('--veneer-color-surface')
     s.ctx.beginPath()
     s.ctx.roundRect(p.x, p.y, p.w, p.h, p.r)
     s.ctx.fill()

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Weft + warp against the React and Solid kits people ship, on one dashboard (README.md).
+// Kerf + veneer against the React and Solid kits people ship, on one dashboard (README.md).
 //   node measure.mjs                       size, load, parity and DOM work; writes results.json
 //   node measure.mjs --long-list           only the long list, writes nothing
 import { execFileSync } from 'node:child_process'
@@ -28,7 +28,7 @@ const META = Object.fromEntries(
 const STACKS = Object.keys(META).sort((a, b) => META[a].order - META[b].order)
 const SWEEP = [1, 10, 50, 200]
 const ROWS = [20, 100, 200]
-const require = createRequire(join(here, '../../packages/warp/package.json'))
+const require = createRequire(join(here, '../../packages/veneer/package.json'))
 const { chromium } = require('playwright-core')
 
 const types = {
@@ -142,7 +142,7 @@ if (kept.length) {
     process.stderr.write(`design/${d.name}\n`)
     build(dir)
     const a = await audit(browser, join(dir, 'dist'))
-    ;(results[d.name === 'weft-ds' ? 'weft-warp' : d.name] ??= { label: d.name }).design = {
+    ;(results[d.name === 'kerf-ds' ? 'kerf-veneer' : d.name] ??= { label: d.name }).design = {
       axe: a.axe,
       contrast: a.contrast,
       distinct: a.distinctTotal,

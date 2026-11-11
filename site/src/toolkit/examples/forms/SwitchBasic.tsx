@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Switch } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Switch } from '@kerf/veneer'
 
 export function SwitchBasic() {
   const on = state(true)

@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   AuthDone,
   Input,
@@ -7,15 +7,15 @@ import {
   PasswordMeter,
   SignUp,
   Stack,
-} from '@weft-js/warp'
-import type { SignUpValues } from '@weft-js/warp'
+} from '@kerf/veneer'
+import type { SignUpValues } from '@kerf/veneer'
 import { wait, PROVIDERS } from './sign-in'
 
 const authenticatorLede =
   'Open your authenticator app. The ' +
   'sample code is 123456.'
 
-export function SignUpWeft() {
+export function SignUpKerf() {
   const pending = state(false)
   const made = state('')
   const submit = async (values: SignUpValues) => {

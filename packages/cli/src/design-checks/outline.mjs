@@ -1,11 +1,11 @@
 import { scanParent } from './rules.mjs'
 
-export function checkOutline({ el, warpName, headings, solids, scan }) {
+export function checkOutline({ el, veneerName, headings, solids, scan }) {
   // -- outline --
   const h = /^h([1-6])$/.exec(el.name)
   const level = h
     ? Number(h[1])
-    : el.name === 'Heading' && warpName('Heading')
+    : el.name === 'Heading' && veneerName('Heading')
       ? Number(el.attr('level')?.value ?? /^\d$/.exec(el.attr('level')?.expr ?? '')?.[0] ?? 2)
       : 0
   if (level) headings.push({ level, el })
@@ -13,7 +13,7 @@ export function checkOutline({ el, warpName, headings, solids, scan }) {
   // -- one primary action per region --
   if (
     el.name === 'Button' &&
-    warpName('Button') &&
+    veneerName('Button') &&
     (!el.attr('emphasis') || el.attr('emphasis')?.value === 'solid') &&
     !el.attr('tone')
   ) {

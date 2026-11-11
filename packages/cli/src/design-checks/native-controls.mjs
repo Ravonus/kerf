@@ -7,7 +7,7 @@ export function checkNativeControls({ el, f, report, localComponents }) {
       'D005',
       el.start,
       el.tagEnd,
-      `\`type="${el.attr('type').value}"\` is painted by the browser: <${typed}> is warp's.`,
+      `\`type="${el.attr('type').value}"\` is painted by the browser: <${typed}> is veneer's.`,
     )
   if (/^[a-z]/.test(el.name) && el.name !== 'iframe' && el.attr('title'))
     report(
@@ -27,7 +27,7 @@ export function checkNativeControls({ el, f, report, localComponents }) {
       'D005',
       el.start,
       el.tagEnd,
-      `Native <${el.name}> in a warp app: <${NATIVE[el.name]}> brings the focus ring, the sweep, the tones and the touch target.`,
+      `Native <${el.name}> in a veneer app: <${NATIVE[el.name]}> brings the focus ring, the sweep, the tones and the touch target.`,
       swap
         ? {
             description: 'Use <Button>',

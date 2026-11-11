@@ -1,5 +1,5 @@
-// @weft-js/core/hmr: hot updates for dev builds (PLAN §3.6, research 21). Only compiled dev modules import it (the compiler's
-// `hmr` option, set by the weft() Vite plugin when serving); production builds never do.
+// @kerf/core/hmr: hot updates for dev builds (PLAN §3.6, research 21). Only compiled dev modules import it (the compiler's
+// `hmr` option, set by the kerf() Vite plugin when serving); production builds never do.
 //
 // Each top-level component is registered under `file#Name` with a hash of its source. A registered component mounts
 // as a derived value that re-runs when its entry's version changes, so a new module version swaps the implementation
@@ -125,7 +125,7 @@ function capture() {
     const scroll = () => {
       for (const s of scrolled) {
         const el = find(s)
-        // instant: a smooth root (warp's default) would glide back to where the edit left it
+        // instant: a smooth root (veneer's default) would glide back to where the edit left it
         if (!el) continue
         if (typeof el.scrollTo === 'function')
           el.scrollTo({ top: s.top, left: s.left, behavior: 'instant' })
@@ -177,7 +177,7 @@ function mount(e: Entry, props: unknown, name?: string, loc?: string) {
     } catch (err) {
       if (runs === 1) throw err
       console.error(
-        `weft hmr: <${e.name}> threw while updating; keeping its last output until the next edit\n`,
+        `kerf hmr: <${e.name}> threw while updating; keeping its last output until the next edit\n`,
         err,
       )
       return last

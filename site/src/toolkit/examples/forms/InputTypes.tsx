@@ -1,4 +1,4 @@
-import { Input, Stack } from '@weft-js/warp'
+import { Input, Stack } from '@kerf/veneer'
 
 export const InputTypes = () => (
   <Stack gap="group">
@@ -17,7 +17,7 @@ export const InputTypes = () => (
     <Input
       label="Repository"
       type="url"
-      placeholder="https://github.com/weft/storefront"
+      placeholder="https://github.com/kerf/storefront"
       icon="link"
     />
   </Stack>

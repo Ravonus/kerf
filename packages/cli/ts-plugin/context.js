@@ -45,7 +45,7 @@ function createContext(ts, info, ls) {
     try {
       engine.run(host)
     } catch (e) {
-      info.project.projectService.logger.info(`weft props: ${e.stack}`)
+      info.project.projectService.logger.info(`kerf props: ${e.stack}`)
     } finally {
       busy = false
     }

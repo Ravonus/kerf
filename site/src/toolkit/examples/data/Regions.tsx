@@ -1,4 +1,4 @@
-import { PivotTable } from '@weft-js/warp'
+import { PivotTable } from '@kerf/veneer'
 
 import { PROJECTS } from '../../world'
 

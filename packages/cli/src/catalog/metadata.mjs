@@ -6,14 +6,14 @@ export const metadataHead = [
     by: 'cli',
     catches:
       "No `site.url`: a build has no absolute canonical, og:url or og:image, and a server takes them from the request's Host header",
-    fix: 'Set `site.url`, or `WEFT_SITE_URL` in the deploy environment',
+    fix: 'Set `site.url`, or `KERF_SITE_URL` in the deploy environment',
   },
   {
     code: 'H002',
     severity: 'error',
     by: 'cli',
     catches:
-      'Param route with an `auto` image on a static-only preset and no `prerender` (`weft routes --meta --preset static`)',
+      'Param route with an `auto` image on a static-only preset and no `prerender` (`kerf routes --meta --preset static`)',
     fix: 'Export `prerender`, or set `og.image`',
   },
   {
@@ -21,7 +21,7 @@ export const metadataHead = [
     severity: 'warning',
     by: 'cli',
     catches:
-      'No description after merging the config, layouts and route (`weft check`, per route and on `site`)',
+      'No description after merging the config, layouts and route (`kerf check`, per route and on `site`)',
     fix: "Set `site.description` (or the route's `meta.description`)",
   },
   {
@@ -74,7 +74,7 @@ export const metadataHead = [
     severity: 'info',
     by: 'cli',
     catches:
-      "A route `weft check` couldn't fully check: it failed here, or a param route with no page to sample",
+      "A route `kerf check` couldn't fully check: it failed here, or a param route with no page to sample",
     fix: 'Export `prerender`, or link to a page of it; `check: { routes: false }` turns the route pass off',
   },
 ]
@@ -94,7 +94,7 @@ export const metadataCards = [
     severity: 'error',
     by: 'cli',
     catches:
-      '`meta` reads a box or calls a hook (metadata is plain data); found statically by `weft check`',
+      '`meta` reads a box or calls a hook (metadata is plain data); found statically by `kerf check`',
     fix: 'Compute it from `params` and `data`',
   },
   {

@@ -4,7 +4,7 @@ import {
   Split,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 export const NavContents = () => (
   <Split

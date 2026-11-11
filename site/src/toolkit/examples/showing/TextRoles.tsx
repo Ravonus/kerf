@@ -1,4 +1,4 @@
-import { Stack, Text } from '@weft-js/warp'
+import { Stack, Text } from '@kerf/veneer'
 
 export const TextRoles = () => (
   <Stack gap="related">

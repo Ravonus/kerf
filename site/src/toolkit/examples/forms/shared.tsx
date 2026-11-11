@@ -1,5 +1,5 @@
-import { Badge, Row } from '@weft-js/warp'
-import type { SegmentedOption } from '@weft-js/warp'
+import { Badge, Row } from '@kerf/veneer'
+import type { SegmentedOption } from '@kerf/veneer'
 import {
   DEPLOYS,
   PEOPLE,

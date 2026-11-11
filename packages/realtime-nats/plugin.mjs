@@ -1,18 +1,18 @@
-// nats() for weft.config.ts: this package as the `realtime.bus` provider. Listed here, it replaces the memory bus, and
+// nats() for kerf.config.ts: this package as the `realtime.bus` provider. Listed here, it replaces the memory bus, and
 // a bus set in `src/realtime.server.ts` still wins.
-import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
+import { definePlugin, defineSlot, provide } from '@kerf/core/plugin'
 
 const slot = defineSlot({ id: 'realtime.bus', version: 1, cardinality: 'one', sides: ['server'] })
 
 export const nats = definePlugin({
-  name: '@weft-js/realtime-nats',
+  name: '@kerf/realtime-nats',
   version: '0.1.0',
-  weft: '*',
-  permissions: { net: ['env:NATS_URL'], env: ['NATS_URL', 'WEFT_BUILD'] },
+  kerf: '*',
+  permissions: { net: ['env:NATS_URL'], env: ['NATS_URL', 'KERF_BUILD'] },
   contribute: (options) => ({
     provides: [
       provide(slot, {
-        sides: { server: { module: '@weft-js/realtime-nats', export: 'bus', options } },
+        sides: { server: { module: '@kerf/realtime-nats', export: 'bus', options } },
       }),
     ],
     agents: {

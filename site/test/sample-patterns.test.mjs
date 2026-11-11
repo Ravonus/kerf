@@ -42,7 +42,7 @@ const require = createRequire(new URL('../../packages/cli/package.json', import.
 const typescriptModules = dirname(dirname(require.resolve('typescript/package.json')))
 
 function fixture() {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-pattern-gate-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-pattern-gate-'))
   const put = (path, text) => {
     const dest = join(dir, path)
     mkdirSync(dirname(dest), { recursive: true })

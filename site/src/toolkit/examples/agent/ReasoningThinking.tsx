@@ -1,4 +1,4 @@
-import { Reasoning } from '@weft-js/warp'
+import { Reasoning } from '@kerf/veneer'
 
 export const ReasoningThinking = () => (
   <Reasoning

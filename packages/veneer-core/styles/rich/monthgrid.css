@@ -1,0 +1,15 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs-rich {
+/* -- monthgrid */
+  :where([data-scope="monthgrid"]) { min-inline-size: 260px; }
+  :where([data-scope="monthgrid"] [data-part="head"]:not([data-scope="monthgrid"] :is([data-scope="artifact"],[data-scope="calendar"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="sidenav"],[data-scope="transport"],[data-scope="truncate"]) *:not([data-scope="monthgrid"] :is([data-scope="artifact"],[data-scope="calendar"],[data-scope="chart"],[data-scope="checklist"],[data-scope="codeblock"],[data-scope="diff"],[data-scope="log"],[data-scope="menu-screen"],[data-scope="meter"],[data-scope="pay-frame"],[data-scope="prefs-matrix"],[data-scope="sidenav"],[data-scope="transport"],[data-scope="truncate"]) [data-scope="monthgrid"] *))) { display: flex; align-items: center; justify-content: space-between; margin-block-end: 8px; font-family: var(--veneer-text-title-font); font-size: var(--veneer-text-heading-size); }
+  :where([data-scope="monthgrid"] [role="grid"]) { display: grid; gap: 4px; }
+  :where([data-scope="monthgrid"] [role="row"]) { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  :where([data-scope="monthgrid"] [role="gridcell"]) { all: unset; box-sizing: border-box; display: grid; place-items: center; block-size: 40px; border-radius: var(--veneer-radius-control); cursor: pointer; font-size: var(--veneer-text-body-size); text-transform: capitalize; transition: background-color var(--veneer-duration-fast); }
+  :where([data-pointer="coarse"] [data-scope="monthgrid"] [role="gridcell"]) { block-size: 48px; }
+  @media (pointer: coarse) { :where([data-scope="monthgrid"] [role="gridcell"]) { block-size: 48px; } }
+  :where([data-scope="monthgrid"] [role="gridcell"]:hover) { background: var(--veneer-color-surface-hover); }
+  :where([data-scope="monthgrid"] [role="gridcell"][aria-current="date"]) { box-shadow: inset 0 0 0 var(--veneer-border-hairline) var(--veneer-color-accent-solid); }
+  :where([data-scope="monthgrid"] [role="gridcell"][aria-selected="true"]) { background: var(--veneer-color-accent-solid); color: var(--veneer-color-accent-on-solid); font-weight: 500; }
+  :where([data-scope="monthgrid"] [role="gridcell"]:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 2px; }
+}

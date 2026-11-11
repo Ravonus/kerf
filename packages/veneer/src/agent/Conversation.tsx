@@ -1,0 +1,70 @@
+import { DownIcon } from '@kerf/veneer-icons'
+import { stick } from '@kerf/veneer-core'
+import { derived, state } from '@kerf/core'
+import { Button } from '../Button'
+import { use } from '@kerf/veneer-core/kerf'
+import '../styles'
+import '@kerf/veneer-core/styles/app/tokens.css'
+import '@kerf/veneer-core/styles/app/base.css'
+import '@kerf/veneer-core/styles/app/thread.css'
+
+/**
+ * Conversation (07 §1.1, §1.3, §1.6): role=log with aria-live off (a turn announces its own end), keyed turns as
+ * `children`, an optional app bar and the Prompt below. It sticks to the bottom only within 48px of it; otherwise Jump
+ * to latest appears, and pressing it goes back to the end and focuses the log.
+ */
+export function Conversation({
+  label = 'Assistant conversation',
+  title,
+  bar,
+  prompt,
+  children,
+}: {
+  label?: string | undefined
+  title?: unknown
+  bar?: unknown
+  prompt?: unknown
+  children?: unknown
+}) {
+  const away = state(false)
+  const head = derived(() => title !== undefined || bar !== undefined)
+  let log: HTMLElement | undefined
+  use(
+    stick,
+    () => log,
+    () => ({ onAway: (a: boolean) => (away.value = a) }),
+  )
+  const jump = () => {
+    log!.scrollTop = log!.scrollHeight
+    log!.focus({ preventScroll: true })
+    away.value = false
+  }
+  return (
+    <section data-scope="thread" data-part="root" aria-label={label}>
+      {head.value && (
+        <div data-part="app-bar">
+          <h2 data-part="app-title">{title}</h2>
+          <span data-part="spacer"></span>
+          {bar}
+        </div>
+      )}
+      <div
+        ref={(n) => (log = n)}
+        data-part="log"
+        role="log"
+        aria-live="off"
+        aria-label="Messages"
+        tabindex="0"
+      >
+        {children}
+      </div>
+      {away.value && (
+        <Button emphasis="soft" tone="neutral" size="sm" data-part="jump" onClick={jump}>
+          <DownIcon />
+          Jump to latest
+        </Button>
+      )}
+      <div style="grid-row:3">{prompt}</div>
+    </section>
+  )
+}

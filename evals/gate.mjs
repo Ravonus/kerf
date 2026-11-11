@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// The Phase 1b exit check for the test gate (`weft test --gate`, PLAN §9): it accepts every eval reference test and
+// The Phase 1b exit check for the test gate (`kerf test --gate`, PLAN §9): it accepts every eval reference test and
 // catches planted junk tests. Each scenario is a diff (before → after) the gate judges like an agent's change.
 //
 //   node gate.mjs [--starter <dir>] [--budget 120] [--json]
 //
-// Scenarios on the v3 shop in weft (the evals with a weft reference):
+// Scenarios on the v3 shop in kerf (the evals with a kerf reference):
 //   fresh    the whole app and every hidden test, from nothing
-//   tickets  starter → reference with the ticket tests t1–t3 (needs a weft starter: tasks-v3/shop/starter/weft/src,
+//   tickets  starter → reference with the ticket tests t1–t3 (needs a kerf starter: tasks-v3/shop/starter/kerf/src,
 //            or --starter)
 //   junk     the tickets diff (fresh without a starter) plus planted junk tests and a weakened baseline test; every
 //            junk test must be caught, and every reference test still accepted
@@ -30,17 +30,17 @@ const arg = (name, fallback) => {
 }
 const json = process.argv.includes('--json')
 const budgetSec = Number(arg('budget', 120))
-const fwDir = join(root, 'frameworks', 'weft')
+const fwDir = join(root, 'frameworks', 'kerf')
 const hidden = join(root, 'tasks-v3', 'shop', 'hidden')
-const reference = join(root, 'reference-v3', 'weft', 'src')
-const starterDir = arg('starter', join(root, 'tasks-v3', 'shop', 'starter', 'weft', 'src'))
+const reference = join(root, 'reference-v3', 'kerf', 'src')
+const starterDir = arg('starter', join(root, 'tasks-v3', 'shop', 'starter', 'kerf', 'src'))
 const starter = existsSync(starterDir) ? starterDir : null
 const log = (...a) => {
   if (!json) console.error(...a)
 }
 
 if (!existsSync(join(fwDir, 'node_modules'))) {
-  console.error('evals/frameworks/weft has no node_modules: run `npm ci` there first')
+  console.error('evals/frameworks/kerf has no node_modules: run `npm ci` there first')
   process.exit(2)
 }
 
@@ -100,7 +100,7 @@ const weakenedBaseline = read('baseline.test.tsx').replace(
   "expect(lineField('Apple', 'qty')).toBeTruthy()",
 )
 
-/** Lay out one scenario under frameworks/weft/.gate/<name> (its node_modules resolve from there) and run the gate. */
+/** Lay out one scenario under frameworks/kerf/.gate/<name> (its node_modules resolve from there) and run the gate. */
 async function scenario(name, { before, after, tests }) {
   const dir = join(fwDir, '.gate', name)
   rmSync(dir, { recursive: true, force: true })
@@ -111,10 +111,10 @@ async function scenario(name, { before, after, tests }) {
   }
   write(
     'vitest.config.ts',
-    `import weft from '@weft-js/core/vite'
+    `import kerf from '@kerf/core/vite'
 import { defineConfig } from 'vitest/config'
 export default defineConfig({
-  plugins: [weft()],
+  plugins: [kerf()],
   resolve: { alias: { '#adapter': ${JSON.stringify(join(fwDir, 'adapter.tsx'))} } },
   test: { environment: 'jsdom', globals: true, include: ['*.test.tsx'], testTimeout: 10_000 },
 })

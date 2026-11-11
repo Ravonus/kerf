@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { RolesMatrix } from '@weft-js/warp'
-import type { Permission } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { RolesMatrix } from '@kerf/veneer'
+import type { Permission } from '@kerf/veneer'
 import { TEAM_PERMISSIONS, TEAM_ROLES } from '../../world'
 
 export function RolesMatrixEdit() {

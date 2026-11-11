@@ -14,7 +14,7 @@ export function checkFiles(root, exclude, tokens, reporter) {
       const prop = m[1].toLowerCase()
       if (prop.startsWith('--')) continue
       const start = m.index + m[0].indexOf(m[2], m[1].length + 1)
-      // Restyling warp's parts and the app's theme file are the supported ways past tokens: worth a look, not a stop.
+      // Restyling veneer's parts and the app's theme file are the supported ways past tokens: worth a look, not a stop.
       const opening = css.lastIndexOf('{', m.index)
       const selector = css.slice(
         Math.max(css.lastIndexOf('}', opening), css.lastIndexOf(';', opening)) + 1,

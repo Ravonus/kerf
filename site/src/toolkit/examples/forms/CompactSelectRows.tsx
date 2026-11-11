@@ -1,10 +1,10 @@
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 import {
   CompactSelect,
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { PROJECTS } from '../../world'
 import { PAGE_SIZES } from './shared'
 

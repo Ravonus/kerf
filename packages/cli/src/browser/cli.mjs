@@ -1,4 +1,4 @@
-// `weft browser <command>`: JSON on stdout with --json, a readable form on stderr otherwise.
+// `kerf browser <command>`: JSON on stdout with --json, a readable form on stderr otherwise.
 
 import { browser, browserUsage, cliParams } from './commands.mjs'
 
@@ -25,7 +25,7 @@ export async function browserCommand(args, { print, say, io }) {
         ok: false,
         error: { code: error.code ?? 'E_INTERNAL', message: error.message, tabs: error.tabs },
       })
-    say(`weft browser ${cmd}: ${error.message}`)
+    say(`kerf browser ${cmd}: ${error.message}`)
     return 1
   }
 }

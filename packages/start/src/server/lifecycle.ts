@@ -19,14 +19,14 @@ export function withRequestIds(
 
 /**
  * What a serving process starts besides answering requests: the cron schedule and the job queue, and on shutdown,
- * stopping both (letting running jobs finish) and closing realtime connections. A build, and `weft routes --meta`, load the server to read it, not to run it.
+ * stopping both (letting running jobs finish) and closing realtime connections. A build, and `kerf routes --meta`, load the server to read it, not to run it.
  */
 export function lifecycle(
   options: HandlerOptions,
   services: ReturnType<typeof makeServices>,
   enter: (scope: Scope, run: () => Promise<void>) => Promise<void>,
 ) {
-  if (process.env.WEFT_BUILD || options.requestOrigin === false) return
+  if (process.env.KERF_BUILD || options.requestOrigin === false) return
   const deps = {
     scopeOptions: services.scopeOptions,
     store: options.store ?? exec.defaultStore,

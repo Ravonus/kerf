@@ -2,13 +2,13 @@
 
 :::learn
 - How to show different markup depending on a condition, with `? :` and `&&`
-- Why an early `return` that depends on state or props doesn't work in Weft, and what to write instead
+- Why an early `return` that depends on state or props doesn't work in Kerf, and what to write instead
 - How to render nothing
 - What happens to the markup, and the state inside it, when a condition flips
 :::
 
 Your components often need to show different things in different situations: a sign-in button or a profile, an empty
-state or a list, a struck-through item once it's packed. In Weft you write conditions with the same JavaScript you'd use
+state or a list, a struck-through item once it's packed. In Kerf you write conditions with the same JavaScript you'd use
 in React, `? :` and `&&`, inside the markup. The one thing that changes is where the condition goes: since a component's
 body runs once, the condition has to live in the markup, where it can be checked again.
 
@@ -31,7 +31,7 @@ function Item(
 }
 ```
 
-In React that works, because `Item` runs again whenever `isPacked` changes. In Weft, `Item` runs once. The `if` would
+In React that works, because `Item` runs again whenever `isPacked` changes. In Kerf, `Item` runs once. The `if` would
 check `isPacked` when the item first appears, pick a branch, and never look again, so ticking the item later would
 change nothing. The compiler stops you with **W001**: "`isPacked` is read once when the component is set up, so this
 never updates."
@@ -70,7 +70,7 @@ that's when the answer could change after the body has run.
 
 ## Conditionally returning nothing with `null`
 
-Sometimes a component shouldn't show anything at all. In React you'd `return null` early. In Weft the same rule applies:
+Sometimes a component shouldn't show anything at all. In React you'd `return null` early. In Kerf the same rule applies:
 `return null` is fine when it's unconditional, but a `return` that depends on a prop or state is **W001**, and so is a
 ternary on the `return` line:
 
@@ -125,12 +125,12 @@ small component of its own.
 
 :::deepdive Are these two the same?
 In React, `{isPacked ? <del>{name}</del> : name}` and the early-return version produce the same result: React compares
-the output either way. In Weft they differ, and the markup version is the one that works, but it's worth seeing
+the output either way. In Kerf they differ, and the markup version is the one that works, but it's worth seeing
 exactly what it does.
 
 The compiler tracks a conditional's test on its own, separately from its branches. While `isPacked` keeps the same
 value, the branch on screen stays exactly as it is, and the expressions inside it (`{name}` here) update in place. Only
-when the test's result changes does Weft remove the old branch, cleaning up everything it owned, and build the other.
+when the test's result changes does Kerf remove the old branch, cleaning up everything it owned, and build the other.
 So a condition costs nothing until it flips.
 :::
 
@@ -158,8 +158,8 @@ When `isPacked` is `false`, the whole expression is `false`, and `false` renders
 side is falsy, and `0` is a number, which renders as text. Make the left side a boolean:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Badge, Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Badge, Button } from '@kerf/veneer'
 
 export function Inbox() {
   const count = state(0)
@@ -181,7 +181,7 @@ result changes on every new count, and the badge is rebuilt each time.
 
 ### Choosing markup in a function
 
-In React you might assign markup to a variable with an `if` and use the variable in the return. In Weft a variable in
+In React you might assign markup to a variable with an `if` and use the variable in the return. In Kerf a variable in
 the body is set once, so give the choice a function instead, and call the function in the markup:
 
 ```tsx
@@ -224,7 +224,7 @@ Hidden markup still costs its DOM nodes and keeps its bindings running, so use `
 often, and a condition for the rest. A third option for state that should outlive the markup is to keep the state in a
 parent, or in [defineState](/learn/app-wide-state), and pass it down: then the child can come and go and the data stays.
 
-:::deepdive How Weft knows what to clean up
+:::deepdive How Kerf knows what to clean up
 Each piece of markup is built under an owner: the binding that made it. When the condition flips, that binding runs
 again, and before it does, it disposes everything it owned the last time: the bindings in the old branch, the watches
 created there, the `onCleanup` callbacks registered there. Nothing has to be unsubscribed by hand, and nothing leaks.
@@ -344,7 +344,7 @@ This greeting never changes after it first appears, and the compiler reports W00
 
 <!-- example: skip the starting point, which reports W001 -->
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Greeting() {
   const user = state<string | null>(null)
@@ -362,7 +362,7 @@ export function Greeting() {
 Move the branch into the markup, so it's checked every time `user` changes:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Greeting() {
   const user = state<string | null>(null)
@@ -386,7 +386,7 @@ Pressing the button sets `user`, the test's result flips, and the button is swap
 Closing this panel throws away what was typed in it. Keep the text while the panel is closed, without moving any state.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Notes() {
   const open = state(true)
@@ -407,7 +407,7 @@ export function Notes() {
 Keep the `<textarea>` in the page and hide it, so it isn't removed and made again:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Notes() {
   const open = state(true)

@@ -1,8 +1,8 @@
-// text() for weft.config.ts (research 13 §3.4, research 26 §3, research 33 §6): declares the app's fonts once and
-// provides font.build@1 and text.measure@1. The build (src/build.mjs) runs in @weft-js/core/vite through
-// `.weft/slots/font.build.build.json`; the engine (src/measure.mjs) loads only when something measures.
+// text() for kerf.config.ts (research 13 §3.4, research 26 §3, research 33 §6): declares the app's fonts once and
+// provides font.build@1 and text.measure@1. The build (src/build.mjs) runs in @kerf/core/vite through
+// `.kerf/slots/font.build.build.json`; the engine (src/measure.mjs) loads only when something measures.
 import { fileURLToPath } from 'node:url'
-import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
+import { definePlugin, defineSlot, provide } from '@kerf/core/plugin'
 
 const fontBuild = defineSlot({ id: 'font.build', version: 1, cardinality: 'one', sides: ['build'] })
 const textMeasure = defineSlot({
@@ -89,9 +89,9 @@ function options(input) {
 }
 
 export const text = definePlugin({
-  name: '@weft-js/text',
+  name: '@kerf/text',
   version: '0.0.0',
-  weft: '*',
+  kerf: '*',
   options,
   permissions: { fs: { read: ['**/*.{woff2,woff,ttf,otf}'] } },
   contribute: (o) => ({
@@ -122,7 +122,7 @@ export const text = definePlugin({
             provide(textMeasure, {
               sides: {
                 client: {
-                  module: '@weft-js/text/measure',
+                  module: '@kerf/text/measure',
                   export: 'createMeasure',
                   options: { engine: o.engine },
                 },
@@ -131,19 +131,19 @@ export const text = definePlugin({
           ]),
     ],
     agents: {
-      title: 'Fonts (@weft-js/text)',
+      title: 'Fonts (@kerf/text)',
       text: [
-        '- Declare fonts once in `text({ fonts })` in weft.config.ts: `{ body: { family, src, fallback } }`. Never hand-write `@font-face` (X020).',
-        '- The build subsets each face by `unicode-range`, adds a metric-matched `"<Family> Fallback"` face and preloads `body` and `display`. `@weft-js/core/vite` loads them: no import. `weft docs fonts`.',
+        '- Declare fonts once in `text({ fonts })` in kerf.config.ts: `{ body: { family, src, fallback } }`. Never hand-write `@font-face` (X020).',
+        '- The build subsets each face by `unicode-range`, adds a metric-matched `"<Family> Fallback"` face and preloads `body` and `display`. `@kerf/core/vite` loads them: no import. `kerf docs fonts`.',
         '- A build trims faces on its own: custom axes the source never varies are pinned, and uncommon latin characters load on demand. An axis set at runtime needs declaring in `axes`; `trim: false` turns it all off.',
-        "- `text.measure` is lazy: it costs nothing until something measures, a canvas `s.text()`, `measure()`, `lines()` or `fit()` from @weft-js/core/text, or a warp list given `text` (`measure: 'off'` removes it).",
+        "- `text.measure` is lazy: it costs nothing until something measures, a canvas `s.text()`, `measure()`, `lines()` or `fit()` from @kerf/core/text, or a veneer list given `text` (`measure: 'off'` removes it).",
         '- Font stacks name the fallback second: `font-family: "Inter", "Inter Fallback", sans-serif`. `font-display` is `swap` or `optional`, never `block` (X021).',
       ].join('\n'),
     },
     catalog: [
       {
         name: 'text',
-        import: '@weft-js/text',
+        import: '@kerf/text',
         summary:
           'font.build: subsets, matched fallback faces, preloads; text.measure: lazy line breaking for canvas text and exact row heights',
       },

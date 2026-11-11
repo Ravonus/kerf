@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Heading, Shell, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Heading, Shell, Text } from '@kerf/veneer'
 import { AppWindow, ROOT_NAV } from './shared'
 
 export function ShellChildPage() {
@@ -11,14 +11,14 @@ export function ShellChildPage() {
     >
       <Shell
         island
-        label="weft"
+        label="kerf"
         depth="child"
         title="storefront"
         back={{
           label: 'Back to projects',
           onClick: () => (left.value = !left.value),
         }}
-        brand={{ name: 'weft' }}
+        brand={{ name: 'kerf' }}
         nav={ROOT_NAV}
         current="projects"
       >

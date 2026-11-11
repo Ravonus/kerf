@@ -8,7 +8,7 @@
 //   node run-app.mjs grade    --name v3-sonnet                                   # every snapshot, cumulative tests
 //   node run-app.mjs measure  --name v3-sonnet                                   # perf probe + bundle size, last snapshot
 //   node run-app.mjs summary  --name v3-sonnet
-//   node run-app.mjs reference --name v3-ref [--frameworks react,solid,weft]    # snapshot reference-v3/<fw> as t3
+//   node run-app.mjs reference --name v3-ref [--frameworks react,solid,kerf]    # snapshot reference-v3/<fw> as t3
 //   node run-app.mjs bug --suite tasks-v4 --name v4-bug-x --frameworks react --bug no-memo  # reference + buggy-v4 overlay
 //   node run-app.mjs prepare --suite tasks-v4 --tickets quiet --name v4q-sonnet ...         # tickets-quiet/: no stated budgets
 import { execFile, execFileSync } from 'node:child_process'
@@ -43,7 +43,7 @@ const app = opt.app ?? (suite === 'tasks-v3' ? 'shop' : readdirSync(join(root, s
 const appDir = join(root, suite, app)
 const refDir = join(root, suite.replace(/^tasks/, 'reference'))
 const resultsDir = join(root, 'results', name)
-const workRoot = join(tmpdir(), 'weft-evals', name)
+const workRoot = join(tmpdir(), 'kerf-evals', name)
 const task = JSON.parse(readFileSync(join(appDir, 'task.json'), 'utf8'))
 const frameworks = () => (opt.frameworks ?? 'react,solid').split(',')
 const ws = (fw) => join(workRoot, fw)
@@ -59,13 +59,13 @@ const ticketsDir = join(appDir, variant ? `tickets-${variant}` : 'tickets')
 const FRAMEWORK = {
   react: 'React 19 + TypeScript (function components and hooks)',
   solid: 'SolidJS 1.9 + TypeScript (`solid-js`)',
-  weft: 'weft + TypeScript (`weft`)',
-  warp: 'weft + warp (@weft-js/warp UI kit) + TypeScript',
+  kerf: 'kerf + TypeScript (`kerf`)',
+  veneer: 'kerf + veneer (@kerf/veneer UI kit) + TypeScript',
 }
 // Framework-specific setup notes appended to ticket 1's intro; the tickets themselves are identical across frameworks.
 const SETUP = {
-  weft:
-    ' weft is not React: read AGENTS.md in the project first. `npx weft check --json` reports weft diagnostics ' +
+  kerf:
+    ' kerf is not React: read AGENTS.md in the project first. `npx kerf check --json` reports kerf diagnostics ' +
     '(code, location, why, fix); run it after your changes and fix what it reports (the P002 warnings about ' +
     'package.json scripts are expected here, ignore them).',
 }
@@ -76,9 +76,9 @@ function prepare() {
     rmSync(dir, { recursive: true, force: true })
     cpSync(join(appDir, 'starter', fw), dir, { recursive: true })
     symlinkSync(join(root, 'frameworks', fw, 'node_modules'), join(dir, 'node_modules'))
-    // weft's AGENTS.md is generated from the installed weft, so it always matches the compiler the agent runs.
-    if (fw === 'weft')
-      execFileSync(join(dir, 'node_modules', '.bin', 'weft'), ['agents-md', '--root', dir], {
+    // kerf's AGENTS.md is generated from the installed kerf, so it always matches the compiler the agent runs.
+    if (fw === 'kerf')
+      execFileSync(join(dir, 'node_modules', '.bin', 'kerf'), ['agents-md', '--root', dir], {
         stdio: 'inherit',
       })
   }

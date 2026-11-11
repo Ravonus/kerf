@@ -1,5 +1,5 @@
 // The stack-neutral design audit behind `evals/gates/ds-exit.mjs` (PLAN §9 Phase 4) and measure.mjs: it reads only the built
-// page in Chromium, so it can't tell weft from React. Every screen of the brief, in light and dark, at 1280 and 390.
+// page in Chromium, so it can't tell kerf from React. Every screen of the brief, in light and dark, at 1280 and 390.
 //
 //   a11y         axe (WCAG 2.0–2.2 A/AA + best practice) nodes, split by contrast and everything else, over the resting
 //                screens and two states (the invalid form, the open dialog); keyboard focus with no visible change;
@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url'
 import { brotliCompressSync, constants } from 'node:zlib'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const require = createRequire(join(here, '../../../packages/warp/package.json'))
+const require = createRequire(join(here, '../../../packages/veneer/package.json'))
 export const { chromium } = require('playwright-core')
 const AXE = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
 const RULES = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice']

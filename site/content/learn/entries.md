@@ -9,7 +9,7 @@
 :::
 
 On [Choosing the state structure](/learn/choosing-state-structure) you flattened data into an object keyed by id. That
-shape has a second benefit in Weft: a row can read *one entry* of the object, and then only a change to that entry
+shape has a second benefit in Kerf: a row can read *one entry* of the object, and then only a change to that entry
 re-runs it. A list of a thousand products where you add one to the basket does one row's worth of work, not a thousand.
 
 :::demo entries
@@ -19,7 +19,7 @@ re-runs it. A list of a thousand products where you add one to the basket does o
 Here's the stock list above in code:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 const FRUIT = ['apple', 'pear', 'plum']
 
@@ -64,9 +64,9 @@ and five hundred re-runs that each find nothing to change. The compiler warns wh
 object (`stock.value[f]`, or `cart[p.id]` from a prop) as **W017**, and has an autofix to `.get`.
 
 :::note Where `get` and `set` come from
-`.get` and `.set` live in `@weft-js/core/keyed`. You don't import it: the Weft Vite plugin adds it to any module that
+`.get` and `.set` live in `@kerf/core/keyed`. You don't import it: the Kerf Vite plugin adds it to any module that
 calls them, so an app that never uses them doesn't ship them. If you build the method name at run time
-(`box[name]`), the plugin can't see it, and you import `@weft-js/core/keyed` yourself.
+(`box[name]`), the plugin can't see it, and you import `@kerf/core/keyed` yourself.
 :::
 
 ## Writing one entry with `set`
@@ -86,7 +86,7 @@ stock.set((d) => {
 ```
 
 It's the same as writing `stock.value = { ...stock.value, pear: 5 }`, in a form that's harder to get wrong. After the
-write, Weft compares the entries that `get` readers are following. Only those whose value changed re-run.
+write, Kerf compares the entries that `get` readers are following. Only those whose value changed re-run.
 
 `set` works on arrays too: `list.set(d => { d.push(item) })` copies the array, pushes, and writes the copy.
 
@@ -114,7 +114,7 @@ the row:
 :::demo manage-rows
 
 ```tsx
-import { derived, state, type State } from '@weft-js/core'
+import { derived, state, type State } from '@kerf/core'
 
 type Product = { id: string; name: string }
 
@@ -180,7 +180,7 @@ products.value = products.value.map((p) =>
 ```
 
 Copying every item, `products.value.map(p => ({ ...p, price }))`, gives each one a new identity, so every row re-runs,
-even the ones whose price didn't change. That's **W014**. The compiler catches it inside one file, and `weft check`
+even the ones whose price didn't change. That's **W014**. The compiler catches it inside one file, and `kerf check`
 follows the box through props into other files to find it there.
 
 ## State lives with the row
@@ -191,7 +191,7 @@ instance:
 :::demo manage-keep
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 type Guest = { id: number; name: string }
 
@@ -239,7 +239,7 @@ The rules are short:
 - **A key that leaves takes its row with it.** Remove Ana, and her row is disposed of, with its note. Add her back, and
   she gets a new row with an empty note.
 
-That's Weft's version of React's "preserving and resetting state" for lists, and the reason `key` matters: it says which
+That's Kerf's version of React's "preserving and resetting state" for lists, and the reason `key` matters: it says which
 row is which. A missing key on a list of objects is **W010**. Over plain strings or numbers, the value is the key.
 
 :::deepdive Row state, or an object box in the parent?
@@ -258,7 +258,7 @@ Sometimes a row should start from server data and let the user edit a copy. `sta
 `source` until you write to it:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 type Product = { id: string; name: string; price: number }
 
@@ -305,7 +305,7 @@ With `key`, an edit holds while the key stays the same, so a refetch of the prod
 Add a −1 button to each row of the stock list. It should never go below zero, and should be off at zero.
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 const FRUIT = ['apple', 'pear', 'plum']
 
@@ -353,7 +353,7 @@ function update(id: string, price: number) {
 ```
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 type Price = { id: string; name: string; price: number }
 
@@ -392,7 +392,7 @@ The parent passes `count={counts.value[t.id]}` to each `Topic` row, so every vot
 re-runs only its own row.
 :::solution
 ```tsx
-import { state, type State } from '@weft-js/core'
+import { state, type State } from '@kerf/core'
 
 type Topic = { id: string; title: string }
 

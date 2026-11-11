@@ -1,4 +1,4 @@
-import { Assistant } from '@weft-js/warp'
+import { Assistant } from '@kerf/veneer'
 import { FINISHED } from './shared'
 
 export const AssistantAnswer = () => (

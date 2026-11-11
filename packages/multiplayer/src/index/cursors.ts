@@ -6,7 +6,7 @@ import {
   untrack,
   type Derived,
   type State,
-} from '@weft-js/core'
+} from '@kerf/core'
 import type { CursorAt, Peer, Presence } from '../index'
 import { isServer, silent } from './shared'
 

@@ -1,5 +1,5 @@
-import type { CanvasFrame } from '@weft-js/warp'
-import { Canvas } from '@weft-js/warp'
+import type { CanvasFrame } from '@kerf/veneer'
+import { Canvas } from '@kerf/veneer'
 import { token, STAGE } from './paint-primitives'
 
 export function drawSpotlight({
@@ -9,7 +9,7 @@ export function drawSpotlight({
   pointer,
 }: CanvasFrame) {
   ctx.clearRect(0, 0, width, height)
-  ctx.fillStyle = token(ctx, '--warp-color-text-subtle')
+  ctx.fillStyle = token(ctx, '--veneer-color-text-subtle')
   for (let x = 12; x < width; x += 24) {
     for (let y = 12; y < height; y += 24) {
       const near = pointer.in

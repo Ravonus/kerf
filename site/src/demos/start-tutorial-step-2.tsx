@@ -1,5 +1,5 @@
-import { state, type State } from '@weft-js/core'
-import { Badge, Button, Card } from '@weft-js/warp'
+import { state, type State } from '@kerf/core'
+import { Badge, Button, Card } from '@kerf/veneer'
 
 const PRODUCTS = [
   { id: 'beans', name: 'House beans, 250 g', price: 12 },

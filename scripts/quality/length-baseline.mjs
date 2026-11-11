@@ -23,9 +23,9 @@ export function renamedBaseline(baseline) {
   const renamed = {}
   for (const [id, value] of Object.entries(baseline)) {
     let key = id.replace(
-      /^(file|function):packages\/(weft|icons|create-weft)\//,
+      /^(file|function):packages\/(kerf|icons|create-kerf)\//,
       (_, kind, name) =>
-        `${kind}:packages/${{ weft: 'core', icons: 'warp-icons', 'create-weft': 'create' }[name]}/`,
+        `${kind}:packages/${{ kerf: 'core', icons: 'veneer-icons', 'create-kerf': 'create' }[name]}/`,
     )
     key = key.replace(
       /^(file|function):evals\/(apps|compare|speed)\//,

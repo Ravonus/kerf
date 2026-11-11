@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
-import { palette, quantize, tile } from '@weft-js/warp-core/dither'
+import { Canvas, type CanvasFrame as Frame } from '@kerf/veneer'
+import { palette, quantize, tile } from '@kerf/veneer-core/dither'
 import { type ArtProps, type Meta } from './shared'
 import code from './bobbin-sdf.tsx?raw'
 
@@ -86,11 +86,11 @@ type BobbinState = {
 
 function drawBobbin(state: BobbinState, { ctx, width, height, dt, tier, still, pointer }: Frame) {
   state.cells ??= palette(ctx.canvas.parentElement!, [
-    '--warp-color-page',
-    '--warp-color-accent-soft',
-    '--warp-color-accent-border',
-    '--warp-color-accent-text',
-    '--warp-color-text',
+    '--veneer-color-page',
+    '--veneer-color-accent-soft',
+    '--veneer-color-accent-border',
+    '--veneer-color-accent-text',
+    '--veneer-color-text',
   ])
   let fresh = false
   if (!state.image || state.image.width !== width || state.image.height !== height) {

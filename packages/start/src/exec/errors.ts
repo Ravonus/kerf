@@ -81,7 +81,7 @@ export function dbError(e: unknown): unknown {
   return new StartError(
     'Q014',
     `the database doesn't match the schema: ${m}`,
-    'run `weft db generate`, then reload (new migrations apply on the next request)',
+    'run `kerf db generate`, then reload (new migrations apply on the next request)',
     { status: 500 },
   )
 }

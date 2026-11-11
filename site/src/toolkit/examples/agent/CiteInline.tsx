@@ -1,4 +1,4 @@
-import { Cite, Sources, Stack, Text } from '@weft-js/warp'
+import { Cite, Sources, Stack, Text } from '@kerf/veneer'
 import { DEPLOY_SOURCES } from '../../world'
 import { CITED } from './shared'
 

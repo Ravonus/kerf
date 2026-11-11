@@ -1,4 +1,4 @@
-import { DitherField } from '@weft-js/warp'
+import { DitherField } from '@kerf/veneer'
 import { smooth, type ArtProps, type Meta } from './shared'
 import code from './tide-table.tsx?raw'
 
@@ -52,9 +52,9 @@ export default function TideTable({ live = true }: ArtProps) {
       kind={horizons}
       ramp={[
         'none',
-        '--warp-color-accent-soft',
-        '--warp-color-accent-border',
-        '--warp-color-accent-text',
+        '--veneer-color-accent-soft',
+        '--veneer-color-accent-border',
+        '--veneer-color-accent-text',
       ]}
       pattern="blue"
       fade="top"

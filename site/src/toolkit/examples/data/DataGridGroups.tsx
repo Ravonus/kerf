@@ -1,4 +1,4 @@
-import { DataGrid } from '@weft-js/warp'
+import { DataGrid } from '@kerf/veneer'
 
 import { PROJECTS } from '../../world'
 

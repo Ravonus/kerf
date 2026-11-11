@@ -2,7 +2,7 @@ import {
   SettingRow,
   SettingsSection,
   Switch,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { SettingsWidth } from './shared'
 
 export const SettingsSectionNotifications = () => (

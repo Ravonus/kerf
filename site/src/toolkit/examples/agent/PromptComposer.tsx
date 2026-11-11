@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { Prompt, Stack, Text } from '@weft-js/warp'
-import type { PromptFile } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Prompt, Stack, Text } from '@kerf/veneer'
+import type { PromptFile } from '@kerf/veneer'
 import {
   COMMANDS,
   CONTEXT,

@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   Card,
@@ -8,7 +8,7 @@ import {
   Stack,
   Tabs,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 type Tab = 'details' | 'shipping' | 'returns'
 

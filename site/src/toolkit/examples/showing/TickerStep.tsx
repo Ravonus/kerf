@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Row, Text, Ticker, Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Row, Text, Ticker, Button } from '@kerf/veneer'
 
 export function TickerStep() {
   const n = state(412)

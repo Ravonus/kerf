@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 // The row's key differs between server and client, as a random id would.
 const side = typeof window === 'undefined' ? 'server' : 'client'

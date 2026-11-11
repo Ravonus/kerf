@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
-// `.live`, `stream` and reconnects over @weft-js/core/test's fake transport (research 30 §7): the real hub, the real client, a
+// `.live`, `stream` and reconnects over @kerf/core/test's fake transport (research 30 §7): the real hub, the real client, a
 // memory bus, no sockets.
-import { createRoot, state } from '@weft-js/core'
-import { clock, flush, net, page, render, screen } from '@weft-js/core/test'
-import { mutation, query, skip, stale, type StandardSchemaV1 } from '@weft-js/start'
-import { backoff } from '@weft-js/start/live'
-import { configure, hub } from '@weft-js/start/hub'
-import { seed } from '@weft-js/start/data'
+import { createRoot, state } from '@kerf/core'
+import { clock, flush, net, page, render, screen } from '@kerf/core/test'
+import { mutation, query, skip, stale, type StandardSchemaV1 } from '@kerf/start'
+import { backoff } from '@kerf/start/live'
+import { configure, hub } from '@kerf/start/hub'
+import { seed } from '@kerf/start/data'
 import { registerLiveStreamTests } from './live.stream'
 
 type Todo = { id: string; title: string }
@@ -205,7 +205,7 @@ function registerLiveDiagnosticTests() {
       return dispose
     })
     await net.settle()
-    const { leaks } = await import('@weft-js/core/test')
+    const { leaks } = await import('@kerf/core/test')
     expect(leaks().join()).toContain('live.list')
     stop()
     expect(leaks()).toEqual([])
@@ -265,10 +265,10 @@ describe('reconnects', () => {
 
 registerLiveStreamTests(any, typed)
 
-describe("the page's cursor (#weft-rt)", () => {
+describe("the page's cursor (#kerf-rt)", () => {
   const carry = (payload: object) => {
     const el = document.createElement('script')
-    el.id = 'weft-rt'
+    el.id = 'kerf-rt'
     el.type = 'application/json'
     el.textContent = JSON.stringify(payload)
     document.body.append(el)

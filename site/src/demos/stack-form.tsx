@@ -1,5 +1,5 @@
-import { flush, state } from '@weft-js/core'
-import { Alert, Button, Card, Input } from '@weft-js/warp'
+import { flush, state } from '@kerf/core'
+import { Alert, Button, Card, Input } from '@kerf/veneer'
 
 // Stands in for the server: schema checks, then a check
 // only the server can make (an email that is taken).

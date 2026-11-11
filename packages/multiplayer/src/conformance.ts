@@ -1,6 +1,6 @@
 // Plain data in, Checks out: it runs in Node against a real relay, or in a page.
 
-import { state, type Derived } from '@weft-js/core'
+import { state, type Derived } from '@kerf/core'
 import type { PeerLink, PeerRoom, PeerTransport } from './index'
 
 /** One requirement of the suite, and how the transport did. */

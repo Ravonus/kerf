@@ -1,7 +1,7 @@
 // Keep the shared world available to the example reader.
 import { REGIONS as _REGIONS } from '../../world'
-import { state } from '@weft-js/core'
-import { NumberField, Stack, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { NumberField, Stack, Text } from '@kerf/veneer'
 
 export function NumberFieldSeats() {
   const seats = state<number | null>(8)

@@ -1,4 +1,4 @@
-import { Stack } from '@weft-js/warp'
+import { Stack } from '@kerf/veneer'
 import { Box } from './shared'
 
 export const StackDivided = () => (

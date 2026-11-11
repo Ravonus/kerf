@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 import { BROWSER, entry, trail, walk } from './boundaries.mjs'
 
 const root = repoRoot
-// A call on a line that also tests `typeof … randomUUID` is the fallback pattern (warp-core's newOrderKey), and allowed.
+// A call on a line that also tests `typeof … randomUUID` is the fallback pattern (veneer-core's newOrderKey), and allowed.
 const CALL = /\brandomUUID\s*\(/
 const GUARDED = /typeof\s+[\w.]*randomUUID\b/
 // Server modules run only on the server; a client build gets a stub of them.
@@ -63,7 +63,7 @@ export function findProblems(extra = []) {
       problems.push({
         file: `${relative(root, file)}:${c.line}`,
         detail: `\`${c.text}\` runs in the browser (${chain}), and a page on plain http has no crypto.randomUUID`,
-        fix: "Use crypto.getRandomValues, or test `typeof crypto.randomUUID === 'function'` first (warp-core's newOrderKey does).",
+        fix: "Use crypto.getRandomValues, or test `typeof crypto.randomUUID === 'function'` first (veneer-core's newOrderKey does).",
       })
   }
   return problems

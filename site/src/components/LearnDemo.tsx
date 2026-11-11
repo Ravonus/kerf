@@ -108,7 +108,7 @@ import DemoToolCoupon from '../demos/tool-coupon'
 import DemoToolRows from '../demos/tool-rows'
 import DemoUiKit from '../demos/ui-kit'
 import DemoUiState from '../demos/ui-state'
-import '@weft-js/warp-core/styles/rich/codeblock.css'
+import '@kerf/veneer-core/styles/rich/codeblock.css'
 import '../styles/example.css'
 
 function learnBasics(props: { id: string }) {

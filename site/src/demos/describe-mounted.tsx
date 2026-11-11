@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Card, Switch } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Card, Switch } from '@kerf/veneer'
 
 export default function TwoWays() {
   const open = state(true)

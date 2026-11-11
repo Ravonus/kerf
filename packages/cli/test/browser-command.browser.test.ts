@@ -1,5 +1,5 @@
-// `weft browser` end to end: a Vite dev server with the weft() plugin, a headless Chrome as a plain host page (no
-// automation library), and every command relayed through the dev server to @weft-js/core/agent in the page.
+// `kerf browser` end to end: a Vite dev server with the kerf() plugin, a headless Chrome as a plain host page (no
+// automation library), and every command relayed through the dev server to @kerf/core/agent in the page.
 import {
   chmodSync,
   cpSync,
@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createLogger, createServer } from 'vite'
-import weft from '@weft-js/core/vite'
+import kerf from '@kerf/core/vite'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { browser, cliParams } from '../src/browser/commands.mjs'
 import { findChrome, launch } from '../src/browser/client.mjs'
@@ -73,12 +73,12 @@ describe.skipIf(process.platform === 'win32')('browser launch failures', () => {
   ])(
     '%s reports the child failure and cleans state',
     async (_name, contents, executable, delay, message) => {
-      const root = mkdtempSync(join(tmpdir(), 'weft-launch-'))
+      const root = mkdtempSync(join(tmpdir(), 'kerf-launch-'))
       const exe = join(root, 'chrome')
       writeFileSync(exe, contents)
       chmodSync(exe, executable ? 0o755 : 0o644)
-      const old = process.env.WEFT_CHROME
-      process.env.WEFT_CHROME = exe
+      const old = process.env.KERF_CHROME
+      process.env.KERF_CHROME = exe
       const server = httpServer((_req, res) => {
         const answer = () => res.end(JSON.stringify({ agent: true, tabs: [] }))
         if (delay !== 'exit') {
@@ -100,10 +100,10 @@ describe.skipIf(process.platform === 'win32')('browser launch failures', () => {
         await expect(
           launch(root, '/', { url: `http://127.0.0.1:${address.port}` }),
         ).rejects.toThrow(message)
-        expect(existsSync(join(root, '.weft/browser/chrome.json'))).toBe(false)
+        expect(existsSync(join(root, '.kerf/browser/chrome.json'))).toBe(false)
       } finally {
-        if (old === undefined) delete process.env.WEFT_CHROME
-        else process.env.WEFT_CHROME = old
+        if (old === undefined) delete process.env.KERF_CHROME
+        else process.env.KERF_CHROME = old
         server.close()
         rmSync(root, { recursive: true, force: true })
       }
@@ -116,17 +116,17 @@ type Run = (cmd: string, p?: Record<string, unknown>) => ReturnType<typeof brows
 const chrome = findChrome()
 
 // Drives a real browser, and CI machines and containers may not have Chrome.
-describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => {
+describe.skipIf(!chrome)('kerf browser against the v3 shop under `vite`', () => {
   let root: string, server: Awaited<ReturnType<typeof createServer>>
   const run: Run = (cmd, p) => browser(root, cmd, p)
 
   beforeAll(async () => {
     // a cold Chrome on a shared CI runner sometimes takes longer than 15 s to open its first tab
-    process.env.WEFT_BROWSER_WAIT_MS ??= '45000'
+    process.env.KERF_BROWSER_WAIT_MS ??= '45000'
     mkdirSync(tmpRoot, { recursive: true })
     root = mkdtempSync(join(tmpRoot, 'shop-'))
-    cpSync(join(evals, 'reference-v3/weft/src'), join(root, 'src'), { recursive: true })
-    cpSync(join(evals, 'tasks-v3/shop/starter/weft/index.html'), join(root, 'index.html'))
+    cpSync(join(evals, 'reference-v3/kerf/src'), join(root, 'src'), { recursive: true })
+    cpSync(join(evals, 'tasks-v3/shop/starter/kerf/index.html'), join(root, 'index.html'))
     writeFileSync(join(root, 'package.json'), '{ "type": "module", "private": true }')
     const events: string[] = []
     const record = (event: string) => {
@@ -151,14 +151,14 @@ describe.skipIf(!chrome)('weft browser against the v3 shop under `vite`', () => 
             })
           },
         },
-        weft(),
+        kerf(),
       ],
       server: { port: 0, strictPort: false },
     })
     await server.listen()
     await new Promise((r) => {
       setTimeout(r, 100)
-    }) // .weft/dev.json is written on 'listening'
+    }) // .kerf/dev.json is written on 'listening'
     try {
       await run('launch', { route: '/' })
     } catch (error) {
@@ -252,7 +252,7 @@ function registerBrowserSessionTests(run: Run) {
     expect(await run('net', { op: 'online' })).toMatchObject({ online: true })
   })
 
-  it('records a session into a @weft-js/core/test test', async () => {
+  it('records a session into a @kerf/core/test test', async () => {
     await run('record', { op: 'start' })
     await run('act', { target: { role: 'button', name: 'Add Milk' }, action: 'click' })
     await run('assert', { target: { role: 'button', name: 'Add Milk' }, expect: { enabled: true } })

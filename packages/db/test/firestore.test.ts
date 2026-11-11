@@ -1,8 +1,8 @@
 // The `db.adapter` suite on the Firestore emulator: `FIRESTORE_EMULATOR_HOST`, as the SDK reads it.
 import { initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
-import { LIST_ROWS, listSuite } from '@weft-js/core/test/plugins'
-import { decodeCursor } from '@weft-js/start/list'
+import { LIST_ROWS, listSuite } from '@kerf/core/test/plugins'
+import { decodeCursor } from '@kerf/start/list'
 import { firestoreSource, type FirestoreCollection, type FirestoreQuery } from '../src/firestore'
 
 const host = process.env.FIRESTORE_EMULATOR_HOST
@@ -13,7 +13,7 @@ const spec = {
 
 // Needs the Firestore emulator running.
 test.skipIf(!host)('firestoreSource passes db.adapter@1', async () => {
-  const db = getFirestore(initializeApp({ projectId: 'weft-test' }))
+  const db = getFirestore(initializeApp({ projectId: 'kerf-test' }))
   const col = db.collection(`t${Date.now()}`)
   const make = async () => {
     const old = await col.get()

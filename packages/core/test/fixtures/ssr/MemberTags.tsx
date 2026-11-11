@@ -1,5 +1,5 @@
 // A tag that starts at a name the pre-pass rewrites: row parameters, destructured rows, props, rest (test/member-tags.test.tsx).
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 type Part = (props: { class?: string; label?: string; children?: unknown }) => unknown
 

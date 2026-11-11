@@ -1,4 +1,4 @@
-import { Badge, Feed } from '@weft-js/warp'
+import { Badge, Feed } from '@kerf/veneer'
 
 import { money as _Shared0 } from './shared-project'
 
@@ -21,7 +21,7 @@ export const FeedCustom = () => (
         <span
           data-part="knot"
           style={
-            `--_dc:var(--warp-color-` +
+            `--_dc:var(--veneer-color-` +
             `${item().tone}-solid)`
           }
         ></span>

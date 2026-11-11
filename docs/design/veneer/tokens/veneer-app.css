@@ -1,0 +1,1662 @@
+/* =============================================================================
+   veneer · app patterns — calendar, meetings, notifications, chat, AI, collab, auth
+   v0.3 · 2026-10-28 (§13: year view, preferences matrix, transport picker, quote reply, 403) · Spec: ../07-app-patterns.md · Tokens: ./veneer.css
+   Reuses (by name, unchanged): button, badge, status-dot, live-status, toast,
+   tabs, sheet, dialog, popover, fab, spinner, skeleton, empty-state (veneer-components.css)
+   and the signature field (veneer.css). Load after both.
+
+   Contract: @layer veneer.app, :where() everywhere, sys tokens only, parts are
+   [data-scope][data-part], state is ARIA or data-state. Every pattern sizes to
+   its container (@container at 600 / 1000), never the window.
+
+   The sweep in app patterns has four jobs, and only four:
+     1. hover/focus on an interactive surface (event, notification, tile, card);
+     2. arrival: a new item's top hairline draws L→R once, then leaves right;
+     3. confirmation: a committed drag or a sent message plays in → out once;
+     4. "live now": the now line and a speaker's tile edge.
+   Stroke = --veneer-color-sweep (full accent, ≥ 3.78:1 against the hairline base,
+   ≥ 3:1 against the ink base of fields; measured by the specimen).
+   ========================================================================== */
+
+@layer veneer.tokens, veneer.base, veneer.signature, veneer.components, veneer.app;
+
+@layer veneer.tokens {
+  :root, [data-expression], [data-density], [data-form], [data-pointer],
+  [data-motion], [data-flair], [data-theme], [data-palette], [data-veneer] {
+    --veneer-cal-hour: calc(48px * var(--veneer-density-k));          /* 36 · 48 · 60 px per hour */
+    --veneer-cal-gutter: 52px;
+    --veneer-cal-hour-w: 64px;                                       /* a timeline hour's least width: past it the rows scroll sideways */
+    --veneer-cal-day-min: 128px;                                     /* a week day's least width (more for a day of overlaps): past it the week scrolls sideways */
+    --veneer-cal-max-h: 100dvh;                                      /* the calendar's own bound when no parent gives it a height */
+    --veneer-cal-bar: calc(var(--veneer-border-emphasis) + 1px);      /* event colour edge 2 · 2.5 · 3 */
+    --veneer-cal-tint: 15%;                                          /* event fill = category over surface */
+    --veneer-arrive-duration: var(--veneer-duration-slow);
+    --veneer-arrive-sweep: calc(var(--veneer-sweep-duration) * 0.9);
+    --veneer-tile-gap: calc(6px * var(--veneer-density-k));
+    --veneer-bubble-radius: max(var(--veneer-radius-surface), calc(14px - 12px * var(--veneer-x)));
+    --veneer-avatar-sm: 24px; --veneer-avatar-md: 32px; --veneer-avatar-lg: 40px;
+  }
+}
+
+@layer veneer.app {
+
+/* ---------------------------------------------------------------------------
+   0 · Shared plumbing
+   ------------------------------------------------------------------------ */
+/* Sweep colours come from veneer.css (the part's `color`): full accent over the ink base for fields and
+   controls, critical when invalid. App surfaces only override the base, and only with `color:`. */
+:where([data-scope="field"] [data-part="control"]) > :where([data-part="sweep"]),
+:where([data-scope="field"] [data-part="control"]) > :where([data-part="sweep-base"]) { inset: 0; }
+
+/* avatar (comp owns Avatar; this is the app-side stack + presence ring) */
+:where([data-scope="avatar"]) {
+  --_s: var(--veneer-avatar-md);
+  position: relative; display: inline-grid; place-items: center; flex: none;
+  inline-size: var(--_s); block-size: var(--_s); border-radius: var(--veneer-radius-round);
+  background: var(--_bg, var(--veneer-color-surface-active)); color: var(--_fg, var(--veneer-color-text));
+  font: 600 calc(var(--_s) * 0.38)/1 var(--veneer-text-body-font); letter-spacing: 0;
+  box-shadow: 0 0 0 var(--veneer-border-hairline) color-mix(in oklab, var(--veneer-color-text) 10%, transparent) inset;
+  user-select: none;
+}
+:where([data-scope="avatar"][data-size="sm"]) { --_s: var(--veneer-avatar-sm); }
+:where([data-scope="avatar"][data-size="lg"]) { --_s: var(--veneer-avatar-lg); }
+:where([data-scope="avatar"][data-size="xl"]) { --_s: 72px; }
+:where([data-scope="avatar"] > [data-scope="status-dot"]) { position: absolute; inset-block-end: -1px; inset-inline-end: -1px; }
+:where([data-scope="avatar-stack"]) { display: inline-flex; align-items: center; }
+:where([data-scope="avatar-stack"] > [data-scope="avatar"]) { box-shadow: 0 0 0 2px var(--_ring, var(--veneer-color-surface)); }
+:where([data-scope="avatar-stack"] > * + *) { margin-inline-start: calc(var(--_s, 28px) * -0.18); }
+:where([data-scope="avatar-stack"] > [data-scope="avatar"]) { font-size: calc(var(--_s) * 0.34); letter-spacing: -0.02em; }
+:where([data-scope="avatar-stack"] > [data-scope="avatar"][data-presence]) { box-shadow: 0 0 0 2px var(--_ring, var(--veneer-color-surface)), 0 0 0 calc(2px + var(--veneer-border-emphasis)) var(--_pc, var(--veneer-color-accent-solid)); }
+:where([data-scope="avatar-stack"] > [data-part="more"]) {
+  display: inline-grid; place-items: center; block-size: 28px; min-inline-size: 28px; padding-inline: 6px;
+  border-radius: var(--veneer-radius-round); background: var(--veneer-color-surface-sunken); color: var(--veneer-color-text-subtle);
+  font: 500 11px/1 var(--veneer-font-mono); box-shadow: 0 0 0 2px var(--_ring, var(--veneer-color-surface));
+}
+
+/* the arrival grammar: one enter for every real-time item, one sweep per item */
+:where([data-arrive]) {
+  position: relative;
+  animation: veneer-arrive var(--veneer-arrive-duration) var(--veneer-ease-out) both;
+}
+:where([data-arrive])::after {
+  content: ""; position: absolute; inset: 0 0 auto; block-size: var(--veneer-border-emphasis); pointer-events: none;
+  background: var(--veneer-color-sweep); clip-path: inset(0 100% 0 0);
+  animation: veneer-arrive-sweep calc(var(--veneer-arrive-sweep) * 2) var(--veneer-sweep-ease) var(--veneer-duration-fast) both;
+}
+:where([data-flair="sweep"] [data-arrive])::after {
+  inset: 0; block-size: auto; background: none; border: var(--veneer-sweep-width) solid var(--veneer-color-sweep); border-radius: inherit;
+}
+@keyframes veneer-arrive {
+  from { opacity: 0; translate: 0 calc(var(--veneer-motion-distance) * -1); }
+}
+@keyframes veneer-arrive-sweep {
+  0%   { clip-path: inset(0 100% 0 0); }
+  48%  { clip-path: inset(0 0 0 0); }
+  58%  { clip-path: inset(0 0 0 0); }
+  100% { clip-path: inset(0 0 0 100%); }
+}
+/* a one-shot sweep on any host (drop commit, message sent, tool done): confirm() sets data-confirm
+   for one pass, which runs the host in and out L→R, so it shows even on
+   hosts whose hover sweep is dial-gated (--_on: 0) */
+:where([data-sweep])[data-confirm] { --_on: 1; }
+
+/* count bump on badges that update live */
+:where([data-scope="badge"][data-count][data-bump]) { animation: veneer-bump var(--veneer-duration-slow) var(--veneer-ease-pop); }
+@keyframes veneer-bump { 40% { scale: calc(1 + 0.18 * var(--veneer-motion-scale)); } }
+
+/* app toolbar (shared by calendar, inbox, room, chat headers) */
+:where([data-part="app-bar"]) {
+  display: flex; align-items: center; gap: var(--veneer-space-related); min-block-size: 52px;
+  padding: var(--veneer-space-related) var(--veneer-space-group);
+  border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border); background: var(--veneer-color-surface);
+}
+:where([data-part="app-bar"] [data-part="app-title"]) {
+  margin: 0; font-family: var(--veneer-text-title-font); font-weight: var(--veneer-text-title-weight);
+  font-size: calc(var(--veneer-text-heading-size) * (1 + 0.1 * var(--veneer-x))); letter-spacing: var(--veneer-text-title-tracking); line-height: 1.1;
+}
+:where([data-part="app-bar"] [data-part="spacer"]) { flex: 1; }
+:where([data-part="eyebrow"]) {
+  font-family: var(--veneer-text-eyebrow-font); font-size: var(--veneer-text-eyebrow-size); font-weight: 500;
+  letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: var(--veneer-text-eyebrow-case); color: var(--veneer-color-text-subtle);
+}
+
+/* ---------------------------------------------------------------------------
+   1 · CALENDAR (month · week · day · agenda · timeline)
+   ------------------------------------------------------------------------ */
+:where([data-scope="calendar"][data-part="root"]) {
+  container: calendar / inline-size;
+  /* 100% of a parent that has a height; without one it would grow to all 24 hours and open on midnight, so it stops at
+     --veneer-cal-max-h and scrolls its hours inside, opening at the working day either way */
+  display: grid; grid-template-rows: auto minmax(0, 1fr); min-block-size: 0; block-size: 100%; max-block-size: var(--veneer-cal-max-h);
+  background: var(--veneer-color-surface); color: var(--veneer-color-text);
+}
+/* the month in a picker's popover sizes the panel, and inline-size containment would make its intrinsic width zero */
+:where([data-scope="calendar"][data-part="root"]:is(dialog[data-scope="popover"] *)) { container-type: normal; block-size: auto; max-block-size: none; }
+:where([data-scope="calendar"] [data-part="range-label"] small) { color: var(--veneer-color-text-subtle); font-family: var(--veneer-text-body-font); font-size: var(--veneer-text-body-size); font-weight: 400; letter-spacing: 0; }
+:where([data-scope="calendar"] [data-part="tz"]) {
+  display: inline-flex; align-items: center; gap: 6px; block-size: 26px; padding-inline: 8px;
+  border: var(--veneer-border-hairline) solid var(--veneer-color-border); border-radius: var(--veneer-radius-round);
+  font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); background: var(--veneer-color-surface-raised);
+}
+:where([data-scope="calendar"] [data-part="layout"]) { display: grid; grid-template-columns: minmax(0, 1fr); min-block-size: 0; }
+@container calendar (min-width: 1000px) {
+  :where([data-scope="calendar"] [data-part="layout"]) { grid-template-columns: 232px minmax(0, 1fr); }
+}
+:where([data-scope="calendar"] [data-part="rail"]) {
+  display: none; align-content: start; gap: var(--veneer-space-group); padding: var(--veneer-space-group);
+  border-inline-end: var(--veneer-border-hairline) solid var(--veneer-color-border); overflow: auto;
+}
+@container calendar (min-width: 1000px) { :where([data-scope="calendar"] [data-part="rail"]) { display: grid; } }
+
+/* mini month (the rich CalendarGrid in read-only "navigator" mode) */
+:where([data-scope="calendar"] [data-part="mini"]) { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px 0; font-size: 12px; text-align: center; }
+:where([data-scope="calendar"] [data-part="mini"] [data-day]) {
+  box-sizing: border-box; display: grid; place-items: center; block-size: 26px; border-radius: var(--veneer-radius-round); cursor: pointer; font-variant-numeric: tabular-nums; user-select: none;
+}
+:where([data-scope="calendar"] [data-part="mini"] [data-day]:hover) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range]) { background: var(--veneer-color-accent-soft); border-radius: 0; color: var(--veneer-color-accent-text); }
+:where([data-scope="calendar"] [data-part="mini"] [data-day][aria-current="date"]) { background: var(--veneer-color-accent-solid); color: var(--veneer-color-accent-on-solid); border-radius: var(--veneer-radius-round); font-weight: 600; }
+:where([data-scope="calendar"] [data-part="sources"]) { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="calendar"] [data-part="sources"] label) { display: flex; align-items: center; gap: 10px; min-block-size: 30px; font-size: var(--veneer-text-body-size); cursor: pointer; }
+:where([data-scope="calendar"] [data-part="sources"] input) { appearance: none; margin: 0; inline-size: 14px; block-size: 14px; border-radius: var(--veneer-radius-mark); border: 1.5px solid var(--_c); background: var(--_c); }
+:where([data-scope="calendar"] [data-part="sources"] input:not(:checked)) { background: transparent; }
+
+/* the time grid */
+:where([data-scope="calendar"] [data-part="grid"]) {
+  --_days: 7;
+  display: grid; grid-template-rows: auto auto minmax(0, 1fr); min-block-size: 0; min-inline-size: 0; position: relative;
+}
+:where([data-scope="calendar"] [data-part="head"]),
+:where([data-scope="calendar"] [data-part="allday"]),
+:where([data-scope="calendar"] [data-part="cols"]) {
+  display: grid; grid-template-columns: var(--_tracks, var(--veneer-cal-gutter) repeat(var(--_days), minmax(0, 1fr)));
+}
+/* Week and Day: one scroller for both axes. A day never gets narrower than --veneer-cal-day-min (wider for a day whose events
+   overlap; Calendar writes --_tracks and --_week-w), so a narrow box scrolls the week sideways under its hours, which stay
+   put, and the day heads and all-day row stay on top as the hours scroll */
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"]) { grid-template-rows: minmax(0, 1fr); }
+/* Calendar keeps the hour in view itself as the grid refits; the browser's anchoring would chase a moving event instead */
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"]) { overflow-anchor: none; }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"] > :is([data-part="top"])),
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] > [data-part="scroller"] > :is([data-part="cols"])) { min-inline-size: var(--_week-w, 0px); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] [data-part="top"]) { position: sticky; inset-block-start: 0; z-index: 9; background: var(--veneer-color-surface); }
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] :is([data-part="head"] > [data-part="corner"], [data-part="allday"] > [data-part="gutter-label"])) {
+  position: sticky; inset-inline-start: 0; z-index: 8; background: var(--veneer-color-surface);
+}
+:where([data-scope="calendar"] [data-part="grid"][data-view="time"] [data-part="allday"] > [data-part="gutter-label"]) { align-self: stretch; justify-self: stretch; display: flex; align-items: center; justify-content: end; }
+:where([data-scope="calendar"] [data-part="head"]) { border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border); }
+:where([data-scope="calendar"] [data-part="dayhead"]) {
+  /* a narrow day (a quiet weekend in a week that fits its box) puts its date under its name */
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 2px 6px; padding-block: 10px 8px;
+  border-inline-start: var(--veneer-border-hairline) solid var(--veneer-color-border); min-inline-size: 0;
+}
+:where([data-scope="calendar"] [data-part="dayhead"] span) { font-family: var(--veneer-text-eyebrow-font); font-size: var(--veneer-text-eyebrow-size); letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: var(--veneer-text-eyebrow-case); color: var(--veneer-color-text-subtle); }
+:where([data-scope="calendar"] [data-part="dayhead"] b) {
+  display: inline-grid; place-items: center; min-inline-size: 28px; block-size: 28px; padding-inline: 4px; border-radius: var(--veneer-radius-round);
+  font: 500 15px/1 var(--veneer-text-heading-font); font-variant-numeric: tabular-nums;
+}
+:where([data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b) { background: var(--veneer-color-accent-solid); color: var(--veneer-color-accent-on-solid); }
+:where([data-scope="calendar"] [data-part="dayhead"][aria-current="date"] span) { color: var(--veneer-color-accent-text); }
+:where([data-scope="calendar"] [data-part="allday"]) { border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border); min-block-size: 30px; }
+:where([data-scope="calendar"] [data-part="allday"] > [data-part="gutter-label"]) { align-self: center; justify-self: end; padding-inline-end: 8px; font: 500 10px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); text-transform: uppercase; letter-spacing: 0.08em; }
+:where([data-scope="calendar"] [data-part="allday-cell"]) { display: grid; gap: 2px; align-content: start; padding: 3px; border-inline-start: var(--veneer-border-hairline) solid var(--veneer-color-border); min-inline-size: 0; }
+:where([data-scope="calendar"] [data-part="scroller"]) {
+  position: relative; overflow: auto; overscroll-behavior: contain; min-block-size: 0;
+}
+:where([data-scope="calendar"] [data-part="cols"]) { position: relative; block-size: calc(var(--veneer-cal-hour) * var(--_hours, 24)); }
+/* the hours stay put as a wide week scrolls sideways under them */
+:where([data-scope="calendar"] [data-part="gutter"]) { position: sticky; inset-inline-start: 0; z-index: 8; background: var(--veneer-color-surface); }
+:where([data-scope="calendar"] [data-part="hour"]) {
+  position: absolute; inset-inline-end: 8px; translate: 0 -50%; font: 500 10.5px/1 var(--veneer-font-mono);
+  color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+:where([data-scope="calendar"] [data-part="col"]) {
+  position: relative; min-inline-size: 0; border-inline-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  background-image:
+    repeating-linear-gradient(to bottom, var(--veneer-color-border) 0 1px, transparent 1px var(--veneer-cal-hour)),
+    repeating-linear-gradient(to bottom, transparent 0 calc(var(--veneer-cal-hour) / 2),
+      color-mix(in oklab, var(--veneer-color-border) 55%, transparent) calc(var(--veneer-cal-hour) / 2) calc(var(--veneer-cal-hour) / 2 + 1px),
+      transparent calc(var(--veneer-cal-hour) / 2 + 1px) var(--veneer-cal-hour));
+  cursor: crosshair; touch-action: pan-y;
+}
+:where([data-scope="calendar"] [data-part="col"][data-weekend]) { background-color: color-mix(in oklab, var(--veneer-color-surface-sunken) 60%, transparent); }
+:where([data-scope="calendar"] [data-part="col"][aria-current="date"]) { background-color: color-mix(in oklab, var(--veneer-color-accent-soft) 35%, transparent); }
+/* out of working hours: the same quiet shade before the day starts and after it ends, behind events, never intercepts.
+   Its own part name: a page's "band" (a site's woven strip) once drew over the evening as a loud green slab */
+:where([data-scope="calendar"] [data-part="off-hours"]) {
+  position: absolute; inset-inline: 0; pointer-events: none; inset-block-start: var(--_top); block-size: var(--_h);
+  background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--veneer-color-text) 4%, transparent) 0 1px, transparent 1px 7px),
+    color-mix(in oklab, var(--veneer-color-surface-sunken) 55%, transparent);
+}
+
+/* the event */
+:where([data-scope="calendar"] [data-part="event"]) {
+  --_c: var(--veneer-color-data-1);
+  position: absolute; box-sizing: border-box; z-index: 1;
+  inset-block-start: var(--_top); block-size: max(var(--_h), 20px);
+  inset-inline-start: calc((100% - 6px) * var(--_col, 0) / var(--_cols, 1) + 2px);
+  inline-size: calc((100% - 6px) * var(--_span, 1) / var(--_cols, 1) - 2px);
+  /* a column that wraps: the name comes first and keeps the first column; a line that has no room below it (the times,
+     the place) wraps into a second column, out of the box, rather than show half cut */
+  display: flex; flex-flow: column wrap; align-content: flex-start; gap: 1px 24px; overflow: clip;
+  padding: 4px 3px 4px calc(4px + var(--veneer-cal-bar));
+  border-radius: calc(var(--veneer-radius-control) - 1px);
+  background: color-mix(in oklab, var(--_c) var(--veneer-cal-tint), var(--veneer-color-surface-raised));
+  box-shadow: inset var(--veneer-cal-bar) 0 0 var(--_c), 0 0 0 1px var(--veneer-color-surface);
+  color: var(--veneer-color-text); font-size: var(--veneer-text-caption-size); line-height: 1.3; text-align: start;
+  cursor: grab; user-select: none; touch-action: none; outline-offset: 1px;
+  transition: box-shadow var(--veneer-duration-fast) var(--veneer-ease-out), opacity var(--veneer-duration-fast);
+}
+:where([data-scope="calendar"] [data-part="event"]) > :where(:not(.sr, [data-part="resize"], [data-part="sweep"], [data-part="sweep-base"])) { inline-size: 100%; }
+:where([data-scope="calendar"] [data-part="event"][data-short]) { flex-flow: row wrap; align-items: baseline; gap: 24px 6px; padding-block: 2px; }
+:where([data-scope="calendar"] [data-part="event"][data-short]) > :where(:not(.sr)) { inline-size: auto; }
+/* the whole name, broken only between words: Calendar widens a day for its longest word and lengthens the hours until
+   every name is whole, so a name never ends in an ellipsis */
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-title"]) { font-weight: 500; white-space: normal; overflow-wrap: normal; min-inline-size: 0; flex: none; }
+/* a short event on one line: its whole name, and its times beside it when they fit whole (else they wrap out of sight) */
+:where([data-scope="calendar"] [data-part="event"][data-short] [data-part="event-title"]) { white-space: nowrap; }
+:where([data-scope="calendar"] [data-part="event"][data-short] [data-part="event-time"]) { flex: none; }
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-time"]) { color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 11.5px; overflow: clip; text-overflow: ellipsis; min-inline-size: 0; }
+/* in a narrow event the times break after their dash rather than end in an ellipsis */
+:where([data-scope="calendar"] [data-part="event"]:not([data-short]) [data-part="event-time"]) { white-space: normal; text-overflow: clip; }
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-start"]) { display: none; font: 500 10.5px/1.2 var(--veneer-font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: clip; }
+:where([data-scope="calendar"] [data-part="event"] [data-part="event-meta"]) { color: var(--veneer-color-text-subtle); white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
+:where([data-scope="calendar"] [data-part="event"] svg[data-icon]) { inline-size: 12px; block-size: 12px; vertical-align: -1px; }
+:where([data-scope="calendar"] [data-part="event"][data-tentative]) {
+  background:
+    repeating-linear-gradient(135deg, color-mix(in oklab, var(--_c) 22%, transparent) 0 1px, transparent 1px 6px),
+    color-mix(in oklab, var(--_c) 6%, var(--veneer-color-surface-raised));
+  box-shadow: inset var(--veneer-cal-bar) 0 0 color-mix(in oklab, var(--_c) 55%, transparent), inset 0 0 0 1px color-mix(in oklab, var(--_c) 40%, transparent);
+}
+:where([data-scope="calendar"] [data-part="event"][data-declined] [data-part="event-title"]) { text-decoration: line-through; color: var(--veneer-color-text-subtle); }
+:where([data-scope="calendar"] [data-part="event"]:is([aria-selected="true"])),
+:where([data-scope="calendar"] [data-part="event"]:is([aria-expanded="true"])) { z-index: 3; box-shadow: inset var(--veneer-cal-bar) 0 0 var(--_c), var(--veneer-elevation-2); }
+:where([data-scope="calendar"] [data-part="event"][data-state="dragging"]) {
+  z-index: 6; cursor: grabbing; opacity: 0.97; transition: none;
+  box-shadow: inset var(--veneer-cal-bar) 0 0 var(--_c), var(--veneer-elevation-3);
+}
+:where([data-scope="calendar"] [data-part="event"][data-state="moving"]) { z-index: 6; box-shadow: inset var(--veneer-cal-bar) 0 0 var(--_c), var(--veneer-elevation-2); outline: var(--veneer-focus-width) dashed var(--veneer-color-focus); }
+:where([data-scope="calendar"] [data-part="event"][data-locked]) { cursor: default; }
+:where([data-scope="calendar"] [data-part="resize"]) {
+  position: absolute; inset-inline: 0; inset-block-end: 0; block-size: 8px; cursor: ns-resize; z-index: 3;
+}
+:where([data-scope="calendar"] [data-part="resize"])::after {
+  content: ""; position: absolute; inset-block-end: 3px; inset-inline-start: 50%; translate: -50% 0; inline-size: 16px; block-size: 2px;
+  border-radius: 2px; background: var(--_c); opacity: 0; transition: opacity var(--veneer-duration-fast);
+}
+:where([data-scope="calendar"] [data-part="event"]:hover [data-part="resize"])::after { opacity: 0.8; }
+:where([data-scope="calendar"] [data-part="event"]) > :where([data-part="sweep"]),
+:where([data-scope="calendar"] [data-part="event"]) > :where([data-part="sweep-base"]) { inset: 0; }
+:where([data-scope="calendar"] [data-part="event"]) > :where([data-part="sweep-base"]) { opacity: 0; }
+/* origin ghost while dragging, and the draft while creating */
+:where([data-scope="calendar"] [data-part="ghost"]) {
+  position: absolute; z-index: 0; box-sizing: border-box; inset-block-start: var(--_top); block-size: var(--_h);
+  inset-inline: 2px 4px; border-radius: calc(var(--veneer-radius-control) - 1px);
+  border: 1px dashed var(--veneer-color-border-strong); background: transparent; pointer-events: none;
+}
+:where([data-scope="calendar"] [data-part="draft"]) {
+  position: absolute; z-index: 5; box-sizing: border-box; inset-block-start: var(--_top); block-size: max(var(--_h), 12px);
+  inset-inline: 2px 4px; padding: 4px 8px; border-radius: calc(var(--veneer-radius-control) - 1px);
+  background: color-mix(in oklab, var(--veneer-color-accent-solid) 14%, var(--veneer-color-surface-raised));
+  border: var(--veneer-sweep-width) solid var(--veneer-color-sweep); color: var(--veneer-color-accent-text);
+  font: 500 11.5px/1.3 var(--veneer-text-body-font); font-variant-numeric: tabular-nums; pointer-events: none;
+  box-shadow: var(--veneer-elevation-2);
+}
+/* drag readout follows the pointer's slot (also read by the live region) */
+:where([data-scope="calendar"] [data-part="readout"]) {
+  position: absolute; z-index: 7; inset-inline-start: 4px; translate: 0 calc(-100% - 4px); padding: 3px 7px; border-radius: var(--veneer-radius-mark);
+  background: var(--veneer-color-surface-inverse); color: var(--veneer-color-on-inverse); font: 500 11px/1.2 var(--veneer-font-mono); white-space: nowrap; pointer-events: none;
+}
+/* the now line: accent, a dot on the gutter edge, the time in the gutter. It sweeps in once. */
+:where([data-scope="calendar"] [data-part="now"]) {
+  /* under the events: over them it struck through a title ("ncident review") */
+  position: absolute; z-index: 0; inset-inline: 0; inset-block-start: var(--_top); block-size: 0; pointer-events: none;
+  border-block-start: var(--veneer-border-emphasis) solid var(--veneer-color-sweep);
+  animation: veneer-now-in var(--veneer-sweep-duration) var(--veneer-sweep-ease) both;
+}
+:where([data-scope="calendar"] [data-part="now"])::before {
+  content: ""; position: absolute; inset-inline-start: -5px; inset-block-start: calc(-4px - var(--veneer-border-emphasis) / 2);
+  inline-size: 8px; block-size: 8px; border-radius: 99px; background: var(--veneer-color-sweep);
+}
+/* a run of the line between events (Calendar draws it only in the lanes free at that minute): no dot mid-column */
+:where([data-scope="calendar"] [data-part="now"][data-cut])::before { content: none; }
+:where([data-scope="calendar"] [data-part="now-label"]) {
+  position: absolute; z-index: 4; inset-inline-end: 4px; inset-block-start: var(--_top); translate: 0 -50%;
+  padding: 2px 4px; border-radius: var(--veneer-radius-mark); background: var(--veneer-color-sweep); color: var(--veneer-color-accent-on-solid);
+  font: 600 10px/1 var(--veneer-font-mono); font-variant-numeric: tabular-nums;
+}
+@keyframes veneer-now-in { from { clip-path: inset(-6px 100% -6px 0); } to { clip-path: inset(-6px 0 -6px 0); } }
+
+/* month view */
+/* the weeks share the height the calendar has, so the whole month is in view: a day shows the chips its row has room for
+   and "+N more" (Calendar measures it, from the heights here: a 16px date, 18px chips, 34px for two lines, 2px apart).
+   Below 72px a week the month scrolls. */
+:where([data-scope="calendar"] [data-part="month"][role="grid"]) { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-auto-rows: minmax(72px, 1fr); block-size: 100%; }
+:where([data-scope="calendar"] [data-part="day-cell"]) {
+  display: grid; align-content: start; gap: 2px; padding: 3px; min-inline-size: 0; min-block-size: 0; overflow: clip;
+  border-inline-start: var(--veneer-border-hairline) solid var(--veneer-color-border); border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+}
+:where([data-scope="calendar"] [data-part="day-cell"][data-outside]) { background: var(--veneer-color-surface-sunken); color: var(--veneer-color-text-subtle); }
+:where([data-scope="calendar"] [data-part="day-cell"]) > :where([aria-hidden="true"]:not([data-part])) { padding-inline: 3px; font-size: 12px; line-height: 16px; font-variant-numeric: tabular-nums; }
+:where([data-scope="calendar"] [data-part="chip"]) {
+  /* a block, not a flex row: the title is its own text, so a long one ends in an ellipsis rather than a hard cut */
+  --_c: var(--veneer-color-data-1);
+  display: block; min-inline-size: 0; block-size: 18px; padding-inline: 4px; border-radius: var(--veneer-radius-mark);
+  font-size: 11.5px; line-height: 18px; color: var(--veneer-color-text); background: color-mix(in oklab, var(--_c) 13%, transparent);
+  white-space: nowrap; overflow: clip; text-overflow: ellipsis;
+}
+/* the dot and padding are 4px apart so a 91px day (a desk's month) gives a name 66px */
+:where([data-scope="calendar"] [data-part="chip"])::before { content: ""; display: inline-block; vertical-align: 1px; margin-inline-end: 4px; inline-size: 6px; block-size: 6px; border-radius: 99px; background: var(--_c); }
+/* a month whose every day has room for all its events at two lines (Calendar decides, for all days alike) lets long
+   names take a second line, then an ellipsis: 34px at most, 18px if it's short */
+:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"][data-wrap]) {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+  block-size: auto; max-block-size: 34px; padding-block: 1px; line-height: 16px; white-space: normal; overflow-wrap: anywhere;
+}
+/* its dot hangs in the padding, so a long first word starts beside it rather than leaving the dot alone on line one */
+:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"][data-wrap]) { position: relative; padding-inline-start: 14px; }
+:where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"][data-wrap])::before { position: absolute; inset-inline-start: 4px; inset-block-start: 6px; margin: 0; }
+/* an all-day event in Week and Day keeps its whole name too: it breaks between words and the row grows */
+:where([data-scope="calendar"] [data-part="allday"] [data-part="chip"]) { block-size: auto; min-block-size: 20px; padding-block: 2px; line-height: 16px; white-space: normal; text-overflow: clip; }
+/* a phone's month day is too narrow for a title: its events become dots, and each keeps its name for assistive tech.
+   Only the month's: an all-day event in Week and Day keeps its name */
+@container calendar (max-width: 479.98px) {
+  :where([data-scope="calendar"] [data-part="day-cell"]) { grid-template-columns: repeat(auto-fill, 8px); justify-content: start; }
+  :where([data-scope="calendar"] [data-part="day-cell"]) > :where(:not([data-part="chip"])) { grid-column: 1 / -1; }
+  :where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"]) { display: flex; inline-size: 8px; block-size: 8px; padding: 0; background: none; font-size: 0; line-height: 0; }
+  :where([data-scope="calendar"] [data-part="day-cell"] [data-part="chip"])::before { margin: 0; inline-size: 8px; block-size: 8px; }
+}
+:where([data-scope="calendar"] [data-part="more"]) { block-size: 18px; font: 500 11px/18px var(--veneer-font-mono); color: var(--veneer-color-text-subtle); padding-inline: 4px; background: none; border: 0; text-align: start; }
+
+/* resource / timeline view: rows are people or rooms, time runs across */
+/* an hour never gets narrower than --veneer-cal-hour-w: past that the hours scroll sideways under the names, which stay
+   put, and the edges box (layout) shades the side with more */
+:where([data-scope="calendar"] [data-part="timeline-edges"]) { --_label: 148px; --veneer-edges-start: var(--_label); }
+@container calendar (max-width: 719.98px) {
+:where([data-scope="calendar"] [data-part="timeline-edges"]) { --_label: 84px; }
+:where([data-scope="calendar"] [data-part="lane-label"]) { flex-direction: column; align-items: start; justify-content: center; gap: 0; }
+}
+:where([data-scope="calendar"] [data-part="timeline"]) {
+  display: grid; grid-template-columns: var(--_label) minmax(0, 1fr); font-size: var(--veneer-text-caption-size);
+  min-inline-size: calc(var(--_label) + var(--_slots, 10) * max(var(--veneer-cal-hour-w), var(--_fit, 0px)));
+}
+:where([data-scope="calendar"] [data-part="timeline"] > [data-part="corner"]),
+:where([data-scope="calendar"] [data-part="lane-label"]) {
+  position: sticky; inset-inline-start: 0; z-index: 5; background: var(--veneer-color-surface);
+}
+:where([data-scope="calendar"] [data-part="lane-label"]) { display: flex; align-items: center; gap: 8px; padding: 8px; min-inline-size: 0; overflow: clip; border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border); }
+:where([data-scope="calendar"] [data-part="lane-label"] > *) { white-space: nowrap; overflow: clip; text-overflow: ellipsis; max-inline-size: 100%; }
+:where([data-scope="calendar"] [data-part="lane"]) {
+  /* five-minute columns (--_cols): a booking spans its minutes, and the row grows to the tallest name in it; bookings
+     that overlap in one row stack */
+  position: relative; display: grid; grid-template-columns: repeat(var(--_cols, 120), minmax(0, 1fr)); grid-auto-flow: row dense;
+  align-content: center; row-gap: 4px; box-sizing: border-box; min-block-size: 52px; padding-block: 6px;
+  border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  background-image: repeating-linear-gradient(to right, var(--veneer-color-border) 0 1px, transparent 1px calc(100% / var(--_slots, 10)));
+}
+:where([data-scope="calendar"] [data-part="lane"] [data-part="event"]) {
+  position: relative; inset: auto; block-size: auto; min-block-size: 40px; inline-size: auto; min-inline-size: 0; margin-inline-end: 2px;
+  /* a booking reads its own width: its whole name, broken only between words (Calendar widens the hours when a word
+     needs it), with its times under it when there's room; or only its start when it is too narrow for a word */
+  container: cal-event / inline-size; flex-flow: column nowrap; align-items: stretch; justify-content: center; gap: 1px;
+  padding-block: 4px; padding-inline: calc(4px + var(--veneer-cal-bar)) 3px;
+}
+:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-title"]) {
+  display: block; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: normal; line-height: 1.25;
+}
+:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-time"]) { display: none; }
+@container cal-event (min-width: 100px) {
+:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-time"]) { display: block; }
+}
+@container cal-event (max-width: 33.98px) {
+:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-title"]) { display: none; }
+:where([data-scope="calendar"] [data-part="lane"] [data-part="event"] [data-part="event-start"]) { display: block; }
+}
+:where([data-scope="calendar"] [data-part="lane"][data-busy]) { background-color: color-mix(in oklab, var(--veneer-color-text) 3%, transparent); }
+
+/* category colours (data palette, never status) */
+:where([data-cal="1"]) { --_c: var(--veneer-color-data-1); } :where([data-cal="2"]) { --_c: var(--veneer-color-data-2); }
+:where([data-cal="3"]) { --_c: var(--veneer-color-data-3); } :where([data-cal="4"]) { --_c: var(--veneer-color-data-4); }
+:where([data-cal="5"]) { --_c: var(--veneer-color-data-5); } :where([data-cal="6"]) { --_c: var(--veneer-color-data-6); }
+:where([data-cal="7"]) { --_c: var(--veneer-color-data-7); } :where([data-cal="8"]) { --_c: var(--veneer-color-data-8); }
+
+/* event popover body (rides comp's popover content) */
+:where([data-scope="event-card"]) { display: grid; gap: var(--veneer-space-related); inline-size: min(320px, calc(100vw - 32px)); }
+:where([data-scope="event-card"] [data-part="title"]) { --veneer-trim-k: 0; display: flex; align-items: flex-start; gap: 10px; margin: 0; font: var(--veneer-text-heading-weight) var(--veneer-text-heading-size)/1.25 var(--veneer-text-heading-font); }
+:where([data-scope="event-card"] [data-part="title"])::before { content: ""; flex: none; margin-block-start: 0.35em; inline-size: 10px; block-size: 10px; border-radius: var(--veneer-radius-mark); background: var(--_c, var(--veneer-color-data-1)); }
+:where([data-scope="event-card"] dl) { display: grid; grid-template-columns: 18px 1fr; gap: 6px 10px; margin: 0; font-size: var(--veneer-text-body-size); }
+:where([data-scope="event-card"] dt) { color: var(--veneer-color-text-subtle); padding-block-start: 2px; }
+:where([data-scope="event-card"] dd) { margin: 0; }
+:where([data-scope="event-card"] [data-part="actions"]) { display: flex; gap: var(--veneer-space-related); justify-content: flex-end; flex-wrap: wrap; padding-block-start: var(--veneer-space-related); border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border); }
+
+/* phone agenda: week strip + day pages that swipe */
+:where([data-scope="agenda"][data-part="root"]) {
+  container: agenda / inline-size; position: relative;
+  display: grid; grid-template-rows: auto auto minmax(0, 1fr); block-size: 100%; min-block-size: 0; background: var(--veneer-color-surface);
+}
+:where([data-scope="agenda"] [data-part="strip"]) {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; padding: 4px var(--veneer-space-related) 10px;
+  border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border);
+}
+:where([data-scope="agenda"] [data-part="strip"] button) {
+  all: unset; position: relative; display: grid; justify-items: center; gap: 4px; padding-block: 6px 8px; border-radius: var(--veneer-radius-control);
+  cursor: pointer; min-block-size: 44px; -webkit-tap-highlight-color: transparent;
+}
+:where([data-scope="agenda"] [data-part="strip"] button span) { font: 500 10.5px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); text-transform: uppercase; letter-spacing: 0.06em; }
+:where([data-scope="agenda"] [data-part="strip"] button b) { display: grid; place-items: center; inline-size: 32px; block-size: 32px; border-radius: var(--veneer-radius-round); font: 500 16px/1 var(--veneer-text-heading-font); font-variant-numeric: tabular-nums; transition: background-color var(--veneer-duration-base) var(--veneer-ease-out), color var(--veneer-duration-base); }
+:where([data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b) { background: var(--veneer-color-text); color: var(--veneer-color-surface); }
+:where([data-scope="agenda"] [data-part="strip"] button[data-today] b) { box-shadow: inset 0 0 0 var(--veneer-border-emphasis) var(--veneer-color-sweep); }
+:where([data-scope="agenda"] [data-part="strip"] button[data-today][aria-selected="true"] b) { background: var(--veneer-color-accent-solid); color: var(--veneer-color-accent-on-solid); box-shadow: none; }
+:where([data-scope="agenda"] [data-part="strip"] button i) { display: flex; gap: 2px; block-size: 4px; }
+:where([data-scope="agenda"] [data-part="strip"] button i)::before { content: none; }
+:where([data-scope="agenda"] [data-part="strip"] button i em) { inline-size: 4px; block-size: 4px; border-radius: 9px; background: var(--_c); }
+:where([data-scope="agenda"] [data-part="viewport"]) { position: relative; overflow: clip; min-block-size: 0; touch-action: pan-y; }
+:where([data-scope="agenda"] [data-part="track"]) {
+  display: grid; grid-template-columns: repeat(3, 100%); block-size: 100%;
+  translate: calc(-100% + var(--_dx, 0px)) 0;
+  transition: translate var(--veneer-duration-slow) var(--veneer-ease-out);
+}
+:where([data-scope="agenda"] [data-part="track"][data-dragging]) { transition: none; }
+:where([data-scope="agenda"] [data-part="page"]) { overflow: auto; overscroll-behavior: contain; padding: var(--veneer-space-related) var(--veneer-space-group) 96px; }
+:where([data-scope="agenda"] [data-part="day-title"]) { display: flex; align-items: baseline; justify-content: space-between; padding: 6px 0 10px; }
+:where([data-scope="agenda"] [data-part="day-title"] h4) { margin: 0; font: var(--veneer-text-title-weight) 22px/1.1 var(--veneer-text-title-font); letter-spacing: var(--veneer-text-title-tracking); }
+:where([data-scope="agenda"] [data-part="row"]) {
+  --_c: var(--veneer-color-data-1);
+  position: relative; display: grid; grid-template-columns: 56px var(--veneer-cal-bar) minmax(0, 1fr); gap: 0 12px; align-items: stretch;
+  min-block-size: 56px; padding: 10px 8px; margin-inline: -8px; border-radius: var(--veneer-radius-control); cursor: pointer;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  transition: background-color var(--veneer-duration-fast), scale var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="agenda"] [data-part="row"]:active),
+:where([data-scope="agenda"] [data-part="row"][data-pressing]) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="agenda"] [data-part="row"][data-lifted]) { scale: calc(1 + 0.02 * var(--veneer-motion-scale)); background: var(--veneer-color-surface-raised); box-shadow: var(--veneer-elevation-2); }
+:where([data-scope="agenda"] [data-part="row"] time) { display: grid; align-content: start; gap: 2px; font: 500 13px/1.2 var(--veneer-text-body-font); font-variant-numeric: tabular-nums; }
+:where([data-scope="agenda"] [data-part="row"] time small) { color: var(--veneer-color-text-subtle); font-size: 12px; font-weight: 400; }
+:where([data-scope="agenda"] [data-part="row"] > i) { border-radius: 4px; background: var(--_c); }
+:where([data-scope="agenda"] [data-part="row"] b) { display: block; font-weight: 500; font-size: 15px; line-height: 1.3; }
+:where([data-scope="agenda"] [data-part="row"] span) { display: block; color: var(--veneer-color-text-subtle); font-size: 13px; line-height: 1.35; margin-block-start: 2px; }
+:where([data-scope="agenda"] [data-part="row"][data-allday] time) { font: 500 10.5px/1.3 var(--veneer-font-mono); text-transform: uppercase; color: var(--veneer-color-text-subtle); letter-spacing: 0.06em; }
+:where([data-scope="agenda"] [data-part="now"]) { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; margin-block: 2px; }
+:where([data-scope="agenda"] [data-part="now"] span) { font: 600 11px/1 var(--veneer-font-mono); color: var(--veneer-color-accent-text); font-variant-numeric: tabular-nums; }
+:where([data-scope="agenda"] [data-part="now"] i) { position: relative; block-size: var(--veneer-border-emphasis); background: var(--veneer-color-sweep); animation: veneer-now-in var(--veneer-sweep-duration) var(--veneer-sweep-ease) both; }
+:where([data-scope="agenda"] [data-part="now"] i)::before { content: ""; position: absolute; inset-inline-start: -4px; inset-block-start: -3.5px; inline-size: 8px; block-size: 8px; border-radius: 9px; background: var(--veneer-color-sweep); }
+:where([data-scope="agenda"] [data-part="free"]) { display: grid; grid-template-columns: 56px 1fr; gap: 12px; padding-block: 6px; color: var(--veneer-color-text-subtle); font: 500 11px/1 var(--veneer-font-mono); }
+:where([data-scope="agenda"] [data-part="free"] i) { border-block-start: 1px dashed var(--veneer-color-border-strong); align-self: center; }
+
+/* booking: availability → slots → confirm */
+:where([data-scope="booking"][data-part="root"]) { container: booking / inline-size; display: grid; gap: var(--veneer-space-group); }
+:where([data-scope="booking"] [data-part="slots"]) { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: var(--veneer-space-related); }
+:where([data-scope="booking"] [data-part="slot"]) {
+  position: relative; display: grid; place-items: center; block-size: max(var(--veneer-control-md), var(--veneer-target-min));
+  border: 0; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised); color: var(--veneer-color-text);
+  font: 500 var(--veneer-text-body-size)/1 var(--veneer-text-body-font); font-variant-numeric: tabular-nums; cursor: pointer;
+}
+:where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"])),
+:where([data-scope="booking"] [data-part="slot"]:is([aria-checked="true"])) { background: var(--veneer-color-accent-solid); color: var(--veneer-color-accent-on-solid); }
+:where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"], [aria-checked="true"])) > :where([data-part="sweep-base"]) { opacity: 0; }
+/* review 01 M6: on the accent fill the accent stroke was 1.08:1; use the on-accent ink */
+:where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"], [aria-checked="true"])) > :where([data-part="sweep"]) { color: var(--veneer-color-accent-on-solid); }
+:where([data-scope="booking"] [data-part="slot"]:disabled) { color: var(--veneer-color-text-faint); text-decoration: line-through; cursor: not-allowed; background: transparent; }
+
+/* ---------------------------------------------------------------------------
+   2 · MEETINGS (room, tile, control bar, sidebar, prejoin, lobby, PiP)
+   ------------------------------------------------------------------------ */
+:where([data-scope="room"][data-part="root"]) {
+  container: room / inline-size; position: relative;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr) auto;
+  block-size: 100%; min-block-size: 0; background: var(--veneer-color-page); color: var(--veneer-color-text);
+}
+:where([data-scope="room"] [data-part="header"]) { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--veneer-space-related); padding: 10px var(--veneer-space-group); }
+:where([data-scope="room"] [data-part="rec"]) { display: inline-flex; align-items: center; gap: 6px; font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-critical-text); text-transform: uppercase; letter-spacing: 0.08em; }
+:where([data-scope="room"] [data-part="stage"]) { grid-column: 1; grid-row: 2; position: relative; min-block-size: 0; padding: 0 var(--veneer-space-related) var(--veneer-space-related); display: grid; }
+:where([data-scope="room"] [data-part="stage"][data-layout="gallery"]) {
+  grid-template-columns: repeat(var(--_cols, 3), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: var(--veneer-tile-gap); align-content: stretch;
+}
+:where([data-scope="room"] [data-part="stage"][data-layout="speaker"]) { grid-template-rows: minmax(0, 1fr) 96px; gap: var(--veneer-tile-gap); }
+:where([data-scope="room"] [data-part="stage"][data-layout="speaker"] > [data-part="strip"]) { display: grid; grid-auto-flow: column; grid-auto-columns: 148px; gap: var(--veneer-tile-gap); overflow-x: auto; scrollbar-width: none; }
+:where([data-scope="room"] [data-part="stage"][data-layout="presentation"]),
+:where([data-scope="room"] [data-part="stage"][data-layout="board"]) {
+  grid-template-columns: minmax(0, 1fr) 168px; gap: var(--veneer-tile-gap);
+}
+:where([data-scope="room"] [data-part="stage"][data-layout="board"]) { grid-template-columns: minmax(0, 1fr) 112px; }
+:where([data-scope="room"] [data-part="stage"] > [data-part="rail"]) { display: grid; grid-auto-rows: 96px; gap: var(--veneer-tile-gap); align-content: start; overflow: auto; scrollbar-width: none; }
+:where([data-scope="room"] [data-part="stage"][data-layout="board"] > [data-part="rail"]) { grid-auto-rows: 72px; }
+:where([data-scope="room"] [data-part="share"]) {
+  position: relative; display: grid; grid-template-rows: auto 1fr; border-radius: var(--veneer-radius-surface); overflow: clip;
+  background: var(--veneer-color-surface); box-shadow: 0 0 0 1px var(--veneer-color-border);
+}
+:where([data-scope="room"] [data-part="share"] header) { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); border-block-end: 1px solid var(--veneer-color-border); }
+
+/* tile: video or avatar; state lives on attributes; nothing loops */
+:where([data-scope="tile"]) {
+  --_ring: transparent;
+  position: relative; isolation: isolate; overflow: clip; min-block-size: 0; min-inline-size: 0;
+  display: grid; place-items: center; border-radius: var(--veneer-radius-surface);
+  background: radial-gradient(120% 90% at 30% 20%, color-mix(in oklab, var(--_hue, var(--veneer-color-data-1)) 30%, var(--veneer-color-surface-raised)), var(--veneer-color-surface-sunken));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--veneer-color-text) 8%, transparent);
+  cursor: pointer;
+}
+:where([data-scope="tile"] [data-scope="avatar"]) { --_s: clamp(40px, 28cqi, 88px); font-size: calc(var(--_s) * 0.36); }
+:where([data-scope="tile"]) { container-type: size; }
+:where([data-scope="tile"] [data-part="name"]) {
+  position: absolute; inset-inline-start: 8px; inset-block-end: 8px; z-index: 2; max-inline-size: calc(100% - 16px);
+  display: inline-flex; align-items: center; gap: 6px; block-size: 24px; padding-inline: 8px; border-radius: var(--veneer-radius-control);
+  background: color-mix(in oklab, var(--veneer-color-surface-overlay) 82%, transparent); backdrop-filter: blur(var(--veneer-blur-overlay));
+  font: 500 12px/1 var(--veneer-text-body-font); white-space: nowrap; overflow: clip; text-overflow: ellipsis;
+}
+:where([data-scope="tile"] [data-part="name"] svg[data-icon]) { inline-size: 13px; block-size: 13px; }
+:where([data-scope="tile"] [data-part="video"]) { position: absolute; inset: 0; z-index: 1; }
+:where([data-scope="tile"] [data-part="video"] > :is(video)),
+:where([data-scope="tile"] [data-part="video"] > :is(img)),
+:where([data-scope="tile"] [data-part="video"] > :is(canvas)) { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; }
+:where([data-scope="tile"] [data-part="level"]) { color: var(--veneer-color-sweep); }
+:where([data-scope="room"] [data-part="tiles"]) { display: contents; }
+:where([data-scope="tile"] [data-part="flags"]) { position: absolute; inset-inline-end: 8px; inset-block-start: 8px; z-index: 2; display: flex; gap: 4px; }
+:where([data-scope="tile"] [data-part="flag"]) {
+  display: inline-grid; place-items: center; inline-size: 26px; block-size: 26px; border-radius: var(--veneer-radius-control);
+  background: color-mix(in oklab, var(--veneer-color-surface-overlay) 82%, transparent); backdrop-filter: blur(var(--veneer-blur-overlay));
+}
+:where([data-scope="tile"] [data-part="flag"][data-tone]) { color: var(--_text); }
+:where([data-scope="tile"] [data-part="flag"] svg[data-icon]) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="tile"][data-hand] [data-part="flag"][data-kind="hand"]) { background: var(--veneer-color-highlight-solid); color: var(--veneer-color-highlight-on-solid); animation: veneer-bump var(--veneer-duration-slow) var(--veneer-ease-pop); }
+/* speaking: an accent ring drawn by the sweep (in when speaking starts, out when it stops) */
+:where([data-scope="tile"])::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 calc(var(--veneer-border-emphasis) + 1px) var(--veneer-color-sweep);
+  clip-path: inset(0 100% 0 0 round var(--veneer-radius-surface));
+  transition: clip-path calc(var(--veneer-sweep-duration) * 0.6) var(--veneer-sweep-ease);
+}
+:where([data-scope="tile"][data-speaking])::after { clip-path: inset(0 0 0 0 round var(--veneer-radius-surface)); }
+:where([data-scope="tile"][data-speaking-out])::after { clip-path: inset(0 0 0 100% round var(--veneer-radius-surface)); }
+/* audio level: 3 bars driven by a --level custom property (0..1), no loop */
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"]) { display: inline-flex; align-items: center; gap: 2px; block-size: 12px; }
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { inline-size: 2px; border-radius: 2px; background: currentColor; block-size: calc(3px + 9px * var(--level, 0) * var(--k, 1)); transition: block-size 90ms linear; }
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i:nth-child(1)),
+:where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i:nth-child(3)) { --k: 0.6; }
+:where([data-scope="tile"][data-network="poor"]) { box-shadow: inset 0 0 0 1px var(--veneer-color-caution-border); }
+:where([data-scope="tile"][data-network="poor"] [data-scope="avatar"]) { filter: saturate(0.6); }
+:where([data-scope="tile"][data-cam="off"] [data-part="video"]) { display: none; }
+/* PiP self-view: draggable, snaps to the nearest corner */
+:where([data-scope="pip"]) {
+  position: absolute; z-index: var(--veneer-z-dock); inline-size: clamp(120px, 22cqi, 200px); aspect-ratio: 16 / 10;
+  inset-inline-end: 16px; inset-block-end: 80px; border-radius: var(--veneer-radius-surface); overflow: clip;
+  box-shadow: var(--veneer-elevation-3), 0 0 0 1px var(--veneer-color-border-strong); cursor: grab; touch-action: none;
+  translate: var(--_px, 0) var(--_py, 0); transition: translate var(--veneer-duration-slow) var(--veneer-ease-out);
+}
+:where([data-scope="pip"][data-dragging]) { transition: none; cursor: grabbing; }
+:where([data-scope="pip"] [data-scope="tile"]) { block-size: 100%; border-radius: 0; }
+
+/* control bar: grouped, the destructive action set apart, labels collapse by container width */
+:where([data-scope="call-controls"]) {
+  grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--veneer-space-related);
+  padding: var(--veneer-space-related) var(--veneer-space-group) calc(var(--veneer-space-related) + env(safe-area-inset-bottom, 0px));
+}
+:where([data-scope="call-controls"] [data-part="group"]) { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 4px; border-radius: calc(var(--veneer-radius-control) + 4px); background: var(--veneer-color-surface-raised); box-shadow: 0 0 0 1px var(--veneer-color-border); }
+:where([data-scope="call-controls"] [data-part="control"]) {
+  position: relative; display: inline-grid; grid-auto-flow: column; place-items: center; gap: 6px;
+  min-inline-size: max(40px, var(--veneer-target-min)); block-size: max(40px, var(--veneer-target-min)); padding-inline: 10px;
+  border: 0; border-radius: var(--veneer-radius-control); background: transparent; color: var(--veneer-color-text); cursor: pointer;
+  font: 500 var(--veneer-text-caption-size)/1 var(--veneer-text-body-font);
+  transition: background-color var(--veneer-duration-fast), color var(--veneer-duration-fast);
+}
+:where([data-scope="call-controls"] [data-part="control"]:hover) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="call-controls"] [data-part="control"][aria-pressed="false"][data-kind="device"]) { background: var(--veneer-color-critical-soft); color: var(--veneer-color-critical-text); }
+:where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]:not([data-kind="device"])) { background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); }
+:where([data-scope="call-controls"] [data-part="control"] [data-part="label"]) { display: none; }
+@container room (min-width: 1000px) { :where([data-scope="call-controls"] [data-part="control"] [data-part="label"]) { display: inline; } }
+:where([data-scope="call-controls"] [data-part="leave"]) { margin-inline-start: var(--veneer-space-related); }
+:where([data-scope="call-controls"] [data-part="end"]) { position: absolute; inset-inline-end: var(--veneer-space-group); display: flex; gap: 4px; }
+@container room (max-width: 599.98px) {
+  :where([data-scope="call-controls"]) { justify-content: space-between; gap: 4px; }
+  :where([data-scope="call-controls"] [data-part="end"]) { position: static; }
+  :where([data-scope="call-controls"] [data-part="group"]) { background: transparent; box-shadow: none; padding: 0; }
+  :where([data-scope="room"] [data-part="stage"][data-layout="gallery"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* the stage's own --_cols is inline */
+}
+/* sidebar: chat / people; a column on desktop, a sheet below 1000 */
+:where([data-scope="room"] [data-part="sidebar"]) {
+  grid-column: 2; grid-row: 2; inline-size: 300px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-block-size: 0;
+  margin: 0 var(--veneer-space-related) var(--veneer-space-related) 0; border-radius: var(--veneer-radius-surface);
+  background: var(--veneer-color-surface); box-shadow: 0 0 0 1px var(--veneer-color-border); overflow: clip;
+  animation: veneer-side-in var(--veneer-duration-slow) var(--veneer-ease-out);
+}
+:where([data-scope="room"] [data-part="sidebar"][hidden]) { display: none; }
+@keyframes veneer-side-in { from { opacity: 0; translate: calc(var(--veneer-motion-distance) * 2) 0; } }
+@container room (max-width: 999.98px) {
+  :where([data-scope="room"] [data-part="sidebar"]) { position: absolute; inset: auto 8px 72px 8px; inline-size: auto; block-size: 60%; z-index: var(--veneer-z-overlay); box-shadow: var(--veneer-elevation-3), 0 0 0 1px var(--veneer-color-border); margin: 0; }
+}
+:where([data-scope="room"] [data-part="people"] li) { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: var(--veneer-text-body-size); }
+:where([data-scope="room"] [data-part="people"] li > span:not([data-scope])) { flex: 1; min-inline-size: 0; }
+:where([data-scope="room"] [data-part="people"] li small) { display: block; color: var(--veneer-color-text-subtle); font-size: 12px; }
+
+/* prejoin / lobby */
+:where([data-scope="prejoin"]) { container: prejoin / inline-size; }
+:where([data-scope="prejoin"] > [data-part="layout"]) { display: grid; gap: var(--veneer-space-group); }
+@container prejoin (min-width: 600px) { :where([data-scope="prejoin"] > [data-part="layout"]) { grid-template-columns: 1.3fr 1fr; align-items: center; } }
+:where([data-scope="prejoin"] [data-part="stack"]) { display: grid; gap: var(--veneer-space-group); align-content: start; min-inline-size: 0; }
+:where([data-scope="prejoin"] [data-part="preview"]) { position: relative; aspect-ratio: 16 / 10; border-radius: var(--veneer-radius-surface); overflow: clip; }
+:where([data-scope="prejoin"] [data-part="preview"] [data-scope="tile"]) { block-size: 100%; }
+:where([data-scope="prejoin"] [data-part="preview-controls"]) { position: absolute; inset-inline: 0; inset-block-end: 10px; z-index: 4; display: flex; justify-content: center; gap: 8px; }
+:where([data-scope="prejoin"] [data-part="meter"]) { display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; block-size: 6px; }
+:where([data-scope="prejoin"] [data-part="meter"] i) { border-radius: 2px; background: var(--veneer-color-surface-active); transition: background-color 80ms linear; }
+:where([data-scope="prejoin"] [data-part="meter"] i[data-on]) { background: var(--veneer-color-positive-solid); }
+:where([data-part="countdown"]) { display: flex; gap: 6px; font: 500 28px/1 var(--veneer-font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+:where([data-part="countdown"] span) { display: grid; justify-items: center; gap: 6px; min-inline-size: 52px; padding: 10px 6px 8px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); }
+:where([data-part="countdown"] small) { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--veneer-color-text-subtle); }
+
+/* ---------------------------------------------------------------------------
+   3 · NOTIFICATIONS (bell, center, item, push prompt, activity feed)
+   ------------------------------------------------------------------------ */
+/* the bell is its button's box, never stretched by a row or a column, so the badge measures from the button */
+:where([data-scope="bell"]) { position: relative; display: inline-flex; vertical-align: middle; inline-size: fit-content; block-size: fit-content; }
+:where([data-scope="bell"] [data-part="content"]:popover-open) { display: grid; inline-size: min(400px, calc(100vw - 16px)); max-inline-size: none; max-block-size: min(520px, calc(100dvh - 88px)); padding: 0; overflow: clip; }
+/* the count sits off the glyph's top-end corner, as a notification badge does: placed from the button's centre, it
+   reaches 2px into the glyph's box each way (the box's empty corner, beside the bell's dome), whatever the control size,
+   grows away from it, and a 2px ring of the surface cuts it clear of the bell's outline */
+:where([data-scope="bell"] > [data-scope="badge"][data-count]) {
+  position: absolute; inset-inline-start: calc(50% + var(--veneer-icon-md) / 2 - 2px); inset-block-end: calc(50% + var(--veneer-icon-md) / 2 - 2px);
+  box-sizing: border-box; block-size: 15px; min-inline-size: 15px; padding-inline: 3px; border: 0; font-size: 9.5px; line-height: 1;
+  box-shadow: 0 0 0 2px var(--veneer-color-surface); pointer-events: none;
+}
+:where([data-scope="inbox"][data-part="root"]) {
+  container: inbox / inline-size; position: relative;
+  display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; min-block-size: 0; max-block-size: 100%;
+  background: var(--veneer-color-surface-overlay); color: var(--veneer-color-text);
+}
+:where([data-scope="inbox"][data-variant="popover"]) {
+  inline-size: min(400px, 100%); border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-3), 0 0 0 1px var(--veneer-color-border);
+  overflow: clip;
+}
+:where([data-scope="inbox"] [data-part="header"]) { display: flex; align-items: center; gap: var(--veneer-space-related); padding: 14px var(--veneer-space-group) 6px; }
+:where([data-scope="inbox"] [data-part="header"] h3) { flex: 1; margin: 0; font: var(--veneer-text-heading-weight) var(--veneer-text-heading-size)/1.2 var(--veneer-text-heading-font); }
+:where([data-scope="inbox"] [data-part="panel"]) { display: grid; grid-template-rows: minmax(0, 1fr); min-block-size: 0; }
+:where([data-scope="inbox"] [data-scope="tabs"]) { padding-inline: var(--veneer-space-group); }
+:where([data-scope="inbox"] [data-part="list"]) { overflow: auto; overscroll-behavior: contain; margin: 0; padding: 0 0 var(--veneer-space-related); list-style: none; }
+:where([data-scope="inbox"] [data-part="group"]) {
+  position: sticky; inset-block-start: 0; z-index: 2; padding: 12px var(--veneer-space-group) 6px; background: var(--veneer-color-surface-overlay);
+  font-family: var(--veneer-text-eyebrow-font); font-size: var(--veneer-text-eyebrow-size); letter-spacing: var(--veneer-text-eyebrow-tracking);
+  text-transform: var(--veneer-text-eyebrow-case); color: var(--veneer-color-text-subtle); font-weight: 500;
+}
+:where([data-scope="notification"]) {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 12px; align-items: start;
+  padding: 12px var(--veneer-space-group); cursor: pointer; outline-offset: -2px;
+  transition: background-color var(--veneer-duration-fast) var(--veneer-ease-out);
+}
+:where([data-scope="notification"]:hover) { background: color-mix(in oklab, var(--veneer-color-text) var(--veneer-state-hover), transparent); }
+/* review 01 M3: no 1px bottom rule; the full border sweeps over a hairline base, like any surface */
+:where([data-scope="notification"]) { --veneer-sweep-radius: 0px; }
+/* a notification is a list row: a surface, so it sweeps only with data-flair="sweep", or when it opts in (veneer.css §4) */
+:where([data-scope="notification"][data-sweep]) { --_on: var(--veneer-sweep-surfaces); }
+:where([data-scope="notification"][data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
+:where([data-scope="notification"]) > :where([data-part="sweep-base"]) { color: var(--veneer-color-border); }
+:where([data-scope="notification"] [data-part="icon"]) { position: relative; }
+:where([data-scope="notification"] [data-part="kind"]) {
+  position: absolute; inset-inline-end: -6px; inset-block-end: -6px; display: grid; place-items: center; inline-size: 16px; block-size: 16px;
+  border-radius: var(--veneer-radius-round); background: var(--_solid); color: var(--_ink-on); box-shadow: 0 0 0 2px var(--veneer-color-surface-overlay);
+}
+:where([data-scope="notification"] [data-part="kind"] svg[data-icon]) { inline-size: 10px; block-size: 10px; stroke-width: 2; }
+:where([data-scope="notification"] [data-part="text"]) { margin: 0; font-size: var(--veneer-text-body-size); line-height: 1.45; color: var(--veneer-color-text-subtle); }
+:where([data-scope="notification"] [data-part="text"] b) { color: var(--veneer-color-text); font-weight: 500; }
+:where([data-scope="notification"] [data-part="quote"]) { grid-column: 2; margin: 4px 0 2px; padding: 8px 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text); }
+:where([data-scope="notification"] [data-part="meta"]) { grid-column: 2; display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="notification"] [data-part="actions"]) { grid-column: 2; display: flex; gap: 6px; margin-block-start: 8px; }
+:where([data-scope="notification"] [data-part="unread"]) { grid-column: 3; grid-row: 1; inline-size: 8px; block-size: 8px; margin-block-start: 6px; border-radius: 9px; background: var(--veneer-color-accent-solid); transition: opacity var(--veneer-duration-base), scale var(--veneer-duration-base) var(--veneer-ease-pop); }
+:where([data-scope="notification"][data-read] [data-part="unread"]) { opacity: 0; scale: 0.4; }
+:where([data-scope="notification"]:not([data-read])) { background: color-mix(in oklab, var(--veneer-color-accent-soft) 45%, transparent); }
+:where([data-scope="notification"][data-state="dismissed"]) { animation: veneer-dismiss calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) var(--veneer-ease-in) forwards; }
+@keyframes veneer-dismiss { to { opacity: 0; translate: calc(var(--veneer-motion-distance) * 3) 0; } }
+:where([data-scope="inbox"] [data-part="footer"]) { display: flex; justify-content: space-between; align-items: center; padding: 8px var(--veneer-space-group); border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border); font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+/* "N new" pill when the list is scrolled and items arrive above */
+:where([data-scope="inbox"] [data-part="new-pill"]) {
+  position: absolute; inset-inline-start: 50%; translate: -50% 0; inset-block-start: 112px; z-index: 3;
+  animation: veneer-arrive var(--veneer-arrive-duration) var(--veneer-ease-out);
+}
+/* push permission: the soft ask comes before the browser's prompt, only after a meaningful action */
+:where([data-scope="push-ask"]) {
+  position: relative; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; padding: var(--veneer-space-group);
+  border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-raised); box-shadow: 0 0 0 1px var(--veneer-color-border), var(--veneer-elevation-1);
+}
+:where([data-scope="push-ask"] [data-part="mark"]) { grid-row: span 2; display: grid; place-items: center; inline-size: 36px; block-size: 36px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); }
+:where([data-scope="push-ask"] [data-part="actions"]) { grid-column: 2; display: flex; gap: 8px; margin-block-start: 8px; }
+/* activity feed: a quiet timeline with a hairline spine */
+:where([data-scope="activity-feed"] > header) { display: flex; justify-content: space-between; align-items: center; gap: var(--veneer-space-related); }
+:where([data-scope="activity"]) { margin: 0; padding: 0; list-style: none; display: grid; }
+:where([data-scope="activity"] > li) { position: relative; display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; padding-block: 8px; font-size: var(--veneer-text-body-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="activity"] > li)::before { content: ""; position: absolute; inset-inline-start: 11.5px; inset-block: 32px -8px; inline-size: 1px; background: var(--veneer-color-border); }
+:where([data-scope="activity"] > li:last-child)::before { display: none; }
+:where([data-scope="activity"] > li b) { color: var(--veneer-color-text); font-weight: 500; }
+:where([data-scope="activity"] time) { font: 500 11px/1.8 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+
+/* toasts scoped to a container instead of the viewport (embeds, the specimen frames) */
+:where([data-scope="toast"][data-part="region"][data-contained]) { position: absolute; inset-inline-end: var(--veneer-space-group); inset-block-end: var(--veneer-space-group); }
+
+/* ---------------------------------------------------------------------------
+   4 · CHAT (thread, message, composer, typing, receipts, reactions)
+   ------------------------------------------------------------------------ */
+:where([data-scope="thread"][data-part="root"]) {
+  container: thread / inline-size;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; block-size: 100%; min-block-size: 0; background: var(--veneer-color-surface);
+}
+:where([data-scope="thread"] [data-part="log"]) { overflow: auto; overscroll-behavior: contain; padding: var(--veneer-space-group); display: flex; flex-direction: column; gap: 2px; scrollbar-width: thin; }
+:where([data-scope="thread"] [data-part="divider"]) {
+  display: flex; align-items: center; gap: 12px; margin-block: 14px 8px; font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); text-transform: uppercase; letter-spacing: 0.08em;
+}
+:where([data-scope="thread"] [data-part="divider"])::before, :where([data-scope="thread"] [data-part="divider"])::after { content: ""; flex: 1; border-block-start: 1px solid var(--veneer-color-border); }
+/* "Jump to latest": over the log, on the log's own grid row (07 §5.2) */
+:where([data-scope="thread"] [data-part="log"]) { grid-area: 2 / 1; }
+:where([data-scope="thread"] [data-part="jump"]) { grid-area: 2 / 1; align-self: end; justify-self: center; z-index: 5; margin-block-end: 8px; }
+:where([data-scope="thread"] [data-part="divider"][data-unread]) { color: var(--veneer-color-accent-text); }
+:where([data-scope="thread"] [data-part="divider"][data-unread])::before, :where([data-scope="thread"] [data-part="divider"][data-unread])::after { border-color: var(--veneer-color-sweep); }
+:where([data-scope="message"]) {
+  position: relative; display: grid; grid-template-columns: var(--veneer-avatar-md) minmax(0, 1fr); gap: 0 10px; padding: 4px 0;
+  max-inline-size: 100%;
+}
+:where([data-scope="message"][data-continued]) { padding-block-start: 0; }
+:where([data-scope="message"][data-continued] > [data-scope="avatar"]) { visibility: hidden; block-size: 0; }
+:where([data-scope="message"] [data-part="by"]) { display: flex; align-items: baseline; gap: 8px; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); margin-block-end: 3px; }
+:where([data-scope="message"] [data-part="by"] b) { color: var(--veneer-color-text); font-weight: 600; font-size: var(--veneer-text-body-size); }
+:where([data-scope="message"] [data-part="body"]) { display: grid; justify-items: start; gap: 4px; min-inline-size: 0; }
+:where([data-scope="message"] [data-part="bubble"]) {
+  position: relative; max-inline-size: min(560px, 100%); padding: 8px 12px; border-radius: var(--veneer-bubble-radius);
+  background: var(--veneer-color-surface-sunken); line-height: 1.5; overflow-wrap: anywhere;
+}
+:where([data-scope="message"][data-mine]) { grid-template-columns: minmax(0, 1fr); }
+:where([data-scope="message"][data-mine] > [data-scope="avatar"]),
+:where([data-scope="message"][data-mine] [data-part="by"]) { display: none; }
+:where([data-scope="message"][data-mine] [data-part="body"]) { justify-items: end; }
+:where([data-scope="message"][data-mine] [data-part="bubble"]) { background: var(--veneer-color-accent-solid); color: var(--veneer-color-accent-on-solid); }
+/* review 01 M4: the bubble is the sweep host (hairline base, surface reach; confirm() always shows) */
+:where([data-scope="message"] [data-part="bubble"][data-sweep]) { --veneer-sweep-radius: var(--veneer-bubble-radius); --_on: var(--veneer-sweep-surfaces); }
+:where([data-scope="message"] [data-part="bubble"]) > :where([data-part="sweep-base"]) { color: transparent; }
+:where([data-scope="message"][data-mine] [data-part="bubble"]) > :where([data-part="sweep"]) { color: var(--veneer-color-accent-on-solid); }
+:where([data-scope="message"][data-mine] [data-part="bubble"] a) { color: inherit; }
+/* @you: a highlight tint on the whole message (07 §5.2) */
+:where([data-scope="message"][data-mentions-me]:not([data-mine]) [data-part="bubble"]) { background: var(--veneer-color-highlight-soft); }
+:where([data-scope="message"] [data-part="mention"]) { padding: 0 3px; border-radius: var(--veneer-radius-mark); background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); font-weight: 500; }
+:where([data-scope="message"][data-mine] [data-part="mention"]) { background: color-mix(in oklab, var(--veneer-color-accent-on-solid) 20%, transparent); color: inherit; }
+:where([data-scope="message"][data-state="sending"] [data-part="bubble"]) { opacity: 0.6; }
+:where([data-scope="message"][data-state="failed"] [data-part="bubble"]) { background: var(--veneer-color-critical-soft); color: var(--veneer-color-text); box-shadow: inset 0 0 0 1px var(--veneer-color-critical-border); }
+:where([data-scope="message"] [data-part="status"]) { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="message"] [data-part="status"] svg[data-icon]) { inline-size: 13px; block-size: 13px; }
+:where([data-scope="message"][data-state="failed"] [data-part="status"]) { color: var(--veneer-color-critical-text); }
+:where([data-scope="message"] [data-part="attachment"]) {
+  display: grid; grid-template-columns: 36px 1fr; gap: 2px 10px; align-items: center; padding: 8px 12px 8px 8px; min-inline-size: 220px;
+  border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised); box-shadow: 0 0 0 1px var(--veneer-color-border);
+}
+:where([data-scope="message"] [data-part="attachment"] i) { grid-row: span 2; display: grid; place-items: center; block-size: 36px; border-radius: var(--veneer-radius-mark); background: var(--veneer-color-info-soft); color: var(--veneer-color-info-text); font: 600 9.5px/1 var(--veneer-font-mono); font-style: normal; }
+:where([data-scope="message"] [data-part="attachment"] small) { color: var(--veneer-color-text-subtle); font-size: 12px; }
+:where([data-scope="reactions"]) { display: flex; flex-wrap: wrap; gap: 4px; }
+:where([data-scope="reactions"] button) {
+  all: unset; display: inline-flex; align-items: center; gap: 4px; block-size: 24px; padding-inline: 7px; border-radius: var(--veneer-radius-round);
+  background: var(--veneer-color-surface-raised); box-shadow: inset 0 0 0 1px var(--veneer-color-border); font-size: 12.5px; cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+:where([data-scope="reactions"] button[aria-pressed="true"]) { background: var(--veneer-color-accent-soft); box-shadow: inset 0 0 0 1px var(--veneer-color-accent-border); color: var(--veneer-color-accent-text); }
+:where([data-scope="reactions"] button:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 1px; }
+:where([data-scope="receipts"]) { display: flex; justify-content: flex-end; align-items: center; gap: 6px; font-size: 11.5px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="receipts"] [data-scope="avatar"]) { --_s: 16px; font-size: 7px; }
+:where([data-scope="typing"]) { display: inline-flex; align-items: center; gap: 8px; min-block-size: 22px; padding-inline: var(--veneer-space-group); font-size: 12px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="typing"] [data-part="dots"]) { display: inline-flex; gap: 3px; }
+:where([data-scope="typing"] [data-part="dots"] i) { inline-size: 5px; block-size: 5px; border-radius: 9px; background: currentColor; opacity: 0.35; animation: veneer-typing 1.2s var(--veneer-ease-in-out) infinite; animation-play-state: var(--_play, running); }
+:where([data-scope="typing"] [data-part="dots"] i:nth-child(2)) { animation-delay: 0.15s; }
+:where([data-scope="typing"] [data-part="dots"] i:nth-child(3)) { animation-delay: 0.3s; }
+@keyframes veneer-typing { 30% { opacity: 1; translate: 0 calc(-2px * var(--veneer-motion-scale)); } 60% { opacity: 0.35; translate: 0 0; } }
+/* typing is real data (someone is typing), so it may animate; it stops when they stop, and reduced motion holds still */
+@media (prefers-reduced-motion: reduce) { :where(:root:not([data-motion="full"]) [data-scope="typing"] [data-part="dots"] i) { animation: none; opacity: 0.7; } }
+:where([data-motion="reduce"] [data-scope="typing"] [data-part="dots"] i) { animation: none; opacity: 0.7; }
+
+/* composer: one field, the signature sweep on its border, grows to 8 lines, stays above the keyboard */
+:where([data-scope="composer"]) {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 0 var(--veneer-space-group) var(--veneer-space-group);
+  padding: 8px; border-radius: calc(var(--veneer-radius-surface) + 2px); background: var(--veneer-color-surface-raised);
+}
+/* the composer is a field: it keeps the ink base (sweep vs base >= 3:1), no override */
+:where([data-scope="composer"] textarea) {
+  all: unset; box-sizing: border-box; display: block; inline-size: 100%; min-block-size: 24px; max-block-size: calc(1.5em * 8);
+  padding: 4px 6px; overflow-y: auto; font: 400 max(var(--veneer-text-body-size), var(--veneer-input-font-min))/1.5 var(--veneer-text-body-font);
+  field-sizing: content; position: relative; z-index: 3; white-space: pre-wrap;
+}
+:where([data-scope="composer"] textarea)::placeholder { color: var(--veneer-color-text-subtle); }
+:where([data-scope="composer"] [data-part="row"]) { display: flex; align-items: center; gap: 2px; position: relative; z-index: 3; }
+:where([data-scope="composer"] [data-part="row"] [data-part="spacer"]) { flex: 1; }
+:where([data-scope="composer"] [data-part="hint"]) { font-size: 11.5px; color: var(--veneer-color-text-subtle); padding-inline: 6px; }
+:where([data-scope="composer"] [data-part="files"]) { display: flex; gap: 6px; flex-wrap: wrap; position: relative; z-index: 3; }
+:where([data-scope="composer"] [data-part="file"]) {
+  display: inline-grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; block-size: 36px; padding: 0 4px 0 8px;
+  border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font-size: 12.5px; max-inline-size: 240px;
+}
+:where([data-scope="composer"] [data-part="file"] [data-scope="progress"]) { grid-column: 1 / -1; margin-block-start: -6px; }
+:where([data-scope="composer"] [data-part="send"]) { border-radius: var(--veneer-radius-round); }
+/* mention / slash / emoji suggestions: a listbox anchored above the caret line */
+:where([data-scope="suggest"]) {
+  position: absolute; inset-inline-start: 8px; inset-block-end: calc(100% + 6px); z-index: var(--veneer-z-menu); inline-size: min(320px, calc(100% - 16px));
+  padding: 4px; border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-overlay);
+  box-shadow: var(--veneer-elevation-2), 0 0 0 1px var(--veneer-color-border); animation: veneer-enter var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="suggest"] [role="option"]) { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; min-block-size: 36px; padding-inline: 8px; border-radius: var(--veneer-radius-control); font-size: var(--veneer-text-body-size); cursor: pointer; }
+:where([data-scope="suggest"] [role="option"] small) { color: var(--veneer-color-text-subtle); font-size: 12px; }
+:where([data-scope="suggest"] [role="option"] kbd) { font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+:where([data-scope="suggest"] [role="option"][aria-selected="true"]) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="suggest"] [role="option"] [data-part="cmd"]) { font: 500 13px/1 var(--veneer-font-mono); color: var(--veneer-color-accent-text); }
+:where([data-scope="suggest"] [data-part="group"]) { padding: 8px 8px 4px; font: 500 10.5px/1 var(--veneer-font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--veneer-color-text-subtle); }
+
+/* ---------------------------------------------------------------------------
+   5 · AI + AGENT (assistant message, stream caret, tool call, citations, run)
+   ------------------------------------------------------------------------ */
+:where([data-scope="assistant"]) { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 0 12px; padding-block: 10px; }
+:where([data-scope="assistant"] [data-part="mark"]) {
+  display: grid; place-items: center; inline-size: 28px; block-size: 28px; border-radius: var(--veneer-radius-control);
+  background: var(--veneer-color-surface-inverse); color: var(--veneer-color-on-inverse);
+}
+:where([data-scope="assistant"] [data-part="mark"] svg) { inline-size: 16px; block-size: 16px; }
+:where([data-scope="assistant"] [data-part="content"]) { min-inline-size: 0; display: grid; gap: 10px; font-size: var(--veneer-text-prose-size); line-height: var(--veneer-text-prose-leading); }
+:where([data-scope="assistant"] [data-part="content"] p) { margin: 0; }
+:where([data-scope="assistant"] [data-part="content"] ul) { margin: 0; padding-inline-start: 1.2em; list-style: disc; display: grid; gap: 4px; }
+:where([data-scope="assistant"] [data-part="content"] ul li)::marker { color: var(--veneer-color-sweep); }
+:where([data-scope="assistant"] [data-part="content"] code:not(pre code)) { padding: 1px 5px; border-radius: var(--veneer-radius-mark); background: var(--veneer-color-surface-sunken); font-size: 0.86em; }
+:where([data-scope="assistant"] pre) {
+  margin: 0; padding: 12px 14px; overflow: auto; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--veneer-color-border); font-size: var(--veneer-text-code-size); line-height: 1.6;
+}
+:where([data-scope="assistant"] pre .k) { color: var(--veneer-color-data-7); } :where([data-scope="assistant"] pre .s) { color: var(--veneer-color-positive-text); }
+:where([data-scope="assistant"] pre .c) { color: var(--veneer-color-text-subtle); } :where([data-scope="assistant"] pre .f) { color: var(--veneer-color-info-text); }
+/* the streaming caret: a 2px accent bar after the last token; it blinks only while waiting, never while tokens flow */
+:where([data-scope="assistant"] > [data-part="actions"]) { grid-column: 2; display: flex; align-items: center; gap: 0; margin-block-start: 6px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="assistant"] [data-part="content"] > *) { min-inline-size: 0; }
+:where([data-scope="message"] [data-part="bubble"][data-variant="prompt"]) { background: var(--veneer-color-surface-sunken); color: var(--veneer-color-text); box-shadow: inset 0 0 0 1px var(--veneer-color-border); }
+/* the AI prompt bubble is a light surface even though it is "mine": its sweep is the full accent, over the hairline */
+:where([data-scope="message"] [data-part="bubble"][data-variant="prompt"]) > :where([data-part="sweep"]) { color: var(--veneer-color-sweep); }
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(p):last-child)::after,
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(ul):last-child)::after,
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(ol):last-child)::after,
+:where([data-scope="assistant"][data-state="streaming"] [data-part="content"] > :is(pre):last-child)::after {
+  content: ""; display: inline-block; inline-size: 0.5em; block-size: 1.05em; margin-inline-start: 2px; vertical-align: -0.15em;
+  background: var(--veneer-color-sweep); border-radius: 1px;
+}
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p):last-child)::after,
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ul):last-child)::after,
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ol):last-child)::after,
+:where([data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(pre):last-child)::after {
+  content: ""; display: inline-block; inline-size: 0.5em; block-size: 1.05em; vertical-align: -0.15em; background: var(--veneer-color-sweep);
+  animation: veneer-caret 1s steps(1) infinite;
+}
+@keyframes veneer-caret { 50% { opacity: 0; } }
+:where([data-scope="assistant"] [data-part="token"]) { animation: veneer-fade-in calc(var(--veneer-duration-fast) * var(--veneer-motion-scale)) linear; }
+:where([data-scope="cite"]) {
+  display: inline-grid; place-items: center; min-inline-size: 18px; block-size: 18px; padding-inline: 4px; margin-inline: 1px; vertical-align: 0.12em;
+  border-radius: var(--veneer-radius-mark); background: var(--veneer-color-surface-sunken); box-shadow: inset 0 0 0 1px var(--veneer-color-border);
+  font: 600 10px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); text-decoration: none; cursor: pointer;
+}
+:where([data-scope="cite"]:hover),
+:where([data-scope="cite"][aria-expanded="true"]) { background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); box-shadow: inset 0 0 0 1px var(--veneer-color-accent-border); }
+:where([data-scope="sources"]) { display: flex; gap: 6px; flex-wrap: wrap; }
+:where([data-scope="sources"] a) {
+  position: relative; display: grid; grid-template-columns: auto 1fr; gap: 0 8px; align-items: center; inline-size: 196px; padding: 8px 10px;
+  border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised); color: inherit; text-decoration: none;
+  font-size: 12.5px; line-height: 1.35;
+}
+:where([data-scope="sources"] a b) { display: block; font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="sources"] a small) { color: var(--veneer-color-text-subtle); font: 500 10.5px/1.4 var(--veneer-font-mono); }
+:where([data-scope="sources"] a > i) { grid-row: span 2; font: 600 10px/18px var(--veneer-font-mono); font-style: normal; inline-size: 18px; text-align: center; border-radius: var(--veneer-radius-mark); background: var(--veneer-color-surface-sunken); color: var(--veneer-color-text-subtle); }
+/* tool call card: running → done | failed | needs approval. The sweep host is the frame around the
+   <details> (review 01 M3: parts inside a closed <details> rendered as a 2px sliver) */
+:where([data-part="tool-frame"]) { position: relative; display: grid; border-radius: var(--veneer-radius-control); --veneer-sweep-radius: var(--veneer-radius-control); }
+:where([data-part="tool-frame"]) > :where([data-part="sweep"]),
+:where([data-part="tool-frame"]) > :where([data-part="sweep-base"]) { inset: -1px; z-index: 4; }
+:where([data-part="tool-frame"]) > :where([data-part="sweep-base"]) { color: var(--veneer-color-border); }
+/* tool call card */
+:where([data-scope="tool-call"]) {
+  position: relative; min-inline-size: 0; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised);
+  box-shadow: 0 0 0 1px var(--veneer-color-border); font-size: var(--veneer-text-caption-size); overflow: clip;
+}
+:where([data-scope="tool-call"]) > :where([data-part="sweep"]),
+:where([data-scope="tool-call"]) > :where([data-part="sweep-base"]) { inset: 0; }
+:where([data-scope="tool-call"] summary) { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: 8px; min-block-size: 38px; padding: 0 10px; cursor: pointer; list-style: none; position: relative; z-index: 3; }
+:where([data-scope="tool-call"] summary)::-webkit-details-marker { display: none; }
+:where([data-scope="tool-call"] [data-part="name"]) { font: 500 12.5px/1 var(--veneer-font-mono); color: var(--veneer-color-text); }
+:where([data-scope="tool-call"] [data-part="arg"]) { color: var(--veneer-color-text-subtle); font: 400 12px/1 var(--veneer-font-mono); overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="tool-call"] [data-part="dur"]) { font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="tool-call"] [data-part="chev"]) { transition: rotate var(--veneer-duration-base) var(--veneer-ease-out); color: var(--veneer-color-text-subtle); }
+:where([data-scope="tool-call"][open] [data-part="chev"]) { rotate: 90deg; }
+:where([data-scope="tool-call"] [data-part="io"]) { display: grid; gap: 8px; padding: 10px; border-block-start: 1px solid var(--veneer-color-border); position: relative; z-index: 3; }
+:where([data-scope="tool-call"] [data-part="io"] pre) { margin: 0; padding: 8px 10px; border-radius: var(--veneer-radius-mark); background: var(--veneer-color-surface-sunken); font-size: 12px; line-height: 1.55; overflow: auto; max-block-size: 160px; }
+:where([data-scope="tool-call"] [data-part="io"] > span) { font: 500 10.5px/1 var(--veneer-font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--veneer-color-text-subtle); }
+:where([data-scope="tool-call"][data-state="running"]) { box-shadow: 0 0 0 1px var(--veneer-color-accent-border); }
+:where([data-scope="tool-call"][data-state="running"])::before {
+  content: ""; position: absolute; inset: auto 0 0 0; block-size: var(--veneer-border-emphasis); z-index: 4;
+  background: linear-gradient(90deg, transparent, var(--veneer-color-sweep), transparent) 0 0 / 40% 100% no-repeat;
+  animation: veneer-tool-run calc(1200ms + 400ms * var(--veneer-x)) var(--veneer-sweep-ease) infinite;
+}
+@keyframes veneer-tool-run { from { background-position: -40% 0; } to { background-position: 140% 0; } }
+:where([data-motion="reduce"] [data-scope="tool-call"][data-state="running"])::before { animation: none; background: var(--veneer-color-sweep); opacity: 0.5; }
+@media (prefers-reduced-motion: reduce) { :where(:root:not([data-motion="full"]) [data-scope="tool-call"][data-state="running"])::before { animation: none; background: var(--veneer-color-sweep); opacity: 0.5; } }
+:where([data-scope="tool-call"][data-state="failed"]) { box-shadow: 0 0 0 1px var(--veneer-color-critical-border); }
+:where([data-scope="tool-call"][data-state="approval"]) { box-shadow: 0 0 0 1px var(--veneer-color-caution-border); background: color-mix(in oklab, var(--veneer-color-caution-soft) 50%, var(--veneer-color-surface-raised)); }
+/* prompt input: the composer with a model picker, attachments and slash commands */
+:where([data-scope="prompt"]) { margin: 0; }
+:where([data-scope="prompt"] [data-part="model"]) {
+  all: unset; display: inline-flex; align-items: center; gap: 6px; block-size: 28px; padding-inline: 8px; border-radius: var(--veneer-radius-control);
+  font: 500 12px/1 var(--veneer-text-body-font); color: var(--veneer-color-text-subtle); cursor: pointer;
+}
+:where([data-scope="prompt"] [data-part="model"]:hover) { background: var(--veneer-color-surface-hover); color: var(--veneer-color-text); }
+:where([data-scope="prompt"] [data-part="model"] i) { inline-size: 6px; block-size: 6px; border-radius: 9px; background: var(--veneer-color-positive-solid); }
+/* agent run timeline: steps with a spine; approval steps hold the run */
+:where([data-scope="run"]) { margin: 0; padding: 0; list-style: none; display: grid; }
+:where([data-scope="run"] > li) {
+  --_dot: var(--veneer-color-border-strong);
+  position: relative; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 2px 10px; padding-block: 7px; font-size: var(--veneer-text-body-size);
+}
+:where([data-scope="run"] > li)::before { content: ""; position: absolute; inset-inline-start: 9.5px; inset-block: 25px -7px; inline-size: 1px; background: var(--veneer-color-border); }
+:where([data-scope="run"] > li:last-child)::before { display: none; }
+:where([data-scope="run"] > li[data-state="done"])::before { background: var(--veneer-color-sweep); }
+:where([data-scope="run"] [data-part="dot"]) { display: grid; place-items: center; inline-size: 20px; block-size: 20px; border-radius: 99px; box-shadow: inset 0 0 0 1.5px var(--_dot); background: var(--veneer-color-surface); color: var(--veneer-color-text-subtle); }
+:where([data-scope="run"] [data-part="dot"] svg[data-icon]) { inline-size: 12px; block-size: 12px; stroke-width: 2; }
+:where([data-scope="run"] > li[data-state="done"] [data-part="dot"]) { background: var(--veneer-color-sweep); box-shadow: none; color: var(--veneer-color-accent-on-solid); }
+:where([data-scope="run"] > li[data-state="running"] [data-part="dot"]) { box-shadow: inset 0 0 0 1.5px var(--veneer-color-sweep); color: var(--veneer-color-accent-text); }
+:where([data-scope="run"] > li[data-state="approval"] [data-part="dot"]) { background: var(--veneer-color-caution-solid); color: var(--veneer-color-caution-on-solid); box-shadow: none; }
+:where([data-scope="run"] > li[data-state="failed"] [data-part="dot"]) { background: var(--veneer-color-critical-solid); color: var(--veneer-color-critical-on-solid); box-shadow: none; }
+:where([data-scope="run"] > li[data-state="pending"]) { color: var(--veneer-color-text-subtle); }
+:where([data-scope="run"] [data-part="label"]) { font-weight: 500; }
+:where([data-scope="run"] [data-part="detail"]) { grid-column: 2 / -1; font-size: 12.5px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="run"] time) { font: 500 11px/1.6 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="run"] [data-part="approve"]) {
+  grid-column: 2 / -1; display: grid; gap: 8px; margin-block-start: 6px; padding: 10px 12px; border-radius: var(--veneer-radius-control);
+  background: var(--veneer-color-caution-soft); box-shadow: inset 0 0 0 1px var(--veneer-color-caution-border); font-size: 13px;
+}
+:where([data-scope="run"] [data-part="approve"] div) { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------------------------
+   6 · COLLABORATION (cursors, presence, locks, conflicts, synced selection)
+   ------------------------------------------------------------------------ */
+:where([data-scope="cursors"]) { position: absolute; inset: 0; pointer-events: none; z-index: var(--veneer-z-overlay); overflow: clip; }
+:where([data-scope="cursor"]) {
+  position: absolute; inset: 0 auto auto 0; translate: var(--_x) var(--_y);
+  transition: translate calc(120ms * var(--veneer-motion-scale)) linear;
+  color: var(--_pc, var(--veneer-color-data-2));
+}
+:where([data-scope="cursor"] svg) { display: block; inline-size: 16px; block-size: 16px; fill: currentColor; stroke: var(--veneer-color-surface); stroke-width: 1.5; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.18)); }
+:where([data-scope="cursor"] span) {
+  position: absolute; inset-inline-start: 12px; inset-block-start: 14px; padding: 3px 7px; border-radius: var(--veneer-radius-control);
+  background: color-mix(in oklab, currentColor 70%, var(--veneer-color-text)); font: 500 11.5px/1.2 var(--veneer-text-body-font); white-space: nowrap;
+}
+:where([data-scope="cursor"] span b) { color: var(--veneer-color-surface); font-weight: 500; }
+:where([data-scope="cursor"][data-idle]) { opacity: 0.4; transition: opacity var(--veneer-duration-slow), translate 0s; }
+:where([data-presence-color="1"]) { --_pc: var(--veneer-color-data-1); } :where([data-presence-color="2"]) { --_pc: var(--veneer-color-data-2); }
+:where([data-presence-color="3"]) { --_pc: var(--veneer-color-data-3); } :where([data-presence-color="4"]) { --_pc: var(--veneer-color-data-4); }
+:where([data-presence-color="5"]) { --_pc: var(--veneer-color-data-5); } :where([data-presence-color="7"]) { --_pc: var(--veneer-color-data-7); }
+:where([data-presence-color="6"]) { --_pc: var(--veneer-color-data-6); } :where([data-presence-color="8"]) { --_pc: var(--veneer-color-data-8); }
+/* a peer's selection: their colour as a hairline outline + a name flag */
+:where([data-peer-selection]) { position: relative; outline: var(--veneer-border-emphasis) solid var(--_pc); outline-offset: 2px; border-radius: var(--veneer-radius-mark); }
+:where([data-peer-selection])::before {
+  content: attr(data-peer-selection); position: absolute; inset-inline-end: -2px; inset-block-start: -20px; padding: 2px 6px; border-radius: var(--veneer-radius-mark) var(--veneer-radius-mark) 0 0;
+  background: color-mix(in oklab, var(--_pc) 70%, var(--veneer-color-text)); color: var(--veneer-color-surface); font: 500 10.5px/1.3 var(--veneer-text-body-font); white-space: nowrap;
+}
+:where(mark[data-peer-text]) { background: color-mix(in oklab, var(--_pc) 22%, transparent); color: inherit; border-inline-end: 2px solid var(--_pc); }
+/* edit lock: someone else holds this field */
+:where([data-locked-by]) { position: relative; }
+:where([data-scope="lock"]) {
+  display: inline-flex; align-items: center; gap: 6px; block-size: 22px; padding-inline: 4px 8px; border-radius: var(--veneer-radius-round);
+  background: color-mix(in oklab, var(--_pc) 14%, var(--veneer-color-surface-raised)); font-size: 11.5px; color: var(--veneer-color-text);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--_pc) 45%, transparent);
+}
+:where([data-scope="lock"] [data-scope="avatar"]) { --_s: 16px; font-size: 7px; }
+/* conflict banner (inline in the editing surface; comp's alert with diff actions) */
+:where([data-scope="conflict"]) { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-block-start: 8px; }
+:where([data-scope="conflict"] > div) { padding: 8px 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised); font-size: 12.5px; box-shadow: inset 0 0 0 1px var(--veneer-color-border); }
+:where([data-scope="conflict"] > div small) { display: block; font: 500 10.5px/1.6 var(--veneer-font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--veneer-color-text-subtle); }
+:where([data-scope="conflict"] del) { color: var(--veneer-color-critical-text); } :where([data-scope="conflict"] ins) { color: var(--veneer-color-positive-text); text-decoration: none; background: var(--veneer-color-positive-soft); }
+/* synced-state indicator: saved · saving · offline (queued) */
+:where([data-scope="sync"]) { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="sync"] svg[data-icon]) { inline-size: 14px; block-size: 14px; }
+:where([data-scope="sync"][data-state="offline"]) { color: var(--veneer-color-caution-text); }
+
+/* ---------------------------------------------------------------------------
+   5b · AI flagship additions: reasoning, model menu, branches, plan/queue,
+   context meter, suggestions, ask-user, checkpoint, artifact, shimmer
+   ------------------------------------------------------------------------ */
+:where([data-scope="reasoning"]) { border-radius: var(--veneer-radius-control); font-size: var(--veneer-text-caption-size); }
+:where([data-scope="reasoning"] summary) {
+  display: inline-flex; align-items: center; gap: 8px; block-size: 28px; padding-inline: 2px 8px; border-radius: var(--veneer-radius-control);
+  color: var(--veneer-color-text-subtle); cursor: pointer; list-style: none; font-weight: 500;
+}
+:where([data-scope="reasoning"] summary)::-webkit-details-marker { display: none; }
+:where([data-scope="reasoning"] summary:hover) { color: var(--veneer-color-text); }
+:where([data-scope="reasoning"] [data-part="chev"]) { transition: rotate var(--veneer-duration-base) var(--veneer-ease-out); }
+:where([data-scope="reasoning"][open] [data-part="chev"]) { rotate: 90deg; }
+:where([data-scope="reasoning"] [data-part="body"]) {
+  margin: 4px 0 2px 7px; padding: 2px 0 2px 14px; border-inline-start: var(--veneer-border-emphasis) solid var(--veneer-color-border-strong);
+  color: var(--veneer-color-text-subtle); line-height: 1.6; font-size: 13px; max-block-size: 180px; overflow: auto;
+}
+:where([data-scope="reasoning"][data-state="streaming"] [data-part="body"]) { border-inline-start-color: var(--veneer-color-sweep); }
+/* shimmer text: the sweep as a light band across pending words; still under reduced motion */
+:where([data-scope="shimmer"]) {
+  color: transparent; background: linear-gradient(90deg, var(--veneer-color-text-subtle) 0 40%, var(--veneer-color-text) 50%, var(--veneer-color-text-subtle) 60% 100%) 0 0 / 250% 100%;
+  -webkit-background-clip: text; background-clip: text; animation: veneer-shimmer-text calc(1600ms + 400ms * var(--veneer-x)) linear infinite;
+}
+@keyframes veneer-shimmer-text { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+:where([data-motion="reduce"] [data-scope="shimmer"]) { animation: none; color: var(--veneer-color-text-subtle); background: none; }
+@media (prefers-reduced-motion: reduce) { :where(:root:not([data-motion="full"]) [data-scope="shimmer"]) { animation: none; color: var(--veneer-color-text-subtle); background: none; } }
+/* branch switcher + message actions */
+:where([data-scope="branch"]) { display: inline-flex; align-items: center; gap: 0; font: 500 11.5px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="branch"] button) { all: unset; display: inline-grid; place-items: center; inline-size: max(24px, var(--veneer-target-min)); block-size: max(24px, var(--veneer-target-min)); border-radius: var(--veneer-radius-control); cursor: pointer; }
+:where([data-scope="branch"] button:hover) { background: var(--veneer-color-surface-hover); color: var(--veneer-color-text); }
+:where([data-scope="branch"] button:disabled) { opacity: var(--veneer-opacity-disabled); cursor: default; background: none; }
+:where([data-scope="branch"] button:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); }
+:where([data-scope="assistant"] [data-part="actions"] [data-scope="button"][aria-pressed="true"]) { color: var(--veneer-color-accent-text); }
+/* model menu rows: name, capabilities, context, cost */
+:where([data-scope="model-menu"] [role="option"]) { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 8px 10px; border-radius: var(--veneer-radius-control); cursor: pointer; }
+:where([data-scope="model-menu"] [role="option"]:hover),
+:where([data-scope="model-menu"] [role="option"][aria-selected="true"]) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="model-menu"] [role="option"] b) { font-weight: 500; }
+:where([data-scope="model-menu"] [role="option"] small) { grid-column: 1; color: var(--veneer-color-text-subtle); font-size: 12px; }
+:where([data-scope="model-menu"] [role="option"] code) { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-size: 11px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="model-menu"] [role="option"][aria-selected="true"] b)::after { content: " ✓"; color: var(--veneer-color-accent-text); }
+/* context meter: a ring + numbers; caution at 80%, critical at 95% */
+:where([data-scope="context-meter"]) { display: inline-flex; align-items: center; gap: 6px; font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="context-meter"] svg) { inline-size: 16px; block-size: 16px; rotate: -90deg; }
+:where([data-scope="context-meter"] circle) { fill: none; stroke-width: 3; }
+:where([data-scope="context-meter"] circle + circle) { stroke: var(--veneer-color-sweep); stroke-dasharray: 100 100; stroke-dashoffset: calc(100 - var(--_v, 0) * 100); transition: stroke-dashoffset var(--veneer-duration-slow) var(--veneer-ease-out); }
+:where([data-scope="context-meter"][data-level="high"] circle + circle) { stroke: var(--veneer-color-caution-solid); }
+:where([data-scope="context-meter"][data-level="full"] circle + circle) { stroke: var(--veneer-color-critical-solid); }
+/* starter prompts / follow-up suggestions: sweep cards */
+:where([data-scope="suggestions"]) { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+:where([data-scope="suggestions"] button) {
+  all: unset; position: relative; box-sizing: border-box; display: grid; gap: 2px; padding: 10px 12px; border-radius: var(--veneer-radius-control);
+  background: var(--veneer-color-surface-raised); cursor: pointer; font-size: 13px; line-height: 1.4;
+}
+:where([data-scope="suggestions"] button small) { color: var(--veneer-color-text-subtle); font-size: 12px; }
+:where([data-scope="suggestions"] button:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 2px; }
+:where([data-scope="suggestions"][data-variant="chips"]) { display: flex; flex-wrap: wrap; }
+:where([data-scope="suggestions"][data-variant="chips"] button) { padding: 6px 12px; border-radius: var(--veneer-radius-round); }
+/* plan / task list / queue */
+:where([data-scope="plan"]) { display: grid; gap: 10px; }
+:where([data-scope="plan"] [data-part="header"]) { display: flex; align-items: center; gap: 8px; }
+:where([data-scope="plan"] [data-part="header"] h4) { flex: 1; margin: 0; font: var(--veneer-text-heading-weight) 15px/1.3 var(--veneer-text-heading-font); }
+:where([data-scope="plan"] ol) { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
+:where([data-scope="plan"] li) {
+  counter-increment: step; display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; align-items: start; padding: 6px 8px; border-radius: var(--veneer-radius-control); font-size: 13.5px;
+}
+:where([data-scope="plan"] li[data-state="running"]) { background: color-mix(in oklab, var(--veneer-color-accent-soft) 55%, transparent); }
+:where([data-scope="plan"] li [data-part="box"]) { display: grid; place-items: center; inline-size: 18px; block-size: 18px; margin-block-start: 1px; border-radius: var(--veneer-radius-mark); box-shadow: inset 0 0 0 1.5px var(--veneer-color-border-control); color: var(--veneer-color-accent-on-solid); }
+:where([data-scope="plan"] li[data-state="done"] [data-part="box"]) { background: var(--veneer-color-sweep); box-shadow: none; }
+:where([data-scope="plan"] li[data-state="done"] > span) { color: var(--veneer-color-text-subtle); text-decoration: line-through; text-decoration-color: var(--veneer-color-border-strong); }
+:where([data-scope="plan"] li[data-state="running"] [data-part="box"]) { box-shadow: inset 0 0 0 1.5px var(--veneer-color-sweep); }
+:where([data-scope="plan"] li[data-state="blocked"] [data-part="box"]) { background: var(--veneer-color-caution-solid); box-shadow: none; color: var(--veneer-color-caution-on-solid); }
+:where([data-scope="plan"] li small) { display: block; color: var(--veneer-color-text-subtle); font-size: 12px; }
+:where([data-scope="plan"] [data-part="queue"]) { display: grid; gap: 4px; padding-block-start: 8px; border-block-start: 1px dashed var(--veneer-color-border-strong); }
+:where([data-scope="plan"] [data-part="queue"] div) { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font-size: 12.5px; }
+:where([data-scope="plan"] [data-part="queue"] div span) { flex: 1; }
+/* trace spans: nested bars on a shared time axis */
+:where([data-scope="trace"]) { display: grid; gap: 3px; font: 500 11.5px/1 var(--veneer-font-mono); }
+:where([data-scope="trace"] div) { display: grid; grid-template-columns: 120px 1fr 48px; align-items: center; gap: 8px; }
+:where([data-scope="trace"] span:first-child) { padding-inline-start: calc(var(--_d, 0) * 10px); overflow: clip; text-overflow: ellipsis; white-space: nowrap; color: var(--veneer-color-text); }
+:where([data-scope="trace"] i) { position: relative; block-size: 10px; }
+:where([data-scope="trace"] i)::before { content: ""; position: absolute; inset-block: 0; inset-inline-start: calc(var(--_x) * 100%); inline-size: max(2px, calc(var(--_w) * 100%)); border-radius: 2px; background: var(--_c, var(--veneer-color-data-1)); }
+:where([data-scope="trace"] em) { font-style: normal; color: var(--veneer-color-text-subtle); text-align: end; }
+/* ask-user question card */
+:where([data-scope="question"]) { display: grid; gap: 10px; padding: 12px 14px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised); box-shadow: inset 0 0 0 1px var(--veneer-color-info-border); }
+:where([data-scope="question"] legend) { font-weight: 500; padding: 0; margin-block-end: 8px; }
+:where([data-scope="question"] fieldset) { border: 0; margin: 0; padding: 0; display: grid; gap: 4px; }
+:where([data-scope="question"] label) { min-block-size: max(32px, var(--veneer-target-min)); padding-inline: 8px; border-radius: var(--veneer-radius-control); cursor: pointer; font-size: 13.5px; }
+:where([data-scope="question"] label:has(:checked)) { background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); }
+/* checkpoint: a hairline across the conversation with a restore action */
+:where([data-scope="checkpoint"]) { display: flex; align-items: center; gap: 10px; margin-block: 6px; font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); text-transform: uppercase; letter-spacing: 0.08em; }
+:where([data-scope="checkpoint"])::before, :where([data-scope="checkpoint"])::after { content: ""; flex: 1; border-block-start: 1px dashed var(--veneer-color-border-strong); }
+/* artifact side panel: tabs (preview / code / versions) */
+:where([data-scope="artifact"]) { display: grid; grid-template-rows: auto minmax(0, 1fr); min-block-size: 0; border-inline-start: 1px solid var(--veneer-color-border); background: var(--veneer-color-surface); }
+/* tool approval: arguments are editable before approving */
+:where([data-scope="tool-call"] [data-part="approve"]) { display: grid; gap: 8px; padding: 10px; border-block-start: 1px solid var(--veneer-color-caution-border); position: relative; z-index: 3; }
+:where([data-scope="tool-call"] [data-part="approve"] textarea) {
+  font: 400 12px/1.55 var(--veneer-font-mono); padding: 8px 10px; border: 0; border-radius: var(--veneer-radius-mark); resize: vertical; min-block-size: 64px;
+  background: var(--veneer-color-surface); color: var(--veneer-color-text); box-shadow: inset 0 0 0 1px var(--veneer-color-border-control);
+}
+:where([data-scope="tool-call"] [data-part="approve"] textarea:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 0; }
+:where([data-scope="tool-call"] [data-part="approve"] > div) { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12.5px; }
+:where([data-scope="tool-call"] [data-part="approve"] label) { display: inline-flex; gap: 6px; align-items: center; margin-inline-start: auto; color: var(--veneer-color-text-subtle); }
+/* diff / commit card (P2) */
+:where([data-scope="commit"]) { display: grid; gap: 4px; padding: 10px 12px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised); box-shadow: inset 0 0 0 1px var(--veneer-color-border); font-size: 12.5px; }
+:where([data-scope="commit"] div) { display: flex; gap: 8px; font-family: var(--veneer-font-mono); font-size: 12px; }
+:where([data-scope="commit"] ins) { text-decoration: none; color: var(--veneer-color-positive-text); } :where([data-scope="commit"] del) { text-decoration: none; color: var(--veneer-color-critical-text); }
+
+/* ---------------------------------------------------------------------------
+   6b · Conversations, comments, share, following, viewports, history
+   ------------------------------------------------------------------------ */
+:where([data-scope="conversations"]) { display: grid; align-content: start; gap: 1px; padding: 6px; overflow: auto; border-inline-end: 1px solid var(--veneer-color-border); background: var(--veneer-color-surface-sunken); }
+:where([data-scope="conversations"] a) {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0 10px; align-items: center; padding: 8px; border-radius: var(--veneer-radius-control);
+  color: inherit; text-decoration: none; font-size: 13px;
+}
+:where([data-scope="conversations"] a:hover) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="conversations"] a[aria-current="page"]) { background: var(--veneer-color-surface-raised); box-shadow: 0 0 0 1px var(--veneer-color-border); }
+:where([data-scope="conversations"] a b) { font-weight: 500; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="conversations"] a small) { grid-column: 2; color: var(--veneer-color-text-subtle); font-size: 12px; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="conversations"] a[data-unread] b) { font-weight: 600; }
+:where([data-scope="conversations"] a[data-unread] small) { color: var(--veneer-color-text); }
+:where([data-scope="conversations"] a[data-muted]) { color: var(--veneer-color-text-subtle); }
+:where([data-scope="conversations"] a [data-part="side"]) { grid-row: 1 / span 2; grid-column: 3; display: grid; justify-items: end; gap: 4px; font: 500 10.5px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+:where([data-scope="thread-replies"]) { all: unset; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--veneer-color-accent-text); cursor: pointer; font-weight: 500; }
+:where([data-scope="thread-replies"] [data-scope="avatar"]) { --_s: 18px; font-size: 8px; }
+:where([data-scope="thread-replies"]:hover) { text-decoration: underline; }
+/* comments: margin rail of anchored threads */
+:where([data-scope="comment-anchor"]) { background: color-mix(in oklab, var(--veneer-color-highlight-solid) 32%, transparent); border-block-end: 2px solid var(--veneer-color-highlight-solid); cursor: pointer; }
+:where([data-scope="comment-anchor"][data-active]) { background: color-mix(in oklab, var(--veneer-color-highlight-solid) 60%, transparent); }
+:where([data-scope="comment-thread"]) {
+  position: relative; display: grid; gap: 10px; padding: 12px; border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-raised);
+  box-shadow: 0 0 0 1px var(--veneer-color-border), var(--veneer-elevation-1); font-size: 13px; transition: translate var(--veneer-duration-base) var(--veneer-ease-out), opacity var(--veneer-duration-base);
+}
+:where([data-scope="comment-thread"][data-active]) { box-shadow: 0 0 0 1px var(--veneer-color-border-strong), var(--veneer-elevation-2); translate: calc(var(--veneer-motion-distance) * -0.75) 0; }
+:where([data-scope="comment-thread"][data-resolved]) { opacity: 0.55; }
+:where([data-scope="comment-thread"] [data-part="comment"]) { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 8px; }
+:where([data-scope="comment-thread"] [data-part="comment"] p) { grid-column: 2 / -1; margin: 0; line-height: 1.5; }
+:where([data-scope="comment-thread"] [data-part="comment"] time) { font: 500 10.5px/1.8 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+:where([data-scope="comment-thread"] [data-part="reply"]) { display: flex; gap: 6px; align-items: center; }
+:where([data-scope="comment-thread"] [data-part="reply"] input) { flex: 1; min-inline-size: 0; block-size: 32px; padding-inline: 10px; border: 0; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); color: inherit; font: inherit; box-shadow: inset 0 0 0 1px var(--veneer-color-border); }
+:where([data-scope="comment-thread"] [data-part="reply"] input:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 0; }
+/* share dialog rows */
+:where([data-scope="share"] [data-part="person"]) { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding-block: 6px; }
+:where([data-scope="share"] [data-part="person"] small) { display: block; color: var(--veneer-color-text-subtle); font-size: 12px; }
+:where([data-scope="share"] [data-part="link"]) { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font-size: 13px; }
+/* following: the followed peer's colour frames the whole viewport */
+:where([data-following]) { box-shadow: inset 0 0 0 calc(var(--veneer-border-emphasis) + 1px) var(--_pc); }
+:where([data-scope="follow-flag"]) { position: absolute; inset-block-start: 0; inset-inline-start: 50%; translate: -50% 0; z-index: var(--veneer-z-overlay); padding: 3px 10px; border-radius: 0 0 var(--veneer-radius-control) var(--veneer-radius-control); background: color-mix(in oklab, var(--_pc) 70%, var(--veneer-color-text)); color: var(--veneer-color-surface); font: 500 11.5px/1.4 var(--veneer-text-body-font); }
+/* LiveViewport: a minimap rail; each peer is a frame of their viewport */
+:where([data-scope="viewport-rail"]) { position: relative; inline-size: 44px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); box-shadow: inset 0 0 0 1px var(--veneer-color-border); }
+:where([data-scope="viewport-rail"] i) { position: absolute; inset-inline: 3px; inset-block-start: calc(var(--_t) * 100%); block-size: calc(var(--_h) * 100%); border-radius: 3px; box-shadow: inset 0 0 0 1.5px var(--_pc); background: color-mix(in oklab, var(--_pc) 14%, transparent); transition: inset-block-start var(--veneer-duration-slow) var(--veneer-ease-out); }
+:where([data-scope="viewport-rail"] i[data-self]) { --_pc: var(--veneer-color-text-subtle); box-shadow: inset 0 0 0 1px var(--_pc); background: none; }
+/* LiveSection: which section each peer is in (avatars beside a heading) */
+:where([data-scope="section-peers"]) { display: inline-flex; vertical-align: middle; margin-inline-start: 8px; }
+:where([data-scope="section-peers"] [data-scope="avatar"]) { --_s: 18px; font-size: 8px; box-shadow: 0 0 0 1.5px var(--_pc); }
+/* InteractionRelay: a peer's press/hover replayed with the component's own visuals + a colour ring */
+:where([data-relay]) { outline: var(--veneer-border-emphasis) solid var(--_pc); outline-offset: 2px; transition: outline-color var(--veneer-duration-base); }
+:where([data-scope="click-ripple"]) { position: absolute; inline-size: 24px; block-size: 24px; margin: -12px 0 0 -12px; border-radius: 99px; box-shadow: 0 0 0 2px var(--_pc); pointer-events: none; animation: veneer-ripple calc(600ms * var(--veneer-motion-scale) + 1ms) var(--veneer-ease-out) forwards; }
+@keyframes veneer-ripple { from { scale: 0.3; opacity: 1; } to { scale: 1.6; opacity: 0; } }
+/* version history list */
+:where([data-scope="versions"]) { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="versions"] li) { display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: center; padding: 7px 8px; border-radius: var(--veneer-radius-control); font-size: 13px; cursor: pointer; }
+:where([data-scope="versions"] li:hover) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="versions"] li[aria-current="true"]) { background: var(--veneer-color-accent-soft); }
+:where([data-scope="versions"] li > i) { inline-size: 8px; block-size: 8px; border-radius: 99px; box-shadow: inset 0 0 0 1.5px var(--veneer-color-border-strong); }
+:where([data-scope="versions"] li[data-named] > i) { background: var(--veneer-color-sweep); box-shadow: none; }
+:where([data-scope="versions"] li small) { display: block; color: var(--veneer-color-text-subtle); font-size: 11.5px; }
+/* kanban (P1): columns + cards; drag uses the calendar's lift and ghost */
+:where([data-scope="kanban"]) { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 12px; overflow-x: auto; }
+:where([data-scope="kanban"] [data-part="column"]) { display: grid; align-content: start; gap: 6px; padding: 8px; border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-sunken); }
+:where([data-scope="kanban"] [data-part="column"] header) { display: flex; justify-content: space-between; font: 500 11px/1.6 var(--veneer-font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--veneer-color-text-subtle); padding: 2px 4px; }
+:where([data-scope="kanban"] [data-part="column"][data-over-limit] header em) { color: var(--veneer-color-caution-text); font-style: normal; }
+:where([data-scope="kanban"] [data-part="card"]) { position: relative; padding: 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised); box-shadow: 0 0 0 1px var(--veneer-color-border); font-size: 13px; cursor: grab; }
+/* touch: cards are ~40px tall, 6px apart: a block-axis expander (under the card's content) makes them hit-min */
+:where([data-scope="kanban"] [data-part="card"]) { isolation: isolate; }
+:where([data-scope="kanban"] [data-part="card"])::after { content: ""; position: absolute; z-index: -1; inset-inline: 0; inset-block: min(0px, calc((100% - var(--veneer-hit-min)) / 2)); }
+
+/* ---------------------------------------------------------------------------
+   8 · Navigator grids (review 03 M7): mini month, month view, room timeline.
+   APG grid: role=grid > role=row > gridcell, one roving tab stop, arrows,
+   Home/End (week), PageUp/PageDown (month). Rows are display: contents so
+   the 7-column CSS grid is unchanged.
+   ------------------------------------------------------------------------ */
+:where([data-scope="calendar"] [data-part="mini"] [role="row"]),
+:where([data-scope="calendar"] [data-part="month"] [role="row"]),
+:where([data-scope="calendar"] [data-part="timeline"] [role="row"]) { display: contents; }
+:where([data-scope="calendar"] [data-part="mini"] [role="columnheader"]) { font: 500 10.5px/24px var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+:where([data-scope="calendar"] [data-part="mini"] [role="columnheader"] abbr) { text-decoration: none; }
+:where([data-scope="calendar"] [data-part="mini"] [role="gridcell"][data-outside]) { display: grid; place-items: center; block-size: 26px; color: var(--veneer-color-text-faint); }
+:where([data-scope="calendar"] [data-part="mini"] [data-day]:focus-visible),
+:where([data-scope="calendar"] [data-part="month"] [role="gridcell"]:focus-visible),
+:where([data-scope="calendar"] [data-part="timeline"] [role="gridcell"]:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 1px; }
+:where([data-scope="calendar"] [data-part="mini"] [data-day][aria-selected="true"]:not([aria-current="date"])) { box-shadow: inset 0 0 0 var(--veneer-border-emphasis) var(--veneer-color-accent-solid); border-radius: var(--veneer-radius-round); }
+:where([data-scope="calendar"] [data-part="mini-note"]) { font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); min-block-size: 1.4em; }
+:where([data-scope="calendar"] [data-part="month"] [role="gridcell"]) { cursor: pointer; }
+:where([data-scope="calendar"] [data-part="month"] [role="gridcell"][data-outside]) { cursor: default; }
+
+/* ---------------------------------------------------------------------------
+   9 · Touch targets (review 02 M7). --veneer-hit-min is 44px on coarse
+   pointers and 24px on fine ones, so these cost nothing on desktop.
+   ------------------------------------------------------------------------ */
+:where([data-scope="composer"] textarea) {
+  min-block-size: var(--veneer-hit-min);
+  padding-block: max(4px, calc((var(--veneer-hit-min) - 1.5em) / 2));   /* 44px tall on touch, text centred */
+}
+:where([data-scope="prompt"] [data-part="model"]),
+:where([data-scope="reasoning"] summary) { block-size: max(28px, var(--veneer-hit-min)); }
+:where([data-scope="tool-call"] summary) { min-block-size: max(38px, var(--veneer-hit-min)); }
+:where([data-scope="suggestions"] button),
+:where([data-scope="thread-replies"]) { min-block-size: var(--veneer-hit-min); }
+:where([data-scope="suggestions"][data-variant="chips"] button) { display: inline-flex; align-items: center; }
+:where([data-scope="inbox"] [role="tab"]) { min-inline-size: var(--veneer-hit-min); justify-content: center; }
+:where([data-scope="inbox"] [data-part="footer"] a) { display: inline-flex; align-items: center; min-block-size: var(--veneer-hit-min); }
+/* solid sweep buttons (sweep-fill): veneer-components wipes the fill with clip-path inside the box, so nothing here
+   clips the button; its ::after hit area (hit-min, 44px on coarse) and focus ring stay whole. */
+/* small visuals keep their size; an invisible ::after reaches the hit area (neighbours may overlap) */
+:where([data-scope="reactions"] button),
+:where([data-scope="cite"]) { position: relative; }
+:where([data-scope="reactions"] button)::after,
+:where([data-scope="cite"])::after {
+  content: ""; position: absolute; inset-block: min(0px, calc((100% - var(--veneer-hit-min)) / 2));
+  inset-inline: min(0px, calc((100% - var(--veneer-hit-min)) / 2));
+}
+:where([data-scope="message"] [data-part="status"] [data-scope="button"][data-emphasis="link"])::after { inset-inline: min(-6px, calc((100% - var(--veneer-hit-min)) / 2)); }
+:where([data-scope="agenda"] [data-part="strip"] button) { min-block-size: var(--veneer-hit-min); }
+
+/* ---------------------------------------------------------------------------
+   10 · Reduced motion leftovers (review 03 M11). Spinners are handled kit-wide by
+   veneer.css (an opacity pulse under reduce). Audio levels stop moving in height
+   and read as opacity instead. End states are unchanged.
+   ------------------------------------------------------------------------ */
+:where([data-motion="reduce"] :is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
+@media (prefers-reduced-motion: reduce) {
+  :where(:root:not([data-motion="full"]) :is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { transition: none; block-size: 9px; opacity: calc(0.3 + 0.7 * var(--level, 0)); }
+}
+
+/* ---------------------------------------------------------------------------
+   11 · Coverage additions (review 03 coverage): speech input + mic selector,
+   artifact panel, availability editor, synced form, data-integrity panel,
+   auto-track. All reuse existing parts; new CSS is layout only.
+   ------------------------------------------------------------------------ */
+/* SpeechInput: the composer's mic becomes a capture strip; transcript streams like tokens */
+:where([data-scope="speech"]) { display: grid; gap: 10px; }
+:where([data-scope="speech"] [data-part="strip"]) {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  min-block-size: var(--veneer-control-md); padding: 6px 8px 6px 6px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised);
+}
+:where([data-scope="speech"] [data-part="strip"]) { --veneer-sweep-radius: var(--veneer-radius-control); }
+:where([data-scope="speech"] [data-part="wave"]) { display: flex; align-items: center; gap: 2px; block-size: 24px; overflow: clip; color: var(--veneer-color-text-subtle); }
+:where([data-scope="speech"][data-state="listening"] [data-part="wave"]) { color: var(--veneer-color-accent-text); }
+:where([data-scope="speech"] [data-part="wave"] i) { flex: none; inline-size: 2px; border-radius: 2px; background: currentColor; block-size: calc(3px + 19px * var(--a, 0)); transition: block-size 90ms linear; }
+:where([data-motion="reduce"] [data-scope="speech"] [data-part="wave"] i) { transition: none; block-size: 12px; opacity: calc(0.25 + 0.75 * var(--a, 0)); }
+@media (prefers-reduced-motion: reduce) { :where(:root:not([data-motion="full"]) [data-scope="speech"] [data-part="wave"] i) { transition: none; block-size: 12px; opacity: calc(0.25 + 0.75 * var(--a, 0)); } }
+:where([data-scope="speech"] [data-part="time"]) { font: 500 12px/1 var(--veneer-font-mono); font-variant-numeric: tabular-nums; color: var(--veneer-color-text-subtle); }
+:where([data-scope="speech"] [data-part="transcript"]) { min-block-size: 3em; padding: 8px 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font-size: var(--veneer-text-body-size); line-height: 1.5; }
+:where([data-scope="speech"] [data-part="transcript"] [data-part="interim"]) { color: var(--veneer-color-text-subtle); }
+:where([data-scope="speech"] [data-part="mic"]) { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="speech"] [data-part="mic"] [data-part="level"]) { color: var(--veneer-color-positive-text); }
+
+/* ArtifactPanel: preview / code / versions beside the conversation (sheet on phones) */
+:where([data-scope="artifact"] [data-part="head"]) { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border); }
+:where([data-scope="artifact"] [data-part="head"] b) { flex: 1; min-inline-size: 0; overflow: clip; text-overflow: ellipsis; white-space: nowrap; font: 500 13px/1.2 var(--veneer-text-heading-font); }
+:where([data-scope="artifact"] [data-part="panel"]) { min-block-size: 220px; overflow: auto; padding: 12px; }
+:where([data-scope="artifact"] [data-part="preview"]) { display: grid; gap: 6px; padding: 14px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-page); box-shadow: inset 0 0 0 1px var(--veneer-color-border); font-size: 13px; }
+:where([data-scope="artifact"] pre) { margin: 0; padding: 10px 12px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font: 400 12px/1.6 var(--veneer-font-mono); overflow: auto; }
+:where([data-scope="artifact"]) { border-radius: var(--veneer-radius-surface); box-shadow: inset 0 0 0 1px var(--veneer-color-border); border-inline-start: 0; overflow: clip; }
+
+/* AvailabilityEditor: weekly hours (a switch per day + time ranges) and date overrides */
+:where([data-scope="availability"]) { container: availability / inline-size; display: grid; gap: var(--veneer-space-group); }
+:where([data-scope="availability"] [data-part="week"]) { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="availability"] [data-part="day"]) {
+  display: grid; grid-template-columns: 156px minmax(0, 1fr); align-items: start; gap: 6px 12px; padding-block: 8px;
+  border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border);
+}
+:where([data-scope="availability"] [data-part="ranges"]) { display: grid; gap: 6px; }
+:where([data-scope="availability"] [data-part="range"]) { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+:where([data-scope="availability"] [data-part="range"] > [data-scope="field"]) { inline-size: 118px; flex: none; }
+:where([data-scope="availability"] [data-part="range"] > [data-part="error"]) { flex-basis: 100%; }
+:where([data-scope="availability"] [data-part="error"]) { font-size: var(--veneer-text-caption-size); color: var(--veneer-color-critical-text); }
+:where([data-scope="availability"] [data-part="off"]) { align-self: center; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="availability"] [data-part="overrides"]) { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+:where([data-scope="availability"] [data-part="overrides"] li) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 10px; padding: 8px 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font-size: 13px; }
+:where([data-scope="availability"] [data-part="overrides"] small) { grid-column: 1; color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size); }
+@container availability (max-width: 420px) { :where([data-scope="availability"] [data-part="day"]) { grid-template-columns: minmax(0, 1fr); } }
+
+/* SyncedForm (all-inputs sync): every field of a form mirrored between peers; a remote edit tints the field in
+   the peer's colour for a moment and the peer's name rides the label line */
+:where([data-scope="synced-form"]) { display: grid; gap: 14px; }
+:where([data-scope="synced-form"] [data-scope="field"][data-remote]) > :where([data-part="control"]) { box-shadow: 0 0 0 var(--veneer-border-emphasis) var(--_pc); border-radius: var(--veneer-radius-control); transition: box-shadow var(--veneer-duration-base) var(--veneer-ease-out); }
+:where([data-scope="synced-form"] [data-part="peer-tag"]) { justify-self: end; margin-block-start: -10px; padding: 1px 6px; border-radius: var(--veneer-radius-mark); background: color-mix(in oklab, var(--_pc) 70%, var(--veneer-color-text)); color: var(--veneer-color-surface); font: 600 10.5px/1.5 var(--veneer-text-body-font); }
+:where([data-scope="synced-form"] [data-part="peer-tag"][hidden]) { display: none; }
+
+/* DataIntegrity (dev tool, P2): counts sent / received / duplicate / out-of-order, and a sparkline of lag */
+:where([data-scope="integrity"]) { display: grid; gap: 10px; font-size: 13px; }
+:where([data-scope="integrity"] dl) { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; margin: 0; }
+:where([data-scope="integrity"] dl > div) { display: grid; gap: 2px; padding: 8px 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); }
+:where([data-scope="integrity"] dt) { font: 500 11px/1.2 var(--veneer-font-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--veneer-color-text-subtle); }
+:where([data-scope="integrity"] dd) { margin: 0; font: 500 18px/1.2 var(--veneer-font-mono); font-variant-numeric: tabular-nums; }
+:where([data-scope="integrity"] dd[data-tone="caution"]) { color: var(--veneer-color-caution-text); }
+:where([data-scope="integrity"] dd[data-tone="critical"]) { color: var(--veneer-color-critical-text); }
+:where([data-scope="integrity"] ol) { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; max-block-size: 132px; overflow: auto; font: 400 12px/1.6 var(--veneer-font-mono); }
+:where([data-scope="integrity"] ol li) { display: grid; grid-template-columns: 44px 64px minmax(0, 1fr) auto; gap: 8px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="integrity"] ol li b) { font-weight: 500; color: var(--veneer-color-text); }
+
+/* AutoTrack (MultiplayerAutoTrack): follow whoever is presenting; any manual scroll pauses it */
+:where([data-scope="auto-track"]) { display: inline-flex; align-items: center; gap: 8px; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="auto-track"][data-state="paused"]) { color: var(--veneer-color-caution-text); }
+
+/* `hidden` must beat component display rules */
+:where([data-scope][hidden]),
+:where([data-part][hidden]) { display: none; }
+
+/* ---------------------------------------------------------------------------
+   12. Reduced motion for the stream caret, and forced colours (01-foundations §12)
+   Every app part that draws state with a background opts out and repaints with
+   system colours only, so the state still differs in colour and width.
+   --------------------------------------------------------------------------- */
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p):last-child)::after,
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ul):last-child)::after,
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ol):last-child)::after,
+:where([data-motion="reduce"] [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(pre):last-child)::after { animation: none; opacity: 0.6; }
+@media (prefers-reduced-motion: reduce) { :where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(p):last-child)::after,
+ :where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ul):last-child)::after,
+ :where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(ol):last-child)::after,
+ :where(:root:not([data-motion="full"]) [data-scope="assistant"][data-state="waiting"] [data-part="content"] > :is(pre):last-child)::after { animation: none; opacity: 0.6; } }
+
+@media (forced-colors: active) {
+  /* arrival sweep, now line, stream caret, done markers: Highlight bars */
+  :where([data-arrive])::after,
+  :where([data-scope="calendar"] [data-part="now"])::before,
+  :where([data-scope="calendar"] [data-part="now-label"]),
+  :where([data-scope="agenda"] [data-part="now"] i),
+  :where([data-scope="agenda"] [data-part="now"] i)::before,
+  :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
+  :where([data-scope="run"] > li[data-state="done"])::before,
+  :where([data-scope="tool-call"][data-state="running"])::before,
+  :where([data-scope="versions"] li[data-named] > i),
+  :where([data-scope="notification"] [data-part="unread"]) { forced-color-adjust: none; background: Highlight; }
+  /* selected / current / pressed: Highlight fill, HighlightText ink */
+  :where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"])),
+  :where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-selected="true"])),
+  :where([data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b),
+  :where([data-scope="agenda"] [data-part="strip"] button[aria-selected="true"] b),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"])),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-checked="true"])),
+  :where([data-scope="run"] > li[data-state="done"] [data-part="dot"]),
+  :where([data-scope="plan"] li[data-state="done"] [data-part="box"]),
+  :where([data-scope="message"][data-mine] [data-part="bubble"]),
+  :where([data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+  /* soft states (range, toggled, chosen): a ring instead of a tint */
+  :where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range]),
+  :where([data-scope="reactions"] button[aria-pressed="true"]),
+  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]),
+  :where([data-scope="question"] label:has(:checked)),
+  :where([data-scope="versions"] li[aria-current="true"]),
+  :where([data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }
+  /* calendar events and timeline bookings are colour-coded fills; give them a border */
+  :where([data-scope="calendar"] [data-part="event"]) { border: 1px solid CanvasText; }
+  :where([data-scope="calendar"] [data-part="now"]) { border-block-start-color: Highlight; }
+  :where([data-scope="calendar"] [data-part="now-label"]) { color: HighlightText; }
+  /* speaking tile, remote-edit ring, invalid range */
+  :where([data-scope="tile"][data-speaking]) { outline: 3px solid Highlight; outline-offset: -3px; }
+  :where([data-scope="synced-form"] [data-remote]) { outline: 2px dashed Highlight; outline-offset: 2px; }
+  :where([data-scope="availability"] [aria-invalid="true"]) { outline: 3px double CanvasText; }
+  /* calendar source toggles are background-drawn checkboxes */
+  :where([data-scope="calendar"] [data-part="sources"] input) { forced-color-adjust: none; border-color: CanvasText; background: Canvas; }
+  :where([data-scope="calendar"] [data-part="sources"] input:checked) { border-color: Highlight; background: Highlight; }
+  :where([data-scope="speech"] [data-part="wave"] i),
+  :where(:is([data-scope="speech"], [data-scope="tile"]) [data-part="level"] i) { forced-color-adjust: none; background: CanvasText; }
+  :where([data-scope="speech"][data-state="listening"] [data-part="wave"] i) { background: Highlight; }
+}
+
+/* ---------------------------------------------------------------------------
+   13 · v0.3 gap fills (07 §2.7, §4.6, §4.7, §5.5, §6.5): year view, notification
+   preferences matrix, realtime transport picker, quote reply, access denied (403).
+   Same rules as the rest: container queries for layout, sys tokens only, the 03
+   checkbox / choice card / field shells and the one sweep machine, unchanged.
+   ------------------------------------------------------------------------ */
+
+/* -- Year view (07 §2.7): 12 mini months, 1 → 4 columns by container ------- */
+:where([data-scope="year"]) { container: year / inline-size; display: grid; gap: var(--veneer-space-group); min-inline-size: 0; }
+:where([data-scope="year"] [data-part="toolbar"]) { display: flex; align-items: center; gap: var(--veneer-space-related); flex-wrap: wrap; }
+:where([data-scope="year"] [data-part="title"]) {
+  margin: 0; min-inline-size: 4ch; text-align: center; font-family: var(--veneer-text-title-font); font-weight: var(--veneer-text-title-weight);
+  font-size: calc(var(--veneer-text-heading-size) * 1.1); line-height: 1.1; letter-spacing: var(--veneer-text-title-tracking); font-variant-numeric: tabular-nums;
+}
+:where([data-scope="year"] [data-part="legend"]) { display: inline-flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; margin-inline-start: auto; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="year"] [data-part="legend"] > span) { display: inline-flex; align-items: center; gap: 4px; }
+:where([data-scope="year"] [data-part="months"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--veneer-space-group) * 1.25) var(--veneer-space-group);
+  transition: opacity var(--veneer-duration-fast) var(--veneer-ease-out);
+}
+:where([data-scope="year"] [data-part="months"][data-swapping]) { opacity: 0; }
+@container year (min-width: 480px) { :where([data-scope="year"] [data-part="months"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container year (min-width: 720px) { :where([data-scope="year"] [data-part="months"]) { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@container year (min-width: 960px) { :where([data-scope="year"] [data-part="months"]) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+:where([data-scope="year"] [data-part="year-month"]) { display: grid; gap: 4px; align-content: start; min-inline-size: 0; }
+:where([data-scope="year"] [data-part="month-title"]) {
+  all: unset; box-sizing: border-box; display: flex; align-items: baseline; gap: 8px; justify-self: start; min-block-size: var(--veneer-hit-min);
+  padding-inline: 6px; margin-inline-start: -6px; border-radius: var(--veneer-radius-control); cursor: pointer;
+  font: var(--veneer-text-heading-weight) calc(var(--veneer-text-body-size) + 1px)/1.2 var(--veneer-text-heading-font);
+}
+:where([data-scope="year"] [data-part="month-title"] small) { font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="year"] [data-part="month-title"]:hover) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="year"] [data-part="month-title"]:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 1px; }
+:where([data-scope="year"] [data-part="year-month"][data-current] [data-part="month-title"]) { color: var(--veneer-color-accent-text); }
+:where([data-scope="year"] [role="grid"]) { display: grid; grid-template-columns: repeat(7, minmax(28px, 1fr)); }
+:where([data-scope="year"] [role="row"]) { display: contents; }
+:where([data-scope="year"] [role="columnheader"]) { display: grid; place-items: center; block-size: 20px; font: 500 10.5px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+:where([data-scope="year"] [role="columnheader"] abbr) { text-decoration: none; }
+:where([data-scope="year"] [role="gridcell"]) {
+  position: relative; display: grid; place-items: center; align-content: center; gap: 1px;
+  block-size: max(30px, var(--veneer-hit-min)); border-radius: var(--veneer-radius-control);
+  font: 500 12px/1 var(--veneer-text-body-font); font-variant-numeric: tabular-nums; color: var(--veneer-color-text); cursor: pointer;
+}
+:where([data-scope="year"] [role="gridcell"][data-weekend]) { color: var(--veneer-color-text-subtle); }
+:where([data-scope="year"] [role="gridcell"][data-outside]) { cursor: default; }
+:where([data-scope="year"] [role="gridcell"]:not([data-outside]):hover) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="year"] [role="gridcell"] [data-part="num"]) { display: grid; place-items: center; inline-size: 22px; block-size: 20px; border-radius: var(--veneer-radius-round); }
+:where([data-scope="year"] [role="gridcell"][aria-current="date"] [data-part="num"]) { background: var(--veneer-color-accent-solid); color: var(--veneer-color-accent-on-solid); }
+:where([data-scope="year"] [role="gridcell"][aria-selected="true"]) { box-shadow: inset 0 0 0 var(--veneer-border-emphasis) var(--veneer-color-accent-solid); }
+:where([data-scope="year"] [role="gridcell"]:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 0; z-index: 1; }
+/* density: n dots (1–3), so the level never rides on colour alone */
+:where([data-scope="year"] [data-part="dots"]) {
+  display: block; block-size: 4px; inline-size: calc(var(--_n, 0) * 5px - 1px);
+  background: radial-gradient(circle at 2px 2px, var(--veneer-color-accent-solid) 1.6px, transparent 2px) 0 0 / 5px 4px repeat-x;
+}
+:where([data-scope="year"] [data-part="legend"] [data-part="dots"]) { inline-size: max(4px, calc(var(--_n, 0) * 5px - 1px)); }
+:where([data-scope="year"] [data-part="legend"] [data-part="dots"][data-zero]) { background: none; box-shadow: inset 0 0 0 1px var(--veneer-color-border-strong); border-radius: 2px; }
+:where([data-scope="year"] [data-part="detail"]) {
+  display: grid; gap: 6px; min-block-size: 3.2em; padding: 10px 12px; border-radius: var(--veneer-radius-control);
+  background: var(--veneer-color-surface-sunken); font-size: var(--veneer-text-body-size);
+}
+:where([data-scope="year"] [data-part="detail"] ul) { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="year"] [data-part="detail"] li) { display: flex; gap: 8px; align-items: center; }
+:where([data-scope="year"] [data-part="detail"] li > i) { inline-size: 8px; block-size: 8px; border-radius: 2px; background: var(--_c, var(--veneer-color-accent-solid)); flex: none; }
+:where([data-scope="calendar"] [data-part="year-wrap"]) { overflow: auto; padding: var(--veneer-space-group) calc(var(--veneer-space-group) * 1.5) calc(var(--veneer-space-group) * 2); min-block-size: 0; }
+
+/* -- Notification preferences matrix (07 §4.6) ----------------------------- */
+:where([data-scope="prefs-matrix"]) { container: prefs / inline-size; display: grid; gap: var(--veneer-space-group); min-inline-size: 0; }
+:where([data-scope="prefs-matrix"] [data-part="grid"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, minmax(60px, 84px)); min-inline-size: 0;
+  border-radius: var(--veneer-radius-surface); box-shadow: inset 0 0 0 var(--veneer-border-hairline) var(--veneer-color-border);
+}
+:where([data-scope="prefs-matrix"] [data-part="rows"]) { display: contents; }
+:where([data-scope="prefs-matrix"] [role="row"]) {
+  display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center;
+  border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+}
+:where([data-scope="prefs-matrix"] [role="row"]:first-child) { border-block-start: 0; }
+:where([data-scope="prefs-matrix"] [role="row"][data-part="head"]) { background: var(--veneer-color-surface-sunken); border-start-start-radius: var(--veneer-radius-surface); border-start-end-radius: var(--veneer-radius-surface); }
+:where([data-scope="prefs-matrix"] [role="row"][data-part="group"]) { background: color-mix(in oklab, var(--veneer-color-surface-sunken) 55%, transparent); }
+:where([data-scope="prefs-matrix"] [role="rowheader"]),
+:where([data-scope="prefs-matrix"] [data-part="corner"]) {
+  display: grid; gap: 2px; padding: calc(var(--veneer-space-related) + 2px) var(--veneer-space-group); min-inline-size: 0; text-align: start;
+}
+:where([data-scope="prefs-matrix"] [data-part="corner"]),
+:where([data-scope="prefs-matrix"] [data-part="group"] [role="rowheader"]) {
+  font-family: var(--veneer-text-eyebrow-font); font-size: var(--veneer-text-eyebrow-size); font-weight: 500; letter-spacing: var(--veneer-text-eyebrow-tracking);
+  text-transform: var(--veneer-text-eyebrow-case); color: var(--veneer-color-text-subtle);
+}
+:where([data-scope="prefs-matrix"] [role="rowheader"] b) { font-weight: 500; }
+:where([data-scope="prefs-matrix"] [role="rowheader"] small) { font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); line-height: 1.35; }
+:where([data-scope="prefs-matrix"] [role="rowheader"] [data-scope="badge"]) { justify-self: start; }
+:where([data-scope="prefs-matrix"] :is([role="gridcell"])),
+:where([data-scope="prefs-matrix"] :is([role="columnheader"]:not([data-part="corner"]))) {
+  display: grid; place-items: center; min-block-size: max(44px, var(--veneer-hit-min)); padding: 4px; min-inline-size: 0;
+}
+:where([data-scope="prefs-matrix"] [role="columnheader"] [data-part="ch-head"]) { font: 500 var(--veneer-text-caption-size)/1.2 var(--veneer-text-body-font); color: var(--veneer-color-text); }
+:where([data-scope="prefs-matrix"] [data-scope="checkbox"]) { grid-template-columns: auto; justify-items: center; justify-self: center; row-gap: 3px; column-gap: 0; }
+/* the channel name under each box: hidden on wide grids (the column header names it), shown when the grid restacks */
+:where([data-scope="prefs-matrix"] [data-part="ch-name"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
+:where([data-scope="prefs-matrix"] [data-part="na"]) { color: var(--veneer-color-text-faint); font: 500 13px/1 var(--veneer-font-mono); }
+:where([data-scope="prefs-matrix"] [data-part="na"]:focus-visible),
+:where([data-scope="prefs-matrix"] [data-part="na"]:focus) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: -4px; border-radius: var(--veneer-radius-control); }
+:where([data-scope="prefs-matrix"] [data-scope="checkbox"]:has(input:focus-visible)) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 3px; border-radius: var(--veneer-radius-control); }
+:where([data-scope="prefs-matrix"] [data-scope="checkbox"]:has(input[aria-disabled="true"])) { cursor: not-allowed; }
+:where([data-scope="prefs-matrix"] [data-scope="checkbox"]:has(input[aria-disabled="true"]) [data-part="control"]) { opacity: 0.72; }
+:where([data-scope="prefs-matrix"] [data-part="lock"]) { position: absolute; inset-block-start: 2px; inset-inline-end: -12px; inline-size: 11px; block-size: 11px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="prefs-matrix"] [data-part="footer"]) { display: flex; flex-wrap: wrap; align-items: end; gap: var(--veneer-space-related) var(--veneer-space-group); }
+:where([data-scope="prefs-matrix"] [data-part="footer"] > [data-scope="field"]) { inline-size: min(100%, 260px); }
+:where([data-scope="prefs-matrix"] [data-part="status"]) { margin-inline-start: auto; align-self: center; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="prefs-matrix"] [data-part="status"][data-state="error"]) { color: var(--veneer-color-critical-text); }
+/* below 560px of container: rows restack, nothing scrolls sideways (07 §4.6) */
+@container prefs (max-width: 559.98px) {
+  :where([data-scope="prefs-matrix"] [data-part="grid"]) { grid-template-columns: minmax(0, 1fr); }
+  :where([data-scope="prefs-matrix"] [role="row"]) { grid-template-columns: repeat(4, minmax(0, 1fr)); padding-block-end: 6px; }
+  :where([data-scope="prefs-matrix"] :is([role="rowheader"])),
+  :where([data-scope="prefs-matrix"] :is([data-part="corner"])) { grid-column: 1 / -1; padding-block-end: 2px; }
+  :where([data-scope="prefs-matrix"] :is([role="gridcell"])),
+  :where([data-scope="prefs-matrix"] :is([role="columnheader"]:not([data-part="corner"]))) { min-block-size: 0; padding-block: 2px; }
+  :where([data-scope="prefs-matrix"] [data-part="ch-name"]) { position: static; inline-size: auto; block-size: auto; overflow: visible; clip-path: none; font-size: 11.5px; color: var(--veneer-color-text-subtle); }
+  :where([data-scope="prefs-matrix"] [role="columnheader"] [data-part="ch-head"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
+  :where([data-scope="prefs-matrix"] [data-part="na"]) { display: grid; justify-items: center; gap: 3px; }
+  :where([data-scope="prefs-matrix"] [data-part="status"]) { margin-inline-start: 0; flex-basis: 100%; }
+}
+@container prefs (max-width: 339.98px) {
+  :where([data-scope="prefs-matrix"] [role="row"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* -- Transport picker (07 §4.7, sandbox) ----------------------------------- */
+:where([data-scope="transport"]) { container: transport / inline-size; display: grid; gap: var(--veneer-space-group); min-inline-size: 0; }
+:where([data-scope="transport"] [data-part="head"]) { display: flex; align-items: center; gap: var(--veneer-space-related); flex-wrap: wrap; }
+:where([data-scope="transport"] [data-part="head"] h4) { margin: 0; margin-inline-end: auto; font: var(--veneer-text-heading-weight) 15px/1.25 var(--veneer-text-heading-font); }
+:where([data-scope="transport"] [data-part="config"]) { display: grid; gap: var(--veneer-space-group); grid-template-columns: minmax(0, 1fr); }
+:where([data-scope="transport"] [data-part="choices"]) { display: grid; gap: var(--veneer-space-related); grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+:where([data-scope="transport"] [data-scope="choice-card"]) { position: relative; align-content: start; }
+:where([data-scope="transport"] [data-scope="choice-card"] [data-part="label"] code) { font: 500 12.5px/1.25 var(--veneer-font-mono); }
+:where([data-scope="transport"] [data-scope="choice-card"] [data-part="hint"]) { grid-column: 1 / -1; }
+:where([data-scope="transport"] [data-scope="choice-card"]:has(input:disabled)) { opacity: var(--veneer-opacity-disabled); cursor: not-allowed; }
+:where([data-scope="transport"] [data-scope="choice-card"]:has(input:focus-visible)) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 2px; }
+:where([data-scope="transport"] fieldset[data-scope="group"][disabled] [data-part="choices"]) { opacity: var(--veneer-opacity-disabled); }
+:where([data-scope="transport"] [data-part="row"]) { display: flex; flex-wrap: wrap; align-items: end; gap: var(--veneer-space-related) var(--veneer-space-group); }
+:where([data-scope="transport"] [data-part="row"] > [data-scope="field"]) { inline-size: min(100%, 240px); }
+:where([data-scope="transport"] [data-part="lanes"]) { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-radius: var(--veneer-radius-surface); box-shadow: inset 0 0 0 var(--veneer-border-hairline) var(--veneer-color-border); }
+:where([data-scope="transport"] [data-part="lane"]) {
+  display: grid; grid-template-columns: minmax(150px, 1.1fr) auto minmax(0, 2fr) minmax(96px, 1fr); align-items: center; gap: 6px var(--veneer-space-group);
+  padding: var(--veneer-space-related) var(--veneer-space-group); border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+}
+:where([data-scope="transport"] [data-part="lane"]:first-child) { border-block-start: 0; }
+:where([data-scope="transport"] [data-part="lane-name"]) { display: grid; gap: 2px; min-inline-size: 0; }
+:where([data-scope="transport"] [data-part="lane-name"] b) { font: 500 13px/1.2 var(--veneer-font-mono); }
+:where([data-scope="transport"] [data-part="lane-name"] small) { font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="transport"] [data-part="figures"]) { display: flex; flex-wrap: wrap; gap: 4px var(--veneer-space-group); margin: 0; }
+:where([data-scope="transport"] [data-part="figures"] > div) { display: grid; gap: 1px; }
+:where([data-scope="transport"] [data-part="figures"] dt) { font: 500 10.5px/1.2 var(--veneer-font-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--veneer-color-text-subtle); }
+:where([data-scope="transport"] [data-part="figures"] dd) { margin: 0; font: 500 13px/1.3 var(--veneer-text-numeric-font, var(--veneer-font-mono)); font-variant-numeric: tabular-nums; }
+:where([data-scope="transport"] [data-part="figures"] dd[data-tone="caution"]) { color: var(--veneer-color-caution-text); }
+:where([data-scope="transport"] [data-part="figures"] dd[data-tone="critical"]) { color: var(--veneer-color-critical-text); }
+:where([data-scope="transport"] [data-part="bars"]) { display: flex; align-items: end; gap: 2px; block-size: 26px; min-inline-size: 0; max-inline-size: 240px; overflow: clip; }
+:where([data-scope="transport"] [data-part="bars"] i) {
+  flex: 1 1 0; max-inline-size: 6px; min-inline-size: 2px; block-size: calc(2px + 24px * var(--h, 0)); border-radius: 1px;
+  background: color-mix(in oklab, var(--veneer-color-sweep) 75%, transparent); transition: block-size var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="transport"] [data-part="bars"] i[data-tone="caution"]) { background: var(--veneer-color-caution-solid); }
+:where([data-scope="transport"] [data-part="bars"] i[data-tone="critical"]) { background: var(--veneer-color-critical-solid); }
+:where([data-scope="transport"] [data-part="note"]) { grid-column: 1 / -1; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); min-block-size: 1.3em; }
+:where([data-scope="transport"] [data-part="lane"][data-state="offline"] [data-part="note"]) { color: var(--veneer-color-critical-text); }
+:where([data-scope="transport"] [data-part="build-error"]) { margin: 0; }
+:where([data-scope="transport"] [data-part="log"]) {
+  display: grid; gap: 1px; margin: 0; padding: 8px 10px; list-style: none; max-block-size: 140px; overflow: auto;
+  border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font: 400 12px/1.55 var(--veneer-font-mono); color: var(--veneer-color-text-subtle);
+}
+:where([data-scope="transport"] [data-part="log"] ol) { display: contents; }
+:where([data-scope="transport"] [data-part="log"] li) { display: grid; grid-template-columns: 64px 72px minmax(0, 1fr); gap: 8px; }
+:where([data-scope="transport"] [data-part="log"] b) { font-weight: 500; color: var(--veneer-color-text); }
+@container transport (max-width: 559.98px) {
+  :where([data-scope="transport"] [data-part="lane"]) { grid-template-columns: minmax(0, 1fr) auto; }
+  :where([data-scope="transport"] [data-part="figures"]),
+  :where([data-scope="transport"] [data-part="bars"]) { grid-column: 1 / -1; }
+  :where([data-scope="transport"] [data-part="log"] li) { grid-template-columns: 56px minmax(0, 1fr); }
+  :where([data-scope="transport"] [data-part="log"] li > span:last-child) { grid-column: 1 / -1; }
+}
+:where([data-motion="reduce"] [data-scope="transport"] [data-part="bars"] i) { transition: none; }
+@media (prefers-reduced-motion: reduce) { :where(:root:not([data-motion="full"]) [data-scope="transport"] [data-part="bars"] i) { transition: none; } }
+
+/* -- Quote reply (07 §5.5) -------------------------------------------------- */
+:where([data-scope="message"]) { border-radius: var(--veneer-radius-control); }
+:where([data-scope="message"]:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 2px; }
+:where([data-scope="message"] [data-part="actions"]) {
+  position: absolute; inset-block-start: -10px; inset-inline-end: 4px; z-index: 4; display: none; gap: 2px; padding: 2px;
+  border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-overlay); box-shadow: var(--veneer-elevation-2), 0 0 0 1px var(--veneer-color-border);
+}
+:where([data-scope="message"]:is(:hover, :focus-within, [data-actions]) [data-part="actions"]) { display: flex; }
+:where([data-scope="message"][data-mine] [data-part="actions"]) { inset-inline: 4px auto; }
+:where([data-scope="message"] [data-part="bubble"] [data-part="quote"]) {
+  display: grid; gap: 2px; margin: 2px 0 6px; padding: 4px 0 4px 10px; position: relative; z-index: 3;
+  border-inline-start: 2px solid var(--veneer-color-sweep); font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle);
+}
+:where([data-scope="message"] [data-part="quote"] [data-part="quote-by"]) { font-weight: 600; color: var(--veneer-color-text); }
+:where([data-scope="message"] [data-part="quote"] [data-part="quote-text"]) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: clip; }
+:where([data-scope="message"][data-mine] [data-part="bubble"] [data-part="quote"]) { border-inline-start-color: var(--veneer-color-accent-on-solid); color: color-mix(in oklab, var(--veneer-color-accent-on-solid) 85%, transparent); }
+:where([data-scope="message"][data-mine] [data-part="quote"] [data-part="quote-by"]) { color: var(--veneer-color-accent-on-solid); }
+:where([data-scope="message"] [data-part="bubble"] > :not([data-part^="sweep"])) { position: relative; z-index: 3; }
+:where([data-scope="message"] [data-part="quote-jump"]) { font-size: var(--veneer-text-caption-size); }
+:where([data-scope="composer"] [data-part="quote-draft"]) {
+  position: relative; z-index: 3; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 8px;
+  padding: 6px 4px 6px 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken);
+  box-shadow: inset 2px 0 0 var(--veneer-color-sweep);
+}
+:where([dir="rtl"] [data-scope="composer"] [data-part="quote-draft"]) { box-shadow: inset -2px 0 0 var(--veneer-color-sweep); }
+:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-by"]) { font-size: var(--veneer-text-caption-size); font-weight: 600; }
+:where([data-scope="composer"] [data-part="quote-draft"] [data-part="quote-text"]) { grid-column: 1; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: clip; }
+:where([data-scope="composer"] [data-part="quote-draft"] > [data-scope="button"]) { grid-column: 2; grid-row: 1 / span 2; }
+:where([data-scope="composer"] [data-part="hint"][data-state="error"]) { color: var(--veneer-color-critical-text); }
+
+/* -- Access denied, 403 (07 §6.5): 09's system-page anatomy, mirrored here because the
+   app specimen doesn't load veneer-flows.css. Values match veneer-flows.css §5; flows wins where both load. */
+:where([data-scope="system-page"]) {
+  container: system / inline-size; display: grid; place-items: center; min-block-size: min(100%, 520px);
+  padding: var(--veneer-space-section) var(--veneer-space-page); text-align: center;
+}
+:where([data-scope="system-page"] [data-part="body"]) { display: grid; justify-items: center; gap: 14px; max-inline-size: 460px; }
+:where([data-scope="system-page"] [data-part="art"]) { position: relative; inline-size: 132px; block-size: 84px; color: var(--veneer-color-text); margin-block-end: 6px; }
+:where([data-scope="system-page"] [data-part="code"]) { font: 500 var(--veneer-text-eyebrow-size)/1 var(--veneer-text-eyebrow-font); letter-spacing: var(--veneer-text-eyebrow-tracking); text-transform: var(--veneer-text-eyebrow-case); color: var(--veneer-color-text-subtle); }
+:where([data-scope="system-page"] :is(h2)),
+:where([data-scope="system-page"] :is(h3)) { margin: 0; font: var(--veneer-text-title-weight) var(--veneer-text-title-size)/1.1 var(--veneer-text-title-font); letter-spacing: var(--veneer-text-title-tracking); }
+:where([data-scope="system-page"] :is(h2):focus),
+:where([data-scope="system-page"] :is(h3):focus) { outline: none; }
+:where([data-scope="system-page"] p) { margin: 0; color: var(--veneer-color-text-subtle); }
+:where([data-scope="system-page"] [data-part="actions"]) { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-block-start: 6px; }
+:where([data-scope="system-page"] [data-part="meta"]) { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; font: 400 var(--veneer-text-caption-size)/1.4 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+:where([data-scope="system-page"] [data-part="request"]) { display: grid; gap: 10px; inline-size: min(100%, 380px); text-align: start; }
+:where([data-scope="system-page"] [data-part="request"] [data-part="actions"]) { justify-content: flex-end; margin: 0; }
+:where([data-scope="system-page"] [data-part="pending"]) { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-info-soft); color: var(--veneer-color-info-text); font-size: var(--veneer-text-body-size); text-align: start; }
+:where([data-scope="system-page"] [data-part="accounts"]) {
+  display: grid; gap: 2px; inline-size: min(100%, 320px); margin: 0; padding: 4px; list-style: none; text-align: start;
+  border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-overlay); box-shadow: var(--veneer-elevation-2), 0 0 0 1px var(--veneer-color-border);
+}
+:where([data-scope="system-page"] [data-part="accounts"][hidden]) { display: none; }
+:where([data-scope="system-page"] [data-part="accounts"] [role="menuitem"]) {
+  all: unset; box-sizing: border-box; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  min-block-size: max(40px, var(--veneer-hit-min)); padding-inline: 8px; border-radius: var(--veneer-radius-control); cursor: pointer; font-size: var(--veneer-text-body-size);
+}
+:where([data-scope="system-page"] [data-part="accounts"] [role="menuitem"] small) { display: block; color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-caption-size); }
+:where([data-scope="system-page"] [data-part="accounts"] [role="menuitem"]:is(:hover)),
+:where([data-scope="system-page"] [data-part="accounts"] [role="menuitem"]:is(:focus-visible)) { background: var(--veneer-color-surface-hover); outline: none; }
+:where([data-scope="system-page"] [data-part="accounts"] [role="menuitem"]:focus-visible) { box-shadow: inset 0 0 0 var(--veneer-focus-width) var(--veneer-color-focus); }
+/* the weave with a lock knot: veneer threads, kerf threads that draw once, a padlock on the crossing */
+:where([data-scope="system-page"] [data-part="weave"]) { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; overflow: visible; }
+:where([data-scope="system-page"] [data-part="weave"] line) { stroke: currentColor; stroke-width: 1; opacity: 0.16; vector-effect: non-scaling-stroke; }
+:where([data-scope="system-page"] [data-part="weave"] path[pathLength]) {
+  fill: none; stroke: var(--veneer-color-accent-solid); stroke-width: calc(1px + var(--veneer-x) * 1px); vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: veneer-app-weave calc(var(--veneer-sweep-duration) * 2) var(--veneer-sweep-ease) forwards;
+  animation-delay: calc(var(--i, 0) * var(--veneer-stagger) * 3);
+}
+:where([data-scope="system-page"] [data-part="weave"] [data-part="lock"]) { fill: var(--veneer-color-surface); stroke: var(--veneer-color-text); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+:where([data-scope="system-page"] [data-part="weave"] :is([data-part="shackle"])),
+:where([data-scope="system-page"] [data-part="weave"] :is([data-part="keyhole"])) { fill: none; stroke: var(--veneer-color-text); stroke-width: 1.5; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+@keyframes veneer-app-weave { to { stroke-dashoffset: 0; } }
+:where([data-motion="reduce"] [data-scope="system-page"] [data-part="weave"] path[pathLength]) { animation: none; stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) { :where(:root:not([data-motion="full"]) [data-scope="system-page"] [data-part="weave"] path[pathLength]) { animation: none; stroke-dashoffset: 0; } }
+
+@media (forced-colors: active) {
+  :where([data-scope="year"] [role="gridcell"][aria-current="date"] [data-part="num"]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+  :where([data-scope="year"] [role="gridcell"][aria-selected="true"]) { outline: 2px solid Highlight; outline-offset: -2px; box-shadow: none; }
+  :where([data-scope="year"] [data-part="dots"]) { forced-color-adjust: none; background: radial-gradient(circle at 2px 2px, CanvasText 1.6px, transparent 2px) 0 0 / 5px 4px repeat-x; }
+  :where([data-scope="prefs-matrix"] [data-part="lock"]) { color: GrayText; }
+  :where([data-scope="transport"] [data-part="bars"] i) { forced-color-adjust: none; background: CanvasText; }
+  :where([data-scope="transport"] [data-part="bars"] i:is([data-tone="caution"])),
+  :where([data-scope="transport"] [data-part="bars"] i:is([data-tone="critical"])) { background: Highlight; }
+  :where([data-scope="message"] [data-part="quote"]),
+  :where([data-scope="composer"] [data-part="quote-draft"]) { border-inline-start: 2px solid CanvasText; box-shadow: none; }
+  :where([data-scope="system-page"] [data-part="weave"] path[pathLength]) { stroke: CanvasText; }
+  :where([data-scope="system-page"] [data-part="weave"] [data-part="lock"]) { fill: Canvas; stroke: CanvasText; }
+  :where([data-scope="system-page"] [data-part="weave"] :is([data-part="shackle"])),
+  :where([data-scope="system-page"] [data-part="weave"] :is([data-part="keyhole"])) { stroke: CanvasText; }
+}
+
+} /* @layer veneer.app */

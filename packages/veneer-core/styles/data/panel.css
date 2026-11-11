@@ -1,0 +1,30 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.data {
+/* data surfaces (panels, stat rows, KPI tiles, interactive or not): gated like surfaces (data-flair="sweep" only) */
+:where([data-scope="panel"][data-sweep]),
+:where([data-scope="stat"][data-sweep]) {
+  --_on: var(--veneer-sweep-surfaces); --veneer-sweep-radius: var(--veneer-radius-surface);
+}
+/* opt-in (veneer.css §4): any data-sweep but "surface" sweeps at every stop */
+:where([data-scope="panel"]):where([data-sweep]:not([data-sweep="surface"])),
+:where([data-scope="stat"]):where([data-sweep]:not([data-sweep="surface"])),
+:where([data-scope="card"]):where([data-sweep]:not([data-sweep="surface"])),
+:where([data-scope="kanban"] [data-part="card"]):where([data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
+/* data surfaces rest on the decorative hairline, not the field's ink border */
+:where([data-scope="panel"], [data-scope="stat"], [data-scope="card"], [data-scope="kanban"] [data-part="card"]):where([data-sweep]) {
+  --veneer-color-sweep-base: var(--veneer-color-border);
+}
+/* panel: the card that holds a chart or a table */
+:where([data-scope="panel"]) {
+  position: relative; display: grid; gap: var(--veneer-space-group); align-content: start; min-inline-size: 0;
+  padding: var(--veneer-pad-surface); background: var(--veneer-color-surface-raised);
+  border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-1);
+}
+:where([data-scope="panel"]:not([data-sweep])) { border: var(--veneer-border-hairline) solid var(--veneer-color-border); }
+:where([data-scope="panel"] > [data-part="header"]) { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: var(--veneer-space-related) var(--veneer-space-group); }
+:where([data-scope="panel"] [data-part="title"]:not([data-scope="panel"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="panel"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="panel"] *))) {
+  font-family: var(--veneer-text-heading-font); font-size: calc(var(--veneer-text-heading-size) - 3px);
+  font-weight: var(--veneer-text-heading-weight); letter-spacing: var(--veneer-text-heading-tracking); line-height: 1.3; margin: 0;
+}
+:where([data-scope="panel"] [data-part="description"]:not([data-scope="panel"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="empty-state"],[data-scope="group"],[data-scope="item"],[data-scope="page-header"],[data-scope="popover"],[data-scope="sheet"],[data-scope="steps"],[data-scope="toast"]) *:not([data-scope="panel"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="empty-state"],[data-scope="group"],[data-scope="item"],[data-scope="page-header"],[data-scope="popover"],[data-scope="sheet"],[data-scope="steps"],[data-scope="toast"]) [data-scope="panel"] *))) { font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); margin: 2px 0 0; }
+}

@@ -1,0 +1,36 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* ScrollArea — contained scroll, thin bar, keyboard-reachable, edge fade */
+:where([data-scope="scroll-area"]) {
+  overflow: auto; overscroll-behavior: contain; min-inline-size: 0; min-block-size: 0;
+  scrollbar-gutter: stable;
+}
+:where([data-scope="scroll-area"][data-axis="x"]) {
+  overflow-x: auto; overflow-y: hidden; scrollbar-gutter: auto; scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+:where([data-scope="scroll-area"][data-snap]) { scroll-snap-type: x mandatory; scroll-padding-inline: var(--veneer-space-page); }
+:where([data-scope="scroll-area"][data-snap] > *) { scroll-snap-align: start; }
+:where([data-scope="scroll-area"]:focus-visible) { outline-offset: calc(var(--veneer-focus-width) * -1); }
+@supports (animation-timeline: scroll()) {
+:where([data-scope="scroll-area"][data-fade]) {
+    --_veneer-fs: 0px; --_veneer-fe: 24px;
+    mask-image: linear-gradient(to bottom, transparent, #000 var(--_veneer-fs), #000 calc(100% - var(--_veneer-fe)), transparent);
+    animation: veneer-edge-fade linear both; animation-timeline: scroll(self block);
+  }
+:where([data-scope="scroll-area"][data-fade][data-axis="x"]) {
+    mask-image: linear-gradient(to right, transparent, #000 var(--_veneer-fs), #000 calc(100% - var(--_veneer-fe)), transparent);
+    animation-timeline: scroll(self inline);
+  }
+}
+@media print {
+:where([data-scope="scroll-area"]),
+  :where([data-scope="master-detail"] > *) { overflow: visible; block-size: auto; mask-image: none; }
+}
+@keyframes veneer-edge-fade {
+  0%   { --_veneer-fs: 0px;  --_veneer-fe: 24px; }
+  8%   { --_veneer-fs: 24px; }
+  92%  { --_veneer-fe: 24px; }
+  100% { --_veneer-fs: 24px; --_veneer-fe: 0px; }
+}
+}

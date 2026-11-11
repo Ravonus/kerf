@@ -2,7 +2,7 @@
 import type * as Zlib from 'node:zlib'
 import { brotliDecompressSync, gunzipSync, createBrotliDecompress } from 'node:zlib'
 import { vi } from 'vitest'
-import { Boundary, resource } from '@weft-js/core'
+import { Boundary, resource } from '@kerf/core'
 import { createHandler, type Manifest } from '../src/server'
 
 const zlib = vi.hoisted(() => ({ brotliCompress: 0, gzip: 0 }))
@@ -141,7 +141,7 @@ test('data is compressed once too', async () => {
   const [a, b] = await Promise.all(
     ['a', 'b'].map(() =>
       handler(
-        new Request('http://localhost/_weft/data/', { headers: { 'accept-encoding': 'gzip' } }),
+        new Request('http://localhost/_kerf/data/', { headers: { 'accept-encoding': 'gzip' } }),
       ),
     ),
   )

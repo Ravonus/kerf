@@ -113,10 +113,10 @@ export function compare(c) {
     out.push({
       code: 'H001',
       severity: 'warning',
-      file: 'weft.config.ts',
+      file: 'kerf.config.ts',
       route: '*',
       why: "`site.url` is not set: a build has no absolute URLs (no canonical, no og:url, a relative og:image), and a server takes them from the request's Host header. Crawlers don't resolve relative URLs.",
-      help: 'Set `site.url` in weft.config.ts, or `WEFT_SITE_URL` in the deploy environment.',
+      help: 'Set `site.url` in kerf.config.ts, or `KERF_SITE_URL` in the deploy environment.',
     })
 
   for (const { route, entry } of entries)

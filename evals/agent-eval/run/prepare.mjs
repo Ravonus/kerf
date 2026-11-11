@@ -37,7 +37,7 @@ export async function golden({ withRegistry, stackNames, stacks, packagesCommit,
       rmSync(dir, { recursive: true, force: true })
       mkdirSync(box.home, { recursive: true })
       mkdirSync(box.tmp)
-      if (name !== 'weft-warp') throw new Error('S5 supports only weft-warp')
+      if (name !== 'kerf-veneer') throw new Error('S5 supports only kerf-veneer')
       say(`== ${name}`)
       install({
         dir,
@@ -60,7 +60,7 @@ export async function golden({ withRegistry, stackNames, stacks, packagesCommit,
       manifest.stacks[name] = {
         tree: hashTree(box.app),
         versions: Object.fromEntries(
-          ['react', 'next', 'vite', '@weft-js/core', '@weft-js/warp', 'tailwindcss']
+          ['react', 'next', 'vite', '@kerf/core', '@kerf/veneer', 'tailwindcss']
             .map((n) => [n, installed(n)])
             .filter(([, v]) => v),
         ),
@@ -77,9 +77,9 @@ export async function golden({ withRegistry, stackNames, stacks, packagesCommit,
 
 export async function pack({ packagesCommit, say }) {
   rmSync(tgz, { recursive: true, force: true })
-  const { packWithAddon } = await import(join(repo, 'packages/create/scripts/pack-all.mjs'))
+  const { packWithAddon } = await import(join(repo, 'packages/create-kerf/scripts/pack-all.mjs'))
   const packed = packWithAddon(tgz)
-  if (!Object.keys(packed).some((n) => n.startsWith('@weft-js/compiler-')))
+  if (!Object.keys(packed).some((n) => n.startsWith('@kerf/compiler-')))
     throw new Error(
       'no native addon packed: run build:native in packages/core, a real install gets one',
     )

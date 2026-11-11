@@ -3,8 +3,8 @@
 // client, and so which call sites in the rest are islands. It only ever errs one way: a binding it can't see through
 // ships, which costs bytes, and nothing it calls static was seen doing anything a client would have to repeat.
 //
-//   client   a handler, `ref` or spread on an element, an `import()` outside a handler, a top-level side effect, `@weft client`,
-//            or a read of anything that is: weft's reactive API, a query, a binding that made a box. A component's handler prop passed on, or its props
+//   client   a handler, `ref` or spread on an element, an `import()` outside a handler, a top-level side effect, `@kerf client`,
+//            or a read of anything that is: kerf's reactive API, a query, a binding that made a box. A component's handler prop passed on, or its props
 //            spread, doesn't count while tags are all that reach it (hydration.rs): only a call site can put anything there
 //   island   a call site of a client component (or one given a handler, or a spread of something else) from code that isn't
 //
@@ -14,11 +14,11 @@
 // Then when each island loads, from everything it reaches. Waiting is the default and has to be earned the other way
 // round from above: only what is seen doing nothing without an event may wait for one.
 //
-//   interaction  handlers and nothing else: every change starts with an event, and events replay. `@weft interaction` says
+//   interaction  handlers and nothing else: every change starts with an event, and events replay. `@kerf interaction` says
 //                so of work that starts by itself but only matters to someone using it, where the compiler can't prove it
 //   visible      work that starts by itself but stays inside the island (`onMount` with `SAFE` globals only), or server
-//                data that can move on; `@weft visible` says so where the compiler can't prove it
-//   load         anything else: `@weft client`, `autofocus`, a `ref` that does work, a module that runs as it loads, a
+//                data that can move on; `@kerf visible` says so where the compiler can't prove it
+//   load         anything else: `@kerf client`, `autofocus`, a `ref` that does work, a module that runs as it loads, a
 //                box at module level (a write elsewhere couldn't reach an island that isn't there), code it can't see
 
 import { gather } from './hydration/graph.mjs'

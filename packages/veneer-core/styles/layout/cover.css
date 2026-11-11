@@ -1,0 +1,11 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* Cover — fills the screen; one child is centred, header/footer hug the edges */
+:where([data-scope="cover"]) {
+  display: flex; flex-direction: column; gap: var(--_gap, var(--veneer-space-group));
+  min-block-size: var(--veneer-viewport-block);
+  padding-block: max(var(--veneer-space-group), var(--veneer-safe-top)) max(var(--veneer-space-group), var(--veneer-safe-bottom));
+}
+:where([data-scope="cover"][data-min="fill"]) { min-block-size: 100%; }
+:where([data-scope="cover"] > [data-part="center"]) { margin-block: auto; }
+}

@@ -1,6 +1,6 @@
 # Runtime state machines
 
-Weft's runtime has several lifecycles that are not written as one state
+Kerf's runtime has several lifecycles that are not written as one state
 variable. They live in flags, nullable fields, timers and abort
 controllers spread across a module. This page names each one, its states
 and where they change, so a change to one of these files starts from the
@@ -125,7 +125,7 @@ and **disposed**.
 
 Encoded by membership in the `later` map, `Later.running`, `Later.el`
 with the `watched` map and the shared IntersectionObserver, and the
-`weft:reloaded:` sessionStorage flag.
+`kerf:reloaded:` sessionStorage flag.
 
 The rule: an outcome only applies while `later.get(key)` is still this
 island. Disposal removes it from the map and unobserves its element.

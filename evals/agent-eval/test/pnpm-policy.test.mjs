@@ -6,7 +6,7 @@ import { test } from 'node:test'
 import { normalizeOverrides, pnpmEnv, POLICY, writePolicy } from '../lib/pnpm-policy.mjs'
 
 test('standalone policy keeps the age floor and rejects replacement', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-policy-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-policy-'))
   try {
     writePolicy(dir)
     assert.equal(readFileSync(join(dir, 'pnpm-workspace.yaml'), 'utf8'), POLICY)
@@ -26,12 +26,12 @@ test('inherited overrides cannot bypass the policy', () => {
 })
 
 test('manifest overrides merge into the workspace and conflicts fail closed', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-override-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-override-'))
   try {
     const pkg = {
       overrides: { inherited: '1.2.3' },
       pnpm: {
-        overrides: { inherited: '1.2.3', '@weft-js/core': 'file:/tmp/core.tgz' },
+        overrides: { inherited: '1.2.3', '@kerf/core': 'file:/tmp/core.tgz' },
         other: true,
       },
     }
@@ -45,7 +45,7 @@ test('manifest overrides merge into the workspace and conflicts fail closed', ()
     assert.match(policy, /minimumReleaseAge: 4320/)
     assert.match(policy, /"miniflare>undici": 7.30.1/)
     assert.match(policy, /"inherited": "1.2.3"/)
-    assert.match(policy, /"@weft-js\/core": "file:\/tmp\/core.tgz"/)
+    assert.match(policy, /"@kerf\/core": "file:\/tmp\/core.tgz"/)
     assert.deepEqual(JSON.parse(readFileSync(join(dir, 'package.json'))), { pnpm: { other: true } })
     assert.equal(normalizeOverrides(dir), false)
     writeFileSync(

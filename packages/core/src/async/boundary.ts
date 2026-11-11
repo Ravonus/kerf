@@ -107,7 +107,7 @@ export function Boundary(props: BoundaryProps) {
   return boundaryView({ parent, list, props, scoped, boundary, key, failure, retry, show })
 }
 
-/** What a page that's still streaming carries once the client runs: `w` claims a chunk's nodes (@weft-js/start's client). */
+/** What a page that's still streaming carries once the client runs: `w` claims a chunk's nodes (@kerf/start's client). */
 type Streamed = Omit<SsrData, 'w'> & { w?: 1 | ((root: Element, fn: () => void) => void) }
 
 type Page = {
@@ -181,9 +181,9 @@ function makeBuilder({
                 claimed()
                 return claimed
               } catch (e) {
-                if (DEV && e && typeof e === 'object' && (e as { weft?: string }).weft)
+                if (DEV && e && typeof e === 'object' && (e as { kerf?: string }).kerf)
                   console.error(
-                    `weft: <Boundary> caught an error in ${(e as { weft?: string }).weft}`,
+                    `kerf: <Boundary> caught an error in ${(e as { kerf?: string }).kerf}`,
                   )
                 thrown.value = rt.server ? ((rt as Pass).shown?.(e) ?? e) : e
                 return null
@@ -318,7 +318,7 @@ function boundaryView({
   return memo(() => {
     const e = failure.value
     if (e !== undefined) {
-      if (DEV && !props.error) console.error('weft: <Boundary> without `error` caught', e)
+      if (DEV && !props.error) console.error('kerf: <Boundary> without `error` caught', e)
       const view = props.error ? sideView('e', () => props.error!(e, retry)) : null
       if (!rt.stream || key === undefined) return view
       // The fallback may be out already: what replaces it is this, not the content that never came.

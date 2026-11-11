@@ -1,4 +1,4 @@
-import { Button, Card, Text } from '@weft-js/warp'
+import { Button, Card, Text } from '@kerf/veneer'
 
 export default function Special() {
   return (
@@ -10,8 +10,8 @@ export default function Special() {
       <p
         style={{
           borderLeft:
-            '4px solid var(--warp-color-accent-solid)',
-          paddingLeft: 'var(--warp-space-related)',
+            '4px solid var(--veneer-color-accent-solid)',
+          paddingLeft: 'var(--veneer-space-related)',
           fontStyle: 'italic',
         }}
       >

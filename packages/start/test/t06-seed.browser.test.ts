@@ -16,7 +16,7 @@ test.each([true, false])('a production query bundle reads with seed=%s', async (
         },
         load(id) {
           if (id !== entry) return null
-          return `import { query } from '@weft-js/start/data';
+          return `import { query } from '@kerf/start/data';
           window.result = query({ $id: 'listTodos.108883' }).fetch();`
         },
       },
@@ -38,14 +38,14 @@ test.each([true, false])('a production query bundle reads with seed=%s', async (
     const requests: string[] = []
     await page.route('**/*', async (route) => {
       const url = route.request().url()
-      if (url.includes('/_weft/fn/')) {
+      if (url.includes('/_kerf/fn/')) {
         requests.push(url)
         await route.fulfill({ json: { v: ['network'], t: [] } })
       } else {
         await route.fulfill({
           contentType: 'text/html',
           body: seeded
-            ? `<script id="weft-cache" type="application/json">[["listTodos.108883",null,["seed"],[]]]</script>`
+            ? `<script id="kerf-cache" type="application/json">[["listTodos.108883",null,["seed"],[]]]</script>`
             : '',
         })
       }
@@ -59,7 +59,7 @@ test.each([true, false])('a production query bundle reads with seed=%s', async (
     expect({ result, requests }).toEqual(
       seeded
         ? { result: ['seed'], requests: [] }
-        : { result: ['network'], requests: ['http://t06.local/_weft/fn/listTodos.108883'] },
+        : { result: ['network'], requests: ['http://t06.local/_kerf/fn/listTodos.108883'] },
     )
   } finally {
     await browser.close()

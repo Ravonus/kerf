@@ -1,4 +1,4 @@
-// @weft-js/core/test/plugins: conformance suites that ship with a slot, so any provider can be held to them (research 13 §2.11).
+// @kerf/core/test/plugins: conformance suites that ship with a slot, so any provider can be held to them (research 13 §2.11).
 // `textMeasureSuite` runs in a page, against real layout: a test double can't show a line count is right. A runner loads
 // it in each pinned browser (packages/text/test/conformance.mjs).
 
@@ -104,7 +104,7 @@ export async function busSuite({ make, restart }: BusSuiteOptions): Promise<Chec
   const check = (name: string, ok: boolean, detail = '') => void out.push({ name, ok, detail })
   const a = await make(),
     b = await make()
-  const room = (s: string) => `weft:c:conform-${Date.now()}-${s}:{"room":"a*b> c é"}`
+  const room = (s: string) => `kerf:c:conform-${Date.now()}-${s}:{"room":"a*b> c é"}`
   try {
     await busCross(a, b, room, check)
 

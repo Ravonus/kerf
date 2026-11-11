@@ -1,4 +1,4 @@
-import { Inbox, Toaster } from '@weft-js/warp'
+import { Inbox, Toaster } from '@kerf/veneer'
 import { useInbox } from './shared'
 
 export function InboxPage() {

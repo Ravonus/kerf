@@ -57,28 +57,28 @@ test('an alternate staging root isolates state and projects', async () => {
 })
 
 test('calibration resolves its golden under the requested root', () => {
-  const env = { ...process.env, WEFT_EVAL_ROOT: '/private/tmp/missing-weft-calibration-fixture' }
+  const env = { ...process.env, KERF_EVAL_ROOT: '/private/tmp/missing-kerf-calibration-fixture' }
   delete env.NODE_TEST_CONTEXT
   const child = spawnSync(process.execPath, [entry, 'calibrate', 'reference'], {
     env,
     encoding: 'utf8',
   })
   assert.equal(child.status, 2)
-  assert.match(child.stderr, /missing-weft-calibration-fixture\/state\/golden\/weft-warp\/app/)
+  assert.match(child.stderr, /missing-kerf-calibration-fixture\/state\/golden\/kerf-veneer\/app/)
 })
 
 test('calibration dependency closure loads from the alternate directory', async () => {
   const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import('node:fs')
   const { tmpdir } = await import('node:os')
   const { join } = await import('node:path')
-  const root = mkdtempSync(join(tmpdir(), 'weft-eval-deps-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-eval-deps-'))
   try {
     mkdirSync(join(root, 'node_modules/playwright-core'), { recursive: true })
     mkdirSync(join(root, 'node_modules/axe-core'), { recursive: true })
     writeFileSync(join(root, 'package.json'), '{}')
     writeFileSync(join(root, 'node_modules/playwright-core/index.js'), 'exports.chromium = {}')
     writeFileSync(join(root, 'node_modules/axe-core/axe.min.js'), 'fixture')
-    const env = { ...process.env, WEFT_EVAL_DEPS: root }
+    const env = { ...process.env, KERF_EVAL_DEPS: root }
     delete env.NODE_TEST_CONTEXT
     const grade = fileURLToPath(new URL('../lib/grade.mjs', import.meta.url))
     const child = spawnSync(
@@ -95,7 +95,7 @@ test('calibration dependency closure loads from the alternate directory', async 
 
 test('calibration sandbox denies the owner home as well as its fresh HOME', () => {
   const sandbox = fileURLToPath(new URL('../lib/sandbox.mjs', import.meta.url))
-  const env = { ...process.env, WEFT_EVAL_HOST_HOME: '/private/tmp/owner-home-fixture' }
+  const env = { ...process.env, KERF_EVAL_HOST_HOME: '/private/tmp/owner-home-fixture' }
   delete env.NODE_TEST_CONTEXT
   const child = spawnSync(
     process.execPath,
@@ -131,7 +131,7 @@ test('actual hidden grader dispatches all bugfix calibration checks', async () =
   const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import('node:fs')
   const { tmpdir } = await import('node:os')
   const { join } = await import('node:path')
-  const root = mkdtempSync(join(tmpdir(), 'weft-hidden-dispatch-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-hidden-dispatch-'))
   try {
     mkdirSync(join(root, 'node_modules/playwright-core'), { recursive: true })
     mkdirSync(join(root, 'node_modules/axe-core'), { recursive: true })
@@ -147,7 +147,7 @@ test('actual hidden grader dispatches all bugfix calibration checks', async () =
     `,
     )
     writeFileSync(join(root, 'node_modules/axe-core/axe.min.js'), 'fixture')
-    const env = { ...process.env, WEFT_EVAL_DEPS: root }
+    const env = { ...process.env, KERF_EVAL_DEPS: root }
     delete env.NODE_TEST_CONTEXT
     const grade = fileURLToPath(new URL('../lib/grade.mjs', import.meta.url))
     const child = spawnSync(

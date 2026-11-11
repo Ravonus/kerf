@@ -1,4 +1,4 @@
-import { SpeechInput } from '@weft-js/warp'
+import { SpeechInput } from '@kerf/veneer'
 import { MICS, fakeEngine } from './shared'
 
 export const SpeechInputTranscript = () => (

@@ -1,4 +1,4 @@
-import { RolesMatrix } from '@weft-js/warp'
+import { RolesMatrix } from '@kerf/veneer'
 import { TEAM_ROLES } from '../../world'
 import { TILE_PERMISSIONS } from './shared'
 

@@ -1,5 +1,5 @@
-import { onCleanup, onMount } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
+import { onCleanup, onMount } from '@kerf/core'
+import { render } from '@kerf/core/dom'
 import { previews } from '../generated/previews'
 
 /** The narrowest a card lays each kind of stage out at: a chart or a form squeezed into a card's width breaks apart. */
@@ -57,7 +57,7 @@ function fitTile(host: HTMLElement, fit?: string, width?: number) {
   host.style.opacity = '1'
 }
 
-/* @weft visible */
+/* @kerf visible */
 /**
  * One example, running. Its group's file loads as it nears the view, and until then the box holds its height with a
  * skeleton, so nothing below it moves. `Replay` on the frame sends `stage:replay` here.

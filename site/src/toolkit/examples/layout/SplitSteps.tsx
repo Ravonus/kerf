@@ -1,4 +1,4 @@
-import { Split, Stack, Text } from '@weft-js/warp'
+import { Split, Stack, Text } from '@kerf/veneer'
 import { Box } from './shared'
 
 export const SplitSteps = () => (

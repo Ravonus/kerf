@@ -1,32 +1,32 @@
 # The compare apps install together, apart from the repo's workspace (each pins its own stack's versions).
-# `@weft-js/*` links to the repo's packages, which the root install already set up.
+# `@kerf/*` links to the repo's packages, which the root install already set up.
 # Same rule as the root: nothing younger than 3 days, except our own packages.
 packages:
   - '*'
   - design/*
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
-  - '@weft-js/*'
+  - '@kerf/*'
 allowBuilds:
   esbuild: false
 overrides:
-  '@weft-js/cli': link:../../packages/cli
-  '@weft-js/create': link:../../packages/create
-  '@weft-js/db': link:../../packages/db
-  '@weft-js/warp-icons': link:../../packages/warp-icons
-  '@weft-js/multiplayer': link:../../packages/multiplayer
-  '@weft-js/pay': link:../../packages/pay
-  '@weft-js/plugin-media-ffmpeg': link:../../packages/plugin-media-ffmpeg
-  '@weft-js/plugin-media': link:../../packages/plugin-media
-  '@weft-js/plugin-surface-keel': link:../../packages/plugin-surface-keel
-  '@weft-js/realtime-durable-object': link:../../packages/realtime-durable-object
-  '@weft-js/realtime-livekit': link:../../packages/realtime-livekit
-  '@weft-js/realtime-nats': link:../../packages/realtime-nats
-  '@weft-js/realtime-redis': link:../../packages/realtime-redis
-  '@weft-js/realtime-socketio': link:../../packages/realtime-socketio
-  '@weft-js/realtime-webrtc': link:../../packages/realtime-webrtc
-  '@weft-js/start': link:../../packages/start
-  '@weft-js/text': link:../../packages/text
-  '@weft-js/warp-core': link:../../packages/warp-core
-  '@weft-js/warp': link:../../packages/warp
-  '@weft-js/core': link:../../packages/core
+  '@kerf/cli': link:../../packages/cli
+  'create-kerf': link:../../packages/create-kerf
+  '@kerf/db': link:../../packages/db
+  '@kerf/veneer-icons': link:../../packages/veneer-icons
+  '@kerf/multiplayer': link:../../packages/multiplayer
+  '@kerf/pay': link:../../packages/pay
+  '@kerf/media-ffmpeg': link:../../packages/media-ffmpeg
+  '@kerf/media': link:../../packages/media
+  '@kerf/keel-pixel': link:../../packages/keel-pixel
+  '@kerf/realtime-durable-object': link:../../packages/realtime-durable-object
+  '@kerf/realtime-livekit': link:../../packages/realtime-livekit
+  '@kerf/realtime-nats': link:../../packages/realtime-nats
+  '@kerf/realtime-redis': link:../../packages/realtime-redis
+  '@kerf/realtime-socketio': link:../../packages/realtime-socketio
+  '@kerf/realtime-webrtc': link:../../packages/realtime-webrtc
+  '@kerf/start': link:../../packages/start
+  '@kerf/text': link:../../packages/text
+  '@kerf/veneer-core': link:../../packages/veneer-core
+  '@kerf/veneer': link:../../packages/veneer
+  '@kerf/core': link:../../packages/core

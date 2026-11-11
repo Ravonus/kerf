@@ -27,7 +27,7 @@ export const ALLOWED = new Set([
 export const REVIEWED = [
   [
     /^@img\/sharp-/,
-    'LGPL libvips: a prebuilt library sharp loads at run time and an install can replace. sharp is optional and nothing of it is copied into weft.',
+    'LGPL libvips: a prebuilt library sharp loads at run time and an install can replace. sharp is optional and nothing of it is copied into kerf.',
   ],
   [/^elkjs$/, 'EPL-2.0: a dev-only tool Prisma pulls in. It never ships.'],
   [/^limiter$/, 'MIT: its LICENSE.txt says so; the manifest uses the old `licenses` field.'],
@@ -41,9 +41,9 @@ const fits = (expr) => {
   return ALLOWED.has(parts.trim())
 }
 
-// WEFT_LICENCES_JSON: a `pnpm licenses list --json` result to read instead (prove.mjs plants a bad one this way)
+// KERF_LICENCES_JSON: a `pnpm licenses list --json` result to read instead (prove.mjs plants a bad one this way)
 const listed = JSON.parse(
-  process.env.WEFT_LICENCES_JSON ??
+  process.env.KERF_LICENCES_JSON ??
     execFileSync(
       process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
       ['licenses', 'list', '--json', '--recursive'],
@@ -54,7 +54,7 @@ const problems = new Set()
 let seen = 0
 for (const [license, entries] of Object.entries(listed)) {
   for (const { name, versions } of entries) {
-    if (name.startsWith('@weft-js/')) continue
+    if (name.startsWith('@kerf/')) continue
     seen++
     if (REVIEWED.some(([re]) => re.test(name))) continue
     if (!license || license === 'Unknown') problems.add(`${name}@${versions.join(',')}: no licence`)

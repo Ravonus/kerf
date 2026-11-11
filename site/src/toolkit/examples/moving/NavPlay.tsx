@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Nav } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Nav } from '@kerf/veneer'
 import { PAGES } from './shared'
 
 export function NavPlay({ axis }: { axis: 'x' | 'y' }) {

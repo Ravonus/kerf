@@ -2,8 +2,8 @@
 // The guard is the point: a tool call runs as the signed-in person, through their `auth`, and then must also be a
 // function that opted in with `agent:` and one the grant allows. A person's own calls are never touched.
 import { randomUUID } from 'node:crypto'
-import type { Context } from '@weft-js/start'
-import type { ExtensionApi, ServerExtension } from '@weft-js/start/extension'
+import type { Context } from '@kerf/start'
+import type { ExtensionApi, ServerExtension } from '@kerf/start/extension'
 import { allows } from '../index'
 import { serveMcp } from '../mcp'
 import { allTools, toolsFor } from '../tools'
@@ -78,7 +78,7 @@ function guard(fn: { id: string }) {
     throw new AgentError('AGENT009', `Not allowed: this needs ${tool.permission}`)
 }
 
-/** The extension `defineAgent` hands weft. */
+/** The extension `defineAgent` hands kerf. */
 export function agentExtension(core: Core): ServerExtension {
   return {
     options: ['agent'],

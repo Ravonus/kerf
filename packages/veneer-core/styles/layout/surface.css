@@ -1,0 +1,11 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+:where([data-part="panel"][data-sweep]),
+:where([data-scope="surface"][data-sweep]) {
+  --veneer-color-sweep-base: var(--veneer-color-surface-line); --veneer-sweep-radius: var(--veneer-radius-surface);
+  border-color: transparent;
+}
+:where([data-scope="surface"][data-sweep]:is(:hover)),
+:where([data-scope="surface"][data-sweep]:is(:focus-visible)),
+:where([data-scope="surface"][data-sweep]:is(:has(:focus-visible))) { --veneer-color-sweep-base: var(--veneer-color-border-strong); }
+}

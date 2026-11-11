@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
-import { group } from '@weft-js/core/style'
+import { state } from '@kerf/core'
+import { group } from '@kerf/core/style'
 import {
   Card,
   Segmented,
   Stack,
   Switch,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 type Status = 'open' | 'shipped' | 'late'
 

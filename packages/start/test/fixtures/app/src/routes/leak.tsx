@@ -1,4 +1,4 @@
-import type { LoadArgs } from '@weft-js/start'
+import type { LoadArgs } from '@kerf/start'
 import { prefs } from '../state/prefs'
 
 // S002: a `load` serves every visitor, so it can't read a scope.

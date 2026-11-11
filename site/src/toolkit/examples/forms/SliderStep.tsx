@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Slider } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Slider } from '@kerf/veneer'
 import { percent } from './shared'
 
 export function SliderStep() {

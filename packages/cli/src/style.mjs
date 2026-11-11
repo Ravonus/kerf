@@ -1,6 +1,6 @@
-// `weft style find|explain|matrix` and the style D-codes (research 23 §2.4, §3). The matrix comes from the installed
-// weft (`@weft-js/core/style/matrix`): the project is scanned with its compiler, so the CLI, the MCP tools and the Vite
-// plugin's `.weft/styles.json` agree. D020 (class soup) is found here, on the source text: groups never write a class.
+// `kerf style find|explain|matrix` and the style D-codes (research 23 §2.4, §3). The matrix comes from the installed
+// kerf (`@kerf/core/style/matrix`): the project is scanned with its compiler, so the CLI, the MCP tools and the Vite
+// plugin's `.kerf/styles.json` agree. D020 (class soup) is found here, on the source text: groups never write a class.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -9,17 +9,17 @@ import { diagnostic, locate, positions } from './diag.mjs'
 import { discover } from './files.mjs'
 import { loadConfig } from './load-config.mjs'
 import { isTestFile } from './tests.mjs'
-import { loadCompiler, resolveWeft } from './weft.mjs'
+import { loadCompiler, resolveKerf } from './kerf.mjs'
 
 import { closest, usageError } from './style/find.mjs'
 
 export { closest, findGroups } from './style/find.mjs'
 
-/** The installed weft's matrix module, or null when this weft has no style groups. */
-export async function styleModule(weft) {
-  const target = weft.pkg.exports?.['./style/matrix']
+/** The installed kerf's matrix module, or null when this kerf has no style groups. */
+export async function styleModule(kerf) {
+  const target = kerf.pkg.exports?.['./style/matrix']
   if (typeof target !== 'string') return null
-  return import(pathToFileURL(join(weft.dir, target)).href)
+  return import(pathToFileURL(join(kerf.dir, target)).href)
 }
 
 /** Source files that can define or use groups: components and plain modules, not tests. */
@@ -31,31 +31,31 @@ export function styleFiles(root, config = {}) {
 }
 
 /**
- * Scan the project and build the matrix. `write`: also write `.weft/styles.json` (when the project has groups, or the
+ * Scan the project and build the matrix. `write`: also write `.kerf/styles.json` (when the project has groups, or the
  * file is already there).
  */
 export async function styleMatrix(root, { write = false } = {}) {
-  const weft = resolveWeft(root)
-  const mod = await styleModule(weft)
+  const kerf = resolveKerf(root)
+  const mod = await styleModule(kerf)
   if (!mod)
     throw Object.assign(
-      new Error(`weft@${weft.version} has no style groups (@weft-js/core/style/matrix)`),
+      new Error(`kerf@${kerf.version} has no style groups (@kerf/core/style/matrix)`),
       { code: 'E_NO_STYLE' },
     )
   const { config } = await loadConfig(root)
-  const compiler = loadCompiler(weft)
+  const compiler = loadCompiler(kerf)
   const scan = mod.scanProject(root, styleFiles(root, config), (...a) => compiler.transform(...a))
   const matrix = mod.buildMatrix(scan.groups, scan.uses)
-  const file = join(root, '.weft', 'styles.json')
+  const file = join(root, '.kerf', 'styles.json')
   if (write && (scan.groups.length || existsSync(file))) writeMatrixFile(root, matrix)
   return { matrix, scan, mod, file }
 }
 
 export function writeMatrixFile(root, matrix) {
-  const file = join(root, '.weft', 'styles.json')
+  const file = join(root, '.kerf', 'styles.json')
   const text = `${JSON.stringify(matrix, null, 2)}\n`
   if (existsSync(file) && readFileSync(file, 'utf8') === text) return false
-  mkdirSync(join(root, '.weft'), { recursive: true })
+  mkdirSync(join(root, '.kerf'), { recursive: true })
   writeFileSync(file, text)
   return true
 }
@@ -70,7 +70,7 @@ export function parseTarget(target) {
   const t = (target ?? '').trim()
   if (!t)
     throw usageError(
-      'weft style explain <group|selector>: a group name (`order-card`), `order-card.title`, or a selector',
+      'kerf style explain <group|selector>: a group name (`order-card`), `order-card.title`, or a selector',
     )
   const out = { group: null, part: null, axes: {}, states: [], accent: {} }
   const head = /^([a-z][\w-]*)(?:\.([\w-]+))?/i.exec(t)
@@ -98,12 +98,12 @@ export function parseTarget(target) {
       else out.axes[name] = value
     }
   }
-  if (!out.group) throw usageError(`weft style explain: no group in \`${t}\``)
+  if (!out.group) throw usageError(`kerf style explain: no group in \`${t}\``)
   return out
 }
 
 /**
- * `weft style explain <target>`: the group, and for the selection (defaults filled in) every declaration on the root
+ * `kerf style explain <target>`: the group, and for the selection (defaults filled in) every declaration on the root
  * and its parts in cascade order, with where each came from, plus the CSS that selection emits.
  * @param {{ axes?: Record<string, string>, states?: string[], accent?: Record<string, string>, part?: string }} [extra]
  */
@@ -114,7 +114,7 @@ export function explainTarget({ matrix, scan, mod }, target, extra = {}) {
     const near = closest(t.group, Object.keys(matrix.groups))
     throw Object.assign(
       new Error(
-        `D025 no group \`${t.group}\`${near.length ? `; did you mean ${near.map((n) => `\`${n}\``).join(' or ')}?` : ''} (\`weft style find\` searches by what it is)`,
+        `D025 no group \`${t.group}\`${near.length ? `; did you mean ${near.map((n) => `\`${n}\``).join(' or ')}?` : ''} (\`kerf style find\` searches by what it is)`,
       ),
       { code: 'E_UNKNOWN_GROUP' },
     )
@@ -186,7 +186,7 @@ function attributesOf(group, sel, part) {
 
 export function formatFind(r) {
   if (!r.groups.length)
-    return `no group fits "${r.query}" (${r.total} groups). Define one with group() from @weft-js/core/style; \`weft docs style\` has the rules.`
+    return `no group fits "${r.query}" (${r.total} groups). Define one with group() from @kerf/core/style; \`kerf docs style\` has the rules.`
   const lines = r.groups.map((g) => {
     const axes = Object.entries(g.axes)
       .map(([a, v]) => `${a}: ${Array.isArray(v) ? v.join('|') : v}`)
@@ -212,7 +212,7 @@ export function formatExplain(r) {
       )
   }
   out.push('', r.css.trimEnd())
-  if (r.contextTone) out.push('', 'Reads its tone from the nearest data-tone (warp context tone).')
+  if (r.contextTone) out.push('', 'Reads its tone from the nearest data-tone (veneer context tone).')
   return out.join('\n')
 }
 
@@ -297,9 +297,9 @@ export function classSoup(files) {
 }
 
 const groupHelp = (name) =>
-  `Extract a group: \`export const ${name.replace(/-(\w)/g, (_, c) => c.toUpperCase())} = group('${name}', { base: { … } })\` and spread it (\`{...${name.replace(/-(\w)/g, (_, c) => c.toUpperCase())}()}\`). \`weft style find\` first: one may already fit.`
+  `Extract a group: \`export const ${name.replace(/-(\w)/g, (_, c) => c.toUpperCase())} = group('${name}', { base: { … } })\` and spread it (\`{...${name.replace(/-(\w)/g, (_, c) => c.toUpperCase())}()}\`). \`kerf style find\` first: one may already fit.`
 
-/** Matrix diagnostics (D021–D025) as `weft check` diagnostics, located on the group or the site. */
+/** Matrix diagnostics (D021–D025) as `kerf check` diagnostics, located on the group or the site. */
 export function matrixDiagnostics(root, matrix) {
   const texts = new Map()
   const text = (file) => {

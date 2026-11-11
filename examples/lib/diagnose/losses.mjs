@@ -3,25 +3,25 @@ import { PER, kb } from './units.mjs'
 const PHASE_ADVICE = [
   [
     /first byte|ttfb/,
-    'weft',
+    'kerf',
     'server response',
     'Stream or cache the shell; look at what the server does before the first byte.',
   ],
   [
     /render delay/,
-    'weft',
+    'kerf',
     'render delay',
     'The LCP element is in the HTML but paints late: look at what blocks it, usually render-blocking CSS, webfont swap, or a hidden state lifted by hydration.',
   ],
   [
     /load delay/,
-    'weft',
+    'kerf',
     'resource load delay',
     'The LCP resource is found late: emit a preload for it from the server render.',
   ],
   [
     /load (duration|time)/,
-    'weft',
+    'kerf',
     'resource load',
     'The LCP resource takes long to arrive: shrink or preconnect it.',
   ],
@@ -32,7 +32,7 @@ function lcpLoss({ p, path, l, add }) {
     [phase] = phases[0] ?? ['unknown', 0]
   const advice = PHASE_ADVICE.find(([re]) => re.test(phase))
   add(`lcp:${advice?.[2] ?? phase}`, {
-    where: advice?.[1] ?? 'weft',
+    where: advice?.[1] ?? 'kerf',
     title: `LCP: ${advice?.[2] ?? phase} is the largest phase`,
     why: `${l.points} mobile points lost to LCP on ${path}. Really throttled: ${phases.map(([k, n]) => `${k} ${n}ms`).join(', ')}. Lantern, which sets the score: ${Object.entries(
       p.lcp.simulated ?? {},
@@ -48,7 +48,7 @@ function fontsFinding({ p, path, add }) {
   const big = p.top[0]
   if (big?.type === 'font' && big.br > p.metrics['bytes.js.br'].med)
     add('fonts', {
-      where: 'weft',
+      where: 'kerf',
       title: 'Fonts outweigh everything else on the page',
       why: `${kb(p.metrics['bytes.font.br'].med)} of fonts against ${kb(p.metrics['bytes.js.br'].med)} of JS on ${path}; largest ${big.path.split('/').pop()} at ${kb(big.br)}. Same in every variant, so a default to win, not a gap: subset harder, and check the LCP text isn't waiting on it.`,
       impact:
@@ -64,7 +64,7 @@ function unusedFindings({ p, path, split, kit, add }) {
       .filter(([g]) => g !== 'app')
       .sort((a, b) => b[1] - a[1])[0]
     add('unused-js', {
-      where: biggest?.[0] === 'warp' ? 'warp' : 'weft',
+      where: biggest?.[0] === 'veneer' ? 'veneer' : 'kerf',
       title: 'JS shipped but not run at load',
       why: `${kb(p.unused.js)} br of ${kb(p.metrics['bytes.js.br'].med)} never ran on ${path}${biggest ? `; largest framework group: ${biggest[0]} (${kb(biggest[1])})` : ''}.`,
       impact: (p.unused.js / 1024) * PER.kb,
@@ -86,7 +86,7 @@ export function tuneLosses({ p, path, split, kit, add }) {
     if (l.metric === 'LCP') lcpLoss({ p, path, l, add })
     else
       add(`lost:${l.metric}`, {
-        where: 'weft',
+        where: 'kerf',
         title: `${l.metric} costs mobile points`,
         why: `${l.points} mobile points on ${path}.`,
         impact: l.points,

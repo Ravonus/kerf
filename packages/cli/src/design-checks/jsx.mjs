@@ -1,5 +1,5 @@
 import { scanJsx } from '../jsx-scan.mjs'
-import { WARP } from './values.mjs'
+import { VENEER } from './values.mjs'
 import { checkLayoutValues } from './layout-values.mjs'
 import { checkHeadingLinks } from './heading-links.mjs'
 import { checkNativeControls } from './native-controls.mjs'
@@ -19,7 +19,7 @@ export function checkJsx({ files, reporter, tokens, looks }) {
     }
     const report = reporter(f)
     const localComponents = new Set(scan.functions.keys())
-    const warpName = (n) => scan.imports.some((i) => i.source === WARP && i.local === n)
+    const veneerName = (n) => scan.imports.some((i) => i.source === VENEER && i.local === n)
     const labelled = new Set(
       scan.elements.map((e) => e.attr('for')?.value ?? e.attr('htmlFor')?.value).filter(Boolean),
     )
@@ -29,13 +29,13 @@ export function checkJsx({ files, reporter, tokens, looks }) {
     for (const el of scan.elements) {
       if (tokens) {
         checkLayoutValues({ el, f, report })
-        checkHeadingLinks({ el, f, report, warpName, looks, localComponents, scan })
+        checkHeadingLinks({ el, f, report, veneerName, looks, localComponents, scan })
         checkNativeControls({ el, f, report, localComponents })
       }
       checkContrast({ el, report })
       checkAccessibleNames({ el, report, labelled })
       checkInteraction({ el, f, report })
-      checkOutline({ el, warpName, headings, solids, scan })
+      checkOutline({ el, veneerName, headings, solids, scan })
     }
 
     for (let i = 1; i < headings.length; i++) {

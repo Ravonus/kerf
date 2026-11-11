@@ -1,4 +1,4 @@
-import { BoxPlot } from '@weft-js/warp'
+import { BoxPlot } from '@kerf/veneer'
 
 import { LATENCY_BY_REGION } from '../../world'
 

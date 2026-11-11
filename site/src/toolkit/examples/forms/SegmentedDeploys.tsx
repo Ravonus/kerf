@@ -1,10 +1,10 @@
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 import {
   Row,
   Segmented,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { DEPLOYS } from '../../world'
 import { DEPLOY_FILTERS } from './shared'
 

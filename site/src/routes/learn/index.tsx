@@ -1,4 +1,4 @@
-import { Link, type Meta, type RouteProps } from '@weft-js/start'
+import { Link, type Meta, type RouteProps } from '@kerf/start'
 import { LearnDemo } from '../../components/LearnDemo'
 import nav from '../../generated/learn-nav.json'
 import pages from '../../generated/learn.json'
@@ -14,16 +14,16 @@ export const prerender = true
 export const meta: Meta = {
   title: 'Learn',
   description:
-    'Learn Weft from the first component to the server: chapters in order, each with live examples.',
+    'Learn Kerf from the first component to the server: chapters in order, each with live examples.',
 }
 
 export default function LearnHome(props: RouteProps<typeof load>) {
   return (
     <article data-site="doc" data-vt="main" data-learn-home="">
       <header>
-        <h1>Learn Weft</h1>
+        <h1>Learn Kerf</h1>
         <p data-part="lede">
-          weft is TSX that compiles to direct DOM updates. A component runs once, state is a box
+          kerf is TSX that compiles to direct DOM updates. A component runs once, state is a box
           with a <code data-scope="code">.value</code>, and the compiler names each mistake with a
           code and a fix. These chapters go from your first component to the server, in order.
         </p>
@@ -33,10 +33,10 @@ export default function LearnHome(props: RouteProps<typeof load>) {
         <h2 id="quick-start">Quick start</h2>
         <p>One command makes an app, and a second runs it:</p>
         <pre data-part="cmd">
-          <code>npm create @weft-js my-app</code>
+          <code>npm create kerf my-app</code>
         </pre>
         <pre data-part="cmd">
-          <code>cd my-app && npx weft dev</code>
+          <code>cd my-app && npx kerf dev</code>
         </pre>
         <p>
           pnpm, bun and deno work the same way. <Link href="/learn/installation">Installation</Link>{' '}
@@ -52,7 +52,7 @@ export default function LearnHome(props: RouteProps<typeof load>) {
             <LearnDemo id="getting-started" />
             <div
               data-scope="codeblock"
-              // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from this repo's demos
+              // oxlint-disable-next-line kerf/no-html-sink -- highlighted at build time from this repo's demos
               innerHTML={props.data.code}
             ></div>
           </div>

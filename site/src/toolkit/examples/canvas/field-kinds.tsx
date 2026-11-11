@@ -1,4 +1,4 @@
-import { Grid, DitherField } from '@weft-js/warp'
+import { Grid, DitherField } from '@kerf/veneer'
 
 export const KINDS = [
   'weave',

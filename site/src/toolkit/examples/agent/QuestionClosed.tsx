@@ -1,4 +1,4 @@
-import { Question } from '@weft-js/warp'
+import { Question } from '@kerf/veneer'
 import { GAP } from './shared'
 
 export const QuestionClosed = () => (

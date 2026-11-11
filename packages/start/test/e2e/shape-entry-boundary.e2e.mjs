@@ -8,7 +8,7 @@ import * as entryStyles from '../../src/vite/shape-entry-css.mjs'
 import { load as moduleLoad } from '../../src/vite/module-hooks.mjs'
 
 function fixture(t) {
-  const parent = realpathSync(mkdtempSync(join(tmpdir(), 'weft-entry-boundary-')))
+  const parent = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-entry-boundary-')))
   t.after(() => rmSync(parent, { recursive: true, force: true }))
   const root = join(parent, 'project')
   const outside = join(parent, 'outside')
@@ -113,7 +113,7 @@ void test('an entry scan finishing after server close cannot restore stale state
       return pending
     },
   }
-  const loading = moduleLoad(state).handler.call(context, '\0virtual:weft/routes')
+  const loading = moduleLoad(state).handler.call(context, '\0virtual:kerf/routes')
   await waiting
   await server.close()
   release(null)
@@ -184,7 +184,7 @@ void test('a route style scan finishing after close cannot restore entry state',
       return pending
     },
   }
-  const loading = moduleLoad(state).handler.call(context, '\0virtual:weft/routes')
+  const loading = moduleLoad(state).handler.call(context, '\0virtual:kerf/routes')
   await waiting
   await server.close()
   release(null)

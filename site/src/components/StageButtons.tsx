@@ -1,4 +1,4 @@
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 
 // [dial, icon, what it changes]: each a corner button on a stage, handled by FrameTools' one listener.
 const TOOLS = [

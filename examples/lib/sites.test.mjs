@@ -17,7 +17,7 @@ test('live needs a canary, cached is a label, and a map picks by variant', () =>
   assert.throws(() => freshness({ path: '/', freshness: 'stale' }, 'a'), /live or cached/)
   const mixed = { path: '/', canary, freshness: { next: 'cached', '*': 'live' } }
   assert.equal(freshness(mixed, 'next'), 'cached')
-  assert.equal(freshness(mixed, 'weft'), 'live')
+  assert.equal(freshness(mixed, 'kerf'), 'live')
 })
 
 test('every site manifest says what the contract needs', () => {
@@ -25,8 +25,8 @@ test('every site manifest says what the contract needs', () => {
     assert.ok(allApps().includes(site))
     const m = JSON.parse(readFileSync(join(here, site, 'app.json'), 'utf8'))
     assert.ok(m.db, site)
-    assert.equal(m.variants.weft.scaffold.template, site)
-    assert.deepEqual(Object.keys(m.variants).sort(), ['next', 'solid', 'weft'])
+    assert.equal(m.variants.kerf.scaffold.template, site)
+    assert.deepEqual(Object.keys(m.variants).sort(), ['next', 'solid', 'kerf'])
     for (const v of Object.values(m.variants)) assert.ok(v.label, site)
     for (const p of m.pages) if (p.canary) assert.match(p.canary.sql, /\$1/)
   }
@@ -42,15 +42,15 @@ test('a scaffold variant is generated, in the work area, the same every load', (
       db: {},
       login: {},
       pages: ['/'],
-      variants: { weft: { scaffold: { db: 'postgres', auth: true } } },
+      variants: { kerf: { scaffold: { db: 'postgres', auth: true } } },
     }),
   )
   try {
     const a = loadApp(dir),
       v = a.variants[0],
       env = readFileSync(join(v.path, '.env.example'), 'utf8')
-    assert.equal(v.path, join(dir, 'work/gen', a.name, 'weft'))
-    assert.equal(v.stack.family, 'weft')
+    assert.equal(v.path, join(dir, 'work/gen', a.name, 'kerf'))
+    assert.equal(v.stack.family, 'kerf')
     assert.equal(v.tarballs, true)
     assert.equal(a.db.hash, seedHash())
     assert.equal(a.login.submit, 'Sign in')
@@ -70,18 +70,18 @@ test('an unknown template is refused, not ignored', () => {
   const dir = mkdtempSync(join(tmpdir(), 'bench-scaffold-'))
   writeFileSync(
     join(dir, 'app.json'),
-    JSON.stringify({ pages: ['/'], variants: { weft: { scaffold: { template: 'nope' } } } }),
+    JSON.stringify({ pages: ['/'], variants: { kerf: { scaffold: { template: 'nope' } } } }),
   )
   assert.throws(() => loadApp(dir), /--template/)
   rmSync(dir, { recursive: true, force: true })
 })
 
 test('database names stay in the bench namespace', async () => {
-  assert.equal(dbName('todo', 'weft-naive'), 'weft_bench_todo_weft_naive')
-  await assert.rejects(clone('postgres', 'weft_bench_seed_x'), /not weft_bench_/)
+  assert.equal(dbName('todo', 'kerf-naive'), 'kerf_bench_todo_kerf_naive')
+  await assert.rejects(clone('postgres', 'kerf_bench_seed_x'), /not kerf_bench_/)
 })
 
 test('the seed hash moves with the files and nothing else', () => {
   assert.equal(seedHash(), seedHash())
-  assert.match(seedName(), /^weft_bench_seed_[0-9a-f]{12}$/)
+  assert.match(seedName(), /^kerf_bench_seed_[0-9a-f]{12}$/)
 })

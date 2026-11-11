@@ -1,0 +1,18 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* count bump on badges that update live */
+:where([data-scope="badge"][data-count][data-bump]) { animation: veneer-bump var(--veneer-duration-slow) var(--veneer-ease-pop); }
+@media (forced-colors: active) {
+:where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-current="date"])),
+  :where([data-scope="calendar"] [data-part="mini"] [data-day]:is([aria-selected="true"])),
+  :where([data-scope="calendar"] [data-part="dayhead"][aria-current="date"] b),
+  :where([data-scope="agenda"] [data-part="strip"]:not([data-scope="agenda"] :is([data-scope="room"],[data-scope="speech"]) *:not([data-scope="agenda"] :is([data-scope="room"],[data-scope="speech"]) [data-scope="agenda"] *)) button[aria-selected="true"] b),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-pressed="true"]):not([data-scope="booking"] [data-scope="pay-frame"] *:not([data-scope="booking"] [data-scope="pay-frame"] [data-scope="booking"] *))),
+  :where([data-scope="booking"] [data-part="slot"]:is([aria-checked="true"]):not([data-scope="booking"] [data-scope="pay-frame"] *:not([data-scope="booking"] [data-scope="pay-frame"] [data-scope="booking"] *))),
+  :where([data-scope="run"] > li[data-state="done"] [data-part="dot"]),
+  :where([data-scope="plan"] li[data-state="done"] [data-part="box"]:not([data-scope="plan"] [data-scope="tree"] *:not([data-scope="plan"] [data-scope="tree"] [data-scope="plan"] *))),
+  :where([data-scope="message"][data-mine] [data-part="bubble"]:not([data-scope="message"] [data-scope="slider"] *:not([data-scope="message"] [data-scope="slider"] [data-scope="message"] *))),
+  :where([data-scope="badge"][data-count]) { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+}
+@keyframes veneer-bump { 40% { scale: calc(1 + 0.18 * var(--veneer-motion-scale)); } }
+}

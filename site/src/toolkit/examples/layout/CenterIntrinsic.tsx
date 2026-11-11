@@ -4,7 +4,7 @@ import {
   Heading,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 export const CenterIntrinsic = () => (
   <Center

@@ -1,39 +1,39 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
-<h1 align="center">@weft-js/start</h1>
+<h1 align="center">@kerf/start</h1>
 
 <p align="center">
-  <strong>Weft's full-stack layer: file routes, typed server functions, streaming SSR, a database, auth and live data.</strong><br>
+  <strong>Kerf's full-stack layer: file routes, typed server functions, streaming SSR, a database, auth and live data.</strong><br>
   Pages ship only the islands that need the client, and one build runs on Node, Bun or Deno.
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@weft-js/start"><img src="https://img.shields.io/npm/v/@weft-js/start?color=145c3c&label=npm" alt="npm version"></a>
-  <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
-  <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
-  <img src="https://img.shields.io/node/v/@weft-js/start?color=145c3c" alt="node version">
+  <a href="https://www.npmjs.com/package/@kerf/start"><img src="https://img.shields.io/npm/v/@kerf/start?color=145c3c&label=npm" alt="npm version"></a>
+  <a href="https://github.com/Ravonus/kerf/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
+  <a href="https://github.com/Ravonus/kerf/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/kerf/quality.yml?branch=main&label=checks" alt="checks"></a>
+  <img src="https://img.shields.io/node/v/@kerf/start?color=145c3c" alt="node version">
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/docs">Docs</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/examples">Examples</a> ·
-  <a href="https://github.com/Ravonus/weft/blob/main/CHANGELOG.md">Changelog</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf/tree/main/docs">Docs</a> ·
+  <a href="https://github.com/Ravonus/kerf/tree/main/examples">Examples</a> ·
+  <a href="https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!IMPORTANT]
 > **Early release (0.1.x).** APIs can change between minor versions. Pin the version and read the
-> [changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md) before you upgrade.
+> [changelog](https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md) before you upgrade.
 
-`@weft-js/start` turns a folder of Weft components into a server-rendered app. Files in `src/routes` become pages,
+`@kerf/start` turns a folder of Kerf components into a server-rendered app. Files in `src/routes` become pages,
 exports in `src/server` become typed functions the client calls over HTTP, and the server streams each page as its
 data arrives. A database, sign-in and realtime updates plug into the same `ctx` every server function gets. It runs on
-Node, Bun or Deno and needs no Rust. An app made with `npm create @weft-js` already has it, wired up.
+Node, Bun or Deno and needs no Rust. An app made with `npm create kerf` already has it, wired up.
 
 ## Highlights
 
@@ -51,8 +51,8 @@ Node, Bun or Deno and needs no Rust. An app made with `npm create @weft-js` alre
   MySQL; migrations apply on the next request. Better Auth by default, or any provider with two functions.
 - **Live data without polling code.** `query.live()` refetches whenever a mutation on any tab invalidates one of its
   tags, and `dbChanges` brings in writes from cron jobs, `psql` or other services.
-- **Deploy targets checked before you deploy.** `weft deploy hosts` says which of Netlify, Vercel, Cloudflare, Fly and
-  Render can run what the app uses, then `weft deploy init` writes their files and a GitHub workflow.
+- **Deploy targets checked before you deploy.** `kerf deploy hosts` says which of Netlify, Vercel, Cloudflare, Fly and
+  Render can run what the app uses, then `kerf deploy init` writes their files and a GitHub workflow.
 
 ## Contents
 
@@ -82,27 +82,27 @@ Node, Bun or Deno and needs no Rust. An app made with `npm create @weft-js` alre
 Start a new app. The wizard asks for a UI kit, a database, a data layer and auth, and installs everything:
 
 ```bash
-npm create @weft-js my-app
+npm create kerf my-app
 # or
-pnpm create @weft-js my-app
+pnpm create kerf my-app
 # or
-bun create @weft-js my-app
+bun create kerf my-app
 # or (Deno)
-deno run -A npm:@weft-js/create my-app
+deno run -A npm:create-kerf my-app
 ```
 
-Each one scaffolds for its own runtime and package manager. To add Start to an existing Weft project:
+Each one scaffolds for its own runtime and package manager. To add Start to an existing Kerf project:
 
 ```bash
-npm install @weft-js/start @weft-js/core
+npm install @kerf/start @kerf/core
 # or
-pnpm add @weft-js/start @weft-js/core
+pnpm add @kerf/start @kerf/core
 # or
-bun add @weft-js/start @weft-js/core
+bun add @kerf/start @kerf/core
 ```
 
 Start needs Node 24 or later (the `engines` field), Bun or Deno. Drizzle, Better Auth, Zod and the database drivers are
-optional peer dependencies: install the ones your app uses, or let `weft add db` and `weft add auth` do it.
+optional peer dependencies: install the ones your app uses, or let `kerf add db` and `kerf add auth` do it.
 
 ## Quick start
 
@@ -110,7 +110,7 @@ A server function in `src/server/` runs on the server. The client gets a stub th
 
 ```ts
 // src/server/greeting.ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 
 export const greeting = query({
   run: () => {
@@ -125,7 +125,7 @@ arrives:
 
 ```tsx
 // src/routes/hello.tsx
-import type { Meta } from '@weft-js/start'
+import type { Meta } from '@kerf/start'
 import { greeting } from '#/server/greeting'
 
 export const meta: Meta = {
@@ -141,13 +141,13 @@ export default function Hello() {
 ```
 
 ```bash
-npx weft dev     # serves it at http://localhost:5173/hello
-npx weft build   # writes .output/ and .weft/contract.json
-npx weft start   # runs .output/ on the configured runtime
+npx kerf dev     # serves it at http://localhost:5173/hello
+npx kerf build   # writes .output/ and .kerf/contract.json
+npx kerf start   # runs .output/ on the configured runtime
 ```
 
 `#/server/greeting` is `src/server/greeting`. That alias is `paths` in `tsconfig.json`: change it or add your own there,
-and Vite and `weft check` follow.
+and Vite and `kerf check` follow.
 
 ## Project layout
 
@@ -162,16 +162,16 @@ src/db/index.server.ts   the database client
 src/auth.server.ts       the auth provider, mounted at /api/auth/*
 src/context.server.ts    what `ctx` holds
 src/realtime.server.ts   bus, origins and change feed for realtime
-weft.config.ts           site metadata, runtime, hydration, deploy
+kerf.config.ts           site metadata, runtime, hydration, deploy
 drizzle/                 generated migrations (never edit by hand)
 ```
 
 `load` and `meta` never ship to the client, and neither does anything under `src/server` beyond a stub per function.
-Importing `@weft-js/start/db*` or `@weft-js/start/auth` from code the client reaches is an error (Q012).
+Importing `@kerf/start/db*` or `@kerf/start/auth` from code the client reaches is an error (Q012).
 
 ## File routes
 
-The router reads `src/routes` into a manifest that the server, the client, the Vite plugin and `weft routes` share.
+The router reads `src/routes` into a manifest that the server, the client, the Vite plugin and `kerf routes` share.
 
 | File                         | URL                  | Notes                                                              |
 | ---------------------------- | -------------------- | ------------------------------------------------------------------ |
@@ -196,7 +196,7 @@ A route module may export:
 | `default`   | The component. Gets `params`, `data` and, in a layout, `children`.                                 |
 | `load`      | Async data for the page, run on the server before render. See [Data loading](#data-loading).       |
 | `meta`      | Title, description and tags, as an object or a function of `data` and `params`.                    |
-| `prerender` | The params `weft build` writes as static pages with their cards; `true` on a route without params. |
+| `prerender` | The params `kerf build` writes as static pages with their cards; `true` on a route without params. |
 | `skeleton`  | A function of plain markup shown while the route's data loads, or `false` to keep the old page up. |
 
 ### A param route
@@ -208,7 +208,7 @@ import {
   type LoadArgs,
   type Meta,
   type RouteProps,
-} from '@weft-js/start'
+} from '@kerf/start'
 import { getUser } from '#/server/users'
 
 export const load = async ({ params }: LoadArgs<'/users/[id]'>) => {
@@ -230,7 +230,7 @@ export default function User(
 ```
 
 `LoadArgs<'/users/[id]'>` types `params` as `{ id: string }`, and `RouteProps<typeof load, …>` types `data` from what
-`load` returns, without `notFound()`. Route paths come from `.weft/routes.d.ts`, which Start's Vite plugin writes during `weft dev` and `weft build`.
+`load` returns, without `notFound()`. Route paths come from `.kerf/routes.d.ts`, which Start's Vite plugin writes during `kerf dev` and `kerf build`.
 
 `props.data` and `const { data } = props` stay live across navigations: compute from them in JSX or `derived`, not
 once in the component body (W001).
@@ -241,7 +241,7 @@ A `_layout.tsx` wraps every route in its folder and below. It renders `props.chi
 
 ```tsx
 // src/routes/_layout.tsx
-import { Link, type RouteProps } from '@weft-js/start'
+import { Link, type RouteProps } from '@kerf/start'
 
 export const meta = {
   extra: [{ name: 'theme-color', content: '#0b0b0f' }],
@@ -278,7 +278,7 @@ Until you add them, an app gets built-in pages. Your own get the path, or the st
 
 ```tsx
 // src/routes/404.tsx
-import type { RouteProps } from '@weft-js/start'
+import type { RouteProps } from '@kerf/start'
 
 export const meta = {
   title: 'Page not found',
@@ -353,8 +353,8 @@ reads it:
 
 ```tsx
 // src/routes/product/[id].tsx
-import { Boundary, resource } from '@weft-js/core'
-import type { LoadArgs, RouteProps } from '@weft-js/start'
+import { Boundary, resource } from '@kerf/core'
+import type { LoadArgs, RouteProps } from '@kerf/start'
 import { getProduct, getReviews } from '#/server/products'
 
 export const load = async ({
@@ -410,14 +410,14 @@ streaming. On a client navigation the deferred fields arrive resolved in the rou
 
 ## Server functions
 
-Any module under `src/server/` (or named `*.server.ts`) can export queries and mutations. The `weft:start` Vite plugin
-gives each an id and replaces it in the client build with a stub that calls `/_weft/fn/<id>`. Only `optimistic` ships to
+Any module under `src/server/` (or named `*.server.ts`) can export queries and mutations. The `kerf:start` Vite plugin
+gives each an id and replaces it in the client build with a stub that calls `/_kerf/fn/<id>`. Only `optimistic` ships to
 the client.
 
 ```ts
 // src/server/todos.ts
-import { mutation, query } from '@weft-js/start'
-import { schemasOf } from '@weft-js/start/db'
+import { mutation, query } from '@kerf/start'
+import { schemasOf } from '@kerf/start/db'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import * as schema from '#/db/schema'
@@ -499,7 +499,7 @@ it. Read results in JSX as `(q().value ?? []).map(…)`; never copy query result
 | Option        | On                | What it does                                                                                           |
 | ------------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
 | `input`       | both              | A Standard Schema. Validated on the server before `run`; issues come back on `FnError.issues`.        |
-| `output`      | both              | Checked in dev and tests (C002), and written to `.weft/contract.json`.                                |
+| `output`      | both              | Checked in dev and tests (C002), and written to `.kerf/contract.json`.                                |
 | `auth`        | both              | `'user'` refuses a call with no session (A002) and types `ctx.user` as non-null.                       |
 | `tags`        | query             | Strings, or `(input, ctx) => string[]`. Every cache (client, request, shared) goes by these.          |
 | `invalidates` | mutation          | Tags whose queries the response refreshes in one round trip, or `(input, result) => string[]`.        |
@@ -510,13 +510,13 @@ it. Read results in JSX as `(q().value ?? []).map(…)`; never copy query result
 | `errors`      | both              | Named failures, raised with `raise(code, data)`; the client sees `FnError.code` and `.data`.          |
 | `shape`       | query             | An example result that sizes a pending view.                                                           |
 
-A table a function touches must be named in its `tags` or `invalidates` (Q011, checked at run time in `weft dev`): a
+A table a function touches must be named in its `tags` or `invalidates` (Q011, checked at run time in `kerf dev`): a
 tag named after the table, or `table:…`.
 
 ### Failing on purpose
 
 ```ts
-import { FnError, invalid, raise, redirect } from '@weft-js/start'
+import { FnError, invalid, raise, redirect } from '@kerf/start'
 
 // A user-facing message and a status
 throw new FnError({ message: 'Not yours' }, 403)
@@ -545,13 +545,13 @@ reaches the others:
 
 ```ts
 // src/cache.server.ts
-import { redisStore } from '@weft-js/realtime-redis'
+import { redisStore } from '@kerf/realtime-redis'
 
 // REDIS_URL, or redisStore({ url, prefix })
 export default redisStore()
 ```
 
-Any object with `get`, `set`, `versions` and `bump` works (the `Store` type from `@weft-js/start/cache`), and
+Any object with `get`, `set`, `versions` and `bump` works (the `Store` type from `@kerf/start/cache`), and
 `memoryStore({ values, tags })` changes the memory store's limits.
 
 ## Forms
@@ -561,7 +561,7 @@ and the page comes back with errors and typed values restored. After, it submits
 invalid field, and never reloads.
 
 ```tsx
-import { Form, type FormApi } from '@weft-js/start'
+import { Form, type FormApi } from '@kerf/start'
 import { joinWaitlist } from '#/server/waitlist'
 
 export function WaitlistForm() {
@@ -621,7 +621,7 @@ The server matches the path, runs every `load` in the chain, merges the metadata
 3. The page data the client needs to take over.
 
 ```tsx
-import { Boundary } from '@weft-js/core'
+import { Boundary } from '@kerf/core'
 
 ;<Boundary
   pending={<p>Loading…</p>}
@@ -632,11 +632,11 @@ import { Boundary } from '@weft-js/core'
 ```
 
 A `<Boundary>` covers every resource created while its children are built. Its fallback shows after 150 ms and stays
-at least 400 ms, and a refetch keeps the current content. `weft docs async` has the details.
+at least 400 ms, and a refetch keeps the current content. `kerf docs async` has the details.
 
 ### Islands
 
-Most of a page has nothing to do in the browser. Weft's compiler follows each route's component graph and marks a
+Most of a page has nothing to do in the browser. Kerf's compiler follows each route's component graph and marks a
 component as client only when it has a reason: an event handler, a `ref` or spread on an element, a read of reactive
 state or a query, an `import()` outside a handler, or a top-level side effect. Each call site of such a component from
 static code is an island. Everything else stays server HTML and ships no JavaScript.
@@ -656,7 +656,7 @@ the visitor asks for less data (`prefers-reduced-data` or Save-Data), pointer ho
 When the compiler can't prove what you know, say it with a comment above the component:
 
 ```tsx
-/* @weft visible */
+/* @kerf visible */
 export function Chart(props: { points: number[] }) {
   // measures and draws once it's on screen
 }
@@ -664,17 +664,17 @@ export function Chart(props: { points: number[] }) {
 
 | Comment                    | Means                                                          |
 | -------------------------- | -------------------------------------------------------------- |
-| `/* @weft client */`       | always ship this component and load it with the page           |
-| `/* @weft static */`       | this component needs no client code                            |
-| `/* @weft visible */`      | its work only matters once it's on screen                      |
-| `/* @weft interaction */`  | its work only matters to someone using it                      |
+| `/* @kerf client */`       | always ship this component and load it with the page           |
+| `/* @kerf static */`       | this component needs no client code                            |
+| `/* @kerf visible */`      | its work only matters once it's on screen                      |
+| `/* @kerf interaction */`  | its work only matters to someone using it                      |
 
-`.weft/hydration.json` says why each island loads when it does, and H010 points out islands that load with the page for
+`.kerf/hydration.json` says why each island loads when it does, and H010 points out islands that load with the page for
 a reason their code could avoid. An island's props cross from server to client as JSON: a function, a `Date` or a class
 instance there is H009. A prop that is a function over local names can't cross either, so the component around it
 hydrates whole (H017).
 
-Set `hydration` in `weft.config.ts` to change the policy: `'lazy'` (the default), `'partial'` (every island loads with
+Set `hydration` in `kerf.config.ts` to change the policy: `'lazy'` (the default), `'partial'` (every island loads with
 the page) or `'full'` (every route hydrates whole).
 
 ### CSS on a page
@@ -682,11 +682,11 @@ the page) or `'full'` (every route hydrates whole).
 A built page carries the CSS its first paint needs in a `<style>`, found by matching the page's HTML against a table from
 the build, and links the rest at the end of its shell. The links are at most two hashed files: one with what every route
 shares, one with the rest of that route. Hover and focus rules aren't in the first paint, so they work once the late
-sheet lands. Mark a region that must not show before then with `data-weft="styled"`: it keeps its room, stays hidden,
+sheet lands. Mark a region that must not show before then with `data-kerf="styled"`: it keeps its room, stays hidden,
 and shows anyway after 3 s.
 
 `site.criticalCss: false` goes back to one sheet per chunk, inlined up to 48 KB. `site.inlineCss: false` keeps plain
-links, as a strict CSP needs. `weft build` keeps old combined sheets for 30 days in `.weft/sheets`, so a page cached
+links, as a strict CSP needs. `kerf build` keeps old combined sheets for 30 days in `.kerf/sheets`, so a page cached
 before a deploy still finds its sheets: keep that folder between builds.
 
 ## Navigation, view transitions and speculation rules
@@ -707,7 +707,7 @@ prefetched offline or with Save-Data. Put `data-preload="off"` on a link or a co
 **Speculation rules.** A page that runs no client code until it's needed follows its links with full page loads. So the
 server adds a `<script type="speculationrules">` that asks the browser to prefetch the link the pointer rests on
 (`eagerness: 'moderate'`). It is a prefetch, not a prerender, which would run the next page's code unseen. It leaves out
-island links, `/_weft/*`, downloads and anything under `data-preload="off"`, and the router removes the rules when it
+island links, `/_kerf/*`, downloads and anything under `data-preload="off"`, and the router removes the rules when it
 takes over, so nothing is fetched twice.
 
 ## Head, SEO and share cards
@@ -716,7 +716,7 @@ Every page gets a title, a description, a canonical URL, Open Graph and Twitter 
 response, where a crawler can read them. Most of it is automatic; the words are yours.
 
 ```tsx
-import type { Meta } from '@weft-js/start'
+import type { Meta } from '@kerf/start'
 
 export const meta: Meta = {
   title: 'Pricing',
@@ -728,7 +728,7 @@ export const meta: Meta = {
 `meta` is plain data, computed once per request after the loaders and before the first byte. It can't read a box (H006)
 or a deferred field (H007). It also takes `title: { absolute: 'Home' }` to skip the site template, `og`, `twitter`,
 `extra` for other tags, and `jsonLd` for structured data. Layers merge in this order, later winning: `site` in
-`weft.config.ts`, what the page rendered, each layout's `meta`, the route's `meta`.
+`kerf.config.ts`, what the page rendered, each layout's `meta`, the route's `meta`.
 
 With no `meta`, or a field left out:
 
@@ -737,30 +737,30 @@ With no `meta`, or a field left out:
 - **Share card**: a 1200×630 PNG of the title, description, app name and address. `routes/x.og.tsx` replaces one route's
   card and `_default.og.tsx` every card; `og: { image: '/x.png' }` or `image: false` skips it. The card URL holds a
   hash of what it draws, so it is cached forever and changes when the page does.
-- **Canonical and `og:url`** from `site.url`, `WEFT_SITE_URL`, or the host's own variable (Vercel, Netlify, Cloudflare
+- **Canonical and `og:url`** from `site.url`, `KERF_SITE_URL`, or the host's own variable (Vercel, Netlify, Cloudflare
   Pages, Render, Railway, Fly). With none, the server uses the request's origin and warns once in production (H001).
 
-`weft check` reports metadata for every route from what the routes really produce (H001–H016), and
-`weft routes --meta` prints a table of each page's tags and where each came from. Full details:
-[`weft docs meta`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/meta.md).
+`kerf check` reports metadata for every route from what the routes really produce (H001–H016), and
+`kerf routes --meta` prints a table of each page's tags and where each came from. Full details:
+[`kerf docs meta`](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/meta.md).
 
 ## Database
 
-`ctx.db` is a Drizzle client, async on every driver. `@weft-js/start` ships three, each a `createDb` that connects on
-the first statement, so `weft build` and a page with no queries need no database:
+`ctx.db` is a Drizzle client, async on every driver. `@kerf/start` ships three, each a `createDb` that connects on
+the first statement, so `kerf build` and a page with no queries need no database:
 
 | Import                          | Driver                                                         | Options                                                    |
 | ------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------- |
-| `@weft-js/start/db/sqlite`      | `node:sqlite` on Node and Deno, `bun:sqlite` on Bun; no native binary | `schema`, `url` (default `file:.data/app.db`, or `:memory:`), `migrate` |
-| `@weft-js/start/db/postgres`    | postgres.js                                                    | `schema`, `url`, `migrate`, `max` (pool, default 10), `prepare` (default `true`; off behind a pooler in transaction mode) |
-| `@weft-js/start/db/mysql`       | mysql2                                                         | `schema`, `url`, `migrate`, `max` (pool, default 10)       |
+| `@kerf/start/db/sqlite`      | `node:sqlite` on Node and Deno, `bun:sqlite` on Bun; no native binary | `schema`, `url` (default `file:.data/app.db`, or `:memory:`), `migrate` |
+| `@kerf/start/db/postgres`    | postgres.js                                                    | `schema`, `url`, `migrate`, `max` (pool, default 10), `prepare` (default `true`; off behind a pooler in transaction mode) |
+| `@kerf/start/db/mysql`       | mysql2                                                         | `schema`, `url`, `migrate`, `max` (pool, default 10)       |
 
 `migrate` defaults to `true`: pending migrations apply before the first statement a request runs. Postgres and MySQL hold
 a lock while they do, so instances starting together apply each file once.
 
 ```ts
 // src/db/index.server.ts
-import { createDb } from '@weft-js/start/db/postgres'
+import { createDb } from '@kerf/start/db/postgres'
 import { env } from '../env.server'
 import * as schema from './schema'
 
@@ -773,7 +773,7 @@ import { db } from '#/db/index.server'
 
 export default () => ({ db })
 
-declare module '@weft-js/start' {
+declare module '@kerf/start' {
   interface Context {
     db: typeof db
   }
@@ -782,16 +782,16 @@ declare module '@weft-js/start' {
 
 ### Migrations
 
-Change `src/db/schema.ts`, run `weft db generate` (Q015 warns until you do), reload. The new migration in `drizzle/`
-applies before the next statement. There is no `weft db migrate`. Never edit `drizzle/` by hand.
+Change `src/db/schema.ts`, run `kerf db generate` (Q015 warns until you do), reload. The new migration in `drizzle/`
+applies before the next statement. There is no `kerf db migrate`. Never edit `drizzle/` by hand.
 
 ```bash
 # Drizzle-kit generate, then records the schema hash
-npx weft db generate add_due_dates
+npx kerf db generate add_due_dates
 # A migration with change triggers for realtime
-npx weft db live
+npx kerf db live
 # The change feed as its own process
-npx weft db listen
+npx kerf db listen
 ```
 
 A request that hits a missing table gets Q014, which names it. If the database is down, a request that uses it answers
@@ -799,7 +799,7 @@ A request that hits a missing table gets Q014, which names it. If the database i
 
 ### Validating input from tables
 
-`schemasOf(schema, refine?)` from `@weft-js/start/db` gives a Zod `select`, `insert` and `update` schema per table
+`schemasOf(schema, refine?)` from `@kerf/start/db` gives a Zod `select`, `insert` and `update` schema per table
 (through drizzle-zod), so a table is its own validator:
 
 ```ts
@@ -813,16 +813,16 @@ export const addTodo = mutation({
 
 ### Other data layers
 
-Prisma, or plain SQL with no ORM, come from [`@weft-js/db`](https://www.npmjs.com/package/@weft-js/db) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/db)</sup>:
+Prisma, or plain SQL with no ORM, come from [`@kerf/db`](https://www.npmjs.com/package/@kerf/db) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/db)</sup>:
 
 ```bash
-npx weft add db postgres --layer native   # ctx.db.sql`select …`
+npx kerf add db postgres --layer native   # ctx.db.sql`select …`
 # Ctx.db is your Prisma client
-npx weft add db sqlite --layer prisma
+npx kerf add db sqlite --layer prisma
 ```
 
-Paged, filtered and searchable lists over any of them (`listInput` and a list source) are covered in the `@weft-js/db`
-README. A Drizzle table's source is `drizzleSource({ db, table }, spec)` from `@weft-js/start/list/drizzle`.
+Paged, filtered and searchable lists over any of them (`listInput` and a list source) are covered in the `@kerf/db`
+README. A Drizzle table's source is `drizzleSource({ db, table }, spec)` from `@kerf/start/list/drizzle`.
 
 ## Auth
 
@@ -833,8 +833,8 @@ Auth is a provider in `src/auth.server.ts` with two jobs: `handler(request)` ser
 
 ```ts
 // src/auth.server.ts
-import { createAuth } from '@weft-js/start/auth/better-auth'
-import { drizzleAuth } from '@weft-js/start/auth/drizzle'
+import { createAuth } from '@kerf/start/auth/better-auth'
+import { drizzleAuth } from '@kerf/start/auth/drizzle'
 import { db } from '#/db/index.server'
 import * as schema from './db/schema'
 import { env } from './env.server'
@@ -848,7 +848,7 @@ export default createAuth({
 
 ```ts
 // src/context.server.ts
-import { session } from '@weft-js/start/auth'
+import { session } from '@kerf/start/auth'
 import auth from '#/auth.server'
 import { db } from '#/db/index.server'
 
@@ -859,7 +859,7 @@ export default async ({ request }: { request: Request }) => ({
 
 type Session = Awaited<ReturnType<typeof auth.session>>
 
-declare module '@weft-js/start' {
+declare module '@kerf/start' {
   interface Context {
     db: typeof db
     user: Session['user']
@@ -869,15 +869,15 @@ declare module '@weft-js/start' {
 ```
 
 `createAuth` takes `db`, `secret` (32+ characters; A001 in production), `options` (any Better Auth option, which wins
-over Weft's defaults) and `api`. `options.database` is required (A005): `drizzleAuth(db, schema)`, `nativeAuth(db)` from
-`@weft-js/db/plugin-native/auth`, or Better Auth's Prisma adapter. `weft add auth` sets all of this up.
+over Kerf's defaults) and `api`. `options.database` is required (A005): `drizzleAuth(db, schema)`, `nativeAuth(db)` from
+`@kerf/db/plugin-native/auth`, or Better Auth's Prisma adapter. `kerf add auth` sets all of this up.
 
 Sign-in is a mutation. `forward` puts the provider's cookies on the response and turns its failure into an `FnError`:
 
 ```ts
 // src/server/session.ts
-import { mutation, redirect } from '@weft-js/start'
-import { forward } from '@weft-js/start/auth'
+import { mutation, redirect } from '@kerf/start'
+import { forward } from '@kerf/start/auth'
 import { z } from 'zod'
 import auth from '#/auth.server'
 
@@ -929,7 +929,7 @@ otherwise, since a page's data is usually for anyone. An app without auth is unc
 **Behind a proxy.** Better Auth rate-limits sign-in by the client's address. Behind a load balancer or CDN, every
 request comes from the proxy, so set `site.trustProxy` (`true` for one proxy, or how many) and the address comes from
 `X-Forwarded-For` instead. With several instances, give it one store: `rateLimit: { customStorage: redisRateLimit() }` from
-`@weft-js/realtime-redis`. In production `createAuth` also needs its own URL (`BETTER_AUTH_URL` or `options.baseURL`,
+`@kerf/realtime-redis`. In production `createAuth` also needs its own URL (`BETTER_AUTH_URL` or `options.baseURL`,
 A007): without it Better Auth trusts each request's `Host` header for the links in its emails. The JWT signing key
 rotates every 30 days (`api: { jwks: { rotationInterval } }` changes it).
 
@@ -962,13 +962,13 @@ createAuth({
 ```
 
 ```text
-GET  /_weft/fn/<id>?i=<json>
+GET  /_kerf/fn/<id>?i=<json>
      authorization: Bearer <token>
 
-POST /_weft/fn/<id>
+POST /_kerf/fn/<id>
      authorization: Bearer <token>
      content-type: application/json
-     x-weft: 1
+     x-kerf: 1
      body: {"i": input}
 ```
 
@@ -979,7 +979,7 @@ With no `BETTER_AUTH_URL` or fixed `baseURL`, no token is accepted, since nothin
 
 ```ts
 // src/auth.server.ts
-import { defineAuth } from '@weft-js/start/auth'
+import { defineAuth } from '@kerf/start/auth'
 
 export default defineAuth<{ id: string }, { id: string }>({
   async session(request) {
@@ -1020,15 +1020,15 @@ Give the database's writes to `realtime` and a cron job, `psql` or another servi
 
 ```ts
 // src/realtime.server.ts
-import { realtime } from '@weft-js/start'
-import { dbChanges } from '@weft-js/start/changes'
+import { realtime } from '@kerf/start'
+import { dbChanges } from '@kerf/start/changes'
 import { db } from '#/db/index.server'
 import { notes } from '#/db/schema'
 
 export default realtime({ changes: dbChanges(db, [notes]) })
 ```
 
-Then `weft db live` writes the trigger migration and it applies on the next request. A notification carries a table and
+Then `kerf db live` writes the trigger migration and it applies on the next request. A notification carries a table and
 primary keys, never a column: each client refetches through its own `query`, so `auth` and every filter still apply.
 
 | Database | How it hears changes                                         | Limits                                                                  |
@@ -1036,17 +1036,17 @@ primary keys, never a column: each client refetches through its own `query`, so 
 | Postgres | triggers and NOTIFY on one held connection                   | a transaction-mode pooler breaks LISTEN: pass `{ listenUrl }` for a direct connection |
 | SQLite   | `PRAGMA data_version` every 100 ms, then the triggers' log   | same host only                                                          |
 | MySQL    | the triggers' log, read every 500 ms                          | a row in the log per row written                                        |
-| MongoDB  | a change stream (`mongoChanges` from `@weft-js/db/mongo`)     | needs a replica set                                                     |
+| MongoDB  | a change stream (`mongoChanges` from `@kerf/db/mongo`)     | needs a replica set                                                     |
 
 `notes.liveMode.value` says what the server settled on (`'feed'`, `'external'`, `'poll'`, `'app'` or `'off'`), and
-`weft doctor --preset vercel` says what a target can do before you deploy. `live: { required: true }` on a query fails
-`weft check` and `weft build` (R013) on a target that can't deliver it, and `liveHealth()` reports it for a health route.
+`kerf doctor --preset vercel` says what a target can do before you deploy. `live: { required: true }` on a query fails
+`kerf check` and `kerf build` (R013) on a target that can't deliver it, and `liveHealth()` reports it for a health route.
 
 ### Streams and topics
 
 ```ts
 // src/server/prices.ts
-import { stream, topic } from '@weft-js/start'
+import { stream, topic } from '@kerf/start'
 import { z } from 'zod'
 
 const Price = z.object({ symbol: z.string(), price: z.number() })
@@ -1089,7 +1089,7 @@ cursors). `authorize` is required (R001) and runs on every join and every 5 minu
 
 ```ts
 // src/server/chat.ts
-import { channel } from '@weft-js/start'
+import { channel } from '@kerf/start'
 import { z } from 'zod'
 import { insertMessage, isMember, Message } from '#/server/messages'
 
@@ -1122,13 +1122,13 @@ per key, held in server memory.
 
 ### More than one instance
 
-One instance needs nothing. Several need a bus, and `weft build` refuses the in-memory bus on a multi-instance preset
+One instance needs nothing. Several need a bus, and `kerf build` refuses the in-memory bus on a multi-instance preset
 (R002):
 
 ```ts
 // src/realtime.server.ts
-import { realtime } from '@weft-js/start'
-import { postgresBus } from '@weft-js/start/bus/postgres'
+import { realtime } from '@kerf/start'
+import { postgresBus } from '@kerf/start/bus/postgres'
 
 export default realtime({
   bus: postgresBus({ url: process.env.DATABASE_URL! }),
@@ -1142,20 +1142,20 @@ export default realtime({
 
 On function hosts (Vercel, Netlify, Lambda, Azure Functions, Firebase, Cloudflare Workers, Deno Deploy) a process ends
 with its request, so `.live()` shows `degraded` for outside writes (R014). Deploy to a server preset, or run
-`weft db listen` on any always-on host with a bus both can reach and `dbChanges(db, tables, { listener: 'external' })`
+`kerf db listen` on any always-on host with a bus both can reach and `dbChanges(db, tables, { listener: 'external' })`
 in the app.
 
 The full realtime reference, including `verify` round trips against staging and the test helpers in
-`@weft-js/core/test`, is [`weft docs start`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/start.md).
+`@kerf/core/test`, is [`kerf docs start`](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/start.md).
 
 ## Configuration
 
-Start reads these keys from `weft.config.ts` (or `.json` / `.yaml`). `weft check` validates them and writes
-`.weft/config.schema.json` for editor completion.
+Start reads these keys from `kerf.config.ts` (or `.json` / `.yaml`). `kerf check` validates them and writes
+`.kerf/config.schema.json` for editor completion.
 
 ```ts
-// weft.config.ts
-import { defineConfig } from '@weft-js/core/config'
+// kerf.config.ts
+import { defineConfig } from '@kerf/core/config'
 
 export default defineConfig({
   site: {
@@ -1199,11 +1199,11 @@ export default defineConfig({
 | `site.criticalCss`   | `boolean`                                      | `true`         | One hashed sheet plus first-paint CSS; `false` splits by chunk and inlines up to 48 KB       |
 | `site.criticalKeep`  | `string[]`                                     |                | Classes a head script sets, kept in the first paint                                          |
 | `site.head`          | `string`                                       |                | Raw HTML before the stylesheets on every page                                                |
-| `runtime`            | `'node'` \| `'bun'` \| `'deno'`                | the one running the CLI | What `weft build` targets                                                           |
+| `runtime`            | `'node'` \| `'bun'` \| `'deno'`                | the one running the CLI | What `kerf build` targets                                                           |
 | `hydration`          | `'lazy'` \| `'partial'` \| `'full'`            | `'lazy'`       | When islands load, or hydrate every route whole                                              |
-| `deploy`             | `{ target, <host>, ci, branch, cdn }`          |                | The host `weft build` and `weft deploy` target                                               |
+| `deploy`             | `{ target, <host>, ci, branch, cdn }`          |                | The host `kerf build` and `kerf deploy` target                                               |
 | `live.targets`       | `{ [name]: { url, db, production } }`          |                | Where a live query's `verify` runs its round trip                                            |
-| `rust`               | `{ unions, services }`                         |                | Server functions with a Rust body (`weft docs rust`)                                         |
+| `rust`               | `{ unions, services }`                         |                | Server functions with a Rust body (`kerf docs rust`)                                         |
 
 Every response Start sends carries `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`,
 `X-Frame-Options: SAMEORIGIN` and `Cross-Origin-Opener-Policy: same-origin-allow-popups`, plus
@@ -1214,11 +1214,11 @@ Pages are sent `private, no-cache`, so no shared cache or CDN keeps one user's p
 own `cache-control` (`ctx.response.headers.set(...)` in `load`) replaces that default; server function answers stay
 `no-store`.
 
-The full key list is [`weft docs config`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/config.md).
+The full key list is [`kerf docs config`](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/config.md).
 
 ## Running in production
 
-**Health.** `GET /_weft/health` answers 200 when every database answers `select 1` (within 2 s) and live data is
+**Health.** `GET /_kerf/health` answers 200 when every database answers `select 1` (within 2 s) and live data is
 delivered as `live: { required }` needs, and 503 otherwise, as JSON: `{ ok, db: [{ dialect, ok, ms }], live }`. It
 runs before migrations, so a failed one still reports. Point a load balancer or uptime check at it.
 
@@ -1234,7 +1234,7 @@ schedule stops, queued jobs that are running finish, and realtime connections cl
 
 ```ts
 // src/cron.server.ts
-import { defineCron } from '@weft-js/start/cron'
+import { defineCron } from '@kerf/start/cron'
 
 export default defineCron({
   // 03:00 UTC every day
@@ -1251,13 +1251,13 @@ several instances and `redisStore()` in `src/cache.server.ts`, each job runs on 
 store, every instance runs it. Jobs run on server presets (`node`, `bun`, `deno`), not on function hosts, which only
 wake for requests: there, call a mutation from the host's own scheduler.
 
-**Email.** `sendEmail()` from `@weft-js/start/email` sends through whichever is set: `RESEND_API_KEY` (Resend's API,
+**Email.** `sendEmail()` from `@kerf/start/email` sends through whichever is set: `RESEND_API_KEY` (Resend's API,
 no package needed) or `SMTP_URL` (`smtps://user:pass@smtp.example.com:465`, through `nodemailer`, which you add). The
 sender is `EMAIL_FROM` unless a message passes `from`. In dev with neither, each message is printed to the server log,
 links and all. Better Auth's password-reset and verification emails go through it too, unless you pass your own.
 
 ```ts
-import { sendEmail } from '@weft-js/start/email'
+import { sendEmail } from '@kerf/start/email'
 
 await sendEmail({
   to: user.email,
@@ -1274,8 +1274,8 @@ To choose in code (another provider, a test double), default-export a mailer fro
 
 ```ts
 // src/jobs.server.ts
-import { defineJobs, job } from '@weft-js/start/jobs'
-import { redisQueue } from '@weft-js/realtime-redis'
+import { defineJobs, job } from '@kerf/start/jobs'
+import { redisQueue } from '@kerf/realtime-redis'
 import { z } from 'zod'
 
 export default defineJobs(
@@ -1305,23 +1305,23 @@ and every instance works the same queue. Like cron, the queue is worked on serve
 
 ## Runtimes, deploy targets and adapters
 
-`weft build` runs Vite with Start's plugin and Nitro, and writes `.output/` and `.weft/contract.json`. The Nitro preset
+`kerf build` runs Vite with Start's plugin and Nitro, and writes `.output/` and `.kerf/contract.json`. The Nitro preset
 comes from, in order: `--preset`, `--runtime`, `deploy.target`, `runtime` in the config, then the runtime running the
 CLI.
 
 | Runtime | Nitro preset   | Run it with                    |
 | ------- | -------------- | ------------------------------ |
-| `node`  | `node`         | `weft start`                   |
-| `bun`   | `bun`          | `weft start --runtime bun`     |
-| `deno`  | `deno_server`  | `weft start --runtime deno`    |
+| `node`  | `node`         | `kerf start`                   |
+| `bun`   | `bun`          | `kerf start --runtime bun`     |
+| `deno`  | `deno_server`  | `kerf start --runtime deno`    |
 
-The CLI itself runs on whichever runtime starts it (`bun --bun`, or `deno run -A npm:@weft-js/cli`). Server code that
+The CLI itself runs on whichever runtime starts it (`bun --bun`, or `deno run -A npm:@kerf/cli`). Server code that
 uses `node:` modules and web APIs works on all three; `Bun.*`, `Deno.*` or `better-sqlite3` break the others. Built
 assets ship with `.br` and `.gz` copies, and the server picks by `Accept-Encoding`.
 
 ### Hosts
 
-`weft deploy` knows five hosts. It reads what the app uses and says which can run it, before a build:
+`kerf deploy` knows five hosts. It reads what the app uses and says which can run it, before a build:
 
 | What the app uses                                    | Netlify / Vercel | Cloudflare            | Fly / Render                  |
 | ---------------------------------------------------- | ---------------- | --------------------- | ----------------------------- |
@@ -1331,7 +1331,7 @@ assets ship with `.br` and `.gz` copies, and the server picks by `Accept-Encodin
 | a SQLite file, media uploads                         | no (E003)        | no (E003)             | with a volume or disk         |
 | `changes` without an external listener               | degraded (R014)  | degraded              | yes                           |
 
-| Target       | Preset               | Files `weft deploy init` writes             | Secrets it reads                                   |
+| Target       | Preset               | Files `kerf deploy init` writes             | Secrets it reads                                   |
 | ------------ | -------------------- | ------------------------------------------- | -------------------------------------------------- |
 | `netlify`    | `netlify`            | `netlify.toml`                              | `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID`            |
 | `vercel`     | `vercel`             | `vercel.json`                               | `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` |
@@ -1340,22 +1340,22 @@ assets ship with `.br` and `.gz` copies, and the server picks by `Accept-Encodin
 | `render`     | the runtime's server | `render.yaml`, `Dockerfile`, `.dockerignore` | `RENDER_DEPLOY_HOOK_URL`                          |
 
 ```bash
-npx weft deploy hosts   # fit, cost and a suggestion
+npx kerf deploy hosts   # fit, cost and a suggestion
 # Host files, a GitHub workflow and `deploy` in the config
-npx weft deploy init
+npx kerf deploy init
 # Dry run: prints the build and commands --yes would run
-npx weft deploy
-npx weft deploy --yes   # deploy a preview; add --prod for production
+npx kerf deploy
+npx kerf deploy --yes   # deploy a preview; add --prod for production
 ```
 
-Every target also gets `.github/workflows/weft-deploy.yml`, which runs `weft check` then deploys on push. Tokens come
+Every target also gets `.github/workflows/kerf-deploy.yml`, which runs `kerf check` then deploys on push. Tokens come
 from the environment only: one written into the config or a host file is E008. Any other Nitro preset works with
-`weft build --preset <name>`; `weft doctor --preset <name>` says what live data does there. Full details:
-[`weft docs deploy`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/deploy.md).
+`kerf build --preset <name>`; `kerf doctor --preset <name>` says what live data does there. Full details:
+[`kerf docs deploy`](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/deploy.md).
 
 ## API reference
 
-### `@weft-js/start`
+### `@kerf/start`
 
 | Export                                                         | What it is                                                                     |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
@@ -1380,44 +1380,44 @@ from the environment only: one written into the config or a host file is E008. A
 
 | Import                                | What it has                                                                           |
 | ------------------------------------- | ------------------------------------------------------------------------------------- |
-| `@weft-js/start/db`                   | `schemasOf(schema, refine?)`, `getTableName`, and the `DbHandle` type                 |
-| `@weft-js/start/db/sqlite`            | `createDb` on `node:sqlite` or `bun:sqlite`                                            |
-| `@weft-js/start/db/postgres`          | `createDb` on postgres.js                                                              |
-| `@weft-js/start/db/mysql`             | `createDb` on mysql2                                                                   |
-| `@weft-js/start/db/core`              | The migration gate and handle that data layers build on (used by `@weft-js/db`)        |
-| `@weft-js/start/auth`                 | `defineAuth`, `session`, `forward`, and the `AuthProvider` type                       |
-| `@weft-js/start/auth/better-auth`     | `createAuth`: Better Auth with Weft's defaults                                         |
-| `@weft-js/start/auth/drizzle`         | `drizzleAuth(db, schema?)`: Better Auth's store on a Drizzle client                    |
-| `@weft-js/start/list`                 | `listInput` and the list contract that sources implement                              |
-| `@weft-js/start/list/drizzle`         | `drizzleSource({ db, table }, spec)`                                                   |
-| `@weft-js/start/changes`              | `dbChanges` and the `Source` interface for your own change feed                        |
-| `@weft-js/start/bus/postgres`         | `postgresBus({ url })`: LISTEN/NOTIFY as the realtime bus                              |
-| `@weft-js/start/bus`                  | The `Bus` interface and `memoryBus`                                                    |
-| `@weft-js/start/media`                | `z`, Zod with `z.media()` for upload records `<Media>` takes                           |
-| `@weft-js/start/rust`                 | `remote()` and `native()`: server functions with a Rust body (`weft docs rust`)       |
-| `@weft-js/start/extension`            | `server.extension@1`: how a plugin adds a server route                                 |
-| `@weft-js/start/og`                   | The share-card renderer                                                                |
-| `@weft-js/start/client`               | `start()`: the client entry                                                            |
-| `@weft-js/start/server`               | `createHandler()`: the request handler                                                 |
-| `@weft-js/start/vite`                 | `weftStart()`, the Vite plugin, and `scanRoutes`                                       |
-| `@weft-js/start/app`                  | `dev()` and `build()`, as `weft dev` and `weft build` call them                        |
-| `@weft-js/start/data`, `/hub`, `/live`, `/channel`, `/share`, `/listen`, `/verify`, `/live-target`, `/changes-sql`, `/routes`, `/inspect`, `/contract`, `/derive`, `/sidecar` | Internals the CLI, the build and sibling packages use. Not a stable API |
+| `@kerf/start/db`                   | `schemasOf(schema, refine?)`, `getTableName`, and the `DbHandle` type                 |
+| `@kerf/start/db/sqlite`            | `createDb` on `node:sqlite` or `bun:sqlite`                                            |
+| `@kerf/start/db/postgres`          | `createDb` on postgres.js                                                              |
+| `@kerf/start/db/mysql`             | `createDb` on mysql2                                                                   |
+| `@kerf/start/db/core`              | The migration gate and handle that data layers build on (used by `@kerf/db`)        |
+| `@kerf/start/auth`                 | `defineAuth`, `session`, `forward`, and the `AuthProvider` type                       |
+| `@kerf/start/auth/better-auth`     | `createAuth`: Better Auth with Kerf's defaults                                         |
+| `@kerf/start/auth/drizzle`         | `drizzleAuth(db, schema?)`: Better Auth's store on a Drizzle client                    |
+| `@kerf/start/list`                 | `listInput` and the list contract that sources implement                              |
+| `@kerf/start/list/drizzle`         | `drizzleSource({ db, table }, spec)`                                                   |
+| `@kerf/start/changes`              | `dbChanges` and the `Source` interface for your own change feed                        |
+| `@kerf/start/bus/postgres`         | `postgresBus({ url })`: LISTEN/NOTIFY as the realtime bus                              |
+| `@kerf/start/bus`                  | The `Bus` interface and `memoryBus`                                                    |
+| `@kerf/start/media`                | `z`, Zod with `z.media()` for upload records `<Media>` takes                           |
+| `@kerf/start/rust`                 | `remote()` and `native()`: server functions with a Rust body (`kerf docs rust`)       |
+| `@kerf/start/extension`            | `server.extension@1`: how a plugin adds a server route                                 |
+| `@kerf/start/og`                   | The share-card renderer                                                                |
+| `@kerf/start/client`               | `start()`: the client entry                                                            |
+| `@kerf/start/server`               | `createHandler()`: the request handler                                                 |
+| `@kerf/start/vite`                 | `kerfStart()`, the Vite plugin, and `scanRoutes`                                       |
+| `@kerf/start/app`                  | `dev()` and `build()`, as `kerf dev` and `kerf build` call them                        |
+| `@kerf/start/data`, `/hub`, `/live`, `/channel`, `/share`, `/listen`, `/verify`, `/live-target`, `/changes-sql`, `/routes`, `/inspect`, `/contract`, `/derive`, `/sidecar` | Internals the CLI, the build and sibling packages use. Not a stable API |
 
 </details>
 
 ## Troubleshooting
 
-`weft docs <code>` explains any diagnostic below, with its fix.
+`kerf docs <code>` explains any diagnostic below, with its fix.
 
 | Code / symptom                       | Cause                                                                    | Fix                                                                     |
 | ------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
 | Q001                                 | `q()` called outside a component or `defineState` setup                  | `await q.fetch(input)` in `load`, handlers and server code              |
 | Q006                                 | A query with `cache` read `ctx.user`                                     | Add `cache: { scope: 'user' }`, or drop the shared cache                |
 | Q011                                 | A function touched a table its `tags`/`invalidates` don't name           | Add the table's name (or `table:…`)                                     |
-| Q012                                 | `@weft-js/start/db*` or `/auth` reached the client                       | Import it only from server modules or `load`                            |
+| Q012                                 | `@kerf/start/db*` or `/auth` reached the client                       | Import it only from server modules or `load`                            |
 | Q013                                 | A database URL the driver can't open                                     | Use the matching `createDb` (`postgres://` needs `/db/postgres`)        |
-| Q014                                 | A table or column is missing                                             | `weft db generate`, then reload                                         |
-| Q015                                 | `src/db/schema.ts` changed since the last generate                       | `weft db generate`                                                      |
+| Q014                                 | A table or column is missing                                             | `kerf db generate`, then reload                                         |
+| Q015                                 | `src/db/schema.ts` changed since the last generate                       | `kerf db generate`                                                      |
 | Q016 (503)                           | The database is down, or a migration failed                              | Start it, check `DATABASE_URL`, or fix the migration; no restart needed |
 | Q018 (413)                           | A request body over `site.limits`                                        | Send less, or raise `site.limits.body` / `.upload`                      |
 | Q019 (404)                           | `api.call` / `serverCall` named no query or mutation                     | Call one by its `$id`                                                   |
@@ -1429,11 +1429,11 @@ from the environment only: one written into the config or a host file is E008. A
 | A004                                 | A mutation changed the session cookie without a redirect                 | `redirect()` after sign-in or sign-out                                  |
 | A005                                 | `createAuth` has no store                                                | Pass `options.database`                                                 |
 | H007 (500)                           | `meta` or a card read a deferred `load` field                           | Await it in `load`, or leave it out of `meta`                           |
-| H009                                 | An island prop JSON can't carry                                          | Pass plain data, or `/* @weft client */` on the parent                  |
+| H009                                 | An island prop JSON can't carry                                          | Pass plain data, or `/* @kerf client */` on the parent                  |
 | R002                                 | The memory bus on a multi-instance preset                                | Set `bus` in `realtime()`                                               |
-| R014, `.live` shows `degraded`       | Outside writes on a function host                                        | A server preset, or `weft db listen` with a shared bus                  |
+| R014, `.live` shows `degraded`       | Outside writes on a function host                                        | A server preset, or `kerf db listen` with a shared bus                  |
 | W053                                 | `.live()` on a query with no `tags`                                      | Add `tags`                                                              |
-| Sign-in answers `INVALID_ORIGIN`     | `BETTER_AUTH_URL` doesn't match where the app runs (`weft dev --port`)   | Update `BETTER_AUTH_URL` in `.env`                                      |
+| Sign-in answers `INVALID_ORIGIN`     | `BETTER_AUTH_URL` doesn't match where the app runs (`kerf dev --port`)   | Update `BETTER_AUTH_URL` in `.env`                                      |
 | `postgresBus` or `.live` goes quiet  | pgBouncer in transaction mode breaks LISTEN                              | Give it a direct connection                                             |
 | A native addon fails after deploy (E004) | Built on a Mac, deployed to Linux                                   | Build where the host runs; the generated workflow builds on Linux      |
 
@@ -1441,23 +1441,23 @@ from the environment only: one written into the config or a host file is E008. A
 
 | Package                                                                                         | What it is                                                                                     |
 | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [`@weft-js/core`](https://www.npmjs.com/package/@weft-js/core) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/core)</sup>                      | The reactive runtime, compiler binding, Vite plugin, SSR and test utilities Start is built on  |
-| [`@weft-js/cli`](https://www.npmjs.com/package/@weft-js/cli) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/cli)</sup>                        | The `weft` command: `dev`, `build`, `check`, `db`, `deploy`, `docs` and the MCP server         |
-| [`@weft-js/create`](https://www.npmjs.com/package/@weft-js/create) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/create)</sup>                  | `npm create @weft-js`: scaffolds an app with Start, a database and auth                        |
-| [`@weft-js/db`](https://www.npmjs.com/package/@weft-js/db) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/db)</sup>                          | Prisma and no-ORM data layers, and list sources for SQL, Kysely, Prisma, MongoDB, DynamoDB and Firestore |
-| [`@weft-js/warp`](https://www.npmjs.com/package/@weft-js/warp) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/warp)</sup>                      | The UI toolkit; its `Table` reads list sources                                                 |
-| [`@weft-js/realtime-redis`](https://www.npmjs.com/package/@weft-js/realtime-redis) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/realtime-redis)</sup>, [`-nats`](https://www.npmjs.com/package/@weft-js/realtime-nats), [`-durable-object`](https://www.npmjs.com/package/@weft-js/realtime-durable-object) | Realtime buses for Redis, NATS and Cloudflare Durable Objects |
+| [`@kerf/core`](https://www.npmjs.com/package/@kerf/core) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/core)</sup>                      | The reactive runtime, compiler binding, Vite plugin, SSR and test utilities Start is built on  |
+| [`@kerf/cli`](https://www.npmjs.com/package/@kerf/cli) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/cli)</sup>                        | The `kerf` command: `dev`, `build`, `check`, `db`, `deploy`, `docs` and the MCP server         |
+| [`create-kerf`](https://www.npmjs.com/package/create-kerf) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/create-kerf)</sup>                  | `npm create kerf`: scaffolds an app with Start, a database and auth                        |
+| [`@kerf/db`](https://www.npmjs.com/package/@kerf/db) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/db)</sup>                          | Prisma and no-ORM data layers, and list sources for SQL, Kysely, Prisma, MongoDB, DynamoDB and Firestore |
+| [`@kerf/veneer`](https://www.npmjs.com/package/@kerf/veneer) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/veneer)</sup>                      | The UI toolkit; its `Table` reads list sources                                                 |
+| [`@kerf/realtime-redis`](https://www.npmjs.com/package/@kerf/realtime-redis) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/realtime-redis)</sup>, [`-nats`](https://www.npmjs.com/package/@kerf/realtime-nats), [`-durable-object`](https://www.npmjs.com/package/@kerf/realtime-durable-object) | Realtime buses for Redis, NATS and Cloudflare Durable Objects |
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Ravonus/weft/blob/main/CONTRIBUTING.md). From the repository root:
+See [CONTRIBUTING.md](https://github.com/Ravonus/kerf/blob/main/CONTRIBUTING.md). From the repository root:
 
 ```bash
 pnpm install
 # Unit and integration tests (Vitest)
-pnpm --filter @weft-js/start test
+pnpm --filter @kerf/start test
 # The runtime matrix against a built app
-pnpm --filter @weft-js/start test:e2e <built-app>
+pnpm --filter @kerf/start test:e2e <built-app>
 ```
 
 `test:e2e` takes `--e2e <path>` to pick another scenario in `test/e2e`. The live database scripts in that folder run
@@ -1466,4 +1466,4 @@ runtime matrix load them without a test transform.
 
 ## License
 
-[MIT](https://github.com/Ravonus/weft/blob/main/LICENSE)
+[MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)

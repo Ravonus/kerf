@@ -1,5 +1,5 @@
-import { onCleanup, onMount, state } from '@weft-js/core'
-import { Card, Slider } from '@weft-js/warp'
+import { onCleanup, onMount, state } from '@kerf/core'
+import { Card, Slider } from '@kerf/veneer'
 
 export default function Ruler() {
   const percent = state(60)
@@ -31,7 +31,7 @@ export default function Ruler() {
         style={
           `inline-size:${percent.value}%;` +
           'block-size:0.75rem;' +
-          'background:var(--warp-color-accent-solid)'
+          'background:var(--veneer-color-accent-solid)'
         }
       ></div>
       <p>

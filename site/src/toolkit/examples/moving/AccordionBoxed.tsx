@@ -1,4 +1,4 @@
-import { Accordion } from '@weft-js/warp'
+import { Accordion } from '@kerf/veneer'
 import { QUESTIONS } from './shared'
 
 export const AccordionBoxed = () => (

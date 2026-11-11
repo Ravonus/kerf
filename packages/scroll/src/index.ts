@@ -1,4 +1,4 @@
-// @weft-js/scroll: scrolling run in JavaScript, with bars drawn in the DOM or (from `./canvas`) on a canvas.
+// @kerf/scroll: scrolling run in JavaScript, with bars drawn in the DOM or (from `./canvas`) on a canvas.
 export { scroller } from './scroller'
 export { wrap } from './wrap'
 export { domRenderer } from './render'

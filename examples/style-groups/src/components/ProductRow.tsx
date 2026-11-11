@@ -1,5 +1,5 @@
 import type { Product } from '../api'
-import { group } from '@weft-js/core/style'
+import { group } from '@kerf/core/style'
 import { money } from '../format'
 import { action } from '../ui'
 

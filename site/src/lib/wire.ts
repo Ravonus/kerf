@@ -1,4 +1,4 @@
-// The "cut the wire" button: a real browser's sockets, with a way to fail them. Not part of weft.
+// The "cut the wire" button: a real browser's sockets, with a way to fail them. Not part of kerf.
 const Real = globalThis.WebSocket
 const open = new Set<WebSocket>()
 let cut = false

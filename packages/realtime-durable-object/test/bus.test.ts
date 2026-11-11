@@ -14,7 +14,7 @@ export class Hub {
   constructor(state, env) { this.env = env; this.got = []; this.gaps = 0 }
   async fetch(request) {
     const url = new URL(request.url)
-    this.bus ??= durableObjectBus({ namespace: this.env.WEFT_BUS })
+    this.bus ??= durableObjectBus({ namespace: this.env.KERF_BUS })
     if (url.pathname === '/sub') { await this.bus.subscribe(url.searchParams.get('c'), m => this.got.push(m), () => this.gaps++); return new Response('ok') }
     if (url.pathname === '/pub') { await this.bus.publish(url.searchParams.get('c'), url.searchParams.get('m')); return new Response('ok') }
     return Response.json({ got: this.got, gaps: this.gaps })
@@ -29,7 +29,7 @@ export default { fetch: (request, env) => env.HUB.get(env.HUB.idFromName(new URL
       modules: true,
       script,
       compatibilityDate: '2026-06-01',
-      durableObjects: { WEFT_BUS: 'WeftBusObject', HUB: 'Hub' },
+      durableObjects: { KERF_BUS: 'KerfBusObject', HUB: 'Hub' },
     })
     await mf.ready
   }, 60_000)

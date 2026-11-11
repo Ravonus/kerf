@@ -5,16 +5,16 @@ export function makeMedia(
   options: HandlerOptions,
   mediaServer: () => Promise<MediaServer> | undefined,
 ) {
-  /** `/_weft/m/<hash>/<width>.<fmt>` (research 29 §6): content-addressed, so cached for good; `auto` varies on `Accept`. */
+  /** `/_kerf/m/<hash>/<width>.<fmt>` (research 29 §6): content-addressed, so cached for good; `auto` varies on `Accept`. */
   return async function media(url: URL, request: Request): Promise<Response> {
-    const m = /^\/_weft\/m\/([0-9a-f]{32})\/(\d+)\.([a-z0-9]+)$/.exec(url.pathname)
+    const m = /^\/_kerf\/m\/([0-9a-f]{32})\/(\d+)\.([a-z0-9]+)$/.exec(url.pathname)
     const server = await mediaServer()
     if (!server)
       options.onDiagnostic?.({
         code: 'M017',
         severity: 'error',
         message:
-          'M017: a media URL was requested, but nothing provides `media.server`. Add `media()` from `@weft-js/plugin-media` to `plugins`',
+          'M017: a media URL was requested, but nothing provides `media.server`. Add `media()` from `@kerf/media` to `plugins`',
       })
     const out =
       m &&

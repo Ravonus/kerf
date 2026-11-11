@@ -83,7 +83,7 @@ export function registerAcrossClientsARealSocketALate(getBrowser, open, shot) {
     const button = person(b, 'left', 'Ana').locator('button'),
       control = box(b, 'left', 'Ana').locator('[data-part="control"]')
     const active = (l) => l.evaluate((el) => getComputedStyle(el).getPropertyValue('--_a').trim())
-    expect(await active(button)).toBe('1') // warp's own switch: the sweep is drawn with no pointer here
+    expect(await active(button)).toBe('1') // veneer's own switch: the sweep is drawn with no pointer here
     expect(await active(control)).toBe('1')
     expect(await active(person(b, 'left', 'Ben').locator('button'))).toBe('0')
     await shot(b, '3-across-clients')

@@ -1,4 +1,4 @@
-import { CompactSelect } from '@weft-js/warp'
+import { CompactSelect } from '@kerf/veneer'
 import { REGION_OPTIONS } from './shared'
 
 export const CompactSelectStates = () => (

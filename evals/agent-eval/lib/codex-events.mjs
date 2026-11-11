@@ -1,6 +1,6 @@
 // Keep only bounded metrics from Codex events.
 const CODE = /\b[TPQHIMS]\d{3}\b/g
-const SOURCE = /(?:^|[\s"'\/])node_modules\/@weft-js\/[\w-]+\/(?:src|dist)\//
+const SOURCE = /(?:^|[\s"'\/])node_modules\/@kerf\/[\w-]+\/(?:src|dist)\//
 
 /** Summarize a Codex JSONL stream without retaining agent or tool text. */
 export function summarize(events, exitCode, timedOut = false) {

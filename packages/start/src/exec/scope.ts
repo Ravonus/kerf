@@ -1,4 +1,4 @@
-import type { MediaAsset } from '@weft-js/core/media'
+import type { MediaAsset } from '@kerf/core/media'
 import type { ServerExtension } from '../extension'
 import { StartError, type Context } from '../data'
 import { dbError } from './errors'
@@ -36,7 +36,7 @@ export interface Scope {
   said: Set<string>
   /** The render read a live query or a stream: the page carries the realtime cursor (research 30 §1). */
   live?: boolean
-  /** A preview (the `weft-preview` cookie, `preview.start`): its queries never read or write the shared cache, so what
+  /** A preview (the `kerf-preview` cookie, `preview.start`): its queries never read or write the shared cache, so what
    * it sees (a draft, applied in a transaction the app rolls back) can't reach anyone else. */
   preview: boolean
   /** Work for when the response is finished (`after`): a rollback, a snapshot, a push. */
@@ -61,7 +61,7 @@ export interface FormFailure {
   status: number
 }
 
-/** The `media.server@1` provider (`@weft-js/plugin-media/server`, research 29 §6). */
+/** The `media.server@1` provider (`@kerf/media/server`, research 29 §6). */
 export interface MediaServer {
   ingest(bytes: Uint8Array, options: { name?: string }): Promise<MediaAsset>
   serve(want: { hash: string; width: number; format: string; accept: string }): Promise<{
@@ -78,7 +78,7 @@ export interface ScopeOptions {
   /** The app's context (`src/context.server.ts`). */
   context?: ((args: { request: Request }) => object | Promise<object>) | undefined
   store?: Store | undefined
-  /** Tests (@weft-js/core/test `net.handle`): a replacement `run` by function id. */
+  /** Tests (@kerf/core/test `net.handle`): a replacement `run` by function id. */
   handlers?: Map<string, (input: unknown, ctx: Context) => unknown>
   onDiagnostic?: ((d: { code: string; severity: string; message: string }) => void) | undefined
   dev?: boolean | undefined
@@ -87,9 +87,9 @@ export interface ScopeOptions {
   extensions?: ServerExtension[] | undefined
 }
 
-/** The cookie `preview.start` sets. Its value is the app's (a draft's id); weft only reads that it's there. */
-export const PREVIEW_COOKIE = 'weft-preview'
-const PREVIEW = /(?:^|;\s*)weft-preview=[^;]/
+/** The cookie `preview.start` sets. Its value is the app's (a draft's id); kerf only reads that it's there. */
+export const PREVIEW_COOKIE = 'kerf-preview'
+const PREVIEW = /(?:^|;\s*)kerf-preview=[^;]/
 
 export function createScope(request: Request, options: ScopeOptions = {}): Scope {
   const headers = new Headers()
@@ -142,7 +142,7 @@ const mediaApi = (options: ScopeOptions): Context['media'] => ({
       throw new StartError(
         'M017',
         '`ctx.media` needs a `media.server` provider',
-        'add `media()` from `@weft-js/plugin-media` to `plugins` in weft.config.ts',
+        'add `media()` from `@kerf/media` to `plugins` in kerf.config.ts',
         { status: 500 },
       )
     const bytes = file instanceof Uint8Array ? file : new Uint8Array(await file.arrayBuffer())
@@ -163,7 +163,7 @@ export const frame = (scope: Scope): Scope =>
 
 /**
  * Where `cache: { life }` values live: memory by default, or what `src/cache.server.ts` exports (`redisStore()` from
- * `@weft-js/realtime-redis`, so every server reads the same values and an invalidation reaches all of them).
+ * `@kerf/realtime-redis`, so every server reads the same values and an invalidation reaches all of them).
  */
 export interface Store {
   get(key: string): Stored | undefined | Promise<Stored | undefined>
@@ -276,7 +276,7 @@ export function rereads(scope: Scope): Request | undefined {
 }
 
 const previewValue = (scope: Scope) =>
-  /(?:^|;\s*)weft-preview=([^;]+)/.exec(scope.request.headers.get('cookie') ?? '')?.[1] ?? ''
+  /(?:^|;\s*)kerf-preview=([^;]+)/.exec(scope.request.headers.get('cookie') ?? '')?.[1] ?? ''
 
 /** The response is done: run what `after` queued, each once, a failure a diagnostic that stops none of the rest. */
 export async function finishScope(scope: Scope) {

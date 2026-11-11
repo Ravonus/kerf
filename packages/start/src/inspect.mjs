@@ -1,4 +1,4 @@
-// `weft routes --meta` (research 20 §5, §10; research 25 §7) and the route half of `weft check`: every route's merged
+// `kerf routes --meta` (research 20 §5, §10; research 25 §7) and the route half of `kerf check`: every route's merged
 // metadata and where its words came from, so an agent reviews every page's tags without a browser. Static routes run
 // their loaders and render (one GET each, as a crawler's request would). Param routes run `meta` on placeholders
 // (`params.id` is `<id>`, `data.name` is `<data.name>`), then on real samples: their `prerender` params and the links
@@ -7,8 +7,8 @@
 import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { createServer, parseSync } from 'vite'
-import weft from '@weft-js/core/vite'
-import weftStart, { startDir } from './vite.mjs'
+import kerf from '@kerf/core/vite'
+import kerfStart, { startDir } from './vite.mjs'
 import { deployUrl } from './derive.mjs'
 import { compare } from './inspect/compare.mjs'
 import { inspectRoutes } from './inspect/routes.mjs'
@@ -68,7 +68,7 @@ function metaSnippet(route, title, description) {
 }
 
 /**
- * Only what reading the source can tell, for an app whose routes can't run here (`weft check` falls back to it):
+ * Only what reading the source can tell, for an app whose routes can't run here (`kerf check` falls back to it):
  * pages with no `meta`, and param routes whose `meta` reads neither `data` nor `params`.
  */
 export function staticRouteChecks(root) {
@@ -136,16 +136,16 @@ export async function routesMeta({ root, site = {}, preset }) {
     logLevel: 'silent',
     appType: 'custom',
     server: { middlewareMode: true, hmr: false, ws: false },
-    plugins: [weft({ hydratable: true, csp: site?.csp }), weftStart({ root, site })],
+    plugins: [kerf({ hydratable: true, csp: site?.csp }), kerfStart({ root, site })],
   })
   try {
-    const { manifest, modules } = await server.ssrLoadModule('virtual:weft/routes')
+    const { manifest, modules } = await server.ssrLoadModule('virtual:kerf/routes')
     const { createHandler, cardPath } = await server.ssrLoadModule(join(startDir, 'server.tsx'))
-    const { mergeMeta, headTags } = await server.ssrLoadModule('@weft-js/core/ssr')
-    await server.ssrLoadModule('virtual:weft/fns').catch(() => {})
+    const { mergeMeta, headTags } = await server.ssrLoadModule('@kerf/core/ssr')
+    await server.ssrLoadModule('virtual:kerf/fns').catch(() => {})
     // An app's server code often validates its environment as it loads, and this may not be that environment. Its pages
     // can still be looked at: one that needs it answers 500, which is H016.
-    const context = await server.ssrLoadModule('virtual:weft/context').then(
+    const context = await server.ssrLoadModule('virtual:kerf/context').then(
       (m) => m.default,
       () => undefined,
     )
@@ -160,7 +160,7 @@ export async function routesMeta({ root, site = {}, preset }) {
       requestOrigin: false,
       onDiagnostic: (d) => found.push(d),
     })
-    const run = (path) => handler.inspect(path, new Request(`http://weft.local${path}`))
+    const run = (path) => handler.inspect(path, new Request(`http://kerf.local${path}`))
     const out = []
     const diagnostics = []
     const pages = [] // { route, url, title, description, source }: what the rest compares

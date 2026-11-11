@@ -1,10 +1,10 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   Heading,
   Input,
   Shell,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { AppWindow, FOCUS_STEPS } from './shared'
 
 export function ShellFocus() {
@@ -39,7 +39,7 @@ export function ShellFocus() {
         </Heading>
         <Input
           label="Repository"
-          defaultValue="weft/storefront"
+          defaultValue="kerf/storefront"
         />
       </Shell>
     </AppWindow>

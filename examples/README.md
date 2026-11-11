@@ -1,14 +1,14 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
-<h1 align="center">Weft examples</h1>
+<h1 align="center">Kerf examples</h1>
 
 <p align="center">
-  <strong>Real apps, each built in Weft and in other stacks, benchmarked on production builds.</strong><br>
-  Point the bench at an app and its other versions; it reports how Weft compares and what to tune in Weft or Warp.
+  <strong>Real apps, each built in Kerf and in other stacks, benchmarked on production builds.</strong><br>
+  Point the bench at an app and its other versions; it reports how Kerf compares and what to tune in Kerf or Veneer.
 </p>
 
 <p align="center">
@@ -16,38 +16,38 @@
   <a href="#real-apps-any-stack">Run the bench</a> ·
   <a href="#what-it-measures">What it measures</a> ·
   <a href="#honesty-rules">Honesty rules</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!NOTE]
 > Everything in `examples/` is private and unpublished: the folder's `package.json` is `"private": true`, and none of
-> these apps or tools is on npm. The Weft variants of the database sites aren't stored here at all; they are generated
-> from `@weft-js/create` templates on every run.
+> these apps or tools is on npm. The Kerf variants of the database sites aren't stored here at all; they are generated
+> from `create-kerf` templates on every run.
 
 ## Examples
 
 | Folder | What it is | Variants |
 | --- | --- | --- |
-| [`admin/`](./admin/README.md) | A signed-in back office over 10,000 orders, plus nested, per-row and slow-panel load shapes. | weft (template), solid, next |
-| [`catalog/`](./catalog/README.md) | The holdout: 5,000 public products and a cart behind Suspense. | weft (template), solid, next |
-| [`landing/`](./landing/README.md) | A marketing site with one waitlist form that works with JavaScript off. | weft (template), solid, next |
-| [`todo/`](./todo/README.md) | The race flagship: per-user todos, optimistic writes, six race probes. | weft (template), solid, next |
-| [`lemonstand/`](./lemonstand/README.md) | A real marketing site: animated hero, audience tabs, coach demo, two forms. | next and weft (outside the repo), solid |
-| [`dashboard/`](./dashboard/README.md) | A manifest only: the `benchmarks/compare` screen run through this bench. | weft-warp, weft-plain, solid, react-radix, react-zustand, react-mui |
+| [`admin/`](./admin/README.md) | A signed-in back office over 10,000 orders, plus nested, per-row and slow-panel load shapes. | kerf (template), solid, next |
+| [`catalog/`](./catalog/README.md) | The holdout: 5,000 public products and a cart behind Suspense. | kerf (template), solid, next |
+| [`landing/`](./landing/README.md) | A marketing site with one waitlist form that works with JavaScript off. | kerf (template), solid, next |
+| [`todo/`](./todo/README.md) | The race flagship: per-user todos, optimistic writes, six race probes. | kerf (template), solid, next |
+| [`lemonstand/`](./lemonstand/README.md) | A real marketing site: animated hero, audience tabs, coach demo, two forms. | next and kerf (outside the repo), solid |
+| [`dashboard/`](./dashboard/README.md) | A manifest only: the `benchmarks/compare` screen run through this bench. | kerf-veneer, kerf-plain, solid, react-radix, react-zustand, react-mui |
 | [`style-groups/`](./style-groups/README.md) | Source fixture for core's style-group and SSR round-trip tests. | none: not benchmarked |
 | [`bench/`](./bench/README.md) | The run loop behind `bench.mjs`: `run.mjs` and `samples.mjs`. | tooling |
 | [`lib/`](./lib/README.md) | The harness: build, serve, measure, flow, race, diagnose, stats, e2e kit and its tests. | tooling |
 | [`shared/`](./shared/README.md) | Postgres for the database sites: schema, seed, per-variant clones and the latency proxy. | tooling |
 
 The scripts at this level: `bench.mjs` (benchmark apps), `e2e.mjs` (run an app's end-to-end test against one variant),
-`show.mjs` (serve the last Weft builds from port 5501 to click through), and `chart.mjs` (rewrite
+`show.mjs` (serve the last Kerf builds from port 5501 to click through), and `chart.mjs` (rewrite
 `../evals/results/apps.html` from `chart.html`, `results.json` and the history). `stacks.json` lists the stacks bench can
 detect.
 
 ## Real apps, any stack
 
 `benchmarks/compare` is one synthetic screen. This is the other half: point it at a real app and its other versions, and it reports
-how weft compares and what to tune in weft or warp because of it. Run it after converting an app, and after changing weft.
+how kerf compares and what to tune in kerf or veneer because of it. Run it after converting an app, and after changing kerf.
 
     pnpm run setup                              # repo root, Node 26
     cd examples
@@ -55,10 +55,10 @@ how weft compares and what to tune in weft or warp because of it. Run it after c
     node bench.mjs lemonstand                    # one app
     node bench.mjs --all                         # every folder here with an app.json
     node bench.mjs ~/dev/shop --samples=5        # any folder holding an app.json
-    node bench.mjs lemonstand --only weft --no-record    # try a change, write nothing
+    node bench.mjs lemonstand --only kerf --no-record    # try a change, write nothing
     node bench.mjs lemonstand --detect           # what it worked out, without building
 
-It's a tool for improving weft. Apps are fast by construction: this is not a budget gate, and it isn't a step in an app's
+It's a tool for improving kerf. Apps are fast by construction: this is not a budget gate, and it isn't a step in an app's
 workflow.
 
 `results.json` holds each app's latest run, `../evals/results/apps-history.jsonl` gets a line per run, and `../evals/results/apps.html` is
@@ -74,14 +74,14 @@ A folder here (or anywhere) with an `app.json`. No harness code.
   "pages": [{ "path": "/", "probe": { "click": "[role=tab]:nth-of-type(2)", "watch": "[role=tablist]" } }, "/privacy"],
   "variants": {
     "next": { "path": "~/dev/lemonstand-landing" },
-    "weft": { "path": "~/dev/lemonstand-weft" },
+    "kerf": { "path": "~/dev/lemonstand-kerf" },
     "solid": { "path": "solid" }
   }
 }
 ```
 
 A variant's `path` can be outside the repo, and it's only read: bench copies what git would track into
-`~/.cache/weft-app-bench` (`BENCH_WORK` moves it) and never copies a real `.env`, `netlify.env`, `.neon`, `.mcp.json` or `*.pem`.
+`~/.cache/kerf-app-bench` (`BENCH_WORK` moves it) and never copies a real `.env`, `netlify.env`, `.neon`, `.mcp.json` or `*.pem`.
 `.env.example` becomes the copy's `.env`.
 
 From each `package.json` it works out the stack (`stacks.json`, most specific first), the package manager, the build and the
@@ -92,8 +92,8 @@ say in the variant: `stack`, `label`, `cwd` (build a subfolder of a copied tree,
 To add a stack, add a line to `stacks.json`: its `detect` packages, its `out` folders, and regexes that sort sourcemap paths
 into `groups`. `sourcemap` is `vite` or `next`; leave it out and that stack gets totals with no split.
 
-A `scaffold` variant has no folder: `"scaffold": {"template": "todo", "db": "postgres", "auth": true}` is passed to create-weft's real
-`scaffold()`, into `$BENCH_WORK/gen/<app>/<variant>`, on every load, and it's then a variant like any other. So no weft source lives
+A `scaffold` variant has no folder: `"scaffold": {"template": "todo", "db": "postgres", "auth": true}` is passed to create-kerf's real
+`scaffold()`, into `$BENCH_WORK/gen/<app>/<variant>`, on every load, and it's then a variant like any other. So no kerf source lives
 here. Give each variant a `label` that declares its component kit.
 
 `probe` is how hydration is timed: bench clicks `click` every frame from the first frame until `watch`'s markup changes, under a
@@ -116,13 +116,13 @@ Per variant and page, on production builds, `--samples` samples (3 by default, 5
 
 ## Database-driven sites
 
-`landing`, `todo`, `admin` and `catalog` follow [the contract](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/research/40-site-benchmarks.md). Their weft variant is the
+`landing`, `todo`, `admin` and `catalog` follow [the contract](https://github.com/Ravonus/kerf/blob/archive/evals-2026-11/docs/research/40-site-benchmarks.md). Their kerf variant is the
 template; `solid` and `next` are folders here. `--all` skips a site whose folders aren't written yet, and says so.
 
-    node e2e.mjs todo weft                  # build if needed, database, proxy, production server, tests, stop it all
-    node e2e.mjs todo weft --no-build       # the last build as it stands
+    node e2e.mjs todo kerf                  # build if needed, database, proxy, production server, tests, stop it all
+    node e2e.mjs todo kerf --no-build       # the last build as it stands
     node e2e.mjs todo --dir ./my-build      # a local build, by its start script
-    node e2e.mjs todo --dir http://localhost:3000 --db weft_bench_x    # a server already running
+    node e2e.mjs todo --dir http://localhost:3000 --db kerf_bench_x    # a server already running
 
 `<app>/e2e.test.mjs` is node:test on `lib/e2e-kit.mjs`, roles and names only, each test on a fresh copy of the seed. It has to pass on
 a variant before that variant's numbers count.
@@ -147,7 +147,7 @@ A target is `"role:name"`, exact. What a page doesn't declare, or can't do, is `
 
 | Probe | How |
 |---|---|
-| `db.queries`, `db.rows` | per HTML request, from `pg_stat_statements` deltas for that database (read from `weft_bench_stats`, skipping BEGIN, COMMIT, SET and the like). Where the server doesn't load it, the proxy counts Query and Execute messages, which includes those, `db.rows` is null, and `db.queries` in the run says which |
+| `db.queries`, `db.rows` | per HTML request, from `pg_stat_statements` deltas for that database (read from `kerf_bench_stats`, skipping BEGIN, COMMIT, SET and the like). Where the server doesn't load it, the proxy counts Query and Execute messages, which includes those, `db.rows` is null, and `db.queries` in the run says which |
 | `db.roundTrips` | (TTFB at 40 ms − at 2 ms) ÷ 38, one connection |
 | `server.ttfb.p50/p95/p99`, `server.flush.head` | 10 connections, closed loop, uncompressed so the `</head>` byte can be found |
 | `flow.nav.url/.paint/.data` `.cold/.second` | a real click to the URL, first frame with a DOM change, the text. Second is after going back |
@@ -160,20 +160,20 @@ A target is `"role:name"`, exact. What a page doesn't declare, or can't do, is `
 Input is CDP `Input.dispatchMouseEvent`, so it's trusted. `twoTabs` tells the other tab it got focus, because Playwright keeps every
 page focused. `toggles` holds an even reply last, as an odd one matches the end state, and timing can still miss it on one sample.
 
-`shared/pg/env.mjs` keeps `weft_bench_seed_<hash>` from `schema.sql` and `seed.sql`, clones it per variant with `CREATE DATABASE ...
+`shared/pg/env.mjs` keeps `kerf_bench_seed_<hash>` from `schema.sql` and `seed.sql`, clones it per variant with `CREATE DATABASE ...
 TEMPLATE`, and resets by dropping and cloning, which cuts the server's connections for its pool to reopen. It touches only
-`weft_bench_*`, needs `psql` (or `BENCH_PSQL`, its path), and takes `BENCH_PG_HOST`, `BENCH_PG_PORT` and `BENCH_PG_USER` (default your login). `shared/pg/latency-proxy.mjs` is its own process,
+`kerf_bench_*`, needs `psql` (or `BENCH_PSQL`, its path), and takes `BENCH_PG_HOST`, `BENCH_PG_PORT` and `BENCH_PG_USER` (default your login). `shared/pg/latency-proxy.mjs` is its own process,
 delays each direction by RTT/2 and counts turns, and each `sitePass` checks the RTT with `SELECT 1` (`db.rtt` in the run, about 1 ms
 over at 2 ms on a loaded Mac). `shared/pg/bench-user.json` is a throwaway local account; the hash in the seed is Better Auth's own.
 
 ## Why it's quick
 
 It's meant to run after every tweak. Tarballs are packed once per state of `packages/` and `crates/`. A variant's build is keyed on
-its source files, lockfile, commands, Node and, for weft, those tarballs, and is reused while the key holds: a weft change rebuilds
-the weft variants only, and an unchanged tree rebuilds nothing (`--rebuild` overrides; the output is re-fingerprinted either way).
+its source files, lockfile, commands, Node and, for kerf, those tarballs, and is reused while the key holds: a kerf change rebuilds
+the kerf variants only, and an unchanged tree rebuilds nothing (`--rebuild` overrides; the output is re-fingerprinted either way).
 
 Measuring runs in phases that never overlap. Variants go side by side with each one's timing-sensitive passes in turn, then
-Lighthouse's simulated runs share a pool, shuffled, and last comes server load, one variant at a time. `--jobs=N` and `WEFT_JOBS` set the width
+Lighthouse's simulated runs share a pool, shuffled, and last comes server load, one variant at a time. `--jobs=N` and `KERF_JOBS` set the width
 (`scripts/jobs.mjs`); on a busy machine the default narrows by itself. `--jobs=1` runs everything in turn, which is the check that
 parallel numbers match a serial run. Last checked on Lemonstand: every score, LCP and byte number agreed within spread; load reads
 about 25% low side by side, which is why it isn't.
@@ -188,8 +188,8 @@ reach a private Postgres, `BENCH_CHROME` overrides the installed Chrome it finds
 
 ## What it diagnoses
 
-For each weft variant: the mobile points each metric costs; LCP phases and element; the largest resources; JS and CSS that
-never ran, from browser coverage; the split into runtime, router, data, warp and app from sourcemaps of a separate build (whose
+For each kerf variant: the mobile points each metric costs; LCP phases and element; the largest resources; JS and CSS that
+never ran, from browser coverage; the split into runtime, router, data, veneer and app from sourcemaps of a separate build (whose
 output has to hash the same, and says if it doesn't); the gap to the best other variant on each metric; what moved since the
 app's last run; and a ranked list, where bytes and milliseconds are converted to rough score points at rates at the top of
 `lib/diagnose.mjs`. Read the order, not the digits.
@@ -200,13 +200,13 @@ app's last run; and a ranked list, where bytes and milliseconds are converted to
   Otherwise it's a tie, however far the medians are. Three samples leave a 10% chance of a fluke per comparison.
 - Every measurement proves it hit this build. The run writes a canary into `public/`, each sample fetches it back, and every JS
   and CSS file a sample touched has to hash to a file the build wrote. Any miss stops the run.
-- Weft variants go through `local.mjs refresh` into a private store, so each run measures this checkout, and the installed `weft`
+- Kerf variants go through `local.mjs refresh` into a private store, so each run measures this checkout, and the installed `kerf`
   is compared to the tarball byte for byte. Servers run on ports checked to be free, each in its own process group (Windows: stopped by process tree, then by port).
 - A diff only reports variants that were rebuilt. Ones that weren't are controls: machine drift shows up in them, and is taken off
   timing metrics before anything is called a change.
 - Peak load is recorded per run. Over 40 at start it refuses: use another machine, with `BENCH_WORK` set. Windows has no load average, so there it's the percent of CPU in use: a 3 s sample over 80% refuses, and `loadMax` is a percent.
 
-The stack rule still holds: a claim about weft gets measured across the other variants, here and in `benchmarks/compare`.
+The stack rule still holds: a claim about kerf gets measured across the other variants, here and in `benchmarks/compare`.
 
 `node --test lib` covers the win logic, the freshness checks and stack detection; with Postgres up, it also runs the database, proxy
 and race probes for real against `lib/fixture`, the todo contract with no framework.

@@ -1,0 +1,15 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.data {
+/* bar list + tracker ---------------------------------------------------------------- */
+:where([data-scope="bar-list"]) { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: var(--veneer-text-caption-size); }
+:where([data-scope="bar-list"] li) { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-block-size: 30px; padding-inline: 10px; isolation: isolate; }
+:where([data-scope="bar-list"] li)::before {
+  content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: calc(var(--v) * 100%); z-index: -1;
+  background: color-mix(in oklab, var(--_dc, var(--veneer-color-data-1)) 22%, transparent); border-radius: var(--veneer-radius-mark);
+  transform-origin: left; animation: veneer-bar-in var(--veneer-data-enter) var(--veneer-ease-out) both; animation-delay: calc(var(--i, 0) * 40ms * var(--veneer-data-rise));
+}
+:where([data-scope="bar-list"] li b) { font-weight: 600; font-variant-numeric: tabular-nums; }
+:where([data-scope="bar-list"] a) { color: inherit; text-decoration: none; }
+:where([data-scope="bar-list"] a:hover) { text-decoration: underline; }
+@keyframes veneer-bar-in { from { transform: scaleX(calc(1 - var(--veneer-data-rise))); opacity: calc(1 - var(--veneer-data-fade)); } }
+}

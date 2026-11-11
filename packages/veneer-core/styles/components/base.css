@@ -1,0 +1,142 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* ---------------------------------------------------------------------------
+   S · THE SWEEP. Parts, colour, weight and phases come from @layer veneer.signature
+   (tokens/veneer.css) unchanged. Components only set tokens on their OWN hosts:
+   --veneer-sweep-radius (match the host's corners), --veneer-color-sweep (tone) and
+   --_on (the signature's gate; static surfaces use the dial's surface reach).
+   ------------------------------------------------------------------------ */
+:where([data-scope="chip"]),
+:where([data-scope="pill"]) { --veneer-sweep-radius: var(--veneer-radius-round); }
+:where([data-scope="surface"]),
+:where([data-scope="menu"][data-part="content"]),
+:where([data-scope="select"][data-part="content"]),
+:where([data-scope="accordion"] [data-part="item"]:not([data-scope="accordion"] :is([data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="accordion"] :is([data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="accordion"] *))) { --veneer-sweep-radius: var(--veneer-radius-surface); }
+:where([data-scope="surface"][data-sweep="surface"]) { --_on: var(--veneer-sweep-surfaces); }
+/* opt-in (veneer.css §4): any data-sweep but "surface" sweeps at every stop */
+:where([data-scope="surface"][data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
+:where([data-part="content"][hidden]),
+:where([data-part="content"][popover]:not(:popover-open)) { display: none; }
+/* bracket corners: [data-part="frame-corners"] + [data-part="sweep-corners"] (veneer.signature §1b) */
+
+/* ---------------------------------------------------------------------------
+   0 · Plumbing: tone channels, icon strokes, shared state layer, panels
+   ------------------------------------------------------------------------ */
+:where([data-scope]) {
+  --_solid: var(--veneer-color-accent-solid); --_solid-hover: var(--veneer-color-accent-solid-hover);
+  --_ink-on: var(--veneer-color-accent-on-solid); --_soft: var(--veneer-color-accent-soft);
+  --_text: var(--veneer-color-accent-text);   --_border: var(--veneer-color-accent-border);
+}
+:where([data-tone="neutral"]) {
+  --_solid: var(--veneer-color-neutral-solid); --_solid-hover: var(--veneer-color-neutral-solid-hover);
+  --_ink-on: var(--veneer-color-neutral-on-solid); --_soft: var(--veneer-color-neutral-soft);
+  --_text: var(--veneer-color-neutral-text);   --_border: var(--veneer-color-neutral-border);
+}
+:where([data-tone="positive"]) {
+  --_solid: var(--veneer-color-positive-solid); --_solid-hover: var(--veneer-color-positive-solid-hover);
+  --_ink-on: var(--veneer-color-positive-on-solid); --_soft: var(--veneer-color-positive-soft);
+  --_text: var(--veneer-color-positive-text);   --_border: var(--veneer-color-positive-border);
+}
+:where([data-tone="caution"]) {
+  --_solid: var(--veneer-color-caution-solid); --_solid-hover: var(--veneer-color-caution-solid-hover);
+  --_ink-on: var(--veneer-color-caution-on-solid); --_soft: var(--veneer-color-caution-soft);
+  --_text: var(--veneer-color-caution-text);   --_border: var(--veneer-color-caution-border);
+}
+:where([data-tone="critical"]) {
+  --_solid: var(--veneer-color-critical-solid); --_solid-hover: var(--veneer-color-critical-solid-hover);
+  --_ink-on: var(--veneer-color-critical-on-solid); --_soft: var(--veneer-color-critical-soft);
+  --_text: var(--veneer-color-critical-text);   --_border: var(--veneer-color-critical-border);
+}
+:where([data-tone="info"]) {
+  --_solid: var(--veneer-color-info-solid); --_solid-hover: var(--veneer-color-info-solid-hover);
+  --_ink-on: var(--veneer-color-info-on-solid); --_soft: var(--veneer-color-info-soft);
+  --_text: var(--veneer-color-info-text);   --_border: var(--veneer-color-info-border);
+}
+
+/* icons: 24 grid, 1.5 stroke (→ 1px at 16), round caps; square at vivid */
+:where(svg[data-icon]) {
+  inline-size: var(--veneer-icon-md); block-size: var(--veneer-icon-md); flex: none;
+  fill: none; stroke: currentColor; stroke-width: var(--veneer-icon-stroke);
+  stroke-linecap: round; stroke-linejoin: round;
+}
+:where([data-expression="vivid"] svg[data-icon]) { stroke-linecap: square; stroke-linejoin: miter; }
+:where([data-expression="quiet"] svg[data-icon]),
+:where([data-expression="balanced"] svg[data-icon]) { stroke-linecap: round; stroke-linejoin: round; }
+
+/* kbd */
+:where(kbd[data-scope="kbd"]) {
+  display: inline-grid; place-items: center; min-inline-size: 20px; block-size: 20px; padding-inline: 5px;
+  border: var(--veneer-border-hairline) solid var(--veneer-color-border-strong); border-block-end-width: 2px;
+  border-radius: var(--veneer-radius-mark); background: var(--veneer-color-surface-raised);
+  font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle);
+}
+
+/* a modal open: the page behind holds still. data-scrollbar (dialog()) keeps a classic scrollbar's room, so nothing shifts */
+html:has(dialog:modal) { overflow: hidden; }
+html[data-scrollbar]:has(dialog:modal) { scrollbar-gutter: stable; }
+
+/* visually hidden (live regions, labels) */
+:where([data-part="sr-only"]),
+:where([data-scope="announcer"]) {
+  position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap;
+}
+
+/* shared floating panel (menu, popover, select, hover card, context menu) */
+:where([data-scope="menu"][data-part="content"]),
+:where([data-scope="popover"][data-part="content"]),
+:where([data-scope="select"][data-part="content"]),
+:where([data-scope="hover-card"][data-part="content"]) {
+  --_side-x: 0; --_side-y: -1;   /* the anchor is above → enter downward, leave upward */
+  position: fixed; inset: auto; margin: 0; box-sizing: border-box;
+  min-inline-size: 180px; max-inline-size: min(360px, calc(100vw - 16px));
+  max-block-size: min(var(--_avail, 480px), calc(100dvh - 16px)); overflow: auto; overscroll-behavior: contain;
+  padding: var(--veneer-space-tight);
+  background: var(--veneer-color-surface-overlay); color: var(--veneer-color-text);
+  border: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-2);
+  font-size: var(--veneer-text-body-size); line-height: var(--veneer-text-body-leading);
+  transform-origin: var(--veneer-origin, var(--_origin, top left));
+  /* exit state (also the base): toward the anchor by half the distance */
+  opacity: 0;
+  translate: calc(var(--_side-x) * var(--veneer-motion-distance) * 0.5) calc(var(--_side-y) * var(--veneer-motion-distance) * 0.5);
+  scale: var(--veneer-motion-scale-from);
+  transition:
+    opacity calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+    translate calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+    scale calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+    overlay calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) allow-discrete,
+    display calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) allow-discrete;
+}
+:where([data-scope="menu"][data-part="content"]):where(:popover-open),
+:where([data-scope="menu"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="popover"][data-part="content"]):where(:popover-open),
+:where([data-scope="popover"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="select"][data-part="content"]):where(:popover-open),
+:where([data-scope="select"][data-part="content"]):where([data-state="open"]),
+:where([data-scope="hover-card"][data-part="content"]):where(:popover-open),
+:where([data-scope="hover-card"][data-part="content"]):where([data-state="open"]) {
+  opacity: 1; translate: 0 0; scale: 1;
+  transition:
+    opacity var(--veneer-duration-fast) var(--veneer-ease-out),
+    translate var(--veneer-spring-duration) var(--veneer-ease-spring),
+    scale var(--veneer-spring-duration) var(--veneer-ease-spring),
+    overlay var(--veneer-duration-base) allow-discrete, display var(--veneer-duration-base) allow-discrete;
+}
+@starting-style {
+  :where([data-scope="menu"][data-part="content"]):popover-open,
+  :where([data-scope="popover"][data-part="content"]):popover-open,
+  :where([data-scope="select"][data-part="content"]):popover-open,
+  :where([data-scope="hover-card"][data-part="content"]):popover-open {
+    opacity: 0; scale: var(--veneer-motion-scale-from);
+    translate: calc(var(--_side-x) * var(--veneer-motion-distance)) calc(var(--_side-y) * var(--veneer-motion-distance));
+  }
+}
+:where([data-side="top"])    { --_side-x: 0;  --_side-y: 1;  --_origin: bottom left; }
+:where([data-side="bottom"]) { --_side-x: 0;  --_side-y: -1; --_origin: top left; }
+:where([data-side="right"])  { --_side-x: -1; --_side-y: 0;  --_origin: top left; }
+:where([data-side="left"])   { --_side-x: 1;  --_side-y: 0;  --_origin: top right; }
+
+/* ---------------------------------------------------------------------------
+   1 · ACTIONS
+   ------------------------------------------------------------------------ */
+}

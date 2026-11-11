@@ -1,6 +1,6 @@
 // <Media> over a built asset (the shape `?media` imports produce), mounted: the component's own cost.
-import { render } from '@weft-js/core/dom'
-import { Media, type MediaAsset } from '@weft-js/core/media'
+import { render } from '@kerf/core/dom'
+import { Media, type MediaAsset } from '@kerf/core/media'
 
 const hero: MediaAsset = {
   kind: 'photo',

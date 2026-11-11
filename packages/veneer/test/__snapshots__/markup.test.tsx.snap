@@ -1,0 +1,3814 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Alerts: client DOM after mount 1`] = `
+"<div>
+<div data-scope="alert" data-tone="info">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">info</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="neutral">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">neutral</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="accent">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">accent</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="positive">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M5 0h2v1h-2zM8 0h3v1h-3zM3 1h2v1h-2zM10 1h3v1h-3zM2 2h1v1h-1zM11 2h3v1h-3zM1 3h1v5h-1zM12 3h3v1h-3zM13 4h2v2h-2zM12 6h3v2h-3zM2 8h1v1h-1zM11 8h3v1h-3zM3 9h2v1h-2zM9 9h4v1h-4zM5 10h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M10 3h1v1h-1zM9 4h1v1h-1zM4 5h1v1h-1zM8 5h1v1h-1zM5 6h1v1h-1zM7 6h1v1h-1zM6 7h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M7 3h1v1h-1zM6 4h1v1h-1zM11 7h1v1h-1zM10 8h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">positive</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="caution">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM11 11h1v1h-1zM6 12h1v1h-1zM10 12h1v1h-1zM12 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v1h-1zM9 7h2v1h-2zM3 8h1v2h-1zM10 8h2v2h-2zM2 10h1v2h-1zM11 10h2v2h-2zM1 12h1v1h-1zM11 12h3v1h-3zM1 13h13v1h-13z" data-p="" data-t="v">
+</path>
+<path d="M7 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM10 12h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">caution</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="critical">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v4h-1zM7 7h1v1h-1zM6 9h1v1h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 8h1v1h-1zM3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">critical</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="critical" role="alert">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v4h-1zM7 7h1v1h-1zM6 9h1v1h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 8h1v1h-1zM3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">Failed</div>
+<div data-part="description">Try again.</div>
+<div data-part="actions">
+<button data-scope="button" data-size="sm" data-sweep="" type="button">Retry<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+</div>
+<button aria-label="Dismiss" data-dismiss="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-size="sm" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-scope="alert" data-tone="info">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="description">Only body</div>
+</div>
+</div>"
+`;
+
+exports[`Alerts: server HTML 1`] = `
+"<div>
+<div data-scope="alert" data-tone="info">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">info</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="neutral">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">neutral</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="accent">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">accent</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="positive">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M5 0h2v1h-2zM8 0h3v1h-3zM3 1h2v1h-2zM10 1h3v1h-3zM2 2h1v1h-1zM11 2h3v1h-3zM1 3h1v5h-1zM12 3h3v1h-3zM13 4h2v2h-2zM12 6h3v2h-3zM2 8h1v1h-1zM11 8h3v1h-3zM3 9h2v1h-2zM9 9h4v1h-4zM5 10h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M10 3h1v1h-1zM9 4h1v1h-1zM4 5h1v1h-1zM8 5h1v1h-1zM5 6h1v1h-1zM7 6h1v1h-1zM6 7h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M7 3h1v1h-1zM6 4h1v1h-1zM11 7h1v1h-1zM10 8h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">positive</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="caution">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM11 11h1v1h-1zM6 12h1v1h-1zM10 12h1v1h-1zM12 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v1h-1zM9 7h2v1h-2zM3 8h1v2h-1zM10 8h2v2h-2zM2 10h1v2h-1zM11 10h2v2h-2zM1 12h1v1h-1zM11 12h3v1h-3zM1 13h13v1h-13z" data-p="" data-t="v">
+</path>
+<path d="M7 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM10 12h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">caution</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="critical">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v4h-1zM7 7h1v1h-1zM6 9h1v1h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 8h1v1h-1zM3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">critical</div>
+<div data-part="description">Body</div>
+</div>
+<div data-scope="alert" data-tone="critical" role="alert">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v4h-1zM7 7h1v1h-1zM6 9h1v1h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 8h1v1h-1zM3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">Failed</div>
+<div data-part="description">Try again.</div>
+<div data-part="actions">
+<button data-scope="button" data-size="sm" data-sweep="" type="button">Retry<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+</div>
+<button aria-label="Dismiss" data-dismiss="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-size="sm" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-scope="alert" data-tone="info">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="description">Only body</div>
+</div>
+</div>"
+`;
+
+exports[`Buttons: client DOM after mount 1`] = `
+"<div>
+<button data-scope="button" data-sweep="" type="button">Solid<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button data-emphasis="soft" data-scope="button" data-sweep="" data-tone="accent" type="button">Soft<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button data-emphasis="outline" data-scope="button" data-size="sm" data-sweep="" type="button">Outline<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button data-emphasis="ghost" data-full="" data-scope="button" data-size="lg" data-sweep="" type="button">Ghost<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button data-emphasis="link" data-scope="button" type="button">Link</button>
+<button data-emphasis="frame" data-scope="button" data-sweep="" type="button">
+<span aria-hidden="true" data-part="frame-corners">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span aria-hidden="true" data-part="sweep-corners">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span aria-hidden="true" data-part="sweep-outline">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span data-part="sweep-label">Frame</span>
+<span aria-hidden="true" data-part="sweep-content">Frame</span>
+</button>
+<button data-emphasis="frame" data-fill="" data-scope="button" data-sweep="" type="button">
+<span aria-hidden="true" data-part="sweep-fill">
+</span>
+<span aria-hidden="true" data-part="frame-corners">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span aria-hidden="true" data-part="sweep-corners">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span aria-hidden="true" data-part="sweep-outline">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span data-part="sweep-label">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Frame fill</span>
+<span aria-hidden="true" data-part="sweep-content">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Frame fill</span>
+</button>
+<button data-scope="button" data-sweep="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>With icon<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-sweep="" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button data-scope="button" data-sweep="" type="button">
+<span data-part="label">Can load</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" data-sweep="" type="button">
+<span data-part="label">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Loading</span>
+<span aria-hidden="true" data-part="spinner" data-scope="spinner">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-busy="true" aria-disabled="true" data-emphasis="outline" data-loading="" data-scope="button" data-sweep="" type="button">
+<span data-part="label">Outline loading</span>
+<span aria-hidden="true" data-part="spinner" data-scope="spinner">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-controls="x" data-scope="button" data-sweep="" id="b1" type="submit">Submit<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+</div>"
+`;
+
+exports[`Buttons: server HTML 1`] = `
+"<div>
+<button data-scope="button" data-sweep="" type="button">Solid<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button data-emphasis="soft" data-scope="button" data-sweep="" data-tone="accent" type="button">Soft<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button data-emphasis="outline" data-scope="button" data-size="sm" data-sweep="" type="button">Outline<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button data-emphasis="ghost" data-full="" data-scope="button" data-size="lg" data-sweep="" type="button">Ghost<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button data-emphasis="link" data-scope="button" type="button">Link</button>
+<button data-emphasis="frame" data-scope="button" data-sweep="" type="button">
+<span aria-hidden="true" data-part="frame-corners">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span aria-hidden="true" data-part="sweep-corners">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span aria-hidden="true" data-part="sweep-outline">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span data-part="sweep-label">Frame</span>
+<span aria-hidden="true" data-part="sweep-content">Frame</span>
+</button>
+<button data-emphasis="frame" data-fill="" data-scope="button" data-sweep="" type="button">
+<span aria-hidden="true" data-part="sweep-fill">
+</span>
+<span aria-hidden="true" data-part="frame-corners">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span aria-hidden="true" data-part="sweep-corners">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span aria-hidden="true" data-part="sweep-outline">
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+<i>
+</i>
+</span>
+<span data-part="sweep-label">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Frame fill</span>
+<span aria-hidden="true" data-part="sweep-content">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Frame fill</span>
+</button>
+<button data-scope="button" data-sweep="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>With icon<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-sweep="" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button data-scope="button" data-sweep="" type="button">
+<span data-part="label">Can load</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-busy="true" aria-disabled="true" data-loading="" data-scope="button" data-sweep="" type="button">
+<span data-part="label">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Loading</span>
+<span aria-hidden="true" data-part="spinner" data-scope="spinner">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-busy="true" aria-disabled="true" data-emphasis="outline" data-loading="" data-scope="button" data-sweep="" type="button">
+<span data-part="label">Outline loading</span>
+<span aria-hidden="true" data-part="spinner" data-scope="spinner">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-controls="x" data-scope="button" data-sweep="" id="b1" type="submit">Submit<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+</div>"
+`;
+
+exports[`Choices: client DOM after mount 1`] = `
+"<div>
+<label data-scope="checkbox">
+<input type="checkbox">
+<span data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="mark">
+</span>
+</span>
+<span data-part="label">Agree</span>
+</label>
+<label data-invalid="" data-scope="checkbox">
+<input aria-invalid="true" type="checkbox">
+<span data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="mark">
+</span>
+</span>
+<span data-part="label">Mixed</span>
+<span data-part="hint">Pick one</span>
+</label>
+<label data-placement="start" data-scope="switch" data-size="sm">
+<input role="switch" type="checkbox">
+<span data-part="track" data-sweep="">
+<span aria-hidden="true" data-part="rail-fill">
+<span data-part="rail-hover">
+</span>
+</span>
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<span aria-hidden="true" data-part="thumb">
+</span>
+</span>
+<span data-part="label">Wi-Fi</span>
+<span data-part="hint">On the go</span>
+</label>
+<div aria-label="View" data-scope="segmented" data-size="sm" role="radiogroup">
+<span aria-hidden="true" data-part="indicator" style="--veneer-a: 0px; --veneer-b: 0px; --veneer-ca: 0px; --veneer-cb: 0px;">
+</span>
+<label data-sweep="">
+<span aria-hidden="true" data-part="sweep">
+</span>
+<input name="view" type="radio" value="a">
+<span data-part="item">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>A<span data-part="count">3</span>
+</span>
+</label>
+<label data-sweep="">
+<span aria-hidden="true" data-part="sweep">
+</span>
+<input disabled="" name="view" type="radio" value="b">
+<span data-part="item">B</span>
+</label>
+</div>
+<button aria-pressed="false" data-scope="chip" data-sweep="" type="button">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>Plain</button>
+<button aria-pressed="true" data-scope="chip" data-sweep="" type="button">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="check" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Pressed<span data-part="count">4</span>
+</button>
+<button aria-pressed="false" data-scope="chip" data-sweep="" type="button">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Icon</button>
+</div>"
+`;
+
+exports[`Choices: server HTML 1`] = `
+"<div>
+<label data-scope="checkbox">
+<input type="checkbox">
+<span data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="mark">
+</span>
+</span>
+<span data-part="label">Agree</span>
+</label>
+<label data-invalid="" data-scope="checkbox">
+<input aria-invalid="true" type="checkbox">
+<span data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="mark">
+</span>
+</span>
+<span data-part="label">Mixed</span>
+<span data-part="hint">Pick one</span>
+</label>
+<label data-placement="start" data-scope="switch" data-size="sm">
+<input checked="" role="switch" type="checkbox">
+<span data-part="track" data-sweep="">
+<span aria-hidden="true" data-part="rail-fill">
+<span data-part="rail-hover">
+</span>
+</span>
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<span aria-hidden="true" data-part="thumb">
+</span>
+</span>
+<span data-part="label">Wi-Fi</span>
+<span data-part="hint">On the go</span>
+</label>
+<div aria-label="View" data-scope="segmented" data-size="sm" role="radiogroup">
+<span aria-hidden="true" data-instant="" data-part="indicator">
+</span>
+<label data-sweep="">
+<span aria-hidden="true" data-part="sweep">
+</span>
+<input name="view" type="radio" value="a">
+<span data-part="item">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>A<span data-part="count">3</span>
+</span>
+</label>
+<label data-sweep="">
+<span aria-hidden="true" data-part="sweep">
+</span>
+<input checked="" disabled="" name="view" type="radio" value="b">
+<span data-part="item">B</span>
+</label>
+</div>
+<button aria-pressed="false" data-scope="chip" data-sweep="" type="button">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>Plain</button>
+<button aria-pressed="true" data-scope="chip" data-sweep="" type="button">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="check" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Pressed<span data-part="count">4</span>
+</button>
+<button aria-pressed="false" data-scope="chip" data-sweep="" type="button">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Icon</button>
+</div>"
+`;
+
+exports[`Fields: client DOM after mount 1`] = `
+"<div>
+<div data-scope="field">
+<div data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<label data-part="label" for="field-0">
+<span data-part="label-text">Name</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="N" data-char="">
+</span>
+<span data-c="a" data-char="">
+</span>
+<span data-c="m" data-char="">
+</span>
+<span data-c="e" data-char="">
+</span>
+</span>
+</label>
+<input data-part="input" id="field-0" placeholder=" ">
+</div>
+</div>
+<div data-scope="field" data-size="sm">
+<div data-filled="" data-icon="search" data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<span aria-hidden="true" data-part="icon">
+<span data-part="sweep-base">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</span>
+<span data-part="sweep">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</span>
+</span>
+<label data-part="label" for="field-1">
+<span data-part="label-text">Email address</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="E" data-char="">
+</span>
+<span data-c="m" data-char="">
+</span>
+<span data-c="a" data-char="">
+</span>
+<span data-c="i" data-char="">
+</span>
+<span data-c="l" data-char="">
+</span>
+<span data-c=" " data-char="">
+</span>
+<span data-c="a" data-char="">
+</span>
+<span data-c="d" data-char="">
+</span>
+<span data-c="d" data-char="">
+</span>
+<span data-c="r" data-char="">
+</span>
+<span data-c="e" data-char="">
+</span>
+<span data-c="s" data-char="">
+</span>
+<span data-c="s" data-char="">
+</span>
+</span>
+</label>
+<span data-part="prefix">@</span>
+<input aria-describedby="field-1-msg" data-part="input" id="field-1" placeholder=" ">
+<span data-part="suffix">.com</span>
+<button aria-label="Clear Email address" data-part="clear" tabindex="-1" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="message" id="field-1-msg">
+<span data-part="hint">Never shared.</span>
+</div>
+</div>
+<div data-appearance="line" data-disabled="" data-invalid="" data-readonly="" data-scope="field" data-size="lg" data-variant="classic">
+<div data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<label data-part="label" for="field-2">
+<span data-part="label-text">Code</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="C" data-char="">
+</span>
+<span data-c="o" data-char="">
+</span>
+<span data-c="d" data-char="">
+</span>
+<span data-c="e" data-char="">
+</span>
+</span>
+</label>
+<input aria-describedby="field-2-msg" aria-invalid="true" data-part="input" disabled="" id="field-2" placeholder="X" readonly="">
+</div>
+<div data-part="message" id="field-2-msg">
+<span data-part="error" role="alert">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM11 11h1v1h-1zM6 12h1v1h-1zM10 12h1v1h-1zM12 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v1h-1zM9 7h2v1h-2zM3 8h1v2h-1zM10 8h2v2h-2zM2 10h1v2h-1zM11 10h2v2h-2zM1 12h1v1h-1zM11 12h3v1h-3zM1 13h13v1h-13z" data-p="" data-t="v">
+</path>
+<path d="M7 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM10 12h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<span>Required</span>
+</span>
+</div>
+</div>
+<div data-scope="field" role="search">
+<div data-icon="" data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<span aria-hidden="true" data-part="icon">
+<span data-part="sweep-base">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</span>
+<span data-part="sweep">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</span>
+</span>
+<label data-part="label" for="field-3">
+<span data-part="label-text">Search</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="S" data-char="">
+</span>
+<span data-c="e" data-char="">
+</span>
+<span data-c="a" data-char="">
+</span>
+<span data-c="r" data-char="">
+</span>
+<span data-c="c" data-char="">
+</span>
+<span data-c="h" data-char="">
+</span>
+</span>
+</label>
+<input autocomplete="off" data-part="input" enterkeyhint="search" id="field-3" placeholder=" " type="search">
+<button aria-label="Clear Search" data-part="clear" tabindex="-1" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<div data-counter="40" data-scope="field">
+<div data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<label data-part="label" for="field-4">
+<span data-part="label-text">Note</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="N" data-char="">
+</span>
+<span data-c="o" data-char="">
+</span>
+<span data-c="t" data-char="">
+</span>
+<span data-c="e" data-char="">
+</span>
+</span>
+</label>
+<textarea aria-describedby="field-4-msg" data-part="input" enterkeyhint="enter" id="field-4" placeholder=" " rows="4" style="--_rows: 4;">
+</textarea>
+</div>
+<div data-part="message" id="field-4-msg">
+<span aria-live="off" data-part="counter">0/40</span>
+</div>
+</div>
+<div data-scope="field">
+<div data-filled="" data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<label data-part="label" id="field-5-l">
+<span data-part="label-text">Sort</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="S" data-char="">
+</span>
+<span data-c="o" data-char="">
+</span>
+<span data-c="r" data-char="">
+</span>
+<span data-c="t" data-char="">
+</span>
+</span>
+</label>
+<button aria-expanded="false" aria-haspopup="listbox" aria-labelledby="field-5-l" data-part="input" id="field-5" role="combobox" type="button">
+<span data-part="value" data-placeholder="Pick">
+</span>
+</button>
+<select aria-hidden="true" data-part="carrier" tabindex="-1">
+<option value="">Pick</option>
+<option value="a">A</option>
+<optgroup label="More">
+<option disabled="" value="b">B</option>
+</optgroup>
+</select>
+<span aria-hidden="true" data-part="indicator">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-down-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="q" data-w="" mask="url(#wi-down-q)" stroke-width="4">
+</path>
+<mask id="wi-down-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="b" data-w="" mask="url(#wi-down-b)" stroke-width="5.5">
+</path>
+<path d="M1 3h3v1h-3zM9 3h3v1h-3zM0 4h1v2h-1zM4 4h1v1h-1zM8 4h1v1h-1zM12 4h1v2h-1zM5 5h1v1h-1zM7 5h1v1h-1zM1 6h1v1h-1zM6 6h1v1h-1zM11 6h1v1h-1zM2 7h1v1h-1zM10 7h1v1h-1zM3 8h1v1h-1zM9 8h1v1h-1zM4 9h1v1h-1zM8 9h1v1h-1zM5 10h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</span>
+</div>
+</div>
+</div>"
+`;
+
+exports[`Fields: server HTML 1`] = `
+"<div>
+<div data-scope="field">
+<div data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<label data-part="label" for="field-0">
+<span data-part="label-text">Name</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="N" data-char="">
+</span>
+<span data-c="a" data-char="">
+</span>
+<span data-c="m" data-char="">
+</span>
+<span data-c="e" data-char="">
+</span>
+</span>
+</label>
+<input data-part="input" id="field-0" placeholder=" ">
+</div>
+</div>
+<div data-scope="field" data-size="sm">
+<div data-filled="" data-icon="search" data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<span aria-hidden="true" data-part="icon">
+<span data-part="sweep-base">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</span>
+<span data-part="sweep">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</span>
+</span>
+<label data-part="label" for="field-1">
+<span data-part="label-text">Email address</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="E" data-char="">
+</span>
+<span data-c="m" data-char="">
+</span>
+<span data-c="a" data-char="">
+</span>
+<span data-c="i" data-char="">
+</span>
+<span data-c="l" data-char="">
+</span>
+<span data-c=" " data-char="">
+</span>
+<span data-c="a" data-char="">
+</span>
+<span data-c="d" data-char="">
+</span>
+<span data-c="d" data-char="">
+</span>
+<span data-c="r" data-char="">
+</span>
+<span data-c="e" data-char="">
+</span>
+<span data-c="s" data-char="">
+</span>
+<span data-c="s" data-char="">
+</span>
+</span>
+</label>
+<span data-part="prefix">@</span>
+<input aria-describedby="field-1-msg" data-part="input" id="field-1" placeholder=" " value="a">
+<span data-part="suffix">.com</span>
+<button aria-label="Clear Email address" data-part="clear" tabindex="-1" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="message" id="field-1-msg">
+<span data-part="hint">Never shared.</span>
+</div>
+</div>
+<div data-appearance="line" data-disabled="" data-invalid="" data-readonly="" data-scope="field" data-size="lg" data-variant="classic">
+<div data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<label data-part="label" for="field-2">
+<span data-part="label-text">Code</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="C" data-char="">
+</span>
+<span data-c="o" data-char="">
+</span>
+<span data-c="d" data-char="">
+</span>
+<span data-c="e" data-char="">
+</span>
+</span>
+</label>
+<input aria-describedby="field-2-msg" aria-invalid="true" data-part="input" disabled="" id="field-2" placeholder="X" readonly="">
+</div>
+<div data-part="message" id="field-2-msg">
+<span data-part="error" role="alert">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM11 11h1v1h-1zM6 12h1v1h-1zM10 12h1v1h-1zM12 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v1h-1zM9 7h2v1h-2zM3 8h1v2h-1zM10 8h2v2h-2zM2 10h1v2h-1zM11 10h2v2h-2zM1 12h1v1h-1zM11 12h3v1h-3zM1 13h13v1h-13z" data-p="" data-t="v">
+</path>
+<path d="M7 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM10 12h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<span>Required</span>
+</span>
+</div>
+</div>
+<div data-scope="field" role="search">
+<div data-icon="" data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<span aria-hidden="true" data-part="icon">
+<span data-part="sweep-base">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</span>
+<span data-part="sweep">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</span>
+</span>
+<label data-part="label" for="field-3">
+<span data-part="label-text">Search</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="S" data-char="">
+</span>
+<span data-c="e" data-char="">
+</span>
+<span data-c="a" data-char="">
+</span>
+<span data-c="r" data-char="">
+</span>
+<span data-c="c" data-char="">
+</span>
+<span data-c="h" data-char="">
+</span>
+</span>
+</label>
+<input autocomplete="off" data-part="input" enterkeyhint="search" id="field-3" placeholder=" " type="search">
+<button aria-label="Clear Search" data-part="clear" tabindex="-1" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<div data-counter="40" data-scope="field">
+<div data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<label data-part="label" for="field-4">
+<span data-part="label-text">Note</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="N" data-char="">
+</span>
+<span data-c="o" data-char="">
+</span>
+<span data-c="t" data-char="">
+</span>
+<span data-c="e" data-char="">
+</span>
+</span>
+</label>
+<textarea aria-describedby="field-4-msg" data-part="input" enterkeyhint="enter" id="field-4" placeholder=" " rows="4" style="--_rows:4">
+</textarea>
+</div>
+<div data-part="message" id="field-4-msg">
+<span aria-live="off" data-part="counter">
+</span>
+</div>
+</div>
+<div data-scope="field">
+<div data-filled="" data-part="control" data-sweep="">
+<span aria-hidden="true" data-part="sweep-base">
+</span>
+<span aria-hidden="true" data-part="sweep">
+</span>
+<label data-part="label" id="field-5-l">
+<span data-part="label-text">Sort</span>
+<span aria-hidden="true" data-part="label-chars">
+<span data-c="S" data-char="">
+</span>
+<span data-c="o" data-char="">
+</span>
+<span data-c="r" data-char="">
+</span>
+<span data-c="t" data-char="">
+</span>
+</span>
+</label>
+<button aria-expanded="false" aria-haspopup="listbox" aria-labelledby="field-5-l" data-part="input" id="field-5" role="combobox" type="button">
+<span data-part="value" data-placeholder="Pick">
+</span>
+</button>
+<select aria-hidden="true" data-part="carrier" tabindex="-1">
+<option selected="" value="">Pick</option>
+<option value="a">A</option>
+<optgroup label="More">
+<option disabled="" value="b">B</option>
+</optgroup>
+</select>
+<span aria-hidden="true" data-part="indicator">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-down-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="q" data-w="" mask="url(#wi-down-q)" stroke-width="4">
+</path>
+<mask id="wi-down-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="b" data-w="" mask="url(#wi-down-b)" stroke-width="5.5">
+</path>
+<path d="M1 3h3v1h-3zM9 3h3v1h-3zM0 4h1v2h-1zM4 4h1v1h-1zM8 4h1v1h-1zM12 4h1v2h-1zM5 5h1v1h-1zM7 5h1v1h-1zM1 6h1v1h-1zM6 6h1v1h-1zM11 6h1v1h-1zM2 7h1v1h-1zM10 7h1v1h-1zM3 8h1v1h-1zM9 8h1v1h-1zM4 9h1v1h-1zM8 9h1v1h-1zM5 10h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</span>
+</div>
+</div>
+</div>"
+`;
+
+exports[`Icons: client DOM after mount 1`] = `
+"<div>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-down-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="q" data-w="" mask="url(#wi-down-q)" stroke-width="4">
+</path>
+<mask id="wi-down-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="b" data-w="" mask="url(#wi-down-b)" stroke-width="5.5">
+</path>
+<path d="M1 3h3v1h-3zM9 3h3v1h-3zM0 4h1v2h-1zM4 4h1v1h-1zM8 4h1v1h-1zM12 4h1v2h-1zM5 5h1v1h-1zM7 5h1v1h-1zM1 6h1v1h-1zM6 6h1v1h-1zM11 6h1v1h-1zM2 7h1v1h-1zM10 7h1v1h-1zM3 8h1v1h-1zM9 8h1v1h-1zM4 9h1v1h-1zM8 9h1v1h-1zM5 10h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM11 11h1v1h-1zM6 12h1v1h-1zM10 12h1v1h-1zM12 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v1h-1zM9 7h2v1h-2zM3 8h1v2h-1zM10 8h2v2h-2zM2 10h1v2h-1zM11 10h2v2h-2zM1 12h1v1h-1zM11 12h3v1h-3zM1 13h13v1h-13z" data-p="" data-t="v">
+</path>
+<path d="M7 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM10 12h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v4h-1zM7 7h1v1h-1zM6 9h1v1h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 8h1v1h-1zM3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M5 0h2v1h-2zM8 0h3v1h-3zM3 1h2v1h-2zM10 1h3v1h-3zM2 2h1v1h-1zM11 2h3v1h-3zM1 3h1v5h-1zM12 3h3v1h-3zM13 4h2v2h-2zM12 6h3v2h-3zM2 8h1v1h-1zM11 8h3v1h-3zM3 9h2v1h-2zM9 9h4v1h-4zM5 10h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M10 3h1v1h-1zM9 4h1v1h-1zM4 5h1v1h-1zM8 5h1v1h-1zM5 6h1v1h-1zM7 6h1v1h-1zM6 7h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M7 3h1v1h-1zM6 4h1v1h-1zM11 7h1v1h-1zM10 8h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</div>"
+`;
+
+exports[`Icons: server HTML 1`] = `
+"<div>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-down-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="q" data-w="" mask="url(#wi-down-q)" stroke-width="4">
+</path>
+<mask id="wi-down-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 8.25L11.25 15.75L18.75 8.25" data-t="b" data-w="" mask="url(#wi-down-b)" stroke-width="5.5">
+</path>
+<path d="M1 3h3v1h-3zM9 3h3v1h-3zM0 4h1v2h-1zM4 4h1v1h-1zM8 4h1v1h-1zM12 4h1v2h-1zM5 5h1v1h-1zM7 5h1v1h-1zM1 6h1v1h-1zM6 6h1v1h-1zM11 6h1v1h-1zM2 7h1v1h-1zM10 7h1v1h-1zM3 8h1v1h-1zM9 8h1v1h-1zM4 9h1v1h-1zM8 9h1v1h-1zM5 10h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM7 9h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M10.11 4.36Q11.25 2.25 12.39 4.36L19.86 18.14Q21 20.25 18.6 20.25L3.9 20.25Q1.5 20.25 2.64 18.14z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M10.75 3.17Q11.25 2.25 11.75 3.17L20.5 19.33Q21 20.25 19.95 20.25L2.55 20.25Q1.5 20.25 2 19.33z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 8.25L11.25 14.25M10.95 17.25h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM11 11h1v1h-1zM6 12h1v1h-1zM10 12h1v1h-1zM12 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M7 1h1v1h-1zM6 2h1v2h-1zM8 2h1v2h-1zM5 4h1v2h-1zM7 4h1v6h-1zM9 4h1v2h-1zM4 6h1v2h-1zM10 6h1v1h-1zM9 7h2v1h-2zM3 8h1v2h-1zM10 8h2v2h-2zM2 10h1v2h-1zM11 10h2v2h-2zM1 12h1v1h-1zM11 12h3v1h-3zM1 13h13v1h-13z" data-p="" data-t="v">
+</path>
+<path d="M7 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 10h1v1h-1zM5 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1zM10 12h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v4h-1zM7 7h1v1h-1zM6 9h1v1h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 8h1v1h-1zM3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M5 0h2v1h-2zM8 0h3v1h-3zM3 1h2v1h-2zM10 1h3v1h-3zM2 2h1v1h-1zM11 2h3v1h-3zM1 3h1v5h-1zM12 3h3v1h-3zM13 4h2v2h-2zM12 6h3v2h-3zM2 8h1v1h-1zM11 8h3v1h-3zM3 9h2v1h-2zM9 9h4v1h-4zM5 10h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M10 3h1v1h-1zM9 4h1v1h-1zM4 5h1v1h-1zM8 5h1v1h-1zM5 6h1v1h-1zM7 6h1v1h-1zM6 7h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M7 3h1v1h-1zM6 4h1v1h-1zM11 7h1v1h-1zM10 8h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</div>"
+`;
+
+exports[`Layouts: client DOM after mount 1`] = `
+"<div>
+<div data-scope="stack">default</div>
+<ul data-align="center" data-divided="" data-gap="tight" data-scope="stack">
+<li>a</li>
+</ul>
+<div data-scope="row">default</div>
+<nav aria-label="Pages" data-align="baseline" data-gap="group" data-justify="between" data-reflow="tablet" data-scope="row" data-wrap="none">
+<div data-scope="spacer">
+</div>
+</nav>
+<div data-cols="4" data-gap="section" data-min="xs" data-scope="grid">x</div>
+<div data-at="desktop" data-scope="split" data-side="end" data-width="half">
+<div>
+</div>
+<div>
+</div>
+</div>
+<div data-gutter="" data-intrinsic="" data-max="measure" data-scope="center">x</div>
+<div data-gap="tight" data-min="fill" data-scope="cover">x</div>
+<div data-ratio="21:9" data-scope="frame">x</div>
+<div data-pad="section" data-scope="inset">x</div>
+</div>"
+`;
+
+exports[`Layouts: server HTML 1`] = `
+"<div>
+<div data-scope="stack">default</div>
+<ul data-align="center" data-divided="" data-gap="tight" data-scope="stack">
+<li>a</li>
+</ul>
+<div data-scope="row">default</div>
+<nav aria-label="Pages" data-align="baseline" data-gap="group" data-justify="between" data-reflow="tablet" data-scope="row" data-wrap="none">
+<div data-scope="spacer">
+</div>
+</nav>
+<div data-cols="4" data-gap="section" data-min="xs" data-scope="grid">x</div>
+<div data-at="desktop" data-scope="split" data-side="end" data-width="half">
+<div>
+</div>
+<div>
+</div>
+</div>
+<div data-gutter="" data-intrinsic="" data-max="measure" data-scope="center">x</div>
+<div data-gap="tight" data-min="fill" data-scope="cover">x</div>
+<div data-ratio="21:9" data-scope="frame">x</div>
+<div data-pad="section" data-scope="inset">x</div>
+</div>"
+`;
+
+exports[`Overlays: client DOM after mount 1`] = `
+"<div>
+<button aria-controls="pop-0" aria-expanded="false" aria-haspopup="dialog" data-emphasis="outline" data-scope="button" data-sweep="" data-tone="neutral" id="pop-0-b" type="button">Plain<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<div aria-labelledby="pop-0-b" data-part="content" data-scope="popover" id="pop-0" popover="manual" role="dialog">body</div>
+<button aria-controls="pop-1" aria-expanded="false" aria-haspopup="dialog" data-emphasis="soft" data-scope="button" data-size="sm" data-sweep="" data-tone="neutral" id="pop-1-b" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Titled<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<div aria-labelledby="pop-1-t" data-part="content" data-scope="popover" id="pop-1" popover="manual" role="dialog">
+<p data-part="title" id="pop-1-t">T</p>
+<p data-part="description">D</p>body</div>
+<dialog aria-describedby="dlg-2-d" aria-labelledby="dlg-2-t" data-scope="dialog" data-size="sm" data-tone="critical" open="">
+<div data-part="header">
+<h2 data-part="title" id="dlg-2-t" tabindex="-1">Open</h2>
+<p data-part="description" id="dlg-2-d">Desc</p>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="body">x</div>
+<div data-part="footer">
+<button data-close="" data-scope="button" data-sweep="" type="button">OK<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+</div>
+</dialog>
+<dialog aria-labelledby="dlg-3-t" data-scope="dialog" data-size="lg" role="alertdialog">
+<div data-part="header">
+<h2 data-part="title" id="dlg-3-t">Alert</h2>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="body">y</div>
+</dialog>
+<dialog aria-describedby="sheet-4-d" aria-labelledby="sheet-4-t" data-scope="sheet" data-side="left" open="" style="--veneer-origin: 0px 0px;">
+<button aria-label="Sheet height: tall. Press to shrink." data-part="handle" type="button">
+</button>
+<div data-part="header">
+<h2 data-part="title" id="sheet-4-t" tabindex="-1">Side</h2>
+<p data-part="description" id="sheet-4-d">D</p>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="body">z</div>
+<div data-part="footer">
+<button data-scope="button" data-sweep="" type="button">Go<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+</div>
+</dialog>
+<dialog aria-labelledby="sheet-5-t" data-scope="sheet" data-side="right">
+<button aria-label="Sheet height: tall. Press to shrink." data-part="handle" type="button">
+</button>
+<div data-part="header">
+<h2 data-part="title" id="sheet-5-t">Auto</h2>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="body">w</div>
+</dialog>
+<dialog aria-labelledby="sheet-6-t" data-scope="sheet" data-side="bottom">
+<button aria-label="Sheet height: tall. Press to shrink." data-part="handle" type="button">
+</button>
+<div data-part="header">
+<h2 data-part="title" id="sheet-6-t">Bottom</h2>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="body">v</div>
+</dialog>
+</div>"
+`;
+
+exports[`Overlays: server HTML 1`] = `
+"<div>
+<button aria-controls="pop-0" aria-expanded="false" aria-haspopup="dialog" data-emphasis="outline" data-scope="button" data-sweep="" data-tone="neutral" id="pop-0-b" type="button">Plain<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<div aria-labelledby="pop-0-b" data-part="content" data-scope="popover" id="pop-0" popover="manual" role="dialog">body</div>
+<button aria-controls="pop-1" aria-expanded="false" aria-haspopup="dialog" data-emphasis="soft" data-scope="button" data-size="sm" data-sweep="" data-tone="neutral" id="pop-1-b" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>Titled<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<div aria-labelledby="pop-1-t" data-part="content" data-scope="popover" id="pop-1" popover="manual" role="dialog">
+<p data-part="title" id="pop-1-t">T</p>
+<p data-part="description">D</p>body</div>
+<dialog aria-describedby="dlg-2-d" aria-labelledby="dlg-2-t" data-scope="dialog" data-size="sm" data-tone="critical">
+<div data-part="header">
+<h2 data-part="title" id="dlg-2-t">Open</h2>
+<p data-part="description" id="dlg-2-d">Desc</p>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="body">x</div>
+<div data-part="footer">
+<button data-close="" data-scope="button" data-sweep="" type="button">OK<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+</div>
+</dialog>
+<dialog aria-labelledby="dlg-3-t" data-scope="dialog" data-size="lg" role="alertdialog">
+<div data-part="header">
+<h2 data-part="title" id="dlg-3-t">Alert</h2>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="body">y</div>
+</dialog>
+<dialog aria-describedby="sheet-4-d" aria-labelledby="sheet-4-t" data-scope="sheet" data-side="left">
+<button aria-label="Sheet height: tall. Press to shrink." data-part="handle" type="button">
+</button>
+<div data-part="header">
+<h2 data-part="title" id="sheet-4-t">Side</h2>
+<p data-part="description" id="sheet-4-d">D</p>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="body">z</div>
+<div data-part="footer">
+<button data-scope="button" data-sweep="" type="button">Go<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+</div>
+</dialog>
+<dialog aria-labelledby="sheet-5-t" data-scope="sheet" data-side="right">
+<button aria-label="Sheet height: tall. Press to shrink." data-part="handle" type="button">
+</button>
+<div data-part="header">
+<h2 data-part="title" id="sheet-5-t">Auto</h2>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="body">w</div>
+</dialog>
+<dialog aria-labelledby="sheet-6-t" data-scope="sheet" data-side="bottom">
+<button aria-label="Sheet height: tall. Press to shrink." data-part="handle" type="button">
+</button>
+<div data-part="header">
+<h2 data-part="title" id="sheet-6-t">Bottom</h2>
+<button aria-label="Close" data-close="" data-emphasis="ghost" data-icon-only="" data-part="close" data-scope="button" data-tone="neutral" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="ink" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<div data-part="body">v</div>
+</dialog>
+</div>"
+`;
+
+exports[`Surfaces: client DOM after mount 1`] = `
+"<div>
+<div data-scope="surface" data-sweep="surface">
+<span data-part="title">Static</span>x<span aria-hidden="true" data-part="sweep">
+</span>
+</div>
+<a data-scope="surface" data-sweep="surface" href="/x">
+<span data-part="eyebrow">E</span>
+<span data-part="title">Link</span>y<span aria-hidden="true" data-part="sweep">
+</span>
+</a>
+<button data-scope="surface" data-sweep="surface" type="button">
+<span data-part="title">Press</span>z<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<div data-scope="surface">none</div>
+<span data-scope="badge">New</span>
+<span data-emphasis="solid" data-scope="badge" data-tone="positive">
+<span data-scope="status-dot" data-tone="positive">
+</span>3<span data-part="sr-only"> unread</span>
+</span>
+<span data-count="" data-emphasis="outline" data-scope="badge">9</span>
+<span data-scope="tag">plain</span>
+<span data-scope="tag" data-tone="accent">
+<span data-part="swatch">
+</span>fruit<button aria-label="Remove fruit" data-part="remove" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</span>
+<div aria-label="Upload" aria-valuemax="100" aria-valuemin="0" aria-valuenow="40" data-part="root" data-scope="progress" role="progressbar" style="--_v: 0.4;">
+<div data-part="label-row">
+<span>Upload</span>
+<span data-part="value-text">40%</span>
+</div>
+<div data-part="track">
+<div data-part="range">
+</div>
+</div>
+</div>
+<div aria-label="Wait" aria-valuetext="Wait" data-part="root" data-scope="progress" data-state="indeterminate" role="progressbar">
+<div data-part="label-row">
+<span>Wait</span>
+<span data-part="value-text">—</span>
+</div>
+<div data-part="track">
+<div data-part="range">
+</div>
+</div>
+</div>
+<div aria-label="Ring" aria-valuemax="100" aria-valuemin="0" aria-valuenow="70" data-scope="progress" data-shape="circle" data-tone="positive" role="progressbar" style="--_v: 0.7;">
+<svg aria-hidden="true" viewBox="0 0 36 36">
+<circle cx="18" cy="18" data-part="track" pathLength="100" r="15.9155">
+</circle>
+<circle cx="18" cy="18" data-part="range" pathLength="100" r="15.9155">
+</circle>
+</svg>
+<span data-part="value-text">70</span>
+</div>
+<div aria-label="Ring" aria-valuemax="100" aria-valuemin="0" data-scope="progress" data-shape="circle" data-state="indeterminate" role="progressbar">
+<svg aria-hidden="true" viewBox="0 0 36 36">
+<circle cx="18" cy="18" data-part="track" pathLength="100" r="15.9155">
+</circle>
+<circle cx="18" cy="18" data-part="range" pathLength="100" r="15.9155">
+</circle>
+</svg>
+</div>
+<span data-scope="skeleton">
+</span>
+<span data-scope="skeleton" data-shape="circle" style="inline-size: 2rem; block-size: 2rem;">
+</span>
+<span data-scope="skeleton">
+</span>
+<span data-scope="skeleton" style="inline-size: 60%;">
+</span>
+<div aria-busy="true" aria-label="Loading" data-scope="skeleton-scope" inert="" role="status" style="display: flex; flex-direction: column; gap: 0px;">
+<span data-scope="skeleton" style="inline-size: 100%; block-size: 0.7em; margin-block: calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+<span data-scope="skeleton" style="inline-size: 60%; block-size: 0.7em; margin-block: calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+</div>
+<div aria-busy="true" aria-label="Loading people" data-scope="skeleton-scope" inert="" role="status" style="display: flex; flex-direction: column; gap: 0px;">
+<div style="display: flex; align-items: center; gap: 12px; padding-block: 8px;">
+<span data-scope="skeleton" data-shape="circle" style="inline-size: 36px; block-size: 36px; flex: 0 0 auto;">
+</span>
+<div style="display: flex; flex-direction: column; gap: 0px; flex: 1 1 0%; min-inline-size: 0px;">
+<span data-scope="skeleton" style="inline-size: 40%; block-size: 0.7em; margin-block: calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+<span data-scope="skeleton" style="inline-size: 70%; block-size: 0.7em; margin-block: calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+</div>
+</div>
+</div>
+<div aria-busy="true" aria-label="Loading" data-scope="skeleton-scope" inert="" role="status" style="display: flex; flex-direction: column; gap: 0px;">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding-block: 8px; min-block-size: calc(var(--veneer-text-body-leading, 1.55) * 1em);">
+<span data-scope="skeleton" style="inline-size: 80%; block-size: 0.7em; margin-block: calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+<span data-scope="skeleton" style="inline-size: 60%; block-size: 0.7em; margin-block: calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2);">
+</span>
+</div>
+</div>
+</div>"
+`;
+
+exports[`Surfaces: server HTML 1`] = `
+"<div>
+<div data-scope="surface" data-sweep="surface">
+<span data-part="title">Static</span>x<span aria-hidden="true" data-part="sweep">
+</span>
+</div>
+<a data-scope="surface" data-sweep="surface" href="/x">
+<span data-part="eyebrow">E</span>
+<span data-part="title">Link</span>y<span aria-hidden="true" data-part="sweep">
+</span>
+</a>
+<button data-scope="surface" data-sweep="surface" type="button">
+<span data-part="title">Press</span>z<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<div data-scope="surface">none</div>
+<span data-scope="badge">New</span>
+<span data-emphasis="solid" data-scope="badge" data-tone="positive">
+<span data-scope="status-dot" data-tone="positive">
+</span>3<span data-part="sr-only"> unread</span>
+</span>
+<span data-count="" data-emphasis="outline" data-scope="badge">9</span>
+<span data-scope="tag">plain</span>
+<span data-scope="tag" data-tone="accent">
+<span data-part="swatch">
+</span>fruit<button aria-label="Remove fruit" data-part="remove" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</span>
+<div aria-label="Upload" aria-valuemax="100" aria-valuemin="0" aria-valuenow="40" data-part="root" data-scope="progress" role="progressbar" style="--_v:0.4">
+<div data-part="label-row">
+<span>Upload</span>
+<span data-part="value-text">40%</span>
+</div>
+<div data-part="track">
+<div data-part="range">
+</div>
+</div>
+</div>
+<div aria-label="Wait" aria-valuetext="Wait" data-part="root" data-scope="progress" data-state="indeterminate" role="progressbar">
+<div data-part="label-row">
+<span>Wait</span>
+<span data-part="value-text">—</span>
+</div>
+<div data-part="track">
+<div data-part="range">
+</div>
+</div>
+</div>
+<div aria-label="Ring" aria-valuemax="100" aria-valuemin="0" aria-valuenow="70" data-scope="progress" data-shape="circle" data-tone="positive" role="progressbar" style="--_v:0.7">
+<svg aria-hidden="true" viewBox="0 0 36 36">
+<circle cx="18" cy="18" data-part="track" pathLength="100" r="15.9155">
+</circle>
+<circle cx="18" cy="18" data-part="range" pathLength="100" r="15.9155">
+</circle>
+</svg>
+<span data-part="value-text">70</span>
+</div>
+<div aria-label="Ring" aria-valuemax="100" aria-valuemin="0" data-scope="progress" data-shape="circle" data-state="indeterminate" role="progressbar">
+<svg aria-hidden="true" viewBox="0 0 36 36">
+<circle cx="18" cy="18" data-part="track" pathLength="100" r="15.9155">
+</circle>
+<circle cx="18" cy="18" data-part="range" pathLength="100" r="15.9155">
+</circle>
+</svg>
+</div>
+<span data-scope="skeleton">
+</span>
+<span data-scope="skeleton" data-shape="circle" style="inline-size:2rem;block-size:2rem">
+</span>
+<span data-scope="skeleton">
+</span>
+<span data-scope="skeleton" style="inline-size:60%">
+</span>
+<div aria-busy="true" aria-label="Loading" data-scope="skeleton-scope" inert="" role="status" style="display:flex;flex-direction:column;gap:0">
+<span data-scope="skeleton" style="inline-size:100%;block-size:0.7em;margin-block:calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+<span data-scope="skeleton" style="inline-size:60%;block-size:0.7em;margin-block:calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+</div>
+<div aria-busy="true" aria-label="Loading people" data-scope="skeleton-scope" inert="" role="status" style="display:flex;flex-direction:column;gap:0">
+<div style="display:flex;align-items:center;gap:12px;padding-block:8px">
+<span data-scope="skeleton" data-shape="circle" style="inline-size:36px;block-size:36px;flex:none">
+</span>
+<div style="display:flex;flex-direction:column;gap:0;flex:1;min-inline-size:0">
+<span data-scope="skeleton" style="inline-size:40%;block-size:0.7em;margin-block:calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+<span data-scope="skeleton" style="inline-size:70%;block-size:0.7em;margin-block:calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+</div>
+</div>
+</div>
+<div aria-busy="true" aria-label="Loading" data-scope="skeleton-scope" inert="" role="status" style="display:flex;flex-direction:column;gap:0">
+<div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:16px;padding-block:8px;min-block-size:calc(var(--veneer-text-body-leading, 1.55) * 1em)">
+<span data-scope="skeleton" style="inline-size:80%;block-size:0.7em;margin-block:calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+<span data-scope="skeleton" style="inline-size:60%;block-size:0.7em;margin-block:calc((var(--veneer-text-body-leading, 1.55) * 1em - 0.7em) / 2)">
+</span>
+</div>
+</div>
+</div>"
+`;
+
+exports[`Tabbed: client DOM after mount 1`] = `
+"<div>
+<div data-part="root" data-scope="tabs">
+<div aria-label="T" data-part="list" role="tablist">
+<button aria-controls="tabs-0-p0" aria-selected="true" data-part="trigger" id="tabs-0-t0" role="tab" type="button">A</button>
+<button aria-controls="tabs-0-p1" aria-selected="false" data-part="trigger" disabled="" id="tabs-0-t1" role="tab" tabindex="-1" type="button">B</button>
+<span aria-hidden="true" data-part="indicator" style="--veneer-a: 0px; --veneer-b: 0px; --veneer-ca: 0px; --veneer-cb: 0px;">
+</span>
+</div>
+<div aria-labelledby="tabs-0-t0" data-part="content" id="tabs-0-p0" role="tabpanel" tabindex="0">
+<p>a</p>
+</div>
+<div aria-labelledby="tabs-0-t1" data-part="content" hidden="" id="tabs-0-p1" role="tabpanel" tabindex="0">
+<p>b</p>
+</div>
+</div>
+<div data-part="root" data-scope="tabs" data-variant="pill">
+<div aria-label="P" data-part="list" role="tablist">
+<button aria-controls="tabs-1-p0" aria-selected="true" data-part="trigger" id="tabs-1-t0" role="tab" type="button">A</button>
+<button aria-controls="tabs-1-p0" aria-selected="false" data-part="trigger" id="tabs-1-t1" role="tab" tabindex="-1" type="button">B</button>
+<span aria-hidden="true" data-part="indicator" style="--veneer-a: 0px; --veneer-b: 0px; --veneer-ca: 0px; --veneer-cb: 0px;">
+</span>
+</div>
+<div aria-labelledby="tabs-1-t0" data-part="content" id="tabs-1-p0" role="tabpanel" tabindex="0">
+<p>a</p>
+</div>
+</div>
+</div>"
+`;
+
+exports[`Tabbed: server HTML 1`] = `
+"<div>
+<div data-part="root" data-scope="tabs">
+<div aria-label="T" data-part="list" role="tablist">
+<button aria-controls="tabs-0-p0" aria-selected="true" data-part="trigger" id="tabs-0-t0" role="tab" type="button">A</button>
+<button aria-controls="tabs-0-p1" aria-selected="false" data-part="trigger" disabled="" id="tabs-0-t1" role="tab" tabindex="-1" type="button">B</button>
+<span aria-hidden="true" data-instant="" data-part="indicator">
+</span>
+</div>
+<div aria-labelledby="tabs-0-t0" data-part="content" id="tabs-0-p0" role="tabpanel" tabindex="0">
+<p>a</p>
+</div>
+<div aria-labelledby="tabs-0-t1" data-part="content" hidden="" id="tabs-0-p1" role="tabpanel" tabindex="0">
+<p>b</p>
+</div>
+</div>
+<div data-part="root" data-scope="tabs" data-variant="pill">
+<div aria-label="P" data-part="list" role="tablist">
+<button aria-controls="tabs-1-p0" aria-selected="true" data-part="trigger" id="tabs-1-t0" role="tab" type="button">A</button>
+<button aria-controls="tabs-1-p0" aria-selected="false" data-part="trigger" id="tabs-1-t1" role="tab" tabindex="-1" type="button">B</button>
+<span aria-hidden="true" data-instant="" data-part="indicator">
+</span>
+</div>
+<div aria-labelledby="tabs-1-t0" data-part="content" id="tabs-1-p0" role="tabpanel" tabindex="0">
+<p>a</p>
+</div>
+</div>
+</div>"
+`;
+
+exports[`Toasts: client DOM after mount 1`] = `
+"<section aria-label="Notifications (F8)" data-part="region" data-scope="toast" style="block-size: 0px;" tabindex="-1">
+<div aria-label="Plain" data-id="t3" data-part="root" data-scope="toast" data-tone="neutral" role="group" style="z-index: 100; --_y: 0px; --_s: 1; --_o: 1;">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">Plain</div>
+<div data-part="actions">
+<button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<div aria-label="Failed" data-behind="" data-id="t2" data-part="root" data-scope="toast" data-tone="critical" role="group" style="z-index: 99; max-block-size: 0px; overflow: hidden; --_y: -12px; --_s: 0.95; --_o: 1;">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v4h-1zM7 7h1v1h-1zM6 9h1v1h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 8h1v1h-1zM3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">Failed</div>
+<div data-part="description">Try later.</div>
+<div data-part="actions">
+<button data-act="" data-emphasis="ghost" data-scope="button" data-size="sm" type="button">Retry</button>
+<button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<div aria-label="Saved" data-behind="" data-id="t1" data-part="root" data-scope="toast" data-tone="positive" role="group" style="z-index: 98; max-block-size: 0px; overflow: hidden; --_y: -24px; --_s: 0.9; --_o: 1;">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M5 0h2v1h-2zM8 0h3v1h-3zM3 1h2v1h-2zM10 1h3v1h-3zM2 2h1v1h-1zM11 2h3v1h-3zM1 3h1v5h-1zM12 3h3v1h-3zM13 4h2v2h-2zM12 6h3v2h-3zM2 8h1v1h-1zM11 8h3v1h-3zM3 9h2v1h-2zM9 9h4v1h-4zM5 10h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M10 3h1v1h-1zM9 4h1v1h-1zM4 5h1v1h-1zM8 5h1v1h-1zM5 6h1v1h-1zM7 6h1v1h-1zM6 7h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M7 3h1v1h-1zM6 4h1v1h-1zM11 7h1v1h-1zM10 8h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">Saved</div>
+<div data-part="actions">
+<button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<span aria-hidden="true" data-part="progress">
+</span>
+</div>
+</section>
+<div aria-atomic="true" aria-live="polite" data-scope="announcer" role="status">Saved</div>
+<div aria-atomic="true" aria-live="assertive" data-scope="announcer" role="alert">Failed. Try later.</div>"
+`;
+
+exports[`Toasts: server HTML 1`] = `
+"<section aria-label="Notifications (F8)" data-part="region" data-scope="toast" tabindex="-1">
+<div aria-label="Plain" data-id="t3" data-part="root" data-scope="toast" data-tone="neutral" role="group">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 10.5L11.25 16.5M10.95 6h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v1h-1zM7 4h1v1h-1zM6 6h1v4h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">Plain</div>
+<div data-part="actions">
+<button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<div aria-label="Failed" data-id="t2" data-part="root" data-scope="toast" data-tone="critical" role="group">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M11.25 6L11.25 12M10.95 16.5h.6" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M12 8h1v1h-1zM11 9h1v1h-1zM8 10h1v1h-1zM10 10h1v1h-1zM5 11h1v1h-1zM9 11h1v1h-1zM6 12h1v1h-1zM8 12h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M5 1h5v1h-5zM3 2h1v1h-1zM10 2h2v1h-2zM2 3h1v2h-1zM12 3h1v2h-1zM1 5h1v5h-1zM12 5h2v5h-2zM2 10h1v2h-1zM11 10h2v1h-2zM10 11h3v1h-3zM3 12h9v1h-9zM5 13h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M6 3h1v4h-1zM7 7h1v1h-1zM6 9h1v1h-1zM7 10h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M10 8h1v1h-1zM3 9h1v1h-1zM11 9h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">Failed</div>
+<div data-part="description">Try later.</div>
+<div data-part="actions">
+<button data-act="" data-emphasis="ghost" data-scope="button" data-size="sm" type="button">Retry</button>
+<button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+</div>
+<div aria-label="Saved" data-id="t1" data-part="root" data-scope="toast" data-tone="positive" role="group">
+<svg aria-hidden="true" data-dither="" data-icon="" data-part="icon" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-qs="" data-t="q">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 11.25a9 9 0 1 0 18 0a9 9 0 1 0 -18 0z" data-bs="" data-t="b">
+</path>
+<path d="M6.75 12L9.75 15L15.75 7.5" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M5 0h2v1h-2zM8 0h3v1h-3zM3 1h2v1h-2zM10 1h3v1h-3zM2 2h1v1h-1zM11 2h3v1h-3zM1 3h1v5h-1zM12 3h3v1h-3zM13 4h2v2h-2zM12 6h3v2h-3zM2 8h1v1h-1zM11 8h3v1h-3zM3 9h2v1h-2zM9 9h4v1h-4zM5 10h5v1h-5z" data-p="" data-t="v">
+</path>
+<path d="M10 3h1v1h-1zM9 4h1v1h-1zM4 5h1v1h-1zM8 5h1v1h-1zM5 6h1v1h-1zM7 6h1v1h-1zM6 7h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M7 3h1v1h-1zM6 4h1v1h-1zM11 7h1v1h-1zM10 8h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<div data-part="title">Saved</div>
+<div data-part="actions">
+<button aria-label="Dismiss" data-emphasis="ghost" data-icon-only="" data-scope="button" data-size="sm" data-tone="neutral" data-x="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-x-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="q" data-w="" mask="url(#wi-x-q)" stroke-width="4">
+</path>
+<mask id="wi-x-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M3.75 3.75L18.75 18.75M18.75 3.75L3.75 18.75" data-t="b" data-w="" mask="url(#wi-x-b)" stroke-width="5.5">
+</path>
+<path d="M1 0h3v1h-3zM9 0h3v1h-3zM0 1h1v2h-1zM4 1h1v1h-1zM8 1h1v1h-1zM12 1h1v2h-1zM5 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM10 4h1v1h-1zM3 5h1v1h-1zM9 5h1v1h-1zM4 6h1v1h-1zM8 6h1v1h-1zM3 7h1v1h-1zM9 7h1v1h-1zM2 8h1v1h-1zM10 8h1v1h-1zM1 9h1v1h-1zM6 9h1v1h-1zM11 9h1v1h-1zM0 10h1v2h-1zM5 10h1v1h-1zM7 10h1v1h-1zM12 10h1v1h-1zM4 11h1v1h-1zM8 11h1v1h-1zM11 11h2v1h-2zM1 12h3v1h-3zM9 12h3v1h-3z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM7 7h1v1h-1zM8 8h1v1h-1zM5 9h1v1h-1zM9 9h1v1h-1zM4 10h1v1h-1zM10 10h1v1h-1zM3 11h1v1h-1zM9 11h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+</button>
+</div>
+<span aria-hidden="true" data-part="progress">
+</span>
+</div>
+</section>
+<div aria-atomic="true" aria-live="polite" data-scope="announcer" role="status">
+</div>
+<div aria-atomic="true" aria-live="assertive" data-scope="announcer" role="alert">
+</div>"
+`;
+
+exports[`Toggles: client DOM after mount 1`] = `
+"<div>
+<button aria-pressed="false" data-scope="toggle" data-sweep="" type="button">Off<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-pressed="true" data-scope="toggle" data-size="sm" data-sweep="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>On<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-label="Search" aria-pressed="false" data-scope="toggle" data-sweep="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+</div>"
+`;
+
+exports[`Toggles: server HTML 1`] = `
+"<div>
+<button aria-pressed="false" data-scope="toggle" data-sweep="" type="button">Off<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-pressed="true" data-scope="toggle" data-size="sm" data-sweep="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<mask id="wi-check-q" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" stroke="#000" stroke-width="2">
+</path>
+</mask>
+<path d="M2.25 12.75L8.25 18.75L20.25 5.25" data-t="q" data-w="" mask="url(#wi-check-q)" stroke-width="4">
+</path>
+<mask id="wi-check-b" maskUnits="userSpaceOnUse">
+<path d="M0 0h24v24H0z" fill="#fff" stroke="none">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" stroke="#000" stroke-width="1.3">
+</path>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-m="" stroke="#000" stroke-width="2.1">
+</path>
+</mask>
+<path d="M2.83 12.65L8.44 18.27L19.67 5.63" data-t="b" data-w="" mask="url(#wi-check-b)" stroke-width="5.5">
+</path>
+<path d="M11 1h3v1h-3zM10 2h1v1h-1zM14 2h1v2h-1zM9 3h1v1h-1zM8 4h1v1h-1zM13 4h1v1h-1zM7 5h1v1h-1zM12 5h1v1h-1zM1 6h3v1h-3zM6 6h1v1h-1zM11 6h1v1h-1zM0 7h1v2h-1zM4 7h2v1h-2zM10 7h1v1h-1zM8 8h2v1h-2zM1 9h1v1h-1zM8 9h1v1h-1zM2 10h1v1h-1zM7 10h1v1h-1zM3 11h4v1h-4z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M13 3h1v1h-1zM12 4h1v1h-1zM11 5h1v1h-1zM10 6h1v1h-1zM9 7h1v1h-1zM7 9h1v1h-1zM4 10h1v1h-1zM6 10h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>On<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+<button aria-label="Search" aria-pressed="false" data-scope="toggle" data-sweep="" type="button">
+<svg aria-hidden="true" data-dither="" data-icon="" focusable="false" viewBox="0 0 24 24">
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-qs="" data-t="q">
+</path>
+<path d="M15.75 15.75L21 21" data-qs="" data-t="q" data-w="">
+</path>
+<path d="M2.25 9.75a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0z" data-bs="" data-t="b">
+</path>
+<path d="M15.75 15.75L21 21" data-bi="" data-t="b" data-w="">
+</path>
+<path d="M10 6h1v1h-1zM9 7h1v1h-1zM8 8h1v1h-1zM10 8h1v1h-1zM7 9h1v1h-1zM9 9h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1z" data-d="" data-p="" data-t="b">
+</path>
+<path d="M3 0h3v1h-3zM7 0h2v1h-2zM2 1h1v1h-1zM9 1h1v1h-1zM1 2h1v5h-1zM10 2h1v4h-1zM9 6h2v1h-2zM2 7h1v1h-1zM8 7h2v1h-2zM3 8h6v1h-6z" data-p="" data-t="v">
+</path>
+<path d="M9 8h1v1h-1zM10 9h1v1h-1zM11 10h1v1h-1zM12 11h1v1h-1z" data-p="" data-t="v" data-w="">
+</path>
+<path d="M9 3h1v1h-1zM8 4h1v1h-1zM7 5h1v1h-1zM9 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM5 7h1v1h-1zM7 7h1v1h-1z" data-d="" data-p="" data-t="v">
+</path>
+</svg>
+<span aria-hidden="true" data-part="sweep">
+</span>
+</button>
+</div>"
+`;
+
+exports[`Type: client DOM after mount 1`] = `
+"<div>
+<h1 data-role="title" data-scope="text">h</h1>
+<h2 data-role="heading" data-scope="text">h</h2>
+<h3 data-role="heading" data-scope="text">h</h3>
+<h4 data-role="label" data-scope="text">h</h4>
+<h5 data-role="label" data-scope="text">h</h5>
+<h6 data-role="label" data-scope="text">h</h6>
+<h2 data-role="display" data-scope="text">Default level</h2>
+<a data-scope="link" href="/a">Link</a>
+<a data-scope="link" data-variant="subtle" href="/b" rel="noopener noreferrer" target="_blank">Away<span class="vh"> (opens in a new tab)</span>
+</a>
+<p data-scope="text">Body</p>
+<span data-role="eyebrow" data-scope="text">Eyebrow</span>
+<p data-ink="faint" data-scope="text" data-tone="critical">Tone</p>
+</div>"
+`;
+
+exports[`Type: server HTML 1`] = `
+"<div>
+<h1 data-role="title" data-scope="text">h</h1>
+<h2 data-role="heading" data-scope="text">h</h2>
+<h3 data-role="heading" data-scope="text">h</h3>
+<h4 data-role="label" data-scope="text">h</h4>
+<h5 data-role="label" data-scope="text">h</h5>
+<h6 data-role="label" data-scope="text">h</h6>
+<h2 data-role="display" data-scope="text">Default level</h2>
+<a data-scope="link" href="/a">Link</a>
+<a data-scope="link" data-variant="subtle" href="/b" rel="noopener noreferrer" target="_blank">Away<span class="vh"> (opens in a new tab)</span>
+</a>
+<p data-scope="text">Body</p>
+<span data-role="eyebrow" data-scope="text">Eyebrow</span>
+<p data-ink="faint" data-scope="text" data-tone="critical">Tone</p>
+</div>"
+`;

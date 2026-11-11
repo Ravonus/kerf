@@ -7,7 +7,7 @@ const skipDirs = new Set([
   'public',
   'node_modules',
   '.git',
-  '.weft',
+  '.kerf',
   '.output',
   'dist',
   'coverage',

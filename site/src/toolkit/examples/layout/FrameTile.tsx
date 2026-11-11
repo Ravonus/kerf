@@ -1,4 +1,4 @@
-import { Frame } from '@weft-js/warp'
+import { Frame } from '@kerf/veneer'
 import { Box } from './shared'
 
 export const FrameTile = () => (

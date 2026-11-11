@@ -40,7 +40,7 @@ export async function finishBuild({
             diagnostic({
               code: 'L000',
               severity: 'warning',
-              file: 'weft.config.ts',
+              file: 'kerf.config.ts',
               why: '`build.audit` is false: the built pages were not audited.',
             }),
           ],
@@ -55,11 +55,11 @@ export async function finishBuild({
   const kept = [
     ...contract.diagnostics.filter((d) => !(d.severity === 'error' && unsafe.allows(d))),
     ...warned,
-  ].map((d) => diagnostic({ file: '.weft/contract.json', ...d }))
+  ].map((d) => diagnostic({ file: '.kerf/contract.json', ...d }))
   const diagnostics = [
     ...kept,
     ...pages,
-    ...forced.map((d) => diagnostic({ file: '.weft/contract.json', ...d })),
+    ...forced.map((d) => diagnostic({ file: '.kerf/contract.json', ...d })),
   ]
   return {
     ok: !diagnostics.some((d) => d.severity === 'error'),

@@ -2,11 +2,11 @@ import {
   Grid,
   PaymentCardInput,
   PlaceLookupInput,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import type {
   ProviderAppearance,
   ProviderField,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { Cell } from '../../world'
 import { findPlace, PLACES } from './place-lookup'
 

@@ -1,9 +1,9 @@
-// weft's back end (research 19): what its output does, construct by construct. The corpus oracle
+// kerf's back end (research 19): what its output does, construct by construct. The corpus oracle
 // (oracle.test.tsx) checks whole components against Solid's recorded output and the server render.
-// weft-allow T005: framework test of compiled output; it checks the exact DOM and classes the back end writes
+// kerf-allow T005: framework test of compiled output; it checks the exact DOM and classes the back end writes
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { flush } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
+import { flush } from '@kerf/core'
+import { render } from '@kerf/core/dom'
 import * as basics from './fixtures/next/Basics'
 import { Main as Bench } from './fixtures/next/Bench'
 import * as two from './fixtures/next/Step2'
@@ -91,13 +91,13 @@ function registerBenchmarkEntry() {
   })
 }
 
-describe('weft back end: basics', () => {
+describe('kerf back end: basics', () => {
   it('compiles without Solid-shaped helpers', () => {
     const out = transform(readFileSync(resolve(__dirname, 'fixtures/next/Basics.tsx'), 'utf8'), {
       filename: 'Basics.tsx',
     })
     expect(out.diagnostics).toEqual([])
-    const imported = /import \{([^}]*)\} from "@weft-js\/core\/dom"/.exec(out.code!)![1]
+    const imported = /import \{([^}]*)\} from "@kerf\/core\/dom"/.exec(out.code!)![1]
     const helpers = [
       'attr',
       'bind',
@@ -173,7 +173,7 @@ function registerConditionalAndSpread() {
   })
 
   it('element spreads: later attributes win, values stay live, handlers are listeners', async () => {
-    const { state } = await import('@weft-js/core')
+    const { state } = await import('@kerf/core')
     const tone = state('info')
     const clicks: string[] = []
     const rest = state<Record<string, unknown>>({
@@ -215,7 +215,7 @@ function registerConditionalAndSpread() {
 
 function registerContentAndRefs() {
   it("a spread's children fill an element that has none, and stay live", async () => {
-    const { state } = await import('@weft-js/core')
+    const { state } = await import('@kerf/core')
     const rest = state<Record<string, unknown>>({ title: 't', children: 'first' })
     const root = mount(() =>
       two.Content({
@@ -271,7 +271,7 @@ function registerSelectAndSvg() {
   })
 }
 
-describe('weft back end, step 2', () => {
+describe('kerf back end, step 2', () => {
   registerConditionalAndSpread()
 
   registerContentAndRefs()

@@ -3,12 +3,12 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync 
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, sep } from 'node:path'
 import { test } from 'node:test'
-import { checkPackedCrate, forceWasmCompiler } from '../../packages/create/scripts/packed-paths.mjs'
+import { checkPackedCrate, forceWasmCompiler } from '../../packages/create-kerf/scripts/packed-paths.mjs'
 
 function fixture(run) {
-  const root = mkdtempSync(join(tmpdir(), 'weft-packed-paths-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-packed-paths-'))
   const app = join(root, 'app')
-  mkdirSync(join(app, 'node_modules/@weft-js'), { recursive: true })
+  mkdirSync(join(app, 'node_modules/@kerf'), { recursive: true })
   try {
     run(app, root)
   } finally {
@@ -18,12 +18,12 @@ function fixture(run) {
 
 await test('Rust crate checks accept pnpm paths and reject a different crate', () =>
   fixture((app) => {
-    const crate = join(app, 'node_modules/.pnpm/start/node_modules/@weft-js/start/crate')
+    const crate = join(app, 'node_modules/.pnpm/start/node_modules/@kerf/start/crate')
     mkdirSync(crate, { recursive: true })
     mkdirSync(join(app, 'crates/hasher'), { recursive: true })
-    symlinkSync(dirname(crate), join(app, 'node_modules/@weft-js/start'), 'junction')
+    symlinkSync(dirname(crate), join(app, 'node_modules/@kerf/start'), 'junction')
     const path = relative(join(app, 'crates/hasher'), crate).split(sep).join('/')
-    const dependency = `weft = { path = "${path}", features = ["native"] }`
+    const dependency = `kerf = { path = "${path}", features = ["native"] }`
     const manifest = `[dependencies]\n${dependency}\n[build-dependencies]\n${dependency}\n`
     checkPackedCrate(app, manifest)
     assert.throws(() => checkPackedCrate(app, dependency), /shipped by/)
@@ -33,18 +33,18 @@ await test('Rust crate checks accept pnpm paths and reject a different crate', (
   }))
 
 function nativeFixture(app, parent) {
-  const core = join(parent, 'node_modules/@weft-js/core')
-  const addon = join(parent, 'node_modules/@weft-js/compiler-test')
+  const core = join(parent, 'node_modules/@kerf/core')
+  const addon = join(parent, 'node_modules/@kerf/compiler-test')
   mkdirSync(core, { recursive: true })
   mkdirSync(addon, { recursive: true })
-  writeFileSync(join(core, 'package.json'), '{"name":"@weft-js/core"}')
+  writeFileSync(join(core, 'package.json'), '{"name":"@kerf/core"}')
   writeFileSync(
     join(addon, 'package.json'),
-    '{"name":"@weft-js/compiler-test","main":"addon.node"}',
+    '{"name":"@kerf/compiler-test","main":"addon.node"}',
   )
   const native = join(addon, 'addon.node')
   writeFileSync(native, 'test marker; not loaded')
-  symlinkSync(core, join(app, 'node_modules/@weft-js/core'), 'junction')
+  symlinkSync(core, join(app, 'node_modules/@kerf/core'), 'junction')
   return native
 }
 

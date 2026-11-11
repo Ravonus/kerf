@@ -1,7 +1,7 @@
 import { median } from '../../../scripts/lib/helpers.mjs'
 // The arena's "time per update", taken apart: at 60 Hz and flat out, with and without the harness's observer, and with
 // text writes muted. Each row is a fresh page with three frames, in the slot the subject has on the site.
-//   node run.mjs --rounds 3 --ticks 1200 [--subjects weft,raw] [--out arena.json]
+//   node run.mjs --rounds 3 --ticks 1200 [--subjects kerf,raw] [--out arena.json]
 //   --as-is: 60 Hz with the meter untouched only. --plain: no cross-origin isolation, so the clock is as coarse as the site's.
 import { createServer } from 'node:http'
 import { readFile, writeFile } from 'node:fs/promises'
@@ -19,7 +19,7 @@ const dist = process.env.DIST ?? join(here, '../dist/arena')
 const rounds = +arg('rounds', 3),
   ticks = +arg('ticks', 1200),
   hard = +arg('tight', 4000)
-const subjects = arg('subjects', 'weft,raw').split(',')
+const subjects = arg('subjects', 'kerf,raw').split(',')
 const others = arg('others', 'solid,react')
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' }
 const server = createServer(async (req, res) => {

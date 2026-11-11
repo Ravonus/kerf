@@ -1,0 +1,22 @@
+{
+  "requires": { "db": "postgres", "auth": true },
+  "pages": ["/", "/login", "/signup", "/admin", "/admin/orders", "/admin/orders/[id]", "/admin/nested", "/admin/per-row", "/admin/slow"],
+  "dependencies": { "@kerf/veneer-icons": "0.0.0" },
+  "veneer": {
+    "seed": { "accent": "#4f46e5" },
+    "dials": { "expression": "balanced", "density": "compact" },
+    "radius": "soft",
+    "fields": "classic",
+    "fonts": {
+      "display": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "body": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "mono": "ui-monospace, \"SF Mono\", Menlo, Consolas, monospace"
+    },
+    "tokens": {
+      "--veneer-color-page": "light-dark(#eceef5, #0e1020)",
+      "--veneer-color-surface": "light-dark(#fbfbfe, #161a2e)",
+      "--veneer-color-surface-raised": "light-dark(#ffffff, #1b2036)",
+      "--veneer-color-surface-sunken": "light-dark(#f1f2f8, #0a0c18)"
+    }
+  }
+}

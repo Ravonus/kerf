@@ -97,7 +97,7 @@ test('canonical metric units are exact; missing/bad metrics and FCP fail', () =>
 
 test('missing-stack and bad-metric controls really exit nonzero in standalone children', (t) => {
   const url = new URL('./profile-load-data.mjs', import.meta.url).href
-  for (const expression of ['m.requireSix(["weft-warp"])', 'm.metricsFrom({}, 10)']) {
+  for (const expression of ['m.requireSix(["kerf-veneer"])', 'm.metricsFrom({}, 10)']) {
     const env = { ...process.env }
     delete env.NODE_TEST_CONTEXT
     const child = spawnSync(
@@ -351,13 +351,13 @@ test('build proof rejects changed assets, pins and failed commands', () => {
 
 test('prebuilt asset pins require a complete ordinary dashboard, not a missing dist', () =>
   temporary((folder) => {
-    assert.throws(() => assetPins(folder, [{ name: 'weft-warp' }]), /Missing built/)
-    const dist = join(folder, 'benchmarks/compare/weft-warp/dist')
+    assert.throws(() => assetPins(folder, [{ name: 'kerf-veneer' }]), /Missing built/)
+    const dist = join(folder, 'benchmarks/compare/kerf-veneer/dist')
     mkdirSync(dist, { recursive: true })
     writeFileSync(join(dist, 'index.html'), 'index')
-    assert.throws(() => assetPins(folder, [{ name: 'weft-warp' }]), /Missing JS/)
+    assert.throws(() => assetPins(folder, [{ name: 'kerf-veneer' }]), /Missing JS/)
     writeFileSync(join(dist, 'app.js'), 'const mounted = true')
-    assert.equal(Object.keys(assetPins(folder, [{ name: 'weft-warp' }])['weft-warp']).length, 2)
+    assert.equal(Object.keys(assetPins(folder, [{ name: 'kerf-veneer' }])['kerf-veneer']).length, 2)
   }))
 
 test('summary rejects missing stack/trial/metric rather than publishing partial comparisons', () => {
@@ -367,10 +367,10 @@ test('summary rejects missing stack/trial/metric rather than publishing partial 
       Array.from({ length: 12 }, () => ({ status: 'ok', metrics: metricsFrom(raw(), 15) })),
     ]),
   )
-  assert.equal(summarizeTrials(trials)['weft-warp'].summary.taskMs.median, 20)
-  assert.throws(() => summarizeTrials({ ...trials, 'weft-warp': [] }), /coverage/)
+  assert.equal(summarizeTrials(trials)['kerf-veneer'].summary.taskMs.median, 20)
+  assert.throws(() => summarizeTrials({ ...trials, 'kerf-veneer': [] }), /coverage/)
   const missing = structuredClone(trials)
-  delete missing['weft-warp'][0].metrics.scriptMs
+  delete missing['kerf-veneer'][0].metrics.scriptMs
   assert.throws(() => summarizeTrials(missing), /Missing summary/)
 })
 

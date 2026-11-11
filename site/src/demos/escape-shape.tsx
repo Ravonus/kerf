@@ -1,6 +1,6 @@
-import { Boundary, resource, state } from '@weft-js/core'
-import { Card, Switch } from '@weft-js/warp'
-import '@weft-js/warp/skeleton'
+import { Boundary, resource, state } from '@kerf/core'
+import { Card, Switch } from '@kerf/veneer'
+import '@kerf/veneer/skeleton'
 
 type Post = { id: number; title: string; body: string }
 // Stands in for a request that takes 1.2 s.

@@ -1,23 +1,23 @@
-// kyselySource() for weft.config.ts: the `db.adapter` provider under the key `kysely`, so the lock records it and `weft check` names it.
-import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
+// kyselySource() for kerf.config.ts: the `db.adapter` provider under the key `kysely`, so the lock records it and `kerf check` names it.
+import { definePlugin, defineSlot, provide } from '@kerf/core/plugin'
 
 const slot = defineSlot({ id: 'db.adapter', version: 1, cardinality: 'keyed', sides: ['server'] })
 
 export const kyselySource = definePlugin({
-  name: '@weft-js/db/kysely',
+  name: '@kerf/db/kysely',
   version: '0.0.0',
-  weft: '*',
+  kerf: '*',
   permissions: { net: ['driver:kysely'] },
   contribute: () => ({
     provides: [
       provide(slot, {
         key: 'kysely',
-        sides: { server: { module: '@weft-js/db/kysely', export: 'adapter' } },
+        sides: { server: { module: '@kerf/db/kysely', export: 'adapter' } },
       }),
     ],
     agents: {
       title: 'Lists (kysely)',
-      text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. warp `Table` reads what comes back.',
+      text: 'Build a source once, in a server module, with `columns`: only those are selected, returned or written. Then `query({ input: listInput({ sort, filter, search }), run: ({ input }) => source.list(input) })`. veneer `Table` reads what comes back.',
     },
   }),
 })

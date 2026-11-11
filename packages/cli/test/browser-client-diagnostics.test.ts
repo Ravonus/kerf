@@ -6,7 +6,7 @@ import { expect, it } from 'vitest'
 import { diagnoseLaunch } from '../src/browser/client.mjs'
 
 it('keeps the original error when DevTools is unavailable', async () => {
-  const profile = mkdtempSync(join(tmpdir(), 'weft-diagnostics-'))
+  const profile = mkdtempSync(join(tmpdir(), 'kerf-diagnostics-'))
   try {
     const error = Object.assign(new Error('no tab connected in time'), { code: 'E_NO_TAB' })
     expect(await diagnoseLaunch(error, profile, 'http://localhost:5173/?token=secret')).toBe(error)
@@ -19,7 +19,7 @@ it('keeps the original error when DevTools is unavailable', async () => {
 })
 
 it('reports page metadata from the launched profile without URL secrets', async () => {
-  const profile = mkdtempSync(join(tmpdir(), 'weft-diagnostics-'))
+  const profile = mkdtempSync(join(tmpdir(), 'kerf-diagnostics-'))
   const server = createServer((req, res) => {
     res.setHeader('content-type', 'application/json')
     res.end(

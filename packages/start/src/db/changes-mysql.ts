@@ -23,7 +23,7 @@ const said = (e: unknown) => (e as Error | null)?.message ?? String(e)
 async function probeMysql(pool: Pool, tables: string[], interval: number): Promise<Probe> {
   try {
     const [rows] = await pool.query(
-      `select event_object_table as t from information_schema.triggers where trigger_schema = database() and trigger_name like 'weft\\_changes\\_%\\_upd'`,
+      `select event_object_table as t from information_schema.triggers where trigger_schema = database() and trigger_name like 'kerf\\_changes\\_%\\_upd'`,
     )
     const have = (rows as { t: string }[]).map((r) => r.t)
     const missing = tables.filter((t) => !have.includes(t))
@@ -42,8 +42,8 @@ async function probeMysql(pool: Pool, tables: string[], interval: number): Promi
       via: 'none',
       why: `no trigger on ${missing.map((t) => `\`${t}\``).join(', ')}, and MySQL has no counter to fall back on`,
       fix: may
-        ? 'run `weft db live`, then apply the migration'
-        : 'run `weft db live`, and apply the migration as a user with the TRIGGER privilege',
+        ? 'run `kerf db live`, then apply the migration'
+        : 'run `kerf db live`, and apply the migration as a user with the TRIGGER privilege',
     }
   } catch (e) {
     return {

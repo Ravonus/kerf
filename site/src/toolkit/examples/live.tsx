@@ -14,7 +14,7 @@ export {
   LobbyWaiting,
   MeetingRoomIncident,
   MeetingRoomPhone,
-  NotificationPreferencesWeft,
+  NotificationPreferencesKerf,
   PrejoinIncidentCall,
   PushSoftAskMentions,
   ScheduledLobbyReview,

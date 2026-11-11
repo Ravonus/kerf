@@ -1,4 +1,4 @@
-// `@weft-js/start/cron`: jobs on a schedule. `src/cron.server.ts` default-exports `defineCron({ name: { schedule, run } })`;
+// `@kerf/start/cron`: jobs on a schedule. `src/cron.server.ts` default-exports `defineCron({ name: { schedule, run } })`;
 // a server preset (node, bun, deno) runs each at its minute, in UTC, on one instance at a time.
 import { StartError, type Context } from './data'
 

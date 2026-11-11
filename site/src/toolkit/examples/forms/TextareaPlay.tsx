@@ -1,4 +1,4 @@
-import { Textarea } from '@weft-js/warp'
+import { Textarea } from '@kerf/veneer'
 import type { Knobs } from './shared'
 
 export const TextareaPlay = (p: Knobs) => (

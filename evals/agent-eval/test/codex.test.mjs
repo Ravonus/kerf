@@ -13,7 +13,7 @@ const command = {
   type: 'item.completed',
   item: {
     type: 'command_execution',
-    command: 'cat node_modules/@weft-js/core/src/a.ts',
+    command: 'cat node_modules/@kerf/core/src/a.ts',
     aggregated_output: 'T123 secret-key',
   },
 }

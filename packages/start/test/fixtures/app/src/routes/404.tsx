@@ -1,4 +1,4 @@
-import type { RouteProps } from '@weft-js/start'
+import type { RouteProps } from '@kerf/start'
 import './404.css'
 
 export const meta = { title: 'Page not found', description: 'There is nothing here.' }

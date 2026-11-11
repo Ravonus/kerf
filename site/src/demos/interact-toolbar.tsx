@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Card } from '@kerf/veneer'
 
 // The toolbar knows nothing about playing or uploading.
 // Its user passes what each button does.

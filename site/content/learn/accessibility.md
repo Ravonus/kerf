@@ -1,7 +1,7 @@
 # Accessibility
 
 :::learn
-- What Warp does for you: native elements, names, keyboard support and focus management
+- What Veneer does for you: native elements, names, keyboard support and focus management
 - What you still own: structure, words, and anything you build from plain elements
 - Which diagnostics catch accessibility mistakes, and how to read them
 - How to test it: role and label queries, the keyboard, and a screen reader
@@ -11,26 +11,26 @@ An accessible app is one that works for someone using a keyboard, a screen reade
 forced colours or reduced motion. Most of that is decided by small things: whether a control is a real `<button>`,
 whether a field has a name, where focus goes when a dialog closes.
 
-Weft splits the work. Warp's components handle the parts that are hard to get right and easy to get wrong, like
-keyboard patterns and focus, and `weft check` catches the common mistakes in the markup you write yourself. What's left
+Kerf splits the work. Veneer's components handle the parts that are hard to get right and easy to get wrong, like
+keyboard patterns and focus, and `kerf check` catches the common mistakes in the markup you write yourself. What's left
 is what no library can do for you: the words, the structure, and the order things happen in.
 
 :::demo style-keyboard
 
-## What Warp does for you
+## What Veneer does for you
 
 ### Real elements
 
-A Warp `Button` is a `<button>`. `Input` is an `<input>` with a `<label>`. `Modal` is a native `<dialog>` opened with
+A Veneer `Button` is a `<button>`. `Input` is an `<input>` with a `<label>`. `Modal` is a native `<dialog>` opened with
 `showModal()`. `Switch` and `Checkbox` are real checkboxes. Building on native elements means the browser and assistive
 technology already know what each thing is: Enter and Space press a button, a disabled control leaves the tab order,
-and a form posts its fields with no script. This is why, in a Warp app, `weft check` suggests the Warp component when it
+and a form posts its fields with no script. This is why, in a Veneer app, `kerf check` suggests the Veneer component when it
 finds a bare `<button>` or `<select>` (D005): the component gives you the same element with the behaviour around it
 finished.
 
 ### Names
 
-Every control needs an accessible name, the words a screen reader says for it. Warp makes the name part of the API, so
+Every control needs an accessible name, the words a screen reader says for it. Veneer makes the name part of the API, so
 you can't forget it:
 
 - Fields take a required `label`. TypeScript reports a field without one.
@@ -61,8 +61,8 @@ Each component's page on the site has its own keyboard table, for example [Menu]
 [Tabs](/components/tabs).
 
 The "one tab stop" pattern is **roving focus**: Tab enters the group once, the arrow keys move inside it, and Tab leaves.
-A toolbar of twelve buttons costs a keyboard user one Tab, not twelve. warp-core exports it as `roving` for your own
-markup, as [Using Warp](/learn/warp#warp-core-on-its-own) shows.
+A toolbar of twelve buttons costs a keyboard user one Tab, not twelve. veneer-core exports it as `roving` for your own
+markup, as [Using Veneer](/learn/veneer#veneer-core-on-its-own) shows.
 
 ### Focus management
 
@@ -78,21 +78,21 @@ Where focus goes after something opens or closes is the part most often missed:
 
 ### The look
 
-- **Contrast.** Every text and fill pair in Warp's tokens meets WCAG contrast at every dial stop, light and dark, and a
+- **Contrast.** Every text and fill pair in Veneer's tokens meets WCAG contrast at every dial stop, light and dark, and a
   seed or token override that breaks one fails the build (D010).
-- **Focus ring.** Every interactive component draws a visible focus ring from `--warp-color-focus`, on `:focus-visible`.
+- **Focus ring.** Every interactive component draws a visible focus ring from `--veneer-color-focus`, on `:focus-visible`.
 - **Targets.** On a touch screen, controls are at least 44 pixels tall.
-- **Forced colours.** Warp redraws its parts in system colours when Windows' high-contrast mode is on.
+- **Forced colours.** Veneer redraws its parts in system colours when Windows' high-contrast mode is on.
 - **Motion.** Under `prefers-reduced-motion` (or `data-motion="reduce"`), an animation runs at most once, nothing loops
   but an opacity pulse, and the action icons hold still.
 
-Warp's own test suite runs axe-core over every component in a real browser at all twelve combinations of expression,
+Veneer's own test suite runs axe-core over every component in a real browser at all twelve combinations of expression,
 theme and motion, so these hold for the components you import.
 
 :::note React developers
 In React you'd usually reach for a headless library like React Aria or Radix for the keyboard and focus work, and
-`eslint-plugin-jsx-a11y` for the markup checks. In Weft, the first is warp-core (and Warp on top of it), and the second
-is built into `weft check` as the D-codes below. There is nothing to install or configure.
+`eslint-plugin-jsx-a11y` for the markup checks. In Kerf, the first is veneer-core (and Veneer on top of it), and the second
+is built into `kerf check` as the D-codes below. There is nothing to install or configure.
 :::
 
 ## What you still own
@@ -106,11 +106,11 @@ Screen reader users move through a page by its headings and landmarks, so those 
 - **Landmarks.** Put the page's main content in `<main>`, navigation in `<nav>` with an `aria-label` if there's more
   than one, and use `<header>`, `<footer>` and `<aside>` for what they are. `Stack as="main"` and the other layout
   primitives' `as` prop give you these elements.
-- **Language.** `<html lang>` tells a screen reader which voice to use. Weft writes it from your config's
+- **Language.** `<html lang>` tells a screen reader which voice to use. Kerf writes it from your config's
   `site.locale`; a hand-written `<html>` without one is D039.
 
 ```tsx
-import { Heading, Stack, Text } from '@weft-js/warp'
+import { Heading, Stack, Text } from '@kerf/veneer'
 
 export function OrdersPage() {
   return (
@@ -146,8 +146,8 @@ Whatever you build from plain elements is yours to get right. The commonest mist
 that isn't a control:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Text } from '@kerf/veneer'
 
 export function Reveal() {
   const open = state(false)
@@ -175,7 +175,7 @@ reader whether the details are showing.
 :::pitfall `role="button"` isn't a button
 Adding `role="button"` to a `<div>` changes what a screen reader *says*, not what the element *does*. You'd still have to
 add `tabindex="0"`, handle Enter and Space yourself, and handle the disabled state. Use `Button`, or a `<button>` in an app
-without Warp, and get all of it from the browser.
+without Veneer, and get all of it from the browser.
 :::
 
 ### What happens after an action
@@ -188,7 +188,7 @@ When something on the page changes because of what the user did, think about whe
 
 ## The diagnostics
 
-`weft check` reads your markup and CSS for the mistakes it can see. These run in every app, Warp or not:
+`kerf check` reads your markup and CSS for the mistakes it can see. These run in every app, Veneer or not:
 
 | Code | Catches |
 |---|---|
@@ -214,10 +214,10 @@ D031 6: <Button> has no name a screen reader can read:
   only an icon, or nothing (WCAG 4.1.2).
 ```
 
-`weft fix` applies the ones with a safe fix, like turning a positive `tabindex` into `0`. A fix that changes an element,
+`kerf fix` applies the ones with a safe fix, like turning a positive `tabindex` into `0`. A fix that changes an element,
 like a `<div onClick>` into a button, comes back as a suggested edit.
 
-:::pitfall A clean `weft check` isn't an accessible app
+:::pitfall A clean `kerf check` isn't an accessible app
 These checks catch what can be seen in the source: a missing name, a removed focus ring. They can't tell whether the
 name is *right*, whether the tab order makes sense, or whether focus lands somewhere useful after a delete. Treat them as
 the floor, and test the rest by using the app the way your users do.
@@ -227,14 +227,14 @@ the floor, and test the rest by using the app the way your users do.
 
 ### Query by role and name
 
-`@weft-js/core/test` has role, label and text queries and nothing else: no test ids, no CSS selectors. That's on
+`@kerf/core/test` has role, label and text queries and nothing else: no test ids, no CSS selectors. That's on
 purpose. A test that finds a button by its role and name fails when the button loses its name, so every test you write
 checks accessibility a little:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { render, screen, user } from '@weft-js/core/test'
-import { Button, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { render, screen, user } from '@kerf/core/test'
+import { Button, Text } from '@kerf/veneer'
 import { expect, test } from 'vitest'
 
 function Favourite() {
@@ -272,8 +272,8 @@ which is exactly what a screen reader user would have found.
 the keys do what they say:
 
 ```tsx
-import { render, screen, user } from '@weft-js/core/test'
-import { Button, Input, Stack } from '@weft-js/warp'
+import { render, screen, user } from '@kerf/core/test'
+import { Button, Input, Stack } from '@kerf/veneer'
 import { expect, test } from 'vitest'
 
 function SignIn() {
@@ -316,24 +316,24 @@ Automated tests can't hear a page. Before a release, spend five minutes on each 
   form controls. Does each thing say what it is?
 - **200% zoom** and a narrow window. Does the text grow, and does anything get cut off?
 - **The dials.** `?theme=dark&motion=reduce&expression=quiet` in the address bar sets them for one page (with
-  `dialsFromUrl` from `@weft-js/warp-core`, if your app calls it), or set them with the
+  `dialsFromUrl` from `@kerf/veneer-core`, if your app calls it), or set them with the
   [dial attributes](/learn/theming).
 
 ## Recap
 
-- Warp's components are native elements with names, keyboard patterns and focus management built in, and their tokens
+- Veneer's components are native elements with names, keyboard patterns and focus management built in, and their tokens
   pass contrast at every dial stop.
 - You own the structure (headings, landmarks, `lang`), the words (labels, errors, alt text) and anything built from plain
   elements.
-- `weft check` reports the mistakes it can see as D030–D039, D041 and D011, each with its WCAG criterion, and `weft build`
-  and `weft audit` run axe's WCAG rules on the built pages (L-codes).
+- `kerf check` reports the mistakes it can see as D030–D039, D041 and D011, each with its WCAG criterion, and `kerf build`
+  and `kerf audit` run axe's WCAG rules on the built pages (L-codes).
 - Find elements by role and name in tests, so a lost name fails a test. Then use the app with a keyboard and a screen
   reader.
 
 ## Try it
 
 :::challenge A clickable card
-This card opens a product when clicked, but `weft check` reports D033 and a keyboard user can't open it. Fix it without
+This card opens a product when clicked, but `kerf check` reports D033 and a keyboard user can't open it. Fix it without
 changing how it looks to a mouse user.
 
 <!-- example: skip the challenge's starting code, which has D033 on purpose -->
@@ -350,7 +350,7 @@ export function ProductCard(
 ```
 :::solution
 ```tsx
-import { Card } from '@weft-js/warp'
+import { Card } from '@kerf/veneer'
 
 export function ProductCard(
   props: { name: string; onOpen: () => void },
@@ -379,7 +379,7 @@ export function SiteSearch() {
 ```
 :::solution
 ```tsx
-import { Search } from '@weft-js/warp'
+import { Search } from '@kerf/veneer'
 
 export function SiteSearch() {
   return (
@@ -390,7 +390,7 @@ export function SiteSearch() {
 }
 ```
 
-`label` is required on Warp's fields, so the name can't be left out. A placeholder isn't a name: it disappears as soon
+`label` is required on Veneer's fields, so the name can't be left out. A placeholder isn't a name: it disappears as soon
 as you type, and many screen readers don't read it.
 :::
 
@@ -399,8 +399,8 @@ Write a test for this component: open the dialog with the button, close it with 
 the button that opened it.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button, Modal, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Modal, Text } from '@kerf/veneer'
 
 export function Terms() {
   const open = state(false)
@@ -426,9 +426,9 @@ export function Terms() {
 ```
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
-import { render, screen, user } from '@weft-js/core/test'
-import { Button, Modal, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { render, screen, user } from '@kerf/core/test'
+import { Button, Modal, Text } from '@kerf/veneer'
 import { expect, test } from 'vitest'
 
 function Terms() {

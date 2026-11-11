@@ -5,14 +5,14 @@ import type { Scope } from '../exec'
 import { bodyLimit, limited, multipartBody, withHeaders } from './request'
 import type { HandlerOptions } from './types'
 
-/** `/_weft/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
+/** `/_kerf/fn/<id>`: GET runs a query, POST a mutation (CSRF-checked), both answering JSON (research 27 §3). */
 export async function serverFunction(
   options: HandlerOptions,
   url: URL,
   request: Request,
   scope: Scope,
 ): Promise<Response> {
-  const id = decodeURIComponent(url.pathname.slice('/_weft/fn/'.length))
+  const id = decodeURIComponent(url.pathname.slice('/_kerf/fn/'.length))
   const f = fns.get(id)
   const out = (body: unknown, status = 200) => {
     const res = withHeaders(Response.json(body, { status }), scope)
@@ -40,7 +40,7 @@ export async function serverFunction(
     )
   let fromForm = false
   if (f.kind === 'stream')
-    return fail('Q009', `Q009: \`${id}\` is a stream: its client reads it over \`/_weft/rt\``, 405)
+    return fail('Q009', `Q009: \`${id}\` is a stream: its client reads it over \`/_kerf/rt\``, 405)
   try {
     if (f.kind === 'query') {
       if (request.method !== 'GET' && request.method !== 'HEAD')
@@ -55,15 +55,15 @@ export async function serverFunction(
     const cross =
       (origin && origin !== url.origin) || (from && from !== 'same-origin' && from !== 'none')
     const type = request.headers.get('content-type') ?? ''
-    const multipart = type.startsWith('multipart/form-data') // `<Form>` with a file; `x-weft` still forces a preflight
+    const multipart = type.startsWith('multipart/form-data') // `<Form>` with a file; `x-kerf` still forces a preflight
     if (
       cross ||
-      request.headers.get('x-weft') !== '1' ||
+      request.headers.get('x-kerf') !== '1' ||
       !(multipart || type.startsWith('application/json'))
     )
       return fail(
         'Q010',
-        `Q010: mutation \`${id}\` without the CSRF proof (POST + JSON + \`x-weft: 1\`, same origin): call it through its stub`,
+        `Q010: mutation \`${id}\` without the CSRF proof (POST + JSON + \`x-kerf: 1\`, same origin): call it through its stub`,
         403,
       )
     const read = await limited(request, bodyLimit(options.site?.limits, request))

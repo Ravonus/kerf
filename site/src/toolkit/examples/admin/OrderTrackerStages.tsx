@@ -1,10 +1,10 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   OrderTracker,
   Segmented,
   Stack,
-} from '@weft-js/warp'
-import type { OrderStage } from '@weft-js/warp'
+} from '@kerf/veneer'
+import type { OrderStage } from '@kerf/veneer'
 import { STAGES } from './shared'
 
 export function OrderTrackerStages() {

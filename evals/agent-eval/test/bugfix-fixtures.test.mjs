@@ -37,7 +37,7 @@ function checkCoverage(checks, mutants) {
 }
 
 test('bugfix reference preserves medium behavior and starter plants only two documented defects', () => {
-  const source = new URL('reference/weft-warp/src/routes/', mediumRoot)
+  const source = new URL('reference/kerf-veneer/src/routes/', mediumRoot)
   for (const file of readdirSync(source)) {
     let reference = readFileSync(new URL(file, source), 'utf8')
     if (file === 'shop-state.ts')
@@ -47,7 +47,7 @@ test('bugfix reference preserves medium behavior and starter plants only two doc
           "(['Enter a name', 'Enter a valid email', 'Enter 16 digits'][i] ?? '')",
         )
         .replace("['name', 'email', 'card'][first]!", "['name', 'email', 'card'][first] ?? ''")
-    assert.equal(compact(read(`reference/weft-warp/src/routes/${file}`)), compact(reference), file)
+    assert.equal(compact(read(`reference/kerf-veneer/src/routes/${file}`)), compact(reference), file)
     let starter = reference
     if (file === 'shop-state.ts')
       starter = starter
@@ -74,7 +74,7 @@ test('bugfix reference preserves medium behavior and starter plants only two doc
           'onClick={() => m.change(p, 1)}',
           'onClick={() => m.change(products[index] ?? p, 1)}',
         )
-    assert.equal(compact(read(`starter/weft-warp/src/routes/${file}`)), compact(starter), file)
+    assert.equal(compact(read(`starter/kerf-veneer/src/routes/${file}`)), compact(starter), file)
   }
   assert.equal(tests.length, 1)
   assert.equal(calibrationTests.length, 14)
@@ -111,7 +111,7 @@ test('each bugfix requirement maps to a named check and uniquely targeted mutati
       entry.requirement,
     )
   }
-  const routes = new URL('reference/weft-warp/src/routes/', root)
+  const routes = new URL('reference/kerf-veneer/src/routes/', root)
   const sources = readdirSync(routes).map((file) =>
     readFileSync(join(routes.pathname, file), 'utf8'),
   )

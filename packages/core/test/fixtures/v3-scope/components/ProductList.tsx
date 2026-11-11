@@ -1,4 +1,4 @@
-import { derived } from '@weft-js/core'
+import { derived } from '@kerf/core'
 import type { Category, Product } from '../api'
 import { cart } from '../state/cart'
 import { ProductRow } from './ProductRow'

@@ -3,7 +3,7 @@
 import { strict as assert } from 'node:assert'
 import { test } from 'vitest'
 import { spawnSync } from 'node:child_process'
-import { esc, markup } from '@weft-js/core/markup'
+import { esc, markup } from '@kerf/core/markup'
 import { markup as originalMarkup } from '../src/markup.mjs'
 
 test('esc preserves the three HTML contexts', () => {
@@ -32,7 +32,7 @@ test('markup loads in Node without a browser runtime', () => {
     for (const key of ['window', 'document']) {
       Object.defineProperty(globalThis, key, { get() { throw new Error(key) } })
     }
-    const { esc, markup } = await import('@weft-js/core/markup')
+    const { esc, markup } = await import('@kerf/core/markup')
     if (esc('<') !== '&lt;' || typeof markup !== 'function') process.exit(1)
   `,
     ],

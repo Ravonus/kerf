@@ -1,4 +1,4 @@
-import type { CalEvent } from '@weft-js/warp-core'
+import type { CalEvent } from '@kerf/veneer-core'
 
 export const TODAY = '2026-11-03'
 

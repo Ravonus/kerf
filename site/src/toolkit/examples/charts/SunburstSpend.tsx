@@ -1,4 +1,4 @@
-import { Sunburst } from '@weft-js/warp'
+import { Sunburst } from '@kerf/veneer'
 
 import { SPEND_TREE } from '../../world'
 

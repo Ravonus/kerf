@@ -1,12 +1,12 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
-import { state } from '@weft-js/core'
+import { Canvas, type CanvasFrame as Frame } from '@kerf/veneer'
+import { state } from '@kerf/core'
 import { inks, mix, rng, type ArtProps, type Meta } from './shared'
 import code from './commit-weave.tsx?raw'
 
 export const meta: Meta = {
   name: 'Commit Weave',
   description:
-    'A year of activity as a strip of cloth: fifty-two warps, seven wefts, and each thread stands as tall as that day was busy. Hover a day. The year here is a seeded sample.',
+    'A year of activity as a strip of cloth: fifty-two veneers, seven kerfs, and each thread stands as tall as that day was busy. Hover a day. The year here is a seeded sample.',
   kind: 'data',
   code,
   wide: true,
@@ -17,12 +17,12 @@ const WEEKS = 52,
   DAYS = 7,
   NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const colours = inks({
-  rule: '--warp-color-border',
-  a: '--warp-color-accent-soft',
-  b: '--warp-color-accent-border',
-  c: '--warp-color-accent-text',
-  d: '--warp-color-text',
-  hot: '--warp-color-sweep',
+  rule: '--veneer-color-border',
+  a: '--veneer-color-accent-soft',
+  b: '--veneer-color-accent-border',
+  c: '--veneer-color-accent-text',
+  d: '--veneer-color-text',
+  hot: '--veneer-color-sweep',
 })
 
 /** Sample activity with a real year's shape: quiet weekends, a summer lull, three bursts before releases. */
@@ -50,7 +50,7 @@ export default function CommitWeave(_props: ArtProps) {
       cw = (width - mx * 2) / WEEKS,
       ch = (height - my * 2) / DAYS
     ctx.clearRect(0, 0, width, height)
-    // the wefts go first, so every warp lies over them
+    // the kerfs go first, so every veneer lies over them
     ctx.fillStyle = c.rule
     for (let d = 0; d < DAYS; d++) ctx.fillRect(mx, my + (d + 0.5) * ch - 1, width - mx * 2, 2)
     const ramp = [c.a, c.b, c.c, c.d]

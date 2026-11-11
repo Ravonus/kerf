@@ -1,5 +1,5 @@
-// Postgres for `@weft-js/start` (research 28 §2): Drizzle on postgres.js, pure JS on Node, Bun and Deno. The client
-// connects on the first statement, so `weft build` and a page with no queries need no database. Migrations hold an
+// Postgres for `@kerf/start` (research 28 §2): Drizzle on postgres.js, pure JS on Node, Bun and Deno. The client
+// connects on the first statement, so `kerf build` and a page with no queries need no database. Migrations hold an
 // advisory lock, so instances starting together apply each file once.
 
 import postgres from 'postgres'
@@ -24,9 +24,9 @@ export interface PostgresOptions<S extends Record<string, unknown>> {
   prepare?: boolean
 }
 
-/** Drizzle on postgres.js, with `$weft` for the framework's own needs. */
+/** Drizzle on postgres.js, with `$kerf` for the framework's own needs. */
 export type PostgresDb<S extends Record<string, unknown>> = PostgresJsDatabase<S> & {
-  $weft: DbHandle
+  $kerf: DbHandle
 }
 
 const LOCK = 7_301_986
@@ -41,12 +41,12 @@ export function createDb<S extends Record<string, unknown>>({
   max = 10,
   prepare = true,
 }: PostgresOptions<S>): PostgresDb<S> {
-  if (!url && process.env.WEFT_BUILD) url = 'postgres://localhost/build' // a build loads this module and never connects
+  if (!url && process.env.KERF_BUILD) url = 'postgres://localhost/build' // a build loads this module and never connects
   if (!/^postgres(ql)?:\/\//.test(url ?? ''))
     throw new StartError(
       'Q013',
-      `\`@weft-js/start/db/postgres\` needs a \`postgres://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``,
-      'set `DATABASE_URL`, or `createDb` from `@weft-js/start/db/sqlite` for a file',
+      `\`@kerf/start/db/postgres\` needs a \`postgres://\` URL, not \`${(url ?? '').replace(/\/\/.*@/, '//…@')}\``,
+      'set `DATABASE_URL`, or `createDb` from `@kerf/start/db/sqlite` for a file',
     )
   // Idle connections close, so a stopped server can exit.
   const client = postgres(url, { max, idle_timeout: 20, onnotice: () => {} })
@@ -58,15 +58,15 @@ export function createDb<S extends Record<string, unknown>>({
       await client.begin(async (tx) => {
         await tx.unsafe(`select pg_advisory_xact_lock(${LOCK})`)
         await tx.unsafe(
-          'create table if not exists __weft_migrations (tag text primary key, at timestamptz not null default now())',
+          'create table if not exists __kerf_migrations (tag text primary key, at timestamptz not null default now())',
         )
         const done = new Set(
-          (await tx.unsafe('select tag from __weft_migrations')).map((r) => r.tag),
+          (await tx.unsafe('select tag from __kerf_migrations')).map((r) => r.tag),
         )
         for (const m of list) {
           if (done.has(m.tag)) continue
           for (const s of statements(m.sql)) await tx.unsafe(s)
-          await tx.unsafe('insert into __weft_migrations (tag) values ($1)', [m.tag])
+          await tx.unsafe('insert into __kerf_migrations (tag) values ($1)', [m.tag])
         }
       })
     },

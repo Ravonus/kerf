@@ -1,6 +1,6 @@
-// The token, read back by LiveKit's own rules. The transport against a real server is `WEFT_TEST_LIVEKIT` in Chromium:
+// The token, read back by LiveKit's own rules. The transport against a real server is `KERF_TEST_LIVEKIT` in Chromium:
 // packages/multiplayer/test/e2e/e2e-browsers.mjs.
-import { verifyTicket } from '@weft-js/multiplayer/server'
+import { verifyTicket } from '@kerf/multiplayer/server'
 import { livekitTicket } from '../src/server'
 
 test('a token names the connection and limits it to data', async () => {

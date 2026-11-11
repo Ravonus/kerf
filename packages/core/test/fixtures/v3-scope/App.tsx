@@ -1,4 +1,4 @@
-import { state, watch } from '@weft-js/core'
+import { state, watch } from '@kerf/core'
 import type { Api, Product } from './api'
 import { CartView } from './components/CartView'
 import { Header } from './components/Header'

@@ -15,7 +15,7 @@ import { goldens, here, projects } from '../lib/paths.mjs'
 
 export async function calibrate(args) {
   const { task, mutant } = calibrationTarget(args)
-  const golden = join(goldens, 'weft-warp', 'app')
+  const golden = join(goldens, 'kerf-veneer', 'app')
   if (!existsSync(join(golden, 'package.json')))
     throw new Error(`missing owned calibration golden: ${golden}`)
   const { gradeOnce } = await import('./grade-once.mjs')
@@ -26,14 +26,14 @@ export async function calibrate(args) {
     mkdirSync(box.home)
     mkdirSync(box.tmp)
     cpSync(golden, box.app, { recursive: true, dereference: false, verbatimSymlinks: true })
-    const starter = join(here, 'tasks', task, 'starter/weft-warp')
+    const starter = join(here, 'tasks', task, 'starter/kerf-veneer')
     if (existsSync(starter)) cpSync(starter, box.app, { recursive: true })
-    const reference = join(here, 'tasks', task, 'reference/weft-warp')
+    const reference = join(here, 'tasks', task, 'reference/kerf-veneer')
     cpSync(reference, box.app, { recursive: true })
     if (mutant) applyMutant(reference, box.app, mutant)
-    const stack = JSON.parse(readFileSync(join(here, 'stacks.json'), 'utf8'))['weft-warp']
+    const stack = JSON.parse(readFileSync(join(here, 'stacks.json'), 'utf8'))['kerf-veneer']
     stack.calibrationPnpm = true
-    const grade = await gradeOnce(box, 'weft-warp', task, 1, false, {
+    const grade = await gradeOnce(box, 'kerf-veneer', task, 1, false, {
       stack,
       gradeable: false,
       calibration: true,

@@ -1,4 +1,4 @@
-import { Input, Stack } from '@weft-js/warp'
+import { Input, Stack } from '@kerf/veneer'
 
 export const InputSizes = () => (
   <Stack gap="group">

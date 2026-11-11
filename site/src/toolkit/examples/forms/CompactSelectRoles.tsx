@@ -3,7 +3,7 @@ import {
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { TEAM_ROLES, TEAM } from './shared'
 
 export const CompactSelectRoles = () => (

@@ -1,0 +1,7 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* share dialog rows */
+:where([data-scope="share"] [data-part="person"]) { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding-block: 6px; }
+:where([data-scope="share"] [data-part="person"] small) { display: block; color: var(--veneer-color-text-subtle); font-size: 12px; }
+:where([data-scope="share"] [data-part="link"]:not([data-scope="share"] [data-scope="topnav"] *:not([data-scope="share"] [data-scope="topnav"] [data-scope="share"] *))) { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font-size: 13px; }
+}

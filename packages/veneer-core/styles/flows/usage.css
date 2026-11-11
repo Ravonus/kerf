@@ -1,0 +1,5 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+/* usage meters: the used part fills through the rail; tick at the warn line */
+:where([data-scope="usage"]) { display: grid; gap: 14px; }
+}

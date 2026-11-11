@@ -1,5 +1,5 @@
-import { state, untrack } from '@weft-js/core'
-import { Switch } from '@weft-js/warp'
+import { state, untrack } from '@kerf/core'
+import { Switch } from '@kerf/veneer'
 import type { Knobs } from './shared'
 
 export function SwitchPlay(p: Knobs) {

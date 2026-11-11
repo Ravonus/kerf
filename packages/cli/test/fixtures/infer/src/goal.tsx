@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 function Button(props: { onClick?: () => void; children?: unknown; variant?: string }) {
   return <button onClick={props.onClick}>{props.children}</button>

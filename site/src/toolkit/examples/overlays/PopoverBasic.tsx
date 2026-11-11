@@ -1,4 +1,4 @@
-import { Popover } from '@weft-js/warp'
+import { Popover } from '@kerf/veneer'
 
 export const PopoverBasic = () => (
   <Popover

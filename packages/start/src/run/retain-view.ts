@@ -1,5 +1,5 @@
-import { createRoot, getOwner, onCleanup, state } from '@weft-js/core'
-import { hole, rt } from '@weft-js/core/internal'
+import { createRoot, getOwner, onCleanup, state } from '@kerf/core'
+import { hole, rt } from '@kerf/core/internal'
 
 /** Keep one route view alive while its pending shape occupies the same outlet. */
 export function retainRouteView(view: () => unknown, pending: () => unknown) {

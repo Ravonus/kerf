@@ -1,4 +1,4 @@
-// renderCard for weft (research 20 §4, §9; promoted from archive/evals-2026-11:spikes/og/card): weft SSR HTML → PNG/JPEG/WebP/SVG, on
+// renderCard for kerf (research 20 §4, §9; promoted from archive/evals-2026-11:spikes/og/card): kerf SSR HTML → PNG/JPEG/WebP/SVG, on
 // Takumi, with what Satori did better added around it:
 //   - strict styles: every declaration is checked once against the renderer (an invalid value would fail the whole
 //     card, an unknown property is silently dropped) and reported as H005; production drops the bad declaration and
@@ -30,7 +30,7 @@ const renderers = new Map() // fonts array → the renderer registered with them
 
 /**
  * The one seam the server uses (research 20 §4.2): HTML at `size`, drawn with `fonts`, to PNG bytes. Diagnostics (H005
- * styles, H008 images) go to `onDiagnostic`; `strict` (dev, `weft build`) throws on an error instead. Native Takumi;
+ * styles, H008 images) go to `onDiagnostic`; `strict` (dev, `kerf build`) throws on an error instead. Native Takumi;
  * the edge build (`@takumi-rs/wasm`) plugs in here when an edge preset needs it.
  *
  * @param {string} html
@@ -68,14 +68,14 @@ export async function createCardRenderer({ backend, fonts = [], images: imageOpt
   const prepare = createPreparation(renderer)
 
   return {
-    /** Diagnostics only (`weft check`, dev): nothing is fetched or rasterized. */
+    /** Diagnostics only (`kerf check`, dev): nothing is fetched or rasterized. */
     async check(html) {
       return (await prepare(html)).diagnostics
     },
 
     /**
      * Renders a card. Never throws on a card's styles or images: those come back as diagnostics, and the card renders
-     * without them. `strict` (dev, `weft build`) throws on any error-severity diagnostic instead.
+     * without them. `strict` (dev, `kerf build`) throws on any error-severity diagnostic instead.
      */
     async render(
       html,
@@ -185,7 +185,7 @@ function createPreparation(renderer) {
 }
 
 /**
- * The HTTP response for `/_weft/og/<route>.png?v=<hash>` (§4.3): immutable, since the URL is content-addressed, except
+ * The HTTP response for `/_kerf/og/<route>.png?v=<hash>` (§4.3): immutable, since the URL is content-addressed, except
  * in dev, where an edit must show on reload.
  */
 export function cardResponse({ body, type }, { dev = false } = {}) {
@@ -198,7 +198,7 @@ export function cardResponse({ body, type }, { dev = false } = {}) {
 }
 
 /**
- * The card as a page for `weft open --og`: the same HTML, preflight and font bytes as the PNG, at the card's size, so a
+ * The card as a page for `kerf open --og`: the same HTML, preflight and font bytes as the PNG, at the card's size, so a
  * browser shows what the renderer draws.
  */
 export function previewHtml(html, { fonts = [], width = SIZE.width, height = SIZE.height } = {}) {

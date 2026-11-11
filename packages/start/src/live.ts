@@ -5,7 +5,7 @@
 //
 // A poke is a local `cache.invalidate`: readers refetch through `query`, and the keyed list writes what changed.
 
-import { DEV, batch, createRoot, state, untrack } from '@weft-js/core'
+import { DEV, batch, createRoot, state, untrack } from '@kerf/core'
 import type { AuthScope, Fn, LiveMode, LiveOptions, LiveStatus, StandardSchemaV1 } from './data'
 import type { SubEntry } from './hub'
 import { noSockets } from './link'
@@ -26,7 +26,7 @@ export type { Link } from './live/transport'
 
 // ---- definitions ----------------------------------------------------------------------------------------------------
 
-const FN = Symbol.for('weft.fn')
+const FN = Symbol.for('kerf.fn')
 let auto = 0
 
 export function stream<
@@ -123,7 +123,7 @@ export function hold(fn: Fn, input: unknown, options?: LiveOptions): () => void 
 const { http, socket } = transports(() => (retry = 0))
 
 /**
- * @weft-js/core/test only (`live-fake.ts`). The specifier hides it from the bundler: an `import()` it can see would keep the
+ * @kerf/core/test only (`live-fake.ts`). The specifier hides it from the bundler: an `import()` it can see would keep the
  * fake, and through it the hub, as chunks of every app, used or not.
  */
 const FAKE = './live-fake.ts'
@@ -176,9 +176,9 @@ let changing: Promise<void> | undefined
 let pokes = new Set<string>()
 let pokeTimer: ReturnType<typeof setTimeout> | undefined
 
-/** The page's `#weft-rt`, on the tab's first connect. */
+/** The page's `#kerf-rt`, on the tab's first connect. */
 function readPage() {
-  const el = document.getElementById('weft-rt')
+  const el = document.getElementById('kerf-rt')
   if (!el) return
   const page = JSON.parse(el.textContent) as { c?: string; b?: string }
   el.remove()
@@ -205,7 +205,7 @@ function linked(l?: Linked) {
   if (DEV && l && l.m !== 'feed' && l.m !== 'external' && !warned) {
     warned = true
     console.warn(
-      `weft: R016 live queries are \`degraded\` (mode \`${l.m}\`): writes from outside the app arrive late or not at all. The server log says why.`,
+      `kerf: R016 live queries are \`degraded\` (mode \`${l.m}\`): writes from outside the app arrive late or not at all. The server log says why.`,
     )
   }
 }
@@ -367,7 +367,7 @@ function listen(on: boolean) {
   if (!on) clearTimeout(hiddenAt)
 }
 
-/** @weft-js/core/test, after each test. */
+/** @kerf/core/test, after each test. */
 function reset() {
   for (const s of subs.values()) clearTimeout(s.timer)
   subs.clear()

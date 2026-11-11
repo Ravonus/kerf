@@ -2,7 +2,7 @@
 // mirror is always on, so selection, find, translation, screen readers, forced colours and print need nothing else.
 // A surface with no 2D context has no text path: there the mirror itself is the visible text.
 
-import { DEV, effect, onCleanup, state, type State } from '@weft-js/core'
+import { DEV, effect, onCleanup, state, type State } from '@kerf/core'
 import { loadMeasure, type MeasureHandle, type MeasureProvider } from './measure'
 
 export type { MeasureHandle, MeasureLine, MeasureProvider } from './measure'
@@ -97,7 +97,7 @@ const warned = new Set<string>()
 const warn = (code: string, message: string) => {
   if (warned.has(code + message)) return
   warned.add(code + message)
-  console.warn(`weft: ${code} ${message}`)
+  console.warn(`kerf: ${code} ${message}`)
 }
 
 /** X002–X004 and X011: what only the live mirror can tell. Dev only. */
@@ -142,7 +142,7 @@ function inspect(el: HTMLElement, font: string, exact: boolean | undefined) {
   if (c.display === 'none' || c.visibility === 'hidden' || el.closest('[aria-hidden="true"]'))
     warn(
       'X011',
-      'A surface text mirror is hidden from assistive tech. Leave the mirror to weft; it is the only copy of this text a screen reader can read.',
+      'A surface text mirror is hidden from assistive tech. Leave the mirror to kerf; it is the only copy of this text a screen reader can read.',
     )
 }
 

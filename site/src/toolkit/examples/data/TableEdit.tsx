@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
-import { Stack, Table, Text } from '@weft-js/warp'
+import { Stack, Table, Text } from '@kerf/veneer'
 
 import { PROJECTS } from '../../world'
 

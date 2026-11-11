@@ -1,4 +1,4 @@
-import { Grid, Input } from '@weft-js/warp'
+import { Grid, Input } from '@kerf/veneer'
 import { Cell } from '../../world'
 
 export const InputStates = () => (

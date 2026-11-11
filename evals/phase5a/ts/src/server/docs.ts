@@ -1,5 +1,5 @@
 // Before the swap: the search runs in TypeScript. evals/phase5a/rust has the same file after it.
-import { mutation, query, raise } from '@weft-js/start'
+import { mutation, query, raise } from '@kerf/start'
 import { z } from 'zod'
 import { all, index, rank } from './rank'
 

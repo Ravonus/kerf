@@ -1,5 +1,5 @@
-import { Prompt, SpeechInput, Stack } from '@weft-js/warp'
-import type { PromptControl } from '@weft-js/warp'
+import { Prompt, SpeechInput, Stack } from '@kerf/veneer'
+import type { PromptControl } from '@kerf/veneer'
 import { MICS, fakeEngine } from './shared'
 
 export function SpeechInputDictate() {

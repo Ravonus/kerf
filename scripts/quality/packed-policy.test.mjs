@@ -5,20 +5,20 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { pack, pin, writePackedPolicy } from '../../packages/create/scripts/tarballs.mjs'
-import { writeToolShim } from '../../packages/create/scripts/tool-shim.mjs'
+import { pack, pin, writePackedPolicy } from '../../packages/create-kerf/scripts/tarballs.mjs'
+import { writeToolShim } from '../../packages/create-kerf/scripts/tool-shim.mjs'
 
 await test('packed policy merges tarballs into its inherited security overrides', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-policy-merge-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-policy-merge-'))
   try {
     const rootPolicy = readFileSync(new URL('../../pnpm-workspace.yaml', import.meta.url), 'utf8')
     const inherited = /^overrides:\n((?:[ \t].*\n)*)/m.exec(rootPolicy)?.[1]
     assert.ok(inherited)
-    writePackedPolicy(dir, { '@weft-js/packed-test': 'file:/packed.tgz' })
+    writePackedPolicy(dir, { '@kerf/packed-test': 'file:/packed.tgz' })
     const policy = readFileSync(join(dir, 'pnpm-workspace.yaml'), 'utf8')
     assert.equal(policy.match(/^overrides:$/gm)?.length, 1)
     assert.ok(policy.includes(inherited))
-    assert.match(policy, /"@weft-js\/packed-test": "file:\/packed.tgz"/)
+    assert.match(policy, /"@kerf\/packed-test": "file:\/packed.tgz"/)
     assert.doesNotMatch(policy, /patchedDependencies/)
     assert.match(policy, /^minimumReleaseAge:/m)
   } finally {
@@ -27,7 +27,7 @@ await test('packed policy merges tarballs into its inherited security overrides'
 })
 
 await test('restricted PATH preserves a launcher that resolves its sibling executable', () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-packed-shim-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-packed-shim-'))
   try {
     const tools = join(root, "original tools'"),
       bin = join(root, 'restricted')
@@ -51,7 +51,7 @@ await test('restricted PATH preserves a launcher that resolves its sibling execu
 })
 
 await test('packed pnpm installs keep the age policy and use transitive tarball overrides', () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-packed-policy-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-packed-policy-'))
   try {
     const source = join(root, 'source'),
       dest = join(root, 'tgz'),
@@ -61,7 +61,7 @@ await test('packed pnpm installs keep the age policy and use transitive tarball 
     writeFileSync(
       join(source, 'package.json'),
       JSON.stringify({
-        name: '@weft-js/packed-test',
+        name: '@kerf/packed-test',
         version: '1.0.0',
         scripts: { prepack: 'node -e "console.log(\'lifecycle output\')"' },
       }),
@@ -75,11 +75,11 @@ await test('packed pnpm installs keep the age policy and use transitive tarball 
       JSON.stringify({
         name: 'packed-bridge',
         version: '1.0.0',
-        dependencies: { '@weft-js/packed-test': '9.9.9' },
+        dependencies: { '@kerf/packed-test': '9.9.9' },
       }),
     )
     const bridgeTarball = pack(bridge, dest)
-    const tarballs = { '@weft-js/packed-test': tarball }
+    const tarballs = { '@kerf/packed-test': tarball }
     const pkg = pin(
       {
         name: 'consumer',
@@ -93,12 +93,12 @@ await test('packed pnpm installs keep the age policy and use transitive tarball 
     )
     assert.equal(pkg.overrides.other, '1.0.0')
     assert.equal(pkg.pnpm.overrides.another, '2.0.0')
-    assert.equal(pkg.pnpm.overrides['@weft-js/packed-test'], tarball)
+    assert.equal(pkg.pnpm.overrides['@kerf/packed-test'], tarball)
     writeFileSync(join(app, 'package.json'), JSON.stringify(pkg))
     writePackedPolicy(scope, tarballs, ['person'])
     const policy = readFileSync(join(scope, 'pnpm-workspace.yaml'), 'utf8')
     assert.match(policy, /minimumReleaseAge: 4320\n/)
-    assert.match(policy, /minimumReleaseAgeExclude:\n  - '@weft-js\/\*'/)
+    assert.match(policy, /minimumReleaseAgeExclude:\n  - '@kerf\/\*'/)
     execFileSync('pnpm', ['install', '--no-frozen-lockfile', '--offline'], {
       cwd: app,
       stdio: 'pipe',
@@ -123,7 +123,7 @@ function assertBridgeVersion(app) {
     realpathSync(join(app, 'node_modules/packed-bridge/package.json')),
   )
   assert.equal(
-    JSON.parse(readFileSync(fromBridge.resolve('@weft-js/packed-test/package.json'), 'utf8'))
+    JSON.parse(readFileSync(fromBridge.resolve('@kerf/packed-test/package.json'), 'utf8'))
       .version,
     '1.0.0',
   )

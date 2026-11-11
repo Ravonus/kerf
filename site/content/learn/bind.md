@@ -5,7 +5,7 @@
 - Why only the call site decides whether a write leaves a component
 - How `bind:` is typed, and the `bind(box)` form plain `tsc` accepts
 - When to pass a box typed `State<T>` instead
-- Patterns: an input inside a child, reusable controls, Warp's own controls
+- Patterns: an input inside a child, reusable controls, Veneer's own controls
 :::
 
 On [Passing props](/learn/passing-props) a child could change its own copy of a prop with `let` or `props.x =`, but the
@@ -94,18 +94,18 @@ warns against.
 />
 ```
 
-## Types: `weft tsc` and `bind(box)`
+## Types: `kerf tsc` and `bind(box)`
 
 TypeScript doesn't know that `bind:value` means the prop `value`. To plain `tsc`, `bind:value` is an unrelated
 namespaced attribute, so a component with a required `value` prop would be reported as missing it.
 
-`weft tsc`, `weft check` and the editor plugin know better: they read `bind:value={box}` as `value` with the box's value
-type. A required prop is satisfied, and a box of the wrong type is an error. Run `weft tsc` in CI rather than `tsc`, and
+`kerf tsc`, `kerf check` and the editor plugin know better: they read `bind:value={box}` as `value` with the box's value
+type. A required prop is satisfied, and a box of the wrong type is an error. Run `kerf tsc` in CI rather than `tsc`, and
 you can make the prop required:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 function Stepper(props: { value: number }) {
   let { value } = props
@@ -137,11 +137,11 @@ export function Booking() {
 ```
 
 Where something only runs plain `tsc`, keep the prop optional, as the demo at the top does, or use the other form. `bind`
-from `@weft-js/core` wraps the box in the attribute's value:
+from `@kerf/core` wraps the box in the attribute's value:
 
 ```tsx
-import { bind, state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { bind, state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 function Stepper(props: { value: number }) {
   let { value } = props
@@ -163,8 +163,8 @@ prop, `bind(box)` is **W061** too.
 You can also pass the box itself and type the prop as `State<T>`:
 
 ```tsx
-import { type State } from '@weft-js/core'
-import { Input } from '@weft-js/warp'
+import { type State } from '@kerf/core'
+import { Input } from '@kerf/veneer'
 
 export function Coupon({ code }: { code: State<string> }) {
   return (
@@ -185,9 +185,9 @@ Which to choose:
 - **`bind:`** when the child edits a value. The child stays simple, it reads and writes a plain prop, and it works with or
   without a parent box: with `value={x}` it keeps its own edits, with `bind:value={box}` it writes the parent's.
 - **A `State<T>` prop** when the child needs the box itself: to read one entry with `.get` in a list row (see
-  [Keyed state and entries](/learn/entries)), to pass it on to a Warp control, or to call `.set` on it.
+  [Keyed state and entries](/learn/entries)), to pass it on to a Veneer control, or to call `.set` on it.
 
-Mixing them up is **W008**, which `weft check` and the editor report: a box where the child's prop type wants a value, or
+Mixing them up is **W008**, which `kerf check` and the editor report: a box where the child's prop type wants a value, or
 a value where it wants a box.
 
 ## Patterns
@@ -198,8 +198,8 @@ The demo above is the most common use: a component that wraps an input, with its
 parent owns. The child writes its own `let`:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Input } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Input } from '@kerf/veneer'
 
 function EmailField(props: { value?: string }) {
   let { value = '' } = props
@@ -230,14 +230,14 @@ export function Settings() {
 }
 ```
 
-### Warp's controls take the box
+### Veneer's controls take the box
 
-Warp's own controls that hold a value, such as `Select`, `NumberField` and the date and time fields, take the box
+Veneer's own controls that hold a value, such as `Select`, `NumberField` and the date and time fields, take the box
 directly as `value`. They write it, and you don't need `bind:`:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { NumberField } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { NumberField } from '@kerf/veneer'
 
 export function Guests() {
   const guests = state<number | null>(2)
@@ -260,11 +260,11 @@ but never write back. [Forms and inputs](/learn/forms-and-inputs) has each contr
 
 ### Callbacks still work
 
-You don't have to use `bind:`. The React pattern, a value and a handler prop, works in Weft as it does in React:
+You don't have to use `bind:`. The React pattern, a value and a handler prop, works in Kerf as it does in React:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 function Stepper(
   { value, onChange }: {
@@ -295,12 +295,12 @@ write to a prop there always stays local: there's no parent box in the browser t
 inside the island, or in a [`defineState`](/learn/app-wide-state) scope.
 :::
 
-:::deepdive Why Weft does it this way
+:::deepdive Why Kerf does it this way
 In React, data flows one way. A child that wants to change the parent's state calls a function the parent passed it, and
 you can read the parent to see every way its state can change. Svelte's `bind:` and Vue's `v-model` let a child write a
 parent's value with less code, at the cost that the child alone may decide to write.
 
-Weft keeps React's guarantee and drops the boilerplate. A child can always write its own props, so a reusable component
+Kerf keeps React's guarantee and drops the boilerplate. A child can always write its own props, so a reusable component
 needs no `value`/`onChange`/`defaultValue` trio to work both controlled and uncontrolled. Whether a write goes further is
 decided only where the parent uses the child, written in the parent's file. Reading the parent still tells you every way its
 state can change: look for `bind:`, and for boxes passed as props.
@@ -312,9 +312,9 @@ state can change: look for `bind:`, and for boxes passed as props.
   `bind:`.
 - `bind:x={box}` at the call site gives the prop a setter that writes the box. The child's code doesn't change.
 - `bind:` takes a box, on a component. Anything else is **W061**.
-- `weft tsc` types `bind:x` as `x`. `x={bind(box)}` is the same binding in a form plain `tsc` accepts.
+- `kerf tsc` types `bind:x` as `x`. `x={bind(box)}` is the same binding in a form plain `tsc` accepts.
 - A prop typed `State<T>` passes the box itself, for children that need `.get`, `.set` or to pass it on.
-- Warp's value controls take the box as `value={box}`. Callback props work too, when the parent wants a say.
+- Veneer's value controls take the box as `value={box}`. Callback props work too, when the parent wants a say.
 
 ## Try it
 
@@ -340,7 +340,7 @@ This form doesn't compile: the compiler reports **W061** on the input. Fix it so
 
 <!-- example: skip deliberately broken: the challenge is to fix the W061 -->
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Post() {
   const title = state('')
@@ -356,8 +356,8 @@ export function Post() {
 `bind:` is for component props. A built-in input takes `value` and a handler:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Input } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Input } from '@kerf/veneer'
 
 export function Post() {
   const title = state('')
@@ -374,7 +374,7 @@ export function Post() {
 }
 ```
 
-Here the built-in input is swapped for Warp's `Input`, which takes the same `value` and `onInput`.
+Here the built-in input is swapped for Veneer's `Input`, which takes the same `value` and `onInput`.
 :::
 
 :::challenge A rating that works both ways
@@ -382,8 +382,8 @@ Write a `Rating` component with five star buttons that sets its `value` prop fro
 box the parent shows, and once with a plain starting value that it keeps to itself.
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 function Rating(props: { value?: number }) {
   let { value = 0 } = props

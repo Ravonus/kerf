@@ -1,9 +1,9 @@
 // The fixture's client entry: start() with a probe around hydration for the e2e tests (DOM writes, key misses).
-import 'weft:fonts'
+import 'kerf:fonts'
 import './entry.css'
-import { start } from '@weft-js/start/client'
-import { hydration } from '@weft-js/core/dom'
-import * as routes from 'virtual:weft/routes'
+import { start } from '@kerf/start/client'
+import { hydration } from '@kerf/core/dom'
+import * as routes from 'virtual:kerf/routes'
 
 const writes: MutationRecord[] = []
 const observer = new MutationObserver((r) => writes.push(...r))
@@ -31,5 +31,5 @@ Object.defineProperty(self, '$wb', {
 start(routes as any, { eager: !location.search.includes('boot') }).then(() => {
   writes.push(...observer.takeRecords())
   observer.disconnect()
-  ;(window as any).__weft = { misses: hydration.misses, writes: writes.length, hydrated: true }
+  ;(window as any).__kerf = { misses: hydration.misses, writes: writes.length, hydrated: true }
 })

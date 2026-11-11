@@ -1,4 +1,4 @@
-import { CommentThread } from '@weft-js/warp'
+import { CommentThread } from '@kerf/veneer'
 
 import { RESOLVED } from './shared-wait'
 

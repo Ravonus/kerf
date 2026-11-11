@@ -8,7 +8,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { join } from 'node:path'
-import { pieces } from '@weft-js/core/node-purge'
+import { pieces } from '@kerf/core/node-purge'
 import { planSheets, reach } from '../sheets.mjs'
 import { INLINE_CSS_MAX } from '../inline.mjs'
 
@@ -70,7 +70,7 @@ export function combineSheets(dir, bundle, manifest, abs, islands) {
 
 /**
  * The first-paint table of the build's sheets (node/purge.mjs), and the last builds' combined sheets kept beside them: a
- * page cached across a deploy links the ones it was built with. `.weft/sheets` carries them, so CI has to keep that folder.
+ * page cached across a deploy links the ones it was built with. `.kerf/sheets` carries them, so CI has to keep that folder.
  */
 export function sheetPieces(outDir, base, plan, keep, root) {
   const dir = join(outDir, 'assets')
@@ -79,7 +79,7 @@ export function sheetPieces(outDir, base, plan, keep, root) {
   const sheets = names
     .map((n) => [href(n), readFileSync(join(outDir, n), 'utf8')])
     .filter(([, css]) => !/<\/style|<!--/i.test(css))
-  const old = join(root, '.weft/sheets')
+  const old = join(root, '.kerf/sheets')
   mkdirSync(old, { recursive: true })
   for (const f of Object.keys(plan.files))
     writeFileSync(join(old, f.replace('assets/', '')), plan.files[f])

@@ -1,5 +1,5 @@
-import { state, onCleanup } from '@weft-js/core'
-import { Grid, Card, Text, Ticker } from '@weft-js/warp'
+import { state, onCleanup } from '@kerf/core'
+import { Grid, Card, Text, Ticker } from '@kerf/veneer'
 
 export function TickerLiveTraffic() {
   const rate = state(18420)

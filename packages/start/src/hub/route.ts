@@ -30,7 +30,7 @@ export const validBody = (input: unknown): input is Body => {
   )
 }
 
-/** `/_weft/rt` (research 30 §4): opens a connection, or changes one. Same proof as a mutation, plus `origins`. */
+/** `/_kerf/rt` (research 30 §4): opens a connection, or changes one. Same proof as a mutation, plus `origins`. */
 export async function handleRoute(
   request: Request,
   scope: Scope,
@@ -44,7 +44,7 @@ export async function handleRoute(
       { status, headers: { 'cache-control': 'no-store' } },
     )
   }
-  if (request.method !== 'POST') return refuse('Q010', 'Q010: `/_weft/rt` needs POST', 405)
+  if (request.method !== 'POST') return refuse('Q010', 'Q010: `/_kerf/rt` needs POST', 405)
   const url = new URL(request.url)
   const origin = request.headers.get('origin')
   const site = request.headers.get('sec-fetch-site')
@@ -59,12 +59,12 @@ export async function handleRoute(
       403,
     )
   if (
-    request.headers.get('x-weft') !== '1' ||
+    request.headers.get('x-kerf') !== '1' ||
     !request.headers.get('content-type')?.startsWith('application/json')
   )
     return refuse(
       'Q010',
-      'Q010: `/_weft/rt` without the CSRF proof (POST + JSON + `x-weft: 1`)',
+      'Q010: `/_kerf/rt` without the CSRF proof (POST + JSON + `x-kerf: 1`)',
       403,
     )
   const h = hub()
@@ -79,7 +79,7 @@ export async function handleRoute(
   try {
     body = JSON.parse(raw)
   } catch {
-    return refuse('Q002', "Q002: `/_weft/rt` got a body that isn't JSON", 400)
+    return refuse('Q002', "Q002: `/_kerf/rt` got a body that isn't JSON", 400)
   }
   // A tab that didn't dial the shared socket asks who it is now (link.ts).
   if ((body as { w?: 1 })?.w === 1)
@@ -88,7 +88,7 @@ export async function handleRoute(
       { headers: { 'cache-control': 'no-store' } },
     )
   if (!validBody(body))
-    return refuse('Q002', 'Q002: `/_weft/rt` got a body of the wrong shape', 400)
+    return refuse('Q002', 'Q002: `/_kerf/rt` got a body of the wrong shape', 400)
   if (body.k) {
     const c = h.find(body.k)
     const user = c && ((await scope.ctx()) as { user?: { id?: string } }).user?.id

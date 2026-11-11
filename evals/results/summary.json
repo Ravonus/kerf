@@ -2,19 +2,19 @@
   "archive": {
     "tag": "archive/evals-2026-11",
     "commit": "c112af1cb179fe41ea3ec3c8c06190f4d93cbe4f",
-    "source": "evals/results/v3-warp-exit/exit.json",
-    "download": "https://github.com/Ravonus/weft/releases/download/archive/evals-2026-11/weft-evals-2026-11.tar.gz",
+    "source": "evals/results/v3-veneer-exit/exit.json",
+    "download": "https://github.com/Ravonus/kerf/releases/download/archive/evals-2026-11/kerf-evals-2026-11.tar.gz",
     "sha256": "77c56f6f289cda3bf97435c6c357df05c9af46e38d54e75958f76715582f379d"
   },
-  "warpExit": {
+  "veneerExit": {
     "ok": true,
     "date": "2026-11-01T20:45:49.836Z",
     "hidden": {
       "ok": true,
-      "warp": "23/23",
-      "weft": "23/23",
+      "veneer": "23/23",
+      "kerf": "23/23",
       "probe": {
-        "warp": {
+        "veneer": {
           "add-one": {
             "domMutations": 1,
             "commits": 5,
@@ -34,7 +34,7 @@
             "wallMs": 24.46
           }
         },
-        "weft": {
+        "kerf": {
           "add-one": {
             "domMutations": 1,
             "commits": 5,
@@ -64,11 +64,11 @@
     },
     "size": {
       "ok": true,
-      "warp": {
+      "veneer": {
         "js": 12914,
         "css": 12756
       },
-      "weft": {
+      "kerf": {
         "js": 6160,
         "css": 0
       },
@@ -79,7 +79,7 @@
         "js": 17408,
         "ceiling": 51200
       },
-      "weftWithinAppBudget": true
+      "kerfWithinAppBudget": true
     },
     "contrast": {
       "ok": true,

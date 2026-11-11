@@ -1,6 +1,6 @@
 // The fixture app in Chrome (playwright-core, headless): hydration of a plain and a streamed page, and client
 // navigation, which keeps shared layouts and writes only what changed. The fixture's src/entry.client.ts records the
-// DOM writes and key misses around start() in `window.__weft`.
+// DOM writes and key misses around start() in `window.__kerf`.
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
@@ -33,7 +33,7 @@ async function open(path: string) {
     m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined,
   )
   await page.goto(url + path)
-  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
   return { page, errors }
 }
 
@@ -67,26 +67,26 @@ async function record(page: Playwright.Page) {
 test("a client that starts after a failure lands takes its error view, and doesn't read it again", async () => {
   const fetched: string[] = []
   const page = await browser.newPage()
-  page.on('request', (r) => r.url().includes('/_weft/') && fetched.push(r.url()))
+  page.on('request', (r) => r.url().includes('/_kerf/') && fetched.push(r.url()))
   await page.goto(url + '/held?ms=0')
-  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
   await page.waitForSelector('[role=alert]')
   await page.waitForTimeout(100)
-  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   expect(fetched).toEqual([])
   await page.close()
 })
 
 test('a server-rendered page hydrates with 0 key misses and 0 DOM writes', async () => {
   const { page, errors } = await open('/users/1')
-  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   expect(errors).toEqual([])
   await page.close()
 })
 
 test('a streamed page: Boundaries swapped in before hydration, then 0/0, and no refetch', async () => {
   const { page, errors } = await open('/slow')
-  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   await page.waitForSelector('.reviews li')
   expect(await page.textContent('.stock')).toBe('In stock: 7')
   expect(await page.$$eval('.reviews li', (l) => l.map((e) => e.textContent))).toEqual([
@@ -112,13 +112,13 @@ describe('a client running before the chunks land', () => {
     const page = await browser.newPage()
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
-    page.on('request', (r) => r.url().includes('/_weft/') && fetched.push(r.url()))
+    page.on('request', (r) => r.url().includes('/_kerf/') && fetched.push(r.url()))
     await page.goto(url + '/held?ms=2500', { waitUntil: 'commit' })
-    await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+    await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
     // Not a timing assumption: it's what these tests are of.
     expect(await page.$('.wait-late')).not.toBeNull()
     expect(await page.$('.late')).toBeNull()
-    expect(await page.evaluate(() => window.__weft)).toEqual({
+    expect(await page.evaluate(() => window.__kerf)).toEqual({
       misses: 0,
       writes: 0,
       hydrated: true,
@@ -177,7 +177,7 @@ describe('a client running before the chunks land', () => {
     await page.waitForSelector('.ok')
     expect(await page.textContent('.ok')).toBe('recovered')
     expect(await page.$('[role=alert]')).toBeNull()
-    expect(fetched.filter((u) => u.includes('/_weft/data'))).toHaveLength(1)
+    expect(fetched.filter((u) => u.includes('/_kerf/data'))).toHaveLength(1)
     expect(errors).toEqual([])
     await page.close()
   })
@@ -214,7 +214,7 @@ test('navigating between users keeps both layouts and writes only what changed',
   )
   expect(await page.getAttribute('link[rel=canonical]', 'href')).toBe('https://acme.dev/users/2')
   expect(await page.getAttribute('meta[property="og:image"]', 'content')).toMatch(
-    /\/_weft\/og\/users\/2\.png\?v=/,
+    /\/_kerf\/og\/users\/2\.png\?v=/,
   )
   expect(await page.$$eval('head [data-wm]', (l) => l.length)).toBe(16)
   expect(errors).toEqual([])
@@ -238,7 +238,7 @@ test('navigating to a page with no meta brings the words it rendered, and takes 
     /^Harvest when 5 < 7/,
   )
   expect(await page.getAttribute('meta[property="og:image"]', 'content')).toMatch(
-    /\/_weft\/og\/meta\/plain\.png\?v=/,
+    /\/_kerf\/og\/meta\/plain\.png\?v=/,
   )
   expect(await page.getAttribute('link[rel=canonical]', 'href')).toBe('https://acme.dev/meta/plain')
   expect(await page.$$eval('script[type="application/ld+json"]', (l) => l.length)).toBe(0)
@@ -317,7 +317,7 @@ test('dev: with JS off the first paint has every stylesheet of the route, and on
         expect.stringContaining('text/css'),
       ])
     }
-    expect(await page.locator('link[href^="/@weft-sheet/"]').count()).toBe(1) // a virtual sheet links too
+    expect(await page.locator('link[href^="/@kerf-sheet/"]').count()).toBe(1) // a virtual sheet links too
     await page.goto(url + '/about')
     expect(await page.locator('link[href*="styled.css"]').count()).toBe(0)
     await page.goto(url + '/nowhere')

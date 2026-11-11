@@ -4,7 +4,7 @@ import { createRequire } from 'node:module'
 import { test } from 'node:test'
 import { measureBlock, checkBlock } from './rendered-rows.mjs'
 
-const { chromium } = createRequire(new URL('../../../packages/warp/package.json', import.meta.url))(
+const { chromium } = createRequire(new URL('../../../packages/veneer/package.json', import.meta.url))(
   'playwright-core',
 )
 const site = readFileSync(new URL('../../src/styles/site.css', import.meta.url), 'utf8')
@@ -15,8 +15,8 @@ await test('annotated wrapped lines keep their gutter and hanging indent', async
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 900 } })
     await page.setContent(`<!doctype html><style>${site}\n${example}
-      :root { --warp-space-group: 16px; --warp-color-accent-text: rgb(0, 128, 64);
-        --warp-color-accent-soft: rgb(210, 240, 220); }
+      :root { --veneer-space-group: 16px; --veneer-color-accent-text: rgb(0, 128, 64);
+        --veneer-color-accent-soft: rgb(210, 240, 220); }
       pre { width: 22ch; font: 16px/24px monospace; margin: 0 16px; }
     </style><main data-site="example"></main>`)
     for (const spaces of [0, 2, 4]) {

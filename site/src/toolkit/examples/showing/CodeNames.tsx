@@ -1,4 +1,4 @@
-import { Code } from '@weft-js/warp'
+import { Code } from '@kerf/veneer'
 
 export const CodeNames = () => (
   <>

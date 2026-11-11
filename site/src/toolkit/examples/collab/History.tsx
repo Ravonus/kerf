@@ -1,8 +1,8 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
-import { VersionHistory } from '@weft-js/warp'
+import { VersionHistory } from '@kerf/veneer'
 
-import type { Version } from '@weft-js/warp'
+import type { Version } from '@kerf/veneer'
 
 import { VERSIONS } from '../../world'
 

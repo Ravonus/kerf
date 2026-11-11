@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   Prejoin,
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { CALL_DEVICES } from '../../world'
 import { pause } from './shared'
 

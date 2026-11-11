@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Question } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Question } from '@kerf/veneer'
 import { NOTIFY } from './shared'
 
 export function QuestionManyAnswers() {

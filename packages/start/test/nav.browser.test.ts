@@ -21,7 +21,7 @@ afterAll(async () => {
 })
 
 const settle = (page: Playwright.Page) =>
-  page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
 
 async function open(
   path: string,
@@ -65,8 +65,8 @@ const link = (page: Playwright.Page, href: string) =>
 
 test('a mutation landing during a navigation does not stop it', async () => {
   const { page, errors } = await open('/todos')
-  const write = await hold(page, '**/_weft/fn/toggleTodo*')
-  const data = await hold(page, '**/_weft/data/about*')
+  const write = await hold(page, '**/_kerf/fn/toggleTodo*')
+  const data = await hold(page, '**/_kerf/data/about*')
   await page.click('ul.todos li:nth-child(1) .toggle')
   await link(page, '/about')
   await page.waitForTimeout(100)
@@ -84,9 +84,9 @@ test('tags invalidated during a navigation refresh the route it lands on', async
   const ctx = await browser.newContext()
   const { page } = await open('/', ctx)
   const count = await page.evaluate(
-    async () => (await (await fetch('/_weft/data/todos')).json()).m.at(-1).data.count,
+    async () => (await (await fetch('/_kerf/data/todos')).json()).m.at(-1).data.count,
   )
-  const data = await hold(page, '**/_weft/data/todos*')
+  const data = await hold(page, '**/_kerf/data/todos*')
   await link(page, '/todos')
   await page.waitForTimeout(100) // the server has answered: only the reply is late
   // Another tab writes while this one is on its way: the data it's waiting for is older than that.
@@ -104,15 +104,15 @@ test('tags a stopped refresh was reading are still owed to the page', async () =
   await link(page, '/todos')
   await page.waitForFunction(() => document.title.startsWith('Todos ('))
   const count = await page.evaluate(() => +/\((\d+)\)/.exec(document.title)![1]!)
-  await page.route('**/_weft/data/todos*', () => {}) // the refresh goes out and never answers
-  await page.route('**/_weft/data/users*', () => {})
+  await page.route('**/_kerf/data/todos*', () => {}) // the refresh goes out and never answers
+  await page.route('**/_kerf/data/users*', () => {})
   const other = await open('/todos', ctx)
   await other.page.click('button.add')
   await other.page.waitForFunction((k) => document.title.startsWith(`Todos (${k + 1})`), count)
   await page.waitForTimeout(100)
   await link(page, '/users') // stops the refresh
   await page.waitForTimeout(50)
-  await page.unroute('**/_weft/data/todos*')
+  await page.unroute('**/_kerf/data/todos*')
   // The URL changed when the link was pressed, so back leaves the pending /users for the page still showing, which
   // was never left, and nothing has told it.
   await page.evaluate(() => history.back())
@@ -128,7 +128,7 @@ test("a navigation's cache entries older than a write in this tab do not land", 
   const gate = new Promise<void>((ok) => {
     open_ = ok
   })
-  await page.route('**/_weft/data/todos*', async (r) => {
+  await page.route('**/_kerf/data/todos*', async (r) => {
     if (!first) return // what the write owes: left unanswered, so only the older reply is left to land
     first = false
     const reply = await r.fetch()
@@ -149,7 +149,7 @@ test("a navigation's cache entries older than a write in this tab do not land", 
 
 test('a pressed link whose preloaded reply comes after the user moved on does not take over', async () => {
   const { page, errors } = await open('/')
-  const data = await hold(page, '**/_weft/data/old')
+  const data = await hold(page, '**/_kerf/data/old')
   await page.evaluate(() => {
     const a = Object.assign(document.createElement('a'), {
       href: '/old',
@@ -204,7 +204,7 @@ test('Back then Forward before anything lands stays on the page, and leaves noth
   await link(page, '/about')
   await page.waitForFunction(() => location.pathname === '/about')
   await page.waitForFunction(() => document.body.textContent.includes('About'))
-  const data = await hold(page, '**/_weft/data')
+  const data = await hold(page, '**/_kerf/data')
   await page.evaluate(() => history.back())
   await page.waitForFunction(() => location.pathname === '/')
   await page.evaluate(() => history.forward())
@@ -228,7 +228,7 @@ test('a chunk the deploy took away falls back to loading the page', async () => 
       ? r.continue()
       : r.fulfill({ status: 404, body: 'gone' }),
   )
-  await page.route('**/_weft/data/about', (r) => r.continue())
+  await page.route('**/_kerf/data/about', (r) => r.continue())
   await link(page, '/about')
   await page.waitForFunction(
     () => location.pathname === '/about' && window.__same === undefined,
@@ -382,7 +382,7 @@ test('a hidden tab reads nothing for a write until it shows, then once', async (
   const was = await b.page.$$eval('ul.todos li', (l) => l.length)
   const reads: string[] = []
   b.page.on('request', (r) => {
-    if (r.url().includes('/_weft/fn/listTodos')) reads.push(r.url())
+    if (r.url().includes('/_kerf/fn/listTodos')) reads.push(r.url())
   })
   const shown = (v: boolean) =>
     b.page.evaluate((h) => {
@@ -419,7 +419,7 @@ test('a sign-out in one tab leaves no rows in the others, shown or hidden', asyn
       ;(window as unknown as { __same: number }).__same = 1
     })
   // What the server answers a mutation that changed the session: a redirect, and a full load.
-  await a.page.route('**/_weft/fn/toggleTodo*', (r) => r.fulfill({ json: { r: '/about', x: 1 } }))
+  await a.page.route('**/_kerf/fn/toggleTodo*', (r) => r.fulfill({ json: { r: '/about', x: 1 } }))
   await a.page.click('ul.todos li:nth-child(1) .toggle')
   await a.page.waitForURL('**/about')
   for (const t of [shown, hidden]) await t.page.waitForFunction(() => window.__same === undefined)
@@ -430,13 +430,13 @@ test('a route refresh that fails leaves the page and goes again by itself', asyn
   const ctx = await browser.newContext()
   const { page } = await open('/todos', ctx)
   const count = await page.evaluate(() => +/\((\d+)\)/.exec(document.title)![1]!)
-  await page.route('**/_weft/data/todos*', (r) => r.abort('failed'))
+  await page.route('**/_kerf/data/todos*', (r) => r.abort('failed'))
   const other = await open('/todos', ctx)
   await other.page.click('button.add')
   await other.page.waitForFunction((k) => document.title.startsWith(`Todos (${k + 1})`), count)
   await page.waitForTimeout(200)
   expect(await page.title()).toContain(`(${count})`)
-  await page.unroute('**/_weft/data/todos*')
+  await page.unroute('**/_kerf/data/todos*')
   await page.waitForFunction((k) => document.title.startsWith(`Todos (${k + 1})`), count)
   await ctx.close()
 })

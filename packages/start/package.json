@@ -1,19 +1,19 @@
 {
-  "name": "@weft-js/start",
-  "version": "0.1.4",
-  "description": "weft Start: file routes, server functions, streaming SSR, a database and auth",
+  "name": "@kerf/start",
+  "version": "0.1.0",
+  "description": "kerf Start: file routes, server functions, streaming SSR, a database and auth",
   "keywords": [
-    "weft"
+    "kerf"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/start"
   },
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/start#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/start#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "files": [
     "src",
@@ -90,7 +90,7 @@
   },
   "devDependencies": {
     "@types/nodemailer": "8.0.2",
-    "@weft-js/core": "workspace:*",
+    "@kerf/core": "workspace:*",
     "better-auth": "1.7.14",
     "drizzle-kit": "0.31.11",
     "drizzle-orm": "0.45.4",
@@ -109,7 +109,7 @@
     "zod": "4.6.7"
   },
   "peerDependencies": {
-    "@weft-js/core": "*",
+    "@kerf/core": "*",
     "better-auth": "^1.7.0",
     "drizzle-orm": "^0.45.0",
     "drizzle-zod": "^0.8.0",

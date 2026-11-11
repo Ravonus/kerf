@@ -2,8 +2,8 @@ import {
   defineState,
   derived,
   state,
-} from '@weft-js/core'
-import { Button, Card, Row, Tag } from '@weft-js/warp'
+} from '@kerf/core'
+import { Button, Card, Row, Tag } from '@kerf/veneer'
 
 const CITIES = ['Lisbon', 'Oslo', 'Osaka', 'Lima']
 

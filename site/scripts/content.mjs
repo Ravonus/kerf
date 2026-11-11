@@ -13,9 +13,9 @@ reportSampleWidths(repo)
 const docs = await buildReference()
 const learn = buildLearn(docs)
 const toolkit = buildToolkit()
-// The stylesheet facts warp's theme compiler needs, so the theme studio can run it in the browser.
-const { themeContext } = await import('../../packages/warp/src/plugin/theme-context.mjs')
-const themeFacts = themeContext(new URL('../../packages/warp-core/', import.meta.url))
+// The stylesheet facts veneer's theme compiler needs, so the theme studio can run it in the browser.
+const { themeContext } = await import('../../packages/veneer/src/plugin/theme-context.mjs')
+const themeFacts = themeContext(new URL('../../packages/veneer-core/', import.meta.url))
 write('theme-context.json', {
   ...themeFacts,
   tokenNames: [...themeFacts.tokenNames].sort((a, b) => a.localeCompare(b)),
@@ -43,7 +43,7 @@ const demoHtml = (f) => {
 }
 // The arena's frames are built by ../benchmarks/arena/build.mjs and aren't in git. Without them the site says so instead of framing 404s.
 const framed = (name) => existsSync(join(site, 'public/arena', name, 'index.html'))
-const arena = { frames: ['weft', 'solid', 'react'].every(framed), graph: framed('graph') }
+const arena = { frames: ['kerf', 'solid', 'react'].every(framed), graph: framed('graph') }
 if (!arena.frames || !arena.graph)
   console.warn(
     '[content] Build arena frames: `pnpm install` then `node benchmarks/arena/build.mjs` (repo root).',

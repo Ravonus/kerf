@@ -1,11 +1,11 @@
-import type { Meta } from '@weft-js/start'
+import type { Meta } from '@kerf/start'
 import { ThemeStudio } from '../../components/studio/ThemeStudio'
 
 export const prerender = true
 export const meta: Meta = {
   title: 'Theme studio',
   description:
-    'Theme Warp live: colour, shape, type, space, motion, any part in any state and any token, then copy the warp() config.',
+    'Theme Veneer live: colour, shape, type, space, motion, any part in any state and any token, then copy the veneer() config.',
 }
 
 export default function Page() {
@@ -14,9 +14,9 @@ export default function Page() {
       <header>
         <h1>Theme studio</h1>
         <p>
-          Every control writes a key of <code data-scope="code">warp()</code>, and the preview runs
-          warp's own theme compiler, so what you see is what your build ships. Copy the config into
-          weft.config.ts when it looks right.
+          Every control writes a key of <code data-scope="code">veneer()</code>, and the preview runs
+          veneer's own theme compiler, so what you see is what your build ships. Copy the config into
+          kerf.config.ts when it looks right.
         </p>
       </header>
       <ThemeStudio />

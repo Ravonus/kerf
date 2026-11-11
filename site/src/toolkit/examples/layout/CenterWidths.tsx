@@ -1,4 +1,4 @@
-import { Center, Stack } from '@weft-js/warp'
+import { Center, Stack } from '@kerf/veneer'
 import { Box, MAXES } from './shared'
 
 export const CenterWidths = () => (

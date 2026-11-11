@@ -1,5 +1,5 @@
 // A list source from bound SQL: `columns` is required, identifiers come only from it, and every value
-// is a parameter. `target` is anything with `query(text, params)`: `ctx.db` from `@weft-js/db/plugin-native`, or a driver.
+// is a parameter. `target` is anything with `query(text, params)`: `ctx.db` from `@kerf/db/plugin-native`, or a driver.
 
 import {
   likeOf,
@@ -12,14 +12,14 @@ import {
   type ListParams,
   type ListSource,
   type SourceSpec,
-} from '@weft-js/start/list'
-import { StartError } from '@weft-js/start/data'
+} from '@kerf/start/list'
+import { StartError } from '@kerf/start/data'
 
 /** Whatever runs a bound statement, and says which dialect it speaks. */
 export interface SqlTarget {
   query(text: string, params: unknown[]): Promise<Record<string, unknown>[]>
   dialect?: 'postgresql' | 'sqlite' | 'mysql'
-  $weft?: { dialect: 'postgresql' | 'sqlite' | 'mysql' }
+  $kerf?: { dialect: 'postgresql' | 'sqlite' | 'mysql' }
 }
 
 /** A source's allowlist, and the table it covers. */
@@ -118,7 +118,7 @@ export function sqlSource<Row = Record<string, unknown>>(
   target: SqlTarget,
   spec: SqlSpec,
 ): ListSource<Row> {
-  const dialect = target.dialect ?? target.$weft?.dialect ?? 'postgresql'
+  const dialect = target.dialect ?? target.$kerf?.dialect ?? 'postgresql'
   const q = ident(dialect)
   for (const c of [spec.table, ...Object.values(spec.columns)]) q(c)
   const table = q(spec.table)
@@ -202,12 +202,12 @@ export function postgresTrigger({
 }): string {
   const q = ident('postgresql')
   if (!/^[\w:-]+$/.test(tag)) throw new StartError('Q002', `\`${tag}\` can't be a tag in a trigger`)
-  const fn = `weft_poke_${table}`
+  const fn = `kerf_poke_${table}`
   return `create or replace function ${q(fn)}() returns trigger language plpgsql as $$
 declare row_id text;
 begin
   if tg_op = 'DELETE' then row_id := old.${q(id)}::text; else row_id := new.${q(id)}::text; end if;
-  perform pg_notify('weft_bus', '=weft:poke' || chr(10) || json_build_object('t', json_build_array('${tag}', '${tag}:' || row_id))::text);
+  perform pg_notify('kerf_bus', '=kerf:poke' || chr(10) || json_build_object('t', json_build_array('${tag}', '${tag}:' || row_id))::text);
   return null;
 end $$;
 drop trigger if exists ${q(fn)} on ${q(table)};

@@ -1,6 +1,6 @@
-// withWeft on a stand-in client: the real one runs in the database matrix (create-weft/scripts/db-matrix.mjs).
-import { runtime } from '@weft-js/start/data'
-import { withWeft } from '../src/prisma-client'
+// withKerf on a stand-in client: the real one runs in the database matrix (create-kerf/scripts/db-matrix.mjs).
+import { runtime } from '@kerf/start/data'
+import { withKerf } from '../src/prisma-client'
 
 function client() {
   const ran: string[] = []
@@ -8,7 +8,7 @@ function client() {
   const tx = {
     $executeRawUnsafe(sql: string, ...values: unknown[]) {
       ran.push(sql)
-      if (sql.startsWith('insert into __weft_migrations')) tags.add(values[0] as string)
+      if (sql.startsWith('insert into __kerf_migrations')) tags.add(values[0] as string)
       return Promise.resolve(0)
     },
     $queryRawUnsafe() {
@@ -27,9 +27,9 @@ const list = [
 
 test('a file runs statement by statement, and once', async () => {
   const c = client()
-  const db = withWeft(c, 'sqlite', { migrate: false })
-  await db.$weft.migrate(list)
-  await db.$weft.migrate(list)
+  const db = withKerf(c, 'sqlite', { migrate: false })
+  await db.$kerf.migrate(list)
+  await db.$kerf.migrate(list)
   expect(c.ran.filter((s) => s.startsWith('CREATE'))).toEqual([
     'CREATE TABLE a (id int)',
     'CREATE INDEX i ON a(id)',
@@ -39,8 +39,8 @@ test('a file runs statement by statement, and once', async () => {
 test("the server waits on a client it can't hold: its gate runs the list once, and `migrate: false` has none to run", async () => {
   const c = client()
   const before = runtime.dbs?.size ?? 0
-  withWeft(c, 'sqlite')
-  withWeft(client(), 'sqlite', { migrate: false })
+  withKerf(c, 'sqlite')
+  withKerf(client(), 'sqlite', { migrate: false })
   expect(runtime.dbs!.size).toBe(before + 2)
   const [on, off] = [...runtime.dbs!].slice(before) as [() => unknown, () => unknown]
   runtime.migrations = { list, report() {} }
@@ -57,7 +57,7 @@ test("MySQL: a lock it didn't get stops the run, and a failed run lets the conne
     return Promise.resolve(sql.includes('get_lock') ? [{ got: BigInt(got) }] : [])
   }
   const db = (got: number) =>
-    withWeft(
+    withKerf(
       {
         ...c,
         $queryRawUnsafe: query(got),
@@ -67,10 +67,10 @@ test("MySQL: a lock it didn't get stops the run, and a failed run lets the conne
       'mysql',
       { migrate: false },
     )
-  await expect(db(0).$weft.migrate(list)).rejects.toThrow('migration lock')
+  await expect(db(0).$kerf.migrate(list)).rejects.toThrow('migration lock')
   expect(c.ran.filter((s) => s.startsWith('CREATE'))).toEqual([])
   await expect(
-    db(1).$weft.migrate([{ tag: 'b', sql: 'CREATE TABLE b (id int);' }]),
+    db(1).$kerf.migrate([{ tag: 'b', sql: 'CREATE TABLE b (id int);' }]),
   ).resolves.toBeUndefined()
   expect(c.ran.at(-1)).toContain('release_lock')
   const failing = {
@@ -79,16 +79,16 @@ test("MySQL: a lock it didn't get stops the run, and a failed run lets the conne
     $executeRawUnsafe: () => Promise.reject(new Error('bad sql')),
   }
   await expect(
-    withWeft(
+    withKerf(
       { ...failing, $transaction: (fn: (t: unknown) => Promise<void>) => fn(failing) },
       'mysql',
       { migrate: false },
-    ).$weft.migrate(list),
+    ).$kerf.migrate(list),
   ).rejects.toThrow('bad sql')
   expect(c.ran.at(-1)).toContain('release_lock')
 })
 
 test("it is the same client, so Prisma's docs stay true", () => {
   const c = client()
-  expect(withWeft(c, 'mysql', { migrate: false })).toBe(c)
+  expect(withKerf(c, 'mysql', { migrate: false })).toBe(c)
 })

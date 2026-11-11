@@ -7,7 +7,7 @@ import type { HandlerOptions } from '../src/server/types'
 import type { Scope } from '../src/exec'
 
 const post = (body: BodyInit, headers: Record<string, string> = {}) =>
-  new Request('http://localhost/_weft/fn/x', {
+  new Request('http://localhost/_kerf/fn/x', {
     method: 'POST',
     body,
     headers,

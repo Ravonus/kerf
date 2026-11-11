@@ -256,7 +256,7 @@ const SWEEP_LIST = async ({ step, frames }) => {
   }
   return { worstJump: +worst.toFixed(1), blank, elements: most }
 }
-/** What the page fetched, not what sits in dist: warp's folder holds the engine for three browsers and every lazy pack. */
+/** What the page fetched, not what sits in dist: veneer's folder holds the engine for three browsers and every lazy pack. */
 export const listResult = (dir, { fetched = [], ...r }) => ({
   ...r,
   loadedBr: fetched.reduce((n, p) => n + br(readFileSync(join(dir, 'feed/dist', p))), 0),

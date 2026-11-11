@@ -2,49 +2,49 @@
 
 :::learn
 - How to render a component under vitest and drive it the way a user would
-- Why a weft test never sleeps, and how to move time and the network instead
+- Why a kerf test never sleeps, and how to move time and the network instead
 - How to test shared state, server functions and live data without a server
-- Which tests `weft check` calls junk, and why
-- What `weft test --gate` adds before a change is done
+- Which tests `kerf check` calls junk, and why
+- What `kerf test --gate` adds before a change is done
 :::
 
 A test should fail when the code is wrong, and pass when it's right. That sounds obvious, but a lot of tests pass
 whatever the code does: they assert on a value they set themselves, sleep and hope, or check a snapshot nobody reads.
-Weft's test helpers are built so that the natural way to write a test is the one that catches bugs, and `weft check`
+Kerf's test helpers are built so that the natural way to write a test is the one that catches bugs, and `kerf check`
 reports the patterns that don't.
 
-Everything on this page comes from `@weft-js/core/test`, which runs under [vitest](https://vitest.dev) in jsdom. Here is
+Everything on this page comes from `@kerf/core/test`, which runs under [vitest](https://vitest.dev) in jsdom. Here is
 the component the first examples test. Try it before you read its tests:
 
 :::demo tool-coupon
 
 ## Setting up vitest
 
-A new app has no test runner. Add one, with jsdom and Testing Library, which `@weft-js/core/test` builds on:
+A new app has no test runner. Add one, with jsdom and Testing Library, which `@kerf/core/test` builds on:
 
 ```bash
 npm install -D vitest jsdom @testing-library/dom \
   @testing-library/user-event
 ```
 
-Then give vitest the Weft compiler, so a `.tsx` test compiles the same way your app does:
+Then give vitest the Kerf compiler, so a `.tsx` test compiles the same way your app does:
 
-<!-- example: skip @weft-js/core/vite has no type declarations yet (TS7016 under strict) -->
+<!-- example: skip @kerf/core/vite has no type declarations yet (TS7016 under strict) -->
 ```ts
 // vitest.config.ts
-import weft from '@weft-js/core/vite'
+import kerf from '@kerf/core/vite'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  plugins: [weft()],
+  plugins: [kerf()],
   // `#/db/schema` and the app's other aliases live in tsconfig.json.
   resolve: { tsconfigPaths: true },
   test: { environment: 'jsdom' },
 })
 ```
 
-Run the suite with `npx vitest run`, or `npx vitest` to rerun on every save. There's no `weft` command that runs your
-tests: vitest does that. `weft test` is something else, the gate at the end of this page.
+Run the suite with `npx vitest run`, or `npx vitest` to rerun on every save. There's no `kerf` command that runs your
+tests: vitest does that. `kerf test` is something else, the gate at the end of this page.
 
 ## Rendering and querying
 
@@ -52,8 +52,8 @@ Here is the coupon form from the demo, as a component in your app:
 
 ```tsx
 // src/testing/Coupon.tsx
-import { derived, state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { derived, state } from '@kerf/core'
+import { Button, Card } from '@kerf/veneer'
 
 const CODES: Record<string, number> = { SAVE10: 10, HALF: 50 }
 const SUBTOTAL = 40
@@ -95,7 +95,7 @@ And its first test. Put it next to the component, named `*.test.tsx`:
 
 ```tsx
 // src/testing/Coupon.test.tsx
-import { render, screen, user } from '@weft-js/core/test'
+import { render, screen, user } from '@kerf/core/test'
 import { expect, test } from 'vitest'
 import { Coupon } from './Coupon'
 
@@ -124,13 +124,13 @@ exactly when a user would notice something wrong.
 
 :::note Coming from React Testing Library
 Most of this will look familiar. Two things are different. There's no `act()`, because every `user` action already waits
-for the page to update. And there's no `rerender`, because a Weft component runs once: to see it with new props, pass a
+for the page to update. And there's no `rerender`, because a Kerf component runs once: to see it with new props, pass a
 box or render the parent that owns the value.
 :::
 
 ## Every action ends in a flush
 
-In Weft, writes are batched: a handler sets some boxes, and the DOM catches up together once the handler is done. In a
+In Kerf, writes are batched: a handler sets some boxes, and the DOM catches up together once the handler is done. In a
 test, that means there's a moment after a click when the page hasn't changed yet.
 
 You never see that moment, because every `user` action ends in `flush()`, which applies pending updates and lets what
@@ -141,8 +141,8 @@ If you change something outside `user`, for example by calling an action on a sh
 
 ```tsx
 // src/testing/flush.test.tsx
-import { state } from '@weft-js/core'
-import { flush, render, screen } from '@weft-js/core/test'
+import { state } from '@kerf/core'
+import { flush, render, screen } from '@kerf/core/test'
 import { expect, test } from 'vitest'
 
 const unread = state(3)
@@ -164,7 +164,7 @@ assignment works.
 
 :::pitfall Sleeping in a test
 `await new Promise(r => setTimeout(r, 100))` makes a test slow, and still flaky: on a busy machine 100 ms isn't always
-enough. `waitFor` is the same thing with a loop. `weft check` reports both as T004. Use `await flush()` for updates, and
+enough. `waitFor` is the same thing with a loop. `kerf check` reports both as T004. Use `await flush()` for updates, and
 the fake clock below for anything that really does wait.
 :::
 
@@ -174,7 +174,7 @@ Most bugs live in the branch nobody clicked. Test the error as carefully as the 
 
 ```tsx
 // src/testing/Coupon-errors.test.tsx
-import { render, screen, user } from '@weft-js/core/test'
+import { render, screen, user } from '@kerf/core/test'
 import { expect, test } from 'vitest'
 import { Coupon } from './Coupon'
 
@@ -212,7 +212,7 @@ with backoff. Don't wait in the test as well. Install the fake clock and move it
 
 ```tsx
 // src/testing/SaveButton.tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function SaveButton() {
   const saved = state(false)
@@ -230,7 +230,7 @@ export function SaveButton() {
 
 ```tsx
 // src/testing/SaveButton.test.tsx
-import { clock, render, screen, user } from '@weft-js/core/test'
+import { clock, render, screen, user } from '@kerf/core/test'
 import { expect, test } from 'vitest'
 import { SaveButton } from './SaveButton'
 
@@ -264,7 +264,7 @@ To test the logic alone, `scope(handle)` makes a fresh instance with no UI:
 
 ```ts
 // src/testing/cart.ts
-import { defineState, derived, state } from '@weft-js/core'
+import { defineState, derived, state } from '@kerf/core'
 
 export const cart = defineState('cart', () => {
   const lines = state<Record<string, number>>({})
@@ -281,7 +281,7 @@ export const cart = defineState('cart', () => {
 
 ```ts
 // src/testing/cart.test.ts
-import { scope } from '@weft-js/core/test'
+import { scope } from '@kerf/core/test'
 import { expect, test } from 'vitest'
 import { cart } from './cart'
 
@@ -309,7 +309,7 @@ To start a component from a particular state, seed it with `render`'s `state` op
 
 ```tsx
 // src/testing/CartBadge.test.tsx
-import { render, screen } from '@weft-js/core/test'
+import { render, screen } from '@kerf/core/test'
 import { expect, test } from 'vitest'
 import { cart } from './cart'
 
@@ -331,7 +331,7 @@ to two `render`s and the second sees what the first saved, which is how you test
 
 ## Server functions, without a server
 
-With `@weft-js/core/test` loaded, a query or mutation from `@weft-js/start` doesn't go over HTTP. It runs in the same
+With `@kerf/core/test` loaded, a query or mutation from `@kerf/start` doesn't go over HTTP. It runs in the same
 process through the real server executor: input validation, `auth`, tags, the cache and a JSON round trip all happen as
 they would in production. What you control is the edge, through `net`:
 
@@ -349,7 +349,7 @@ Here's a component that reads the scaffold's `listTodos` query (it has `auth: 'u
 
 ```tsx
 // src/testing/OpenTodos.tsx
-import { derived } from '@weft-js/core'
+import { derived } from '@kerf/core'
 import { listTodos } from '../server/todos'
 
 export function OpenTodos() {
@@ -367,7 +367,7 @@ export function OpenTodos() {
 
 ```tsx
 // src/testing/OpenTodos.test.tsx
-import { net, render, screen } from '@weft-js/core/test'
+import { net, render, screen } from '@kerf/core/test'
 import { expect, test } from 'vitest'
 import { listTodos } from '../server/todos'
 import { OpenTodos } from './OpenTodos'
@@ -399,8 +399,8 @@ The second test is worth a closer look. `net.handle` replaced the body, but not 
 the real `auth: 'user'` check refuses the call (A002), the query's `error` is set, and the component shows the message. A
 mock of `listTodos` would have skipped exactly the part this test checks.
 
-:::pitfall Mocking Weft or the thing you're testing
-`vi.mock('@weft-js/core')`, or mocking the component under test, makes a test check its own mock. `weft check` reports it
+:::pitfall Mocking Kerf or the thing you're testing
+`vi.mock('@kerf/core')`, or mocking the component under test, makes a test check its own mock. `kerf check` reports it
 as T006. Fake the edges instead (the network with `net`, time with `clock`, storage with `memoryStorage`) and render the
 real component.
 :::
@@ -419,12 +419,12 @@ to do with your code. [Realtime and live data](/learn/live-data) covers what you
 
 ### The page around your component
 
-`@weft-js/core/browser` gives you the page's changing values, such as `online()` and `visible()`. In a test, `page`
+`@kerf/core/browser` gives you the page's changing values, such as `online()` and `visible()`. In a test, `page`
 controls them: `page.hide()`, `page.show()`, `page.blur()`, `page.focus()`, `page.leave()`, `page.restore()` and
 `page.media(query, matches)`. Each fires the real browser events, then flushes. Each test starts with the page visible,
 focused and online.
 
-After every test, `@weft-js/core/test` also checks that nothing from `@weft-js/core/browser` is still open: a listener,
+After every test, `@kerf/core/test` also checks that nothing from `@kerf/core/browser` is still open: a listener,
 an interval or a subscription that outlived its component. If one is, the test fails with T012 and says where it was
 made.
 
@@ -437,8 +437,8 @@ rows run again. The page looks right, so the test passes, but every keystroke no
 
 ```tsx
 // src/testing/Prices.test.tsx
-import { state } from '@weft-js/core'
-import { render, user, screen } from '@weft-js/core/test'
+import { state } from '@kerf/core'
+import { render, user, screen } from '@kerf/core/test'
 import { expect, test } from 'vitest'
 
 const start = Array.from({ length: 50 }, (_, i) => ({
@@ -481,16 +481,16 @@ DOM writes stay at one, so only the `runs` budget notices. That's why the budget
 full count (`mutations`, `runs`, `added`, `removed`, `text`, `attributes`) if you want to look before you pick a budget.
 
 :::deepdive Why count re-runs as well as DOM writes?
-Weft compiles each read of a box to its own binding. When a row's item object is replaced by an equal copy, the row's
+Kerf compiles each read of a box to its own binding. When a row's item object is replaced by an equal copy, the row's
 bindings run again, compare, and find nothing to write. So the DOM barely changes, but the CPU did the work for every
 row. That's the bug W014 describes: an array rebuilt with new item identities. The compiler catches it inside one file
-and `weft check` follows the box into other files, but a test with a `runs` budget catches it wherever it comes from,
+and `kerf check` follows the box into other files, but a test with a `runs` budget catches it wherever it comes from,
 including from a library you don't control.
 :::
 
 ## Junk tests: the T-codes
 
-`weft check` reads your test files (by default every `*.test.*` and `*.spec.*`, or `test.include` in the config) and
+`kerf check` reads your test files (by default every `*.test.*` and `*.spec.*`, or `test.include` in the config) and
 reports tests that would pass whatever the code did:
 
 | Code | What it catches | What to write instead |
@@ -500,7 +500,7 @@ reports tests that would pass whatever the code did:
 | T003 | `n.value = 5; expect(n.value).toBe(5)` | Act through the UI, assert what depends on it |
 | T004 | Sleeps, real timers, `waitFor` | `flush()`, `clock.advance(ms)` |
 | T005 | `container`, selectors, classes, `innerHTML`, test ids (a warning) | Role, label and text queries |
-| T006 | Mocking `@weft-js/core` or the unit under test | Fake the edges |
+| T006 | Mocking `@kerf/core` or the unit under test | Fake the edges |
 | T007 | Snapshots | Assert the behaviour |
 | T008 | `expect` under `if`, `?:`, `&&` or `catch`, or only inside a loop | Assert the condition, then assert unconditionally |
 | T009 | `.only`, `.skip`, `fit`, `xit` left in | Remove it, or use `test.fails` for a test meant to fail |
@@ -510,7 +510,7 @@ static check couldn't read.
 
 Here's a test that collects three of them:
 
-<!-- example: skip deliberately junk: it shows the T004, T005 and T008 that weft check reports -->
+<!-- example: skip deliberately junk: it shows the T004, T005 and T008 that kerf check reports -->
 ```tsx
 test('coupon', async () => {
   const { container } = render(Coupon)
@@ -530,18 +530,18 @@ When an exception is deliberate, say why on the line before:
 
 <!-- example: skip a fragment showing the comment form -->
 ```tsx
-// weft-allow T007: the exported SVG is the product, byte for byte
+// kerf-allow T007: the exported SVG is the product, byte for byte
 expect(exportChart()).toMatchSnapshot()
 ```
 
-A `weft-allow` in the file's header comments covers the whole file; anywhere else it covers its own line and the next.
+A `kerf-allow` in the file's header comments covers the whole file; anywhere else it covers its own line and the next.
 
-## The gate: `weft test --gate`
+## The gate: `kerf test --gate`
 
 The T-codes judge a test by reading it. The gate judges it by running it, against your change:
 
 ```bash
-weft test --gate
+kerf test --gate
 ```
 
 It works on the diff (your uncommitted change, or `--base <ref>`), in scratch copies, so your working tree is never
@@ -553,33 +553,33 @@ touched. Three checks:
   boundary, a changed literal, a removed call. If a test still passes when your `>=` becomes `>`, it isn't checking that
   line. Surviving mutants come back with what to assert.
 - **T020, no weakening.** Deleting a test, skipping it, or loosening an assertion (`toBe(3)` to `toBeTruthy()`) needs
-  `// weft-allow T020: <reason>` on it.
+  `// kerf-allow T020: <reason>` on it.
 
 Mutation testing takes time, so it's sampled within a budget: `--budget <sec>` and `--max-mutants <n>`, or
 `test.gate` in the config. When the mutants were sampled, T011 is a warning instead of an error. `--no-mutation` skips
 it, and `--refactor` promises no behaviour change, so no test may change at all.
 
 The gate is the last step before a change is done, for you and for an agent working in your app. Read
-[Diagnostics and weft check](/learn/diagnostics) for the rest of `weft check`, and the
-[verify reference](/reference/verify) for driving the running app with `weft browser`, which can also record what you do
+[Diagnostics and kerf check](/learn/diagnostics) for the rest of `kerf check`, and the
+[verify reference](/reference/verify) for driving the running app with `kerf browser`, which can also record what you do
 as a test to start from.
 
 ## Testing a plugin's provider
 
-If you write a plugin that fills a slot, such as a text measurer or a realtime bus, `@weft-js/core/test/plugins` has a
+If you write a plugin that fills a slot, such as a text measurer or a realtime bus, `@kerf/core/test/plugins` has a
 conformance suite for it: `textMeasureSuite`, `busSuite` and `listSuite`. Each returns one `{ name, ok, detail }` per
 requirement of the slot, and a provider that fails one is P119. [Plugins](/learn/plugins) covers writing one.
 
 ## Recap
 
-- `render`, `screen` and `user` from `@weft-js/core/test` mount a component and drive it by role, label and text.
+- `render`, `screen` and `user` from `@kerf/core/test` mount a component and drive it by role, label and text.
 - Every `user` action ends in `flush()`. Never sleep or poll: use `flush()`, and `clock.install()` with
   `clock.advance(ms)` for time.
 - `scope(handle)` tests shared state with no UI; `render`'s `state` option starts a component from a given state.
 - Server functions run in process through the real executor. `net.handle`, `net.context` and `net.fail` control the
   edge, so guards and validation still run.
 - `toTouchAtMost(n, { runs })` turns "this stays fast" into an assertion.
-- `weft check` reports junk tests (T001–T009); `weft test --gate` proves each new test fails before your change and
+- `kerf check` reports junk tests (T001–T009); `kerf test --gate` proves each new test fails before your change and
   catches a mutant of it.
 
 ## Try it
@@ -601,7 +601,7 @@ message fails it.
 :::
 
 :::challenge Rescue a junk test
-This test passes, but `weft check` reports T003 and T005. Rewrite it so it tests the component.
+This test passes, but `kerf check` reports T003 and T005. Rewrite it so it tests the component.
 
 <!-- example: skip the junk test the challenge asks you to fix -->
 ```tsx

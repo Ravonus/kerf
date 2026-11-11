@@ -1,4 +1,4 @@
-// @weft-js/core/test's realtime transport (research 30 §7): the real hub, a memory bus, frames through JSON.
+// @kerf/core/test's realtime transport (research 30 §7): the real hub, a memory bus, frames through JSON.
 
 import { fakeScope, FnError, net, runtime, type Fn } from './data'
 import type { Body } from './hub'
@@ -10,7 +10,7 @@ export async function change(body: Body) {
   const [{ hub }, exec] = await Promise.all([import('./hub'), loadExec()])
   const c = hub().find(body.k!)
   if (!c) throw new FnError({}, 404)
-  const request = new Request('http://localhost/_weft/rt', { method: 'POST' })
+  const request = new Request('http://localhost/_kerf/rt', { method: 'POST' })
   await hub().change(c, request, fakeScope(exec, net()!, request).options, body)
 }
 
@@ -32,7 +32,7 @@ export async function open(
   closing(resetHub)
   const h = hub()
   runtime.poke ??= (tags, origin) => hub().poke(tags, origin)
-  const request = new Request('http://localhost/_weft/rt', { method: 'POST' })
+  const request = new Request('http://localhost/_kerf/rt', { method: 'POST' })
   return new Promise<void>((done, fail) => {
     let conn: Parameters<typeof h.close>[0] | undefined
     const sink = {

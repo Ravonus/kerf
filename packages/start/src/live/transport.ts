@@ -2,7 +2,7 @@ import type { Body } from '../hub'
 import { HANDOVER, openLine, type Line } from '../link'
 import { FnError } from './api'
 
-/** How the client reaches `/_weft/rt`: SSE, a shared socket, or a fake under test. */
+/** How the client reaches `/_kerf/rt`: SSE, a shared socket, or a fake under test. */
 export interface Link {
   /** Resolves when the connection ends. */
   open(
@@ -16,9 +16,9 @@ export interface Link {
 
 export function transports(handover: () => void) {
   const post = (body: Body, signal?: AbortSignal) =>
-    fetch('/_weft/rt', {
+    fetch('/_kerf/rt', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'text/event-stream', 'x-weft': '1' },
+      headers: { 'content-type': 'application/json', accept: 'text/event-stream', 'x-kerf': '1' },
       body: JSON.stringify(body),
       ...(signal && { signal }),
     })
@@ -51,7 +51,7 @@ export function transports(handover: () => void) {
     },
   }
 
-  /** A line on the browser's one socket (link.ts): the same events, and `/_weft/rt`'s SSE is for a host with no sockets. */
+  /** A line on the browser's one socket (link.ts): the same events, and `/_kerf/rt`'s SSE is for a host with no sockets. */
   let line: Line | undefined
   const socket: Link = {
     open(body, heard, signal, alive) {

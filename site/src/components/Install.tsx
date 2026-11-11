@@ -1,5 +1,5 @@
-import { Snippet, Tabs } from '@weft-js/warp'
-import { state } from '@weft-js/core'
+import { Snippet, Tabs } from '@kerf/veneer'
+import { state } from '@kerf/core'
 
 const MANAGERS = [
   { value: 'npm', label: 'npm' },
@@ -7,12 +7,12 @@ const MANAGERS = [
   { value: 'bun', label: 'bun' },
 ] as const
 const COMMAND = {
-  npm: 'npm install @weft-js/warp',
-  pnpm: 'pnpm add @weft-js/warp',
-  bun: 'bun add @weft-js/warp',
+  npm: 'npm install @kerf/veneer',
+  pnpm: 'pnpm add @kerf/veneer',
+  bun: 'bun add @kerf/veneer',
 }
 
-/* @weft visible */
+/* @kerf visible */
 /** The install line, for the reader's package manager. */
 export function Install() {
   const manager = state<'npm' | 'pnpm' | 'bun'>('npm')

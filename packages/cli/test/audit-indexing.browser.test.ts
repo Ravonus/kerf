@@ -10,7 +10,7 @@ import { findChrome } from '../src/browser/client.mjs'
 // These integration checks require Chrome; the non-browser policy tests always run.
 describe.skipIf(!findChrome())('indexing response policy', () => {
   it('fails public meta/header blocks, keeps private exclusions, and accepts crawlable HTML', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'weft-indexing-'))
+    const root = mkdtempSync(join(tmpdir(), 'kerf-indexing-'))
     const server = createServer((request, response) => {
       if (request.url === '/header') response.setHeader('X-Robots-Tag', 'noindex, nofollow')
       response.setHeader('Content-Type', 'text/html')

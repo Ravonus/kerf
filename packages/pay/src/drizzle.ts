@@ -1,5 +1,5 @@
 import { eq, getTableName, type AnyColumn, type SQL, type Table } from 'drizzle-orm'
-import type { DbHandle } from '@weft-js/start/db/core'
+import type { DbHandle } from '@kerf/start/db/core'
 import type { PayStore, Purchase } from './server'
 
 /** A Drizzle client as far as the ledger uses one: the dialects' builders share no type, so this names what they have in common. */
@@ -20,7 +20,7 @@ interface LedgerClient {
 
 /** A `PayStore` on the app's Drizzle tables, on Postgres, SQLite or MySQL. */
 export function drizzlePayStore(
-  db: { $weft: DbHandle },
+  db: { $kerf: DbHandle },
   tables: {
     purchases: Table & { id: AnyColumn; user: AnyColumn }
     payEvents: Table & { id: AnyColumn }
@@ -28,8 +28,8 @@ export function drizzlePayStore(
 ): PayStore {
   const { purchases, payEvents } = tables
   const client = db as unknown as LedgerClient
-  const mysql = db.$weft.dialect === 'mysql'
-  db.$weft.exempt.add(getTableName(purchases)).add(getTableName(payEvents)) // written by a webhook, not by a server function
+  const mysql = db.$kerf.dialect === 'mysql'
+  db.$kerf.exempt.add(getTableName(purchases)).add(getTableName(payEvents)) // written by a webhook, not by a server function
   return {
     seen: async (id) =>
       (

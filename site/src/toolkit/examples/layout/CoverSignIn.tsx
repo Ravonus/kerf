@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   Center,
@@ -8,7 +8,7 @@ import {
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { SCREEN } from './shared'
 
 function signInForm(send: (e: Event) => void) {
@@ -19,7 +19,7 @@ function signInForm(send: (e: Event) => void) {
       onSubmit={send}
     >
       <Stack gap="hair">
-        <Heading level={3}>Sign in to weft</Heading>
+        <Heading level={3}>Sign in to kerf</Heading>
         <Text subtle>
           We'll email you a link. No password needed.
         </Text>
@@ -47,14 +47,14 @@ export function CoverSignIn() {
   }
   return (
     <Cover
-      style={`${SCREEN};--warp-viewport-block:520px`}
+      style={`${SCREEN};--veneer-viewport-block:520px`}
       gap="group"
     >
       <Row
         justify="between"
         gap="tight"
       >
-        <Text role="heading">weft</Text>
+        <Text role="heading">kerf</Text>
         <Button
           emphasis="ghost"
           tone="neutral"
@@ -92,7 +92,7 @@ export function CoverSignIn() {
         role="caption"
         subtle
       >
-        © 2026 weft
+        © 2026 kerf
       </Text>
     </Cover>
   )

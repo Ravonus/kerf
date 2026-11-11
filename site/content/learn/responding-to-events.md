@@ -4,7 +4,7 @@
 - How to write an event handler and pass it to an element
 - How a component takes handlers as props, and how to name them
 - How events travel up the page, and how to stop them or their default
-- How Weft attaches handlers, and what happens to a click before the code has loaded
+- How Kerf attaches handlers, and what happens to a click before the code has loaded
 :::
 
 A page that only shows things is half a page. Event handlers are your own functions that run when something happens: a
@@ -18,7 +18,7 @@ handler usually changes some [state](/learn/state). The page follows.
 To make a button do something, first write a function, then pass it to the button's `onClick`:
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 
 export function Greeter() {
   function handleClick() {
@@ -57,7 +57,7 @@ When the handler needs an argument, wrap it: `onClick={() => remove(item.id)}`.
 A handler runs when the event happens, not when the component ran. So it reads props and state as they are at that moment:
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 
 export function AlertButton(props: {
   message: string
@@ -82,7 +82,7 @@ export function Toolbar() {
 ```
 
 If the parent later passes a different `message`, the next click shows the new one. Nothing re-created the handler: it
-reads `message` each time it runs. In React a handler closes over one render's values; in Weft there is one run of
+reads `message` each time it runs. In React a handler closes over one render's values; in Kerf there is one run of
 the component, and every read is live.
 
 ## Passing handlers as props
@@ -95,7 +95,7 @@ app using it decides what they mean. Pass the handlers down as props:
 `Toolbar` takes `onPlay` and `onUpload` and hands each to a `Button`. It doesn't know what playing or uploading is. That's
 the same move as passing any other prop: a function is a value like the rest.
 
-Warp's own components work this way. `Button`'s `onClick` is a prop, and `Button` passes it to the real `<button>` inside.
+Veneer's own components work this way. `Button`'s `onClick` is a prop, and `Button` passes it to the real `<button>` inside.
 
 ### Naming handler props
 
@@ -133,7 +133,7 @@ handler below it.
 ## `onChange` fires on every edit
 
 As in React, `onChange` on a text field fires on each keystroke, not when the field loses focus. On a checkbox, radio,
-select or file input it fires when the value changes. Weft listens for both the browser's `input` and `change` events and
+select or file input it fires when the value changes. Kerf listens for both the browser's `input` and `change` events and
 drops the `change` that only repeats an edit it already reported, so your handler runs once per edit. To act when the user
 is done with a field, use `onBlur`.
 
@@ -175,7 +175,7 @@ Some events have something the browser does by itself. Submitting a `<form>` loa
 it. `e.preventDefault()` stops that, and you handle the event yourself:
 
 ```tsx
-import { Button, Input } from '@weft-js/warp'
+import { Button, Input } from '@kerf/veneer'
 
 export function Signup() {
   const submit = (e: SubmitEvent) => {
@@ -198,8 +198,8 @@ export function Signup() {
 The two are unrelated: `stopPropagation()` stops handlers above from running, `preventDefault()` stops the browser's
 default. You can call either, both or neither. [Forms and inputs](/learn/forms-and-inputs) covers submitting in more depth.
 
-:::deepdive How Weft attaches handlers
-Weft doesn't put a listener on every button. For the common bubbling events (`click`, `input`, `keydown`, `keyup`,
+:::deepdive How Kerf attaches handlers
+Kerf doesn't put a listener on every button. For the common bubbling events (`click`, `input`, `keydown`, `keyup`,
 `pointerdown` and the other pointer, mouse and touch events, `focusin`, `focusout`, `dblclick`, `contextmenu`,
 `beforeinput`) the compiler stores your handler on the element itself, and the page has one listener per event type, on
 the `document`. When a click arrives there, that listener walks from the clicked element up through its parents and calls
@@ -214,14 +214,14 @@ Everything else gets an ordinary listener on its own element: the events not on 
 
 Two consequences, both shared with React, which delegates the same way:
 
-- A listener you add yourself with `addEventListener` on a parent element runs *before* Weft's handlers for a bubbling
-  event, because the event reaches that parent before it reaches the `document`. A Weft handler's `stopPropagation()`
+- A listener you add yourself with `addEventListener` on a parent element runs *before* Kerf's handlers for a bubbling
+  event, because the event reaches that parent before it reaches the `document`. A Kerf handler's `stopPropagation()`
   can't stop it.
-- A listener of your own that calls `stopPropagation()` keeps the event from reaching the `document`, so Weft handlers
+- A listener of your own that calls `stopPropagation()` keeps the event from reaching the `document`, so Kerf handlers
   above it don't run.
 
 You rarely need your own listeners on elements. For the window or the document, use `on(window, 'keydown', …)` from
-`@weft-js/core/browser`: it's removed when the component goes. A bare `addEventListener` in a component with no cleanup
+`@kerf/core/browser`: it's removed when the component goes. A bare `addEventListener` in a component with no cleanup
 is **W050**. See [Browser values](/reference/browser).
 :::
 
@@ -230,7 +230,7 @@ The compiler attaches a handler to a built-in element once, when the element is 
 made only then:
 
 ```tsx
-// On a warp component: fine, props are live.
+// On a veneer component: fine, props are live.
 <Button onClick={editing.value ? save : edit}>…</Button>
 // On a built-in element: stays on the first choice.
 <button onClick={editing.value ? save : edit}>…</button>
@@ -262,7 +262,7 @@ The button disables itself while `saving.value` is `true`, so a second press can
 
 ## Before the code arrives
 
-With `@weft-js/start`, pages are rendered on the server, and a component with nothing to do in the browser ships no
+With `@kerf/start`, pages are rendered on the server, and a component with nothing to do in the browser ships no
 JavaScript at all. Components that do have handlers become *islands*. An island whose only work is its handlers loads
 when someone first interacts with it, not with the page. One with work that starts by itself loads when it comes into
 view, if the compiler can prove that's safe, and with the page otherwise.
@@ -273,8 +273,8 @@ code, and replays the events in order once the island is ready. Typing and focus
 replayed so the island's state catches up. The click you made while the code was on its way isn't lost, and you write
 nothing for it.
 
-You can tell the compiler what it can't see for itself with a comment above a component: `/* @weft client */` loads it
-with the page, `/* @weft visible */` when it scrolls into view. `.weft/hydration.json` says when each island loads and
+You can tell the compiler what it can't see for itself with a comment above a component: `/* @kerf client */` loads it
+with the page, `/* @kerf visible */` when it scrolls into view. `.kerf/hydration.json` says when each island loads and
 why. [SSR, islands and hydration](/learn/ssr-and-hydration) covers this in full.
 
 ## Recap
@@ -285,7 +285,7 @@ why. [SSR, islands and hydration](/learn/ssr-and-hydration) covers this in full.
 - Components take handlers as props. Name them `on` plus what happened in your app: `onPlay`, `onSelect`.
 - `e.currentTarget` is the element the handler is on, already typed. `onChange` fires on every edit.
 - Events bubble to parents. `e.stopPropagation()` stops that; `e.preventDefault()` stops the browser's default.
-- Weft delegates common events to one listener on the document. Handlers on built-in elements are read once.
+- Kerf delegates common events to one listener on the document. Handlers on built-in elements are read once.
 - On a server-rendered page, events that arrive before an island's code are held and replayed.
 
 ## Try it
@@ -311,8 +311,8 @@ and call it from the button. Make sure clicking the button doesn't also count as
 clicks on the card.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Card } from '@kerf/veneer'
 
 function ColorSwitch() {
   return <Button>Change colour</Button>
@@ -337,8 +337,8 @@ export function App() {
 ```
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Card } from '@kerf/veneer'
 
 function ColorSwitch(props: {
   onChangeColor: () => void
@@ -384,8 +384,8 @@ nothing. Fix it.
 
 <!-- example: skip deliberately broken: the challenge is to find the bug -->
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 export function Save() {
   const status = state('Not saved')
@@ -403,8 +403,8 @@ export function Save() {
 `onClick={save()}` calls `save` while the button is made and passes its result, `undefined`. Pass the function:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 export function Save() {
   const status = state('Not saved')

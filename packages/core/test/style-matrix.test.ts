@@ -1,10 +1,10 @@
-// The style matrix (research 23 §2.4, src/style/matrix.ts): .weft/styles.json from definitions and call sites, the
+// The style matrix (research 23 §2.4, src/style/matrix.ts): .kerf/styles.json from definitions and call sites, the
 // project-wide D-codes, `explainGroup`, the project scan the CLI uses, and the Vite build writing the file.
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { build } from 'vite'
-import weft from '../vite.mjs'
+import kerf from '../vite.mjs'
 import { group } from '../src/style'
 import { buildMatrix, explainGroup, scanProject } from '../src/style/matrix'
 import type { GroupSource, GroupUse } from '../src/style/css'
@@ -55,21 +55,21 @@ describe('explainGroup', () => {
     expect(root!.decls.filter((d) => d.prop === 'padding')).toEqual([
       {
         prop: 'padding',
-        value: 'var(--warp-space-group)',
+        value: 'var(--veneer-space-group)',
         from: 'pad: group',
         at: 'base',
         overridden: true,
       },
       {
         prop: 'padding',
-        value: 'var(--warp-space-tight)',
+        value: 'var(--veneer-space-tight)',
         from: 'pad: tight',
         at: 'accent pad:tight',
       },
     ])
     expect(e.elements.map((x) => x.element)).toEqual(['root', 'part title'])
     expect(e.css).toContain(':scope[data-accent~="pad:tight"]')
-    expect(e.css).toContain('color: var(--warp-color-info-text)') // the tone, folded for this selection
+    expect(e.css).toContain('color: var(--veneer-color-info-text)') // the tone, folded for this selection
   })
 
   test('unknown names throw with the closest', () => {
@@ -86,12 +86,12 @@ describe('explainGroup', () => {
 describe('the project scan and the Vite build', () => {
   const files = {
     'src/card.tsx':
-      "import { group } from '@weft-js/core/style'\n/** A card. */\nexport const card = group('card', { base: { pad: 'group' }, axes: { tone: { a: { tone: 'info' }, b: { tone: 'critical' } } }, parts: { title: { text: 'title' } } })\n",
+      "import { group } from '@kerf/core/style'\n/** A card. */\nexport const card = group('card', { base: { pad: 'group' }, axes: { tone: { a: { tone: 'info' }, b: { tone: 'critical' } } }, parts: { title: { text: 'title' } } })\n",
     'src/main.tsx':
       "import { card } from './card'\nexport const A = (p: { b: boolean }) => <div {...card({ tone: p.b ? 'b' : 'a' })}><h3 {...card.title}>x</h3></div>\n",
   }
   const tmp = () => {
-    const root = mkdtempSync(join(tmpdir(), 'weft-matrix-'))
+    const root = mkdtempSync(join(tmpdir(), 'kerf-matrix-'))
     for (const [f, text] of Object.entries(files)) {
       mkdirSync(join(root, f, '..'), { recursive: true })
       writeFileSync(join(root, f), text)
@@ -116,7 +116,7 @@ describe('the project scan and the Vite build', () => {
     }
   })
 
-  test('a build writes .weft/styles.json', async () => {
+  test('a build writes .kerf/styles.json', async () => {
     const root = tmp()
     const vitest = process.env.VITEST
     delete process.env.VITEST // the plugin skips its project scan under vitest
@@ -124,15 +124,15 @@ describe('the project scan and the Vite build', () => {
       await build({
         root,
         logLevel: 'silent',
-        plugins: [weft({ style: { matrix: true } })],
+        plugins: [kerf({ style: { matrix: true } })],
         build: {
           write: false,
           lib: { entry: join(root, 'src/main.tsx'), formats: ['es'] },
-          rollupOptions: { external: [/^@weft-js\/core/] },
+          rollupOptions: { external: [/^@kerf\/core/] },
         },
       })
-      expect(existsSync(join(root, '.weft/styles.json'))).toBe(true)
-      const m = JSON.parse(readFileSync(join(root, '.weft/styles.json'), 'utf8'))
+      expect(existsSync(join(root, '.kerf/styles.json'))).toBe(true)
+      const m = JSON.parse(readFileSync(join(root, '.kerf/styles.json'), 'utf8'))
       expect(m.groups.card).toMatchObject({
         file: 'src/card.tsx:3',
         doc: 'A card.',
@@ -186,11 +186,11 @@ function registerMatrixOutputTests() {
       contextTone: false,
     })
     expect(g!.resolved.base).toEqual({
-      'background-color': 'var(--warp-color-surface-raised)',
-      padding: 'var(--warp-space-group)',
-      color: 'var(--_text, var(--warp-color-text-subtle))',
+      'background-color': 'var(--veneer-color-surface-raised)',
+      padding: 'var(--veneer-space-group)',
+      color: 'var(--_text, var(--veneer-color-text-subtle))',
     })
-    expect(g!.resolved['status=late']!['--_text']).toBe('var(--warp-color-critical-text)')
+    expect(g!.resolved['status=late']!['--_text']).toBe('var(--veneer-color-critical-text)')
     expect(g!.tokens).toEqual([
       'emphasis.subtle',
       'pad.group',
@@ -227,7 +227,7 @@ function registerMatrixDiagnosticTests() {
       def: {
         base: {
           layout: 'grid',
-          css: { gridTemplateColumns: '1fr auto', padding: 'var(--warp-space-group)' },
+          css: { gridTemplateColumns: '1fr auto', padding: 'var(--veneer-space-group)' },
         },
       },
     }

@@ -1,0 +1,45 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Copy action: any [data-copy] control (CopyButton). Copy glyph at rest, check on success ---- */
+:where([data-copy] [data-part="indicator"]:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-copy] *))) { display: grid; }
+:where([data-copy] [data-part="indicator"]:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-copy] *)) > svg) {
+  grid-area: 1 / 1;
+  transition: opacity var(--veneer-duration-fast) var(--veneer-ease-out), scale var(--veneer-duration-base) var(--veneer-ease-pop);
+}
+:where([data-copy] [data-part="indicator"]:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-copy] *)) > svg:last-child) { opacity: 0; scale: 0.6; }
+:where([data-copy][data-state="copied"] [data-part="indicator"]:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-copy] *)) > svg:first-child) { opacity: 0; scale: 0.6; }
+:where([data-copy][data-state="copied"] [data-part="indicator"]:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-copy] *)) > svg:last-child) { opacity: 1; scale: 1; color: var(--veneer-color-positive-text); }
+:where([data-copy][data-state="copied"]:not([data-emphasis])) { --_ink: var(--_ink-on); }
+:where([data-copy][data-state="copied"]:not([data-emphasis]) [data-part="indicator"]:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-copy] *)) > svg:last-child) { color: inherit; }
+:where([data-copy][data-state="failed"]),
+:where([data-act="copy"][data-failed]) { color: var(--veneer-color-critical-text); }
+/* a refusal says so in words too (copyButtons adds the note for a moment): beside the button, inline-start, so a code
+   block's head (which clips) keeps it, and the reader learns it didn't copy before they paste nothing */
+:where([data-act="copy"] > [data-part="copy-note"]) {
+  position: absolute; z-index: 2; inset-inline-end: calc(100% + 6px); inset-block-start: 50%; translate: 0 -50%;
+  padding: 4px 8px; border-radius: var(--veneer-radius-mark); pointer-events: none; white-space: nowrap;
+  border: var(--veneer-border-hairline) solid var(--veneer-color-critical-border);
+  background: var(--veneer-color-critical-soft); color: var(--veneer-color-critical-text);
+  font: 500 var(--veneer-text-caption-size)/1.2 var(--veneer-text-body-font); letter-spacing: 0; text-transform: none;
+  animation: veneer-enter var(--veneer-duration-base) var(--veneer-ease-out);
+}
+
+/* ---------------------------------------------------------------------------
+   2 · OVERLAYS
+   ------------------------------------------------------------------------ */
+
+/* scroll lock for modal layers only; the gutter is reserved so nothing jumps */
+:where(html) { scrollbar-gutter: stable; }
+:where(html:has(dialog[open]:modal)) { overflow: hidden; }
+
+
+
+
+/* ---------------------------------------------------------------- forced colours (01-foundations §12)
+   Every state this file draws with a background opts out of the UA repaint and is redrawn with system
+   colours, so selection differs by colour and fill, never by a tint the UA would flatten. */
+@media (forced-colors: active) {
+:where([data-copy] [data-part="indicator"]:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-copy] *))) { color: inherit; }
+  :where([data-copy][data-state="copied"] [data-part="indicator"]:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-copy] :is([data-scope="field"],[data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-copy] *)) > svg:last-child) { color: inherit; }
+}
+}

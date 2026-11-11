@@ -1,4 +1,4 @@
-import { Link, type Meta } from '@weft-js/start'
+import { Link, type Meta } from '@kerf/start'
 import { Arena } from '../components/Arena'
 import { Example } from '../components/Example'
 import numbers from '../generated/numbers.json'
@@ -14,13 +14,13 @@ import show from '../generated/showcase.json'
 
 export const prerender = true
 export const meta: Meta = {
-  title: { absolute: 'Weft: a TypeScript framework for fast web apps' },
+  title: { absolute: 'Kerf: a TypeScript framework for fast web apps' },
   description:
-    'Write components in TSX. Weft compiles them to small, direct page updates, with routing, data, a UI kit and errors your coding agent can act on.',
+    'Write components in TSX. Kerf compiles them to small, direct page updates, with routing, data, a UI kit and errors your coding agent can act on.',
 }
 
 const components = kit.reduce((n, g) => n + g.items.length, 0)
-const SHOWN = ['weft-warp', 'solid-kobalte', 'react-radix', 'react-mui']
+const SHOWN = ['kerf-veneer', 'solid-kobalte', 'react-radix', 'react-mui']
 const SIZES = SHOWN.map((id) => numbers.stacks.find((s) => s.id === id)!).map(
   (s) => [s.label, s.js] as const,
 )
@@ -42,7 +42,7 @@ function HomeSkeleton() {
       <div data-part="say">
         <h1>The TypeScript framework for fast web apps.</h1>
         <p>
-          Write components in TSX, as you would in React. weft compiles them into small, direct page
+          Write components in TSX, as you would in React. kerf compiles them into small, direct page
           updates, and comes with routing, data, a UI kit and errors your coding agent can act on.
         </p>
         <div data-part="next">
@@ -106,7 +106,7 @@ function introduction() {
       <section>
         <h2 data-flow="heading">You already know how to write this</h2>
         <p data-part="intro">
-          A weft component is a function that returns TSX. Keep a value in <code>state</code>, show
+          A kerf component is a function that returns TSX. Keep a value in <code>state</code>, show
           it, change it. There is no new template language to learn.
         </p>
         <Example id="shop-1" plain>
@@ -119,7 +119,7 @@ function introduction() {
       <section>
         <h2 data-flow="heading">Values that keep themselves right</h2>
         <p data-part="intro">
-          Say how a value is worked out, and weft keeps it current. The shop gets a total, and
+          Say how a value is worked out, and kerf keeps it current. The shop gets a total, and
           shipping that turns free at $36.
         </p>
         <Example id="shop-2" plain>
@@ -136,7 +136,7 @@ function shopFeatures() {
       <section>
         <h2 data-flow="heading">Only what changed gets updated</h2>
         <p data-part="intro">
-          Most frameworks re-run your component and compare the result to find what changed. weft
+          Most frameworks re-run your component and compare the result to find what changed. kerf
           works that out when it compiles, so a change goes straight to the piece of the page it
           affects. The shop gets more products and a search box: one new value and one line of
           filtering, and everything that depends on it follows.
@@ -149,7 +149,7 @@ function shopFeatures() {
       <section>
         <h2 data-flow="heading">A UI kit comes with it</h2>
         <p data-part="intro">
-          The buttons and fields so far are warp, weft's own component library: {components}{' '}
+          The buttons and fields so far are veneer, kerf's own component library: {components}{' '}
           components, with keyboard support, themes and 651 icons. The shop gets a checkout.
         </p>
         <Example id="shop-5" plain>
@@ -168,14 +168,14 @@ function fullStack() {
     <section>
       <h2 data-flow="heading">One project, front to back</h2>
       <p data-part="intro">
-        A real shop keeps its products in a database. With <code>@weft-js/start</code>, a server
+        A real shop keeps its products in a database. With <code>@kerf/start</code>, a server
         query lives beside your components, and each file in <code>src/routes</code> is a page.
         Database and sign-in are built in, so the whole app is one codebase.
       </p>
       <div
         data-part="server"
         data-scope="codeblock"
-        // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+        // oxlint-disable-next-line kerf/no-html-sink -- highlighted at build time from a fixed sample
         innerHTML={show.server}
       ></div>
       <dl data-part="files">
@@ -187,7 +187,7 @@ function fullStack() {
         ))}
       </dl>
       <p data-part="more">
-        <Link href="/learn/full-stack">Read about full-stack Weft</Link>
+        <Link href="/learn/full-stack">Read about full-stack Kerf</Link>
       </p>
     </section>
   )
@@ -212,7 +212,7 @@ function bundleSizes() {
       </ul>
       <p data-part="note">
         JavaScript sent to the browser, compressed with brotli, from this repo's{' '}
-        <a href="https://github.com/Ravonus/weft/blob/main/benchmarks/README.md" rel="external">
+        <a href="https://github.com/Ravonus/kerf/blob/main/benchmarks/README.md" rel="external">
           comparison app
         </a>
         .
@@ -229,7 +229,7 @@ function hero() {
       <div data-part="say">
         <h1>The TypeScript framework for fast web apps.</h1>
         <p>
-          Write components in TSX, as you would in React. weft compiles them into small, direct page
+          Write components in TSX, as you would in React. kerf compiles them into small, direct page
           updates, and comes with routing, data, a UI kit and errors your coding agent can act on.
         </p>
         <div data-part="next">
@@ -241,8 +241,8 @@ function hero() {
           </Link>
         </div>
         <p data-part="install">
-          <code>npm create @weft-js my-app</code>
-          <span>Then run npx weft dev in it. Works on Node 26, Bun or Deno.</span>
+          <code>npm create kerf my-app</code>
+          <span>Then run npx kerf dev in it. Works on Node 26, Bun or Deno.</span>
         </p>
       </div>
     </section>

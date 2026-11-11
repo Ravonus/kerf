@@ -9,7 +9,7 @@ import {
   type Sink,
   type Source,
   type StandardSchemaV1,
-} from '@weft-js/start'
+} from '@kerf/start'
 import {
   configure,
   hub,
@@ -17,9 +17,9 @@ import {
   resetHub,
   type Sink as ConnSink,
   type SubEntry,
-} from '@weft-js/start/hub'
-import { createFeed, dbChanges, functionHost, type Poke } from '@weft-js/start/changes'
-import { listen } from '@weft-js/start/listen'
+} from '@kerf/start/hub'
+import { createFeed, dbChanges, functionHost, type Poke } from '@kerf/start/changes'
+import { listen } from '@kerf/start/listen'
 import {
   createScope,
   fetchQuery,
@@ -76,7 +76,7 @@ function conn() {
     close() {},
   } as ConnSink & { frames: [string, unknown][] }
 }
-const request = () => new Request('http://app.test/_weft/rt', { method: 'POST' })
+const request = () => new Request('http://app.test/_kerf/rt', { method: 'POST' })
 const open = async (subs: SubEntry[], s = conn(), ctx: object = {}) => {
   const r = request()
   const c = await hub().connect(
@@ -215,7 +215,7 @@ describe('coalescing', () => {
       (
         await fetchQuery(
           createScope(request(), { store }),
-          (await import('@weft-js/start/data')).fns.get('c.cached')!,
+          (await import('@kerf/start/data')).fns.get('c.cached')!,
           undefined,
         )
       ).v
@@ -520,7 +520,7 @@ function modeExternalTests(quiet: () => void) {
     expect(of(a.s, 'h')[0]!.l).toEqual({ m: 'external' })
     await wait(70)
     expect(of(a.s, 'L').at(-1)).toEqual({ m: 'external', d: 1 })
-    await bus.publish('weft:poke', '{"v":1,"b":1}')
+    await bus.publish('kerf:poke', '{"v":1,"b":1}')
     await wait(1)
     expect(of(a.s, 'L').at(-1)).toEqual({ m: 'external' })
   })

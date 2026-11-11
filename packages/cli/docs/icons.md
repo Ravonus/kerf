@@ -1,23 +1,23 @@
 # Icons
 
-`@weft-js/warp-icons` is weft's own set: 651 original icons in warp's three expression tiers. Outline at quiet and balanced, pixel art on a 16×16 grid at vivid. Each has two forms, hollow (the default) and solid, drawn apart in every tier and shaded with dither.
+`@kerf/veneer-icons` is kerf's own set: 651 original icons in veneer's three expression tiers. Outline at quiet and balanced, pixel art on a 16×16 grid at vivid. Each has two forms, hollow (the default) and solid, drawn apart in every tier and shaded with dither.
 
-`weft add icons` installs it and adds `icons()` to the config. warp already depends on it.
+`kerf add icons` installs it and adds `icons()` to the config. veneer already depends on it.
 
 ## Using one
 
 Three forms, and all three build to the same bytes:
 
 ```tsx
-import { CheckIcon } from '@weft-js/warp-icons'
+import { CheckIcon } from '@kerf/veneer-icons'
 <CheckIcon />
 
 // Or: import * as Icons
-import Icons from '@weft-js/warp-icons'
+import Icons from '@kerf/veneer-icons'
 <Icons.Check />
 
-// Or import from '@weft-js/warp-icons/icon'.
-import { Icon } from '@weft-js/warp'
+// Or import from '@kerf/veneer-icons/icon'.
+import { Icon } from '@kerf/veneer'
 <Icon name="check" />
 ```
 
@@ -27,7 +27,7 @@ Props on any of them:
 // Decorative: aria-hidden, focusable="false"
 <CheckIcon />
 <CheckIcon label="Saved" />   // role="img" with that name
-<CheckIcon size={24} />       // otherwise warp's icon sizes apply
+<CheckIcon size={24} />       // otherwise veneer's icon sizes apply
 // This tier regardless of the page's expression.
 <CheckIcon tier="vivid" />
 ```
@@ -49,7 +49,7 @@ The tier is a prop, never a name. Hollow and solid describe the object: an open 
 
 ## A wrong name
 
-`<Icon name>` is typed, so a bad name is a type error. Untyped code gets the same from the compiler and from `weft check`:
+`<Icon name>` is typed, so a bad name is a type error. Untyped code gets the same from the compiler and from `kerf check`:
 
 ```
 I001 no icon 'chekc', did you mean 'check'?
@@ -59,12 +59,12 @@ It fails the build, and so does a variant an icon doesn't have.
 
 ## Names that aren't literal
 
-The build follows a name through variables, props, conditionals, maps and component boundaries, and ships what it finds. A name it can't follow, such as one from an API, is legal. `weft check` reports it as I002 with the file and the cost (I003 if the pack itself is passed around). That use then gets one of two things:
+The build follows a name through variables, props, conditionals, maps and component boundaries, and ships what it finds. A name it can't follow, such as one from an API, is legal. `kerf check` reports it as I002 with the file and the cost (I003 if the pack itself is passed around). That use then gets one of two things:
 
 - **The pack, as its own chunk.** The default. About 111 KB of brotli for all 651 with every tier in, loaded only by a page that reaches it. A page stays about 1.6 KB bigger than one with no dynamic name.
 - **Single icons from a URL.** `icons({ source: 'https://cdn.example.com/icons/' })`. Nothing of the pack is built; each icon is fetched when first drawn.
 
-`weft icons publish <dir>` writes every icon and variant as static `.svg` files, with a `manifest.json`, for that URL. It writes files and uploads nothing. Action icons aren't published.
+`kerf icons publish <dir>` writes every icon and variant as static `.svg` files, with a `manifest.json`, for that URL. It writes files and uploads nothing. Action icons aren't published.
 
 A remote icon renders an empty `<svg data-icon data-loading>` of the right size until it arrives, then swaps with no layout shift, and carries `data-failed` if the fetch fails. It stays empty on the server, so SSR needs no network. Elements are allowlisted before they are inserted. A Content-Security-Policy needs that origin in `connect-src`.
 
@@ -80,7 +80,7 @@ Five icons have a built-in animation: `trash` (the lid lifts), `bell` (it rings)
 <TrashIconAction action="press" />
 ```
 
-It's CSS alone, and each one's stylesheet ships only if that icon is used (about 230 B of CSS and 50 B of JS, brotli). Outlines ease; pixels move in whole cells, in frames. warp's motion dial and `prefers-reduced-motion` turn it off. An action on another icon is I001.
+It's CSS alone, and each one's stylesheet ships only if that icon is used (about 230 B of CSS and 50 B of JS, brotli). Outlines ease; pixels move in whole cells, in frames. veneer's motion dial and `prefers-reduced-motion` turn it off. An action on another icon is I001.
 
 ## Tiers
 
@@ -88,14 +88,14 @@ With no options each icon carries its tiers, and CSS shows the one for the neare
 
 To compile one tier in, with no switch, name it in the config:
 
-<!-- example: skip @weft-js/warp-icons/plugin has no type declarations yet (TS7016 under strict) -->
+<!-- example: skip @kerf/veneer-icons/plugin has no type declarations yet (TS7016 under strict) -->
 ```ts
-import { icons } from '@weft-js/warp-icons/plugin'
+import { icons } from '@kerf/veneer-icons/plugin'
 
 export default { plugins: [icons({ tier: 'vivid' })] }
 ```
 
-`tier` is `quiet`, `balanced` or `vivid`. warp's own icons follow it too. After that a page's `data-expression` no longer changes icons: run `weft plugins sync` if you change it.
+`tier` is `quiet`, `balanced` or `vivid`. veneer's own icons follow it too. After that a page's `data-expression` no longer changes icons: run `kerf plugins sync` if you change it.
 
 ## Pixel sizes
 
@@ -103,6 +103,6 @@ The pixel tier is exact at 16, 32 and 48. At 20 and 24 a 1× screen rounds cells
 
 ## Styling
 
-A solid cuts its marks with `--warp-icon-knock`, which defaults to `Canvas`. On a coloured surface, like a solid button, set it to that surface's colour.
+A solid cuts its marks with `--veneer-icon-knock`, which defaults to `Canvas`. On a coloured surface, like a solid button, set it to that surface's colour.
 
-Icons are `currentColor`. The weft stroke, the one that says what the icon means, is `[data-w]`, so `svg [data-w] { stroke: var(--warp-color-accent-text) }` colours it. Its weight is `--warp-icon-weft`.
+Icons are `currentColor`. The kerf stroke, the one that says what the icon means, is `[data-w]`, so `svg [data-w] { stroke: var(--veneer-color-accent-text) }` colours it. Its weight is `--veneer-icon-kerf`.

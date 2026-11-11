@@ -1,4 +1,4 @@
-// S001 and S012 in `weft check` (research 29 §4), on a copy of the v3 reference app with planted files.
+// S001 and S012 in `kerf check` (research 29 §4), on a copy of the v3 reference app with planted files.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -7,7 +7,7 @@ import { project } from './helpers.mjs'
 
 const server = {
   'src/server/notes.ts':
-    "import { mutation, query } from '@weft-js/start'\nexport const listNotes = query({ run: () => [] })\nexport const getNote = query({ run: () => ({ id: 1 }) })\nexport const addNote = mutation({ run: () => 1 })\nexport const plain = () => []\n",
+    "import { mutation, query } from '@kerf/start'\nexport const listNotes = query({ run: () => [] })\nexport const getNote = query({ run: () => ({ id: 1 }) })\nexport const addNote = mutation({ run: () => 1 })\nexport const plain = () => []\n",
 }
 const s = (r: Awaited<ReturnType<typeof check>>) =>
   r.diagnostics
@@ -15,7 +15,7 @@ const s = (r: Awaited<ReturnType<typeof check>>) =>
     .map((d) => [d.code, d.file, d.span[0]])
 const line = (name: string, body: string): [string, string] => [
   `src/state/${name}.ts`,
-  `import { listNotes, getNote, plain } from '../server/notes'\nimport { defineState, state, watch, derived } from '@weft-js/core'\n${body}\n`,
+  `import { listNotes, getNote, plain } from '../server/notes'\nimport { defineState, state, watch, derived } from '@kerf/core'\n${body}\n`,
 ]
 
 describe('S001', () => {
@@ -115,7 +115,7 @@ describe('S012', () => {
 describe('X037', () => {
   const page = (name: string, body: string): [string, string] => [
     `src/routes/x037-${name}.tsx`,
-    `import { Boundary, resource as load } from '@weft-js/core'\nimport { listNotes } from '../server/notes'\n${body}\n`,
+    `import { Boundary, resource as load } from '@kerf/core'\nimport { listNotes } from '../server/notes'\n${body}\n`,
   ]
   const flagged = {
     query: page(

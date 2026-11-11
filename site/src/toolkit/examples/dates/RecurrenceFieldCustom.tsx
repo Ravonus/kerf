@@ -1,4 +1,4 @@
-import { RecurrenceField } from '@weft-js/warp'
+import { RecurrenceField } from '@kerf/veneer'
 
 import { TODAY as _Shared0 } from './shared-event'
 

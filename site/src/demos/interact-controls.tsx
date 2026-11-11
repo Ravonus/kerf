@@ -1,4 +1,4 @@
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 import {
   Card,
   Input,
@@ -7,7 +7,7 @@ import {
   Select,
   Switch,
   Textarea,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 type Size = 'small' | 'large'
 

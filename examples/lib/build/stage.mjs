@@ -6,7 +6,7 @@ import { copy } from './copy.mjs'
 import { fingerprint, installedIsPacked, sha } from './fingerprint.mjs'
 import { run } from './run.mjs'
 
-export const localMjs = join(repoRoot, 'packages/create/scripts/local.mjs')
+export const localMjs = join(repoRoot, 'packages/create-kerf/scripts/local.mjs')
 
 export function placeVariant(app, v, work) {
   const dir = join(work, 'apps', app.name, v.name),
@@ -31,7 +31,7 @@ export function reuseStamp({ v, stamp, key, quick }) {
   // A quick build (one, no maps, from e2e.mjs) serves another quick use and never a bench run.
   if (b.key !== key || !existsSync(v.root) || !(quick || !b.quick)) return null
   v.canary = b.canary
-  v.weft = b.weft
+  v.kerf = b.kerf
   v.maps = b.maps
   v.fresh = fingerprint(v.root, v)
   return b.hashes === sha([...v.fresh.hashes].sort().join()) ? b : null
@@ -52,7 +52,7 @@ export async function install({ app, v, store }) {
     ...process.env,
     ...v.buildEnv,
     npm_config_min_release_age: '3',
-    WEFT_LOCAL_DIR: store,
+    KERF_LOCAL_DIR: store,
   }
   delete env.NODE_ENV
   if (v.tarballs) {
@@ -61,7 +61,7 @@ export async function install({ app, v, store }) {
       env,
       log,
     })
-    v.weft = installedIsPacked(root, store)
+    v.kerf = installedIsPacked(root, store)
   } else await run(v.install.join(' '), { cwd: root, env, log })
   if (app.setup) await run(app.setup, { cwd: root, env, log })
 }

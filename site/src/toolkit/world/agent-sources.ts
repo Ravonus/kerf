@@ -1,4 +1,4 @@
-import type { AgentSource } from '@weft-js/warp'
+import type { AgentSource } from '@kerf/veneer'
 
 export const DEPLOY_SOURCES: AgentSource[] = [
   {
@@ -11,7 +11,7 @@ export const DEPLOY_SOURCES: AgentSource[] = [
   },
   {
     title: 'Health checks',
-    path: 'weft docs · Deploys',
+    path: 'kerf docs · Deploys',
     snippet:
       'A deploy that fails three ' +
       'checks in a row is held back ' +

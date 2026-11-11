@@ -9,12 +9,12 @@ import { shapeHotUpdate } from '../../src/vite.mjs'
 import { load as moduleLoad } from '../../src/vite/module-hooks.mjs'
 
 async function project(t) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-level-css-')))
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-level-css-')))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = (name) => join(root, name)
   const write = (name, source) => writeFileSync(file(name), source)
-  mkdirSync(file('.weft/tokens'), { recursive: true })
-  write('.weft/tokens/warp.css', ':root { --size: 4px }')
+  mkdirSync(file('.kerf/tokens'), { recursive: true })
+  write('.kerf/tokens/veneer.css', ':root { --size: 4px }')
   for (const name of [
     'shared',
     'global',
@@ -40,7 +40,7 @@ async function project(t) {
   write(
     'component.js',
     `
-    import './component.css'; import './shared.css'; import 'weft:tokens/warp';
+    import './component.css'; import './shared.css'; import 'kerf:tokens/veneer';
     import './page.tsx'; export function Component() { throw Error('component') }
   `,
   )
@@ -95,7 +95,7 @@ async function project(t) {
     environment: { config: { consumer: 'client' } },
     resolve: (...args) => server.environments.client.pluginContainer.resolveId(...args),
   }
-  const refresh = () => moduleLoad(state).handler.call(ctx, '\0virtual:weft/routes')
+  const refresh = () => moduleLoad(state).handler.call(ctx, '\0virtual:kerf/routes')
   return { root, file, write, state, server, events, refresh }
 }
 
@@ -123,7 +123,7 @@ void test('generated levels include ordered nested styles without loading routes
         p.file('global.css'),
         p.file('first.css'),
         p.file('component.css'),
-        p.file('.weft/tokens/warp.css'),
+        p.file('.kerf/tokens/veneer.css'),
         p.file('last.css'),
       ].map((path) => `${path}?inline`),
     )
@@ -136,7 +136,7 @@ void test('generated levels include ordered nested styles without loading routes
     assert.equal(manifest.shapes['/'].cssStatus, 'partial')
     assert.equal(manifest.shapes['/disabled'].kind, 'disabled')
     assert.equal(manifest.shapes['/custom'].kind, 'unavailable')
-    const pageRequest = JSON.stringify(`${p.file('page.tsx')}?weft-assets`)
+    const pageRequest = JSON.stringify(`${p.file('page.tsx')}?kerf-assets`)
     assert.ok(source.includes(`() => import(${pageRequest})`))
     assert.ok(!source.includes('server.css?inline'))
     assert.ok(!source.includes('unrelated.css?inline'))

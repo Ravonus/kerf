@@ -1,4 +1,4 @@
-// The human form of `weft routes --meta`: one line per page, and one per sampled page of a param route, with where each
+// The human form of `kerf routes --meta`: one line per page, and one per sampled page of a param route, with where each
 // value came from. `--json` has everything else (every tag, the merged object).
 
 const short = (s, n) => {
@@ -8,13 +8,13 @@ const short = (s, n) => {
 
 const cell = (s, n) => short(s, n).padEnd(n)
 
-/** `/_weft/og/users/42.png?v=abc` → `card: users/42.png`; an explicit image as it is. */
+/** `/_kerf/og/users/42.png?v=abc` → `card: users/42.png`; an explicit image as it is. */
 const imageOf = (url) =>
   !url
     ? 'none'
     : url
         .replace(/^https?:\/\/[^/]+/, '')
-        .replace(/^\/_weft\/og\//, '/_weft/og/')
+        .replace(/^\/_kerf\/og\//, '/_kerf/og/')
         .replace(/\?v=.*/, '')
 
 export function metaTable(result) {

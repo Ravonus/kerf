@@ -1,5 +1,5 @@
-import { state, untrack } from '@weft-js/core'
-import { Checkbox } from '@weft-js/warp'
+import { state, untrack } from '@kerf/core'
+import { Checkbox } from '@kerf/veneer'
 import type { Knobs } from './shared'
 
 export function CheckboxPlay(p: Knobs) {

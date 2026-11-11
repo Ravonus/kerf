@@ -1,5 +1,5 @@
-import { onMount, state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { onMount, state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 import bytes from '../generated/arena.json'
 import built from '../generated/arena-built.json'
 import speed from '../generated/speed.json'
@@ -14,7 +14,7 @@ const harness = (r: { frame: HTMLIFrameElement | undefined }) =>
   (r.frame?.contentWindow as { arena?: Harness } | null | undefined)?.arena
 
 const FRAMES = [
-  { id: 'weft', name: 'weft' },
+  { id: 'kerf', name: 'kerf' },
   { id: 'solid', name: 'Solid' },
   { id: 'react', name: 'React' },
 ] as const
@@ -31,13 +31,13 @@ const time = (v: number) => (v < 0.01 ? '<0.01' : v < 10 ? v.toFixed(2) : v.toFi
 const us = (v: number) => `${Math.round(v)} µs`
 const top = Math.max(...FRAMES.map((f) => bytes[f.id]))
 
-/* @weft visible */
+/* @kerf visible */
 /** The same app built three times, each in its own frame. All readouts come from the frames' own harness. */
 export function Arena() {
   const model = arenaState()
   return (
     <section data-site="arena" ref={model.setBox}>
-      <h2>The same app in Weft, Solid and React</h2>
+      <h2>The same app in Kerf, Solid and React</h2>
       {!built.frames && (
         <p data-part="missing" role="status">
           The live comparison isn't in this build: its three frames come from{' '}
@@ -56,14 +56,14 @@ export function Arena() {
             added up. One update in 30 runs untimed so its page changes can be counted. Time per
             update stays empty until a run has about five seconds in it, because a few clicks are
             too few to compare. On an {speed.machine}, 60 updates a second take{' '}
-            {us(speed.arena.weft)} each in weft, {us(speed.arena.solid)} in Solid,{' '}
+            {us(speed.arena.kerf)} each in kerf, {us(speed.arena.solid)} in Solid,{' '}
             {us(speed.arena.react)} in React and {us(speed.arena.raw)} in hand-written DOM.
           </p>
         </>
       )}
       <h3>Speed, measured in Chromium</h3>
       <p data-part="intro">
-        weft is faster than Solid in {speed.wins} of these {speed.rows.length} rows and slower in{' '}
+        kerf is faster than Solid in {speed.wins} of these {speed.rows.length} rows and slower in{' '}
         {speed.losses}, marked in red. In the rest the rounds overlap. Times are milliseconds, the
         median of three rounds on an {speed.machine} on {speed.when}, with Solid {speed.solid}.
       </p>
@@ -72,7 +72,7 @@ export function Arena() {
           <thead>
             <tr>
               <th scope="col">Operation</th>
-              <th scope="col">Weft</th>
+              <th scope="col">Kerf</th>
               <th scope="col">Solid</th>
               <th scope="col">React</th>
               <th scope="col">Fastest</th>
@@ -82,7 +82,7 @@ export function Arena() {
             {speed.rows.map((r) => (
               <tr key={r.label} data-lost={r.fastest === 'Solid' ? '' : undefined}>
                 <th scope="row">{r.label}</th>
-                <td>{time(r.weft)}</td>
+                <td>{time(r.kerf)}</td>
                 <td>{time(r.solid)}</td>
                 <td>{time(r.react)}</td>
                 <td>{r.fastest}</td>

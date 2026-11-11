@@ -1,0 +1,16 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.data {
+/* small shared atoms ------------------------------------------------------- */
+:where([data-scope="chip"]) {
+  display: inline-flex; align-items: center; gap: 6px; block-size: 28px; padding-inline: 10px 4px; border-radius: var(--veneer-radius-round);
+  background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); font-size: var(--veneer-text-caption-size); font-weight: 500; white-space: nowrap;
+}
+:where([data-scope="chip"] b) { font-weight: 600; }
+:where([data-scope="chip"] button) {
+  all: unset; position: relative; display: grid; place-items: center; inline-size: 20px; block-size: 20px; border-radius: 50%; cursor: pointer;
+}
+:where([data-scope="chip"] button)::after { content: ""; position: absolute; inset: min(0px, calc((20px - var(--veneer-hit-min)) / 2)); }
+:where([data-scope="chip"] button:is(:hover)),
+:where([data-scope="chip"] button:is(:focus-visible)) { background: color-mix(in oklab, currentColor 14%, transparent); }
+:where([data-scope="chip"] button:focus-visible) { outline: 2px solid var(--veneer-color-focus); }
+}

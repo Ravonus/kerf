@@ -1,0 +1,5 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* activity feed: a quiet timeline with a hairline spine */
+:where([data-scope="activity-feed"] > header) { display: flex; justify-content: space-between; align-items: center; gap: var(--veneer-space-related); }
+}

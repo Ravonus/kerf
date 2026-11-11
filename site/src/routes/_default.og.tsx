@@ -1,4 +1,4 @@
-import type { OgProps } from '@weft-js/start'
+import type { OgProps } from '@kerf/start'
 import art from '../generated/card-art.json'
 
 /** Every page's share card: the hero's dither and the woven mark, with the page's own title and sentence. */
@@ -15,7 +15,7 @@ export default function Card(props: OgProps) {
       <div style="display:flex;flex-direction:column;justify-content:space-between;position:relative;width:620px;height:100%;padding:56px 0 56px 64px">
         <div style="display:flex;flex-direction:column">
           <h1 style="margin:0;font-size:56px;line-height:1.05;font-weight:700;font-family:Space Grotesk">
-            {props.title.replace(/ · weft$/, '')}
+            {props.title.replace(/ · kerf$/, '')}
           </h1>
           <p style="margin:24px 0 0 0;font-size:26px;line-height:1.4;color:#b9bfb4">
             {props.description}

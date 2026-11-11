@@ -1,6 +1,6 @@
-import { bar } from '@weft-js/warp-core/charts'
+import { bar } from '@kerf/veneer-core/charts'
 
-import { Chart } from '@weft-js/warp'
+import { Chart } from '@kerf/veneer'
 
 import { dollars as _Shared0 } from './shared-dollars'
 

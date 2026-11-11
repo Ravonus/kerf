@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { on } from '@weft-js/core/browser'
-import { Card } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { on } from '@kerf/core/browser'
+import { Card } from '@kerf/veneer'
 
 /** Pointer position over `el()` as a box. The listener
  * leaves with the caller's owner. */
@@ -36,8 +36,8 @@ export default function Tracker() {
         ref={(el: HTMLElement) => (pad = el)}
         style={
           'block-size:6rem;' +
-          'border:1px dashed var(--warp-color-border);' +
-          'border-radius:var(--warp-radius-control)'
+          'border:1px dashed var(--veneer-color-border);' +
+          'border-radius:var(--veneer-radius-control)'
         }
       >
         <p>

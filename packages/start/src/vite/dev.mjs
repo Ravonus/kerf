@@ -8,8 +8,8 @@ const NOT_LOADING = `<!doctype html><meta charset="utf-8"><title>This page faile
 <body style="font:16px system-ui;padding:2rem"><h1>This page failed to load</h1><p>The error is in the terminal. This tab reloads when you save a fix.</p>
 <script type="module">
 import { createHotContext } from '/@vite/client'
-const hot = createHotContext('/@weft/not-loading')
-for (const event of ['vite:afterUpdate', 'weft:refresh']) hot.on(event, () => location.reload())
+const hot = createHotContext('/@kerf/not-loading')
+for (const event of ['vite:afterUpdate', 'kerf:refresh']) hot.on(event, () => location.reload())
 </script>`
 
 export function waitingForAFix(req, res, next) {
@@ -65,10 +65,10 @@ export function refresh(vite, rel, say = true, queries = true) {
     setTimeout(() => {
       if (say)
         vite.config.logger.info(
-          `weft: ${rel} runs on the server: refreshing the page's data, state kept`,
+          `kerf: ${rel} runs on the server: refreshing the page's data, state kept`,
           { timestamp: true },
         )
-      vite.ws.send({ type: 'custom', event: 'weft:refresh', data: { queries } })
+      vite.ws.send({ type: 'custom', event: 'kerf:refresh', data: { queries } })
     }, 50),
   )
 }
@@ -77,7 +77,7 @@ export function packageDirs(root) {
   const req = createRequire(join(root, 'package.json'))
   const own = createRequire(join(here, 'vite.mjs'))
   const out = []
-  for (const name of ['@weft-js/core/vite', 'nitro/package.json']) {
+  for (const name of ['@kerf/core/vite', 'nitro/package.json']) {
     // each at its package root
     for (const r of [req, own]) {
       try {

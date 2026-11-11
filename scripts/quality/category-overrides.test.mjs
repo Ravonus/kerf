@@ -16,7 +16,7 @@ void test('CLI generates a config and rejects drift', async () => {
   const { tmpdir } = await import('node:os')
   const { join } = await import('node:path')
   const { spawnSync } = await import('node:child_process')
-  const dir = mkdtempSync(join(tmpdir(), 'weft-overrides-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-overrides-'))
   try {
     const script = 'scripts/quality/category-overrides.mjs'
     const generate = spawnSync(process.execPath, [script, '--generate'], { encoding: 'utf8' })
@@ -40,14 +40,14 @@ void test('category warnings do not hide independently enforced lint errors', as
   const { join, resolve } = await import('node:path')
   const { spawnSync } = await import('node:child_process')
   const { runCategoryLint } = await import('./category-overrides.mjs')
-  const dir = mkdtempSync(join(tmpdir(), 'weft-category-run-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-category-run-'))
   try {
     mkdirSync(join(dir, 'src/utils'), { recursive: true })
     const path = 'src/utils/test.ts'
     const content = 'function f(a,b,c,d,e,f) { return a }\nf(1,2,3,4,5,6)\n'
     writeFileSync(join(dir, path), content)
     const local = resolve('node_modules/.bin/oxlint')
-    const binary = existsSync(local) ? local : resolve('../../weft/node_modules/.bin/oxlint')
+    const binary = existsSync(local) ? local : resolve('../../kerf/node_modules/.bin/oxlint')
     const warnings = []
     runCategoryLint({
       files: [{ path, content }],
@@ -60,7 +60,7 @@ void test('category warnings do not hide independently enforced lint errors', as
       JSON.stringify(warnings),
     )
     assert.equal(
-      readdirSync(dir).some((name) => name.startsWith('.weft-category-')),
+      readdirSync(dir).some((name) => name.startsWith('.kerf-category-')),
       false,
     )
     writeFileSync(
@@ -82,7 +82,7 @@ void test('category warnings do not hide independently enforced lint errors', as
       /Category lint failed/,
     )
     assert.equal(
-      readdirSync(dir).some((name) => name.startsWith('.weft-category-')),
+      readdirSync(dir).some((name) => name.startsWith('.kerf-category-')),
       false,
     )
   } finally {

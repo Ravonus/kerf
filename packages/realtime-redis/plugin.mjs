@@ -1,18 +1,18 @@
-// redis() for weft.config.ts: this package as the `realtime.bus` provider. Listed here, it replaces the memory bus, and
+// redis() for kerf.config.ts: this package as the `realtime.bus` provider. Listed here, it replaces the memory bus, and
 // a bus set in `src/realtime.server.ts` still wins.
-import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
+import { definePlugin, defineSlot, provide } from '@kerf/core/plugin'
 
 const slot = defineSlot({ id: 'realtime.bus', version: 1, cardinality: 'one', sides: ['server'] })
 
 export const redis = definePlugin({
-  name: '@weft-js/realtime-redis',
+  name: '@kerf/realtime-redis',
   version: '0.1.0',
-  weft: '*',
-  permissions: { net: ['env:REDIS_URL'], env: ['REDIS_URL', 'WEFT_BUILD'] },
+  kerf: '*',
+  permissions: { net: ['env:REDIS_URL'], env: ['REDIS_URL', 'KERF_BUILD'] },
   contribute: (options) => ({
     provides: [
       provide(slot, {
-        sides: { server: { module: '@weft-js/realtime-redis', export: 'bus', options } },
+        sides: { server: { module: '@kerf/realtime-redis', export: 'bus', options } },
       }),
     ],
     agents: {

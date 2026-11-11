@@ -1,4 +1,4 @@
-import { Card, Text, Code } from '@weft-js/warp'
+import { Card, Text, Code } from '@kerf/veneer'
 
 export const CodeOnACard = () => (
   <Card

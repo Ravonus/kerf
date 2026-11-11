@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   Row,
   Stack,
   Text,
   Textarea,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 export function TextareaReleaseNote() {
   const text = state('')

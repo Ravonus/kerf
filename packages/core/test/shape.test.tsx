@@ -1,9 +1,9 @@
 // Shape variants and placeholders (research 31): <Boundary pending="shape"> renders the compiled variant of its
-// children from a resource's shape, in warp's SkeletonScope markup, and none of the component's behaviour runs.
-// weft-allow T004, T005: fake timers drive the Boundary's timing; the skeleton's structure is the behaviour under test
-import { fakeMeasure, flush, render } from '@weft-js/core/test'
-import { fill, mask, placeholder, shapeAny, shapeText } from '@weft-js/core/shape'
-import { streamBlocks, Text } from '@weft-js/core/text'
+// children from a resource's shape, in veneer's SkeletonScope markup, and none of the component's behaviour runs.
+// kerf-allow T004, T005: fake timers drive the Boundary's timing; the skeleton's structure is the behaviour under test
+import { fakeMeasure, flush, render } from '@kerf/core/test'
+import { fill, mask, placeholder, shapeAny, shapeText } from '@kerf/core/shape'
+import { streamBlocks, Text } from '@kerf/core/text'
 import { Page } from './fixtures/shape/Page'
 import type { Post } from './fixtures/shape/Feed'
 
@@ -112,7 +112,7 @@ test('shapeAny reads as anything; shapeText survives what throws', () => {
 
 test('<Text reserve>: a placeholder in the real element, then one swap', async () => {
   vi.useRealTimers()
-  const { state } = await import('@weft-js/core')
+  const { state } = await import('@kerf/core')
   const text = state<string | undefined>(undefined)
   render(() => (
     <Text as="h2" class="t" reserve={11}>
@@ -137,7 +137,7 @@ test('<Text reserve>: a placeholder in the real element, then one swap', async (
 
 test('<Text stream>: the height only grows', async () => {
   vi.useRealTimers()
-  const { state } = await import('@weft-js/core')
+  const { state } = await import('@kerf/core')
   const text = state('Hello')
   let height = 40
   vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
@@ -158,7 +158,7 @@ test('<Text stream>: the height only grows', async () => {
 
 test('<Text stream>: tokens land once a frame, in whole lines, and complete blocks are never rewritten', async () => {
   vi.useRealTimers()
-  const { state } = await import('@weft-js/core')
+  const { state } = await import('@kerf/core')
   const text = state('# One')
   let height = 25
   vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
@@ -204,7 +204,7 @@ test('streamBlocks: a blank line inside a code fence does not end a block', () =
 })
 
 test('measure, lines and fit: exact boxes from the slot, null with none bound', async () => {
-  const { measure, lines, fit } = await import('@weft-js/core/text')
+  const { measure, lines, fit } = await import('@kerf/core/text')
   const spec = { font: '16px Inter', lineHeight: 20, width: 80 }
   let box!: ReturnType<typeof measure>,
     rows!: ReturnType<typeof lines>,

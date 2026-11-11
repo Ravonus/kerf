@@ -1,20 +1,20 @@
 # Core entrypoints
 
 Import application APIs such as `state`, `derived`, `watch`, `context` and `createRoot`
-from `@weft-js/core`. Use the `State<T>` and `Derived<T>` types for boxes.
+from `@kerf/core`. Use the `State<T>` and `Derived<T>` types for boxes.
 
 `memo(fn)` returns a cached accessor, `() => T`. Call it to read the current value.
 It tracks the same dependencies as `derived(fn)` and recomputes when they change.
 
 ```ts
-import { memo, state } from '@weft-js/core'
+import { memo, state } from '@kerf/core'
 
 const count = state(1)
 const twice = memo(() => count.value * 2)
 console.log(twice()) // 2
 ```
 
-Compiler output and framework integrations use `@weft-js/core/internal`. This
+Compiler output and framework integrations use `@kerf/core/internal`. This
 entrypoint re-exports the runtime's existing implementations and shares its graph,
 box constructors and server state. It does not create another runtime instance.
 
@@ -27,4 +27,4 @@ Applications create boxes with `state` rather than constructing `Box`.
 tracks a renderer's child binding. `localProps` implements writable prop locals.
 `restOf` takes the prop snapshot used by a compiled native-element spread. These
 are compiler and renderer contracts, rather than application APIs. The `hole`
-export of `@weft-js/core/ssr` is a separate server-rendering helper.
+export of `@kerf/core/ssr` is a separate server-rendering helper.

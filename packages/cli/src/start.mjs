@@ -1,5 +1,5 @@
-// `weft dev`, `weft build` and `weft routes` for an app with src/routes: they run @weft-js/start (research 25 §6–7).
-// @weft-js/start resolves from the app first (its own version), then from this workspace.
+// `kerf dev`, `kerf build` and `kerf routes` for an app with src/routes: they run @kerf/start (research 25 §6–7).
+// @kerf/start resolves from the app first (its own version), then from this workspace.
 
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -24,11 +24,11 @@ export { routeDiagnostics } from './start/routes.mjs'
 export async function start(root, sub) {
   let file
   try {
-    file = createRequire(join(root, 'package.json')).resolve(`@weft-js/start/${sub}`)
+    file = createRequire(join(root, 'package.json')).resolve(`@kerf/start/${sub}`)
   } catch {
     const sibling = new URL(`../../start/src/${sub}.mjs`, import.meta.url)
     if (!existsSync(sibling))
-      throw Object.assign(new Error('@weft-js/start is not installed in this project'), {
+      throw Object.assign(new Error('@kerf/start is not installed in this project'), {
         code: 'E_USAGE',
       })
     file = sibling
@@ -36,8 +36,8 @@ export async function start(root, sub) {
   return import(typeof file === 'string' ? pathToFileURL(file).href : file.href)
 }
 
-/** The config's `site` (metadata defaults), and the config diagnostics. Slot files are synced first, so @weft-js/core/vite
- * finds the build-side providers (`.weft/slots/<id>.build.json`, research 26 §3.1). */
+/** The config's `site` (metadata defaults), and the config diagnostics. Slot files are synced first, so @kerf/core/vite
+ * finds the build-side providers (`.kerf/slots/<id>.build.json`, research 26 §3.1). */
 async function site(root) {
   const loaded = await loadConfig(root)
   if (!loaded.diagnostics.some((d) => d.code === 'P007') && loaded.config?.plugins?.length)
@@ -52,7 +52,7 @@ async function site(root) {
   }
 }
 
-/** `site` with what plugins know about the app's look (`card` in a manifest): warp's colours, the text plugin's faces. */
+/** `site` with what plugins know about the app's look (`card` in a manifest): veneer's colours, the text plugin's faces. */
 export function siteOf(loaded) {
   const base = loaded.config?.site ?? {}
   const given = (loaded.contributions ?? []).map((c) => c.manifest.card).filter(Boolean)
@@ -61,7 +61,7 @@ export function siteOf(loaded) {
   return { ...base, card: { ...card, ...base.card, fonts: { ...card.fonts, ...base.card?.fonts } } }
 }
 
-/** `runtime` in weft.config.ts or `--runtime`, as a Nitro preset (research 28 §5). */
+/** `runtime` in kerf.config.ts or `--runtime`, as a Nitro preset (research 28 §5). */
 export const PRESETS = { node: 'node', bun: 'bun', deno: 'deno_server' }
 /** With no `runtime` in the config, the one running this: a machine may have only that one. */
 export const hostRuntime = () =>
@@ -89,7 +89,7 @@ export async function devCommand(root, { port } = {}) {
     ? await devSidecars({ root, site: config.site, rust })
     : undefined
   const server = await dev({ root, ...config, port })
-  if (server.watcher) server.weftProps = attachProps(server, root, (await loadConfig(root)).config)
+  if (server.watcher) server.kerfProps = attachProps(server, root, (await loadConfig(root)).config)
   if (sidecars) {
     sidecars.attach(server)
     const close = server.close.bind(server)
@@ -136,8 +136,8 @@ export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) 
   const config = await site(root)
   preset = await buildPreset(root, { preset, runtime, hostRuntime, PRESETS })
   // A build holds no secrets: an app's env check stands down, and server modules load without a database.
-  const held = process.env.WEFT_BUILD
-  process.env.WEFT_BUILD = '1'
+  const held = process.env.KERF_BUILD
+  process.env.KERF_BUILD = '1'
   try {
     const rust = (await loadConfig(root)).config?.rust
     const refuse = (d) => {
@@ -145,7 +145,7 @@ export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) 
       // a finding, not a misuse: exit 1 with the fix and the way past it, never the usage text
       throw Object.assign(
         new Error(
-          `${d.code}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}\nTo build anyway: --unsafe-allow ${d.code}, or build.unsafeAllow in weft.config.ts with why.`,
+          `${d.code}: ${d.why}${d.rendered ? `\n${d.rendered}` : ''}\nTo build anyway: --unsafe-allow ${d.code}, or build.unsafeAllow in kerf.config.ts with why.`,
         ),
         { code: 'E_REFUSED' },
       )
@@ -197,8 +197,8 @@ export async function buildCommand(root, { preset, runtime, unsafeAllow } = {}) 
       writeContract,
     })
   } finally {
-    if (held === undefined) delete process.env.WEFT_BUILD
-    else process.env.WEFT_BUILD = held
+    if (held === undefined) delete process.env.KERF_BUILD
+    else process.env.KERF_BUILD = held
   }
 }
 
@@ -209,7 +209,7 @@ const SERVERS = {
   deno: ['deno', ['run', '-A']],
 }
 
-/** `weft start`: run `.output/` on the runtime it was built for. Resolves with the exit code. */
+/** `kerf start`: run `.output/` on the runtime it was built for. Resolves with the exit code. */
 export async function startCommand(root, { runtime } = {}) {
   const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? hostRuntime()
   if (!SERVERS[chosen])
@@ -238,18 +238,18 @@ export async function startCommand(root, { runtime } = {}) {
   })
 }
 
-/** The hash `weft db generate` records and Q015 compares. */
+/** The hash `kerf db generate` records and Q015 compares. */
 export const schemaHash = (text) => createHash('sha256').update(text).digest('hex').slice(0, 16)
 
-/** What `weft db` takes. There's no `migrate`: new migrations apply on the next request. */
+/** What `kerf db` takes. There's no `migrate`: new migrations apply on the next request. */
 export const DB_COMMANDS = ['generate', 'live', 'listen']
 
-/** `weft db generate [name]`: the data layer's migration, on Node like all of dev (research 28 §2, 34 §4). */
+/** `kerf db generate [name]`: the data layer's migration, on Node like all of dev (research 28 §2, 34 §4). */
 export async function dbCommand(root, sub, name) {
   if (!DB_COMMANDS.includes(sub))
     throw Object.assign(
       new Error(
-        `weft db ${sub ?? ''}: use generate (new migrations apply on the next request), live or listen`,
+        `kerf db ${sub ?? ''}: use generate (new migrations apply on the next request), live or listen`,
       ),
       { code: 'E_USAGE' },
     )
@@ -257,7 +257,7 @@ export async function dbCommand(root, sub, name) {
   if (sub === 'listen') return dbListen(root)
   const layer = await dbLayer(root)
   if (!layer)
-    throw Object.assign(new Error('this app has no database: `weft add db` adds one'), {
+    throw Object.assign(new Error('this app has no database: `kerf add db` adds one'), {
       code: 'E_USAGE',
     })
   const output = layer.generate(root, name)
@@ -270,10 +270,10 @@ export async function dbCommand(root, sub, name) {
   return { ok: true, output }
 }
 
-/** `weft db live`: a migration that adds change triggers to the tables in `changes` (Postgres, SQLite, MySQL). */
+/** `kerf db live`: a migration that adds change triggers to the tables in `changes` (Postgres, SQLite, MySQL). */
 async function dbLive(root) {
-  const held = process.env.WEFT_BUILD
-  process.env.WEFT_BUILD = '1'
+  const held = process.env.KERF_BUILD
+  process.env.KERF_BUILD = '1'
   const config = await site(root)
   const { withRealtime } = await start(root, 'contract')
   const { changeSql } = await start(root, 'changes-sql')
@@ -289,15 +289,15 @@ async function dbLive(root) {
       return { sql: changeSql(changes.dialect, defs), tables: defs.map((t) => t.name) }
     }))
   } finally {
-    if (held === undefined) delete process.env.WEFT_BUILD
-    else process.env.WEFT_BUILD = held
+    if (held === undefined) delete process.env.KERF_BUILD
+    else process.env.KERF_BUILD = held
   }
   const layer = await dbLayer(root)
   if (layer?.layer !== 'drizzle')
     return { ok: true, output: `${sql}\n-- add this to a migration of your data layer` }
   const req = createRequire(join(root, 'package.json'))
   const bin = join(dirname(req.resolve('drizzle-kit')), 'bin.cjs')
-  const r = spawnSync(process.execPath, [bin, 'generate', '--custom', '--name=weft_live'], {
+  const r = spawnSync(process.execPath, [bin, 'generate', '--custom', '--name=kerf_live'], {
     cwd: root,
     encoding: 'utf8',
   })
@@ -316,7 +316,7 @@ async function dbLive(root) {
   }
 }
 
-/** `weft db listen`: the change feed as its own process, for an app on functions. Runs until SIGINT or SIGTERM. */
+/** `kerf db listen`: the change feed as its own process, for an app on functions. Runs until SIGINT or SIGTERM. */
 async function dbListen(root) {
   if (existsSync(join(root, '.env'))) process.loadEnvFile(join(root, '.env'))
   const config = await site(root)
@@ -326,7 +326,7 @@ async function dbListen(root) {
       throw Object.assign(new Error('`src/realtime.server.ts` has no `changes`'), {
         code: 'E_USAGE',
       })
-    const { listen } = await server.ssrLoadModule('@weft-js/start/listen')
+    const { listen } = await server.ssrLoadModule('@kerf/start/listen')
     const stop = await listen({ changes, bus: bus ?? { name: 'memory' } })
     await new Promise((ok) => {
       process.once('SIGINT', ok)
@@ -334,15 +334,15 @@ async function dbListen(root) {
     })
     await stop()
   })
-  return { ok: true, output: 'weft db listen: stopped' }
+  return { ok: true, output: 'kerf db listen: stopped' }
 }
 
-/** `weft doctor`: what live data does on this deploy target, and what to do about what it can't. */
+/** `kerf doctor`: what live data does on this deploy target, and what to do about what it can't. */
 export async function doctorCommand(root, { preset, runtime } = {}) {
   const config = await site(root)
   const chosen = runtime ?? (await loadConfig(root)).config?.runtime ?? 'node'
-  const held = process.env.WEFT_BUILD
-  process.env.WEFT_BUILD = '1'
+  const held = process.env.KERF_BUILD
+  process.env.KERF_BUILD = '1'
   try {
     const { readLivePlan } = await start(root, 'contract')
     const plan = await readLivePlan({
@@ -359,8 +359,8 @@ export async function doctorCommand(root, { preset, runtime } = {}) {
       ),
     }
   } finally {
-    if (held === undefined) delete process.env.WEFT_BUILD
-    else process.env.WEFT_BUILD = held
+    if (held === undefined) delete process.env.KERF_BUILD
+    else process.env.KERF_BUILD = held
   }
 }
 

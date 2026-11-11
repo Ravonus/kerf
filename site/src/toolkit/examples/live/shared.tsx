@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
-import { Button, Inset, Text } from '@weft-js/warp'
-import type { Note, Participant } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Inset, Text } from '@kerf/veneer'
+import type { Note, Participant } from '@kerf/veneer'
 import { NOTES } from '../../world'
 
 export const pause = (ms: number) =>

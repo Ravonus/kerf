@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Badge, Button, Card } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Badge, Button, Card } from '@kerf/veneer'
 
 const READERS = ['Alice', 'Bob']
 

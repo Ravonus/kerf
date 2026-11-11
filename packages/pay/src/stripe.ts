@@ -151,9 +151,9 @@ const id = (x: unknown): string | undefined =>
 const identity = (object: StripeObject) => {
   const m = object?.metadata ?? {}
   return {
-    ...(m.weft_user && { user: m.weft_user }),
-    ...(m.weft_product && { product: m.weft_product }),
-    ...(m.weft_plan && { plan: m.weft_plan }),
+    ...(m.kerf_user && { user: m.kerf_user }),
+    ...(m.kerf_product && { product: m.kerf_product }),
+    ...(m.kerf_plan && { plan: m.kerf_plan }),
   }
 }
 
@@ -225,7 +225,7 @@ function stripeCall(
     if (api === API && /placeholder/i.test(key))
       throw new PayError(
         'PAY003',
-        '`STRIPE_SECRET_KEY` is still the placeholder `weft add pay` wrote: nothing was sent to Stripe',
+        '`STRIPE_SECRET_KEY` is still the placeholder `kerf add pay` wrote: nothing was sent to Stripe',
         500,
       ) // a mock may take one
     return key
@@ -321,9 +321,9 @@ export function stripeRail(options: StripeOptions = {}): PayRail {
     async checkout(request) {
       const { line, user, customer } = request
       const metadata = {
-        weft_user: user,
-        weft_product: line.product,
-        ...(line.plan && { weft_plan: line.plan }),
+        kerf_user: user,
+        kerf_product: line.product,
+        ...(line.plan && { kerf_plan: line.plan }),
       }
       const session = await call(
         '/v1/checkout/sessions',

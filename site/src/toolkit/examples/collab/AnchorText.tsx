@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
-import { CommentAnchor, Stack, Text } from '@weft-js/warp'
+import { CommentAnchor, Stack, Text } from '@kerf/veneer'
 
 import { wait as _Shared0 } from './shared-wait'
 

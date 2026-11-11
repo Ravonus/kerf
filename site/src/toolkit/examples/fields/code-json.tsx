@@ -2,7 +2,7 @@ import {
   CodeInput,
   Grid,
   JsonEditor,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { Cell } from '../../world'
 import { SCRIPT } from './payment-card-code'
 
@@ -109,7 +109,7 @@ export const checkConfig = (v: unknown) =>
 
 export const JsonEditorBasic = () => (
   <JsonEditor
-    label="weft.json"
+    label="kerf.json"
     defaultValue={CONFIG}
     rows={7}
   />
@@ -117,7 +117,7 @@ export const JsonEditorBasic = () => (
 
 export const JsonEditorSchema = () => (
   <JsonEditor
-    label="weft.json"
+    label="kerf.json"
     defaultValue={BAD_CONFIG}
     rows={7}
     schema={checkConfig}
@@ -126,7 +126,7 @@ export const JsonEditorSchema = () => (
 
 export const JsonEditorBroken = () => (
   <JsonEditor
-    label="weft.json"
+    label="kerf.json"
     defaultValue={
       '{\n  "region": "eu-west",\n  "copies": 3,\n}'
     }

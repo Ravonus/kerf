@@ -1,5 +1,5 @@
-import { Segmented } from '@weft-js/warp'
-import { state } from '@weft-js/core'
+import { Segmented } from '@kerf/veneer'
+import { state } from '@kerf/core'
 
 const STOPS = [
   { value: 'quiet', label: 'Quiet' },
@@ -7,7 +7,7 @@ const STOPS = [
   { value: 'vivid', label: 'Vivid' },
 ]
 
-/** Sets one attribute on the page's stages. Nothing re-renders: Warp's tokens and icons read the nearest one. */
+/** Sets one attribute on the page's stages. Nothing re-renders: Veneer's tokens and icons read the nearest one. */
 export function TierPicker() {
   const stop = state('balanced')
   const pick = (v: string) => {

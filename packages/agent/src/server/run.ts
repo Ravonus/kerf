@@ -1,7 +1,7 @@
 // A turn: the bridge writes, asks for tools, gets their results and writes again, until it's done, a call waits for
 // the owner, or it runs out of steps. Every step's usage is recorded; the reply is saved as one message.
 import { randomBytes, randomUUID } from 'node:crypto'
-import { serverCall, type Context } from '@weft-js/start'
+import { serverCall, type Context } from '@kerf/start'
 import type { Bridge } from '../bridge'
 import {
   allows,

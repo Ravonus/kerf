@@ -1,8 +1,8 @@
 // The server half. `src/agent.server.ts` default-exports `defineAgent({ … })`: that turns the extension on, and
-// `src/server/agent.ts` (which `weft add agent` writes) wraps its methods as the app's own queries and mutations, so the
+// `src/server/agent.ts` (which `kerf add agent` writes) wraps its methods as the app's own queries and mutations, so the
 // pages get caching, invalidation and live updates like any other data.
-import type { Context } from '@weft-js/start'
-import type { ServerExtension } from '@weft-js/start/extension'
+import type { Context } from '@kerf/start'
+import type { ServerExtension } from '@kerf/start/extension'
 import { scopes, toolsFor } from './tools'
 import { conversationApi, turnApi } from './server/conversations'
 import { makeCore, userOf, type AgentOptions } from './server/core'
@@ -41,5 +41,5 @@ export type Agent = ReturnType<typeof defineAgent>
 /** The `server.extension@1` provider: `src/agent.server.ts` default-exports `defineAgent(...)`. */
 export const extension = (app: Agent): ServerExtension => app.extension
 
-/** The extension's key: its routes live under `/_weft/x/agent/`. */
+/** The extension's key: its routes live under `/_kerf/x/agent/`. */
 export const key = 'agent'

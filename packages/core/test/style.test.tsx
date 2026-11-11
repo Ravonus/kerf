@@ -1,19 +1,19 @@
-// Style groups (research 23, @weft-js/core/style): the compiler lowers call sites to attributes, the emitter writes CSS for
+// Style groups (research 23, @kerf/core/style): the compiler lowers call sites to attributes, the emitter writes CSS for
 // the values call sites can produce, a reactive axis is one attribute write, and SSR → hydrate claims the attributes
 // with no writes. The groups shop is examples/style-groups.
-// weft-allow T005: framework test of compiled markup, SSR and hydration; attributes and node identity are the subject
+// kerf-allow T005: framework test of compiled markup, SSR and hydration; attributes and node identity are the subject
 import { screen } from '@testing-library/dom'
-import { state } from '@weft-js/core'
-import { renderToString } from '@weft-js/core/ssr'
-import { hydrate } from '@weft-js/core/dom'
-import { flush, render, touches } from '@weft-js/core/test'
-import { group } from '@weft-js/core/style'
+import { state } from '@kerf/core'
+import { renderToString } from '@kerf/core/ssr'
+import { hydrate } from '@kerf/core/dom'
+import { flush, render, touches } from '@kerf/core/test'
+import { group } from '@kerf/core/style'
 import { hydration } from '../src/hydrate'
 import { emitGroups, GroupError, resolve, type GroupSource, type GroupUse } from '../src/style/css'
 // oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
-import { GroupShop as ServerShop } from './fixtures/ssr/GroupShop.tsx?weft-ssr'
-import { GroupShop as ClientShop } from './fixtures/ssr/GroupShop.tsx?weft-hydrate'
-import type { Product } from '../../../evals/reference-v3/weft/src/api'
+import { GroupShop as ServerShop } from './fixtures/ssr/GroupShop.tsx?kerf-ssr'
+import { GroupShop as ClientShop } from './fixtures/ssr/GroupShop.tsx?kerf-hydrate'
+import type { Product } from '../../../evals/reference-v3/kerf/src/api'
 
 const { transform } = require('../compiler.cjs') as {
   transform: (
@@ -45,7 +45,7 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-const SRC = `import { group } from '@weft-js/core/style'
+const SRC = `import { group } from '@kerf/core/style'
 export const card = group('order-card', {
   base: { surface: 'raised', pad: 'group', emphasis: 'subtle' },
   axes: { status: { open: { tone: 'info' }, shipped: { tone: 'positive' }, late: { tone: 'critical' } } },
@@ -101,7 +101,7 @@ function registerCompilerMarkup() {
 
   test("W060: a value that isn't a literal is named", () => {
     const out = transform(
-      `import { group } from '@weft-js/core/style'\nconst px = 13\nexport const g = group('g', { axes: { size: { big: { pad: px } } } })`,
+      `import { group } from '@kerf/core/style'\nconst px = 13\nexport const g = group('g', { axes: { size: { big: { pad: px } } } })`,
       { filename: '/a.tsx' },
     )
     expect(out.diagnostics.map((d) => d.code)).toEqual(['W060'])
@@ -195,7 +195,7 @@ function registerCssRules(groups: () => GroupSource[]) {
     expect(css).toContain('@scope ([data-g="order-card"]) to ([data-g])')
     // the tone is folded: the late rule reads the critical token directly
     expect(css).toContain(
-      ':scope[data-status="late"] {\n      color: var(--warp-color-critical-text);',
+      ':scope[data-status="late"] {\n      color: var(--veneer-color-critical-text);',
     )
     expect(css).not.toContain('--_text')
     expect(css).not.toContain('"open"')
@@ -240,7 +240,7 @@ function registerCssRules(groups: () => GroupSource[]) {
       { dev: true },
     )
     expect(css).toContain(
-      ':scope[data-accent~="radius:round"] {\n      border-radius: var(--warp-radius-round);',
+      ':scope[data-accent~="radius:round"] {\n      border-radius: var(--veneer-radius-round);',
     )
     expect(css.indexOf('data-accent')).toBeGreaterThan(css.indexOf('data-status="late"'))
   })
@@ -259,7 +259,7 @@ function registerCssValidation(groups: () => GroupSource[]) {
     )
     expect(() => resolve({ padding: 'group' }, 'group x base')).toThrow(/`padding` isn't an intent/)
     expect(resolve({ pad: 'group', css: { gridTemplateColumns: '1fr auto' } }, '')).toEqual({
-      padding: 'var(--warp-space-group)',
+      padding: 'var(--veneer-space-group)',
       'grid-template-columns': '1fr auto',
     })
   })
@@ -276,16 +276,16 @@ describe('CSS: only what call sites can produce', () => {
   registerCssValidation(groups)
 })
 
-test('every token the vocabulary names exists in warp.css', async () => {
+test('every token the vocabulary names exists in veneer.css', async () => {
   const { readFileSync } = await import('node:fs')
   const { VOCAB } = await import('../src/style/vocab')
-  const warp = readFileSync(`${process.cwd()}/../../docs/design/warp/tokens/warp.css`, 'utf8')
-  const defined = new Set([...warp.matchAll(/(--warp-[\w-]+)\s*:/g)].map((m) => m[1]))
+  const veneer = readFileSync(`${process.cwd()}/../../docs/design/veneer/tokens/veneer.css`, 'utf8')
+  const defined = new Set([...veneer.matchAll(/(--veneer-[\w-]+)\s*:/g)].map((m) => m[1]))
   const used = new Set(
     Object.values(VOCAB).flatMap((vs) =>
       Object.values(vs).flatMap((d) =>
         Object.values(d as Record<string, string>).flatMap((v) =>
-          [...v.matchAll(/var\((--warp-[\w-]+)/g)].map((m) => m[1]),
+          [...v.matchAll(/var\((--veneer-[\w-]+)/g)].map((m) => m[1]),
         ),
       ),
     ),

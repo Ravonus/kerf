@@ -1,0 +1,15 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* mention / slash / emoji suggestions: a listbox anchored above the caret line */
+:where([data-scope="suggest"]) {
+  position: absolute; inset-inline-start: 8px; inset-block-end: calc(100% + 6px); z-index: var(--veneer-z-menu); inline-size: min(320px, calc(100% - 16px));
+  padding: 4px; border-radius: var(--veneer-radius-surface); background: var(--veneer-color-surface-overlay);
+  box-shadow: var(--veneer-elevation-2), 0 0 0 1px var(--veneer-color-border); animation: veneer-enter var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="suggest"] [role="option"]) { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; min-block-size: 36px; padding-inline: 8px; border-radius: var(--veneer-radius-control); font-size: var(--veneer-text-body-size); cursor: pointer; }
+:where([data-scope="suggest"] [role="option"] small) { color: var(--veneer-color-text-subtle); font-size: 12px; }
+:where([data-scope="suggest"] [role="option"] kbd) { font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); }
+:where([data-scope="suggest"] [role="option"][aria-selected="true"]) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="suggest"] [role="option"] [data-part="cmd"]) { font: 500 13px/1 var(--veneer-font-mono); color: var(--veneer-color-accent-text); }
+:where([data-scope="suggest"] [data-part="group"]:not([data-scope="suggest"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="table"]) *:not([data-scope="suggest"] :is([data-scope="call-controls"],[data-scope="inbox"],[data-scope="prefs-matrix"],[data-scope="query"],[data-scope="settings-section"],[data-scope="table"]) [data-scope="suggest"] *))) { padding: 8px 8px 4px; font: 500 10.5px/1 var(--veneer-font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--veneer-color-text-subtle); }
+}

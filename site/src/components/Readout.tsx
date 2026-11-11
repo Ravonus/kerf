@@ -1,11 +1,11 @@
-import { onMount, state } from '@weft-js/core'
-import { stats } from '@weft-js/core/internal'
+import { onMount, state } from '@kerf/core'
+import { stats } from '@kerf/core/internal'
 
 const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`
 
 /**
  * What this page cost, read from the browser: bytes from Resource Timing (as they came over the wire), DOM writes from a
- * MutationObserver on the document, and reactive runs from Weft's own counter. Its own text doesn't count.
+ * MutationObserver on the document, and reactive runs from Kerf's own counter. Its own text doesn't count.
  */
 export function Readout() {
   const js = state(0)
@@ -63,7 +63,7 @@ export function Readout() {
     <p
       data-site="readout"
       ref={(el) => (self = el)}
-      title="Bytes from Resource Timing, DOM writes from a MutationObserver, runs from Weft's counter. Live, for this tab."
+      title="Bytes from Resource Timing, DOM writes from a MutationObserver, runs from Kerf's counter. Live, for this tab."
     >
       <span>This page</span>
       <span>

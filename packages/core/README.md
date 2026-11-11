@@ -1,10 +1,10 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
-<h1 align="center">@weft-js/core</h1>
+<h1 align="center">@kerf/core</h1>
 
 <p align="center">
   <strong>A fine-grained reactive TSX runtime whose compiler catches reactivity bugs before they ship.</strong><br>
@@ -12,30 +12,30 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@weft-js/core"><img src="https://img.shields.io/npm/v/@weft-js/core?color=145c3c&label=npm" alt="npm version"></a>
-  <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
-  <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
+  <a href="https://www.npmjs.com/package/@kerf/core"><img src="https://img.shields.io/npm/v/@kerf/core?color=145c3c&label=npm" alt="npm version"></a>
+  <a href="https://github.com/Ravonus/kerf/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
+  <a href="https://github.com/Ravonus/kerf/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/kerf/quality.yml?branch=main&label=checks" alt="checks"></a>
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/docs">Docs</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/examples">Examples</a> ·
-  <a href="https://github.com/Ravonus/weft/blob/main/CHANGELOG.md">Changelog</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf/tree/main/docs">Docs</a> ·
+  <a href="https://github.com/Ravonus/kerf/tree/main/examples">Examples</a> ·
+  <a href="https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!IMPORTANT]
 > **Early release (0.1.x).** APIs can change between minor versions. Pin the version and read the
-> [changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md) before you upgrade.
+> [changelog](https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md) before you upgrade.
 
-`@weft-js/core` is the heart of [Weft](https://github.com/Ravonus/weft): the reactive runtime, the binding to Weft's
+`@kerf/core` is the heart of [Kerf](https://github.com/Ravonus/kerf): the reactive runtime, the binding to Kerf's
 Rust compiler, the Vite plugin, the server renderer and the test utilities. You write TSX components that run once and
 read state through `.value`. The compiler turns each read into a precise DOM update, and it rejects the patterns that
 silently break reactivity, such as computing from a prop once, a list without keys, or a React hook. It was built so
 that coding agents, and people, get reactive code right the first time.
 
-An app made with `npm create @weft-js` already has this package, wired up. Read on to use it directly, or to understand
+An app made with `npm create kerf` already has this package, wired up. Read on to use it directly, or to understand
 what the scaffold set up for you.
 
 ## Highlights
@@ -50,9 +50,9 @@ what the scaffold set up for you.
   `persist`, `sync: 'tabs'` and `history` are options on it, validated by any Standard Schema (Zod, Valibot, ArkType).
 - **Async without flashes.** `resource` is async `derived` with abort, and `<Boundary>` waits for it. The server can
   render to a string, wait for data first, or stream each Boundary as it resolves.
-- **Tests that measure work, not just output.** `@weft-js/core/test` renders, clicks and fakes the clock, and
+- **Tests that measure work, not just output.** `@kerf/core/test` renders, clicks and fakes the clock, and
   `toTouchAtMost(n, { runs })` fails a test when one interaction writes the DOM or re-runs reactive code more than it should.
-- **Small.** Hello world is 1.60 KB of brotli and the whole `@weft-js/core` entry is 5.63 KB (`scripts/size.mjs`,
+- **Small.** Hello world is 1.60 KB of brotli and the whole `@kerf/core` entry is 5.63 KB (`scripts/size.mjs`,
   [sizes below](#size)).
 - **No Rust needed.** The compiler ships as a native addon for seven platforms and as WebAssembly for everything
   else. Both produce byte-identical output, and a parity test holds them to it.
@@ -85,7 +85,7 @@ what the scaffold set up for you.
 - [Testing](#testing)
 - [The compiler: native and WASM](#the-compiler-native-and-wasm)
 - [TypeScript setup](#typescript-setup)
-- [How Weft compares to React and Solid](#how-weft-compares-to-react-and-solid)
+- [How Kerf compares to React and Solid](#how-kerf-compares-to-react-and-solid)
 - [Size](#size)
 - [Troubleshooting](#troubleshooting)
 - [Related packages](#related-packages)
@@ -94,32 +94,32 @@ what the scaffold set up for you.
 
 ## Install
 
-The fastest start is a full app, which includes this package, routing, SSR and the `weft` CLI:
+The fastest start is a full app, which includes this package, routing, SSR and the `kerf` CLI:
 
 ```bash
-npm create @weft-js
+npm create kerf
 ```
 
-To add Weft to a Vite project yourself:
+To add Kerf to a Vite project yourself:
 
 ```bash
 # npm
-npm install @weft-js/core
+npm install @kerf/core
 npm install -D vite
 
 # pnpm
-pnpm add @weft-js/core
+pnpm add @kerf/core
 pnpm add -D vite
 
 # bun
-bun add @weft-js/core
+bun add @kerf/core
 bun add -d vite
 ```
 
-Every merge to `main` that passes its checks goes out under the `next` tag (`npm install @weft-js/core@next`,
+Every merge to `main` that passes its checks goes out under the `next` tag (`npm install @kerf/core@next`,
 versions like `0.1.5-nightly.20261111.12`). `latest` is the last release, run through the full release gate.
 
-The package declares `node >= 24`. It ships its runtime as TypeScript source, so build with Vite and the `weft()`
+The package declares `node >= 24`. It ships its runtime as TypeScript source, so build with Vite and the `kerf()`
 plugin, which compiles your `.tsx` and the runtime together.
 
 For tests, add the optional peers:
@@ -131,36 +131,36 @@ npm install -D vitest jsdom \
 
 ### What installing runs
 
-Nothing. No Weft package has an `install` or `postinstall` script, and
-`@weft-js/core` has one runtime dependency, `dom-accessibility-api`, which
+Nothing. No Kerf package has an `install` or `postinstall` script, and
+`@kerf/core` has one runtime dependency, `dom-accessibility-api`, which
 has none either.
 
 What does run is the compiler, at build time, inside Vite:
 
 | Build | Where it comes from | What it can reach |
 | --- | --- | --- |
-| Native addon | `@weft-js/compiler-<platform>`, an optional dependency: a prebuilt `.node` file of about 4 MB | Native code in the Vite process. It reads the source text it's given and returns code; it opens no files or sockets |
-| WASM | `native/weft-compiler.wasm`, in this package | Nothing. The module has no imports, so it can only turn the input text into output text |
+| Native addon | `@kerf/compiler-<platform>`, an optional dependency: a prebuilt `.node` file of about 4 MB | Native code in the Vite process. It reads the source text it's given and returns code; it opens no files or sockets |
+| WASM | `native/kerf-compiler.wasm`, in this package | Nothing. The module has no imports, so it can only turn the input text into output text |
 
 Both come from the same Rust source in
-[`crates/weft-compiler`](https://github.com/Ravonus/weft/tree/main/crates/weft-compiler)
+[`crates/kerf-compiler`](https://github.com/Ravonus/kerf/tree/main/crates/kerf-compiler)
 and produce byte-identical output. To keep native code out of your builds
 entirely, skip the optional dependencies and pin WASM:
 
 ```bash
-npm install @weft-js/core --omit=optional
-WEFT_COMPILER=wasm npx vite build
+npm install @kerf/core --omit=optional
+KERF_COMPILER=wasm npx vite build
 ```
 
 `--omit=optional` alone is enough: with no addon installed the loader
-falls back to WASM. `WEFT_COMPILER=wasm` makes that a rule, so an addon
+falls back to WASM. `KERF_COMPILER=wasm` makes that a rule, so an addon
 that arrives later is still ignored. `--ignore-scripts` doesn't change
 which build runs, because an addon needs no install script.
 
 ### The reference, offline
 
-The reference pages that `npx weft docs <topic>` prints ship in this
-package too, as Markdown in `node_modules/@weft-js/core/docs/`, with an
+The reference pages that `npx kerf docs <topic>` prints ship in this
+package too, as Markdown in `node_modules/@kerf/core/docs/`, with an
 index in its `README.md`. They match the installed version, and need no
 network or CLI. The links in this README go to the same pages on GitHub.
 
@@ -173,7 +173,7 @@ A complete client-only app in five files.
 {
   "type": "module",
   "scripts": { "dev": "vite", "build": "vite build" },
-  "dependencies": { "@weft-js/core": "^0.1.4" },
+  "dependencies": { "@kerf/core": "^0.1.4" },
   "devDependencies": { "vite": "^8.0.0" }
 }
 ```
@@ -184,10 +184,10 @@ A complete client-only app in five files.
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vite'
-import weft from '@weft-js/core/vite'
+import kerf from '@kerf/core/vite'
 
 export default defineConfig({
-  plugins: [weft()],
+  plugins: [kerf()],
 })
 ```
 
@@ -201,9 +201,9 @@ export default defineConfig({
     "strict": true,
     "noEmit": true,
     "jsx": "preserve",
-    "jsxImportSource": "@weft-js/core",
+    "jsxImportSource": "@kerf/core",
     "lib": ["es2023", "dom", "dom.iterable"],
-    "types": ["@weft-js/core/client"]
+    "types": ["@kerf/core/client"]
   },
   "include": ["src"]
 }
@@ -222,8 +222,8 @@ export default defineConfig({
 
 ```tsx
 // src/main.tsx
-import { derived, state } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
+import { derived, state } from '@kerf/core'
+import { render } from '@kerf/core/dom'
 
 function Counter() {
   const count = state(0)
@@ -257,15 +257,15 @@ Vercel, GitHub Pages, S3 or an nginx folder.
   `not_found_handling = "single-page-application"`, Netlify's
   `/* /index.html 200`).
 - **Pre-rendered HTML.** For pages that arrive as HTML and then hydrate,
-  use [`@weft-js/start`](https://www.npmjs.com/package/@weft-js/start):
+  use [`@kerf/start`](https://www.npmjs.com/package/@kerf/start):
   a route with `prerender` is written as a static page at build time.
 - **A strict CSP.** See [Content Security Policy](#content-security-policy).
 
 ## The model
 
-Weft's reactive model has few parts. Everything below comes from `@weft-js/core` unless it says otherwise. The full
-reference pages are [`rules`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/rules.md) and
-[`state`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/state.md), and `npx weft docs <topic>` prints them.
+Kerf's reactive model has few parts. Everything below comes from `@kerf/core` unless it says otherwise. The full
+reference pages are [`rules`](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/rules.md) and
+[`state`](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/state.md), and `npx kerf docs <topic>` prints them.
 
 ### A component runs once
 
@@ -279,7 +279,7 @@ That has two consequences the compiler enforces:
 - A `let` that a handler changes never shows the change (`W041`). Use `state`.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Panel() {
   const open = state(false)
@@ -303,7 +303,7 @@ export function Panel() {
 `.value` and the dependents update. Writing a value that is `Object.is` the old one does nothing.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Name() {
   const name = state('')
@@ -322,7 +322,7 @@ export function Name() {
 
 Rendering the box itself (`{name}`) is `W015`, with an autofix to `{name.value}`.
 
-Object and array boxes have two more methods, from `@weft-js/core/keyed`. The main entry and the Vite plugin bring that
+Object and array boxes have two more methods, from `@kerf/core/keyed`. The main entry and the Vite plugin bring that
 module in when a file uses them, so you rarely import it yourself.
 
 | Call | What it does |
@@ -337,7 +337,7 @@ Anything computed from other values is `derived`. It tracks what it reads, cache
 of those inputs changed and it is read again. Its `.value` is read-only.
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 
 export function Cart() {
   const price = state(20)
@@ -367,7 +367,7 @@ can read anything without subscribing to it. If `act` returns a function, it run
 owner is disposed.
 
 ```tsx
-import { state, watch } from '@weft-js/core'
+import { state, watch } from '@kerf/core'
 
 export function Title() {
   const unread = state(3)
@@ -402,7 +402,7 @@ export function Title() {
   `W018`.
 
 ```tsx
-import { flush, state } from '@weft-js/core'
+import { flush, state } from '@kerf/core'
 
 export function Search() {
   const open = state(false)
@@ -434,14 +434,14 @@ export function Search() {
 ### onMount and onCleanup
 
 Every component, list row and `createRoot` is an **owner**. When an owner is disposed, everything it created goes
-with it: watchers, listeners from `@weft-js/core/browser`, and child components.
+with it: watchers, listeners from `@kerf/core/browser`, and child components.
 
 - `onMount(fn)` runs once the component's DOM is in place and its refs are set. It never runs on the server.
 - `onCleanup(fn)` runs when the owner is disposed.
 - `createRoot(dispose => …)` makes an owner that outlives its caller, ended by calling `dispose()`.
 
 ```tsx
-import { onCleanup, onMount } from '@weft-js/core'
+import { onCleanup, onMount } from '@kerf/core'
 
 export function Chart() {
   let canvas: HTMLCanvasElement | undefined
@@ -464,7 +464,7 @@ export function Chart() {
 created inside the callback, and `ctx.use` (a property, not a call) reads the nearest one, or the fallback.
 
 ```tsx
-import { context } from '@weft-js/core'
+import { context } from '@kerf/core'
 
 const Theme = context<'light' | 'dark'>('light')
 
@@ -487,7 +487,7 @@ per app, the first time the scope is used, and returns boxes, derived values and
 transaction and one undo step.
 
 ```ts
-import { defineState, derived, state } from '@weft-js/core'
+import { defineState, derived, state } from '@kerf/core'
 import { z } from 'zod'
 
 export const cart = defineState(
@@ -531,7 +531,7 @@ Options on a `state` inside a setup:
 | `history` | `false` | Leaves this box out of undo |
 | `name` | `string` | The box's name in its scope. A persisted box the setup doesn't return needs one |
 
-`persist`, `sync` and `history` live in `@weft-js/core/persist`, `/sync` and `/history`. The Vite plugin adds each
+`persist`, `sync` and `history` live in `@kerf/core/persist`, `/sync` and `/history`. The Vite plugin adds each
 import only where it's used, so an app without them ships none of that code.
 
 Misuse throws a `StateError` in dev with a code and a fix: `S008` (persistence or sync set up wrongly) and `S009` (two
@@ -548,7 +548,7 @@ The fallback shows after 150 ms and stays at least 400 ms, so fast loads don't f
 content on screen.
 
 ```tsx
-import { Boundary, resource } from '@weft-js/core'
+import { Boundary, resource } from '@kerf/core'
 
 type User = { name: string }
 
@@ -599,7 +599,7 @@ resolve on the server and transfer to the client.
 under the same key updates that row in place, and moved keys move their nodes instead of rebuilding them.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 type Product = { id: string; name: string; price: number }
 
@@ -694,7 +694,7 @@ export function Price({
 What doesn't stay live is *computing* in the body, because the body runs once:
 
 ```tsx
-import { derived } from '@weft-js/core'
+import { derived } from '@kerf/core'
 
 export function Count({ items }: { items: string[] }) {
   // W001: `const n = items.length + 1` is read once, never updated
@@ -709,16 +709,16 @@ export function Count({ items }: { items: string[] }) {
   Only `bind:n={box}` at the call site writes back to the parent's box. `bind:` takes a box, on a component (`W061`).
 - **A snapshot on purpose:** `const first = untrack(() => props.x)`.
 
-With the `weft` CLI, unannotated props are also *typed*: `weft check`, `weft tsc` and the editor plugin infer them
-from the callers. See [`props`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/props.md).
+With the `kerf` CLI, unannotated props are also *typed*: `kerf check`, `kerf tsc` and the editor plugin infer them
+from the callers. See [`props`](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/props.md).
 
 ## Compiler diagnostics
 
 The compiler reads every component and reports the patterns that break reactivity, leak resources or render wrong
 HTML. Each diagnostic has a stable code, a severity, a message saying *why*, a `help` line saying *what to write
-instead*, and a line and column. Where the fix is mechanical it carries an edit, and `weft fix` applies the safe ones.
+instead*, and a line and column. Where the fix is mechanical it carries an edit, and `kerf fix` applies the safe ones.
 
-This is the main reason Weft suits code written by agents: a mistake that would ship silently in other frameworks is a
+This is the main reason Kerf suits code written by agents: a mistake that would ship silently in other frameworks is a
 build error here, with the fix in the message. In the Vite plugin, an `error` fails the transform and a `warning`
 prints. Either way the message carries the code, the reason and the help, at the file, line and column:
 
@@ -727,12 +727,12 @@ W015 `count` is a box; JSX needs its value.
   help: Read `count.value`.
 ```
 
-`npx weft docs W001` prints any code's page, and `npx weft check --json` gives the same diagnostics to a tool.
+`npx kerf docs W001` prints any code's page, and `npx kerf check --json` gives the same diagnostics to a tool.
 
 ### Codes the compiler reports
 
-These run in the compiler itself: in `weft()` during every build and dev transform, and in `transform()` from
-`@weft-js/core/compiler`.
+These run in the compiler itself: in `kerf()` during every build and dev transform, and in `transform()` from
+`@kerf/core/compiler`.
 
 | Code | Severity | What it catches | Fix |
 | --- | --- | --- | --- |
@@ -756,7 +756,7 @@ These run in the compiler itself: in `weft()` during every build and dev transfo
 | `W020` | error | React hooks (`useState`, `useEffect`, custom `useX()`), and dependency arrays on `watch`, `derived` or `memo` | `state`, `watch`, `derived`, `ref`; reads are tracked for you |
 | `W040` | error | An early `return` in a component body that depends on state | Branch in JSX |
 | `W041` | error | A `let` changed in a handler and read in JSX | Make it `state` |
-| `W050` | error | Raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no cleanup | `on` / `interval` from `@weft-js/core/browser`, or `onCleanup` |
+| `W050` | error | Raw `addEventListener`, `setInterval`, `new WebSocket` or `new EventSource` in a component with no cleanup | `on` / `interval` from `@kerf/core/browser`, or `onCleanup` |
 | `W051` | error | A browser value, `on` or `interval` created with no owner (module scope, a timer, a handler, after `await`) | Create it in setup or inside `createRoot` |
 | `W052` | error | A `watch` that folds a stream into a list by hand | `fold` and `initial` where the stream is read |
 | `W054` | error | `media(query)` with no `ssr` value in a server-rendered component (a warning when it can't tell) | `media(query, { ssr: false })` |
@@ -765,22 +765,22 @@ These run in the compiler itself: in `weft()` during every build and dev transfo
 | `W061` | error | `bind:x` on a native element, or `bind:` / `bind(box)` with something that isn't a box | `<Card bind:person={name} />` with `name` a box |
 
 <details>
-<summary><strong>Codes <code>weft check</code> adds across files</strong></summary>
+<summary><strong>Codes <code>kerf check</code> adds across files</strong></summary>
 
-These need the whole project, so the [`@weft-js/cli`](https://www.npmjs.com/package/@weft-js/cli) runs them in
-`weft check`, `weft dev` and `weft tsc`, not the Vite plugin.
+These need the whole project, so the [`@kerf/cli`](https://www.npmjs.com/package/@kerf/cli) runs them in
+`kerf check`, `kerf dev` and `kerf tsc`, not the Vite plugin.
 
 | Code | Severity | What it catches |
 | --- | --- | --- |
 | `W007` | error | Assigning to a `Derived` (maps TypeScript's TS2540) |
 | `W008` | error | A box where a value is expected at a prop, or the reverse |
 | `W030` | error | Module-level `state` reachable from the server entry, which leaks across requests |
-| `W043` | warning | `data-x={true}` or `data-x={false}`: `data-*` booleans are presence flags in Weft |
+| `W043` | warning | `data-x={true}` or `data-x={false}`: `data-*` booleans are presence flags in Kerf |
 | `W044` | warning | A `key` from `crypto.randomUUID()`, `Date.now()`, `Math.random()` or `performance.now()`, which differs between server and client |
 | `W080`–`W085` | mixed | Prop type inference: no caller, a missing or stale inferred type, an `any` source, a caller that disagrees |
 
-`weft check` also follows `W014` through props into other files. Other families cover state (`S`), tests (`T`),
-design (`D`), plugins (`P`), page metadata (`H`) and shared UI state (`U`); `npx weft docs <code>` explains each.
+`kerf check` also follows `W014` through props into other files. Other families cover state (`S`), tests (`T`),
+design (`D`), plugins (`P`), page metadata (`H`) and shared UI state (`U`); `npx kerf docs <code>` explains each.
 
 </details>
 
@@ -790,24 +790,24 @@ Import application code from these. Each is a separate entry, so an app ships on
 
 | Import | What it has |
 | --- | --- |
-| `@weft-js/core` | `state`, `derived`, `memo`, `watch`, `batch`, `flush`, `untrack`, `onMount`, `onCleanup`, `createRoot`, `getOwner`, `context`, `bind`, `defineState`, `StateError`, `resource`, `<Boundary>`, and the types `State`, `Derived`, `Linked`, `Resource`, `Props` |
-| `@weft-js/core/keyed` | `box.get(key)`, `box.set(fn)` and `state.linked`. Import it yourself only for a page the Vite plugin builds without it, such as when a key is built at run time (`box[name]`) |
-| `@weft-js/core/dom` | `render(() => <App />, el)` and `hydrate(() => <App />, el, { data? })` |
-| `@weft-js/core/ssr` | `renderToString`, `renderToStringAsync` and `renderToStream` |
-| `@weft-js/core/test` | `render`, `screen`, `user`, `flush`, `clock`, `scope`, `memoryStorage`, `touches`, `toTouchAtMost`, `leaks`, and the page fakes `net`, `page` and `tabs` |
-| `@weft-js/core/persist`, `/sync`, `/history` | `defineState`'s `persist`, `sync: 'tabs'` and `history`. The Vite plugin adds each import where it's used |
-| `@weft-js/core/browser` | Browser events as values: `online`, `visible`, `lifecycle`, `media`, `on`, `interval`, and `tabs.channel` ([docs](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/browser.md)) |
-| `@weft-js/core/interaction` | `interaction()`: hover, focus and press as state, optionally shared across tabs and clients ([docs](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/ui-state.md)) |
-| `@weft-js/core/style` | `group()`: style groups written in design tokens ([docs](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/style.md)) |
-| `@weft-js/core/ds` | The design language's vocabulary: `SPACE`, `TONE`, `EMPHASIS`, `SIZE`, `DENSITY`, `TEXT_ROLE` and their types. The primitives that use them are in [`@weft-js/warp`](https://www.npmjs.com/package/@weft-js/warp) ([docs](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/design.md)) |
-| `@weft-js/core/surface` | `defineSurface` and `<Surface>`: canvas 2D and WebGL2 as layout children with live props ([docs](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/surface.md)) |
-| `@weft-js/core/media`, `/text`, `/shape`, `/head` | `<Media>`, `<Text>`, skeleton shapes, and `setHead`, which `@weft-js/start` uses |
-| `@weft-js/core/config` | `defineConfig` for `weft.config.ts` ([docs](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/config.md)) |
-| `@weft-js/core/plugin` | `definePlugin`, `defineSlot` and `provide`, for writing Weft plugins |
-| `@weft-js/core/client` | Types only: ambient declarations for the Vite plugin's virtual imports (`*?media`, `weft:tokens/*`, `*.css`) |
-| `@weft-js/core/vite` | The Vite plugin |
-| `@weft-js/core/compiler` | `transform(source, options)`, which returns `{ code, map, diagnostics }`, and `backend`, which says which build is running |
-| `@weft-js/core/markup` | `markup(html)` indexes selectors for CSS pruning; `esc(text, context?)` escapes HTML |
+| `@kerf/core` | `state`, `derived`, `memo`, `watch`, `batch`, `flush`, `untrack`, `onMount`, `onCleanup`, `createRoot`, `getOwner`, `context`, `bind`, `defineState`, `StateError`, `resource`, `<Boundary>`, and the types `State`, `Derived`, `Linked`, `Resource`, `Props` |
+| `@kerf/core/keyed` | `box.get(key)`, `box.set(fn)` and `state.linked`. Import it yourself only for a page the Vite plugin builds without it, such as when a key is built at run time (`box[name]`) |
+| `@kerf/core/dom` | `render(() => <App />, el)` and `hydrate(() => <App />, el, { data? })` |
+| `@kerf/core/ssr` | `renderToString`, `renderToStringAsync` and `renderToStream` |
+| `@kerf/core/test` | `render`, `screen`, `user`, `flush`, `clock`, `scope`, `memoryStorage`, `touches`, `toTouchAtMost`, `leaks`, and the page fakes `net`, `page` and `tabs` |
+| `@kerf/core/persist`, `/sync`, `/history` | `defineState`'s `persist`, `sync: 'tabs'` and `history`. The Vite plugin adds each import where it's used |
+| `@kerf/core/browser` | Browser events as values: `online`, `visible`, `lifecycle`, `media`, `on`, `interval`, and `tabs.channel` ([docs](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/browser.md)) |
+| `@kerf/core/interaction` | `interaction()`: hover, focus and press as state, optionally shared across tabs and clients ([docs](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/ui-state.md)) |
+| `@kerf/core/style` | `group()`: style groups written in design tokens ([docs](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/style.md)) |
+| `@kerf/core/ds` | The design language's vocabulary: `SPACE`, `TONE`, `EMPHASIS`, `SIZE`, `DENSITY`, `TEXT_ROLE` and their types. The primitives that use them are in [`@kerf/veneer`](https://www.npmjs.com/package/@kerf/veneer) ([docs](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/design.md)) |
+| `@kerf/core/surface` | `defineSurface` and `<Surface>`: canvas 2D and WebGL2 as layout children with live props ([docs](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/surface.md)) |
+| `@kerf/core/media`, `/text`, `/shape`, `/head` | `<Media>`, `<Text>`, skeleton shapes, and `setHead`, which `@kerf/start` uses |
+| `@kerf/core/config` | `defineConfig` for `kerf.config.ts` ([docs](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/config.md)) |
+| `@kerf/core/plugin` | `definePlugin`, `defineSlot` and `provide`, for writing Kerf plugins |
+| `@kerf/core/client` | Types only: ambient declarations for the Vite plugin's virtual imports (`*?media`, `kerf:tokens/*`, `*.css`) |
+| `@kerf/core/vite` | The Vite plugin |
+| `@kerf/core/compiler` | `transform(source, options)`, which returns `{ code, map, diagnostics }`, and `backend`, which says which build is running |
+| `@kerf/core/markup` | `markup(html)` indexes selectors for CSS pruning; `esc(text, context?)` escapes HTML |
 
 `esc` escapes `&`, `<` and double quotes by default. Pass `'text'` to escape `&`, `<` and `>`, or `'full'` to escape
 all four. Apostrophes stay literal. This entry runs in Node and in browsers.
@@ -815,37 +815,37 @@ all four. Apostrophes stay literal. This entry runs in Node and in browsers.
 <details>
 <summary><strong>Entries for tooling and compiled code</strong></summary>
 
-These are package exports, but not application APIs. The CLI, `@weft-js/start`, plugins and compiled output use them.
+These are package exports, but not application APIs. The CLI, `@kerf/start`, plugins and compiled output use them.
 
 | Import | Used by |
 | --- | --- |
-| `@weft-js/core/internal` | Compiler output and renderers. Shares the runtime's graph; it is not a second runtime |
-| `@weft-js/core/jsx-runtime` | JSX types for `jsxImportSource` |
-| `@weft-js/core/hmr` | Hot updates the compiler generates in dev |
-| `@weft-js/core/devtools` | The dev graph and overlay |
-| `@weft-js/core/agent` | The in-page dev agent behind `weft browser`; needs the test peers |
-| `@weft-js/core/test/plugins` | Conformance suites for plugin authors |
-| `@weft-js/core/hydration`, `/node-purge`, `/style/matrix`, `/media-probe` | Node tooling for hydration, CSS purging, the style matrix and media probing |
+| `@kerf/core/internal` | Compiler output and renderers. Shares the runtime's graph; it is not a second runtime |
+| `@kerf/core/jsx-runtime` | JSX types for `jsxImportSource` |
+| `@kerf/core/hmr` | Hot updates the compiler generates in dev |
+| `@kerf/core/devtools` | The dev graph and overlay |
+| `@kerf/core/agent` | The in-page dev agent behind `kerf browser`; needs the test peers |
+| `@kerf/core/test/plugins` | Conformance suites for plugin authors |
+| `@kerf/core/hydration`, `/node-purge`, `/style/matrix`, `/media-probe` | Node tooling for hydration, CSS purging, the style matrix and media probing |
 
 The full list, with each entry's environment, is
-[`entrypoints`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/entrypoints.md).
+[`entrypoints`](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/entrypoints.md).
 
 </details>
 
 ## The Vite plugin
 
-`weft()` from `@weft-js/core/vite` compiles `.tsx` and `.jsx` files with Weft's compiler, for the client or for the
+`kerf()` from `@kerf/core/vite` compiles `.tsx` and `.jsx` files with Kerf's compiler, for the client or for the
 server (Vite's SSR transforms get server output). It also wires style groups, design tokens, plugin slots, icons,
 assets and, in production, CSS purging. It targets Vite 8.
 
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vite'
-import weft from '@weft-js/core/vite'
+import kerf from '@kerf/core/vite'
 
 export default defineConfig({
   plugins: [
-    weft({
+    kerf({
       hydratable: true, // the client adopts server HTML
       // A class name built only at run time
       purge: { keep: ['knob'] },
@@ -861,8 +861,8 @@ export default defineConfig({
 | `hmr` | `boolean` | `true` when serving, outside Vitest | Client modules accept their own hot updates. Never for server output |
 | `purge` | `false` · `{ keep?: string[] }` | on | Drops unreachable CSS from the production client build (below) |
 | `style.taggedParts` | `boolean` | `false` | Style-group parts carry `data-g` as well as `data-part` |
-| `style.matrix` | `boolean` | `true` | `false` stops writing `.weft/styles.json` |
-| `off` | `string[]` | `[]` | Speed paths to leave out, to measure them (`['SWAP']`, or `['all']`). `WEFT_OFF=SWAP,TEXT` does it for a whole run |
+| `style.matrix` | `boolean` | `true` | `false` stops writing `.kerf/styles.json` |
+| `off` | `string[]` | `[]` | Speed paths to leave out, to measure them (`['SWAP']`, or `['all']`). `KERF_OFF=SWAP,TEXT` does it for a whole run |
 
 The plugin also sets Vite's `oxc` JSX handling to `preserve` and turns on `resolve.tsconfigPaths` unless you set it,
 so aliases from your `tsconfig.json` work.
@@ -884,14 +884,14 @@ your app starts using a new component. Purging runs only on `vite build`, only f
 
 ### Server and hydrate builds in one process
 
-`import { App } from './App.tsx?weft-ssr'` (or `?weft-hydrate`) loads a component graph compiled for the server (or
-for hydration) into any process. The query follows `.tsx` and `.jsx` imports. Weft's own SSR tests use this to render
+`import { App } from './App.tsx?kerf-ssr'` (or `?kerf-hydrate`) loads a component graph compiled for the server (or
+for hydration) into any process. The query follows `.tsx` and `.jsx` imports. Kerf's own SSR tests use this to render
 and hydrate the same fixture in one Vitest run.
 
 ## Server rendering
 
-Import only these three from `@weft-js/core/ssr`; its other exports are what compiled server code calls. Build the
-server and the client with `weft({ hydratable: true })`. [`@weft-js/start`](https://www.npmjs.com/package/@weft-js/start)
+Import only these three from `@kerf/core/ssr`; its other exports are what compiled server code calls. Build the
+server and the client with `kerf({ hydratable: true })`. [`@kerf/start`](https://www.npmjs.com/package/@kerf/start)
 does all of this for you, with routing.
 
 | Function | Returns | Use it when |
@@ -906,12 +906,12 @@ Effects, `watch` and `onMount` don't run on the server.
 
 `renderToStringAsync` renders, waits for the resources that pass started, and renders again until none is pending
 (at most `passes`, default 10, or until a pass stops making progress). Hydratable output ends with
-`<script type="application/json" data-weft>` holding resolved resources, Boundary states and `defineState` scopes, and
+`<script type="application/json" data-kerf>` holding resolved resources, Boundary states and `defineState` scopes, and
 `hydrate` reads it from the container.
 
 ```tsx
 // server.tsx
-import { renderToStringAsync } from '@weft-js/core/ssr'
+import { renderToStringAsync } from '@kerf/core/ssr'
 import { App } from './App.tsx'
 
 export async function page() {
@@ -929,14 +929,14 @@ export async function page() {
 
 ```tsx
 // src/client.tsx
-import { hydrate } from '@weft-js/core/dom'
+import { hydrate } from '@kerf/core/dom'
 import { App } from './App.tsx'
 
 hydrate(() => <App />, document.getElementById('app')!)
 ```
 
 `hydrate` takes over the server's DOM without rewriting it. Use it instead of `render` whenever the HTML came from
-`@weft-js/core/ssr`.
+`@kerf/core/ssr`.
 
 ### renderToStream
 
@@ -946,7 +946,7 @@ the page data for `hydrate`.
 
 ```tsx
 import type { ServerResponse } from 'node:http'
-import { renderToStream } from '@weft-js/core/ssr'
+import { renderToStream } from '@kerf/core/ssr'
 import { App } from './App.tsx'
 
 export async function stream(res: ServerResponse) {
@@ -994,12 +994,12 @@ On the client, pass the data explicitly: `hydrate(() => <App />, el, { data: win
 
 ## Images and video with Media
 
-`<Media>` from `@weft-js/core/media` renders an image or video import with
+`<Media>` from `@kerf/core/media` renders an image or video import with
 its width and height, a placeholder, `srcset` and `sizes`, so nothing
 shifts while it loads.
 
 ```tsx
-import { Media } from '@weft-js/core/media'
+import { Media } from '@kerf/core/media'
 import hero from './hero.jpg?media'
 
 export const Hero = () => (
@@ -1013,13 +1013,13 @@ export const Hero = () => (
 ```
 
 What a `?media` import gives you depends on the plugins in
-`weft.config.ts`:
+`kerf.config.ts`:
 
 | Setup | Images | Video and audio |
 | --- | --- | --- |
 | No media plugin | Dimensions from the file header; the original file, no ladder | Not supported |
-| [`@weft-js/plugin-media`](https://www.npmjs.com/package/@weft-js/plugin-media) | AVIF (and WebP) width ladders tuned to a quality target, a fallback, the dominant colour and a 16 px placeholder | Not supported |
-| plus [`@weft-js/plugin-media-ffmpeg`](https://www.npmjs.com/package/@weft-js/plugin-media-ffmpeg) | As above | AV1 and H.264 ladders, a poster, GIFs turned into video |
+| [`@kerf/media`](https://www.npmjs.com/package/@kerf/media) | AVIF (and WebP) width ladders tuned to a quality target, a fallback, the dominant colour and a 16 px placeholder | Not supported |
+| plus [`@kerf/media-ffmpeg`](https://www.npmjs.com/package/@kerf/media-ffmpeg) | As above | AV1 and H.264 ladders, a poster, GIFs turned into video |
 
 | Prop | What it does |
 | --- | --- |
@@ -1032,7 +1032,7 @@ What a `?media` import gives you depends on the plugins in
 
 A page with one `<Media>` is about 8 KB of brotli in all (see
 [Size](#size)). The plugin's README has every option:
-[`@weft-js/plugin-media`](https://github.com/Ravonus/weft/tree/main/packages/plugin-media).
+[`@kerf/media`](https://github.com/Ravonus/kerf/tree/main/packages/media).
 
 > [!NOTE]
 > **The placeholder and CSP.** By default the 16 px placeholder is inlined
@@ -1045,7 +1045,7 @@ A page with one `<Media>` is about 8 KB of brotli in all (see
 
 ## Content Security Policy
 
-A client-rendered Weft build works under a strict policy:
+A client-rendered Kerf build works under a strict policy:
 
 ```text
 default-src 'self'; script-src 'self'; style-src 'self'
@@ -1063,12 +1063,12 @@ policy without `'unsafe-inline'` blocks style attributes in HTML. Turn on
 strict mode and the compiler moves them out for you:
 
 ```ts
-// vite.config.ts, for @weft-js/core on its own
-weft({ csp: 'strict' })
+// vite.config.ts, for @kerf/core on its own
+kerf({ csp: 'strict' })
 ```
 
 ```ts
-// weft.config.ts, for an @weft-js/start app
+// kerf.config.ts, for an @kerf/start app
 export default defineConfig({
   site: { csp: 'strict' },
 })
@@ -1092,23 +1092,23 @@ anywhere in the app is the same class. An element with a spread
 
 ## Testing
 
-`@weft-js/core/test` is a Vitest toolkit: it mounts components into jsdom with a fresh app each time, queries by
+`@kerf/core/test` is a Vitest toolkit: it mounts components into jsdom with a fresh app each time, queries by
 role, label and text, drives real user events, fakes the clock, and asserts how much work an interaction did.
 
 ```ts
 // vitest.config.ts
-import weft from '@weft-js/core/vite'
+import kerf from '@kerf/core/vite'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  plugins: [weft()],
+  plugins: [kerf()],
   test: { environment: 'jsdom' },
 })
 ```
 
 ```tsx
-import { state } from '@weft-js/core'
-import { render, screen, user } from '@weft-js/core/test'
+import { state } from '@kerf/core'
+import { render, screen, user } from '@kerf/core/test'
 import { expect, test } from 'vitest'
 
 function Cart() {
@@ -1146,49 +1146,49 @@ test('adding to the cart', async () => {
 | `toTouchAtMost(n, { runs? })` | Bounds DOM writes and reactive re-runs. DOM writes alone miss identity bugs that re-run every row but write once (`W014`) |
 | `scope(handle)` | A fresh instance of one `defineState` scope, with no UI |
 | `memoryStorage()` | A storage to pass to several renders |
-| `net`, `page`, `tabs` | Fakes for `@weft-js/core/browser`: `net.offline()`, `page.hide()`, `page.media(query, true)`, `tabs.post(name, msg)` and more |
+| `net`, `page`, `tabs` | Fakes for `@kerf/core/browser`: `net.offline()`, `page.hide()`, `page.media(query, true)`, `tabs.post(name, msg)` and more |
 | `leaks()`, `assertNoLeaks()` | After each test, the toolkit fails if a listener or timer is still open (`T012`); `leaks()` lists what is |
 
-`weft check` also flags junk tests statically (`T001`–`T009`): no assertion, a tautology, sleeping on real timers,
-CSS-selector queries, mocking `@weft-js/core`, snapshots, conditional `expect`, and `.only` or `.skip`. A test that
-finishes without asserting also fails at run time. See [`testing`](https://github.com/Ravonus/weft/blob/main/packages/cli/docs/testing.md).
+`kerf check` also flags junk tests statically (`T001`–`T009`): no assertion, a tautology, sleeping on real timers,
+CSS-selector queries, mocking `@kerf/core`, snapshots, conditional `expect`, and `.only` or `.skip`. A test that
+finishes without asserting also fails at run time. See [`testing`](https://github.com/Ravonus/kerf/blob/main/packages/cli/docs/testing.md).
 
 ## The compiler: native and WASM
 
 The compiler is the Rust crate in
-[`crates/weft-compiler`](https://github.com/Ravonus/weft/tree/main/crates/weft-compiler), built on
+[`crates/kerf-compiler`](https://github.com/Ravonus/kerf/tree/main/crates/kerf-compiler), built on
 [Oxc](https://oxc.rs). You never need Rust to use it. `compiler.cjs` loads the fastest build this machine has:
 
-1. a native addon built in a Weft checkout (contributors only);
-2. otherwise the prebuilt `@weft-js/compiler-<platform>` addon, an optional dependency that your package manager
+1. a native addon built in a Kerf checkout (contributors only);
+2. otherwise the prebuilt `@kerf/compiler-<platform>` addon, an optional dependency that your package manager
    installs only on a matching OS, CPU and libc;
-3. otherwise `native/weft-compiler.wasm`, shipped in this package, which runs anywhere.
+3. otherwise `native/kerf-compiler.wasm`, shipped in this package, which runs anywhere.
 
-The addon must be the same version as `@weft-js/core`. If an override pulls a different one, the loader skips it and
+The addon must be the same version as `@kerf/core`. If an override pulls a different one, the loader skips it and
 uses WASM, which produces the same output. `test/compiler-parity.test.ts` compiles a corpus of over 100 files with
 both builds, in every mode, and fails on any difference in output or diagnostics.
 
 | Platform | Package | Build |
 | --- | --- | --- |
-| macOS, Apple silicon | `@weft-js/compiler-darwin-arm64` | native |
-| macOS, Intel | `@weft-js/compiler-darwin-x64` | native |
-| Linux x64, glibc | `@weft-js/compiler-linux-x64-gnu` | native |
-| Linux arm64, glibc | `@weft-js/compiler-linux-arm64-gnu` | native |
-| Linux x64, musl (Alpine) | `@weft-js/compiler-linux-x64-musl` | native |
-| Linux arm64, musl (Alpine) | `@weft-js/compiler-linux-arm64-musl` | native |
-| Windows x64 | `@weft-js/compiler-win32-x64` | native |
+| macOS, Apple silicon | `@kerf/compiler-darwin-arm64` | native |
+| macOS, Intel | `@kerf/compiler-darwin-x64` | native |
+| Linux x64, glibc | `@kerf/compiler-linux-x64-gnu` | native |
+| Linux arm64, glibc | `@kerf/compiler-linux-arm64-gnu` | native |
+| Linux x64, musl (Alpine) | `@kerf/compiler-linux-x64-musl` | native |
+| Linux arm64, musl (Alpine) | `@kerf/compiler-linux-arm64-musl` | native |
+| Windows x64 | `@kerf/compiler-win32-x64` | native |
 | Anything else, including Windows on Arm | none | WASM |
 
 The native addon is native code running in your build process, even when you install with `--ignore-scripts`: it
 needs no script to load. To keep it out, see [What installing runs](#what-installing-runs).
 
-`npx weft doctor` says which build an app is using. In code, `backend` from `@weft-js/core/compiler` reports
+`npx kerf doctor` says which build an app is using. In code, `backend` from `@kerf/core/compiler` reports
 `{ kind: 'native' | 'wasm', file, … }`; a WASM backend also lists the addons it wanted and why each was skipped.
-`WEFT_COMPILER=native` or `WEFT_COMPILER=wasm` pins one build; with `native`, a missing addon is an error rather than a
+`KERF_COMPILER=native` or `KERF_COMPILER=wasm` pins one build; with `native`, a missing addon is an error rather than a
 fallback.
 
 ```js
-import { backend, transform } from '@weft-js/core/compiler'
+import { backend, transform } from '@kerf/core/compiler'
 
 const out = transform(
   `export const A = (p) => <p>{p.n}</p>`,
@@ -1205,28 +1205,28 @@ TSX files need two compiler options, and the client types:
 {
   "compilerOptions": {
     "jsx": "preserve",
-    "jsxImportSource": "@weft-js/core",
+    "jsxImportSource": "@kerf/core",
     "moduleResolution": "bundler",
-    "types": ["@weft-js/core/client"]
+    "types": ["@kerf/core/client"]
   }
 }
 ```
 
-- `"jsx": "preserve"` leaves JSX for Weft's compiler; TypeScript only type-checks it.
-- `"jsxImportSource": "@weft-js/core"` gives JSX its types from `@weft-js/core/jsx-runtime`.
-- `"types": ["@weft-js/core/client"]` declares the Vite plugin's virtual imports, such as `./photo.jpg?media` and
+- `"jsx": "preserve"` leaves JSX for Kerf's compiler; TypeScript only type-checks it.
+- `"jsxImportSource": "@kerf/core"` gives JSX its types from `@kerf/core/jsx-runtime`.
+- `"types": ["@kerf/core/client"]` declares the Vite plugin's virtual imports, such as `./photo.jpg?media` and
   side-effect `.css` imports.
 
-An app from `npm create @weft-js` also adds the editor plugin, `"plugins": [{ "name": "@weft-js/cli/ts-plugin" }]`,
-which infers unannotated props and understands `bind:`. Run `weft tsc` in CI rather than plain `tsc` if you rely on
+An app from `npm create kerf` also adds the editor plugin, `"plugins": [{ "name": "@kerf/cli/ts-plugin" }]`,
+which infers unannotated props and understands `bind:`. Run `kerf tsc` in CI rather than plain `tsc` if you rely on
 inferred props.
 
-## How Weft compares to React and Solid
+## How Kerf compares to React and Solid
 
 Concepts only. For measured numbers, see the
-[`benchmarks/compare`](https://github.com/Ravonus/weft/tree/main/benchmarks/compare) method and results.
+[`benchmarks/compare`](https://github.com/Ravonus/kerf/tree/main/benchmarks/compare) method and results.
 
-| | React | Solid | Weft |
+| | React | Solid | Kerf |
 | --- | --- | --- | --- |
 | Component body | Re-runs on every update | Runs once | Runs once |
 | Reading state | A variable from `useState` | Call a getter: `count()` | Read a box: `count.value` |
@@ -1238,9 +1238,9 @@ Concepts only. For measured numbers, see the
 | Shared state | Context or a store library | `createStore`, context | `defineState`, with `persist`, `sync` and `history` as options |
 | Mistakes | Lint rules | Lint rules | Compiler errors with a fix, and an autofix where safe |
 
-Coming from React, the habits that matter are covered: `useState(prop)` is `W005`, hooks are `W020` with the Weft form
+Coming from React, the habits that matter are covered: `useState(prop)` is `W005`, hooks are `W020` with the Kerf form
 to use, and React's prop names (`className`, `htmlFor`, `onChange` per keystroke, camelCase SVG attributes) work on
-native elements. See [React prop names](https://github.com/Ravonus/weft/blob/main/docs/react-props.md).
+native elements. See [React prop names](https://github.com/Ravonus/kerf/blob/main/docs/react-props.md).
 
 Coming from Solid, the model is close. The differences are `.value` boxes instead of getter calls, destructured props
 that stay live, plain `.map` instead of `<For>`, and checks that run in the compiler rather than a linter.
@@ -1254,9 +1254,9 @@ Brotli sizes of production builds, as `node scripts/size.mjs` in this package re
 | --- | --- | --- |
 | Hello world | 1.60 KB | 3.00 KB |
 | Counter (`state` + `derived`) | 2.48 KB | |
-| Counter + `@weft-js/core/browser` | 3.48 KB | |
+| Counter + `@kerf/core/browser` | 3.48 KB | |
 | `<Boundary>` + `resource` | 5.00 KB | |
-| The `@weft-js/core` entry, every export | 5.63 KB | 6.90 KB |
+| The `@kerf/core` entry, every export | 5.63 KB | 6.90 KB |
 | A reference shop app | 6.20 KB | 10.00 KB |
 | The same app with `defineState` | 7.17 KB | 10.00 KB |
 | The same app, hydrating server HTML | 7.23 KB | 10.00 KB |
@@ -1267,11 +1267,11 @@ What each entry adds to a page, as whole pages measured with and without it:
 
 | Entry | A page with it | The same page without it | It adds |
 | --- | --- | --- | --- |
-| `@weft-js/core/head` (`setHead`) | 0.64 KB on its own | | 0.64 KB |
-| `pending="shape"` (`@weft-js/core/shape`) | 6.40 KB | 6.06 KB | 0.34 KB |
+| `@kerf/core/head` (`setHead`) | 0.64 KB on its own | | 0.64 KB |
+| `pending="shape"` (`@kerf/core/shape`) | 6.40 KB | 6.06 KB | 0.34 KB |
 | `<Surface>`, canvas 2D | 7.29 KB | 2.64 KB | 4.65 KB |
 | `<Surface>`, WebGL2 | 7.31 KB | 2.64 KB | 4.67 KB |
-| `<Media>` (`@weft-js/core/media`) | 8.06 KB | 1.60 KB (hello world) | about 6.5 KB |
+| `<Media>` (`@kerf/core/media`) | 8.06 KB | 1.60 KB (hello world) | about 6.5 KB |
 
 The full runtime lands on exactly 13.37 KB on purpose. `src/egg.ts` pads it with the digits of π, in an export nothing
 reads, so no app ships them. Apps pay only for what they import, so the other rows are what a real page costs.
@@ -1281,8 +1281,8 @@ reads, so no app ships them. Apps pay only for what they import, so the other ro
 <details>
 <summary><strong>The build fails with a code like <code>W001</code> or <code>W015</code></strong></summary>
 
-That is a compiler error, and the message says what to write instead. `npx weft docs W001` prints the full page with
-an example, and `npx weft fix` applies the safe autofixes. Warnings (`W004`, `W016`, `W017`, `W018`, `W056`) print but
+That is a compiler error, and the message says what to write instead. `npx kerf docs W001` prints the full page with
+an example, and `npx kerf fix` applies the safe autofixes. Warnings (`W004`, `W016`, `W017`, `W018`, `W056`) print but
 don't fail the build.
 
 </details>
@@ -1297,11 +1297,11 @@ in `derived`.
 </details>
 
 <details>
-<summary><strong><code>weft: rendered fresh, a key differs between server and client</code></strong></summary>
+<summary><strong><code>kerf: rendered fresh, a key differs between server and client</code></strong></summary>
 
 Hydration found server HTML whose keys don't match the client's, so it rebuilt that part. The usual cause is a `key`
 from `Date.now()`, `Math.random()` or `crypto.randomUUID()` (`W044`). Key on a stable id from the data. Also check
-that both builds use `weft({ hydratable: true })` and render the same component tree. In dev,
+that both builds use `kerf({ hydratable: true })` and render the same component tree. In dev,
 `N server element(s) were never claimed` names the first element the client didn't adopt.
 
 </details>
@@ -1315,11 +1315,11 @@ its children are built. Move the `resource` call into a child component.
 </details>
 
 <details>
-<summary><strong><code>weft: WEFT_COMPILER=native, and no addon for … loads</code></strong></summary>
+<summary><strong><code>kerf: KERF_COMPILER=native, and no addon for … loads</code></strong></summary>
 
 You pinned the native compiler on a platform with no prebuilt addon, or the addon failed to install. Unset
-`WEFT_COMPILER` to fall back to WASM, or reinstall with optional dependencies enabled (some CI setups pass
-`--no-optional`). `npx weft doctor` shows which addon was wanted and why it was skipped.
+`KERF_COMPILER` to fall back to WASM, or reinstall with optional dependencies enabled (some CI setups pass
+`--no-optional`). `npx kerf doctor` shows which addon was wanted and why it was skipped.
 
 </details>
 
@@ -1327,16 +1327,16 @@ You pinned the native compiler on a platform with no prebuilt addon, or the addo
 <summary><strong>A class or <code>data-variant</code> style is missing in production only</strong></summary>
 
 The CSS purge removed a rule whose name no built file mentions, usually because the name is assembled at run time.
-Add it to `weft({ purge: { keep: ['name'] } })`, or set `purge: false` to confirm that's the cause.
+Add it to `kerf({ purge: { keep: ['name'] } })`, or set `purge: false` to confirm that's the cause.
 
 </details>
 
 <details>
 <summary><strong>TypeScript errors in <code>vite.config.ts</code> or on props</strong></summary>
 
-- `@weft-js/core/vite` has no type declarations yet, so a strict `vite.config.ts` that TypeScript checks reports
+- `@kerf/core/vite` has no type declarations yet, so a strict `vite.config.ts` that TypeScript checks reports
   TS7016. Keep config files out of `include`, as the scaffold does.
-- Plain `tsc` reports TS7006 on unannotated, inferred props and can't connect `bind:n` to `n`. Run `weft tsc`, or
+- Plain `tsc` reports TS7006 on unannotated, inferred props and can't connect `bind:n` to `n`. Run `kerf tsc`, or
   write `n={bind(box)}`, which plain `tsc` accepts.
 
 </details>
@@ -1345,7 +1345,7 @@ Add it to `weft({ purge: { keep: ['name'] } })`, or set `purge: false` to confir
 <summary><strong>A test fails after it passes, with <code>T012</code></strong></summary>
 
 Something the test opened, a listener, timer or socket, was still open after it ended. `leaks()` from
-`@weft-js/core/test` lists it. Create listeners with `on` and `interval` from `@weft-js/core/browser` so their owner
+`@kerf/core/test` lists it. Create listeners with `on` and `interval` from `@kerf/core/browser` so their owner
 removes them.
 
 </details>
@@ -1355,8 +1355,8 @@ removes them.
 
 `S008`: persistence or sync is set up wrongly, for example `sync: 'tabs'` without `persist`, with `'session'`, or an
 object box persisted without a `schema`. It also fires when a scope persists a box but
-`@weft-js/core/persist` isn't loaded: the Vite plugin adds that import, so without the plugin, add
-`import '@weft-js/core/persist'` yourself. `S009`: two `defineState` scopes share a name, the setup returned a reserved
+`@kerf/core/persist` isn't loaded: the Vite plugin adds that import, so without the plugin, add
+`import '@kerf/core/persist'` yourself. `S009`: two `defineState` scopes share a name, the setup returned a reserved
 `$` key, or code used `$history` on a scope without `history`.
 
 </details>
@@ -1365,17 +1365,17 @@ object box persisted without a `schema`. It also fires when a scope persists a b
 
 | Package | What it is |
 | --- | --- |
-| [`@weft-js/start`](https://www.npmjs.com/package/@weft-js/start) | The full stack: file routes, server functions, streaming SSR, a database, auth and live data |
-| [`@weft-js/cli`](https://www.npmjs.com/package/@weft-js/cli) | The `weft` command: `dev`, `build`, `check`, `fix`, `docs`, `doctor`, the agent layer and the MCP server |
-| [`@weft-js/create`](https://www.npmjs.com/package/@weft-js/create) | Scaffolds an app: `npm create @weft-js` |
-| [`@weft-js/warp`](https://www.npmjs.com/package/@weft-js/warp) | The UI toolkit for Weft: layout primitives and accessible components |
-| [`@weft-js/warp-core`](https://www.npmjs.com/package/@weft-js/warp-core) | Warp's tokens, CSS and framework-agnostic behavior |
-| [`@weft-js/warp-icons`](https://www.npmjs.com/package/@weft-js/warp-icons) | Icons for Warp and Weft |
-| [`@weft-js/db`](https://www.npmjs.com/package/@weft-js/db) | Weft's data layers and list sources, with each driver an optional peer |
+| [`@kerf/start`](https://www.npmjs.com/package/@kerf/start) | The full stack: file routes, server functions, streaming SSR, a database, auth and live data |
+| [`@kerf/cli`](https://www.npmjs.com/package/@kerf/cli) | The `kerf` command: `dev`, `build`, `check`, `fix`, `docs`, `doctor`, the agent layer and the MCP server |
+| [`create-kerf`](https://www.npmjs.com/package/create-kerf) | Scaffolds an app: `npm create kerf` |
+| [`@kerf/veneer`](https://www.npmjs.com/package/@kerf/veneer) | The UI toolkit for Kerf: layout primitives and accessible components |
+| [`@kerf/veneer-core`](https://www.npmjs.com/package/@kerf/veneer-core) | Veneer's tokens, CSS and framework-agnostic behavior |
+| [`@kerf/veneer-icons`](https://www.npmjs.com/package/@kerf/veneer-icons) | Icons for Veneer and Kerf |
+| [`@kerf/db`](https://www.npmjs.com/package/@kerf/db) | Kerf's data layers and list sources, with each driver an optional peer |
 
 ## Contributing
 
-Read [CONTRIBUTING.md](https://github.com/Ravonus/weft/blob/main/CONTRIBUTING.md) first. From the repository root,
+Read [CONTRIBUTING.md](https://github.com/Ravonus/kerf/blob/main/CONTRIBUTING.md) first. From the repository root,
 `pnpm run setup` installs every package and builds the compiler, which needs Rust. Then, in `packages/core`:
 
 ```bash
@@ -1392,9 +1392,9 @@ is an error, not a fallback: rebuild with `pnpm run build:native`.
 `src/egg.ts` pads the full runtime to exactly 13.37 KB. Run `node scripts/egg.mjs` last, after any merge that changes
 the runtime.
 
-The source is in [`packages/core`](https://github.com/Ravonus/weft/tree/main/packages/core), and issues go to
-[GitHub](https://github.com/Ravonus/weft/issues).
+The source is in [`packages/core`](https://github.com/Ravonus/kerf/tree/main/packages/core), and issues go to
+[GitHub](https://github.com/Ravonus/kerf/issues).
 
 ## License
 
-[MIT](https://github.com/Ravonus/weft/blob/main/LICENSE)
+[MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)

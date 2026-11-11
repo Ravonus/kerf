@@ -1,4 +1,0 @@
-/* A bare `<a>` is never the browser's blue: warp's link ink and hairline underline (05 §4), in warp.base so every component's own link and app CSS win. */
-@layer warp.base {
-:where(a:any-link) { color: var(--warp-color-accent-text); text-decoration-thickness: var(--warp-border-hairline); text-underline-offset: 0.22em; }
-}

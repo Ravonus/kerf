@@ -1,10 +1,10 @@
 // defineState (PLAN §4.5, research 14 §2) and keyed reads of object boxes.
-// weft-allow T004: persistence writes land on a macrotask; `tick` waits for that, not for an update
+// kerf-allow T004: persistence writes land on a macrotask; `tick` waits for that, not for an update
 import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 import { screen } from '@testing-library/dom'
 import { z } from 'zod'
-import { defineState, derived, flush as flushGraph, state, StateError } from '@weft-js/core'
-import { flush, memoryStorage, render, scope, touches } from '@weft-js/core/test'
+import { defineState, derived, flush as flushGraph, state, StateError } from '@kerf/core'
+import { flush, memoryStorage, render, scope, touches } from '@kerf/core/test'
 
 describe('keyed reads: box.get(key)', () => {
   test('a reader of one entry re-runs only when that entry changes', () => {
@@ -224,7 +224,7 @@ function registerStorageRoundTripTests() {
     a.dense.value = true
     await tick()
     expect(set).toHaveBeenCalledTimes(1)
-    expect(JSON.parse(storage.getItem('weft:shop:theme.dense')!)).toMatchObject({
+    expect(JSON.parse(storage.getItem('kerf:shop:theme.dense')!)).toMatchObject({
       v: 1,
       data: true,
     })
@@ -233,7 +233,7 @@ function registerStorageRoundTripTests() {
 
   test('localStorage, with a schema, a version and migrations', async () => {
     localStorage.setItem(
-      'weft:app:guest.lines',
+      'kerf:app:guest.lines',
       JSON.stringify({ v: 1, at: 0, data: [{ id: 'a', qty: 2 }] }),
     )
     const guest = defineState('guest', () => ({
@@ -258,7 +258,7 @@ function registerStorageRoundTripTests() {
       d.b = 1
     })
     await tick()
-    expect(JSON.parse(localStorage.getItem('weft:app:guest.lines')!)).toMatchObject({
+    expect(JSON.parse(localStorage.getItem('kerf:app:guest.lines')!)).toMatchObject({
       v: 2,
       data: { a: 2, b: 1 },
     })
@@ -268,12 +268,12 @@ function registerStorageRoundTripTests() {
   test('S003: a payload that fails its schema falls back to init and is kept aside', () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => {})
     const storage = memoryStorage()
-    storage.setItem('weft:app:qty.n', JSON.stringify({ v: 1, at: 0, data: -5 }))
+    storage.setItem('kerf:app:qty.n', JSON.stringify({ v: 1, at: 0, data: -5 }))
     const qty = defineState('qty', () => ({
       n: state(1, { persist: { in: 'memory', schema: z.number().min(0) } }),
     }))
     expect(scope(qty, { storage }).n.value).toBe(1)
-    expect(storage.getItem('weft:app:qty.n:corrupt')).toContain('-5')
+    expect(storage.getItem('kerf:app:qty.n:corrupt')).toContain('-5')
     expect(err.mock.calls[0]![0]).toMatch(/^S003/)
     err.mockRestore()
   })
@@ -283,7 +283,7 @@ function registerStorageErrorTests() {
   test('S003: a stored version with no migration path', () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => {})
     const storage = memoryStorage()
-    storage.setItem('weft:app:mig.n', JSON.stringify({ v: 1, at: 0, data: 3 }))
+    storage.setItem('kerf:app:mig.n', JSON.stringify({ v: 1, at: 0, data: 3 }))
     const mig = defineState('mig', () => ({
       n: state(0, { persist: { in: 'memory', version: 3, migrate: { 1: (v: number) => v } } }),
     }))
@@ -322,7 +322,7 @@ function registerStorageErrorTests() {
     w.at.value = new Date(0)
     await tick()
     expect(err.mock.calls[0]![0]).toMatch(/^S010.*Date/)
-    expect(storage.getItem('weft:app:when.at')).toBeNull()
+    expect(storage.getItem('kerf:app:when.at')).toBeNull()
     err.mockRestore()
   })
 
@@ -335,6 +335,6 @@ function registerStorageErrorTests() {
     s.$reset()
     flushGraph()
     await tick()
-    expect(JSON.parse(storage.getItem('weft:app:resettable.n')!).data).toBe(1)
+    expect(JSON.parse(storage.getItem('kerf:app:resettable.n')!).data).toBe(1)
   })
 }

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Card, Input } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Card, Input } from '@kerf/veneer'
 
 export default function Person() {
   const person = state({
@@ -34,7 +34,7 @@ export default function Person() {
           })
         }
       />
-      {/* set gives you a copy to change; weft writes
+      {/* set gives you a copy to change; kerf writes
           the copy back as the new value. */}
       <Input
         label="Email"

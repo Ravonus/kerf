@@ -3,8 +3,8 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { eq } from 'drizzle-orm'
 import { createLocalJWKSet, jwtVerify } from 'jose'
-import { mutation, query, type Context } from '@weft-js/start'
-import { enter, fnOf } from '@weft-js/start/data'
+import { mutation, query, type Context } from '@kerf/start'
+import { enter, fnOf } from '@kerf/start/data'
 import { forward, session } from '../src/auth'
 import { createAuth } from '../src/auth/better-auth'
 import { drizzleAuth } from '../src/auth/drizzle'
@@ -156,7 +156,7 @@ const handler = createHandler({
   dev: true,
 })
 const fnUrl = (fn: unknown, input?: unknown) =>
-  `${base}/_weft/fn/${encodeURIComponent(idOf(fn))}${input === undefined ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`
+  `${base}/_kerf/fn/${encodeURIComponent(idOf(fn))}${input === undefined ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`
 const headersFor = (cookie?: string, bearer?: string) => ({
   ...(cookie && { cookie }),
   ...(bearer && { authorization: `Bearer ${bearer}` }),
@@ -167,7 +167,7 @@ const post = (fn: unknown, cookie?: string, bearer?: string, body: object = {}) 
   handler(
     new Request(fnUrl(fn), {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-weft': '1', ...headersFor(cookie, bearer) },
+      headers: { 'content-type': 'application/json', 'x-kerf': '1', ...headersFor(cookie, bearer) },
       body: JSON.stringify(body),
     }),
   )
@@ -203,7 +203,7 @@ async function token(cookie: string) {
 }
 const payloadOf = (t: string) => JSON.parse(Buffer.from(t.split('.')[1]!, 'base64url').toString())
 
-beforeAll(() => db.$weft.migrate([{ tag: 'auth', sql: ddl }]))
+beforeAll(() => db.$kerf.migrate([{ tag: 'auth', sql: ddl }]))
 afterEach(() => vi.restoreAllMocks())
 
 function registerATokenLastsMinutesCarriesNo() {
@@ -464,12 +464,12 @@ function registerARealtimeRequestReadsTheDatabase() {
   test('a realtime request reads the database: its ctx outlives the request', async () => {
     const { cookie, id } = await fresh()
     await revoke(id)
-    for (const path of ['/_weft/ws', '/_weft/rt', '/_weft/x/some/route'])
+    for (const path of ['/_kerf/ws', '/_kerf/rt', '/_kerf/x/some/route'])
       expect(
         (await session(auth, new Request(base + path, { headers: { cookie } }))).user,
       ).toBeNull()
     expect(
-      (await session(auth, new Request(base + '/_weft/data/a', { headers: { cookie } }))).user,
+      (await session(auth, new Request(base + '/_kerf/data/a', { headers: { cookie } }))).user,
     ).not.toBeNull()
   })
 }
@@ -586,13 +586,13 @@ describe('a build', () => {
   test('hands Better Auth a throwaway secret when it has none, and a server never gets one', () => {
     const noSecret = () => createAuth({ db, secret: undefined, options }).options.secret
     expect(noSecret()).toBeUndefined()
-    process.env.WEFT_BUILD = '1'
+    process.env.KERF_BUILD = '1'
     try {
       expect(noSecret()).toMatch(/.{32}/)
       expect(noSecret()).not.toBe(noSecret())
       expect(createAuth({ db, secret, options }).options.secret).toBe(secret)
     } finally {
-      delete process.env.WEFT_BUILD
+      delete process.env.KERF_BUILD
     }
   })
 })

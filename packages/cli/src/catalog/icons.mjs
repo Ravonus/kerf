@@ -5,7 +5,7 @@ export const icons = [
     severity: 'error',
     by: 'cli',
     catches: '`<Icon name="as">`, or `Icons.As`, where no such icon exists',
-    fix: 'Use the name it suggests. `weft docs icons` has the set; an editor completes it from the type.',
+    fix: 'Use the name it suggests. `kerf docs icons` has the set; an editor completes it from the type.',
   },
   {
     code: 'I002',

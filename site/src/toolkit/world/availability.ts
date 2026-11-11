@@ -1,4 +1,4 @@
-import type { Availability } from '@weft-js/warp'
+import type { Availability } from '@kerf/veneer'
 
 export const ON_CALL_HOURS: Availability = {
   week: [1, 2, 3, 4, 5, 6, 0].map((day) => ({

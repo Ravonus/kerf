@@ -1,7 +1,7 @@
-import { Button, Input, Segmented, Select, Slider, Switch } from '@weft-js/warp'
-import { highlight } from '@weft-js/warp-core'
-import { derived, onCleanup, onMount, state, untrack } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
+import { Button, Input, Segmented, Select, Slider, Switch } from '@kerf/veneer'
+import { highlight } from '@kerf/veneer-core'
+import { derived, onCleanup, onMount, state, untrack } from '@kerf/core'
+import { render } from '@kerf/core/dom'
 import { previews } from '../generated/previews'
 import { StageButtons } from './StageButtons'
 import type { Knob, Playground as Play } from '../toolkit/types'
@@ -40,7 +40,7 @@ function print(play: ShownPlayground, name: string, v: Values) {
   const line = (kids ? play.code : play.code.replace(/>\{children\}<\/[\w.]+>/, ' />'))
     .replace('{props}', () => attrs)
     .replace('{children}', () => kids)
-  return `import { ${name} } from '@weft-js/warp'\n\n${line}`
+  return `import { ${name} } from '@kerf/veneer'\n\n${line}`
 }
 
 const shown = (k: Knob, v: Values) => !k.when || k.when.is.includes(v[k.when.prop])
@@ -273,7 +273,7 @@ function playgroundCode(code: { value: string }, html: { value: string }) {
         </div>
         <pre tabindex="0">
           <code
-            // oxlint-disable-next-line weft/no-html-sink -- highlight escapes every character of the code it marks up
+            // oxlint-disable-next-line kerf/no-html-sink -- highlight escapes every character of the code it marks up
             innerHTML={html.value}
           ></code>
         </pre>
@@ -282,7 +282,7 @@ function playgroundCode(code: { value: string }, html: { value: string }) {
   )
 }
 
-/* @weft visible */
+/* @kerf visible */
 /**
  * The page's "Try it": the component large on a stage, the controls that change it beside it (below it on a phone),
  * and the call they add up to under both, live and copyable. Any change makes the example

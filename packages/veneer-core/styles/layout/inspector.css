@@ -1,0 +1,35 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* Inspector — a right panel docked beside content ≥ 1000 of the page, a
+   non-modal bottom sheet below. Toggle with data-open; resizable via SplitPane. */
+:where([data-scope="inspector"]) {
+  display: grid; grid-template-columns: minmax(0, 1fr); min-block-size: 0; min-inline-size: 0;
+}
+:where([data-scope="inspector"] > [data-part="aside"]) {
+  display: flex; flex-direction: column; min-inline-size: 0; background: var(--veneer-color-surface);
+  border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+}
+:where([data-scope="inspector"]:not([data-open]) > [data-part="aside"]) { display: none; }
+:where([data-scope="inspector"] [data-part="panel-head"]) {
+  display: flex; align-items: center; gap: var(--veneer-space-related); min-block-size: var(--veneer-layout-bar);
+  padding-inline: var(--veneer-space-group) var(--veneer-space-tight); border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border); font-weight: 600;
+}
+:where([data-scope="inspector"] [data-part="panel-body"]) { padding: var(--veneer-space-group); overflow: auto; overscroll-behavior: contain; display: grid; gap: var(--veneer-space-group); align-content: start; }
+@container veneer-page (min-width: 1000px) {
+:where([data-scope="inspector"][data-open]) { grid-template-columns: minmax(0, 1fr) var(--veneer-layout-aside); }
+:where([data-scope="inspector"] > [data-part="aside"]) {
+    border-block-start: 0; border-inline-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+    animation: veneer-aside-in var(--veneer-duration-base) var(--veneer-ease-out) both;
+  }
+}
+@container veneer-page (max-width: 999.98px) {
+:where([data-scope="inspector"] > [data-part="aside"]) {
+    border-radius: calc(var(--veneer-radius-surface) + 6px) calc(var(--veneer-radius-surface) + 6px) 0 0; box-shadow: var(--veneer-elevation-2);
+    animation: veneer-sheet-in var(--veneer-duration-sheet) var(--veneer-ease-out) both;
+  }
+}
+@keyframes veneer-aside-in { from { transform: translateX(calc(var(--veneer-motion-distance) * 3 * var(--_dir, 1))); opacity: 0; } }
+@keyframes veneer-sheet-in {
+  from { transform: translateY(calc(100% * var(--veneer-motion-scale))); opacity: calc(1 - var(--veneer-motion-scale)); }
+}
+}

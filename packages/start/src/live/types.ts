@@ -1,4 +1,4 @@
-import type { Derived } from '@weft-js/core'
+import type { Derived } from '@kerf/core'
 import type { Context, LiveOptions, LiveStatus, Skip, StandardSchemaV1 } from '../data'
 import type { Tracked } from '../hub'
 

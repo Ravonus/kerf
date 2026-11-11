@@ -90,7 +90,7 @@ const SKIP = new Set([
   '.next',
   'dist',
   '.output',
-  '.weft',
+  '.kerf',
   '.git',
   'package-lock.json',
   'next-env.d.ts',

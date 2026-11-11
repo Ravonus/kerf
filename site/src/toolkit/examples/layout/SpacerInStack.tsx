@@ -1,4 +1,4 @@
-import { Inset, Spacer, Stack } from '@weft-js/warp'
+import { Inset, Spacer, Stack } from '@kerf/veneer'
 import { Box } from './shared'
 
 export const SpacerInStack = () => (

@@ -1,0 +1,55 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* tool call card */
+:where([data-scope="tool-call"]) {
+  position: relative; min-inline-size: 0; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised);
+  box-shadow: 0 0 0 1px var(--veneer-color-border); font-size: var(--veneer-text-caption-size); overflow: clip;
+}
+:where([data-scope="tool-call"]) > :where([data-part="sweep"]),
+:where([data-scope="tool-call"]) > :where([data-part="sweep-base"]) { inset: 0; }
+:where([data-scope="tool-call"] summary) { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: 8px; min-block-size: 38px; padding: 0 10px; cursor: pointer; list-style: none; position: relative; z-index: 3; }
+:where([data-scope="tool-call"] summary)::-webkit-details-marker { display: none; }
+:where([data-scope="tool-call"] [data-part="name"]:not([data-scope="tool-call"] :is([data-scope="layers"],[data-scope="persona"],[data-scope="plan-card"],[data-scope="tile"],[data-scope="uploads"]) *:not([data-scope="tool-call"] :is([data-scope="layers"],[data-scope="persona"],[data-scope="plan-card"],[data-scope="tile"],[data-scope="uploads"]) [data-scope="tool-call"] *))) { font: 500 12.5px/1 var(--veneer-font-mono); color: var(--veneer-color-text); }
+:where([data-scope="tool-call"] [data-part="arg"]) { color: var(--veneer-color-text-subtle); font: 400 12px/1 var(--veneer-font-mono); overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
+:where([data-scope="tool-call"] [data-part="dur"]) { font: 500 11px/1 var(--veneer-font-mono); color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="tool-call"] [data-part="chev"]:not([data-scope="tool-call"] [data-scope="reasoning"] *:not([data-scope="tool-call"] [data-scope="reasoning"] [data-scope="tool-call"] *))) { transition: rotate var(--veneer-duration-base) var(--veneer-ease-out); color: var(--veneer-color-text-subtle); }
+:where([data-scope="tool-call"][open] [data-part="chev"]:not([data-scope="tool-call"] [data-scope="reasoning"] *:not([data-scope="tool-call"] [data-scope="reasoning"] [data-scope="tool-call"] *))) { rotate: 90deg; }
+:where([data-scope="tool-call"] [data-part="io"]) { display: grid; gap: 8px; padding: 10px; border-block-start: 1px solid var(--veneer-color-border); position: relative; z-index: 3; }
+:where([data-scope="tool-call"] [data-part="io"] pre) { margin: 0; padding: 8px 10px; border-radius: var(--veneer-radius-mark); background: var(--veneer-color-surface-sunken); font-size: 12px; line-height: 1.55; overflow: auto; max-block-size: 160px; }
+:where([data-scope="tool-call"] [data-part="io"] > span) { font: 500 10.5px/1 var(--veneer-font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--veneer-color-text-subtle); }
+:where([data-scope="tool-call"][data-state="running"]) { box-shadow: 0 0 0 1px var(--veneer-color-accent-border); }
+:where([data-scope="tool-call"][data-state="running"])::before {
+  content: ""; position: absolute; inset: auto 0 0 0; block-size: var(--veneer-border-emphasis); z-index: 4;
+  background: linear-gradient(90deg, transparent, var(--veneer-color-sweep), transparent) 0 0 / 40% 100% no-repeat;
+  animation: veneer-tool-run calc(1200ms + 400ms * var(--veneer-x)) var(--veneer-sweep-ease) infinite;
+}
+:where([data-motion="reduce"] [data-scope="tool-call"][data-state="running"])::before { animation: none; background: var(--veneer-color-sweep); opacity: 0.5; }
+@media (prefers-reduced-motion: reduce) {
+:where(:root:not([data-motion="full"]) [data-scope="tool-call"][data-state="running"])::before { animation: none; background: var(--veneer-color-sweep); opacity: 0.5; }
+}
+:where([data-scope="tool-call"][data-state="failed"]) { box-shadow: 0 0 0 1px var(--veneer-color-critical-border); }
+:where([data-scope="tool-call"][data-state="approval"]) { box-shadow: 0 0 0 1px var(--veneer-color-caution-border); background: color-mix(in oklab, var(--veneer-color-caution-soft) 50%, var(--veneer-color-surface-raised)); }
+/* tool approval: arguments are editable before approving */
+:where([data-scope="tool-call"] [data-part="approve"]:not([data-scope="tool-call"] [data-scope="run"] *:not([data-scope="tool-call"] [data-scope="run"] [data-scope="tool-call"] *))) { display: grid; gap: 8px; padding: 10px; border-block-start: 1px solid var(--veneer-color-caution-border); position: relative; z-index: 3; }
+:where([data-scope="tool-call"] [data-part="approve"]:not([data-scope="tool-call"] [data-scope="run"] *:not([data-scope="tool-call"] [data-scope="run"] [data-scope="tool-call"] *)) textarea) {
+  font: 400 12px/1.55 var(--veneer-font-mono); padding: 8px 10px; border: 0; border-radius: var(--veneer-radius-mark); resize: vertical; min-block-size: 64px;
+  background: var(--veneer-color-surface); color: var(--veneer-color-text); box-shadow: inset 0 0 0 1px var(--veneer-color-border-control);
+}
+:where([data-scope="tool-call"] [data-part="approve"]:not([data-scope="tool-call"] [data-scope="run"] *:not([data-scope="tool-call"] [data-scope="run"] [data-scope="tool-call"] *)) textarea:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 0; }
+:where([data-scope="tool-call"] [data-part="approve"]:not([data-scope="tool-call"] [data-scope="run"] *:not([data-scope="tool-call"] [data-scope="run"] [data-scope="tool-call"] *)) > div) { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12.5px; }
+:where([data-scope="tool-call"] [data-part="approve"]:not([data-scope="tool-call"] [data-scope="run"] *:not([data-scope="tool-call"] [data-scope="run"] [data-scope="tool-call"] *)) label) { display: inline-flex; gap: 6px; align-items: center; margin-inline-start: auto; color: var(--veneer-color-text-subtle); }
+:where([data-scope="tool-call"] summary) { min-block-size: max(38px, var(--veneer-hit-min)); }
+@media (forced-colors: active) {
+:where([data-arrive])::after,
+  :where([data-scope="calendar"] [data-part="now"])::before,
+  :where([data-scope="calendar"] [data-part="now-label"]),
+  :where([data-scope="agenda"] [data-part="now"]:not([data-scope="agenda"] [data-scope="calendar"] *:not([data-scope="agenda"] [data-scope="calendar"] [data-scope="agenda"] *)) i),
+  :where([data-scope="agenda"] [data-part="now"] i)::before,
+  :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
+  :where([data-scope="run"] > li[data-state="done"])::before,
+  :where([data-scope="tool-call"][data-state="running"])::before,
+  :where([data-scope="versions"] li[data-named] > i),
+  :where([data-scope="notification"] [data-part="unread"]) { forced-color-adjust: none; background: Highlight; }
+}
+@keyframes veneer-tool-run { from { background-position: -40% 0; } to { background-position: 140% 0; } }
+}

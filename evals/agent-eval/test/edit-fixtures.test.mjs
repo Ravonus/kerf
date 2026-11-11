@@ -32,8 +32,8 @@ const ids = [
 ]
 
 test('edit starter preserves medium source with safe index fallbacks', () => {
-  const source = new URL('reference/weft-warp/src/routes/', mediumRoot)
-  const starter = new URL('starter/weft-warp/src/routes/', root)
+  const source = new URL('reference/kerf-veneer/src/routes/', mediumRoot)
+  const starter = new URL('starter/kerf-veneer/src/routes/', root)
   for (const file of readdirSync(source)) {
     let expected = readFileSync(new URL(file, source), 'utf8')
     if (file === 'shop-state.ts') {
@@ -58,7 +58,7 @@ test('edit starter preserves medium source with safe index fallbacks', () => {
 test('edit requirements map to one reference mutation and one named check', () => {
   const coverage = JSON.parse(readFileSync(new URL('coverage.json', root)))
   const mutants = JSON.parse(readFileSync(new URL('mutants.json', root)))
-  const routes = new URL('reference/weft-warp/src/routes/', root)
+  const routes = new URL('reference/kerf-veneer/src/routes/', root)
   const sources = readdirSync(routes).map((file) =>
     readFileSync(join(routes.pathname, file), 'utf8'),
   )

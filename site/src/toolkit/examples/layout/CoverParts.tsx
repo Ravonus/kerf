@@ -1,4 +1,4 @@
-import { Cover } from '@weft-js/warp'
+import { Cover } from '@kerf/veneer'
 import { Box, SCREEN } from './shared'
 
 export const CoverParts = () => (

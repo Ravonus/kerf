@@ -20,7 +20,7 @@ async function probe(handle: { dialect: string; ping?: () => Promise<unknown> })
 }
 
 /**
- * `/_weft/health`, for a load balancer or uptime check: 200 when every database answers and live data is delivered
+ * `/_kerf/health`, for a load balancer or uptime check: 200 when every database answers and live data is delivered
  * as required, 503 otherwise, with what each part said. It runs before migrations, so a failed one still reports.
  */
 export async function health(dev: boolean | undefined): Promise<Response> {

@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   AuthDone,
   Button,
@@ -7,7 +7,7 @@ import {
   ResetPassword,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { PEOPLE } from '../../world'
 
 const resendLede =
@@ -59,7 +59,7 @@ export function ResetPasswordSteps() {
         <MagicLinkSent
           heading="h3"
           title="Check your inbox"
-          email="priya@weft.dev"
+          email="priya@kerf.dev"
           lede={resendLede}
           onResend={() => (stage.value = 'password')}
           resendIn={0}
@@ -109,11 +109,11 @@ export function InviteAcceptWorkspace() {
         <InviteAccept
           heading="h3"
           inviter="Mara Lindqvist"
-          org="weft"
+          org="kerf"
           role="Member"
-          email="dara@weft.dev"
+          email="dara@kerf.dev"
           description={memberDescription}
-          onAccept={() => (answer.value = 'Joined weft.')}
+          onAccept={() => (answer.value = 'Joined kerf.')}
           onDecline={() =>
             (answer.value = 'Invite declined.')
           }
@@ -128,7 +128,7 @@ export const AuthDoneSignedIn = () => (
   <AuthDone
     heading="h3"
     title="You're in"
-    lede="Signed in as mara@weft.dev."
+    lede="Signed in as mara@kerf.dev."
     delay={3600000}
   />
 )

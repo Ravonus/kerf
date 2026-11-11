@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, resolve as resolvePath } from 'node:path'
-// The style matrix (research 23 §2.4): `.weft/styles.json`, every group with its axes, values, parts, states,
+// The style matrix (research 23 §2.4): `.kerf/styles.json`, every group with its axes, values, parts, states,
 // accents, resolved declarations and where each is used, plus the style D-codes that need the whole project (D021–D025,
-// research 23 §3). The Vite plugin writes it from what it compiled; `weft style` and `weft check` build it by scanning
+// research 23 §3). The Vite plugin writes it from what it compiled; `kerf style` and `kerf check` build it by scanning
 // the project with the same compiler (`scanProject`). Generated, never hand-edited. Plain data and erasable types: the
 // plugin and the CLI import it in Node, as node/matrix.mjs (scripts/node-style.mjs).
 import {
@@ -45,7 +45,7 @@ export type MatrixGroup = {
   tokens: string[]
   /** `css: { … }` escapes (D023): where, and the properties they set. */
   escapes: { at: string; props: string[] }[]
-  /** Reads a tone it doesn't set, so it takes one from Warp's `data-tone` context. */
+  /** Reads a tone it doesn't set, so it takes one from Veneer's `data-tone` context. */
   contextTone: boolean
   used: {
     file: string
@@ -129,7 +129,7 @@ function validateSelection(g: GroupSource, selection: Selection) {
 
 /**
  * The resolved CSS for one selection of a group, and where each value came from (token, axis, state, compound or
- * accent), as `weft explain` does for compiled code. Unknown axes, values, states or parts throw a GroupError (D025).
+ * accent), as `kerf explain` does for compiled code. Unknown axes, values, states or parts throw a GroupError (D025).
  */
 export function explainGroup(
   g: GroupSource,
@@ -264,7 +264,7 @@ export function scanProject(root: string, files: string[], transform: Transform)
       const code = existsSync(abs) ? readFileSync(abs, 'utf8') : ''
       defs.set(
         abs,
-        code.includes('@weft-js/core/style')
+        code.includes('@kerf/core/style')
           ? (transform(code, { filename: abs, checkOnly: true }).facts.groups ?? []).map((g) => ({
               ...g,
               file: relative(root, abs).split('\\').join('/'),

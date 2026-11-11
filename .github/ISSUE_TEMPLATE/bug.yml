@@ -19,4 +19,4 @@ body:
     id: versions
     attributes:
       label: Versions
-      description: The output of `npx weft doctor`, or your weft, Node and OS versions.
+      description: The output of `npx kerf doctor`, or your kerf, Node and OS versions.

@@ -13,7 +13,7 @@ export function defsOf(s, file) {
   if (mtime === undefined) return []
   if (s.scanned.get(file) !== mtime || !s.defs.has(file)) {
     const code = readFileSync(file, 'utf8')
-    const found = code.includes('@weft-js/core/style')
+    const found = code.includes('@kerf/core/style')
       ? transform(code, { filename: file, checkOnly: true }).facts.groups
       : []
     s.defs.set(file, found)
@@ -57,7 +57,7 @@ export function validate(s, ctx, file, groups) {
     for (const [other, gs] of s.defs)
       if (other !== file && gs.some((x) => x.name === g.name))
         ctx.error(
-          `@weft-js/core/style: group ${g.name} (${where}) is also defined in ${relative(s.root, other)}`,
+          `@kerf/core/style: group ${g.name} (${where}) is also defined in ${relative(s.root, other)}`,
         )
     const { base, axes = {}, parts = {}, states = {}, compounds = [] } = g.def
     try {
@@ -71,7 +71,7 @@ export function validate(s, ctx, file, groups) {
       for (const [n, c] of compounds.entries())
         resolveIntent(c.set, `group ${g.name} (${where}) compound ${n}`)
     } catch (e) {
-      if (e instanceof GroupError) ctx.error(`D025 @weft-js/core/style: ${e.message}`)
+      if (e instanceof GroupError) ctx.error(`D025 @kerf/core/style: ${e.message}`)
       throw e
     }
   }
@@ -99,11 +99,11 @@ export function writeMatrix(s) {
   if (
     s.matrix &&
     text !== s.written &&
-    (all.length || existsSync(join(s.root, '.weft', 'styles.json')))
+    (all.length || existsSync(join(s.root, '.kerf', 'styles.json')))
   ) {
     try {
-      mkdirSync(join(s.root, '.weft'), { recursive: true })
-      writeFileSync(join(s.root, '.weft', 'styles.json'), text)
+      mkdirSync(join(s.root, '.kerf'), { recursive: true })
+      writeFileSync(join(s.root, '.kerf', 'styles.json'), text)
       s.written = text
     } catch {}
   }

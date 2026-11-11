@@ -1,4 +1,4 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { Canvas, type CanvasFrame as Frame } from '@kerf/veneer'
 import { fbm, inks, rng, type ArtProps, type Meta } from './shared'
 import code from './curl-threads.tsx?raw'
 
@@ -12,7 +12,7 @@ export const meta: Meta = {
 
 const COUNT = 600,
   STEP = 1.1
-const colours = inks({ line: '--warp-color-text-subtle', accent: '--warp-color-accent-text' })
+const colours = inks({ line: '--veneer-color-text-subtle', accent: '--veneer-color-accent-text' })
 
 type ThreadFlow = {
   x: Float32Array

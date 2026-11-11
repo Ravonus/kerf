@@ -1,4 +1,4 @@
-// `weft routes --meta` (research 25 §7): every route's merged metadata as JSON, without a browser or a server. The
+// `kerf routes --meta` (research 25 §7): every route's merged metadata as JSON, without a browser or a server. The
 // fixture's output is a snapshot, so a change to any route's tags shows in review.
 import { metaExport, routesMeta, h006, staticRouteChecks } from '../src/inspect.mjs'
 import { fixture, site } from './dev-server.setup.mjs'
@@ -63,7 +63,7 @@ test('H006: meta that reads a box or calls a hook, found in the source', () => {
   const found: string[][] = []
   const report = (why: string, file: string) => found.push([file, why.slice(0, 30)])
   h006(
-    `import { state } from '@weft-js/core'\nconst n = state(1)\nexport const meta = () => ({ title: String(n.value) })`,
+    `import { state } from '@kerf/core'\nconst n = state(1)\nexport const meta = () => ({ title: String(n.value) })`,
     'a.tsx',
     report,
   )
@@ -83,7 +83,7 @@ test('H006: meta that reads a box or calls a hook, found in the source', () => {
   ])
 })
 
-describe('what `weft check` reports per route', () => {
+describe('what `kerf check` reports per route', () => {
   let r: Awaited<ReturnType<typeof routesMeta>>
   const found = (code: string, route?: string) =>
     r.diagnostics.filter((d) => d.code === code && (!route || d.route === route))
@@ -124,7 +124,7 @@ describe('what `weft check` reports per route', () => {
     const { url: _, ...bare } = site
     const out = await routesMeta({ root: fixture, site: bare })
     expect(out.diagnostics.filter((d) => d.code === 'H001')).toMatchObject([
-      { severity: 'warning', file: 'weft.config.ts' },
+      { severity: 'warning', file: 'kerf.config.ts' },
     ])
   })
 })

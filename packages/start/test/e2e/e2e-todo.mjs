@@ -1,4 +1,4 @@
-// The scaffold's e2e (research 28 §5): what `create-weft --db sqlite --auth` promises, on a production server, in
+// The scaffold's e2e (research 28 §5): what `create-kerf --db sqlite --auth` promises, on a production server, in
 // Chrome and over HTTP. Selectors are roles and labels, so it holds for every `--ui`. Credentials are generated here;
 // nothing leaves the local server.
 import { randomBytes } from 'node:crypto'
@@ -121,7 +121,7 @@ async function personalChecks({ check, eq, fail, hydrated, signUp, add, titles }
     })
     // Not `networkidle`: a page that reached it once reports it at once, and the row flips optimistically before the write lands.
     const written = a.page.waitForResponse(
-      (r) => r.url().includes('/_weft/fn/') && r.request().method() === 'POST',
+      (r) => r.url().includes('/_kerf/fn/') && r.request().method() === 'POST',
     )
     await a.page.locator('ul.todos li', { hasText: 'Write the note' }).getByRole('checkbox').click()
     await a.page.locator('ul.todos li.done').waitFor()
@@ -141,7 +141,7 @@ async function hydrationChecks({ check, eq, fail, titles }, a) {
       await a.idle()
       const calls = []
       const listen = (r) => {
-        if (r.url().includes('/_weft/fn/')) calls.push(r.url())
+        if (r.url().includes('/_kerf/fn/')) calls.push(r.url())
       }
       a.page.on('request', listen)
       await a.page.addInitScript(() => {
@@ -238,14 +238,14 @@ async function accountChecks(
 async function accessChecks({ check, eq, titles }, url, a, b) {
   // A real id for the checks below: the page's own payload.
   const cached = await a.page.evaluate(() =>
-    JSON.parse(document.getElementById('weft-cache')?.textContent ?? '[]'),
+    JSON.parse(document.getElementById('kerf-cache')?.textContent ?? '[]'),
   )
   const list = cached.find((w) => Array.isArray(w[2]) && w[2][0]?.title)
   const aliceId = list[2][0].id
   const ids = await functionIds(url, a.context)
   const post = (ctx, name, input) =>
-    ctx.request.post(`/_weft/fn/${ids[name]}`, {
-      headers: { 'content-type': 'application/json', 'x-weft': '1' },
+    ctx.request.post(`/_kerf/fn/${ids[name]}`, {
+      headers: { 'content-type': 'application/json', 'x-kerf': '1' },
       data: { i: input, f: [] },
     })
 
@@ -257,15 +257,15 @@ async function accessChecks({ check, eq, titles }, url, a, b) {
     eq((await titles(a.page))[0], 'done:Write the note', "alice's todo")
   })
   await check('A002: a call with no session is a 401', async () => {
-    const r = await fetch(`${url}/_weft/fn/${ids.listTodos}`)
+    const r = await fetch(`${url}/_kerf/fn/${ids.listTodos}`)
     eq([r.status, (await r.json()).e.code], [401, 'A002'], 'anonymous query')
   })
   await check('Q010: a cross-site mutation is refused', async () => {
-    const r = await fetch(`${url}/_weft/fn/${ids.addTodo}`, {
+    const r = await fetch(`${url}/_kerf/fn/${ids.addTodo}`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-weft': '1',
+        'x-kerf': '1',
         origin: 'https://evil.example',
       },
       body: JSON.stringify({ i: { title: 'x' } }),

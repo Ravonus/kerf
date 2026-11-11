@@ -1,8 +1,8 @@
 import { sleep as wait } from '../../../scripts/lib/sleep.mjs'
-import { memoryBus, query, stream, tracked } from '@weft-js/start'
-import { configure, hub, type Body, type SubEntry } from '@weft-js/start/hub'
+import { memoryBus, query, stream, tracked } from '@kerf/start'
+import { configure, hub, type Body, type SubEntry } from '@kerf/start/hub'
 import { createScope } from '../src/exec'
-import { currentScope } from '@weft-js/start/data'
+import { currentScope } from '@kerf/start/data'
 import type { createHubFixture } from './hub.fixture'
 
 type HubFixture = ReturnType<typeof createHubFixture>
@@ -52,7 +52,7 @@ function registerPokeDeliveryTests(fixture: HubFixture) {
     configure({
       bus: {
         ...bus,
-        subscribe: (ch, on, g) => (ch === 'weft:poke' && (gap = g!), bus.subscribe(ch, on)),
+        subscribe: (ch, on, g) => (ch === 'kerf:poke' && (gap = g!), bus.subscribe(ch, on)),
       },
     })
     const { s } = await open({ s: [[1, 'q', 'hub.q']] })

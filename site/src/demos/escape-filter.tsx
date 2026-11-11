@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { Card, Input, Switch } from '@weft-js/warp'
+import { derived, state } from '@kerf/core'
+import { Card, Input, Switch } from '@kerf/veneer'
 
 type Todo = { id: number; text: string; done: boolean }
 const TODOS: Todo[] = [

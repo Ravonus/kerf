@@ -1,4 +1,4 @@
-import { LineChart } from '@weft-js/warp'
+import { LineChart } from '@kerf/veneer'
 
 import { REQUESTS_BY_REGION } from '../../world'
 

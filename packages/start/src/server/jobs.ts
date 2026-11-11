@@ -29,7 +29,7 @@ function settler(defs: JobDefs, queue: Queue, deps: BackgroundDeps) {
     if (!def) return dead(job, 'no job by that name is defined')
     if (job.attempt > retries + 1) return dead(job, 'its process stopped on every attempt')
     try {
-      await inScope(deps, `/_weft/jobs/${encodeURIComponent(job.name)}`, (ctx) =>
+      await inScope(deps, `/_kerf/jobs/${encodeURIComponent(job.name)}`, (ctx) =>
         def.run({ ctx, input: job.input, id: job.id, name: job.name, attempt: job.attempt }),
       )
       await queue.done(job)

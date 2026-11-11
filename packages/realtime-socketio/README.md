@@ -1,42 +1,42 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
-<h1 align="center">@weft-js/realtime-socketio</h1>
+<h1 align="center">@kerf/realtime-socketio</h1>
 
 <p align="center">
-  <strong>Live cursors through a Socket.IO relay you run, with tickets your Weft server signs.</strong><br>
+  <strong>Live cursors through a Socket.IO relay you run, with tickets your Kerf server signs.</strong><br>
   For apps moving off Socket.IO: keep the relay you have, and let it carry cursors.
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@weft-js/realtime-socketio"><img src="https://img.shields.io/npm/v/@weft-js/realtime-socketio?color=145c3c&label=npm" alt="npm version"></a>
-  <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
-  <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
+  <a href="https://www.npmjs.com/package/@kerf/realtime-socketio"><img src="https://img.shields.io/npm/v/@kerf/realtime-socketio?color=145c3c&label=npm" alt="npm version"></a>
+  <a href="https://github.com/Ravonus/kerf/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
+  <a href="https://github.com/Ravonus/kerf/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/kerf/quality.yml?branch=main&label=checks" alt="checks"></a>
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/docs">Docs</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/examples">Examples</a> ·
-  <a href="https://github.com/Ravonus/weft/blob/main/CHANGELOG.md">Changelog</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf/tree/main/docs">Docs</a> ·
+  <a href="https://github.com/Ravonus/kerf/tree/main/examples">Examples</a> ·
+  <a href="https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!IMPORTANT]
 > **Early release (0.1.x).** APIs can change between minor versions. Pin the version and read the
-> [changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md) before you upgrade.
+> [changelog](https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md) before you upgrade.
 
-A cursor transport for [`@weft-js/multiplayer`](https://www.npmjs.com/package/@weft-js/multiplayer) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/multiplayer)</sup>. It has
+A cursor transport for [`@kerf/multiplayer`](https://www.npmjs.com/package/@kerf/multiplayer) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/multiplayer)</sup>. It has
 two halves: `socketio()` in the page, and `relay(io, { secret })` on a Socket.IO server you run. The relay admits only
-connections with a ticket your Weft server signed, and stamps every frame with the ticket's subject, so a client can't
+connections with a ticket your Kerf server signed, and stamps every frame with the ticket's subject, so a client can't
 speak as anyone else.
 
 > [!TIP]
 > This is for migrations. If you don't already run a Socket.IO server, leave it out: cursors work over the channel's
-> socket with nothing extra, and [`@weft-js/realtime-webrtc`](https://www.npmjs.com/package/@weft-js/realtime-webrtc) <sup>[source](https://github.com/Ravonus/weft/tree/main/packages/realtime-webrtc)</sup>
+> socket with nothing extra, and [`@kerf/realtime-webrtc`](https://www.npmjs.com/package/@kerf/realtime-webrtc) <sup>[source](https://github.com/Ravonus/kerf/tree/main/packages/realtime-webrtc)</sup>
 > takes them off your server without one.
 
 ## Highlights
@@ -56,32 +56,32 @@ speak as anyone else.
 
 ```bash
 # npm
-npm install @weft-js/multiplayer @weft-js/realtime-socketio
+npm install @kerf/multiplayer @kerf/realtime-socketio
 
 # pnpm
-pnpm add @weft-js/multiplayer @weft-js/realtime-socketio
+pnpm add @kerf/multiplayer @kerf/realtime-socketio
 
 # bun
-bun add @weft-js/multiplayer @weft-js/realtime-socketio
+bun add @kerf/multiplayer @kerf/realtime-socketio
 ```
 
-Or install `@weft-js/multiplayer`, then let the `weft` CLI install this package and add its plugin to
-`weft.config.ts`:
+Or install `@kerf/multiplayer`, then let the `kerf` CLI install this package and add its plugin to
+`kerf.config.ts`:
 
 ```bash
-npm install @weft-js/multiplayer
-npx weft add realtime-socketio
+npm install @kerf/multiplayer
+npx kerf add realtime-socketio
 ```
 
-`@weft-js/multiplayer` is a peer dependency, so add it too. `socket.io-client` comes with this package. `socket.io`
+`@kerf/multiplayer` is a peer dependency, so add it too. `socket.io-client` comes with this package. `socket.io`
 (`^4.8.0`) is an optional peer: only the relay needs it, on the server that runs the relay.
 
-`weft add` puts its plugin in `weft.config.ts`:
+`kerf add` puts its plugin in `kerf.config.ts`:
 
 ```ts
-// weft.config.ts
-import { defineConfig } from '@weft-js/core/config'
-import realtimeSocketio from '@weft-js/realtime-socketio/plugin'
+// kerf.config.ts
+import { defineConfig } from '@kerf/core/config'
+import realtimeSocketio from '@kerf/realtime-socketio/plugin'
 
 export default defineConfig({
   plugins: [realtimeSocketio()],
@@ -96,11 +96,11 @@ transport itself is passed to `presence()` in a page.
 | Piece | Where | What it needs |
 | ----- | ----- | ------------- |
 | `relay(io, { secret })` | Your Socket.IO server | `socket.io` 4.8 or later, and the shared secret. |
-| `socketioTicket({ secret })` | Your Weft server, in `multiplayer({ ticket })` | The same secret. |
+| `socketioTicket({ secret })` | Your Kerf server, in `multiplayer({ ticket })` | The same secret. |
 | `socketio({ url, path })` | The page | The relay's URL, and its `path` if not the default. |
 
 The package reads no environment variable itself. Keep the secret in one (the end-to-end test calls it
-`WEFT_E2E_SOCKETIO_SECRET`) and pass it to both halves.
+`KERF_E2E_SOCKETIO_SECRET`) and pass it to both halves.
 
 ## Quick start
 
@@ -110,7 +110,7 @@ The relay, on your Socket.IO server:
 // relay.ts
 import { createServer } from 'node:http'
 import { Server } from 'socket.io'
-import { relay } from '@weft-js/realtime-socketio/relay'
+import { relay } from '@kerf/realtime-socketio/relay'
 
 const http = createServer()
 const io = new Server(http, {
@@ -124,9 +124,9 @@ The ticket, in your channel:
 
 ```ts
 // src/server/doc.ts
-import { channel } from '@weft-js/start'
-import { multiplayer } from '@weft-js/multiplayer/server'
-import { socketioTicket } from '@weft-js/realtime-socketio/relay'
+import { channel } from '@kerf/start'
+import { multiplayer } from '@kerf/multiplayer/server'
+import { socketioTicket } from '@kerf/realtime-socketio/relay'
 import { z } from 'zod'
 
 const mp = multiplayer<{ id: string }>({
@@ -148,9 +148,9 @@ The transport, in the page:
 
 ```tsx
 // src/routes/room.tsx
-import { cursors, presence } from '@weft-js/multiplayer'
-import { Cursors } from '@weft-js/multiplayer/ui'
-import { socketio } from '@weft-js/realtime-socketio'
+import { cursors, presence } from '@kerf/multiplayer'
+import { Cursors } from '@kerf/multiplayer/ui'
+import { socketio } from '@kerf/realtime-socketio'
 import { doc } from '#/server/doc'
 
 export default function Room() {
@@ -166,18 +166,18 @@ export default function Room() {
 
 ## How it works
 
-1. On `mp.hello` the Weft server signs a ticket: `{ sub: <connection id>, room: roomId(params), exp }`. The page gets
+1. On `mp.hello` the Kerf server signs a ticket: `{ sub: <connection id>, room: roomId(params), exp }`. The page gets
    it with `mp.you`.
 2. `socketio({ url })` connects with `auth: { ticket }`. The relay's middleware verifies it with the secret; a bad,
    expired or incomplete ticket is refused with `bad ticket`.
-3. An admitted socket joins the ticket's room and receives `weft:ok`. From then on the link is up while there's
+3. An admitted socket joins the ticket's room and receives `kerf:ok`. From then on the link is up while there's
    another peer.
-4. The page sends a cursor as `weft:f`. The relay re-emits it to the rest of the room as `weft:f` with the ticket's
+4. The page sends a cursor as `kerf:f`. The relay re-emits it to the rest of the room as `kerf:f` with the ticket's
    `sub` as the sender, and `presence` checks it like any frame off a transport.
 
 ## API reference
 
-### `@weft-js/realtime-socketio`
+### `@kerf/realtime-socketio`
 
 `socketio(options): PeerTransport`: the transport, for `presence(conn, { transport })`.
 
@@ -188,7 +188,7 @@ export default function Room() {
 
 Type: `SocketIoOptions`.
 
-### `@weft-js/realtime-socketio/relay`
+### `@kerf/realtime-socketio/relay`
 
 | Export | What it does |
 | ------ | ------------ |
@@ -203,14 +203,14 @@ Type: `SocketIoOptions`.
 Type: `TicketOptions`. The relay checks the ticket when a socket connects, so a socket already open stays open past
 `ttl`.
 
-### `@weft-js/realtime-socketio/plugin`
+### `@kerf/realtime-socketio/plugin`
 
-The plugin for `weft.config.ts`, as a default export and as the named export `socketio`. Import the default, or rename
+The plugin for `kerf.config.ts`, as a default export and as the named export `socketio`. Import the default, or rename
 the named one, so it doesn't clash with the transport of the same name.
 
 ## Limits
 
-- Only cursors ride the relay. Presence state, the relay events of `@weft-js/multiplayer` and signalling stay on the
+- Only cursors ride the relay. Presence state, the relay events of `@kerf/multiplayer` and signalling stay on the
   channel, where the server checks them.
 - Frames are volatile and over 1024 characters are dropped. Nothing is retried.
 - The relay keeps no state beyond Socket.IO's rooms. To run several relay instances, they need Socket.IO's own adapter
@@ -222,29 +222,29 @@ the named one, so it doesn't clash with the transport of the same name.
 | ------- | ----- | --- |
 | `connect_error` with `bad ticket` | The secrets differ, the ticket expired, or `multiplayer()` has no `ticket`. | Use one secret on both sides; check `ttl`. |
 | `via` stays `'socket'` | The relay isn't reachable from the page (URL, `path`, CORS), or no other peer is here. | Check the relay's URL and its CORS origin. Cursors keep working over the channel meanwhile. |
-| R007 from `weft check` | `socket.io-client` is in the app's own dependencies. Weft owns the app's connections. | Let this package bring `socket.io-client`; don't add it to the app. |
-| `weft check` stops after `weft add` | A newly added plugin's permissions must be approved. | `weft plugins approve @weft-js/realtime-socketio`. |
+| R007 from `kerf check` | `socket.io-client` is in the app's own dependencies. Kerf owns the app's connections. | Let this package bring `socket.io-client`; don't add it to the app. |
+| `kerf check` stops after `kerf add` | A newly added plugin's permissions must be approved. | `kerf plugins approve @kerf/realtime-socketio`. |
 
 ## Related packages
 
 | Package | What it is |
 | ------- | ---------- |
-| [`@weft-js/multiplayer`](https://www.npmjs.com/package/@weft-js/multiplayer) | Presence, cursors and the relay that this transport carries cursors for. |
-| [`@weft-js/realtime-webrtc`](https://www.npmjs.com/package/@weft-js/realtime-webrtc) | Cursors browser to browser, with no service in between. |
-| [`@weft-js/realtime-livekit`](https://www.npmjs.com/package/@weft-js/realtime-livekit) | Cursors over a LiveKit room, which also carries audio and video. |
-| [`@weft-js/realtime-redis`](https://www.npmjs.com/package/@weft-js/realtime-redis) | A `realtime.bus` over Redis: how server instances reach each other, not a cursor transport. |
-| [`@weft-js/realtime-nats`](https://www.npmjs.com/package/@weft-js/realtime-nats) | A `realtime.bus` over NATS. |
-| [`@weft-js/realtime-durable-object`](https://www.npmjs.com/package/@weft-js/realtime-durable-object) | A `realtime.bus` on Cloudflare Durable Objects. |
-| [`@weft-js/core`](https://www.npmjs.com/package/@weft-js/core) | The compiler and reactive runtime, the Vite plugin, the plugin system and test utilities. |
-| [`@weft-js/start`](https://www.npmjs.com/package/@weft-js/start) | The full-stack runtime: routes, server functions, `channel`, `realtime()` and the realtime hub. |
+| [`@kerf/multiplayer`](https://www.npmjs.com/package/@kerf/multiplayer) | Presence, cursors and the relay that this transport carries cursors for. |
+| [`@kerf/realtime-webrtc`](https://www.npmjs.com/package/@kerf/realtime-webrtc) | Cursors browser to browser, with no service in between. |
+| [`@kerf/realtime-livekit`](https://www.npmjs.com/package/@kerf/realtime-livekit) | Cursors over a LiveKit room, which also carries audio and video. |
+| [`@kerf/realtime-redis`](https://www.npmjs.com/package/@kerf/realtime-redis) | A `realtime.bus` over Redis: how server instances reach each other, not a cursor transport. |
+| [`@kerf/realtime-nats`](https://www.npmjs.com/package/@kerf/realtime-nats) | A `realtime.bus` over NATS. |
+| [`@kerf/realtime-durable-object`](https://www.npmjs.com/package/@kerf/realtime-durable-object) | A `realtime.bus` on Cloudflare Durable Objects. |
+| [`@kerf/core`](https://www.npmjs.com/package/@kerf/core) | The compiler and reactive runtime, the Vite plugin, the plugin system and test utilities. |
+| [`@kerf/start`](https://www.npmjs.com/package/@kerf/start) | The full-stack runtime: routes, server functions, `channel`, `realtime()` and the realtime hub. |
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Ravonus/weft/blob/main/CONTRIBUTING.md). From the repository,
-`pnpm --filter @weft-js/realtime-socketio test` starts a real Socket.IO server with the relay and runs
-`@weft-js/multiplayer`'s transport suite against real clients, plus a forged-ticket refusal. No external service is
+See [CONTRIBUTING.md](https://github.com/Ravonus/kerf/blob/main/CONTRIBUTING.md). From the repository,
+`pnpm --filter @kerf/realtime-socketio test` starts a real Socket.IO server with the relay and runs
+`@kerf/multiplayer`'s transport suite against real clients, plus a forged-ticket refusal. No external service is
 needed.
 
 ## License
 
-[MIT](https://github.com/Ravonus/weft/blob/main/LICENSE)
+[MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)

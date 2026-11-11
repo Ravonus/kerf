@@ -10,8 +10,8 @@ import type { LookName } from './paint-primitives'
 export const LOOKS = {
   flat: lookKit({
     ...TOKENS,
-    soft: 'var(--stage-soft, var(--warp-color-border))',
-    onFill: 'var(--warp-color-accent-on-solid)',
+    soft: 'var(--stage-soft, var(--veneer-color-border))',
+    onFill: 'var(--veneer-color-accent-on-solid)',
     rough: 0,
     glow: 0,
     hatch: false,
@@ -23,10 +23,10 @@ export const LOOKS = {
         gap = 28,
         off = (s.scroll?.top ?? 0) % gap
       ctx.fillStyle = s.color(
-        '--warp-color-surface-sunken',
+        '--veneer-color-surface-sunken',
       )
       ctx.fillRect(0, 0, s.width, s.height)
-      ctx.fillStyle = s.color('--warp-color-border')
+      ctx.fillStyle = s.color('--veneer-color-border')
       for (let y = -off; y < s.height; y += gap)
         for (let x = gap / 2; x < s.width; x += gap)
           ctx.fillRect(x, y, 2, 2)
@@ -37,12 +37,12 @@ export const LOOKS = {
       ctx.beginPath()
       ctx.roundRect(p.x, p.y, p.w, p.h, p.r)
       ctx.clip()
-      ctx.fillStyle = s.color('--warp-color-accent-soft')
+      ctx.fillStyle = s.color('--veneer-color-accent-soft')
       ctx.fillRect(p.x, p.y, p.w, p.h)
       for (const [i, tone] of [
-        '--warp-color-accent-solid',
-        '--warp-color-info-solid',
-        '--warp-color-highlight-solid',
+        '--veneer-color-accent-solid',
+        '--veneer-color-info-solid',
+        '--veneer-color-highlight-solid',
       ].entries()) {
         const cx =
             p.x +
@@ -77,7 +77,7 @@ export const LOOKS = {
           g.addColorStop(0, s.color(TOKENS.accent))
           g.addColorStop(
             1,
-            s.color('--warp-color-info-solid'),
+            s.color('--veneer-color-info-solid'),
           )
           ctx.fillStyle = g
         },
@@ -88,8 +88,8 @@ export const LOOKS = {
     ...TOKENS,
     soft:
       'var(--stage-soft, ' +
-      'var(--warp-color-text-subtle))',
-    onFill: 'var(--warp-color-text)',
+      'var(--veneer-color-text-subtle))',
+    onFill: 'var(--veneer-color-text)',
     rough: 2.2,
     glow: 0,
     hatch: true,
@@ -104,7 +104,7 @@ export const LOOKS = {
       ctx.fillStyle = s.color(TOKENS.paper)
       ctx.fillRect(0, 0, s.width, s.height)
       ctx.strokeStyle = s.color(
-        '--warp-color-info-border',
+        '--veneer-color-info-border',
       )
       ctx.lineWidth = 1
       ctx.beginPath()
@@ -114,7 +114,7 @@ export const LOOKS = {
       }
       ctx.stroke()
       ctx.strokeStyle = s.color(
-        '--warp-color-critical-border',
+        '--veneer-color-critical-border',
       )
       ctx.beginPath()
       ctx.moveTo(18.5, 0)

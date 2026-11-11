@@ -1,8 +1,8 @@
-// pay() for weft.config.ts: start here to see how a plugin is put together (`weft docs plugins` walks through it). Everything
-// a plugin gives weft is in this one pure manifest: the server part as a slot provider, and its checks, docs, codes and
-// `weft add` steps as data. Heavy code stays behind `import()` and the slot's lazy `load()`, so a config load costs little
+// pay() for kerf.config.ts: start here to see how a plugin is put together (`kerf docs plugins` walks through it). Everything
+// a plugin gives kerf is in this one pure manifest: the server part as a slot provider, and its checks, docs, codes and
+// `kerf add` steps as data. Heavy code stays behind `import()` and the slot's lazy `load()`, so a config load costs little
 // and a page costs nothing. A payment provider is a separate plugin: this one defines the ledger, and `pay.rail` is the seam.
-import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
+import { definePlugin, defineSlot, provide } from '@kerf/core/plugin'
 import { setup } from './src/setup.mjs'
 
 const extension = defineSlot({
@@ -47,7 +47,7 @@ const diagnostics = [
     'PAY011',
     'error',
     'A webhook left unverified: a handler of payment events with no signature check, a `PayRail` whose `verify` ignores `headers`, or no `STRIPE_WEBHOOK_SECRET`',
-    'Delete the handler: `/_weft/x/pay/<rail>` verifies. Give Stripe that URL, and set `STRIPE_WEBHOOK_SECRET`',
+    'Delete the handler: `/_kerf/x/pay/<rail>` verifies. Give Stripe that URL, and set `STRIPE_WEBHOOK_SECRET`',
   ],
   [
     'PAY012',
@@ -71,7 +71,7 @@ const diagnostics = [
     'PAY015',
     'error',
     '`ctx.entitlements.has()` tested without `await`: a promise is truthy, so everyone passes',
-    'Await it (`weft fix` does, in an `async` function)',
+    'Await it (`kerf fix` does, in an `async` function)',
   ],
   [
     'PAY016',
@@ -82,34 +82,34 @@ const diagnostics = [
   [
     'PAY017',
     'error',
-    '`@weft-js/pay/server` or `/drizzle` imported in client code',
-    'Import them in a server module; the client gets `@weft-js/pay`',
+    '`@kerf/pay/server` or `/drizzle` imported in client code',
+    'Import them in a server module; the client gets `@kerf/pay`',
   ],
   [
     'PAY018',
     'error',
     '`src/pay.server.ts` with no `pay.rail` provider',
-    'Add a rail to `plugins`: `weft add pay-stripe`',
+    'Add a rail to `plugins`: `kerf add pay-stripe`',
   ],
-  ['PAY031', 'error', 'A live key in a test', '`fakePay` from `@weft-js/pay/test`'],
+  ['PAY031', 'error', 'A live key in a test', '`fakePay` from `@kerf/pay/test`'],
 ].map(([code, severity, catches, fix]) => ({ code, severity, catches, fix }))
 
 export const pay = definePlugin({
-  name: '@weft-js/pay',
+  name: '@kerf/pay',
   version: '0.1.0',
-  weft: '*',
+  kerf: '*',
   namespace: 'PAY',
   permissions: {},
   contribute: () => ({
     provides: [
       provide(extension, {
         key: 'pay',
-        sides: { server: { module: '@weft-js/pay/server', export: 'extension' } },
+        sides: { server: { module: '@kerf/pay/server', export: 'extension' } },
       }),
     ],
     diagnostics,
     check: {
-      include: ['src/**/*.{ts,tsx,js,jsx,mts,mjs}', 'test/**/*.{ts,tsx,js,mjs}', 'weft.config.*'],
+      include: ['src/**/*.{ts,tsx,js,jsx,mts,mjs}', 'test/**/*.{ts,tsx,js,mjs}', 'kerf.config.*'],
       run: (ctx) => import('./src/checks.mjs').then((c) => c.run(ctx)),
     },
     docs: {
@@ -121,27 +121,27 @@ export const pay = definePlugin({
     setup,
     agents: {
       title: 'Payments',
-      text: 'Products are in `src/pay/catalog.ts`, in minor units. `checkout` and `entitlements` are in `src/server/pay.ts`. App code never names a rail or a price id, and `checkout` grants nothing: a verified webhook does. Enforce on the server, with `requires: [...]` or `await ctx.entitlements.has(...)`: a check only on the client protects nothing. Test with `fakePay` from `@weft-js/pay/test`. `weft docs pay`.',
+      text: 'Products are in `src/pay/catalog.ts`, in minor units. `checkout` and `entitlements` are in `src/server/pay.ts`. App code never names a rail or a price id, and `checkout` grants nothing: a verified webhook does. Enforce on the server, with `requires: [...]` or `await ctx.entitlements.has(...)`: a check only on the client protects nothing. Test with `fakePay` from `@kerf/pay/test`. `kerf docs pay`.',
     },
     catalog: [
       {
         name: 'product',
-        import: '@weft-js/pay',
+        import: '@kerf/pay',
         summary: 'One thing you sell, in integer minor units',
       },
       {
         name: 'price',
-        import: '@weft-js/pay',
+        import: '@kerf/pay',
         summary: "A product's price, formatted for the reader",
       },
       {
         name: 'definePay',
-        import: '@weft-js/pay/server',
+        import: '@kerf/pay/server',
         summary: 'The ledger: src/pay.server.ts default-exports it',
       },
       {
         name: 'fakePay',
-        import: '@weft-js/pay/test',
+        import: '@kerf/pay/test',
         summary: 'A rail for tests: renewals, refunds and disputes on the clock',
       },
     ],
@@ -149,7 +149,7 @@ export const pay = definePlugin({
       {
         want: 'Sell something',
         call: 'add it to `src/pay/catalog.ts`, then `checkout({ product, plan })`',
-        have: '`weft docs pay`',
+        have: '`kerf docs pay`',
       },
     ],
   }),

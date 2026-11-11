@@ -1,4 +1,4 @@
-import { LockedField, Stack } from '@weft-js/warp'
+import { LockedField, Stack } from '@kerf/veneer'
 
 import { JUN } from '../../world'
 

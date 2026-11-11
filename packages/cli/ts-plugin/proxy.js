@@ -63,7 +63,7 @@ function diagnostics(proxy, ls, ts, { ensure, mapOf, sourceFile, diag, inside, f
       category:
         x.severity === 'warning' ? ts.DiagnosticCategory.Warning : ts.DiagnosticCategory.Error,
       code: CODES[x.code],
-      source: 'weft',
+      source: 'kerf',
     }))
     const theirs = ls
       .getSemanticDiagnostics(f)
@@ -103,7 +103,7 @@ function installFixes(proxy, ls, { ensure, mapOf, back, findings }) {
     const fixes = findings(f)
       .filter((x) => x.edits && codes.includes(CODES[x.code]) && x.start < end && start < x.end)
       .map((x) => ({
-        fixName: 'weft-props',
+        fixName: 'kerf-props',
         description: `Write ${x.code === 'W082' ? 'the new' : 'the inferred'} prop type`,
         changes: [
           {

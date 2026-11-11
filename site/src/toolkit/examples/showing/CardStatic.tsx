@@ -1,4 +1,4 @@
-import { Card, Text } from '@weft-js/warp'
+import { Card, Text } from '@kerf/veneer'
 
 export const CardStatic = () => (
   <Card

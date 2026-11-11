@@ -39,11 +39,11 @@ test('six-stack coverage equals Git, and missing or invalid bytes cannot pass', 
   const values = complete()
   values['react-mui'].css = 0
   requireSix(stackVector(values))
-  delete values['weft-plain']
+  delete values['kerf-plain']
   const incomplete = stackVector(values)
-  assert.equal(incomplete['weft-plain'], null)
-  assert.throws(() => requireSix(incomplete), /weft-plain/)
-  values['weft-plain'] = { js: -1, css: 0 }
+  assert.equal(incomplete['kerf-plain'], null)
+  assert.throws(() => requireSix(incomplete), /kerf-plain/)
+  values['kerf-plain'] = { js: -1, css: 0 }
   assert.throws(() => stackVector(values), /Invalid archived bytes/)
 })
 
@@ -67,7 +67,7 @@ test('missing source objects remain visible, and conflicting clean receipts fail
   assert.equal(records[1].ancestorOfTarget, false)
   const other = {
     ...records[0],
-    vector: stackVector({ ...complete(), 'weft-warp': { js: 101, css: 10 } }),
+    vector: stackVector({ ...complete(), 'kerf-veneer': { js: 101, css: 10 } }),
   }
   assert.throws(() => sourceReceipt([records[0], other], 'known'), /Conflicting/)
 })
@@ -100,7 +100,7 @@ test('ancestry bridges preserve the merge parent rather than inventing a linear 
 
 test('dirty intervals retain all candidate changes and never fill missing stacks with zero', () => {
   const before = stackVector(complete()),
-    after = stackVector({ ...complete(), 'weft-warp': { js: 110, css: 12 } })
+    after = stackVector({ ...complete(), 'kerf-veneer': { js: 110, css: 12 } })
   const rows = [
     { source: 'a', dirty: false, line: 1, vector: before, sixStacks: true },
     { source: 'b', dirty: true, line: 2, vector: after, sixStacks: true },
@@ -109,13 +109,13 @@ test('dirty intervals retain all candidate changes and never fill missing stacks
   const edges = ['b', 'c'].map((commit) => ({ commit, delta: { files: [commit] } }))
   const [interval] = receiptIntervals(rows, ['a', 'b', 'c'], edges)
   assert.deepEqual(interval.inputChanges, ['b', 'c'])
-  assert.deepEqual(interval.archivedDelta['weft-warp'], { js: 10, css: 2 })
-  assert.equal(vectorDelta({ ...before, 'weft-plain': null }, after)['weft-plain'], null)
+  assert.deepEqual(interval.archivedDelta['kerf-veneer'], { js: 10, css: 2 })
+  assert.equal(vectorDelta({ ...before, 'kerf-plain': null }, after)['kerf-plain'], null)
 })
 
 test('package/layout renames retain identity and unrelated design manifests stay out', () => {
-  assert.equal(canonicalPath('packages/ui-core/src/a.ts'), 'packages/warp-core/src/a.ts')
-  assert.equal(canonicalPath('packages/weft/src/a.ts'), 'packages/core/src/a.ts')
+  assert.equal(canonicalPath('packages/ui-core/src/a.ts'), 'packages/veneer-core/src/a.ts')
+  assert.equal(canonicalPath('packages/kerf/src/a.ts'), 'packages/core/src/a.ts')
   assert.equal(inputGroup('benchmarks/compare/design/react-mui/package.json'), null)
   const fake = {
     inputs: (ref) =>
@@ -123,11 +123,11 @@ test('package/layout renames retain identity and unrelated design manifests stay
         [
           'same',
           {
-            group: 'warp-core-js',
+            group: 'veneer-core-js',
             bytes: 12,
             files: [
               {
-                path: ref === 'a' ? 'packages/ui-core/src/a.ts' : 'packages/warp-core/src/a.ts',
+                path: ref === 'a' ? 'packages/ui-core/src/a.ts' : 'packages/veneer-core/src/a.ts',
                 object: 'same',
                 bytes: 12,
               },
@@ -136,7 +136,7 @@ test('package/layout renames retain identity and unrelated design manifests stay
         ],
       ]),
   }
-  assert.equal(sourceDelta(fake, 'a', 'b').totals['warp-core-js'], 0)
+  assert.equal(sourceDelta(fake, 'a', 'b').totals['veneer-core-js'], 0)
 })
 
 test('Git compiler inputs match the independent native stamp and cover every tracked input', (t) => {
@@ -146,16 +146,16 @@ test('Git compiler inputs match the independent native stamp and cover every tra
   )
   assert.equal(info.stamp, sourceStamp())
   const tracked = repo
-    .git(['ls-files', '--', 'crates/weft-compiler'])
+    .git(['ls-files', '--', 'crates/kerf-compiler'])
     .split('\n')
     .filter((path) =>
-      /^crates\/weft-compiler\/(src\/|Cargo\.(toml|lock)$|build.rs$|rust-toolchain.toml$)/.test(
+      /^crates\/kerf-compiler\/(src\/|Cargo\.(toml|lock)$|build.rs$|rust-toolchain.toml$)/.test(
         path,
       ),
     )
   assert.equal(info.files.length, tracked.length)
   assert.deepEqual(
-    info.files.map((file) => `crates/weft-compiler/${file.path}`).sort(),
+    info.files.map((file) => `crates/kerf-compiler/${file.path}`).sort(),
     tracked.sort(),
   )
   t.diagnostic(`Compiler coverage: ${info.files.length}/${tracked.length} tracked inputs`)

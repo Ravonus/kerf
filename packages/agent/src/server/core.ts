@@ -2,7 +2,7 @@
 // keeps outside the store (its token and its reply in progress, for a bridge that calls tools over MCP).
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { createHash } from 'node:crypto'
-import { FnError, type Context } from '@weft-js/start'
+import { FnError, type Context } from '@kerf/start'
 import type { Bridge } from '../bridge'
 import type { AgentCaller, Message, TurnEvent } from '../index'
 import type { AgentStore } from '../store'
@@ -36,7 +36,7 @@ export class AgentError extends FnError {
   }
 }
 
-export const MCP = '/_weft/x/agent/mcp'
+export const MCP = '/_kerf/x/agent/mcp'
 
 /** A tool call in progress: whose grants it runs under. Only the outermost call is checked; what it calls in turn is its own business. */
 export const acting = new AsyncLocalStorage<{ caller: AgentCaller; checked: boolean }>()

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Builds, checks and publishes weft's packages. It only reads the tree: each package is packed, its manifest made fit for
+// Builds, checks and publishes kerf's packages. It only reads the tree: each package is packed, its manifest made fit for
 // a registry (sibling `file:` deps become versions, dev-only fields go), and that tarball is what gets checked and sent.
 //
 //   node scripts/release.mjs                         build, stage, check, then `npm publish --dry-run` each. Nothing leaves.
@@ -43,7 +43,7 @@ const registry = flag('registry') ?? 'https://registry.npmjs.org/'
 const local = !registry.includes('registry.npmjs.org')
 const useOtp = argv.includes('--otp')
 const ci = argv.includes('--ci')
-let otp = process.env.WEFT_OTP // set it, even empty, and nothing is asked
+let otp = process.env.KERF_OTP // set it, even empty, and nothing is asked
 /** One line from the terminal, even with stdin redirected. */
 const ask = (prompt) =>
   execFileSync('bash', ['-c', `read -r -p "${prompt}" a </dev/tty >/dev/tty; echo "$a"`], {
@@ -106,12 +106,12 @@ function build() {
 
 /** The manifest a registry should have. */
 function published(pkg, names, version) {
-  const ours = (name) => names.has(name) || name.startsWith('@weft-js/')
+  const ours = (name) => names.has(name) || name.startsWith('@kerf/')
   const pin = (deps, range) =>
     deps &&
     Object.fromEntries(
       Object.entries(deps)
-        .filter(([name]) => !name.startsWith('@weft-js/compiler-') || names.has(name))
+        .filter(([name]) => !name.startsWith('@kerf/compiler-') || names.has(name))
         .map(([name, spec]) => [name, ours(name) ? range : spec]),
     )
   const { devDependencies: _dev, scripts: _scripts, ...rest } = pkg
@@ -165,7 +165,7 @@ function ships(has, from, at) {
 /** Everything wrong with one tarball. `names` is what's being published. */
 function check(tgz, names, version) {
   const bad = []
-  const dir = mkdtempSync(join(tmpdir(), 'weft-check-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-check-'))
   run('tar', ['xzf', tgz], dir)
   const base = join(dir, 'package')
   const pkg = read(join(base, 'package.json'))
@@ -175,16 +175,16 @@ function check(tgz, names, version) {
   const has = new Set(files)
   if (pkg.version !== version) bad.push(`version is ${pkg.version}, not ${version}`)
   if (pkg.private) bad.push('still private')
-  if (pkg.repository?.url !== 'git+https://github.com/Ravonus/weft.git')
-    bad.push('does not link to github.com/Ravonus/weft')
+  if (pkg.repository?.url !== 'git+https://github.com/Ravonus/kerf.git')
+    bad.push('does not link to github.com/Ravonus/kerf')
   if (!pkg.license) bad.push('no license')
   if (!has.has('README.md')) bad.push('no README')
   if (pkg.publishConfig?.access !== 'public') bad.push('publishConfig.access is not public')
-  if (!pkg.name.startsWith('@weft-js/compiler-') && !has.has('LICENSE')) bad.push('no LICENSE')
+  if (!pkg.name.startsWith('@kerf/compiler-') && !has.has('LICENSE')) bad.push('no LICENSE')
   for (const group of ['dependencies', 'optionalDependencies', 'peerDependencies']) {
     for (const [name, spec] of Object.entries(pkg[group] ?? {})) {
       if (/^(file|link|workspace):/.test(spec)) bad.push(`${group}: ${name} is ${spec}`)
-      if (name.startsWith('@weft-js/') && !names.has(name))
+      if (name.startsWith('@kerf/') && !names.has(name))
         bad.push(`${group}: ${name} isn't published`)
     }
   }
@@ -315,7 +315,7 @@ say(
 
 rmSync(out, { recursive: true, force: true })
 mkdirSync(out, { recursive: true })
-const work = mkdtempSync(join(tmpdir(), 'weft-release-'))
+const work = mkdtempSync(join(tmpdir(), 'kerf-release-'))
 const names = new Set(list.map((p) => p.pkg.name))
 const staged = list.map((item) => ({ ...item, tgz: stage(item, names, version, work) }))
 rmSync(work, { recursive: true })

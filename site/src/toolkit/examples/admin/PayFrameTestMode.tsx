@@ -1,4 +1,4 @@
-import { PayFrame } from '@weft-js/warp'
+import { PayFrame } from '@kerf/veneer'
 import { providerFields } from './shared'
 
 export const PayFrameTestMode = () => (

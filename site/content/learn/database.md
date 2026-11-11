@@ -12,7 +12,7 @@ read and write a database. An app made with `--db` has one wired up already: a s
 and migrations that apply themselves.
 
 The database layer is [Drizzle](https://orm.drizzle.team), with SQLite, Postgres or MySQL under it. You write queries in
-TypeScript that read like SQL, and they're typed from your schema. This page covers what Weft adds around it; for every
+TypeScript that read like SQL, and they're typed from your schema. This page covers what Kerf adds around it; for every
 Drizzle query there is, its own docs are the reference.
 
 ## What a new app has
@@ -22,7 +22,7 @@ drizzle.config.ts           schema and migration paths for drizzle-kit
 src/db/schema.ts            your tables
 src/db/index.server.ts      the client: createDb({ schema, url })
 src/context.server.ts       puts the client on ctx.db
-drizzle/                    migrations, written by `weft db generate`
+drizzle/                    migrations, written by `kerf db generate`
 .env                        DATABASE_URL
 ```
 
@@ -30,7 +30,7 @@ The client is one line, made from the schema and the URL in the environment:
 
 ```ts
 // src/db/index.server.ts
-import { createDb } from '@weft-js/start/db/sqlite'
+import { createDb } from '@kerf/start/db/sqlite'
 import { env } from '#/env.server'
 import * as schema from '#/db/schema'
 
@@ -40,8 +40,8 @@ export const db = createDb({ schema, url: env.DATABASE_URL })
 `src/context.server.ts` returns it as `db`, so every server function and every `load` has it as `ctx.db`. Use `ctx.db`
 in your code rather than importing `db` directly: it's the same client, and a test can hand in another one.
 
-`index.server.ts` ends in `.server.ts` for a reason. The database client must never reach the browser, and Weft keeps it
-out: importing `@weft-js/start/db` from a file the browser loads is **Q012**. `src/db/schema.ts` is plain table
+`index.server.ts` ends in `.server.ts` for a reason. The database client must never reach the browser, and Kerf keeps it
+out: importing `@kerf/start/db` from a file the browser loads is **Q012**. `src/db/schema.ts` is plain table
 definitions, so it's safe to import anywhere, and its types are useful on both sides.
 
 ## The schema
@@ -85,21 +85,21 @@ notes: text('notes'),
 Then make a migration:
 
 ```bash
-npx weft db generate
+npx kerf db generate
 ```
 
 That compares the schema with the last migration and writes the SQL for the difference to a new file in `drizzle/`,
 here an `ALTER TABLE` that adds `notes`. Read it; it's short. Then reload the page. There's no separate "migrate" step:
 the server applies any new migration in `drizzle/` before the first statement a request runs.
 
-So the loop is: edit the schema, generate, reload. The same thing happens in production. `weft build` puts the
+So the loop is: edit the schema, generate, reload. The same thing happens in production. `kerf build` puts the
 migrations into the server bundle, and the first request after a deploy that uses the database applies what's new. A
 second server starting at the same moment waits for the first (Postgres takes a lock), and each migration runs once:
-the database keeps a table, `__weft_migrations`, of the ones it has applied.
+the database keeps a table, `__kerf_migrations`, of the ones it has applied.
 
-Weft tells you when the two sides don't match:
+Kerf tells you when the two sides don't match:
 
-- **Q015** (from `weft check`): the schema changed since the last `weft db generate`. Run it.
+- **Q015** (from `kerf check`): the schema changed since the last `kerf db generate`. Run it.
 - **Q014** (at run time): a statement used a table or column the database doesn't have. Usually the same fix.
 
 :::pitfall Don't edit `drizzle/` by hand
@@ -126,7 +126,7 @@ Queries run inside a server function's `run`, on `ctx.db`. Every driver is async
 
 ```ts
 // src/server/reports.ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 import { and, count, desc, eq } from 'drizzle-orm'
 import { todos, user } from '#/db/schema'
 
@@ -179,7 +179,7 @@ export const withOwner = query({
 annotation from you.
 
 Notice the `tags`. A query's tags say which tables it reads, so a mutation that writes one of them refreshes it.
-`withOwner` reads two tables and names both. In development Weft watches the SQL each function runs, and warns with
+`withOwner` reads two tables and names both. In development Kerf watches the SQL each function runs, and warns with
 **Q011** when it touches a table its tags don't name: a change to that table wouldn't refresh it.
 
 :::pitfall Ownership goes in the `where`
@@ -195,7 +195,7 @@ gives back the rows they wrote:
 
 ```ts
 // src/server/writes.ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'
@@ -245,7 +245,7 @@ When two writes must happen together or not at all, put them in a transaction. E
 
 ```ts
 // src/server/split.ts
-import { FnError, mutation } from '@weft-js/start'
+import { FnError, mutation } from '@kerf/start'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'
@@ -299,11 +299,11 @@ writes with it.
 
 ### Validating with the table
 
-A table already knows its columns' types, so it can validate input. `schemasOf` from `@weft-js/start/db` turns each
+A table already knows its columns' types, so it can validate input. `schemasOf` from `@kerf/start/db` turns each
 table into Zod schemas (`select`, `insert` and `update`), and you add rules per column:
 
 ```ts
-import { schemasOf } from '@weft-js/start/db'
+import { schemasOf } from '@kerf/start/db'
 import { z } from 'zod'
 import * as schema from '#/db/schema'
 
@@ -319,13 +319,13 @@ When a column changes in the schema, the validation changes with it.
 ## Choosing a database
 
 The database is picked when the app is made, with `--db sqlite`, `--db postgres` or `--db mysql`, or added to an app
-without one by `weft add db [engine]`. The difference in your code is one import in `src/db/index.server.ts`:
+without one by `kerf add db [engine]`. The difference in your code is one import in `src/db/index.server.ts`:
 
 | | Import | `DATABASE_URL` |
 |---|---|---|
-| SQLite | `@weft-js/start/db/sqlite` | `file:.data/app.db` (the default), a path, or `:memory:` |
-| Postgres | `@weft-js/start/db/postgres` | `postgres://user:pass@host:5432/db` |
-| MySQL | `@weft-js/start/db/mysql` | `mysql://user:pass@host:3306/db` |
+| SQLite | `@kerf/start/db/sqlite` | `file:.data/app.db` (the default), a path, or `:memory:` |
+| Postgres | `@kerf/start/db/postgres` | `postgres://user:pass@host:5432/db` |
+| MySQL | `@kerf/start/db/mysql` | `mysql://user:pass@host:3306/db` |
 
 A URL the driver can't open, such as a `postgres://` URL given to the SQLite client, is **Q013**. Postgres and MySQL
 pool their connections; `createDb({ …, max: 20 })` sets the pool size (10 by default).
@@ -334,8 +334,8 @@ SQLite is the easiest start: a file in `.data/`, no server to run, and no native
 runtime's own SQLite (`node:sqlite` on Node and Deno, `bun:sqlite` on Bun). It's a fine choice in production on one
 server. Pick Postgres or MySQL when several servers share the data, or when your host provides one.
 
-Drizzle is the default data layer. `weft add db` also takes `--layer prisma` or `--layer native` (plain SQL through
-`@weft-js/db`), and `@weft-js/db` has adapters for Kysely, MongoDB, DynamoDB and Firestore. The rest of `@weft-js/start`
+Drizzle is the default data layer. `kerf add db` also takes `--layer prisma` or `--layer native` (plain SQL through
+`@kerf/db`), and `@kerf/db` has adapters for Kysely, MongoDB, DynamoDB and Firestore. The rest of `@kerf/start`
 works the same over any of them: tags, `ctx.db`, migrations on the next request. This chapter sticks to Drizzle.
 
 :::note When the database is down
@@ -347,7 +347,7 @@ back, the next request works: no restart.
 ## Recap
 
 - `src/db/schema.ts` is your tables; `src/db/index.server.ts` makes the client; `ctx.db` is how server code reaches it.
-- Change the schema, run `weft db generate`, reload: new migrations apply before the next request's first statement, in
+- Change the schema, run `kerf db generate`, reload: new migrations apply before the next request's first statement, in
   development and in production. Q015 and Q014 tell you when you forgot.
 - Never edit `drizzle/` by hand.
 - Read with `ctx.db.select()…`, write with `insert`, `update` and `delete`, and `await` them. `ctx.db.transaction` keeps
@@ -368,7 +368,7 @@ the list on the page updates.
 Delete with both conditions in the `where`, return the count of rows deleted, and invalidate `todos`:
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { and, eq } from 'drizzle-orm'
 import { todos } from '#/db/schema'
 
@@ -393,7 +393,7 @@ This query warns with Q005 in development, and the page shows something odd wher
 fix?
 
 ```ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 import { eq } from 'drizzle-orm'
 import { user } from '#/db/schema'
 
@@ -415,7 +415,7 @@ JSON, and JSON has no dates: the browser would get a string while the server ren
 out. Send a string you choose:
 
 ```ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 import { eq } from 'drizzle-orm'
 import { user } from '#/db/schema'
 
@@ -451,7 +451,7 @@ priority: integer('priority').notNull().default(2),
 Then the migration:
 
 ```bash
-npx weft db generate
+npx kerf db generate
 ```
 
 Then the input. A new app's `addTodo` takes `schemas.todos.insert.pick({ title: true })`; pick the new column too:

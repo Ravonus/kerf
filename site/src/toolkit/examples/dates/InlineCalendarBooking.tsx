@@ -1,4 +1,4 @@
-import { InlineCalendar } from '@weft-js/warp'
+import { InlineCalendar } from '@kerf/veneer'
 
 import { TODAY, booked } from './shared-event'
 

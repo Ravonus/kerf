@@ -140,7 +140,7 @@ function listenPage({ browser, sessionId, found, statics, served, loaded, docume
       found.push({ code: 'L010', key: text, at: where(top?.url, top?.lineNumber), text })
     } else if (m.method === 'Log.entryAdded' && p.entry.level === 'error') {
       // a build's pages served as files have no server: its realtime and function routes answer 404 here and nowhere else
-      if (statics && /\/_weft\/(rt|ws|fn|data|m|x)\b/.test(`${p.entry.url ?? ''} ${p.entry.text}`))
+      if (statics && /\/_kerf\/(rt|ws|fn|data|m|x)\b/.test(`${p.entry.url ?? ''} ${p.entry.text}`))
         return
       if (
         statics &&

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Modal, Stack, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Modal, Stack, Text } from '@kerf/veneer'
 
 export function ModalConfirm() {
   const open = state(false)

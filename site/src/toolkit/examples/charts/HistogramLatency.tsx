@@ -1,4 +1,4 @@
-import { Histogram } from '@weft-js/warp'
+import { Histogram } from '@kerf/veneer'
 
 import { LATENCIES } from '../../world'
 

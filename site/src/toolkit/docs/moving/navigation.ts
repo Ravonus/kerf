@@ -250,7 +250,7 @@ export const navigation: Doc[] = [
           {
             id: 'NavAcross',
             title: 'A row',
-            note: 'Mark the current page with `aria-current`. `Link` from `@weft-js/start` does that for you.',
+            note: 'Mark the current page with `aria-current`. `Link` from `@kerf/start` does that for you.',
           },
           {
             id: 'NavDown',

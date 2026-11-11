@@ -1,4 +1,4 @@
-import { Link, type RouteProps } from '@weft-js/start'
+import { Link, type RouteProps } from '@kerf/start'
 import './root.css'
 
 export const meta = { extra: [{ name: 'theme-color', content: '#0b0b0f' }] }

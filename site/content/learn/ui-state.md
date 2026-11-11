@@ -2,7 +2,7 @@
 
 :::learn
 - How `interaction()` turns hover, focus and press into state you can read
-- How Warp components fill it and draw it with `ui`
+- How Veneer components fill it and draw it with `ui`
 - How one key shares a row between components, tabs and visitors
 - How to keep other UI state, such as a collapsed sidebar, the same in every tab
 - What U001–U005 catch
@@ -11,7 +11,7 @@
 Hover, focus and press are usually a pile of event handlers: `pointerenter`, `pointerleave`, `focusin`, `focusout`,
 `pointerdown`, and the edge cases between them. Most of the time CSS covers what you need with `:hover` and
 `:focus-visible`. When it doesn't, because logic needs to know, or another part of the page should light up, or another
-tab or person should see it, `interaction()` from `@weft-js/core/interaction` turns them into state you read like any
+tab or person should see it, `interaction()` from `@kerf/core/interaction` turns them into state you read like any
 other box.
 
 :::demo manage-interaction
@@ -19,8 +19,8 @@ other box.
 ## A row of interaction state
 
 ```tsx
-import { interaction } from '@weft-js/core/interaction'
-import { Button } from '@weft-js/warp'
+import { interaction } from '@kerf/core/interaction'
+import { Button } from '@kerf/veneer'
 
 export function Save() {
   const row = interaction()
@@ -44,15 +44,15 @@ export function Save() {
 | `row.pressed.value` | it's being pressed |
 | `row.remote.value` | how many *others* have each of those, when it's shared (below) |
 
-Hand the row to a Warp component with `ui={row}`. The component fills the row from real events and draws from it. The
+Hand the row to a Veneer component with `ui={row}`. The component fills the row from real events and draws from it. The
 components that take `ui` are Button, Checkbox, Switch, Radio, Toggle, Chip and Card. Passing `ui` to one that doesn't
 take it is **U005**: an attribute is written and nothing is drawn.
 
 The three local values are ordinary boxes, so you can read them anywhere you'd read state: in JSX, in a `derived`, in a
-`watch`. You can also write them yourself, for an element Warp doesn't draw:
+`watch`. You can also write them yourself, for an element Veneer doesn't draw:
 
 ```tsx
-import { interaction } from '@weft-js/core/interaction'
+import { interaction } from '@kerf/core/interaction'
 
 export function Tile(props: { title: string }) {
   const row = interaction()
@@ -69,7 +69,7 @@ export function Tile(props: { title: string }) {
 }
 ```
 
-An app that never calls `interaction()` ships none of it, and a Warp component that's never given `ui` doesn't pull it
+An app that never calls `interaction()` ships none of it, and a Veneer component that's never given `ui` doesn't pull it
 in either.
 
 :::note Prefer CSS when CSS can do it
@@ -85,9 +85,9 @@ show the same to-do, in two panes, light up together:
 :::demo ui-state
 
 ```tsx
-import { derived } from '@weft-js/core'
-import { interaction } from '@weft-js/core/interaction'
-import { Checkbox } from '@weft-js/warp'
+import { derived } from '@kerf/core'
+import { interaction } from '@kerf/core/interaction'
+import { Checkbox } from '@kerf/veneer'
 
 export function TodoRow(props: { id: string; text: string }) {
   const row = interaction({ share: () => `todo:${props.id}` })
@@ -119,7 +119,7 @@ anyone else's, which is **U001**.
 | Other tabs of this browser | `BroadcastChannel`, at most one message a frame | nothing |
 | Other browsers and people | one socket per browser, through the app's realtime server | allow it, below |
 
-Drop `share` and the row is private to that one call. An app without `@weft-js/start` shares on the page and across tabs
+Drop `share` and the row is private to that one call. An app without `@kerf/start` shares on the page and across tabs
 only.
 
 ### Yours and theirs never mix
@@ -131,9 +131,9 @@ That rule is what makes a shared row safe to run logic on. A `watch` on `row.hov
 fire because someone else pointed at something, and it can't echo back and forth between tabs:
 
 ```tsx
-import { watch } from '@weft-js/core'
-import { interaction } from '@weft-js/core/interaction'
-import { Button } from '@weft-js/warp'
+import { watch } from '@kerf/core'
+import { interaction } from '@kerf/core/interaction'
+import { Button } from '@kerf/veneer'
 
 export function Open(props: { id: string }) {
   const row = interaction({ share: () => `doc:${props.id}` })
@@ -145,7 +145,7 @@ export function Open(props: { id: string }) {
 }
 ```
 
-To draw both by hand, read both: `row.hover.value || row.remote.value.hover > 0`. Warp does this for you: a component lit
+To draw both by hand, read both: `row.hover.value || row.remote.value.hover > 0`. Veneer does this for you: a component lit
 from anywhere gets `data-hold`, and `data-remote` when it's only others.
 
 `row.remote` is a derived value: only the network writes it. Assigning to it is **U004**.
@@ -156,7 +156,7 @@ Sharing with other browsers is off until the server says who may see which keys.
 `src/realtime.server.ts`:
 
 ```ts
-import { realtime } from '@weft-js/start'
+import { realtime } from '@kerf/start'
 
 export default realtime({
   share: ({ ctx, key }) =>
@@ -165,14 +165,14 @@ export default realtime({
 ```
 
 The rule runs once per key, when a client joins and at each session re-check. With no `share` rule, the socket refuses
-every key (**R011**), and a refused key still works between tabs. `weft check` warns about `interaction({ share })` in an
+every key (**R011**), and a refused key still works between tabs. `kerf check` warns about `interaction({ share })` in an
 app with no rule as **U003**, which you can leave if tabs are all you want.
 
 Peers see three bits and an opaque connection id: no name, no pointer position, nothing typed. For names and cursors,
-there's `@weft-js/multiplayer`.
+there's `@kerf/multiplayer`.
 
 :::pitfall Hover tells people things
-What someone lingers on in a shared document, or which field of a form has focus, is a real signal. Warp never shares by
+What someone lingers on in a shared document, or which field of a form has focus, is a real signal. Veneer never shares by
 default: you opt in, row by row, with `share`. Build keys from data the server knows, not from the URL or something
 typed: a key taken from user input is **U002**, because the server's rule then authorises a string the user chose. And
 it's worth telling your users what others can see.
@@ -193,7 +193,7 @@ browser:
 
 ```ts
 // src/state/layout.ts
-import { defineState, state } from '@weft-js/core'
+import { defineState, state } from '@kerf/core'
 
 export const layout = defineState('layout', () => ({
   sidebar: state(true, { persist: 'local', sync: 'tabs' }),
@@ -205,7 +205,7 @@ export const layout = defineState('layout', () => ({
 ```
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 import { layout } from '../state/layout'
 
 export function SidebarToggle() {
@@ -225,7 +225,7 @@ export function SidebarToggle() {
 
 Collapse the sidebar in one tab and it collapses in the others; reload, and it's still collapsed. `sync: 'tabs'` needs
 `persist`, because a new tab starts from what was stored, and it can't be `'session'`, which is per tab. Getting either
-wrong throws **S008** in development. The `@weft-js/core/sync` module that does the work is added by the Weft Vite plugin
+wrong throws **S008** in development. The `@kerf/core/sync` module that does the work is added by the Kerf Vite plugin
 to the modules that use the option, so you don't import it.
 
 :::note Server rendering and `local`
@@ -236,11 +236,11 @@ box the first paint depends on, like a theme, persist to `'cookie'` instead, whi
 
 ### A message to the other tabs: `tabs.channel`
 
-For an event rather than a value, such as "signed out, close everything", `tabs.channel` from `@weft-js/core/browser` is
+For an event rather than a value, such as "signed out, close everything", `tabs.channel` from `@kerf/core/browser` is
 a typed, validated `BroadcastChannel`:
 
 ```tsx
-import { tabs } from '@weft-js/core/browser'
+import { tabs } from '@kerf/core/browser'
 import { z } from 'zod'
 
 export function SignOut() {
@@ -288,8 +288,8 @@ running an older deploy; a message it refuses is dropped. The [Browser values re
 Under a Switch, show "Press Space to toggle" while it has focus, and nothing otherwise.
 :::solution
 ```tsx
-import { interaction } from '@weft-js/core/interaction'
-import { Switch } from '@weft-js/warp'
+import { interaction } from '@kerf/core/interaction'
+import { Switch } from '@kerf/veneer'
 
 export function Wifi() {
   const row = interaction()
@@ -309,8 +309,8 @@ A list of cities and a row of pins are separate components. Hovering a city in t
 hovering the pin should light up the city. Neither component should know about the other.
 :::solution
 ```tsx
-import { interaction } from '@weft-js/core/interaction'
-import { Button, Chip } from '@weft-js/warp'
+import { interaction } from '@kerf/core/interaction'
+import { Button, Chip } from '@kerf/veneer'
 
 const CITIES = ['Lisbon', 'Oslo', 'Lima']
 
@@ -348,7 +348,7 @@ this needs no server, and other tabs follow too.
 :::
 
 :::challenge Fix the echo
-This component tries to show others' hover by writing it into `remote`, and `weft check` reports U004. Fix it.
+This component tries to show others' hover by writing it into `remote`, and `kerf check` reports U004. Fix it.
 
 ```tsx
 const row = interaction({ share: () => `todo:${props.id}` })
@@ -360,9 +360,9 @@ watch(() => row.hover.value, (on) => {
 Don't write `remote`: it's what others are doing, and only the network writes it. Read it instead, next to your own:
 
 ```tsx
-import { derived } from '@weft-js/core'
-import { interaction } from '@weft-js/core/interaction'
-import { Checkbox } from '@weft-js/warp'
+import { derived } from '@kerf/core'
+import { interaction } from '@kerf/core/interaction'
+import { Checkbox } from '@kerf/veneer'
 
 export function Todo(props: { id: string; text: string }) {
   const row = interaction({ share: () => `todo:${props.id}` })

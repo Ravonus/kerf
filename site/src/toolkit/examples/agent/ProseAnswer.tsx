@@ -1,5 +1,5 @@
-import { Prose } from '@weft-js/warp'
-import { SparkleIcon } from '@weft-js/warp-icons'
+import { Prose } from '@kerf/veneer'
+import { SparkleIcon } from '@kerf/veneer-icons'
 import { CITED, REPORT } from './shared'
 
 export const ProseAnswer = () => (

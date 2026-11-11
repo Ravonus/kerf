@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { UserMessage } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { UserMessage } from '@kerf/veneer'
 
 export function UserMessageEditable() {
   const text = state(

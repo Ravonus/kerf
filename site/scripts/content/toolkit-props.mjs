@@ -27,7 +27,7 @@ const PROP_WORDS = {
   tone: 'What it means: neutral, accent, positive, caution, critical or info.',
   size: 'Control size. `md` by default.',
   emphasis: 'How loud it is.',
-  icon: 'An icon name from `@weft-js/warp-icons`, or a component.',
+  icon: 'An icon name from `@kerf/veneer-icons`, or a component.',
   title: 'The heading.',
   description: 'One supporting line under the title.',
   footer: 'What sits at the bottom, usually actions.',
@@ -49,7 +49,7 @@ const PROP_WORDS = {
   height: 'Its height, in pixels.',
   width: 'Its width.',
   ratio: 'Width to height.',
-  gap: "The space between children, from warp's space scale.",
+  gap: "The space between children, from veneer's space scale.",
   as: 'The element it renders as.',
   variant: 'Which form it takes.',
   count: 'The number it shows.',
@@ -118,7 +118,7 @@ function arrange(doc) {
 
 /** The shortest thing that shows a component in use, for the Usage heading. */
 function usageOf(doc, name, found, play) {
-  const line = `import { ${name} } from '@weft-js/warp'`
+  const line = `import { ${name} } from '@kerf/veneer'`
   const from = play && !play.code.includes('{children}') ? null : play?.code
   const start = play && Object.fromEntries(play.knobs.map((k) => [k.prop, k.initial]))
   const kids = String(start?.children ?? '')
@@ -131,7 +131,7 @@ function usageOf(doc, name, found, play) {
 }
 
 const SPEC_WORDS = /§|\bSIGNATURE\b|\bspecimen\b/
-const GITHUB_SRC = 'https://github.com/Ravonus/weft/blob/main/'
+const GITHUB_SRC = 'https://github.com/Ravonus/kerf/blob/main/'
 
 /** A prop's row: the prop's own comment, then the page's, then the common word, and never a spec reference. */
 /** A default the words name, as in "`md` by default", when it's one of the prop's own values and not one case of several. */

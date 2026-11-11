@@ -1,0 +1,4 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+:where([data-scope="cursors"]) { position: absolute; inset: 0; pointer-events: none; z-index: var(--veneer-z-overlay); overflow: clip; }
+}

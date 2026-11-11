@@ -28,7 +28,7 @@ await sql.unsafe(
 const statements = changeStatements('postgresql', [{ name: 'notes', pk: ['id'] }])
 for (const s of statements) await sql.unsafe(s)
 const leftovers = async () =>
-  (await sql`select count(*)::int as n from notes where body like 'weft-verify-%'`)[0].n
+  (await sql`select count(*)::int as n from notes where body like 'kerf-verify-%'`)[0].n
 
 const port = await freePort()
 const app = spawn(
@@ -54,10 +54,10 @@ for (let i = 0; i < 300; i++) {
 
 const live = { targets: { staging: { url: base, db: 'FIXTURE_DATABASE_URL', production: false } } }
 process.env.FIXTURE_DATABASE_URL = url
-process.env.WEFT_STAGING_COOKIE = 'user=alice'
-process.env.WEFT_STAGING_OTHER_COOKIE = 'user=bob'
-process.env.WEFT_VERIFY_FRESH = '1'
-process.env.WEFT_BUILD = '1'
+process.env.KERF_STAGING_COOKIE = 'user=alice'
+process.env.KERF_STAGING_OTHER_COOKIE = 'user=bob'
+process.env.KERF_VERIFY_FRESH = '1'
+process.env.KERF_BUILD = '1'
 const plan = (options) => readLivePlan({ root, preset: 'node_server', live: options ?? live })
 const codes = (p) => p.diagnostics.map((d) => d.code)
 const r019 = (p) => p.diagnostics.find((d) => d.code === 'R019')?.why ?? ''
@@ -71,10 +71,10 @@ check(
 check(p.verified[0]?.untested.length === 0, 'with both targets, nothing is untested')
 check((await leftovers()) === 0, 'its row is gone')
 
-delete process.env.WEFT_VERIFY_FRESH
+delete process.env.KERF_VERIFY_FRESH
 const again = await plan()
 check(again.verified[0]?.cached, "an unchanged query isn't run again")
-process.env.WEFT_VERIFY_FRESH = '1'
+process.env.KERF_VERIFY_FRESH = '1'
 
 p = await plan({ targets: { staging: { db: 'FIXTURE_DATABASE_URL', production: false } } })
 check(
@@ -87,13 +87,13 @@ check(
   "a URL alone passes, and says what it didn't test",
 )
 
-await sql.unsafe('alter table notes disable trigger weft_changes_ins')
+await sql.unsafe('alter table notes disable trigger kerf_changes_ins')
 p = await plan()
 check(/at `trigger`.*disabled/.test(r019(p)), `a disabled trigger: ${r019(p)}`)
-await sql.unsafe('alter table notes enable trigger weft_changes_ins')
+await sql.unsafe('alter table notes enable trigger kerf_changes_ins')
 
 await sql.unsafe(
-  `create or replace function weft_changes_notify() returns trigger as $$ begin return null; end $$ language plpgsql`,
+  `create or replace function kerf_changes_notify() returns trigger as $$ begin return null; end $$ language plpgsql`,
 )
 p = await plan({ ...live, targets: { staging: { ...live.targets.staging } } })
 check(/at `notify`/.test(r019(p)), `a trigger that fires and says nothing: ${r019(p)}`)
@@ -107,11 +107,11 @@ const broken = await plan({
 })
 check(/at `app`/.test(r019(broken)), `the app down: ${r019(broken)}`)
 
-process.env.WEFT_STAGING_OTHER_COOKIE = 'user=alice'
+process.env.KERF_STAGING_OTHER_COOKIE = 'user=alice'
 p = await plan()
 check(/at `denied`/.test(r019(p)), `a "user without access" who sees the row: ${r019(p)}`)
 check((await leftovers()) === 0, 'and the row is gone')
-process.env.WEFT_STAGING_OTHER_COOKIE = 'user=bob'
+process.env.KERF_STAGING_OTHER_COOKIE = 'user=bob'
 
 // ---- refusals, and nothing touched ------------------------------------------------------------------------------------
 const before = (await sql`select count(*)::int as n from notes`)[0].n
@@ -166,7 +166,7 @@ check(
   'a build fails on it',
 )
 
-const dir = mkdtempSync(join(tmpdir(), 'weft-verify-'))
+const dir = mkdtempSync(join(tmpdir(), 'kerf-verify-'))
 mkdirSync(join(dir, 'src'))
 writeFileSync(
   join(dir, 'src/q.ts'),

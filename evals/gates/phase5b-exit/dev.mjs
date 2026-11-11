@@ -5,7 +5,7 @@ import { join } from 'node:path'
 export async function dev(context) {
   const {
     freePort,
-    weft,
+    kerf,
     dir,
     until,
     call,
@@ -18,7 +18,7 @@ export async function dev(context) {
     cleanServer,
   } = context
   const port = await freePort()
-  const child = spawn(weft(), ['dev', '--port', String(port)], {
+  const child = spawn(kerf(), ['dev', '--port', String(port)], {
     cwd: dir,
     stdio: ['ignore', 'pipe', 'pipe'],
     detached: true,
@@ -37,7 +37,7 @@ export async function dev(context) {
   const input = { seed: 5, width: 64, height: 64 }
   try {
     await until(
-      `weft dev: ${output}`,
+      `kerf dev: ${output}`,
       async () => (await call(url, ID.thumbnail, input)).status === 200,
       240_000,
     )
@@ -114,7 +114,7 @@ async function devChecks({
         'failed polls during the reload',
       )
       ok(
-        existsSync(join(dir, '.weft/native/media-2.node')),
+        existsSync(join(dir, '.kerf/native/media-2.node')),
         'the second build has a path of its own',
       )
       return { reloadMs: ms, requests: polls.length }

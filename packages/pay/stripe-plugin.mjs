@@ -1,6 +1,6 @@
-// stripe() for weft.config.ts: this package as the `pay.rail` provider for the web. Options are in the generated slot
+// stripe() for kerf.config.ts: this package as the `pay.rail` provider for the web. Options are in the generated slot
 // module, so they name env vars and never hold a key (PAY003). Another provider is this one line swapped for another.
-import { definePlugin, defineSlot, provide } from '@weft-js/core/plugin'
+import { definePlugin, defineSlot, provide } from '@kerf/core/plugin'
 
 const slot = defineSlot({
   id: 'pay.rail',
@@ -10,9 +10,9 @@ const slot = defineSlot({
 })
 
 export const stripe = definePlugin({
-  name: '@weft-js/pay/stripe',
+  name: '@kerf/pay/stripe',
   version: '0.0.0',
-  weft: '*',
+  kerf: '*',
   permissions: {
     net: ['api.stripe.com'],
     env: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_MODE', 'STRIPE_PUBLISHABLE_KEY'],
@@ -21,12 +21,12 @@ export const stripe = definePlugin({
     provides: [
       provide(slot, {
         key: 'stripe',
-        sides: { server: { module: '@weft-js/pay/stripe', export: 'stripeRail', options } },
+        sides: { server: { module: '@kerf/pay/stripe', export: 'stripeRail', options } },
       }),
     ],
     agents: {
       title: 'Pay rail: Stripe',
-      text: 'Stripe Checkout, server side only: `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` for `/_weft/x/pay/stripe`, the webhook URL to give Stripe. Test mode is an `sk_test_` key; `STRIPE_MODE=test` makes a live key an error (PAY032). Test card 4242 4242 4242 4242; `stripe listen --forward-to localhost:5173/_weft/x/pay/stripe` for local webhooks.',
+      text: 'Stripe Checkout, server side only: `STRIPE_SECRET_KEY`, and `STRIPE_WEBHOOK_SECRET` for `/_kerf/x/pay/stripe`, the webhook URL to give Stripe. Test mode is an `sk_test_` key; `STRIPE_MODE=test` makes a live key an error (PAY032). Test card 4242 4242 4242 4242; `stripe listen --forward-to localhost:5173/_kerf/x/pay/stripe` for local webhooks.',
     },
     map: [
       {

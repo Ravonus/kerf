@@ -1,5 +1,5 @@
-import { render } from '@weft-js/core/dom'
-import { defineSurface, Surface } from '@weft-js/core/surface'
+import { render } from '@kerf/core/dom'
+import { defineSurface, Surface } from '@kerf/core/surface'
 
 const Clear = defineSurface({
   name: 'clear',

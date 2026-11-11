@@ -1,5 +1,5 @@
-// The change feed on a real Postgres. `WEFT_TEST_POSTGRES=postgres://…` turns these on, and its database is yours to lose:
-// they drop and create their tables. `WEFT_TEST_PGBOUNCER`: the same database through pgBouncer in transaction mode.
+// The change feed on a real Postgres. `KERF_TEST_POSTGRES=postgres://…` turns these on, and its database is yours to lose:
+// they drop and create their tables. `KERF_TEST_PGBOUNCER`: the same database through pgBouncer in transaction mode.
 import { until5000 as until } from './change-wait.helpers.mjs'
 import { sleep as wait } from '../../../scripts/lib/helpers.mjs'
 import postgres from 'postgres'
@@ -7,8 +7,8 @@ import { changeStatements } from '../src/changes-sql.mjs'
 import { createFeed, type Poke, type Probe, type Sink, type Source } from '../src/changes'
 import { postgresChanges } from '../src/db/changes-postgres'
 
-const url = process.env.WEFT_TEST_POSTGRES!
-const bouncer = process.env.WEFT_TEST_PGBOUNCER
+const url = process.env.KERF_TEST_POSTGRES!
+const bouncer = process.env.KERF_TEST_PGBOUNCER
 
 function source(
   sql: ReturnType<typeof postgres>,
@@ -32,7 +32,7 @@ function sinkless(s: Source, how?: Probe, throttle = 25) {
   return { pokes, status, feed, start: async () => feed.start(how ?? (await s.probe())) }
 }
 
-// Needs a Postgres server, named by WEFT_TEST_POSTGRES.
+// Needs a Postgres server, named by KERF_TEST_POSTGRES.
 describe.skipIf(!url)('postgres change feed', () => {
   let sql: ReturnType<typeof postgres>
   beforeAll(async () => {
@@ -73,7 +73,7 @@ function postgresProbeTests(getSql: () => ReturnType<typeof postgres>) {
     const sql = getSql()
     const f = sinkless(source(sql))
     await f.start()
-    const other = postgres(url, { max: 1, connection: { application_name: 'not-weft' } })
+    const other = postgres(url, { max: 1, connection: { application_name: 'not-kerf' } })
     const [{ id } = { id: '' }] = await other<
       { id: string }[]
     >`insert into live_a (secret) values ('hunter2') returning id`
@@ -88,7 +88,7 @@ function postgresProbeTests(getSql: () => ReturnType<typeof postgres>) {
     const sql = getSql()
     const heard: string[] = []
     const l = postgres(url, { max: 1, onnotice: () => {} })
-    await l.listen('weft_changes', (p) => heard.push(p))
+    await l.listen('kerf_changes', (p) => heard.push(p))
     await sql`insert into live_a (secret) values ('hunter2')`
     await until(() => heard.length > 0)
     expect(heard[0]).toMatch(/^\{"t" : "live_a", "i" : \["\d+"\]\}$/)
@@ -132,7 +132,7 @@ function postgresNotificationTests(getSql: () => ReturnType<typeof postgres>) {
     const f = sinkless(source(sql))
     const notes: string[] = []
     const l = postgres(url, { max: 1, onnotice: () => {} })
-    await l.listen('weft_changes', (p) => notes.push(p))
+    await l.listen('kerf_changes', (p) => notes.push(p))
     await f.start()
     await sql`insert into live_a (secret) select 'x' from generate_series(1, 10000)`
     await until(() => f.pokes.length > 0)
@@ -205,7 +205,7 @@ function postgresFallbackTests(getSql: () => ReturnType<typeof postgres>) {
     const how = await s.probe()
     expect(how).toMatchObject({ mode: 'poll', via: 'postgres-stats' })
     expect(how.why).toMatch(/no trigger on `live_plain`/)
-    expect(how.fix).toMatch(/weft db live/)
+    expect(how.fix).toMatch(/kerf db live/)
     const f = sinkless(s, how)
     await f.start()
     await sql`insert into live_plain values (${(Date.now() + 1) % 1e9})`
@@ -234,8 +234,8 @@ function postgresFallbackTests(getSql: () => ReturnType<typeof postgres>) {
     )
   })
 
-  // Needs a PgBouncer in front of Postgres, named by WEFT_TEST_PGBOUNCER.
-  // Needs a PgBouncer in front of Postgres, named by WEFT_TEST_PGBOUNCER.
+  // Needs a PgBouncer in front of Postgres, named by KERF_TEST_PGBOUNCER.
+  // Needs a PgBouncer in front of Postgres, named by KERF_TEST_PGBOUNCER.
   test.skipIf(!bouncer)(
     'pgBouncer in transaction mode: a LISTEN that hears nothing is found out',
     async () => {
@@ -255,7 +255,7 @@ function postgresFallbackTests(getSql: () => ReturnType<typeof postgres>) {
 }
 
 function postgresPooledListenerTests() {
-  // Needs a PgBouncer in front of Postgres, named by WEFT_TEST_PGBOUNCER.
+  // Needs a PgBouncer in front of Postgres, named by KERF_TEST_PGBOUNCER.
   test.skipIf(!bouncer)(
     'the app through the pooler, the listener direct: a full feed',
     async () => {

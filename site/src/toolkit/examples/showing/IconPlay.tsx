@@ -1,5 +1,5 @@
-import type { IconName } from '@weft-js/warp'
-import { Icon } from '@weft-js/warp'
+import type { IconName } from '@kerf/veneer'
+import { Icon } from '@kerf/veneer'
 
 export const IconPlay = (p: {
   name: IconName

@@ -1,4 +1,4 @@
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 import { StageButtons } from './StageButtons'
 import { Preview } from './Preview'
 import type { ExampleRef } from '../toolkit/types'
@@ -64,7 +64,7 @@ export function ExampleFrame(props: ExampleFrameProps) {
       </div>
       <div data-part="code" data-fold={ex.lines > FOLD && !ex.codeOpen ? '' : undefined}>
         <div
-          // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from this repo's examples
+          // oxlint-disable-next-line kerf/no-html-sink -- highlighted at build time from this repo's examples
           innerHTML={ex.code}
         ></div>
         {ex.lines > FOLD && !ex.codeOpen && codeButton()}

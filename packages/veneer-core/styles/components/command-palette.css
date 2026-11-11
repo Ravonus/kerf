@@ -1,0 +1,72 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Command palette (combobox in a <dialog>) ------------------------------------ */
+:where(dialog[data-scope="palette"]) {
+  inline-size: min(640px, calc(100vw - var(--veneer-space-page) * 2)); max-inline-size: none;
+  margin: 12dvh auto auto; max-block-size: min(520px, 76dvh);
+  border-radius: var(--veneer-radius-surface); overflow: clip;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  opacity: 0; translate: 0 calc(var(--veneer-motion-distance) * -0.5); scale: var(--veneer-motion-scale-from);
+  transition:
+    opacity calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+    translate calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+    scale calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+    overlay calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) allow-discrete,
+    display calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) allow-discrete;
+}
+:where(dialog[data-scope="palette"][open]) {
+  display: grid; opacity: 1; translate: 0 0; scale: 1;
+  transition: opacity var(--veneer-duration-base) var(--veneer-ease-out), translate var(--veneer-duration-base) var(--veneer-ease-out),
+              scale var(--veneer-duration-base) var(--veneer-ease-pop),
+              overlay var(--veneer-duration-base) allow-discrete, display var(--veneer-duration-base) allow-discrete;
+}
+@starting-style {
+  :where(dialog[data-scope="palette"][open]) { opacity: 0; translate: 0 calc(var(--veneer-motion-distance) * -1); scale: var(--veneer-motion-scale-from); }
+}
+/* the palette input sweeps (review 01 M1): one thread along the panel's edge, not a box inside it, held while it has focus */
+:where([data-scope="palette"] [data-part="input-row"]) { --veneer-sweep-radius: 0px; }
+:where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep"]),
+:where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep-base"]) {
+  inset: auto 0 calc(var(--veneer-border-hairline) * -1); block-size: 0; border-radius: 0; border-width: var(--veneer-sweep-width) 0 0;
+}
+:where([data-scope="palette"] [data-part="input-row"]) > :where([data-part="sweep-base"]) { border-width: var(--veneer-border-hairline) 0 0; color: var(--veneer-color-border); }
+:where([data-scope="palette"] [data-part="input-row"]) {
+  position: relative; display: flex; align-items: center; gap: var(--veneer-space-related); padding-inline: var(--veneer-pad-surface) var(--veneer-space-group);
+  border-block-end: var(--veneer-border-hairline) solid var(--veneer-color-border); color: var(--veneer-color-text-subtle);
+}
+:where([data-scope="palette"] [data-part="input"]:not([data-scope="palette"] [data-scope="field"] *:not([data-scope="palette"] [data-scope="field"] [data-scope="palette"] *))) {
+  all: unset; flex: 1; min-inline-size: 0; block-size: 56px; color: var(--veneer-color-text);
+  font: 400 max(16px, calc(var(--veneer-text-body-size) + 2px))/1 var(--veneer-text-body-font);
+}
+:where([data-scope="palette"] [data-part="input"])::placeholder { color: var(--veneer-color-text-subtle); }
+/* a nested level names itself before the query: "Region ›", so you know which list you are filtering */
+:where([data-scope="palette"] [data-part="crumb"]) {
+  all: unset; flex: none; display: inline-flex; align-items: center; gap: 4px; max-inline-size: 40%; block-size: 26px; padding-inline: 8px;
+  border-radius: var(--veneer-radius-control); background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text);
+  font: 500 var(--veneer-text-caption-size)/1 var(--veneer-text-body-font); white-space: nowrap; overflow: clip; text-overflow: ellipsis; cursor: pointer;
+}
+:where([data-scope="palette"] [data-part="crumb"]:hover) { background: color-mix(in oklab, var(--veneer-color-accent-soft), var(--veneer-color-accent-solid) 12%); }
+:where([data-scope="palette"] [data-part="crumb"]:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 1px; }
+:where([data-scope="palette"] [data-part="list"]:not([data-scope="palette"] :is([data-scope="inbox"],[data-scope="master-detail"],[data-scope="select"],[data-scope="tabs"]) *:not([data-scope="palette"] :is([data-scope="inbox"],[data-scope="master-detail"],[data-scope="select"],[data-scope="tabs"]) [data-scope="palette"] *))) { position: relative; isolation: isolate; overflow: auto; overscroll-behavior: contain; padding: var(--veneer-space-tight) var(--veneer-space-related) var(--veneer-space-related); --_inset: var(--veneer-space-related); }
+:where([data-scope="palette"] [data-part="item"]:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="palette"] *))) { min-block-size: max(40px, var(--veneer-target-min)); }
+:where([data-scope="palette"] [data-part="item"]:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="palette"] *)) [data-part="hint"]:not([data-scope="palette"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="field"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) *:not([data-scope="palette"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="field"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) [data-scope="palette"] *))) { flex: 1 1 0; min-inline-size: 0; overflow: clip; white-space: nowrap; text-overflow: ellipsis; text-align: end; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="palette"] [data-part="item"]:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="palette"] *)) [data-part="text"]:not([data-scope="palette"] :is([data-scope="announcement"],[data-scope="editable"],[data-scope="hover-scope"],[data-scope="linkcard"],[data-scope="notification"],[data-scope="save-bar"],[data-scope="sortable"],[data-scope="truncate"]) *:not([data-scope="palette"] :is([data-scope="announcement"],[data-scope="editable"],[data-scope="hover-scope"],[data-scope="linkcard"],[data-scope="notification"],[data-scope="save-bar"],[data-scope="sortable"],[data-scope="truncate"]) [data-scope="palette"] *))) { flex: 0 1 auto; min-inline-size: 0; overflow: clip; white-space: nowrap; text-overflow: ellipsis; }
+:where([data-scope="palette"] [data-part="item"][aria-selected="true"]:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="palette"] *))) { background: none; color: var(--veneer-color-text); }
+:where([data-scope="palette"] [data-part="item"][aria-selected="true"]:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="palette"] *)) > svg[data-icon]) { color: var(--veneer-color-accent-text); }
+:where([data-scope="palette"] [data-part][hidden]) { display: none; }
+::highlight(veneer-palette-hit) { color: var(--veneer-color-accent-text); text-decoration: underline; text-underline-offset: 2px; }
+:where([data-scope="palette"] [data-part="empty"]:not([data-scope="palette"] :is([data-scope="popup"],[data-scope="select"],[data-scope="shortcuts"],[data-scope="sidenav"],[data-scope="signature"]) *:not([data-scope="palette"] :is([data-scope="popup"],[data-scope="select"],[data-scope="shortcuts"],[data-scope="sidenav"],[data-scope="signature"]) [data-scope="palette"] *))) { padding: 32px var(--veneer-pad-surface); text-align: center; color: var(--veneer-color-text-subtle); }
+:where([data-scope="palette"] [data-part="footer"]:not([data-scope="palette"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="palette"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) [data-scope="palette"] *))) {
+  display: flex; gap: var(--veneer-space-group); padding: 8px var(--veneer-pad-surface); border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle);
+}
+:where([data-scope="palette"] [data-part="footer"]:not([data-scope="palette"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="palette"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) [data-scope="palette"] *)) span) { display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 599.98px) {
+  :where(dialog[data-scope="palette"]) { margin: 0; inline-size: 100%; max-block-size: 100dvh; block-size: 100dvh; border-radius: 0; border: 0; }
+  :where([data-scope="palette"] [data-part="footer"]:not([data-scope="palette"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="palette"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) [data-scope="palette"] *))) { display: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   3 · NAVIGATION WIDGETS
+   ------------------------------------------------------------------------ */
+}

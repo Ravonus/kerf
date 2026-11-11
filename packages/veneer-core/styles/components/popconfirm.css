@@ -1,0 +1,6 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Popconfirm: a small anchored confirm (popover with an alertdialog role) */
+:where([data-scope="popconfirm"][data-part="content"]) { inline-size: 280px; }
+:where([data-scope="popconfirm"] [data-part="footer"]:not([data-scope="popconfirm"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="popconfirm"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) [data-scope="popconfirm"] *))) { display: flex; justify-content: flex-end; gap: 8px; margin-block-start: 12px; }
+}

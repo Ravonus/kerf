@@ -1,11 +1,11 @@
 {
   "label": "Dashboard (benchmarks/compare)",
-  "note": "The synthetic screen from benchmarks/compare, every stack, client-rendered and served statically, so warp is measured on a real bundle. A manifest only: the stack folders aren't changed.",
+  "note": "The synthetic screen from benchmarks/compare, every stack, client-rendered and served statically, so veneer is measured on a real bundle. A manifest only: the stack folders aren't changed.",
   "pages": [{ "path": "/", "probe": { "click": "[role=columnheader] button, th button", "watch": "table, [role=grid]" } }],
   "env": {},
   "variants": {
-    "weft-warp": { "path": "../../benchmarks/compare", "cwd": "weft-warp", "src": ["src"] },
-    "weft-plain": { "path": "../../benchmarks/compare", "cwd": "weft-plain" },
+    "kerf-veneer": { "path": "../../benchmarks/compare", "cwd": "kerf-veneer", "src": ["src"] },
+    "kerf-plain": { "path": "../../benchmarks/compare", "cwd": "kerf-plain" },
     "solid": { "path": "../../benchmarks/compare", "cwd": "solid-kobalte", "install": ["npm", "install", "--legacy-peer-deps"], "build": "npx vite build" },
     "react-radix": { "path": "../../benchmarks/compare", "cwd": "react-radix", "install": ["npm", "install", "--legacy-peer-deps"], "build": "npx vite build" },
     "react-zustand": { "path": "../../benchmarks/compare", "cwd": "react-zustand", "install": ["npm", "install", "--legacy-peer-deps"], "build": "npx vite build", "label": "React + Zustand" },

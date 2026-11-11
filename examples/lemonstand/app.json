@@ -8,7 +8,7 @@
   ],
   "variants": {
     "next": { "path": "~/dev/lemonstand-landing" },
-    "weft": { "path": "~/dev/lemonstand-weft" },
+    "kerf": { "path": "~/dev/lemonstand-kerf" },
     "solid": { "path": "solid" }
   }
 }

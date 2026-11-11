@@ -40,7 +40,7 @@ export function missingEnv(root, target, config, env) {
     .map(([k, severity, how, local]) => ({
       code: 'E007',
       severity,
-      file: 'weft.config.ts',
+      file: 'kerf.config.ts',
       why: `\`${k}\` is unset${severity === 'warning' ? local : ''}`,
       fix: `${how}. Set it in the environment (never a file)`,
     }))

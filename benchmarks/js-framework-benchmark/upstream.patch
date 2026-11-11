@@ -1,14 +1,14 @@
-diff --git a/frameworks/keyed/weft/index.html b/frameworks/keyed/weft/index.html
+diff --git a/frameworks/keyed/kerf/index.html b/frameworks/keyed/kerf/index.html
 new file mode 100644
 index 00000000..370e341f
 --- /dev/null
-+++ b/frameworks/keyed/weft/index.html
++++ b/frameworks/keyed/kerf/index.html
 @@ -0,0 +1,12 @@
 +<!doctype html>
 +<html lang="en">
 +  <head>
 +    <meta charset="utf-8" />
-+    <title>weft-keyed</title>
++    <title>kerf-keyed</title>
 +    <link href="/css/currentStyle.css" rel="stylesheet" />
 +  </head>
 +  <body>
@@ -16,23 +16,23 @@ index 00000000..370e341f
 +    <script type="module" src="./dist/main.js"></script>
 +  </body>
 +</html>
-diff --git a/frameworks/keyed/weft/package-lock.json b/frameworks/keyed/weft/package-lock.json
+diff --git a/frameworks/keyed/kerf/package-lock.json b/frameworks/keyed/kerf/package-lock.json
 new file mode 100644
 index 00000000..0820ca0c
 --- /dev/null
-+++ b/frameworks/keyed/weft/package-lock.json
++++ b/frameworks/keyed/kerf/package-lock.json
 @@ -0,0 +1,1679 @@
 +{
-+  "name": "js-framework-benchmark-weft",
++  "name": "js-framework-benchmark-kerf",
 +  "version": "1.0.0",
 +  "lockfileVersion": 3,
 +  "requires": true,
 +  "packages": {
 +    "": {
-+      "name": "js-framework-benchmark-weft",
++      "name": "js-framework-benchmark-kerf",
 +      "version": "1.0.0",
 +      "dependencies": {
-+        "@weft-js/core": "0.1.1"
++        "@kerf/core": "0.1.1"
 +      },
 +      "devDependencies": {
 +        "oxfmt": "0.75.0",
@@ -41,7 +41,7 @@ index 00000000..0820ca0c
 +        "vite": "8.3.5"
 +      }
 +    },
-+    "node_modules/@weft-js/core": {
++    "node_modules/@kerf/core": {
 +      "version": "0.1.1",
 +      "integrity": "sha512-JPIyW6xqZcyk9JSjaqIRI9Nj0JNVIEXY3Bt/v1M4vZ4HtioGOLI7kBo3PIq1b1WYHyFrrX5YIX2LbUuVar9cMA==",
 +      "dependencies": {
@@ -51,7 +51,7 @@ index 00000000..0820ca0c
 +        "node": ">=26"
 +      },
 +      "optionalDependencies": {
-+        "@weft-js/compiler-darwin-arm64": "0.1.1"
++        "@kerf/compiler-darwin-arm64": "0.1.1"
 +      },
 +      "peerDependencies": {
 +        "@testing-library/dom": ">=10",
@@ -69,9 +69,9 @@ index 00000000..0820ca0c
 +          "optional": true
 +        }
 +      },
-+      "resolved": "https://registry.npmjs.org/@weft-js/core/-/core-0.1.1.tgz"
++      "resolved": "https://registry.npmjs.org/@kerf/core/-/core-0.1.1.tgz"
 +    },
-+    "node_modules/@weft-js/core/node_modules/@weft-js/compiler-darwin-arm64": {
++    "node_modules/@kerf/core/node_modules/@kerf/compiler-darwin-arm64": {
 +      "version": "0.1.1",
 +      "integrity": "sha512-RKW+DUXV2nhgtvUR5MfFmSQDlnW22Kq5EGbBpB65TTtL9ooqfTyowvvug6I2A0jGy/NzAbg7xECVDr/QmDynWw==",
 +      "cpu": [
@@ -80,9 +80,9 @@ index 00000000..0820ca0c
 +      "os": [
 +        "darwin"
 +      ],
-+      "resolved": "https://registry.npmjs.org/@weft-js/compiler-darwin-arm64/-/compiler-darwin-arm64-0.1.1.tgz"
++      "resolved": "https://registry.npmjs.org/@kerf/compiler-darwin-arm64/-/compiler-darwin-arm64-0.1.1.tgz"
 +    },
-+    "node_modules/@weft-js/core/node_modules/dom-accessibility-api": {
++    "node_modules/@kerf/core/node_modules/dom-accessibility-api": {
 +      "version": "0.7.1",
 +      "integrity": "sha512-vdnCeZD+3wZ+8h8xXL/ZtBlvvoobOFyPzSiIfO6sGOZDqjFx4aLMAjZhl4rawj5xYz3UwP6Tgvyh0iH4IOCVnQ==",
 +      "resolved": "https://registry.npmjs.org/dom-accessibility-api/-/dom-accessibility-api-0.7.1.tgz"
@@ -1701,21 +1701,21 @@ index 00000000..0820ca0c
 +    }
 +  }
 +}
-diff --git a/frameworks/keyed/weft/package.json b/frameworks/keyed/weft/package.json
+diff --git a/frameworks/keyed/kerf/package.json b/frameworks/keyed/kerf/package.json
 new file mode 100644
 index 00000000..c3d16f21
 --- /dev/null
-+++ b/frameworks/keyed/weft/package.json
++++ b/frameworks/keyed/kerf/package.json
 @@ -0,0 +1,25 @@
 +{
-+  "name": "js-framework-benchmark-weft",
++  "name": "js-framework-benchmark-kerf",
 +  "version": "1.0.0",
 +  "private": true,
 +  "type": "module",
 +  "js-framework-benchmark": {
-+    "frameworkVersionFromPackage": "@weft-js/core",
-+    "frameworkHomeURL": "https://github.com/Ravonus/weft",
-+    "repoURL": "https://github.com/Ravonus/weft",
++    "frameworkVersionFromPackage": "@kerf/core",
++    "frameworkHomeURL": "https://github.com/Ravonus/kerf",
++    "repoURL": "https://github.com/Ravonus/kerf",
 +    "language": "TypeScript"
 +  },
 +  "scripts": {
@@ -1723,7 +1723,7 @@ index 00000000..c3d16f21
 +    "typecheck": "tsc --noEmit"
 +  },
 +  "dependencies": {
-+    "@weft-js/core": "0.1.1"
++    "@kerf/core": "0.1.1"
 +  },
 +  "devDependencies": {
 +    "oxfmt": "0.75.0",
@@ -1732,11 +1732,11 @@ index 00000000..c3d16f21
 +    "vite": "8.3.5"
 +  }
 +}
-diff --git a/frameworks/keyed/weft/pnpm-lock.yaml b/frameworks/keyed/weft/pnpm-lock.yaml
+diff --git a/frameworks/keyed/kerf/pnpm-lock.yaml b/frameworks/keyed/kerf/pnpm-lock.yaml
 new file mode 100644
 index 00000000..e48582ba
 --- /dev/null
-+++ b/frameworks/keyed/weft/pnpm-lock.yaml
++++ b/frameworks/keyed/kerf/pnpm-lock.yaml
 @@ -0,0 +1,1134 @@
 +lockfileVersion: '9.0'
 +
@@ -1748,7 +1748,7 @@ index 00000000..e48582ba
 +
 +  .:
 +    dependencies:
-+      '@weft-js/core':
++      '@kerf/core':
 +        specifier: 0.1.1
 +        version: 0.1.1
 +    devDependencies:
@@ -2233,12 +2233,12 @@ index 00000000..e48582ba
 +    cpu: [x64]
 +    os: [win32]
 +
-+  '@weft-js/compiler-darwin-arm64@0.1.1':
++  '@kerf/compiler-darwin-arm64@0.1.1':
 +    resolution: {integrity: sha512-RKW+DUXV2nhgtvUR5MfFmSQDlnW22Kq5EGbBpB65TTtL9ooqfTyowvvug6I2A0jGy/NzAbg7xECVDr/QmDynWw==}
 +    cpu: [arm64]
 +    os: [darwin]
 +
-+  '@weft-js/core@0.1.1':
++  '@kerf/core@0.1.1':
 +    resolution: {integrity: sha512-JPIyW6xqZcyk9JSjaqIRI9Nj0JNVIEXY3Bt/v1M4vZ4HtioGOLI7kBo3PIq1b1WYHyFrrX5YIX2LbUuVar9cMA==}
 +    engines: {node: '>=26'}
 +    peerDependencies:
@@ -2683,14 +2683,14 @@ index 00000000..e48582ba
 +  '@typescript/typescript-win32-x64@7.0.2':
 +    optional: true
 +
-+  '@weft-js/compiler-darwin-arm64@0.1.1':
++  '@kerf/compiler-darwin-arm64@0.1.1':
 +    optional: true
 +
-+  '@weft-js/core@0.1.1':
++  '@kerf/core@0.1.1':
 +    dependencies:
 +      dom-accessibility-api: 0.7.1
 +    optionalDependencies:
-+      '@weft-js/compiler-darwin-arm64': 0.1.1
++      '@kerf/compiler-darwin-arm64': 0.1.1
 +
 +  detect-libc@2.1.2: {}
 +
@@ -2872,20 +2872,20 @@ index 00000000..e48582ba
 +      tinyglobby: 0.2.17
 +    optionalDependencies:
 +      fsevents: 2.3.3
-diff --git a/frameworks/keyed/weft/pnpm-workspace.yaml b/frameworks/keyed/weft/pnpm-workspace.yaml
+diff --git a/frameworks/keyed/kerf/pnpm-workspace.yaml b/frameworks/keyed/kerf/pnpm-workspace.yaml
 new file mode 100644
 index 00000000..dfebf88f
 --- /dev/null
-+++ b/frameworks/keyed/weft/pnpm-workspace.yaml
++++ b/frameworks/keyed/kerf/pnpm-workspace.yaml
 @@ -0,0 +1,3 @@
 +minimumReleaseAge: 4320
 +minimumReleaseAgeExclude:
-+  - '@weft-js/*'
-diff --git a/frameworks/keyed/weft/src/data.ts b/frameworks/keyed/weft/src/data.ts
++  - '@kerf/*'
+diff --git a/frameworks/keyed/kerf/src/data.ts b/frameworks/keyed/kerf/src/data.ts
 new file mode 100644
 index 00000000..845a5a4d
 --- /dev/null
-+++ b/frameworks/keyed/weft/src/data.ts
++++ b/frameworks/keyed/kerf/src/data.ts
 @@ -0,0 +1,72 @@
 +export interface Row {
 +  id: number
@@ -2959,14 +2959,14 @@ index 00000000..845a5a4d
 +    label: `${pick(adjectives)} ${pick(colours)} ${pick(nouns)}`,
 +  }))
 +}
-diff --git a/frameworks/keyed/weft/src/main.tsx b/frameworks/keyed/weft/src/main.tsx
+diff --git a/frameworks/keyed/kerf/src/main.tsx b/frameworks/keyed/kerf/src/main.tsx
 new file mode 100644
 index 00000000..a4f68729
 --- /dev/null
-+++ b/frameworks/keyed/weft/src/main.tsx
++++ b/frameworks/keyed/kerf/src/main.tsx
 @@ -0,0 +1,142 @@
-+import { state } from '@weft-js/core'
-+import { For, render } from '@weft-js/core/dom'
++import { state } from '@kerf/core'
++import { For, render } from '@kerf/core/dom'
 +import { makeRows, type Row } from './data'
 +
 +type Actions = {
@@ -2982,7 +2982,7 @@ index 00000000..a4f68729
 +    <div class="jumbotron">
 +      <div class="row">
 +        <div class="col-md-6">
-+          <h1>weft-keyed</h1>
++          <h1>kerf-keyed</h1>
 +        </div>
 +        <div class="col-md-6">
 +          <div class="row">
@@ -3107,11 +3107,11 @@ index 00000000..a4f68729
 +}
 +
 +render(() => <App />, document.getElementById('main')!)
-diff --git a/frameworks/keyed/weft/tsconfig.json b/frameworks/keyed/weft/tsconfig.json
+diff --git a/frameworks/keyed/kerf/tsconfig.json b/frameworks/keyed/kerf/tsconfig.json
 new file mode 100644
 index 00000000..f75673a1
 --- /dev/null
-+++ b/frameworks/keyed/weft/tsconfig.json
++++ b/frameworks/keyed/kerf/tsconfig.json
 @@ -0,0 +1,14 @@
 +{
 +  "compilerOptions": {
@@ -3119,25 +3119,25 @@ index 00000000..f75673a1
 +    "module": "ESNext",
 +    "moduleResolution": "bundler",
 +    "jsx": "preserve",
-+    "jsxImportSource": "@weft-js/core",
++    "jsxImportSource": "@kerf/core",
 +    "strict": true,
 +    "skipLibCheck": true,
 +    "noEmit": true,
-+    "types": ["@weft-js/core/client"]
++    "types": ["@kerf/core/client"]
 +  },
 +  "include": ["src"]
 +}
-diff --git a/frameworks/keyed/weft/vite.config.ts b/frameworks/keyed/weft/vite.config.ts
+diff --git a/frameworks/keyed/kerf/vite.config.ts b/frameworks/keyed/kerf/vite.config.ts
 new file mode 100644
 index 00000000..a0cc55c3
 --- /dev/null
-+++ b/frameworks/keyed/weft/vite.config.ts
++++ b/frameworks/keyed/kerf/vite.config.ts
 @@ -0,0 +1,8 @@
 +import { defineConfig } from 'vite'
-+import weft from '@weft-js/core/vite'
++import kerf from '@kerf/core/vite'
 +
 +export default defineConfig({
 +  base: './',
-+  plugins: [weft()],
++  plugins: [kerf()],
 +  build: { rolldownOptions: { input: 'src/main.tsx', output: { entryFileNames: 'main.js' } } },
 +})

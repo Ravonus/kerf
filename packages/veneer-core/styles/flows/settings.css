@@ -1,0 +1,28 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+:where([data-scope="settings"]) { container: settings / inline-size; }
+:where([data-scope="settings"] > [data-part="layout"]) { display: grid; gap: var(--veneer-space-group); align-items: start; }
+:where([data-scope="settings"] [data-part="nav"]:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) *:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) [data-scope="settings"] *))) {
+  display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; border-block-end: 1px solid var(--veneer-color-border);
+  margin-inline: calc(var(--veneer-space-page) * -1); padding-inline: var(--veneer-space-page);
+}
+:where([data-scope="settings"] [data-part="nav"]:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) *:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) [data-scope="settings"] *)) a) {
+  position: relative; display: inline-flex; align-items: center; gap: 8px; flex: none; min-block-size: var(--veneer-hit-min);
+  padding: 10px 10px; color: var(--veneer-color-text-subtle); text-decoration: none; font-size: var(--veneer-text-label-size); font-weight: 500;
+  border-radius: var(--veneer-radius-control); transition: color var(--veneer-duration-fast), background-color var(--veneer-duration-fast);
+}
+:where([data-scope="settings"] [data-part="nav"]:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) *:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) [data-scope="settings"] *)) a:hover) { color: var(--veneer-color-text); }
+:where([data-scope="settings"] [data-part="nav"]:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) *:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) [data-scope="settings"] *)) a[aria-current="true"]) { color: var(--veneer-color-text); }
+:where([data-scope="settings"] [data-part="nav"] a[aria-current="true"])::after {
+  content: ""; position: absolute; inset: auto 10px -1px; block-size: var(--veneer-border-emphasis); background: var(--veneer-color-accent-solid);
+}
+:where([data-scope="settings"] [data-part="nav"]:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) *:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) [data-scope="settings"] *)) a[data-tone="critical"]) { color: var(--veneer-color-critical-text); }
+:where([data-scope="settings"] [data-part="nav"]:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) *:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) [data-scope="settings"] *)) svg) { inline-size: 15px; block-size: 15px; }
+:where([data-scope="settings"] [data-part="content"]:not([data-scope="settings"] :is([data-scope="accordion"],[data-scope="assistant"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="tabs"]) *:not([data-scope="settings"] :is([data-scope="accordion"],[data-scope="assistant"],[data-scope="bell"],[data-scope="gate"],[data-scope="list"],[data-scope="pull-refresh"],[data-scope="rte"],[data-scope="tabs"]) [data-scope="settings"] *))) { display: grid; gap: var(--veneer-space-group); min-inline-size: 0; padding-block-end: 88px; }
+@container settings (min-width: 760px) {
+:where([data-scope="settings"] > [data-part="layout"]) { grid-template-columns: 200px minmax(0, 1fr); gap: var(--veneer-space-section); }
+:where([data-scope="settings"] [data-part="nav"]:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) *:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) [data-scope="settings"] *))) { position: sticky; inset-block-start: 0; flex-direction: column; border: 0; margin: 0; padding: 0; }
+:where([data-scope="settings"] [data-part="nav"]:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) *:not([data-scope="settings"] :is([data-scope="calendar"],[data-scope="checkout"],[data-scope="shell"]) [data-scope="settings"] *)) a[aria-current="true"]) { background: var(--veneer-color-surface-hover); }
+:where([data-scope="settings"] [data-part="nav"] a[aria-current="true"])::after { inset: 8px auto 8px -1px; inline-size: var(--veneer-border-emphasis); block-size: auto; }
+}
+}

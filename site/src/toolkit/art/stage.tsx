@@ -1,13 +1,13 @@
-import { getDial, Segmented } from '@weft-js/warp'
-import { onCleanup, onMount, state } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
+import { getDial, Segmented } from '@kerf/veneer'
+import { onCleanup, onMount, state } from '@kerf/core'
+import { render } from '@kerf/core/dom'
 import { enrol, type ArtProps, type Meta } from './shared'
 
 /** What a piece's module exports: the piece and its card. */
 type Piece = { default: (props: ArtProps) => unknown; meta: Meta }
 
 const PIECES: Record<string, () => Promise<Piece>> = {
-  'warp-beam': () => import('./warp-beam'),
+  'veneer-beam': () => import('./veneer-beam'),
   'tide-table': () => import('./tide-table'),
   'moire-loom': () => import('./moire-loom'),
   'turing-cloth': () => import('./turing-cloth'),
@@ -37,7 +37,7 @@ const PIECES: Record<string, () => Promise<Piece>> = {
   'sand-table': () => import('./sand-table'),
 }
 
-/* @weft visible */
+/* @kerf visible */
 /** One gallery piece: its file loads as it nears the view, and it moves only while it holds one of the three live slots. */
 export function ArtStage({ id }: { id: string }) {
   // oxlint-disable-next-line no-unassigned-vars -- the compiler assigns it through ref
@@ -82,7 +82,7 @@ const STOPS = [
   { value: 'vivid', label: 'Vivid' },
 ]
 
-/* @weft visible */
+/* @kerf visible */
 /** The gallery's own dial: an attribute on the wall, and every piece hears it. */
 export function ArtDial() {
   const stop = state('vivid')

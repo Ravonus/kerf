@@ -1,5 +1,5 @@
-// `weft browser` commands, shared by the CLI and the `weft mcp` browser tools. Each takes structured params and
-// returns JSON; the page side is @weft-js/core/agent (packages/core/src/agent.ts).
+// `kerf browser` commands, shared by the CLI and the `kerf mcp` browser tools. Each takes structured params and
+// returns JSON; the page side is @kerf/core/agent (packages/core/src/agent.ts).
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join } from 'node:path'
@@ -120,7 +120,7 @@ export async function browser(root, cmd, p = {}, o = {}) {
 async function openPage(root, p, o, page) {
   const before = await page('info', {})
   await page('navigate', { to: p.route ?? '/' })
-  // Same tab id after the load (@weft-js/core/agent keeps it in sessionStorage); wait for the new document to say hello.
+  // Same tab id after the load (@kerf/core/agent keeps it in sessionStorage); wait for the new document to say hello.
   const until = Date.now() + 15_000
   do {
     await sleep(150)
@@ -234,10 +234,10 @@ const parseScope = (s) =>
         return i < 0 ? { role: s } : { role: s.slice(0, i), name: s.slice(i + 1) }
       })()
 
-export const browserUsage = `usage: weft browser <command> [--json] [--url <dev server>] [--tab <id>]
+export const browserUsage = `usage: kerf browser <command> [--json] [--url <dev server>] [--tab <id>]
 
   The page is the app open in any browser (yours, an agent's, or \`launch\`); the dev server relays to it.
-  In a browser that runs JS, the same commands are \`await __weft__.agent.run('<command>', args)\`.
+  In a browser that runs JS, the same commands are \`await __kerf__.agent.run('<command>', args)\`.
 
   tabs                               tabs connected to the dev server
   launch [route] [--headed]          start a headless Chrome on the app (when you have no browser)

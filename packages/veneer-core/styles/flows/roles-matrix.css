@@ -1,0 +1,7 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+:where([data-scope="roles-matrix"] :is(td, thead th):not(:first-child)) { text-align: center; }
+:where([data-scope="roles-matrix"] [data-part="yes"]:not([data-scope="roles-matrix"] [data-scope="comparison"] *:not([data-scope="roles-matrix"] [data-scope="comparison"] [data-scope="roles-matrix"] *))) { display: inline-grid; place-items: center; color: var(--veneer-color-positive-text); }
+:where([data-scope="roles-matrix"] [data-part="yes"]:not([data-scope="roles-matrix"] [data-scope="comparison"] *:not([data-scope="roles-matrix"] [data-scope="comparison"] [data-scope="roles-matrix"] *)) svg) { inline-size: 16px; block-size: 16px; }
+:where([data-scope="roles-matrix"] [data-part="no"]:not([data-scope="roles-matrix"] [data-scope="comparison"] *:not([data-scope="roles-matrix"] [data-scope="comparison"] [data-scope="roles-matrix"] *))) { color: var(--veneer-color-text-subtle); }
+}

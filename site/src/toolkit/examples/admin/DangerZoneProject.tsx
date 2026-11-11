@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   ConfirmDialog,
   DangerZone,
   SettingRow,
   TypeToConfirm,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { wait, SettingsWidth } from './shared'
 
 export function DangerZoneProject() {

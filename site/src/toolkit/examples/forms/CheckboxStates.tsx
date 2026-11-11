@@ -1,4 +1,4 @@
-import { Checkbox, Grid } from '@weft-js/warp'
+import { Checkbox, Grid } from '@kerf/veneer'
 import { Cell } from '../../world'
 
 export const CheckboxStates = () => (

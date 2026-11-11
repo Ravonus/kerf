@@ -1,0 +1,13 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* shimmer text: the sweep as a light band across pending words; still under reduced motion */
+:where([data-scope="shimmer"]) {
+  color: transparent; background: linear-gradient(90deg, var(--veneer-color-text-subtle) 0 40%, var(--veneer-color-text) 50%, var(--veneer-color-text-subtle) 60% 100%) 0 0 / 250% 100%;
+  -webkit-background-clip: text; background-clip: text; animation: veneer-shimmer-text calc(1600ms + 400ms * var(--veneer-x)) linear infinite;
+}
+:where([data-motion="reduce"] [data-scope="shimmer"]) { animation: none; color: var(--veneer-color-text-subtle); background: none; }
+@media (prefers-reduced-motion: reduce) {
+:where(:root:not([data-motion="full"]) [data-scope="shimmer"]) { animation: none; color: var(--veneer-color-text-subtle); background: none; }
+}
+@keyframes veneer-shimmer-text { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+}

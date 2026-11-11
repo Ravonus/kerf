@@ -1,4 +1,4 @@
-import type { AuditEvent } from '@weft-js/warp'
+import type { AuditEvent } from '@kerf/veneer'
 
 export const AUDIT: AuditEvent[] = [
   {
@@ -46,7 +46,7 @@ export const AUDIT: AuditEvent[] = [
     actor: 'Jun Tanaka',
     category: 'members',
     verb: 'invited',
-    target: 'dara@weft.dev',
+    target: 'dara@kerf.dev',
     ip: '10.4.0.31',
   },
   {

@@ -1,4 +1,4 @@
-import { render } from '@weft-js/core/dom'
+import { render } from '@kerf/core/dom'
 import { createFakeApi } from './api'
 import { App } from './App'
 

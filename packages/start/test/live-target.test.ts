@@ -63,7 +63,7 @@ describe.each(FUNCTIONS)('%s, functions', (preset) => {
     const plan = livePlan({ preset, source })
     expect(plan.mode).toBe('off')
     expect(codes(plan)).toEqual(['R014:warning'])
-    expect(plan.options.join()).toMatch(/weft db listen/)
+    expect(plan.options.join()).toMatch(/kerf db listen/)
     expect(plan.options.join()).toMatch(/server preset/)
   })
   test('required is R013, naming the query and the options', () => {
@@ -71,7 +71,7 @@ describe.each(FUNCTIONS)('%s, functions', (preset) => {
     expect(d).toMatchObject({ code: 'R013', severity: 'error' })
     expect(d.why).toMatch(/`listTodos` requires/)
     expect(d.why).toContain(preset)
-    expect(d.why).toMatch(/weft db listen.*server preset/s)
+    expect(d.why).toMatch(/kerf db listen.*server preset/s)
   })
   test('an external listener satisfies it', () => {
     expect(livePlan({ preset, source: { ...source, external: true }, required })).toMatchObject({
@@ -86,7 +86,7 @@ test('no `changes`, nothing required: mutations only, and silent', () => {
 })
 
 describe('scanRequired', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-required-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-required-'))
   afterAll(() => rmSync(dir, { recursive: true, force: true }))
   test('on a query, and at a call', () => {
     mkdirSync(join(dir, 'src/server'), { recursive: true })
@@ -109,13 +109,13 @@ describe('scanRequired', () => {
 describe('verify targets', () => {
   test('`true` finds the two variables, and tells a newcomer what to set', () => {
     expect(
-      resolveTarget(true, { env: { WEFT_STAGING_URL: 'https://staging.x.dev' } }),
+      resolveTarget(true, { env: { KERF_STAGING_URL: 'https://staging.x.dev' } }),
     ).toMatchObject({ url: 'https://staging.x.dev', db: undefined })
     expect(
       resolveTarget(true, { env: { STAGING_DATABASE_URL: 'postgres://u@staging/x' } }),
     ).toMatchObject({ db: 'postgres://u@staging/x' })
     expect((resolveTarget(true, { env: {} }) as { missing: string }).missing).toMatch(
-      /WEFT_STAGING_URL.*STAGING_DATABASE_URL/s,
+      /KERF_STAGING_URL.*STAGING_DATABASE_URL/s,
     )
   })
   test('a name reads `live.targets`; its `db` is a variable', () => {
@@ -160,7 +160,7 @@ describe('verify targets', () => {
 })
 
 test('R020: a password in source is found; a URL with none, and an env read, are not', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-secret-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-secret-'))
   mkdirSync(join(dir, 'src'))
   writeFileSync(
     join(dir, 'src/a.ts'),

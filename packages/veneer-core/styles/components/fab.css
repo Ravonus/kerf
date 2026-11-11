@@ -1,0 +1,23 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- FAB (phone only by default) ------------------------------------------- */
+:where([data-scope="fab"]) {
+  position: absolute; inset-block-end: calc(var(--veneer-space-page) + env(safe-area-inset-bottom, 0px)); inset-inline-end: var(--veneer-space-page);
+  z-index: var(--veneer-z-dock);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--veneer-space-related);
+  block-size: 56px; min-inline-size: 56px; padding-inline: 16px; border: 0;
+  border-radius: max(var(--veneer-radius-surface), min(var(--veneer-radius-round), 16px));
+  background: var(--veneer-color-accent-solid); color: var(--veneer-color-accent-on-solid);
+  font-family: var(--veneer-text-button-font); font-size: var(--veneer-text-button-size); font-weight: var(--veneer-text-button-weight);
+  letter-spacing: var(--veneer-text-button-tracking); text-transform: var(--veneer-text-button-case);
+  box-shadow: var(--veneer-elevation-2); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: translate var(--veneer-duration-base) var(--veneer-ease-out), background-color var(--veneer-duration-fast), opacity var(--veneer-duration-base);
+}
+:where([data-scope="fab"] svg[data-icon]) { inline-size: 22px; block-size: 22px; }
+:where([data-scope="fab"]:hover) { background: var(--veneer-color-accent-solid-hover); }
+:where([data-scope="fab"]:active) { translate: 0 1px; }
+:where([data-scope="fab"][data-state="hidden"]) {
+  translate: 0 calc(100% + var(--veneer-space-page) * 2); opacity: calc(1 - var(--veneer-motion-scale));
+  transition-timing-function: var(--veneer-ease-in); pointer-events: none;
+}
+}

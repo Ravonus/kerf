@@ -1,4 +1,4 @@
-import { onCleanup, onMount } from '@weft-js/core'
+import { onCleanup, onMount } from '@kerf/core'
 import { weaver } from '../lib/loom/weaver'
 import { COLOURS, LIGHT_COLOURS, threads } from '../lib/loom/threads'
 
@@ -277,7 +277,7 @@ function startLoom(canvas: HTMLCanvasElement) {
   }
 }
 
-/* @weft visible */
+/* @kerf visible */
 /**
  * The logo, woven, behind the hero. Scenery: it never holds up the page. It waits until the page has loaded and is
  * idle, weaves in slices of a few ms, runs a few passes a second until the pointer moves, and on a small machine the

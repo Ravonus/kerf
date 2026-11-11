@@ -1,7 +1,7 @@
-// Phase 2's X-codes in `weft check` (research 11 §8.5, research 26 §7): responsive type and zoom (X005, X006, X008),
+// Phase 2's X-codes in `kerf check` (research 11 §8.5, research 26 §7): responsive type and zoom (X005, X006, X008),
 // the font build (X020–X023), media inside query boundaries (X030, X034), and refetches and streams (X033, X035,
 // research 31 §7). X031, X032 and X036 are reported at runtime in dev. Reads .css and .html files and the JSX of the checked files; X022 also reads the font build's
-// report in `.weft/fonts.json`.
+// report in `.kerf/fonts.json`.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
@@ -88,7 +88,7 @@ export function textChecks(root, { files, exclude = [], fontBuild = false }) {
     rel,
     text: readFileSync(join(root, rel), 'utf8'),
   }))
-  const fontsJson = join(root, '.weft', 'fonts.json')
+  const fontsJson = join(root, '.kerf', 'fonts.json')
   const built = existsSync(fontsJson) ? JSON.parse(readFileSync(fontsJson, 'utf8')) : null
 
   const reporter = makeReporter(out)
@@ -128,7 +128,7 @@ export function textChecks(root, { files, exclude = [], fontBuild = false }) {
     if (
       href &&
       !faceUrls.has(basename(href.split('?')[0])) &&
-      !href.includes('@weft-assets') &&
+      !href.includes('@kerf-assets') &&
       !href.startsWith('/assets/')
     ) {
       reporter(file)(
@@ -202,7 +202,7 @@ function checkSheets({ sheets, built, fontBuild, reporter, out }) {
       if (!families.has(`${f.family} Fallback`)) {
         const how = fontBuild
           ? 'declare it in `text({ fonts })`, which generates the fallback'
-          : 'add `@weft-js/text` and declare it in `text({ fonts })`'
+          : 'add `@kerf/text` and declare it in `text({ fonts })`'
         report(
           'X020',
           f.start,
@@ -220,7 +220,7 @@ function checkSheets({ sheets, built, fontBuild, reporter, out }) {
     }
   }
   for (const [code, why] of built?.report?.overBudget ?? []) {
-    if (code === 'X022') out.push(diagnostic({ code: 'X022', file: '.weft/fonts.json', why }))
+    if (code === 'X022') out.push(diagnostic({ code: 'X022', file: '.kerf/fonts.json', why }))
   }
 
   return faceUrls

@@ -9,4 +9,4 @@ export class Tracked<M> {
 export const tracked = <M>(id: string, value: M) => new Tracked(id, value)
 
 /** Thrown out of `run` when its cursor can't resume: the stream restarts without one. */
-export const RESET = new Error('weft.reset')
+export const RESET = new Error('kerf.reset')

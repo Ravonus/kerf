@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // A real app against its other versions, on production builds: what each one scores, downloads and costs, and what to tune in
-// weft and warp because of it (README.md).
+// kerf and veneer because of it (README.md).
 //   node bench.mjs <app|folder|app.json> [more apps]    or --all
 //     --samples=N       samples per page, default 3 (5 before making a claim)
-//     --jobs=N          how much at once; WEFT_JOBS too, default half the free cores, at most 8; 1 runs everything in turn
+//     --jobs=N          how much at once; KERF_JOBS too, default half the free cores, at most 8; 1 runs everything in turn
 //     --build-runs=N    cold builds per variant when its inputs changed, default 3
 //     --rebuild         build even if the inputs haven't changed
 //     --only=a,b        just these variants
@@ -44,7 +44,7 @@ const BUSY = windows ? 80 : 40,
 process.on('SIGINT', () => process.exit(130))
 process.on('SIGTERM', () => process.exit(143))
 const results = join(here, 'results.json')
-const work = process.env.BENCH_WORK ?? join(homedir(), '.cache/weft-app-bench'),
+const work = process.env.BENCH_WORK ?? join(homedir(), '.cache/kerf-app-bench'),
   store = join(work, 'store')
 const samplesWanted = +opt.samples,
   buildRuns = +opt['build-runs'],
@@ -74,7 +74,7 @@ if (opt.detect) {
   process.exit(0)
 }
 if (+process.versions.node.split('.')[0] < 26) {
-  console.error(`weft needs Node 26; this is ${process.version}`)
+  console.error(`kerf needs Node 26; this is ${process.version}`)
   process.exit(1)
 }
 const atStart = load(3000)

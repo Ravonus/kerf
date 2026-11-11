@@ -2,10 +2,10 @@
 // Replies in any order (research 40 §5): a transport whose answers the test hands out by hand, so a reply can be as late as
 // a real one. The fake's one fixed latency can't reorder anything. The final screen has to be the database's state, whichever
 // order the network picked.
-import { Boundary } from '@weft-js/core'
-import { flush, render, screen } from '@weft-js/core/test'
-import { cache, mutation, query, type StandardSchemaV1 } from '@weft-js/start'
-import { FnError, runtime, seed, type Answer, type Wire } from '@weft-js/start/data'
+import { Boundary } from '@kerf/core'
+import { flush, render, screen } from '@kerf/core/test'
+import { cache, mutation, query, type StandardSchemaV1 } from '@kerf/start'
+import { FnError, runtime, seed, type Answer, type Wire } from '@kerf/start/data'
 import { client as router } from '../src/router'
 
 type Row = { id: string; done: boolean }

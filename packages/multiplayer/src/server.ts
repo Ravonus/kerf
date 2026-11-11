@@ -2,8 +2,8 @@
 // frame is stamped here with the connection that sent it. There's no roster on the server: each client
 // answers an `ask`, peers expire without a beat, so any bus works and a dead instance's peers just age out.
 
-import { StartError } from '@weft-js/start/data'
-import type { Context, PublishOptions, StandardSchemaV1 } from '@weft-js/start'
+import { StartError } from '@kerf/start/data'
+import type { Context, PublishOptions, StandardSchemaV1 } from '@kerf/start'
 
 /** Who a peer is: what `user` returns. */
 export interface PeerUser {
@@ -33,7 +33,7 @@ const isIssue = (r: unknown): r is Issue => !!(r as Issue | null)?.issues
 const schema = <T>(validate: (v: Wire) => T | Issue): StandardSchemaV1<T, T> => ({
   '~standard': {
     version: 1,
-    vendor: 'weft',
+    vendor: 'kerf',
     validate: (v: unknown) => {
       const r = validate(v as Wire)
       return isIssue(r) ? r : { value: r }

@@ -1,5 +1,5 @@
-// Builds the site's arena apps (benchmarks/arena, read only) for arena/run.mjs: this weft, Solid, React, and a plain DOM frame
-// that makes the same writes. `SITE=<site worktree>` adds that site's deployed bundles as `weft-site` and `solid-site`.
+// Builds the site's arena apps (benchmarks/arena, read only) for arena/run.mjs: this kerf, Solid, React, and a plain DOM frame
+// that makes the same writes. `SITE=<site worktree>` adds that site's deployed bundles as `kerf-site` and `solid-site`.
 import {
   copyFileSync,
   cpSync,
@@ -19,16 +19,16 @@ const pkg = join(here, '../../../packages/core')
 const from = join(here, '../../arena')
 const site = join(here, '../dist/.arena') // a copy, so these resolve against this bench's packages
 const out = join(here, '..', process.env.OUT ?? 'dist/arena')
-const weft = (await import(join(pkg, 'vite.mjs'))).default
+const kerf = (await import(join(pkg, 'vite.mjs'))).default
 const alias = [
-  { find: /^@weft-js\/core\/dom$/, replacement: join(pkg, 'src/dom.ts') },
-  { find: /^@weft-js\/core$/, replacement: join(pkg, 'src/index.ts') },
+  { find: /^@kerf\/core\/dom$/, replacement: join(pkg, 'src/dom.ts') },
+  { find: /^@kerf\/core$/, replacement: join(pkg, 'src/index.ts') },
 ]
-const name = process.env.NAME ?? 'weft'
+const name = process.env.NAME ?? 'kerf'
 const only = process.env.NAME ? [name] : [name, 'solid', 'react', 'raw']
 if (!process.env.NAME) rmSync(out, { recursive: true, force: true })
 mkdirSync(out, { recursive: true })
-for (const dir of ['weft', 'solid', 'react', 'shared'])
+for (const dir of ['kerf', 'solid', 'react', 'shared'])
   cpSync(join(from, dir), join(site, dir), { recursive: true })
 copyFileSync(join(here, 'raw.js'), join(site, 'shared/raw.js'))
 // One meter for every frame, kept here: harness.js times each tick, as the deployed page did. `HARNESS=site` keeps the
@@ -46,7 +46,7 @@ const frame = (dir) => {
 }
 const entry = (which) =>
   ({
-    weft: { input: join(site, 'weft/main.tsx'), plugins: [weft()], resolve: { alias } },
+    kerf: { input: join(site, 'kerf/main.tsx'), plugins: [kerf()], resolve: { alias } },
     solid: { input: join(site, 'solid/main.tsx'), plugins: [await_solid()] },
     react: {
       input: join(site, 'react/main.tsx'),
@@ -58,7 +58,7 @@ const entry = (which) =>
 const await_solid = (await import('vite-plugin-solid')).default
 const await_react = (await import('@vitejs/plugin-react')).default
 for (const stack of only) {
-  const c = entry(stack === name ? 'weft' : stack)
+  const c = entry(stack === name ? 'kerf' : stack)
   await build({
     root: site,
     base: './',
@@ -92,7 +92,7 @@ copyFileSync(join(here, 'index.html'), join(out, 'index.html'))
 const deployed = process.env.SITE && join(process.env.SITE, 'site/public/arena')
 if (deployed && existsSync(deployed))
   for (const [from, to] of [
-    ['weft', 'weft-site'],
+    ['kerf', 'kerf-site'],
     ['solid', 'solid-site'],
   ]) {
     const dir = join(out, to)

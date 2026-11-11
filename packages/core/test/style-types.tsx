@@ -1,4 +1,4 @@
-// Type tests for @weft-js/core/style (`npx tsc --noEmit -p test/style-types.tsconfig.json`): each @ts-expect-error is a raw
+// Type tests for @kerf/core/style (`npx tsc --noEmit -p test/style-types.tsconfig.json`): each @ts-expect-error is a raw
 // value, an unknown key or an unknown axis value that must not compile.
 import { group } from '../src/style'
 

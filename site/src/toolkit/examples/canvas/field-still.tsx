@@ -1,4 +1,4 @@
-import { DitherField } from '@weft-js/warp'
+import { DitherField } from '@kerf/veneer'
 
 export const DitherFieldStill = () => (
   <DitherField

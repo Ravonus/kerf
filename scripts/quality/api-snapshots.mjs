@@ -13,7 +13,7 @@ export function problemsFor(name, exports, snapshot, docs) {
   if (JSON.stringify(exports) !== JSON.stringify(snapshot.exports))
     problems.push(`${name}: export map differs from api.json`)
   for (const path of Object.keys(exports)) {
-    const specifier = `@weft-js/${name}${path === '.' ? '' : path.slice(1)}`
+    const specifier = `@kerf/${name}${path === '.' ? '' : path.slice(1)}`
     if (
       !docs
         .split('\n')

@@ -30,7 +30,7 @@ export function resources(root, reserve = 0) {
 
 /** These CLIs run in the manager-owned Yuna lease with its explicit Node26 toolchain. */
 export function managerRoot(repo, out) {
-  const root = join(homedir(), 'work/weft-S5-perf')
+  const root = join(homedir(), 'work/kerf-S5-perf')
   assert.equal(realpathSync(repo), join(root, 'repo'), 'Use the exclusive perf checkout')
   assert.equal(realpathSync(root), root, 'No symlinked staging root')
   assert.equal(platform(), 'darwin')
@@ -64,13 +64,13 @@ export function sourcePins(repo, stacks) {
     'benchmarks/compare/node_modules/.modules.yaml',
     'benchmarks/compare/node_modules/.pnpm/lock.yaml',
   ]
-  for (const name of ['core', 'warp', 'warp-core', 'text'])
+  for (const name of ['core', 'veneer', 'veneer-core', 'text'])
     files.push(`packages/${name}/package.json`)
   for (const stack of stacks) files.push(`benchmarks/compare/${stack.name}/package.json`)
   const require = createRequire(join(repo, 'packages/core/package.json'))
   const compiler = require('./compiler.cjs').backend
   const stamp = require('./scripts/native-stamp.cjs').sourceStamp()
-  assert.equal(compiler.kind, 'native', 'Build/profile pins WEFT_COMPILER=native')
+  assert.equal(compiler.kind, 'native', 'Build/profile pins KERF_COMPILER=native')
   assert.ok(
     stamp && readFileSync(compiler.file + '.stamp', 'utf8').trim() === stamp,
     'Compiler source stamp mismatch',

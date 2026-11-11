@@ -1,0 +1,17 @@
+{
+  "name": "kerf-ds",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@kerf/core": "file:../../../../packages/core",
+    "@kerf/veneer": "file:../../../../packages/veneer",
+    "@kerf/veneer-core": "file:../../../../packages/veneer-core",
+    "@kerf/cli": "file:../../../../packages/cli"
+  },
+  "devDependencies": {
+    "vite": "8.3.5"
+  }
+}

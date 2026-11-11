@@ -1,4 +1,4 @@
-import type { Peer } from '@weft-js/warp'
+import type { Peer } from '@kerf/veneer'
 import { PEOPLE } from './people'
 
 export const PEERS: Peer[] = PEOPLE.map((p, i) => ({

@@ -1,0 +1,76 @@
+{
+  "name": "@kerf/veneer",
+  "version": "0.1.0",
+  "description": "veneer, the UI toolkit for kerf: components over @kerf/veneer-core",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
+    "directory": "packages/veneer"
+  },
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/veneer#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/kerf/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "*.css",
+    "./src/styles.ts",
+    "./src/fields.ts",
+    "./src/ui.ts"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./skeleton": "./src/skeleton-css.ts",
+    "./ui": "./src/ui.ts",
+    "./plugin": "./plugin.mjs",
+    "./theme-parts": "./src/plugin/theme-parts.mjs",
+    "./theme": "./src/plugin/theme.mjs",
+    "./theme-context": "./src/plugin/theme-context.mjs",
+    "./tailwind.css": "./tailwind.css"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "size": "node scripts/size.mjs",
+    "a11y": "node scripts/a11y.mjs",
+    "virtual": "node scripts/virtual.mjs",
+    "dither": "node scripts/dither.mjs"
+  },
+  "dependencies": {
+    "@kerf/scroll": "workspace:*",
+    "@kerf/veneer-core": "workspace:*",
+    "@kerf/veneer-icons": "workspace:*"
+  },
+  "peerDependencies": {
+    "@kerf/core": "*"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/user-event": "14.6.8",
+    "@kerf/core": "workspace:*",
+    "axe-core": "^4.14.0",
+    "jsdom": "30.1.3",
+    "playwright-core": "^1.64.1",
+    "rolldown": "1.2.16",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "keywords": [
+    "kerf"
+  ],
+  "files": [
+    "src",
+    "plugin.mjs",
+    "plugin.d.mts",
+    "tailwind.css",
+    "tokens",
+    "README.md",
+    "LICENSE"
+  ]
+}

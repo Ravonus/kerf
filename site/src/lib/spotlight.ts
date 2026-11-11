@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 /** The ⌘K launcher's open state, shared by the header's trigger and the palette in the shell. */
 export const spotlightOpen = state(false)

@@ -1,0 +1,4 @@
+/* 02 §3 lists `page` in the Space scale; the spec's layout CSS stops at `section`. */
+@layer veneer.layout {
+:where([data-gap="page"]) { --_gap: var(--veneer-space-page); }
+}

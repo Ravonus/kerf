@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { Input, Stack, Text } from '@weft-js/warp'
+import { derived, state } from '@kerf/core'
+import { Input, Stack, Text } from '@kerf/veneer'
 
 export function InputSlug() {
   const name = state('Store Front')
@@ -26,7 +26,7 @@ export function InputSlug() {
       />
       <Text subtle>
         {slug.value
-          ? `Lives at ${slug.value}.weft.dev`
+          ? `Lives at ${slug.value}.kerf.dev`
           : 'Waiting for a name'}
       </Text>
     </Stack>

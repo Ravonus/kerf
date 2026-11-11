@@ -1,13 +1,13 @@
-# weft keyed benchmark
+# kerf keyed benchmark
 
 This entry targets `krausest/js-framework-benchmark` revision
 `fa510a76ffe066af1d30f3e75fa51d3fcbc14009` (master observed 2026-11-05).
-The entry pins `@weft-js/core` 0.1.1, including its published compiler,
+The entry pins `@kerf/core` 0.1.1, including its published compiler,
 TypeScript 7.0.2 and Vite 8.3.5. The pnpm lock pins transitive inputs.
 Node 26 and pnpm are required. The workspace config keeps the three-day
-minimum release age; only weft packages are exempt.
+minimum release age; only kerf packages are exempt.
 
-From `keyed/weft`:
+From `keyed/kerf`:
 
 ```sh
 pnpm install --frozen-lockfile --ignore-scripts
@@ -41,11 +41,11 @@ same focused driver directly with pnpm to respect this repository's policy.
 In an isolated checkout of the pinned revision, after applying the patch:
 
 ```sh
-pnpm --dir frameworks/keyed/weft install --frozen-lockfile --ignore-scripts
-pnpm --dir frameworks/keyed/weft build-prod
+pnpm --dir frameworks/keyed/kerf install --frozen-lockfile --ignore-scripts
+pnpm --dir frameworks/keyed/kerf build-prod
 ```
 
-Put `minimumReleaseAge: 4320` and the `@weft-js/*` exemption in separate
+Put `minimumReleaseAge: 4320` and the `@kerf/*` exemption in separate
 `server/pnpm-workspace.yaml` and `webdriver-ts/pnpm-workspace.yaml` files.
 Then install with `pnpm --dir server install --ignore-scripts` and
 `pnpm --dir webdriver-ts install --ignore-scripts`. The upstream driver imports
@@ -60,8 +60,8 @@ PORT=19387 pnpm --dir server start
 In another shell, after checking the port and server ownership, run:
 
 ```sh
-PORT=19387 pnpm --dir webdriver-ts isKeyed --framework keyed/weft --headless --chromeBinary '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-PORT=19387 pnpm --dir webdriver-ts bench --runner playwright --headless true --smoketest true --chromeBinary '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' keyed/weft
+PORT=19387 pnpm --dir webdriver-ts isKeyed --framework keyed/kerf --headless --chromeBinary '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+PORT=19387 pnpm --dir webdriver-ts bench --runner playwright --headless true --smoketest true --chromeBinary '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' keyed/kerf
 ```
 
 These commands exercised the pinned upstream driver on macOS with local Chrome.

@@ -1,4 +1,4 @@
-// The hub and `/_weft/rt` without a server: rings and cursors, backpressure, limits, the Origin check and the bus
+// The hub and `/_kerf/rt` without a server: rings and cursors, backpressure, limits, the Origin check and the bus
 // contract. What a sink does, a real connection does; test/rt.test.ts runs the same protocol over HTTP.
 import { sleep as wait } from '../../../scripts/lib/sleep.mjs'
 import {
@@ -10,12 +10,12 @@ import {
   StartError,
   stream,
   type Bus,
-} from '@weft-js/start'
-import { configure, hub, resetHub, rtRoute, type Body } from '@weft-js/start/hub'
-import { postgresBus } from '@weft-js/start/bus/postgres'
+} from '@kerf/start'
+import { configure, hub, resetHub, rtRoute, type Body } from '@kerf/start/hub'
+import { postgresBus } from '@kerf/start/bus/postgres'
 import { attach, socketRoute } from '../src/socket'
 import { createScope, fetchQuery, liveQueries, runMutation } from '../src/exec'
-import { currentScope, fns, runtime } from '@weft-js/start/data'
+import { currentScope, fns, runtime } from '@kerf/start/data'
 import { createHubFixture } from './hub.fixture'
 import { registerHubStreamTests, registerPokeTests } from './hub.delivery'
 
@@ -97,7 +97,7 @@ describe('a bus that fails', () => {
     subscribe: () => Promise.reject(new Error('bus down')),
   })
 
-  test('making the hub reaches no bus: `weft build` loads this with nothing to connect to', () => {
+  test('making the hub reaches no bus: `kerf build` loads this with nothing to connect to', () => {
     let subscribed = 0
     configure({ bus: { ...down(), subscribe: () => (subscribed++, Promise.resolve(() => {})) } })
     expect(subscribed).toBe(0)
@@ -136,7 +136,7 @@ describe('a bus that fails', () => {
   })
 })
 
-describe('/_weft/rt', () => {
+describe('/_kerf/rt', () => {
   const answer = (body: unknown, headers?: Record<string, string>, origins?: string[]) => {
     const r = request(body, headers)
     return rtRoute(r, createScope(r), origins)
@@ -220,9 +220,9 @@ test('R003: a mutation writes a table a live query reads, and pokes none of its 
   expect(seen).toContain('R003')
 })
 
-// Needs a Postgres server, named by WEFT_TEST_POSTGRES.
-describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres bus', () => {
-  const url = process.env.WEFT_TEST_POSTGRES!
+// Needs a Postgres server, named by KERF_TEST_POSTGRES.
+describe.skipIf(!process.env.KERF_TEST_POSTGRES)('postgres bus', () => {
+  const url = process.env.KERF_TEST_POSTGRES!
 
   test("two instances: a message crosses, in order, and a long one survives NOTIFY's limit", async () => {
     const a = postgresBus({ url }),
@@ -246,7 +246,7 @@ describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres bus', () => {
     configure({ bus })
     const { s } = await open({ s: [[1, 'q', 'hub.q']] })
     const other = postgresBus({ url })
-    await other.publish('weft:poke', JSON.stringify({ t: ['a'] }))
+    await other.publish('kerf:poke', JSON.stringify({ t: ['a'] }))
     await vi.waitFor(() => expect(of(s, 'p')).toHaveLength(1))
     await other.close!()
   })
@@ -260,7 +260,7 @@ describe('channels on the hub', () => {
   })
 
   test('R004 again at the upgrade, for an app that skipped `realtime()`', async () => {
-    const r = new Request('http://app.test/_weft/ws', {
+    const r = new Request('http://app.test/_kerf/ws', {
       headers: { upgrade: 'websocket', origin: 'http://app.test' },
     })
     const seen: string[] = []
@@ -273,7 +273,7 @@ describe('channels on the hub', () => {
 
   test('a refused upgrade is a hook that throws the status; an allowed one has `open`', async () => {
     const at = (origin?: string, origins?: string[]) => {
-      const r = new Request('http://app.test/_weft/ws', {
+      const r = new Request('http://app.test/_kerf/ws', {
         headers: { upgrade: 'websocket', ...(origin && { origin }) },
       })
       return socketRoute(r, createScope(r), origins) as Promise<Upgrade>
@@ -306,7 +306,7 @@ describe('channels on the hub', () => {
       close: (c: number) => void (closed = c),
       backlog: () => 0,
     }
-    const r = new Request('http://app.test/_weft/ws')
+    const r = new Request('http://app.test/_kerf/ws')
     const a = await attach(peer, r, createScope(r, { context: () => ({ user: { id: 'u' } }) }))
     await attach(peer, r, createScope(r, { context: () => ({ user: { id: 'u' } }) }))
     expect(closed).toBe(1008)
@@ -323,7 +323,7 @@ describe('channels on the hub', () => {
     const d = channel({ $id: 'hub.q', authorize: () => true, server: { m: bare } })
     let closed = 0
     const peer = { send() {}, close: (c: number) => void (closed = c), backlog: () => 100 }
-    const r = new Request('http://app.test/_weft/ws')
+    const r = new Request('http://app.test/_kerf/ws')
     await attach(peer, r, createScope(r))
     expect(closed).toBe(1013)
     expect(d.kind).toBe('channel')
@@ -332,9 +332,9 @@ describe('channels on the hub', () => {
 })
 
 test("a plugin's bus waits for its first use, and only then loads", async () => {
-  const { slotBus, memoryBus: made } = await import('@weft-js/start/bus')
+  const { slotBus, memoryBus: made } = await import('@kerf/start/bus')
   let loads = 0
-  const bus = slotBus('@weft-js/realtime-redis', () => (loads++, Promise.resolve(made())))
+  const bus = slotBus('@kerf/realtime-redis', () => (loads++, Promise.resolve(made())))
   expect(bus.name).toBe('redis')
   await bus.close?.()
   expect(loads).toBe(0)
@@ -351,7 +351,7 @@ test("a plugin's bus waits for its first use, and only then loads", async () => 
 test('a muxed socket that fails to open gives its connection back', async () => {
   configure({ limits: { connections: 1 } })
   const { muxed } = await import('../src/mux')
-  const r = new Request('http://app.test/_weft/mux')
+  const r = new Request('http://app.test/_kerf/mux')
   const scope = () => createScope(r, { context: () => ({ user: { id: 'u' } }) })
   let closed = 0
   const broken = {

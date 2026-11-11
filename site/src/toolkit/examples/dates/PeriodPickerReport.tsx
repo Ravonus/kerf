@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
-import { PeriodPicker, Stack, Text } from '@weft-js/warp'
+import { PeriodPicker, Stack, Text } from '@kerf/veneer'
 
 import { TODAY } from './shared-event'
 

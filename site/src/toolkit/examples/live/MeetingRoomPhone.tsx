@@ -1,4 +1,4 @@
-import { MeetingRoom } from '@weft-js/warp'
+import { MeetingRoom } from '@kerf/veneer'
 import { CALL, CALL_SELF } from '../../world'
 import { CHAT } from './shared'
 

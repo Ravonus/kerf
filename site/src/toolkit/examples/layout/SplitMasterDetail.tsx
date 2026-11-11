@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Badge,
   Card,
@@ -9,7 +9,7 @@ import {
   Stack,
   Text,
   Toggle,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { PROJECTS, TONE_OF } from '../../world'
 
 export function SplitMasterDetail() {

@@ -3,14 +3,14 @@ import {
   searchIndex,
   type SearchIndex,
   type SearchWire,
-} from '@weft-js/warp-core/search'
+} from '@kerf/veneer-core/search'
 
 // The body index, off the main thread. A query that lands before the index waits for it; only the newest waiter runs.
 let index: SearchIndex | undefined
 let queued: { id: number; q: string } | undefined
 
 async function wire(url: string): Promise<SearchWire> {
-  const store = await caches?.open('weft-search-1').catch(() => undefined)
+  const store = await caches?.open('kerf-search-1').catch(() => undefined)
   const hit = await store?.match(url)
   if (hit) return hit.json()
   const res = await fetch(url)

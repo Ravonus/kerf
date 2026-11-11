@@ -1,4 +1,4 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
+import { Canvas, type CanvasFrame as Frame } from '@kerf/veneer'
 import { inks, type ArtProps, type Meta } from './shared'
 import code from './filings.tsx?raw'
 
@@ -14,9 +14,9 @@ export const meta: Meta = {
 const PITCH = 11,
   LENGTH = 9
 const colours = inks({
-  near: '--warp-color-text',
-  mid: '--warp-color-text-subtle',
-  far: '--warp-color-text-faint',
+  near: '--veneer-color-text',
+  mid: '--veneer-color-text-subtle',
+  far: '--veneer-color-text-faint',
 })
 
 export default function Filings(_: ArtProps) {

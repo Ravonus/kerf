@@ -1,4 +1,4 @@
-// The hosts `weft deploy` knows (research 46 §3): what each can run, its preset, what its CLI reads, and a cost hint.
+// The hosts `kerf deploy` knows (research 46 §3): what each can run, its preset, what its CLI reads, and a cost hint.
 // The fit (fit.mjs) and the generated files (files.mjs) both read this table, so they can't disagree about a host.
 
 /**
@@ -8,7 +8,7 @@
  *   many: boolean, prebuilt: boolean, env: string[], cost: string, pricing: string, docs: string, deploys: boolean,
  * }} Host
  * `preset`: the Nitro preset, or none for the runtime's server preset. `prebuilt`: what is built here is what ships, so a
- * native addon from this machine goes too. `deploys`: `weft deploy` drives it (AWS is a fit only, research 46 §11).
+ * native addon from this machine goes too. `deploys`: `kerf deploy` drives it (AWS is a fit only, research 46 §11).
  */
 
 /** @type {Host[]} */

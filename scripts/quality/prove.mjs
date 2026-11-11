@@ -114,19 +114,19 @@ const PLANTS = [
     ),
   },
   {
-    area: 'warp-core imports no framework',
+    area: 'veneer-core imports no framework',
     step: 'lint',
     expect: 'no-restricted-imports',
     ...ts(
-      'warp-core/src/planted.ts',
-      "import { signal } from '@weft-js/core'\nexport { signal }\n",
+      'veneer-core/src/planted.ts',
+      "import { signal } from '@kerf/core'\nexport { signal }\n",
     ),
   },
   {
-    area: 'warp-core imports no framework (graph)',
+    area: 'veneer-core imports no framework (graph)',
     step: 'boundaries',
-    expect: 'warp-core',
-    ...ts('warp-core/src/planted.ts', "export { signal } from 'react'\n"),
+    expect: 'veneer-core',
+    ...ts('veneer-core/src/planted.ts', "export { signal } from 'react'\n"),
   },
   {
     area: 'core imports no Node',
@@ -201,22 +201,22 @@ const PLANTS = [
     step: 'clippy',
     expect: 'clippy',
     edit: {
-      file: 'crates/weft-layout/src/lib.rs',
+      file: 'crates/kerf-layout/src/lib.rs',
       append: '\npub fn planted(x: Vec<u8>) -> usize { return x.len(); }\n',
     },
   },
   {
     area: 'cargo fmt',
     step: 'rust-fmt',
-    expect: 'crates/weft-layout',
-    edit: { file: 'crates/weft-layout/src/lib.rs', append: '\nfn  planted( ) {}\n' },
+    expect: 'crates/kerf-layout',
+    edit: { file: 'crates/kerf-layout/src/lib.rs', append: '\nfn  planted( ) {}\n' },
   },
   {
     area: 'no unwrap outside tests',
     step: 'clippy',
     expect: 'unwrap',
     edit: {
-      file: 'crates/weft-layout/src/lib.rs',
+      file: 'crates/kerf-layout/src/lib.rs',
       append: '\n#[must_use]\npub fn planted(x: Option<u8>) -> u8 { x.unwrap() }\n',
     },
   },
@@ -225,7 +225,7 @@ const PLANTS = [
     step: 'clippy',
     expect: 'unsafe block missing a safety comment',
     edit: {
-      file: 'crates/weft-layout/src/lib.rs',
+      file: 'crates/kerf-layout/src/lib.rs',
       append: '\n#[must_use]\npub fn planted(x: *const u8) -> u8 { unsafe { *x } }\n',
     },
   },
@@ -242,7 +242,7 @@ const PLANTS = [
     step: 'licences',
     expect: 'planted-pkg',
     env: {
-      WEFT_LICENCES_JSON: JSON.stringify({
+      KERF_LICENCES_JSON: JSON.stringify({
         'GPL-3.0': [{ name: 'planted-pkg', versions: ['1.0.0'] }],
       }),
     },

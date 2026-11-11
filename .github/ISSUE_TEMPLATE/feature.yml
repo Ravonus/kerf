@@ -1,5 +1,5 @@
 name: Feature
-description: Something weft or warp could do
+description: Something kerf or veneer could do
 body:
   - type: textarea
     id: problem

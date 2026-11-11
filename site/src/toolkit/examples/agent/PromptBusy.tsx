@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Prompt, Stack, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Prompt, Stack, Text } from '@kerf/veneer'
 
 export function PromptBusy() {
   const busy = state(true)

@@ -1,5 +1,5 @@
 // Speed paths. Each one is the same behaviour, faster on some work and paid for in bytes, and each can be turned off
-// to measure it: `weft({ off: ['SWAP'] })`, or `WEFT_OFF=SWAP,TEXT` for a whole run (`all` for every one). The suite
+// to measure it: `kerf({ off: ['SWAP'] })`, or `KERF_OFF=SWAP,TEXT` for a whole run (`all` for every one). The suite
 // passes both ways, and benchmarks/speed/lab.mjs prices each. docs/decisions/performance.md records why each stayed.
 
 /** A re-run keeps the links of the sources it reads again, in order. */
@@ -30,9 +30,9 @@ export const WIPE = true
 export const SCAN = true
 /** Up to 8 rows between the ends are matched by scanning, with no Map to build. */
 export const LINEAR = true
-/** A row's key is read once as the row is made, not through its item in every binding (crates/weft-compiler, `hoist_key`). */
+/** A row's key is read once as the row is made, not through its item in every binding (crates/kerf-compiler, `hoist_key`). */
 export const KEYREAD = true
-/** A delegated handler that's a function is one property write, not two calls (crates/weft-compiler). */
+/** A delegated handler that's a function is one property write, not two calls (crates/kerf-compiler). */
 export const EVENT = true
 /** A hole that holds one text node writes a new primitive straight to it: no `place`, no reads from the DOM. */
 export const STEADY = true

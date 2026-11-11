@@ -1,0 +1,90 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Hamburger ([data-hamburger] on a ghost icon button): three bars become an X. The middle bar sweeps out to the right (never reverses). */
+:where([data-hamburger]) { --_bar: 16px; --_gap: 5px; }
+/* its hover is quiet: no fill, only the bottom bar drawing in a little and the ink deepening, a hint that it opens.
+   The button's wipe and pull-out are for words on a key; on three lines in a circle they read as a smear and a jump. */
+:where([data-hamburger])::before, :where([data-hamburger]) > :where([data-part="sweep"]) { display: none; }   /* no fill or ring at all: a wipe or a tint behind three lines read as a smear */
+@media (hover: hover) {
+  :where([data-hamburger]:hover) { translate: none; box-shadow: none; }
+}
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(3)) { clip-path: inset(0); }
+:where([data-hamburger]:hover:not([aria-expanded="true"]) [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(3)) { clip-path: inset(0 0 0 38%); }
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *))) { position: relative; inline-size: var(--_bar); block-size: calc(var(--_gap) * 2 + 1.5px); display: block; }
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i) {
+  position: absolute; inset-inline: 0; block-size: 1.5px; border-radius: 2px; background: currentColor;
+  transition: translate var(--veneer-duration-base) var(--veneer-ease-in-out), rotate var(--veneer-duration-base) var(--veneer-ease-in-out),
+              clip-path var(--veneer-sweep-duration) var(--veneer-sweep-ease);
+}
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(1)) { inset-block-start: 0; }
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(2)) { inset-block-start: var(--_gap); clip-path: inset(0); }
+:where([data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(3)) { inset-block-start: calc(var(--_gap) * 2); }
+:where([data-hamburger][aria-expanded="true"] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(1)) { translate: 0 var(--_gap); rotate: 45deg; }
+:where([data-hamburger][aria-expanded="true"] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(2)) { clip-path: inset(0 0 0 100%); }
+:where([data-hamburger][aria-expanded="true"] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i:nth-child(3)) { translate: 0 calc(var(--_gap) * -1); rotate: -45deg; }
+/* as the close in a menu-screen, the X wipes to the accent like the close cross (dialog): each bar carries it as a
+   layer over its own colour, grown from the left and shrunk into the right */
+:where([data-scope="button"][data-part="close"][data-hamburger] [data-part="bars"]:not(:is([data-hamburger],[data-scope="button"]) :is([data-scope="tracker"],[data-scope="transport"]) *:not(:is([data-hamburger],[data-scope="button"]) :is([data-scope="tracker"],[data-scope="transport"]) :is([data-hamburger],[data-scope="button"]) *)) > i) {
+  background: linear-gradient(var(--veneer-color-accent-text) 0 0) right / 0% 100% no-repeat, currentColor;
+  transition: translate var(--veneer-duration-base) var(--veneer-ease-in-out), rotate var(--veneer-duration-base) var(--veneer-ease-in-out),
+              clip-path var(--veneer-sweep-duration) var(--veneer-sweep-ease), background-size var(--veneer-sweep-duration) var(--veneer-sweep-ease);
+}
+:where([data-scope="button"][data-part="close"][data-hamburger]:is(:hover, :focus-visible) [data-part="bars"]:not(:is([data-hamburger],[data-scope="button"]) :is([data-scope="tracker"],[data-scope="transport"]) *:not(:is([data-hamburger],[data-scope="button"]) :is([data-scope="tracker"],[data-scope="transport"]) :is([data-hamburger],[data-scope="button"]) *)) > i) {
+  background-position: left, 0 0; background-size: 100% 100%, auto;
+}
+@starting-style {
+  :where([data-scope="menu-screen"][open] [data-hamburger] [data-part="bars"]:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) *:not([data-hamburger] :is([data-scope="button"],[data-scope="tracker"],[data-scope="transport"]) [data-hamburger] *)) > i) { translate: 0 0; rotate: 0deg; clip-path: inset(0); }
+}
+
+/* HamburgerMenu: a full-screen menu that opens as a circle from its button and closes back into it */
+:where(dialog[data-scope="menu-screen"]) {
+  --_x: calc(100% - 32px); --_y: 32px; --_t: calc(var(--veneer-duration-slow) * 1.4);
+  position: fixed; inset: 0; inline-size: 100%; block-size: 100dvh; max-inline-size: none; max-block-size: none;
+  margin: 0; padding: 0; border: 0; box-sizing: border-box; overflow: auto; overscroll-behavior: contain;
+  background: var(--veneer-color-surface); color: var(--veneer-color-text);
+  clip-path: circle(0 at var(--_x) var(--_y));
+  transition: clip-path calc(var(--_t) * var(--veneer-duration-exit-k) * 1.6) var(--veneer-ease-in-out),
+              overlay var(--_t) allow-discrete, display var(--_t) allow-discrete;
+}
+:where(dialog[data-scope="menu-screen"][open]) {
+  clip-path: circle(150vmax at var(--_x) var(--_y));
+  transition: clip-path var(--_t) var(--veneer-ease-out), overlay var(--_t) allow-discrete, display var(--_t) allow-discrete;
+}
+@starting-style { :where(dialog[data-scope="menu-screen"][open]) { clip-path: circle(0 at var(--_x) var(--_y)); } }
+:where(dialog[data-scope="menu-screen"])::backdrop { background: transparent; }
+:where([data-scope="menu-screen"] > [data-part="head"]) {
+  position: sticky; inset-block-start: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between;
+  min-block-size: var(--veneer-control-lg); padding: var(--veneer-space-related) var(--veneer-pad-surface);
+  background: var(--veneer-color-surface);
+}
+:where([data-scope="menu-screen"] > [data-part="body"]) {
+  display: grid; gap: var(--veneer-space-section); padding: var(--veneer-space-group) var(--veneer-pad-surface) var(--veneer-space-section);
+}
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *))) { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--veneer-space-tight); }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) a) {
+  display: block; padding-block: var(--veneer-space-tight); color: var(--veneer-color-text); text-decoration: none;
+  font: 500 clamp(1.75rem, 8vw, 2.75rem)/1.1 var(--veneer-text-heading-font); letter-spacing: -0.02em;
+}
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) a:hover) { color: var(--veneer-color-accent-text); }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) a[aria-current]) { color: var(--veneer-color-accent-text); }
+/* the links rise in one after another, and leave together */
+:where([data-scope="menu-screen"] [data-part="body"]:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="menu-screen"] *)) > *, [data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li) {
+  transition: opacity var(--veneer-duration-base) var(--veneer-ease-out), translate var(--veneer-duration-base) var(--veneer-ease-out);
+}
+:where([data-scope="menu-screen"][open] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li) { transition-delay: calc(80ms + var(--_i, 0) * 40ms); }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li:nth-child(2)) { --_i: 1; }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li:nth-child(3)) { --_i: 2; }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li:nth-child(4)) { --_i: 3; }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li:nth-child(5)) { --_i: 4; }
+:where([data-scope="menu-screen"] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li:nth-child(n + 6)) { --_i: 5; }
+:where([data-scope="menu-screen"]:not([open]) :is([data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li, [data-part="body"]:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="menu-screen"] *)) > :not([data-part="links"]))) { opacity: 0; }
+@starting-style {
+  :where([data-scope="menu-screen"][open] [data-part="links"]:not([data-scope="menu-screen"] [data-scope="topnav"] *:not([data-scope="menu-screen"] [data-scope="topnav"] [data-scope="menu-screen"] *)) > li) { opacity: 0; translate: 0 12px; }
+  :where([data-scope="menu-screen"][open] [data-part="body"]:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="menu-screen"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="menu-screen"] *)) > :not([data-part="links"])) { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(dialog[data-scope="menu-screen"], dialog[data-scope="menu-screen"][open]) { clip-path: none; transition: opacity var(--veneer-duration-base), overlay var(--veneer-duration-base) allow-discrete, display var(--veneer-duration-base) allow-discrete; }
+  :where(dialog[data-scope="menu-screen"]:not([open])) { opacity: 0; }
+  @starting-style { :where(dialog[data-scope="menu-screen"][open]) { opacity: 0; } }
+}
+}

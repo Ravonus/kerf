@@ -1,4 +1,4 @@
-import { SyncIndicator } from '@weft-js/warp'
+import { SyncIndicator } from '@kerf/veneer'
 
 import { SYNC_STATES } from './shared-wait'
 

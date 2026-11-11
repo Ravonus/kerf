@@ -29,7 +29,7 @@ export const sessions: Doc[] = [
     ],
     a11yNotes: [
       'Raised hands are announced. Who is speaking is not, or it would never stop.',
-      'Warp never touches the camera or microphone: media is yours.',
+      'Veneer never touches the camera or microphone: media is yours.',
     ],
     propDocs: {
       participants: 'Everyone but you.',

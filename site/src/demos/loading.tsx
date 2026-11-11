@@ -1,11 +1,11 @@
-import { Boundary, resource, state } from '@weft-js/core'
+import { Boundary, resource, state } from '@kerf/core'
 import {
   Button,
   Card,
   Row,
   Spinner,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 const WEATHER = ['Sunny, 21°', 'Rain, 14°', 'Windy, 17°']
 const cancelled = state(0)

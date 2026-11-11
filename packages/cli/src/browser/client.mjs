@@ -1,4 +1,4 @@
-// The `weft browser` transport: commands go to the dev server, which relays them to an open tab of the app (@weft-js/core/agent
+// The `kerf browser` transport: commands go to the dev server, which relays them to an open tab of the app (@kerf/core/agent
 // in the page). No browser automation library: the page is whatever browser the agent or person already has open. When
 // there is none (CI, a sandbox), `launch` starts a plain headless Chrome on the app as a host page, and `screenshot`
 // reads it over the DevTools protocol.
@@ -8,10 +8,10 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node
 import { join } from 'node:path'
 import { loadConfig } from '../load-config.mjs'
 
-/** The dev server: `--url`, else what the weft() plugin wrote to `.weft/dev.json`, else `environments.dev.url`. */
+/** The dev server: `--url`, else what the kerf() plugin wrote to `.kerf/dev.json`, else `environments.dev.url`. */
 export async function devUrl(root, given) {
   if (given) return given.replace(/\/$/, '')
-  const file = join(root, '.weft', 'dev.json')
+  const file = join(root, '.kerf', 'dev.json')
   if (existsSync(file)) {
     try {
       return JSON.parse(readFileSync(file, 'utf8')).url.replace(/\/$/, '')
@@ -25,14 +25,14 @@ const fail = (code, message, extra) => Object.assign(new Error(message), { code,
 
 async function request(url, init) {
   try {
-    const res = await fetch(`${url}/__weft/agent`, {
+    const res = await fetch(`${url}/__kerf/agent`, {
       ...init,
-      headers: { 'x-weft-agent': '1', 'content-type': 'application/json' },
+      headers: { 'x-kerf-agent': '1', 'content-type': 'application/json' },
     })
     if (res.status === 404)
       throw fail(
         'E_NO_BRIDGE',
-        `${url} is not a weft dev server (no /__weft/agent): serve the app with the weft() Vite plugin`,
+        `${url} is not a kerf dev server (no /__kerf/agent): serve the app with the kerf() Vite plugin`,
       )
     return await res.json()
   } catch (e) {
@@ -58,10 +58,10 @@ export async function tabs(root, { url } = {}) {
   return { url: base, agent: out.agent, tabs: out.tabs }
 }
 
-/** Wait until a tab is connected (after `launch` or `navigate`). WEFT_BROWSER_WAIT_MS lengthens it: a cold Chrome on a busy CI runner can take longer. */
+/** Wait until a tab is connected (after `launch` or `navigate`). KERF_BROWSER_WAIT_MS lengthens it: a cold Chrome on a busy CI runner can take longer. */
 export async function waitForTab(
   root,
-  { url, ms = Number(process.env.WEFT_BROWSER_WAIT_MS) || 15_000, check } = {},
+  { url, ms = Number(process.env.KERF_BROWSER_WAIT_MS) || 15_000, check } = {},
 ) {
   const until = Date.now() + ms
   for (;;) {
@@ -103,12 +103,12 @@ const chromes = {
 }
 
 export function findChrome() {
-  const env = process.env.WEFT_CHROME ?? process.env.CHROME_PATH
+  const env = process.env.KERF_CHROME ?? process.env.CHROME_PATH
   if (env && existsSync(env)) return env
   return (chromes[process.platform] ?? []).find((p) => existsSync(p)) ?? null
 }
 
-const stateFile = (root) => join(root, '.weft', 'browser', 'chrome.json')
+const stateFile = (root) => join(root, '.kerf', 'browser', 'chrome.json')
 
 // Report only URL structure, never credentials, query parameters or fragments.
 function safeUrl(value) {
@@ -183,7 +183,7 @@ export async function diagnoseLaunch(error, profile, expected) {
 }
 
 /**
- * Start a headless Chrome on `route` (a plain page; @weft-js/core/agent connects back to the dev server).
+ * Start a headless Chrome on `route` (a plain page; @kerf/core/agent connects back to the dev server).
  * @param {string} root
  * @param {string} [route]
  * @param {{ url?: string | undefined, headed?: boolean | undefined }} [options]
@@ -193,11 +193,11 @@ export async function launch(root, route = '/', { url, headed = false } = {}) {
   if (!exe)
     throw fail(
       'E_NO_CHROME',
-      'no Chrome or Chromium found; open the app in your own browser instead, or set WEFT_CHROME',
+      'no Chrome or Chromium found; open the app in your own browser instead, or set KERF_CHROME',
     )
   close(root)
   const base = await devUrl(root, url)
-  const profile = join(root, '.weft', 'browser', 'profile')
+  const profile = join(root, '.kerf', 'browser', 'profile')
   mkdirSync(profile, { recursive: true })
   const args = [
     `--user-data-dir=${profile}`,
@@ -261,7 +261,7 @@ export async function screenshot(root, out) {
   if (!existsSync(file))
     throw fail(
       'E_NO_CHROME',
-      'screenshot needs `weft browser launch`; in your own browser, use its screenshot tool',
+      'screenshot needs `kerf browser launch`; in your own browser, use its screenshot tool',
     )
   const { profile } = JSON.parse(readFileSync(file, 'utf8'))
   const [port] = readFileSync(join(profile, 'DevToolsActivePort'), 'utf8').split('\n')
@@ -283,7 +283,7 @@ export async function screenshot(root, out) {
     ws.send(JSON.stringify({ id: 1, method: 'Page.captureScreenshot', params: { format: 'png' } }))
   })
   ws.close()
-  const path = out ?? join(root, '.weft', 'browser', `screenshot-${Date.now()}.png`)
+  const path = out ?? join(root, '.kerf', 'browser', `screenshot-${Date.now()}.png`)
   mkdirSync(join(path, '..'), { recursive: true })
   writeFileSync(path, Buffer.from(data, 'base64'))
   return { path }
@@ -292,7 +292,7 @@ export async function screenshot(root, out) {
 /** Big payloads go to a file; the reply holds the path (research 05: snapshots pile up in context). */
 export function spill(root, name, text, limit = 8000) {
   if (typeof text !== 'string' || text.length <= limit) return text
-  const path = join(root, '.weft', 'browser', `${name}-${Date.now()}.txt`)
+  const path = join(root, '.kerf', 'browser', `${name}-${Date.now()}.txt`)
   mkdirSync(join(path, '..'), { recursive: true })
   writeFileSync(path, text)
   return { path, chars: text.length, head: `${text.slice(0, 1200)}\n…` }

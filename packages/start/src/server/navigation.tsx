@@ -1,5 +1,5 @@
-import { renderToStringAsync } from '@weft-js/core/ssr'
-import type { Merged } from '@weft-js/core/ssr'
+import { renderToStringAsync } from '@kerf/core/ssr'
+import type { Merged } from '@kerf/core/ssr'
 import type { RoutePayload, createRouteState } from '../router'
 import * as exec from '../exec'
 import type { Scope } from '../exec'
@@ -62,7 +62,7 @@ export function makeNavigation({
         shown: (e) => exec.shown(e, scope),
         app: { cookies: cookieJar(request) },
       })
-      const at = out.lastIndexOf('<script type="application/json" data-weft>')
+      const at = out.lastIndexOf('<script type="application/json" data-kerf>')
       payload = {
         ...withLevels(payload, at < 0 ? out : out.slice(0, at), statics, true),
         ...(at >= 0 && {

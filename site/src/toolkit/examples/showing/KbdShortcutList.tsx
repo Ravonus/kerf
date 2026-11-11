@@ -1,4 +1,4 @@
-import { Stack, Row, Text, Kbd } from '@weft-js/warp'
+import { Stack, Row, Text, Kbd } from '@kerf/veneer'
 import { SHORTCUTS } from './shortcut-data'
 
 export const KbdShortcutList = () => (

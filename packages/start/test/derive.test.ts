@@ -106,16 +106,16 @@ describe('descriptionProblem: the two real site bugs, and honest prose', () => {
   test.each([
     'Three plans, billed monthly, and what each one includes.',
     'Lists work as they do in React: .map with a key, && and ternaries.',
-    'weft: a fast framework.',
-    'iPhone apps, built with weft.',
+    'kerf: a fast framework.',
+    'iPhone apps, built with kerf.',
   ])('%s', (text) => expect(descriptionProblem(text)).toBeUndefined())
 })
 
-test('deployUrl: config, then WEFT_SITE_URL, then what the host set; never a guess', () => {
-  expect(deployUrl({ url: 'https://a.dev' }, { WEFT_SITE_URL: 'https://b.dev' })).toBe(
+test('deployUrl: config, then KERF_SITE_URL, then what the host set; never a guess', () => {
+  expect(deployUrl({ url: 'https://a.dev' }, { KERF_SITE_URL: 'https://b.dev' })).toBe(
     'https://a.dev',
   )
-  expect(deployUrl({}, { WEFT_SITE_URL: 'https://b.dev', VERCEL_URL: 'c.vercel.app' })).toBe(
+  expect(deployUrl({}, { KERF_SITE_URL: 'https://b.dev', VERCEL_URL: 'c.vercel.app' })).toBe(
     'https://b.dev',
   )
   expect(deployUrl({}, { VERCEL_URL: 'c.vercel.app' })).toBe('https://c.vercel.app')

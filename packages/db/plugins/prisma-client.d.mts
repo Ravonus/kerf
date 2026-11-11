@@ -1,4 +1,4 @@
-import type { PluginInstance } from '@weft-js/core/plugin'
+import type { PluginInstance } from '@kerf/core/plugin'
 
 /** Prisma as the app's database client, as a plugin that fills `ctx.db`. */
 export const prisma: () => PluginInstance<unknown>

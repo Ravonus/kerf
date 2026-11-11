@@ -4,12 +4,12 @@
 import { rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { allows } from '@weft-js/agent'
-import { defineAgent, extension, memoryAgentStore, allTools } from '@weft-js/agent/server'
-import { fakeBridge, type Line } from '@weft-js/agent/test'
-import { toApi } from '@weft-js/agent/anthropic'
-import { mutation, query, type Context } from '@weft-js/start'
-import { createHandler } from '@weft-js/start/server'
+import { allows } from '@kerf/agent'
+import { defineAgent, extension, memoryAgentStore, allTools } from '@kerf/agent/server'
+import { fakeBridge, type Line } from '@kerf/agent/test'
+import { toApi } from '@kerf/agent/anthropic'
+import { mutation, query, type Context } from '@kerf/start'
+import { createHandler } from '@kerf/start/server'
 
 // oxlint-disable-next-line typescript/no-explicit-any -- response bodies are read by shape, the way a page reads them
 type Loose = any
@@ -40,7 +40,7 @@ const setPrice = mutation({
   run: async ({ input, ctx }) => {
     prices.set(input.item, input.cents)
     // a tool may call what agents can't reach: only the outermost call is checked
-    const { serverCall } = await import('@weft-js/start')
+    const { serverCall } = await import('@kerf/start')
     await serverCall(audit.$id, {
       note: `price by ${(ctx as unknown as { user: { id: string } }).user.id}`,
     })
@@ -82,7 +82,7 @@ function app(
     roles,
     user: (id) => Object.values(people).find((p) => p.id === id) ?? null,
   })
-  // the app's own functions, as `weft add agent` writes them
+  // the app's own functions, as `kerf add agent` writes them
   mutation({ $id: 'start.000001', auth: 'user', run: ({ ctx }) => agent.start(ctx) })
   mutation({
     $id: 'send.000001',
@@ -106,9 +106,9 @@ function app(
   })
   const call = async (id: string, input: unknown = {}) => {
     const res = await handler(
-      new Request(`http://localhost/_weft/fn/${id}`, {
+      new Request(`http://localhost/_kerf/fn/${id}`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-weft': '1' },
+        headers: { 'content-type': 'application/json', 'x-kerf': '1' },
         body: JSON.stringify({ i: input }),
       }),
     )
@@ -118,7 +118,7 @@ function app(
   }
   const mcp = async (token: string, method: string, params?: object) => {
     const res = await handler(
-      new Request('http://localhost/_weft/x/agent/mcp', {
+      new Request('http://localhost/_kerf/x/agent/mcp', {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
         body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
@@ -277,7 +277,7 @@ test('a token on the MCP endpoint: its tools, its calls, its limits, and revokin
   expect(
     (await mcp(secret, 'initialize', { protocolVersion: '2025-06-18' })).body.result.serverInfo
       .name,
-  ).toBe('weft-agent')
+  ).toBe('kerf-agent')
   const list = await mcp(secret, 'tools/list')
   expect(list.body.result.tools.map((t: { name: string }) => t.name)).toEqual(['menu', 'refund'])
   const read = await mcp(secret, 'tools/call', { name: 'menu', arguments: {} })
@@ -363,7 +363,7 @@ test('a bridge that runs tools over MCP: its turn token works for this turn only
   let token = ''
   const rpc = (body: object) =>
     box.handle!(
-      new Request('http://localhost/_weft/x/agent/mcp', {
+      new Request('http://localhost/_kerf/x/agent/mcp', {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
         body: JSON.stringify({ jsonrpc: '2.0', id: 1, ...body }),
@@ -373,7 +373,7 @@ test('a bridge that runs tools over MCP: its turn token works for this turn only
     [
       async (turn) => {
         token = turn.mcp!.token
-        expect(turn.mcp!.url).toBe('http://localhost/_weft/x/agent/mcp')
+        expect(turn.mcp!.url).toBe('http://localhost/_kerf/x/agent/mcp')
         await rpc({
           method: 'tools/call',
           params: { name: 'setPrice', arguments: { item: 'latte', cents: 380 } },
@@ -403,9 +403,9 @@ test('a bridge that runs tools over MCP: its turn token works for this turn only
   box.handle = handler
   const post = async (id: string, i: unknown = {}): Promise<Loose> => {
     const res = await handler(
-      new Request(`http://localhost/_weft/fn/${id}`, {
+      new Request(`http://localhost/_kerf/fn/${id}`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-weft': '1' },
+        headers: { 'content-type': 'application/json', 'x-kerf': '1' },
         body: JSON.stringify({ i }),
       }),
     )
@@ -430,8 +430,8 @@ const AGENT_SQL = [
 ].join(';\n--> statement-breakpoint\n')
 
 test('drizzleAgentStore keeps it all in SQLite', async () => {
-  const { createDb } = await import('@weft-js/start/db/sqlite')
-  const { drizzleAgentStore } = await import('@weft-js/agent/drizzle')
+  const { createDb } = await import('@kerf/start/db/sqlite')
+  const { drizzleAgentStore } = await import('@kerf/agent/drizzle')
   const { setup } = await import('../src/setup.mjs')
   const files = setup.run({ engine: 'sqlite', layer: 'drizzle', read: () => '' }).files as Record<
     string,
@@ -443,7 +443,7 @@ test('drizzleAgentStore keeps it all in SQLite', async () => {
   writeFileSync(file, src)
   const t = await import(file).finally(() => rmSync(file, { force: true }))
   const db = createDb({ schema: t, url: ':memory:', migrate: false })
-  await db.$weft.migrate([{ tag: '0000_agent', sql: AGENT_SQL }])
+  await db.$kerf.migrate([{ tag: '0000_agent', sql: AGENT_SQL }])
   const store = drizzleAgentStore(db, {
     conversations: t.agentConversations,
     messages: t.agentMessages,
@@ -501,7 +501,7 @@ test('drizzleAgentStore keeps it all in SQLite', async () => {
   expect((await store.tokens('u'))[0]).not.toHaveProperty('hash')
   await store.removeConversation('c1')
   expect(await store.messages('c1')).toEqual([])
-  expect(db.$weft.exempt.has('agent_messages')).toBe(true)
+  expect(db.$kerf.exempt.has('agent_messages')).toBe(true)
 })
 
 test('a failed tool tells the agent why: a declared message, or each input issue', async () => {
@@ -519,8 +519,8 @@ const get = (
   headers: Record<string, string> = {},
 ) =>
   handler(
-    new Request(`http://localhost/_weft/fn/${id}?i=%7B%7D`, {
-      headers: { 'x-weft': '1', ...headers },
+    new Request(`http://localhost/_kerf/fn/${id}?i=%7B%7D`, {
+      headers: { 'x-kerf': '1', ...headers },
     }),
   )
 
@@ -534,9 +534,9 @@ test("an agent's token on a function route is turned away with where to go inste
   const { handler } = app()
   // a mutation, not the cached `hours`: a cached answer never builds ctx, so it never sees the token
   const res = await handler(
-    new Request('http://localhost/_weft/fn/start.000001', {
+    new Request('http://localhost/_kerf/fn/start.000001', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-weft': '1', authorization: 'Bearer wa_x' },
+      headers: { 'content-type': 'application/json', 'x-kerf': '1', authorization: 'Bearer wa_x' },
       body: JSON.stringify({ i: {} }),
     }),
   )
@@ -544,6 +544,6 @@ test("an agent's token on a function route is turned away with where to go inste
   expect(res.status).toBe(403)
   expect(body.e).toEqual({
     code: 'AGENT007',
-    message: 'Agents call tools through /_weft/x/agent/mcp',
+    message: 'Agents call tools through /_kerf/x/agent/mcp',
   })
 })

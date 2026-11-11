@@ -1,0 +1,7 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* LiveViewport: a minimap rail; each peer is a frame of their viewport */
+:where([data-scope="viewport-rail"]) { position: relative; inline-size: 44px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); box-shadow: inset 0 0 0 1px var(--veneer-color-border); }
+:where([data-scope="viewport-rail"] i) { position: absolute; inset-inline: 3px; inset-block-start: calc(var(--_t) * 100%); block-size: calc(var(--_h) * 100%); border-radius: 3px; box-shadow: inset 0 0 0 1.5px var(--_pc); background: color-mix(in oklab, var(--_pc) 14%, transparent); transition: inset-block-start var(--veneer-duration-slow) var(--veneer-ease-out); }
+:where([data-scope="viewport-rail"] i[data-self]) { --_pc: var(--veneer-color-text-subtle); box-shadow: inset 0 0 0 1px var(--_pc); background: none; }
+}

@@ -3,8 +3,8 @@ import {
   state,
   type Derived,
   type State,
-} from '@weft-js/core'
-import { Button, Card, Input } from '@weft-js/warp'
+} from '@kerf/core'
+import { Button, Card, Input } from '@kerf/veneer'
 
 const PRODUCTS = [
   { id: 'beans', name: 'House beans, 250 g', price: 12 },

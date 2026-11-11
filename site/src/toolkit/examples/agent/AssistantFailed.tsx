@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Assistant, foldAnswer } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Assistant, foldAnswer } from '@kerf/veneer'
 import { play } from './shared'
 
 export function AssistantFailed() {

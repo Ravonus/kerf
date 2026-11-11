@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
@@ -29,7 +29,7 @@ The full gate is `pnpm run check` (see [scripts/](../scripts)). It takes minutes
 - **Lint for JS and TS.** Staged `.ts`, `.tsx`, `.mts`, `.cts`, `.mjs`, `.cjs` and `.js` files under `packages/`,
   `scripts/` or `site/` go through `oxlint --quiet --deny-warnings`.
 - **Rust formatting.** If any staged file is a `.rs` file under `crates/`, it runs `cargo fmt --check` in
-  `crates/weft-compiler`, `crates/weft-layout` and `crates/weft`.
+  `crates/kerf-compiler`, `crates/kerf-layout` and `crates/kerf`.
 - **Secrets.** If `gitleaks` is on your `PATH`, it scans the staged changes with the repo's `.gitleaks.toml`, redacted.
   If gitleaks isn't installed, this step is skipped.
 - **Fails fast.** The script runs under `set -e`, so the first failing step stops the commit.

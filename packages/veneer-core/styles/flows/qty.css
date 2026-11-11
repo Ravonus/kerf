@@ -1,0 +1,13 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+:where([data-scope="qty"]) {
+  display: inline-flex; align-items: center; block-size: var(--veneer-control-sm); border-radius: var(--veneer-radius-control);
+  box-shadow: inset 0 0 0 1px var(--veneer-color-border-control); background: var(--veneer-color-field);
+}
+:where([data-scope="qty"] button) { all: unset; display: grid; place-items: center; inline-size: max(28px, var(--veneer-target-min)); block-size: 100%; cursor: pointer; color: var(--veneer-color-text-subtle); border-radius: inherit; }
+:where([data-scope="qty"] button:hover) { color: var(--veneer-color-text); background: color-mix(in oklab, currentColor 7%, transparent); }
+:where([data-scope="qty"] button:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 0; }
+:where([data-scope="qty"] button:disabled) { opacity: var(--veneer-opacity-disabled); cursor: not-allowed; }
+:where([data-scope="qty"] output) { min-inline-size: 22px; text-align: center; font: 500 var(--veneer-text-label-size)/1 var(--veneer-font-mono); font-variant-numeric: tabular-nums; }
+:where([data-scope="qty"] svg) { inline-size: 12px; block-size: 12px; }
+}

@@ -1,24 +1,24 @@
 {
-  "name": "@weft-js/core",
-  "version": "0.1.4",
-  "description": "weft: a fine-grained reactive TSX framework. Runtime, compiler binding, Vite plugin and test utilities.",
+  "name": "@kerf/core",
+  "version": "0.1.0",
+  "description": "kerf: a fine-grained reactive TSX framework. Runtime, compiler binding, Vite plugin and test utilities.",
   "keywords": [
-    "weft"
+    "kerf"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/core"
   },
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/core#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/core#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "files": [
     "src",
     "node",
-    "native/weft-compiler.wasm",
+    "native/kerf-compiler.wasm",
     "scripts/native-stamp.cjs",
     "assets.mjs",
     "client.d.ts",
@@ -129,14 +129,14 @@
     }
   },
   "optionalDependencies": {
-    "@weft-js/compiler-darwin-arm64": "0.1.4",
-    "@weft-js/compiler-darwin-x64": "0.1.4",
-    "@weft-js/compiler-linux-arm64-gnu": "0.1.4",
-    "@weft-js/compiler-linux-arm64-musl": "0.1.4",
-    "@weft-js/compiler-linux-x64-gnu": "0.1.4",
-    "@weft-js/compiler-linux-x64-musl": "0.1.4",
-    "@weft-js/compiler-win32-arm64": "0.1.4",
-    "@weft-js/compiler-win32-x64": "0.1.4"
+    "@kerf/compiler-darwin-arm64": "0.1.0",
+    "@kerf/compiler-darwin-x64": "0.1.0",
+    "@kerf/compiler-linux-arm64-gnu": "0.1.0",
+    "@kerf/compiler-linux-arm64-musl": "0.1.0",
+    "@kerf/compiler-linux-x64-gnu": "0.1.0",
+    "@kerf/compiler-linux-x64-musl": "0.1.0",
+    "@kerf/compiler-win32-arm64": "0.1.0",
+    "@kerf/compiler-win32-x64": "0.1.0"
   },
   "engines": {
     "node": ">=24"

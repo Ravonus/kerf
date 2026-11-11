@@ -1,4 +1,4 @@
-// Everything the site says that comes from elsewhere in the repo is generated here, so it can't drift. Docs are `weft docs`'
+// Everything the site says that comes from elsewhere in the repo is generated here, so it can't drift. Docs are `kerf docs`'
 // own pages plus a few files; numbers are evals/. Output is gitignored: src/generated for the routes, public for files
 // served as they are (`.md` twins, llms.txt, search indexes).
 import 'node:crypto'
@@ -9,13 +9,13 @@ import { fileURLToPath } from 'node:url'
 import 'node:zlib'
 import '../../../packages/cli/src/docs.mjs'
 import '../../../packages/cli/src/catalog.mjs'
-import '../../../packages/cli/src/weft.mjs'
+import '../../../packages/cli/src/kerf.mjs'
 import '../../../packages/start/src/derive.mjs'
 import '../toolkit.mjs'
 import { reportSampleWidths } from '../sample-width.mjs'
 import { repoRoot } from '../../../scripts/lib/helpers.mjs'
 
-// warp-core's source imports without extensions, for bundlers; here Node reads it directly.
+// veneer-core's source imports without extensions, for bundlers; here Node reads it directly.
 registerHooks({
   resolve(spec, context, next) {
     try {
@@ -27,7 +27,7 @@ registerHooks({
   },
 })
 const { buildIndex, highlight, markdownToHtml } =
-  await import('../../../packages/warp-core/src/index.ts')
+  await import('../../../packages/veneer-core/src/index.ts')
 const { level, PALETTE } = await import('../../src/lib/field.ts')
 const { GROUPS } = await import('../../src/toolkit/docs/index.ts')
 

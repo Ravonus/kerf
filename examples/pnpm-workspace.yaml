@@ -2,5 +2,5 @@
 packages: []
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
-  - '@weft-js/*'
+  - '@kerf/*'
 ignoreScripts: true

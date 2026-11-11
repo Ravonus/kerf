@@ -1,15 +1,15 @@
 import show from '../generated/showcase.json'
 
 export default function Receipt() {
-  const { weft, kit, total } = show.receipt
+  const { kerf, kit, total } = show.receipt
   return (
     <figure data-part="receipt">
-      <p style={`--share:${(weft / total) * 100}%`}>
-        <span>Weft and the shop</span>
-        <b>{weft} KB</b>
+      <p style={`--share:${(kerf / total) * 100}%`}>
+        <span>Kerf and the shop</span>
+        <b>{kerf} KB</b>
       </p>
       <p style={`--share:${(kit / total) * 100}%`}>
-        <span>Warp components it uses</span>
+        <span>Veneer components it uses</span>
         <b>{kit} KB</b>
       </p>
       <p data-part="total">

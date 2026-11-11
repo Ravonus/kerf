@@ -5,11 +5,11 @@
 - Why state is a box, and why you read and write `.value`
 - Why a plain variable doesn't update the page
 - How to keep several boxes, and why each copy of a component has its own
-- How Weft's boxes compare with React's `useState`
+- How Kerf's boxes compare with React's `useState`
 :::
 
 Components often need to remember things. A product card remembers how many are in the cart; a gallery remembers which
-picture it's on; a form remembers what you typed. In Weft that memory is *state*, and a piece of state is a box: `state(0)`
+picture it's on; a form remembers what you typed. In Kerf that memory is *state*, and a piece of state is a box: `state(0)`
 makes a box holding `0`, and you read and write it through `.value`.
 
 :::demo getting-started
@@ -20,7 +20,7 @@ Here's a gallery that should move to the next picture when you press Next. It ke
 
 <!-- example: skip deliberately broken: W041 is the point of the example -->
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 
 const pictures = [
   'Homenaje a la Neurocirugía',
@@ -54,11 +54,11 @@ A box does both.
 
 ## Adding a box
 
-Import `state` from `@weft-js/core` and make a box in the component body:
+Import `state` from `@kerf/core` and make a box in the component body:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 const pictures = [
   'Homenaje a la Neurocirugía',
@@ -99,7 +99,7 @@ index.value = 1    // write
 index.value++      // read, then write: 2
 ```
 
-`.value` is how Weft knows who reads what. When JSX reads `index.value`, that spot in the page subscribes to the box. When
+`.value` is how Kerf knows who reads what. When JSX reads `index.value`, that spot in the page subscribes to the box. When
 a handler writes it, the box tells exactly those spots, and they update. `Gallery` doesn't run again; nothing else on the
 page does either.
 
@@ -109,7 +109,7 @@ the box can keep its value: the body ran once, but the box it made lives on in e
 The type comes from the initial value. When it can't, say it:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 type Draft = { text: string; at: number }
 
@@ -134,7 +134,7 @@ expects a number, or the other way round, is **W008**. See
 
 :::deepdive Why a box, and not a variable or a setter?
 A plain variable can't tell anyone it changed: JavaScript has no hook for "this `let` was reassigned". React solves this
-by running your whole component again after each change and comparing the result. Weft doesn't re-run components, so it
+by running your whole component again after each change and comparing the result. Kerf doesn't re-run components, so it
 needs the reads and writes themselves to be visible, and a property access is the cheapest place to see them. Reading
 `.value` registers the reader; writing `.value` tells the readers.
 
@@ -144,7 +144,7 @@ React's `useState` gives you a value and a setter:
 const [index, setIndex] = useState(0)   // React
 setIndex(index + 1)
 
-const index = state(0)                   // weft
+const index = state(0)                   // kerf
 index.value = index.value + 1
 ```
 
@@ -153,7 +153,7 @@ The differences follow from that:
 - **One name, not two.** You read and write through the same box.
 - **No snapshot.** `index.value` right after a write is the new value. In React, `index` stays the old value until the
   next render. [How an update reaches the DOM](/learn/how-updates-reach-the-dom) shows what this means in practice.
-- **No hook rules.** `useState` must be called in the same order on every render, so never in a condition or a loop. A Weft
+- **No hook rules.** `useState` must be called in the same order on every render, so never in a condition or a loop. A Kerf
   component runs once, so there's no order to keep: a box is an object you make like any other.
 - **Nothing re-renders.** A write updates the spots that read the box, not the component.
 
@@ -217,21 +217,21 @@ share it app-wide:
 
 :::note A box at module level
 A box made outside any component, at the top of a module, is shared by everything that imports it. That's handy in a
-small client-only demo, but on a server it would be shared by every request: `weft check` reports that as
+small client-only demo, but on a server it would be shared by every request: `kerf check` reports that as
 **W030**. Use `defineState` for state that should be app-wide.
 :::
 
 ## Names in the dev tools
 
 In a development build, the compiler gives each box a name from where it was made: `const index = state(0)` in `Gallery`
-is called `Gallery.index`. That's the name you see in the reactive graph (`weft browser snapshot`, the dev overlay, and
-`graph()` from `@weft-js/core/devtools`), and the name an AI agent sees through `weft mcp`. You don't write anything for it.
+is called `Gallery.index`. That's the name you see in the reactive graph (`kerf browser snapshot`, the dev overlay, and
+`graph()` from `@kerf/core/devtools`), and the name an AI agent sees through `kerf mcp`. You don't write anything for it.
 
 A box made inside a helper function rather than straight in a component has no such name. `name(box, 'label')` from
-`@weft-js/core` gives it one, and returns the box so you can wrap the call:
+`@kerf/core` gives it one, and returns the box so you can wrap the call:
 
 ```tsx
-import { name, state } from '@weft-js/core'
+import { name, state } from '@kerf/core'
 
 export function makeToggle(label: string) {
   return name(state(false), `toggle.${label}`)
@@ -272,8 +272,8 @@ Add a Previous button to the gallery. Neither button should go past the ends: di
 Next on the last, and show "2 of 3" between them.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 const pictures = [
   'Homenaje a la Neurocirugía',
@@ -293,8 +293,8 @@ export function Gallery() {
 ```
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 const pictures = [
   'Homenaje a la Neurocirugía',
@@ -334,7 +334,7 @@ Typing in this form does nothing to the greeting. Fix it.
 
 <!-- example: skip deliberately broken: the challenge is to fix the two lets -->
 ```tsx
-import { Input } from '@weft-js/warp'
+import { Input } from '@kerf/veneer'
 
 export function Greeting() {
   let first = ''
@@ -358,8 +358,8 @@ export function Greeting() {
 ```
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
-import { Input } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Input } from '@kerf/veneer'
 
 export function Greeting() {
   const first = state('')

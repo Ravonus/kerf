@@ -7,7 +7,7 @@ import { rolldown } from 'rolldown'
 import type * as Playwright from 'playwright-core'
 import type * as Scroll from '../../src/index'
 import type * as Canvas from '../../src/canvas'
-import type * as Virtual from '../../../warp-core/src/virtual'
+import type * as Virtual from '../../../veneer-core/src/virtual'
 
 declare global {
   interface Window {
@@ -70,7 +70,7 @@ export const top = (page: Playwright.Page, sel = '#root [data-part="viewport"]')
   page.$eval(sel, (el) => el.scrollTop)
 export const settle = (page: Playwright.Page, ms = 450) => page.waitForTimeout(ms)
 
-export const engines = process.env.WEFT_WEBKIT
+export const engines = process.env.KERF_WEBKIT
   ? (['chromium', 'firefox', 'webkit'] as const)
   : (['chromium', 'firefox'] as const)
 

@@ -1,7 +1,7 @@
 // Islands that load with the page take a task each (island.ts `turn`): hydration's own task claims none of them, they
 // run in page order, `settled` resolves once the last has, and an event on one still waiting claims it at once.
-// weft-allow T004, T005: framework test of hydration's tasks; server markup and the order of macrotasks are the subject
-import { hydrate, level, settled, wake } from '@weft-js/core/dom'
+// kerf-allow T004, T005: framework test of hydration's tasks; server markup and the order of macrotasks are the subject
+import { hydrate, level, settled, wake } from '@kerf/core/dom'
 import { sleep as tick } from '../../../scripts/lib/sleep.mjs'
 
 type Held = { q: Event[]; d: boolean; p(e: Event): void; w(): void }

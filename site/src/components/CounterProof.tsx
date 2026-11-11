@@ -1,8 +1,8 @@
-import { onMount, state } from '@weft-js/core'
-import { stats } from '@weft-js/core/internal'
-import { Button } from '@weft-js/warp'
+import { onMount, state } from '@kerf/core'
+import { stats } from '@kerf/core/internal'
+import { Button } from '@kerf/veneer'
 
-/** The hero's claim, live: press it and the counts come from this page's own MutationObserver and Weft's own counter. */
+/** The hero's claim, live: press it and the counts come from this page's own MutationObserver and Kerf's own counter. */
 export function CounterProof() {
   const count = state(0)
   const writes = state(0)

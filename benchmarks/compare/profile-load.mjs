@@ -97,7 +97,7 @@ async function runOrders(browser, servers, orders, root, log, interrupted) {
 
 /** Profile the built source receipt in one isolated browser, without modifying the benchmark. */
 export async function profile(repo, args) {
-  process.env.WEFT_COMPILER = 'native'
+  process.env.KERF_COMPILER = 'native'
   const out = resolve(args.out),
     root = managerRoot(repo, out)
   process.env.TMPDIR = join(root, 'tmp')
@@ -124,7 +124,7 @@ export async function profile(repo, args) {
       const assets = assetPins(repo, stacks)
       const proof = JSON.parse(readFileSync(resolve(args['build-proof']), 'utf8'))
       verifyBuild(proof, pins, assets)
-      const require = createRequire(join(repo, 'packages/warp/package.json'))
+      const require = createRequire(join(repo, 'packages/veneer/package.json'))
       const { chromium } = require('playwright-core')
       owner = await chromium.launchServer()
       browser = await chromium.connect(owner.wsEndpoint())

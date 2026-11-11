@@ -4,13 +4,13 @@ import {
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { CONFIG_VERSIONS } from '../../world'
 
 export const ArtifactPanelConfig = () => (
   <div style="block-size:280px">
     <ArtifactPanel
-      title="weft.yaml"
+      title="kerf.yaml"
       versions={CONFIG_VERSIONS}
     >
       <Stack gap="related">

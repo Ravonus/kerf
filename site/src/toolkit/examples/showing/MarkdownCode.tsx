@@ -1,4 +1,4 @@
-import { Markdown } from '@weft-js/warp'
+import { Markdown } from '@kerf/veneer'
 import { SNIPPET } from './markdown-data'
 
 export const MarkdownCode = () => (

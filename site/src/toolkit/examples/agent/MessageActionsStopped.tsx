@@ -1,4 +1,4 @@
-import { MessageActions } from '@weft-js/warp'
+import { MessageActions } from '@kerf/veneer'
 
 export const MessageActionsStopped = () => (
   <MessageActions

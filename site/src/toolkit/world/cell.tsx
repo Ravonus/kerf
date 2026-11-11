@@ -1,4 +1,4 @@
-import { Stack, Text } from '@weft-js/warp'
+import { Stack, Text } from '@kerf/veneer'
 
 /** One state in a States grid: its name, then
  * the field.

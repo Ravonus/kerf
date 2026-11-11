@@ -4,7 +4,7 @@ import {
   Row,
   Text,
   Badge,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { PROJECTS, TONE_OF } from '../../world'
 
 export const CardProjectGrid = () => (

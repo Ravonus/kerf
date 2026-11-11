@@ -1,10 +1,10 @@
-import '@weft-js/warp-core/styles/rich/prose.css'
-import '@weft-js/warp-core/styles/rich/codeblock.css'
-import '@weft-js/warp-core/styles/rich/props.css'
-import '@weft-js/warp-core/styles/components/copy.css'
-import { derived } from '@weft-js/core'
-import { currentPath } from '@weft-js/start'
-import { SideNav, type SideNavSection } from '@weft-js/warp'
+import '@kerf/veneer-core/styles/rich/prose.css'
+import '@kerf/veneer-core/styles/rich/codeblock.css'
+import '@kerf/veneer-core/styles/rich/props.css'
+import '@kerf/veneer-core/styles/components/copy.css'
+import { derived } from '@kerf/core'
+import { currentPath } from '@kerf/start'
+import { SideNav, type SideNavSection } from '@kerf/veneer'
 import type { Area } from '../lib/pages'
 import { AREA_LABEL, learnSections, referenceSections, toolkitSections } from '../lib/sections'
 import { ROOM_TITLES } from '../toolkit/art/shared'
@@ -47,7 +47,7 @@ function railFor(section: string): Rail | undefined {
           label: 'Learn',
           sections: learnSections,
           filter: false,
-          remember: 'weft:site:learn',
+          remember: 'kerf:site:learn',
           learn: true,
         }
       : section === 'reference'
@@ -55,21 +55,21 @@ function railFor(section: string): Rail | undefined {
             label: 'Reference',
             sections: referenceSections,
             filter: true,
-            remember: 'weft:site:reference',
+            remember: 'kerf:site:reference',
           }
         : section === 'icons' || section === 'art'
           ? {
               label: section === 'icons' ? 'Icons' : 'Art',
               sections: section === 'icons' ? toolkitSections('icons') : artSections(),
               filter: false,
-              remember: 'weft:site:toolkit',
+              remember: 'kerf:site:toolkit',
             }
           : TOOLKIT.has(section)
             ? {
                 label: AREA_LABEL[section as Area],
                 sections: toolkitSections(section as Area),
                 filter: true,
-                remember: 'weft:site:toolkit',
+                remember: 'kerf:site:toolkit',
                 tools: true,
               }
             : undefined

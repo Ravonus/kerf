@@ -1,5 +1,5 @@
 // `remote()` against a stand-in sidecar on a real socket (research 36): what crosses, and every way a call can come back.
-// The real crate is covered by `cargo test` in crates/weft and by evals/gates/phase5a-exit.mjs.
+// The real crate is covered by `cargo test` in crates/kerf and by evals/gates/phase5a-exit.mjs.
 import type { AddressInfo } from 'node:net'
 import { createHmac } from 'node:crypto'
 import { createServer, type IncomingHttpHeaders, type Server } from 'node:http'
@@ -35,7 +35,7 @@ beforeAll(async () => {
         url: req.url!,
         headers: req.headers,
         body,
-        envelope: JSON.parse(Buffer.from(String(req.headers['weft-ctx']), 'base64url').toString()),
+        envelope: JSON.parse(Buffer.from(String(req.headers['kerf-ctx']), 'base64url').toString()),
       }
       seen.push(s)
       const a = answer(s)
@@ -51,12 +51,12 @@ beforeAll(async () => {
 afterAll(() => void server.close())
 beforeEach(() => {
   seen = []
-  process.env.WEFT_RUST_SEARCH_URL = base
-  process.env.WEFT_RUST_SECRET = SECRET
+  process.env.KERF_RUST_SEARCH_URL = base
+  process.env.KERF_RUST_SECRET = SECRET
 })
 afterEach(() => {
-  delete process.env.WEFT_RUST_SEARCH_URL
-  delete process.env.WEFT_RUST_SECRET
+  delete process.env.KERF_RUST_SEARCH_URL
+  delete process.env.KERF_RUST_SECRET
 })
 
 const scope = (options: ScopeOptions = {}, init: RequestInit = {}) =>
@@ -83,12 +83,12 @@ test('a call is signed over the function, the claims and the body, and carries n
   )
   await fetchQuery(s, fnOf(q), { q: 'x' })
   const c = seen[0]!
-  expect(c.url).toBe(`/_weft/fn/${q.$id}`)
+  expect(c.url).toBe(`/_kerf/fn/${q.$id}`)
   expect(c.body).toBe('{"input":{"q":"x"}}')
   expect(c.headers.cookie).toBeUndefined()
-  expect(c.headers['weft-sig']).toBe(
+  expect(c.headers['kerf-sig']).toBe(
     createHmac('sha256', SECRET)
-      .update(`weft1\n${q.$id}\n${String(c.headers['weft-ctx'])}\n${c.body}`)
+      .update(`kerf1\n${q.$id}\n${String(c.headers['kerf-ctx'])}\n${c.body}`)
       .digest('hex'),
   )
   expect(c.envelope.user).toEqual({ id: '7', roles: ['admin'] }) // claims, not the user: no email
@@ -104,7 +104,7 @@ test('the signature matches the vector the crate checks', async () => {
     'eyJ1c2VyIjp7ImlkIjoidTEiLCJyb2xlcyI6WyJhZG1pbiJdfSwicmVxdWVzdElkIjoicjEiLCJkZWFkbGluZU1zIjoxMDAwLCJ0cmFjZXBhcmVudCI6bnVsbCwiaWF0IjoxMDAwMDAwfQ'
   expect(await sign('s3cret', 'f.abc', ctx, '{"input":{"q":"x"}}')).toBe(
     '1a4c89d125bdeda4db5f2dd02045bc1044ff4ecfacff00c7f42f602ceef3ad08',
-  ) // crates/weft/src/envelope.rs
+  ) // crates/kerf/src/envelope.rs
 })
 
 test('a junk traceparent starts a new trace', async () => {
@@ -226,19 +226,19 @@ test("R108 names the request id, for the sidecar's log", async () => {
 
 test('R106: no address, and no key; R107: nothing listening, and a timeout', async () => {
   const q = define({})
-  delete process.env.WEFT_RUST_SEARCH_URL
+  delete process.env.KERF_RUST_SEARCH_URL
   await expect(fetchQuery(scope(), fnOf(q), undefined)).rejects.toMatchObject({
     code: 'R106',
-    message: expect.stringContaining('WEFT_RUST_SEARCH_URL'),
+    message: expect.stringContaining('KERF_RUST_SEARCH_URL'),
   })
-  process.env.WEFT_RUST_SEARCH_URL = base
-  delete process.env.WEFT_RUST_SECRET
+  process.env.KERF_RUST_SEARCH_URL = base
+  delete process.env.KERF_RUST_SECRET
   await expect(fetchQuery(scope(), fnOf(q), undefined)).rejects.toMatchObject({
     code: 'R106',
-    message: expect.stringContaining('WEFT_RUST_SECRET'),
+    message: expect.stringContaining('KERF_RUST_SECRET'),
   })
-  process.env.WEFT_RUST_SECRET = SECRET
-  process.env.WEFT_RUST_SEARCH_URL = 'http://127.0.0.1:1'
+  process.env.KERF_RUST_SECRET = SECRET
+  process.env.KERF_RUST_SEARCH_URL = 'http://127.0.0.1:1'
   await expect(fetchQuery(scope(), fnOf(q), undefined)).rejects.toMatchObject({
     code: 'R107',
     status: 503,
@@ -268,7 +268,7 @@ test("a target that isn't a sidecar is refused where it's written", () => {
 })
 
 test('the CLI and the server spell the variable the same way', () => {
-  expect(urlVariable('search-index')).toBe('WEFT_RUST_SEARCH_INDEX_URL')
+  expect(urlVariable('search-index')).toBe('KERF_RUST_SEARCH_INDEX_URL')
   expect(cliVariable('search-index')).toBe(urlVariable('search-index'))
 })
 

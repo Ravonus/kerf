@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Lobby, Row, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Lobby, Row, Text } from '@kerf/veneer'
 
 export function LobbyWaiting() {
   const waiting = state(true)

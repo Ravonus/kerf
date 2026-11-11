@@ -1,4 +1,4 @@
-import { Badge } from '@weft-js/warp'
+import { Badge } from '@kerf/veneer'
 
 export const BadgeDot = () => (
   <>

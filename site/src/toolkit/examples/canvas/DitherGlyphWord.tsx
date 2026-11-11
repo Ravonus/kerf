@@ -1,8 +1,8 @@
-import { DitherGlyph } from '@weft-js/warp'
+import { DitherGlyph } from '@kerf/veneer'
 
 export const DitherGlyphWord = () => (
   <DitherGlyph
-    text="weft"
+    text="kerf"
     ratio="4 / 1"
   />
 )

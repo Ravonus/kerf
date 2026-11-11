@@ -31,7 +31,7 @@ export interface Setup {
  * default `native` mode the browser scrolls the viewport, with its own bars hidden, and this draws the bars; in
  * `engine` mode the viewport is `overflow: hidden` and every input runs here. Either way it keeps real scroll offsets,
  * so focus, find, anchors and `scroll` listeners still work. Bars are found as `[data-part="scrollbar"]
- * [data-orientation]` children of `root`, or made. Load `@weft-js/scroll/styles.css`.
+ * [data-orientation]` children of `root`, or made. Load `@kerf/scroll/styles.css`.
  */
 export function scroller(root: HTMLElement, options: ScrollOptions = {}): Scroller {
   const vp = root.querySelector<HTMLElement>(':scope > [data-part="viewport"]') ?? root

@@ -1,6 +1,6 @@
-import { onCleanup, onMount, state } from '@weft-js/core'
-import { interval } from '@weft-js/core/browser'
-import { Card, Switch } from '@weft-js/warp'
+import { onCleanup, onMount, state } from '@kerf/core'
+import { interval } from '@kerf/core/browser'
+import { Card, Switch } from '@kerf/veneer'
 
 function Ticker(props: {
   onLog: (line: string) => void

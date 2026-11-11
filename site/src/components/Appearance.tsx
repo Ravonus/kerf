@@ -1,5 +1,5 @@
-import { getDial, getPalette, Icon, setDial, setPalette, Popover, Segmented } from '@weft-js/warp'
-import { onMount, state } from '@weft-js/core'
+import { getDial, getPalette, Icon, setDial, setPalette, Popover, Segmented } from '@kerf/veneer'
+import { onMount, state } from '@kerf/core'
 import { shownExpression } from '../lib/dial'
 import { PALETTES } from '../lib/palettes'
 
@@ -7,7 +7,7 @@ type Theme = 'auto' | 'light' | 'dark'
 type Stop = 'quiet' | 'balanced' | 'vivid'
 type Motion = 'auto' | 'full' | 'reduce'
 
-/** Warp's dials as a menu: every control in it writes one attribute on the root, and the page follows from tokens. */
+/** Veneer's dials as a menu: every control in it writes one attribute on the root, and the page follows from tokens. */
 export function Appearance() {
   const theme = state<Theme>('auto')
   const expression = state<Stop>(shownExpression())
@@ -82,12 +82,12 @@ export function Appearance() {
   )
 }
 
-/** The site's named themes (src/lib/palettes.ts); "weft" is the default look, so it clears the attribute. */
+/** The site's named themes (src/lib/palettes.ts); "kerf" is the default look, so it clears the attribute. */
 function PaletteRow() {
-  const palette = state('weft')
+  const palette = state('kerf')
   onMount(() => {
     const p = getPalette()
-    palette.value = p === 'auto' ? 'weft' : p
+    palette.value = p === 'auto' ? 'kerf' : p
   })
   return (
     <div data-part="row">
@@ -99,7 +99,7 @@ function PaletteRow() {
         options={PALETTES.map((p) => ({ value: p.name, label: p.label }))}
         onChange={(v) => {
           palette.value = v
-          setPalette(v === 'weft' ? 'auto' : v, { persist: true })
+          setPalette(v === 'kerf' ? 'auto' : v, { persist: true })
         }}
       />
     </div>

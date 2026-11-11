@@ -5,25 +5,25 @@
 - How `<Media>` renders an image or video with its size, a placeholder and the right file for the screen
 - How a skeleton can come from your own markup with `pending="shape"`
 - How `<Surface>` puts a canvas or WebGL view in layout, with live props and real text
-- Where fonts and text measuring come from (`@weft-js/text`), and what `@weft-js/core/head` is for
+- Where fonts and text measuring come from (`@kerf/text`), and what `@kerf/core/head` is for
 :::
 
-Most of what a page shows is elements and text, and Weft's TSX covers it. A few things need more care than an element
+Most of what a page shows is elements and text, and Kerf's TSX covers it. A few things need more care than an element
 can give on its own: text that isn't there yet, text that streams in a few characters at a time, images that should
-arrive at the right size without pushing the page around, and drawing that only a canvas can do. Weft has a small
-module for each, under `@weft-js/core`, and each one only costs a page that imports it.
+arrive at the right size without pushing the page around, and drawing that only a canvas can do. Kerf has a small
+module for each, under `@kerf/core`, and each one only costs a page that imports it.
 
 They share one goal: **nothing moves**. Layout shift, content jumping as things load, is one of the most annoying
 things a page can do, and these tools exist so that each part of the page takes its final size from the first paint.
 
 | Import | For |
 |---|---|
-| `@weft-js/core/text` | `<Text>`: reserved and streamed text; `measure`, `lines`, `fit` |
-| `@weft-js/core/media` | `<Media>` for images, video and audio from `?media` imports; `timeline()` |
-| `@weft-js/core/shape` | What `<Boundary pending="shape">` compiles to: placeholders shaped like your data |
-| `@weft-js/core/surface` | `defineSurface` and `<Surface>`: canvas and WebGL as layout children |
-| `@weft-js/core/head` | The router's half of page metadata |
-| `@weft-js/text` | The plugin for `weft.config.ts`: fonts, and the engine that measures text |
+| `@kerf/core/text` | `<Text>`: reserved and streamed text; `measure`, `lines`, `fit` |
+| `@kerf/core/media` | `<Media>` for images, video and audio from `?media` imports; `timeline()` |
+| `@kerf/core/shape` | What `<Boundary pending="shape">` compiles to: placeholders shaped like your data |
+| `@kerf/core/surface` | `defineSurface` and `<Surface>`: canvas and WebGL as layout children |
+| `@kerf/core/head` | The router's half of page metadata |
+| `@kerf/text` | The plugin for `kerf.config.ts`: fonts, and the engine that measures text |
 
 ## `<Text>`: text that holds its place
 
@@ -33,9 +33,9 @@ moves down when it arrives. `<Text reserve>` keeps the room while the text is mi
 :::demo escape-reserve
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Text } from '@weft-js/core/text'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Text } from '@kerf/core/text'
+import { Button } from '@kerf/veneer'
 
 export function Quote() {
   const quote = state('')
@@ -59,27 +59,27 @@ export function Quote() {
 While the children are empty (`undefined`, `null`, `''` or `false`), `<Text>` renders placeholder text of about that many
 characters, invisible, inside the real element. The browser lays it out with the real font, width and line height, so
 the reserved room is exactly what text of that length would take, with nothing measured in JavaScript. The element is
-marked `aria-busy`, and Warp's skeleton styles can show it as a shimmering bar (the demo imports
-`@weft-js/warp/skeleton` for that).
+marked `aria-busy`, and Veneer's skeleton styles can show it as a shimmering bar (the demo imports
+`@kerf/veneer/skeleton` for that).
 
 `reserve` takes a number of characters, `true` for one line's worth, or a sample string. Pass `as` to choose the element:
 `'p'` (the default), `'span'`, `'div'`, `'li'` or `'h1'` to `'h4'`.
 
-:::note Text is the core one; Warp has another
-Warp also exports a `Text`, for its type roles (`<Text role="caption">`). They're different components. If a file needs
-both, rename one: `import { Text as Reserved } from '@weft-js/core/text'`.
+:::note Text is the core one; Veneer has another
+Veneer also exports a `Text`, for its type roles (`<Text role="caption">`). They're different components. If a file needs
+both, rename one: `import { Text as Reserved } from '@kerf/core/text'`.
 :::
 
 ### Streamed text
 
 An AI reply or a log arrives a few characters at a time. In a plain element, each new token can rewrap the last line,
-the element's height changes many times a second, and in a scrolling container the lines above jump. Weft flags text
+the element's height changes many times a second, and in a scrolling container the lines above jump. Kerf flags text
 streamed straight into a scroll container (**X035**). `<Text stream>` is the fix:
 
 :::demo escape-stream
 
 ```tsx
-import { Text } from '@weft-js/core/text'
+import { Text } from '@kerf/core/text'
 
 export function Answer(props: { text: string }) {
   return <Text stream>{props.text}</Text>
@@ -100,11 +100,11 @@ The tail stays plain text until its block closes, so a half-written list or link
 ### Measuring text before it's rendered
 
 Sometimes you need a text's size without rendering it: to size a virtual list's rows, to fit a headline in a box, or to
-place a label. `@weft-js/core/text` has three reactive helpers for that:
+place a label. `@kerf/core/text` has three reactive helpers for that:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { fit, measure } from '@weft-js/core/text'
+import { state } from '@kerf/core'
+import { fit, measure } from '@kerf/core/text'
 
 export function Headline() {
   const title = state('Fine-grained reactive TSX')
@@ -135,8 +135,8 @@ export function Headline() {
 
 Each takes values or getters and returns a value you read with `.value`, which is `null` until the measuring engine has
 loaded. The engine is Pretext, Cheng Lou's line breaker, which computes line breaks with arithmetic rather than asking
-the DOM. It comes from the `@weft-js/text` plugin, which loads it lazily, only on pages that measure. Without the plugin,
-or with `measure: 'off'`, the values stay `null`, and `weft check` reports a page that needs the engine but has nothing
+the DOM. It comes from the `@kerf/text` plugin, which loads it lazily, only on pages that measure. Without the plugin,
+or with `measure: 'off'`, the values stay `null`, and `kerf check` reports a page that needs the engine but has nothing
 providing it (**P101**). Name a real font family in `font`: `system-ui` can resolve differently in canvas and CSS
 (**X002**).
 
@@ -146,7 +146,7 @@ An `<img>` without a width and height is 0 px tall until its file arrives, then 
 large photo sent to a phone wastes most of its bytes. `<Media>` and `?media` imports deal with both:
 
 ```tsx
-import { Media } from '@weft-js/core/media'
+import { Media } from '@kerf/core/media'
 import hero from '../../assets/hero.jpg?media'
 
 export function Hero() {
@@ -174,10 +174,10 @@ Importing a file with `?media` gives you a record the build made from it, not a 
 `alt` is required. Describe what the image shows, or pass `alt=""` with `decorative` for images that carry no meaning.
 `focus={[x, y]}` sets the focal point when the image is cropped with `fit="cover"`.
 
-The resizing and encoding happen at build time. With `@weft-js/plugin-media` in your config, the build makes AVIF and
-WebP files at several widths, choosing each image's quality by measuring it when it can; without the plugin, Weft reads
+The resizing and encoding happen at build time. With `@kerf/media` in your config, the build makes AVIF and
+WebP files at several widths, choosing each image's quality by measuring it when it can; without the plugin, Kerf reads
 the size from the file's header and serves the original. Video and audio records come from
-`@weft-js/plugin-media-ffmpeg`, which can also turn a large GIF into a video. The plugin also checks raw `<img>`
+`@kerf/media-ffmpeg`, which can also turn a large GIF into a video. The plugin also checks raw `<img>`
 and `<video>` tags: a missing size (**M001**), a missing `alt` (**M007**), a hero that loads lazily (**M008**), and
 more. [Uploads and media](/learn/uploads-and-media) covers media users upload, which takes a different path.
 
@@ -186,8 +186,8 @@ more. [Uploads and media](/learn/uploads-and-media) covers media users upload, w
 A `?media` video or audio file plays through `<Media>` as well. To run code in step with it, make a `timeline`:
 
 ```tsx
-import { Media, timeline } from '@weft-js/core/media'
-import { Button } from '@weft-js/warp'
+import { Media, timeline } from '@kerf/core/media'
+import { Button } from '@kerf/veneer'
 import clip from '../../assets/launch.mp4?media'
 
 export function Launch() {
@@ -221,15 +221,15 @@ playback crosses a cue (not when you seek past it).
 
 A skeleton, grey bars where text will be, keeps a loading region the size of what's coming. The trouble is keeping a
 hand-drawn skeleton the same size as the real content as both change. When the two differ, the swap moves the page, and
-Weft warns in development (**X031**).
+Kerf warns in development (**X031**).
 
 `<Boundary pending="shape">` hands that job to the compiler:
 
 :::demo escape-shape
 
 ```tsx
-import { Boundary, resource } from '@weft-js/core'
-import '@weft-js/warp/skeleton'
+import { Boundary, resource } from '@kerf/core'
+import '@kerf/veneer/skeleton'
 
 type Post = { id: number; title: string; body: string }
 declare function loadPosts(): Promise<Post[]>
@@ -261,17 +261,17 @@ replaced by a placeholder bar and none of the behaviour. `pending="shape"` rende
 as the fallback. It's laid out by the browser like the real thing, so the swap moves nothing. It even takes its place,
 hidden, from the very first paint, and is only revealed if the data takes longer than 150 ms.
 
-Variants are only built into a page that uses one, so this costs nothing elsewhere. `@weft-js/core/shape` holds what the
-compiled variants call; you don't import from it yourself. The CSS that draws the bars is Warp's: import
-`@weft-js/warp/skeleton` once if the page has no other Warp skeleton on it.
+Variants are only built into a page that uses one, so this costs nothing elsewhere. `@kerf/core/shape` holds what the
+compiled variants call; you don't import from it yourself. The CSS that draws the bars is Veneer's: import
+`@kerf/veneer/skeleton` once if the page has no other Veneer skeleton on it.
 
-How long is each bar? With a plain `resource`, Weft knows nothing about the data, so it draws a few rows of short bars.
-With a `@weft-js/start` query, the bars come from the query's `output` schema: `z.string().max(80)` gives a bar of up to
+How long is each bar? With a plain `resource`, Kerf knows nothing about the data, so it draws a few rows of short bars.
+With a `@kerf/start` query, the bars come from the query's `output` schema: `z.string().max(80)` gives a bar of up to
 80 characters, and `.max(20)` on an array or a `limit` input gives the row count. A list with no count hint shows five
 rows and warns (**X032**); a string with no length hint warns too (**X036**). A query's resource also has `.shape`, the
 placeholder value itself, for a hand-written fallback.
 
-For a fallback you draw yourself, Warp's `<Shape>` gives you the standard skeletons by kind and count:
+For a fallback you draw yourself, Veneer's `<Shape>` gives you the standard skeletons by kind and count:
 `<Shape kind="list" rows={5} />`, `kind="card"`, `kind="table"`, `kind="media"`.
 
 ## `<Surface>`: a canvas in layout
@@ -283,9 +283,9 @@ changes, and text drawn on it is invisible to screen readers and search. A surfa
 :::demo escape-surface
 
 ```tsx
-import { state } from '@weft-js/core'
-import { defineSurface, Surface } from '@weft-js/core/surface'
-import { Slider } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { defineSurface, Surface } from '@kerf/core/surface'
+import { Slider } from '@kerf/veneer'
 
 const Bars = defineSurface<{ data: number[] }, 'canvas2d'>({
   name: 'bars',
@@ -335,18 +335,18 @@ export function Sales() {
   `s.tokens.accent` is your theme's accent colour, so switching to dark mode repaints in the new colour.
 
 A surface needs a `label`, or `decorative` if it shows nothing a reader needs (**X009**). The shared `clock` from
-`@weft-js/core/surface` pauses, plays and seeks every animated surface at once, and starts paused for users who prefer
+`@kerf/core/surface` pauses, plays and seeks every animated surface at once, and starts paused for users who prefer
 reduced motion.
 
 ### Text on a surface
 
-Text drawn with `fillText` exists only as pixels: no selection, no find in page, no translation, no screen reader. Weft
+Text drawn with `fillText` exists only as pixels: no selection, no find in page, no translation, no screen reader. Kerf
 reports it (**X010**). `s.text(text, options)` draws the text and keeps a real element over it, placed exactly where the
 pixels are, so all of those work:
 
-<!-- example: skip needs the text() plugin in weft.config.ts (P101), which the example app doesn't have -->
+<!-- example: skip needs the text() plugin in kerf.config.ts (P101), which the example app doesn't have -->
 ```tsx
-import { defineSurface } from '@weft-js/core/surface'
+import { defineSurface } from '@kerf/core/surface'
 
 export const Score = defineSurface<{ points: number }, 'canvas2d'>({
   name: 'score',
@@ -363,18 +363,18 @@ export const Score = defineSurface<{ points: number }, 'canvas2d'>({
 })
 ```
 
-On a canvas, `s.text` lays out lines with the same measuring engine as `measure`, so it needs the `@weft-js/text`
+On a canvas, `s.text` lays out lines with the same measuring engine as `measure`, so it needs the `@kerf/text`
 plugin (P101 without it). For text that is pure decoration, wrap the call: `s.decorative(() => s.ctx.fillText(…))`.
 [Reference: surface](/reference/surface) has the full list of options, WebGL, pixel-art targets and testing.
 
-## Fonts: `@weft-js/text`
+## Fonts: `@kerf/text`
 
-The measuring engine and the `s.text` mirror both depend on knowing the font. `@weft-js/text` is where an app declares
-its fonts, in `weft.config.ts`:
+The measuring engine and the `s.text` mirror both depend on knowing the font. `@kerf/text` is where an app declares
+its fonts, in `kerf.config.ts`:
 
 ```ts
-import { defineConfig } from '@weft-js/core/config'
-import { text } from '@weft-js/text'
+import { defineConfig } from '@kerf/core/config'
+import { text } from '@kerf/text'
 
 export default defineConfig({
   plugins: [
@@ -397,9 +397,9 @@ The build subsets each font, writes the `@font-face` rules and preload links, an
 font's metrics, so text doesn't shift when the real font arrives. `measure: 'auto'` makes the engine available to
 pages that measure; `'off'` leaves it out. [Fonts](/learn/fonts) covers the font side in full.
 
-## `@weft-js/core/head`
+## `@kerf/core/head`
 
-`@weft-js/core/head` exports `setHead`, which the `@weft-js/start` router calls after a client-side navigation to
+`@kerf/core/head` exports `setHead`, which the `@kerf/start` router calls after a client-side navigation to
 replace the page's title and meta tags with the next route's. You don't call it yourself: a route declares its
 metadata, and the server writes it into the HTML for crawlers while the router keeps the tab's title in step. See
 [Metadata and share images](/learn/metadata-and-share-images).
@@ -408,13 +408,13 @@ metadata, and the server writes it into the HTML for crawlers while the router k
 
 - `<Text reserve>` holds a text's room while it's missing, with invisible placeholder text the browser lays out.
 - `<Text stream>` lands tokens once a frame, grows in whole lines and never rewrites a finished block (X035).
-- `measure`, `lines` and `fit` size text before it renders, with the engine from `@weft-js/text` (P101 without it).
+- `measure`, `lines` and `fit` size text before it renders, with the engine from `@kerf/text` (P101 without it).
 - `?media` imports and `<Media>` give images and video their size, a placeholder and the right file; `timeline()`
   syncs code to playback.
 - `<Boundary pending="shape">` makes the skeleton from your own markup, so the swap moves nothing (X031, X032, X036).
 - `defineSurface` and `<Surface>` put canvas and WebGL in layout with live props; `s.text` keeps text real (X009,
   X010).
-- `@weft-js/text` declares fonts and provides the measuring engine; `@weft-js/core/head` is the router's.
+- `@kerf/text` declares fonts and provides the measuring engine; `@kerf/core/head` is the router's.
 
 ## Try it
 
@@ -423,7 +423,7 @@ A product card shows a description that loads separately. Descriptions are one t
 characters. Make the card keep that room while it waits, so the price below doesn't jump.
 
 ```tsx
-import { resource } from '@weft-js/core'
+import { resource } from '@kerf/core'
 
 declare function loadDescription(id: string): Promise<string>
 
@@ -442,8 +442,8 @@ Render the description with `<Text reserve={120}>`. While `description.value` is
 characters of room at the card's width and font:
 
 ```tsx
-import { resource } from '@weft-js/core'
-import { Text } from '@weft-js/core/text'
+import { resource } from '@kerf/core'
+import { Text } from '@kerf/core/text'
 
 declare function loadDescription(id: string): Promise<string>
 
@@ -469,9 +469,9 @@ screen readers. Show it with a slider that sets the progress.
 and it's live, so it follows the slider.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { defineSurface, Surface } from '@weft-js/core/surface'
-import { Slider } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { defineSurface, Surface } from '@kerf/core/surface'
+import { Slider } from '@kerf/veneer'
 
 const Ring = defineSurface<{ progress: number }, 'canvas2d'>({
   name: 'ring',
@@ -539,7 +539,7 @@ Render the streamed text with `<Text stream>` inside the scroller. Its height on
 finished paragraphs are never rewritten:
 
 ```tsx
-import { Text } from '@weft-js/core/text'
+import { Text } from '@kerf/core/text'
 
 export function Reply(props: { text: string }) {
   return (

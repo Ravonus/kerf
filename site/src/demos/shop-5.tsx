@@ -1,11 +1,11 @@
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 import {
   Badge,
   Button,
   Card,
   Input,
   Switch,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 const products = [
   {

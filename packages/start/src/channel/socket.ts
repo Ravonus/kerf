@@ -1,4 +1,4 @@
-import { DEV, batch, createRoot, state, untrack, type State } from '@weft-js/core'
+import { DEV, batch, createRoot, state, untrack, type State } from '@kerf/core'
 import { HANDOVER, SOCKETS, openLine, socketDown } from '../link'
 import { FnError, keyOf, net, rt, track, type Fn } from '../data'
 import type { ChannelStatus } from '../channel'
@@ -195,7 +195,7 @@ let nudge: (() => void) | undefined
 let parked = false
 let hiddenAt: ReturnType<typeof setTimeout> | undefined
 
-/** A leader tab can be hidden while a sibling is looking: `@weft-js/start/share` says when this socket must stay. */
+/** A leader tab can be hidden while a sibling is looking: `@kerf/start/share` says when this socket must stay. */
 export const keepOpen: { stay?: (() => boolean) | undefined } = {}
 
 const send = (f: unknown[]) => live?.send(JSON.stringify(f))
@@ -378,7 +378,7 @@ function listen(on: boolean) {
   if (!on) clearTimeout(hiddenAt)
 }
 
-/** @weft-js/core/test, after each test. */
+/** @kerf/core/test, after each test. */
 function reset() {
   for (const j of joins.values()) clearTimeout(j.timer)
   joins.clear()

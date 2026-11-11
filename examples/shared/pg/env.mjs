@@ -1,5 +1,5 @@
 // The Postgres side of a bench: one seeded template per state of schema.sql and seed.sql, one clone per variant, reset from the
-// template, reached through one latency proxy. Only ever touches databases named weft_bench_*. Talks to Postgres with `psql`, so
+// template, reached through one latency proxy. Only ever touches databases named kerf_bench_*. Talks to Postgres with `psql`, so
 // the harness itself installs no driver.
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -16,7 +16,7 @@ const HOST = process.env.BENCH_PG_HOST ?? '127.0.0.1',
   PORT = +(process.env.BENCH_PG_PORT ?? 5432),
   USER = process.env.BENCH_PG_USER
 export const PSQL = process.env.BENCH_PSQL ?? 'psql'
-const STATS = 'weft_bench_stats' // holds the pg_stat_statements extension, so reading it adds nothing to a variant's own database
+const STATS = 'kerf_bench_stats' // holds the pg_stat_statements extension, so reading it adds nothing to a variant's own database
 export const benchUser = JSON.parse(readFileSync(join(here, 'bench-user.json'), 'utf8'))
 export const seedHash = () =>
   createHash('sha256')
@@ -24,15 +24,15 @@ export const seedHash = () =>
     .update(readFileSync(join(here, 'seed.sql')))
     .digest('hex')
     .slice(0, 12)
-export const seedName = () => `weft_bench_seed_${seedHash()}`
+export const seedName = () => `kerf_bench_seed_${seedHash()}`
 export const dbName = (app, variant) =>
-  `weft_bench_${app}_${variant}${process.env.BENCH_TAG ? `_${process.env.BENCH_TAG}` : ''}`
+  `kerf_bench_${app}_${variant}${process.env.BENCH_TAG ? `_${process.env.BENCH_TAG}` : ''}`
     .toLowerCase()
     .replace(/[^a-z0-9_]/g, '_')
 
 function mine(name) {
-  if (!/^weft_bench_[a-z0-9_]+$/.test(name))
-    throw new Error(`refusing to touch database "${name}": not weft_bench_*`)
+  if (!/^kerf_bench_[a-z0-9_]+$/.test(name))
+    throw new Error(`refusing to touch database "${name}": not kerf_bench_*`)
   return name
 }
 

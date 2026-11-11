@@ -1,35 +1,35 @@
-# Theme: changing warp's look
+# Theme: changing veneer's look
 
 Three levels, in order. Stop at the first that gets you there; each one keeps the contrast check.
 
-1. `warp({ seed, dials, fields, radius, fonts, tokens })` in the weft config. Checked by D010 at the stops `dials` leave.
+1. `veneer({ seed, dials, fields, radius, fonts, tokens })` in the kerf config. Checked by D010 at the stops `dials` leave.
    For your own names, per-element looks and named themes: `colors`, `system`, `parts`, `themes` (below).
-2. `src/theme.css`, unlayered: `[data-scope]` and `[data-part]` rules beat warp with no `!important`.
-3. Your own component, with warp's tokens.
+2. `src/theme.css`, unlayered: `[data-scope]` and `[data-part]` rules beat veneer with no `!important`.
+3. Your own component, with veneer's tokens.
 
 The Theme studio on the docs site (`/components/theme-studio`) edits level 1 with live components and contrast
-ratios, and copies the result as `weft.config.ts`.
+ratios, and copies the result as `kerf.config.ts`.
 
-## warp() options
+## veneer() options
 
 | Option | Does |
 |---|---|
-| `seed.accent` | The hue family: `#rrggbb`, a name from `colors`, or `{ hue, chroma }`. Each theme solves its own lightness, and `weft build` prints where it landed |
+| `seed.accent` | The hue family: `#rrggbb`, a name from `colors`, or `{ hue, chroma }`. Each theme solves its own lightness, and `kerf build` prints where it landed |
 | `seed.neutral` | The tint of pages, surfaces and text, `#rrggbb` or `{ hue, chroma }` |
 | `dials` | Default `expression` (quiet balanced vivid), `density`, `flair`, `theme`. With `theme: 'light'`, dark isn't checked |
 | `fields` | `floating` (the default: the label floats in a notch) or `classic` (the label above the box) |
 | `radius` | `sharp` (2px), `soft`, `round`. Below 2px, set the radius tokens |
 | `fonts` | `body`, `display`, `mono`: a family or a whole stack |
-| `tokens` | Any `--warp-*`, set on every scope. Colours are `#rrggbb`, `oklch()`, `color-mix()` or `light-dark()` |
+| `tokens` | Any `--veneer-*`, set on every scope. Colours are `#rrggbb`, `oklch()`, `color-mix()` or `light-dark()` |
 
-App-wide values go in `warp()`. A `--warp-color-*` set in CSS on `:root` skips the check and is undone inside any scope that
+App-wide values go in `veneer()`. A `--veneer-color-*` set in CSS on `:root` skips the check and is undone inside any scope that
 sets a dial, such as a Table's density.
 
 ## colors, system, parts, themes
 
 | Option | Does |
 |---|---|
-| `colors` | `{ brand: '#e8590c' }`: `--warp-color-brand`, a tone (`tone="brand"`), and `bg-brand` via `.weft/tokens/warp.tailwind.css`. Lowercase names, `#rrggbb` |
+| `colors` | `{ brand: '#e8590c' }`: `--veneer-color-brand`, a tone (`tone="brand"`), and `bg-brand` via `.kerf/tokens/veneer.tailwind.css`. Lowercase names, `#rrggbb` |
 | `system` | The scales: `radius`, `space`, `pad`, `control`, `font`, `shadow`, `duration`, `ease`, `border`, `icon`, `text.<role>` |
 | `parts` | One element, at rest and per state (`hover focus press active open disabled`). Numbers are px (ms for `duration`); names are system steps or `colors` |
 | `themes` | `{ ocean: { seed, colors, system, parts } }` under `[data-palette="ocean"]`. `dials.palette` sets the default; `setPalette()` switches |
@@ -74,7 +74,7 @@ set on a fill set in the same part is checked like a seed: below 4.5:1 is D010. 
 same way as the main one.
 
 ```ts
-warp({
+veneer({
   colors: { brand: '#e8590c', ink: '#1b1b1f' },
   parts: {
     button: {
@@ -101,16 +101,16 @@ warp({
 ## Brutalist
 
 ```ts
-warp({
+veneer({
   dials: { expression: 'quiet', flair: 'none' },
   fonts: {
     display: 'ui-monospace, monospace',
     body: 'ui-monospace, monospace',
   },
   tokens: {
-    '--warp-radius-mark': '0px',
-    '--warp-radius-control': '0px',
-    '--warp-radius-surface': '0px',
+    '--veneer-radius-mark': '0px',
+    '--veneer-radius-control': '0px',
+    '--veneer-radius-surface': '0px',
   },
 })
 ```
@@ -118,12 +118,12 @@ warp({
 ```css
 /* src/theme.css */
 [data-scope="button"] {
-  --warp-tone-edge: var(--warp-color-text);
+  --veneer-tone-edge: var(--veneer-color-text);
   border-width: 2px;
-  box-shadow: 4px 4px 0 var(--warp-color-text);
+  box-shadow: 4px 4px 0 var(--veneer-color-text);
 }
 [data-scope="surface"] {
-  border: 2px solid var(--warp-color-text);
+  border: 2px solid var(--veneer-color-text);
   box-shadow: none;
 }
 ```
@@ -133,7 +133,7 @@ Raw colours and shadows in `src/theme.css` or on a `[data-scope]` rule are D001 
 ## Warm editorial
 
 ```ts
-warp({
+veneer({
   seed: { accent: '#9a3412', neutral: { hue: 70, chroma: 0.03 } },
   dials: { expression: 'vivid' },
   fonts: { display: '"Iowan Old Style", Georgia, serif' },
@@ -145,11 +145,11 @@ warp({
 A seed gives the hue, not the colour. To pin it, set the fill and its hover for both themes. One alone never re-derives the other.
 
 ```ts
-warp({
+veneer({
   seed: { accent: '#c8102e' },
   tokens: {
-    '--warp-color-accent-solid': 'light-dark(#c8102e, #e5484d)',
-    '--warp-color-accent-solid-hover': 'light-dark(#a50d26, #f2666a)',
+    '--veneer-color-accent-solid': 'light-dark(#c8102e, #e5484d)',
+    '--veneer-color-accent-solid-hover': 'light-dark(#a50d26, #f2666a)',
   },
 })
 ```
@@ -161,22 +161,22 @@ stay together, at every emphasis:
 
 | Channel | Paints |
 |---|---|
-| `--warp-tone-fill` | The background |
-| `--warp-tone-ink` | The text |
-| `--warp-tone-edge` | The border |
-| `--warp-tone-layer` | The hover layer that wipes across |
+| `--veneer-tone-fill` | The background |
+| `--veneer-tone-ink` | The text |
+| `--veneer-tone-edge` | The border |
+| `--veneer-tone-layer` | The hover layer that wipes across |
 
 ```css
 [data-scope="button"][data-emphasis="solid"] {
-  --warp-tone-fill: #111111;
-  --warp-tone-ink: #ffffff;
-  --warp-tone-layer: #333333;
+  --veneer-tone-fill: #111111;
+  --veneer-tone-ink: #ffffff;
+  --veneer-tone-layer: #333333;
 }
 ```
 
-The channels are on Button only. Fields read `--warp-field-*`, tables `--warp-table-*`.
+The channels are on Button only. Fields read `--veneer-field-*`, tables `--veneer-table-*`.
 
 ## D010
 
-Each failing pair is named with its stop. Change that token or the seed, or limit the stops with `dials`. `weft build` stops on
-it, because a refused config would ship warp's default look.
+Each failing pair is named with its stop. Change that token or the seed, or limit the stops with `dials`. `kerf build` stops on
+it, because a refused config would ship veneer's default look.

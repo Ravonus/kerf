@@ -1,5 +1,5 @@
-import { onMount, state } from '@weft-js/core'
-import { Link, type LoadArgs, type RouteProps } from '@weft-js/start'
+import { onMount, state } from '@kerf/core'
+import { Link, type LoadArgs, type RouteProps } from '@kerf/start'
 import { db } from '../../db'
 
 export const load = async (_: LoadArgs) => ({ users: await db.users() })

@@ -1,4 +1,4 @@
-import { Dither } from '@weft-js/warp'
+import { Dither } from '@kerf/veneer'
 import { SOFT } from './paint-primitives'
 
 export const DitherGradient = () => (

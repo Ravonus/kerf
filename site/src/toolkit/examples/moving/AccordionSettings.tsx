@@ -3,7 +3,7 @@ import {
   Input,
   Stack,
   Switch,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 export const AccordionSettings = () => (
   <Accordion

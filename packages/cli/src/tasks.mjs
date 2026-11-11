@@ -1,4 +1,4 @@
-// `weft tasks`: the single list of what can be run (PLAN §7b). Built-ins first, then the project's `tasks`.
+// `kerf tasks`: the single list of what can be run (PLAN §7b). Built-ins first, then the project's `tasks`.
 
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -30,7 +30,7 @@ export const builtins = [
   },
   {
     name: 'docs',
-    description: 'Print a docs topic or a diagnostic code (`weft docs W014`)',
+    description: 'Print a docs topic or a diagnostic code (`kerf docs W014`)',
     args: { type: 'object', properties: { topic: { type: 'string' } } },
     sideEffects: [],
     available: true,
@@ -53,7 +53,7 @@ export const builtins = [
   {
     name: 'style',
     description:
-      'Style groups: `find <query>`, `explain <group|selector>`, `matrix` (writes .weft/styles.json)',
+      'Style groups: `find <query>`, `explain <group|selector>`, `matrix` (writes .kerf/styles.json)',
     args: {
       type: 'object',
       properties: {
@@ -62,14 +62,14 @@ export const builtins = [
         target: { type: 'string' },
       },
     },
-    sideEffects: ['fs:.weft/styles.json'],
+    sideEffects: ['fs:.kerf/styles.json'],
     available: true,
   },
   {
     name: 'map',
-    description: 'Write `.weft/map.md`: a matrix of what to call in this app',
+    description: 'Write `.kerf/map.md`: a matrix of what to call in this app',
     args: { type: 'object', properties: {} },
-    sideEffects: ['fs:.weft/map.*'],
+    sideEffects: ['fs:.kerf/map.*'],
     available: true,
   },
   {
@@ -79,7 +79,7 @@ export const builtins = [
       type: 'object',
       properties: { plugin: { type: 'string' }, 'dry-run': { type: 'boolean' } },
     },
-    sideEffects: ['fs:weft.config.*', 'fs:package.json', 'network:install'],
+    sideEffects: ['fs:kerf.config.*', 'fs:package.json', 'network:install'],
     available: true,
   },
   {
@@ -124,12 +124,12 @@ export const builtins = [
         refactor: { type: 'boolean' },
       },
     },
-    sideEffects: ['fs:.weft/gate'],
+    sideEffects: ['fs:.kerf/gate'],
     available: true,
   },
   {
     name: 'fix',
-    description: 'Apply the safe autofixes from `weft check`',
+    description: 'Apply the safe autofixes from `kerf check`',
     args: { type: 'object', properties: { files } },
     sideEffects: ['fs:scope.write'],
     available: true,
@@ -137,17 +137,17 @@ export const builtins = [
   {
     name: 'tokens',
     description:
-      "warp's resolved tokens as DTCG 2025.10 in `.weft/tokens/` (Figma, Style Dictionary, Terrazzo)",
+      "veneer's resolved tokens as DTCG 2025.10 in `.kerf/tokens/` (Figma, Style Dictionary, Terrazzo)",
     args: { type: 'object', properties: {} },
-    sideEffects: ['fs:.weft/tokens/**'],
+    sideEffects: ['fs:.kerf/tokens/**'],
     available: true,
   },
   {
     name: 'browser',
     description:
-      'Drive the running app in any open browser by role/label/text (`weft browser help`)',
+      'Drive the running app in any open browser by role/label/text (`kerf browser help`)',
     args: { type: 'object', properties: { command: { type: 'string' } } },
-    sideEffects: ['network:dev-server', 'fs:.weft/browser'],
+    sideEffects: ['network:dev-server', 'fs:.kerf/browser'],
     available: true,
   },
   {
@@ -157,7 +157,7 @@ export const builtins = [
     sideEffects: ['task'],
     available: true,
   },
-  { name: 'create', description: 'Scaffold a weft app', sideEffects: ['fs'], available: false },
+  { name: 'create', description: 'Scaffold a kerf app', sideEffects: ['fs'], available: false },
   {
     name: 'surfaces',
     description: "List the project's surfaces: name, kind, props and file",
@@ -167,7 +167,7 @@ export const builtins = [
   {
     name: 'plugins',
     description:
-      'List and explain plugins and slot bindings; `sync` regenerates .weft/slots and plugin tokens; `audit` and `approve` check and write the permissions lock',
+      'List and explain plugins and slot bindings; `sync` regenerates .kerf/slots and plugin tokens; `audit` and `approve` check and write the permissions lock',
     args: {
       type: 'object',
       properties: {
@@ -176,7 +176,7 @@ export const builtins = [
         all: { type: 'boolean' },
       },
     },
-    sideEffects: ['fs:.weft/**', 'fs:.gitignore'],
+    sideEffects: ['fs:.kerf/**', 'fs:.gitignore'],
     available: true,
   },
 ]
@@ -193,7 +193,7 @@ function jsonSchema(args) {
   return args
 }
 
-/** `weft run <name>`: the task's command in a shell at the project root, its output yours. Resolves with its exit code. */
+/** `kerf run <name>`: the task's command in a shell at the project root, its output yours. Resolves with its exit code. */
 export async function runTask(root, name) {
   root = resolve(root)
   const { config } = await loadConfig(root)
@@ -212,7 +212,7 @@ export async function runTask(root, name) {
   })
 }
 
-/** Everything `weft` can run here: the built-ins and the project's own tasks, with the config's diagnostics. */
+/** Everything `kerf` can run here: the built-ins and the project's own tasks, with the config's diagnostics. */
 export async function tasks(root) {
   root = resolve(root)
   const { file, config, diagnostics } = await loadConfig(root)
@@ -222,9 +222,9 @@ export async function tasks(root) {
     name: b.name,
     kind: 'builtin',
     command:
-      { check: 'weft check --json', tasks: 'weft tasks --json', docs: 'weft docs <topic>' }[
+      { check: 'kerf check --json', tasks: 'kerf tasks --json', docs: 'kerf docs <topic>' }[
         b.name
-      ] ?? `weft ${b.name}`,
+      ] ?? `kerf ${b.name}`,
     description: b.description,
     args: b.args ?? { type: 'object', properties: {} },
     sideEffects: b.sideEffects,
@@ -236,7 +236,7 @@ export async function tasks(root) {
     list.push({
       name,
       kind: 'project',
-      command: `weft run ${name}`,
+      command: `kerf run ${name}`,
       description: t.description ?? null,
       args: jsonSchema(t.args),
       sideEffects: t.sideEffects ?? null,

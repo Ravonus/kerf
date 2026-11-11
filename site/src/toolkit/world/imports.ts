@@ -21,13 +21,13 @@ export const IMPORT_TARGETS = [
 ]
 
 export const IMPORT_SAMPLE = {
-  name: 'weft-team.csv',
+  name: 'kerf-team.csv',
   text:
     'Name,Email,Team,Role\nDara ' +
-    'Nowak,dara@weft.dev,Web,' +
-    'member\nKai Sorensen,kai@weft,' +
+    'Nowak,dara@kerf.dev,Web,' +
+    'member\nKai Sorensen,kai@kerf,' +
     'Data,member\nAmir Saleh,' +
-    'amir@weft.dev,Mobile,owner\n' +
-    'Rosa Delgado,rosa@weft.dev,' +
+    'amir@kerf.dev,Mobile,owner\n' +
+    'Rosa Delgado,rosa@kerf.dev,' +
     'Platform,admin\n',
 }

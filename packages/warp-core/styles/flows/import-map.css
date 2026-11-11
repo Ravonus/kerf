@@ -1,4 +1,0 @@
-/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
-@layer warp.flows {
-:where([data-scope="import-map"] [data-scope="field"]) { min-inline-size: 150px; }
-}

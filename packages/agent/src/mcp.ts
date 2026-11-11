@@ -1,4 +1,4 @@
-// The app as an MCP server, at `/_weft/x/agent/mcp`: Claude Code, Codex or anything that speaks MCP connects with a
+// The app as an MCP server, at `/_kerf/x/agent/mcp`: Claude Code, Codex or anything that speaks MCP connects with a
 // bearer token and sees exactly the tools its grants allow. Streamable HTTP, answered as plain JSON (no server-sent
 // events: nothing here pushes), which is all a tools-only server needs.
 import type { Part, ToolInfo } from './index'
@@ -29,7 +29,7 @@ async function answer(m: Rpc, s: Serve): Promise<unknown> {
         protocolVersion:
           typeof m.params?.protocolVersion === 'string' ? m.params.protocolVersion : VERSION,
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'weft-agent', version: '0.1.0' },
+        serverInfo: { name: 'kerf-agent', version: '0.1.0' },
       }
     case 'ping':
       return {}

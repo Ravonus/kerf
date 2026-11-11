@@ -1,0 +1,16 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.flows {
+/* a section = heading + one bordered group of rows. No card inside a card. */
+:where([data-scope="settings-section"]) { display: grid; gap: 12px; scroll-margin-block-start: 16px; }
+:where([data-scope="settings-section"] > header :is(h3)),
+:where([data-scope="settings-section"] > header :is(h4)) { margin: 0; font: var(--veneer-text-heading-weight) var(--veneer-text-heading-size)/1.25 var(--veneer-text-heading-font); }
+:where([data-scope="settings-section"] > header p) { margin: 4px 0 0; font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="settings-section"] > [data-part="group"]) {
+  background: var(--veneer-color-surface-raised); border: 1px solid var(--veneer-color-border); border-radius: var(--veneer-radius-surface);
+  padding-inline: var(--veneer-pad-surface);
+}
+/* danger zone: the only critical-bordered group on the page */
+:where([data-scope="settings-section"][data-tone="critical"] > header :is(h3)),
+:where([data-scope="settings-section"][data-tone="critical"] > header :is(h4)) { color: var(--veneer-color-critical-text); }
+:where([data-scope="settings-section"][data-tone="critical"] > [data-part="group"]) { border-color: var(--veneer-color-critical-border); }
+}

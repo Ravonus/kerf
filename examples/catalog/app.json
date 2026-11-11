@@ -1,6 +1,6 @@
 {
   "label": "Catalog",
-  "note": "The holdout: 5,000 public products, a cart behind Suspense. Built like the others, and no change to weft or warp comes from its numbers.",
+  "note": "The holdout: 5,000 public products, a cart behind Suspense. Built like the others, and no change to kerf or veneer comes from its numbers.",
   "db": {},
   "pages": [
     {
@@ -37,8 +37,8 @@
     }
   ],
   "variants": {
-    "weft": {
-      "label": "weft + warp",
+    "kerf": {
+      "label": "kerf + veneer",
       "scaffold": {
         "template": "catalog",
         "db": "postgres",

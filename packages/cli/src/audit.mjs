@@ -1,5 +1,5 @@
-// `weft audit` and the last step of `weft build`: the built pages in a clean headless Chrome, at a phone's width and a
-// desktop's, read the way a crawler, a screen reader and Lighthouse read them. `weft check` reads source; some failures
+// `kerf audit` and the last step of `kerf build`: the built pages in a clean headless Chrome, at a phone's width and a
+// desktop's, read the way a crawler, a screen reader and Lighthouse read them. `kerf check` reads source; some failures
 // only exist once CSS and a breakpoint have had their say (a button whose text a phone hides has no name), so this
 // looks at the rendered page. No automation library: the DevTools protocol over the WebSocket Node already has.
 //
@@ -123,7 +123,7 @@ export function serveStatic(dir) {
 
 /** A clean headless Chrome (its own empty profile: no extensions, nothing stored) and a DevTools protocol client. As root (a container, CI) Chrome only starts unsandboxed. */
 async function chrome(exe) {
-  const profile = mkdtempSync(join(tmpdir(), 'weft-audit-'))
+  const profile = mkdtempSync(join(tmpdir(), 'kerf-audit-'))
   const child = spawn(
     exe,
     [
@@ -234,14 +234,14 @@ export function appRoutes(root) {
 /**
  * @param {string} root project root
  * @param {{ url?: string, dir?: string, routes?: string[], all?: boolean, max?: number, forms?: (keyof FORMS)[], concurrency?: number, indexing?: 'auto' | 'public' | 'private' }} [options]
- *   `url`: audit a running site (a deploy, `weft start`); else `dir`, a build's public directory (found when left out)
+ *   `url`: audit a running site (a deploy, `kerf start`); else `dir`, a build's public directory (found when left out)
  * @returns {Promise<{ ok: boolean, skipped?: string, base: string, pages: string[], diagnostics: object[], ms: number }>}
  */
 export async function audit(root, options = {}) {
   const t = performance.now()
   const loaded = options.indexing === undefined ? await loadConfig(root) : undefined
   if (loaded?.diagnostics?.some((d) => d.severity === 'error'))
-    throw new Error('Fix weft.config before auditing, or pass --indexing explicitly')
+    throw new Error('Fix kerf.config before auditing, or pass --indexing explicitly')
   const configured = loaded?.config?.build?.audit
   const indexing =
     options.indexing ?? (typeof configured === 'object' ? configured.indexing : undefined) ?? 'auto'
@@ -254,19 +254,19 @@ export async function audit(root, options = {}) {
     skipped: why,
     base: options.url ?? '',
     pages: [],
-    diagnostics: [diagnostic({ code: 'L000', severity: 'warning', file: 'weft.config.ts', why })],
+    diagnostics: [diagnostic({ code: 'L000', severity: 'warning', file: 'kerf.config.ts', why })],
     ms: 0,
   })
   if (!exe)
     return skip(
-      'No Chrome or Chromium here, so the built pages were not audited (L001–L030). Set `WEFT_CHROME`, or run `weft audit --url <deploy>` where there is one.',
+      'No Chrome or Chromium here, so the built pages were not audited (L001–L030). Set `KERF_CHROME`, or run `kerf audit --url <deploy>` where there is one.',
     )
   let base = options.url?.replace(/\/$/, '')
   let server
   let routes = options.routes
   if (!base) {
     const dir = options.dir ?? builtPublic(root)
-    if (!dir) return skip('No built pages to audit: run `weft build` first, or pass `--url`.')
+    if (!dir) return skip('No built pages to audit: run `kerf build` first, or pass `--url`.')
     const pages = pagesIn(dir)
     if (!pages.length)
       return skip(

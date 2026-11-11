@@ -1,4 +1,4 @@
-// `weft add`: what the wizard offers, on an app that already exists (research 34 §7). It installs a plugin and adds it to
+// `kerf add`: what the wizard offers, on an app that already exists (research 34 §7). It installs a plugin and adds it to
 // the config, whichever format that is. It only ever inserts, and stops rather than guess at a config it can't read.
 
 import { execFileSync } from 'node:child_process'
@@ -19,37 +19,37 @@ import { addToTs, addToData, listed, names } from './add/config.mjs'
 import { setupOf, planSetup, applySetup, setupActions, authEdits } from './add/setup.mjs'
 
 const ALIASES = {
-  warp: '@weft-js/warp',
-  icons: '@weft-js/warp-icons',
-  text: '@weft-js/text',
-  media: '@weft-js/plugin-media',
-  'media-ffmpeg': '@weft-js/plugin-media-ffmpeg',
-  'surface-keel': '@weft-js/plugin-surface-keel',
-  keel: '@weft-js/plugin-keel',
-  redis: '@weft-js/realtime-redis',
-  nats: '@weft-js/realtime-nats',
-  agent: '@weft-js/agent',
-  pay: '@weft-js/pay',
-  'pay-stripe': '@weft-js/pay/stripe',
-  'pay-square': '@weft-js/pay/square',
+  veneer: '@kerf/veneer',
+  icons: '@kerf/veneer-icons',
+  text: '@kerf/text',
+  media: '@kerf/media',
+  'media-ffmpeg': '@kerf/media-ffmpeg',
+  'surface-keel': '@kerf/keel-pixel',
+  keel: '@kerf/keel',
+  redis: '@kerf/realtime-redis',
+  nats: '@kerf/realtime-nats',
+  agent: '@kerf/agent',
+  pay: '@kerf/pay',
+  'pay-stripe': '@kerf/pay/stripe',
+  'pay-square': '@kerf/pay/square',
 }
 
-/** Add-ons `weft add` knows by the name after the scope, as `weft add realtime-redis`. */
+/** Add-ons `kerf add` knows by the name after the scope, as `kerf add realtime-redis`. */
 const ADDONS = new Set([
-  '@weft-js/text',
-  '@weft-js/agent',
-  '@weft-js/pay',
-  '@weft-js/plugin-media',
-  '@weft-js/plugin-media-ffmpeg',
-  '@weft-js/plugin-surface-keel',
-  '@weft-js/plugin-keel',
-  '@weft-js/multiplayer',
-  '@weft-js/realtime-durable-object',
-  '@weft-js/realtime-livekit',
-  '@weft-js/realtime-nats',
-  '@weft-js/realtime-redis',
-  '@weft-js/realtime-socketio',
-  '@weft-js/realtime-webrtc',
+  '@kerf/text',
+  '@kerf/agent',
+  '@kerf/pay',
+  '@kerf/media',
+  '@kerf/media-ffmpeg',
+  '@kerf/keel-pixel',
+  '@kerf/keel',
+  '@kerf/multiplayer',
+  '@kerf/realtime-durable-object',
+  '@kerf/realtime-livekit',
+  '@kerf/realtime-nats',
+  '@kerf/realtime-redis',
+  '@kerf/realtime-socketio',
+  '@kerf/realtime-webrtc',
 ])
 
 const INSTALL = {
@@ -117,7 +117,7 @@ function viteWithTailwind(file, text) {
 /** Tailwind's packages, the Vite plugin, and the top of src/app.css, imported first by the root layout. */
 function addTailwind(root, { dryRun, install }) {
   if (!existsSync(join(root, 'package.json')))
-    throw refused('`weft add tailwind` needs a package.json. Nothing was changed.')
+    throw refused('`kerf add tailwind` needs a package.json. Nothing was changed.')
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
   const cssFile = join(root, 'src/app.css')
   const css = existsSync(cssFile) ? readFileSync(cssFile, 'utf8') : ''
@@ -138,17 +138,17 @@ function addTailwind(root, { dryRun, install }) {
     actions.push(`install ${specs.join(' ')} with ${manager}`)
     if (!dryRun) installSpecs(root, manager, verb, specs)
   }
-  const warp = '@weft-js/warp' in { ...pkg.dependencies, ...pkg.devDependencies }
+  const veneer = '@kerf/veneer' in { ...pkg.dependencies, ...pkg.devDependencies }
   const edits = [
     [join(root, viteName ?? 'vite.config.ts'), vite],
-    ...(has ? [] : [[cssFile, `${cssEntry(warp)}${css && '\n'}${css}`]]),
+    ...(has ? [] : [[cssFile, `${cssEntry(veneer)}${css && '\n'}${css}`]]),
   ]
   actions.push(
     `add Tailwind to ${viteName ?? 'vite.config.ts'}`,
     ...(has
       ? []
       : [
-          `add Tailwind to src/app.css${warp ? ' (without its reset, which would override warp)' : ''}`,
+          `add Tailwind to src/app.css${veneer ? ' (without its reset, which would override veneer)' : ''}`,
         ]),
   )
   if (layout === null)
@@ -164,19 +164,19 @@ function addTailwind(root, { dryRun, install }) {
 }
 
 const ENGINES = ['sqlite', 'postgres', 'mysql']
-const LAYER_PLUGIN = { prisma: '@weft-js/db/plugin-prisma', native: '@weft-js/db/plugin-native' }
+const LAYER_PLUGIN = { prisma: '@kerf/db/plugin-prisma', native: '@kerf/db/plugin-native' }
 
 /** A database on an app that has none: the wiring a scaffold writes, with no todo app. Never touches what's there. */
 async function addDb(root, engine = 'sqlite', { layer = 'drizzle', dryRun, install }) {
   if (!ENGINES.includes(engine))
-    throw usageError(`weft add db takes ${ENGINES.join(', ')}, not \`${engine}\``)
+    throw usageError(`kerf add db takes ${ENGINES.join(', ')}, not \`${engine}\``)
   if (!['drizzle', ...Object.keys(LAYER_PLUGIN)].includes(layer))
     throw usageError(`--layer takes drizzle, prisma or native, not \`${layer}\``)
   if (await dbLayer(root))
     throw refused(
       "This app already has a database. Changing engine or layer changes your queries, so it's yours to do. Nothing was changed.",
     )
-  const { stackDeps, stackFiles } = await import('@weft-js/create/stack')
+  const { stackDeps, stackFiles } = await import('create-kerf/stack')
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
   const name = String(pkg.name ?? 'app').replace(/^@.*\//, '')
   const files = stackFiles({ db: engine, layer, auth: false, name, secret: '' })
@@ -209,7 +209,7 @@ async function addDb(root, engine = 'sqlite', { layer = 'drizzle', dryRun, insta
   }
   if (LAYER_PLUGIN[layer])
     actions.push(...(await addCommand(root, LAYER_PLUGIN[layer], { install: false })).actions)
-  actions.push('next: `weft db generate`')
+  actions.push('next: `kerf db generate`')
   return { ok: true, package: `${layer} on ${engine}`, actions }
 }
 
@@ -218,7 +218,7 @@ async function addAuth(root, { dryRun, install }) {
   const layer = await dbLayer(root)
   if (!layer)
     throw refused(
-      'Better Auth keeps users in a database: run `weft add db` first. Nothing was changed.',
+      'Better Auth keeps users in a database: run `kerf add db` first. Nothing was changed.',
     )
   if (existsSync(join(root, 'src/auth.server.ts')))
     throw refused(
@@ -226,8 +226,8 @@ async function addAuth(root, { dryRun, install }) {
     )
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
   const db = database(root, layer).engine
-  const ui = '@weft-js/warp' in { ...pkg.dependencies, ...pkg.devDependencies } ? 'warp' : 'none'
-  const { authFiles, stackDeps } = await import('@weft-js/create/stack')
+  const ui = '@kerf/veneer' in { ...pkg.dependencies, ...pkg.devDependencies } ? 'veneer' : 'none'
+  const { authFiles, stackDeps } = await import('create-kerf/stack')
   const { files, context, tables } = authFiles({ db, layer: layer.layer, ui })
   const contextFile = join(root, 'src/context.server.ts')
   if (
@@ -235,7 +235,7 @@ async function addAuth(root, { dryRun, install }) {
     !/export default \(\) => \(\{ db \}\)/.test(readFileSync(contextFile, 'utf8'))
   )
     throw refused(
-      'src/context.server.ts has been changed. Spread `session(auth, request)` from @weft-js/start/auth into it, then run this again. Nothing was changed.',
+      'src/context.server.ts has been changed. Spread `session(auth, request)` from @kerf/start/auth into it, then run this again. Nothing was changed.',
     )
   const taken = Object.keys(files).filter((f) => existsSync(join(root, f)))
   if (taken.length) throw refused(`${taken.join(', ')} already exist. Nothing was changed.`)
@@ -272,7 +272,7 @@ async function addAuth(root, { dryRun, install }) {
   }
   actions.push(
     'add BETTER_AUTH_SECRET to .env',
-    ...(layer.schema ? ['next: `weft db generate`'] : []),
+    ...(layer.schema ? ['next: `kerf db generate`'] : []),
     'next: reload the app: the migration applies on the next request',
     "next: add `auth: 'user'` to what needs a user, and link to /login",
   )
@@ -292,7 +292,7 @@ export async function addCommand(
   root = resolve(root)
   if (!feature)
     throw usageError(
-      `weft add needs a feature: db, auth, tailwind, rust, ${Object.keys(ALIASES).join(', ')}, or a package name`,
+      `kerf add needs a feature: db, auth, tailwind, rust, ${Object.keys(ALIASES).join(', ')}, or a package name`,
     )
   if (feature === 'rust') {
     const [manager, verb] = installer(root)
@@ -307,12 +307,12 @@ export async function addCommand(
   if (feature === 'db') return addDb(root, engine, { layer, dryRun, install })
   if (feature === 'auth') return addAuth(root, { dryRun, install })
   const pkg =
-    ALIASES[feature] ?? (ADDONS.has(`@weft-js/${feature}`) ? `@weft-js/${feature}` : feature)
-  const file = findConfig(root) ?? join(root, 'weft.config.ts')
+    ALIASES[feature] ?? (ADDONS.has(`@kerf/${feature}`) ? `@kerf/${feature}` : feature)
+  const file = findConfig(root) ?? join(root, 'kerf.config.ts')
   const config = relative(root, file)
   const text = existsSync(file)
     ? readFileSync(file, 'utf8')
-    : "import { defineConfig } from '@weft-js/core/config'\n\nexport default defineConfig({})\n"
+    : "import { defineConfig } from '@kerf/core/config'\n\nexport default defineConfig({})\n"
   const named = names(text, pkg)
   // A config can name a package that isn't installed yet, and importing it then would leave this process's module
   // resolver sure the package has no `exports`, so the load after the install would fail too. Load it once it's there.
@@ -359,7 +359,7 @@ async function finishAdd({ root, file, next, text, config, pkg, install, actions
     )
   }
   sync(root, after)
-  actions.push('regenerate .weft/slots')
+  actions.push('regenerate .kerf/slots')
   if (plan) {
     for (const other of setup.with ?? [])
       actions.push(...(await addCommand(root, other, { install })).actions)
@@ -368,10 +368,10 @@ async function finishAdd({ root, file, next, text, config, pkg, install, actions
   }
   // Never approved here: installing a plugin isn't having read what it asks for.
   const trust = trustStatus(root, after).plugins.find((p) => p.name === pkg)
-  // Only the generated file: a scaffold's short one is the app's own until `weft agents-md` is asked for.
+  // Only the generated file: a scaffold's short one is the app's own until `kerf agents-md` is asked for.
   if (
     existsSync(join(root, 'AGENTS.md')) &&
-    readFileSync(join(root, 'AGENTS.md'), 'utf8').includes('Generated by `weft agents-md`')
+    readFileSync(join(root, 'AGENTS.md'), 'utf8').includes('Generated by `kerf agents-md`')
   ) {
     await writeAgentsMd(root)
     actions.push('regenerate AGENTS.md')
@@ -379,7 +379,7 @@ async function finishAdd({ root, file, next, text, config, pkg, install, actions
   actions.push(...(after.contributions?.find((c) => c.name === pkg)?.manifest?.notes ?? []))
   if (trust?.blocked)
     actions.push(
-      `${pkg} asks for ${[...trust.added, ...trust.hidden.map((n) => `${n} (undeclared)`)].join(', ') || 'a code change'}; \`weft check\` stops until you run \`weft plugins approve ${pkg}\``,
+      `${pkg} asks for ${[...trust.added, ...trust.hidden.map((n) => `${n} (undeclared)`)].join(', ') || 'a code change'}; \`kerf check\` stops until you run \`kerf plugins approve ${pkg}\``,
     )
   return {
     ok: true,

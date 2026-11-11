@@ -13,7 +13,7 @@ export default async function run({ url, log }) {
   // Rows show optimistically, so wait for the write itself before a reload.
   const add = async (page, title) => {
     const written = page.waitForResponse(
-      (r) => r.url().includes('/_weft/fn/') && r.request().method() === 'POST',
+      (r) => r.url().includes('/_kerf/fn/') && r.request().method() === 'POST',
     )
     await t.add(page, title)
     await written
@@ -39,12 +39,12 @@ export default async function run({ url, log }) {
     })
     await check('toggle and delete persist', async () => {
       const written = page.waitForResponse(
-        (r) => r.url().includes('/_weft/fn/') && r.request().method() === 'POST',
+        (r) => r.url().includes('/_kerf/fn/') && r.request().method() === 'POST',
       )
       await page.getByRole('checkbox').first().check()
       await written
       const deleted = page.waitForResponse(
-        (r) => r.url().includes('/_weft/fn/') && r.request().method() === 'POST',
+        (r) => r.url().includes('/_kerf/fn/') && r.request().method() === 'POST',
       )
       await page.getByRole('button', { name: 'Delete Bread' }).click()
       await page.getByRole('button', { name: 'Delete Bread' }).waitFor({ state: 'detached' })

@@ -1,5 +1,5 @@
-import type { CanvasFrame } from '@weft-js/warp'
-import { Canvas } from '@weft-js/warp'
+import type { CanvasFrame } from '@kerf/veneer'
+import { Canvas } from '@kerf/veneer'
 import { token, STAGE } from './paint-primitives'
 
 // A needle that eases toward the pointer and stops asking
@@ -19,7 +19,7 @@ export function drawNeedle(
   ctx.lineWidth = 12
   ctx.strokeStyle = token(
     ctx,
-    '--warp-color-surface-sunken',
+    '--veneer-color-surface-sunken',
   )
   ctx.beginPath()
   ctx.arc(cx, cy, r, Math.PI, 0)
@@ -27,8 +27,8 @@ export function drawNeedle(
   ctx.strokeStyle = token(
     ctx,
     needle.at > 0.8
-      ? '--warp-color-critical-solid'
-      : '--warp-color-accent-solid',
+      ? '--veneer-color-critical-solid'
+      : '--veneer-color-accent-solid',
   )
   ctx.beginPath()
   ctx.arc(
@@ -41,7 +41,7 @@ export function drawNeedle(
   ctx.stroke()
   const a = Math.PI + needle.at * Math.PI
   ctx.lineWidth = 3
-  ctx.strokeStyle = token(ctx, '--warp-color-text')
+  ctx.strokeStyle = token(ctx, '--veneer-color-text')
   ctx.beginPath()
   ctx.moveTo(cx, cy)
   ctx.lineTo(

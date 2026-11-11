@@ -1,6 +1,6 @@
-import { line } from '@weft-js/warp-core/charts'
+import { line } from '@kerf/veneer-core/charts'
 
-import { Chart } from '@weft-js/warp'
+import { Chart } from '@kerf/veneer'
 
 import { TRAFFIC } from '../../world'
 

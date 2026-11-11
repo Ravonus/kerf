@@ -1,0 +1,30 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs-rich {
+/* -- markdown */
+  :where([data-scope="markdown"]) { display: grid; gap: 10px; min-inline-size: 0; font-size: var(--veneer-text-body-size); line-height: 1.6; padding: 4px 2px; }
+  :where([data-scope="markdown"] > *) { margin: 0; }
+  :where([data-scope="markdown"] :is(h2)),
+  :where([data-scope="markdown"] :is(h3)),
+  :where([data-scope="markdown"] :is(h4)),
+  :where([data-scope="markdown"] :is(h5)) { font-family: var(--veneer-text-title-font); font-weight: var(--veneer-text-title-weight); letter-spacing: var(--veneer-text-title-tracking); line-height: 1.2; }
+  :where([data-scope="markdown"] h2) { font-size: calc(var(--veneer-text-heading-size) + 6px); }
+  :where([data-scope="markdown"] h3) { font-size: calc(var(--veneer-text-heading-size) + 2px); }
+  :where([data-scope="markdown"] :is(ul)),
+  :where([data-scope="markdown"] :is(ol)) { padding-inline-start: 1.3em; display: grid; gap: 3px; }
+  :where([data-scope="markdown"] li.task) { list-style: none; margin-inline-start: -1.3em; }
+  :where([data-scope="markdown"] li.task input) {
+    appearance: none; display: inline-grid; place-content: center; inline-size: 14px; block-size: 14px; margin: 0 6px 0 0; vertical-align: -2px;
+    border: 1.5px solid var(--veneer-color-border-strong); border-radius: var(--veneer-radius-mark); background: transparent; color: var(--veneer-color-accent-on-solid);
+  }
+  :where([data-scope="markdown"] li.task input:checked) { border-color: var(--veneer-color-accent-solid); background: var(--veneer-color-accent-solid); }
+  :where([data-scope="markdown"] li.task input:checked)::after { content: ""; inline-size: 8px; block-size: 4px; margin-block-start: -2px; border-inline-start: 2px solid currentColor; border-block-end: 2px solid currentColor; rotate: -45deg; }
+  :where([data-scope="markdown"] blockquote) { padding-inline-start: 12px; border-inline-start: 2px solid var(--veneer-color-accent-solid); color: var(--veneer-color-text-subtle); }
+  :where([data-scope="markdown"] hr) { border: 0; border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border); }
+  :where([data-scope="markdown"] a) { color: var(--veneer-color-accent-text); text-underline-offset: 2px; }
+  :where(.lab-f) { padding-block-start: 10px; }
+  :where([data-scope="field"][data-multiline] [data-part="body"]:not([data-scope="field"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="field"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="field"] *)) > textarea[data-part="input"]) { box-sizing: border-box; padding: 14px var(--veneer-pad-control) 10px; resize: vertical; line-height: 1.55; min-block-size: 6lh; }
+  :where(.code-in) { padding: 14px var(--veneer-pad-control) 10px; }
+  :where([data-scope="signature"] [data-part="typed"])::placeholder { transition: color var(--veneer-duration-fast); }
+  :where([data-scope="field"] > [data-part="control"]:not(:hover, :focus-within, [data-filled]) [data-scope="signature"] [data-part="typed"])::placeholder,
+  :where([data-scope="signature"] [data-scope="field"] > [data-part="control"]:not(:hover, :focus-within, [data-filled]) [data-part="typed"])::placeholder { color: transparent; }
+}

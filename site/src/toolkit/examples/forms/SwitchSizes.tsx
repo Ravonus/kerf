@@ -1,4 +1,4 @@
-import { Stack, Switch } from '@weft-js/warp'
+import { Stack, Switch } from '@kerf/veneer'
 
 export const SwitchSizes = () => (
   <Stack gap="related">

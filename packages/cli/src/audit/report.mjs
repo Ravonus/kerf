@@ -1,9 +1,9 @@
 import { diagnostic } from '../diag.mjs'
 
-/** What a rule means in a warp app, where warp is how it usually happens. */
-const WARP = {
+/** What a rule means in a veneer app, where veneer is how it usually happens. */
+const VENEER = {
   'heading-order':
-    "warp's titled parts (Accordion, Chart, ActivityFeed) are h3, for a page section under an h2: one placed elsewhere takes `level`, or the place gets the heading it lacks. ",
+    "veneer's titled parts (Accordion, Chart, ActivityFeed) are h3, for a page section under an h2: one placed elsewhere takes `level`, or the place gets the heading it lacks. ",
 }
 
 const say = {
@@ -52,7 +52,7 @@ export function reportFindings(findings, routes, forms, indexing = 'auto') {
       // an axe rule outside L001–L003 carries its own fix: the rule's first remedy, and its page
       const help =
         f.code === 'L004'
-          ? `${f.fix ? `${f.fix}. ` : ''}${WARP[f.rule] ?? ''}The rule: https://dequeuniversity.com/rules/axe/4.14/${f.rule}`
+          ? `${f.fix ? `${f.fix}. ` : ''}${VENEER[f.rule] ?? ''}The rule: https://dequeuniversity.com/rules/axe/4.14/${f.rule}`
           : undefined
       return diagnostic({
         code: f.code,

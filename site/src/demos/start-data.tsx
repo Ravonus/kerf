@@ -1,4 +1,4 @@
-import { Card } from '@weft-js/warp'
+import { Card } from '@kerf/veneer'
 
 const barista = {
   name: 'Noor',
@@ -16,11 +16,11 @@ export default function Profile() {
         style={{
           width: barista.size,
           height: barista.size,
-          borderRadius: 'var(--warp-radius-round)',
+          borderRadius: 'var(--veneer-radius-round)',
           display: 'grid',
           placeItems: 'center',
-          background: 'var(--warp-color-accent-solid)',
-          color: 'var(--warp-color-surface)',
+          background: 'var(--veneer-color-accent-solid)',
+          color: 'var(--veneer-color-surface)',
           fontSize: barista.size / 2,
         }}
       >

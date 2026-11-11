@@ -2,7 +2,7 @@ import {
   ScheduledLobby,
   Toaster,
   toast,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 export function ScheduledLobbyReview() {
   const to = Date.now() + 8 * 60_000

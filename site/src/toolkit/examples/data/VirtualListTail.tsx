@@ -1,4 +1,4 @@
-import { onCleanup, onMount, state } from '@weft-js/core'
+import { onCleanup, onMount, state } from '@kerf/core'
 
 import {
   Button,
@@ -6,9 +6,9 @@ import {
   Stack,
   Toggle,
   VirtualList,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
-import type { VirtualControl } from '@weft-js/warp'
+import type { VirtualControl } from '@kerf/veneer'
 
 import { money as _Shared0 } from './shared-project'
 

@@ -1,4 +1,4 @@
-import { Grid, Switch } from '@weft-js/warp'
+import { Grid, Switch } from '@kerf/veneer'
 import { Cell } from '../../world'
 
 const previewHint =

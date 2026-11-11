@@ -1,20 +1,20 @@
 {
-  "name": "@weft-js/cli",
-  "version": "0.1.4",
-  "description": "The weft command: dev, build, check, the agent layer and the MCP server",
+  "name": "@kerf/cli",
+  "version": "0.1.0",
+  "description": "The kerf command: dev, build, check, the agent layer and the MCP server",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/cli#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/cli#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "type": "module",
   "bin": {
-    "weft": "./bin/weft.mjs"
+    "kerf": "./bin/kerf.mjs"
   },
   "exports": {
     ".": "./src/index.mjs",
@@ -27,17 +27,17 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@weft-js/create": "workspace:*",
+    "create-kerf": "workspace:*",
     "axe-core": "4.14.0",
     "typescript": "6.0.3",
     "yaml": "2.9.1",
     "zod": "4.6.7"
   },
   "peerDependencies": {
-    "@weft-js/core": "*"
+    "@kerf/core": "*"
   },
   "devDependencies": {
-    "@weft-js/core": "workspace:*",
+    "@kerf/core": "workspace:*",
     "vite": "8.3.5",
     "vitest": "5.0.5"
   },
@@ -45,7 +45,7 @@
     "access": "public"
   },
   "keywords": [
-    "weft"
+    "kerf"
   ],
   "files": [
     "bin",

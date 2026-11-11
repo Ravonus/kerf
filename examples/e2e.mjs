@@ -2,7 +2,7 @@
 // One site, one variant, against the role-based test that every variant has to pass before any number counts (rule 6).
 //   node e2e.mjs <site> <variant> [--no-build]     builds it if needed, then database, proxy, production server, tests, and stops all of it
 //   node e2e.mjs <site> --dir <folder>             a local build as it stands, started with its own start script
-//   node e2e.mjs <site> --dir <url> [--db <name>]  a server already running; --db names its weft_bench_* database
+//   node e2e.mjs <site> --dir <url> [--db <name>]  a server already running; --db names its kerf_bench_* database
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
@@ -50,7 +50,7 @@ function localVariant(dir) {
   }
 }
 
-const work = process.env.BENCH_WORK ?? join(homedir(), '.cache/weft-app-bench')
+const work = process.env.BENCH_WORK ?? join(homedir(), '.cache/kerf-app-bench')
 let db,
   server,
   code = 1
@@ -64,12 +64,12 @@ try {
     if (opt['no-build']) lastBuild(app, v, { work })
     else {
       const store = join(work, 'store'),
-        weft = v.tarballs ? await packOnce(store, join(work, 'pack.log')) : null
+        kerf = v.tarballs ? await packOnce(store, join(work, 'pack.log')) : null
       const { reused, build } = await prepare(app, v, {
         work,
         runId: Date.now().toString(36),
         store,
-        weft: weft?.inputs,
+        kerf: kerf?.inputs,
         buildRuns: 1,
         quick: true,
       })

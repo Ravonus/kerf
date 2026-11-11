@@ -14,7 +14,7 @@ afterAll(() => {
 })
 
 async function project(files: Record<string, string>, entries = ['route.tsx']) {
-  const root = mkdtempSync(join(tmpdir(), 'weft-solve-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-solve-'))
   dirs.push(root)
   for (const [f, text] of Object.entries(files)) {
     mkdirSync(dirname(join(root, f)), { recursive: true })
@@ -71,7 +71,7 @@ test('it follows re-exports and barrels', async () => {
 
 test('reactivity reaches callers through what they read', async () => {
   const { why } = await project({
-    'route.tsx': `import { state } from '@weft-js/core'\nconst n = state(0)\nfunction Show() { return <p>{n.value}</p> }\nexport default function R() { return <Show /> }`,
+    'route.tsx': `import { state } from '@kerf/core'\nconst n = state(0)\nfunction Show() { return <p>{n.value}</p> }\nexport default function R() { return <Show /> }`,
   })
   expect(why('Show')).toBeTruthy()
 })
@@ -108,13 +108,13 @@ test('a module with top-level side effects ships', async () => {
   expect(why('R')).toMatch(/as it loads/)
 })
 
-test('the hatches: `@weft client` keeps code on the client, `@weft static` stops the inference', async () => {
+test('the hatches: `@kerf client` keeps code on the client, `@kerf static` stops the inference', async () => {
   const forced = await project({
-    'route.tsx': `/* @weft client */\nexport default function R() { return <p>x</p> }`,
+    'route.tsx': `/* @kerf client */\nexport default function R() { return <p>x</p> }`,
   })
   expect(forced.routeStatic).toBe(false)
   const held = await project({
-    'route.tsx': `import { state } from '@weft-js/core'\nconst n = state(0)\n/* @weft static */\nexport default function R() { return <p>{n.value}</p> }`,
+    'route.tsx': `import { state } from '@kerf/core'\nconst n = state(0)\n/* @kerf static */\nexport default function R() { return <p>{n.value}</p> }`,
   })
   expect(held.routeStatic).toBe(true)
 })
@@ -169,7 +169,7 @@ const at = async (body: string, extra: Record<string, string> = {}) => {
 
 test('handlers alone wait for an event', async () => {
   const { load, diagnostics } = await at(
-    `import { state } from '@weft-js/core'\nexport function C() { const n = state(0); return <button onClick={() => { document.title = 'x'; n.value++ }}>{n.value}</button> }`,
+    `import { state } from '@kerf/core'\nexport function C() { const n = state(0); return <button onClick={() => { document.title = 'x'; n.value++ }}>{n.value}</button> }`,
   )
   expect(load).toMatchObject({ when: 'interaction', tag: 'C' })
   expect(diagnostics).toEqual([])
@@ -177,15 +177,15 @@ test('handlers alone wait for an event', async () => {
 
 test("work that stays inside waits for the viewport, and work that reaches out doesn't wait, with a fix", async () => {
   const inside = await at(
-    `import { onMount, state } from '@weft-js/core'\nexport function C() { const n = state(0); onMount(() => { window.setTimeout(() => { n.value = 1 }, 10) }); return <p>{n.value}</p> }`,
+    `import { onMount, state } from '@kerf/core'\nexport function C() { const n = state(0); onMount(() => { window.setTimeout(() => { n.value = 1 }, 10) }); return <p>{n.value}</p> }`,
   )
   expect(inside.load!.when).toBe('visible')
   const out = await at(
-    `import { onMount } from '@weft-js/core'\nexport function C() { onMount(() => { document.title = 'x' }); return <p onClick={() => {}}>c</p> }`,
+    `import { onMount } from '@kerf/core'\nexport function C() { onMount(() => { document.title = 'x' }); return <p onClick={() => {}}>c</p> }`,
   )
   expect(out.load).toMatchObject({ when: 'load', why: expect.stringMatching(/document/) })
   expect(out.diagnostics).toMatchObject([
-    { code: 'H010', file: 'route.tsx', fix: expect.stringMatching(/@weft visible/) },
+    { code: 'H010', file: 'route.tsx', fix: expect.stringMatching(/@kerf visible/) },
   ])
 })
 
@@ -193,7 +193,7 @@ test("moving focus can't wait, and neither can autofocus or a ref that works", a
   expect(
     (
       await at(
-        `import { onMount } from '@weft-js/core'\nexport function C() { let e; onMount(() => e.focus()); return <input ref={e} /> }`,
+        `import { onMount } from '@kerf/core'\nexport function C() { let e; onMount(() => e.focus()); return <input ref={e} /> }`,
       )
     ).load!.when,
   ).toBe('load')
@@ -250,14 +250,14 @@ test('what a child does counts, through the props the island keeps', async () =>
     await at(
       `import { D } from './d'\nexport function C() { return <div onClick={() => {}}><D /></div> }`,
       {
-        'd.tsx': `import { onMount } from '@weft-js/core'\nexport function D() { onMount(() => { navigator.vibrate(1) }); return <p /> }`,
+        'd.tsx': `import { onMount } from '@kerf/core'\nexport function D() { onMount(() => { navigator.vibrate(1) }); return <p /> }`,
       },
     )
   ).load
   expect(load!.when).toBe('load')
   const { plan } = await project({
     'c.tsx': `export function C(props) { return <div onClick={() => {}}>{props.make()}</div> }`,
-    'd.tsx': `import { onMount } from '@weft-js/core'\nexport function D() { onMount(() => {}); return <p /> }`,
+    'd.tsx': `import { onMount } from '@kerf/core'\nexport function D() { onMount(() => {}); return <p /> }`,
     'route.tsx': `import { C } from './c'\nimport { D } from './d'\nconst make = () => <D />\nexport default function R() { return <C make={make} /> }`,
   })
   expect(plan.loads[0]!.when).toBe('visible')
@@ -265,7 +265,7 @@ test('what a child does counts, through the props the island keeps', async () =>
 
 test("a box at module level or a module that runs can't wait: nothing else would reach the island", async () => {
   const box = await at(
-    `import { state } from '@weft-js/core'\nconst n = state(0)\nexport function C() { return <p onClick={() => { n.value++ }}>{n.value}</p> }`,
+    `import { state } from '@kerf/core'\nconst n = state(0)\nexport function C() { return <p onClick={() => { n.value++ }}>{n.value}</p> }`,
   )
   expect(box.load).toMatchObject({ when: 'load', why: expect.stringMatching(/module level/) })
   expect(box.diagnostics[0]!.code).toBe('H010')
@@ -302,36 +302,36 @@ test("server data wants to be running once seen, a mutation passed along doesn't
   expect(
     (
       await at(
-        `import { Boundary } from '@weft-js/core'\nexport function C() { return <Boundary><p onClick={() => {}} /></Boundary> }`,
+        `import { Boundary } from '@kerf/core'\nexport function C() { return <Boundary><p onClick={() => {}} /></Boundary> }`,
       )
     ).load!.when,
   ).toBe('visible')
 })
 
-test('the hatches: `@weft client` keeps its meaning, `@weft visible` overrules the proof', async () => {
+test('the hatches: `@kerf client` keeps its meaning, `@kerf visible` overrules the proof', async () => {
   expect(
-    (await at(`/* @weft client */\nexport function C() { return <p onClick={() => {}} /> }`)).load,
-  ).toMatchObject({ when: 'load', why: expect.stringMatching(/@weft client/) })
+    (await at(`/* @kerf client */\nexport function C() { return <p onClick={() => {}} /> }`)).load,
+  ).toMatchObject({ when: 'load', why: expect.stringMatching(/@kerf client/) })
   const seen = await at(
-    `import { onMount } from '@weft-js/core'\n/* @weft visible */\nexport function C() { onMount(() => { document.title = 'x' }); return <p /> }`,
+    `import { onMount } from '@kerf/core'\n/* @kerf visible */\nexport function C() { onMount(() => { document.title = 'x' }); return <p /> }`,
   )
   expect(seen.load!.when).toBe('visible')
   expect(seen.diagnostics).toEqual([])
 })
 
-test('`@weft interaction` stops the search at what it marks, and nothing else', async () => {
+test('`@kerf interaction` stops the search at what it marks, and nothing else', async () => {
   const child = (hatch: string) => ({
-    'd.tsx': `import { onMount } from '@weft-js/core'\n${hatch}\nexport function D() { onMount(() => { document.title = 'x' }); return <p /> }`,
+    'd.tsx': `import { onMount } from '@kerf/core'\n${hatch}\nexport function D() { onMount(() => { document.title = 'x' }); return <p /> }`,
   })
   const route = `import { D } from './d'\nexport function C() { return <div onClick={() => {}}><D /></div> }`
   expect((await at(route, child(''))).load?.when).toBe('load')
-  expect((await at(route, child('/* @weft interaction */'))).load).toMatchObject({
+  expect((await at(route, child('/* @kerf interaction */'))).load).toMatchObject({
     when: 'interaction',
     why: expect.stringMatching(/handlers only/),
   })
   const beside = {
-    ...child('/* @weft interaction */'),
-    'e.tsx': `import { onMount } from '@weft-js/core'\nexport function E() { onMount(() => {}); return <p /> }`,
+    ...child('/* @kerf interaction */'),
+    'e.tsx': `import { onMount } from '@kerf/core'\nexport function E() { onMount(() => {}); return <p /> }`,
   }
   expect(
     (
@@ -344,7 +344,7 @@ test('`@weft interaction` stops the search at what it marks, and nothing else', 
 })
 
 test('`lazy: false`: every island loads with the page, as an opt-out', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-solve-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-solve-'))
   dirs.push(root)
   writeFileSync(join(root, 'c.tsx'), button.replace('Button', 'C'))
   writeFileSync(
@@ -383,7 +383,7 @@ test('an import that only brings CSS keeps an island waiting; one that runs code
   expect(when(code.plan)).toBe('load')
 })
 
-const layout = `import { untrack } from '@weft-js/core'
+const layout = `import { untrack } from '@kerf/core'
 function Div({ children, ...rest }) { return <div {...rest}>{children}</div> }
 const TAGS = { div: Div }
 function Element({ as, ...rest }) { const Tag = TAGS[untrack(() => as) ?? 'div']; return <Tag {...rest} /> }
@@ -426,7 +426,7 @@ test('a handler under another name, or a spread of anything but the props, could
 
 test('an island waits by what its hoisted children read, not only its own tag', async () => {
   const { plan } = await project({
-    'route.tsx': `import { Boundary, state } from '@weft-js/core'
+    'route.tsx': `import { Boundary, state } from '@kerf/core'
 function Box({ children }) { const s = state(0); return <div onClick={() => s.value++}>{children}</div> }
 function Inner() { const n = state(1); return <Boundary fallback="…">{n.value}</Boundary> }
 export default function R() { return <main><Box><Inner /></Box></main> }`,
@@ -434,16 +434,16 @@ export default function R() { return <main><Box><Inner /></Box></main> }`,
   expect(plan.loads).toMatchObject([{ tag: 'Box', when: 'visible' }])
 })
 
-test('@weft visible on a hoisted child is reached', async () => {
+test('@kerf visible on a hoisted child is reached', async () => {
   const { plan } = await project({
-    'route.tsx': `import { onMount, state } from '@weft-js/core'
+    'route.tsx': `import { onMount, state } from '@kerf/core'
 function Box({ children }) { const s = state(0); return <div onClick={() => s.value++}>{children}</div> }
-/* @weft visible */
+/* @kerf visible */
 function Inner() { onMount(() => document.title); return <span>t</span> }
 export default function R() { return <main><Box><Inner /></Box></main> }`,
   })
   expect(plan.loads).toMatchObject([
-    { tag: 'Box', when: 'visible', why: expect.stringMatching(/@weft visible/) },
+    { tag: 'Box', when: 'visible', why: expect.stringMatching(/@kerf visible/) },
   ])
 })
 
@@ -465,7 +465,7 @@ test('H017: a closure on a handler is why a route hydrates whole', async () => {
 
 test('Media waits to be seen, whatever else is on the page', async () => {
   const { plan } = await project({
-    'route.tsx': `import { Media } from '@weft-js/core/media'\nconst hero = { src: 'a.jpg' }\nexport default function R() { return <main><Media src={hero} alt="" /></main> }`,
+    'route.tsx': `import { Media } from '@kerf/core/media'\nconst hero = { src: 'a.jpg' }\nexport default function R() { return <main><Media src={hero} alt="" /></main> }`,
   })
   expect(plan.loads).toMatchObject([{ tag: 'Media', when: 'visible' }])
 })

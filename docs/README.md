@@ -1,17 +1,17 @@
-# weft docs
+# kerf docs
 
-## For people using Weft
+## For people using Kerf
 
 | Where | What |
 |---|---|
 | [site/content/learn](../site/content/learn) | Learn: the tutorial, from installation to Rust, in order. The site serves it at `/learn`. |
-| [packages/cli/docs](../packages/cli/docs) | Reference: every API, command, config key and diagnostic. `npx weft docs <topic>` prints the same pages, and the site serves them at `/reference`. |
+| [packages/cli/docs](../packages/cli/docs) | Reference: every API, command, config key and diagnostic. `npx kerf docs <topic>` prints the same pages, and the site serves them at `/reference`. |
 | [packages/agent/docs/agent.md](../packages/agent/docs/agent.md) | Reference for the agent: tools, grants, conversations, MCP, bridges. |
 | [packages/pay/docs/pay.md](../packages/pay/docs/pay.md) | Reference for payments. |
 | [react-props.md](react-props.md) | Coming from React: prop names, values and events. |
 | Each `packages/*/README.md` | What one package is for, how to install it and where its docs are. |
 
-## For people working on Weft
+## For people working on Kerf
 
 | Where | What |
 |---|---|
@@ -30,6 +30,6 @@ the reference, the code and the reference are right.
 |---|---|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | The current architecture and design rules. |
 | [REVIEW.md](REVIEW.md) | An outside review of the first plan (2026-10-28). Everything in it was folded into the plan. |
-| [research/](https://github.com/Ravonus/weft/tree/archive/evals-2026-11/docs/research) | Numbered research and design notes, 01 to 45, in the order they were written. `research/agorix/` studies the earlier toolkit Warp was rebuilt from. |
-| [design/warp/](design/warp/) | Warp's design: direction, foundations, components, tokens and specimens. |
-| [spikes/](https://github.com/Ravonus/weft/tree/archive/evals-2026-11/spikes) | Throwaway experiments behind some of the research: native targets, share cards, Rust sidecars and addons, style groups. |
+| [research/](https://github.com/Ravonus/kerf/tree/archive/evals-2026-11/docs/research) | Numbered research and design notes, 01 to 45, in the order they were written. `research/agorix/` studies the earlier toolkit Veneer was rebuilt from. |
+| [design/veneer/](design/veneer/) | Veneer's design: direction, foundations, components, tokens and specimens. |
+| [spikes/](https://github.com/Ravonus/kerf/tree/archive/evals-2026-11/spikes) | Throwaway experiments behind some of the research: native targets, share cards, Rust sidecars and addons, style groups. |

@@ -6,15 +6,15 @@ const TAILWIND = { tailwindcss: '4.3.3', '@tailwindcss/vite': '4.3.3' }
 const REACT = { react: '19.3.1', 'react-dom': '19.3.1' }
 const reactVite = (...more) =>
   `import react from '@vitejs/plugin-react'\n${more.includes('tw') ? "import tailwindcss from '@tailwindcss/vite'\n" : ''}import { defineConfig } from 'vite'\nexport default defineConfig({ plugins: [react()${more.includes('tw') ? ', tailwindcss()' : ''}] })\n`
-const WEFT_MAIN = `import { render } from '@weft-js/core/dom'\nimport { App } from './App'\nrender(() => <App />, document.getElementById('root')!)\n`
-const WEFT_APP = `export function App() {\n  return <main>Replace me</main>\n}\n`
+const KERF_MAIN = `import { render } from '@kerf/core/dom'\nimport { App } from './App'\nrender(() => <App />, document.getElementById('root')!)\n`
+const KERF_APP = `export function App() {\n  return <main>Replace me</main>\n}\n`
 const TSX = {
   compilerOptions: {
     target: 'ES2022',
     module: 'ESNext',
     moduleResolution: 'bundler',
     jsx: 'preserve',
-    jsxImportSource: '@weft-js/core',
+    jsxImportSource: '@kerf/core',
     strict: true,
     skipLibCheck: true,
     noEmit: true,
@@ -24,43 +24,43 @@ const TSX = {
 const CSS_TW = `@import "tailwindcss";\n`
 
 export const STACKS = {
-  'weft-ds': {
-    label: '@weft-js/core/ds (weft + warp)',
-    tool: 'weft + @weft-js/warp',
+  'kerf-ds': {
+    label: '@kerf/core/ds (kerf + veneer)',
+    tool: 'kerf + @kerf/veneer',
     deps: {
-      '@weft-js/core': pkg('core'),
-      '@weft-js/warp': pkg('warp'),
-      '@weft-js/warp-core': pkg('warp-core'),
-      '@weft-js/cli': pkg('cli'),
+      '@kerf/core': pkg('core'),
+      '@kerf/veneer': pkg('veneer'),
+      '@kerf/veneer-core': pkg('veneer-core'),
+      '@kerf/cli': pkg('cli'),
     },
     dev: { vite: '8.3.5' },
     files: {
-      'vite.config.ts': `import { defineConfig } from 'vite'\nimport weft from '@weft-js/core/vite'\nexport default defineConfig({ plugins: [weft()] })\n`,
-      'weft.config.ts': `import { defineConfig } from '@weft-js/core/config'\nimport warp from '@weft-js/warp/plugin'\nexport default defineConfig({ plugins: [warp()] })\n`,
-      'src/main.tsx': WEFT_MAIN,
-      'src/App.tsx': WEFT_APP,
+      'vite.config.ts': `import { defineConfig } from 'vite'\nimport kerf from '@kerf/core/vite'\nexport default defineConfig({ plugins: [kerf()] })\n`,
+      'kerf.config.ts': `import { defineConfig } from '@kerf/core/config'\nimport veneer from '@kerf/veneer/plugin'\nexport default defineConfig({ plugins: [veneer()] })\n`,
+      'src/main.tsx': KERF_MAIN,
+      'src/App.tsx': KERF_APP,
       'tsconfig.json': JSON.stringify(TSX, null, 2),
     },
-    note: 'This is a weft app using warp. Read AGENTS.md first, then `npx weft docs design`. Run `npx weft check --json` after changes and `npx weft fix` for the safe fixes.',
+    note: 'This is a kerf app using veneer. Read AGENTS.md first, then `npx kerf docs design`. Run `npx kerf check --json` after changes and `npx kerf fix` for the safe fixes.',
     after: (dir) => {
-      execFileSync('npx', ['weft', 'plugins', 'approve', '--all'], { cwd: dir, stdio: 'ignore' })
-      execFileSync('npx', ['weft', 'agents-md'], { cwd: dir, stdio: 'ignore' })
+      execFileSync('npx', ['kerf', 'plugins', 'approve', '--all'], { cwd: dir, stdio: 'ignore' })
+      execFileSync('npx', ['kerf', 'agents-md'], { cwd: dir, stdio: 'ignore' })
     },
   },
-  'weft-tailwind': {
-    label: 'Raw Tailwind (weft + Tailwind)',
-    tool: 'weft + Tailwind',
-    deps: { '@weft-js/core': pkg('core'), '@weft-js/cli': pkg('cli') },
+  'kerf-tailwind': {
+    label: 'Raw Tailwind (kerf + Tailwind)',
+    tool: 'kerf + Tailwind',
+    deps: { '@kerf/core': pkg('core'), '@kerf/cli': pkg('cli') },
     dev: { vite: '8.3.5', ...TAILWIND },
     files: {
-      'vite.config.ts': `import tailwindcss from '@tailwindcss/vite'\nimport { defineConfig } from 'vite'\nimport weft from '@weft-js/core/vite'\nexport default defineConfig({ plugins: [weft(), tailwindcss()] })\n`,
-      'src/main.tsx': `import './app.css'\n${WEFT_MAIN}`,
-      'src/App.tsx': WEFT_APP,
+      'vite.config.ts': `import tailwindcss from '@tailwindcss/vite'\nimport { defineConfig } from 'vite'\nimport kerf from '@kerf/core/vite'\nexport default defineConfig({ plugins: [kerf(), tailwindcss()] })\n`,
+      'src/main.tsx': `import './app.css'\n${KERF_MAIN}`,
+      'src/App.tsx': KERF_APP,
       'src/app.css': CSS_TW,
       'tsconfig.json': JSON.stringify(TSX, null, 2),
     },
-    note: 'This is a weft app styled with Tailwind v4 utility classes. Read AGENTS.md first. Run `npx weft check --json` after changes.',
-    after: (dir) => execFileSync('npx', ['weft', 'agents-md'], { cwd: dir, stdio: 'ignore' }),
+    note: 'This is a kerf app styled with Tailwind v4 utility classes. Read AGENTS.md first. Run `npx kerf check --json` after changes.',
+    after: (dir) => execFileSync('npx', ['kerf', 'agents-md'], { cwd: dir, stdio: 'ignore' }),
   },
   'solid-kobalte': {
     label: 'Solid + Kobalte + Tailwind',
@@ -70,7 +70,7 @@ export const STACKS = {
     files: {
       'vite.config.ts': `import tailwindcss from '@tailwindcss/vite'\nimport { defineConfig } from 'vite'\nimport solid from 'vite-plugin-solid'\nexport default defineConfig({ plugins: [solid(), tailwindcss()] })\n`,
       'src/main.tsx': `import { render } from 'solid-js/web'\nimport { App } from './App'\nimport './app.css'\nrender(() => <App />, document.getElementById('root')!)\n`,
-      'src/App.tsx': WEFT_APP,
+      'src/App.tsx': KERF_APP,
       'src/app.css': CSS_TW,
     },
     note: 'This is a Solid app. Use Kobalte for the dialog and select, and Tailwind v4 for styling.',
@@ -88,7 +88,7 @@ export const STACKS = {
     files: {
       'vite.config.ts': reactVite('tw'),
       'src/main.tsx': `import { createRoot } from 'react-dom/client'\nimport { App } from './App'\nimport './app.css'\ncreateRoot(document.getElementById('root')!).render(<App />)\n`,
-      'src/App.tsx': WEFT_APP,
+      'src/App.tsx': KERF_APP,
       'src/app.css': CSS_TW,
     },
     note: 'This is a React app. Use Radix primitives for the dialog, select and switch, and Tailwind v4 for styling.',
@@ -107,7 +107,7 @@ export const STACKS = {
     files: {
       'vite.config.ts': reactVite('tw'),
       'src/main.tsx': `import { createRoot } from 'react-dom/client'\nimport { App } from './App'\nimport './app.css'\ncreateRoot(document.getElementById('root')!).render(<App />)\n`,
-      'src/App.tsx': WEFT_APP,
+      'src/App.tsx': KERF_APP,
       'src/app.css': CSS_TW,
     },
     note: 'This is a React app. Keep the customer list in a Zustand store. Use Radix primitives for the dialog, select and switch, and Tailwind v4 for styling.',
@@ -125,7 +125,7 @@ export const STACKS = {
     files: {
       'vite.config.ts': reactVite(),
       'src/main.tsx': `import { createRoot } from 'react-dom/client'\nimport { App } from './App'\ncreateRoot(document.getElementById('root')!).render(<App />)\n`,
-      'src/App.tsx': WEFT_APP,
+      'src/App.tsx': KERF_APP,
     },
     note: 'This is a React app using MUI (Material UI) components and its theme.',
   },

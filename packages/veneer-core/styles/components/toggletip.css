@@ -1,0 +1,12 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Toggletip: click-to-open contextual help (works on touch, unlike a tooltip) */
+:where([data-scope="toggletip"][data-part="trigger"]) {
+  position: relative; display: inline-grid; place-items: center; inline-size: 18px; block-size: 18px; padding: 0; vertical-align: middle;
+  border: 0; border-radius: var(--veneer-radius-round); background: transparent; color: var(--veneer-color-text-subtle); cursor: pointer;
+}
+:where([data-scope="toggletip"][data-part="trigger"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--veneer-hit-min)) / 2)); }
+:where([data-scope="toggletip"][data-part="trigger"]:hover),
+:where([data-scope="toggletip"][data-part="trigger"][aria-expanded="true"]) { color: var(--veneer-color-accent-text); }
+:where([data-scope="toggletip"][data-part="trigger"] svg) { inline-size: 16px; block-size: 16px; }
+}

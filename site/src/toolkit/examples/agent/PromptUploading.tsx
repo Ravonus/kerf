@@ -1,4 +1,4 @@
-import { Prompt } from '@weft-js/warp'
+import { Prompt } from '@kerf/veneer'
 
 export const PromptUploading = () => (
   <Prompt

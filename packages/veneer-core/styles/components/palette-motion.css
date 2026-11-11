@@ -1,0 +1,7 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Palette motion: a dialog that scales in, rows that settle as the pool shows them */
+:where([data-scope="palette"] [data-part="row"]:not([hidden]):not([data-scope="palette"] :is([data-scope="agenda"],[data-scope="auth"],[data-scope="composer"],[data-scope="scroll-grid"],[data-scope="transport"],[data-scope="tree"],[data-scope="virtual"]) *:not([data-scope="palette"] :is([data-scope="agenda"],[data-scope="auth"],[data-scope="composer"],[data-scope="scroll-grid"],[data-scope="transport"],[data-scope="tree"],[data-scope="virtual"]) [data-scope="palette"] *))) { transition: opacity var(--veneer-duration-fast) var(--veneer-ease-out), translate var(--veneer-duration-fast) var(--veneer-ease-out); @starting-style { opacity: 0; translate: 0 calc(var(--veneer-motion-distance) * 0.5); } }
+:where(dialog[data-scope="palette"]) { transition: opacity var(--veneer-duration-base) var(--veneer-ease-out), scale var(--veneer-duration-base) var(--veneer-ease-pop), overlay var(--veneer-duration-base) allow-discrete, display var(--veneer-duration-base) allow-discrete; opacity: 0; scale: var(--veneer-motion-scale-from); }
+:where(dialog[data-scope="palette"][open]) { opacity: 1; scale: 1; @starting-style { opacity: 0; scale: var(--veneer-motion-scale-from); } }
+}

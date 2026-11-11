@@ -2,23 +2,23 @@
 
 Two checks before a change is done: see it work in the running app, and get its tests through the gate.
 
-## The running app: `weft browser` or `__weft__.agent`
+## The running app: `kerf browser` or `__kerf__.agent`
 
-Run the app in dev: `weft dev`, or `vite` for an app without `@weft-js/start`. In dev, every page loads
-`@weft-js/core/agent`, as long as `@testing-library/dom` and `@testing-library/user-event` are installed (they are what
-`weft docs testing` adds; without them a page gets only the devtools graph). Drive it whichever way you can reach it:
+Run the app in dev: `kerf dev`, or `vite` for an app without `@kerf/start`. In dev, every page loads
+`@kerf/core/agent`, as long as `@testing-library/dom` and `@testing-library/user-event` are installed (they are what
+`kerf docs testing` adds; without them a page gets only the devtools graph). Drive it whichever way you can reach it:
 
 - **Your own browser** (a browser tool that runs JS, any agent): open the app's URL, then
-  `await __weft__.agent.run('snapshot')`, `await __weft__.agent.act({ role: 'button', name: 'Add' }, 'click')`, …
-- **The CLI or MCP**: `weft browser <command>` (tools `browser_*` in `weft mcp`). The dev server relays each command to
-  the open tab. Nothing open? Open the URL in your browser, or `weft browser launch` (a headless Chrome).
+  `await __kerf__.agent.run('snapshot')`, `await __kerf__.agent.act({ role: 'button', name: 'Add' }, 'click')`, …
+- **The CLI or MCP**: `kerf browser <command>` (tools `browser_*` in `kerf mcp`). The dev server relays each command to
+  the open tab. Nothing open? Open the URL in your browser, or `kerf browser launch` (a headless Chrome).
 
 Commands (CLI form; the JS and MCP forms take the same params):
 
 - `snapshot [--interactive] [--delta]`: roles, names and refs (`- button "Add Banana" [ref=e15]`), plus the reactive
   graph with real names: `Cart.total = 4.5 ← Cart.lines → 1 binding in <Cart> (Cart.tsx:12)`. Big ones go to a file.
 - `act button "Add Banana" click`, `act label Coupon fill SAVE10`, `act @e15 click`: user-event, like `user` in
-  @weft-js/core/test. Returns what changed on the page.
+  @kerf/core/test. Returns what changed on the page.
 - `assert status - text "Total: $4.50"`; expectations: visible, absent, text, exactText, value, checked, unchecked,
   disabled, enabled, focused, count. Retries briefly for async loads.
 - `graph Cart` and `set Cart.coupon '"SAVE10"'`: read the graph, write a box by name to reach a state fast.
@@ -27,10 +27,10 @@ Commands (CLI form; the JS and MCP forms take the same params):
 - `net offline|online|latency 300|drop|reset`: `navigator.onLine`, the events, `fetch`, open WebSockets and
   EventSources. `drop` is a server restart; check the app reconnects.
 - `record start` … `record code --component App --from ./App --out src/App.test.tsx`: what you did (acts, asserts,
-  clicks and typing from any browser tool) as a `@weft-js/core/test` test. It then has to pass the gate.
+  clicks and typing from any browser tool) as a `@kerf/core/test` test. It then has to pass the gate.
 - `logs`: console errors and uncaught errors, with the binding they came from.
 
-## The test gate: `weft test --gate`
+## The test gate: `kerf test --gate`
 
 Runs on the diff (`--base <ref>`, default the uncommitted change), in scratch copies; your working tree is never
 touched.
@@ -41,7 +41,7 @@ touched.
   literals, conditions, removed calls, JSX text). Surviving mutants come back with what to assert. Sampled within
   `test.gate.mutationBudgetSec` (default 60) and `maxMutants` (40); when sampled, T011 is a warning.
 - **T020, no weakening:** deleting, skipping or loosening an existing test (`toBe(3)` → `toBeTruthy()`) needs
-  `// weft-allow T020: <reason>` on it.
+  `// kerf-allow T020: <reason>` on it.
 - The static T-codes run on the changed tests; T005 (implementation queries) blocks here.
 
 Tests added for code that didn't change have nothing to fail on: fail-before is skipped, and the mutants come from
@@ -54,7 +54,7 @@ For a site intended for public search, declare
 `build: { audit: { indexing: 'public' } }`. L024 then fails the build or audit if
 robots metadata or an HTTP X-Robots-Tag header says noindex. `private` or the
 backward-compatible `auto` leaves this a warning; neither removes a directive.
-After deployment, run `weft audit --url https://your-site.example --indexing public`:
+After deployment, run `kerf audit --url https://your-site.example --indexing public`:
 a host or proxy may add a header that a local build cannot see. Preserve intentional
 preview/private exclusions. A noindex finding is an indexing policy issue, not
 chat-agent traffic; use a clean profile before attributing other audit failures

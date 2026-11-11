@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Drawer, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Drawer, Text } from '@kerf/veneer'
 
 export function DrawerPlay(p: {
   side: 'auto' | 'right' | 'left' | 'top' | 'bottom'

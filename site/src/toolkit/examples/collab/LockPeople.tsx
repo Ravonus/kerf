@@ -1,4 +1,4 @@
-import { LockIndicator } from '@weft-js/warp'
+import { LockIndicator } from '@kerf/veneer'
 
 import { JUN, LENA } from '../../world'
 

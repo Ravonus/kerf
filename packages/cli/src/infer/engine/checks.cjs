@@ -129,7 +129,7 @@ function errors(host, file) {
     const start = map ? toSource(map, d.start) : d.start
     const end = map ? toSource(map, d.start + d.length) : d.start + d.length
     if (said.some((f) => overlaps([f.start, f.end], [start, Math.max(end, start + 1)]))) return []
-    return [{ code: `TS${d.code}`, start, end, why: d.text, help: 'Fix the type error', ...d.weft }]
+    return [{ code: `TS${d.code}`, start, end, why: d.text, help: 'Fix the type error', ...d.kerf }]
   })
 }
 

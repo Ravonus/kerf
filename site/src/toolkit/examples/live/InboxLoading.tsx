@@ -1,4 +1,4 @@
-import { Inbox } from '@weft-js/warp'
+import { Inbox } from '@kerf/veneer'
 
 export const InboxLoading = () => (
   <Inbox items={undefined} />

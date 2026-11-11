@@ -46,7 +46,7 @@ async function routeHead(route, layouts, mod, context, report) {
       report(
         'H016',
         'info',
-        `This page answered ${status} here, so its metadata wasn't checked. It may need a database or an environment \`weft check\` doesn't have.`,
+        `This page answered ${status} here, so its metadata wasn't checked. It may need a database or an environment \`kerf check\` doesn't have.`,
       )
   } else {
     const params = Object.fromEntries(route.params.map((p) => [p, `<${p}>`]))
@@ -61,7 +61,7 @@ async function routeHead(route, layouts, mod, context, report) {
     head = mergeMeta(site, ...metas)
     if (head.og.image === 'auto')
       head.og.image = {
-        url: `/_weft/og/${cardPath(url)}.png?v=<hash>`,
+        url: `/_kerf/og/${cardPath(url)}.png?v=<hash>`,
         width: 1200,
         height: 630,
       }
@@ -88,7 +88,7 @@ function applyHead(entry, route, mod, resolved, context) {
   entry.image =
     typeof image !== 'object' || !image
       ? 'none'
-      : !image.url.startsWith('/_weft/og/')
+      : !image.url.startsWith('/_kerf/og/')
         ? 'url'
         : !route.params.length
           ? 'build'
@@ -132,7 +132,7 @@ async function inspectRoute(route, context) {
   const resolved = await routeHead(route, layouts, mod, context, report)
   const { head, status } = resolved
   if (!applyHead(entry, route, mod, resolved, context)) return
-  // Route-level checks on the merged result (the config-level ones run in `weft check`).
+  // Route-level checks on the merged result (the config-level ones run in `kerf check`).
   if (preset === 'static' && entry.image === 'on-demand')
     report(
       'H002',

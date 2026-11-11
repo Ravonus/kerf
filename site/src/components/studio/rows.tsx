@@ -1,6 +1,6 @@
-// The studio's control rows. Each edits one path of the config; an unset path is "auto", warp's own value.
-import { untrack, type State } from '@weft-js/core'
-import { Button, CompactSelect, Icon, Segmented, Slider } from '@weft-js/warp'
+// The studio's control rows. Each edits one path of the config; an unset path is "auto", veneer's own value.
+import { untrack, type State } from '@kerf/core'
+import { Button, CompactSelect, Icon, Segmented, Slider } from '@kerf/veneer'
 import { getIn, setIn, type StudioConfig } from '../../lib/studio'
 
 export type Cfg = State<StudioConfig>
@@ -75,7 +75,7 @@ export function NumberRow(props: {
   min: number
   max: number
   step?: number
-  /** Where the thumb rests while unset: warp's own value at the balanced stop. */
+  /** Where the thumb rests while unset: veneer's own value at the balanced stop. */
   auto: number
   unit?: string
 }) {

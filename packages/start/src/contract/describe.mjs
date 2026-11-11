@@ -175,7 +175,7 @@ function describeFunction(f, rust, diagnostics) {
       diagnostics.push({
         code: 'R102',
         severity: 'error',
-        why: `\`${f.$id}\`'s \`${hit}\` is a plain \`z.union\` of objects: it has no tag, so Rust can't tell its arms apart reliably. Use \`z.discriminatedUnion\`, or set \`rust: { unions: 'allow' }\` in weft.config.ts.`,
+        why: `\`${f.$id}\`'s \`${hit}\` is a plain \`z.union\` of objects: it has no tag, so Rust can't tell its arms apart reliably. Use \`z.discriminatedUnion\`, or set \`rust: { unions: 'allow' }\` in kerf.config.ts.`,
       })
   }
   const bound = (json, path) => {

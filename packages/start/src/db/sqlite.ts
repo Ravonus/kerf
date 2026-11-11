@@ -1,6 +1,6 @@
-// SQLite for `@weft-js/start` (research 28 §1): Node's and Deno's `node:sqlite` or Bun's `bun:sqlite` behind Drizzle's
+// SQLite for `@kerf/start` (research 28 §1): Node's and Deno's `node:sqlite` or Bun's `bun:sqlite` behind Drizzle's
 // proxy driver, so no native binary and the same async API as Postgres. One connection, opened on the first statement
-// (`weft build` loads this module and must not touch a file). A transaction's body is async, so it holds a gate:
+// (`kerf build` loads this module and must not touch a file). A transaction's body is async, so it holds a gate:
 // statements outside it wait, or a rollback would take another request's writes with it.
 
 // oxlint-disable-next-line typescript/triple-slash-reference -- an installed app's tsc doesn't include this file by itself, and it declares a module, so nothing can import it
@@ -60,16 +60,16 @@ export async function open(path: string): Promise<Conn> {
 
 async function migrateSqlite(connect: () => Promise<Conn>, list: Migration[]) {
   const c = await connect()
-  c.exec('create table if not exists __weft_migrations (tag text primary key, at integer not null)')
+  c.exec('create table if not exists __kerf_migrations (tag text primary key, at integer not null)')
   const done = new Set(
-    (c.query('select tag from __weft_migrations', [], 'values') as string[][]).map((r) => r[0]),
+    (c.query('select tag from __kerf_migrations', [], 'values') as string[][]).map((r) => r[0]),
   )
   for (const m of list) {
     if (done.has(m.tag)) continue
     c.exec('begin')
     try {
       for (const s of statements(m.sql)) c.exec(s)
-      c.query('insert into __weft_migrations values (?, ?)', [m.tag, Date.now()], 'run')
+      c.query('insert into __kerf_migrations values (?, ?)', [m.tag, Date.now()], 'run')
       c.exec('commit')
     } catch (e) {
       c.exec('rollback')
@@ -87,9 +87,9 @@ export interface SqliteOptions<S extends Record<string, unknown>> {
   migrate?: boolean
 }
 
-/** Drizzle over a local file, with `$weft` for the framework's own needs. */
+/** Drizzle over a local file, with `$kerf` for the framework's own needs. */
 export type SqliteDb<S extends Record<string, unknown>> = SqliteRemoteDatabase<S> & {
-  $weft: DbHandle
+  $kerf: DbHandle
 }
 
 /** A Drizzle client on a SQLite file, with this app's migrations and write tracking. */
@@ -101,8 +101,8 @@ export function createDb<S extends Record<string, unknown>>({
   if (/^[a-z][a-z0-9+.-]+:\/\//i.test(url) && !url.startsWith('file:'))
     throw new StartError(
       'Q013',
-      `\`@weft-js/start/db/sqlite\` can't open \`${url.replace(/\/\/.*@/, '//…@')}\``,
-      'use `file:<path>`, or `createDb` from `@weft-js/start/db/postgres` for a Postgres URL',
+      `\`@kerf/start/db/sqlite\` can't open \`${url.replace(/\/\/.*@/, '//…@')}\``,
+      'use `file:<path>`, or `createDb` from `@kerf/start/db/postgres` for a Postgres URL',
     )
   const path = url.replace(/^file:/, '')
   let conn: Promise<Conn> | undefined

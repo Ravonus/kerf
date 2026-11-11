@@ -12,7 +12,7 @@ A query is fresh when you load it. On a page that several people look at, such a
 goes stale the moment someone else changes the data. In React you'd reach for a WebSocket library, a polling interval or
 a hosted service, and then write the code that merges what arrives into what you already have.
 
-In Weft the server functions you already wrote are most of the answer. A query that has `tags` can stay live, a
+In Kerf the server functions you already wrote are most of the answer. A query that has `tags` can stay live, a
 generator can push messages, and a room of named messages rides one shared socket that reconnects, resumes and cleans up
 for you. This page goes from the smallest change (one word on a query) to the larger tools.
 
@@ -60,7 +60,7 @@ There's no server code to write for a live query. The tags you gave the query fo
 names to refresh it, so they are also what decides who hears about a change. That's why a live query needs `tags`:
 without them nothing could ever poke it, and `.live()` on such a query is **W053**.
 
-The other half has a check too. In `weft dev`, a mutation that writes a table a live query reads, without naming one of
+The other half has a check too. In `kerf dev`, a mutation that writes a table a live query reads, without naming one of
 that query's tags in `invalidates`, is **R003**: open pages wouldn't update.
 
 :::pitfall One user's data needs one user's tag
@@ -82,8 +82,8 @@ input changes, the subscription moves with it. An options object can come second
 subscription outlives the last component reading it, so a quick remount finds it warm.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { skip } from '@weft-js/start'
+import { state } from '@kerf/core'
+import { skip } from '@kerf/start'
 import { listTodos } from '#/server/todos'
 
 export function Watcher() {
@@ -128,7 +128,7 @@ to. Define both in a server module, next to your queries:
 
 ```ts
 // src/server/prices.ts
-import { stream, topic } from '@weft-js/start'
+import { stream, topic } from '@kerf/start'
 import { z } from 'zod'
 
 const Price = z.object({ symbol: z.string(), price: z.number() })
@@ -177,11 +177,11 @@ export function Ticker() {
 
 ### Fold, don't collect in state
 
-To keep every message, not only the latest, pass `fold` and `initial`. The fold lives in Weft's cache, not in your
+To keep every message, not only the latest, pass `fold` and `initial`. The fold lives in Kerf's cache, not in your
 component, so a remount within `keep` finds everything it had:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import { prices } from '#/server/prices'
 
 type Prices = Record<string, { symbol: string; price: number }>
@@ -226,7 +226,7 @@ with `tracked`:
 
 ```ts
 // src/server/feed.ts
-import { stream, tracked } from '@weft-js/start'
+import { stream, tracked } from '@kerf/start'
 import { z } from 'zod'
 
 const Line = z.object({ n: z.number(), text: z.string() })
@@ -249,7 +249,7 @@ export const buildLog = stream({
 
 :::pitfall Subscribe before you read
 A stream that reads a backlog from the database and then subscribes to a topic has a gap: anything published between the
-read and the subscribe is lost. In `weft dev` that's **R006**. Call `topic.subscribe()` first (it starts listening at
+read and the subscribe is lost. In `kerf dev` that's **R006**. Call `topic.subscribe()` first (it starts listening at
 once), then read the backlog, or pass `after`.
 :::
 
@@ -267,7 +267,7 @@ so a user who loses access is removed:
 
 ```ts
 // src/server/rooms.ts
-import { channel } from '@weft-js/start'
+import { channel } from '@kerf/start'
 import { z } from 'zod'
 
 const Said = z.object({
@@ -317,7 +317,7 @@ On the page, connect with params. A function argument is tracked, so the connect
 leaves the room:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import { room } from '#/server/rooms'
 
 export function Room(props: { roomId: string }) {
@@ -398,7 +398,7 @@ required:
 
 ```ts
 // src/server/deck.ts
-import { sharedState } from '@weft-js/start'
+import { sharedState } from '@kerf/start'
 import { z } from 'zod'
 
 export const deckSlide = sharedState('deck-slide', {
@@ -439,15 +439,15 @@ last is a mutation. For hover and focus shared between people, see `interaction(
 ## Presence, cursors and the multiplayer library
 
 Who else is here, what they're doing, where their pointer is: that's presence, and it's built on a channel by a separate
-library, `@weft-js/multiplayer`. It's not a plugin, and an app that doesn't import it ships none of it.
+library, `@kerf/multiplayer`. It's not a plugin, and an app that doesn't import it ships none of it.
 
 Its server half gives you messages to spread into your own `channel`, so `authorize` and your own messages stay yours.
 Who a peer is comes from `user` on the server, never from the client:
 
 ```ts
 // src/server/doc.ts
-import { channel } from '@weft-js/start'
-import { multiplayer } from '@weft-js/multiplayer/server'
+import { channel } from '@kerf/start'
+import { multiplayer } from '@kerf/multiplayer/server'
 import { z } from 'zod'
 
 const mp = multiplayer<{ id: string }>({
@@ -469,12 +469,12 @@ export const doc = channel({
 ```
 
 On the page, `presence(connection, { state })` returns `peers`, everyone else in the room with the small state each one
-shares, and `cursors(room)` with `<Cursors of={…} />` from `@weft-js/multiplayer/ui` draws their pointers:
+shares, and `cursors(room)` with `<Cursors of={…} />` from `@kerf/multiplayer/ui` draws their pointers:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { cursors, presence } from '@weft-js/multiplayer'
-import { Cursors } from '@weft-js/multiplayer/ui'
+import { state } from '@kerf/core'
+import { cursors, presence } from '@kerf/multiplayer'
+import { Cursors } from '@kerf/multiplayer/ui'
 import { doc } from '#/server/doc'
 
 export function Board(props: { id: string }) {
@@ -511,9 +511,9 @@ There's no roster on the server, so any bus works and a dead instance's peers si
 through a page.
 
 Cursors go through the server by default. Three packages carry them another way, passed as `transport` to `presence`:
-`@weft-js/realtime-webrtc` (`webrtc()`, directly between browsers, signalled through the room),
-`@weft-js/realtime-livekit` (`livekit({ url })`, through a LiveKit room you can also use for audio and video) and
-`@weft-js/realtime-socketio` (`socketio({ url })`, through a Socket.IO relay you run). Only cursors ride them: state
+`@kerf/realtime-webrtc` (`webrtc()`, directly between browsers, signalled through the room),
+`@kerf/realtime-livekit` (`livekit({ url })`, through a LiveKit room you can also use for audio and video) and
+`@kerf/realtime-socketio` (`socketio({ url })`, through a Socket.IO relay you run). Only cursors ride them: state
 and the relay stay on the server, which checks them.
 
 ## Writes from outside the app
@@ -524,14 +524,14 @@ one, so nothing pokes the page. To catch those writes, give the database's chang
 
 ```ts
 // src/realtime.server.ts
-import { dbChanges, realtime } from '@weft-js/start'
+import { dbChanges, realtime } from '@kerf/start'
 import { db } from '#/db/index.server'
 import { todos } from '#/db/schema'
 
 export default realtime({ changes: dbChanges(db, [todos]) })
 ```
 
-Then run `weft db live`. It writes a migration that adds change triggers to those tables (SQLite, Postgres and MySQL),
+Then run `kerf db live`. It writes a migration that adds change triggers to those tables (SQLite, Postgres and MySQL),
 which applies on the next request. A table in `changes` that no migration covers is **R018**, and the server falls back to
 polling for it.
 
@@ -555,20 +555,20 @@ mode and logs it once, and the page can read it too:
 
 On Postgres it's triggers and `NOTIFY` on one held connection; on SQLite a cheap `PRAGMA data_version` check every
 100 ms on the same host; on MySQL the triggers' log every 500 ms; on MongoDB a change stream with
-`mongoChanges(db, collections)` from `@weft-js/db/mongo`. That polling is the framework's watcher, in one place on the
+`mongoChanges(db, collections)` from `@kerf/db/mongo`. That polling is the framework's watcher, in one place on the
 server. Your own code still never polls.
 
-`weft doctor --preset vercel` tells you what a target can do before you deploy there. Serverless hosts end a process with
+`kerf doctor --preset vercel` tells you what a target can do before you deploy there. Serverless hosts end a process with
 its request, so nothing can hold a connection: mutations still update `.live()`, and outside writes don't (**R014**).
 [Runtimes and deploying](/learn/deploying#live-data-on-serverless-hosts) covers the two ways around that.
 
 :::deepdive Refusing to ship a page that only looks live
 `live: { required: true }` on a query (or `q.live(input, { required: true })`) says "this page is wrong without a real
-feed". `weft check` and `weft build` fail with **R013** when the target can't provide one, and a server whose startup
-probe finds no feed stops with **R015** rather than serve stale data. `liveHealth()` from `@weft-js/start` is the answer
+feed". `kerf check` and `kerf build` fail with **R013** when the target can't provide one, and a server whose startup
+probe finds no feed stops with **R015** rather than serve stale data. `liveHealth()` from `@kerf/start` is the answer
 for a health route: `ok: false` while a required query has no working feed.
 
-`live: { verify: 'staging' }` goes further: on every `weft check` and `weft build` it writes one marked row to a
+`live: { verify: 'staging' }` goes further: on every `kerf check` and `kerf build` it writes one marked row to a
 staging database and follows it through trigger, notify, poke and refetch, naming the link that broke (**R019**). Targets
 must be marked as not production (**R022**), and passwords come from the environment (**R020**). The
 [Full stack reference](/reference/start) has the setup.
@@ -578,23 +578,23 @@ must be marked as not production (**R022**), and passwords come from the environ
 
 On one instance, nothing else is needed: messages, pokes and channels go through a memory bus in the process. Run two
 instances behind a load balancer and a message published on one would reach only the clients connected to that one. So
-several instances need a shared bus, and `weft build` refuses the memory bus on a preset that runs many instances
+several instances need a shared bus, and `kerf build` refuses the memory bus on a preset that runs many instances
 (**R002**).
 
 The bus is a plugin or one line in `src/realtime.server.ts`:
 
-- `weft add redis` adds `@weft-js/realtime-redis`, on `REDIS_URL`.
-- `weft add nats` adds `@weft-js/realtime-nats`, on `NATS_URL`.
-- `postgresBus({ url })` from `@weft-js/start/bus/postgres` uses the Postgres you already have, through `NOTIFY`. It
+- `kerf add redis` adds `@kerf/realtime-redis`, on `REDIS_URL`.
+- `kerf add nats` adds `@kerf/realtime-nats`, on `NATS_URL`.
+- `postgresBus({ url })` from `@kerf/start/bus/postgres` uses the Postgres you already have, through `NOTIFY`. It
   needs a direct connection: a pooler in transaction mode breaks `LISTEN`.
-- `durableObjectBus({ namespace })` from `@weft-js/realtime-durable-object` is for Cloudflare's `cloudflare_durable`
+- `durableObjectBus({ namespace })` from `@kerf/realtime-durable-object` is for Cloudflare's `cloudflare_durable`
   preset only.
 
 <!-- example: skip postgresBus needs the postgres driver, which a SQLite app doesn't install -->
 ```ts
 // src/realtime.server.ts
-import { realtime } from '@weft-js/start'
-import { postgresBus } from '@weft-js/start/bus/postgres'
+import { realtime } from '@kerf/start'
+import { postgresBus } from '@kerf/start/bus/postgres'
 
 export default realtime({
   bus: postgresBus({ url: process.env.DATABASE_URL ?? '' }),
@@ -614,8 +614,8 @@ Every bus is at most once. What must survive is a mutation; `collect` plus a his
 Live queries, streams and channels reconnect, resume and clean up for you. Polling with a timer works against that: it
 asks the server the same question whether anything changed or not, and still shows the change late. A socket library of
 your own (`ws`, `socket.io-client`, `reconnecting-websocket`) bypasses the origin check, the session re-check and the
-shared socket, and `weft check` flags it (**R007**). In a test, a real `WebSocket` or `EventSource` is **T013**: tests use
-the fake transport from `@weft-js/core/test`, which [Testing](/learn/testing) covers.
+shared socket, and `kerf check` flags it (**R007**). In a test, a real `WebSocket` or `EventSource` is **T013**: tests use
+the fake transport from `@kerf/core/test`, which [Testing](/learn/testing) covers.
 
 ## Recap
 
@@ -625,10 +625,10 @@ the fake transport from `@weft-js/core/test`, which [Testing](/learn/testing) co
   `watch` into `state`; subscribe before you read; `tracked` ids let it resume.
 - A `channel` is a room of named, validated messages each way, with `authorize` required. It's a wire, not a log: keep
   what matters in the database.
-- `sharedState` is one last-writer-wins value per key; `@weft-js/multiplayer` adds presence, cursors and a relay on a
+- `sharedState` is one last-writer-wins value per key; `@kerf/multiplayer` adds presence, cursors and a relay on a
   channel.
 - `dbChanges` brings writes from outside the app to the same queries. What works depends on the database and the host;
-  `weft doctor` tells you.
+  `kerf doctor` tells you.
 - More than one instance needs a shared bus: Redis, NATS, Postgres or a Durable Object.
 
 ## Try it
@@ -678,7 +678,7 @@ async *run({ signal }) {
 ```
 :::solution
 An order published after `loadOpenOrders()` read the database and before `subscribe` started listening is in neither, so
-it's lost. `weft dev` reports this as **R006**. Subscribe first, then read the backlog:
+it's lost. `kerf dev` reports this as **R006**. Subscribe first, then read the backlog:
 
 ```ts
 async *run({ signal }) {
@@ -716,7 +716,7 @@ You deploy the chat to two instances on a container host behind a load balancer.
 instances and can't see each other's messages, though each sees their own. What's missing?
 :::solution
 A shared bus. Each instance's memory bus only reaches its own sockets, so `room.publish` on Alice's instance never gets
-to Bob's. Add one: `weft add redis` (with `REDIS_URL`), `weft add nats`, or `bus: postgresBus({ url })` in
-`src/realtime.server.ts`. On presets Weft knows run many instances, `weft build` stops with **R002** before this can
+to Bob's. Add one: `kerf add redis` (with `REDIS_URL`), `kerf add nats`, or `bus: postgresBus({ url })` in
+`src/realtime.server.ts`. On presets Kerf knows run many instances, `kerf build` stops with **R002** before this can
 happen; on a container host you choose the instance count, so it's yours to remember.
 :::

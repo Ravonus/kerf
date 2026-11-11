@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { RadioGroup } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { RadioGroup } from '@kerf/veneer'
 import { NEAR } from './shared'
 
 /** A label can hold more than words: each region

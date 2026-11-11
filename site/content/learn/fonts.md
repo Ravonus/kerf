@@ -1,9 +1,9 @@
 # Fonts
 
 :::learn
-- How to declare an app's fonts with the `text()` plugin from `@weft-js/text`
+- How to declare an app's fonts with the `text()` plugin from `@kerf/text`
 - What the build does with them: subsets, preloads, and fallbacks matched to each font's metrics
-- How to use a face in CSS and in Warp's tokens
+- How to use a face in CSS and in Veneer's tokens
 - How variable fonts and their axes are trimmed, and how to keep an axis
 - What the X-codes about fonts catch
 :::
@@ -12,21 +12,21 @@ A web font is the most common reason a page's text jumps after it loads. The bro
 the real font arrives, and every line reflows because the two faces have different widths. It's also often the biggest
 thing the largest paint on a text-heavy page waits for.
 
-Weft handles fonts in one place: you list the faces in `weft.config.ts`, and the build does the rest. There's nothing to
+Kerf handles fonts in one place: you list the faces in `kerf.config.ts`, and the build does the rest. There's nothing to
 import in your components and no `<link>` to write.
 
 ## Declaring fonts
 
-`weft add text` installs `@weft-js/text` and adds `text()` to the config. Then list your faces under `fonts`:
+`kerf add text` installs `@kerf/text` and adds `text()` to the config. Then list your faces under `fonts`:
 
 ```ts
-import { defineConfig } from '@weft-js/core/config'
-import { text } from '@weft-js/text'
-import { warp } from '@weft-js/warp/plugin'
+import { defineConfig } from '@kerf/core/config'
+import { text } from '@kerf/text'
+import { veneer } from '@kerf/veneer/plugin'
 
 export default defineConfig({
   plugins: [
-    warp(),
+    veneer(),
     text({
       fonts: {
         body: {
@@ -63,9 +63,9 @@ Each key is a role of your choosing; `body` and `display` are the usual two. Eac
 Beside `fonts`, `text()` takes `subsets` (default `['latin']`; also `latin-ext`, `cyrillic`, `greek`, `vietnamese` and
 their extended sets) and `trim` (default `true`, below). The [Fonts reference](/reference/fonts) has every option.
 
-:::note @weft-js/text isn't on npm yet
-Weft's core packages are on npm, but `@weft-js/text` isn't published yet. Until it is, `weft add text` works in an app
-made from a Weft checkout ([Using a Weft checkout](https://github.com/Ravonus/weft/blob/main/docs/getting-started.md)).
+:::note @kerf/text isn't on npm yet
+Kerf's core packages are on npm, but `@kerf/text` isn't published yet. Until it is, `kerf add text` works in an app
+made from a Kerf checkout ([Using a Kerf checkout](https://github.com/Ravonus/kerf/blob/main/docs/getting-started.md)).
 :::
 
 ## What the build does
@@ -90,7 +90,7 @@ fonts at the same `font-size` can differ in all four, so a paragraph in Arial wr
 in Inter. CSS lets a `@font-face` correct a local font: `size-adjust` scales its widths, and `ascent-override`,
 `descent-override` and `line-gap-override` replace its vertical metrics. The build reads the real font file, computes the
 four numbers that make Arial occupy Inter's space, and writes them on the fallback face. The result isn't the same
-*look*, but it is the same *layout*, which is what keeps the page from moving. Warp's own stylesheet does the same for
+*look*, but it is the same *layout*, which is what keeps the page from moving. Veneer's own stylesheet does the same for
 the faces it names.
 :::
 
@@ -107,20 +107,20 @@ h1 { font-family: "Fraunces", "Fraunces Fallback", Georgia, serif; }
 Leave out `"Inter Fallback"` and the browser falls back to plain `sans-serif` while Inter loads, unscaled, and the
 layout shifts when it arrives.
 
-### With Warp
+### With Veneer
 
-Warp's type roles read three tokens: `--warp-font-sans` for body text, `--warp-font-display` for headings and titles,
-and `--warp-font-mono` for code. Point them at your faces with `fonts` in `warp()`. Pass a full stack, with the fallback
-face, so Warp's text gets the metric match too:
+Veneer's type roles read three tokens: `--veneer-font-sans` for body text, `--veneer-font-display` for headings and titles,
+and `--veneer-font-mono` for code. Point them at your faces with `fonts` in `veneer()`. Pass a full stack, with the fallback
+face, so Veneer's text gets the metric match too:
 
 ```ts
-import { defineConfig } from '@weft-js/core/config'
-import { text } from '@weft-js/text'
-import { warp } from '@weft-js/warp/plugin'
+import { defineConfig } from '@kerf/core/config'
+import { text } from '@kerf/text'
+import { veneer } from '@kerf/veneer/plugin'
 
 export default defineConfig({
   plugins: [
-    warp({
+    veneer({
       fonts: {
         body:
           '"Inter", "Inter Fallback", ui-sans-serif, sans-serif',
@@ -148,11 +148,11 @@ export default defineConfig({
 })
 ```
 
-A bare family name, like `fonts: { body: 'Inter' }`, also works; Warp then adds a system stack after it, without the
+A bare family name, like `fonts: { body: 'Inter' }`, also works; Veneer then adds a system stack after it, without the
 fallback face.
 
 Each expression names its own faces: `balanced` uses Inter with Space Grotesk for headings, `quiet` Inter throughout, and
-`vivid` Space Grotesk with Instrument Serif. Warp names them but doesn't ship the files. Declare the ones your app shows
+`vivid` Space Grotesk with Instrument Serif. Veneer names them but doesn't ship the files. Declare the ones your app shows
 with `text()`, as this site does with the `@fontsource` packages, or override the tokens as above.
 
 ## Preloading
@@ -165,7 +165,7 @@ block, should stay `preload: false`.
 A custom server can read the list the build made:
 
 ```ts
-import { preloads } from 'weft:fonts/preloads'
+import { preloads } from 'kerf:fonts/preloads'
 
 export const fontLinks = preloads.map((p) =>
   `<link rel="preload" as="font" type="${p.type}" ` +
@@ -173,7 +173,7 @@ export const fontLinks = preloads.map((p) =>
 ).join('')
 ```
 
-`@weft-js/core/vite` already loads the generated CSS and adds these links for you, in a Start app or an HTML one, so
+`@kerf/core/vite` already loads the generated CSS and adds these links for you, in a Start app or an HTML one, so
 most apps never touch this.
 
 ## Trimming: axes and characters
@@ -189,7 +189,7 @@ show:
   source) is preloaded. The rest is fetched through `unicode-range` only by a page that shows one of those characters,
   so text from a database still gets the right face after a matched swap.
 
-`weft dev` always serves whole faces, so an axis you're adjusting responds while you work.
+`kerf dev` always serves whole faces, so an axis you're adjusting responds while you work.
 
 :::pitfall An axis set where the build can't see it
 The build reads only your own source. A `font-variation-settings` value it can find but not read (a `var()`, a template
@@ -200,7 +200,7 @@ nothing in production. Keep the axis by naming it: `axes: { SOFT: [0, 100] }`. `
 
 ## The X-codes for fonts
 
-`weft check` reads your CSS and the font build:
+`kerf check` reads your CSS and the font build:
 
 | Code | Catches |
 |---|---|
@@ -220,10 +220,10 @@ measures. `measure: 'off'` removes it. [Text, media and shapes](/learn/text-medi
 
 ## Recap
 
-- Declare every face in `text({ fonts })` in `weft.config.ts`; there's nothing to import in components.
+- Declare every face in `text({ fonts })` in `kerf.config.ts`; there's nothing to import in components.
 - The build subsets faces, preloads `body` and `display`, and writes a `"<Family> Fallback"` face matched to each font's
   metrics, so the swap doesn't move the layout.
-- Name the face and its fallback face in your CSS, or in `warp({ fonts })` for Warp's roles.
+- Name the face and its fallback face in your CSS, or in `veneer({ fonts })` for Veneer's roles.
 - A production build pins unused variable axes and splits rare latin characters into a lazy file; name an axis in `axes`
   to keep it.
 - X020–X023 catch hand-written font CSS that shifts layout, hides text, or loads too much.
@@ -231,7 +231,7 @@ measures. `measure: 'off'` removes it. [Text, media and shapes](/learn/text-medi
 ## Try it
 
 :::challenge Replace a hand-written @font-face
-This stylesheet loads a font by hand. `weft check` reports X020, X021 and X022 on it. Move the font into `text()` and
+This stylesheet loads a font by hand. `kerf check` reports X020, X021 and X022 on it. Move the font into `text()` and
 fix the CSS that uses it.
 
 ```css
@@ -244,8 +244,8 @@ article { font-family: "Lora", serif; }
 ```
 :::solution
 ```ts
-import { defineConfig } from '@weft-js/core/config'
-import { text } from '@weft-js/text'
+import { defineConfig } from '@kerf/core/config'
+import { text } from '@kerf/text'
 
 export default defineConfig({
   plugins: [
@@ -277,8 +277,8 @@ Your app has a body face, a display face for headings, and a mono face used only
 pages. Write the `fonts` so the first paint waits for the first two and not the third.
 :::solution
 ```ts
-import { defineConfig } from '@weft-js/core/config'
-import { text } from '@weft-js/text'
+import { defineConfig } from '@kerf/core/config'
+import { text } from '@kerf/text'
 
 export default defineConfig({
   plugins: [
@@ -314,7 +314,7 @@ Writing `preload: false` on it would say the same thing explicitly.
 
 :::challenge An axis a dependency sets
 You use Fraunces for headings, and a small UI package you installed softens it on hover with
-`font-variation-settings: "SOFT" 100` in its own CSS. In `weft dev` the hover works; in production it does nothing.
+`font-variation-settings: "SOFT" 100` in its own CSS. In `kerf dev` the hover works; in production it does nothing.
 Why, and what's the fix?
 :::solution
 The trim reads only your own source for `font-variation-settings`. Your source never sets `SOFT`, so the build pins it to
@@ -322,8 +322,8 @@ the font's default and removes the axis from the file. The package's CSS then as
 Name the axis so it's kept whatever the source says:
 
 ```ts
-import { defineConfig } from '@weft-js/core/config'
-import { text } from '@weft-js/text'
+import { defineConfig } from '@kerf/core/config'
+import { text } from '@kerf/text'
 
 export default defineConfig({
   plugins: [
@@ -341,5 +341,5 @@ export default defineConfig({
 })
 ```
 
-`weft dev` always serves whole faces, which is why it worked there.
+`kerf dev` always serves whole faces, which is why it worked there.
 :::

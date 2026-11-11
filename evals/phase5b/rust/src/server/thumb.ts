@@ -1,4 +1,4 @@
-import { query } from '@weft-js/start/data'
+import { query } from '@kerf/start/data'
 import { z } from 'zod'
 import { impatient, media } from './rust'
 

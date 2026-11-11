@@ -1,4 +1,4 @@
-import { Boundary } from '@weft-js/core'
+import { Boundary } from '@kerf/core'
 import { Feed } from './index'
 
 export default function Streamed() {

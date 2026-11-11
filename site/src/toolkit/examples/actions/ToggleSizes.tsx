@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Toggle } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Toggle } from '@kerf/veneer'
 
 export function ToggleSizes() {
   const small = state(true)

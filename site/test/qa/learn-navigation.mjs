@@ -139,7 +139,7 @@ for (const [path, word, want] of [
     await box.fill('')
   })
 }
-// The contents rail on a Learn page is the toolkit's: warp's Nav with its accent bar, following the heading in view.
+// The contents rail on a Learn page is the toolkit's: veneer's Nav with its accent bar, following the heading in view.
 await check(
   'learn contents rail tracks the scroll',
   '/learn/state',

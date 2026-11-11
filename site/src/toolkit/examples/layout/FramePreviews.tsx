@@ -4,7 +4,7 @@ import {
   Grid,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { DEPLOYS } from '../../world'
 import { art } from './shared'
 

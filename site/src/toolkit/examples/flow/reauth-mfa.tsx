@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Badge,
   Button,
@@ -9,7 +9,7 @@ import {
   Stack,
   Text,
   Toaster,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { wait, SSO } from './sign-in'
 
 const passwordError =

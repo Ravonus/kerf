@@ -21,7 +21,7 @@ const handle = handleSource as (
   message: object,
 ) => Promise<HandleResponse | undefined>
 
-/** Talk to a real `weft mcp` process over stdio. */
+/** Talk to a real `kerf mcp` process over stdio. */
 function client(root: string) {
   const child = spawn(process.execPath, [bin, 'mcp', '--root', root], {
     stdio: ['pipe', 'pipe', 'inherit'],
@@ -49,7 +49,7 @@ function client(root: string) {
   }
 }
 
-describe('weft mcp (stdio)', () => {
+describe('kerf mcp (stdio)', () => {
   it('initializes, lists docs/check/tasks and calls each on the reference app', async () => {
     const c = client(fixture)
     const init = await c.request('initialize', {
@@ -60,7 +60,7 @@ describe('weft mcp (stdio)', () => {
     expect(init.result).toMatchObject({
       protocolVersion: '2025-06-18',
       capabilities: { tools: {} },
-      serverInfo: { name: 'weft' },
+      serverInfo: { name: 'kerf' },
     })
     c.notify('notifications/initialized')
 

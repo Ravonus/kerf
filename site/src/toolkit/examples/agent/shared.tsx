@@ -1,12 +1,12 @@
-import type { State } from '@weft-js/core'
-import { foldAnswer } from '@weft-js/warp'
+import type { State } from '@kerf/core'
+import { foldAnswer } from '@kerf/veneer'
 import type {
   AgentEvent,
   AgentTool,
   Answer,
   PlanStep,
   SpeechInputProps,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { DEPLOY_SOURCES, WHY_FAILED } from '../../world'
 
 export const QUESTION =
@@ -106,7 +106,7 @@ export const REPORT =
   'Three failed checks held the ' +
   'deploy back [1].\n\n- `d-4801` is ' +
   'still live.\n- Lower `attempts` to ' +
-  '2 and redeploy.\n\n```Shell\nweft ' +
+  '2 and redeploy.\n\n```Shell\nkerf ' +
   'deploy mobile-bff --branch main\n' +
   '```\n'
 

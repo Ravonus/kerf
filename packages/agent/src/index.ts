@@ -1,5 +1,5 @@
-// @weft-js/agent, the part both sides share: what a function says to agents, how grants read, and the shapes of a
-// conversation. The server half is `@weft-js/agent/server`; nothing here touches a model, a key or the database.
+// @kerf/agent, the part both sides share: what a function says to agents, how grants read, and the shapes of a
+// conversation. The server half is `@kerf/agent/server`; nothing here touches a model, a key or the database.
 
 /**
  * What a server function offers an agent, on `agent:` beside `auth`. A function without it is invisible to every
@@ -16,9 +16,9 @@ export interface AgentAccess {
   say?: string
 }
 
-declare module '@weft-js/start' {
+declare module '@kerf/start' {
   interface FnOptions {
-    /** Offer this function to agents as a tool: `true`, or what it needs (`@weft-js/agent`). */
+    /** Offer this function to agents as a tool: `true`, or what it needs (`@kerf/agent`). */
     agent?: boolean | AgentAccess
   }
   interface Context {

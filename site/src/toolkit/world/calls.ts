@@ -1,4 +1,4 @@
-import type { Participant } from '@weft-js/warp'
+import type { Participant } from '@kerf/veneer'
 
 export const CALL: Participant[] = [
   {

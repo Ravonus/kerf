@@ -1,35 +1,35 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
-<h1 align="center">@weft-js/realtime-nats</h1>
+<h1 align="center">@kerf/realtime-nats</h1>
 
 <p align="center">
-  <strong>Core NATS as Weft's realtime bus, so live data reaches every instance of your app.</strong><br>
-  One line in <code>weft.config.ts</code>, one <code>NATS_URL</code>, and no change to your pages or server functions.
+  <strong>Core NATS as Kerf's realtime bus, so live data reaches every instance of your app.</strong><br>
+  One line in <code>kerf.config.ts</code>, one <code>NATS_URL</code>, and no change to your pages or server functions.
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@weft-js/realtime-nats"><img src="https://img.shields.io/npm/v/@weft-js/realtime-nats?color=145c3c&label=npm" alt="npm version"></a>
-  <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
-  <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
+  <a href="https://www.npmjs.com/package/@kerf/realtime-nats"><img src="https://img.shields.io/npm/v/@kerf/realtime-nats?color=145c3c&label=npm" alt="npm version"></a>
+  <a href="https://github.com/Ravonus/kerf/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
+  <a href="https://github.com/Ravonus/kerf/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/kerf/quality.yml?branch=main&label=checks" alt="checks"></a>
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/docs">Docs</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/examples">Examples</a> ·
-  <a href="https://github.com/Ravonus/weft/blob/main/CHANGELOG.md">Changelog</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf/tree/main/docs">Docs</a> ·
+  <a href="https://github.com/Ravonus/kerf/tree/main/examples">Examples</a> ·
+  <a href="https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!IMPORTANT]
 > **Early release (0.1.x).** APIs can change between minor versions. Pin the version and read the
-> [changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md) before you upgrade.
+> [changelog](https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md) before you upgrade.
 
-On one server, Weft's realtime needs nothing: messages, `.live()` pokes, channels and shared state go through a memory
+On one server, Kerf's realtime needs nothing: messages, `.live()` pokes, channels and shared state go through a memory
 bus inside the process. Run two instances and each one only reaches its own sockets, so a mutation on one never
 refreshes a page connected to the other. This package fills the `realtime.bus` slot with core NATS, so every instance
 hears every publish. It's for apps that already run NATS, or want a small message server between instances.
@@ -39,9 +39,9 @@ hears every publish. It's for apps that already run NATS, or want a small messag
 - **A plugin, not code.** `nats()` in `plugins` replaces the memory bus. Nothing in `src/` changes.
 - **Reads `NATS_URL`.** The servers come from the environment unless you pass `servers`.
 - **Token or user/password auth.** Pass `token`, or `user` and `pass`, when the server asks for them.
-- **Any channel name is safe.** Weft's channel names come from tags and keys, which can hold characters a NATS subject
-  can't (`*`, `>`, spaces). Each channel becomes `weft.<base64url of the name>`.
-- **Lazy.** It connects on the first publish or subscribe, and `weft build` never connects.
+- **Any channel name is safe.** Kerf's channel names come from tags and keys, which can hold characters a NATS subject
+  can't (`*`, `>`, spaces). Each channel becomes `kerf.<base64url of the name>`.
+- **Lazy.** It connects on the first publish or subscribe, and `kerf build` never connects.
 - **Reconnects on its own.** It retries without limit, every 500 ms. A reconnect is reported to the hub as a gap, so
   clients know that messages may be missing.
 - **Tested against a real server.** The test suite runs the shared `realtime.bus@1` conformance checks against a
@@ -51,22 +51,22 @@ hears every publish. It's for apps that already run NATS, or want a small messag
 
 ```bash
 # npm
-npm install @weft-js/realtime-nats
+npm install @kerf/realtime-nats
 
 # pnpm
-pnpm add @weft-js/realtime-nats
+pnpm add @kerf/realtime-nats
 
 # bun
-bun add @weft-js/realtime-nats
+bun add @kerf/realtime-nats
 ```
 
-Or let the `weft` CLI install it and add it to `weft.config.ts` in one step:
+Or let the `kerf` CLI install it and add it to `kerf.config.ts` in one step:
 
 ```bash
-npx weft add nats
+npx kerf add nats
 ```
 
-`weft add` installs the package and adds the plugin to `weft.config.ts`.
+`kerf add` installs the package and adds the plugin to `kerf.config.ts`.
 
 ## Quick start
 
@@ -76,19 +76,19 @@ npx weft add nats
    docker run --rm -p 4222:4222 nats
    ```
 
-2. Add the plugin. `weft add nats` writes this for you:
+2. Add the plugin. `kerf add nats` writes this for you:
 
    ```ts
-   // weft.config.ts
-   import { defineConfig } from '@weft-js/core/config'
-   import realtimeNats from '@weft-js/realtime-nats/plugin'
+   // kerf.config.ts
+   import { defineConfig } from '@kerf/core/config'
+   import realtimeNats from '@kerf/realtime-nats/plugin'
 
    export default defineConfig({
      plugins: [realtimeNats()],
    })
    ```
 
-   `import { nats } from '@weft-js/realtime-nats/plugin'` is the same function under its own name.
+   `import { nats } from '@kerf/realtime-nats/plugin'` is the same function under its own name.
 
 3. Set the server in the app's environment:
 
@@ -100,21 +100,21 @@ npx weft add nats
 4. Start two instances on different ports and open a page that reads a query with `.live()` on each. A mutation through
    one refreshes the page on the other.
 
-## How it plugs into Weft
+## How it plugs into Kerf
 
-Weft's realtime hub keeps everything that has state (tags, topics, replay rings, cursors, presence) and hands the bus
+Kerf's realtime hub keeps everything that has state (tags, topics, replay rings, cursors, presence) and hands the bus
 three things to do: publish a string to a channel, subscribe to a channel, and close. That is the `Bus` interface in
-[`@weft-js/start/bus`](https://github.com/Ravonus/weft/blob/main/packages/start/src/bus.ts). A bus is at-most-once and
+[`@kerf/start/bus`](https://github.com/Ravonus/kerf/blob/main/packages/start/src/bus.ts). A bus is at-most-once and
 ordered per publisher; core NATS is both.
 
-The plugin provides the `realtime.bus` slot (version 1, one provider, server side). At build time Weft writes the slot
-binding to `.weft/slots/realtime.bus.ts`, and the server entry wraps it in a bus that loads this package on the first
+The plugin provides the `realtime.bus` slot (version 1, one provider, server side). At build time Kerf writes the slot
+binding to `.kerf/slots/realtime.bus.ts`, and the server entry wraps it in a bus that loads this package on the first
 publish or subscribe. The order of precedence is:
 
 | Where the bus comes from | Wins over |
 | --- | --- |
 | `bus` in `src/realtime.server.ts` | everything: an explicit choice beats a plugin |
-| a `realtime.bus` plugin in `weft.config.ts` (this one, or `@weft-js/realtime-redis`) | the memory bus |
+| a `realtime.bus` plugin in `kerf.config.ts` (this one, or `@kerf/realtime-redis`) | the memory bus |
 | nothing | the memory bus, one process only |
 
 ### Using it without the plugin
@@ -123,8 +123,8 @@ publish or subscribe. The order of precedence is:
 
 ```ts
 // src/realtime.server.ts
-import { realtime } from '@weft-js/start'
-import { natsBus } from '@weft-js/realtime-nats'
+import { realtime } from '@kerf/start'
+import { natsBus } from '@kerf/realtime-nats'
 
 export default realtime({
   bus: natsBus({
@@ -139,7 +139,7 @@ your own. The package still has to be installed.
 
 ## Options
 
-`nats(options)` in `weft.config.ts` and `natsBus(options)` take the same options. The plugin passes them through to
+`nats(options)` in `kerf.config.ts` and `natsBus(options)` take the same options. The plugin passes them through to
 `bus()`, which fills `servers` from `NATS_URL` when it's missing.
 
 | Option | Type | Default | What it does |
@@ -158,20 +158,20 @@ credentials in `src/realtime.server.ts` from the environment, as in the example 
 | Variable | Read by | Needed |
 | --- | --- | --- |
 | `NATS_URL` | the plugin and `bus()` | At run time, unless `servers` is given. One URL; pass `servers` for several. |
-| `WEFT_BUILD` | `natsBus()` | Set by `weft build`. While it's set, missing `servers` is not an error, since a build never connects. |
+| `KERF_BUILD` | `natsBus()` | Set by `kerf build`. While it's set, missing `servers` is not an error, since a build never connects. |
 
 ### What the plugin declares
 
 | Permission | Value |
 | --- | --- |
 | `net` | `env:NATS_URL`, the host in that variable |
-| `env` | `NATS_URL`, `WEFT_BUILD` |
+| `env` | `NATS_URL`, `KERF_BUILD` |
 
 ## How it behaves
 
 - **One connection** per bus, opened on first use. If it fails, the next publish or subscribe tries again.
-- **Subjects.** A channel `c` is published on `weft.` followed by `c` in base64url, so any string works and nothing
-  collides with your own subjects outside `weft.`.
+- **Subjects.** A channel `c` is published on `kerf.` followed by `c` in base64url, so any string works and nothing
+  collides with your own subjects outside `kerf.`.
 - **`subscribe` waits for the server.** It flushes after subscribing, so a publish made after `subscribe` resolves is
   delivered.
 - **A reconnect is a gap.** Core NATS keeps nothing for a subscriber that was away. On each `reconnect` status the bus
@@ -182,10 +182,10 @@ credentials in `src/realtime.server.ts` from the environment, as in the example 
 
 | Export | From | What it is |
 | --- | --- | --- |
-| `natsBus(options)` | `@weft-js/realtime-nats` | A `Bus` over core NATS, connecting on first use. Throws Q013 without `servers`, except during a build. |
-| `bus(options?)` | `@weft-js/realtime-nats` | The `realtime.bus` provider the plugin loads: `natsBus` with `servers` defaulting to `NATS_URL`. |
-| `NatsBusOptions` | `@weft-js/realtime-nats` | Type: `{ servers: string \| string[]; token?: string; user?: string; pass?: string }`. |
-| default export, `nats` | `@weft-js/realtime-nats/plugin` | The plugin for `weft.config.ts`. Takes the same options as `bus()`. |
+| `natsBus(options)` | `@kerf/realtime-nats` | A `Bus` over core NATS, connecting on first use. Throws Q013 without `servers`, except during a build. |
+| `bus(options?)` | `@kerf/realtime-nats` | The `realtime.bus` provider the plugin loads: `natsBus` with `servers` defaulting to `NATS_URL`. |
+| `NatsBusOptions` | `@kerf/realtime-nats` | Type: `{ servers: string \| string[]; token?: string; user?: string; pass?: string }`. |
+| default export, `nats` | `@kerf/realtime-nats/plugin` | The plugin for `kerf.config.ts`. Takes the same options as `bus()`. |
 
 The returned bus has `name: 'nats'`, `publish(channel, message)`, `subscribe(channel, on, gap?)` and `close()`.
 
@@ -195,8 +195,8 @@ The returned bus has `name: 'nats'`, `publish(channel, message)`, `subscribe(cha
 
 ```ts
 // src/realtime.server.ts
-import { realtime } from '@weft-js/start'
-import { natsBus } from '@weft-js/realtime-nats'
+import { realtime } from '@kerf/start'
+import { natsBus } from '@kerf/realtime-nats'
 
 export default realtime({
   bus: natsBus({
@@ -209,8 +209,8 @@ export default realtime({
 
 ```ts
 // src/realtime.server.ts
-import { realtime } from '@weft-js/start'
-import { natsBus } from '@weft-js/realtime-nats'
+import { realtime } from '@kerf/start'
+import { natsBus } from '@kerf/realtime-nats'
 
 export default realtime({
   bus: natsBus({
@@ -221,9 +221,9 @@ export default realtime({
 })
 ```
 
-### Watching Weft's traffic
+### Watching Kerf's traffic
 
-Every subject starts with `weft.`, so the NATS CLI can show it: `nats sub 'weft.>'`. The rest of each subject is the
+Every subject starts with `kerf.`, so the NATS CLI can show it: `nats sub 'kerf.>'`. The rest of each subject is the
 channel name in base64url.
 
 ## Limits
@@ -240,8 +240,8 @@ channel name in base64url.
 | Symptom | Cause | Fix |
 | --- | --- | --- |
 | `Q013` "`natsBus` needs `servers`" at startup | `NATS_URL` is unset and no `servers` was passed | Set `NATS_URL`, or pass `servers`. |
-| `R002` from `weft build` | The preset runs many instances and the app is still on the memory bus | Add this plugin, `@weft-js/realtime-redis`, or `postgresBus` in `src/realtime.server.ts`. |
-| `E009` from `weft deploy` | The same problem, found for a deploy target | As above. |
+| `R002` from `kerf build` | The preset runs many instances and the app is still on the memory bus | Add this plugin, `@kerf/realtime-redis`, or `postgresBus` in `src/realtime.server.ts`. |
+| `E009` from `kerf deploy` | The same problem, found for a deploy target | As above. |
 | The plugin is listed but nothing crosses instances | `src/realtime.server.ts` sets its own `bus`, which wins | Remove that `bus`, or set `natsBus()` there. |
 | Authorization errors in the server log | The server wants credentials | Pass `token`, or `user` and `pass`. |
 | Messages published while NATS was down never arrived | Core NATS keeps nothing; the reconnect was reported as a gap | Expected. Put what must survive in a mutation, and refetch after a gap. |
@@ -250,28 +250,28 @@ channel name in base64url.
 
 | Package | What it is |
 | --- | --- |
-| [`@weft-js/start`](https://www.npmjs.com/package/@weft-js/start) | The full-stack runtime: the realtime hub, `realtime()`, `memoryBus` and `postgresBus` (`@weft-js/start/bus/postgres`). |
-| [`@weft-js/realtime-redis`](https://www.npmjs.com/package/@weft-js/realtime-redis) | The same slot on Redis pub/sub. |
-| [`@weft-js/realtime-durable-object`](https://www.npmjs.com/package/@weft-js/realtime-durable-object) | The bus for Cloudflare, on Durable Objects. |
-| [`@weft-js/multiplayer`](https://www.npmjs.com/package/@weft-js/multiplayer) | Presence, cursors and a relay on `channel`. Its traffic crosses instances through this bus. |
-| [`@weft-js/core`](https://www.npmjs.com/package/@weft-js/core) | The plugin system (`definePlugin`, slots) and `busSuite`, the conformance checks a bus must pass. |
+| [`@kerf/start`](https://www.npmjs.com/package/@kerf/start) | The full-stack runtime: the realtime hub, `realtime()`, `memoryBus` and `postgresBus` (`@kerf/start/bus/postgres`). |
+| [`@kerf/realtime-redis`](https://www.npmjs.com/package/@kerf/realtime-redis) | The same slot on Redis pub/sub. |
+| [`@kerf/realtime-durable-object`](https://www.npmjs.com/package/@kerf/realtime-durable-object) | The bus for Cloudflare, on Durable Objects. |
+| [`@kerf/multiplayer`](https://www.npmjs.com/package/@kerf/multiplayer) | Presence, cursors and a relay on `channel`. Its traffic crosses instances through this bus. |
+| [`@kerf/core`](https://www.npmjs.com/package/@kerf/core) | The plugin system (`definePlugin`, slots) and `busSuite`, the conformance checks a bus must pass. |
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Ravonus/weft/blob/main/CONTRIBUTING.md). To test this package:
+See [CONTRIBUTING.md](https://github.com/Ravonus/kerf/blob/main/CONTRIBUTING.md). To test this package:
 
 ```bash
-pnpm --filter @weft-js/realtime-nats test
+pnpm --filter @kerf/realtime-nats test
 ```
 
-The test against a real server needs a `nats-server` binary. Name it in `WEFT_TEST_NATS`; without it that test is
+The test against a real server needs a `nats-server` binary. Name it in `KERF_TEST_NATS`; without it that test is
 skipped and says so:
 
 ```bash
-WEFT_TEST_NATS=$(command -v nats-server) \
-  pnpm --filter @weft-js/realtime-nats test
+KERF_TEST_NATS=$(command -v nats-server) \
+  pnpm --filter @kerf/realtime-nats test
 ```
 
 ## License
 
-[MIT](https://github.com/Ravonus/weft/blob/main/LICENSE)
+[MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)

@@ -1,6 +1,6 @@
 # Design: tokens, primitives, D-codes
 
-An app with warp has one design language: `@weft-js/warp`'s primitives and components, on warp's tokens. Name what a thing
+An app with veneer has one design language: `@kerf/veneer`'s primitives and components, on veneer's tokens. Name what a thing
 is, and the look follows the theme, the dials and the density.
 
 ```tsx
@@ -12,7 +12,7 @@ import {
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 export function Billing() {
   return (
@@ -46,25 +46,25 @@ export function Billing() {
 | Media box | `Frame ratio` |
 | Push to the far end | `Spacer` |
 | Sunken region | `Inset pad` |
-| Raised box | `Card` (warp's surface: `<Surface>` is weft's canvas) |
+| Raised box | `Card` (veneer's surface: `<Surface>` is kerf's canvas) |
 | Heading | `Heading level role`: `level` is the outline and picks the look (`title` for h1, `heading` for h2 and h3, `label` below); `role` overrides it |
 | Text | `Text role tone subtle faint inline` |
-| Link | `Link href subtle external`; a bare `<a>` still gets warp's colour |
+| Link | `Link href subtle external`; a bare `<a>` still gets veneer's colour |
 
 `gap`: `none hair tight related group section page`, a relationship and not a size: `related` inside a thing, `group`
 between things, `section` between sections. `as` picks the element: `div section article main header footer nav aside
-form ul ol`. There are no breakpoint props, since boxes answer to their container. `@weft-js/core/ds` exports these names as
+form ul ol`. There are no breakpoint props, since boxes answer to their container. `@kerf/core/ds` exports these names as
 constants and types.
 
 `style={{ … }}` and `class` still work; the D-codes below tell you when they leave the system. For a named look of your
-own, use a style group (`weft docs style`), not a class list.
+own, use a style group (`kerf docs style`), not a class list.
 
 ## D-codes
 
-`weft check` reports them. `weft fix` applies the safe autofixes. A fix that changes an element is a suggested edit in
+`kerf check` reports them. `kerf fix` applies the safe autofixes. A fix that changes an element is a suggested edit in
 `fix.edits`; a raw colour has none, since a token follows the theme and the raw value didn't.
 
-Where the app has warp's tokens (`@weft-js/warp` in package.json; headless `@weft-js/warp-core` ships none):
+Where the app has veneer's tokens (`@kerf/veneer` in package.json; headless `@kerf/veneer-core` ships none):
 
 | Code | Catches | Fix |
 |---|---|---|
@@ -72,8 +72,8 @@ Where the app has warp's tokens (`@weft-js/warp` in package.json; headless `@wef
 | D002 | Spacing off the scale, or a step by hand | Autofix when exactly a step |
 | D003 | Raw type, radius, shadow | `Heading`, `Text`, radius and elevation tokens; autofix for an exact radius |
 | D004 | Layout spelled out on an element | `Stack`, `Row` (suggested edit) |
-| D040 | The style gate (`data-weft="styled"`) on main content or an h1 | A secondary part, or no marker |
-| D005 | A browser-painted control: `<button>`, `<select>`, `<textarea>`, an input type such as `date`, `number` or `range`, or a `title` tooltip | The warp component (suggested edit for a button) |
+| D040 | The style gate (`data-kerf="styled"`) on main content or an h1 | A secondary part, or no marker |
+| D005 | A browser-painted control: `<button>`, `<select>`, `<textarea>`, an input type such as `date`, `number` or `range`, or a `title` tooltip | The veneer component (suggested edit for a button) |
 | D006 | One heading level at two roles across the app, or a bare `<hN>` beside `<Heading>` | Match the level's main role (suggested edit at each site) |
 | D007 | A bare `<a href>` | `<Link>`, or `Shell`'s `nav` (suggested edit) |
 
@@ -82,8 +82,8 @@ In every app:
 | Code | Catches | Fix |
 |---|---|---|
 | D011 | A literal colour pair below 4.5:1 | Tokens, or better colours |
-| D030 | A form control with no label | `<label>`, `aria-label`, warp's `label` |
-| D031 | A button or link with no name | Text, `aria-label`, warp's `label` |
+| D030 | A form control with no label | `<label>`, `aria-label`, veneer's `label` |
+| D031 | A button or link with no name | Text, `aria-label`, veneer's `label` |
 | D032 | `<img>` with no `alt` | Describe it; `alt=""` for decoration |
 | D033 | `onClick` on a non-interactive element | `<button type="button">` (suggested edit) |
 | D034 | A control inside a control | One control |
@@ -93,14 +93,14 @@ In every app:
 | D038 | Two solid Buttons side by side | One primary action per region |
 | D039 | `<html>` with no `lang` | Set it |
 
-D010 is warp's contrast gate on the seed and tokens: `weft build` stops on it. D012 is a CSP that blocks the inlined CSS. D020–D025 are style groups.
+D010 is veneer's contrast gate on the seed and tokens: `kerf build` stops on it. D012 is a CSP that blocks the inlined CSS. D020–D025 are style groups.
 
-`// weft-allow D001: <reason>` on the line above keeps one site; the reason is required. `check: { design: false }` in
+`// kerf-allow D001: <reason>` on the line above keeps one site; the reason is required. `check: { design: false }` in
 the config turns these off.
 
 ## Tokens
 
-The theme is `warp({ seed, dials, fields, radius, fonts, tokens })`: every value goes through the contrast check. `weft docs theme`
-has worked looks and the button channels. `weft tokens`
-writes the resolved tokens to `.weft/tokens/` as DTCG 2025.10, one file per theme × expression plus a resolver, for
+The theme is `veneer({ seed, dials, fields, radius, fonts, tokens })`: every value goes through the contrast check. `kerf docs theme`
+has worked looks and the button channels. `kerf tokens`
+writes the resolved tokens to `.kerf/tokens/` as DTCG 2025.10, one file per theme × expression plus a resolver, for
 Figma, Style Dictionary or Terrazzo.

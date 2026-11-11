@@ -30,7 +30,7 @@ const parse = (text) => {
   return printer.printFile(file)
 }
 const fixture = (run) => {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-sample-width-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-sample-width-'))
   try {
     return run(dir)
   } finally {

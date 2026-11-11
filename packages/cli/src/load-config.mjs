@@ -1,4 +1,4 @@
-// Find, load and validate weft.config (TypeScript, JSON or YAML, one schema: research 34 §2). Plugins run only their pure
+// Find, load and validate kerf.config (TypeScript, JSON or YAML, one schema: research 34 §2). Plugins run only their pure
 // `contribute()` (plugins.mjs); `slots` is data.
 
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -14,13 +14,13 @@ import { contributions } from './contributions.mjs'
 import { bindSlots } from './slots.mjs'
 
 export const configNames = [
-  'weft.config.ts',
-  'weft.config.mts',
-  'weft.config.js',
-  'weft.config.mjs',
-  'weft.config.json',
-  'weft.config.yaml',
-  'weft.config.yml',
+  'kerf.config.ts',
+  'kerf.config.mts',
+  'kerf.config.js',
+  'kerf.config.mjs',
+  'kerf.config.json',
+  'kerf.config.yaml',
+  'kerf.config.yml',
 ]
 export const builtinNames = [
   'add',
@@ -52,8 +52,8 @@ const nativeRequire = createRequire(import.meta.url)
 /** Node's sync module hooks. Bun has none, and Deno's break `.node` requires, like Rolldown's; both read TypeScript without help (`importConfig`). */
 const registerHooks =
   process.versions.bun || process.versions.deno ? null : nodeModule.registerHooks
-/** `weft.config.ts.weft-load-<n>`: a fresh module id per load, so a long-lived `weft mcp` sees edits. */
-const tag = /\.weft-load-\d+$/
+/** `kerf.config.ts.kerf-load-<n>`: a fresh module id per load, so a long-lived `kerf mcp` sees edits. */
+const tag = /\.kerf-load-\d+$/
 let hooked = false
 
 const transpile = (path) =>
@@ -64,7 +64,7 @@ const transpile = (path) =>
 
 /**
  * Sync module hooks, so loading is Node's own `require(esm)` and works inside test runners' vm contexts too.
- * `@weft-js/core/config` resolves to the project's weft when it ships one, else to ours; `.ts` is transpiled, not stripped.
+ * `@kerf/core/config` resolves to the project's kerf when it ships one, else to ours; `.ts` is transpiled, not stripped.
  */
 function hook() {
   if (hooked) return
@@ -73,7 +73,7 @@ function hook() {
     resolve(specifier, context, next) {
       if (tag.test(specifier))
         return { url: pathToFileURL(specifier).href, format: 'module', shortCircuit: true }
-      if (specifier === '@weft-js/core/config' || specifier === '@weft-js/cli/config') {
+      if (specifier === '@kerf/core/config' || specifier === '@kerf/cli/config') {
         try {
           return next(specifier, context)
         } catch {
@@ -119,19 +119,19 @@ function hook() {
 
 /**
  * The config on Bun and Deno: their own TypeScript, with a query for a fresh module per load. When the project has no
- * `@weft-js/core/config` of its own, a copy next to the config, so its relative imports still resolve, imports ours instead.
+ * `@kerf/core/config` of its own, a copy next to the config, so its relative imports still resolve, imports ours instead.
  */
 async function importConfig(file) {
   try {
-    return (await import(`${pathToFileURL(file).href}?weft-load=${generation++}`)).default ?? {}
+    return (await import(`${pathToFileURL(file).href}?kerf-load=${generation++}`)).default ?? {}
   } catch (error) {
-    if (!/weft\/config|@weft-js\/cli\/config/.test(error.message)) throw error
+    if (!/kerf\/config|@kerf\/cli\/config/.test(error.message)) throw error
   }
-  const copy = `${file}.weft-load-${generation++}.mjs`
+  const copy = `${file}.kerf-load-${generation++}.mjs`
   writeFileSync(
     copy,
     transpile(file).replace(
-      /(['"])(?:weft\/config|@weft-js\/cli\/config)\1/g,
+      /(['"])(?:kerf\/config|@kerf\/cli\/config)\1/g,
       JSON.stringify(configModule),
     ),
   )
@@ -153,16 +153,16 @@ export function findConfig(root) {
   return configFiles(root)[0] ?? null
 }
 
-/** The schema `$schema` points at, for completion in `weft.config.json` and `.yaml`. */
+/** The schema `$schema` points at, for completion in `kerf.config.json` and `.yaml`. */
 export function writeConfigSchema(root) {
-  mkdirSync(join(root, '.weft'), { recursive: true })
+  mkdirSync(join(root, '.kerf'), { recursive: true })
   writeFileSync(
-    join(root, '.weft', 'config.schema.json'),
+    join(root, '.kerf', 'config.schema.json'),
     `${JSON.stringify(z.toJSONSchema(dataSchema, { unrepresentable: 'any' }), null, 2)}\n`,
   )
 }
 
-/** `@weft-js/text` → `text`, `@weft-js/db/plugin-native` → `native`: the name a plugin's named export goes by. */
+/** `@kerf/text` → `text`, `@kerf/db/plugin-native` → `native`: the name a plugin's named export goes by. */
 export const pluginName = (pkg) =>
   pkg
     .replace(/^@[^/]+\/(?:[^/]+\/)?/, '')
@@ -211,7 +211,7 @@ function validateTasks(config, report) {
   const commands = new Map()
   for (const [name, t] of Object.entries(tasks)) {
     if (builtinNames.includes(name))
-      report('P003', `Task \`${name}\` has the same name as the built-in \`weft ${name}\`.`, name)
+      report('P003', `Task \`${name}\` has the same name as the built-in \`kerf ${name}\`.`, name)
     const twin = commands.get(t.run.trim())
     if (twin)
       report('P003', `Task \`${name}\` runs the same command as \`${twin}\` (\`${t.run}\`).`, name)
@@ -234,12 +234,12 @@ function validateTasks(config, report) {
 
 /**
  * @param {string} root project root
- * @returns {Promise<{ file: string | null, config: import('./config').WeftConfig, diagnostics: object[], slots: object, contributions: ReturnType<typeof contributions> }>}
+ * @returns {Promise<{ file: string | null, config: import('./config').KerfConfig, diagnostics: object[], slots: object, contributions: ReturnType<typeof contributions> }>}
  */
 export async function loadConfig(root) {
   const file = findConfig(root)
   const diagnostics = []
-  const rel = file ? relative(root, file).split('\\').join('/') : 'weft.config.ts'
+  const rel = file ? relative(root, file).split('\\').join('/') : 'kerf.config.ts'
   const text = file ? readFileSync(file, 'utf8') : ''
   const report = (code, why, near, extra) =>
     diagnostics.push(diagnostic({ code, file: rel, why, ...locate(text, near), ...extra }))
@@ -260,13 +260,13 @@ export async function loadConfig(root) {
       config = isDataConfig(file)
         ? readDataConfig(root, file, text)
         : registerHooks
-          ? (nativeRequire(`${file}.weft-load-${generation++}`).default ?? {})
+          ? (nativeRequire(`${file}.kerf-load-${generation++}`).default ?? {})
           : await importConfig(file)
     } catch (error) {
-      // A plugin factory rejecting its options throws while the config module evaluates (@weft-js/core/plugin).
+      // A plugin factory rejecting its options throws while the config module evaluates (@kerf/core/plugin).
       if (error?.code === 'P115')
         report('P115', error.message.split('\n')[0], error.message.match(/^`([^`]+)`/)?.[1] ?? null)
-      else report('P007', `weft.config could not be loaded: ${error.message.split('\n')[0]}`, null)
+      else report('P007', `kerf.config could not be loaded: ${error.message.split('\n')[0]}`, null)
       return { file, config: {}, diagnostics, slots: bindSlots({}, () => {}), contributions: [] }
     }
     const parsed = configSchema.safeParse(config)
@@ -277,7 +277,7 @@ export async function loadConfig(root) {
           'P007',
           `\`${path || '(root)'}\`: ${issue.message}`,
           String(issue.path.at(-1) ?? ''),
-          { help: 'Fix the key at the path shown (see `weft docs config`).' },
+          { help: 'Fix the key at the path shown (see `kerf docs config`).' },
         )
       }
       return { file, config, diagnostics, slots: bindSlots({}, () => {}), contributions: [] }

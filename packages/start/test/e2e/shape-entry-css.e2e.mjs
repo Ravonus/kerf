@@ -11,17 +11,17 @@ import { shapeHotUpdate } from '../../src/vite.mjs'
 import { load as moduleLoad } from '../../src/vite/module-hooks.mjs'
 
 async function project(t, plugins = []) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-entry-closure-')))
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-entry-closure-')))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = (name) => join(root, name)
   const write = (name, code) => writeFileSync(file(name), code)
-  mkdirSync(file('.weft/tokens'), { recursive: true })
-  write('.weft/tokens/warp.css', ':root { --size: 4px }')
+  mkdirSync(file('.kerf/tokens'), { recursive: true })
+  write('.kerf/tokens/veneer.css', ':root { --size: 4px }')
   write('entry.js', "import './a.css'; import './nested.js'; import './b.css'; throw Error('run')")
   write(
     'nested.js',
     `
-    import './nested.css'; import './entry.js'; import 'weft:tokens/warp';
+    import './nested.css'; import './entry.js'; import 'kerf:tokens/veneer';
     export { value } from './deep.js'; import('./dynamic.js');
   `,
   )
@@ -52,7 +52,7 @@ void test('entry closure follows static CSS in order through cycles without runn
     assert.deepEqual(result.styles, [
       p.file('a.css'),
       p.file('nested.css'),
-      p.file('.weft/tokens/warp.css'),
+      p.file('.kerf/tokens/veneer.css'),
       p.file('deep.css'),
       p.file('b.css'),
     ])
@@ -67,7 +67,7 @@ void test('entry closure follows static CSS in order through cycles without runn
       manifest: { layouts: [], routes: [{ id: '/', file: 'page.tsx', kind: 'page' }] },
       hydration: () => undefined,
     }
-    const source = await moduleLoad(state).handler.call(p.ctx, '\0virtual:weft/routes')
+    const source = await moduleLoad(state).handler.call(p.ctx, '\0virtual:kerf/routes')
     let before = -1
     for (const css of result.styles) {
       const index = source.indexOf(JSON.stringify(`${css}?inline`))

@@ -1,4 +1,4 @@
-// @weft-js/core/style: named style groups (research 23). A group is data: intent keys and token names (./style/vocab.ts),
+// @kerf/core/style: named style groups (research 23). A group is data: intent keys and token names (./style/vocab.ts),
 // typed here and evaluated at build by the compiler, which also lowers every call site to plain attributes:
 //
 //   <li {...productRow({ stock: s })}>      →  <li data-g="product-row" data-stock={s}>   (one attribute binding)
@@ -11,7 +11,7 @@ import type { Vocab } from './style/vocab'
 
 /** Token-only declarations: each key is an intent from the closed vocabulary, each value one of its token names. */
 export type Intent = { [K in keyof Vocab]?: keyof Vocab[K] } & {
-  /** The escape: raw CSS properties, counted by `weft check` (D023 in research 23). */
+  /** The escape: raw CSS properties, counted by `kerf check` (D023 in research 23). */
   css?: Record<string, string | number>
 }
 

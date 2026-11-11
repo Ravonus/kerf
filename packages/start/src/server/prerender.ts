@@ -1,4 +1,4 @@
-import type { Merged } from '@weft-js/core/ssr'
+import type { Merged } from '@kerf/core/ssr'
 import { pathPages } from '../derive.mjs'
 import { esc } from './text'
 import { fill } from './payload'
@@ -10,7 +10,7 @@ export function makePrerender(
   resolve: (path: string, request: Request) => Promise<Resolved>,
   finished: (r: Resolved, request: Request) => Promise<Merged>,
 ) {
-  /** Every path `weft build` prerenders: pages from `prerender`, and the card of each page that has a generated one. */
+  /** Every path `kerf build` prerenders: pages from `prerender`, and the card of each page that has a generated one. */
   async function prerenderPaths(request: Request): Promise<string[]> {
     const paths: string[] = []
     for (const route of manifest.routes) {
@@ -28,7 +28,7 @@ export function makePrerender(
           r.status === 200 &&
           typeof image === 'object' &&
           image &&
-          image.url.startsWith('/_weft/og/')
+          image.url.startsWith('/_kerf/og/')
         )
           paths.push(image.url.replace(/\?.*/, ''))
       }
@@ -37,7 +37,7 @@ export function makePrerender(
   }
 
   /**
-   * Build mode (research 20 §4.3): the card URLs `weft build` prerenders, queued through Nitro's `x-nitro-prerender`.
+   * Build mode (research 20 §4.3): the card URLs `kerf build` prerenders, queued through Nitro's `x-nitro-prerender`.
    * It's a header, so a big site's list comes a page at a time: too long a header is an error that Nitro's client
    * logs and carries on from, and the build ends with no cards.
    */
@@ -51,7 +51,7 @@ export function makePrerender(
     const n = Number(url.searchParams.get('page') ?? 0)
     const paths = [
       ...(pages[n] ?? []),
-      ...(n + 1 < pages.length ? [`/_weft/og-routes?page=${n + 1}`] : []),
+      ...(n + 1 < pages.length ? [`/_kerf/og-routes?page=${n + 1}`] : []),
     ]
     // HTML, because Nitro's prerenderer only follows links (and this header) from HTML responses.
     const list = paths.map((p) => `<a href="${esc(p)}">${esc(p)}</a>`).join('\n')

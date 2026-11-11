@@ -3,13 +3,13 @@
 :::learn
 - How to tie a text field, number, checkbox, radio, select and textarea to state
 - When to keep an input's value in a box, and when to let the browser keep it
-- Which Warp control takes which props, and which ones take the box itself
+- Which Veneer control takes which props, and which ones take the box itself
 - How to submit a form in the browser, and where server forms come in
 :::
 
 Most interactivity ends in a form: a search box, a settings page, a checkout. You already have the pieces: a box holds
 the value, the input reads it, and a handler writes it. This page goes through each kind of input, first as the browser's
-own element and then as its Warp control, and ends with submitting.
+own element and then as its Veneer control, and ends with submitting.
 
 :::demo interact-controls
 
@@ -19,7 +19,7 @@ The pattern for every input is the same two halves: the input shows the box with
 when the user changes it.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Search() {
   const query = state('')
@@ -44,15 +44,15 @@ list, a button that's only enabled when the field isn't empty. And a write from 
 Clear button, shows in the field.
 
 `value`, `checked` and `selected` are written as DOM properties, not attributes. The attribute is only the starting
-value: after someone types, setting the attribute no longer changes what the field shows, and the property does. Weft
+value: after someone types, setting the attribute no longer changes what the field shows, and the property does. Kerf
 handles that for you.
 
 In React this is a *controlled input*. One difference to know: React puts the field back to the state's value after
-every keystroke, so an input with a `value` and no handler can't be typed in. Weft writes the field only when the box
+every keystroke, so an input with a `value` and no handler can't be typed in. Kerf writes the field only when the box
 changes. That matters in one case, covered in the pitfall below.
 
 :::pitfall A handler that refuses a change
-Weft writes `value` to the field when the box changes, and not otherwise. A handler that *rejects* an edit, by not
+Kerf writes `value` to the field when the box changes, and not otherwise. A handler that *rejects* an edit, by not
 writing or by writing what the box already held, leaves the user's typing on screen:
 
 ```tsx
@@ -78,8 +78,8 @@ button that enables, another field that depends on it. Otherwise the browser hol
 
 ## Each kind of input
 
-The browser's own elements work as below. In an app that uses Warp, `weft check` suggests Warp's control instead of a
-browser-drawn `<select>`, `<textarea>`, number input and the like (**D005**): Warp's draw the same in every browser, with
+The browser's own elements work as below. In an app that uses Veneer, `kerf check` suggests Veneer's control instead of a
+browser-drawn `<select>`, `<textarea>`, number input and the like (**D005**): Veneer's draw the same in every browser, with
 the focus ring and touch targets of the rest of the app. Each section shows both.
 
 ### Text and textarea
@@ -87,11 +87,11 @@ the focus ring and touch targets of the rest of the app. Each section shows both
 `value` and `onInput`, as above. `e.currentTarget.value` is a string. A `<textarea>` works the same way: in TSX it takes a
 `value` like an input, not children.
 
-Warp's `Input` and `Textarea` take the same two props, plus a `label`, which they need:
+Veneer's `Input` and `Textarea` take the same two props, plus a `label`, which they need:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Input, Textarea } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Input, Textarea } from '@kerf/veneer'
 
 export function Note() {
   const title = state('')
@@ -124,7 +124,7 @@ A field's value is always a string, even for `type="number"`. Convert it as you 
 or `NaN` when the field is empty or not a number:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Quantity() {
   const qty = state(1)
@@ -151,12 +151,12 @@ export function Quantity() {
 }
 ```
 
-Warp's `NumberField` holds a `number | null`, with `null` for empty, and takes the box itself as `value`. It writes the box
+Veneer's `NumberField` holds a `number | null`, with `null` for empty, and takes the box itself as `value`. It writes the box
 as the user types, steps or presses the arrow keys:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { NumberField } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { NumberField } from '@kerf/veneer'
 
 export function Quantity() {
   const qty = state<number | null>(1)
@@ -181,7 +181,7 @@ export function Quantity() {
 A checkbox's value is `checked`, a boolean, and `onChange` fires when it flips:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Terms() {
   const agreed = state(false)
@@ -199,12 +199,12 @@ export function Terms() {
 }
 ```
 
-Warp's `Checkbox` and `Switch` are a real checkbox inside, and pass `checked` and `onChange` to it. Their extra props are
+Veneer's `Checkbox` and `Switch` are a real checkbox inside, and pass `checked` and `onChange` to it. Their extra props are
 typed loosely, so give the handler's event a type:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Checkbox, Switch } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Checkbox, Switch } from '@kerf/veneer'
 
 type Toggle = Event & { currentTarget: HTMLInputElement }
 
@@ -239,7 +239,7 @@ Use a switch for a setting that applies at once, and a checkbox for a choice tha
 Radio buttons that share a `name` form a group. Each one is `checked` when the box holds its value:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 const sizes = ['small', 'medium', 'large'] as const
 
@@ -264,12 +264,12 @@ export function SizePicker() {
 }
 ```
 
-Warp's `RadioGroup` does that wiring for you. It takes the current `value`, an `onChange` that receives the picked value
+Veneer's `RadioGroup` does that wiring for you. It takes the current `value`, an `onChange` that receives the picked value
 (not an event), and the `options`. `Segmented` takes the same props and draws them as a row of segments:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { RadioGroup } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { RadioGroup } from '@kerf/veneer'
 
 type Size = 'small' | 'medium' | 'large'
 
@@ -295,7 +295,7 @@ export function SizePicker() {
 A `<select>` takes `value` and `onChange`, like a text field:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Milk() {
   const milk = state('oat')
@@ -318,12 +318,12 @@ export function Milk() {
 The compiler writes a select's `value` after its options exist, so the right option is selected even when the options
 come from a list.
 
-Warp's `Select` takes `options` as data and, like `NumberField`, the box itself as `value`. A real `<select>` stays inside
+Veneer's `Select` takes `options` as data and, like `NumberField`, the box itself as `value`. A real `<select>` stays inside
 it, so a form posts, resets and validates as it would with the browser's:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Select } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Select } from '@kerf/veneer'
 
 export function Milk() {
   const milk = state<string | null>('oat')
@@ -348,7 +348,7 @@ export function Milk() {
 }
 ```
 
-### Which Warp control takes what
+### Which Veneer control takes what
 
 | Control | Value | How it writes |
 |---|---|---|
@@ -358,7 +358,7 @@ export function Milk() {
 | `Slider` | `value={box.value}` (a number, or two) | `onChange={v => …}`, the value |
 | `Select`, `NumberField`, the date and time fields | `value={box}`, the box itself | Writes the box. Or `value` plus `onValueChange`, or `defaultValue` |
 
-The last row is Warp's `Bindable` props: a control that takes the box writes it, so there's no handler to write. `bind:`
+The last row is Veneer's `Bindable` props: a control that takes the box writes it, so there's no handler to write. `bind:`
 isn't needed for them, and isn't what they expect: see [Writing to a parent with bind:](/learn/bind).
 
 ## Submitting a form
@@ -377,7 +377,7 @@ The handler does three things:
 3. **Holds state for the request**, `sending` and `joined`, so the page can show progress and the result.
 
 The browser checks `required` and `type="email"` before `onSubmit` runs: press Join with the field empty and the handler
-never runs. Warp's fields show the browser's message in their own error style.
+never runs. Veneer's fields show the browser's message in their own error style.
 
 Nothing waits for a promise an event handler returns, and a rejected one goes unhandled. So keep the submit handler
 itself synchronous, as the demo does: call `preventDefault()` first, then start the async work with `void join(email)`,
@@ -390,7 +390,7 @@ that the form is busy, but read `FormData` before you disable them: disabled fie
 
 ### Server forms
 
-A form that saves to your own server doesn't need any of this by hand. With `@weft-js/start`, `<Form of={addTodo}>` posts
+A form that saves to your own server doesn't need any of this by hand. With `@kerf/start`, `<Form of={addTodo}>` posts
 to a server mutation: it validates the input with the mutation's schema, shows errors next to each field, tracks
 `pending`, resets after a success, and still works before the page's JavaScript has loaded or with it turned off.
 [Forms and validation](/learn/forms-and-validation) covers it.
@@ -401,13 +401,13 @@ or never leaves the page.
 ## Recap
 
 - Tie an input to a box with two halves: `value={box.value}` to show it, a handler to write it.
-- Weft writes the field only when the box changes. A handler that rejects an edit puts the field back itself.
+- Kerf writes the field only when the box changes. A handler that rejects an edit puts the field back itself.
 - Let the browser keep a value, with `defaultValue` and `FormData`, when nothing reads it before submit.
 - Checkboxes use `checked` and `onChange`; radios share a `name` and compare with the box; a select takes `value`.
-- In a Warp app, use Warp's controls (**D005**). Text and choice controls take a value and a handler; `Select`,
+- In a Veneer app, use Veneer's controls (**D005**). Text and choice controls take a value and a handler; `Select`,
   `NumberField` and the date fields take the box itself.
 - Submit with `onSubmit` on the form, `e.preventDefault()`, and `FormData`. For server forms, use `Form` from
-  `@weft-js/start`.
+  `@kerf/start`.
 
 ## Try it
 
@@ -416,8 +416,8 @@ Add a counter under this textarea that shows how many of 140 characters are left
 and disables the Post button when the text is empty or too long.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button, Textarea } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Textarea } from '@kerf/veneer'
 
 export function Compose() {
   const text = state('')
@@ -435,8 +435,8 @@ export function Compose() {
 ```
 :::solution
 ```tsx
-import { derived, state } from '@weft-js/core'
-import { Button, Textarea } from '@weft-js/warp'
+import { derived, state } from '@kerf/core'
+import { Button, Textarea } from '@kerf/veneer'
 
 export function Compose() {
   const text = state('')
@@ -469,7 +469,7 @@ This sign-up form keeps nothing in state. Make it show "Welcome, <name>!" in pla
 reading the name from the form itself.
 
 ```tsx
-import { Button, Input } from '@weft-js/warp'
+import { Button, Input } from '@kerf/veneer'
 
 export function SignUp() {
   return (
@@ -486,8 +486,8 @@ export function SignUp() {
 ```
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
-import { Button, Input } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Input } from '@kerf/veneer'
 
 export function SignUp() {
   const name = state<string | null>(null)
@@ -525,8 +525,8 @@ name.
 Make this field accept digits only: typing a letter should leave the field as it was.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Input } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Input } from '@kerf/veneer'
 
 export function Pin() {
   const pin = state('')
@@ -540,8 +540,8 @@ export function Pin() {
 ```
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
-import { Input } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Input } from '@kerf/veneer'
 
 export function Pin() {
   const pin = state('')
@@ -564,6 +564,6 @@ export function Pin() {
 }
 ```
 
-Stripping the letter leaves the box as it was, so Weft has nothing to write to the field. The handler puts the field back
+Stripping the letter leaves the box as it was, so Kerf has nothing to write to the field. The handler puts the field back
 to the box itself.
 :::

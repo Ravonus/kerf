@@ -8,7 +8,7 @@ import { test } from 'node:test'
 const gate = resolve(import.meta.dirname, 'conventions.mjs')
 
 function probe(contents) {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-conventions-edge-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-conventions-edge-'))
   const env = { ...process.env }
   delete env.NODE_TEST_CONTEXT
   try {

@@ -1,9 +1,9 @@
 import { writeFileSync } from 'node:fs'
 
 export async function diagnostics(context) {
-  const { check, eq, weftCheck, server, cleanServer, ID, ok } = context
-  await check('`weft check` passes the clean app, with no warning', () => {
-    const r = weftCheck()
+  const { check, eq, kerfCheck, server, cleanServer, ID, ok } = context
+  await check('`kerf check` passes the clean app, with no warning', () => {
+    const r = kerfCheck()
     eq([r.ok, r.diagnostics?.filter((d) => d.code.startsWith('R1'))], [true, []], 'check')
     return r.summary
   })
@@ -15,7 +15,7 @@ export async function diagnostics(context) {
         'const Done = z.object({ checksum: z.string(), format: z.string(),',
       ),
     )
-    const r = weftCheck().diagnostics.filter((d) => d.code === 'R103')
+    const r = kerfCheck().diagnostics.filter((d) => d.code === 'R103')
     writeFileSync(server, cleanServer)
     ok(
       r.some((d) => d.why.includes(ID.thumbnail)),
@@ -31,9 +31,9 @@ export async function diagnostics(context) {
 }
 
 async function remaining(context) {
-  const { check, eq, weftCheck, main, cleanMain, ID, run, weft, dir, ok } = context
+  const { check, eq, kerfCheck, main, cleanMain, ID, run, kerf, dir, ok } = context
   await check('R104: an edge preset is refused with the fix, before anything compiles', () => {
-    const r = run(weft(), ['build', '--preset', 'cloudflare_module'], dir, {
+    const r = run(kerf(), ['build', '--preset', 'cloudflare_module'], dir, {
       NODE_ENV: 'production',
     })
     ok(r.status !== 0, 'the build passed')
@@ -45,7 +45,7 @@ async function remaining(context) {
       main,
       `#[cfg(target_family = "wasm")]\ncompile_error!("this crate links C");\n${cleanMain}`,
     )
-    const r = weftCheck()
+    const r = kerfCheck()
     writeFileSync(main, cleanMain)
     const hit = r.diagnostics.find((d) => d.code === 'R104')
     ok(hit?.severity === 'warning', JSON.stringify(r.diagnostics))
@@ -55,7 +55,7 @@ async function remaining(context) {
   })
   await check('R105: a cached query with tags and no `touch`, at the method', () => {
     writeFileSync(main, cleanMain.replace('        ctx.touch("images");\n', ''))
-    const r = weftCheck().diagnostics.filter((d) => d.code === 'R105')
+    const r = kerfCheck().diagnostics.filter((d) => d.code === 'R105')
     writeFileSync(main, cleanMain)
     eq(r.length, 1, `R105s: ${JSON.stringify(r)}`)
     eq(r[0].file, 'crates/media/src/lib.rs', 'file')

@@ -6,7 +6,7 @@ export const realtime = [
     severity: 'error',
     by: 'start',
     catches:
-      '`channel` or `sharedState` without `authorize` (`weft check`, `weft build`, and thrown at definition)',
+      '`channel` or `sharedState` without `authorize` (`kerf check`, `kerf build`, and thrown at definition)',
     fix: 'Add it (`() => true` must be written explicitly)',
   },
   {
@@ -14,8 +14,8 @@ export const realtime = [
     severity: 'error',
     by: 'cli',
     catches:
-      "The memory bus on a multi-instance preset, or `durableObjectBus` outside `cloudflare_durable` (`weft build` fails): a message reaches one instance's clients",
-    fix: '`weft add redis` or `weft add nats`, or `realtime({ bus: postgresBus({ url }) })` in `src/realtime.server.ts`',
+      "The memory bus on a multi-instance preset, or `durableObjectBus` outside `cloudflare_durable` (`kerf build` fails): a message reaches one instance's clients",
+    fix: '`kerf add redis` or `kerf add nats`, or `realtime({ bus: postgresBus({ url }) })` in `src/realtime.server.ts`',
   },
   {
     code: 'R003',
@@ -38,7 +38,7 @@ export const realtime = [
     severity: 'warning',
     by: 'cli',
     catches:
-      "A stream's `input`, a channel's `params` or client messages, or a shared key or value has an unbounded string or array (`weft build`): a client decides how much the server holds",
+      "A stream's `input`, a channel's `params` or client messages, or a shared key or value has an unbounded string or array (`kerf build`): a client decides how much the server holds",
     fix: 'Add `.max()`',
   },
   {
@@ -54,7 +54,7 @@ export const realtime = [
     severity: 'warning',
     by: 'cli',
     catches:
-      '`ws`, `socket.io-client`, `reconnecting-websocket` or `@microsoft/fetch-event-source` in dependencies: weft owns the connection',
+      '`ws`, `socket.io-client`, `reconnecting-websocket` or `@microsoft/fetch-event-source` in dependencies: kerf owns the connection',
     fix: 'Use `stream`, `.live()` or `channel`',
   },
   {
@@ -102,8 +102,8 @@ export const realtime = [
     severity: 'error',
     by: 'cli',
     catches:
-      "A query marked `live: { required: true }` on a target that can't deliver a change feed: a functions preset with no external listener, or no `changes` at all (`weft check`, `weft build`, `weft doctor`)",
-    fix: "Run `weft db listen` on an always-on host and set `listener: 'external'`, deploy to a server preset, add `changes: dbChanges(db, [tables])`, or drop `required`",
+      "A query marked `live: { required: true }` on a target that can't deliver a change feed: a functions preset with no external listener, or no `changes` at all (`kerf check`, `kerf build`, `kerf doctor`)",
+    fix: "Run `kerf db listen` on an always-on host and set `listener: 'external'`, deploy to a server preset, add `changes: dbChanges(db, [tables])`, or drop `required`",
   },
   {
     code: 'R014',
@@ -111,7 +111,7 @@ export const realtime = [
     by: 'cli',
     catches:
       "`changes` on a preset with no long-running process: writes from outside the app won't reach `.live()`, which shows `degraded`",
-    fix: "Run `weft db listen` on an always-on host and set `listener: 'external'`, or deploy to a server preset",
+    fix: "Run `kerf db listen` on an always-on host and set `listener: 'external'`, or deploy to a server preset",
   },
   {
     code: 'R015',
@@ -119,7 +119,7 @@ export const realtime = [
     by: 'start',
     catches:
       "A required live query, and the server's startup probe found no real change feed (a pooler, no trigger, no trigger permission, a Mongo without a replica set): the server stops rather than serve stale data, and dev answers 503",
-    fix: 'What the error names: `dbChanges(db, tables, { listenUrl })` for a direct connection, `weft db live` for triggers',
+    fix: 'What the error names: `dbChanges(db, tables, { listenUrl })` for a direct connection, `kerf db live` for triggers',
   },
   {
     code: 'R016',
@@ -127,23 +127,23 @@ export const realtime = [
     by: 'start',
     catches:
       'The server settled on a degraded live mode (`poll` or `off`), or a working feed went down: `.live()` shows `degraded` or `reconnecting`',
-    fix: 'What the log line names; `weft doctor` lists the options',
+    fix: 'What the log line names; `kerf doctor` lists the options',
   },
   {
     code: 'R017',
     severity: 'error',
     by: 'start',
     catches:
-      "`dbChanges` on a client it can't watch or something that isn't a table, or `weft db listen` on the memory bus, which stops at that process",
-    fix: 'Use a client from `@weft-js/start/db/*` or `mongoChanges`; set `bus` in `src/realtime.server.ts`',
+      "`dbChanges` on a client it can't watch or something that isn't a table, or `kerf db listen` on the memory bus, which stops at that process",
+    fix: 'Use a client from `@kerf/start/db/*` or `mongoChanges`; set `bus` in `src/realtime.server.ts`',
   },
   {
     code: 'R019',
     severity: 'error',
     by: 'cli',
     catches:
-      "A query's `live: { verify }` round trip failed against its target (`weft check`, `weft build`): the message names the link that broke, from `trigger` to `cleanup`",
-    fix: "What the link says: `weft db live` for a trigger, the app's log for a poke, `verify.row` for a row the query can't see",
+      "A query's `live: { verify }` round trip failed against its target (`kerf check`, `kerf build`): the message names the link that broke, from `trigger` to `cleanup`",
+    fix: "What the link says: `kerf db live` for a trigger, the app's log for a poke, `verify.row` for a row the query can't see",
   },
   {
     code: 'R020',
@@ -158,8 +158,8 @@ export const realtime = [
     severity: 'error',
     by: 'cli',
     catches:
-      "A `verify` target isn't available here: fails `weft build`, and `weft check` warns and skips",
-    fix: 'Set `WEFT_STAGING_URL`, `STAGING_DATABASE_URL`, or the variable its target names',
+      "A `verify` target isn't available here: fails `kerf build`, and `kerf check` warns and skips",
+    fix: 'Set `KERF_STAGING_URL`, `STAGING_DATABASE_URL`, or the variable its target names',
   },
   {
     code: 'R022',
@@ -181,15 +181,15 @@ export const realtime = [
     severity: 'error',
     by: 'cli',
     catches:
-      "A `channel` or `sharedState` built for a target that can't hold a WebSocket (Netlify, Vercel, AWS Lambda): `weft build` fails, and where it is let through the page never dials, the channel's `status` is `unavailable` and a send rejects with R024",
-    fix: '`weft deploy hosts`, then a server host (`fly`, `render`); or `--unsafe-allow R024` with why, for a demo that may stay offline there',
+      "A `channel` or `sharedState` built for a target that can't hold a WebSocket (Netlify, Vercel, AWS Lambda): `kerf build` fails, and where it is let through the page never dials, the channel's `status` is `unavailable` and a send rejects with R024",
+    fix: '`kerf deploy hosts`, then a server host (`fly`, `render`); or `--unsafe-allow R024` with why, for a demo that may stay offline there',
   },
   {
     code: 'R018',
     severity: 'warning',
     by: 'cli',
     catches:
-      'A table in `changes` that no migration gives a change trigger (`weft check`, `weft build`): the server would fall back to polling',
-    fix: 'Run `weft db live`',
+      'A table in `changes` that no migration gives a change trigger (`kerf check`, `kerf build`): the server would fall back to polling',
+    fix: 'Run `kerf db live`',
   },
 ]

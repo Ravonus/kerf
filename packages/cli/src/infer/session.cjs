@@ -1,5 +1,5 @@
-// One project's inference: a tsconfig's files, an engine, and a checker started only if something needs one. `weft
-// check`, `weft tsc` and the dev worker all use this. The tsserver plugin has a language service of its own (plugin).
+// One project's inference: a tsconfig's files, an engine, and a checker started only if something needs one. `kerf
+// check`, `kerf tsc` and the dev worker all use this. The tsserver plugin has a language service of its own (plugin).
 
 const { existsSync, readFileSync } = require('node:fs')
 const { createRequire } = require('node:module')
@@ -141,7 +141,7 @@ class Session {
               end: d.start + d.length,
               why: d.text,
               help: 'Fix the type error',
-              ...d.weft,
+              ...d.kerf,
             })),
         )
         continue

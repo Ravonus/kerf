@@ -1,6 +1,6 @@
-import type { DitherPainter } from '@weft-js/warp'
-import { LEVEL, DitherStage, Stack } from '@weft-js/warp'
-import { state } from '@weft-js/core'
+import type { DitherPainter } from '@kerf/veneer'
+import { LEVEL, DitherStage, Stack } from '@kerf/veneer'
+import { state } from '@kerf/core'
 
 // A skin of your own: a battery whose cells fill to the
 // meter's value. Painters get the piece's box and states,

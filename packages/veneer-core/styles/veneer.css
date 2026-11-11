@@ -1,0 +1,1997 @@
+/* =============================================================================
+   veneer · foundations — tokens + base                         v0.2 · 2026-10-28
+   Spec: ../01-foundations.md        Direction: ../00-direction.md
+
+   Scope attributes (any element; nest freely):
+     data-theme       light | dark            (none = follow prefers-color-scheme)
+     data-expression  quiet | balanced | vivid (none = balanced)
+     data-density     compact | cozy | comfortable (none = cozy)
+     data-flair       sweep | none            sweep on buttons + surfaces too / inputs only (a surface that opts in with
+                                              data-sweep sweeps at every stop, flair or not)
+     data-fields      floating | classic      the one field switch: on :root (app), a form, any ancestor;
+                                              nearest wins; data-variant on a field overrides. Pure CSS.
+     data-motion      reduce | full           (none = follow prefers-reduced-motion)
+     data-pointer     coarse | fine           (none = follow (pointer: coarse))
+     data-form        phone | tablet | desktop (none = follow viewport width)
+     data-veneer        re-derive tokens here after overriding a seed inline
+
+   Contracts read by veneer.base (01-foundations §2):
+     data-loop        an idle loop: stopped under reduced motion (spinners pulse instead)
+     data-hit         a bespoke tap target: hit-min (44px coarse) floor; ="text" for a standalone text link;
+                      ="area" keeps the visual box and adds a centred hit-min expander (::after)
+     data-prose       reading text: prose size + leading, the dial's measure, text-wrap: pretty
+     data-text-canvas a canvas host: re-resolves the px role strings (--veneer-text-*-canvas) against
+                      its own container, for @kerf/core/text and Surfaces (01-foundations §2, Type)
+     data-numeric     figures on a face with tnum at every stop (vivid's serif has none)
+     data-trim        ="display": non-heading text that sets text-box: var(--veneer-text-display-trim) keeps
+                      its trimmed box through the font swap (h1–h6 and the hero title do this already)
+   Forced colours: @layer veneer.signature §5 redraws every signature part in system colours (01 §12).
+
+   Signature (SIGNATURE.md): the sweep border and the floating border label
+   live in @layer veneer.signature at every dial stop; the dial sets intensity.
+
+   Layering: everything is inside `@layer veneer.*`. Declare `@layer veneer, theme,
+   base, components, utilities;` first in your app CSS (Tailwind v4) and every
+   utility, CSS module or unlayered rule beats veneer without !important.
+
+   Generated-by-hand for v0; `kerf tokens build` will emit this file from the
+   DTCG source. Colours are OKLCH. Every text/fill pair is verified by
+   ../scripts/contrast-check.mjs.
+   ========================================================================== */
+
+@layer veneer, app, theme, base, components, utilities;
+@layer veneer.tokens, veneer.base, veneer.signature, veneer.layout, veneer.components, veneer.inputs, veneer.inputs-rich, veneer.data, veneer.app, veneer.flows, veneer.marketing, veneer.canvas, veneer.flow;
+
+/* -- metric-matched fallback faces (01 §2 "Font loading"; research 11 §8.2) ------------------
+   Each brand face gets a local system face scaled to the same advance widths and vertical metrics
+   (Capsize metrics, computed by `kerf tokens build`). The stacks list "<Family> Fallback" right after the
+   brand face, so the page lays out on it and the font-display: swap of the real file shifts nothing.
+   Safari has size-adjust (17+) but not the *-override descriptors; every role sets an explicit unitless
+   line-height, so line boxes never depend on ascent/descent there either. Regular and bold system
+   faces are both declared so weights 600+ match bold widths instead of a synthesised bold. */
+@font-face { font-family: "Inter Fallback"; src: local("Arial"), local("ArialMT"); font-weight: 100 549;
+  size-adjust: 107.12%; ascent-override: 90.44%; descent-override: 22.52%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Inter Fallback"; src: local("Arial Bold"), local("Arial-BoldMT"); font-weight: 550 900;
+  size-adjust: 107.12%; ascent-override: 90.44%; descent-override: 22.52%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Space Grotesk Fallback"; src: local("Arial"), local("ArialMT"); font-weight: 100 549;
+  size-adjust: 109.69%; ascent-override: 89.71%; descent-override: 26.62%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Space Grotesk Fallback"; src: local("Arial Bold"), local("Arial-BoldMT"); font-weight: 550 900;
+  size-adjust: 109.69%; ascent-override: 89.71%; descent-override: 26.62%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Instrument Serif Fallback"; src: local("Times New Roman"), local("TimesNewRomanPSMT"); font-style: normal;
+  size-adjust: 83.94%; ascent-override: 117.94%; descent-override: 36.93%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "Instrument Serif Fallback"; src: local("Times New Roman Italic"), local("TimesNewRomanPS-ItalicMT"); font-style: italic;
+  size-adjust: 83.94%; ascent-override: 117.94%; descent-override: 36.93%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono Fallback"; src: local("Courier New"), local("CourierNewPSMT"); font-weight: 100 549;
+  size-adjust: 99.98%; ascent-override: 102.52%; descent-override: 27.5%; line-gap-override: 0%; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono Fallback"; src: local("Courier New Bold"), local("CourierNewPS-BoldMT"); font-weight: 550 900;
+  size-adjust: 99.98%; ascent-override: 102.52%; descent-override: 27.5%; line-gap-override: 0%; font-display: swap; }
+
+/* px-resolved role sizes (registered, so they compute to absolute px) feed the canvas role strings */
+@property --veneer-mx { syntax: "<percentage>"; inherits: true;  initial-value: 50%; }   /* where the hand arrived on a button */
+@property --veneer-my { syntax: "<percentage>"; inherits: true;  initial-value: 50%; }
+@property --_fo     { syntax: "<number>";     inherits: false; initial-value: 1; }     /* button fill: 1 parked, 0 met */
+@property --_fr     { syntax: "<number>";     inherits: false; initial-value: 0; }     /* button fill: size */
+@property --_wp     { syntax: "<number>";     inherits: false; initial-value: 0; }     /* button fill: how much of the wipe shows */
+@property --_flow-dx  { syntax: "<length>"; inherits: false; initial-value: 0px; }      /* veneer.flow's move, see the note at its keyframes */
+@property --_flow-dy  { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --_flow-sx  { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_flow-sy  { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_flow-rot { syntax: "<angle>";  inherits: false; initial-value: 0deg; }
+@property --_flow-scan { syntax: "<number>"; inherits: false; initial-value: 0; }   /* 1 while a code block waits below the fold for its scan */
+@property --_flow-settle-time { syntax: "<time>"; inherits: false; initial-value: 0s; }
+@property --veneer-text-display-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --veneer-text-title-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --veneer-text-heading-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --veneer-text-body-px    { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --veneer-text-prose-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --veneer-text-label-px   { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --veneer-text-eyebrow-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --veneer-text-caption-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --veneer-text-code-px    { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --veneer-text-button-px  { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --veneer-text-control-px { syntax: "<length>"; inherits: true; initial-value: 0px; }
+
+/* cap-trim font-swap fix (01 §2 Type): registered, so it resolves to px on the trimmed element itself */
+@property --veneer-trim-fix { syntax: "<length>"; inherits: true; initial-value: 0px; }
+
+/* the shuttle's two edges: registered so they interpolate, and on their own timings */
+@property --veneer-a { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --veneer-b { syntax: "<length>"; inherits: false; initial-value: 0px; }
+/* and its two edges across, for a group in rows */
+@property --veneer-ca { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --veneer-cb { syntax: "<length>"; inherits: false; initial-value: 0px; }
+/* frame outline head/tail (§1b): registered so they interpolate */
+@property --veneer-frame-tail { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --veneer-frame-head { syntax: "<number>"; inherits: true; initial-value: 0; }
+
+/* the sweep's two edges, one per transition (veneer.signature) */
+@property --_a { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --_sl { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
+@property --_sr { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
+/* the sweep's clocks (veneer.signature §1): linear counters, in sweeps, that the edges are worked out from */
+@property --_kc { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_kh { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_ks { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_kx { syntax: "<number>"; inherits: false; initial-value: 3; }
+@property --_kw { syntax: "<number>"; inherits: false; initial-value: 1.5; }
+@property --_hp { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_tp { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_tq { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_c0 { syntax: "<number>"; inherits: false; initial-value: 0; }
+@property --_hd { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --_td { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --veneer-sweep-duration { syntax: "<time>"; inherits: true; initial-value: 620ms; }
+@layer veneer.tokens {
+
+/* ---------------------------------------------------------------------------
+   1 · INPUTS. Seeds, the dial, density, form factor, pointer, motion.
+   Inputs inherit. Only §2 derives from them.
+   ------------------------------------------------------------------------ */
+
+:root {
+  color-scheme: light dark;
+  /* seed: the brand accent as hue + base chroma (default: the field green) */
+  --veneer-seed-accent-h: 152;
+  --veneer-seed-accent-c: 0.115;
+  /* environment inputs (overridden by media / attributes below) */
+  --veneer-target-min: 0px;          /* 44px on coarse pointers */
+  --veneer-input-font-min: 0px;      /* 16px on coarse pointers (no iOS zoom) */
+  --veneer-motion-scale: 1;          /* 0 under reduced motion */
+  --veneer-loop-play: running;       /* paused under reduced motion. Anything that loops while idle
+                                      (spinner, shimmer, dash, marquee) sets animation-play-state from it */
+}
+[data-theme="light"] { color-scheme: light; }
+[data-theme="dark"]  { color-scheme: dark; }
+
+/* -- the expression dial ------------------------------------------------- */
+:root, [data-expression="balanced"] {
+  --veneer-x: 0.5;
+  --veneer-icon-o: inline; --veneer-icon-q: none; --veneer-icon-b: inline; --veneer-icon-v: none; --veneer-icon-kerf: 2; /* @kerf/veneer-icons' tier, 10 §8 */
+  --veneer-ref-neutral-h: 80;  --veneer-ref-neutral-c: 0.0015;  /* true graphite: the dial reads cool · none · warm */
+  --veneer-ref-accent-k: 1;    --veneer-ref-tone-k: 1;
+  --veneer-ref-depth: 0.7;     --veneer-ref-depth-rest: 0;  --veneer-ref-rest-ambient: 0;   /* flat at rest: hairlines layer, shadows only on overlays */
+  --veneer-ref-air: 0.85;      --veneer-ref-control-step: -2px;   /* the drafting table: tight */
+  --veneer-btn-fill: 0;
+  --veneer-ref-primary-solid: var(--veneer-color-accent-solid); --veneer-ref-primary-solid-hover: var(--veneer-color-accent-solid-hover); --veneer-ref-primary-on-solid: var(--veneer-color-accent-on-solid);
+  --veneer-ref-surface-line: var(--veneer-color-border);
+  --veneer-ref-hair: -0.03;    --veneer-ref-page: 0;              /* crisper hairline */
+  --veneer-ref-body-leading: 1.5;
+  --veneer-font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --veneer-font-display: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --veneer-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
+  --veneer-ref-title-font: var(--veneer-font-display);
+  --veneer-ref-heading-font: var(--veneer-font-display);   /* Space Grotesk carries every heading */
+  --veneer-ref-display-weight: 500;
+  /* fluid display + title (research 11 §8.3): clamp(min, b + m·cqi, max), 34 → 52px from 375 to 1280 */
+  --veneer-ref-display-min: 2.125; --veneer-ref-display-b: 1.659; --veneer-ref-display-m: 1.989; --veneer-ref-display-max: 3.25;
+  --veneer-ref-title-min: 1.5;     --veneer-ref-title-b: 1.345;   --veneer-ref-title-m: 0.663;   --veneer-ref-title-max: 1.875;
+  --veneer-ref-measure: 66;        /* prose line length, in --veneer-ch */
+  --veneer-ref-ch: 0.613em;        /* Inter's "0" advance: 1ch of the brand face, steady across the font swap */
+  --veneer-ref-trim-heading: trim-both cap alphabetic; --veneer-ref-trim-display: normal;
+  --veneer-ref-trim-heading-k: 1;  --veneer-ref-trim-display-k: 0;          /* the same switches as numbers */
+  --veneer-ref-prose-wrap: pretty; --veneer-ref-editable-wrap: auto;
+  --veneer-ref-display-variation: normal;
+  /* text-box fallback metrics (em): ascent+descent · ascent−cap · descent, heading face then eyebrow face */
+  --veneer-ref-hm-k1: 1.276; --veneer-ref-hm-k2: 0.284; --veneer-ref-hm-k3: 0.292;  /* Space Grotesk */
+  --veneer-ref-em-k1: 1.3;  --veneer-ref-em-k2: 0.327;  --veneer-ref-em-k3: 0.275;   /* IBM Plex Mono */
+  --veneer-ref-display-tracking: -0.03em; --veneer-ref-title-weight: 500;
+  --veneer-ref-heading-weight: 600;
+  --veneer-ref-label-font: var(--veneer-font-sans);
+  --veneer-ref-label-case: none; --veneer-ref-label-tracking: 0em; --veneer-ref-label-adjust: 1px;
+  --veneer-ref-eyebrow-font: var(--veneer-font-mono);
+  --veneer-ref-eyebrow-case: uppercase; --veneer-ref-eyebrow-tracking: 0.08em; --veneer-ref-eyebrow-adjust: -1px;
+  --veneer-ref-button-font: var(--veneer-font-sans);
+  --veneer-ref-button-case: none; --veneer-ref-button-tracking: 0em;
+  --veneer-ref-button-weight: 500; --veneer-ref-button-adjust: 0px;
+  --veneer-ref-radius-round: 6px;                         /* chips, switches: machined, not pills */
+  --veneer-ref-motion-k: 1;  --veneer-ref-distance: 8px; --veneer-ref-scale-from: 0.97;
+  --veneer-ref-stagger: 32ms;
+  --veneer-ref-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --veneer-ref-ease-pop: cubic-bezier(0.16, 1, 0.3, 1);
+  /* signature: the original sweep, 620ms; buttons sweep, surfaces don't */
+  /* the two clocks (redesign §2-3): how this stop feels in the hand */
+  --veneer-ref-spring: linear(0, 0.085, 0.261, 0.454, 0.625, 0.761, 0.86, 0.927, 0.969, 0.993, 1.005, 1.01, 1.011, 1);   /* ζ 0.82: settles once, 1.1% over */
+  --veneer-ref-spring-ms: 380ms; --veneer-ref-press: 0.97; --veneer-ref-touch-out: 160ms;
+  --veneer-ref-shuttle-head: 180ms; --veneer-ref-shuttle-tail: 300ms; --veneer-ref-offset: 0px;
+  --veneer-ref-sweep: 620ms;     --veneer-ref-sweep-k: 1;
+  --veneer-ref-frame: 620ms;     /* frame button: on the sweep's clock, so every stroke draws at one speed */
+  --veneer-sweep-buttons: 1;     --veneer-sweep-surfaces: 0;
+  --veneer-ref-sweep-base: var(--veneer-color-text);
+  /* fields rest neutral at every stop; the accent tint arrives with the sweep (hover, focus) */
+  --veneer-ref-field-fill: var(--veneer-color-surface-raised);
+  --veneer-ref-field-fill-active: var(--veneer-color-accent-soft);
+  --veneer-ref-float-font: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --veneer-ref-numeric-font: var(--veneer-font-mono);      /* every figure reads like an instrument */
+  --veneer-ref-emphasis-style: normal;                   /* no italic face: upright + accent */
+}
+[data-expression="quiet"] {
+  --veneer-x: 0;
+  --veneer-icon-o: inline; --veneer-icon-q: inline; --veneer-icon-b: none; --veneer-icon-v: none; --veneer-icon-kerf: 1.5;
+  --veneer-ref-neutral-h: 255; --veneer-ref-neutral-c: 0.017;   /* cool slate, unmistakably */
+  --veneer-ref-accent-k: 0.62; --veneer-ref-tone-k: 0.72;
+  --veneer-ref-depth: 1.2;     --veneer-ref-depth-rest: 1.2; --veneer-ref-rest-ambient: 1;  /* surfaces float on shadow */
+  --veneer-ref-air: 1.2;       --veneer-ref-control-step: 4px;    /* the quiet room: roomy */
+  --veneer-btn-fill: 0;
+  /* the primary action is ink, not accent; surfaces lift on shadow alone, with no hairline */
+  --veneer-ref-primary-solid: var(--veneer-color-neutral-solid); --veneer-ref-primary-solid-hover: var(--veneer-color-neutral-solid-hover); --veneer-ref-primary-on-solid: var(--veneer-color-neutral-on-solid);
+  --veneer-ref-surface-line: transparent;
+  --veneer-ref-hair: 0.032;    --veneer-ref-page: -0.012;         /* the hairline all but goes; a deeper page lifts white cards */
+  --veneer-ref-body-leading: 1.6;
+  --veneer-font-sans: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --veneer-font-display: "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
+  --veneer-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
+  --veneer-ref-title-font: var(--veneer-font-display);
+  --veneer-ref-heading-font: var(--veneer-font-sans);
+  --veneer-ref-display-weight: 500;
+  /* fluid display, calmer range (research 11 §3.4: max/min 1.3): 34 → 44px from 375 to 1280 */
+  --veneer-ref-display-min: 2.125; --veneer-ref-display-b: 1.861; --veneer-ref-display-m: 1.127; --veneer-ref-display-max: 2.7625;
+  --veneer-ref-title-min: 1.5;     --veneer-ref-title-b: 1.345;   --veneer-ref-title-m: 0.663;   --veneer-ref-title-max: 1.875;
+  --veneer-ref-measure: 72;
+  --veneer-ref-ch: 0.613em;        /* Inter */
+  --veneer-ref-trim-heading: normal; --veneer-ref-trim-display: normal;   /* quiet trims controls only */
+  --veneer-ref-trim-heading-k: 0;  --veneer-ref-trim-display-k: 0;
+  --veneer-ref-prose-wrap: auto;   --veneer-ref-editable-wrap: auto;      /* headings balance; prose wraps as usual */
+  --veneer-ref-display-variation: normal;
+  /* text-box fallback metrics (em): ascent+descent · ascent−cap · descent, heading face then eyebrow face */
+  --veneer-ref-hm-k1: 1.21; --veneer-ref-hm-k2: 0.2415; --veneer-ref-hm-k3: 0.241;   /* Inter */
+  --veneer-ref-em-k1: 1.21; --veneer-ref-em-k2: 0.2415; --veneer-ref-em-k3: 0.241;   /* Inter (quiet eyebrows are sans) */
+  --veneer-ref-display-tracking: -0.028em; --veneer-ref-title-weight: 500;
+  --veneer-ref-heading-weight: 500;
+  --veneer-ref-label-font: var(--veneer-font-sans);
+  --veneer-ref-label-case: none; --veneer-ref-label-tracking: 0em; --veneer-ref-label-adjust: 1px;
+  --veneer-ref-eyebrow-font: var(--veneer-font-sans);
+  --veneer-ref-eyebrow-case: none; --veneer-ref-eyebrow-tracking: 0.005em; --veneer-ref-eyebrow-adjust: 0px;
+  --veneer-ref-button-font: var(--veneer-font-sans);
+  --veneer-ref-button-case: none; --veneer-ref-button-tracking: 0em;
+  --veneer-ref-button-weight: 500; --veneer-ref-button-adjust: 0px;
+  --veneer-ref-radius-round: 999px;
+  --veneer-ref-motion-k: 0.85; --veneer-ref-distance: 3px; --veneer-ref-scale-from: 0.99;
+  --veneer-ref-stagger: 0ms;   /* redesign §3 said 0; this said 16 */
+  --veneer-ref-ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --veneer-ref-ease-pop: cubic-bezier(0.2, 0, 0, 1);
+  /* signature, quieter: faster, neutral field; inputs, controls, buttons sweep (same full-accent stroke) */
+  /* the two clocks (redesign §2-3): how this stop feels in the hand */
+  --veneer-ref-spring: cubic-bezier(0.2, 0, 0, 1);
+  --veneer-ref-spring-ms: 240ms; --veneer-ref-press: 0.985; --veneer-ref-touch-out: 120ms;
+  --veneer-ref-shuttle-head: 180ms; --veneer-ref-shuttle-tail: 180ms; --veneer-ref-offset: 0px;
+  --veneer-ref-sweep: 480ms;     --veneer-ref-sweep-k: 1;
+  --veneer-ref-frame: 480ms;     /* frame, quieter: on the sweep's clock */
+  --veneer-sweep-buttons: 1;     --veneer-sweep-surfaces: 0;
+  --veneer-ref-sweep-base: var(--veneer-color-text);
+  --veneer-ref-field-fill: var(--veneer-color-surface-raised);
+  --veneer-ref-field-fill-active: var(--veneer-color-surface-raised);
+  --veneer-ref-float-font: "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
+  --veneer-ref-numeric-font: var(--veneer-font-display);   /* Inter has tnum */
+  --veneer-ref-emphasis-style: normal;                   /* quiet never italicises */
+}
+[data-expression="vivid"] {
+  --veneer-x: 1;
+  --veneer-icon-o: none; --veneer-icon-q: none; --veneer-icon-b: none; --veneer-icon-v: inline; --veneer-icon-fine: inline; --veneer-icon-kerf: 2;
+  --veneer-ref-neutral-h: 85;  --veneer-ref-neutral-c: 0.012;   /* warm paper / ink */
+  --veneer-ref-accent-k: 1.2;  --veneer-ref-tone-k: 1.1;
+  --veneer-ref-depth: 0.35;    --veneer-ref-depth-rest: 0.35; --veneer-ref-rest-ambient: 0;
+  --veneer-ref-air: 1;         --veneer-ref-control-step: 0px;
+  --veneer-btn-fill: 1;   /* vivid: Keel's two-colour fill, lift and offset */
+  --veneer-ref-primary-solid: var(--veneer-color-accent-solid); --veneer-ref-primary-solid-hover: var(--veneer-color-accent-solid-hover); --veneer-ref-primary-on-solid: var(--veneer-color-accent-on-solid);
+  --veneer-ref-surface-line: var(--veneer-color-border);
+  --veneer-ref-hair: 0;        --veneer-ref-page: 0;
+  --veneer-ref-body-leading: 1.55;
+  --veneer-font-sans: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --veneer-font-display: "Instrument Serif", "Instrument Serif Fallback", "Fraunces", Georgia, serif;
+  --veneer-font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
+  --veneer-ref-title-font: var(--veneer-font-display);
+  --veneer-ref-heading-font: var(--veneer-font-sans);
+  --veneer-ref-display-weight: 400;
+  /* fluid display + title × 1.18 / × 1.144 (research 11 §8.3): 40 → 61px display, 27 → 34px title */
+  --veneer-ref-display-min: 2.507; --veneer-ref-display-b: 1.958; --veneer-ref-display-m: 2.347; --veneer-ref-display-max: 3.835;
+  --veneer-ref-title-min: 1.716;   --veneer-ref-title-b: 1.539;   --veneer-ref-title-m: 0.7585;  --veneer-ref-title-max: 2.145;
+  --veneer-ref-measure: 60;        /* larger, more expressive type: a shorter line */
+  --veneer-ref-ch: 0.641em;        /* Space Grotesk */
+  --veneer-ref-trim-heading: trim-both cap alphabetic; --veneer-ref-trim-display: trim-both cap alphabetic;
+  --veneer-ref-trim-heading-k: 1;  --veneer-ref-trim-display-k: 1;
+  --veneer-ref-prose-wrap: pretty; --veneer-ref-editable-wrap: stable;
+  /* display pinned to its optical-size maximum (values clamp to each face's axis: Inter 32, Fraunces 144;
+     Instrument Serif is static, so this only matters for the fallbacks) */
+  --veneer-ref-display-variation: "opsz" 144;
+  --veneer-ref-hm-k1: 1.276; --veneer-ref-hm-k2: 0.284; --veneer-ref-hm-k3: 0.292;  /* Space Grotesk */
+  --veneer-ref-em-k1: 1.3;   --veneer-ref-em-k2: 0.327; --veneer-ref-em-k3: 0.275;  /* IBM Plex Mono */
+  --veneer-ref-display-tracking: -0.015em; --veneer-ref-title-weight: 400;
+  --veneer-ref-heading-weight: 500;
+  --veneer-ref-label-font: var(--veneer-font-mono);
+  --veneer-ref-label-case: uppercase; --veneer-ref-label-tracking: 0.1em; --veneer-ref-label-adjust: -1px;
+  --veneer-ref-eyebrow-font: var(--veneer-font-mono);
+  --veneer-ref-eyebrow-case: uppercase; --veneer-ref-eyebrow-tracking: 0.14em; --veneer-ref-eyebrow-adjust: -1px;
+  --veneer-ref-button-font: var(--veneer-font-mono);
+  --veneer-ref-button-case: uppercase; --veneer-ref-button-tracking: 0.1em;
+  --veneer-ref-button-weight: 600; --veneer-ref-button-adjust: -2px;
+  --veneer-ref-radius-round: 2px;
+  --veneer-ref-motion-k: 1.2; --veneer-ref-distance: 12px; --veneer-ref-scale-from: 0.95;
+  --veneer-ref-stagger: 48ms;
+  --veneer-ref-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* spring k=380 c=20 m=0.5 (ζ≈0.73, 3.5% overshoot) sampled to linear() */
+  --veneer-ref-ease-pop: linear(0, 0.095, 0.291, 0.505, 0.692, 0.839, 0.936, 0.994, 1.024,
+    1.034, 1.034, 1.028, 1.021, 1.014, 1.008, 1.004, 1.001, 1);
+  /* signature, louder: longer travel; cards, panels, stat rows sweep too */
+  /* the two clocks (redesign §2-3): how this stop feels in the hand */
+  --veneer-ref-spring: linear(0, 0.154, 0.44, 0.701, 0.883, 0.985, 1.029, 1.038, 1.032, 1.021, 1.011, 1.004, 1, 0.999, 1);
+  --veneer-ref-spring-ms: 520ms; --veneer-ref-press: 0.96; --veneer-ref-touch-out: 200ms;
+  --veneer-ref-shuttle-head: 150ms; --veneer-ref-shuttle-tail: 420ms; --veneer-ref-offset: 3px;
+  --veneer-ref-sweep: 700ms;     --veneer-ref-sweep-k: 1;
+  --veneer-ref-frame: 700ms;     /* frame: on the sweep's clock, top of the vivid range */
+  --veneer-sweep-buttons: 1;     --veneer-sweep-surfaces: 0;   /* the sweep answers a click target; a static surface keeps its hairline */
+  --veneer-ref-sweep-base: var(--veneer-color-text);
+  /* neutral at rest (00 §10); accent-soft arrives with the sweep */
+  --veneer-ref-field-fill: var(--veneer-color-surface-raised);
+  --veneer-ref-field-fill-active: var(--veneer-color-accent-soft);
+  --veneer-ref-float-font: "Space Grotesk", "Space Grotesk Fallback", "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Instrument Serif has no tnum: figures that update or align use the sans */
+  --veneer-ref-numeric-font: var(--veneer-font-sans);
+  --veneer-ref-emphasis-style: italic;                   /* Instrument Serif ships a real italic */
+}
+/* flair widens or narrows WHERE the sweep runs; inputs and controls always sweep */
+[data-flair="sweep"] { --veneer-sweep-buttons: 1; --veneer-sweep-surfaces: 1; }
+[data-flair="none"]  { --veneer-sweep-buttons: 0; --veneer-sweep-surfaces: 0; --veneer-btn-fill: 0; }
+
+/* -- density ------------------------------------------------------------- */
+:root, [data-density="cozy"] {
+  --veneer-density-k: 1;
+  --veneer-ref-control-sm: 28px; --veneer-ref-control-md: 36px; --veneer-ref-control-lg: 44px;
+}
+[data-density="compact"] {
+  --veneer-density-k: 0.75;
+  --veneer-ref-control-sm: 24px; --veneer-ref-control-md: 32px; --veneer-ref-control-lg: 40px;
+}
+[data-density="comfortable"] {
+  --veneer-density-k: 1.25;
+  --veneer-ref-control-sm: 32px; --veneer-ref-control-md: 40px; --veneer-ref-control-lg: 48px;
+}
+
+/* -- form factor: fixed reading sizes + page rhythm (desktop ≥1024 / tablet / phone <600) ------
+   Reading roles (heading, body, prose, label, caption, code) are fixed per form factor, in the user's
+   rem (--veneer-rem), so they follow the browser's default font size. Display and title are fluid
+   (§2 SYS TOKENS); under an explicit data-form they resolve at that form's reference width.
+   --veneer-rem: the root's font-size is the body size (14/15/16px), so plain `rem` is not the user's
+   default inside the page. --veneer-ref-rem-k (16 / root body px) converts back; the root alone reads
+   --veneer-ref-root-size (in real rem: on the root element, rem is the initial 16px × user setting). */
+:root {
+  --veneer-rem: calc(1rem * var(--veneer-ref-rem-k));
+  --veneer-ref-rem-k: 1.142857; --veneer-ref-root-size: 0.875rem;          /* desktop root: body 14 */
+  --veneer-ref-fluid-unit: 1vw;                                          /* iOS 15: no container units */
+}
+@supports (width: 1cqi) { :root { --veneer-ref-fluid-unit: 1cqi; } }   /* the nearest inline-size container */
+/* the shell's main isn't a container (each one costs the page a style pass), so its unit is the shell's less the nav */
+@supports (width: 1cqi) {
+  :where([data-scope="shell"]:not([data-form] *, [data-form]) > [data-part="layout"] > [data-part="main"]) {
+    /* the two fluid sizes again (as in SYS TOKENS): a custom property resolves where it's declared */
+    --veneer-ref-fluid-unit: calc((100cqi - var(--_navw)) / 100);   /* for scope roots inside it */
+    --_fu: var(--veneer-ref-fluid-unit);
+    --veneer-text-display-size: clamp(calc(var(--veneer-ref-display-min) * var(--veneer-rem)),
+      calc(var(--veneer-ref-display-b) * var(--veneer-rem) + var(--veneer-ref-display-m) * var(--_fu)),
+      calc(var(--veneer-ref-display-max) * var(--veneer-rem)));
+    --veneer-text-title-size: clamp(calc(var(--veneer-ref-title-min) * var(--veneer-rem)),
+      calc(var(--veneer-ref-title-b) * var(--veneer-rem) + var(--veneer-ref-title-m) * var(--_fu)),
+      calc(var(--veneer-ref-title-max) * var(--veneer-rem)));
+  }
+}
+@media (max-width: 1023.98px) { :root:not([data-form]) { --veneer-ref-rem-k: 1.066667; --veneer-ref-root-size: 0.9375rem; } }
+@media (max-width: 599.98px)  { :root:not([data-form]) { --veneer-ref-rem-k: 1; --veneer-ref-root-size: 1rem; } }
+:root[data-form="tablet"] { --veneer-ref-rem-k: 1.066667; --veneer-ref-root-size: 0.9375rem; }
+:root[data-form="phone"]  { --veneer-ref-rem-k: 1; --veneer-ref-root-size: 1rem; }
+/* a forced form factor pins the fluid roles at its reference width (375 / 834 / 1280) */
+[data-form="phone"] { --veneer-ref-fluid-unit: 3.75px; }
+[data-form="tablet"] { --veneer-ref-fluid-unit: 8.34px; }
+[data-form="desktop"] { --veneer-ref-fluid-unit: 12.8px; }
+
+:root, [data-form="desktop"] {
+  --veneer-ref-type-heading: calc(1.25 * var(--veneer-rem));
+  --veneer-ref-type-body: calc(0.875 * var(--veneer-rem)); --veneer-ref-type-prose: calc(1 * var(--veneer-rem));
+  --veneer-ref-type-label: calc(0.75 * var(--veneer-rem)); --veneer-ref-type-caption: calc(0.75 * var(--veneer-rem));
+  --veneer-ref-type-code: calc(0.8125 * var(--veneer-rem));
+  --veneer-ref-section: 48px; --veneer-ref-gutter: 32px;
+}
+@media (max-width: 1023.98px) {
+  :root:not([data-form]) {
+    --veneer-ref-type-heading: calc(1.1875 * var(--veneer-rem));
+    --veneer-ref-type-body: calc(0.9375 * var(--veneer-rem)); --veneer-ref-type-prose: calc(1.0625 * var(--veneer-rem));
+    --veneer-ref-type-caption: calc(0.75 * var(--veneer-rem)); --veneer-ref-type-code: calc(0.8125 * var(--veneer-rem));
+    --veneer-ref-section: 40px; --veneer-ref-gutter: 24px;
+  }
+}
+@media (max-width: 599.98px) {
+  :root:not([data-form]) {
+    --veneer-ref-type-heading: calc(1.125 * var(--veneer-rem));
+    --veneer-ref-type-body: calc(1 * var(--veneer-rem)); --veneer-ref-type-prose: calc(1.0625 * var(--veneer-rem));
+    --veneer-ref-type-caption: calc(0.8125 * var(--veneer-rem)); --veneer-ref-type-code: calc(0.875 * var(--veneer-rem));
+    --veneer-ref-section: 32px; --veneer-ref-gutter: 16px;
+  }
+}
+[data-form="tablet"] {
+  --veneer-ref-type-heading: calc(1.1875 * var(--veneer-rem));
+  --veneer-ref-type-body: calc(0.9375 * var(--veneer-rem)); --veneer-ref-type-prose: calc(1.0625 * var(--veneer-rem));
+  --veneer-ref-type-label: calc(0.75 * var(--veneer-rem)); --veneer-ref-type-caption: calc(0.75 * var(--veneer-rem));
+  --veneer-ref-type-code: calc(0.8125 * var(--veneer-rem));
+  --veneer-ref-section: 40px; --veneer-ref-gutter: 24px;
+}
+[data-form="phone"] {
+  --veneer-ref-type-heading: calc(1.125 * var(--veneer-rem));
+  --veneer-ref-type-body: calc(1 * var(--veneer-rem)); --veneer-ref-type-prose: calc(1.0625 * var(--veneer-rem));
+  --veneer-ref-type-label: calc(0.75 * var(--veneer-rem)); --veneer-ref-type-caption: calc(0.8125 * var(--veneer-rem));
+  --veneer-ref-type-code: calc(0.875 * var(--veneer-rem));
+  --veneer-ref-section: 32px; --veneer-ref-gutter: 16px;
+}
+
+/* -- pointer + motion environment ---------------------------------------- */
+@media (pointer: coarse) {
+  :root:not([data-pointer]) { --veneer-target-min: 44px; --veneer-input-font-min: 16px; }
+}
+[data-pointer="coarse"] { --veneer-target-min: 44px; --veneer-input-font-min: 16px; }
+[data-pointer="fine"]   { --veneer-target-min: 0px;  --veneer-input-font-min: 0px; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion]) { --veneer-motion-scale: 0; --veneer-loop-play: paused; }
+}
+[data-motion="reduce"] { --veneer-motion-scale: 0; --veneer-loop-play: paused; }
+[data-motion="full"]   { --veneer-motion-scale: 1; --veneer-loop-play: running; }
+
+/* ---------------------------------------------------------------------------
+   2 · SYS TOKENS. Re-declared on every scope root so nested islands
+   recompute from their own inputs. Components read only these.
+   [data-theme] is a scope root too: a build that lowers light-dark() picks
+   light or dark where a token is declared, so a themed island must declare
+   them again or it shows the page's colours (01-foundations.md §1).
+   ------------------------------------------------------------------------ */
+
+:root, [data-expression], [data-density], [data-form], [data-pointer],
+[data-motion], [data-flair], [data-theme], [data-palette], [data-veneer] {
+  /* private shorthands */
+  --_h: var(--veneer-ref-neutral-h);
+  --_c: var(--veneer-ref-neutral-c);
+  --_cl: calc(var(--veneer-ref-neutral-c) * 0.45);          /* light neutrals are calmer */
+  --_ah: var(--veneer-seed-accent-h);
+  --_ac: calc(var(--veneer-seed-accent-c) * var(--veneer-ref-accent-k));
+  --_tk: var(--veneer-ref-tone-k);
+
+  /* -- colour · page + surfaces (light | dark) -------------------------- */
+  --veneer-color-page:            light-dark(oklch(calc(0.972 + var(--veneer-ref-page)) var(--_cl) var(--_h)), oklch(0.155 var(--_c) var(--_h)));
+  --veneer-color-surface:         light-dark(oklch(0.993 var(--_cl) var(--_h)), oklch(0.188 var(--_c) var(--_h)));
+  --veneer-color-surface-raised:  light-dark(oklch(0.998 calc(var(--_cl) * 0.5) var(--_h)), oklch(0.215 var(--_c) var(--_h)));
+  --veneer-color-surface-overlay: light-dark(oklch(1 0 0), oklch(0.235 var(--_c) var(--_h)));
+  --veneer-color-surface-sunken:  light-dark(oklch(0.955 var(--_cl) var(--_h)), oklch(0.135 var(--_c) var(--_h)));
+  --veneer-color-surface-hover:   light-dark(oklch(0.948 var(--_cl) var(--_h)), oklch(0.255 var(--_c) var(--_h)));
+  --veneer-color-surface-active:  light-dark(oklch(0.922 var(--_cl) var(--_h)), oklch(0.285 var(--_c) var(--_h)));
+  --veneer-color-surface-inverse: light-dark(oklch(0.245 var(--_c) var(--_h)), oklch(0.93 var(--_c) var(--_h)));
+  --veneer-color-on-inverse:      light-dark(oklch(0.975 var(--_cl) var(--_h)), oklch(0.19 var(--_c) var(--_h)));
+  --veneer-color-scrim:           light-dark(oklch(0.2 var(--_c) var(--_h) / 0.36), oklch(0.05 0 0 / 0.62));
+
+  /* -- colour · text, borders, focus ----------------------------------- */
+  --veneer-color-text:            light-dark(oklch(0.235 var(--_c) var(--_h)), oklch(0.935 var(--_c) var(--_h)));
+  --veneer-color-text-subtle:     light-dark(oklch(0.475 var(--_c) var(--_h)), oklch(0.735 var(--_c) var(--_h)));
+  --veneer-color-text-faint:      light-dark(oklch(0.53 var(--_c) var(--_h)), oklch(0.625 var(--_c) var(--_h)));  /* meta ink: AA (≥ 4.5:1) on every surface, still lighter than subtle */
+  --veneer-color-border:          light-dark(oklch(calc(0.905 + var(--veneer-ref-hair)) var(--_cl) var(--_h)), oklch(calc(0.29 - var(--veneer-ref-hair)) var(--_c) var(--_h)));
+  --veneer-color-border-strong:   light-dark(oklch(0.84 var(--_c) var(--_h)), oklch(0.38 var(--_c) var(--_h)));
+  --veneer-color-border-control:  light-dark(oklch(0.625 var(--_c) var(--_h)), oklch(0.545 var(--_c) var(--_h)));
+  --veneer-color-focus:           light-dark(oklch(0.52 min(calc(var(--_ac) * 1.1), 0.135) var(--_ah)), oklch(0.8 calc(var(--_ac) * 1.15) var(--_ah)));
+
+  /* -- colour · tones: solid, solid-hover, on-solid, soft, text, border --
+     on-solid is solved per theme so it passes 4.5:1 on solid AND solid-hover;
+     text passes 4.5:1 on page, surface, raised, sunken and its own soft.
+     min(…, cap) = the sRGB chroma ceiling at that lightness for the default
+     hues; `kerf tokens build` computes the cap per seed hue. */
+  --veneer-color-primary-solid:       var(--veneer-ref-primary-solid);
+  --veneer-color-primary-solid-hover: var(--veneer-ref-primary-solid-hover);
+  --veneer-color-primary-on-solid:    var(--veneer-ref-primary-on-solid);
+  --veneer-color-surface-line:        var(--veneer-ref-surface-line);
+  --veneer-color-neutral-solid:       var(--veneer-color-surface-inverse);
+  --veneer-color-neutral-solid-hover: light-dark(oklch(0.33 var(--_c) var(--_h)), oklch(0.86 var(--_c) var(--_h)));
+  --veneer-color-neutral-on-solid:    var(--veneer-color-on-inverse);
+  --veneer-color-neutral-soft:        var(--veneer-color-surface-hover);
+  --veneer-color-neutral-text:        var(--veneer-color-text);
+  --veneer-color-neutral-border:      var(--veneer-color-border-strong);
+
+  --veneer-color-accent-solid:        light-dark(oklch(0.5 min(var(--_ac), 0.13) var(--_ah)), oklch(0.76 calc(var(--_ac) * 1.15) var(--_ah)));
+  --veneer-color-accent-solid-hover:  light-dark(oklch(0.44 min(var(--_ac), 0.115) var(--_ah)), oklch(0.81 calc(var(--_ac) * 1.15) var(--_ah)));
+  --veneer-color-accent-on-solid:     light-dark(oklch(0.985 0.012 var(--_ah)), oklch(0.18 0.03 var(--_ah)));
+  --veneer-color-accent-soft:         light-dark(oklch(0.952 calc(var(--_ac) * 0.3) var(--_ah)), oklch(0.27 calc(var(--_ac) * 0.45) var(--_ah)));
+  --veneer-color-accent-text:         light-dark(oklch(0.46 min(var(--_ac), 0.12) var(--_ah)), oklch(0.8 var(--_ac) var(--_ah)));
+  --veneer-color-accent-border:       light-dark(oklch(0.78 calc(var(--_ac) * 0.6) var(--_ah)), oklch(0.43 calc(var(--_ac) * 0.7) var(--_ah)));
+
+  --veneer-color-positive-solid:       light-dark(oklch(0.52 calc(0.12 * var(--_tk)) 148), oklch(0.74 calc(0.14 * var(--_tk)) 148));
+  --veneer-color-positive-solid-hover: light-dark(oklch(0.46 calc(0.12 * var(--_tk)) 148), oklch(0.79 calc(0.14 * var(--_tk)) 148));
+  --veneer-color-positive-on-solid:    light-dark(oklch(0.985 0.012 148), oklch(0.18 0.03 148));
+  --veneer-color-positive-soft:        light-dark(oklch(0.955 calc(0.035 * var(--_tk)) 148), oklch(0.27 calc(0.05 * var(--_tk)) 148));
+  --veneer-color-positive-text:        light-dark(oklch(0.46 calc(0.12 * var(--_tk)) 148), oklch(0.79 calc(0.13 * var(--_tk)) 148));
+  --veneer-color-positive-border:      light-dark(oklch(0.8 calc(0.07 * var(--_tk)) 148), oklch(0.43 calc(0.08 * var(--_tk)) 148));
+
+  --veneer-color-caution-solid:        light-dark(oklch(0.8 calc(0.15 * var(--_tk)) 78), oklch(0.8 calc(0.14 * var(--_tk)) 78));
+  --veneer-color-caution-solid-hover:  light-dark(oklch(0.75 min(calc(0.15 * var(--_tk)), 0.155) 78), oklch(0.85 min(calc(0.13 * var(--_tk)), 0.137) 78));
+  --veneer-color-caution-on-solid:     light-dark(oklch(0.25 0.04 78), oklch(0.2 0.03 78));
+  --veneer-color-caution-soft:         light-dark(oklch(0.96 calc(0.04 * var(--_tk)) 85), oklch(0.28 calc(0.05 * var(--_tk)) 78));
+  --veneer-color-caution-text:         light-dark(oklch(0.5 min(calc(0.1 * var(--_tk)), 0.107) 70), oklch(0.82 calc(0.13 * var(--_tk)) 80));
+  --veneer-color-caution-border:       light-dark(oklch(0.82 calc(0.1 * var(--_tk)) 80), oklch(0.45 calc(0.08 * var(--_tk)) 78));
+
+  --veneer-color-critical-solid:       light-dark(oklch(0.54 calc(0.19 * var(--_tk)) 27), oklch(0.7 calc(0.16 * var(--_tk)) 25));
+  --veneer-color-critical-solid-hover: light-dark(oklch(0.49 calc(0.18 * var(--_tk)) 27), oklch(0.75 calc(0.14 * var(--_tk)) 25));
+  --veneer-color-critical-on-solid:    light-dark(oklch(0.985 0.01 27), oklch(0.17 0.03 25));
+  --veneer-color-critical-soft:        light-dark(oklch(0.955 min(calc(0.02 * var(--_tk)), 0.022) 27), oklch(0.26 calc(0.055 * var(--_tk)) 25));
+  --veneer-color-critical-text:        light-dark(oklch(0.51 calc(0.18 * var(--_tk)) 27), oklch(0.8 min(calc(0.11 * var(--_tk)), 0.112) 25));
+  --veneer-color-critical-border:      light-dark(oklch(0.8 calc(0.08 * var(--_tk)) 27), oklch(0.45 calc(0.1 * var(--_tk)) 25));
+
+  --veneer-color-info-solid:           light-dark(oklch(0.53 calc(0.14 * var(--_tk)) 252), oklch(0.74 calc(0.11 * var(--_tk)) 250));
+  --veneer-color-info-solid-hover:     light-dark(oklch(0.48 min(calc(0.14 * var(--_tk)), 0.143) 252), oklch(0.79 calc(0.1 * var(--_tk)) 250));
+  --veneer-color-info-on-solid:        light-dark(oklch(0.985 0.01 252), oklch(0.18 0.03 250));
+  --veneer-color-info-soft:            light-dark(oklch(0.955 min(calc(0.02 * var(--_tk)), 0.022) 252), oklch(0.27 calc(0.05 * var(--_tk)) 250));
+  --veneer-color-info-text:            light-dark(oklch(0.49 min(calc(0.14 * var(--_tk)), 0.146) 252), oklch(0.81 calc(0.09 * var(--_tk)) 250));
+  --veneer-color-info-border:          light-dark(oklch(0.8 calc(0.07 * var(--_tk)) 252), oklch(0.43 calc(0.08 * var(--_tk)) 250));
+
+  /* highlight: the old "gold" (a lime). Optional, never a status. */
+  --veneer-color-highlight-solid:       light-dark(oklch(0.87 calc(0.17 * var(--_tk)) 128), oklch(0.86 calc(0.18 * var(--_tk)) 132));
+  --veneer-color-highlight-solid-hover: light-dark(oklch(0.83 calc(0.17 * var(--_tk)) 128), oklch(0.9 calc(0.16 * var(--_tk)) 132));
+  --veneer-color-highlight-on-solid:    light-dark(oklch(0.25 0.05 128), oklch(0.2 0.04 132));
+  --veneer-color-highlight-soft:        light-dark(oklch(0.96 calc(0.05 * var(--_tk)) 128), oklch(0.29 calc(0.06 * var(--_tk)) 132));
+  --veneer-color-highlight-text:        light-dark(oklch(0.48 calc(0.12 * var(--_tk)) 132), oklch(0.86 calc(0.17 * var(--_tk)) 132));
+  --veneer-color-highlight-border:      light-dark(oklch(0.84 calc(0.12 * var(--_tk)) 128), oklch(0.47 calc(0.1 * var(--_tk)) 132));
+
+  /* -- colour · data viz (categorical; ≥3:1 vs surface, ordered for CVD) - */
+  --veneer-color-data-1: light-dark(oklch(0.55 calc(0.14 * var(--_tk)) 252), oklch(0.74 calc(0.12 * var(--_tk)) 252));
+  --veneer-color-data-2: light-dark(oklch(0.62 min(calc(0.14 * var(--_tk)), 0.144) 60),  oklch(0.78 calc(0.14 * var(--_tk)) 65));
+  --veneer-color-data-3: light-dark(oklch(0.56 calc(0.11 * var(--_tk)) 165), oklch(0.76 calc(0.12 * var(--_tk)) 165));
+  --veneer-color-data-4: light-dark(oklch(0.56 calc(0.17 * var(--_tk)) 350), oklch(0.74 calc(0.14 * var(--_tk)) 350));
+  --veneer-color-data-5: light-dark(oklch(0.58 min(calc(0.1 * var(--_tk)), 0.102) 215),  oklch(0.8 calc(0.1 * var(--_tk)) 215));
+  --veneer-color-data-6: light-dark(oklch(0.55 calc(0.16 * var(--_tk)) 30),  oklch(0.72 calc(0.15 * var(--_tk)) 30));
+  --veneer-color-data-7: light-dark(oklch(0.52 calc(0.14 * var(--_tk)) 295), oklch(0.74 calc(0.12 * var(--_tk)) 295));
+  --veneer-color-data-8: light-dark(oklch(0.6 calc(0.11 * var(--_tk)) 115),  oklch(0.8 calc(0.13 * var(--_tk)) 115));
+  --veneer-color-data-grid: var(--veneer-color-border);
+  --veneer-color-data-axis: var(--veneer-color-text-subtle);
+
+  /* -- shape ------------------------------------------------------------ */
+  --veneer-radius-control: calc(2px + 8px * (1 - var(--veneer-x)) * (1 - var(--veneer-x)));     /* 10 · 4 · 2 */
+  --veneer-radius-surface: calc(2px + 12px * (1 - var(--veneer-x)) * (1 - var(--veneer-x)));    /* 14 · 5 · 2 */
+  --veneer-radius-mark:    calc(2px + 2px * (1 - var(--veneer-x)) * (1 - var(--veneer-x)));     /* checkbox, kbd: 4 · 2.5 · 2 */
+  --veneer-radius-round:   var(--veneer-ref-radius-round);        /* chip, switch, avatar */
+  --veneer-border-hairline: 1px;
+  --veneer-border-emphasis: calc(1px + 1px * var(--veneer-x));    /* selected, tabs, sweep: 1 · 1.5 · 2 */
+  --veneer-focus-width: 2px;
+  --veneer-focus-offset: 2px;
+
+  /* -- elevation (alpha × depth; vivid is near-flat and leans on borders) -- */
+  --_sa: var(--veneer-ref-depth);
+  --veneer-elevation-0: none;
+  --_rest: var(--veneer-ref-depth-rest);                          /* resting surfaces: 1.2 · 0 · 0.35 */
+  --veneer-elevation-1:
+    0 1px 2px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.07 * var(--_rest))), oklch(0 0 0 / calc(0.4 * var(--_rest)))),
+    0 6px 18px -6px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.12 * var(--veneer-ref-rest-ambient))), oklch(0 0 0 / calc(0.5 * var(--veneer-ref-rest-ambient))));
+  --veneer-elevation-2:
+    0 1px 3px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.06 * var(--_sa))), oklch(0 0 0 / calc(0.35 * var(--_sa)))),
+    0 6px 16px -4px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.1 * var(--_sa))), oklch(0 0 0 / calc(0.5 * var(--_sa))));
+  --veneer-elevation-3:
+    0 2px 6px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.07 * var(--_sa))), oklch(0 0 0 / calc(0.4 * var(--_sa)))),
+    0 18px 40px -8px light-dark(oklch(0.2 0.02 var(--_h) / calc(0.16 * var(--_sa))), oklch(0 0 0 / calc(0.6 * var(--_sa))));
+  --veneer-blur-overlay: calc(12px * (1 - var(--veneer-x)));      /* 12 · 6 · 0 */
+
+  /* -- space (relationships; density-scaled except section/page) -------- */
+  --veneer-space-hair:    calc(2px * var(--veneer-density-k));
+  --veneer-space-tight:   calc(4px * var(--veneer-density-k));
+  --veneer-space-related: calc(8px * var(--veneer-density-k));
+  --veneer-space-group:   calc(16px * var(--veneer-density-k) * var(--veneer-ref-air));
+  --veneer-space-section: calc(var(--veneer-ref-section) * var(--veneer-ref-air));
+  --veneer-space-page:    var(--veneer-ref-gutter);
+  --veneer-pad-control:   calc(12px * var(--veneer-density-k) * var(--veneer-ref-air));
+  --veneer-pad-surface:   calc(20px * var(--veneer-density-k) * var(--veneer-ref-air));     /* cozy: 24 · 17 · 20 */
+
+  /* -- size ------------------------------------------------------------- */
+  --veneer-control-sm: max(calc(var(--veneer-ref-control-sm) + var(--veneer-ref-control-step)), calc(var(--veneer-target-min) - 8px));
+  --veneer-control-md: max(calc(var(--veneer-ref-control-md) + var(--veneer-ref-control-step)), var(--veneer-target-min));
+  --veneer-control-lg: max(calc(var(--veneer-ref-control-lg) + var(--veneer-ref-control-step)), calc(var(--veneer-target-min) + 4px));
+  --veneer-hit-min:    max(24px, var(--veneer-target-min));
+  --veneer-icon-sm: 14px; --veneer-icon-md: 16px; --veneer-icon-lg: 20px;
+  --veneer-icon-stroke: 1.5;                       /* on a 24 grid → 1px at 16px */
+
+  /* -- type (role tokens) ----------------------------------------------
+     Every role has an explicit unitless leading (zero CLS on the font swap, Safari included).
+     display + title are fluid: clamp(rem floor, rem + container units, rem ceiling), the container
+     being the nearest inline-size query container (none: the small viewport; iOS 15: vw). max/min
+     ≤ 2.5 so 200% zoom still doubles them (WCAG 1.4.4): 1.53 · 1.3 (quiet) · 1.25 (title). */
+  --_fu: var(--veneer-ref-fluid-unit);
+  --veneer-text-display-font: var(--veneer-font-display);
+  --veneer-text-display-size: clamp(calc(var(--veneer-ref-display-min) * var(--veneer-rem)),
+    calc(var(--veneer-ref-display-b) * var(--veneer-rem) + var(--veneer-ref-display-m) * var(--_fu)),
+    calc(var(--veneer-ref-display-max) * var(--veneer-rem)));
+  --veneer-text-display-leading: 1.04;
+  --veneer-text-display-weight: var(--veneer-ref-display-weight);
+  --veneer-text-display-tracking: var(--veneer-ref-display-tracking);
+  --veneer-text-display-variation: var(--veneer-ref-display-variation);   /* vivid: "opsz" pinned to max */
+  --veneer-text-display-trim: var(--veneer-ref-trim-display);
+  --veneer-text-display-trim-k: var(--veneer-ref-trim-display-k);         /* 1 where display trims (vivid) */
+  --veneer-text-title-font: var(--veneer-ref-title-font);
+  --veneer-text-title-size: clamp(calc(var(--veneer-ref-title-min) * var(--veneer-rem)),
+    calc(var(--veneer-ref-title-b) * var(--veneer-rem) + var(--veneer-ref-title-m) * var(--_fu)),
+    calc(var(--veneer-ref-title-max) * var(--veneer-rem)));
+  --veneer-text-title-leading: 1.15;
+  --veneer-text-title-weight: var(--veneer-ref-title-weight);
+  --veneer-text-title-tracking: calc(var(--veneer-ref-display-tracking) * 0.6);
+  --veneer-text-heading-font: var(--veneer-ref-heading-font);
+  --veneer-text-heading-size: var(--veneer-ref-type-heading);
+  --veneer-text-heading-leading: 1.3;
+  --veneer-text-heading-weight: var(--veneer-ref-heading-weight);
+  --veneer-text-heading-tracking: -0.01em;
+  --veneer-text-heading-trim: var(--veneer-ref-trim-heading);              /* quiet: normal */
+  --veneer-text-heading-trim-k: var(--veneer-ref-trim-heading-k);          /* quiet: 0 */
+  --veneer-text-heading-wrap: balance;
+  --veneer-text-body-font: var(--veneer-font-sans);
+  --veneer-text-body-size: var(--veneer-ref-type-body);
+  --veneer-text-body-leading: var(--veneer-ref-body-leading);
+  --veneer-text-body-weight: 400;
+  --veneer-text-prose-size: var(--veneer-ref-type-prose);
+  --veneer-text-prose-leading: 1.65;
+  --veneer-text-prose-wrap: var(--veneer-ref-prose-wrap);                  /* quiet: wrap; else pretty */
+  --veneer-text-editable-wrap: var(--veneer-ref-editable-wrap);            /* vivid: stable */
+  /* measure: 72 · 66 · 60ch of the brand face. Plain `ch` follows whichever face is rendering, so a
+     ch width moves when the fallback swaps for the brand font (Arial's "0" is 3% narrower than
+     Inter's at the matched size); --veneer-ch is the brand face's ch as em, which doesn't */
+  --veneer-ch: var(--veneer-ref-ch);
+  --veneer-measure: calc(var(--veneer-ref-measure) * var(--veneer-ch));
+  --veneer-text-label-font: var(--veneer-ref-label-font);
+  --veneer-text-label-size: calc(var(--veneer-ref-type-label) + var(--veneer-ref-label-adjust));
+  --veneer-text-label-leading: 1.25;
+  --veneer-text-label-weight: 500;
+  --veneer-text-label-tracking: var(--veneer-ref-label-tracking);
+  --veneer-text-label-case: var(--veneer-ref-label-case);
+  --veneer-text-eyebrow-font: var(--veneer-ref-eyebrow-font);
+  --veneer-text-eyebrow-size: calc(var(--veneer-ref-type-label) + var(--veneer-ref-eyebrow-adjust));
+  --veneer-text-eyebrow-leading: 1.25;
+  --veneer-text-eyebrow-weight: 500;
+  --veneer-text-eyebrow-tracking: var(--veneer-ref-eyebrow-tracking);
+  --veneer-text-eyebrow-case: var(--veneer-ref-eyebrow-case);
+  --veneer-text-caption-size: var(--veneer-ref-type-caption);
+  --veneer-text-caption-leading: 1.45;
+  --veneer-text-code-font: var(--veneer-font-mono);
+  --veneer-text-code-size: var(--veneer-ref-type-code);
+  --veneer-text-code-leading: 1.55;
+  --veneer-text-control-size: max(var(--veneer-ref-type-body), var(--veneer-input-font-min));
+  --veneer-text-control-leading: 1.25;
+  --veneer-text-button-font: var(--veneer-ref-button-font);
+  --veneer-text-button-size: calc(var(--veneer-ref-type-body) + var(--veneer-ref-button-adjust));
+  --veneer-text-button-leading: 1;
+  --veneer-text-button-weight: var(--veneer-ref-button-weight);
+  --veneer-text-button-tracking: var(--veneer-ref-button-tracking);
+  --veneer-text-button-case: var(--veneer-ref-button-case);
+  /* trimmed text boxes: controls, badges, chips, eyebrows at every stop; headings from balanced;
+     display at vivid (research 11 §3.4). The fallback (no text-box) is in veneer.base */
+  --veneer-text-box-trim: trim-both cap alphabetic;
+  /* font-swap fix for trimmed block text (headings, display). A cap-trimmed box is (lines − 1) × lh + 1cap,
+     and 1cap is the cap height of the face that is rendering: the metric-matched fallback until the web font
+     swaps in. This resolves, on the element, to (brand cap − fallback cap) em while one of the four fallback
+     faces renders and to 0 for any other face (brand, system, unknown), so the box is always (lines − 1) × lh
+     + the brand's cap and the swap moves nothing. Each term is a window on 1cap / 1em around a fallback's cap
+     (Capsize cap heights: Inter 0.7275 vs Arial × 1.0712 = 0.767, Space Grotesk 0.700 vs Arial × 1.0969 =
+     0.786, Instrument Serif 0.720 vs Times × 0.8394 = 0.556, Plex Mono 0.698 vs Courier New 0.571 and Courier
+     New Bold 0.591); clamp(0, (1cap − a·1em) × 1000, d·1em) steps from 0 to d just above a. The windows are
+     ±0.005 em; the measured spread across weights and sizes is ±0.001 em. Generated with the fallback faces. */
+  --_tw: calc(1cap * 1000);
+  --veneer-ref-trim-swap: calc(
+      clamp(0px, var(--_tw) - 550em, 0.1642em) - clamp(0px, var(--_tw) - 562em, 0.1642em)    /* Instrument Serif */
+    + clamp(0px, var(--_tw) - 566em, 0.1268em) - clamp(0px, var(--_tw) - 576em, 0.1268em)    /* Plex Mono 400–549 */
+    + clamp(0px, var(--_tw) - 586em, 0.1067em) - clamp(0px, var(--_tw) - 596em, 0.1067em)    /* Plex Mono 550+ */
+    - clamp(0px, var(--_tw) - 762em, 0.0395em) + clamp(0px, var(--_tw) - 772em, 0.0395em)    /* Inter */
+    - clamp(0px, var(--_tw) - 780em, 0.0855em) + clamp(0px, var(--_tw) - 791em, 0.0855em));  /* Space Grotesk */
+  /* figures: tabular at every stop. numeric-font is a face that HAS tnum (vivid's serif doesn't) */
+  --veneer-text-numeric-font: var(--veneer-ref-numeric-font);
+  --veneer-text-numeric-variant: tabular-nums lining-nums;
+  /* <em> inside display / title / headings: a real italic or none (font-synthesis-style: none) */
+  --veneer-text-emphasis-style: var(--veneer-ref-emphasis-style);
+  --veneer-text-emphasis-color: var(--veneer-color-accent-text);
+
+  /* -- type · canvas role strings (@kerf/core/text, Surfaces) ------------------
+     A canvas `font` can't read var() or calc(): these resolve to "weight Npx family-stack" (read them
+     with getComputedStyle(host).getPropertyValue). Line height, tracking and case aren't part of a canvas
+     font: read the matching -leading / -tracking / -case tokens. The fluid roles resolve here, at the scope
+     root; a [data-text-canvas] host re-resolves them against its own container (veneer.base). */
+  --veneer-text-display-px: var(--veneer-text-display-size);
+  --veneer-text-title-px:   var(--veneer-text-title-size);
+  --veneer-text-heading-px: var(--veneer-text-heading-size);
+  --veneer-text-body-px:    var(--veneer-text-body-size);
+  --veneer-text-prose-px:   var(--veneer-text-prose-size);
+  --veneer-text-label-px:   var(--veneer-text-label-size);
+  --veneer-text-eyebrow-px: var(--veneer-text-eyebrow-size);
+  --veneer-text-caption-px: var(--veneer-text-caption-size);
+  --veneer-text-code-px:    var(--veneer-text-code-size);
+  --veneer-text-button-px:  var(--veneer-text-button-size);
+  --veneer-text-control-px: var(--veneer-text-control-size);
+  --veneer-text-display-canvas: var(--veneer-text-display-weight) var(--veneer-text-display-px) var(--veneer-text-display-font);
+  --veneer-text-title-canvas:   var(--veneer-text-title-weight) var(--veneer-text-title-px) var(--veneer-text-title-font);
+  --veneer-text-heading-canvas: var(--veneer-text-heading-weight) var(--veneer-text-heading-px) var(--veneer-text-heading-font);
+  --veneer-text-body-canvas:    var(--veneer-text-body-weight) var(--veneer-text-body-px) var(--veneer-text-body-font);
+  --veneer-text-prose-canvas:   var(--veneer-text-body-weight) var(--veneer-text-prose-px) var(--veneer-text-body-font);
+  --veneer-text-label-canvas:   var(--veneer-text-label-weight) var(--veneer-text-label-px) var(--veneer-text-label-font);
+  --veneer-text-eyebrow-canvas: var(--veneer-text-eyebrow-weight) var(--veneer-text-eyebrow-px) var(--veneer-text-eyebrow-font);
+  --veneer-text-caption-canvas: var(--veneer-text-body-weight) var(--veneer-text-caption-px) var(--veneer-text-body-font);
+  --veneer-text-code-canvas:    var(--veneer-text-body-weight) var(--veneer-text-code-px) var(--veneer-text-code-font);
+  --veneer-text-button-canvas:  var(--veneer-text-button-weight) var(--veneer-text-button-px) var(--veneer-text-button-font);
+  --veneer-text-control-canvas: var(--veneer-text-body-weight) var(--veneer-text-control-px) var(--veneer-text-body-font);
+
+  /* -- motion ---------------------------------------------------------- */
+  --_mk: calc(var(--veneer-ref-motion-k) * (0.6 + 0.4 * var(--veneer-motion-scale)));
+  --veneer-duration-instant: 80ms;                                 /* press */
+  --veneer-duration-fast:    calc(120ms * var(--_mk));             /* hover, colour */
+  --veneer-duration-base:    calc(200ms * var(--_mk));             /* popover, menu, toast */
+  --veneer-fill-duration:    520ms;                                /* vivid button: the two blobs close and part */
+  --veneer-duration-slow:    calc(320ms * var(--_mk));             /* sheet, dialog, page */
+  --veneer-duration-exit-k:  0.5;                                  /* exits are half of enters (redesign §3) */
+  --veneer-ease-out:    var(--veneer-ref-ease-out);                  /* enter, settle */
+  --veneer-ease-in:     cubic-bezier(0.4, 0, 1, 1);                /* exit, leave */
+  --veneer-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);            /* move, sweep */
+  --veneer-ease-pop:    var(--veneer-ref-ease-pop);                  /* scale-in accents */
+  --veneer-ease-sheet:  cubic-bezier(0.32, 0.72, 0, 1);            /* drawers: long, rare, heavy */
+  --veneer-ease-spring: var(--veneer-ref-spring);                    /* release, arrivals: the stop's tension */
+  --veneer-spring-duration: calc(var(--veneer-ref-spring-ms) * var(--veneer-motion-scale));
+  --veneer-touch-out: calc(var(--veneer-ref-touch-out) * var(--_mk));/* hover: instant in, this long out */
+  --veneer-press: calc(1 - (1 - var(--veneer-ref-press)) * var(--veneer-motion-scale));
+  --veneer-offset: calc(var(--veneer-ref-offset) * 1);               /* vivid's hard ink shadow; it is depth, so it stays under reduced motion */
+  --veneer-offset-color: light-dark(#000, #fff);                   /* that shadow's colour: the page's opposite, black on light, white on dark. Set it to brand the pull-out */
+  --veneer-shuttle-head: calc(var(--veneer-ref-shuttle-head) * var(--veneer-motion-scale));
+  --veneer-shuttle-tail: calc(var(--veneer-ref-shuttle-tail) * var(--veneer-motion-scale));
+  --veneer-motion-distance:   calc(var(--veneer-ref-distance) * var(--veneer-motion-scale));
+  --veneer-motion-scale-from: calc(1 - (1 - var(--veneer-ref-scale-from)) * var(--veneer-motion-scale));
+  --veneer-stagger:           calc(var(--veneer-ref-stagger) * var(--veneer-motion-scale));
+  --veneer-stagger-max: 6;                                         /* items; later ones share the last delay */
+
+  /* -- signature: sweep + floating border label ------------------------- */
+  --veneer-sweep-duration: calc(var(--veneer-ref-sweep) * var(--veneer-motion-scale)); /* 480 · 620 · 700; 0 = instant */
+  --veneer-sweep-ease: cubic-bezier(0.65, 0, 0.35, 1);
+  --veneer-sweep-ease-in: cubic-bezier(0.3, 0.55, 0.15, 1);        /* in leaves at once (redesign §2); out keeps the original curve */
+  --veneer-sweep-width: calc(1px + 0.5px * min(1, var(--veneer-x) * 2));   /* stroke 1 · 1.5 · 1.5 */
+  --veneer-sweep-base-width: var(--veneer-border-hairline);                  /* resting border stays 1px */
+  /* the full accent at every stop: the dial never makes the stroke faint.
+     Pinned between the ink base and the surface so both edges read (≥ 3:1 each). */
+  --veneer-color-sweep: light-dark(
+    oklch(0.515 min(max(calc(var(--_ac) * 1.25), 0.12), 0.13) var(--_ah)),
+    oklch(0.6 min(max(calc(var(--_ac) * 1.35), 0.14), 0.16) var(--_ah)));
+  --veneer-color-sweep-base: var(--veneer-ref-sweep-base);
+  /* frame button (§1b): track = ink (#050505-strength) in light, ink at 62% in dark */
+  --veneer-frame-track: light-dark(var(--veneer-color-text), color-mix(in oklab, var(--veneer-color-text) 62%, transparent));
+  --veneer-frame-corner: 10px; --veneer-frame-weight: 2px; --veneer-frame-stroke: 2.6;
+  --veneer-frame-duration: calc(var(--veneer-ref-frame) * var(--veneer-motion-scale)); /* 480 · 620 · 700, the sweep's; 0 = instant */
+  --veneer-color-sweep-critical: var(--veneer-color-critical-solid);
+  --veneer-color-field: var(--veneer-ref-field-fill);                  /* at rest */
+  --veneer-color-field-active: var(--veneer-ref-field-fill-active);    /* hover / focus, with the sweep */
+  --veneer-color-field-invalid: var(--veneer-color-critical-soft);
+  --veneer-field-height: max(calc(var(--veneer-ref-control-md) + var(--veneer-ref-control-step) + 4px), var(--veneer-target-min)); /* cozy: 44 · 38 · 40 */
+  --veneer-label-font: var(--veneer-ref-float-font);
+  /* the one sub-11px caps exception (00 §4): 10px on fine pointers, 11px on coarse (16px × 0.6875).
+     The label is the field's real <label for>; its name comes from the hidden label-text copy. */
+  --veneer-label-float-size: max(10px, calc(var(--veneer-input-font-min) * 0.6875));
+  --veneer-label-float-weight: 600;
+  --veneer-label-float-tracking: 0.12em;
+  --veneer-label-float-offset: -7px;        /* top of the floated label vs the top border */
+  --veneer-label-float-duration: calc(520ms * var(--veneer-motion-scale));
+  --veneer-label-float-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --veneer-label-fade: calc(120ms * (1 - var(--veneer-motion-scale)));   /* reduced-motion substitute */
+  --veneer-label-char-duration: 120ms;
+  --veneer-label-stagger: var(--veneer-motion-scale);                    /* 0 = no per-char delay */
+  --veneer-color-label: var(--veneer-color-text-subtle);                 /* resting inside the field */
+  --veneer-color-label-rest: light-dark(                               /* floated, idle: accent + 40% black */
+    oklch(0.4 min(calc(var(--_ac) * 0.85), 0.1) var(--_ah)),
+    oklch(0.72 calc(var(--_ac) * 0.55) var(--_ah)));
+  --veneer-color-label-active: light-dark(                              /* hover/focus: the sweep's own accent, */
+    var(--veneer-color-sweep),                                         /* lifted in dark to stay ≥ 4.5:1 as text */
+    oklch(0.7 min(max(calc(var(--_ac) * 1.35), 0.14), 0.16) var(--_ah)));
+  --veneer-message-duration: calc(180ms * var(--veneer-motion-scale));
+
+  /* -- layers, opacity --------------------------------------------------- */
+  --veneer-z-base: 0; --veneer-z-raised: 1; --veneer-z-sticky: 100; --veneer-z-dock: 200;
+  --veneer-z-overlay: 300; --veneer-z-menu: 400; --veneer-z-modal: 500; --veneer-z-toast: 600;
+  --veneer-z-tooltip: 700;
+  --veneer-opacity-disabled: 0.45;
+  --veneer-state-hover: 0.07;    /* currentColor layer over any non-solid fill */
+  --veneer-state-press: 0.11;
+}
+
+} /* @layer veneer.tokens */
+
+/* ===========================================================================
+   BASE · page defaults, scope painting, focus, keyframes. Zero-specificity.
+   ======================================================================== */
+@layer veneer.base {
+  :where(:root) {
+    background: var(--veneer-color-page);
+    color: var(--veneer-color-text);
+    font-family: var(--veneer-text-body-font);
+    font-size: var(--veneer-ref-root-size);          /* the body size, in real rem (user default font size) */
+    line-height: var(--veneer-text-body-leading);
+    font-optical-sizing: auto;                     /* Inter's opsz axis follows the size (14–32) */
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    accent-color: var(--veneer-color-accent-solid);
+  }
+  /* an in-page anchor lands below the sticky top bar (veneer's own: 48 · 56) with a breath of room, not under it. A
+     page with a taller header, or none, sets --veneer-scroll-offset. On the targets, not as the root's scroll-padding:
+     a view() timeline's default inset is the scroller's scroll-padding, so that would move every scroll-driven
+     animation on the page (veneer's flow exits are already placed by the header) */
+  :where([id]) { scroll-margin-block-start: var(--veneer-scroll-offset, calc(var(--veneer-control-md) + 12px + var(--veneer-space-related))); }
+  /* in-page anchors and skip links glide to their target. Only when nobody asked for less motion: not under the OS
+     reduced-motion setting (the block below also forces auto there), not under data-motion="reduce"; an app that
+     chose data-motion="full" keeps it. A route change still jumps: kerf's router scrolls with behavior: "instant" */
+  @media (prefers-reduced-motion: no-preference) {
+    :where(:root:not([data-motion="reduce"])) { scroll-behavior: smooth; }
+  }
+  :where(:root[data-motion="full"]) { scroll-behavior: smooth; }
+  /* a scope that changes theme or expression repaints its own ink and font */
+  :where([data-theme]),
+  :where([data-expression]) {
+    color: var(--veneer-color-text);
+    font-family: var(--veneer-text-body-font);
+  }
+  :where([data-theme]) { background-color: var(--veneer-color-page); }
+
+  :where(:focus-visible) {
+    outline: var(--veneer-focus-width) solid var(--veneer-color-focus);
+    outline-offset: var(--veneer-focus-offset);
+    animation: veneer-ring calc(120ms * var(--veneer-motion-scale)) var(--veneer-ease-out);   /* the ring is drawn out from the edge */
+  }
+  @keyframes veneer-ring { from { outline-offset: 0px; outline-color: transparent; } }
+  ::selection {
+    background: var(--veneer-color-accent-soft);
+    color: var(--veneer-color-text);
+  }
+  :where(code),
+  :where(kbd),
+  :where(samp),
+  :where(pre) { font-family: var(--veneer-text-code-font); font-size: var(--veneer-text-code-size); }
+  :where(pre) { line-height: var(--veneer-text-code-leading); }
+
+  /* -- type roles (01 §2 Type; research 11 §3) ------------------------------------------
+     wrap: headings balance at every stop; prose is pretty from balanced; vivid keeps editable text stable
+     (text-wrap-style only, so a component's white-space: nowrap still wins). */
+  :where(h1),
+  :where(h2),
+  :where(h3),
+  :where(h4),
+  :where(h5),
+  :where(h6) { text-wrap-style: var(--veneer-text-heading-wrap); }
+  :where(p),
+  :where(li),
+  :where(dd),
+  :where(blockquote),
+  :where(figcaption) { text-wrap-style: var(--veneer-text-prose-wrap); }
+  :where(textarea),
+  :where([contenteditable]:not([contenteditable="false"])) { text-wrap-style: var(--veneer-text-editable-wrap); }
+  /* prose: reading size, leading and the dial's measure (72 · 66 · 60ch) */
+  :where([data-prose]) {
+    font-size: var(--veneer-text-prose-size); line-height: var(--veneer-text-prose-leading);
+    max-inline-size: var(--veneer-measure); text-wrap-style: var(--veneer-text-prose-wrap); overflow-wrap: break-word;
+  }
+  /* trimmed text boxes: the box is cap height to baseline, so spacing and centring are optical.
+     Controls (button, badge, chip, pill, tag) and eyebrows at every stop; headings from balanced.
+     A flex host's own text-box doesn't reach its text (it isn't a block container), so its direct
+     label spans are trimmed too; heights stay fixed (block-size), only the glyphs centre on the cap. */
+  @supports (text-box: trim-both cap alphabetic) {
+    :where([data-scope="button"]),
+    :where([data-scope="badge"]),
+    :where([data-scope="chip"]),
+    :where([data-scope="pill"]),
+    :where([data-scope="tag"]),
+    :where([data-part="eyebrow"]),
+    :where([data-scope="button"], [data-scope="badge"], [data-scope="chip"], [data-scope="pill"], [data-scope="tag"]) > :where(span:not([data-part])) {
+      text-box: var(--veneer-text-box-trim);
+    }
+    :where(h1),
+    :where(h2),
+    :where(h3),
+    :where(h4),
+    :where(h5),
+    :where(h6) { text-box: var(--veneer-text-heading-trim); }
+    /* trimmed block text keeps the brand's box through the font swap: a fixed-height part (control, badge)
+       can't move, but a heading's height is its cap, which differs between the fallback and the web font.
+       --veneer-trim-k says whether the element is trimmed (it mirrors the text-box token it uses); the fix is
+       0 once the web font renders, so the loaded layout is exactly the text-box one. Display text trims at
+       vivid only: the hero title, and any element marked data-trim="display", reads the display switch.
+       An element that sets text-box: var(--veneer-text-display-trim) itself sets data-trim="display" too, and a
+       heading laid out as flex or grid (text-box only trims block containers) sets --veneer-trim-k: 0. So does any rule
+       that takes the trim off (text-box: normal): CSS can't read text-box, and a k of 1 there pads an untrimmed
+       heading while the fallback renders, then drops it at the swap (scripts/quality/css-rules.test.mjs). */
+    :where(h1),
+    :where(h2),
+    :where(h3),
+    :where(h4),
+    :where(h5),
+    :where(h6) { --veneer-trim-k: var(--veneer-text-heading-trim-k); }
+    :where([data-scope="hero"] [data-part="title"]:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="hero"] *))),
+    :where([data-trim="display"]) { --veneer-trim-k: var(--veneer-text-display-trim-k); }
+    /* an accordion / disclosure heading holds a block button, not lines of its own: nothing to trim */
+    :where(h1):where(:has(> button[aria-expanded])),
+    :where(h2):where(:has(> button[aria-expanded])),
+    :where(h3):where(:has(> button[aria-expanded])),
+    :where(h4):where(:has(> button[aria-expanded])),
+    :where(h5):where(:has(> button[aria-expanded])),
+    :where(h6):where(:has(> button[aria-expanded])) { --veneer-trim-k: 0; }
+    :where(h1),
+    :where(h2),
+    :where(h3),
+    :where(h4),
+    :where(h5),
+    :where(h6),
+    :where([data-scope="hero"] [data-part="title"]:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="hero"] *))),
+    :where([data-trim]) {
+      --veneer-trim-fix: calc(var(--veneer-trim-k, 0) * var(--veneer-ref-trim-swap));
+    }
+    /* where the fix goes. Above the first line it keeps the baseline where the web font will put it, so
+       neither the box nor the glyphs move at the swap. A positive fix (serif, mono) is top padding. A
+       negative one (Inter, Space Grotesk) can't be: in WebKit a zero-height table before the first line
+       carries the whole fix as a margin, either sign, and keeps the cap trim; Chromium and Firefox drop the
+       start trim when a block starts with a table, so Chromium takes a negative fix off the auto height with
+       calc-size() (the box holds; its glyphs still rise by the fix at the swap). Firefox's 1cap doesn't see
+       the fallback during the swap, so the fix reads 0 there: unchanged. hanging-punctuation picks out WebKit
+       (no other engine ships it). With the web font
+       loaded every term is 0: padding 0, calc-size(auto, size + 0px), which lays out as auto, stretch included. */
+    @supports not ((hanging-punctuation: first) and (not (block-size: calc-size(auto, size)))) {
+      :where(h1),
+      :where(h2),
+      :where(h3),
+      :where(h4),
+      :where(h5),
+      :where(h6),
+      :where([data-scope="hero"] [data-part="title"]:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="hero"] *))),
+      :where([data-trim]) {
+        padding-block-start: max(0px, var(--veneer-trim-fix));
+      }
+    }
+    @supports (block-size: calc-size(auto, size)) {
+      :where(h1),
+      :where(h2),
+      :where(h3),
+      :where(h4),
+      :where(h5),
+      :where(h6),
+      :where([data-scope="hero"] [data-part="title"]:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="hero"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="hero"] *))),
+      :where([data-trim]) {
+        block-size: calc-size(auto, size + min(0px, var(--veneer-trim-fix)));
+      }
+    }
+    @supports (hanging-punctuation: first) and (not (block-size: calc-size(auto, size))) {
+      :where(h1)::before,
+      :where(h2)::before,
+      :where(h3)::before,
+      :where(h4)::before,
+      :where(h5)::before,
+      :where(h6)::before,
+      :where([data-scope="hero"] [data-part="title"])::before,
+      :where([data-trim])::before {
+        /* the box exists only while the fix is non-zero: after the swap it is gone, so it never becomes a
+           flex item (with gap) in a flex heading. An engine without if() drops the pseudo (no fix). */
+        content: if(style(--veneer-trim-fix: 0px): none; else: "");
+        display: table; margin-block-end: var(--veneer-trim-fix);
+      }
+    }
+  }
+  /* fallback (iOS < 18.2, Firefox < 154): Capsize-style negative margins from the face's metrics,
+     using the line's own height (lh). Without lh (iOS 15) the declarations are dropped: untrimmed, harmless. */
+  @supports not (text-box: trim-both cap alphabetic) {
+    :where(h1)::before,
+    :where(h2)::before,
+    :where(h3)::before,
+    :where(h4)::before,
+    :where(h5)::before,
+    :where(h6)::before,
+    :where(h1)::after,
+    :where(h2)::after,
+    :where(h3)::after,
+    :where(h4)::after,
+    :where(h5)::after,
+    :where(h6)::after,
+    :where([data-part="eyebrow"])::before,
+    :where([data-part="eyebrow"])::after { content: ""; display: table; }
+    :where(h1),
+    :where(h2),
+    :where(h3),
+    :where(h4),
+    :where(h5),
+    :where(h6) { --_t: 1; }
+    :where([data-expression="quiet"] :is(h1)),
+    :where([data-expression="quiet"] :is(h2)),
+    :where([data-expression="quiet"] :is(h3)),
+    :where([data-expression="quiet"] :is(h4)),
+    :where([data-expression="quiet"] :is(h5)),
+    :where([data-expression="quiet"] :is(h6)),
+    :where([data-expression="quiet"]:is(h1)),
+    :where([data-expression="quiet"]:is(h2)),
+    :where([data-expression="quiet"]:is(h3)),
+    :where([data-expression="quiet"]:is(h4)),
+    :where([data-expression="quiet"]:is(h5)),
+    :where([data-expression="quiet"]:is(h6)) { --_t: 0; }
+    :where(h1)::before,
+    :where(h2)::before,
+    :where(h3)::before,
+    :where(h4)::before,
+    :where(h5)::before,
+    :where(h6)::before { margin-block-end: calc(-1 * var(--_t) * ((1lh - var(--veneer-ref-hm-k1) * 1em) / 2 + var(--veneer-ref-hm-k2) * 1em)); }
+    :where(h1)::after,
+    :where(h2)::after,
+    :where(h3)::after,
+    :where(h4)::after,
+    :where(h5)::after,
+    :where(h6)::after { margin-block-start: calc(-1 * var(--_t) * ((1lh - var(--veneer-ref-hm-k1) * 1em) / 2 + var(--veneer-ref-hm-k3) * 1em)); }
+    :where([data-part="eyebrow"])::before { margin-block-end: calc(-1 * ((1lh - var(--veneer-ref-em-k1) * 1em) / 2 + var(--veneer-ref-em-k2) * 1em)); }
+    :where([data-part="eyebrow"])::after { margin-block-start: calc(-1 * ((1lh - var(--veneer-ref-em-k1) * 1em) / 2 + var(--veneer-ref-em-k3) * 1em)); }
+  }
+  /* a canvas host re-resolves the px role strings against its own container (fluid display / title) */
+  :where([data-text-canvas]) {
+    --veneer-text-display-px: var(--veneer-text-display-size); --veneer-text-title-px: var(--veneer-text-title-size);
+  }
+
+  /* no faux italics in headlines: Space Grotesk and Inter-as-display ship no italic, so the browser
+     would slant the roman. Emphasis there is upright + accent; vivid's serif uses its real italic. */
+  :where(h1),
+  :where(h2),
+  :where(h3),
+  :where(h4),
+  :where(h5),
+  :where(h6) { font-synthesis-style: none; }
+  :where(h1, h2, h3, h4, h5, h6) :where(em) { font-style: var(--veneer-text-emphasis-style); color: var(--veneer-text-emphasis-color); }
+  /* figures that update or align: a face with tnum at every stop (vivid's serif has none) */
+  :where([data-numeric]) { font-family: var(--veneer-text-numeric-font); font-variant-numeric: var(--veneer-text-numeric-variant); }
+  :where(table),
+  :where(time) { font-variant-numeric: var(--veneer-text-numeric-variant); }
+
+  /* touch: every target reaches hit-min (24px fine, 44px coarse) from tokens alone (00 §1.5).
+     The floor is a min-size, so a component's own block-size still sets the visual size on a mouse. */
+  :where([data-scope="button"]:not([data-emphasis="link"])),
+  :where([data-scope="toggle"]),
+  :where([data-part="close"]),
+  :where([data-scope="status-bar"] > button),
+  :where([role="tab"]),
+  :where([data-hit]:not([data-hit="area"])) { min-block-size: var(--veneer-hit-min); }
+  :where([data-scope="button"][data-icon-only]),
+  :where([data-part="close"]),
+  :where([data-scope="toggle"]),
+  :where([data-hit]:not([data-hit="area"])) { min-inline-size: var(--veneer-hit-min); }
+  /* expander: a target that must keep a smaller visual box (a chart toggle, a pin, a drag handle) gets a
+     centred hit-min area from ::after; it never shrinks the box. Components use the same formula on their
+     own parts; where two expanders would overlap, the part takes its share of the gap instead (24px
+     floor + spacing, WCAG 2.5.8) and says so in its file. */
+  :where([data-hit="area"]) { position: relative; }
+  :where([data-hit="area"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--veneer-hit-min)) / 2)); }
+  /* a standalone text link (not inside running text) gets the same row height */
+  :where([data-scope="button"][data-emphasis="link"]:not(:is(p, li, dd, td, figcaption, blockquote, label) *)),
+  :where([data-hit="text"]) {
+    display: inline-flex; align-items: center; min-block-size: var(--veneer-hit-min);
+  }
+
+  /* a loading button keeps its accessible name: the label hides by opacity (stays in the a11y tree),
+     never by visibility. !important because hiding the name is an a11y failure, not a style choice. */
+  :where([data-scope="button"][data-loading]) > :where(:not([data-part="spinner"], [data-scope="spinner"])) { visibility: visible !important; opacity: 0; }
+  :where(hr) { border: 0; border-top: var(--veneer-border-hairline) solid var(--veneer-color-border); }
+
+  /* motion primitives (components set animation-duration/-timing) */
+  @keyframes veneer-enter {
+    from { opacity: 0; transform: translateY(var(--veneer-motion-distance)) scale(var(--veneer-motion-scale-from)); }
+  }
+  @keyframes veneer-exit {
+    to { opacity: 0; transform: translateY(calc(var(--veneer-motion-distance) * -0.5)) scale(var(--veneer-motion-scale-from)); }
+  }
+  @keyframes veneer-fade-in  { from { opacity: 0; } }
+  @keyframes veneer-fade-out { to { opacity: 0; } }
+  @keyframes veneer-msg-in   { from { opacity: 0; transform: translateY(calc(-4px * var(--veneer-motion-scale))); } }
+  @keyframes veneer-label-a  { from { opacity: 0; } }   /* reduced-motion label crossfades; */
+  @keyframes veneer-label-b  { from { opacity: 0; } }   /* two names so each state change replays */
+  @keyframes veneer-shimmer  { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+  @keyframes veneer-pulse    { from { opacity: 1; } to { opacity: 0.45; } }   /* reduced-motion status signal */
+
+  /* Nothing loops while idle under reduced motion (00 §8). Applies to the OS setting (unless the app
+     chose data-motion="full") and to data-motion="reduce" on any scope. !important in veneer.base beats
+     every later layer's !important, so a component's own reduced-motion shortening (e.g. a 120ms
+     duration) can't turn a loop into a strobe.
+       1. every animation runs at most once;
+       2. idle loops (shimmer, skeleton, marching dashes, [data-loop]) stop;
+       3. spinners and indeterminate bars keep a status signal: an opacity pulse, no rotation or travel. */
+  @media (prefers-reduced-motion: reduce) {
+    :where(:root:not([data-motion="full"]) *) { scroll-behavior: auto !important; }
+    :where(:root:not([data-motion="full"]) *),
+    :where(:root:not([data-motion="full"]) *)::before,
+    :where(:root:not([data-motion="full"]) *)::after { animation-iteration-count: 1 !important; }
+    :where(:root:not([data-motion="full"])) :where([data-shimmer]),
+    :where(:root:not([data-motion="full"])) :where([data-scope="skeleton"]),
+    :where(:root:not([data-motion="full"])) :where([data-part="skeleton"]),
+    :where(:root:not([data-motion="full"])) :where([data-skeleton]),
+    :where(:root:not([data-motion="full"])) :where([data-scope="shimmer"]),
+    :where(:root:not([data-motion="full"])) :where([data-part="shimmer"]),
+    :where(:root:not([data-motion="full"])) :where(.edge[data-live]),
+    :where(:root:not([data-motion="full"])) :where([data-loop]) { animation: none !important; }
+    :where(:root:not([data-motion="full"])) :where([data-shimmer])::before,
+    :where(:root:not([data-motion="full"])) :where([data-scope="skeleton"])::before,
+    :where(:root:not([data-motion="full"])) :where([data-part="skeleton"])::before,
+    :where(:root:not([data-motion="full"])) :where([data-skeleton])::before,
+    :where(:root:not([data-motion="full"])) :where([data-scope="shimmer"])::before,
+    :where(:root:not([data-motion="full"])) :where([data-part="shimmer"])::before,
+    :where(:root:not([data-motion="full"])) :where([data-loop])::before,
+    :where(:root:not([data-motion="full"])) :where([data-shimmer])::after,
+    :where(:root:not([data-motion="full"])) :where([data-scope="skeleton"])::after,
+    :where(:root:not([data-motion="full"])) :where([data-part="skeleton"])::after,
+    :where(:root:not([data-motion="full"])) :where([data-skeleton])::after,
+    :where(:root:not([data-motion="full"])) :where([data-scope="shimmer"])::after,
+    :where(:root:not([data-motion="full"])) :where([data-part="shimmer"])::after,
+    :where(:root:not([data-motion="full"])) :where([data-loop])::after { animation: none !important; }
+    :where(:root:not([data-motion="full"])) :where([data-scope="spinner"], [data-part="spinner"], [data-part="spin"], [data-scope="progress"][data-state="indeterminate"] [data-part="range"]:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) *:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) [data-scope="progress"] *))) {
+      animation: veneer-pulse 1.2s ease-in-out infinite alternate !important;
+    }
+  }
+  :where([data-motion="reduce"] *),
+  :where([data-motion="reduce"] *)::before,
+  :where([data-motion="reduce"] *)::after { animation-iteration-count: 1 !important; }
+  :where([data-motion="reduce"]) :where([data-shimmer]),
+  :where([data-motion="reduce"]) :where([data-scope="skeleton"]),
+  :where([data-motion="reduce"]) :where([data-part="skeleton"]),
+  :where([data-motion="reduce"]) :where([data-skeleton]),
+  :where([data-motion="reduce"]) :where([data-scope="shimmer"]),
+  :where([data-motion="reduce"]) :where([data-part="shimmer"]),
+  :where([data-motion="reduce"]) :where(.edge[data-live]),
+  :where([data-motion="reduce"]) :where([data-loop]) { animation: none !important; }
+  :where([data-motion="reduce"]) :where([data-shimmer])::before,
+  :where([data-motion="reduce"]) :where([data-scope="skeleton"])::before,
+  :where([data-motion="reduce"]) :where([data-part="skeleton"])::before,
+  :where([data-motion="reduce"]) :where([data-skeleton])::before,
+  :where([data-motion="reduce"]) :where([data-scope="shimmer"])::before,
+  :where([data-motion="reduce"]) :where([data-part="shimmer"])::before,
+  :where([data-motion="reduce"]) :where([data-loop])::before,
+  :where([data-motion="reduce"]) :where([data-shimmer])::after,
+  :where([data-motion="reduce"]) :where([data-scope="skeleton"])::after,
+  :where([data-motion="reduce"]) :where([data-part="skeleton"])::after,
+  :where([data-motion="reduce"]) :where([data-skeleton])::after,
+  :where([data-motion="reduce"]) :where([data-scope="shimmer"])::after,
+  :where([data-motion="reduce"]) :where([data-part="shimmer"])::after,
+  :where([data-motion="reduce"]) :where([data-loop])::after { animation: none !important; }
+  :where([data-motion="reduce"]) :where([data-scope="spinner"], [data-part="spinner"], [data-part="spin"], [data-scope="progress"][data-state="indeterminate"] [data-part="range"]:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) *:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) [data-scope="progress"] *))) {
+    animation: veneer-pulse 1.2s ease-in-out infinite alternate !important;
+  }
+}
+
+/* ===========================================================================
+   SIGNATURE · the sweep border + the floating border label.  Every stop.
+   Source of truth: ../SIGNATURE.md.
+     --_a is 1 while a host is active; each part's clocks do the rest (§1), so a part has no states. It draws L→R, leaves L→R,
+     and never reverses. Duration 0 (reduced motion) makes every change instant, with the same end states.
+   Hosts: [data-sweep]. Set --veneer-sweep-radius to the host's corner radius
+   (clip-path `round` must match it). --_on gates decorative hosts (0 = fade).
+   ======================================================================== */
+@layer veneer.signature {
+  :where([data-sweep]) { position: relative; --veneer-sweep-radius: var(--veneer-radius-control); --_on: 1; --_a: 0; }
+
+  /* -- the switch: --_a is 1 while a host is active. Hover (not touch), focus, a held state, a pass. The only state.
+     Hover and focus are the browser's, so the sweep runs with no script and no write to the DOM. */
+  @media (hover: hover) { :where([data-sweep]:hover),
+ :where([data-sweep-trigger]:hover [data-sweep]),
+ :where(label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):hover [data-sweep]) { --_a: 1; } }
+  @media (hover: none) { :where([data-sweep]:active),
+ :where([data-sweep-trigger]:active [data-sweep]),
+ :where(label:is([data-scope="checkbox"], [data-scope="radio"], [data-scope="switch"]):active [data-sweep]) { --_a: 1; } }
+  :where([data-sweep]:is(:focus-visible, :has(:focus-visible), [data-pin], [data-hold], [data-confirm], [data-invalid], [aria-expanded="true"], [aria-pressed="true"], [data-state="open"], :popover-open),
+         [data-sweep]:has(> [aria-expanded="true"], > [data-part="heading"] [aria-expanded="true"]),
+         :is([data-sweep-trigger], label[data-scope="checkbox"], label[data-scope="radio"], label[data-scope="switch"]):is(:focus-visible, :has(:focus-visible), [data-hold], [aria-expanded="true"], [aria-pressed="true"], [data-state="open"]) [data-sweep],
+         :is([data-scope="field"] > [data-part="control"], [data-scope="field"][data-sweep], [data-scope="composer"], [data-part="input-row"], [data-sweep-focus="within"]):focus-within,
+         dialog[data-scope="palette"][open] > [data-sweep], [data-scope="field"] > [data-part="control"]:has(select:open), [data-scope="field"][data-open] [data-sweep], [data-sweep][data-open=""] [data-sweep], [data-invalid] > [data-sweep]) { --_a: 1; }
+
+  /* -- 1 · two edges, worked out from clocks. Once the stroke starts it draws all the way round, even when the host lets
+     go part way, and only then leaves. It draws L→R, leaves L→R and never reverses. An edge can't be a transition of its
+     own (a transition retargets the moment the host lets go), so each part runs linear clocks, counted in sweeps, and
+     works the edges out from them. The head is how far the stroke has drawn, the tail how far it has left (0…1):
+       --_kc  sweeps since the host went active (to 3); holds two sweeps after it lets go, then resets
+       --_kh  the same, but holds one sweep: it says the last hover was long (> 0.55 sweep) and recent (--_kk)
+       --_ks  sweeps since the host went active (to 3); 0 the moment it lets go
+       --_kx  sweeps since the host let go (to 3); 0 the moment it goes active
+       --_kw  sweeps since the host let go (to 1.5); runs back down to 0 at 3 per sweep when it goes active
+     A fresh hover draws on --_ks. Let go after a short hover, the stroke keeps drawing on --_kc + --_kx (time since it
+     went active), then leaves. Let go after a long one, it leaves at once on --_kw. Back again mid-exit, --_kw runs down,
+     so the tail draws back round to the start and the stroke is whole again. --_kc and --_kh restart from what they held,
+     so --_c0 and --_h0 work that value back out. Every clock stops within three sweeps. The head is on the "in" curve, the
+     tail on the out curve. Duration 0 (reduced motion) makes every clock instant, with the same end states. */
+  :where([data-part="sweep"]),
+  :where([data-part="sweep-base"]),
+  :where([data-part="sweep-fill"]),
+  :where([data-part="sweep-corners"]),
+  :where([data-part="sweep-outline"]),
+  :where([data-part="sweep-label"]),
+  :where([data-part="sweep-content"]),
+  :where([data-part="rail-hover"]) {
+    --_kc: calc(var(--_a, 0) * 3); --_kh: calc(var(--_a, 0) * 3); --_ks: calc(var(--_a, 0) * 3);
+    --_kx: calc((1 - var(--_a, 0)) * 3); --_kw: calc((1 - var(--_a, 0)) * 1.5);
+    --_c0: calc((var(--_kc) - var(--_ks)) / max(0.0001, 1 - var(--_ks) / 3));
+    --_kk: clamp(0, ((var(--_kh) - var(--_ks)) / max(0.0001, 1 - var(--_ks) / 3) - 0.55) * 1000 + 1, 1);
+    --_hp: calc(var(--_kk) * clamp(0, var(--_kc) + var(--_kw) + 3 * var(--_ks), 1)
+              + (1 - var(--_kk)) * clamp(0, var(--_ks) + (1 - var(--_a, 0)) * (var(--_kc) + var(--_kx)), 1));
+    /* the tail: after a long hover --_tq, where it stood when the host came back (--_kw + 3·--_ks is --_kw then), and the
+       gap closes in step with --_kw; otherwise --_tp */
+    --_tq: clamp(0, min(var(--_kw) + 3 * var(--_ks), var(--_c0) + var(--_kw) + 3 * var(--_ks) - 1), 1);
+    --_tp: clamp(0, (1 - var(--_a, 0)) * (var(--_kc) + var(--_kx) - 1), 1);
+    /* the curves as polynomials: --veneer-sweep-ease-in (head) and --veneer-sweep-ease (tail), to within ~2% */
+    --_hd: calc(1 - (1 - var(--_hp)) * (1 - var(--_hp)) * (1 - var(--_hp)) * (1 - var(--_hp)) * (1 - var(--_hp)) * (1 + 2.95 * var(--_hp) - 0.7 * var(--_hp) * var(--_hp)));
+    --_td: calc(var(--_kk) * (min(4 * var(--_tq) * var(--_tq) * var(--_tq), 0.5) + max(0, 0.5 - 4 * (1 - var(--_tq)) * (1 - var(--_tq)) * (1 - var(--_tq))))
+                 * var(--_kw) / max(0.0001, var(--_kw) + 3 * var(--_ks))
+              + (1 - var(--_kk)) * (min(4 * var(--_tp) * var(--_tp) * var(--_tp), 0.5) + max(0, 0.5 - 4 * (1 - var(--_tp)) * (1 - var(--_tp)) * (1 - var(--_tp)))));
+    /* once the tail is all the way out, the head goes back to the start too: at rest both edges sit at the right, as ever */
+    --_sl: calc(var(--_td) * 100%); --_sr: calc((1 - var(--_hd) * (1 - clamp(0, (var(--_td) - 0.999) * 1000, 1))) * 100%);
+    --_edges: --_kc calc(var(--_a, 0) * 3 * var(--veneer-sweep-duration)) linear calc((1 - var(--_a, 0)) * 2 * var(--veneer-sweep-duration)),
+              --_kh calc(var(--_a, 0) * 3 * var(--veneer-sweep-duration)) linear calc((1 - var(--_a, 0)) * var(--veneer-sweep-duration)),
+              --_ks calc(var(--_a, 0) * 3 * var(--veneer-sweep-duration)) linear,
+              --_kx calc((1 - var(--_a, 0)) * 3 * var(--veneer-sweep-duration)) linear,
+              --_kw calc(((1 - var(--_a, 0)) * 1.5 + var(--_a, 0) * 0.5) * var(--veneer-sweep-duration)) linear;
+    transition: var(--_edges);
+  }
+  /* two stacked 1px borders (or any content, e.g. an icon) */
+  :where([data-part="sweep"]),
+  :where([data-part="sweep-base"]) {
+    position: absolute; inset: 0; box-sizing: border-box; pointer-events: none;
+    border-radius: inherit;
+  }
+  :where([data-part="sweep"]:empty) { border: var(--veneer-sweep-width) solid currentColor; }
+  :where([data-part="sweep-base"]:empty) { border: var(--veneer-sweep-base-width) solid currentColor; }
+  /* the clip's corners, physical (top-left, top-right, bottom-right, bottom-left): a joined item squares its start
+     (--_js: 0) or end (--_je: 0) corners; a vertical group sets --_round to top, top, bottom, bottom */
+  :where([data-part="sweep"]),
+  :where([data-part="sweep-base"]) {
+    --_rs: calc(var(--veneer-sweep-radius) * var(--_js, 1)); --_re: calc(var(--veneer-sweep-radius) * var(--_je, 1));
+    --_round: var(--_rs) var(--_re) var(--_re) var(--_rs);
+  }
+  :where([data-part="sweep"]):where(:dir(rtl)),
+  :where([data-part="sweep-base"]):where(:dir(rtl)) { --_round: var(--_re) var(--_rs) var(--_rs) var(--_re); }
+  /* joined (SIGNATURE §1.8): in a row of items with shared edges the stroke draws only the item's outer edges, so a
+     hovered item never boxes itself in. First: start, top and bottom; middle: top and bottom; last: end, top and bottom.
+     Logical edges, so RTL flips; a vertical group does the same with top and bottom.
+     Any group opts in with [data-joined] (data-joined="vertical" for a column); veneer's own groups are joined in their
+     own files (segmented, toggle group, attached button group, tabs, pagination). */
+  :where([data-joined]:not([data-joined="vertical"]) > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part="sweep"]),
+  :where([data-joined]:not([data-joined="vertical"]) > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part="sweep-base"]) { --_js: 0; border-inline-start-width: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+  :where([data-joined]:not([data-joined="vertical"]) > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part="sweep"]),
+  :where([data-joined]:not([data-joined="vertical"]) > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part="sweep-base"]) { --_je: 0; border-inline-end-width: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
+  :where([data-joined="vertical"] > [data-sweep]) > :where([data-part="sweep"]),
+  :where([data-joined="vertical"] > [data-sweep]) > :where([data-part="sweep-base"]) { --_round: var(--_rs) var(--_rs) var(--_re) var(--_re); }
+  :where([data-joined="vertical"] > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part="sweep"]),
+  :where([data-joined="vertical"] > [data-sweep]:not(:nth-child(1 of [data-sweep]))) > :where([data-part="sweep-base"]) { --_js: 0; border-block-start-width: 0; border-start-start-radius: 0; border-start-end-radius: 0; }
+  :where([data-joined="vertical"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part="sweep"]),
+  :where([data-joined="vertical"] > [data-sweep]:not(:nth-last-child(1 of [data-sweep]))) > :where([data-part="sweep-base"]) { --_je: 0; border-block-end-width: 0; border-end-start-radius: 0; border-end-end-radius: 0; }
+  /* the base wipes away ahead of the stroke and is back the moment the host lets go */
+  :where([data-part="sweep-base"]) {
+    z-index: 1; color: var(--veneer-color-sweep-base);
+    /* square-edged: the layer is already rounded (border-radius: inherit). A rounded clip rounded the moving seam too,
+       and where both layers' seams curved away neither border painted: a notch ran round with the stroke */
+    clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1)));
+  }
+  :where([data-part="sweep"]) {
+    z-index: 2; color: var(--veneer-color-sweep); opacity: var(--_on);
+    clip-path: inset(0 var(--_sr) 0 var(--_sl));
+  }
+  /* error: pinned in by the switch, painted critical */
+  :where([data-invalid] > [data-part="sweep"]),
+  :where([data-invalid] > [data-sweep] > [data-part="sweep"]) { color: var(--veneer-color-sweep-critical); opacity: 1; }
+
+  /* -- the shuttle (redesign §3): one highlight per group that travels. Two registered numbers, one per edge, on their
+     own timings: the leading edge goes first, the trailing edge follows, so it draws out like a thread and snaps
+     back to width. veneer-core writes --veneer-a, --veneer-b and data-dir. */
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]),
+  :where([data-scope="segmented"] > [data-part="indicator"]),
+  :where([data-part="shuttle"]) {
+    transition: --veneer-a var(--veneer-shuttle-tail) var(--veneer-ease-spring), --veneer-b var(--veneer-shuttle-head) var(--veneer-ease-spring);
+  }
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]):where([data-dir="back"]) {
+    transition: --veneer-a var(--veneer-shuttle-head) var(--veneer-ease-spring), --veneer-b var(--veneer-shuttle-tail) var(--veneer-ease-spring);
+  }
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"], [data-scope="segmented"] > [data-part="indicator"], [data-part="shuttle"]):where([data-instant]) { transition: none; }
+  :where([data-scope="tabs"] > [data-part="list"] > [data-part="indicator"]) {
+    translate: var(--veneer-a) 0; inline-size: calc(var(--veneer-b) - var(--veneer-a));
+  }
+  /* Segmented's face is a leaf box, so sizing it lays out nothing else. It moves on both axes: in a group of rows the
+     edges across travel with the head, so a move to another row reads as one jump, not a slide then a drop. */
+  :where([data-scope="segmented"] > [data-part="indicator"]) {
+    translate: var(--veneer-a) var(--veneer-ca); inline-size: calc(var(--veneer-b) - var(--veneer-a)); block-size: calc(var(--veneer-cb) - var(--veneer-ca));
+    transition: --veneer-a var(--veneer-shuttle-tail) var(--veneer-ease-spring), --veneer-b var(--veneer-shuttle-head) var(--veneer-ease-spring),
+                --veneer-ca var(--veneer-shuttle-head) var(--veneer-ease-out), --veneer-cb var(--veneer-shuttle-head) var(--veneer-ease-out);
+  }
+  :where([data-scope="segmented"] > [data-part="indicator"][data-dir="back"]) {
+    transition: --veneer-a var(--veneer-shuttle-head) var(--veneer-ease-spring), --veneer-b var(--veneer-shuttle-tail) var(--veneer-ease-spring),
+                --veneer-ca var(--veneer-shuttle-head) var(--veneer-ease-out), --veneer-cb var(--veneer-shuttle-head) var(--veneer-ease-out);
+  }
+  :where([data-scope="segmented"] > [data-part="indicator"][data-instant]) { transition: none; }
+  /* the shuttle in a list: frequent, so short and without overshoot */
+  :where([data-part="shuttle"]) {
+    position: absolute; inset-inline: var(--_inset, 4px); inset-block-start: 0; z-index: -1; pointer-events: none;
+    translate: 0 var(--veneer-a); block-size: calc(var(--veneer-b) - var(--veneer-a));
+    border-radius: max(2px, calc(var(--veneer-radius-control) - 2px)); background: var(--veneer-color-accent-soft); opacity: 0;
+    --veneer-shuttle-head: calc(70ms * var(--veneer-motion-scale)); --veneer-shuttle-tail: calc(120ms * var(--veneer-motion-scale)); --veneer-ease-spring: var(--veneer-ease-out);
+  }
+  :where([data-part="shuttle"][data-on]),
+  :where([data-part="list"]:has([aria-selected="true"]) > [data-part="shuttle"]) { opacity: 1; }
+
+  /* -- sweep fill: solid buttons; slides in L→R, leaves to the right ----- */
+  :where([data-part="sweep-fill"]) {
+    position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
+    background: var(--veneer-sweep-fill, var(--veneer-color-accent-solid-hover));
+    transform: translateX(calc((var(--_sl) - var(--_sr)) * 1.01 * var(--_on))); opacity: max(var(--_on), var(--_a, 0));
+    transition: var(--_edges), opacity var(--veneer-duration-fast) var(--veneer-ease-out);
+  }
+
+  /* -- 1b · frame button (SIGNATURE §1b; old: theme/tokens.css:317-493) ---
+     rest: four 10px/2px bracket corners in the track colour, no border.
+     in:   active corners clip in L→R + the outline draws itself (two routes
+           from the left middle, over the top / under the bottom, meeting at the
+           right) + a tone copy of the label wipes in.
+     out:  everything keeps travelling right: the outline's tail follows its head.
+     The outline is CSS, not SVG: an SVG dash with pathLength + non-scaling-stroke
+     is measured in screen px in Chrome and leaves gaps past ~200px wide. Here two
+     registered numbers, --veneer-frame-head (head) and --veneer-frame-tail (tail), run 0 → 1 on the
+     frame's curve, on the sweep's clock (the original ran 760ms; --veneer-frame-duration); each of six
+     2.6px segments sizes itself from them with container units, so the drawn length is exact at any size.
+     Label: at rest in the tone (the original .btn-idle-accent); the copy wipes in L→R in the text colour.
+     This is the only frame implementation: pages supply the button's fill, ink and shape, nothing else.
+     <span data-part="frame-corners"><i></i><i></i><i></i><i></i></span>
+     <span data-part="sweep-corners"><i></i><i></i><i></i><i></i></span>
+     <span data-part="sweep-outline"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+     <span data-part="sweep-label">…</span><span data-part="sweep-content" aria-hidden="true">…</span>  */
+  /* the frame host runs on the frame's duration, so every part (and sweep()) reads the frame's time */
+  :where([data-sweep]:has(> [data-part="sweep-outline"])) { --veneer-sweep-duration: var(--veneer-frame-duration); }
+  :where([data-part="frame-corners"]),
+  :where([data-part="sweep-corners"]) {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none; color: var(--veneer-frame-track);
+  }
+  :where([data-part="frame-corners"], [data-part="sweep-corners"]) > i {
+    position: absolute; inline-size: var(--veneer-frame-corner); block-size: var(--veneer-frame-corner);
+    box-sizing: border-box; border: 0 solid currentColor;
+  }
+  :where([data-part$="corners"]) > i:nth-child(1) { inset-block-start: 0; inset-inline-start: 0; border-block-start-width: var(--veneer-frame-weight); border-inline-start-width: var(--veneer-frame-weight); }
+  :where([data-part$="corners"]) > i:nth-child(2) { inset-block-start: 0; inset-inline-end: 0;   border-block-start-width: var(--veneer-frame-weight); border-inline-end-width: var(--veneer-frame-weight); }
+  :where([data-part$="corners"]) > i:nth-child(3) { inset-block-end: 0;   inset-inline-start: 0; border-block-end-width: var(--veneer-frame-weight);   border-inline-start-width: var(--veneer-frame-weight); }
+  :where([data-part$="corners"]) > i:nth-child(4) { inset-block-end: 0;   inset-inline-end: 0;   border-block-end-width: var(--veneer-frame-weight);   border-inline-end-width: var(--veneer-frame-weight); }
+  :where([data-part="sweep-corners"]),
+  :where([data-part="sweep-content"]) {
+    color: var(--_tone, var(--veneer-color-sweep)); opacity: var(--_on);
+    clip-path: inset(0 var(--_sr) 0 var(--_sl));
+  }
+  :where([data-part="sweep-outline"]) {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    container-type: size;               /* its children measure it: 100cqw × 100cqh */
+    --veneer-frame-tail: var(--_td); --veneer-frame-head: var(--_hd); opacity: var(--_on);
+  }
+  /* each segment: offset o along the route, length n; route length L = w + h
+     (h/2 up the left, w across, h/2 down the right — same as M1 50 V1 H99 V50) */
+  :where([data-part="sweep-outline"]) > i {
+    --_L: calc(100cqw + 100cqh); --_s: calc(var(--veneer-frame-stroke) * 1px);
+    --_u0: clamp(0px, calc(var(--veneer-frame-tail) * var(--_L) - var(--_o)), var(--_n));
+    --_u1: clamp(0px, calc(var(--veneer-frame-head) * var(--_L) - var(--_o)), var(--_n));
+    position: absolute; background: var(--_tone, var(--veneer-color-sweep));
+  }
+  :where([data-part="sweep-outline"]) > i:nth-child(-n+3) { --_o: 0px; --_n: 50cqh; }
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(2)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(5)) { --_o: 50cqh; --_n: 100cqw; }
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(3)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(6)) { --_o: calc(50cqh + 100cqw); --_n: 50cqh; }
+  :where([data-part="sweep-outline"]) > i:nth-child(4) { --_o: 0px; --_n: 50cqh; }
+  /* vertical: left half-edges from the middle; right half-edges toward the middle */
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(1)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(3)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(4)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(6)) {
+    inline-size: var(--_s); block-size: calc(var(--_u1) - var(--_u0));
+  }
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(2)),
+  :where([data-part="sweep-outline"]) > i:is(:nth-child(5)) {
+    block-size: var(--_s); inline-size: calc(var(--_u1) - var(--_u0)); inset-inline-start: var(--_u0);
+  }
+  :where([data-part="sweep-outline"]) > i:nth-child(1) { inset-inline-start: 0; inset-block-end: calc(50cqh + var(--_u0)); }
+  :where([data-part="sweep-outline"]) > i:nth-child(2) { inset-block-start: 0; }
+  :where([data-part="sweep-outline"]) > i:nth-child(3) { inset-inline-end: 0; inset-block-start: var(--_u0); }
+  :where([data-part="sweep-outline"]) > i:nth-child(4) { inset-inline-start: 0; inset-block-start: calc(50cqh + var(--_u0)); }
+  :where([data-part="sweep-outline"]) > i:nth-child(5) { inset-block-end: 0; }
+  :where([data-part="sweep-outline"]) > i:nth-child(6) { inset-inline-end: 0; inset-block-end: var(--_u0); }
+  :where([data-part="sweep-label"]) { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: inherit; }
+  /* the resting label gives way ahead of the copy that wipes over it, so a held sweep never stacks two copies of the text.
+     It is back the moment the host lets go. The margins keep descenders whole at rest; ×3 clears it however narrow it is. */
+  :where([data-part="sweep-label"]) { clip-path: inset(-1em -1em -1em calc((100% - var(--_sr)) * var(--_a, 0) * var(--_on, 1) * 3 - 1em)); }
+  /* idle accent: the resting label is in the tone; the copy that wipes over it is the text colour */
+  :where([data-sweep]:has(> [data-part="sweep-outline"]) > [data-part="sweep-label"]) { color: var(--_tone, var(--veneer-color-accent-text)); }
+  :where([data-part="sweep-content"]) {
+    position: absolute; inset: 0; z-index: 2; display: inline-flex; align-items: center; justify-content: center;
+    gap: inherit; padding: inherit; pointer-events: none; color: var(--veneer-color-text);
+  }
+  /* filled frame: the tone fill slides in under it (sweep-fill), the content copy reads on it */
+  :where([data-sweep]:has(> [data-part="sweep-fill"]) > [data-part="sweep-content"]) { color: var(--_tone-ink, var(--veneer-color-accent-on-solid)); }
+
+  /* -- 1c · rails (SIGNATURE §1c; old: inputs/choice/Switch.tsx) ---------
+     The fill moves THROUGH the rail. [data-part="rail-fill"] clips in L→R
+     when on and back when off (620ms); the thumb slides (420ms, same ease).
+     Hover/focus while on: [data-part="rail-hover"] (accent-hover) sweeps
+     through the inside of the rail. While off: the ring (sweep/sweep-base)
+     sweeps around it. Same parts on slider fills, progress, segmented. */
+  :where([data-part="rail-fill"]),
+  :where([data-part="rail-hover"]) {
+    position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  }
+  :where([data-part="rail-fill"]) {
+    background: var(--veneer-color-accent-solid); clip-path: inset(0 100% 0 0 round var(--veneer-sweep-radius));
+    transition: clip-path var(--veneer-sweep-duration) var(--veneer-sweep-ease);
+  }
+  :where([data-on] > [data-part="rail-fill"]),
+  :where(:checked + [data-part="track"] > [data-part="rail-fill"]) { clip-path: inset(0 round var(--veneer-sweep-radius)); }
+  :where([data-part="rail-hover"]) {
+    background: var(--veneer-color-accent-solid-hover);
+    clip-path: inset(0 var(--_sr) 0 var(--_sl) round var(--veneer-sweep-radius));
+  }
+  /* the ring only sweeps while off; while on the inside sweeps instead */
+  :where(:checked + [data-part="track"], [data-on]) > :where([data-part="sweep"]) { visibility: hidden; }
+  :where([data-part="track"]:not([data-on], :checked + *)) [data-part="rail-hover"] { visibility: hidden; }
+  :where([data-part="thumb"]) {
+    transition: transform calc(420ms * var(--veneer-motion-scale)) var(--veneer-sweep-ease),
+                background-color calc(420ms * var(--veneer-motion-scale)) var(--veneer-sweep-ease);
+  }
+
+  /* -- 2 · the floating border field ------------------------------------ */
+  :where([data-scope="field"]) { display: grid; gap: 0; min-inline-size: 0; }
+  :where([data-scope="field"] > [data-part="control"]) {
+    --_lead: var(--veneer-pad-control);
+    position: relative; display: block; min-inline-size: 0;
+    block-size: var(--veneer-field-height);
+    border-radius: var(--veneer-radius-control); --veneer-sweep-radius: var(--veneer-radius-control);
+    background: var(--veneer-color-field);
+    font-family: var(--veneer-label-font);
+    transition: background-color var(--veneer-duration-base) var(--veneer-ease-out);
+  }
+  :where([data-scope="field"] > [data-part="control"]:has(> [data-part="icon"])) { --_lead: calc(var(--veneer-pad-control) + 28px); }
+  /* the accent tint arrives with the sweep: hover, focus, or an open picker */
+  :where([data-scope="field"] > [data-part="control"]:is(:hover)),
+  :where([data-scope="field"] > [data-part="control"]:is(:focus-within)),
+  :where([data-scope="field"][data-open] > [data-part="control"]) { background: var(--veneer-color-field-active); }
+  :where([data-scope="field"][data-invalid] > [data-part="control"]) { background: var(--veneer-color-field-invalid); }
+  :where([data-scope="field"] [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) {
+    all: unset; box-sizing: border-box; position: relative; z-index: 3;
+    inline-size: 100%; block-size: 100%; padding-inline: var(--_lead) var(--veneer-pad-control);
+    border-radius: inherit; font: inherit; font-size: var(--veneer-text-control-size);
+    color: var(--veneer-color-text);
+  }
+  :where([data-scope="field"] [data-part="input"])::placeholder { color: transparent; transition: color var(--veneer-duration-fast); }
+  :where([data-scope="field"] [data-part="icon"]:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="tab-bar"],[data-scope="toast"],[data-scope="xy-pad"]) *:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="tab-bar"],[data-scope="toast"],[data-scope="xy-pad"]) [data-scope="field"] *))) {
+    position: absolute; z-index: 4; inset-block-start: 50%; inset-inline-start: var(--veneer-pad-control);
+    inline-size: 16px; block-size: 16px; margin-block-start: -8px; --veneer-sweep-radius: 0px; pointer-events: none;
+  }
+  :where([data-scope="field"] [data-part="icon"]:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="tab-bar"],[data-scope="toast"],[data-scope="xy-pad"]) *:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="tab-bar"],[data-scope="toast"],[data-scope="xy-pad"]) [data-scope="field"] *)) svg) { inline-size: 16px; block-size: 16px; display: block; }
+  :where([data-scope="field"] [data-part="icon"]:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="tab-bar"],[data-scope="toast"],[data-scope="xy-pad"]) *:not([data-scope="field"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="notification"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="tab-bar"],[data-scope="toast"],[data-scope="xy-pad"]) [data-scope="field"] *)) > [data-part="sweep-base"]) { color: var(--veneer-color-text-subtle); }
+
+  /* label at rest: inside, at the field's own text size */
+  :where([data-scope="field"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *))) {
+    /* block, not flex: flex items are blockified, which spells the accessible name letter by letter */
+    position: absolute; z-index: 5; display: block; pointer-events: none; user-select: none; white-space: nowrap;
+    inset-block-start: 50%; inset-inline-start: var(--_lead); transform: translateY(-50%);
+    padding-inline: 0; line-height: 1;
+    font-family: var(--veneer-label-font); font-size: var(--veneer-text-control-size); font-weight: 400; letter-spacing: 0;
+    background: transparent;
+    transition-property: inset-block-start, inset-inline-start, transform, padding, font-size, letter-spacing, background-color;
+    transition-duration: var(--veneer-label-float-duration);
+    transition-timing-function: var(--veneer-label-float-ease);
+    animation: veneer-label-a var(--veneer-label-fade) linear;
+  }
+  /* floated: on hover, focus or value — or always, in fixed mode */
+  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *))),
+  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *))) {
+    inset-block-start: var(--veneer-label-float-offset); inset-inline-start: calc(var(--veneer-pad-control) - 4px);
+    transform: none; padding-inline: 4px;
+    font-size: var(--veneer-label-float-size); font-weight: var(--veneer-label-float-weight);
+    letter-spacing: var(--veneer-label-float-tracking); text-transform: uppercase;
+    /* the notch: a pixel-aligned window onto whatever is behind the field.
+       floatingLabel() writes --_notch-*; --veneer-field-notch is the static override. */
+    background-color: var(--_notch-color, var(--veneer-field-notch, var(--veneer-color-surface)));
+    background-image: var(--_notch-image, none);
+    background-size: var(--_notch-size, auto); background-position: var(--_notch-pos, 0 0);
+    background-repeat: no-repeat;
+    animation-name: veneer-label-b;
+  }
+  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-part="input"])::placeholder,
+  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="input"])::placeholder {
+    color: var(--veneer-color-text-subtle);
+  }
+  /* Label anatomy (shared; 01 §2 "Label anatomy"). floatingLabel() renders, inside the real <label for>:
+       <span data-part="label-text">Alt text</span>                       name source, visually hidden
+       <span data-part="label-chars" aria-hidden="true"><span data-char data-c="A"></span>…</span>
+     The letters are generated content (::before from data-c), so the accessible name AND textContent are
+     the plain "Alt text": not spelled out, and not the floated uppercase "ALT TEXT" (Chrome applies
+     text-transform to names). The older form (bare inline <span data-char>A</span>) still works. */
+  :where([data-scope="field"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *)) [data-part="label-text"]),
+  :where([data-part="label-text"]:has(+ [data-part="label-chars"])) {
+    position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%);
+    white-space: nowrap; text-transform: none; letter-spacing: normal;
+  }
+  :where([data-scope="field"] [data-part="label"] [data-char][data-c])::before,
+  :where([data-part="label-chars"] > [data-char][data-c])::before { content: attr(data-c); }
+  /* the same anatomy names any caps-styled name source outside a field (a range head, a pane head, a knob caption):
+     veneerSweep.label(el) on it keeps the visible caps and gives AT the sentence-case words. No tint outside fields. */
+  :where([data-part="label-chars"] > [data-char]) { white-space: pre; }
+  /* per-character tint that travels with the sweep: --d = x / sweep speed.
+     The spans are INLINE: an inline-block per letter makes Chrome compute the label's accessible name
+     (and innerText, copy, find) as "F I R S T  N A M E". Colour transitions need no box. */
+  :where([data-scope="field"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *)) [data-char]) {
+    display: inline; white-space: pre; color: var(--veneer-color-label);
+    transition: color var(--veneer-label-char-duration) linear;
+    transition-delay: calc(var(--d, 0ms) * var(--veneer-label-stagger));
+  }
+  :where(:is([data-scope="field"]:has(input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]))) [data-char]),
+  :where([data-scope="field"] > [data-part="control"]:is([data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-char]) {
+    color: var(--veneer-color-label-rest);
+  }
+  :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-char]) { color: var(--veneer-color-label-active); }
+  :where([data-scope="field"][data-invalid] [data-char]) { color: var(--veneer-color-critical-text); }
+  /* -- classic fields (SIGNATURE §2.5): data-fields="classic" on any ancestor,
+     or data-variant="classic" on the field. Label above the box as plain text:
+     no float, no notch, no overlap. The sweep border and icon sweep stay;
+     the label still tints with the sweep. Same markup as floating. */
+  :where([data-scope="field"][data-variant="classic"]),
+  :where([data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) { padding-block-start: calc(var(--veneer-text-label-size) * 1.25 + var(--veneer-space-tight)); }
+  :where([data-scope="field"][data-variant="classic"],
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) > [data-part="control"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *)) {
+    inset-block-start: auto; inset-block-end: calc(100% + var(--veneer-space-tight));
+    inset-inline-start: 0; transform: none; padding: 0; background: none;
+    font-family: var(--veneer-text-label-font); font-size: var(--veneer-text-label-size);
+    font-weight: var(--veneer-text-label-weight); letter-spacing: 0; text-transform: none;
+    transition: none; animation: none;
+    pointer-events: auto; cursor: default;   /* above the box, a <label for> click focuses the input */
+  }
+  :where([data-scope="field"][data-variant="classic"],
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))::placeholder { color: var(--veneer-color-text-subtle); }
+  :where([data-scope="field"][data-variant="classic"],
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) [data-char] { color: var(--veneer-color-text); }
+  :where([data-scope="field"][data-variant="classic"] > [data-part="control"]:is(:hover, :focus-within),
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *) > [data-part="control"]:is(:hover, :focus-within)) [data-char] { color: var(--veneer-color-label-active); }
+  :where([data-scope="field"][data-variant="classic"],
+         [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *))[data-invalid] [data-char] { color: var(--veneer-color-critical-text); }
+
+  /* hint / error slide in under the field */
+  :where([data-scope="field"] > [data-part="message"]) {
+    display: block; margin-block-start: var(--veneer-space-tight);
+    font-size: max(11px, calc(var(--veneer-text-caption-size) - 1px)); line-height: 1.3;
+    color: var(--veneer-color-text-subtle);
+    animation: veneer-msg-in var(--veneer-message-duration) var(--veneer-label-float-ease);
+  }
+  :where([data-scope="field"][data-invalid] > [data-part="message"]) { color: var(--veneer-color-critical-text); }
+  :where([data-scope="field"][data-disabled]) { opacity: var(--veneer-opacity-disabled); pointer-events: none; }
+
+  /* -- 3 · sweep checkbox: two borders + an accent check that draws ------ */
+  :where([data-scope="checkbox"][data-part="control"]) {
+    all: unset; position: relative; display: inline-grid; place-items: center; flex: none; cursor: pointer;
+    inline-size: 20px; block-size: 20px; border-radius: var(--veneer-radius-mark);
+    --veneer-sweep-radius: var(--veneer-radius-mark);
+  }
+  :where([data-scope="checkbox"][data-part="control"] svg) {
+    position: relative; z-index: 3; inline-size: 70%; block-size: 70%; fill: none; overflow: visible;
+    stroke: var(--veneer-color-accent-solid); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+  :where([data-scope="checkbox"][data-part="control"] path) {
+    stroke-dasharray: 1; stroke-dashoffset: 1;
+    transition: stroke-dashoffset calc(420ms * var(--veneer-motion-scale)) var(--veneer-sweep-ease);
+  }
+  :where([data-scope="checkbox"][data-part="control"][aria-checked="true"] path) { stroke-dashoffset: 0; }
+  /* hit area: hit-min (44px on coarse) around the 20px box, even without a label row */
+  :where([data-scope="checkbox"][data-part="control"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--veneer-hit-min)) / 2)); }
+
+  /* -- 4 · decorative hosts gated by the dial ---------------------------- */
+  :where([data-scope="button"][data-sweep]) { --_on: var(--veneer-sweep-buttons); }
+  /* surfaces (cards, panels, list rows, tiles, stat rows, clickable cards too) never sweep by default at any stop. The
+     kit marks them data-sweep="surface": the parts are there, and only data-flair="sweep" lights them. Any other
+     data-sweep on a surface is an explicit opt-in and sweeps at every stop (Card's `sweep` prop). Each surface family
+     restates the opt-in after its own gate, in its own layer. */
+  :where([data-scope="surface"][data-sweep]) { --_on: var(--veneer-sweep-surfaces); --veneer-sweep-radius: var(--veneer-radius-surface); }
+  /* panels with no click of their own: only a pin or a confirm lights them */
+  :where([data-scope="comment-thread"]):where([data-sweep]):not([data-pin], [data-confirm]),
+  :where([data-scope="artifact"]):where([data-sweep]):not([data-pin], [data-confirm]),
+  :where([data-part="tool-frame"]):where([data-sweep]):not([data-pin], [data-confirm]),
+  :where([data-scope="speech"] [data-part="strip"]):where([data-sweep]):not([data-pin], [data-confirm]) { --_on: 0; }
+
+  /* focus: the sweep is the indicator for fields; everything else keeps the ring */
+  :where([data-scope="field"] [data-part="input"]:focus-visible:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))),
+  :where([data-scope="palette"] [data-part="input"]:focus-visible:not([data-scope="palette"] [data-scope="field"] *:not([data-scope="palette"] [data-scope="field"] [data-scope="palette"] *))) { outline: none; }
+
+  /* -- 5 · forced colours (Windows High Contrast and friends) ------------
+     The UA repaints every colour with a few system colours, so "accent over ink" collapses to
+     CanvasText over CanvasText and background-drawn parts (frame segments, rail fill, sweep fill)
+     vanish. Here every signature part opts out (forced-color-adjust: none) and is redrawn with
+     system colours, so each state stays distinct:
+       rest   1px CanvasText base               in/focus  2px Highlight sweep (colour AND width)
+       field focus  + 2px Highlight outline     invalid   3px double CanvasText, pinned
+       frame  corners CanvasText, outline + active corners Highlight
+       rails  fill Highlight, thumb CanvasText → HighlightText when on; hover rings in Highlight */
+  @media (forced-colors: active) {
+    :where([data-part="sweep"]),
+    :where([data-part="sweep-base"]),
+    :where([data-part="sweep-corners"]),
+    :where([data-part="frame-corners"]),
+    :where([data-part="sweep-outline"]),
+    :where([data-part="sweep-fill"]),
+    :where([data-part="rail-fill"]),
+    :where([data-part="rail-hover"]),
+    :where([data-part="thumb"]),
+    :where(:is([data-scope="tabs"] > [data-part="list"], [data-scope="segmented"], [data-scope="toggle-group"]) > [data-part="indicator"]) { forced-color-adjust: none; }
+    :where([data-part="sweep-base"]) { color: CanvasText; }
+    :where([data-part="sweep"]) { color: Highlight; opacity: 1; }
+    :where([data-part="sweep"]:empty) { border-width: 2px; }
+    :where([data-part="icon"] > [data-part="sweep-base"]) { color: CanvasText; }
+    /* dial-gated hosts (--_on: 0) still show the state change in forced colours */
+    :where([data-sweep]) { --_on: 1; }
+    /* fields: the sweep alone is a 1→2px change, so focus also gets the system ring */
+    :where([data-scope="field"] > [data-part="control"]:focus-within) { outline: 2px solid Highlight; outline-offset: 2px; }
+    :where([data-scope="field"][data-invalid] > [data-part="control"] > [data-part="sweep"]),
+    :where([data-invalid] > [data-part="sweep"]),
+    :where([data-invalid] > [data-sweep] > [data-part="sweep"]) { color: CanvasText; border-style: double; border-width: 3px; }
+    :where([data-scope="field"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *))) { forced-color-adjust: none; color: CanvasText; background-color: Canvas; background-image: none; }
+    :where([data-scope="field"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *)) [data-char]) { color: inherit; }
+    /* the UA would force the transparent resting placeholder to GrayText, under the resting label */
+    :where([data-scope="field"] [data-part="input"])::placeholder { forced-color-adjust: none; color: transparent; }
+    :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="input"])::placeholder,
+    :where([data-fields="classic"] [data-scope="field"], [data-scope="field"][data-variant="classic"]) [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))::placeholder { color: GrayText; }
+    :where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *))) { color: Highlight; }
+    /* frame button: corners at rest, outline + active corners in Highlight; the label copy is redundant */
+    :where([data-part="frame-corners"]) { color: CanvasText; }
+    :where([data-part="sweep-corners"]) { color: Highlight; opacity: 1; }
+    :where([data-part="sweep-outline"]) > i { background: Highlight; }
+    :where([data-part="sweep-outline"]) { opacity: 1; }
+    :where([data-part="sweep-content"]) { display: none; }
+    :where([data-part="sweep-label"]) { clip-path: none; }
+    /* solid buttons: a sweep fill would sit under ButtonText; show the state as an inset Highlight ring */
+    :where([data-part="sweep-fill"]) { background: transparent; box-shadow: inset 0 0 0 2px Highlight; border-radius: inherit; }
+    /* rails */
+    :where([data-part="rail-fill"]) { background: Highlight; }
+    :where([data-part="rail-hover"]) { display: none; }
+    :where([data-part="thumb"]) { background: CanvasText; box-shadow: none; }
+    :where(:checked + [data-part="track"] [data-part="thumb"]),
+    :where([data-on] > [data-part="thumb"]) { background: HighlightText; }
+    :where(:checked + [data-part="track"], [data-on]) > :where([data-part="sweep"]) { visibility: visible; color: CanvasText; }
+    :where(:is([data-scope="tabs"] > [data-part="list"], [data-scope="segmented"], [data-scope="toggle-group"]) > [data-part="indicator"]) ~ :where([aria-checked="true"], [aria-selected="true"], [aria-pressed="true"]) { forced-color-adjust: none; color: HighlightText; }
+    /* checkbox mark */
+    :where([data-scope="checkbox"][data-part="control"] svg) { forced-color-adjust: none; stroke: CanvasText; }
+  }
+}
+
+/* forced colours, base: one system focus ring everywhere */
+@layer veneer.base {
+  @media (forced-colors: active) {
+    :where(:focus-visible) { outline-color: Highlight; }
+  }
+}
+
+/* ===========================================================================
+   Motion defaults: what every veneer app gets with no code. CSS only, compositor
+   only, scaled by --veneer-motion-scale through the duration and distance tokens.
+   ======================================================================== */
+@layer veneer.base {
+  :root { interpolate-size: allow-keywords; }
+
+  /* Route changes: same-document (start's router) and cross-document alike. The page's chrome stays put. */
+  @view-transition { navigation: auto; }
+  :where(:root)::view-transition-group(*) { animation-duration: var(--veneer-duration-slow); animation-timing-function: var(--veneer-ease-out); }
+  :where(:root)::view-transition-old(root) { animation: veneer-page-out calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) var(--veneer-ease-in) both; }
+  :where(:root)::view-transition-new(root) { animation: veneer-page-in var(--veneer-duration-slow) var(--veneer-ease-out) both; }
+  @keyframes veneer-page-out { to { opacity: 0; } }
+  @keyframes veneer-page-in { from { opacity: 0; transform: translateY(var(--veneer-motion-distance)); } }
+  [data-vt="bar"] { view-transition-name: veneer-bar; }
+  [data-vt="side"] { view-transition-name: veneer-side; }
+  [data-vt="main"] { view-transition-name: veneer-main; }
+  :where(:root)::view-transition-old(veneer-main) { animation: veneer-page-out calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) var(--veneer-ease-in) both; }
+  :where(:root)::view-transition-new(veneer-main) { animation: veneer-page-in var(--veneer-duration-slow) var(--veneer-ease-out) both; }
+  :where(:root)::view-transition-group(veneer-bar),
+  :where(:root)::view-transition-group(veneer-side) { z-index: 2; }
+
+  /* A block arriving: fade and rise as it enters the view, off the main thread. `--_d` staggers within a group. */
+  @supports (animation-timeline: view()) {
+    [data-reveal] {
+      animation: veneer-reveal linear both; animation-timeline: view();
+      animation-range: entry calc(var(--_d, 0) * 4%) entry calc(60% + var(--_d, 0) * 4%);
+    }
+    @media (prefers-reduced-motion: reduce) { [data-reveal] { animation: none; } }
+    [data-motion="reduce"] [data-reveal] { animation: none; }
+  }
+  @keyframes veneer-reveal { from { opacity: 0; transform: translateY(calc(var(--veneer-motion-distance) * 3)); } }
+
+  /* Disclosures open by height; content that replaces a placeholder fades in. */
+  ::details-content { block-size: 0; overflow: clip; transition: block-size var(--veneer-duration-slow) var(--veneer-ease-out), content-visibility var(--veneer-duration-slow) allow-discrete; }
+  [open]::details-content { block-size: auto; }
+  [role="tabpanel"]:not([hidden]) { transition: opacity var(--veneer-duration-base) var(--veneer-ease-out), translate var(--veneer-duration-base) var(--veneer-ease-out); @starting-style { opacity: 0; translate: 0 var(--veneer-motion-distance); } }
+  /* Open and close, both ways, for anything shown and hidden by the `hidden` attribute (the exit runs before display:none
+     lands). [data-collapse] grows from nothing to its height; [data-presence] keeps its size and arrives by a preset:
+     fade, rise, pop, or slide-up/down/left/right. Exits run at --veneer-duration-exit-k of the entry, ease in, and travel
+     half as far, back the way they came. */
+  [data-collapse], [data-presence] {
+    transition: block-size var(--veneer-duration-slow) var(--veneer-ease-out), opacity var(--veneer-duration-base) var(--veneer-ease-out),
+      translate var(--veneer-duration-base) var(--veneer-ease-out), scale var(--veneer-duration-base) var(--veneer-ease-out),
+      display var(--veneer-duration-slow) allow-discrete, content-visibility var(--veneer-duration-slow) allow-discrete;
+  }
+  [data-collapse] { overflow: clip; }
+  [data-collapse][hidden], [data-presence][hidden] {
+    display: none; opacity: 0; transition-timing-function: var(--veneer-ease-in);
+    --_out: calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k));
+    --_fade: calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k));
+    transition-duration: var(--_out), var(--_fade), var(--_fade), var(--_fade), var(--_out), var(--_out);
+  }
+  [data-collapse][hidden] { block-size: 0; }
+  [data-presence="rise"][hidden] { translate: 0 calc(var(--veneer-motion-distance) * -0.5); }
+  [data-presence="pop"][hidden] { scale: var(--veneer-motion-scale-from); }
+  [data-presence="slide-up"][hidden] { translate: 0 50%; }
+  [data-presence="slide-down"][hidden] { translate: 0 -50%; }
+  [data-presence="slide-left"][hidden] { translate: -50% 0; }
+  [data-presence="slide-right"][hidden] { translate: 50% 0; }
+  @starting-style {
+    [data-collapse]:not([hidden]) { block-size: 0; opacity: 0; }
+    [data-presence]:not([hidden]) { opacity: 0; }
+    [data-presence="rise"]:not([hidden]) { translate: 0 var(--veneer-motion-distance); }
+    [data-presence="pop"]:not([hidden]) { scale: var(--veneer-motion-scale-from); }
+    [data-presence="slide-up"]:not([hidden]) { translate: 0 100%; }
+    [data-presence="slide-down"]:not([hidden]) { translate: 0 -100%; }
+    [data-presence="slide-left"]:not([hidden]) { translate: -100% 0; }
+    [data-presence="slide-right"]:not([hidden]) { translate: 100% 0; }
+  }
+  [data-fade-in] { transition: opacity var(--veneer-duration-slow) var(--veneer-ease-out); @starting-style { opacity: 0; } }
+  [data-scope="skeleton"] + *, [data-scope="skeleton"] ~ * { transition: opacity var(--veneer-duration-slow) var(--veneer-ease-out); @starting-style { opacity: 0; } }
+
+  /* Press feels instant at every stop. */
+  :where(a):active,
+  :where(button):active,
+  :where([role="button"]):active { transition-duration: var(--veneer-duration-instant); }
+}
+
+/* veneer.flow: compositor scroll choreography; interrupted arrivals finish when scrolling stops. */
+@layer veneer.tokens {
+  :root, [data-expression="balanced"] {
+    --veneer-ref-flow-reach: 20%;   --veneer-ref-flow-out: 200px; --veneer-ref-flow-step: 14px;   /* reach: a share of the view timeline's cover range, so the move is seen */
+    --veneer-ref-flow-y: 28px;      --veneer-ref-flow-x: 20px;    --veneer-ref-flow-s: 0.965;
+    --veneer-ref-flow-z: 1.025;     --veneer-ref-flow-clip: 3%;
+    --veneer-ref-flow-r: 0.6deg;    --veneer-ref-flow-floor: 0.12;
+    --veneer-ref-flow-ease: cubic-bezier(0.3, 0.45, 0.45, 1);
+  }
+  [data-expression="quiet"] {
+    --veneer-ref-flow-reach: 12%;   --veneer-ref-flow-out: 120px; --veneer-ref-flow-step: 0px;
+    --veneer-ref-flow-y: 10px;      --veneer-ref-flow-x: 8px;     --veneer-ref-flow-s: 0.99;
+    --veneer-ref-flow-z: 1.008;     --veneer-ref-flow-clip: 0%;
+    --veneer-ref-flow-r: 0deg;      --veneer-ref-flow-floor: 0.5;
+    --veneer-ref-flow-ease: linear;
+  }
+  [data-expression="vivid"] {
+    --veneer-ref-flow-reach: 26%;   --veneer-ref-flow-out: 280px; --veneer-ref-flow-step: 24px;
+    --veneer-ref-flow-y: 48px;      --veneer-ref-flow-x: 36px;    --veneer-ref-flow-s: 0.94;
+    --veneer-ref-flow-z: 1.04;      --veneer-ref-flow-clip: 6%;
+    --veneer-ref-flow-r: 1.4deg;    --veneer-ref-flow-floor: 0;
+    --veneer-ref-flow-ease: cubic-bezier(0.3, 0.45, 0.45, 1);   /* never a spring: the scroll drives this, and overshoot reads as jitter */
+  }
+  /* the gate: one inherited custom property silences a whole subtree, with no :not() in any family selector */
+  @media print { :root { --veneer-flow-gate: none; } }
+  @media (prefers-reduced-motion: reduce) { :root:not([data-motion]) { --veneer-flow-gate: none; } }
+  [data-motion="reduce"], [data-flow="off"] { --veneer-flow-gate: none; }
+  /* flow waits for a person (veneer-core's flow(), on the first scroll): until then the page holds still and whole, so
+     nothing below the fold sits at opacity 0 for a crawler, an audit or a contrast check. What was on screen when it
+     armed is seen and stays put; a part-faded jump would be the first thing anyone saw move. */
+  :root:not([data-flow-armed]), [data-flow-seen] { --veneer-flow-gate: none; }
+  [data-motion="full"] { --veneer-flow-gate: initial; }
+  :where(dialog, [popover], [role="dialog"], [role="menu"], [role="listbox"], [role="tooltip"], [role="alert"], [role="status"],
+    [data-scope="sheet"], [data-scope="drawer"], [data-scope="toast"], [data-scope="tour"], [data-scope="palette"], [data-scope="shell"] > [data-part="nav"],
+    [data-scope="scroll-grid"], [data-scope="sortable"], [data-scope="carousel"], :has(> [data-part="spacer"]), [data-dragging], thead, [data-sticky],
+    /* a flowed element is a containing block for position: fixed while it moves, so hosts of non-top-layer fixed parts stay
+       out. Their hosts only, each one a direct child: a bare `[data-part="scrim"]` in :has() matched every ancestor up to
+       html, so one Shell anywhere on a page (a hub thumbnail) silenced the whole page's flow. */
+    :has(> :is([data-scope="rte"], [data-presentation="sheet"], [data-part="scrim"]))) { --veneer-flow-gate: none; }
+  /* a virtual window holds its rows out (they mount and recycle), but cells in a row that name a family opt back in, on
+     the window's own timeline, with no header over it. Only the window's hold lifts: reduced motion, print and
+     data-flow="off" still win */
+  :where([data-part="spacer"] > [data-part="row"]:not([data-probe]) [data-flow]:not([data-flow="off"])) { --veneer-flow-gate: initial; --veneer-flow-top: 0px; }
+  @media print { :where([data-part="spacer"] > [data-part="row"] [data-flow]) { --veneer-flow-gate: none; } }
+  @media (prefers-reduced-motion: reduce) { :root:not([data-motion]) :where([data-part="spacer"] > [data-part="row"] [data-flow]) { --veneer-flow-gate: none; } }
+  :where([data-motion="reduce"], [data-flow="off"]) :where([data-part="spacer"] > [data-part="row"] [data-flow]) { --veneer-flow-gate: none; }
+  /* the budget: past the 120th sibling nothing is armed. Long lists go virtual, and those rows use @starting-style on mount */
+  :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], tr, li, [data-scope="stat"], [data-part="item"], [data-part="card"], [data-scope="field"], [data-scope="prose"] > *, [data-flow]):nth-child(n + 121) { --veneer-flow-gate: none; }
+}
+
+@layer veneer.flow {
+  /* every family names its pair; nothing else differs in the machinery.
+     view() binds to the nearest scroll container and hidden overflow makes one, so veneer clips with overflow: clip: an
+     element that isn't a real scroller must leave the page's timeline alone. */
+  :where([data-scope="surface"]),
+  :where([data-scope="listing"]),
+  :where([data-scope="plan"]),
+  :where([data-scope="quote"]),
+  :where([data-scope="post"]),
+  :where([data-scope="prose"] > table),
+  :where([data-flow="card"]) { --_flow-in: veneer-in-card; --_flow-out: veneer-out-card; --_flow-o: 50% 0%; }
+  :where([data-scope="tile"]),
+  :where([data-flow="tile"]) { --_flow-in: veneer-in-tile; --_flow-out: veneer-out-card; }
+  /* a table's viewport is a real scroller, so its rows read the timeline of the table outside it, one after another */
+  :where([data-scope="table"]:has(> [data-part="viewport"])) { view-timeline: --veneer-flow-host block; }
+  :where([data-scope="table"] tbody > tr),
+  :where([data-flow="row"]) { --_flow-in: veneer-in-row; --_flow-out: veneer-out-row; --veneer-flow-reach: calc(var(--veneer-ref-flow-reach) * 0.7); }
+  /* reading text: a page's paragraphs, lists and quotes rise in and fade out as items, its tables as cards; only the top
+     level, so a list's paragraphs move with their list */
+  :where([data-scope="list"] > li),
+  :where([data-scope="timeline"] > li),
+  :where([data-scope="changelog"] li),
+  :where([data-scope="prose"] > :is(p)),
+  :where([data-scope="prose"] > :is(ul)),
+  :where([data-scope="prose"] > :is(ol)),
+  :where([data-scope="prose"] > :is(dl)),
+  :where([data-scope="prose"] > :is(blockquote)),
+  :where([data-flow="item"]) { --_flow-in: veneer-in-item; --_flow-out: veneer-out-fade; --veneer-flow-reach: calc(var(--veneer-ref-flow-reach) * 0.8); }
+  :where([data-scope="stat"]),
+  :where([data-flow="stat"]) { --_flow-in: veneer-in-fade; --_flow-out: veneer-out-fade; view-timeline: --veneer-flow-host block; }
+  :where([data-scope="chart"]),
+  :where([data-flow="chart"]) { --_flow-in: veneer-in-chart; --_flow-out: veneer-out-chart; --_flow-o: 50% 100%; }
+  :where([data-scope="gallery"] [data-part="item"]:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="gallery"] *))),
+  :where(figure),
+  :where([data-flow="image"]) { --_flow-in: veneer-in-image; --_flow-out: veneer-out-image; }
+  /* a heading leaves as its section's words do, by fading where they fade, without a move: left standing over a section
+     that has gone, it read as a label for nothing */
+  :where([data-part="head"] > :is(h1)),
+  :where([data-part="head"] > :is(h2)),
+  :where([data-part="head"] > :is(h3)),
+  :where([data-scope="prose"] > :is(h2)),
+  :where([data-scope="prose"] > :is(h3)),
+  :where([data-flow="heading"]) { --_flow-in: veneer-in-heading; --_flow-out: veneer-out-fade; }
+  :where([data-scope="codeblock"]),
+  :where([data-flow="code"]) { --_flow-in: veneer-in-fade; --_flow-out: veneer-out-fade; --_flow-scans: 1; position: relative; overflow: clip; isolation: isolate; }
+  /* a bare <pre> in prose fades as code does, but keeps its own scrolling: no clip, no scan */
+  :where([data-scope="prose"] > pre) { --_flow-in: veneer-in-fade; --_flow-out: veneer-out-fade; }
+  :where([data-scope="form"] > *),
+  :where([data-scope="field"]),
+  :where([data-flow="form"]) { --_flow-in: veneer-in-fade; --_flow-out: veneer-out-none; }
+  :where([data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))),
+  :where([data-flow="deal"]) { --_flow-in: veneer-in-deal; --_flow-out: veneer-out-card; --_flow-o: 50% 0%; }
+  /* hosts for a live example, one motion per kind of thing shown. A specimen (one component on its bench) grows in
+     about its centre, with no travel, and recedes the same way; a block (a page's section) unfolds down from its top edge and folds back up; a plot
+     (a chart in its frame) opens along its time axis from the left and closes back to it */
+  :where([data-flow="specimen"]) { --_flow-in: veneer-in-specimen; --_flow-out: veneer-out-specimen; }
+  :where([data-flow="block"]) { --_flow-in: veneer-in-block; --_flow-out: veneer-out-block; --_flow-o: 50% 0%; }
+  :where([data-flow="plot"]) { --_flow-in: veneer-in-plot; --_flow-out: veneer-out-plot; --_flow-o: 0% 50%; }
+  /* a glyph in a grid: pops in by column, shrinks away */
+  :where([data-flow="icon"]) { --_flow-in: veneer-in-icon; --_flow-out: veneer-out-icon; }
+
+  :where([data-scope="kanban"] [data-part="card"]:nth-child(even):not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))) { --_flow-s: -1; }
+
+  @media screen { @supports (animation-timeline: view()) {
+    :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
+      [data-scope="table"] tbody > tr, [data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li,
+      [data-scope="stat"], [data-scope="chart"], [data-scope="gallery"] [data-part="item"]:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="gallery"] *)), figure,
+      [data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3, p, ul, ol, dl, blockquote, pre, table, figure), [data-scope="codeblock"],
+      [data-scope="form"] > *, [data-scope="field"], [data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *)), [data-flow]:not([data-flow="off"])) {
+      --_flow-r: var(--veneer-flow-reach, var(--veneer-ref-flow-reach));
+      --_flow-e: var(--veneer-flow-out, var(--veneer-ref-flow-out));
+      --_flow-w: min(100%, max(var(--_flow-e), 45%));
+      --_flow-t: var(--veneer-flow-top, calc(var(--veneer-control-md) + 12px));   /* veneer's bar by default; a page with another header, or none, sets its own */
+      --_flow-i: 0;
+      --_flow-settle-time: var(--veneer-duration-slow);
+      animation-name: var(--veneer-flow-gate, var(--_flow-in)), var(--veneer-flow-gate, var(--_flow-out));
+      animation-timeline: view(), view();
+      animation-duration: auto, auto;
+      animation-timing-function: var(--veneer-ref-flow-ease), linear;
+      animation-fill-mode: backwards, forwards;   /* no effect in between */
+      /* in by a share of cover, so it is on screen while it moves; a tall element is capped and never sits half faded.
+         Out is placed by the sticky header, --veneer-flow-top: 40% of the fade is spent by the time the bottom edge reaches
+         it, and the rest happens underneath. So what can still be read is readable, and nothing at rest has started. */
+      animation-range:
+        entry calc(var(--_flow-i) * var(--veneer-ref-flow-step)) cover calc(min(var(--_flow-r), 340px) + var(--_flow-i) * var(--veneer-ref-flow-step)),
+        exit calc(100% - var(--_flow-t) - var(--_flow-w) * 0.4) exit calc(100% - var(--_flow-t) + var(--_flow-w) * 0.6);
+      transform-origin: var(--_flow-o, 50% 50%);
+      translate: if(style(--_flow-dx: 0px) and style(--_flow-dy: 0px): revert-layer; else: var(--_flow-dx) var(--_flow-dy));
+      scale: if(style(--_flow-sx: 1) and style(--_flow-sy: 1): revert-layer; else: var(--_flow-sx) var(--_flow-sy));
+      rotate: if(style(--_flow-rot: 0deg): revert-layer; else: var(--_flow-rot));
+    }
+    /* the scan passes under the code, and it is played, never scrubbed. Scrubbed, a block resting near the fold held the
+       tint part way, a slab across every line at one column for as long as the page sat there. Played, a block at rest is
+       plain at any position. veneer.flow's script holds --_flow-scan at 1 ([data-flow-scan]) while the block is below the
+       fold where it is drawn, transforms included: a block in a card that rises in is still under the fold when its own
+       box has entered. The moment a pixel shows it lets go, and the tint transitions to 0. The way back is instant, so a
+       block re-entering scans again. No script, no hold: the code sits plain. */
+    [data-flow-scan] { --_flow-scan: 1; }
+    /* a focused field never fades; a jump target arrives whole. Not through the gate: that inherits, and html is :focus-within */
+    :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
+      [data-scope="table"] tbody > tr, [data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li,
+      [data-scope="stat"], [data-scope="chart"], [data-scope="gallery"] [data-part="item"], figure,
+      [data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3, p, ul, ol, dl, blockquote, pre, table, figure), [data-scope="codeblock"],
+      [data-scope="form"] > *, [data-scope="field"], [data-scope="kanban"] [data-part="card"], [data-flow]:not([data-flow="off"])):where(:focus-within),
+    :where([data-scope="surface"], [data-scope="tile"], [data-scope="listing"], [data-scope="plan"], [data-scope="quote"], [data-scope="post"],
+      [data-scope="table"] tbody > tr, [data-scope="list"] > li, [data-scope="timeline"] > li, [data-scope="changelog"] li,
+      [data-scope="stat"], [data-scope="chart"], [data-scope="gallery"] [data-part="item"], figure,
+      [data-part="head"] > :is(h1, h2, h3), [data-scope="prose"] > :is(h2, h3, p, ul, ol, dl, blockquote, pre, table, figure), [data-scope="codeblock"],
+      [data-scope="form"] > *, [data-scope="field"], [data-scope="kanban"] [data-part="card"], [data-flow]:not([data-flow="off"])):where(:target) { animation-name: none; }
+    /* inside a flowed element each one leaves on its own, where it is: in a tall host, what sits at its top fades as it
+       passes the header, not when the host's far end does. (Only the outer one used to leave, so a frame's heading and
+       code stayed whole for as long as the frame was on screen.) Opacity multiplies, so the last of them, level with
+       its host's end, leaves a little faster than the rest. */
+    /* stagger: siblings in one row arrive in order, by column. The grid tells us its column count, or 4 */
+    @supports (width: calc(sibling-index() * 1px)) {
+      :where([data-scope="surface"]),
+      :where([data-scope="tile"]),
+      :where([data-scope="listing"]),
+      :where([data-scope="plan"]),
+      :where([data-scope="stat"]),
+      :where([data-scope="gallery"] [data-part="item"]:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="gallery"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="gallery"] *))),
+      :where([data-scope="form"] > *),
+      :where([data-scope="kanban"] [data-part="card"]:not([data-scope="kanban"] [data-scope="tour"] *:not([data-scope="kanban"] [data-scope="tour"] [data-scope="kanban"] *))),
+      :where([data-flow="icon"]) {
+        --_flow-i: mod(calc(sibling-index() - 1), var(--veneer-flow-cols, 4));
+      }
+    }
+    /* parts that run off their host's timeline */
+    :where([data-scope="table"]:has(> [data-part="viewport"]) tbody > tr) { animation-timeline: --veneer-flow-host, --veneer-flow-host; }
+    @supports (width: calc(sibling-index() * 1px)) {
+      :where([data-scope="table"]:has(> [data-part="viewport"]) tbody > tr) { --_flow-i: min(calc(sibling-index() - 1), 12); }
+    }
+    :where([data-scope="stat"] [data-part="value"]:not([data-scope="stat"] :is([data-scope="countdown"],[data-scope="field"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stopwatch"],[data-scope="surface"]) *:not([data-scope="stat"] :is([data-scope="countdown"],[data-scope="field"],[data-scope="knob"],[data-scope="qr"],[data-scope="select"],[data-scope="stopwatch"],[data-scope="surface"]) [data-scope="stat"] *))) {
+      --_flow-settle-time: var(--veneer-duration-slow);
+      display: block; animation: var(--veneer-flow-gate, veneer-in-value) auto var(--veneer-ref-flow-ease) backwards;
+      animation-timeline: --veneer-flow-host; animation-range: entry 0 cover var(--veneer-ref-flow-reach);
+    }
+    /* Only the arrival rests; the second animation keeps fading under the header. */
+    [data-flow-settled] { animation-name: none, var(--veneer-flow-gate, var(--_flow-out)); }
+    :where([data-scope="stat"] [data-part="value"])[data-flow-settled] { animation-name: none; }
+    :where([data-scope="codeblock"])::after,
+    :where([data-flow="code"])::after {
+      content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transform-origin: 100% 50%;
+      /* a soft leading edge and a fade as it goes: a hard slab edge reads as a seam against whatever sits beside it */
+      background: linear-gradient(to right, transparent,
+        color-mix(in oklab, var(--veneer-color-accent-soft) 50%, var(--veneer-color-surface-sunken)) 35%);
+      --_flow-scan: inherit; scale: var(--_flow-scan) 1; opacity: var(--_flow-scan);
+      transition-property: scale, opacity;
+      transition-duration: calc((1 - var(--_flow-scan)) * var(--veneer-duration-slow) * 2);
+      transition-timing-function: var(--veneer-ease-out);
+    }
+    /* a short screen shows a block a slice at a time, so the scan would cross it as a stripe */
+    @media (max-height: 600px) {
+      :where([data-scope="codeblock"])::after, :where([data-flow="code"])::after { content: none; }
+    }
+  } }
+
+  /* The moves animate registered properties, never translate or scale themselves. Chrome keeps an element a containing
+     block for position: fixed for as long as a scroll-driven animation names one of those, in any phase, finished or not,
+     so a fixed child would sit wrong at rest. The rule above reads these and is `none` at rest, so the block is released.
+     While an element is actually moving it still is one: a fixed child moves with it for that stretch of the scroll. */
+  @keyframes veneer-in-fade    { from { opacity: 0; } }
+  @keyframes veneer-in-card    { from { opacity: 0; --_flow-dy: var(--veneer-ref-flow-y); --_flow-sx: var(--veneer-ref-flow-s); --_flow-sy: var(--veneer-ref-flow-s); } }
+  @keyframes veneer-in-tile    { from { opacity: 0; --_flow-dy: calc(var(--veneer-ref-flow-y) * 1.4); } }
+  @keyframes veneer-in-row     { from { opacity: 0; --_flow-dx: calc(var(--veneer-ref-flow-x) * -1); } }
+  @keyframes veneer-in-item    { from { opacity: 0; --_flow-dy: calc(var(--veneer-ref-flow-y) * 0.5); } }
+  @keyframes veneer-in-chart   { from { opacity: 0; --_flow-sy: calc(1 - (1 - var(--veneer-ref-flow-s)) * 2); } }
+  @keyframes veneer-in-image   { from { opacity: 0; --_flow-sx: var(--veneer-ref-flow-z); --_flow-sy: var(--veneer-ref-flow-z); clip-path: inset(var(--veneer-ref-flow-clip)); } to { clip-path: inset(0); } }
+  @keyframes veneer-in-heading { from { opacity: 0; --_flow-dx: calc(var(--veneer-ref-flow-x) * -1); } }
+  @keyframes veneer-in-deal    { from { opacity: 0; --_flow-dy: calc(var(--veneer-ref-flow-y) * -0.6); --_flow-rot: calc(var(--veneer-ref-flow-r) * var(--_flow-s, 1)); } }
+  @keyframes veneer-in-value   { from { opacity: 0; translate: 0 0.4em; } }
+  @keyframes veneer-out-card   { to { opacity: var(--veneer-ref-flow-floor); --_flow-dy: calc(var(--veneer-ref-flow-y) * -0.5); } }
+  /* back the way it came: a row moving toward the end edge widened its table's scroll width as it left */
+  @keyframes veneer-out-row    { to { opacity: var(--veneer-ref-flow-floor); --_flow-dx: calc(var(--veneer-ref-flow-x) * -0.5); } }
+  @keyframes veneer-out-fade   { to { opacity: var(--veneer-ref-flow-floor); } }
+  @keyframes veneer-out-image  { to { opacity: var(--veneer-ref-flow-floor); --_flow-dy: calc(var(--veneer-ref-flow-y) * -0.4); } }
+  @keyframes veneer-out-none   { to { opacity: 1; } }
+  @keyframes veneer-out-chart  { to { opacity: var(--veneer-ref-flow-floor); --_flow-sy: var(--veneer-ref-flow-s); } }   /* settles back to its baseline */
+  @keyframes veneer-in-specimen  { from { opacity: 0; --_flow-sx: var(--veneer-ref-flow-s); --_flow-sy: var(--veneer-ref-flow-s); } }
+  @keyframes veneer-out-specimen { to { opacity: var(--veneer-ref-flow-floor); --_flow-sx: var(--veneer-ref-flow-s); --_flow-sy: var(--veneer-ref-flow-s); } }
+  @keyframes veneer-in-block     { from { opacity: 0; --_flow-dy: calc(var(--veneer-ref-flow-y) * 0.6); --_flow-sy: var(--veneer-ref-flow-s); } }
+  @keyframes veneer-out-block    { to { opacity: var(--veneer-ref-flow-floor); --_flow-dy: calc(var(--veneer-ref-flow-y) * -0.3); --_flow-sy: var(--veneer-ref-flow-s); } }
+  @keyframes veneer-in-plot      { from { opacity: 0; --_flow-sx: calc(1 - (1 - var(--veneer-ref-flow-s)) * 1.5); } }
+  @keyframes veneer-out-plot     { to { opacity: var(--veneer-ref-flow-floor); --_flow-sx: var(--veneer-ref-flow-s); } }
+  @keyframes veneer-in-icon      { from { opacity: 0; --_flow-sx: calc(1 - (1 - var(--veneer-ref-flow-s)) * 5); --_flow-sy: calc(1 - (1 - var(--veneer-ref-flow-s)) * 5); --_flow-rot: calc(var(--veneer-ref-flow-r) * -4); } }
+  @keyframes veneer-out-icon     { to { opacity: var(--veneer-ref-flow-floor); --_flow-sx: calc(1 - (1 - var(--veneer-ref-flow-s)) * 3); --_flow-sy: calc(1 - (1 - var(--veneer-ref-flow-s)) * 3); } }
+
+  :where([data-part="spacer"] ~ [data-part="row"]) { transition: opacity var(--veneer-duration-base) var(--veneer-ease-out); @starting-style { opacity: 0; } }
+
+  /* fallback: only for elements the observer has already seen off screen */
+  [data-flow-state="wait"] { opacity: 0; translate: 0 var(--veneer-ref-flow-y); }
+  [data-flow-state="in"] { transition: opacity var(--veneer-duration-slow) var(--veneer-ease-out) calc(var(--_flow-i, 0) * var(--veneer-stagger)), translate var(--veneer-duration-slow) var(--veneer-ease-out) calc(var(--_flow-i, 0) * var(--veneer-stagger)); }
+}
+
+/* -- the browser's own chrome, themed (scrollbars stay the compositor's: a painted one would cost every scroll) --------- */
+@layer veneer.base {
+  :root { scrollbar-color: var(--veneer-color-border-strong) transparent; } /* inherited */
+  :where(*) { scrollbar-width: thin; }                                     /* not inherited */
+  :where(html) { scrollbar-width: auto; }
+  @supports not (scrollbar-color: auto) {
+    /* never the page's: a styled root scrollbar is a classic one, and takes its width from a fixed overlay */
+    :where(:not(html))::-webkit-scrollbar { inline-size: 10px; block-size: 10px; }
+    :where(:not(html))::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: var(--veneer-color-border-strong) padding-box; }
+    :where(:not(html))::-webkit-scrollbar-track, :where(:not(html))::-webkit-scrollbar-corner { background: transparent; }
+  }
+  /* a <details> keeps find-in-page and its no-script behaviour; only the marker goes */
+  :where(summary) { list-style: none; cursor: pointer; }
+  :where(summary)::-webkit-details-marker { display: none; }
+  :where(:not([data-scope] *) > summary:not(:has(svg)))::before,
+  :where(.rr-grid summary)::before {
+    content: ""; display: inline-block; inline-size: 0.4em; block-size: 0.4em; margin-inline-end: 0.5em; vertical-align: 0.12em; border-block-end: 1.5px solid currentColor; border-inline-end: 1.5px solid currentColor;
+    rotate: -45deg; transition: rotate var(--veneer-duration-fast) var(--veneer-ease-out);
+  }
+  :where(details[open] > summary)::before { rotate: 45deg; }
+}

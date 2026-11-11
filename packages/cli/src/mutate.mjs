@@ -1,5 +1,5 @@
-// Mutants on the changed lines of a source file (the gate's T011). weft mutates source text, not compiled output, so
-// each mutant goes through the weft compiler like any edit and its W-codes still apply. Operators follow Stryker's
+// Mutants on the changed lines of a source file (the gate's T011). kerf mutates source text, not compiled output, so
+// each mutant goes through the kerf compiler like any edit and its W-codes still apply. Operators follow Stryker's
 // common set: equality, boundaries, logic, arithmetic, negation, literals, conditions, removed calls, JSX text.
 
 import ts from 'typescript'

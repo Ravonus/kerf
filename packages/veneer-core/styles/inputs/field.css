@@ -1,0 +1,203 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs {
+/* ===========================================================================
+   0 · THE SWEEP ON INPUT :is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])S (foundations tokens, restated)
+   ======================================================================== */
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) { position: relative; }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"]),
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep-base"]) {
+  position: absolute; inset: 0; box-sizing: border-box; pointer-events: none; border-radius: inherit;
+  border: 0 solid currentColor;
+}
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"]:empty) { border-width: var(--veneer-sweep-width); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep-base"]:empty) { border-width: var(--veneer-sweep-base-width); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep-base"]) { z-index: 1; color: var(--_base, var(--veneer-color-sweep-base)); clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0))); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > :where([data-part="sweep"]) { z-index: 2; color: var(--_tint, var(--veneer-color-sweep)); opacity: 1; clip-path: inset(0 var(--_sr) 0 var(--_sl)); }
+/* the field icon: two copies of the glyph, the accent copy clips in with the border */
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > [data-part="icon"] > :where([data-part="sweep"]),
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > [data-part="icon"] > :where([data-part="sweep-base"]) {
+  position: absolute; inset: 0; border: 0; border-radius: 0; pointer-events: none;
+}
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > [data-part="icon"] > :where([data-part="sweep-base"]) { color: var(--veneer-color-text-subtle); clip-path: inset(0 0 0 calc((100% - var(--_sr)) * var(--_a, 0))); }
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]) > [data-part="icon"] > :where([data-part="sweep"]) { color: var(--veneer-color-sweep); clip-path: inset(0 var(--_sr) 0 var(--_sl)); }
+/* keyboard focus is heavier than hover: +1px on the swept line */
+:where(:is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep]:is(:focus-visible, :has(:focus-visible), [data-focus])) > :where([data-part="sweep"]:empty),
+:where([data-scope="field"] > [data-part="control"]:focus-within) > :where([data-part="sweep"]:empty) { border-width: calc(var(--veneer-sweep-width) + 1px); }
+/* error: the danger sweep is pinned in, at field level or on the host */
+:where([data-scope="field"][data-invalid] > [data-part="control"], :is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-invalid]) > :where([data-part="sweep"]) {
+  color: var(--veneer-color-sweep-critical);
+}
+:where([data-scope="field"][data-invalid] > [data-part="control"], :is([data-scope="field"] > [data-part="control"], [data-scope="checkbox"] > [data-part="control"], [data-scope="radio"] > [data-part="control"], [data-scope="switch"] > [data-part="track"], [data-scope="segmented"], [data-scope="chip"], [data-scope="choice-card"], [data-scope="otp"] [data-part="cell"], [data-scope="dropzone"], [data-scope="quantity"], [data-scope="editable"] [data-part="preview"], [data-scope="knob"], [data-scope="xy-pad"], [data-scope="icon-tile"])[data-sweep][data-invalid]) > :where([data-part="sweep-base"]) { clip-path: inset(0 0 0 100% round var(--_round, var(--veneer-sweep-radius))); }
+:where([data-scope="field"][data-invalid] > [data-part="control"]) > [data-part="icon"] > :where([data-part="sweep"]) { color: var(--veneer-color-sweep-critical); }
+
+/* ===========================================================================
+   1 · THE FIELD, EXTENDED FOR INPUTS
+   Floating = the signature (default). Classic = label above, no float, no
+   notch; the sweep stays. Both share this markup and a real <label for>.
+   ======================================================================== */
+:where([data-scope="field"]) { min-inline-size: 0; align-content: start; }
+
+/* the control becomes a flex row so slots sit inside the one box */
+:where([data-scope="field"] > [data-part="control"]) {
+  display: flex; align-items: center; gap: var(--veneer-space-related);
+  block-size: auto; min-block-size: var(--veneer-field-height);
+  padding-inline: var(--_lead) var(--veneer-pad-control); cursor: text;
+}
+:where([data-scope="field"][data-size="sm"]) { --veneer-field-height: max(calc(var(--veneer-control-sm) + 4px), var(--veneer-target-min)); }
+:where([data-scope="field"][data-size="lg"]) { --veneer-field-height: max(calc(var(--veneer-control-lg) + 6px), var(--veneer-target-min)); }
+:where([data-scope="field"] [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) {
+  padding-inline: 0; flex: 1; min-inline-size: 0; inline-size: auto; block-size: auto; align-self: stretch;
+  caret-color: var(--veneer-color-sweep); font-variant-numeric: var(--_num, normal); text-align: var(--_align, start);
+}
+:where([data-scope="field"] input[data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) { min-block-size: calc(var(--veneer-field-height) - 2px); }
+:where([data-scope="field"] [data-part="input"][type="search"])::-webkit-search-cancel-button { display: none; }
+:where([data-scope="field"] [data-part="input"][type="number"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) { appearance: textfield; }
+:where([data-scope="field"] [data-part="input"][type="number"])::-webkit-inner-spin-button, :where([data-scope="field"] [data-part="input"][type="number"])::-webkit-outer-spin-button { appearance: none; margin: 0; }
+:where([data-scope="field"] [data-part="input"]:-webkit-autofill:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) { -webkit-text-fill-color: var(--veneer-color-text); transition: background-color 600000s 0s; }
+
+/* textarea: grows from its rows (--_rows, 3) to 10 or its rows; label and icon rest on the first line. field-sizing:
+   content ignores the rows attribute, so Textarea writes --_rows */
+:where([data-scope="field"] > [data-part="control"]:has(> textarea)),
+:where([data-scope="field"] > [data-part="control"][data-wrap]) { align-items: flex-start; }
+:where([data-scope="field"] textarea[data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) {
+  white-space: pre-wrap; overflow-wrap: anywhere; resize: none; field-sizing: content; line-height: 1.5;
+  padding-block: calc((var(--veneer-field-height) - 1.5em) / 2);
+  min-block-size: calc(1.5em * var(--_rows, 3) + var(--veneer-field-height) - 1.5em); max-block-size: calc(1.5em * max(10, var(--_rows, 3)) + var(--veneer-field-height) - 1.5em); overflow: auto;
+}
+:where([data-scope="field"] > [data-part="control"]:is(:has(> textarea), [data-wrap]) > [data-part="icon"]) { inset-block-start: calc(var(--veneer-field-height) / 2); }
+:where([data-scope="field"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:is(:has(> textarea), [data-wrap]):not(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) > [data-part="label"]) { inset-block-start: calc(var(--veneer-field-height) / 2); }
+
+/* every slot paints above the borders */
+:where([data-scope="field"] > [data-part="control"]) > :where(:not([data-part="sweep"], [data-part="sweep-base"], [data-part="icon"], [data-part="label"], [data-part="mask"], [data-part="carrier"], [data-scope="popup"], [data-scope="select"])) { position: relative; z-index: 3; }
+
+/* prefix / suffix: fixed text, not submitted. Floating: shown once the label has lifted. Classic: always. */
+:where([data-scope="field"] :is([data-part="prefix"]:not([data-scope="field"] [data-scope="api-key"] *:not([data-scope="field"] [data-scope="api-key"] [data-scope="field"] *)))),
+:where([data-scope="field"] :is([data-part="suffix"])) {
+  flex: none; color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-control-size); white-space: nowrap; user-select: none;
+  opacity: 0; transition: opacity var(--veneer-duration-fast);
+}
+:where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) > :is([data-part="prefix"])),
+:where([data-scope="field"] > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) > :is([data-part="suffix"])),
+:where([data-scope="field"]:is([data-lift], [data-variant="classic"]) > [data-part="control"] > :is([data-part="prefix"])),
+:where([data-scope="field"]:is([data-lift], [data-variant="classic"]) > [data-part="control"] > :is([data-part="suffix"])),
+:where([data-fields="classic"] [data-scope="field"]:not([data-variant="floating"]) > [data-part="control"] > :is([data-part="prefix"])),
+:where([data-fields="classic"] [data-scope="field"]:not([data-variant="floating"]) > [data-part="control"] > :is([data-part="suffix"])) { opacity: 1; }
+:where([data-scope="field"] [data-part="prefix"]:not([data-scope="field"] [data-scope="api-key"] *:not([data-scope="field"] [data-scope="api-key"] [data-scope="field"] *))) { margin-inline-end: calc(var(--veneer-space-related) * -1 + 1px); }
+:where([data-scope="field"] [data-part="suffix"]) { margin-inline-start: calc(var(--veneer-space-related) * -1 + 1px); }
+
+/* icon buttons inside the control: 24px visual, ≥ hit-min touch area */
+:where([data-scope="field"] :is([data-part="action"]:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *)))),
+:where([data-scope="field"] :is([data-part="clear"]:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *)))) {
+  --_s: 24px; flex: none; display: inline-grid; place-items: center;
+  inline-size: var(--_s); block-size: var(--_s); margin-inline: -4px; padding: 0;
+  border: 0; border-radius: var(--veneer-radius-mark); background: transparent;
+  color: var(--veneer-color-text-subtle); cursor: pointer;
+  transition: color var(--veneer-duration-fast), background-color var(--veneer-duration-fast), opacity var(--veneer-duration-fast);
+}
+:where([data-scope="field"] :is([data-part="action"]))::before,
+:where([data-scope="field"] :is([data-part="clear"]))::before { content: ""; position: absolute; inset: min(0px, calc((var(--_s) - var(--veneer-hit-min)) / 2)); }
+:where([data-scope="field"] :is([data-part="action"]):hover:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *))),
+:where([data-scope="field"] :is([data-part="clear"]):hover:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *))) { color: var(--veneer-color-text); background: color-mix(in oklab, currentColor calc(var(--veneer-state-hover) * 100%), transparent); }
+:where([data-scope="field"] :is([data-part="action"]):focus-visible:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *))),
+:where([data-scope="field"] :is([data-part="clear"]):focus-visible:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *))) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: 0; }
+:where([data-scope="field"] :is([data-part="action"]:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *)), [data-part="clear"]:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *)), [data-part="end"]:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="setting"]) *:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="setting"]) [data-scope="field"] *)), [data-part="indicator"]:not([data-scope="field"] :is([data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) *:not([data-scope="field"] :is([data-scope="menu"],[data-scope="nav"],[data-scope="navlist"],[data-scope="pull-refresh"],[data-scope="segmented"],[data-scope="select"],[data-scope="steps"],[data-scope="tabs"],[data-scope="toggle-group"]) [data-scope="field"] *))) svg) { inline-size: var(--veneer-icon-md); block-size: var(--veneer-icon-md); }
+:where([data-scope="field"] [data-part="action"][aria-pressed="true"]:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) *:not([data-scope="field"] :is([data-scope="checklist"],[data-scope="speed-dial"]) [data-scope="field"] *))) { color: var(--veneer-color-sweep); }
+:where([data-scope="field"] > [data-part="control"]:has([data-part="input"]:placeholder-shown) [data-part="clear"]:not([data-scope="field"] [data-scope="chips"] *:not([data-scope="field"] [data-scope="chips"] [data-scope="field"] *))) { visibility: hidden; opacity: 0; }
+:where([data-scope="field"] [data-part="end"]:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="setting"]) *:not([data-scope="field"] :is([data-scope="call-controls"],[data-scope="setting"]) [data-scope="field"] *))) { flex: none; display: inline-flex; color: var(--veneer-color-text-subtle); }
+
+/* async: spinner + the one success tick worth showing */
+:where([data-scope="field"] [data-part="spinner"]:not([data-scope="field"] [data-scope="button"] *:not([data-scope="field"] [data-scope="button"] [data-scope="field"] *))) {
+  flex: none; inline-size: 14px; block-size: 14px; border-radius: 50%;
+  border: 1.5px solid var(--veneer-color-border-strong); border-block-start-color: var(--veneer-color-sweep);
+  animation: veneer-field-spin calc(700ms / max(0.4, var(--veneer-motion-scale))) linear infinite;
+}
+:where([data-scope="field"]:not([data-loading]) [data-part="spinner"]:not([data-scope="field"] [data-scope="button"] *:not([data-scope="field"] [data-scope="button"] [data-scope="field"] *))) { display: none; }
+/* reduced motion (review 03 M11): no rotation, only a slow opacity pulse; the field's aria-busy carries the state */
+:where([data-motion="reduce"]) :where([data-scope="field"] [data-part="spinner"]:not([data-scope="field"] [data-scope="button"] *:not([data-scope="field"] [data-scope="button"] [data-scope="field"] *))) { animation: veneer-field-pulse 1.6s ease-in-out infinite alternate; border-color: var(--veneer-color-sweep); }
+@media (prefers-reduced-motion: reduce) { :where(:root:not([data-motion="full"])) :where([data-scope="field"] [data-part="spinner"]:not([data-scope="field"] [data-scope="button"] *:not([data-scope="field"] [data-scope="button"] [data-scope="field"] *))) { animation: veneer-field-pulse 1.6s ease-in-out infinite alternate; border-color: var(--veneer-color-sweep); } }
+@keyframes veneer-field-pulse { from { opacity: 1; } to { opacity: 0.45; } }
+:where([data-scope="field"] [data-part="status"]:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) *:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) [data-scope="field"] *))) { flex: none; display: none; color: var(--veneer-color-positive-text); }
+:where([data-scope="field"][data-valid]:not([data-loading]) [data-part="status"]:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) *:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) [data-scope="field"] *))) { display: inline-flex; animation: veneer-fade-in var(--veneer-duration-base) var(--veneer-ease-out); }
+:where([data-scope="field"] [data-part="status"]:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) *:not([data-scope="field"] :is([data-scope="form"],[data-scope="message"],[data-scope="prefs-matrix"]) [data-scope="field"] *)) svg) { inline-size: var(--veneer-icon-md); block-size: var(--veneer-icon-md); }
+
+/* message row: hint OR error (error replaces the hint and slides in), counter last */
+:where([data-scope="field"] > [data-part="message"]) {
+  display: flex; align-items: baseline; gap: var(--veneer-space-related); min-inline-size: 0; padding-inline: 2px;
+}
+:where([data-scope="field"]:not([data-invalid]) > [data-part="message"]:not(:has([data-part="hint"], [data-part="counter"]))) { display: none; }
+:where([data-scope="field"] [data-part="hint"]:not([data-scope="field"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) [data-scope="field"] *))) { color: var(--veneer-color-text-subtle); }
+:where([data-scope="field"] [data-part="error"]:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) *:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) [data-scope="field"] *))) { display: none; color: var(--veneer-color-critical-text); gap: 5px; align-items: flex-start; }
+:where([data-scope="field"] [data-part="error"]:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) *:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) [data-scope="field"] *)) svg) { flex: none; inline-size: 13px; block-size: 13px; margin-block-start: 0.05em; }
+:where([data-scope="field"][data-invalid] [data-part="error"]:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) *:not([data-scope="field"] :is([data-scope="availability"],[data-scope="import-preview"],[data-scope="stack"]) [data-scope="field"] *))) { display: inline-flex; animation: veneer-msg-in var(--veneer-message-duration) var(--veneer-label-float-ease); }
+:where([data-scope="field"][data-invalid] [data-part="hint"]:not([data-scope="field"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) *:not([data-scope="field"] :is([data-scope="checkbox"],[data-scope="choice-card"],[data-scope="composer"],[data-scope="dropzone"],[data-scope="palette"],[data-scope="prefs"],[data-scope="radio"],[data-scope="setting"],[data-scope="switch"]) [data-scope="field"] *))) { display: none; }
+:where([data-scope="field"] [data-part="counter"]) { margin-inline-start: auto; flex: none; color: var(--veneer-color-text-subtle); font-variant-numeric: tabular-nums; }
+:where([data-scope="field"] [data-part="counter"][data-level="near"]) { color: var(--veneer-color-caution-text); }
+:where([data-scope="field"] [data-part="counter"][data-level="over"]) { color: var(--veneer-color-critical-text); font-weight: 500; }
+:where([data-part="live"]) { position: absolute; inline-size: 1px; block-size: 1px; overflow: clip; clip-path: inset(50%); white-space: nowrap; }
+
+/* read-only: dashed resting edge, no fill; focus still sweeps */
+:where([data-scope="field"][data-readonly] > [data-part="control"]) { background: transparent; }
+:where([data-scope="field"][data-readonly] > [data-part="control"]) > :where([data-part="sweep-base"]) { border-style: dashed; } /* dashed ink: read-only reads by the dash, the sweep still clears 3:1 */
+/* shake: vivid only, and 0px under reduced motion */
+:where([data-scope="field"][data-shake] > [data-part="control"]),
+:where([data-scope="otp"][data-shake]) {
+  --_shk: calc(var(--veneer-field-shake) * var(--veneer-motion-scale) * 1px);
+  animation: veneer-field-shake calc(var(--veneer-duration-slow) * 1.1) var(--veneer-ease-out);
+}
+:where([data-motion="reduce"]) :where([data-scope="field"][data-shake] > [data-part="control"], [data-scope="otp"][data-shake]) { animation: none; }
+@media (prefers-reduced-motion: reduce) { :where([data-scope="field"][data-shake] > [data-part="control"]),
+ :where([data-scope="otp"][data-shake]) { animation: none; } }
+
+/* specimens only: force the floated label (data-lift) and its hover tint (data-lift="active"), floating fields only */
+:where([data-scope="field"][data-lift]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *))) {
+  inset-block-start: var(--veneer-label-float-offset); inset-inline-start: calc(var(--veneer-pad-control) - 4px);
+  transform: none; padding-inline: 4px;
+  font-size: var(--veneer-label-float-size); font-weight: var(--veneer-label-float-weight);
+  letter-spacing: var(--veneer-label-float-tracking); text-transform: uppercase;
+  background-color: var(--_notch-color, var(--veneer-field-notch, var(--veneer-color-surface)));
+  background-image: var(--_notch-image, none); background-size: var(--_notch-size, auto); background-position: var(--_notch-pos, 0 0); background-repeat: no-repeat;
+}
+:where([data-scope="field"][data-lift] [data-char]) { color: var(--veneer-color-label-rest); }
+:where([data-scope="field"][data-lift="active"] [data-char]) { color: var(--veneer-color-label-active); }
+:where([data-scope="field"][data-lift] [data-part="input"])::placeholder { color: var(--veneer-color-text-subtle); }
+:where([data-scope="field"][data-invalid] [data-char]) { color: var(--veneer-color-critical-text); }
+
+/* -- appearance: line (FloatingLineInput) ----------------------------------
+   One bottom hairline; the accent line scales in from the left and, with its
+   origin flipped on exit, keeps travelling right. No notch, no fill. */
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]) { --_lead: 0px; background: transparent; border-radius: 0; --veneer-sweep-radius: 0px; padding-inline-end: 0; }
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]:has(> [data-part="icon"])) { --_lead: 26px; }
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"] > [data-part="icon"]) { inset-inline-start: 0; }
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]) > :where([data-part="sweep"]),
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]) > :where([data-part="sweep-base"]) {
+  inset: auto 0 0; block-size: 0; border-width: var(--veneer-sweep-base-width) 0 0; border-radius: 0;
+}
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]) > :where([data-part="sweep-base"]) { color: var(--veneer-color-sweep-base); /* ink: sweep-vs-base ≥ 3:1 (review 03 M9) */ }
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]) > :where([data-part="sweep"]) {
+  border-top-width: var(--veneer-sweep-width);
+}
+:where([data-scope="field"][data-appearance="line"] > [data-part="control"]:focus-within) > :where([data-part="sweep"]) { border-top-width: calc(var(--veneer-sweep-width) + 1px); }
+:where([data-scope="field"][data-appearance="line"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *))) { background: none; padding-inline: 0; }
+:where([data-scope="field"][data-appearance="line"]:not([data-variant="classic"], [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"])) > [data-part="control"]:is(:hover, :focus-within, [data-filled], :has([data-part="input"]:not(:placeholder-shown))) [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *))) {
+  inset-block-start: -4px; inset-inline-start: 0;
+}
+
+/* classic, said again after the floating-only rules above (the textarea's resting label, data-lift, line). They name
+   classic inside a :not(), and an app that makes classic its default (veneer({ fields: 'classic' })) gets a copy of each
+   rule keyed on [data-fields="classic"] for its root: a :not() can't be copied that way, so the textarea's label sat
+   on its top border. This rule is keyed positively, so the copy lands after them and the label stays above the box. */
+:where([data-scope="field"][data-variant="classic"],
+       [data-fields="classic"] [data-scope="field"]:not([data-variant="floating"], [data-fields="classic"] [data-fields="floating"] *)) > [data-part="control"] [data-part="label"]:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) *:not([data-scope="field"] :is([data-scope="anchor-nav"],[data-scope="button"],[data-scope="call-controls"],[data-scope="choice-card"],[data-scope="prefs"],[data-scope="run"],[data-scope="setting"],[data-scope="stage"],[data-scope="switch"],[data-scope="tab-bar"]) [data-scope="field"] *)) {
+  inset-block-start: auto; inset-inline-start: 0; transform: none; padding: 0; background: none;
+  font-size: var(--veneer-text-label-size); font-weight: var(--veneer-text-label-weight); letter-spacing: 0; text-transform: none;
+}
+
+
+
+/* the typing input of a tag field is 28px inside a padded wrap control: it grows to hit-min and
+   gives the growth back with negative margins, so the control's height doesn't move */
+:where([data-scope="field"] > [data-part="control"][data-wrap] [data-part="input"]:not([data-scope="field"] [data-scope="palette"] *:not([data-scope="field"] [data-scope="palette"] [data-scope="field"] *))) {
+  --_grow: max(0px, calc((var(--veneer-hit-min) - 28px) / 2));
+  min-block-size: calc(28px + 2 * var(--_grow)); margin-block: calc(-1 * var(--_grow));
+}
+}

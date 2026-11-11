@@ -41,13 +41,13 @@ export function addToTs(root, file, text, pkg) {
   const object = configObject(sf)
   if (!object)
     throw refused(
-      `${file} doesn't export a plain object, so \`weft add\` can't edit it. Add \`${pkg}\` to \`plugins\` by hand.`,
+      `${file} doesn't export a plain object, so \`kerf add\` can't edit it. Add \`${pkg}\` to \`plugins\` by hand.`,
     )
   const { name, line } = pluginImport(root, pkg)
   const prop = object.properties.find((p) => p.name?.getText(sf) === 'plugins')
   if (prop && !(ts.isPropertyAssignment(prop) && ts.isArrayLiteralExpression(prop.initializer)))
     throw refused(
-      `\`plugins\` in ${file} isn't a plain array, so \`weft add\` can't edit it. Add \`${pkg}\` by hand.`,
+      `\`plugins\` in ${file} isn't a plain array, so \`kerf add\` can't edit it. Add \`${pkg}\` by hand.`,
     )
   const edits = []
   const imports = sf.statements.filter(ts.isImportDeclaration)

@@ -1,12 +1,12 @@
-// The weft.config.ts surface (PLAN §7b manifest, §7c reserved `plugins`/`slots`). Validated by `weft check` (P-codes).
+// The kerf.config.ts surface (PLAN §7b manifest, §7c reserved `plugins`/`slots`). Validated by `kerf check` (P-codes).
 import type { CardTheme } from './head'
 
 /** A JSON Schema object, or anything with Zod's `~standard`/`_zod` shape (converted with `z.toJSONSchema`). */
 export type ArgsSchema = Record<string, unknown>
 
-/** A named command for `weft run`. */
+/** A named command for `kerf run`. */
 export interface TaskDef {
-  /** Shell command `weft run <name>` will run, from the project root. */
+  /** Shell command `kerf run <name>` will run, from the project root. */
   run: string
   /** One line an agent reads to decide whether to run it. Missing is P004. */
   description: string
@@ -30,8 +30,8 @@ export type SlotId =
   | (string & {})
 
 /**
- * A `plugins` entry: what a `@weft-js/core/plugin` factory returns (`warp()`), or plain data `{ name, provides }`.
- * `weft check` runs a factory's pure `contribute()` and validates the rest as data (P100, P111–P117, P009).
+ * A `plugins` entry: what a `@kerf/core/plugin` factory returns (`veneer()`), or plain data `{ name, provides }`.
+ * `kerf check` runs a factory's pure `contribute()` and validates the rest as data (P100, P111–P117, P009).
  */
 export interface PluginEntry {
   name: string
@@ -81,7 +81,7 @@ export interface SiteConfig {
   /** `'auto'` = the generated card (research 20 §4, not built yet), or a path/URL with its size. */
   /** A path or URL; `'auto'` (the default) is the generated card, `false` no image at all. */
   image?: false | string | { url: string; width?: number; height?: number; alt?: string }
-  /** The generated card's look, over what Warp and the text plugin give it. */
+  /** The generated card's look, over what Veneer and the text plugin give it. */
   card?: CardTheme
   twitter?: {
     card?: 'summary' | 'summary_large_image' | 'app' | 'player'
@@ -98,8 +98,8 @@ export interface SiteConfig {
   head?: string
 }
 
-/** Everything `weft.config.ts` can say. */
-export interface WeftConfig {
+/** Everything `kerf.config.ts` can say. */
+export interface KerfConfig {
   /** Where agents may write, may read, and may never touch (globs from the project root). */
   scope?: { write?: readonly string[]; read?: readonly string[]; forbid?: readonly string[] }
   tasks?: Record<string, TaskDef>
@@ -110,7 +110,7 @@ export interface WeftConfig {
     lanes?: readonly ('fast' | 'browser' | 'e2e')[]
     gate?: { mutationBudgetSec?: number; maxMutants?: number }
   }
-  /** Files `weft check` compiles. Default `['**\/*.{tsx,jsx}']`, minus node_modules, dist, .weft and `scope.forbid`. */
+  /** Files `kerf check` compiles. Default `['**\/*.{tsx,jsx}']`, minus node_modules, dist, .kerf and `scope.forbid`. */
   check?: {
     include?: readonly string[]
     exclude?: readonly string[]
@@ -118,10 +118,10 @@ export interface WeftConfig {
     design?: boolean
     /** `false` turns the route pass off: H001–H007 and H011–H016 per route, which runs the app's loaders once. Default on. */
     routes?: boolean
-    /** Prop inference (research 44). `false` turns it off; `'manual'` leaves written types to `weft fix` instead of `weft dev`. Default on. */
+    /** Prop inference (research 44). `false` turns it off; `'manual'` leaves written types to `kerf fix` instead of `kerf dev`. Default on. */
     props?: boolean | 'manual'
   }
-  /** `weft build`. */
+  /** `kerf build`. */
   build?: {
     /**
      * The built pages in a clean Chrome at a phone's and a desktop's width, last (L-codes): an error fails the build.
@@ -143,7 +143,7 @@ export interface WeftConfig {
   }
   plugins?: readonly PluginEntry[]
   site?: SiteConfig
-  /** Where `weft build` targets (research 28 §5). `weft dev` always runs on Node. */
+  /** Where `kerf build` targets (research 28 §5). `kerf dev` always runs on Node. */
   runtime?: 'node' | 'bun' | 'deno'
   /** The crates behind `remote('rust://<name>')` and `native('<name>')`. One is `crates/<name>` unless it says otherwise. */
   rust?: {
@@ -154,7 +154,7 @@ export interface WeftConfig {
       {
         /** The crate, from the app's root. */
         crate?: string
-        /** Built and run elsewhere: no cargo here, and `WEFT_RUST_<NAME>_URL` says where it is. */
+        /** Built and run elsewhere: no cargo here, and `KERF_RUST_<NAME>_URL` says where it is. */
         external?: boolean
         /** `false`: a `native()` crate that can't build for WASM, and needs no fallback on this host (R104). */
         wasm?: false
@@ -167,8 +167,8 @@ export interface WeftConfig {
    */
   hydration?: 'lazy' | 'partial' | 'full'
   /**
-   * Where the app deploys, for `weft deploy` (research 46). Names, regions and sizes only: every credential comes from the
-   * environment, and a token-shaped value here is E008. `weft deploy init` writes this and the host's files.
+   * Where the app deploys, for `kerf deploy` (research 46). Names, regions and sizes only: every credential comes from the
+   * environment, and a token-shaped value here is E008. `kerf deploy init` writes this and the host's files.
    */
   deploy?: {
     target?: 'netlify' | 'vercel' | 'cloudflare' | 'fly' | 'render'
@@ -224,9 +224,9 @@ export interface WeftConfig {
   }
   /** `'warn'` turns the plugin lock's P109 and P110 into warnings. Default `'enforce'`. */
   trust?: 'enforce' | 'warn'
-  /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@weft-js/text' }`. */
+  /** Pick a winner when two plugins provide one slot: `{ 'text.measure': '@kerf/text' }`. */
   slots?: { [id: string]: string | Record<string, string> }
 }
 
 /** The config, checked and returned as given. */
-export declare function defineConfig<const C extends WeftConfig>(config: C): C
+export declare function defineConfig<const C extends KerfConfig>(config: C): C

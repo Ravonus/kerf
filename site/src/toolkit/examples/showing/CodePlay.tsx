@@ -1,4 +1,4 @@
-import { Text, Code } from '@weft-js/warp'
+import { Text, Code } from '@kerf/veneer'
 
 export const CodePlay = (p: { children: string }) => (
   <Text>

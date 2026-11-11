@@ -142,7 +142,7 @@ export const learn: Record<string, Demo> = {
       'Start it, stop it, then press Select the lap.',
     why:
       'Effects are for talking to things ' +
-      'outside Weft, like timers and the ' +
+      'outside Kerf, like timers and the ' +
       'DOM. Their cleanup runs for you.',
   },
 }

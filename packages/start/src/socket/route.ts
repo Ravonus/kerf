@@ -61,7 +61,7 @@ export function socketRouteWith(
           scope.options.onDiagnostic?.({
             code: 'E_RT',
             severity: 'error',
-            message: `/_weft/ws: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
+            message: `/_kerf/ws: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`,
           })
           peer.close(1011, 'context failed')
           return { message() {}, close() {} }

@@ -2,7 +2,7 @@ import type {
   Scene,
   StagePiece,
   StagePainter,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 export const STAGE = 'block-size:240px'
 

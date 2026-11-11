@@ -2,8 +2,8 @@
 
 ## Types
 
-Leave a component's props unannotated. weft infers them from its callers and its body, in the editor (the plugin in
-`tsconfig.json`), `weft check`, `weft tsc` and `weft dev`. Nothing is left at run time.
+Leave a component's props unannotated. kerf infers them from its callers and its body, in the editor (the plugin in
+`tsconfig.json`), `kerf check`, `kerf tsc` and `kerf dev`. Nothing is left at run time.
 
 ```tsx
 function Row(props) {
@@ -33,14 +33,14 @@ export default function List() {
 | A component in a variable, map or prop | Its sites count, and prop sets merge |
 | Callers that differ by a string prop | A union of shapes the body can narrow |
 | `src/routes` default export | `RouteProps` |
-| An export | `weft dev` or `weft fix` writes the type with an `/*inferred*/` comment, so it shows in a diff. **W082** when callers move on; delete the comment to keep the type |
+| An export | `kerf dev` or `kerf fix` writes the type with an `/*inferred*/` comment, so it shows in a diff. **W082** when callers move on; delete the comment to keep the type |
 | An `any` from a caller | The body's use, or `any`, with **W083** naming where it came from |
 | No caller | **W080**, with what to do |
-| `bind:x={box}` | The box's value, and it satisfies a required `x` under `weft tsc` and in the editor |
+| `bind:x={box}` | The box's value, and it satisfies a required `x` under `kerf tsc` and in the editor |
 
 Write a type yourself when two props must agree (a type parameter), when the file is `.jsx`, or for a public API with no
 caller in this repository. `Props<typeof Button>` names another component's props. `tsc` alone reports TS7006 on an
-inferred parameter; run `weft tsc` in CI. `check: { props: false }` turns this off; `'manual'` leaves writing to `weft fix`.
+inferred parameter; run `kerf tsc` in CI. `check: { props: false }` turns this off; `'manual'` leaves writing to `kerf fix`.
 
 ## Reactivity
 
@@ -79,9 +79,9 @@ A component can write its own props. `let` makes a local writable; `+=`, `++` an
 | `const n = props.n; n = 5` | **W001**: use `let` or `props.n =` | **W001** |
 
 `bind:` at the call site alone decides whether a write leaves the component. `<Card n={box.value} />` never writes
-`box`, whatever `Card` does. It takes a box, on a component (**W061** otherwise). `weft tsc` and the editor read
+`box`, whatever `Card` does. It takes a box, on a component (**W061** otherwise). `kerf tsc` and the editor read
 `bind:n={box}` as `n` with the box's value, so it satisfies a required prop and a wrong type is an error. Plain `tsc`
-can't connect `bind:n` to `n` and reports the prop as missing: run `weft tsc`. `n={bind(box)}` is the same binding in
+can't connect `bind:n` to `n` and reports the prop as missing: run `kerf tsc`. `n={bind(box)}` is the same binding in
 a form plain `tsc` accepts. An island's props arrive as data, so a write there is always local.
 
 Only a whole prop can be written this way. `let n = props.user.name; n = 1` is **W001**; `props.user.name = 1` writes

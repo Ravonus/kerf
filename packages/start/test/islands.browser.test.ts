@@ -1,5 +1,5 @@
 // Partial hydration in Chrome (PLAN §11): a route the compiler proved static sends HTML and its islands, and they do
-// everything a hydrated page does. `.weft/hydration.json` is what an agent reads to see why.
+// everything a hydrated page does. `.kerf/hydration.json` is what an agent reads to see why.
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
@@ -37,7 +37,7 @@ async function open(path: string, desktop = false) {
     m.type() === 'error' || m.type() === 'warning' ? errors.push(m.text()) : undefined,
   )
   await page.goto(url + path)
-  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
   return { page, errors }
 }
 
@@ -56,7 +56,7 @@ test('the server writes no keys or markers in the static parts, and props as JSO
   expect(html).toContain('<em class="label">From the server</em>')
   expect(html).toMatch(/<!--wi:\["src\/routes\/islands\.tsx#\d+","[^"]+",\[5\]\]-->/) // the literal label stays in the island's code
   expect(html).toContain('<template><p class="late">From the server</p></template>') // Reveal didn't render its children
-  const plan = JSON.parse(readFileSync(join(fixture, '.weft/hydration.json'), 'utf8'))
+  const plan = JSON.parse(readFileSync(join(fixture, '.kerf/hydration.json'), 'utf8'))
   expect(
     plan.islands.filter((i: string) => i.startsWith('src/routes/islands.tsx')).length,
   ).toBeGreaterThanOrEqual(5)
@@ -69,7 +69,7 @@ test('the server writes no keys or markers in the static parts, and props as JSO
     plan.files
       .find((f: { file: string }) => f.file === 'src/components/islands.tsx')
       .nodes.find((n: { name: string }) => n.name === 'Counter').client,
-  ).toMatch(/@weft client/)
+  ).toMatch(/@kerf client/)
   expect(
     plan.files
       .find((f: { file: string }) => f.file === 'src/components/lazy.tsx')
@@ -80,7 +80,7 @@ test('the server writes no keys or markers in the static parts, and props as JSO
 test('a row whose key differs between server and client is built whole, works, and says so', async () => {
   const { page, errors } = await open('/miss')
   await settled(page)
-  expect((await page.evaluate(() => window.__weft!)).misses).toBeGreaterThan(0)
+  expect((await page.evaluate(() => window.__kerf!)).misses).toBeGreaterThan(0)
   expect(errors.join()).toContain('a key differs between server and client')
   expect(await page.locator('.miss li').count()).toBe(1)
   const input = page.locator('.miss li input')
@@ -113,9 +113,9 @@ test('what was typed before a miss is not overwritten by the first writes after 
   await page.locator('.miss .later').fill('sibling')
   letGo = (go) => go()
   held.forEach((go) => go())
-  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
   await settled(page)
-  expect((await page.evaluate(() => window.__weft!)).misses).toBeGreaterThan(0)
+  expect((await page.evaluate(() => window.__kerf!)).misses).toBeGreaterThan(0)
   expect(await page.locator('.miss .typed').inputValue()).toBe('before')
   expect(await page.locator('.miss .ticked').isChecked()).toBe(true)
   expect(await page.locator('.miss .later').inputValue()).toBe('sibling')
@@ -125,7 +125,7 @@ test('what was typed before a miss is not overwritten by the first writes after 
 
 test('islands hydrate 0/0, then what only the claim needed goes', async () => {
   const { page, errors } = await open('/islands')
-  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   await settled(page)
   const { comments, wk } = await count(page)
   expect(wk).toBe(0)
@@ -275,7 +275,7 @@ test('dev: editing an island keeps the page working', async () => {
 // ---- lazy islands: nothing runs before it's needed, and nothing done before then is lost -------------------------
 
 const CODE = (u: URL) =>
-  u.pathname.endsWith('/components/lazy.tsx') && !u.search.includes('weft-assets')
+  u.pathname.endsWith('/components/lazy.tsx') && !u.search.includes('kerf-assets')
 /** `/lazy`, with its islands' code stalled until `release`. */
 async function stalled(path = '/lazy', options?: Parameters<Playwright.Browser['newContext']>[0]) {
   const context = await browser.newContext(options)
@@ -291,7 +291,7 @@ async function stalled(path = '/lazy', options?: Parameters<Playwright.Browser['
     await r.continue()
   })
   await page.goto(url + path)
-  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
   return { page, errors, release, close: () => context.close() }
 }
 const claimed = (page: Playwright.Page, sel: string) =>
@@ -306,7 +306,7 @@ test("a page that's only read runs no client at all; the first click brings it, 
   await page.goto(url + '/lazy?boot')
   await page.waitForTimeout(300)
   expect(asked.filter((p) => /\/run\.tsx|components\/lazy\.tsx/.test(p))).toEqual([])
-  expect(await page.evaluate(() => window.__weft)).toBeUndefined()
+  expect(await page.evaluate(() => window.__kerf)).toBeUndefined()
   await page.click('.tap[data-id=one]')
   await page.click('.tap[data-id=one]')
   await page.waitForFunction(() => document.querySelector('.tap')!.textContent === 'one: 2')
@@ -342,7 +342,7 @@ test('a page whose code waits lets the browser prefetch a link on hover, until t
   await expect.poll(() => prefetched, { timeout: 5_000 }).toContain('/about')
   // The first click brings the client; its router follows links from then on, so the rules go.
   await page.click('.tap[data-id=one]')
-  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.waitForFunction(() => window.__kerf?.hydrated)
   expect(await rules()).toBeUndefined()
   await page.close()
   // A page whose code starts at once has no rules at all.
@@ -378,7 +378,7 @@ test('scrolling to an island that wants to run brings the client, and a link is 
 
 test('hydration.json says when each island loads and why, and H010 what would let it wait', async () => {
   await fetch(url + '/lazy')
-  const plan = JSON.parse(readFileSync(join(fixture, '.weft/hydration.json'), 'utf8'))
+  const plan = JSON.parse(readFileSync(join(fixture, '.kerf/hydration.json'), 'utf8'))
   const of = (tag: string) =>
     plan.loads.find(
       (l: { id: string; tag: string }) => l.id.startsWith('src/routes/lazy') && l.tag === tag,
@@ -397,21 +397,21 @@ test('hydration.json says when each island loads and why, and H010 what would le
   expect(of('Titled')).toMatchObject({ when: 'load', why: expect.stringMatching(/document/) })
   expect(plan.loads.find((l: { id: string; tag: string }) => l.tag === 'Counter')).toMatchObject({
     when: 'load',
-    why: expect.stringMatching(/@weft client/),
+    why: expect.stringMatching(/@kerf client/),
   })
   expect(
     plan.diagnostics.find((d: { line: number; why: string }) => d.line && d.why.includes('Titled')),
   ).toMatchObject({
     code: 'H010',
     file: 'src/routes/lazy-early.tsx',
-    fix: expect.stringMatching(/@weft visible/),
+    fix: expect.stringMatching(/@kerf visible/),
   })
   expect(plan.diagnostics.some((d: { why: string }) => d.why.includes('Auto'))).toBe(false)
 })
 
 test('a page of lazy islands hydrates with no complaints about the ones that wait', async () => {
   const { page, errors } = await open('/lazy')
-  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   expect(await claimed(page, '.tap')).toBe(false)
   expect(errors).toEqual([])
   await page.close()
@@ -502,10 +502,10 @@ test('code that never comes: what was held takes its default, so the page still 
   const page = await context.newPage()
   await page.route(CODE, (r) => r.abort())
   await page.goto(url + '/lazy')
-  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.waitForFunction(() => window.__kerf?.hydrated)
   await page.fill('.name-in', 'Ada')
   await Promise.all([page.waitForURL('**/lazy'), page.waitForEvent('load'), page.click('.name-go')])
-  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.waitForFunction(() => window.__kerf?.hydrated)
   await page.click('.away')
   await page.waitForURL('**/about')
   await context.close()
@@ -582,7 +582,7 @@ test('a visitor who asked for less data loads on interaction only', async () => 
     if (r.url().includes('components/lazy.tsx')) asked++
   })
   await page.goto(url + '/lazy')
-  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.waitForFunction(() => window.__kerf?.hydrated)
   await page.$eval('.seen', (e) => e.scrollIntoView())
   await page.waitForTimeout(200)
   expect(asked).toBe(0)
@@ -603,7 +603,7 @@ test('an island whose code fails once is tried again, and a press on it still la
   let failed = 0
   await page.route('**/components/lazy.tsx*', (r) => (failed++ ? r.continue() : r.abort()))
   await page.goto(url + '/lazy')
-  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.waitForFunction(() => window.__kerf?.hydrated)
   await page.click('.tap[data-id=far]')
   await page.waitForFunction(
     () => document.querySelector('.tap[data-id=far]')!.textContent === 'far: 1',
@@ -621,16 +621,16 @@ test('an island whose code never comes reloads once, then says so instead of sta
   let loads = 0
   page.on('load', () => loads++)
   await page.goto(url + '/lazy')
-  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.waitForFunction(() => window.__kerf?.hydrated)
   await page.click('.tap[data-id=far]')
   await page.waitForFunction(
     () =>
-      sessionStorage.length > 0 && document.readyState === 'complete' && window.__weft?.hydrated,
+      sessionStorage.length > 0 && document.readyState === 'complete' && window.__kerf?.hydrated,
   )
   await page.waitForTimeout(1500)
-  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.waitForFunction(() => window.__kerf?.hydrated)
   await page.click('.tap[data-id=far]')
-  await page.waitForSelector('[data-weft-stale][role=alert]', { timeout: 5000 })
+  await page.waitForSelector('[data-kerf-stale][role=alert]', { timeout: 5000 })
   expect(loads).toBe(2)
   await context.close()
 })
@@ -645,7 +645,7 @@ test('an island left while its code is retried does not reload the page it is no
   let loads = 0
   page.on('load', () => loads++)
   await page.goto(url + '/lazy')
-  await page.waitForFunction(() => window.__weft?.hydrated)
+  await page.waitForFunction(() => window.__kerf?.hydrated)
   await page.click('.tap[data-id=far]') // the first load fails; the retry waits 800 ms
   await page.evaluate(() => {
     const a = Object.assign(document.createElement('a'), { href: '/about' })
@@ -655,9 +655,9 @@ test('an island left while its code is retried does not reload the page it is no
   await page.waitForFunction(() => location.pathname === '/about')
   await page.waitForTimeout(1500) // past the retry and its failure
   expect(loads).toBe(1)
-  expect(await page.$('[data-weft-stale]')).toBeNull()
+  expect(await page.$('[data-kerf-stale]')).toBeNull()
   const reloaded = await page.evaluate(() =>
-    Object.keys(sessionStorage).filter((k) => k.startsWith('weft:reloaded:')),
+    Object.keys(sessionStorage).filter((k) => k.startsWith('kerf:reloaded:')),
   )
   expect(reloaded).toEqual([])
   await context.close()
@@ -707,7 +707,7 @@ test('a CSP that blocks the capture script: islands stop waiting, so nothing is 
     })
   })
   await page.goto(url + '/lazy')
-  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
   await page.waitForFunction(() => {
     const t = document.querySelector('.tap')
     return !t!.hasAttribute('wk') || (t as Element & { $k?: unknown }).$k
@@ -738,7 +738,7 @@ test('an island inside a client page is just a component: its children are claim
   ])
   expect(await page.$$eval('.pair-b', (b) => b.length)).toBe(1)
   expect(await page.$$eval('.rail[data-ready]', (r) => r.length)).toBe(2)
-  expect(await page.evaluate(() => window.__weft)).toEqual({ misses: 0, writes: 0, hydrated: true })
+  expect(await page.evaluate(() => window.__kerf)).toEqual({ misses: 0, writes: 0, hydrated: true })
   expect((await count(page)).comments.filter((c) => /^\/?ws/.test(c))).toEqual([])
   expect(errors).toEqual([])
   await page.close()

@@ -1,9 +1,9 @@
 // The rail against mocked Stripe HTTP: `fetch` here refuses anything it wasn't told to expect, so these tests can't reach
 // a network, and every signature is real HMAC over a placeholder secret.
 import { createHmac } from 'node:crypto'
-import { payRailSuite } from '@weft-js/pay/test'
-import { definePay, memoryPayStore } from '@weft-js/pay/server'
-import { product } from '@weft-js/pay'
+import { payRailSuite } from '@kerf/pay/test'
+import { definePay, memoryPayStore } from '@kerf/pay/server'
+import { product } from '@kerf/pay'
 import { stripeRail } from '../src/stripe'
 
 const SECRET = 'whsec_placeholder_for_tests'
@@ -53,7 +53,7 @@ const sub = (status: string, over: object = {}) => ({
       status,
       customer: 'cus_1',
       current_period_end: now() + 2_592_000,
-      metadata: { weft_user: 'u1', weft_product: 'pro', weft_plan: 'month' },
+      metadata: { kerf_user: 'u1', kerf_product: 'pro', kerf_plan: 'month' },
       ...over,
     },
   },
@@ -133,9 +133,9 @@ function checkoutForms({ line, request }: ReturnType<typeof checkoutData>) {
       'line_items[0][price_data][unit_amount]': '999',
       'line_items[0][price_data][currency]': 'usd',
       'line_items[0][price_data][recurring][interval]': 'month',
-      'metadata[weft_user]': 'u1',
-      'subscription_data[metadata][weft_user]': 'u1',
-      'subscription_data[metadata][weft_product]': 'pro',
+      'metadata[kerf_user]': 'u1',
+      'subscription_data[metadata][kerf_user]': 'u1',
+      'subscription_data[metadata][kerf_product]': 'pro',
       'subscription_data[trial_period_days]': '7',
       client_reference_id: 'u1',
     })
@@ -168,7 +168,7 @@ function checkoutPayments({ request }: ReturnType<typeof checkoutData>) {
     expect(Object.fromEntries(calls[0]!.body)).toMatchObject({
       mode: 'payment',
       'line_items[0][quantity]': '2',
-      'payment_intent_data[metadata][weft_product]': 'tee',
+      'payment_intent_data[metadata][kerf_product]': 'tee',
       'shipping_address_collection[allowed_countries][0]': 'US',
     })
   })
@@ -342,7 +342,7 @@ function verifyPayments() {
         payment_intent: 'pi_1',
         payment_status: 'paid',
         customer: 'cus_1',
-        metadata: { weft_user: 'u1', weft_product: 'tee' },
+        metadata: { kerf_user: 'u1', kerf_product: 'tee' },
         ...over,
       },
     },
@@ -427,7 +427,7 @@ describe('through the ledger', () => {
     return pay
   }
   const post = (d: { body: string; headers: Headers }) =>
-    new Request('http://localhost/_weft/pay/stripe', {
+    new Request('http://localhost/_kerf/pay/stripe', {
       method: 'POST',
       body: d.body,
       headers: d.headers,

@@ -1,5 +1,5 @@
-// W043 and W044 in `weft check`. W043: a React habit that compiles and renders something else. `data-x={true}` is a literal, so it can
-// be told from weft's own `data-open={open}`, whose presence form `[data-open]` selectors depend on (docs/react-props.md).
+// W043 and W044 in `kerf check`. W043: a React habit that compiles and renders something else. `data-x={true}` is a literal, so it can
+// be told from kerf's own `data-open={open}`, whose presence form `[data-open]` selectors depend on (docs/react-props.md).
 
 import { diagnostic, positions } from './diag.mjs'
 import { scanJsx } from './jsx-scan.mjs'

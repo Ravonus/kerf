@@ -1,8 +1,8 @@
 // The shared cache's store: memory bounded and never stale after a reset, and concurrent misses sharing one run.
 import { expect, test, vi } from 'vitest'
-import { query } from '@weft-js/start'
-import { fnOf } from '@weft-js/start/data'
-import { memoryStore, type Stored } from '@weft-js/start/cache'
+import { query } from '@kerf/start'
+import { fnOf } from '@kerf/start/data'
+import { memoryStore, type Stored } from '@kerf/start/cache'
 import { createScope, fetchQuery } from '../src/exec'
 
 const later = (v: unknown, versions: number[] = [], tags: string[] = []): Stored => ({

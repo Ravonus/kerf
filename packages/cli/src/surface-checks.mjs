@@ -1,6 +1,6 @@
-// Surfaces in `weft check` (research 33 §8): X002 and X009–X012 for surfaces and their text, X040 and X041 for per-glyph
+// Surfaces in `kerf check` (research 33 §8): X002 and X009–X012 for surfaces and their text, X040 and X041 for per-glyph
 // markup, and P101 for a surface that needs a slot nothing provides. X001, X003 and X004 need the live mirror, so
-// @weft-js/core/surface reports those in dev. `listSurfaces` is the catalog behind `weft surfaces` and the MCP tool.
+// @kerf/core/surface reports those in dev. `listSurfaces` is the catalog behind `kerf surfaces` and the MCP tool.
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -230,7 +230,7 @@ function surfaceFileChecks(sf, slots, report) {
       report(
         'X011',
         n,
-        'This hides the surface or its text mirror from assistive tech. Leave the mirror to weft.',
+        'This hides the surface or its text mirror from assistive tech. Leave the mirror to kerf.',
       )
   })
   for (const call of calls) {
@@ -240,7 +240,7 @@ function surfaceFileChecks(sf, slots, report) {
       report(
         'P101',
         kindNode,
-        `Surface kind \`${kind}\` has no provider: add the plugin that provides it to \`plugins\` in weft.config.ts.`,
+        `Surface kind \`${kind}\` has no provider: add the plugin that provides it to \`plugins\` in kerf.config.ts.`,
       )
     if (!call.param || !call.fn) continue
     walk(call.fn, (n) => {
@@ -261,7 +261,7 @@ function surfaceFileChecks(sf, slots, report) {
         report(
           'P101',
           n,
-          'Canvas `s.text()` needs `text.measure`, and nothing provides it: add `text()` from `@weft-js/text` to `plugins` in weft.config.ts.',
+          'Canvas `s.text()` needs `text.measure`, and nothing provides it: add `text()` from `@kerf/text` to `plugins` in kerf.config.ts.',
         )
     })
   }
@@ -301,7 +301,7 @@ function cssChecks(file, report) {
         'X011',
         at,
         at + 18,
-        'This hides the text mirror from assistive tech, and it is the only copy a screen reader can read. Leave the mirror to weft.',
+        'This hides the text mirror from assistive tech, and it is the only copy a screen reader can read. Leave the mirror to kerf.',
       )
   }
 }
@@ -325,7 +325,7 @@ export function surfaceChecks(root, { files, exclude = [], slots }) {
   }
   for (const f of sources.values()) {
     const glyphs = /\.[jt]sx$/.test(f.rel) && /\.map\(/.test(f.text) && /<span\b/.test(f.text)
-    const surfaces = f.text.includes('@weft-js/core/surface')
+    const surfaces = f.text.includes('@kerf/core/surface')
     if (!glyphs && !surfaces) continue
     let sf
     try {
@@ -341,7 +341,7 @@ export function surfaceChecks(root, { files, exclude = [], slots }) {
     if (!/\.[jt]sx$/.test(f.rel)) continue
     const scan = scanJsx(f.text, f.rel)
     const local = scan.imports.find(
-      (i) => i.source === '@weft-js/core/surface' && i.imported === 'Surface',
+      (i) => i.source === '@kerf/core/surface' && i.imported === 'Surface',
     )?.local
     for (const el of scan.elements) {
       if (el.name !== local) continue

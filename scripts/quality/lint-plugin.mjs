@@ -1,5 +1,5 @@
 // The rules Oxlint has no built-in for, as an Oxlint plugin so they show up with every other lint. These are rules for the
-// framework's own code; what apps get is `weft check`, in the compiler and the CLI.
+// framework's own code; what apps get is `kerf check`, in the compiler and the CLI.
 import { repoRoot } from '../lib/helpers.mjs'
 import { analyzeComments } from './comment-budget.mjs'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
@@ -107,7 +107,7 @@ const allComments = (context, check) => ({
 })
 
 export default {
-  meta: { name: 'weft' },
+  meta: { name: 'kerf' },
   rules: {
     'comment-budget': {
       create(context) {

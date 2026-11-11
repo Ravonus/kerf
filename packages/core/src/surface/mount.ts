@@ -1,4 +1,4 @@
-import { DEV, effect, getOwner, onCleanup, state, within, type State } from '@weft-js/core'
+import { DEV, effect, getOwner, onCleanup, state, within, type State } from '@kerf/core'
 import type { SurfaceDef, SurfaceBackend, SurfaceRenderer } from '../surface'
 import { integerFit } from './integer-fit'
 import { builtin } from './backends'
@@ -39,7 +39,7 @@ function createCanvas(
         }
         for (const i of result.issues ?? [])
           console.warn(
-            `weft: <Surface use={${def.name}}> prop \`${(i.path ?? []).map((p) => String(((p as { key?: PropertyKey })?.key ?? p) as PropertyKey)).join('.')}\`: ${i.message}`,
+            `kerf: <Surface use={${def.name}}> prop \`${(i.path ?? []).map((p) => String(((p as { key?: PropertyKey })?.key ?? p) as PropertyKey)).join('.')}\`: ${i.message}`,
           )
       },
     )
@@ -133,7 +133,7 @@ function startSurface(renderer: SurfaceRenderer, args: StartArgs) {
   if (!live()) return
   const backend = renderer.context(canvas, def)
   if (!backend) {
-    console.error(`weft: <Surface use={${def.name}}>: this browser has no \`${def.kind}\` context.`)
+    console.error(`kerf: <Surface use={${def.name}}>: this browser has no \`${def.kind}\` context.`)
     host.setAttribute('data-surface-error', def.kind)
     return
   }
@@ -211,7 +211,7 @@ export function mountSurface(
   const known = builtin[def.kind]
   if (known) start(known)
   else {
-    import('weft:slot/surface.renderer')
+    import('kerf:slot/surface.renderer')
       .then((m) => m.load(def.kind) as Promise<SurfaceRenderer>)
       .then(
         (r) => within(owner, () => start(r)),

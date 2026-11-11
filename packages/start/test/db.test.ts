@@ -1,14 +1,14 @@
 // The database layer in process (research 28 §2): one connection through Drizzle's proxy, migrations, the transaction
 // gate, the touched-tables check, Q013/Q014, and the tables as validators. Postgres repeats the core when
-// WEFT_TEST_POSTGRES names a private instance; the runtime matrix runs the whole app on it.
+// KERF_TEST_POSTGRES names a private instance; the runtime matrix runs the whole app on it.
 import { AsyncLocalStorage } from 'node:async_hooks'
 import type { ZodString } from 'zod'
 import { eq, inArray, sql } from 'drizzle-orm'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { mysqlTable, varchar } from 'drizzle-orm/mysql-core'
 import { integer as pgInteger, pgTable, text as pgText } from 'drizzle-orm/pg-core'
-import { mutation, query } from '@weft-js/start'
-import { fnOf, runtime, type StartError } from '@weft-js/start/data'
+import { mutation, query } from '@kerf/start'
+import { fnOf, runtime, type StartError } from '@kerf/start/data'
 import type { Scope } from '../src/exec'
 import { createScope, fetchQuery, runMutation } from '../src/exec'
 import { schemasOf } from '../src/db/index'
@@ -31,7 +31,7 @@ type Described = {
 }
 /** What the Postgres and MySQL `createDb`s share that the lazy test calls: their tables differ, so no one signature fits both. */
 interface LazyDb {
-  $weft: { migrate(list: unknown[]): Promise<void> }
+  $kerf: { migrate(list: unknown[]): Promise<void> }
   select(): { from(table: object): Promise<unknown[]> }
   transaction<T>(
     fn: (tx: { insert(table: object): { values(row: object): Promise<T> } }) => Promise<T>,
@@ -56,7 +56,7 @@ afterAll(() => {
 
 async function fresh() {
   const db = createDb({ schema, url: ':memory:', migrate: false })
-  await db.$weft.migrate(init)
+  await db.$kerf.migrate(init)
   return db
 }
 const scoped = (method = 'GET') => {
@@ -85,14 +85,14 @@ test('creating a client opens nothing: the first statement does', () => {
 
 test('migrations apply once, in order, and a failing one rolls back', async () => {
   const db = createDb({ schema, url: ':memory:', migrate: false })
-  await db.$weft.migrate(init)
-  await db.$weft.migrate(init)
+  await db.$kerf.migrate(init)
+  await db.$kerf.migrate(init)
   const bad = {
     tag: '0001_bad',
     sql: 'create table a (id integer);\n--> statement-breakpoint\ncreate table todos (id integer);',
   }
-  await expect(db.$weft.migrate([...init, bad])).rejects.toThrow(/already exists/)
-  expect(await db.all(sql`select tag from __weft_migrations`)).toEqual([['0000_init']])
+  await expect(db.$kerf.migrate([...init, bad])).rejects.toThrow(/already exists/)
+  expect(await db.all(sql`select tag from __kerf_migrations`)).toEqual([['0000_init']])
   await expect(db.run(sql`select * from a`)).rejects.toMatchObject({
     cause: { message: expect.stringContaining('no such table') },
   })
@@ -139,7 +139,7 @@ test("Q013: a URL the driver can't open, with the password out of the message", 
     }
   })()!
   expect(err.code).toBe('Q013')
-  expect(err.message).toContain('@weft-js/start/db/postgres')
+  expect(err.message).toContain('@kerf/start/db/postgres')
   expect(err.message).not.toContain('secret')
 })
 
@@ -149,7 +149,7 @@ test("Q014: a missing table is the migration that wasn't applied, with the fix",
   const { scope } = scoped()
   await expect(fetchQuery(scope, fnOf(list), undefined)).rejects.toMatchObject({
     code: 'Q014',
-    message: expect.stringContaining('weft db generate'),
+    message: expect.stringContaining('kerf db generate'),
   })
 })
 
@@ -198,7 +198,7 @@ test('Q011 stays out of production and off exempt tables', async () => {
     undefined,
   )
   expect(found).toEqual([])
-  db.$weft.exempt.add('todos')
+  db.$kerf.exempt.add('todos')
   const dev = query({ $id: 'exempt', run: () => db.select().from(todos) })
   const { found: seen, scope } = scoped()
   await fetchQuery(scope, fnOf(dev), undefined)
@@ -223,7 +223,7 @@ test("readMigrations: the journal's order, and nothing for an app with no folder
   const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import('node:fs')
   const { join } = await import('node:path')
   const { tmpdir } = await import('node:os')
-  const root = mkdtempSync(join(tmpdir(), 'weft-mig-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-mig-'))
   expect(readMigrations(root)).toEqual([])
   mkdirSync(join(root, 'drizzle/meta'), { recursive: true })
   writeFileSync(join(root, 'drizzle/0001_b.sql'), 'b')
@@ -242,24 +242,24 @@ test("readMigrations: the journal's order, and nothing for an app with no folder
 describe.each([
   [
     'postgres',
-    process.env.WEFT_TEST_POSTGRES,
+    process.env.KERF_TEST_POSTGRES,
     'postgres://u:p@127.0.0.1:1/none',
     () => import('../src/db/postgres'),
-    pgTable('weft_lazy', { id: pgText().primaryKey() }),
+    pgTable('kerf_lazy', { id: pgText().primaryKey() }),
   ],
   [
     'mysql',
-    process.env.WEFT_TEST_MYSQL,
+    process.env.KERF_TEST_MYSQL,
     'mysql://u:p@127.0.0.1:1/none',
     () => import('../src/db/mysql'),
-    mysqlTable('weft_lazy', { id: varchar({ length: 36 }).primaryKey() }),
+    mysqlTable('kerf_lazy', { id: varchar({ length: 36 }).primaryKey() }),
   ],
 ] as const)('%s, migrated on first use', (_, url, closed, load, table) => {
   afterEach(() => {
     runtime.migrations = undefined
   })
 
-  // Needs a real server, named by WEFT_TEST_POSTGRES or WEFT_TEST_MYSQL.
+  // Needs a real server, named by KERF_TEST_POSTGRES or KERF_TEST_MYSQL.
   test.skipIf(!url)(
     'statements and transactions wait for one run; a dead server is Q016',
     async () => {
@@ -269,12 +269,12 @@ describe.each([
       }) => LazyDb
       const tag = `lazy_${Date.now()}`
       const db = make({ schema: { table }, url })
-      const migrate = vi.spyOn(db.$weft, 'migrate')
+      const migrate = vi.spyOn(db.$kerf, 'migrate')
       runtime.migrations = {
         list: [
           {
             tag,
-            sql: 'drop table if exists weft_lazy;\n--> statement-breakpoint\ncreate table weft_lazy (id varchar(36) primary key);',
+            sql: 'drop table if exists kerf_lazy;\n--> statement-breakpoint\ncreate table kerf_lazy (id varchar(36) primary key);',
           },
         ],
         report() {},
@@ -297,14 +297,14 @@ describe.each([
   )
 })
 
-// Needs a MySQL server, named by WEFT_TEST_MYSQL.
-describe.skipIf(!process.env.WEFT_TEST_MYSQL)('mysql', () => {
+// Needs a MySQL server, named by KERF_TEST_MYSQL.
+describe.skipIf(!process.env.KERF_TEST_MYSQL)('mysql', () => {
   const my = mysqlTable('my_todos', {
     id: varchar({ length: 36 }).primaryKey(),
     title: varchar({ length: 200 }).notNull(),
   })
   const tables = { my }
-  const url = process.env.WEFT_TEST_MYSQL!
+  const url = process.env.KERF_TEST_MYSQL!
   const migrations = [
     {
       tag: `0000_${Date.now()}`,
@@ -314,33 +314,33 @@ describe.skipIf(!process.env.WEFT_TEST_MYSQL)('mysql', () => {
 
   test('same API and migrations, each file once; Q013 on a file URL', async () => {
     const db = createMysql({ schema: tables, url, migrate: false })
-    await db.$weft.migrate(migrations)
+    await db.$kerf.migrate(migrations)
     await db.insert(my).values({ id: '1', title: 'Milk' })
-    await db.$weft.migrate(migrations) // a second run would drop the row
+    await db.$kerf.migrate(migrations) // a second run would drop the row
     expect(await db.select().from(my)).toEqual([{ id: '1', title: 'Milk' }])
     expect(() => createMysql({ schema: tables, url: 'file:x.db' })).toThrow(/Q013|mysql:/)
   })
 })
 
-// Needs a Postgres server, named by WEFT_TEST_POSTGRES.
-describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres', () => {
-  const rows = pgTable('weft_test_rows', { id: pgText().primaryKey(), n: pgInteger().notNull() })
-  const url = process.env.WEFT_TEST_POSTGRES!
+// Needs a Postgres server, named by KERF_TEST_POSTGRES.
+describe.skipIf(!process.env.KERF_TEST_POSTGRES)('postgres', () => {
+  const rows = pgTable('kerf_test_rows', { id: pgText().primaryKey(), n: pgInteger().notNull() })
+  const url = process.env.KERF_TEST_POSTGRES!
   const table = [
     {
       tag: `pg_${Date.now()}`,
-      sql: 'drop table if exists weft_test_rows;\n--> statement-breakpoint\ncreate table weft_test_rows (id text primary key, n integer not null);',
+      sql: 'drop table if exists kerf_test_rows;\n--> statement-breakpoint\ncreate table kerf_test_rows (id text primary key, n integer not null);',
     },
   ]
 
   test('a statement with parameters stays prepared, so a repeat is one round trip; `prepare: false` for a pooler', async () => {
     const { createDb: createPg } = await import('../src/db/postgres')
     const count = async (db: ReturnType<typeof createPg<{ rows: typeof rows }>>) => {
-      await db.$weft.migrate(table)
+      await db.$kerf.migrate(table)
       for (let i = 0; i < 2; i++) await db.select().from(rows).where(eq(rows.id, 'x'))
       return (
         await db.execute(
-          sql`select count(*)::int as n from pg_prepared_statements where statement like '%weft_test_rows%' and from_sql = false`,
+          sql`select count(*)::int as n from pg_prepared_statements where statement like '%kerf_test_rows%' and from_sql = false`,
         )
       )[0]!.n
     }
@@ -355,7 +355,7 @@ describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres', () => {
   test("a list that grows doesn't fill the connection with a statement per length", async () => {
     const { createDb: createPg } = await import('../src/db/postgres')
     const db = createPg({ schema: { rows }, url, migrate: false, max: 1 })
-    await db.$weft.migrate(table)
+    await db.$kerf.migrate(table)
     for (let n = 1; n <= 100; n++)
       await db
         .select()
@@ -367,7 +367,7 @@ describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres', () => {
           ),
         )
     const [row] = await db.execute<{ n: number }>(
-      sql`select count(*)::int as n from pg_prepared_statements where statement like '%weft_test_rows%' and from_sql = false`,
+      sql`select count(*)::int as n from pg_prepared_statements where statement like '%kerf_test_rows%' and from_sql = false`,
     )
     expect(row!.n).toBeLessThanOrEqual(32)
   })
@@ -376,8 +376,8 @@ describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres', () => {
     const { createDb: createPg } = await import('../src/db/postgres')
     expect(() => createPg({ schema: { rows }, url: 'file:x.db' })).toThrow(/Q013|postgres/)
     const db = createPg({ schema: { rows }, url, migrate: false })
-    await db.$weft.migrate(table)
-    await db.$weft.migrate(table)
+    await db.$kerf.migrate(table)
+    await db.$kerf.migrate(table)
     await db.insert(rows).values({ id: 'a', n: 1 })
     expect(await db.select().from(rows)).toEqual([{ id: 'a', n: 1 }])
     await expect(
@@ -391,10 +391,10 @@ describe.skipIf(!process.env.WEFT_TEST_POSTGRES)('postgres', () => {
     const { found, scope } = scoped()
     await fetchQuery(scope, fnOf(q), undefined)
     expect(found.map((d) => d.code)).toEqual(['Q011'])
-    await db.execute(sql`drop table weft_test_rows`)
+    await db.execute(sql`drop table kerf_test_rows`)
     const gone = query({
       $id: 'pgGone',
-      tags: ['weft_test_rows'],
+      tags: ['kerf_test_rows'],
       run: () => db.select().from(rows),
     })
     await expect(fetchQuery(scoped().scope, fnOf(gone), undefined)).rejects.toMatchObject({

@@ -1,12 +1,12 @@
-// `weft test --gate`: a new or changed test has to prove it tests something (PLAN §7b, research 05 §5.1, research 22).
+// `kerf test --gate`: a new or changed test has to prove it tests something (PLAN §7b, research 05 §5.1, research 22).
 //
 //   1. Fail-before (T010): each new or changed test fails against the code before the change, and passes after it.
 //   2. Mutation on changed lines (T011): each new test kills at least one mutant of the changed source lines.
 //      Surviving mutants come back with what an assertion that kills them would check.
-//   3. No silent weakening (T020): an existing test deleted, skipped or loosened needs `// weft-allow T020: <reason>`.
+//   3. No silent weakening (T020): an existing test deleted, skipped or loosened needs `// kerf-allow T020: <reason>`.
 //   Plus the static T-codes on the changed test files, with T005 (implementation queries) blocking for new tests.
 //
-// Tests run in scratch copies of the project (`.weft/gate/`), never in the working tree. With no source change
+// Tests run in scratch copies of the project (`.kerf/gate/`), never in the working tree. With no source change
 // (tests added for existing code) there is no "before" to fail on: fail-before is skipped and the mutants come from
 // the source files the new tests import.
 
@@ -24,7 +24,7 @@ import { resolveImport } from './tests.mjs'
 
 const code = (rel) => /\.[cm]?[jt]sx?$/.test(rel) && !/\.d\.[cm]?ts$/.test(rel)
 const configFile = (rel) =>
-  /(^|\/)(vite|vitest|weft|tsup|eslint|playwright)\.config\.[cm]?[jt]s$/.test(rel)
+  /(^|\/)(vite|vitest|kerf|tsup|eslint|playwright)\.config\.[cm]?[jt]s$/.test(rel)
 const posix = (p) => p.split('\\').join('/')
 
 /** Changed files between `base` and the working tree, from git (paths relative to `root`). */
@@ -39,7 +39,7 @@ export function gitChanges(root, base = 'HEAD') {
     ...git('diff', '--name-only', '--relative', '--no-renames', base).split('\n'),
     ...git('ls-files', '--others', '--exclude-standard').split('\n'),
   ]
-  const rels = [...new Set(list.filter((r) => r && !r.startsWith('.weft/')))]
+  const rels = [...new Set(list.filter((r) => r && !r.startsWith('.kerf/')))]
   return rels
     .map((rel) => {
       let before = null

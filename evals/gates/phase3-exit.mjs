@@ -2,9 +2,9 @@
 // Phase 3's exit check (PLAN §9, "3. Start"; research 28 §8): a T3-equivalent todo + auth app, scaffolded and extended
 // by an agent, passes one e2e on Node, Bun and Deno.
 //
-//   node evals/gates/phase3-exit.mjs prepare <dir>     scaffold, install, `weft db generate`; prints the agent's brief
+//   node evals/gates/phase3-exit.mjs prepare <dir>     scaffold, install, `kerf db generate`; prints the agent's brief
 //   (a fresh agent works in <dir>, from the brief and what the app ships, and sees no e2e)
-//   node evals/gates/phase3-exit.mjs verify <dir>      weft check, tsc, then the hidden e2e on all three runtimes
+//   node evals/gates/phase3-exit.mjs verify <dir>      kerf check, tsc, then the hidden e2e on all three runtimes
 //
 // verify writes evals/results/phase3-exit.md and .json; exit 1 if any part fails. Needs bun and deno on PATH and
 // packages/core's native compiler built.
@@ -22,9 +22,9 @@ if (!['prepare', 'verify'].includes(step) || !dirArg) {
 const dir = resolve(dirArg)
 const { run, must } = commands(dir, 1 << 26)
 
-export const BRIEF = `Add todo sharing to this app. The app is a weft app: read AGENTS.md first, then \`npx weft docs start\`. Run
-\`npx weft check --json\` after changes. Work only inside this directory; don't read weft's own sources in
-node_modules beyond what \`weft docs\` gives you.
+export const BRIEF = `Add todo sharing to this app. The app is a kerf app: read AGENTS.md first, then \`npx kerf docs start\`. Run
+\`npx kerf check --json\` after changes. Work only inside this directory; don't read kerf's own sources in
+node_modules beyond what \`kerf docs\` gives you.
 
 What to build:
 1. A todo's owner can share it with another user by email. On /todos, each of your own todos has a button named
@@ -46,20 +46,20 @@ owner-only. Pages must keep server-rendering with no fetch during hydration, and
 in both lists without a reload in the tab that made them.
 
 The database is SQLite through Drizzle; add what you need to the schema and generate its migration. When you're done,
-\`npx weft check\` should report no errors and \`npx weft build\` should succeed. Don't run a production deploy, and use
+\`npx kerf check\` should report no errors and \`npx kerf build\` should succeed. Don't run a production deploy, and use
 only made-up test accounts on localhost.`
 
 if (step === 'prepare') {
   must(
     'node',
     [
-      join(repo, 'packages/create/bin/create-weft.mjs'),
+      join(repo, 'packages/create-kerf/bin/create-kerf.mjs'),
       dir,
       '--db',
       'sqlite',
       '--auth',
       '--ui',
-      'warp',
+      'veneer',
       '--name',
       'todos',
     ],
@@ -69,17 +69,17 @@ if (step === 'prepare') {
   const pkg = JSON.parse(readFileSync(file, 'utf8'))
   for (const deps of [pkg.dependencies, pkg.devDependencies])
     for (const name of Object.keys(deps ?? {}))
-      if (name === '@weft-js/core' || name.startsWith('@weft-js/')) deps[name] = packageUrl(name)
+      if (name === '@kerf/core' || name.startsWith('@kerf/')) deps[name] = packageUrl(name)
   writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
   must('npm', ['install', '--no-audit', '--no-fund'])
-  must('npx', ['weft', 'db', 'generate'])
-  must('npx', ['weft', 'agents-md'])
+  must('npx', ['kerf', 'db', 'generate'])
+  must('npx', ['kerf', 'agents-md'])
   console.log(BRIEF)
   process.exit(0)
 }
 
 const parts = {}
-const check = JSON.parse(run('npx', ['weft', 'check', '--json']).stdout || '{}')
+const check = JSON.parse(run('npx', ['kerf', 'check', '--json']).stdout || '{}')
 parts.check = {
   ok: check.ok === true,
   summary: check.summary,
@@ -115,7 +115,7 @@ const errors = tsc.stdout.split('\n').filter((l) => /error TS/.test(l))
 const own = errors.filter((l) => l.startsWith('src/'))
 parts.types = { ok: !own.length, app: own, packages: errors.length - own.length }
 
-const json = join(dir, '.weft-matrix.json')
+const json = join(dir, '.kerf-matrix.json')
 const matrix = run(
   'node',
   [
@@ -149,14 +149,14 @@ writeFileSync(
   join(here, 'results/phase3-exit.md'),
   `# Phase 3 exit check
 
-${result.date}: **${ok ? 'PASS' : 'FAIL'}**. \`create-weft --db sqlite --auth --ui warp\`, extended by a fresh agent with todo
+${result.date}: **${ok ? 'PASS' : 'FAIL'}**. \`create-kerf --db sqlite --auth --ui veneer\`, extended by a fresh agent with todo
 sharing from the brief in \`evals/gates/phase3-exit.mjs\`, then the hidden e2e (\`evals/gates/phase3-exit.e2e.mjs\`) per runtime.
 
 | Runtime | Result | Checks |
 |---|---|---|
 ${runtimes.map(row).join('\n')}
 
-- \`weft check\`: ${parts.check.ok ? 'no errors' : 'errors'} (${JSON.stringify(parts.check.summary)}).
+- \`kerf check\`: ${parts.check.ok ? 'no errors' : 'errors'} (${JSON.stringify(parts.check.summary)}).
 - \`tsc\` on the app: ${own.length} error(s) in \`src/\`, ${parts.types.packages} in linked packages.
 - Tables: ${result.tables.join(', ')}. Migrations: ${migrations.join(', ')}.
 `,

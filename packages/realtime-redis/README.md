@@ -1,35 +1,35 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
-<h1 align="center">@weft-js/realtime-redis</h1>
+<h1 align="center">@kerf/realtime-redis</h1>
 
 <p align="center">
-  <strong>Redis pub/sub as Weft's realtime bus, so live data reaches every instance of your app.</strong><br>
-  One line in <code>weft.config.ts</code>, one <code>REDIS_URL</code>, and no change to your pages or server functions.
+  <strong>Redis pub/sub as Kerf's realtime bus, so live data reaches every instance of your app.</strong><br>
+  One line in <code>kerf.config.ts</code>, one <code>REDIS_URL</code>, and no change to your pages or server functions.
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@weft-js/realtime-redis"><img src="https://img.shields.io/npm/v/@weft-js/realtime-redis?color=145c3c&label=npm" alt="npm version"></a>
-  <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
-  <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
+  <a href="https://www.npmjs.com/package/@kerf/realtime-redis"><img src="https://img.shields.io/npm/v/@kerf/realtime-redis?color=145c3c&label=npm" alt="npm version"></a>
+  <a href="https://github.com/Ravonus/kerf/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
+  <a href="https://github.com/Ravonus/kerf/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/kerf/quality.yml?branch=main&label=checks" alt="checks"></a>
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/docs">Docs</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/examples">Examples</a> ·
-  <a href="https://github.com/Ravonus/weft/blob/main/CHANGELOG.md">Changelog</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf/tree/main/docs">Docs</a> ·
+  <a href="https://github.com/Ravonus/kerf/tree/main/examples">Examples</a> ·
+  <a href="https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!IMPORTANT]
 > **Early release (0.1.x).** APIs can change between minor versions. Pin the version and read the
-> [changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md) before you upgrade.
+> [changelog](https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md) before you upgrade.
 
-On one server, Weft's realtime needs nothing: messages, `.live()` pokes, channels and shared state go through a memory
+On one server, Kerf's realtime needs nothing: messages, `.live()` pokes, channels and shared state go through a memory
 bus inside the process. Run two instances and each one only reaches its own sockets, so a mutation on one never
 refreshes a page connected to the other. This package fills the `realtime.bus` slot with Redis pub/sub, so every
 instance hears every publish. It's for apps that already run Redis, or deploy to a host that runs several instances.
@@ -38,8 +38,8 @@ instance hears every publish. It's for apps that already run Redis, or deploy to
 
 - **A plugin, not code.** `redis()` in `plugins` replaces the memory bus. Nothing in `src/` changes.
 - **Reads `REDIS_URL`.** The URL comes from the environment unless you pass `url`, so no secret lands in the config.
-- **Several apps, one server.** Every channel name is prefixed (`weft:` by default), so apps can share a Redis.
-- **Lazy.** It opens no connection until the first publish or subscribe, and `weft build` never connects.
+- **Several apps, one server.** Every channel name is prefixed (`kerf:` by default), so apps can share a Redis.
+- **Lazy.** It opens no connection until the first publish or subscribe, and `kerf build` never connects.
 - **Reconnects on its own.** ioredis retries forever and resubscribes. Each reconnect after the first is reported to
   the hub as a gap, so clients know that messages may be missing.
 - **Tested against a real server.** The test suite runs the shared `realtime.bus@1` conformance checks against a
@@ -49,22 +49,22 @@ instance hears every publish. It's for apps that already run Redis, or deploy to
 
 ```bash
 # npm
-npm install @weft-js/realtime-redis
+npm install @kerf/realtime-redis
 
 # pnpm
-pnpm add @weft-js/realtime-redis
+pnpm add @kerf/realtime-redis
 
 # bun
-bun add @weft-js/realtime-redis
+bun add @kerf/realtime-redis
 ```
 
-Or let the `weft` CLI install it and add it to `weft.config.ts` in one step:
+Or let the `kerf` CLI install it and add it to `kerf.config.ts` in one step:
 
 ```bash
-npx weft add redis
+npx kerf add redis
 ```
 
-`weft add` installs the package and adds the plugin to `weft.config.ts`.
+`kerf add` installs the package and adds the plugin to `kerf.config.ts`.
 
 ## Quick start
 
@@ -74,19 +74,19 @@ npx weft add redis
    docker run --rm -p 6379:6379 redis
    ```
 
-2. Add the plugin. `weft add redis` writes this for you:
+2. Add the plugin. `kerf add redis` writes this for you:
 
    ```ts
-   // weft.config.ts
-   import { defineConfig } from '@weft-js/core/config'
-   import realtimeRedis from '@weft-js/realtime-redis/plugin'
+   // kerf.config.ts
+   import { defineConfig } from '@kerf/core/config'
+   import realtimeRedis from '@kerf/realtime-redis/plugin'
 
    export default defineConfig({
      plugins: [realtimeRedis()],
    })
    ```
 
-   `import { redis } from '@weft-js/realtime-redis/plugin'` is the same function under its own name.
+   `import { redis } from '@kerf/realtime-redis/plugin'` is the same function under its own name.
 
 3. Set the URL in the app's environment:
 
@@ -98,21 +98,21 @@ npx weft add redis
 4. Start two instances on different ports and open a page that reads a query with `.live()` on each. A mutation through
    one refreshes the page on the other.
 
-## How it plugs into Weft
+## How it plugs into Kerf
 
-Weft's realtime hub keeps everything that has state (tags, topics, replay rings, cursors, presence) and hands the bus
+Kerf's realtime hub keeps everything that has state (tags, topics, replay rings, cursors, presence) and hands the bus
 three things to do: publish a string to a channel, subscribe to a channel, and close. That is the `Bus` interface in
-[`@weft-js/start/bus`](https://github.com/Ravonus/weft/blob/main/packages/start/src/bus.ts). A bus is at-most-once and
+[`@kerf/start/bus`](https://github.com/Ravonus/kerf/blob/main/packages/start/src/bus.ts). A bus is at-most-once and
 ordered per publisher, like this one.
 
-The plugin provides the `realtime.bus` slot (version 1, one provider, server side). At build time Weft writes the slot
-binding to `.weft/slots/realtime.bus.ts`, and the server entry wraps it in a bus that loads this package on the first
+The plugin provides the `realtime.bus` slot (version 1, one provider, server side). At build time Kerf writes the slot
+binding to `.kerf/slots/realtime.bus.ts`, and the server entry wraps it in a bus that loads this package on the first
 publish or subscribe. The order of precedence is:
 
 | Where the bus comes from | Wins over |
 | --- | --- |
 | `bus` in `src/realtime.server.ts` | everything: an explicit choice beats a plugin |
-| a `realtime.bus` plugin in `weft.config.ts` (this one, or `@weft-js/realtime-nats`) | the memory bus |
+| a `realtime.bus` plugin in `kerf.config.ts` (this one, or `@kerf/realtime-nats`) | the memory bus |
 | nothing | the memory bus, one process only |
 
 So if `src/realtime.server.ts` already sets `bus: postgresBus(...)`, adding this plugin changes nothing until you take
@@ -125,8 +125,8 @@ options:
 
 ```ts
 // src/realtime.server.ts
-import { realtime } from '@weft-js/start'
-import { redisBus } from '@weft-js/realtime-redis'
+import { realtime } from '@kerf/start'
+import { redisBus } from '@kerf/realtime-redis'
 
 export default realtime({
   bus: redisBus({
@@ -142,13 +142,13 @@ settings. The package still has to be installed.
 
 ## Options
 
-`redis(options)` in `weft.config.ts` and `redisBus(options)` take the same options. The plugin passes them through to
+`redis(options)` in `kerf.config.ts` and `redisBus(options)` take the same options. The plugin passes them through to
 `bus()`, which fills `url` from `REDIS_URL` when it's missing.
 
 | Option | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `url` | `string` | `process.env.REDIS_URL` (plugin and `bus()` only) | Server to connect to. Must start with `redis://` or `rediss://` (TLS). Required for `redisBus()`. |
-| `prefix` | `string` | `'weft:'` | Put in front of every Redis channel name. Give each app its own when apps share a server. |
+| `prefix` | `string` | `'kerf:'` | Put in front of every Redis channel name. Give each app its own when apps share a server. |
 
 The plugin's options end up in generated code, so keep them to plain values. Leave the password in `REDIS_URL` rather
 than in `url`.
@@ -158,16 +158,16 @@ than in `url`.
 | Variable | Read by | Needed |
 | --- | --- | --- |
 | `REDIS_URL` | the plugin and `bus()` | At run time, unless `url` is given. `redis://user:pass@host:6379/0` or `rediss://…` for TLS. |
-| `WEFT_BUILD` | `redisBus()` | Set by `weft build`. While it's set a missing URL is not an error, since a build loads the module but never connects. |
+| `KERF_BUILD` | `redisBus()` | Set by `kerf build`. While it's set a missing URL is not an error, since a build loads the module but never connects. |
 
 ### What the plugin declares
 
-`weft plugins` and the trust check show what a plugin may reach. This one declares:
+`kerf plugins` and the trust check show what a plugin may reach. This one declares:
 
 | Permission | Value |
 | --- | --- |
 | `net` | `env:REDIS_URL`, the host in that variable |
-| `env` | `REDIS_URL`, `WEFT_BUILD` |
+| `env` | `REDIS_URL`, `KERF_BUILD` |
 
 ## How it behaves
 
@@ -186,14 +186,14 @@ than in `url`.
 
 | Export | From | What it is |
 | --- | --- | --- |
-| `redisBus(options)` | `@weft-js/realtime-redis` | A `Bus` over Redis pub/sub, connecting on first use. Throws Q013 without a `redis://` or `rediss://` URL, except during a build. |
-| `bus(options?)` | `@weft-js/realtime-redis` | The `realtime.bus` provider the plugin loads: `redisBus` with `url` defaulting to `REDIS_URL`. |
-| `RedisBusOptions` | `@weft-js/realtime-redis` | Type: `{ url: string; prefix?: string }`. |
-| `redisStore(options?)` | `@weft-js/realtime-redis` | The shared query cache on Redis: default-export it from `src/cache.server.ts`. Values are JSON with their `life` as a TTL; tag versions live in Redis, so every instance sees an invalidation. |
-| `redisRateLimit(options?)` | `@weft-js/realtime-redis` | Better Auth's rate limit on Redis, counted once across instances: `createAuth({ options: { rateLimit: { customStorage: redisRateLimit() } } })`. |
-| `redisQueue(options?)` | `@weft-js/realtime-redis` | The job queue on Redis: `defineJobs(jobs, { queue: redisQueue() })`. Jobs survive restarts and every instance works them, each claimed by one at a time; `dead(count?)` lists dead jobs, newest first (the last `deadLimit`, default 1000). |
-| `RedisStoreOptions` | `@weft-js/realtime-redis` | Type: `{ url?: string; prefix?: string }`. `url` defaults to `REDIS_URL`. |
-| default export, `redis` | `@weft-js/realtime-redis/plugin` | The plugin for `weft.config.ts`. Takes the same options as `bus()`. |
+| `redisBus(options)` | `@kerf/realtime-redis` | A `Bus` over Redis pub/sub, connecting on first use. Throws Q013 without a `redis://` or `rediss://` URL, except during a build. |
+| `bus(options?)` | `@kerf/realtime-redis` | The `realtime.bus` provider the plugin loads: `redisBus` with `url` defaulting to `REDIS_URL`. |
+| `RedisBusOptions` | `@kerf/realtime-redis` | Type: `{ url: string; prefix?: string }`. |
+| `redisStore(options?)` | `@kerf/realtime-redis` | The shared query cache on Redis: default-export it from `src/cache.server.ts`. Values are JSON with their `life` as a TTL; tag versions live in Redis, so every instance sees an invalidation. |
+| `redisRateLimit(options?)` | `@kerf/realtime-redis` | Better Auth's rate limit on Redis, counted once across instances: `createAuth({ options: { rateLimit: { customStorage: redisRateLimit() } } })`. |
+| `redisQueue(options?)` | `@kerf/realtime-redis` | The job queue on Redis: `defineJobs(jobs, { queue: redisQueue() })`. Jobs survive restarts and every instance works them, each claimed by one at a time; `dead(count?)` lists dead jobs, newest first (the last `deadLimit`, default 1000). |
+| `RedisStoreOptions` | `@kerf/realtime-redis` | Type: `{ url?: string; prefix?: string }`. `url` defaults to `REDIS_URL`. |
+| default export, `redis` | `@kerf/realtime-redis/plugin` | The plugin for `kerf.config.ts`. Takes the same options as `bus()`. |
 
 The returned bus has `name: 'redis'`, `publish(channel, message)`, `subscribe(channel, on, gap?)` (resolves once Redis
 confirms the subscription, with a function that stops it) and `close()`.
@@ -207,13 +207,13 @@ instances agree on both:
 
 ```ts
 // src/cache.server.ts
-import { redisStore } from '@weft-js/realtime-redis'
+import { redisStore } from '@kerf/realtime-redis'
 export default redisStore()
 ```
 
 ```ts
 // src/auth.server.ts
-import { redisRateLimit } from '@weft-js/realtime-redis'
+import { redisRateLimit } from '@kerf/realtime-redis'
 export default createAuth({
   db,
   secret,
@@ -228,8 +228,8 @@ export default createAuth({
 
 ```ts
 // src/jobs.server.ts
-import { defineJobs } from '@weft-js/start/jobs'
-import { redisQueue } from '@weft-js/realtime-redis'
+import { defineJobs } from '@kerf/start/jobs'
+import { redisQueue } from '@kerf/realtime-redis'
 
 export default defineJobs(
   { welcome: { run: ({ input }) => sendWelcome(input) } },
@@ -242,9 +242,9 @@ Jobs are stored as JSON under `<prefix>q:`, so their input must be JSON too.
 ### Several apps on one Redis
 
 ```ts
-// weft.config.ts
-import { defineConfig } from '@weft-js/core/config'
-import { redis } from '@weft-js/realtime-redis/plugin'
+// kerf.config.ts
+import { defineConfig } from '@kerf/core/config'
+import { redis } from '@kerf/realtime-redis/plugin'
 
 export default defineConfig({
   plugins: [redis({ prefix: 'billing:' })],
@@ -263,7 +263,7 @@ REDIS_URL=rediss://default:secret@my-redis.example.com:6380
 
 The bus is at-most-once, and a reconnect can drop messages. Anything that must survive goes through a mutation, and a
 channel's `collect` plus a history query fills in what a client missed. The
-[live data guide](https://github.com/Ravonus/weft/blob/main/site/content/learn/live-data.md) shows the pattern.
+[live data guide](https://github.com/Ravonus/kerf/blob/main/site/content/learn/live-data.md) shows the pattern.
 
 ## Limits
 
@@ -278,8 +278,8 @@ channel's `collect` plus a history query fills in what a client missed. The
 | Symptom | Cause | Fix |
 | --- | --- | --- |
 | `Q013` "`redisBus` needs a `redis://` URL" at startup | `REDIS_URL` is unset, or the URL has another scheme (`http://`, a bare host) | Set `REDIS_URL` to a `redis://` or `rediss://` URL, or pass `url`. Credentials are masked in the message. |
-| `R002` from `weft build` | The preset runs many instances and the app is still on the memory bus | Add this plugin, `@weft-js/realtime-nats`, or `postgresBus` in `src/realtime.server.ts`. |
-| `E009` from `weft deploy` | The same problem, found for a deploy target | As above. |
+| `R002` from `kerf build` | The preset runs many instances and the app is still on the memory bus | Add this plugin, `@kerf/realtime-nats`, or `postgresBus` in `src/realtime.server.ts`. |
+| `E009` from `kerf deploy` | The same problem, found for a deploy target | As above. |
 | The plugin is listed but nothing crosses instances | `src/realtime.server.ts` sets its own `bus`, which wins | Remove that `bus`, or set `redisBus()` there. |
 | Messages published while Redis was down never arrived | Pub/sub keeps nothing; the reconnect was reported as a gap | Expected. Put what must survive in a mutation, and refetch after a gap. |
 | Two apps see each other's messages | Same server, same `prefix` | Give each app its own `prefix`. |
@@ -288,28 +288,28 @@ channel's `collect` plus a history query fills in what a client missed. The
 
 | Package | What it is |
 | --- | --- |
-| [`@weft-js/start`](https://www.npmjs.com/package/@weft-js/start) | The full-stack runtime: the realtime hub, `realtime()`, `memoryBus` and `postgresBus` (`@weft-js/start/bus/postgres`). |
-| [`@weft-js/realtime-nats`](https://www.npmjs.com/package/@weft-js/realtime-nats) | The same slot on core NATS. |
-| [`@weft-js/realtime-durable-object`](https://www.npmjs.com/package/@weft-js/realtime-durable-object) | The bus for Cloudflare, on Durable Objects. |
-| [`@weft-js/multiplayer`](https://www.npmjs.com/package/@weft-js/multiplayer) | Presence, cursors and a relay on `channel`. Its traffic crosses instances through this bus. |
-| [`@weft-js/core`](https://www.npmjs.com/package/@weft-js/core) | The plugin system (`definePlugin`, slots) and `busSuite`, the conformance checks a bus must pass. |
+| [`@kerf/start`](https://www.npmjs.com/package/@kerf/start) | The full-stack runtime: the realtime hub, `realtime()`, `memoryBus` and `postgresBus` (`@kerf/start/bus/postgres`). |
+| [`@kerf/realtime-nats`](https://www.npmjs.com/package/@kerf/realtime-nats) | The same slot on core NATS. |
+| [`@kerf/realtime-durable-object`](https://www.npmjs.com/package/@kerf/realtime-durable-object) | The bus for Cloudflare, on Durable Objects. |
+| [`@kerf/multiplayer`](https://www.npmjs.com/package/@kerf/multiplayer) | Presence, cursors and a relay on `channel`. Its traffic crosses instances through this bus. |
+| [`@kerf/core`](https://www.npmjs.com/package/@kerf/core) | The plugin system (`definePlugin`, slots) and `busSuite`, the conformance checks a bus must pass. |
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Ravonus/weft/blob/main/CONTRIBUTING.md). To test this package:
+See [CONTRIBUTING.md](https://github.com/Ravonus/kerf/blob/main/CONTRIBUTING.md). To test this package:
 
 ```bash
-pnpm --filter @weft-js/realtime-redis test
+pnpm --filter @kerf/realtime-redis test
 ```
 
-The test against a real server needs a `redis-server` binary. Name it in `WEFT_TEST_REDIS`; without it that test is
+The test against a real server needs a `redis-server` binary. Name it in `KERF_TEST_REDIS`; without it that test is
 skipped and says so:
 
 ```bash
-WEFT_TEST_REDIS=$(command -v redis-server) \
-  pnpm --filter @weft-js/realtime-redis test
+KERF_TEST_REDIS=$(command -v redis-server) \
+  pnpm --filter @kerf/realtime-redis test
 ```
 
 ## License
 
-[MIT](https://github.com/Ravonus/weft/blob/main/LICENSE)
+[MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE)

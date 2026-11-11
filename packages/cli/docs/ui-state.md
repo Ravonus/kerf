@@ -3,9 +3,9 @@
 Hover, focus and press are usually a pile of event handlers. `interaction()` makes them plain values you can read, draw and share. An app that doesn't use it ships none of it.
 
 ```tsx
-import { derived, watch } from '@weft-js/core'
-import { interaction } from '@weft-js/core/interaction'
-import { Button, Checkbox } from '@weft-js/warp'
+import { derived, watch } from '@kerf/core'
+import { interaction } from '@kerf/core/interaction'
+import { Button, Checkbox } from '@kerf/veneer'
 
 type Todo = { id: string; title: string }
 
@@ -28,14 +28,14 @@ export function TodoRow({ todo }: { todo: Todo }) {
 }
 ```
 
-Give a warp component the row with `ui`, and it fills the row from real events and draws from it. Everything else is reading:
+Give a veneer component the row with `ui`, and it fills the row from real events and draws from it. Everything else is reading:
 
 | Read | It means | Who writes it |
 |---|---|---|
 | `row.hover.value`, `row.focus.value`, `row.pressed.value` | true or false, on this page | real events, or your code |
 | `row.remote.value.hover`, `.focus`, `.pressed` | how many others have it: other tabs and other clients. A count, never who. | only the network |
 
-**Yours and theirs never mix.** Someone else's hover can't set your `row.hover`, so a `watch` on it can't run for them and can't echo back. To draw both by hand, read both: `row.hover.value || row.remote.value.hover`. warp does this for you: a row lit from anywhere gets `data-hold`, and `data-remote` when it's only others.
+**Yours and theirs never mix.** Someone else's hover can't set your `row.hover`, so a `watch` on it can't run for them and can't echo back. To draw both by hand, read both: `row.hover.value || row.remote.value.hover`. veneer does this for you: a row lit from anywhere gets `data-hold`, and `data-remote` when it's only others.
 
 **What a press leaves behind is data.** `pressed` is true only while a button is held down, so others see the press and then it's gone. The tick a press leaves on a checkbox is the app's data, not UI state: share it the way you share any data, with `state(…, { persist, sync: 'tabs' })` for tabs or live data for other clients. The demo above does both.
 
@@ -47,7 +47,7 @@ Give a warp component the row with `ui`, and it fills the row from real events a
 | Other tabs of this browser | `BroadcastChannel`, one post a frame at most | nothing |
 | Other browsers | one socket per browser, held by one tab | allow it, below |
 
-Drop `share` and the row is private to that one `interaction()` call. An app without `@weft-js/start` shares on the page only.
+Drop `share` and the row is private to that one `interaction()` call. An app without `@kerf/start` shares on the page only.
 
 When the tab holding the socket closes or crashes, another tab takes over; nothing flashes, and nobody sees a gap except, for one round trip, a hover made during the handover. When a tab or client goes, what it held clears.
 
@@ -56,7 +56,7 @@ When the tab holding the socket closes or crashes, another tab takes over; nothi
 Sharing with other clients is off until you say who may, in `src/realtime.server.ts`:
 
 ```ts
-import { realtime } from '@weft-js/start'
+import { realtime } from '@kerf/start'
 
 export default realtime({
   share: ({ ctx, key }) =>
@@ -67,7 +67,7 @@ export default realtime({
 That rule runs once per key. If it reads a database, a 200-row list means 200 queries, so answer them together instead. You get up to 400 keys in one call and give back the ones allowed:
 
 ```ts
-import { realtime } from '@weft-js/start'
+import { realtime } from '@kerf/start'
 
 // One query returns the keys this user may see.
 declare function visibleKeys(
@@ -84,9 +84,9 @@ export default realtime({
 
 Either form runs when a client joins and at each session re-check, and uses the same `ctx` as a channel's `authorize`. A rule that throws refuses what it was asked. With no `share` the socket refuses every key (R011), and a refused key still works between tabs. `() => true` must be written out.
 
-Peers see the three bits and an opaque connection id. No name, no pointer position, nothing typed. For names and cursors use `@weft-js/multiplayer`.
+Peers see the three bits and an opaque connection id. No name, no pointer position, nothing typed. For names and cursors use `@kerf/multiplayer`.
 
-**Hover tells people things.** What someone lingers on in a shared document, or which field of a form has focus, is a real signal. warp never shares by default: you opt in row by row, and it's worth telling your users.
+**Hover tells people things.** What someone lingers on in a shared document, or which field of a form has focus, is a real signal. veneer never shares by default: you opt in row by row, and it's worth telling your users.
 
 ## Details
 
@@ -96,10 +96,10 @@ Peers see the three bits and an opaque connection id. No name, no pointer positi
 - **The server** renders every row as idle, so hydration has nothing to reconcile. Rows are live a moment after the page is.
 - **Components that take `ui`:** Button, Checkbox, Switch, Radio, Toggle, Chip, Card. Remote state never touches `aria-*` or focus: it is decoration.
 
-`weft check` flags keys that can't match (U001), keys built from what a user typed (U002), `share` with no rule (U003), writing `remote` (U004) and `ui` on a component that doesn't take it (U005).
+`kerf check` flags keys that can't match (U001), keys built from what a user typed (U002), `share` with no rule (U003), writing `remote` (U004) and `ui` on a component that doesn't take it (U005).
 
 ## One browser, one socket
 
 All tabs of a browser share one WebSocket, held by one tab, and `share`, `channel` and `live` all ride it. You don't set this up. To your code and to the server each tab is still its own connection: `exceptSelf`, `left`, presence and rate limits work per tab as they did. `limits.connections` now counts browsers.
 
-When the leader tab closes, another takes over within a few milliseconds. Every tab's channels rejoin and its live queries resubscribe, so presence in other tabs may blink once. A browser without Web Locks gives each tab its own socket. A host that can't do WebSockets falls back to `/_weft/rt` over SSE for `live`.
+When the leader tab closes, another takes over within a few milliseconds. Every tab's channels rejoin and its live queries resubscribe, so presence in other tabs may blink once. A browser without Web Locks gives each tab its own socket. A host that can't do WebSockets falls back to `/_kerf/rt` over SSE for `live`.

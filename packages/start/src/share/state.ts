@@ -1,4 +1,4 @@
-import type { Counts } from '@weft-js/core/interaction'
+import type { Counts } from '@kerf/core/interaction'
 
 export type Pair = [key: string, bits: number]
 export type Triple = [id: string, key: string, bits: number]

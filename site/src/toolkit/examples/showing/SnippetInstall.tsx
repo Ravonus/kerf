@@ -1,5 +1,5 @@
-import { Snippet } from '@weft-js/warp'
+import { Snippet } from '@kerf/veneer'
 
 export const SnippetInstall = () => (
-  <Snippet code="npm install -g weft" />
+  <Snippet code="npm install -g kerf" />
 )

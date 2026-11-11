@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Card } from '@kerf/veneer'
 
 function Price({ dollars }: { dollars: number }) {
   return <strong>${dollars.toFixed(2)}</strong>

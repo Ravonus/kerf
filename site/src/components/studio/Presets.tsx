@@ -1,11 +1,11 @@
 // Starting points for the studio, and a switch that puts the theme on the whole site while you look around.
-import { onCleanup, state } from '@weft-js/core'
-import { Switch } from '@weft-js/warp'
+import { onCleanup, state } from '@kerf/core'
+import { Switch } from '@kerf/veneer'
 import { STUDIO_PALETTE, type StudioConfig } from '../../lib/studio'
 import type { Cfg } from './rows'
 
 const PRESETS: { name: string; swatch: string; config: StudioConfig }[] = [
-  { name: 'Weft', swatch: '#2f9e6a', config: {} },
+  { name: 'Kerf', swatch: '#2f9e6a', config: {} },
   { name: 'Ember', swatch: '#e8590c', config: { seed: { accent: '#e8590c' } } },
   {
     name: 'Ocean',

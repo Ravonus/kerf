@@ -6,8 +6,8 @@ import { functionRequestsIdle } from '../../packages/start/scripts/request-idle.
 await test('request settling includes overlapping writes and their follow-up reads', async () => {
   const page = new EventEmitter()
   const idle = functionRequestsIdle(page, { quietMs: 20, timeoutMs: 1000 })
-  const write = { url: () => '/_weft/fn/write' },
-    read = { url: () => '/_weft/fn/read' }
+  const write = { url: () => '/_kerf/fn/write' },
+    read = { url: () => '/_kerf/fn/read' }
   let completedRead = false
   page.emit('request', write)
   const timer = setTimeout(() => {
@@ -29,7 +29,7 @@ await test('request settling includes overlapping writes and their follow-up rea
 await test('failed requests settle and unfinished requests fail with a bounded timeout', async () => {
   const page = new EventEmitter()
   const idle = functionRequestsIdle(page, { quietMs: 0, timeoutMs: 30 })
-  const request = { url: () => '/_weft/fn/read' }
+  const request = { url: () => '/_kerf/fn/read' }
   page.emit('request', request)
   await assert.rejects(idle(), /did not settle/)
   page.emit('requestfailed', request)

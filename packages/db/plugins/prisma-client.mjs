@@ -1,10 +1,10 @@
-// prisma() for weft.config.ts (research 34 §4): what the CLI needs from Prisma. `weft db generate` writes the client and
+// prisma() for kerf.config.ts (research 34 §4): what the CLI needs from Prisma. `kerf db generate` writes the client and
 // a migration into `prisma/migrations`. The first needs no database; later ones are Prisma's own diff, which does.
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
-import { definePlugin } from '@weft-js/core/plugin'
+import { definePlugin } from '@kerf/core/plugin'
 
 const DIR = 'prisma/migrations'
 
@@ -45,20 +45,20 @@ function generate(root, name = 'change') {
 }
 
 export const prisma = definePlugin({
-  name: '@weft-js/db/plugin-prisma',
+  name: '@kerf/db/plugin-prisma',
   version: '0.0.0',
-  weft: '*',
+  kerf: '*',
   permissions: { fs: { read: ['prisma/**'], write: ['prisma/migrations/**'] }, spawn: ['node'] },
   contribute: () => ({
     db: { layer: 'prisma', schema: 'prisma/schema.prisma', migrations: DIR, generate },
     agents: {
       title: 'Database (Prisma)',
-      text: "`ctx.db` is the real Prisma client, so Prisma's docs apply. The schema is `prisma/schema.prisma`; after changing it, run `weft db generate <name>`, which updates the client and adds a migration that applies on the next request.",
+      text: "`ctx.db` is the real Prisma client, so Prisma's docs apply. The schema is `prisma/schema.prisma`; after changing it, run `kerf db generate <name>`, which updates the client and adds a migration that applies on the next request.",
     },
     map: [
       {
         want: 'Change the database',
-        call: 'Edit `prisma/schema.prisma`, then `weft db generate <name>`',
+        call: 'Edit `prisma/schema.prisma`, then `kerf db generate <name>`',
         have: 'Prisma',
       },
     ],

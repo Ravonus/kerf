@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Row, Slider, Stack, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Row, Slider, Stack, Text } from '@kerf/veneer'
 import { COPY_COST } from './shared'
 
 export function SliderAutoscale() {

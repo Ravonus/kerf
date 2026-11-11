@@ -2,8 +2,8 @@ import {
   defineState,
   derived,
   state,
-} from '@weft-js/core'
-import { Badge, Button, Card } from '@weft-js/warp'
+} from '@kerf/core'
+import { Badge, Button, Card } from '@kerf/veneer'
 
 // Any component can import this shared state. It is
 // set up the first time something reads it.

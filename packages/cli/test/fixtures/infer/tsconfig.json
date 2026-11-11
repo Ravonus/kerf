@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2022", "module": "esnext", "moduleResolution": "bundler", "strict": true, "noEmit": true, "skipLibCheck": true,
-    "jsx": "preserve", "jsxImportSource": "@weft-js/core", "lib": ["es2023", "dom", "dom.iterable"], "types": []
+    "jsx": "preserve", "jsxImportSource": "@kerf/core", "lib": ["es2023", "dom", "dom.iterable"], "types": []
   },
   "include": ["src"]
 }

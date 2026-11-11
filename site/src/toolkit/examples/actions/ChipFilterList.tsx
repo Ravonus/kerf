@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Chip, Row, Stack, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Chip, Row, Stack, Text } from '@kerf/veneer'
 import { PROJECTS } from '../../world'
 
 export function ChipFilterList() {

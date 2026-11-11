@@ -37,14 +37,14 @@ export function scanServerModules(root) {
 
 const FN_KINDS = new Set(['query', 'mutation', 'stream', 'topic', 'channel', 'sharedState'])
 
-/** Local names bound to the `FN_KINDS` from @weft-js/start. */
+/** Local names bound to the `FN_KINDS` from @kerf/start. */
 function fnLocals(ast) {
   const locals = new Map()
   for (const n of ast.program.body) {
     if (
       n.type !== 'ImportDeclaration' ||
       n.importKind === 'type' ||
-      !/^@weft-js\/start(\/data)?$/.test(n.source.value)
+      !/^@kerf\/start(\/data)?$/.test(n.source.value)
     )
       continue
     for (const s of n.specifiers)
@@ -196,7 +196,7 @@ export function clientStubs(code, file, rel, shapes) {
     }
   }
   const out =
-    `// weft: client stubs for ${rel} (research 27 §2)\n` +
+    `// kerf: client stubs for ${rel} (research 27 §2)\n` +
     kept
       .sort((a, b) => a[0] - b[0])
       .map(([, t]) => t)
@@ -208,7 +208,7 @@ export function clientStubs(code, file, rel, shapes) {
 /** Q003: a `query`/`mutation` defined in a file that isn't a server module (its name and kind), or undefined. */
 export function definesFns(code, file) {
   if (
-    !/@weft-js\/start/.test(code) ||
+    !/@kerf\/start/.test(code) ||
     !/\b(query|mutation|stream|topic|channel|sharedState)\b/.test(code)
   )
     return

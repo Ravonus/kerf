@@ -1,15 +1,15 @@
-import type { CanvasFrame } from '@weft-js/warp'
-import { Canvas } from '@weft-js/warp'
+import type { CanvasFrame } from '@kerf/veneer'
+import { Canvas } from '@kerf/veneer'
 import { token, STAGE } from './paint-primitives'
 
 // Colours read once and kept, then read again only when
 // the theme changes: `onTheme` drops the cache.
 export const TONES_DRAWN = [
-  '--warp-color-accent-solid',
-  '--warp-color-positive-solid',
-  '--warp-color-caution-solid',
-  '--warp-color-critical-solid',
-  '--warp-color-info-solid',
+  '--veneer-color-accent-solid',
+  '--veneer-color-positive-solid',
+  '--veneer-color-caution-solid',
+  '--veneer-color-critical-solid',
+  '--veneer-color-info-solid',
 ]
 
 export const CanvasThemed = () => {
@@ -36,7 +36,7 @@ export const CanvasThemed = () => {
     <Canvas
       draw={draw}
       onTheme={() => (inks = undefined)}
-      label="Five rings in warp's tones"
+      label="Five rings in veneer's tones"
       style={STAGE}
     />
   )

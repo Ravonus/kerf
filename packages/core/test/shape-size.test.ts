@@ -1,10 +1,10 @@
 // @vitest-environment node
 // What shape variants cost (research 31 §9). A component no `pending="shape"` reaches costs nothing: its variant and
-// @weft-js/core/shape tree-shake away.
+// @kerf/core/shape tree-shake away.
 import { fileURLToPath } from 'node:url'
 import { brotliCompressSync } from 'node:zlib'
 import { build } from 'vite'
-import weft from '../vite.mjs'
+import kerf from '../vite.mjs'
 
 const src = (f: string) => fileURLToPath(new URL(`../src/${f}`, import.meta.url))
 const fixture = (f: string) => fileURLToPath(new URL(`../bench/fixtures/${f}`, import.meta.url))
@@ -14,11 +14,11 @@ async function bundle(entry: string) {
     root: fixture(''),
     configFile: false,
     logLevel: 'silent',
-    plugins: [weft()],
+    plugins: [kerf()],
     resolve: {
       alias: [
-        { find: /^@weft-js\/core\/(dom|shape)$/, replacement: src('$1.ts') },
-        { find: /^@weft-js\/core$/, replacement: src('index.ts') },
+        { find: /^@kerf\/core\/(dom|shape)$/, replacement: src('$1.ts') },
+        { find: /^@kerf\/core$/, replacement: src('index.ts') },
       ],
     },
     build: { write: false, modulePreload: { polyfill: false }, rolldownOptions: { input: entry } },
@@ -30,7 +30,7 @@ async function bundle(entry: string) {
     .join('\n')
 }
 
-test('no pending="shape": no variant and no @weft-js/core/shape in the bundle', async () => {
+test('no pending="shape": no variant and no @kerf/core/shape in the bundle', async () => {
   const code = await bundle(fixture('shape-none.tsx'))
   expect(code).not.toContain('skeleton')
   expect(code).not.toContain('nnnnn')
@@ -45,8 +45,8 @@ test('a pending="shape" page pays for what it uses, within the budget', async ()
 }, 60_000)
 
 test('the Vite transform requests route and layout variants without a Boundary', async () => {
-  const main = weft({ hmr: false }).find((plugin) => plugin.name === 'weft')
-  if (!main) throw new Error('weft transform missing')
+  const main = kerf({ hmr: false }).find((plugin) => plugin.name === 'kerf')
+  if (!main) throw new Error('kerf transform missing')
   const hook = (main as { transform?: unknown }).transform as {
     handler: (this: object, code: string, id: string, options: object) => Promise<{ code: string }>
   }

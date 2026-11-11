@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Badge,
   Button,
@@ -9,25 +9,25 @@ import {
   Shell,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { PROJECTS, TONE_OF } from '../../world'
 import {
   AppWindow,
   MARK,
   ACCOUNT,
-  weftNav,
+  kerfNav,
   pageOf,
 } from './shared'
 
 export function ShellApp() {
   const page = state('projects')
-  const nav = weftNav((id) => (page.value = id))
+  const nav = kerfNav((id) => (page.value = id))
   return (
     <AppWindow height={600}>
       <Shell
         island
-        label="weft"
-        brand={{ name: 'weft', mark: <MARK /> }}
+        label="kerf"
+        brand={{ name: 'kerf', mark: <MARK /> }}
         title={pageOf[page.value]!}
         crumbs={[
           { label: 'Acme', href: '#' },

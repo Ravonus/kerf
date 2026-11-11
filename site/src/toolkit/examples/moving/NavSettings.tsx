@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Heading,
   Nav,
   Split,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 export function NavSettings() {
   const at = state('General')

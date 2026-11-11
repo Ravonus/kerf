@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Stack, Input, Row, Tag } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Stack, Input, Row, Tag } from '@kerf/veneer'
 
 export function TagAddToProject() {
   const tags = state(['frontend', 'checkout'])

@@ -61,10 +61,10 @@ const run = (cmd, args, env = {}, cwd = here) =>
     stdio: ['ignore', 'pipe', 'inherit'],
   })
 
-/** One build per variant; the bundles' sizes come from the same `WEFT_OFF` the suite runs with. */
+/** One build per variant; the bundles' sizes come from the same `KERF_OFF` the suite runs with. */
 const sizes = {}
 for (const v of variants) {
-  const env = { WEFT_OFF: v.off.join(','), ONLY: Object.keys(BUNDLES).join(',') }
+  const env = { KERF_OFF: v.off.join(','), ONLY: Object.keys(BUNDLES).join(',') }
   const json = join(here, 'dist/.size.json')
   run(process.execPath, [join(pkg, 'scripts/size.mjs'), '--json', json], env, pkg)
   const rows = JSON.parse(readFileSync(json, 'utf8'))
@@ -79,12 +79,12 @@ if (!has('sizes')) {
   run(process.execPath, ['build.mjs'])
   for (const v of variants)
     if (v.id !== 'on')
-      run(process.execPath, ['build.mjs'], { NAME: v.id, WEFT_OFF: v.off.join(',') })
+      run(process.execPath, ['build.mjs'], { NAME: v.id, KERF_OFF: v.off.join(',') })
   const base = arg('base') && resolve(arg('base'))
-  if (base) run(process.execPath, ['build.mjs'], { WEFT: base })
+  if (base) run(process.execPath, ['build.mjs'], { KERF: base })
   const stacks = [
-    ...(base ? ['weft-base'] : []),
-    'weft',
+    ...(base ? ['kerf-base'] : []),
+    'kerf',
     ...variants.filter((v) => v.id !== 'on').map((v) => v.id),
     'solid-batch',
   ].join(',')
@@ -99,7 +99,7 @@ if (!has('sizes')) {
   const host = arg('host')
   const out = join(here, 'dist/.lab-results.json')
   if (host) {
-    const dir = 'work/weft-lab'
+    const dir = 'work/kerf-lab'
     execSync(
       `ssh ${host} 'mkdir -p ${dir}' && rsync -a --delete --exclude .core dist/ ${host}:${dir}/dist/ && rsync -a measure.mjs reactive.mjs ${host}:${dir}/`,
       { cwd: here },

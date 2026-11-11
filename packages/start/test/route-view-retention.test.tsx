@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 // @vitest-environment-options {"url":"http://localhost/"}
 import { expect, it } from 'vitest'
-import { flush, onCleanup, state } from '@weft-js/core'
-import { render } from '@weft-js/core/dom'
+import { flush, onCleanup, state } from '@kerf/core'
+import { render } from '@kerf/core/dom'
 import { createRouteState } from '../src/router'
 import { App } from '../src/view'
 

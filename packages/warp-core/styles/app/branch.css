@@ -1,9 +1,0 @@
-/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
-@layer warp.app {
-/* branch switcher + message actions */
-:where([data-scope="branch"]) { display: inline-flex; align-items: center; gap: 0; font: 500 11.5px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); font-variant-numeric: tabular-nums; }
-:where([data-scope="branch"] button) { all: unset; display: inline-grid; place-items: center; inline-size: max(24px, var(--warp-target-min)); block-size: max(24px, var(--warp-target-min)); border-radius: var(--warp-radius-control); cursor: pointer; }
-:where([data-scope="branch"] button:hover) { background: var(--warp-color-surface-hover); color: var(--warp-color-text); }
-:where([data-scope="branch"] button:disabled) { opacity: var(--warp-opacity-disabled); cursor: default; background: none; }
-:where([data-scope="branch"] button:focus-visible) { outline: var(--warp-focus-width) solid var(--warp-color-focus); }
-}

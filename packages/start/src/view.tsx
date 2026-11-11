@@ -3,7 +3,7 @@
 // hydration keys line up. A level's hole reads only its route id: params and data reach the component as live
 // props, so a navigation that keeps the route re-runs only the bindings that read what changed.
 
-import { untrack } from '@weft-js/core'
+import { untrack } from '@kerf/core'
 import { active, level, type RouteState } from './router'
 import type { PreparedRouteShape } from './run/shape-preparation'
 import { retainRouteView } from './run/retain-view'
@@ -84,7 +84,7 @@ export function isCurrent(path: string, href: string, section = false) {
  * adds the current-page state. In a static level the server writes it and start() updates it after a navigation, so a
  * Link needs no code there.
  *
- * @weft static
+ * @kerf static
  */
 export function Link({
   href,
@@ -125,7 +125,7 @@ export function Link({
  *
  * What reads it runs in the browser, since it changes there: a static level's HTML would be swapped whole on each move.
  *
- * @weft client
+ * @kerf client
  */
 export function currentPath(): string {
   return active.route?.path.value.replace(/[?#].*/, '') ?? '/'

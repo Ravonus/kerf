@@ -7,7 +7,7 @@ track its dependencies.
 Use `memo(fn)` when a caller needs an accessor instead of a box:
 
 ```ts
-import { derived, memo, state } from '@weft-js/core'
+import { derived, memo, state } from '@kerf/core'
 
 const count = state(1)
 const doubled = derived(() => count.value * 2)
@@ -23,4 +23,4 @@ this accessor form to cache component children.
 For side effects, `watch(source, callback)` tracks reads in `source`. Keep the
 source pure and give reactive work an owner with a component or `createRoot`.
 Graph tracking, mount queues and renderer helpers belong to
-`@weft-js/core/internal`; application code uses the public lifecycle APIs.
+`@kerf/core/internal`; application code uses the public lifecycle APIs.

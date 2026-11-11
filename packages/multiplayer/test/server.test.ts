@@ -1,5 +1,5 @@
 // The server fragment on its own: what it stamps, what it refuses.
-import type { Context, StandardSchemaV1 } from '@weft-js/start'
+import type { Context, StandardSchemaV1 } from '@kerf/start'
 import { cursorSchema, multiplayer, roomId, signTicket, verifyTicket } from '../src/server'
 
 const atString: StandardSchemaV1 = {

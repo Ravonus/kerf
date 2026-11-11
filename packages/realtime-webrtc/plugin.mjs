@@ -1,11 +1,11 @@
-// webrtc() for weft.config.ts: no slot, since a page passes the transport to `presence`. Listed, what it reaches is on
+// webrtc() for kerf.config.ts: no slot, since a page passes the transport to `presence`. Listed, what it reaches is on
 // the record. A browser talks to STUN, TURN and peers directly, and none of that goes through the server.
-import { definePlugin } from '@weft-js/core/plugin'
+import { definePlugin } from '@kerf/core/plugin'
 
 export const webrtc = definePlugin({
-  name: '@weft-js/realtime-webrtc',
+  name: '@kerf/realtime-webrtc',
   version: '0.1.0',
-  weft: '*',
+  kerf: '*',
   permissions: { net: ['browser:peers', 'browser:ice-servers'] },
   contribute: () => ({
     agents: {

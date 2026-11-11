@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Grid,
   JsonEditor,
@@ -6,7 +6,7 @@ import {
   MentionsInput,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { PEOPLE, PROJECTS, Cell } from '../../world'
 
 import { checkConfig } from './code-json'
@@ -18,20 +18,20 @@ export const JsonEditorStates = () => (
   >
     <Cell name="Empty">
       <JsonEditor
-        label="weft.json"
+        label="kerf.json"
         rows={3}
       />
     </Cell>
     <Cell name="Filled">
       <JsonEditor
-        label="weft.json"
+        label="kerf.json"
         rows={3}
         defaultValue={'{ "copies": 3 }'}
       />
     </Cell>
     <Cell name="Invalid">
       <JsonEditor
-        label="weft.json"
+        label="kerf.json"
         rows={3}
         defaultValue={'{ "copies": 0 }'}
         schema={checkConfig}
@@ -39,7 +39,7 @@ export const JsonEditorStates = () => (
     </Cell>
     <Cell name="Disabled">
       <JsonEditor
-        label="weft.json"
+        label="kerf.json"
         rows={3}
         defaultValue={'{ "copies": 3 }'}
         disabled
@@ -47,7 +47,7 @@ export const JsonEditorStates = () => (
     </Cell>
     <Cell name="Read-only">
       <JsonEditor
-        label="weft.json"
+        label="kerf.json"
         rows={3}
         defaultValue={'{ "copies": 3 }'}
         readonly
@@ -60,7 +60,7 @@ export const JsonEditorStates = () => (
 
 const ENV = [
   { key: 'NODE_ENV', value: 'production' },
-  { key: 'API_URL', value: 'https://api.weft.dev' },
+  { key: 'API_URL', value: 'https://api.kerf.dev' },
   { key: 'LOG_LEVEL', value: 'info' },
 ]
 

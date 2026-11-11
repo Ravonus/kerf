@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Stack, Row, Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Stack, Row, Button } from '@kerf/veneer'
 import type { Look } from './stage-landing'
 import { LOOK_NAMES } from './look-names'
 import { Landing } from './landing-actions'

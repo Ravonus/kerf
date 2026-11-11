@@ -1,12 +1,12 @@
-// `.weft/contract.json` (PLAN §4.1, research 28 §4): every query and mutation as JSON Schema, with tags, cache and auth
-// scope. `weft build` writes it; the OpenAPI export, the MCP server and Rust codegen read it. The server modules are
+// `.kerf/contract.json` (PLAN §4.1, research 28 §4): every query and mutation as JSON Schema, with tags, cache and auth
+// scope. `kerf build` writes it; the OpenAPI export, the MCP server and Rust codegen read it. The server modules are
 // loaded through Vite, never run: creating a database client connects to nothing.
 
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { createServer } from 'vite'
-import weft from '@weft-js/core/vite'
+import kerf from '@kerf/core/vite'
 import {
   holdsSockets,
   literalSecrets,
@@ -19,7 +19,7 @@ import {
 import { readMigrations } from './migrations.mjs'
 import { shapeTree } from './shape.mjs'
 import { describe } from './contract/describe.mjs'
-import weftStart, { startDir } from './vite.mjs'
+import kerfStart, { startDir } from './vite.mjs'
 
 export { describe }
 
@@ -30,7 +30,7 @@ const LOCAL = /^(node|bun|deno[-_]server)/
 /** R104 for a build: `native()` on a preset that has no way to run it. */
 export function nativeProblem({ service, preset, wasm }) {
   if (preset && NO_FILES.test(preset))
-    return `\`native('${service}')\` can't load on the \`${preset}\` preset: it has no file system, so neither an addon nor a \`.wasm\` file reaches it. Use \`remote('rust://${service}')\`, which is the same crate behind \`weft::router\``
+    return `\`native('${service}')\` can't load on the \`${preset}\` preset: it has no file system, so neither an addon nor a \`.wasm\` file reaches it. Use \`remote('rust://${service}')\`, which is the same crate behind \`kerf::router\``
   if (wasm === false && preset && !LOCAL.test(preset))
     return `\`native('${service}')\` has no WASM, and an addon built here may not fit the \`${preset}\` preset's machines. Drop \`wasm: false\` from \`rust.services.${service}\`, or use \`remote()\``
 }
@@ -76,20 +76,20 @@ function planOf({ root, preset, realtime }) {
     const missing = source.tables.filter(
       (t) =>
         !new RegExp(
-          `weft_changes_(${t.replace(/\W/g, '_')}_)?upd\\b[^;]*["\`\\s]${t}["\`\\s]`,
+          `kerf_changes_(${t.replace(/\W/g, '_')}_)?upd\\b[^;]*["\`\\s]${t}["\`\\s]`,
         ).test(sql),
     )
     if (missing.length)
       plan.diagnostics.push({
         code: 'R018',
         severity: 'warning',
-        why: `no migration adds change triggers to ${missing.map((t) => `\`${t}\``).join(', ')}: run \`weft db live\`. Until then the server falls back to polling.`,
+        why: `no migration adds change triggers to ${missing.map((t) => `\`${t}\``).join(', ')}: run \`kerf db live\`. Until then the server falls back to polling.`,
       })
   }
   return plan
 }
 
-const verifiedFile = (root) => join(root, '.weft', 'verify.json')
+const verifiedFile = (root) => join(root, '.kerf', 'verify.json')
 const readVerified = (root) => {
   try {
     return JSON.parse(readFileSync(verifiedFile(root), 'utf8'))
@@ -149,7 +149,7 @@ async function verifyAll({ root, fns, realtime, server, live, strict }) {
       )
       .digest('hex')
       .slice(0, 16)
-    if (cache[f.$id]?.key === key && !env.WEFT_VERIFY_FRESH) {
+    if (cache[f.$id]?.key === key && !env.KERF_VERIFY_FRESH) {
       verified.push({ name, cached: true, ...cache[f.$id].result })
       continue
     }
@@ -178,16 +178,16 @@ async function verifyAll({ root, fns, realtime, server, live, strict }) {
         why: `\`${name}\` passed, with ${result.untested.map((u) => `\`${u.link}\``).join(', ')} untested: ${[...new Set(result.untested.map((u) => u.why))].join(' ')}`,
       })
   }
-  mkdirSync(join(root, '.weft'), { recursive: true })
+  mkdirSync(join(root, '.kerf'), { recursive: true })
   writeFileSync(verifiedFile(root), JSON.stringify(cache, null, 2) + '\n')
   return { diagnostics, verified }
 }
 
-/** The deploy's live plan on its own, for `weft check` and `weft doctor`: no contract is written. */
+/** The deploy's live plan on its own, for `kerf check` and `kerf doctor`: no contract is written. */
 export const readLivePlan = ({ root, site, preset, live, verify = true }) => {
   root = resolve(root)
   return withFns({ root, site }, async (fns, server) => {
-    const realtime = (await server.ssrLoadModule('virtual:weft/realtime')).default
+    const realtime = (await server.ssrLoadModule('virtual:kerf/realtime')).default
     const plan = planOf({ root, preset, realtime })
     if (!verify) return { ...plan, verified: [] }
     const { diagnostics, verified } = await verifyAll({
@@ -202,10 +202,10 @@ export const readLivePlan = ({ root, site, preset, live, verify = true }) => {
   })
 }
 
-/** `src/realtime.server.ts` loaded, for `weft db live` and `weft db listen`. `fn` holds it open as long as it needs. */
+/** `src/realtime.server.ts` loaded, for `kerf db live` and `kerf db listen`. `fn` holds it open as long as it needs. */
 export const withRealtime = ({ root, site }, fn) =>
   withFns({ root: resolve(root), site }, async (_, server) =>
-    fn((await server.ssrLoadModule('virtual:weft/realtime')).default ?? {}, server),
+    fn((await server.ssrLoadModule('virtual:kerf/realtime')).default ?? {}, server),
   )
 
 /** Every query's shape tree (research 31 §3), by id. */
@@ -220,7 +220,7 @@ export function shapeTable(fns) {
 
 /**
  * `fn(fns, server)` with every server module loaded through a private Vite server. A dev server sets `NODE_ENV` to
- * development when nothing had: that's put back after, or `weft build`, which reads the live plan first, would build
+ * development when nothing had: that's put back after, or `kerf build`, which reads the live plan first, would build
  * with `import.meta.env.DEV` on and ship every dev-only diagnostic.
  */
 async function withFns({ root, site = {} }, fn) {
@@ -233,9 +233,9 @@ async function withFns({ root, site = {} }, fn) {
       logLevel: 'silent',
       appType: 'custom',
       server: { middlewareMode: true, hmr: false, ws: false },
-      plugins: [weft({ hydratable: true, csp: site?.csp }), weftStart({ root, site })],
+      plugins: [kerf({ hydratable: true, csp: site?.csp }), kerfStart({ root, site })],
     })
-    await server.ssrLoadModule('virtual:weft/fns')
+    await server.ssrLoadModule('virtual:kerf/fns')
     const { fns } = await server.ssrLoadModule(join(startDir, 'data.ts'))
     return await fn(fns, server)
   } finally {
@@ -249,12 +249,12 @@ async function withFns({ root, site = {} }, fn) {
 export const readShapes = (options) =>
   withFns({ ...options, root: resolve(options.root) }, shapeTable)
 
-/** Load every server module and write `.weft/contract.json`. */
+/** Load every server module and write `.kerf/contract.json`. */
 export function writeContract({ root, site = {}, preset, rust, live, verify }) {
   root = resolve(root)
   return withFns({ root, site }, async (fns, server) => {
     const { diagnostics, ...contract } = describe(fns, rust)
-    const mod = await server.ssrLoadModule('virtual:weft/realtime')
+    const mod = await server.ssrLoadModule('virtual:kerf/realtime')
     const socket = [...fns.values()].find((f) => f.kind === 'channel' || f.kind === 'shared')
     // a channel needs the socket itself: on a function host no bus helps, so R024 says where it can run instead of R002
     const unheld = socket && !holdsSockets(preset)
@@ -262,7 +262,7 @@ export function writeContract({ root, site = {}, preset, rust, live, verify }) {
       diagnostics.push({
         code: 'R024',
         severity: 'error',
-        why: `\`${socket.$id.replace(/\..*$/, '')}\` is a ${socket.kind === 'shared' ? 'shared state' : 'channel'}, which needs a WebSocket, and ${liveTarget(preset).host} on \`${preset}\` can't hold one: the page loads, and the channel says \`unavailable\`. \`weft deploy hosts\` lists the hosts that can (Fly, Render).`,
+        why: `\`${socket.$id.replace(/\..*$/, '')}\` is a ${socket.kind === 'shared' ? 'shared state' : 'channel'}, which needs a WebSocket, and ${liveTarget(preset).host} on \`${preset}\` can't hold one: the page loads, and the channel says \`unavailable\`. \`kerf deploy hosts\` lists the hosts that can (Fly, Render).`,
       })
     const bus = busProblem({
       preset,
@@ -276,7 +276,7 @@ export function writeContract({ root, site = {}, preset, rust, live, verify }) {
       diagnostics.push({
         code: 'R002',
         severity: 'error',
-        why: `${bus}. Add \`@weft-js/realtime-redis\` or \`@weft-js/realtime-nats\` to \`plugins\`, or set \`postgresBus\` in \`src/realtime.server.ts\`.`,
+        why: `${bus}. Add \`@kerf/realtime-redis\` or \`@kerf/realtime-nats\` to \`plugins\`, or set \`postgresBus\` in \`src/realtime.server.ts\`.`,
       })
     diagnostics.push(...planOf({ root, preset, realtime: mod.default }).diagnostics)
     let verified = []
@@ -291,8 +291,8 @@ export function writeContract({ root, site = {}, preset, rust, live, verify }) {
         nativeProblem({ service, preset, wasm: rust?.services?.[service]?.wasm })
       if (why) diagnostics.push({ code: 'R104', severity: 'error', why })
     }
-    mkdirSync(join(root, '.weft'), { recursive: true })
-    const path = join(root, '.weft', 'contract.json')
+    mkdirSync(join(root, '.kerf'), { recursive: true })
+    const path = join(root, '.kerf', 'contract.json')
     writeFileSync(path, JSON.stringify(contract, null, 2) + '\n')
     return { path, functions: contract.functions.length, diagnostics, contract, verified }
   })

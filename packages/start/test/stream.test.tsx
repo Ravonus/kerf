@@ -1,7 +1,7 @@
 // A streamed page on the server: what it keeps, what it sends and when.
 import { setFlagsFromString } from 'node:v8'
 import { runInNewContext } from 'node:vm'
-import { Boundary, derived, resource, state } from '@weft-js/core'
+import { Boundary, derived, resource, state } from '@kerf/core'
 import { query, type StandardSchemaV1 } from '../src/data'
 import { body, serve } from './stream.fixture'
 import { registerReadProgressTests, registerReadStallTest } from './stream.reads'

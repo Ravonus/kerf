@@ -1,5 +1,5 @@
 {
-  // What every package's tsconfig extends. For the framework's own code; `weft check` is what apps get.
+  // What every package's tsconfig extends. For the framework's own code; `kerf check` is what apps get.
   "compilerOptions": {
     "target": "esnext",
     // Assignment, not defineProperty: the runtime's classes are hot, and the bundler reads this file. Arena: 3,251 B with it, 3,327 without.
@@ -8,7 +8,7 @@
     "moduleResolution": "bundler",
     "lib": ["es2024", "dom", "dom.iterable"],
     "jsx": "preserve",
-    "jsxImportSource": "@weft-js/core",
+    "jsxImportSource": "@kerf/core",
     "noEmit": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,

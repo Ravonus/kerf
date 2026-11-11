@@ -2,15 +2,15 @@
 // repeat lands on what it already wrote; `mark` comes last, because a crash before it should redeliver. A failure answers
 // 500 for the same reason. A terminal state wins a tie: a refund and a renewal in the same second is a refund.
 
-import type { Context } from '@weft-js/start'
+import type { Context } from '@kerf/start'
 import { makeRails } from './server/rails'
 import { makeLedger, ORDER } from './server/ledger'
 import { checkoutInput } from './server/catalog'
 import { checkoutFor, orderFor, portalFor, webhookFor } from './server/operations'
-import type { ServerExtension } from '@weft-js/start/extension'
+import type { ServerExtension } from '@kerf/start/extension'
 import { PayError, type PayRail, type Product, type PurchaseState, type RailEvent } from './index'
 
-declare module '@weft-js/start' {
+declare module '@kerf/start' {
   interface Context {
     /** What this user holds, from verified rail events. Await it. */
     entitlements: Entitlements
@@ -37,7 +37,7 @@ export interface Purchase {
   customer: string | null
 }
 
-/** Where the ledger lives. `drizzlePayStore` in `@weft-js/start/pay/drizzle`, or write these five for any database. */
+/** Where the ledger lives. `drizzlePayStore` in `@kerf/start/pay/drizzle`, or write these five for any database. */
 export interface PayStore {
   /** Not durable: refused on a production server (PAY016). */
   readonly memory?: boolean
@@ -99,7 +99,7 @@ export interface PayOptions<P extends Product> {
   user?: (ctx: PayContext) => string | null | undefined
   /** With several rails bound, the one that takes payments. One rail needs no choosing. */
   rail?: string
-  /** The `pay.rail` slot. Default the generated `weft:slot/pay.rail`, as any consumer of a slot reads it. */
+  /** The `pay.rail` slot. Default the generated `kerf:slot/pay.rail`, as any consumer of a slot reads it. */
   slot?: () => Promise<{ load(key: string): Promise<unknown>; providers?: Record<string, unknown> }>
   /** Absolute origin for `urls`, behind a proxy. Default the request's. */
   origin?: string
@@ -107,7 +107,7 @@ export interface PayOptions<P extends Product> {
   leeway?: number
 }
 
-/** The server log: @weft-js/start passes its own. */
+/** The server log: @kerf/start passes its own. */
 export type PayReport = (d: { code: string; severity: string; message: string }) => void
 
 /** What a client may ask for: names only. The catalog supplies every amount. */
@@ -153,7 +153,7 @@ export interface Pay<P extends Product = Product> extends ServerExtension {
   readonly input: {
     readonly '~standard': {
       version: 1
-      vendor: 'weft'
+      vendor: 'kerf'
       validate(v: unknown): { value: CheckoutInput<P> } | { issues: { message: string }[] }
       types?: { input: CheckoutInput<P>; output: CheckoutInput<P> }
     }
@@ -204,9 +204,9 @@ export function definePay<P extends Product>(options: PayOptions<P>): Pay<P> {
   const slot =
     options.slot ??
     (() => {
-      // A generated module, declared in .weft/slots.d.ts only once bound: an expect-error would be wrong in one case or the other.
+      // A generated module, declared in .kerf/slots.d.ts only once bound: an expect-error would be wrong in one case or the other.
       // oxlint-disable-next-line typescript/no-unnecessary-type-assertion -- the cast is what lets this compile when the slot isn't declared
-      return import('weft:slot/pay.rail' as string)
+      return import('kerf:slot/pay.rail' as string)
     })
   const rails = makeRails(options, slot)
   const { railFor } = rails

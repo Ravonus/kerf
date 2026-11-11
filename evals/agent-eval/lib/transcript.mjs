@@ -43,9 +43,9 @@ export const TOOLS = 'Task,Bash,Edit,Read,Write,WebFetch,WebSearch,ToolSearch,Mo
 
 const CODE = /\b[TPQHIMS]\d{3}\b/g
 const DOCS =
-  /node_modules\/(?:@weft\/[\w-]+|weft|next)(?:\/dist)?\/docs\/[\w./-]+|AGENTS\.md|\bweft docs(?: [\w-]+)?/g
+  /node_modules\/(?:@kerf\/[\w-]+|kerf|next)(?:\/dist)?\/docs\/[\w./-]+|AGENTS\.md|\bkerf docs(?: [\w-]+)?/g
 
-/** What the session did: tool counts, URLs, docs read, weft diagnostics met. Same scan for every stack. */
+/** What the session did: tool counts, URLs, docs read, kerf diagnostics met. Same scan for every stack. */
 export function activity(events) {
   const tools = {},
     urls = [],
@@ -66,7 +66,7 @@ export function activity(events) {
       }
       if (e.type === 'user' && c.type === 'tool_result') {
         const from = pending.get(c.tool_use_id)
-        if (from?.name === 'Bash' && /\bweft\b/.test(from.input.command ?? '')) {
+        if (from?.name === 'Bash' && /\bkerf\b/.test(from.input.command ?? '')) {
           const text = typeof c.content === 'string' ? c.content : JSON.stringify(c.content)
           for (const m of new Set(text.match(CODE) ?? [])) codes[m] = (codes[m] ?? 0) + 1
         }
@@ -91,7 +91,7 @@ export const FORBIDDEN = [
   'lemonstand',
   'Performance over bytes',
   'performance-over-bytes',
-  'weft-wt',
+  'kerf-wt',
   'chadkoslovsky',
   ...(process.env.HOME ? [process.env.HOME] : []),
 ]

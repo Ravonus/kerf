@@ -1,8 +1,8 @@
 // The client side of the exit check. It is never edited: the swap from a TS `run` to a Rust sidecar leaves this file,
 // and every byte built from it, as they were.
-import { state } from '@weft-js/core'
-import { Boundary } from '@weft-js/core'
-import type { LoadArgs, Meta } from '@weft-js/start'
+import { state } from '@kerf/core'
+import { Boundary } from '@kerf/core'
+import type { LoadArgs, Meta } from '@kerf/start'
 import { addDoc, getDoc, popular, searchDocs } from '../server/docs'
 
 export const load = async (_: LoadArgs) => ({

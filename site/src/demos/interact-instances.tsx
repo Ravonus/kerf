@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Badge, Button, Card } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Badge, Button, Card } from '@kerf/veneer'
 
 // Each <Counter /> runs this function once, making
 // its own box.

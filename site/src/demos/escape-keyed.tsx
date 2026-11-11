@@ -1,10 +1,10 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   Card,
   Row,
   Textarea,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 type Person = { id: number; name: string }
 const PEOPLE: Person[] = [

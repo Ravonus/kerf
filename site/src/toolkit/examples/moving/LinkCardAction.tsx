@@ -1,4 +1,4 @@
-import { Card, Link, Text } from '@weft-js/warp'
+import { Card, Link, Text } from '@kerf/veneer'
 
 export const LinkCardAction = () => (
   <Card

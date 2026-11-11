@@ -1,0 +1,39 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.layout {
+/* ConsentBanner (cookie) — non-modal, never covers primary nav. Reject and
+   accept are equal weight. Desktop: a card at the bottom-start; phone: a sheet. */
+:where([data-scope="consent"]) {
+  position: fixed; z-index: var(--veneer-z-toast); inset-inline-start: max(var(--veneer-space-group), var(--veneer-safe-left));
+  inset-block-end: max(var(--veneer-space-group), var(--veneer-safe-bottom)); inline-size: min(420px, calc(100% - 2 * var(--veneer-space-group)));
+  display: grid; gap: var(--veneer-space-group); padding: var(--veneer-pad-surface);
+  background: var(--veneer-color-surface-overlay); border: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  border-radius: var(--veneer-radius-surface); box-shadow: var(--veneer-elevation-3);
+  animation: veneer-enter var(--veneer-duration-slow) var(--veneer-ease-out) both;
+}
+:where([data-scope="consent"] [data-part="actions"]:not([data-scope="consent"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) *:not([data-scope="consent"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) [data-scope="consent"] *))) { display: grid; grid-template-columns: 1fr 1fr; gap: var(--veneer-space-related); }
+:where([data-scope="consent"] [data-part="actions"]:not([data-scope="consent"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) *:not([data-scope="consent"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="notification"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) [data-scope="consent"] *)) > :last-child:nth-child(3)) { grid-column: 1 / -1; }
+@container (max-width: 599.98px) {
+:where([data-scope="consent"]) {
+    inset-inline: 0; inset-block-end: var(--_dock, 0px); inline-size: auto; border-radius: calc(var(--veneer-radius-surface) + 6px) calc(var(--veneer-radius-surface) + 6px) 0 0;
+    padding-block-end: calc(var(--veneer-pad-surface) + var(--veneer-safe-bottom) * var(--_safe, 1));
+    animation: veneer-sheet-in var(--veneer-duration-sheet) var(--veneer-ease-out) both;
+  }
+}
+@media print {
+:where([data-scope="shell"] [data-part="dock"]),
+  :where([data-scope="shell"] [data-part="menu"]:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) *:not([data-scope="shell"] :is([data-scope="kanban"],[data-scope="topnav"]) [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="sheet"]:not([data-scope="shell"] [data-scope="table"] *:not([data-scope="shell"] [data-scope="table"] [data-scope="shell"] *))),
+  :where([data-scope="shell"] [data-part="palette"]),
+  :where([data-scope="consent"]),
+  :where([data-scope="announcement"]),
+  :where([data-scope="topnav"]),
+  :where([data-scope="float-panel"]),
+  :where([data-scope="back-to-top"]),
+  :where([data-scope="route-progress"]),
+  :where([data-scope="docs"] [data-part="sidenav"]),
+  :where([data-scope="anchor-nav"]) { display: none !important; }
+}
+@keyframes veneer-sheet-in {
+  from { transform: translateY(calc(100% * var(--veneer-motion-scale))); opacity: calc(1 - var(--veneer-motion-scale)); }
+}
+}

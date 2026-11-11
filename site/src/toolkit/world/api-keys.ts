@@ -1,4 +1,4 @@
-import type { ApiKey } from '@weft-js/warp'
+import type { ApiKey } from '@kerf/veneer'
 
 export const API_KEYS: ApiKey[] = [
   {

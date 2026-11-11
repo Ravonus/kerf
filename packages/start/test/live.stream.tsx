@@ -1,6 +1,6 @@
-import { state, untrack, watch } from '@weft-js/core'
-import { flush, net, render, screen } from '@weft-js/core/test'
-import { stream, topic, tracked, type StandardSchemaV1 } from '@weft-js/start'
+import { state, untrack, watch } from '@kerf/core'
+import { flush, net, render, screen } from '@kerf/core/test'
+import { stream, topic, tracked, type StandardSchemaV1 } from '@kerf/start'
 
 type Price = { symbol?: string; price: number }
 

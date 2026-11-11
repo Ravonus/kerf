@@ -2,10 +2,10 @@
 
 :::learn
 - How to give every page a title and a description with `meta`, and build it from `data` on a param route
-- What Weft writes for you when you leave something out, and why you still shouldn't
+- What Kerf writes for you when you leave something out, and why you still shouldn't
 - How the site's defaults in `site` work, and why `site.url` matters before you ship
 - How share cards are drawn, and how to design your own with an `.og.tsx` file
-- How `weft check` and `weft routes --meta` show what every page says about itself
+- How `kerf check` and `kerf routes --meta` show what every page says about itself
 :::
 
 A page has two audiences. People read what's on it; search engines, chat apps and social sites read what's *about* it:
@@ -14,7 +14,7 @@ pastes the link. Crawlers that build link previews don't run JavaScript, so all 
 response.
 
 In React you'd add a head manager, remember to set the tags on every route, and then find a separate service to draw
-preview images. In Weft a route exports `meta`, plain data, and the server writes the tags into the first byte. Every page
+preview images. In Kerf a route exports `meta`, plain data, and the server writes the tags into the first byte. Every page
 also gets a share card drawn from its own title and description, unless you design a better one.
 
 :::demo server-meta-preview
@@ -26,7 +26,7 @@ reader gets there. Export it from the route:
 
 ```tsx
 // src/routes/pricing-plans.tsx
-import type { Meta } from '@weft-js/start'
+import type { Meta } from '@kerf/start'
 
 export const meta: Meta = {
   title: 'Pricing',
@@ -50,19 +50,19 @@ A route like `/posts/[slug]` is many pages, and each should say what it is. Make
 
 ```tsx
 // src/routes/posts/[slug].tsx
-import { notFound } from '@weft-js/start'
+import { notFound } from '@kerf/start'
 import type {
   LoadArgs,
   Meta,
   Prerender,
   RouteProps,
-} from '@weft-js/start'
+} from '@kerf/start'
 
 const POSTS = [
   {
     slug: 'run-once',
     title: 'Components run once',
-    summary: 'Why a weft component body never runs twice, ' +
+    summary: 'Why a kerf component body never runs twice, ' +
       'and what that changes.',
   },
   {
@@ -101,7 +101,7 @@ export default function Post(
 
 `Meta<typeof load, '/posts/[slug]'>` types `data` from the loader, without the `notFound()` case: when `load` returns
 `notFound()`, the 404 page renders and `meta` isn't called. `meta` can be `async` too. `prerender` lists the params
-`weft build` should write as static pages; it comes back later on this page and in [SSR, islands and
+`kerf build` should write as static pages; it comes back later on this page and in [SSR, islands and
 hydration](/learn/ssr-and-hydration#prerendering).
 
 :::pitfall `meta` can't wait for streamed data
@@ -117,17 +117,17 @@ in `load`.
   suits a home page.
 - `og` and `twitter` set those tags directly when they should differ from the title and description: `og.type`,
   `og.image`, `twitter.card` and so on.
-- `extra` adds tags Weft doesn't model, such as `theme-color` or a verification tag:
+- `extra` adds tags Kerf doesn't model, such as `theme-color` or a verification tag:
   `extra: [{ name: 'theme-color', content: '#0b120d' }]`.
-- `jsonLd` writes structured data as `application/ld+json`. Weft writes a `WebSite` on `/` when `site.name` is set, and
+- `jsonLd` writes structured data as `application/ld+json`. Kerf writes a `WebSite` on `/` when `site.name` is set, and
   nothing else unless you say: it doesn't guess what your page is.
 
 ```ts
-import type { Meta } from '@weft-js/start'
+import type { Meta } from '@kerf/start'
 
 export const meta: Meta = {
   title: 'Components run once',
-  description: 'Why a weft component body never runs twice, ' +
+  description: 'Why a kerf component body never runs twice, ' +
     'and what that changes.',
   og: { type: 'article' },
   twitter: { creator: '@acme' },
@@ -141,16 +141,16 @@ export const meta: Meta = {
 
 ### Layers
 
-A page's metadata is merged from four layers, later ones winning: `site` in `weft.config.ts`, what the page rendered,
+A page's metadata is merged from four layers, later ones winning: `site` in `kerf.config.ts`, what the page rendered,
 each layout's `meta` from the outside in, and the route's own `meta`. `og` and `twitter` merge key by key, so a layout
 can set `og.siteName` and a route its `og.type` without either losing the other.
 
 A layout's `meta` is the place for what a whole section shares, such as `twitter.site` for a blog, or an `extra` tag.
 Its title would be overridden by every page under it, so leave titles to routes.
 
-## What Weft does when you leave something out
+## What Kerf does when you leave something out
 
-A page with no `meta`, or a `meta` that leaves out a field, still gets tags. Weft reads them from what the page
+A page with no `meta`, or a `meta` that leaves out a field, still gets tags. Kerf reads them from what the page
 rendered:
 
 - **Title:** the page's `<h1>`, or with none its first `<h2>` or `<h3>`, through `site.title`.
@@ -160,25 +160,25 @@ rendered:
 - **`twitter:card`:** `summary_large_image` whenever there's an image.
 
 That's a safety net, not a plan. A derived description is whatever paragraph came first, which is rarely the sentence
-you'd choose, and two pages with the same layout tend to end up with the same words. `weft check` reports a page with no
+you'd choose, and two pages with the same layout tend to end up with the same words. `kerf check` reports a page with no
 `meta`, or one that leaves out its title or description, as **H011**, with what it derived as a starting point for you to
 rewrite.
 
 :::pitfall Never slice raw content into a description
 `description: post.body.slice(0, 155)` looks harmless until the body starts with a list or a code block, and the card
 under every shared link reads `- xs.map(x = <Row`. A description that reads like code, markdown or a cut-off sentence is
-**H015**. Write the sentence, or store a summary next to the content, or leave the field out and let Weft find a
+**H015**. Write the sentence, or store a summary next to the content, or leave the field out and let Kerf find a
 paragraph.
 :::
 
 ## The site's defaults
 
-`site` in `weft.config.ts` is the bottom layer, and it holds what only the site knows:
+`site` in `kerf.config.ts` is the bottom layer, and it holds what only the site knows:
 
 ```ts
-// weft.config.ts
-import { defineConfig } from '@weft-js/core/config'
-import { warp } from '@weft-js/warp/plugin'
+// kerf.config.ts
+import { defineConfig } from '@kerf/core/config'
+import { veneer } from '@kerf/veneer/plugin'
 
 export default defineConfig({
   site: {
@@ -190,17 +190,17 @@ export default defineConfig({
     twitter: { card: 'summary_large_image', site: '@acme' },
     card: { scheme: 'light', accent: '#1f7a50' },
   },
-  plugins: [warp()],
+  plugins: [veneer()],
 })
 ```
 
-`weft check` validates these (**P007**): `url` must be an absolute `http(s)` address, `title` must contain `%s`, and
+`kerf check` validates these (**P007**): `url` must be an absolute `http(s)` address, `title` must contain `%s`, and
 `locale` must look like `en_US`. The full list of keys is in the [config reference](/reference/config).
 
 ### `site.url`: the address everything absolute needs
 
-Canonical URLs, `og:url` and `og:image` must be absolute, so Weft needs to know where the site lives. It looks, in
-order, at `site.url`, the `WEFT_SITE_URL` environment variable, and what common hosts set (`VERCEL_PROJECT_PRODUCTION_URL`,
+Canonical URLs, `og:url` and `og:image` must be absolute, so Kerf needs to know where the site lives. It looks, in
+order, at `site.url`, the `KERF_SITE_URL` environment variable, and what common hosts set (`VERCEL_PROJECT_PRODUCTION_URL`,
 `VERCEL_URL`, Netlify's `URL`, `CF_PAGES_URL`, `RENDER_EXTERNAL_URL`, `RAILWAY_PUBLIC_DOMAIN`, `FLY_APP_NAME`).
 
 With none of those, a running server uses the request's origin, which is only what its `Host` header claimed, and warns
@@ -210,7 +210,7 @@ resolve relative URLs. Set `site.url` before you ship.
 ## Share cards
 
 When someone pastes a link into a chat, the preview's picture is `og:image`. By default (`site.image: 'auto'`) every
-page gets one: a 1200×630 PNG of its title, description, the app's name and its address, in Warp's colours and the text
+page gets one: a 1200×630 PNG of its title, description, the app's name and its address, in Veneer's colours and the text
 plugin's fonts when the app has them. You don't draw anything to get it.
 
 `site.card` adjusts the built-in card: `scheme: 'light'` or `'dark'` (one image goes to every feed, so a card picks
@@ -227,7 +227,7 @@ metadata, the site, and the title and description the built-in card would show:
 
 ```tsx
 // src/routes/posts/[slug].og.tsx
-import type { OgProps } from '@weft-js/start'
+import type { OgProps } from '@kerf/start'
 import type { load } from './[slug]'
 
 export default function PostCard(
@@ -268,10 +268,10 @@ dropped and the rest still renders. An `<img>` that fails to load (a timeout, an
 card renders without it.
 
 :::deepdive How cards are cached
-A card's URL is `/_weft/og/…png?v=<hash>`, and the hash covers everything it draws. So a card is cached forever, and the
+A card's URL is `/_kerf/og/…png?v=<hash>`, and the hash covers everything it draws. So a card is cached forever, and the
 moment the page's title or description changes, it has a new URL and crawlers fetch the new one.
 
-Cards of pages with no params, and of param pages listed in `prerender`, are drawn by `weft build` and served as static
+Cards of pages with no params, and of param pages listed in `prerender`, are drawn by `kerf build` and served as static
 files. Every other param page's card is drawn on its first request, and only for params the route's own `load` accepts,
 so nobody can make the server draw cards for pages that don't exist.
 
@@ -282,12 +282,12 @@ route with a generated card and no `prerender` on a static preset is **H002**.
 ## Navigating between pages
 
 The first page load gets its tags from the server. After that, client navigation fetches the next route's merged
-metadata and the router replaces the tags it wrote, and the tab title, with `setHead` from `@weft-js/core/head`. You
+metadata and the router replaces the tags it wrote, and the tab title, with `setHead` from `@kerf/core/head`. You
 don't call it yourself. That update is for the tab and the browser history; crawlers only ever read the server's HTML.
 
 ## See it, and fix it
 
-`weft check` runs every route's loaders once and reports metadata for each page, from what the page really produces.
+`kerf check` runs every route's loaders once and reports metadata for each page, from what the page really produces.
 Param routes are sampled from `prerender` and from links on rendered pages. Each diagnostic says what to write:
 
 | Code | What it says |
@@ -301,12 +301,12 @@ Param routes are sampled from `prerender` and from links on rendered pages. Each
 | **H015** | a description that reads like code, markdown or a fragment |
 | **H016** | a route that couldn't be checked here |
 
-`weft routes --meta` prints a table of every page's title, description and image, and where each came from: `route`,
+`kerf routes --meta` prints a table of every page's title, description and image, and where each came from: `route`,
 `layout`, `config`, `auto` or `card`. `--json` has every tag. It's the quickest way to read what your whole site says
-about itself, and the `routes_meta` tool of `weft mcp` gives an agent the same table.
+about itself, and the `routes_meta` tool of `kerf mcp` gives an agent the same table.
 
 The route pass runs your loaders, so in a project where that's slow or needs services, `check: { routes: false }` in
-`weft.config.ts` turns it off. The [meta reference](/reference/meta) has every field.
+`kerf.config.ts` turns it off. The [meta reference](/reference/meta) has every field.
 
 ## Recap
 
@@ -316,10 +316,10 @@ The route pass runs your loaders, so in a project where that's slow or needs ser
   field (**H007**).
 - Layers merge as `site`, the rendered page, layouts, then the route. Missing fields are derived from the page, and
   **H011** says so.
-- Set `site.url` (or `WEFT_SITE_URL`) before you ship, so canonical URLs and card URLs are absolute.
+- Set `site.url` (or `KERF_SITE_URL`) before you ship, so canonical URLs and card URLs are absolute.
 - Every page gets a share card. `site.card` styles it; a `<route>.og.tsx` file or `_default.og.tsx` replaces it. Cards
   are cached forever under a hash of what they draw.
-- `weft check` and `weft routes --meta` show what every page says about itself.
+- `kerf check` and `kerf routes --meta` show what every page says about itself.
 
 ## Try it
 
@@ -329,8 +329,8 @@ description from its tagline.
 
 ```tsx
 // src/routes/products/[id].tsx
-import { notFound } from '@weft-js/start'
-import type { LoadArgs, Meta, RouteProps } from '@weft-js/start'
+import { notFound } from '@kerf/start'
+import type { LoadArgs, Meta, RouteProps } from '@kerf/start'
 
 const PRODUCTS = [{
   id: 'kettle',
@@ -352,8 +352,8 @@ export default function ProductPage(
 ```
 :::solution
 ```tsx
-import { notFound } from '@weft-js/start'
-import type { LoadArgs, Meta, RouteProps } from '@weft-js/start'
+import { notFound } from '@kerf/start'
+import type { LoadArgs, Meta, RouteProps } from '@kerf/start'
 
 const PRODUCTS = [{
   id: 'kettle',
@@ -378,7 +378,7 @@ export default function ProductPage(
 }
 ```
 
-A fixed `meta` on a param route gives every page the same words, which `weft check` reports as **H014**, and as
+A fixed `meta` on a param route gives every page the same words, which `kerf check` reports as **H014**, and as
 **H012** for the shared title. Making `meta` a function of `data` gives each page its own.
 :::
 
@@ -391,7 +391,7 @@ nothing would re-run `meta` when it changed, so reading one is **H006**. Read th
 and build `meta` from `data`:
 
 ```tsx
-import type { LoadArgs, Meta } from '@weft-js/start'
+import type { LoadArgs, Meta } from '@kerf/start'
 
 export const load = ({ ctx }: LoadArgs) => ({
   name: ctx.user?.name ?? 'Your',
@@ -411,7 +411,7 @@ in a corner. Which file, and which props?
 :::solution
 ```tsx
 // src/routes/_default.og.tsx
-import type { OgProps } from '@weft-js/start'
+import type { OgProps } from '@kerf/start'
 
 export default function Card(props: OgProps) {
   const { title, description, site } = props

@@ -1,7 +1,7 @@
-import { derived } from '@weft-js/core'
+import { derived } from '@kerf/core'
 import type { Category, Product } from '../api'
 import type { Cart } from '../App'
-import { group } from '@weft-js/core/style'
+import { group } from '@kerf/core/style'
 import { field, input } from '../ui'
 import { ProductRow } from './ProductRow'
 

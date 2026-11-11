@@ -1,17 +1,17 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 import {
   PresenceStack,
   Spacer,
   Text,
   Thread,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 import type {
   ComposerSend,
   ChatMessage,
   MessageReaction,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 import { CHAT, MARA, PEERS, SAM } from '../../world'
 

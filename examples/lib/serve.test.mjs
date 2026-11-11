@@ -9,7 +9,7 @@ import test from 'node:test'
 import { startServer } from './serve.mjs'
 
 await test('a production server starts and stops without a database', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-serve-test-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-serve-test-'))
   writeFileSync(join(root, 'index.html'), '<p>Owned server</p>')
   const spawn = childProcess.spawn
   let child

@@ -19,7 +19,7 @@ const SKIP = new Set([
   'target',
   'build',
   '.output',
-  '.weft',
+  '.kerf',
   '.git',
   '.nitro',
   'coverage',
@@ -57,7 +57,7 @@ const EDGES = {
   'parens.ts': `export const a = ${'('.repeat(500)}1${')'.repeat(500)}\n`,
 }
 
-const GROUP = `import { group } from '@weft-js/core/style'\nexport const card = group('order-card', { base: { gap: 'tight' }, axes: { status: { late: { gap: 'loose' } } } })\n`
+const GROUP = `import { group } from '@kerf/core/style'\nexport const card = group('order-card', { base: { gap: 'tight' }, axes: { status: { late: { gap: 'loose' } } } })\n`
 const GROUP_USE = `import { card } from './card'\nexport const Row = () => <p {...card({ status: 'late' })}>x</p>\n`
 
 function walk(dir, out) {
@@ -72,8 +72,8 @@ function walk(dir, out) {
 
 /** `{ files, compared, bytes, ms: { native, wasm }, mismatches: [{ file, mode, at, native, wasm }] }`. Throws when a build is missing. */
 export function parity({ also = [], limit } = {}) {
-  const addon = join(pkg, 'native', `weft-compiler.${process.platform}-${process.arch}.node`)
-  const wasmFile = join(pkg, 'native', 'weft-compiler.wasm')
+  const addon = join(pkg, 'native', `kerf-compiler.${process.platform}-${process.arch}.node`)
+  const wasmFile = join(pkg, 'native', 'kerf-compiler.wasm')
   for (const f of [addon, wasmFile])
     if (!existsSync(f)) throw new Error(`no ${f}; run \`npm run build:native\` in packages/core`)
   const native = require(addon)

@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Conversation,
   Prompt,
@@ -6,7 +6,7 @@ import {
   Suggestions,
   Text,
   UserMessage,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { COMMANDS } from '../../world'
 import { STARTERS } from './shared'
 

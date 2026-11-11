@@ -1,6 +1,6 @@
-import { getDial } from '@weft-js/warp'
-import { onMount } from '@weft-js/core'
-import { on } from '@weft-js/core/browser'
+import { getDial } from '@kerf/veneer'
+import { onMount } from '@kerf/core'
+import { on } from '@kerf/core/browser'
 import { PALETTE_NAMES } from '../lib/palettes'
 
 const EXPRESSIONS = ['quiet', 'balanced', 'vivid']
@@ -15,7 +15,7 @@ function shownTheme(el: Element) {
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-/** Sets one stage's width, which Warp's scope attributes carry. */
+/** Sets one stage's width, which Veneer's scope attributes carry. */
 function width(stage: HTMLElement, v: string) {
   if (v === 'full') {
     stage.removeAttribute('data-form')
@@ -48,9 +48,9 @@ export function FrameTools() {
     }
     if (act === 'stage-palette') {
       // The next named theme; back round to the page's own, which is no attribute, so it follows the page again.
-      const at = stage.getAttribute('data-palette') ?? 'weft'
+      const at = stage.getAttribute('data-palette') ?? 'kerf'
       const to = next(PALETTE_NAMES, at)
-      to === 'weft' ? stage.removeAttribute('data-palette') : stage.setAttribute('data-palette', to)
+      to === 'kerf' ? stage.removeAttribute('data-palette') : stage.setAttribute('data-palette', to)
       button.setAttribute('title', `Palette: ${to}`)
     }
     if (act === 'stage-width')

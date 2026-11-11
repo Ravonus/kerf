@@ -1,4 +1,4 @@
-import { Select } from '@weft-js/warp'
+import { Select } from '@kerf/veneer'
 import { REGION_OPTIONS } from './shared'
 
 export const SelectBasic = () => (

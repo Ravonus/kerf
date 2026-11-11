@@ -59,7 +59,7 @@ if (arch !== 'x64')
   throw new Error(
     `Rosetta didn't give an Intel Node (got ${arch || 'nothing'}): is Rosetta installed?`,
   )
-const empty = mkdtempSync(join(tmpdir(), 'weft-intel-'))
+const empty = mkdtempSync(join(tmpdir(), 'kerf-intel-'))
 const r = spawnSync(
   'arch',
   [

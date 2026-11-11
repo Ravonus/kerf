@@ -1,4 +1,4 @@
-import { Message } from '@weft-js/warp'
+import { Message } from '@kerf/veneer'
 
 import { CHAT } from '../../world'
 

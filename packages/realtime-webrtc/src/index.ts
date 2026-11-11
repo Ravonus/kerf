@@ -4,8 +4,8 @@
 //
 //   presence(chat, { transport: webrtc({ iceServers: [{ urls: 'stun:stun.example.com' }] }) })
 
-import { createRoot, derived, effect, state, untrack } from '@weft-js/core'
-import type { PeerLink, PeerRoom, PeerTransport } from '@weft-js/multiplayer'
+import { createRoot, derived, effect, state, untrack } from '@kerf/core'
+import type { PeerLink, PeerRoom, PeerTransport } from '@kerf/multiplayer'
 
 /** Options of `webrtc()`. */
 export interface WebRtcOptions {
@@ -121,7 +121,7 @@ export function webrtc({ iceServers = [], max = 8 }: WebRtcOptions = {}): PeerTr
                 channel(
                   id,
                   c,
-                  c.pc.createDataChannel('weft', { ordered: false, maxRetransmits: 0 }),
+                  c.pc.createDataChannel('kerf', { ordered: false, maxRetransmits: 0 }),
                 )
             }
             for (const id of conns.keys()) if (!ids.includes(id)) close(id)

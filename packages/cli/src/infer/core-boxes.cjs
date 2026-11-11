@@ -11,7 +11,7 @@ function coreMembers(ts, program, checker) {
     for (const node of file.statements) {
       if (
         (!ts.isImportDeclaration(node) && !ts.isExportDeclaration(node)) ||
-        node.moduleSpecifier?.text !== '@weft-js/core'
+        node.moduleSpecifier?.text !== '@kerf/core'
       )
         continue
       const module = checker.getSymbolAtLocation(node.moduleSpecifier)

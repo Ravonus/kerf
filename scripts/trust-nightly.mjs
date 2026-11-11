@@ -20,7 +20,7 @@ const names = [
     .map((file) => JSON.parse(readFileSync(file, 'utf8')))
     .filter((pkg) => !pkg.private)
     .map((pkg) => pkg.name),
-  ...platforms.map((p) => `@weft-js/compiler-${p.name}`),
+  ...platforms.map((p) => `@kerf/compiler-${p.name}`),
 ]
 const npmRun = (args, stdio = 'pipe') =>
   spawnSync(npm, args, { encoding: 'utf8', stdio, shell: process.platform === 'win32' })
@@ -37,7 +37,7 @@ for (const name of names) {
       'github',
       name,
       '--repo',
-      'Ravonus/weft',
+      'Ravonus/kerf',
       '--file',
       'nightly.yml',
       '--allow-publish',

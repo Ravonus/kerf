@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import type { State } from '@weft-js/core'
+import { state } from '@kerf/core'
+import type { State } from '@kerf/core'
 import {
   Button,
   ConfirmDialog,
@@ -10,7 +10,7 @@ import {
   SettingsLayout,
   SettingsSection,
   Switch,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { wait, SECTIONS, REGIONS } from './shared'
 
 export function SettingsLayoutProject() {
@@ -27,7 +27,7 @@ export function SettingsLayoutProject() {
       <SettingsSection
         id="general"
         title="General"
-        description="How storefront appears across weft."
+        description="How storefront appears across kerf."
       >
         <SettingRow layout="stack">
           <Input

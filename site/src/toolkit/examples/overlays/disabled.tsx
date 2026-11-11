@@ -1,4 +1,4 @@
-import { Button, Tooltip } from '@weft-js/warp'
+import { Button, Tooltip } from '@kerf/veneer'
 
 export const TooltipWhyDisabled = () => (
   <Tooltip content="Only owners can delete a project">

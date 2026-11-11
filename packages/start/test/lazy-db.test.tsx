@@ -4,8 +4,8 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { mutation, query } from '@weft-js/start'
-import { runtime } from '@weft-js/start/data'
+import { mutation, query } from '@kerf/start'
+import { runtime } from '@kerf/start/data'
 import { createDb } from '../src/db/sqlite'
 import { createHandler, type Manifest, type RouteModule } from '../src/server'
 
@@ -24,7 +24,7 @@ const manifest: Manifest = {
 
 function app(url: string, migrations = () => list) {
   const db = createDb({ schema: { notes }, url })
-  const spy = vi.spyOn(db.$weft, 'migrate')
+  const spy = vi.spyOn(db.$kerf, 'migrate')
   const found: { code: string; message: string }[] = []
   const modules: Record<string, RouteModule> = {
     home: { default: () => <h1>Marketing</h1> },
@@ -50,7 +50,7 @@ function app(url: string, migrations = () => list) {
 
 let dir: string
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'weft-lazy-'))
+  dir = mkdtempSync(join(tmpdir(), 'kerf-lazy-'))
   runtime.migrations = undefined
 })
 afterEach(() => rmSync(dir, { recursive: true, force: true }))
@@ -85,13 +85,13 @@ test('a server function gets the same 503 and code', async () => {
   const { db, handler } = app(dead().url)
   query({ $id: 'lazyNotes', run: () => db.select().from(notes) })
   mutation({ $id: 'lazyAdd', run: () => db.insert(notes).values({ body: 'a' }) })
-  const q = await handler(new Request('http://app.test/_weft/fn/lazyNotes'))
+  const q = await handler(new Request('http://app.test/_kerf/fn/lazyNotes'))
   expect(q.status).toBe(503)
   expect((await q.json()).e.code).toBe('Q016')
   const m = await handler(
-    new Request('http://app.test/_weft/fn/lazyAdd', {
+    new Request('http://app.test/_kerf/fn/lazyAdd', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-weft': '1' },
+      headers: { 'content-type': 'application/json', 'x-kerf': '1' },
       body: '{"i":{}}',
     }),
   )
@@ -143,7 +143,7 @@ test('in dev a new file in `drizzle/` applies on the next statement', async () =
 
 test('with `migrate: false`, or outside a request, nothing runs', async () => {
   const db = createDb({ schema: { notes }, url: ':memory:', migrate: false })
-  const spy = vi.spyOn(db.$weft, 'migrate')
+  const spy = vi.spyOn(db.$kerf, 'migrate')
   await expect(db.select().from(notes)).rejects.toMatchObject({
     cause: { message: expect.stringContaining('no such table') },
   })

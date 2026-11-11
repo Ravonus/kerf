@@ -1,29 +1,29 @@
-// Server render → hydrate round trips of the v3 reference app (evals/reference-v3/weft). The same sources load
-// twice: `?weft-ssr` compiles them for @weft-js/core/ssr, `?weft-hydrate` for hydratable @weft-js/core/dom (vite.mjs), both with
-// weft's own back end (research 19 §2.4: keys are source paths, ` wk="0.1/0"`).
-// weft-allow T005: framework test of SSR and hydration; server markup and node identity are the subject
+// Server render → hydrate round trips of the v3 reference app (evals/reference-v3/kerf). The same sources load
+// twice: `?kerf-ssr` compiles them for @kerf/core/ssr, `?kerf-hydrate` for hydratable @kerf/core/dom (vite.mjs), both with
+// kerf's own back end (research 19 §2.4: keys are source paths, ` wk="0.1/0"`).
+// kerf-allow T005: framework test of SSR and hydration; server markup and node identity are the subject
 import { readFileSync } from 'node:fs'
 import { screen } from '@testing-library/dom'
 import userEvent from '@testing-library/user-event'
-import { attr, renderToString } from '@weft-js/core/ssr'
-import { hydrate } from '@weft-js/core/dom'
-import { flush } from '@weft-js/core/test'
+import { attr, renderToString } from '@kerf/core/ssr'
+import { hydrate } from '@kerf/core/dom'
+import { flush } from '@kerf/core/test'
 import { hydration } from '../src/hydrate'
-import { App as ServerApp } from '../../../evals/reference-v3/weft/src/App.tsx?weft-ssr'
-import { App as ClientApp } from '../../../evals/reference-v3/weft/src/App.tsx?weft-hydrate'
+import { App as ServerApp } from '../../../evals/reference-v3/kerf/src/App.tsx?kerf-ssr'
+import { App as ClientApp } from '../../../evals/reference-v3/kerf/src/App.tsx?kerf-hydrate'
 // oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
-import { Shop as ServerShop } from './fixtures/ssr/Shop.tsx?weft-ssr'
-import { Shop as ClientShop } from './fixtures/ssr/Shop.tsx?weft-hydrate'
-import type { Product } from '../../../evals/reference-v3/weft/src/api'
-import { App as ServerScopeApp } from './fixtures/v3-scope/App.tsx?weft-ssr'
+import { Shop as ServerShop } from './fixtures/ssr/Shop.tsx?kerf-ssr'
+import { Shop as ClientShop } from './fixtures/ssr/Shop.tsx?kerf-hydrate'
+import type { Product } from '../../../evals/reference-v3/kerf/src/api'
+import { App as ServerScopeApp } from './fixtures/v3-scope/App.tsx?kerf-ssr'
 // oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
-import * as basicsS from './fixtures/next/Basics.tsx?weft-ssr'
-import * as basicsC from './fixtures/next/Basics.tsx?weft-hydrate'
-import * as twoS from './fixtures/next/Step2.tsx?weft-ssr'
-import * as twoC from './fixtures/next/Step2.tsx?weft-hydrate'
-import { Watched as WatchedS } from './fixtures/ssr/Watched.tsx?weft-ssr'
+import * as basicsS from './fixtures/next/Basics.tsx?kerf-ssr'
+import * as basicsC from './fixtures/next/Basics.tsx?kerf-hydrate'
+import * as twoS from './fixtures/next/Step2.tsx?kerf-ssr'
+import * as twoC from './fixtures/next/Step2.tsx?kerf-hydrate'
+import { Watched as WatchedS } from './fixtures/ssr/Watched.tsx?kerf-ssr'
 // oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
-import { Watched as WatchedC } from './fixtures/ssr/Watched.tsx?weft-hydrate'
+import { Watched as WatchedC } from './fixtures/ssr/Watched.tsx?kerf-hydrate'
 
 const products: Product[] = [
   { id: 'apple', name: 'Apple', category: 'fruit', price: 0.5, stock: 20 },
@@ -202,7 +202,7 @@ test('dev hydration warnings name the source line of the template that missed', 
   hydrate(() => basicsC.Counter({}), container)
   expect(hydration.misses).toBe(1)
   expect(warn.mock.calls[0]![0]).toBe(
-    `weft: hydration mismatch at test/fixtures/next/Basics.tsx:${line} <button> (wk=0): the client renders <button>, the server rendered <p>; rendering it fresh`,
+    `kerf: hydration mismatch at test/fixtures/next/Basics.tsx:${line} <button> (wk=0): the client renders <button>, the server rendered <p>; rendering it fresh`,
   )
   warn.mockRestore()
   container.remove()

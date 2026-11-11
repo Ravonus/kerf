@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Card, Input } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Card, Input } from '@kerf/veneer'
 
 // A field that edits its own value. It doesn't know or
 // care whether anyone above is listening.

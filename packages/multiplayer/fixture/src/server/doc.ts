@@ -1,8 +1,8 @@
 // A shared document: presence, cursors, a relay, one shared value, and the room's own message beside them.
-import { channel, sharedState, type StandardSchemaV1 } from '@weft-js/start'
-import { multiplayer } from '@weft-js/multiplayer/server'
-import { socketioTicket } from '@weft-js/realtime-socketio/relay'
-import { livekitTicket } from '@weft-js/realtime-livekit/server'
+import { channel, sharedState, type StandardSchemaV1 } from '@kerf/start'
+import { multiplayer } from '@kerf/multiplayer/server'
+import { socketioTicket } from '@kerf/realtime-socketio/relay'
+import { livekitTicket } from '@kerf/realtime-livekit/server'
 
 const object = <T>(check: (v: any) => boolean): StandardSchemaV1<T, T> =>
   ({
@@ -16,7 +16,7 @@ const Params = object<{ id: string }>((v) => typeof v?.id === 'string' && v.id.l
 const Note = object<{ text: string }>((v) => typeof v?.text === 'string' && v.text.length <= 500)
 const Ping = object<{ at: string }>((v) => typeof v?.at === 'string' && v.at.length <= 64)
 
-const { WEFT_E2E_SOCKETIO_SECRET: secret, LIVEKIT_API_KEY: livekit } = process.env
+const { KERF_E2E_SOCKETIO_SECRET: secret, LIVEKIT_API_KEY: livekit } = process.env
 const ticket = secret ? socketioTicket({ secret }) : livekit ? livekitTicket() : undefined
 
 const mp = multiplayer<{ id: string }>({

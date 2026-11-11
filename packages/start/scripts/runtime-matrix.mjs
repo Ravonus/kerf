@@ -2,7 +2,7 @@
 import { freePort } from '../../../scripts/lib/helpers.mjs'
 // The runtime matrix (PLAN §4.1, research 28 §5): build one app per runtime, serve each build on its own runtime with
 // its own empty database, and run one e2e file against it. This builds on Node for all three, so it's the check that
-// a Bun or Deno break doesn't ship. `create-weft/scripts/alt-runtimes.mjs` is the one with no Node on the machine.
+// a Bun or Deno break doesn't ship. `create-kerf/scripts/alt-runtimes.mjs` is the one with no Node on the machine.
 //
 //   node packages/start/scripts/runtime-matrix.mjs <app> [--e2e <file>] [--runtimes node,bun,deno] [--json <out>]
 //
@@ -77,16 +77,16 @@ async function serve(runtime, env) {
   throw new Error(`${runtime} server didn't answer:\n${output.join('')}`)
 }
 
-const scratch = mkdtempSync(join(tmpdir(), 'weft-matrix-'))
+const scratch = mkdtempSync(join(tmpdir(), 'kerf-matrix-'))
 const { default: run } = await import(pathToFileURL(e2e).href)
-const weft = join(app, 'node_modules', '.bin', 'weft')
+const kerf = join(app, 'node_modules', '.bin', 'kerf')
 const results = []
 for (const runtime of values.runtimes.split(',')) {
   const entry = { runtime, version: version(SERVERS[runtime][0]), ok: false }
   results.push(entry)
   log(`${runtime} (${entry.version}): build`)
   const t = performance.now()
-  const built = spawnSync(weft, ['build', '--runtime', runtime], {
+  const built = spawnSync(kerf, ['build', '--runtime', runtime], {
     cwd: app,
     encoding: 'utf8',
     env: { ...process.env, NODE_ENV: 'production' },

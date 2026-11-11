@@ -2,8 +2,8 @@
 // @vitest-environment-options {"url":"http://localhost/"}
 import type * as ActualHelpers from '../src/run/helpers'
 import { afterEach, expect, it, vi } from 'vitest'
-import { flush, onCleanup, state } from '@weft-js/core'
-import { insert, render } from '@weft-js/core/dom'
+import { flush, onCleanup, state } from '@kerf/core'
+import { insert, render } from '@kerf/core/dom'
 import { createRouteState } from '../src/router'
 import type { ClientRoutes } from '../src/run'
 import { retainRouteView } from '../src/run/retain-view'

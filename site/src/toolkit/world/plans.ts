@@ -1,4 +1,4 @@
-import type { BillingPlan } from '@weft-js/warp'
+import type { BillingPlan } from '@kerf/veneer'
 
 export const PLANS: BillingPlan[] = [
   {

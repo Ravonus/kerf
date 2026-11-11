@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Modal, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Modal, Text } from '@kerf/veneer'
 
 export function ModalSizes() {
   const small = state(false)

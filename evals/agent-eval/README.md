@@ -1,20 +1,20 @@
 # agent-eval
 
 The original comparative study and hypotheses are in the archived
-[pre-registration](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/research/42-agent-eval.md).
+[pre-registration](https://github.com/Ravonus/kerf/blob/archive/evals-2026-11/docs/research/42-agent-eval.md).
 
 ## S5 amendment 1
 
 The current owner instruction replaces the proposed comparison with one sample on
-weft + warp for each of six tasks, using `gpt-6-luna`. Smoke is a calibration
+kerf + veneer for each of six tasks, using `gpt-6-luna`. Smoke is a calibration
 check; report it separately from the five substantive tasks. Five Learn pages
 are planned for the friction pass. This smaller run cannot test the archived
 comparative hypotheses or their five-sample thresholds. Keep the archived
 hypotheses unchanged and do not claim a comparison from these results.
 
 The S5 run waits for S4 PASS and merge, verified isolation with AGENTS.md,
-weft docs and MCP, and a reliable way to record framework-source reads. The
-entrypoint dispatches to Codex and the weft scaffold path uses pnpm with a
+kerf docs and MCP, and a reliable way to record framework-source reads. The
+entrypoint dispatches to Codex and the kerf scaffold path uses pnpm with a
 standalone age policy. M4 verified the packed-current medium-shop reference and
 45 mutants on candidate `9f5436f4`; its source hashes are recorded in
 `tasks/medium-shop/verification.json`. The edit-shop reference and mutants
@@ -43,20 +43,20 @@ checked-in medium-shop reference. Use `edit-shop reference` for the edit task. `
 stock'` applies that named checked-in mutant and exits 1 only when its named
 check fails; exit 2 means it was not caught or calibration could not run. No agent is launched. The
 command requires a policy-safe, owned golden at
-`/private/tmp/aeval/golden/weft-warp/app` and local harness dependencies.
+`/private/tmp/aeval/golden/kerf-veneer/app` and local harness dependencies.
 Do not infer calibration success from fixture tests or use calibration results
 as an agent evaluation.
 
 For the combined S5 checkout, M4 can run the prepared manager script after
 checking Node 26, the cached pnpm entry, compiler stamps, available disk and
-Chromium. Set `WEFT_T06_PNPM_ENTRY` to the cached pnpm 12.15.0 `bin/pnpm.mjs`:
+Chromium. Set `KERF_T06_PNPM_ENTRY` to the cached pnpm 12.15.0 `bin/pnpm.mjs`:
 
 ```bash
-WEFT_T06_PNPM_ENTRY="$HOME/.cache/node/corepack/v1/pnpm/12.15.0/bin/pnpm.mjs" \
-  bash "$HOME/work/weft-S5-verify/repo/evals/agent-eval/evidence/T06/yuna-calibrate.sh"
+KERF_T06_PNPM_ENTRY="$HOME/.cache/node/corepack/v1/pnpm/12.15.0/bin/pnpm.mjs" \
+  bash "$HOME/work/kerf-S5-verify/repo/evals/agent-eval/evidence/T06/yuna-calibrate.sh"
 ```
 
-Set `WEFT_T06_TASK=edit-shop` for the edit reference and its named mutants.
+Set `KERF_T06_TASK=edit-shop` for the edit reference and its named mutants.
 The default remains medium-shop for existing callers.
 
 The script prints its receipt directory and writes progress to `setup.log`.

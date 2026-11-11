@@ -1,0 +1,13 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs-rich {
+/* -- recurrence */
+  :where(.rr-kept) { margin: 0; font-size: var(--veneer-text-caption-size); }
+  :where([data-scope="chip"][role="radio"][aria-checked="true"]) { background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); border-color: var(--veneer-color-accent-solid); }
+  /* the specimen's layout helpers these fields need */
+  :where(.rr-sentence) { font-family: var(--veneer-text-title-font); font-weight: var(--veneer-text-title-weight); font-size: calc(var(--veneer-text-heading-size) + 2px); letter-spacing: var(--veneer-text-title-tracking); line-height: 1.25; }
+  :where(.rr-sentence em) { font-style: normal; color: var(--veneer-color-accent-text); }
+  :where(.rr-grid) { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--veneer-space-group); align-items: start; }
+  :where(.rr-next) { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: var(--veneer-text-body-size); font-variant-numeric: tabular-nums; }
+  :where(.rr-next li) { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); }
+  :where(.rr-next li span) { color: var(--veneer-color-text-subtle); font-size: 12px; }
+}

@@ -1,6 +1,6 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
-import { Button, DataGrid } from '@weft-js/warp'
+import { Button, DataGrid } from '@kerf/veneer'
 
 import { PROJECTS } from '../../world'
 

@@ -71,7 +71,7 @@ await test('canvas reexports keep every demo and paste self-contained code', () 
 })
 
 await test('reexported examples follow local dependencies and reject missing or invalid helpers', () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-toolkit-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-toolkit-'))
   try {
     mkdirSync(join(root, 'canvas'))
     const entry = join(root, 'canvas.tsx')
@@ -100,7 +100,7 @@ await test('reexported examples follow local dependencies and reject missing or 
 })
 
 await test('world reexports include TSX helpers and reject missing names', () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-world-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-world-'))
   try {
     mkdirSync(join(root, 'examples'))
     mkdirSync(join(root, 'world'))

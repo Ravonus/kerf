@@ -1,4 +1,4 @@
-import { DurationField, Stack } from '@weft-js/warp'
+import { DurationField, Stack } from '@kerf/veneer'
 
 import { MIN_SEC, DAY_HOUR } from './shared-event'
 

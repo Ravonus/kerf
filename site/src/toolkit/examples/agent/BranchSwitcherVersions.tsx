@@ -1,11 +1,11 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   BranchSwitcher,
   Prose,
   Row,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { VERSIONS } from './shared'
 
 export function BranchSwitcherVersions() {

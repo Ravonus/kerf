@@ -1,6 +1,6 @@
-// Server functions over HTTP on the fixture app under `weft dev` (research 27 §3): `/_weft/fn/<id>` for queries and
+// Server functions over HTTP on the fixture app under `kerf dev` (research 27 §3): `/_kerf/fn/<id>` for queries and
 // mutations, the CSRF check, validation, single-flight refreshes, the shared tagged cache, redirects from `load` and
-// from a `run`, the request cache shared by `load` and the render, the page's `#weft-cache`, and the client stubs.
+// from a `run`, the request cache shared by `load` and the render, the page's `#kerf-cache`, and the client stubs.
 import { inject } from 'vitest'
 import { fnId } from '../src/vite.mjs'
 
@@ -9,16 +9,16 @@ const id = (name: string) => fnId(name, 'src/server/todos.ts')
 const get = (path: string, init?: RequestInit) => fetch(url + path, { redirect: 'manual', ...init })
 const call = (name: string, input?: unknown) =>
   get(
-    `/_weft/fn/${id(name)}${input === undefined ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`,
+    `/_kerf/fn/${id(name)}${input === undefined ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`,
   )
 const post = (
   name: string,
   body: unknown,
-  headers: Record<string, string> = { 'content-type': 'application/json', 'x-weft': '1' },
-) => get(`/_weft/fn/${id(name)}`, { method: 'POST', headers, body: JSON.stringify(body) })
+  headers: Record<string, string> = { 'content-type': 'application/json', 'x-kerf': '1' },
+) => get(`/_kerf/fn/${id(name)}`, { method: 'POST', headers, body: JSON.stringify(body) })
 const cacheOf = (text: string) =>
   JSON.parse(
-    /<script type="application\/json" id="weft-cache">(.*?)<\/script>/.exec(text)?.[1] ?? 'null',
+    /<script type="application\/json" id="kerf-cache">(.*?)<\/script>/.exec(text)?.[1] ?? 'null',
   )
 
 test('a query answers { v, t }', async () => {
@@ -41,7 +41,7 @@ test('Q002: input the schema rejects is a 400 with the issues', async () => {
 })
 
 test('Q009: an unknown id is a 404', async () => {
-  const res = await get('/_weft/fn/nope.123456')
+  const res = await get('/_kerf/fn/nope.123456')
   expect(res.status).toBe(404)
   expect((await res.json()).e.code).toBe('Q009')
 })
@@ -53,10 +53,10 @@ test('Q010: a mutation without the CSRF proof is refused', async () => {
   const cross = await post(
     'addTodo',
     { i: { title: 'x' } },
-    { 'content-type': 'application/json', 'x-weft': '1', origin: 'https://evil.example' },
+    { 'content-type': 'application/json', 'x-kerf': '1', origin: 'https://evil.example' },
   )
   expect(cross.status).toBe(403)
-  expect((await get(`/_weft/fn/${id('addTodo')}`)).status).toBe(405) // GET a mutation
+  expect((await get(`/_kerf/fn/${id('addTodo')}`)).status).toBe(405) // GET a mutation
 })
 
 test('a mutation refreshes the queries it invalidated in the same response (single-flight)', async () => {
@@ -98,7 +98,7 @@ test('redirect() in load: 307 for the page, { r } for client navigation', async 
   const page = await get('/old')
   expect(page.status).toBe(307)
   expect(page.headers.get('location')).toBe('/todos')
-  expect(await (await get('/_weft/data/old')).json()).toEqual({
+  expect(await (await get('/_kerf/data/old')).json()).toEqual({
     m: [],
     p: '/old',
     s: 307,
@@ -112,7 +112,7 @@ test('redirect() in a run answers { r }, with the cookies the run set', async ()
   expect(res.headers.get('set-cookie')).toBe('session=abc; Path=/; HttpOnly')
 })
 
-test('load and the render share one run per request; the page carries it in #weft-cache', async () => {
+test('load and the render share one run per request; the page carries it in #kerf-cache', async () => {
   const before = (await (await call('todoStats')).json()).v
   const r = await get('/todos')
   const text = await r.text()
@@ -126,14 +126,14 @@ test('load and the render share one run per request; the page carries it in #wef
   expect(text).toContain(`>${list[0].title}</button>`)
   // The route payload records the tags its load read.
   const route = JSON.parse(
-    /<script type="application\/json" id="weft-route">(.*?)<\/script>/.exec(text)![1]!,
+    /<script type="application\/json" id="kerf-route">(.*?)<\/script>/.exec(text)![1]!,
   )
   expect(route.m.at(-1)).toMatchObject({ id: '/todos', t: ['todos'] })
   expect(before).toBeTruthy()
 })
 
 test('client navigation data carries the queries its loaders resolved', async () => {
-  const a = await (await get('/_weft/data/todos')).json()
+  const a = await (await get('/_kerf/data/todos')).json()
   expect(a.c.map((w: unknown[]) => w[0])).toEqual([id('listTodos')])
   expect(a.m.at(-1).t).toEqual(['todos'])
 })

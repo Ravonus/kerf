@@ -5,7 +5,7 @@ import {
   Heading,
   Text,
   Button,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 export const DitherFieldHero = () => (
   <DitherField
@@ -22,7 +22,7 @@ export const DitherFieldHero = () => (
           Deploys that stay out of the way
         </Heading>
         <Text subtle>
-          Push to main. weft builds, tests and ships it.
+          Push to main. kerf builds, tests and ships it.
         </Text>
         <Button icon="rocket">Start a project</Button>
       </Stack>

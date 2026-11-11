@@ -1,4 +1,4 @@
-import { Button, Row, Tooltip } from '@weft-js/warp'
+import { Button, Row, Tooltip } from '@kerf/veneer'
 
 export const TooltipIconBar = () => (
   <Row gap="tight">

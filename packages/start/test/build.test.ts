@@ -1,4 +1,4 @@
-// `weft build` (research 25 §6): Vite + Nitro to `.output`, run as the production server it makes. Node end to end
+// `kerf build` (research 25 §6): Vite + Nitro to `.output`, run as the production server it makes. Node end to end
 // (pages, prerendered and on-demand cards, hydration in Chrome); Bun runs its build when `bun` is on PATH; Deno's
 // build is checked to complete (no deno here).
 import { spawnSync } from 'node:child_process'
@@ -134,7 +134,7 @@ function registerGateAStreamedBoundaryWaitsForTheSheet(
     await tab.waitForSelector('.stock')
     await tab.unroute('**/assets/sheet-*.css')
     await tab.goto(getServer().url + '/gate', { waitUntil: 'load' })
-    await tab.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+    await tab.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
     await tab.click('a[href="/styled"]')
     await tab.waitForURL('**/styled')
     await tab.waitForSelector('.badge')
@@ -143,8 +143,8 @@ function registerGateAStreamedBoundaryWaitsForTheSheet(
 }
 
 function registerStyleGates(getServer: GetServer) {
-  // WebKit runs with WEFT_WEBKIT=1 (the release gate).
-  const browsers = process.env.WEFT_WEBKIT
+  // WebKit runs with KERF_WEBKIT=1 (the release gate).
+  const browsers = process.env.KERF_WEBKIT
     ? (['chromium', 'firefox', 'webkit'] as const)
     : (['chromium', 'firefox'] as const)
   for (const name of browsers)
@@ -192,8 +192,8 @@ function registerStyleGates(getServer: GetServer) {
 function registerBuildCardsForStaticRoutesAndPrerenderParams() {
   test('cards for static routes and `prerender` params are files in the output', () => {
     for (const f of ['index', 'about', 'users', 'slow', 'users/1'])
-      expect(existsSync(join(out('node'), `public/_weft/og/${f}.png`))).toBe(true)
-    expect(existsSync(join(out('node'), 'public/_weft/og/users/2.png'))).toBe(false) // param route without prerender: on demand
+      expect(existsSync(join(out('node'), `public/_kerf/og/${f}.png`))).toBe(true)
+    expect(existsSync(join(out('node'), 'public/_kerf/og/users/2.png'))).toBe(false) // param route without prerender: on demand
   })
 }
 
@@ -214,7 +214,7 @@ function registerBuildAPageEveryTagHashedClientAssets(getServer: GetServer) {
 
 function registerBuildCardsPrerenderedAndOnDemandBothImmutable(getServer: GetServer) {
   test('cards: prerendered and on demand, both immutable', async () => {
-    const pre = await fetch(getServer().url + '/_weft/og/users/1.png?v=anything')
+    const pre = await fetch(getServer().url + '/_kerf/og/users/1.png?v=anything')
     expect([pre.status, pre.headers.get('content-type'), pre.headers.get('cache-control')]).toEqual(
       [200, 'image/png', 'public, max-age=31536000, immutable'],
     )
@@ -225,7 +225,7 @@ function registerBuildCardsPrerenderedAndOnDemandBothImmutable(getServer: GetSer
       200,
       'public, max-age=31536000, immutable',
     ])
-    const stale = await fetch(getServer().url + '/_weft/og/users/2.png?v=old')
+    const stale = await fetch(getServer().url + '/_kerf/og/users/2.png?v=old')
     expect(stale.headers.get('cache-control')).toBe('no-cache') // not the current hash: never cached as immutable
   })
 }
@@ -251,7 +251,7 @@ function registerBuildAFormWorksWithoutJSAndAn(getServer: GetServer) {
       body: add,
     })
     expect([done.status, done.headers.get('location')]).toEqual([303, '/notes'])
-    const sharp = createRequire(new URL('../../plugin-media/package.json', import.meta.url))(
+    const sharp = createRequire(new URL('../../media/package.json', import.meta.url))(
       'sharp',
     )
     const file = await sharp({
@@ -273,7 +273,7 @@ function registerBuildAFormWorksWithoutJSAndAn(getServer: GetServer) {
       ).status,
     ).toBe(303)
     const { v } = await (
-      await fetch(`${getServer().url}/_weft/fn/${id('getCover', 'src/server/forms.ts')}`)
+      await fetch(`${getServer().url}/_kerf/fn/${id('getCover', 'src/server/forms.ts')}`)
     ).json()
     const image = await fetch(getServer().url + v.src, { headers: { accept: 'image/avif' } })
     expect([
@@ -332,9 +332,9 @@ function registerBuildAStreamedBoundaryComesAfterTheSheet(page: ReadPage) {
   test("a streamed Boundary comes after the sheet's link, with only the styles not yet sent", async () => {
     const { html } = await page('/slow')
     const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]!)
-    // Layers rank by first mention: warp's whole order comes before any sheet's own statement.
+    // Layers rank by first mention: veneer's whole order comes before any sheet's own statement.
     expect(
-      styles[0]!.startsWith('@layer warp,app,theme,base,components,utilities;@layer warp.tokens,'),
+      styles[0]!.startsWith('@layer veneer,app,theme,base,components,utilities;@layer veneer.tokens,'),
     ).toBe(true)
     const link = html.indexOf('<link rel="stylesheet" href=')
     const swap = html.indexOf('<template')
@@ -351,7 +351,7 @@ function registerBuildAStreamedBoundaryComesAfterTheSheet(page: ReadPage) {
 
 function registerBuildInlineSheetsLeavesOutWhatWouldBreakIn() {
   test('inlineSheets leaves out what would break in a <style>, and what is too big to carry', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'weft-sheets-'))
+    const dir = mkdtempSync(join(tmpdir(), 'kerf-sheets-'))
     mkdirSync(join(dir, 'assets'))
     const sheets = {
       'ok.css': 'a{background:url(/assets/x.png)}',
@@ -418,7 +418,7 @@ function registerBuildARouteThatRenderedBeforeSendsIts(getServer: GetServer) {
       html
         .slice(
           html.indexOf('<div id="app">'),
-          html.indexOf('<script type="application/json" id="weft-route">'),
+          html.indexOf('<script type="application/json" id="kerf-route">'),
         )
         .replace(/<!--\[-->[\s\S]*?<!--\]-->/, '<!--[--><!--]-->')
     expect(app(again)).toBe(app(plain))
@@ -452,8 +452,8 @@ function registerBuildARouteThatRenderedBeforeSendsIts(getServer: GetServer) {
       await tab.goto(getServer().url + '/stream-sheet?x')
       await tab.waitForSelector('#app [data-scope="late-card"]')
       expect(await tab.evaluate(() => window.seen)).toBe('rgb(7, 8, 9)') // styled from the first frame, with the sheet still out
-      await tab.waitForFunction(() => window.__weft?.hydrated)
-      expect(await tab.evaluate(() => window.__weft)).toMatchObject({ misses: 0, hydrated: true })
+      await tab.waitForFunction(() => window.__kerf?.hydrated)
+      expect(await tab.evaluate(() => window.__kerf)).toMatchObject({ misses: 0, hydrated: true })
     } finally {
       await browser.close()
     }
@@ -543,9 +543,9 @@ function registerBuildTheHeadAsksForTheEntryOnce(getServer: GetServer) {
 
 function registerBuildACombinedSheetStaysInTheBuild() {
   test('a combined sheet stays in the build for the window a page cached before the deploy needs it, and no longer', () => {
-    const root = mkdtempSync(join(tmpdir(), 'weft-keep-'))
+    const root = mkdtempSync(join(tmpdir(), 'kerf-keep-'))
     const dir = join(root, 'out'),
-      old = join(root, '.weft/sheets')
+      old = join(root, '.kerf/sheets')
     mkdirSync(join(dir, 'assets'), { recursive: true })
     mkdirSync(old, { recursive: true })
     writeFileSync(join(dir, 'assets/a.css'), 'p{color:red}')
@@ -589,8 +589,8 @@ function registerBuildTheProductionBuildHydratesWithInChrome(getServer: GetServe
     try {
       const tab = await browser.newPage()
       await tab.goto(getServer().url + '/users/1')
-      await tab.waitForFunction(() => window.__weft?.hydrated)
-      expect(await tab.evaluate(() => window.__weft)).toEqual({
+      await tab.waitForFunction(() => window.__kerf?.hydrated)
+      expect(await tab.evaluate(() => window.__kerf)).toEqual({
         misses: 0,
         writes: 0,
         hydrated: true,
@@ -693,7 +693,7 @@ test('bun preset builds and serves', async () => {
     const res = await fetch(server.url + '/users/42')
     expect(res.status).toBe(200)
     expect((await res.text()).match(/ data-wm>/g)).toHaveLength(16)
-    const card = await fetch(server.url + '/_weft/og/users/2.png')
+    const card = await fetch(server.url + '/_kerf/og/users/2.png')
     expect(card.headers.get('content-type')).toBe('image/png')
   } finally {
     server.stop()
@@ -709,5 +709,5 @@ test('deno_server preset builds', () => {
   })
   const entry = readFileSync(join(out('deno_server'), 'server/index.mjs'), 'utf8')
   expect(entry).toMatch(/Deno\.serve|deno/i)
-  expect(existsSync(join(out('deno_server'), 'public/_weft/og/users/1.png'))).toBe(true)
+  expect(existsSync(join(out('deno_server'), 'public/_kerf/og/users/1.png'))).toBe(true)
 }, 120_000)

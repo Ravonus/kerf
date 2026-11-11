@@ -11,7 +11,7 @@ You have pages now ([Routing and layouts](/learn/routing-and-layouts)). Most of 
 server: a list, a record, the signed-in user. This page is about getting that data onto the page.
 
 In a client-only app you'd fetch it from the browser after the page shows, with a spinner meanwhile. That is still
-possible (it's what [`resource`](/learn/async-and-loading) is for), but with `@weft-js/start` the server renders the
+possible (it's what [`resource`](/learn/async-and-loading) is for), but with `@kerf/start` the server renders the
 page, so it can load the data first and send the page with the data already in it. There are two ways to ask for it: a
 route's `load`, and a query read from a component. Both go through the same server functions and the same cache.
 
@@ -22,7 +22,7 @@ returns becomes the page's `props.data`:
 
 ```ts
 // src/server/summary.ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 import { and, count, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'
@@ -64,7 +64,7 @@ export const findTodo = query({
 
 ```tsx
 // src/routes/todos/summary.tsx
-import type { Meta, RouteProps } from '@weft-js/start'
+import type { Meta, RouteProps } from '@kerf/start'
 import { me } from '#/server/session'
 import { countOpen } from '#/server/summary'
 
@@ -120,7 +120,7 @@ guards live there ([Routing and layouts](/learn/routing-and-layouts#layouts-with
 `props.data` is live: when you navigate between two todos, the same page component stays and gets the new data in place.
 Naming it is fine (`const { data } = props` stays live), but computing from it in the component body is not:
 `const heading = props.data.title.toUpperCase()` runs once and keeps the first todo's title forever. Compute in JSX
-(`{props.data.title.toUpperCase()}`) or in a `derived`, and it stays current. weft check reports the first as W001.
+(`{props.data.title.toUpperCase()}`) or in a `derived`, and it stays current. kerf check reports the first as W001.
 :::
 
 ## Streaming a slow field
@@ -134,8 +134,8 @@ as the rest is ready, and streams that field in the same response when it settle
 
 ```tsx
 // src/routes/todos/overview.tsx
-import { Boundary, resource } from '@weft-js/core'
-import type { RouteProps } from '@weft-js/start'
+import { Boundary, resource } from '@kerf/core'
+import type { RouteProps } from '@kerf/start'
 import { countOpen } from '#/server/summary'
 import { listTodos } from '#/server/todos'
 
@@ -207,7 +207,7 @@ no `.fetch` gives you a [resource](/learn/async-and-loading): `.value` (undefine
 `.error` and `.refresh()`:
 
 ```tsx
-import { Boundary } from '@weft-js/core'
+import { Boundary } from '@kerf/core'
 import { listTodos } from '#/server/todos'
 
 function OpenList() {
@@ -258,13 +258,13 @@ the same query with the same input in one request, it runs once.
 ### An input that changes
 
 A query that takes input gets it as an argument: `findTodo({ id: '42' })`. When the input depends on state, pass a
-function instead. Weft tracks what the function reads, and asks again when it changes, like any [derived
+function instead. Kerf tracks what the function reads, and asks again when it changes, like any [derived
 value](/learn/derived):
 
 ```tsx
-import { Boundary, state } from '@weft-js/core'
-import { skip } from '@weft-js/start'
-import { Button } from '@weft-js/warp'
+import { Boundary, state } from '@kerf/core'
+import { skip } from '@kerf/start'
+import { Button } from '@kerf/veneer'
 import { findTodo } from '#/server/summary'
 import { listTodos } from '#/server/todos'
 
@@ -303,7 +303,7 @@ input is cached separately, so going back to a todo you already looked at shows 
 
 :::pitfall `query()` only in components; `.fetch()` everywhere else
 `listTodos()` makes a resource that lives as long as the component that made it. Outside a component (in `load`, a
-click handler, a timer, another server function, module scope) there's nothing for it to belong to, and Weft stops
+click handler, a timer, another server function, module scope) there's nothing for it to belong to, and Kerf stops
 with **Q001**. There, use `await listTodos.fetch()`, which gives you the value once.
 
 And don't copy a query's value into `state` to "keep" it. The query already keeps it, and keeps it fresh after every
@@ -313,13 +313,13 @@ change. A copy goes stale the first time something changes.
 ## Keeping data fresh
 
 Loading data is half of it. The other half is what happens after a change: you add a todo, and the list, the open count
-and the summary page all need to know. In Weft you don't refetch by hand. You **tag** queries, and changes say which
+and the summary page all need to know. In Kerf you don't refetch by hand. You **tag** queries, and changes say which
 tags they affect.
 
 A query lists its tags, usually the tables it reads:
 
 ```ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 
 export const listTags = query({
   tags: ['todos'],
@@ -330,7 +330,7 @@ export const listTags = query({
 And a mutation lists what it `invalidates`:
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { z } from 'zod'
 
 export const tagTodo = mutation({
@@ -351,7 +351,7 @@ fetched again:
 :::demo stack-tags
 
 Tags can depend on the input, for queries that read one record: `tags: ({ id }) => ['todos', `todos:${id}`]`. A
-mutation that changes one todo can then invalidate `todos:${id}` and leave the others alone. Weft checks the names in
+mutation that changes one todo can then invalidate `todos:${id}` and leave the others alone. Kerf checks the names in
 development: a mutation that invalidates a tag no query declares gets **Q008**, and a function that reads or writes a
 table its tags don't name gets **Q011**.
 
@@ -359,8 +359,8 @@ You can also invalidate by hand with `invalidate(...tags)`. In the browser it ma
 on the page that has one fetches again:
 
 ```tsx
-import { invalidate } from '@weft-js/start'
-import { Button } from '@weft-js/warp'
+import { invalidate } from '@kerf/start'
+import { Button } from '@kerf/veneer'
 
 export function RefreshButton() {
   return (
@@ -391,7 +391,7 @@ There are three places a query's value can be kept. You turn on only the last:
    invalidates one of its tags:
 
 ```ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 
 export const exchangeRates = query({
   tags: ['rates'],
@@ -406,7 +406,7 @@ answer to the next. For a value per user, add `scope: 'user'`, which keeps one v
 `run` read `ctx.user`.
 
 :::note When the server is newer than the tab
-After you deploy, a tab that was already open is running the old build. `stale` from `@weft-js/start` is a box that
+After you deploy, a tab that was already open is running the old build. `stale` from `@kerf/start` is a box that
 turns `true` when the server says it runs a newer one, so you can offer a reload:
 `{stale.value && <Button onClick={() => location.reload()}>A new version is out: reload</Button>}`. It is known
 through the realtime connection, so it updates on pages with a live query, a stream or a channel.
@@ -435,7 +435,7 @@ This page waits for both the user's name and a slow list of suggestions. Make th
 stream in.
 
 ```tsx
-import type { RouteProps } from '@weft-js/start'
+import type { RouteProps } from '@kerf/start'
 import { me } from '#/server/session'
 import { listTodos } from '#/server/todos'
 
@@ -461,8 +461,8 @@ export default function Home(props: RouteProps<typeof load>) {
 Leave `suggestions` unawaited, and read it with `resource` in a component inside a `<Boundary pending>`:
 
 ```tsx
-import { Boundary, resource } from '@weft-js/core'
-import type { RouteProps } from '@weft-js/start'
+import { Boundary, resource } from '@kerf/core'
+import type { RouteProps } from '@kerf/start'
 import { me } from '#/server/session'
 import { listTodos } from '#/server/todos'
 
@@ -503,7 +503,7 @@ The heading is in the first part of the response; the list follows when the quer
 Pressing this button fails with Q001. Why, and what's the fix?
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 import { listTodos } from '#/server/todos'
 
 export function Export() {
@@ -519,7 +519,7 @@ export function Export() {
 component's setup, so there's none. In a handler, ask for the value once with `.fetch()`:
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 import { listTodos } from '#/server/todos'
 
 export function Export() {
@@ -540,7 +540,7 @@ This query is called on every page, so it should be cached for a few minutes. Ad
 Make it cached and correct.
 
 ```ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 
 export const greeting = query({
   run: ({ ctx }) => `Welcome back, ${ctx.user?.name ?? 'friend'}`,
@@ -550,7 +550,7 @@ export const greeting = query({
 A shared cache would give the first visitor's name to everyone, which is what Q006 stops. Either keep one value per user:
 
 ```ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 
 export const greeting = query({
   cache: { life: 'minutes', scope: 'user' },

@@ -1,4 +1,4 @@
-import { Accordion } from '@weft-js/warp'
+import { Accordion } from '@kerf/veneer'
 
 export const AccordionDisabled = () => (
   <Accordion

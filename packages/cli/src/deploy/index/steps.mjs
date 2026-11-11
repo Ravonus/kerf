@@ -2,7 +2,7 @@ import { host, presetFor } from '../hosts.mjs'
 import { needsOf } from '../needs.mjs'
 
 /**
- * The steps `weft deploy` takes for a target, as data: a dry run prints them, `--yes` runs them. A step reads env vars
+ * The steps `kerf deploy` takes for a target, as data: a dry run prints them, `--yes` runs them. A step reads env vars
  * by name; their values are filled in only as it runs.
  */
 export function deploySteps(root, config, { target, prod = false } = {}) {
@@ -13,7 +13,7 @@ export function deploySteps(root, config, { target, prod = false } = {}) {
   const steps = []
   const build = {
     kind: 'build',
-    what: `weft build --preset ${presetFor(h, runtime)}`,
+    what: `kerf build --preset ${presetFor(h, runtime)}`,
     preset: presetFor(h, runtime),
   }
   if (target === 'netlify') {

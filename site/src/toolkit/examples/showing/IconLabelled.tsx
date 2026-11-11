@@ -1,4 +1,4 @@
-import { Row, Icon, Text } from '@weft-js/warp'
+import { Row, Icon, Text } from '@kerf/veneer'
 
 export const IconLabelled = () => (
   <Row gap="related">

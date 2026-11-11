@@ -1,0 +1,37 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs-rich {
+/* -- popover + sheet ------------------------------------------------- */
+  :where([data-scope="popover"]:not([data-part])) {
+    position: absolute; inset-block-start: calc(100% + 6px); inset-inline-start: 0; z-index: var(--veneer-z-menu);
+    min-inline-size: 240px; padding: var(--veneer-space-related);
+    background: var(--veneer-color-surface-overlay); color: var(--veneer-color-text);
+    border: var(--veneer-border-hairline) solid var(--veneer-color-border); border-radius: var(--veneer-radius-surface);
+    box-shadow: var(--veneer-elevation-2); transform-origin: top left;
+  }
+  /* in the top layer, place() anchors it in viewport coordinates, so it can't scroll away with the page */
+  :where([data-scope="popover"]:not([data-part])[popover]) { position: fixed; inset: auto; margin: 0; }
+  :where([data-scope="popover"]:not([data-part])[data-align="end"]) { inset-inline-start: auto; inset-inline-end: 0; transform-origin: top right; }
+  :where([data-scope="popover"]:not([data-part])[data-state="open"]) { animation: wir-pop-in var(--veneer-duration-base) var(--veneer-ease-pop) both; }
+  :where([data-scope="popover"]:not([data-part])[data-state="closed"]) { animation: wir-pop-out calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) var(--veneer-ease-in) both; }
+  :where([data-scope="popover"]:not([data-part]) [data-part="handle"]:not([data-scope="popover"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="select"],[data-scope="sheet"],[data-scope="sortable"]) *:not([data-scope="popover"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="select"],[data-scope="sheet"],[data-scope="sortable"]) [data-scope="popover"] *))),
+  :where([data-scope="popover"]:not([data-part]) [data-part="sheet-head"]:not([data-scope="popover"] [data-scope="select"] *:not([data-scope="popover"] [data-scope="select"] [data-scope="popover"] *))) { display: none; }
+  /* sheet: a bottom sheet on phones (fixed to the nearest transformed frame or the window) */
+  :where([data-scope="popover"]:not([data-part])[data-presentation="sheet"]) {
+    position: fixed; inset: auto 0 0 0; z-index: var(--veneer-z-modal); min-inline-size: 0;
+    max-block-size: 86%; overflow: auto; overscroll-behavior: contain;
+    padding: var(--veneer-space-related) var(--veneer-space-group) calc(var(--veneer-space-group) + env(safe-area-inset-bottom));
+    border-radius: var(--veneer-radius-surface) var(--veneer-radius-surface) 0 0; border-block-end: 0;
+    box-shadow: var(--veneer-elevation-3); transform-origin: bottom center;
+  }
+  :where([data-scope="popover"]:not([data-part])[data-presentation="sheet"][data-state="open"]) { animation: wir-sheet-in var(--veneer-duration-slow) var(--veneer-ease-pop) both; }
+  :where([data-scope="popover"]:not([data-part])[data-presentation="sheet"][data-state="closed"]) { animation: wir-sheet-out calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) var(--veneer-ease-in) both; }
+  :where([data-scope="popover"]:not([data-part])[data-presentation="sheet"] [data-part="handle"]:not([data-scope="popover"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="select"],[data-scope="sheet"],[data-scope="sortable"]) *:not([data-scope="popover"] :is([data-scope="board"],[data-scope="float-panel"],[data-scope="flow"],[data-scope="select"],[data-scope="sheet"],[data-scope="sortable"]) [data-scope="popover"] *))) { display: block; inline-size: 36px; block-size: 4px; margin: 2px auto 10px; border-radius: 999px; background: var(--veneer-color-border-strong); }
+  :where([data-scope="popover"]:not([data-part])[data-presentation="sheet"] [data-part="sheet-head"]:not([data-scope="popover"] [data-scope="select"] *:not([data-scope="popover"] [data-scope="select"] [data-scope="popover"] *))) { display: flex; align-items: center; justify-content: space-between; gap: var(--veneer-space-related); margin-block-end: var(--veneer-space-related); font-weight: 600; font-size: var(--veneer-text-heading-size); }
+  :where([data-scope="popover"] [data-part="scrim"]:not([data-scope="popover"] [data-scope="shell"] *:not([data-scope="popover"] [data-scope="shell"] [data-scope="popover"] *)), [data-scope="popover"] ~ [data-part="scrim"]) { position: fixed; inset: 0; z-index: calc(var(--veneer-z-modal) - 1); background: var(--veneer-color-scrim); backdrop-filter: blur(var(--veneer-blur-overlay)); }
+  :where([data-scope="popover"] [data-part="scrim"][data-state="open"]:not([data-scope="popover"] [data-scope="shell"] *:not([data-scope="popover"] [data-scope="shell"] [data-scope="popover"] *)), [data-scope="popover"] ~ [data-part="scrim"][data-state="open"]) { animation: veneer-fade-in var(--veneer-duration-slow) var(--veneer-ease-out) both; }
+  :where([data-scope="popover"] [data-part="scrim"][data-state="closed"]:not([data-scope="popover"] [data-scope="shell"] *:not([data-scope="popover"] [data-scope="shell"] [data-scope="popover"] *)), [data-scope="popover"] ~ [data-part="scrim"][data-state="closed"]) { animation: veneer-fade-out calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) var(--veneer-ease-in) both; }
+  @keyframes wir-pop-in  { from { opacity: 0; transform: translateY(calc(var(--veneer-motion-distance) * -1)) scale(var(--veneer-motion-scale-from)); } }
+  @keyframes wir-pop-out { to   { opacity: 0; transform: translateY(calc(var(--veneer-motion-distance) * -0.5)) scale(var(--veneer-motion-scale-from)); } }
+  @keyframes wir-sheet-in  { from { transform: translateY(calc(100% * var(--veneer-motion-scale))); opacity: var(--veneer-motion-scale); } }
+  @keyframes wir-sheet-out { to   { transform: translateY(calc(100% * var(--veneer-motion-scale))); opacity: var(--veneer-motion-scale); } }
+}

@@ -2,7 +2,7 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "paths": { "#/*": ["./src/*"] },
-    "types": ["node", "@weft-js/core/client"]
+    "types": ["node", "@kerf/core/client"]
   },
-  "include": ["src", "test", "scripts", "weft.config.ts", ".weft/*.d.ts"]
+  "include": ["src", "test", "scripts", "kerf.config.ts", ".kerf/*.d.ts"]
 }

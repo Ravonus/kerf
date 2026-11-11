@@ -1,4 +1,4 @@
-import type { ArtifactVersion } from '@weft-js/warp'
+import type { ArtifactVersion } from '@kerf/veneer'
 
 export const CONFIG_VERSIONS: ArtifactVersion[] = [
   {

@@ -1,0 +1,17 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Chip (filter / toggle chip): sweeps on hover, holds while pressed -------------- */
+:where([data-scope="chip"]) {
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: var(--veneer-space-tight);
+  block-size: var(--veneer-control-sm); padding-inline: var(--veneer-pad-control); margin: 0;
+  border: var(--veneer-border-hairline) solid var(--veneer-color-border-strong); border-radius: var(--veneer-radius-round);
+  background: var(--veneer-color-surface-raised); color: var(--veneer-color-text-subtle);
+  font: 500 var(--veneer-text-caption-size) / 1 var(--veneer-text-body-font); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color var(--veneer-touch-out), background-color var(--veneer-touch-out), scale var(--veneer-spring-duration) var(--veneer-ease-spring);
+}
+:where([data-scope="chip"])::after { content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--veneer-hit-min)) / 2)); }
+:where([data-scope="chip"]:hover) { color: var(--veneer-color-text); }
+:where([data-scope="chip"] > svg[data-icon]) { inline-size: 12px; block-size: 12px; stroke-width: 2; display: none; }
+:where([data-scope="chip"][aria-pressed="true"]) { background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); }
+:where([data-scope="chip"][aria-pressed="true"] > svg[data-icon]) { display: block; }
+}

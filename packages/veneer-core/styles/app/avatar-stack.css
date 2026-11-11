@@ -1,0 +1,13 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+:where([data-scope="avatar-stack"]) { display: inline-flex; align-items: center; }
+:where([data-scope="avatar-stack"] > [data-scope="avatar"]) { box-shadow: 0 0 0 2px var(--_ring, var(--veneer-color-surface)); }
+:where([data-scope="avatar-stack"] > * + *) { margin-inline-start: calc(var(--_s, 28px) * -0.18); }
+:where([data-scope="avatar-stack"] > [data-scope="avatar"]) { font-size: calc(var(--_s) * 0.34); letter-spacing: -0.02em; }
+:where([data-scope="avatar-stack"] > [data-scope="avatar"][data-presence]) { box-shadow: 0 0 0 2px var(--_ring, var(--veneer-color-surface)), 0 0 0 calc(2px + var(--veneer-border-emphasis)) var(--_pc, var(--veneer-color-accent-solid)); }
+:where([data-scope="avatar-stack"] > [data-part="more"]) {
+  display: inline-grid; place-items: center; block-size: 28px; min-inline-size: 28px; padding-inline: 6px;
+  border-radius: var(--veneer-radius-round); background: var(--veneer-color-surface-sunken); color: var(--veneer-color-text-subtle);
+  font: 500 11px/1 var(--veneer-font-mono); box-shadow: 0 0 0 2px var(--_ring, var(--veneer-color-surface));
+}
+}

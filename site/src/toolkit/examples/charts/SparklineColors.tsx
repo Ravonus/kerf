@@ -3,7 +3,7 @@ import {
   Sparkline,
   Stack,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 import {
   ERRORS,
@@ -28,7 +28,7 @@ export const SparklineColors = () => (
     </Row>
     <Sparkline
       values={ERRORS}
-      color="var(--warp-color-critical-solid)"
+      color="var(--veneer-color-critical-solid)"
       format={percent}
     />
     <Row
@@ -40,7 +40,7 @@ export const SparklineColors = () => (
     </Row>
     <Sparkline
       values={DEPLOYS}
-      color="var(--warp-color-positive-solid)"
+      color="var(--veneer-color-positive-solid)"
     />
   </Stack>
 )

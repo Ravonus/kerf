@@ -1,4 +1,4 @@
-import { Textarea } from '@weft-js/warp'
+import { Textarea } from '@kerf/veneer'
 
 export const TextareaCounter = () => (
   <Textarea

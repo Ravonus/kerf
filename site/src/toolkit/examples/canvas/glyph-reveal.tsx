@@ -1,4 +1,4 @@
-import { DitherGlyph } from '@weft-js/warp'
+import { DitherGlyph } from '@kerf/veneer'
 
 export const DitherGlyphReveal = () => (
   <DitherGlyph

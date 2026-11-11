@@ -1,4 +1,4 @@
-import { Stack, Heading } from '@weft-js/warp'
+import { Stack, Heading } from '@kerf/veneer'
 
 export const HeadingLevels = () => (
   <Stack gap="related">

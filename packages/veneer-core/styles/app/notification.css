@@ -1,0 +1,43 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+:where([data-scope="notification"]) {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 12px; align-items: start;
+  padding: 12px var(--veneer-space-group); cursor: pointer; outline-offset: -2px;
+  transition: background-color var(--veneer-duration-fast) var(--veneer-ease-out);
+}
+:where([data-scope="notification"]:hover) { background: color-mix(in oklab, var(--veneer-color-text) var(--veneer-state-hover), transparent); }
+/* review 01 M3: no 1px bottom rule; the full border sweeps over a hairline base, like any surface */
+:where([data-scope="notification"]) { --veneer-sweep-radius: 0px; }
+/* a notification is a list row: a surface, so it sweeps only with data-flair="sweep", or when it opts in (veneer.css §4) */
+:where([data-scope="notification"][data-sweep]) { --_on: var(--veneer-sweep-surfaces); }
+:where([data-scope="notification"][data-sweep]:not([data-sweep="surface"])) { --_on: 1; }
+:where([data-scope="notification"]) > :where([data-part="sweep-base"]) { color: var(--veneer-color-border); }
+:where([data-scope="notification"] [data-part="icon"]:not([data-scope="notification"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="field"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="tab-bar"],[data-scope="toast"],[data-scope="xy-pad"]) *:not([data-scope="notification"] :is([data-scope="alert"],[data-scope="banner"],[data-scope="checkbox"],[data-scope="chip"],[data-scope="choice-card"],[data-scope="dropzone"],[data-scope="editable"],[data-scope="field"],[data-scope="icon-tile"],[data-scope="knob"],[data-scope="otp"],[data-scope="quantity"],[data-scope="radio"],[data-scope="segmented"],[data-scope="shell"],[data-scope="switch"],[data-scope="tab-bar"],[data-scope="toast"],[data-scope="xy-pad"]) [data-scope="notification"] *))) { position: relative; }
+:where([data-scope="notification"] [data-part="kind"]) {
+  position: absolute; inset-inline-end: -6px; inset-block-end: -6px; display: grid; place-items: center; inline-size: 16px; block-size: 16px;
+  border-radius: var(--veneer-radius-round); background: var(--_solid); color: var(--_ink-on); box-shadow: 0 0 0 2px var(--veneer-color-surface-overlay);
+}
+:where([data-scope="notification"] [data-part="kind"] svg[data-icon]) { inline-size: 10px; block-size: 10px; stroke-width: 2; }
+:where([data-scope="notification"] [data-part="text"]:not([data-scope="notification"] :is([data-scope="announcement"],[data-scope="editable"],[data-scope="hover-scope"],[data-scope="linkcard"],[data-scope="palette"],[data-scope="save-bar"],[data-scope="sortable"],[data-scope="truncate"]) *:not([data-scope="notification"] :is([data-scope="announcement"],[data-scope="editable"],[data-scope="hover-scope"],[data-scope="linkcard"],[data-scope="palette"],[data-scope="save-bar"],[data-scope="sortable"],[data-scope="truncate"]) [data-scope="notification"] *))) { margin: 0; font-size: var(--veneer-text-body-size); line-height: 1.45; color: var(--veneer-color-text-subtle); }
+:where([data-scope="notification"] [data-part="text"]:not([data-scope="notification"] :is([data-scope="announcement"],[data-scope="editable"],[data-scope="hover-scope"],[data-scope="linkcard"],[data-scope="palette"],[data-scope="save-bar"],[data-scope="sortable"],[data-scope="truncate"]) *:not([data-scope="notification"] :is([data-scope="announcement"],[data-scope="editable"],[data-scope="hover-scope"],[data-scope="linkcard"],[data-scope="palette"],[data-scope="save-bar"],[data-scope="sortable"],[data-scope="truncate"]) [data-scope="notification"] *)) b) { color: var(--veneer-color-text); font-weight: 500; }
+:where([data-scope="notification"] [data-part="quote"]:not([data-scope="notification"] [data-scope="message"] *:not([data-scope="notification"] [data-scope="message"] [data-scope="notification"] *))) { grid-column: 2; margin: 4px 0 2px; padding: 8px 10px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text); }
+:where([data-scope="notification"] [data-part="meta"]:not([data-scope="notification"] :is([data-scope="choice-card"],[data-scope="page-header"],[data-scope="system-page"],[data-scope="uploads"]) *:not([data-scope="notification"] :is([data-scope="choice-card"],[data-scope="page-header"],[data-scope="system-page"],[data-scope="uploads"]) [data-scope="notification"] *))) { grid-column: 2; display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--veneer-color-text-subtle); }
+:where([data-scope="notification"] [data-part="actions"]:not([data-scope="notification"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="consent"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) *:not([data-scope="notification"] :is([data-scope="alert"],[data-scope="assistant"],[data-scope="banner"],[data-scope="consent"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="form"],[data-scope="integration"],[data-scope="item"],[data-scope="list"],[data-scope="message"],[data-scope="page-header"],[data-scope="push-ask"],[data-scope="save-bar"],[data-scope="section-message"],[data-scope="shell"],[data-scope="speed-dial"],[data-scope="system-page"],[data-scope="toast"],[data-scope="topnav"]) [data-scope="notification"] *))) { grid-column: 2; display: flex; gap: 6px; margin-block-start: 8px; }
+:where([data-scope="notification"] [data-part="unread"]) { grid-column: 3; grid-row: 1; inline-size: 8px; block-size: 8px; margin-block-start: 6px; border-radius: 9px; background: var(--veneer-color-accent-solid); transition: opacity var(--veneer-duration-base), scale var(--veneer-duration-base) var(--veneer-ease-pop); }
+:where([data-scope="notification"][data-read] [data-part="unread"]) { opacity: 0; scale: 0.4; }
+:where([data-scope="notification"]:not([data-read])) { background: color-mix(in oklab, var(--veneer-color-accent-soft) 45%, transparent); }
+:where([data-scope="notification"][data-state="dismissed"]) { animation: veneer-dismiss calc(var(--veneer-duration-base) * var(--veneer-duration-exit-k)) var(--veneer-ease-in) forwards; }
+@media (forced-colors: active) {
+:where([data-arrive])::after,
+  :where([data-scope="calendar"] [data-part="now"])::before,
+  :where([data-scope="calendar"] [data-part="now-label"]),
+  :where([data-scope="agenda"] [data-part="now"]:not([data-scope="agenda"] [data-scope="calendar"] *:not([data-scope="agenda"] [data-scope="calendar"] [data-scope="agenda"] *)) i),
+  :where([data-scope="agenda"] [data-part="now"] i)::before,
+  :where([data-scope="assistant"] [data-part="content"] > :last-child)::after,
+  :where([data-scope="run"] > li[data-state="done"])::before,
+  :where([data-scope="tool-call"][data-state="running"])::before,
+  :where([data-scope="versions"] li[data-named] > i),
+  :where([data-scope="notification"] [data-part="unread"]) { forced-color-adjust: none; background: Highlight; }
+}
+@keyframes veneer-dismiss { to { opacity: 0; translate: calc(var(--veneer-motion-distance) * 3) 0; } }
+}

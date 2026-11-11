@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
-import { state, watch } from '@weft-js/core'
+import { Canvas, type CanvasFrame as Frame } from '@kerf/veneer'
+import { state, watch } from '@kerf/core'
 import { inks, type ArtProps, type Meta } from './shared'
 import code from './long-thread.tsx?raw'
 
@@ -16,9 +16,9 @@ const ORDER = 6,
   TOTAL = SIDE * SIDE,
   RATE = 760
 const colours = inks({
-  line: '--warp-color-text-subtle',
-  head: '--warp-color-sweep',
-  tail: '--warp-color-accent-text',
+  line: '--veneer-color-text-subtle',
+  head: '--veneer-color-sweep',
+  tail: '--veneer-color-accent-text',
 })
 
 /** The classic index-to-point walk, by rotating quadrants. */

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Card } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Card } from '@kerf/veneer'
 
 function Line(props: { item: string; qty: number }) {
   // Another name for the prop: always current.

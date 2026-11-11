@@ -1,0 +1,17 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+/* ask-user question card */
+:where([data-scope="question"]) { display: grid; gap: 10px; padding: 12px 14px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-raised); box-shadow: inset 0 0 0 1px var(--veneer-color-info-border); }
+:where([data-scope="question"] legend) { font-weight: 500; padding: 0; margin-block-end: 8px; }
+:where([data-scope="question"] fieldset) { border: 0; margin: 0; padding: 0; display: grid; gap: 4px; }
+:where([data-scope="question"] label) { min-block-size: max(32px, var(--veneer-target-min)); padding-inline: 8px; border-radius: var(--veneer-radius-control); cursor: pointer; font-size: 13.5px; }
+:where([data-scope="question"] label:has(:checked)) { background: var(--veneer-color-accent-soft); color: var(--veneer-color-accent-text); }
+@media (forced-colors: active) {
+:where([data-scope="calendar"] [data-part="mini"] [data-day][data-in-range]),
+  :where([data-scope="reactions"] button[aria-pressed="true"]),
+  :where([data-scope="call-controls"] [data-part="control"][aria-pressed="true"]:not([data-scope="call-controls"] :is([data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) *:not([data-scope="call-controls"] :is([data-scope="checkbox"],[data-scope="field"],[data-scope="radio"],[data-scope="setting-row"],[data-scope="switch"]) [data-scope="call-controls"] *))),
+  :where([data-scope="question"] label:has(:checked)),
+  :where([data-scope="versions"] li[aria-current="true"]),
+  :where([data-scope="cite"][aria-expanded="true"]) { outline: 2px solid Highlight; outline-offset: -2px; }
+}
+}

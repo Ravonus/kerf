@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, Card, Stack } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, Card, Stack } from '@kerf/veneer'
 
 // A wrapper: `tone` has a default, `children` is what
 // goes between the tags, and the rest lands on the
@@ -19,12 +19,12 @@ function Panel({
     <section
       {...rest}
       style={{
-        padding: 'var(--warp-space-related)',
-        borderRadius: 'var(--warp-radius-control)',
-        border: '1px solid var(--warp-color-border)',
+        padding: 'var(--veneer-space-related)',
+        borderRadius: 'var(--veneer-radius-control)',
+        border: '1px solid var(--veneer-color-border)',
         borderColor:
           tone === 'warn'
-            ? 'var(--warp-color-caution-border)'
+            ? 'var(--veneer-color-caution-border)'
             : undefined,
       }}
     >

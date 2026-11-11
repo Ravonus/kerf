@@ -26,7 +26,7 @@ function fixture(
     inconclusive = false,
   } = {},
 ) {
-  const root = mkdtempSync(join(tmpdir(), 'weft-calibration-runner-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-calibration-runner-'))
   const task = join(root, 'evals/agent-eval/tasks', taskName)
   const receipts = join(root, 'receipts')
   mkdirSync(join(root, 'projects'))
@@ -58,7 +58,7 @@ function fixture(
 }
 
 function runFixture(item, extra = {}) {
-  const env = { ...process.env, WEFT_T06_JOB: item.root, ...extra }
+  const env = { ...process.env, KERF_T06_JOB: item.root, ...extra }
   delete env.NODE_TEST_CONTEXT
   return spawnSync(process.execPath, [runner, item.root, item.receipts, item.taskName], {
     encoding: 'utf8',

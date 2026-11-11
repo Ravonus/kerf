@@ -92,19 +92,19 @@ export async function subscribe(
   cookie: string | undefined,
   signal: AbortSignal,
 ) {
-  const res = await fetch(`${url}/_weft/rt`, {
+  const res = await fetch(`${url}/_kerf/rt`, {
     method: 'POST',
     signal,
     headers: {
       'content-type': 'application/json',
-      'x-weft': '1',
+      'x-kerf': '1',
       accept: 'text/event-stream',
       origin: url,
       ...(cookie && { cookie }),
     },
     body: JSON.stringify({ s: [[1, 'q', id, input]] }),
   })
-  if (!res.ok) throw new Error(`\`/_weft/rt\` answered ${res.status}`)
+  if (!res.ok) throw new Error(`\`/_kerf/rt\` answered ${res.status}`)
   const frames: Frame[] = []
   const waiting = new Set<() => void>()
   void (async () => {
@@ -144,6 +144,6 @@ export async function subscribe(
 
 export const read = (url: string, id: string, input: unknown, cookie?: string) =>
   fetch(
-    `${url}/_weft/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`,
+    `${url}/_kerf/fn/${id}${input == null ? '' : `?i=${encodeURIComponent(JSON.stringify(input))}`}`,
     { headers: { accept: 'application/json', ...(cookie && { cookie }) } },
   )

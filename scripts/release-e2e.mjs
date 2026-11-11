@@ -176,18 +176,18 @@ const denoAge = ['--minimum-dependency-age=0']
 const runners = {
   npm: ['npx', []],
   bun: ['bunx', ['--bun']],
-  deno: ['deno', ['run', '-A', ...denoAge, 'npm:@weft-js/cli']],
+  deno: ['deno', ['run', '-A', ...denoAge, 'npm:@kerf/cli']],
 }
 const runner = runners[pm]
-const weft = (args, cwd) =>
-  sh(runner[0], pm === 'deno' ? [...runner[1], ...args] : [...runner[1], 'weft', ...args], cwd)
+const kerf = (args, cwd) =>
+  sh(runner[0], pm === 'deno' ? [...runner[1], ...args] : [...runner[1], 'kerf', ...args], cwd)
 try {
   const creating = {
     npm: [
       'npm',
       [
         'create',
-        `@weft-js@${version}`,
+        `@kerf@${version}`,
         '--',
         'demo',
         '--yes',
@@ -202,7 +202,7 @@ try {
       [
         'x',
         '--bun',
-        `@weft-js/create@${version}`,
+        `create-kerf@${version}`,
         'demo',
         '--yes',
         '--no-git',
@@ -219,7 +219,7 @@ try {
         'run',
         '-A',
         ...denoAge,
-        `npm:@weft-js/create@${version}`,
+        `npm:create-kerf@${version}`,
         'demo',
         '--yes',
         '--no-git',
@@ -236,7 +236,7 @@ try {
   step(`create on ${pm}`, existsSync(join(app, 'package.json')))
   const pkg = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8'))
   const wanted = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).filter((n) =>
-    n.startsWith('@weft-js/'),
+    n.startsWith('@kerf/'),
   )
   step(
     'the scaffold names only published packages',
@@ -248,8 +248,8 @@ try {
   if (pm !== 'deno') writeFileSync(join(app, '.npmrc'), `registry=${url}\n`)
   await sh(pm, pm === 'deno' ? ['install', ...denoAge] : ['install'], app)
   step(`${pm} install`, true)
-  await weft(['agents-md'], app)
-  const doctor = JSON.parse(await weft(['doctor', '--json'], app))
+  await kerf(['agents-md'], app)
+  const doctor = JSON.parse(await kerf(['doctor', '--json'], app))
   step(
     'doctor',
     doctor.ok !== false,
@@ -260,33 +260,33 @@ try {
       `compiler is ${values['expect-backend']}`,
       doctor.compiler?.kind === values['expect-backend'],
     )
-  const checked = JSON.parse(await weft(['check', '--json'], app))
+  const checked = JSON.parse(await kerf(['check', '--json'], app))
   step(
-    'weft check',
+    'kerf check',
     checked.ok === true,
     checked.ok ? '' : JSON.stringify(checked.diagnostics).slice(0, 400),
   )
   prepare(app) // after the check: a route with a counter and a live query, not written to pass one
-  await weft(['build'], app)
-  step('weft build', existsSync(join(app, '.output')) || existsSync(join(app, 'dist')))
+  await kerf(['build'], app)
+  step('kerf build', existsSync(join(app, '.output')) || existsSync(join(app, 'dist')))
 
   if (!findChrome()) throw new Error('no Chrome or Edge here: set CHROME')
   const chrome = await launch()
   const port = await freePort()
   const dev = serve(
     ...(pm === 'deno'
-      ? ['deno', ['run', '-A', ...denoAge, 'npm:@weft-js/cli', 'dev', '--port', String(port)]]
+      ? ['deno', ['run', '-A', ...denoAge, 'npm:@kerf/cli', 'dev', '--port', String(port)]]
       : pm === 'bun'
-        ? ['bunx', ['--bun', 'weft', 'dev', '--port', String(port)]]
-        : ['npx', ['weft', 'dev', '--port', String(port)]]),
+        ? ['bunx', ['--bun', 'kerf', 'dev', '--port', String(port)]]
+        : ['npx', ['kerf', 'dev', '--port', String(port)]]),
     app,
     port,
   )
   const hit = await probe(port)
-  await hydrates(chrome, port, 'weft dev')
+  await hydrates(chrome, port, 'kerf dev')
   dev.stop()
   step(
-    'weft dev serves the page',
+    'kerf dev serves the page',
     hit.status === 200 && /<html/i.test(hit.text),
     `HTTP ${hit.status}${hit.status ? '' : ` ${dev.log().slice(-400)}`}`,
   )
@@ -294,10 +294,10 @@ try {
   const livePort = await freePort()
   const started = serve(
     ...(pm === 'deno'
-      ? ['deno', ['run', '-A', ...denoAge, 'npm:@weft-js/cli', 'start']]
+      ? ['deno', ['run', '-A', ...denoAge, 'npm:@kerf/cli', 'start']]
       : pm === 'bun'
-        ? ['bunx', ['--bun', 'weft', 'start']]
-        : ['npx', ['weft', 'start']]),
+        ? ['bunx', ['--bun', 'kerf', 'start']]
+        : ['npx', ['kerf', 'start']]),
     app,
     livePort,
   )

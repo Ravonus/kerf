@@ -1,4 +1,4 @@
-import { mergeMeta, type Merged } from '@weft-js/core/ssr'
+import { mergeMeta, type Merged } from '@kerf/core/ssr'
 import { pageText } from '../derive.mjs'
 import { pointAt } from './resolver'
 import { cardPath, hash } from './text'
@@ -42,7 +42,7 @@ export function makeComplete(
         card ? JSON.stringify(leaf.data ?? null) : '',
       ].join('\0'),
     )
-    return `/_weft/og/${cardPath(path)}.png?v=${v}`
+    return `/_kerf/og/${cardPath(path)}.png?v=${v}`
   }
 
   /**

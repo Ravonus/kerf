@@ -1,6 +1,6 @@
 import { fillPath } from './url.mjs'
 
-/** A param route's real pages to run, at most: enough to compare them, and few enough for `weft check`. */
+/** A param route's real pages to run, at most: enough to compare them, and few enough for `kerf check`. */
 const SAMPLES = 50
 
 /** Run the real samples of param routes. */
@@ -45,13 +45,13 @@ export async function inspectCards(entries, manifest, found, handler) {
     const image = entry.samples?.[0]?.image ?? entry.meta?.og?.image?.url
     if (
       !(route.card || manifest.defaultCard) ||
-      !image?.startsWith('/_weft/og/') ||
+      !image?.startsWith('/_kerf/og/') ||
       image.includes('<')
     )
       continue
     found.length = 0
     try {
-      await handler(new Request(`http://weft.local${image}`))
+      await handler(new Request(`http://kerf.local${image}`))
     } catch {}
     for (const d of found)
       if (d.code === 'H005' || d.code === 'H008') report(d.code, d.severity, d.message)

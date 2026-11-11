@@ -94,7 +94,7 @@ function markInitial(all, loose, client) {
     if (n.force === 'static') continue
     const why =
       n.force === 'client'
-        ? '`@weft client`'
+        ? '`@kerf client`'
         : (n.own ??
           (loose.has(n) ? n.passes : null) ??
           (n.mod.facts.effects && `the module runs ${n.mod.facts.effects} as it loads`))

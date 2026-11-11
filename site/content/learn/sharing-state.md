@@ -8,7 +8,7 @@
 :::
 
 Sometimes two components need to change together. Keep the state in one place, their closest common parent, and pass it
-down to both. This is called *lifting state up*, and it works in Weft the same way it does in React, with one extra tool:
+down to both. This is called *lifting state up*, and it works in Kerf the same way it does in React, with one extra tool:
 `bind:`, which lets a child write to its parent's state without a callback.
 
 ## Lifting state up by example
@@ -25,7 +25,7 @@ To coordinate them, take three steps.
 A panel that owns its own state looks like this:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Panel(
   props: { title: string; children?: unknown },
@@ -62,7 +62,7 @@ Lifting state up often changes what the state *is*. Two booleans become one numb
 parent holds it, and gives each panel a way to ask to be opened:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 function Panel(
   props: {
@@ -112,8 +112,8 @@ export function Accordion() {
 `open.value === 0` is an expression in JSX, so it's live: when `open` changes, each panel's `active` prop follows, and
 only the parts of each panel that read `props.active` update. Neither `Panel` runs again.
 
-:::note Props are live in Weft
-In React, a new prop value means the child renders again. In Weft the child ran once, and its props are live reads: the
+:::note Props are live in Kerf
+In React, a new prop value means the child renders again. In Kerf the child ran once, and its props are live reads: the
 expression `open.value === 0` is evaluated where the panel reads `props.active`. That's why a prop needs no special
 treatment to stay current, and why you shouldn't copy one into `state` (W005).
 :::
@@ -125,7 +125,7 @@ it means. When the child simply edits a value, there's a shorter way. The parent
 child writes its prop as if it were its own:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 function Stepper(props: { value?: number }) {
   let { value = 1 } = props
@@ -158,11 +158,11 @@ passes a new value. With `bind:value={qty}` at the call site, the write goes to 
 the same in both cases; only the parent decides whether its writes leave. [Writing to a parent with
 bind:](/learn/bind) covers it in full.
 
-:::deepdive Controlled and uncontrolled, in Weft
+:::deepdive Controlled and uncontrolled, in Kerf
 React distinguishes *controlled* components, driven by props, from *uncontrolled* ones, which keep their own state, and a
 component author usually picks one.
 
-In Weft one component can be both. `Stepper` above keeps its own value when used alone (`<Stepper />`), starts from the
+In Kerf one component can be both. `Stepper` above keeps its own value when used alone (`<Stepper />`), starts from the
 parent's value and then goes its own way when given one (`<Stepper value={2} />`), and is fully controlled when bound
 (`<Stepper bind:value={qty} />`). The author writes it once, with `let`, and the caller chooses.
 :::
@@ -172,7 +172,7 @@ parent's value and then goes its own way when given one (`<Stepper value={2} />`
 You can also pass the box itself, typed `State<T>`:
 
 ```tsx
-import { state, type State } from '@weft-js/core'
+import { state, type State } from '@kerf/core'
 
 function Coupon(props: { code: State<string> }) {
   return (
@@ -201,7 +201,7 @@ because it works with or without a parent box.
 
 ## A single source of truth for each piece of state
 
-In a Weft app, each piece of state has one owner. Some state lives in a leaf component, like whether a tooltip is open.
+In a Kerf app, each piece of state has one owner. Some state lives in a leaf component, like whether a tooltip is open.
 Some lives near the top, like which page you're on. A few things live in a module or a [`defineState`
 scope](/learn/app-wide-state) that the whole app can import.
 
@@ -234,7 +234,7 @@ each request.
 ## Where state lives, and how to reset it
 
 React has a page on "preserving and resetting state" because its state is attached to a position in the render tree,
-and the rules for when that position counts as the same are subtle. Weft has no such rules. State belongs to the
+and the rules for when that position counts as the same are subtle. Kerf has no such rules. State belongs to the
 component instance that made it:
 
 - A component is made once, and its boxes live as long as it does.
@@ -249,13 +249,13 @@ component instance that made it:
 A messenger shows a chat with one contact at a time. The chat has a draft. Switch contacts, and the draft should start
 empty: a message meant for Ana shouldn't be sent to Ben.
 
-In React you'd give the chat a `key` of the contact's id, so it's rebuilt for each contact. In Weft, `key` belongs to
+In React you'd give the chat a `key` of the contact's id, so it's rebuilt for each contact. In Kerf, `key` belongs to
 list rows; on a single component it does nothing. Instead, make the draft *linked* to the contact:
 
 :::demo manage-reset
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 type Contact = { id: number; name: string }
 
@@ -301,7 +301,7 @@ with `.get` and `.set`. That's [Keyed state and entries](/learn/entries).
 Make two text inputs that always show the same text: typing in either changes both. Use one box in the parent.
 :::solution
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 function TextField(props: { label: string; value?: string }) {
   let { value = '' } = props
@@ -350,7 +350,7 @@ function List(props: { cities: string[] }) {
 Lift `query` into the parent, bind it to the search bar, and derive the filtered list there:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 
 const CITIES = ['Lisbon', 'Oslo', 'Osaka', 'Lima', 'Lagos']
 
@@ -393,7 +393,7 @@ In the accordion, let a second press on an open panel's title close it, so no pa
 Let the index be `null` for "none", and toggle:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 function Panel(
   props: {

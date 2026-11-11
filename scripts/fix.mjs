@@ -17,7 +17,7 @@ run(join(root, 'node_modules', '.bin', windows ? 'oxlint.cmd' : 'oxlint'), [
   'scripts',
   'site',
 ])
-for (const crate of ['crates/weft-compiler', 'crates/weft-layout', 'crates/weft']) {
+for (const crate of ['crates/kerf-compiler', 'crates/kerf-layout', 'crates/kerf']) {
   run(
     'cargo',
     ['clippy', '--fix', '--allow-dirty', '--allow-staged', '--all-targets', '--quiet'],

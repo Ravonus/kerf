@@ -16,7 +16,7 @@ let installed = false
 const g = globalThis as unknown as Record<string, unknown>
 
 /**
- * The page's clock, faked like @weft-js/core/test's `clock`: `pause()` stops time for timers, intervals, rAF, `Date` and
+ * The page's clock, faked like @kerf/core/test's `clock`: `pause()` stops time for timers, intervals, rAF, `Date` and
  * `performance.now`; `advance(ms)` runs what falls due, in order; `resume()` hands pending timers back to real time.
  * Timers scheduled before `pause()` stay on real time: pass `{ reload: true }` to pause from the next page load.
  */
@@ -24,7 +24,7 @@ export const clock = {
   status: () => ({ installed, now: installed ? fakeNow : real.Date.now(), pending: timers.size }),
   pause({ reload = false } = {}) {
     if (reload) {
-      sessionStorage.setItem('weft:clock', 'paused')
+      sessionStorage.setItem('kerf:clock', 'paused')
       real.setTimeout(() => location.reload(), 0)
       return { reloading: true }
     }
@@ -60,7 +60,7 @@ export const clock = {
   resume() {
     if (!installed) return clock.status()
     uninstall()
-    sessionStorage.removeItem('weft:clock')
+    sessionStorage.removeItem('kerf:clock')
     return clock.status()
   },
 }

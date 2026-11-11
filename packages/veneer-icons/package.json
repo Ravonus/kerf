@@ -1,0 +1,64 @@
+{
+  "name": "@kerf/veneer-icons",
+  "version": "0.1.0",
+  "description": "Icons for veneer and kerf",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
+    "directory": "packages/veneer-icons"
+  },
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/veneer-icons#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/kerf/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./src/gen/index.tsx",
+    "./all": "./src/all.tsx",
+    "./quiet": "./src/gen/all.tsx",
+    "./balanced": "./src/gen/all.tsx",
+    "./vivid": "./src/gen/all.tsx",
+    "./names": "./src/names.tsx",
+    "./icon": "./src/icon.tsx",
+    "./late": "./src/late.tsx",
+    "./compile": "./compile.mjs",
+    "./plugin": "./plugin.mjs",
+    "./icons.css": "./src/icons.css",
+    "./tiers.css": "./src/tiers.css"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "sheet": "node scripts/sheet.mjs",
+    "test": "node scripts/build.mjs --check && vitest run"
+  },
+  "peerDependencies": {
+    "vite": "*",
+    "@kerf/core": "*"
+  },
+  "devDependencies": {
+    "jsdom": "30.1.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5",
+    "@kerf/core": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "keywords": [
+    "kerf"
+  ],
+  "files": [
+    "src",
+    "plugin.mjs",
+    "compile.mjs",
+    "README.md",
+    "LICENSE"
+  ]
+}

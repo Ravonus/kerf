@@ -1,10 +1,10 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   BellIconAction,
   CheckIcon,
   HeartIcon,
   HeartIconSolid,
-} from '@weft-js/warp-icons'
+} from '@kerf/veneer-icons'
 import {
   Button,
   Card,
@@ -13,7 +13,7 @@ import {
   Switch,
   Text,
   Toggle,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
 export default function Icons() {
   const liked = state(false)

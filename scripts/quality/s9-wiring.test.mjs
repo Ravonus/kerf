@@ -43,7 +43,7 @@ void test('comment rule reports analysis warnings and preserves other lint error
   rule.Program({})
   assert.ok(reports.some(({ message }) => message.includes('narration')))
   const warning = {
-    code: 'weft(comment-budget)',
+    code: 'kerf(comment-budget)',
     severity: 'warning',
     filename: 'x',
     message: 'bad',
@@ -58,7 +58,7 @@ void test('comment analysis loads the CLI parser ahead of an incompatible root p
   const { tmpdir } = await import('node:os')
   const { join, dirname } = await import('node:path')
   const { createRequire } = await import('node:module')
-  const root = mkdtempSync(join(tmpdir(), 'weft-parser-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-parser-'))
   try {
     const cli = join(root, 'packages/cli')
     const quality = join(root, 'scripts/quality')

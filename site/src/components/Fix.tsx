@@ -1,11 +1,11 @@
-import { derived, onMount, state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
-import '@weft-js/warp-core/styles/rich/codeblock.css'
+import { derived, onMount, state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
+import '@kerf/veneer-core/styles/rich/codeblock.css'
 import show from '../generated/showcase.json'
 
 const START = 2
 const EACH = 5
-const STEPS = ['Your agent wrote this', 'Weft stops the build', 'The fix', 'Now it works']
+const STEPS = ['Your agent wrote this', 'Kerf stops the build', 'The fix', 'Now it works']
 const SAY = [
   'The component works out its total once, so the number on the page can never change.',
   'The compiler explains what is wrong and refuses to build, so this never reaches a browser.',
@@ -25,7 +25,7 @@ function Live(props: { count: number }) {
   return <b>{total.value}</b>
 }
 
-/* @weft visible */
+/* @kerf visible */
 /** The compiler's real W001 on real code, as four steps that open broken, with the component it breaks running beside it. */
 export function Fix() {
   const step = state(0)
@@ -77,7 +77,7 @@ type FixView = {
 
 const renderFix = (o: FixView) => (
   <section data-site="fix" data-step={o.step.value} ref={o.setBox}>
-    <h2>When your agent makes a mistake, Weft catches it</h2>
+    <h2>When your agent makes a mistake, Kerf catches it</h2>
     <p data-part="intro">
       The compiler stops the mistake before it ships and says how to fix it, in words your agent can
       act on.
@@ -104,7 +104,7 @@ const renderFix = (o: FixView) => (
           <div
             data-show="0"
             data-scope="codeblock"
-            // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+            // oxlint-disable-next-line kerf/no-html-sink -- highlighted at build time from a fixed sample
             innerHTML={show.bad}
           ></div>
           <div data-show="1" data-part="diag">
@@ -116,13 +116,13 @@ const renderFix = (o: FixView) => (
           <div
             data-show="2"
             data-scope="codeblock"
-            // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+            // oxlint-disable-next-line kerf/no-html-sink -- highlighted at build time from a fixed sample
             innerHTML={show.diff}
           ></div>
           <div
             data-show="3"
             data-scope="codeblock"
-            // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from a fixed sample
+            // oxlint-disable-next-line kerf/no-html-sink -- highlighted at build time from a fixed sample
             innerHTML={show.good}
           ></div>
         </div>

@@ -1,5 +1,5 @@
 // The fixture's server module (research 27): the client gets stubs (ids and `optimistic` only).
-import { invalidate, mutation, query, redirect } from '@weft-js/start'
+import { invalidate, mutation, query, redirect } from '@kerf/start'
 import { SERVER_ONLY, type Todo } from '../db'
 import { object } from '../schema'
 

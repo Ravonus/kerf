@@ -10,7 +10,7 @@ paths = [
   '''(^|/)target/''',
   '''(^|/)dist/''',
   '''(^|/)\.output/''',
-  '''(^|/)\.weft/''',
+  '''(^|/)\.kerf/''',
   '''(^|/)package-lock\.json$''',
   '''(^|/)Cargo\.lock$''',
   '''(^|/)\.gitleaks-report\.json$''',

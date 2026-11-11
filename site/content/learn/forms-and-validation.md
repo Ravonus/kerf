@@ -12,7 +12,7 @@ from handlers ([Server functions](/learn/server-functions)). That works, but a f
 collected and turned into the right types, each error has to appear next to its field, the button should show that
 something is happening, and ideally the whole thing works even before the page's JavaScript has loaded.
 
-`<Form>` from `@weft-js/start` does all of that for one mutation. You write the mutation and its schema once, and the
+`<Form>` from `@kerf/start` does all of that for one mutation. You write the mutation and its schema once, and the
 form takes its input, its rules and its errors from them.
 
 ## A form for a mutation
@@ -21,7 +21,7 @@ Start with a mutation that has an input schema. The messages in the schema are t
 
 ```ts
 // src/server/feedback.ts
-import { invalid, mutation } from '@weft-js/start'
+import { invalid, mutation } from '@kerf/start'
 import { z } from 'zod'
 
 export const sendFeedback = mutation({
@@ -44,11 +44,11 @@ export const sendFeedback = mutation({
 ```
 
 Then a route with a `<Form of={sendFeedback}>`. Its child is a function that gets the form's state, `form`, and returns
-the fields. Warp's field components take an `error` and show it under the field, with the right ARIA wiring:
+the fields. Veneer's field components take an `error` and show it under the field, with the right ARIA wiring:
 
 ```tsx
 // src/routes/feedback.tsx
-import { Form, type FormApi, type Meta } from '@weft-js/start'
+import { Form, type FormApi, type Meta } from '@kerf/start'
 import {
   Alert,
   Button,
@@ -56,7 +56,7 @@ import {
   Checkbox,
   Input,
   Textarea,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { sendFeedback } from '#/server/feedback'
 
 export const meta: Meta = {
@@ -124,7 +124,7 @@ That's a complete form. Here is what each part of `form` is for:
 | `form.field('email')` | Props to spread on a plain `<input>`: `name`, the typed value, and `aria-invalid`/`aria-describedby` when it's wrong. |
 | `<form.Error name="email" />` | The field's error text, in an element the `aria-describedby` points at. |
 
-On the path without JavaScript (below), `form.field(name)` puts what was typed back into a plain input by itself. Warp's
+On the path without JavaScript (below), `form.field(name)` puts what was typed back into a plain input by itself. Veneer's
 fields take a plain string `value`, so the example above leaves it out, and they start empty on that path. The field
 names are the input's keys. Nested objects use dots (`address.city`), and a name ending in `[]` collects
 every field with that name into an array (`tags[]`).
@@ -153,7 +153,7 @@ plain HTML, and JavaScript makes it nicer, not possible.
 A form that posts to your server could be posted from someone else's page, the attack called cross-site request
 forgery. Many frameworks put a secret token in every form to tell real submits from forged ones.
 
-Weft checks the browser's own headers instead. A real submit from your page carries `Origin` with your address, or
+Kerf checks the browser's own headers instead. A real submit from your page carries `Origin` with your address, or
 `Sec-Fetch-Site: same-origin`, and a page on another site can't forge either. A post without that proof is refused with
 **F002** (status 403). Behind a proxy, make sure the proxy forwards the original host, so the origins match.
 
@@ -190,7 +190,7 @@ Some rules can't be in a schema, because they need the database: "that email alr
 booked". Check them in `run` and refuse with `invalid()`, naming the field:
 
 ```ts
-import { invalid, mutation } from '@weft-js/start'
+import { invalid, mutation } from '@kerf/start'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { user } from '#/db/schema'
@@ -226,7 +226,7 @@ replace the ones in `input`.
 The server's answer comes after a submit. For feedback before that, you have two options that keep one set of rules.
 
 The browser's own constraints are free: `required`, `minlength`, `type="email"`, `min` and `max` stop a submit and say
-why, and Warp's fields show the browser's message in the same place as a server error. They run before the request is
+why, and Veneer's fields show the browser's message in the same place as a server error. They run before the request is
 sent, so most mistakes never reach the server at all.
 
 For anything richer, put the schema in a plain module that both sides import, and check one field as it changes:
@@ -239,8 +239,8 @@ export const email = z.email('Enter an email address.')
 ```
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Input } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Input } from '@kerf/veneer'
 import { email } from '#/lib/feedback'
 
 export function EmailField() {
@@ -282,8 +282,8 @@ After a success you usually want one of three things:
 - **Do something in the page.** Pass `onSuccess`, which gets the result: close a dialog, focus the next input.
 
 ```tsx
-import { Form, type FormApi } from '@weft-js/start'
-import { Button, Input } from '@weft-js/warp'
+import { Form, type FormApi } from '@kerf/start'
+import { Button, Input } from '@kerf/veneer'
 import { addTodo } from '#/server/todos'
 
 export function AddTodo(props: { onAdded: () => void }) {
@@ -314,11 +314,11 @@ is submitted, before the server answers.
 
 ### Plain markup
 
-Without Warp, or for your own field components, spread `form.field(name)` on the input and put `<form.Error>` near it.
+Without Veneer, or for your own field components, spread `form.field(name)` on the input and put `<form.Error>` near it.
 The error element is in the page from the start, so a screen reader announces the message when it appears:
 
 ```tsx
-import { Form, type FormApi } from '@weft-js/start'
+import { Form, type FormApi } from '@kerf/start'
 import { addTodo } from '#/server/todos'
 
 export function PlainAdd() {
@@ -391,7 +391,7 @@ Add a quantity to this order form's mutation: a whole number from 1 to 10, with 
 form already has `<Input label="Quantity" type="number" name="qty" error={form.error('qty')} />`.
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { z } from 'zod'
 
 export const order = mutation({
@@ -403,7 +403,7 @@ export const order = mutation({
 A plain number schema is enough: `<Form>` reads `"3"` as `3` for you.
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { z } from 'zod'
 
 export const order = mutation({
@@ -425,7 +425,7 @@ and `max="10"` to the input lets the browser catch it before sending, too.
 Make `book` refuse a slot that's already taken, with "That slot is booked." shown under the `slot` field.
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { z } from 'zod'
 
 const booked = new Set(['09:00'])
@@ -442,7 +442,7 @@ export const book = mutation({
 Check in `run`, and refuse with `invalid()`:
 
 ```ts
-import { invalid, mutation } from '@weft-js/start'
+import { invalid, mutation } from '@kerf/start'
 import { z } from 'zod'
 
 const booked = new Set(['09:00'])
@@ -470,7 +470,7 @@ running. Change only the mutation.
 End `run` with `redirect()`:
 
 ```ts
-import { mutation, redirect } from '@weft-js/start'
+import { mutation, redirect } from '@kerf/start'
 import { z } from 'zod'
 
 export const sendThanks = mutation({

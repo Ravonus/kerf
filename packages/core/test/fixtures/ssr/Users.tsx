@@ -1,5 +1,5 @@
 // resource + <Boundary> for test/async.test.tsx, compiled for the client, the server and hydration.
-import { Boundary, resource, state } from '@weft-js/core'
+import { Boundary, resource, state } from '@kerf/core'
 
 export type Load = (id: string, signal: AbortSignal) => Promise<{ name: string }>
 

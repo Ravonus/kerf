@@ -77,7 +77,7 @@ export function echoed(input: Record<string, unknown>): Record<string, unknown> 
 
 /**
  * The cookies and headers server functions set (`ctx.response.headers`), on the response. Cookies add up and `Vary`
- * merges; any other header the app set replaces Weft's default (a route's `cache-control` over `private, no-cache`).
+ * merges; any other header the app set replaces Kerf's default (a route's `cache-control` over `private, no-cache`).
  */
 export function withHeaders(res: Response, scope: Scope): Response {
   for (const cookie of scope.headers.getSetCookie()) res.headers.append('set-cookie', cookie)

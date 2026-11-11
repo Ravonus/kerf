@@ -1,8 +1,0 @@
-/* generated from docs/design/warp/tokens by warp-core/scripts/split-css.mjs: do not edit */
-@layer warp.components {
-/* -- Tour step: an anchored popover with a step count and a spotlight ring on the target */
-:where([data-scope="tour"][data-part="content"]) { inline-size: 300px; }
-:where([data-scope="tour"] [data-part="footer"]:not([data-scope="tour"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"]) *:not([data-scope="tour"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"]) [data-scope="tour"] *))) { display: flex; align-items: center; gap: 8px; margin-block-start: 14px; }
-:where([data-scope="tour"] [data-part="count"]:not([data-scope="tour"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="kanban"],[data-scope="pill"],[data-scope="segmented"],[data-scope="tab-bar"],[data-scope="table"]) *:not([data-scope="tour"] :is([data-scope="checklist"],[data-scope="chip"],[data-scope="kanban"],[data-scope="pill"],[data-scope="segmented"],[data-scope="tab-bar"],[data-scope="table"]) [data-scope="tour"] *))) { margin-inline-end: auto; font: 500 11px/1 var(--warp-font-mono); color: var(--warp-color-text-subtle); }
-:where([data-tour-target]) { outline: var(--warp-border-emphasis) solid var(--warp-color-accent-solid); outline-offset: 4px; border-radius: var(--warp-radius-control); box-shadow: 0 0 0 9999px color-mix(in oklab, var(--warp-color-scrim) 40%, transparent); position: relative; z-index: 1; }
-}

@@ -1,0 +1,9 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Watermark: a repeated, rotated text tile behind content; never selectable, never announced */
+:where([data-scope="watermark"]) { position: relative; isolation: isolate; overflow: clip; }
+:where([data-scope="watermark"])::before {
+  content: ""; position: absolute; inset: -50%; z-index: -1; pointer-events: none; rotate: -22deg;
+  background-image: var(--_wm); background-size: 220px 96px; opacity: calc(0.07 + 0.03 * var(--veneer-x));
+}
+}

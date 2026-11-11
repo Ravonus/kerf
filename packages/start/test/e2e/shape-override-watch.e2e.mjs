@@ -10,7 +10,7 @@ import { load as moduleLoad, resolveId as moduleResolve } from '../../src/vite/m
 import { shapeSignature } from '../../src/vite/route-modules.mjs'
 
 async function setup(t) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-override-watch-')))
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-override-watch-')))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = (name) => join(root, name)
   const write = (name, text) => writeFileSync(file(name), text)
@@ -63,8 +63,8 @@ async function setup(t) {
     environment: { config: { consumer: 'client' } },
     resolve: (...args) => server.environments.client.pluginContainer.resolveId(...args),
   }
-  const refresh = () => moduleLoad(state).handler.call(ctx, '\0virtual:weft/routes')
-  const request = `virtual:weft/shape-override/${encodeURIComponent(file('page.tsx'))}.tsx`
+  const refresh = () => moduleLoad(state).handler.call(ctx, '\0virtual:kerf/routes')
+  const request = `virtual:kerf/shape-override/${encodeURIComponent(file('page.tsx'))}.tsx`
   return { root, file, write, state, server, events, refresh, request }
 }
 

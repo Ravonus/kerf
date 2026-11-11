@@ -1,4 +1,4 @@
-// One prebuilt compiler addon as the npm package weft's optionalDependencies name: its package.json carries `os`, `cpu`
+// One prebuilt compiler addon as the npm package kerf's optionalDependencies name: its package.json carries `os`, `cpu`
 // and `libc`, so the installer keeps only the one that fits.
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -18,25 +18,25 @@ export function hostPlatform() {
 }
 
 export function writePlatformPackage(platform, binary, dir) {
-  const name = `@weft-js/compiler-${platform.name}`
+  const name = `@kerf/compiler-${platform.name}`
   mkdirSync(dir, { recursive: true })
-  copyFileSync(binary, join(dir, 'weft-compiler.node'))
+  copyFileSync(binary, join(dir, 'kerf-compiler.node'))
   writeFileSync(join(dir, 'README.md'), platformReadme(name, platform.name))
   const pkg = {
     name,
     version: version(),
-    description: `weft compiler addon for ${platform.name}`,
+    description: `kerf compiler addon for ${platform.name}`,
     license: 'MIT',
     repository: {
       type: 'git',
-      url: 'git+https://github.com/Ravonus/weft.git',
-      directory: 'crates/weft-compiler',
+      url: 'git+https://github.com/Ravonus/kerf.git',
+      directory: 'crates/kerf-compiler',
     },
-    homepage: 'https://github.com/Ravonus/weft/tree/main/packages/core#readme',
-    bugs: { url: 'https://github.com/Ravonus/weft/issues' },
+    homepage: 'https://github.com/Ravonus/kerf/tree/main/packages/core#readme',
+    bugs: { url: 'https://github.com/Ravonus/kerf/issues' },
     publishConfig: { access: 'public' },
-    main: 'weft-compiler.node',
-    files: ['weft-compiler.node'],
+    main: 'kerf-compiler.node',
+    files: ['kerf-compiler.node'],
     os: [platform.os],
     cpu: [platform.cpu],
     ...(platform.libc && { libc: [platform.libc] }),
@@ -46,16 +46,16 @@ export function writePlatformPackage(platform, binary, dir) {
 }
 
 function platformReadme(name, target) {
-  const gh = 'https://github.com/Ravonus/weft'
+  const gh = 'https://github.com/Ravonus/kerf'
   return `<p align="center">
-  <a href="${gh}"><img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="72" height="72" alt="Weft"></a>
+  <a href="${gh}"><img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="72" height="72" alt="Kerf"></a>
 </p>
 
 <h1 align="center">${name}</h1>
 
 <p align="center">
-  <strong>Weft's Rust compiler as a native Node addon for ${target}.</strong><br>
-  Installed for you by <a href="https://www.npmjs.com/package/@weft-js/core">@weft-js/core</a>. You never depend on it directly.
+  <strong>Kerf's Rust compiler as a native Node addon for ${target}.</strong><br>
+  Installed for you by <a href="https://www.npmjs.com/package/@kerf/core">@kerf/core</a>. You never depend on it directly.
 </p>
 
 <p align="center">
@@ -65,27 +65,27 @@ function platformReadme(name, target) {
 
 ## What this is
 
-[@weft-js/core](https://www.npmjs.com/package/@weft-js/core) lists one of these addons per platform in its
+[@kerf/core](https://www.npmjs.com/package/@kerf/core) lists one of these addons per platform in its
 \`optionalDependencies\`. Your package manager installs only the one that matches your OS, CPU and C library, and
 core's compiler loader picks it up. When no addon fits, or the one installed is a different version or fails to load,
 core runs the same compiler as WebAssembly instead: the output is byte-identical, a little slower to produce.
-\`npx weft doctor\` says which one your app is using.
+\`npx kerf doctor\` says which one your app is using.
 
 | Platform           | Package                                |
 | ------------------ | -------------------------------------- |
-| macOS, Apple silicon | \`@weft-js/compiler-darwin-arm64\`     |
-| macOS, Intel       | \`@weft-js/compiler-darwin-x64\`       |
-| Linux x64, glibc   | \`@weft-js/compiler-linux-x64-gnu\`    |
-| Linux x64, musl    | \`@weft-js/compiler-linux-x64-musl\`   |
-| Linux arm64, glibc | \`@weft-js/compiler-linux-arm64-gnu\`  |
-| Linux arm64, musl  | \`@weft-js/compiler-linux-arm64-musl\` |
-| Windows x64        | \`@weft-js/compiler-win32-x64\`        |
+| macOS, Apple silicon | \`@kerf/compiler-darwin-arm64\`     |
+| macOS, Intel       | \`@kerf/compiler-darwin-x64\`       |
+| Linux x64, glibc   | \`@kerf/compiler-linux-x64-gnu\`    |
+| Linux x64, musl    | \`@kerf/compiler-linux-x64-musl\`   |
+| Linux arm64, glibc | \`@kerf/compiler-linux-arm64-gnu\`  |
+| Linux arm64, musl  | \`@kerf/compiler-linux-arm64-musl\` |
+| Windows x64        | \`@kerf/compiler-win32-x64\`        |
 | Everything else    | WebAssembly, built into core           |
 
 ## Links
 
-- [Compiler source](${gh}/tree/main/crates/weft-compiler) (Rust, on [Oxc](https://oxc.rs))
-- [@weft-js/core](https://www.npmjs.com/package/@weft-js/core) and [Weft on GitHub](${gh})
+- [Compiler source](${gh}/tree/main/crates/kerf-compiler) (Rust, on [Oxc](https://oxc.rs))
+- [@kerf/core](https://www.npmjs.com/package/@kerf/core) and [Kerf on GitHub](${gh})
 - [Changelog](${gh}/blob/main/CHANGELOG.md) · [Issues](${gh}/issues)
 
 MIT licensed.

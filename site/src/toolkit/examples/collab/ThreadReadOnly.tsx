@@ -1,4 +1,4 @@
-import { Thread } from '@weft-js/warp'
+import { Thread } from '@kerf/veneer'
 
 import { EARLY_CHAT } from './shared-wait'
 

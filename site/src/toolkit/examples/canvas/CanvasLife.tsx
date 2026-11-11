@@ -1,5 +1,5 @@
-import type { CanvasFrame } from '@weft-js/warp'
-import { Canvas } from '@weft-js/warp'
+import type { CanvasFrame } from '@kerf/veneer'
+import { Canvas } from '@kerf/veneer'
 import { token, STAGE } from './paint-primitives'
 
 // Conway's Life in whole cells, stepped eight times a
@@ -52,12 +52,12 @@ export function drawLife(
   life.cells = next
   ctx.fillStyle = token(
     ctx,
-    '--warp-color-surface-sunken',
+    '--veneer-color-surface-sunken',
   )
   ctx.fillRect(0, 0, width, height)
   ctx.fillStyle = token(
     ctx,
-    '--warp-color-positive-solid',
+    '--veneer-color-positive-solid',
   )
   for (let i = 0; i < next.length; i++)
     if (next[i])

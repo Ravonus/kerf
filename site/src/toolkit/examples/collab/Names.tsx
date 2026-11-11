@@ -1,4 +1,4 @@
-import { Stack, TypingIndicator } from '@weft-js/warp'
+import { Stack, TypingIndicator } from '@kerf/veneer'
 
 import { wait as _Shared0 } from './shared-wait'
 

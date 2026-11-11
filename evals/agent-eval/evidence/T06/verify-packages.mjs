@@ -1,4 +1,4 @@
-// Compare every reachable installed weft package with its candidate tarball.
+// Compare every reachable installed kerf package with its candidate tarball.
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import {
@@ -19,9 +19,9 @@ const required = [
   'core',
   'start',
   'cli',
-  'warp',
-  'warp-core',
-  'warp-icons',
+  'veneer',
+  'veneer-core',
+  'veneer-icons',
   'compiler-darwin-arm64',
 ]
 const digest = (file) => createHash('sha256').update(readFileSync(file)).digest('hex')
@@ -66,7 +66,7 @@ function visit(path) {
   if (seen.has(real)) return
   seen.add(real)
   const { name } = JSON.parse(readFileSync(manifest, 'utf8'))
-  if (name?.startsWith('@weft-js/')) verify(name, path)
+  if (name?.startsWith('@kerf/')) verify(name, path)
   scan(join(path, 'node_modules'))
 }
 function scan(modules) {
@@ -81,7 +81,7 @@ function scan(modules) {
 }
 scan(join(app, 'node_modules'))
 for (const name of required) {
-  if (!results.some((entry) => entry.name === `@weft-js/${name}`))
-    throw new Error(`missing installed @weft-js/${name}`)
+  if (!results.some((entry) => entry.name === `@kerf/${name}`))
+    throw new Error(`missing installed @kerf/${name}`)
 }
 console.log(JSON.stringify(results))

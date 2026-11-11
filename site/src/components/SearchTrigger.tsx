@@ -1,4 +1,4 @@
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 import { warmBody } from '../lib/search'
 import { spotlightOpen } from '../lib/spotlight'
 
@@ -8,7 +8,7 @@ const keys = (n: HTMLElement | null) => {
 }
 
 /**
- * Opens the spotlight: a Warp button dressed as a quiet search field. Its shortcut stays out of the way until the
+ * Opens the spotlight: a Veneer button dressed as a quiet search field. Its shortcut stays out of the way until the
  * hand or the keyboard comes to it.
  */
 export function SearchTrigger() {

@@ -8,7 +8,7 @@ import { load as moduleLoad, resolveId as moduleResolve } from '../../src/vite/m
 import { shapeHotUpdate } from '../../src/vite.mjs'
 
 async function project(t) {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'weft-override-')))
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-override-')))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const file = (name) => join(root, name)
   const write = (name, source) => writeFileSync(file(name), source)
@@ -57,9 +57,9 @@ async function project(t) {
     },
   }
   const load = (id) => moduleLoad(state).handler.call(context, id)
-  const routes = () => load('\0virtual:weft/routes')
+  const routes = () => load('\0virtual:kerf/routes')
   const override = () =>
-    load(`\0virtual:weft/shape-override/${encodeURIComponent(file('page.tsx'))}.tsx`)
+    load(`\0virtual:kerf/shape-override/${encodeURIComponent(file('page.tsx'))}.tsx`)
   return { root, file, write, state, server, watched, routes, override, transformed }
 }
 
@@ -77,7 +77,7 @@ void test('Vite resolves direct default and named overrides without running setu
       )
       p.write('waiting.tsx', `throw Error('component setup'); ${exportSource}`)
       const source = await p.routes()
-      assert.ok(source.includes('virtual:weft/shape-override/'))
+      assert.ok(source.includes('virtual:kerf/shape-override/'))
       assert.ok(source.includes(`() => import(${JSON.stringify(p.file('page.tsx'))})`))
       const stubbed = source.replace(
         /^import \* as shape(\d+) from .+$/gm,
@@ -96,8 +96,8 @@ void test('Vite resolves direct default and named overrides without running setu
       `import { Card as Waiting } from '@waiting';
       export const skeleton = Waiting`,
     )
-    assert.ok((await p.routes()).includes('virtual:weft/shape-override/'))
-    const request = `virtual:weft/shape-override/${encodeURIComponent(p.file('page.tsx'))}.tsx`
+    assert.ok((await p.routes()).includes('virtual:kerf/shape-override/'))
+    const request = `virtual:kerf/shape-override/${encodeURIComponent(p.file('page.tsx'))}.tsx`
     const output = await p.server.environments.client.transformRequest(request)
     assert.ok(output.code.includes('function Skeleton'))
     assert.match(p.transformed[0], /named marker/)
@@ -129,7 +129,7 @@ void test('unsafe and ambiguous imported sources remain unavailable', async (t) 
       p.write('waiting.tsx', source)
       const manifest = await p.routes()
       assert.ok(manifest.includes("reason: 'unresolved-export'"), source)
-      assert.ok(!manifest.includes('virtual:weft/shape-override/'), source)
+      assert.ok(!manifest.includes('virtual:kerf/shape-override/'), source)
       await assert.rejects(() => p.override(), /Unsafe or missing/)
     }
     const graph = { getModuleById: () => 'routes', invalidateModule: () => {} }
@@ -137,12 +137,12 @@ void test('unsafe and ambiguous imported sources remain unavailable', async (t) 
     const ctx = { environment: { config: { consumer: 'client' }, moduleGraph: graph } }
     p.write('waiting.tsx', 'export default () => <div>repaired</div>')
     assert.deepEqual(await handler.call(ctx, { file: p.file('waiting.tsx'), type: 'update' }), [])
-    assert.ok((await p.routes()).includes('virtual:weft/shape-override/'))
+    assert.ok((await p.routes()).includes('virtual:kerf/shape-override/'))
     p.write('page.tsx', "import Waiting from './waiting.tsx'; export const skeleton = false")
     assert.ok((await p.routes()).includes("kind: 'disabled'"))
     p.write('page.tsx', "import Waiting from './external.tsx'; export const skeleton = Waiting")
     assert.ok((await p.routes()).includes("reason: 'unresolved-export'"))
-    const outside = realpathSync(mkdtempSync(join(tmpdir(), 'weft-outside-')))
+    const outside = realpathSync(mkdtempSync(join(tmpdir(), 'kerf-outside-')))
     t.after(() => rmSync(outside, { recursive: true, force: true }))
     writeFileSync(join(outside, 'outside.tsx'), 'export default () => <div>outside</div>')
     symlinkSync(join(outside, 'outside.tsx'), p.file('linked.tsx'))

@@ -1,5 +1,5 @@
-import type { CanvasFrame } from '@weft-js/warp'
-import { Canvas } from '@weft-js/warp'
+import type { CanvasFrame } from '@kerf/veneer'
+import { Canvas } from '@kerf/veneer'
 import { token, STAGE } from './paint-primitives'
 
 // The pointer's recent path, fading as it ages: `pointer`
@@ -19,7 +19,7 @@ export function drawTrail(
   ctx.clearRect(0, 0, width, height)
   ctx.strokeStyle = token(
     ctx,
-    '--warp-color-accent-solid',
+    '--veneer-color-accent-solid',
   )
   ctx.lineCap = 'round'
   for (let i = 1; i < trail.length; i++) {
@@ -32,7 +32,7 @@ export function drawTrail(
     ctx.stroke()
   }
   ctx.globalAlpha = 1
-  ctx.fillStyle = token(ctx, '--warp-color-text-subtle')
+  ctx.fillStyle = token(ctx, '--veneer-color-text-subtle')
   const { fontFamily } = getComputedStyle(ctx.canvas)
   ctx.font = `13px ${fontFamily}`
   if (!trail.length)

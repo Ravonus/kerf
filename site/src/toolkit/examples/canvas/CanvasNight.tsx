@@ -1,5 +1,5 @@
-import type { CanvasFrame } from '@weft-js/warp'
-import { Canvas } from '@weft-js/warp'
+import type { CanvasFrame } from '@kerf/veneer'
+import { Canvas } from '@kerf/veneer'
 import { token, STAGE } from './paint-primitives'
 
 // A still picture that covers every pixel: an opaque
@@ -12,11 +12,11 @@ export function drawNight({
   const sky = ctx.createLinearGradient(0, 0, 0, height)
   sky.addColorStop(
     0,
-    token(ctx, '--warp-color-info-solid'),
+    token(ctx, '--veneer-color-info-solid'),
   )
   sky.addColorStop(
     1,
-    token(ctx, '--warp-color-accent-solid'),
+    token(ctx, '--veneer-color-accent-solid'),
   )
   ctx.fillStyle = sky
   ctx.fillRect(0, 0, width, height)
@@ -34,7 +34,7 @@ export function drawNight({
     )
   }
   ctx.globalAlpha = 1
-  ctx.fillStyle = token(ctx, '--warp-color-surface')
+  ctx.fillStyle = token(ctx, '--veneer-color-surface')
   ctx.beginPath()
   ctx.moveTo(0, height)
   for (let x = 0; x <= width; x += 8)

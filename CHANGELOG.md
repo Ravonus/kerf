@@ -1,130 +1,17 @@
 # Changelog
 
-Every `@weft-js` package is released together, at one version. Early releases (0.1.x) can change APIs between
-minor versions.
+Every `@kerf` package is released together, at one version. Early releases (0.1.x) can change APIs between minor
+versions.
 
-## Unreleased
+## 0.1.0
 
-### Packages
+- The first release as **Kerf**. The framework was published as `@weft-js/*` up to 0.1.4; it was renamed because
+  another TypeScript framework already uses the name weft (`@weftjs/*`, `create-weft`).
+- `@weft-js/*` is now `@kerf/*`, and the UI toolkit Warp is now **Veneer** (`@kerf/veneer`, `@kerf/veneer-core`,
+  `@kerf/veneer-icons`, `--veneer-*` tokens).
+- Scaffold with `npm create kerf` (the package is `create-kerf`).
+- Providers drop the `plugin-` prefix: `@kerf/media`, `@kerf/media-ffmpeg`, `@kerf/keel`, `@kerf/keel-pixel`.
+- The command is `kerf`, the config file is `kerf.config.ts`, attributes are `data-kerf-*`, environment variables are
+  `KERF_*` and framework routes live under `/_kerf/`.
 
-- `@weft-js/warp`: `ScrollRail` draws the page's bar on every device, touch screens included, in place of the native
-  one (it was drawn only with a mouse or trackpad). On a touch screen the rail lets swipes through, and its thumb
-  shows while the page moves and can be grabbed then, over a 44 px area.
-- `@weft-js/scroll`: on a touch screen, a DOM bar at the edge no longer takes the swipes that start there; the thumb
-  takes a finger only while it shows, over a 44 px area.
-
-## 0.1.4 (2026-11-10)
-
-From an outside team's trial of 0.1.3: their feedback, each point acted on.
-
-### Packages
-
-- Every package runs on Node 24 LTS: `engines` is `>=24` (was `>=26`). Nothing a user runs needed 26; working on Weft
-  itself still uses Node 26. The runtime matrix builds and serves the same app on Node 24 as well.
-- `@weft-js/plugin-media`: `placeholder: 'file'` writes the 16 px placeholder as its own hashed `.webp` instead of a
-  `data:` URL, for a CSP whose `img-src` has no `data:`. Images and video posters both take it.
-- The compiler writes a `style={{ … }}` whose values are all constant into the element's template, like a literal
-  `style="…"`, instead of binding it. 3,000 cards with fixed style objects render and lay out about 25% faster in
-  Chromium (27–31 ms to 22 ms) and the page's JS is 21% smaller.
-- Strict CSP: `weft({ csp: 'strict' })`, or `site: { csp: 'strict' }` in `weft.config.ts`, compiles fixed styles to
-  generated classes in the app's stylesheet, so a page needs no `'unsafe-inline'` in `style-src`. A fixed style on an
-  element with a changing `class` becomes one CSSOM write.
-- `@weft-js/core` ships the reference pages `weft docs` prints, in `docs/`, so they can be read offline and match the
-  installed version.
-- `@weft-js/core`: the padding that keeps the full runtime at 13.37 KB is now the digits of π rather than random
-  characters, which read like an obfuscated payload in a security review. It is still an export nothing reads.
-
-- New: `@weft-js/scroll`, custom scrollbars over real scroll offsets, so find-in-page, anchors, sticky
-  positioning, screen readers and `scroll` listeners keep working. In native mode, the default, the browser scrolls
-  the area with its own bar hidden and a CSS scroll timeline moves the thumb, so neither waits for a busy main
-  thread. Engine mode runs wheel, trackpad, touch (with inertia and overscroll), nested hand-off and selection
-  autoscroll in JavaScript, the same in every browser. Keys, snap points and the API work in both. Bars are drawn in
-  the DOM or, with `@weft-js/scroll/canvas`, on a canvas, and take a fixed-size thumb, colours, widths, auto-hide,
-  overlay or gutter.
-- `@weft-js/warp`: `ScrollView`, the Weft component over `@weft-js/scroll`, with a docs page and examples.
-
-### Docs
-
-- `@weft-js/core` README:
-  - **What installing runs:** no install scripts, what the native and WASM compilers can reach, and how to keep native
-    code out (`--omit=optional`, `WEFT_COMPILER=wasm`).
-  - **Content Security Policy:** what works under `script-src 'self'; style-src 'self'`, strict mode, and what
-    still needs more.
-  - **Images and video with Media**, with a note on the placeholder and CSP.
-  - **A static site** recipe.
-  - **Sizes:** what each entry adds to a page.
-- The quick start's `package.json` sets `"type": "module"`, without which Vite 8 warns.
-
-## 0.1.3 (2026-11-10)
-
-### Packages
-
-- The add-ons are released with the framework again, at 0.1.3: `text`, `pay`, `multiplayer`, `plugin-media`,
-  `plugin-media-ffmpeg`, `plugin-surface-keel` and the six `realtime-*` buses. `npm create @weft-js --template landing`
-  installs, since it needs `text` and `plugin-media`.
-- `@weft-js/warp-core` marks `@weft-js/core` as an optional peer, as intended. It named the old package before.
-
-### Docs
-
-- Every package has a full README: what it's for, setup, the API in tables, real examples, troubleshooting and links
-  to npm and the source. The compiler addons, the crates, the examples, the site and the scripts have one too.
-- `packages/README.md` lists every package, and the root README lists the add-ons.
-
-### Release
-
-- `scripts/release.mjs` publishes without asking for a one-time code it doesn't need (`WEFT_OTP`), and a re-run skips
-  what npm already has or is still processing.
-
-## 0.1.2 (2026-11-09)
-
-### Compiler
-
-- New diagnostics for the mistakes agents make most:
-  - state written inside `derived`;
-  - a `watch` that only copies a value, or writes its own source;
-  - reactive reads in async callbacks;
-  - early returns from component setup;
-  - numeric `&&` in JSX;
-  - locals that event handlers change but nothing renders;
-  - box and value prop mismatches;
-  - module state a server can reach.
-- Prebuilt native compilers for seven platforms:
-  - macOS on Apple silicon and Intel;
-  - Linux x64 and arm64, on both glibc and musl;
-  - Windows x64.
-
-  Everywhere else runs the WASM build, which gives the same output. A native compiler that is missing, a different
-  version or fails to load falls back to WASM by itself.
-
-### Start
-
-- Islands take turns, and islands that hold only Warp components wait until they're needed. On the docs site, the
-  islands that load with the page went from 212 to 62, and the landing page's blocking time went to 0.
-- Pages whose code waits let the browser prefetch a hovered link (speculation rules).
-- Cross-page view transitions that the browser skips no longer surface as errors in the page.
-- `weft check` reads `.env`, so its route checks run.
-
-### Warp
-
-- Theme anything from one `warp()` config: colors, systems, parts and themes.
-- The Theme studio: presets, trying a theme on the page, and copying the config.
-- Toasts stay on top on every page, and a page shows one Toaster's list at a time.
-- Warp's icons resolve in a pnpm app that lists only `@weft-js/warp`.
-
-### Create
-
-- A pnpm app installs and checks clean.
-- Templates and the todo app use Warp components.
-
-### Docs
-
-- New READMEs for every package, and the docs match what 0.1.2 does.
-- Each package links back to its source on GitHub.
-
-## 0.1.1 (2026-11-03)
-
-- Every `@weft-js` package, with the deploy and realtime work since 0.1.0.
-
-## 0.1.0 (2026-11-01)
-
-- The first release under the `@weft-js` scope.
+The history before the rename is in [docs/history/weft-CHANGELOG.md](docs/history/weft-CHANGELOG.md).

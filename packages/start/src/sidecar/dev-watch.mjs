@@ -35,7 +35,7 @@ export async function watchServices(deps) {
     }
     if (!existsSync(dir)) {
       log(
-        `[weft] R109 error: ${s.failure}. Point \`rust.services.${service}.crate\` at it, or set \`external: true\``,
+        `[kerf] R109 error: ${s.failure}. Point \`rust.services.${service}.crate\` at it, or set \`external: true\``,
       )
       if (isNative(contract(), service)) publish()
       continue
@@ -66,7 +66,7 @@ export async function watchServices(deps) {
           void rebuild(service)
       }
     } catch (e) {
-      log(`[weft] the contract couldn't be regenerated: ${e.message.split('\n')[0]}`)
+      log(`[kerf] the contract couldn't be regenerated: ${e.message.split('\n')[0]}`)
     }
   })
   if (existsSync(src))

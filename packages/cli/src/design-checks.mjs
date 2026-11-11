@@ -1,13 +1,13 @@
-// The design D-codes in `weft check` (PLAN §6, research 37). Two families:
+// The design D-codes in `kerf check` (PLAN §6, research 37). Two families:
 //
-//   D001–D007  off-system values, hand-rolled layout and role drift. Only where the app has warp's tokens to use instead (`@weft-js/warp`
+//   D001–D007  off-system values, hand-rolled layout and role drift. Only where the app has veneer's tokens to use instead (`@kerf/veneer`
 //              in package.json), so an app that chose raw Tailwind or its own CSS is left alone.
 //   D011, D030–D039  contrast and accessibility, in every app.
 //
 // An autofix is offered only when it keeps the meaning: a length that is exactly a scale step, a tag swap, a Tailwind
 // class with an exact equivalent. A raw colour never gets one, because a token follows the theme and the raw value
 // didn't; the agent chooses from `expected`. `check: { design: false }` turns both families off, and
-// `// weft-allow D001: <reason>` on the line above keeps one site. Reads the JSX of the checked files and the app's .css.
+// `// kerf-allow D001: <reason>` on the line above keeps one site. Reads the JSX of the checked files and the app's .css.
 
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -22,7 +22,7 @@ export function hasTokens(root) {
   if (!existsSync(file)) return false
   try {
     const { dependencies, devDependencies } = JSON.parse(readFileSync(file, 'utf8'))
-    return '@weft-js/warp' in { ...dependencies, ...devDependencies }
+    return '@kerf/veneer' in { ...dependencies, ...devDependencies }
   } catch {
     return false
   }

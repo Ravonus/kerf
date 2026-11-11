@@ -4,11 +4,11 @@ import { fileURLToPath } from 'node:url'
 import { configureAgent } from './agent-server.mjs'
 
 /**
- * Dev serving only: load @weft-js/core/agent (or just @weft-js/core/devtools when Testing Library isn't installed) into every page, and
- * relay `weft browser` / MCP commands to an open tab over Vite's own socket (research 22). `POST /__weft/agent`
- * `{ cmd, args, tab? }` → the tab's result; `GET /__weft/agent` lists the tabs. The URL goes to `.weft/dev.json`.
+ * Dev serving only: load @kerf/core/agent (or just @kerf/core/devtools when Testing Library isn't installed) into every page, and
+ * relay `kerf browser` / MCP commands to an open tab over Vite's own socket (research 22). `POST /__kerf/agent`
+ * `{ cmd, args, tab? }` → the tab's result; `GET /__kerf/agent` lists the tabs. The URL goes to `.kerf/dev.json`.
  */
-const ENTRY = '/@weft-agent.js'
+const ENTRY = '/@kerf-agent.js'
 
 export function agent() {
   const req = createRequire(join(dirname(dirname(fileURLToPath(import.meta.url))), 'vite.mjs'))
@@ -24,7 +24,7 @@ export function agent() {
       return false
     }
   })
-  const entry = can ? '@weft-js/core/agent' : '@weft-js/core/devtools'
+  const entry = can ? '@kerf/core/agent' : '@kerf/core/devtools'
   /** tab id → { client, url, title, visible, focused, seen } */
   const tabs = new Map()
   const pending = new Map()
@@ -35,17 +35,17 @@ export function agent() {
     return all.find((t) => t.focused) ?? all.sort((a, b) => b.seen - a.seen)[0]
   }
   return {
-    name: 'weft:agent',
+    name: 'kerf:agent',
     apply: (_, env) => env.command === 'serve' && env.mode !== 'test', // not vitest's own server
     config: () => ({
-      // One copy of weft in the page: the app's graph and the bridge's must be the same module instance.
+      // One copy of kerf in the page: the app's graph and the bridge's must be the same module instance.
       optimizeDeps: {
-        exclude: ['@weft-js/core'],
+        exclude: ['@kerf/core'],
         include: can
           ? [
-              '@weft-js/core > @testing-library/dom',
-              '@weft-js/core > @testing-library/user-event',
-              '@weft-js/core > dom-accessibility-api',
+              '@kerf/core > @testing-library/dom',
+              '@kerf/core > @testing-library/user-event',
+              '@kerf/core > dom-accessibility-api',
             ]
           : [],
       },

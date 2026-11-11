@@ -9,10 +9,10 @@ export async function dbLayer(root, loaded) {
   const { contributions = [] } = loaded ?? (await loadConfig(root))
   const plugin = contributions.find((c) => c.manifest.db)?.manifest.db
   if (plugin) return plugin
-  // Drizzle has no plugin to say so: its config file, or a client from `@weft-js/start/db/*`, does.
+  // Drizzle has no plugin to say so: its config file, or a client from `@kerf/start/db/*`, does.
   const entry = join(root, 'src/db/index.server.ts')
   return existsSync(join(root, 'drizzle.config.ts')) ||
-    (existsSync(entry) && readFileSync(entry, 'utf8').includes('@weft-js/start/db/'))
+    (existsSync(entry) && readFileSync(entry, 'utf8').includes('@kerf/start/db/'))
     ? DRIZZLE
     : null
 }

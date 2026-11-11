@@ -1,5 +1,5 @@
-import type { CanvasFrame } from '@weft-js/warp'
-import { Canvas } from '@weft-js/warp'
+import type { CanvasFrame } from '@kerf/veneer'
+import { Canvas } from '@kerf/veneer'
 import { token, STAGE } from './paint-primitives'
 
 // Rings that spread from wherever the pointer presses.
@@ -17,7 +17,7 @@ export function drawRipples(
   )
     rings.shift()
   ctx.clearRect(0, 0, width, height)
-  ctx.strokeStyle = token(ctx, '--warp-color-info-solid')
+  ctx.strokeStyle = token(ctx, '--veneer-color-info-solid')
   ctx.lineWidth = 2
   for (const r of rings) {
     const t = (time - r.at) / 1.6
@@ -35,7 +35,7 @@ export function drawRipples(
     }
   }
   ctx.globalAlpha = 1
-  ctx.fillStyle = token(ctx, '--warp-color-text-subtle')
+  ctx.fillStyle = token(ctx, '--veneer-color-text-subtle')
   const { fontFamily } = getComputedStyle(ctx.canvas)
   ctx.font = `13px ${fontFamily}`
   if (!rings.length)

@@ -8,12 +8,12 @@
 - Which diagnostics point at an effect you don't need
 :::
 
-Effects are an escape hatch: they step outside Weft to keep something else in step with your state. When nothing
+Effects are an escape hatch: they step outside Kerf to keep something else in step with your state. When nothing
 outside is involved, when all you want is to show a value or respond to a click, an effect is the long way round. It
 adds a second copy of the truth, a moment where the two copies disagree, and code that runs at a time you have to think
 about. Removing it makes the component shorter and the page right from the first paint.
 
-This page goes through the common cases, most of them familiar from React's page of the same name. In Weft the fixes are
+This page goes through the common cases, most of them familiar from React's page of the same name. In Kerf the fixes are
 usually simpler still, because a component's body runs once and `derived` is always current.
 
 :::demo escape-filter
@@ -24,7 +24,7 @@ Say a form has a first and a last name, and you want the full name. It's temptin
 whenever either part changes:
 
 ```tsx
-import { state, watch } from '@weft-js/core'
+import { state, watch } from '@kerf/core'
 
 export function Form() {
   const first = state('Ada')
@@ -42,7 +42,7 @@ It works in the browser, but it's more code than it needs, and the server render
 there. A value computed from other values is `derived`:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 
 export function Form() {
   const first = state('Ada')
@@ -70,7 +70,7 @@ export function Greeting(props: { first: string; last: string }) {
 }
 ```
 
-The body runs once, so `full` is whatever the props were then. Weft reports this as **W001**: a prop or `.value` used
+The body runs once, so `full` is whatever the props were then. Kerf reports this as **W001**: a prop or `.value` used
 to compute something in the body, outside `derived`, a `watch`, TSX or a handler. Wrap it in `derived`, or write it in
 the TSX.
 :::
@@ -82,7 +82,7 @@ read, keeps the result, and computes again only when a box it read has changed a
 over ten thousand rows runs once per change to the search box, not once per render, because there are no renders.
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 
 type Row = { id: number; name: string }
 
@@ -115,13 +115,13 @@ A profile page shows one person at a time, with a note you can write about them.
 the note should be empty again. In React you'd give the component a `key`; the effect version, clearing state when the
 id changes, renders the old note for a moment first.
 
-Weft does the same thing with a key. A list keyed by id throws a row away when its key goes and makes a new one, with
+Kerf does the same thing with a key. A list keyed by id throws a row away when its key goes and makes a new one, with
 fresh state, when a new key comes. A list of one does the same for a single component:
 
 :::demo escape-keyed
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 type Person = { id: number; name: string }
 
@@ -156,7 +156,7 @@ When only one value should start over, keep the component and make that box foll
 key })` is a box you can write, which goes back to `source` whenever the key changes:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 type Contact = { id: number; name: string }
 
@@ -184,8 +184,8 @@ Some code runs because the user did something: added a product, submitted a form
 handler for that event, not in an effect that watches for the state the event left behind.
 
 ```tsx
-import { state, watch } from '@weft-js/core'
-import { toast } from '@weft-js/warp'
+import { state, watch } from '@kerf/core'
+import { toast } from '@kerf/veneer'
 
 export function Product() {
   const inCart = state(false)
@@ -202,8 +202,8 @@ export function Product() {
 The toast is about the click, so put it with the click:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button, toast } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, toast } from '@kerf/veneer'
 
 export function Product() {
   const inCart = state(false)
@@ -227,8 +227,8 @@ game is hard to follow and runs one step per pass. Compute what you can with `de
 that started it:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { derived, state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 export function Game() {
   const golds = state(0)
@@ -254,7 +254,7 @@ export function Game() {
 }
 ```
 
-A `watch` that writes a box its own source reads is a loop waiting to happen; Weft's catalog names it **W003**.
+A `watch` that writes a box its own source reads is a loop waiting to happen; Kerf's catalog names it **W003**.
 
 ### Telling the parent
 
@@ -262,8 +262,8 @@ When a child's state changes and the parent should know, call the parent from th
 than watching the child's state:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 function Toggle(props: { onChange: (on: boolean) => void }) {
   const on = state(false)
@@ -294,12 +294,12 @@ message at all: see [Writing to a parent with bind:](/learn/bind).
 ## Values that come from outside
 
 Some values aren't yours: whether the browser is online, the size of the window, the state of a store a library keeps.
-The effect version listens and copies each change into a box. Weft has two better answers.
+The effect version listens and copies each change into a box. Kerf has two better answers.
 
-For the browser, `@weft-js/core/browser` already gives you the value. Read it directly:
+For the browser, `@kerf/core/browser` already gives you the value. Read it directly:
 
 ```tsx
-import { online } from '@weft-js/core/browser'
+import { online } from '@kerf/core/browser'
 
 export function Banner() {
   const isOnline = online()
@@ -317,8 +317,8 @@ For a library's store, subscribe while the component is set up, write the box fr
 in `onCleanup`. That's not an effect, just a listener with an owner:
 
 ```tsx
-import { onCleanup, state } from '@weft-js/core'
-import { store } from '@weft-js/warp-core'
+import { onCleanup, state } from '@kerf/core'
+import { store } from '@kerf/veneer-core'
 
 const theme = store<'light' | 'dark'>('light')
 
@@ -329,17 +329,17 @@ export function ThemeName() {
 }
 ```
 
-`store` is warp-core's small framework-free store, standing in for any library with `get` and `subscribe`.
+`store` is veneer-core's small framework-free store, standing in for any library with `get` and `subscribe`.
 
 ## Loading data
 
 Fetching in an effect is the classic React pattern, and the classic source of bugs: two requests in flight, the slow one
-lands last and shows stale results, and you need an `ignore` flag to fix it. In Weft you don't write that effect.
+lands last and shows stale results, and you need an `ignore` flag to fix it. In Kerf you don't write that effect.
 `resource` is the async version of `derived`: it fetches, refetches when what it read changes, and cancels the request it
 no longer needs.
 
 ```tsx
-import { Boundary, resource, state } from '@weft-js/core'
+import { Boundary, resource, state } from '@kerf/core'
 
 type Hit = { id: string; title: string }
 
@@ -376,7 +376,7 @@ export function Search() {
 }
 ```
 
-With `@weft-js/start` you go one step further and call a query from a server module, which also works during server
+With `@kerf/start` you go one step further and call a query from a server module, which also works during server
 rendering and shares its cache across components. [Async and loading states](/learn/async-and-loading) covers
 `resource` and `Boundary`; [Loading data](/learn/loading-data) covers queries.
 
@@ -386,19 +386,19 @@ dies with the component. A stream's `fold` keeps it in the cache instead: see
 
 ## When you do need an effect
 
-After all that, effects are for the cases where something outside Weft has to follow your state, for as long as a
+After all that, effects are for the cases where something outside Kerf has to follow your state, for as long as a
 component is on screen:
 
 - a connection to a server that depends on which room, user or document is showing;
 - a timer or animation that runs while a value says so;
 - a third-party widget (a map, an editor, a chart) that must be told when your data changes;
-- `document.title`, or anything else on the page that Weft didn't render.
+- `document.title`, or anything else on the page that Kerf didn't render.
 
 Those are what [Effects](/learn/effects) is for.
 
 ## The diagnostics
 
-Several of the patterns on this page have codes, and `weft check` and your editor point at each one.
+Several of the patterns on this page have codes, and `kerf check` and your editor point at each one.
 
 | Code | What it catches | Instead |
 |---|---|---|
@@ -416,7 +416,7 @@ Several of the patterns on this page have codes, and `weft check` and your edito
 
 - If a value can be computed from props and state, it's `derived`, or an expression in the TSX. Not state kept in
   sync by an effect.
-- `derived` is already cached: Weft has no `useMemo` because it doesn't need one.
+- `derived` is already cached: Kerf has no `useMemo` because it doesn't need one.
 - Key a component to start all its state over; `state.linked(…, { key })` starts one box over.
 - Code caused by an event goes in that event's handler. Tell the parent from the handler, or share a box with `bind:`.
 - Read browser values directly, and subscribe to outside stores with `onCleanup`, not a copying `watch`.
@@ -428,7 +428,7 @@ Several of the patterns on this page have codes, and `weft check` and your edito
 This list keeps its visible items in state with a `watch`. Rewrite it without the effect.
 
 ```tsx
-import { state, watch } from '@weft-js/core'
+import { state, watch } from '@kerf/core'
 
 type Item = { id: number; name: string; price: number }
 
@@ -456,7 +456,7 @@ export function Cheap(props: { items: Item[] }) {
 `shown` is computed from `items` and `max`, so it's `derived`:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 
 type Item = { id: number; name: string; price: number }
 
@@ -488,8 +488,8 @@ This form sends the order with an effect that watches a `submitted` flag. Move t
 the flag.
 
 ```tsx
-import { state, watch } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state, watch } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 export function Checkout() {
   const submitted = state(false)
@@ -508,8 +508,8 @@ The request happens because the user pressed the button, so it goes in the butto
 button off while it's in flight, which the old version didn't do.
 
 ```tsx
-import { state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 export function Checkout() {
   const sending = state(false)
@@ -529,7 +529,7 @@ export function Checkout() {
 }
 ```
 
-In an app with `@weft-js/start`, this would be a mutation: see [Server functions](/learn/server-functions).
+In an app with `@kerf/start`, this would be a mutation: see [Server functions](/learn/server-functions).
 :::
 
 :::challenge Start the editor over for each document
@@ -537,7 +537,7 @@ In an app with `@weft-js/start`, this would be a mutation: see [Server functions
 the old document's edit. Make it start from the new document's title, without a `watch`.
 
 ```tsx
-import { state, untrack } from '@weft-js/core'
+import { state, untrack } from '@kerf/core'
 
 type Document = { id: string; title: string }
 
@@ -558,7 +558,7 @@ export function Editor(props: { doc: Document }) {
 new key starts it over from the source:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 type Document = { id: string; title: string }
 

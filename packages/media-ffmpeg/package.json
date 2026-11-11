@@ -1,0 +1,49 @@
+{
+  "name": "@kerf/media-ffmpeg",
+  "version": "0.1.0",
+  "description": "@kerf/media-ffmpeg: the media.encode@1 provider for video and audio (AV1, VP9, HEVC, H.264, Opus, AAC) through an ffmpeg you install",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
+    "directory": "packages/media-ffmpeg"
+  },
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/media-ffmpeg#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/kerf/issues"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.mjs"
+    },
+    "./build": "./src/build.mjs"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@kerf/core": "*"
+  },
+  "devDependencies": {
+    "vitest": "5.0.5",
+    "@kerf/core": "workspace:*"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "keywords": [
+    "kerf"
+  ],
+  "files": [
+    "src",
+    "plugin.mjs",
+    "plugin.d.mts",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { clock, net } from '@weft-js/core/test'
+import { clock, net } from '@kerf/core/test'
 import { definePay, memoryPayStore, type Pay, type PayOptions, type Purchase } from './server'
 import {
   PayError,
@@ -106,7 +106,7 @@ function fakeRail(
 async function post(pay: Pay, deliveries: FakePay['deliveries'], event: RailEvent, secret: string) {
   const body = JSON.stringify([event]),
     t = Date.now()
-  const request = new Request('http://localhost/_weft/pay/fake', {
+  const request = new Request('http://localhost/_kerf/pay/fake', {
     method: 'POST',
     body,
     headers: { 'x-fake-signature': `${t},${sign(secret, t, body)}` },

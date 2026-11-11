@@ -1,5 +1,5 @@
 // The gallery's order. The route reads these on the server for names, notes and source; the stage loads each file on its own.
-import { meta as warpBeam } from './warp-beam'
+import { meta as veneerBeam } from './veneer-beam'
 import { meta as tideTable } from './tide-table'
 import { meta as moireLoom } from './moire-loom'
 import { meta as turingCloth } from './turing-cloth'
@@ -42,7 +42,7 @@ export const ROOMS: {
     title: title('field'),
     intro: 'Tones and a few inks. The picture is whatever the threshold leaves behind.',
     pieces: [
-      ['warp-beam', warpBeam],
+      ['veneer-beam', veneerBeam],
       ['tide-table', tideTable],
       ['moire-loom', moireLoom],
       ['turing-cloth', turingCloth],

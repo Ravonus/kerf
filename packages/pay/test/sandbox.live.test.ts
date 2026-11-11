@@ -4,7 +4,7 @@
 import { describe, expect, test } from 'vitest'
 import { stripeKeyMode, stripeRail } from '../src/stripe'
 import { squareRail, squareSandbox } from '../src/square'
-import type { CheckoutRequest } from '@weft-js/pay'
+import type { CheckoutRequest } from '@kerf/pay'
 
 const on = process.env.PAY_SANDBOX === '1'
 const stripeKey = process.env.STRIPE_SECRET_KEY
@@ -34,7 +34,7 @@ const request = (over: Partial<CheckoutRequest> = {}): CheckoutRequest => ({
   },
   successUrl: 'https://example.com/ok',
   cancelUrl: 'https://example.com/no',
-  idempotencyKey: `weft-sandbox-${run}`,
+  idempotencyKey: `kerf-sandbox-${run}`,
   ...over,
 })
 

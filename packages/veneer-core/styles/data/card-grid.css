@@ -1,0 +1,5 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.data {
+/* card + card grid (a card sweeps only when it opts in) */
+:where([data-scope="card-grid"]) { display: grid; gap: var(--veneer-space-group); grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); list-style: none; margin: 0; padding: 0; }
+}

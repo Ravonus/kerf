@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Slider } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Slider } from '@kerf/veneer'
 import type { Knobs } from './shared'
 
 export function SliderPlay(p: Knobs) {

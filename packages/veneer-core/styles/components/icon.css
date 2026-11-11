@@ -1,0 +1,11 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Icon gallery (the veneer set, 24 grid, 1.5 stroke) ----------------------------- */
+:where([data-scope="icon-grid"]) { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 4px; }
+:where([data-scope="icon-grid"] > button) {
+  display: grid; justify-items: center; gap: 8px; padding: 12px 4px 8px; border: 0; border-radius: var(--veneer-radius-control); background: transparent;
+  color: var(--veneer-color-text); font: 400 10.5px/1.2 var(--veneer-font-mono); cursor: pointer;
+}
+:where([data-scope="icon-grid"] > button:hover) { background: color-mix(in oklab, currentColor 7%, transparent); }
+:where([data-scope="icon-grid"] svg) { inline-size: 22px; block-size: 22px; }
+}

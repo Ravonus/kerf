@@ -1,5 +1,5 @@
-import { Boundary, resource } from '@weft-js/core'
-import type { RouteProps } from '@weft-js/start'
+import { Boundary, resource } from '@kerf/core'
+import type { RouteProps } from '@kerf/start'
 import { later } from '../db'
 import './stream-sheet.css'
 

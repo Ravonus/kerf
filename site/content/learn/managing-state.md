@@ -14,7 +14,7 @@ how to keep update logic easy to maintain, and how to share state between compon
 apart, or in different tabs.
 
 If you know React's "Managing State" chapter, much of this will be familiar: the data advice is the same. What differs is
-that Weft components run once, so state is never "preserved between renders" or "reset by position". It lives with the
+that Kerf components run once, so state is never "preserved between renders" or "reset by position". It lives with the
 component that made it, and a box tells exactly the places that read it when it changes.
 
 ## Reacting to input with state
@@ -25,7 +25,7 @@ This quiz has one `status` box, and every screen comes from it:
 :::demo manage-quiz
 
 Read **[Reacting to input with state](/learn/reacting-to-input)** to learn how to list the visual states of a component,
-model them with one status box, and why Weft branches in JSX instead of returning early.
+model them with one status box, and why Kerf branches in JSX instead of returning early.
 
 ## Choosing the state structure
 
@@ -33,7 +33,7 @@ Good state is small and can't contradict itself. Two booleans that must never bo
 item is an id, not a copy:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 
 type Snack = { id: number; title: string }
 
@@ -114,7 +114,7 @@ and people:
 
 :::demo manage-interaction
 
-Read **[Hover, focus and shared UI state](/learn/ui-state)** to learn how Warp draws a row, how far sharing reaches, and
+Read **[Hover, focus and shared UI state](/learn/ui-state)** to learn how Veneer draws a row, how far sharing reaches, and
 how to keep other UI state the same in every tab.
 
 ## App-wide state with defineState

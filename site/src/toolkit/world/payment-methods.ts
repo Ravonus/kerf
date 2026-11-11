@@ -1,7 +1,7 @@
 import type {
   Invoice,
   PaymentMethod,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { BILLS } from './bills'
 
 export const OVERDUE_BILLS: Invoice[] = [

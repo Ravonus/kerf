@@ -1,5 +1,5 @@
-import { Link, notFound, redirect, type LoadArgs, type Meta, type RouteProps } from '@weft-js/start'
-import { Button } from '@weft-js/warp'
+import { Link, notFound, redirect, type LoadArgs, type Meta, type RouteProps } from '@kerf/start'
+import { Button } from '@kerf/veneer'
 import { LearnDemo } from '../../components/LearnDemo'
 import { Toc } from '../../components/Toc'
 import moved from '../../generated/learn-moved.json'
@@ -74,7 +74,7 @@ export default function LearnPage(props: RouteProps<typeof load, '/learn/[slug]'
         <aside data-site="you-will-learn">
           <p data-part="label">You will learn</p>
           <div
-            // oxlint-disable-next-line weft/no-html-sink -- this site's own Markdown, rendered at build time
+            // oxlint-disable-next-line kerf/no-html-sink -- this site's own Markdown, rendered at build time
             innerHTML={props.data.box}
           ></div>
         </aside>
@@ -97,7 +97,7 @@ export default function LearnPage(props: RouteProps<typeof load, '/learn/[slug]'
                 <LearnDemo id={b.demo} />
                 <div
                   data-scope="codeblock"
-                  // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from this repo's demos
+                  // oxlint-disable-next-line kerf/no-html-sink -- highlighted at build time from this repo's demos
                   innerHTML={b.code}
                 ></div>
               </div>
@@ -111,7 +111,7 @@ export default function LearnPage(props: RouteProps<typeof load, '/learn/[slug]'
             <div
               key={i}
               data-scope="prose"
-              // oxlint-disable-next-line weft/no-html-sink -- this site's own Markdown, rendered at build time
+              // oxlint-disable-next-line kerf/no-html-sink -- this site's own Markdown, rendered at build time
               innerHTML={b.html}
             ></div>
           ),

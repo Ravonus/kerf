@@ -30,7 +30,7 @@ void test('shared helpers retain their results', async () => {
 })
 
 void test('walk skips named directories', () => {
-  const root = mkdtempSync(join(tmpdir(), 'weft-walk-'))
+  const root = mkdtempSync(join(tmpdir(), 'kerf-walk-'))
   try {
     mkdirSync(join(root, 'skip'))
     writeFileSync(join(root, 'skip', 'hidden'), '')

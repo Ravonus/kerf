@@ -1,4 +1,4 @@
-import { PeerMark, Text } from '@weft-js/warp'
+import { PeerMark, Text } from '@kerf/veneer'
 
 import { LENA } from '../../world'
 

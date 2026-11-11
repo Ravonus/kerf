@@ -5,7 +5,7 @@ import { join } from 'node:path'
 export const POLICY = `packages: []
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
-  - '@weft-js/*'
+  - '@kerf/*'
 `
 
 /** Create, but never overwrite, the policy used for a fresh standalone workspace. */

@@ -6,7 +6,7 @@ import { check, problemsFor } from './api-snapshots.mjs'
 
 const exports = { '.': './index.ts', './test': { types: './test.d.ts', default: './test.js' } }
 const snapshot = { exports }
-const docs = '- `@weft-js/core`: Root API.\n- `@weft-js/core/test`: Tests.\n'
+const docs = '- `@kerf/core`: Root API.\n- `@kerf/core/test`: Tests.\n'
 
 void test('detects added, removed and changed paths and conditions', () => {
   assert.deepEqual(problemsFor('core', exports, snapshot, docs), [])
@@ -22,11 +22,11 @@ void test('detects added, removed and changed paths and conditions', () => {
 
 void test('requires a reference entry for every path', () => {
   assert.match(
-    problemsFor('core', exports, snapshot, '- `@weft-js/core`: Root.\n').join('\n'),
-    /missing reference for @weft-js\/core\/test/,
+    problemsFor('core', exports, snapshot, '- `@kerf/core`: Root.\n').join('\n'),
+    /missing reference for @kerf\/core\/test/,
   )
   assert.match(
-    problemsFor('core', exports, snapshot, '- `@weft-js/core/test`: \n').join('\n'),
+    problemsFor('core', exports, snapshot, '- `@kerf/core/test`: \n').join('\n'),
     /missing reference/,
   )
 })

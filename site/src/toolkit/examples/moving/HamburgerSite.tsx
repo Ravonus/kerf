@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { HamburgerMenu } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { HamburgerMenu } from '@kerf/veneer'
 import { follow } from './shared'
 
 const LINKS = [

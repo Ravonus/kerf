@@ -1,13 +1,13 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 import {
   Row,
   Stack,
   Text,
   VirtualList,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 
-import type { VirtualControl } from '@weft-js/warp'
+import type { VirtualControl } from '@kerf/veneer'
 
 import { PROJECTS } from '../../world'
 

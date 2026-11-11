@@ -1,28 +1,28 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
 <h1 align="center">Todo</h1>
 
 <p align="center">
-  <strong>A signed-in todo list over Postgres, in Weft, SolidStart and Next.</strong><br>
+  <strong>A signed-in todo list over Postgres, in Kerf, SolidStart and Next.</strong><br>
   The race flagship: per-user rows, optimistic writes where the stack has them, and six race probes that check the list on screen against the database.
 </p>
 
 <p align="center">
   <a href="#run-it">Run it</a> ·
-  <a href="#the-weft-variant">Weft variant</a> ·
+  <a href="#the-kerf-variant">Kerf variant</a> ·
   <a href="#the-comparison-variants">Comparison variants</a> ·
   <a href="#race-probes">Race probes</a> ·
   <a href="../README.md">All examples</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!NOTE]
-> This is a private benchmark site, not a published package. Nothing here is on npm. The Weft version is not stored in
-> this folder: it is generated from the `todo` template of `@weft-js/create` on every bench run.
+> This is a private benchmark site, not a published package. Nothing here is on npm. The Kerf version is not stored in
+> this folder: it is generated from the `todo` template of `create-kerf` on every bench run.
 
 A todo list looks trivial, which is why it is the flagship for races. Optimistic writes, double submits, toggles whose
 replies come back out of order and two open tabs are where a list can quietly end up showing something the database
@@ -50,22 +50,22 @@ The seed in [`../shared/pg/seed.sql`](../shared/pg/seed.sql) gives the bench use
 
 | Variant | Label in results | Where the code lives |
 | --- | --- | --- |
-| `weft` | weft + warp | Generated: `{"template": "todo", "db": "postgres", "auth": true}` passed to create-weft's `scaffold()` |
+| `kerf` | kerf + veneer | Generated: `{"template": "todo", "db": "postgres", "auth": true}` passed to create-kerf's `scaffold()` |
 | `solid` | SolidStart 2.1 + Kobalte + Tailwind 4 | [`solid/`](./solid) |
 | `next` | Next 16.4 + Radix + Tailwind 4 | [`next/`](./next) |
 
-### The Weft variant
+### The Kerf variant
 
-The template source is [`packages/create/templates/todo`](../../packages/create/templates/todo) (Daybook). It uses:
+The template source is [`packages/create-kerf/templates/todo`](../../packages/create-kerf/templates/todo) (Daybook). It uses:
 
 - **Optimistic mutations.** `addTodo`, `toggleTodo` and `deleteTodo` are `mutation`s with `invalidates: ['todos']` and an
   `optimistic` function that edits every cached view of `listTodos` through the `OptimisticCache` API
   (`cache.get`, `cache.update`). The server's answer then confirms or replaces the guess.
 - **Views in the URL.** `src/lib/views.ts` maps `?filter=active|done` to a view, and `listTodos` is a `query` keyed by it.
 - **Auth.** Sign-in, sign-up and sign-out through Better Auth, with `redirect` guarding `/todos`.
-- **Reactivity.** `state` and `derived` from `@weft-js/core`, and `Boundary` around the list.
-- **Warp.** `Shell`, `AuthScreen`, `Checkbox`, `Progress`, `Skeleton`, `Alert`, `Toaster` and `toast`, plus icons from
-  `@weft-js/warp-icons`.
+- **Reactivity.** `state` and `derived` from `@kerf/core`, and `Boundary` around the list.
+- **Veneer.** `Shell`, `AuthScreen`, `Checkbox`, `Progress`, `Skeleton`, `Alert`, `Toaster` and `toast`, plus icons from
+  `@kerf/veneer-icons`.
 
 ### The comparison variants
 
@@ -118,17 +118,17 @@ node bench.mjs todo --samples=5        # before stating a claim
 
 ```bash
 cd examples
-node e2e.mjs todo weft                 # build if needed, database, proxy, server, tests, stop
-node e2e.mjs todo weft --no-build      # the last build as it stands
+node e2e.mjs todo kerf                 # build if needed, database, proxy, server, tests, stop
+node e2e.mjs todo kerf --no-build      # the last build as it stands
 node e2e.mjs todo --dir ./my-build     # a local build, by its start script
 ```
 
-### Click through the Weft build
+### Click through the Kerf build
 
 ```bash
 cd examples
 node bench.mjs todo
-node show.mjs                          # the last Weft builds, from port 5501
+node show.mjs                          # the last Kerf builds, from port 5501
 ```
 
 Sign in with the throwaway account in [`../shared/pg/bench-user.json`](../shared/pg/bench-user.json).
@@ -142,10 +142,10 @@ npm ci
 npm run dev
 ```
 
-### Make your own copy of the Weft version
+### Make your own copy of the Kerf version
 
 ```bash
-pnpm create @weft-js my-todos --template todo --db postgres --auth
+pnpm create kerf my-todos --template todo --db postgres --auth
 ```
 
 ## Manifest details

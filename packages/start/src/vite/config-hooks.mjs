@@ -28,13 +28,13 @@ export const configHook = (s) =>
       },
       // The router-core server bundle and Takumi's addon stay external to the SSR graph; Nitro traces them.
       ssr: {
-        noExternal: ['@weft-js/start', '@weft-js/warp', '@weft-js/warp-icons', '@weft-js/core'],
+        noExternal: ['@kerf/start', '@kerf/veneer', '@kerf/veneer-icons', '@kerf/core'],
         external: ['@takumi-rs/core'],
       },
       optimizeDeps: {
-        exclude: ['@weft-js/start', '@weft-js/warp', '@weft-js/warp-icons', '@weft-js/core'],
-      }, // they ship TSX for the weft plugin
-      // The runtime files of @weft-js/start, weft and Nitro are served from wherever they're installed (a linked package
+        exclude: ['@kerf/start', '@kerf/veneer', '@kerf/veneer-icons', '@kerf/core'],
+      }, // they ship TSX for the kerf plugin
+      // The runtime files of @kerf/start, kerf and Nitro are served from wherever they're installed (a linked package
       // sits outside the app's root).
       server: {
         fs: { allow: [searchForWorkspaceRoot(s.root), join(here, '..'), ...packageDirs(s.root)] },
@@ -42,9 +42,9 @@ export const configHook = (s) =>
       // One copy of the router: the app's route files and the generated entries import the same module.
       resolve: {
         alias: [
-          { find: /^@weft-js\/start$/, replacement: join(here, 'index.ts') },
-          { find: /^@weft-js\/start\/(client|server)$/, replacement: join(here, '$1.tsx') },
-          { find: /^@weft-js\/start\/media$/, replacement: join(here, 'media.ts') },
+          { find: /^@kerf\/start$/, replacement: join(here, 'index.ts') },
+          { find: /^@kerf\/start\/(client|server)$/, replacement: join(here, '$1.tsx') },
+          { find: /^@kerf\/start\/media$/, replacement: join(here, 'media.ts') },
         ],
       },
     }
@@ -78,7 +78,7 @@ export const writeBundle = (s) => ({
   order: 'post',
   async handler(out, bundle) {
     if (!s.dev && this.environment?.config.consumer === 'client' && out.dir) {
-      const name = 'weft-route-assets.json'
+      const name = 'kerf-route-assets.json'
       if (bundle[name]) throw new Error(`Cannot overwrite emitted ${name}`)
       const bytes = assetBytes(bundle, emittedReader(out.dir), s.manifest ?? s.scan(), s.abs)
       bytes.build = s.build || null
@@ -113,7 +113,7 @@ export const renderChunk = (s) => ({
       try {
         const top = this.environment.getTopLevelConfig()
         const client = resolve(s.root, top.environments.client.build.outDir)
-        const saved = JSON.parse(readFileSync(join(client, 'weft-route-assets.json'), 'utf8'))
+        const saved = JSON.parse(readFileSync(join(client, 'kerf-route-assets.json'), 'utf8'))
         if (s.build && saved.build === s.build) receipt = saved
       } catch {
         /* no matching client receipt */
@@ -148,18 +148,18 @@ export const configResolved = (s) =>
     // Each build is its own version, unless it's pinned: instances built apart that serve one deploy, or a
     // reproducible build (SOURCE_DATE_EPOCH), have to agree on it.
     s.build =
-      process.env.WEFT_BUILD_ID ||
+      process.env.KERF_BUILD_ID ||
       createHash('sha256')
         .update(process.env.SOURCE_DATE_EPOCH || String(Date.now()))
         .digest('hex')
         .slice(0, 8)
     if (s.dev) s.build = 'dev'
     s.root = config.root
-    const main = config.plugins.find((p) => p.name === 'weft')
-    s.words = config.plugins.find((p) => p.name === 'weft:purge')?.api
-    s.words?.add('data-weft styled') // gate.css reveals a mark a static page's HTML may hold alone
+    const main = config.plugins.find((p) => p.name === 'kerf')
+    s.words = config.plugins.find((p) => p.name === 'kerf:purge')?.api
+    s.words?.add('data-kerf styled') // gate.css reveals a mark a static page's HTML may hold alone
     if (main?.api) {
-      s.compile = createRequire(join(here, 'vite.mjs'))('@weft-js/core/compiler').transform
+      s.compile = createRequire(join(here, 'vite.mjs'))('@kerf/core/compiler').transform
       main.api.islands = async (ctx, file) =>
         (await s.hydration(ctx))?.files.get(file.replace(/\?.*$/, ''))
     }

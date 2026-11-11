@@ -1,4 +1,4 @@
-import { LoadMore } from '@weft-js/warp'
+import { LoadMore } from '@kerf/veneer'
 
 export const LoadMoreDone = () => (
   <LoadMore

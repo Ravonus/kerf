@@ -1,0 +1,19 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Tag: removable label (the badge is status; the tag is user content) ------ */
+:where([data-scope="tag"]) {
+  display: inline-flex; align-items: center; gap: 4px; block-size: 24px; padding-inline: 8px 4px;
+  border: var(--veneer-border-hairline) solid var(--_border, var(--veneer-color-border)); border-radius: var(--veneer-radius-control);
+  background: var(--veneer-color-surface-raised); color: var(--veneer-color-text); font-size: var(--veneer-text-caption-size);
+}
+:where([data-scope="tag"]:not(:has([data-part="remove"]))) { padding-inline-end: 8px; }
+:where([data-scope="tag"] > [data-part="swatch"]) { inline-size: 8px; block-size: 8px; border-radius: 2px; background: var(--_solid); }
+:where([data-scope="tag"] [data-part="remove"]:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) *:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) [data-scope="tag"] *))) {
+  position: relative; display: grid; place-items: center; inline-size: 18px; block-size: 18px; padding: 0; border: 0; border-radius: var(--veneer-radius-mark);
+  background: transparent; color: var(--veneer-color-text-subtle); cursor: pointer;
+}
+:where([data-scope="tag"] [data-part="remove"])::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--veneer-hit-min)) / 2)); }
+:where([data-scope="tag"] [data-part="remove"]:hover:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) *:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) [data-scope="tag"] *))) { background: color-mix(in oklab, currentColor 12%, transparent); color: var(--veneer-color-text); }
+:where([data-scope="tag"] [data-part="remove"]:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) *:not([data-scope="tag"] :is([data-scope="filterbar"],[data-scope="kv"]) [data-scope="tag"] *)) svg) { inline-size: 12px; block-size: 12px; }
+:where([data-scope="tag"][data-state="removed"]) { animation: veneer-exit calc(var(--veneer-duration-fast) * var(--veneer-duration-exit-k)) var(--veneer-ease-in) forwards; }
+}

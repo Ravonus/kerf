@@ -2,20 +2,20 @@
 // reconnect, and whatever was published meanwhile is gone: every `ready` after the first is the `gap`.
 
 import { Redis } from 'ioredis'
-import type { Bus } from '@weft-js/start/bus'
-import { StartError } from '@weft-js/start/data'
+import type { Bus } from '@kerf/start/bus'
+import { StartError } from '@kerf/start/data'
 
 /** Options of `redisBus()`. */
 export interface RedisBusOptions {
   /** `redis://…` or `rediss://…`. */
   url: string
-  /** Prefix of every Redis channel. Default `weft:`: several apps can share a server. */
+  /** Prefix of every Redis channel. Default `kerf:`: several apps can share a server. */
   prefix?: string
 }
 
 /** A `Bus` over Redis pub/sub, connecting on first use. Throws Q013 without a `redis://` URL, except during a build. */
-export function redisBus({ url, prefix = 'weft:' }: RedisBusOptions): Bus {
-  if (!url && process.env.WEFT_BUILD) url = 'redis://localhost' // a build loads this module and never connects
+export function redisBus({ url, prefix = 'kerf:' }: RedisBusOptions): Bus {
+  if (!url && process.env.KERF_BUILD) url = 'redis://localhost' // a build loads this module and never connects
   if (!/^rediss?:\/\//.test(url ?? ''))
     throw new StartError(
       'Q013',

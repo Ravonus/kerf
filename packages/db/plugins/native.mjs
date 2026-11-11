@@ -1,8 +1,8 @@
-// native() for weft.config.ts (research 34 §4): the no-ORM data layer. It holds what the CLI needs: where migrations
-// live and how `weft db generate` starts one. The runtime is `@weft-js/db/plugin-native/<engine>`.
+// native() for kerf.config.ts (research 34 §4): the no-ORM data layer. It holds what the CLI needs: where migrations
+// live and how `kerf db generate` starts one. The runtime is `@kerf/db/plugin-native/<engine>`.
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { definePlugin } from '@weft-js/core/plugin'
+import { definePlugin } from '@kerf/core/plugin'
 
 const DIR = 'migrations'
 
@@ -20,20 +20,20 @@ function generate(root, name = 'change') {
 }
 
 export const native = definePlugin({
-  name: '@weft-js/db/plugin-native',
+  name: '@kerf/db/plugin-native',
   version: '0.0.0',
-  weft: '*',
+  kerf: '*',
   permissions: { fs: { read: ['migrations/**'], write: ['migrations/**'] } },
   contribute: () => ({
     db: { layer: 'native', migrations: DIR, generate },
     agents: {
       title: 'Database (Native)',
-      text: 'No ORM: `ctx.db.sql` is a tagged template, and values are always bound, never concatenated. Rows are plain objects. `ctx.db.transaction(tx => …)` gives `tx.sql`, and `ctx.db.driver` is the real driver. `weft db generate <name>` starts a file in `migrations/`; write the SQL by hand. Validate input with your own Zod schemas.',
+      text: 'No ORM: `ctx.db.sql` is a tagged template, and values are always bound, never concatenated. Rows are plain objects. `ctx.db.transaction(tx => …)` gives `tx.sql`, and `ctx.db.driver` is the real driver. `kerf db generate <name>` starts a file in `migrations/`; write the SQL by hand. Validate input with your own Zod schemas.',
     },
     map: [
       {
         want: 'Change the database',
-        call: '`weft db generate <name>`, then write the SQL in `migrations/`',
+        call: '`kerf db generate <name>`, then write the SQL in `migrations/`',
         have: 'no ORM',
       },
     ],

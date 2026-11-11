@@ -1,5 +1,5 @@
-import { derived, state } from '@weft-js/core'
-import { Card, Input, Tag } from '@weft-js/warp'
+import { derived, state } from '@kerf/core'
+import { Card, Input, Tag } from '@kerf/veneer'
 
 const CITIES = [
   'Lisbon',

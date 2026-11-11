@@ -1,0 +1,15 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.app {
+:where([data-scope="cursor"]) {
+  position: absolute; inset: 0 auto auto 0; translate: var(--_x) var(--_y);
+  transition: translate calc(120ms * var(--veneer-motion-scale)) linear;
+  color: var(--_pc, var(--veneer-color-data-2));
+}
+:where([data-scope="cursor"] svg) { display: block; inline-size: 16px; block-size: 16px; fill: currentColor; stroke: var(--veneer-color-surface); stroke-width: 1.5; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.18)); }
+:where([data-scope="cursor"] span) {
+  position: absolute; inset-inline-start: 12px; inset-block-start: 14px; padding: 3px 7px; border-radius: var(--veneer-radius-control);
+  background: color-mix(in oklab, currentColor 70%, var(--veneer-color-text)); font: 500 11.5px/1.2 var(--veneer-text-body-font); white-space: nowrap;
+}
+:where([data-scope="cursor"] span b) { color: var(--veneer-color-surface); font-weight: 500; }
+:where([data-scope="cursor"][data-idle]) { opacity: 0.4; transition: opacity var(--veneer-duration-slow), translate 0s; }
+}

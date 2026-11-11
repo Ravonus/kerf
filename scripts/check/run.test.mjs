@@ -49,7 +49,7 @@ void test('package test workers share the outer jobs budget', () => {
     assert.ok(script.endsWith('vitest run'), `${file}: the worker argument must reach Vitest`)
     return [file.slice(0, -'/package.json'.length)]
   })
-  const dir = mkdtempSync(join(tmpdir(), 'weft-check-workers-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-check-workers-'))
   try {
     // Stub package commands so the dispatch check never starts product suites.
     const log = join(dir, 'calls.jsonl')

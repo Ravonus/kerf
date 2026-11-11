@@ -1,5 +1,5 @@
-import { navigate } from '@weft-js/start'
-import type { SearchHit } from '@weft-js/warp-core'
+import { navigate } from '@kerf/start'
+import type { SearchHit } from '@kerf/veneer-core'
 import {
   BookIcon,
   BoxIcon,
@@ -12,7 +12,7 @@ import {
   SlidersIcon,
   StarIcon,
   SunIcon,
-} from '@weft-js/warp-icons'
+} from '@kerf/veneer-icons'
 import {
   CommandPalette,
   setDial,
@@ -20,8 +20,8 @@ import {
   type CommandMode,
   type CommandSource,
   type IconRef,
-} from '@weft-js/warp'
-import { onMount } from '@weft-js/core'
+} from '@kerf/veneer'
+import { onMount } from '@kerf/core'
 import { body, loadTitles, titles } from '../lib/search'
 import { spotlightOpen } from '../lib/spotlight'
 
@@ -48,7 +48,7 @@ const ICON: Record<string, IconRef> = {
   'In the text': FileTextIcon,
 }
 const PER_GROUP = 4
-const RECENT = 'weft:recent'
+const RECENT = 'kerf:recent'
 
 const PAGES: Command[] = [
   { label: 'Learn', group: 'Go to', icon: BookIcon, href: '/learn', run: go('/learn') },
@@ -214,7 +214,7 @@ export function Spotlight() {
       modes={MODES}
       groupOrder={ORDER}
       onRun={remember}
-      label="Search Weft"
+      label="Search Kerf"
       placeholder="Search docs, components, codes…   > for commands"
     />
   )

@@ -24,7 +24,7 @@ export function htpl(html: string, svg?: boolean, where?: string): () => Node {
   const clone = () => {
     if (!node) {
       const t = document.createElement('template')
-      // oxlint-disable-next-line weft/no-html-sink -- `html` is a template the compiler wrote from static markup, never a runtime value
+      // oxlint-disable-next-line kerf/no-html-sink -- `html` is a template the compiler wrote from static markup, never a runtime value
       t.innerHTML = svg ? `<svg>${html}</svg>` : html
       node = svg ? t.content.firstChild!.firstChild! : t.content.firstChild!
     }
@@ -50,8 +50,8 @@ export function htpl(html: string, svg?: boolean, where?: string): () => Node {
         const at = where ?? html.slice(0, 60)
         console.warn(
           el
-            ? `weft: hydration mismatch at ${at} (wk=${key}): the client renders <${tag}>, the server rendered <${el.localName}>; rendering it fresh`
-            : `weft: hydration key miss at ${at} (wk=${key}): the server rendered nothing with this key; rendering it fresh`,
+            ? `kerf: hydration mismatch at ${at} (wk=${key}): the client renders <${tag}>, the server rendered <${el.localName}>; rendering it fresh`
+            : `kerf: hydration key miss at ${at} (wk=${key}): the server rendered nothing with this key; rendering it fresh`,
         )
       }
     }
@@ -168,7 +168,7 @@ export function hchild(
     if (!hydrating) return insert(parent, v, marker)
     // One element where a range would be (ssr.ts `hole`): the walk stopped on it, and building it claims it.
     if (once === 1 && marker?.nodeType === 1) {
-      // Dev: a hot-swappable component (@weft-js/core/hmr) is an accessor, and has to stay live.
+      // Dev: a hot-swappable component (@kerf/core/hmr) is an accessor, and has to stay live.
       if (DEV && typeof v === 'function') {
         let current: Node[] = [marker]
         let at = marker.nextSibling

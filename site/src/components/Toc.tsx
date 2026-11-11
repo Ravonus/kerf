@@ -1,7 +1,7 @@
-import { Nav } from '@weft-js/warp'
+import { Nav } from '@kerf/veneer'
 
-/* @weft visible */
-/** On this page: Warp's Nav follows the heading in view. */
+/* @kerf visible */
+/** On this page: Veneer's Nav follows the heading in view. */
 export function Toc(props: { items: { id: string; text: string; depth?: number }[] }) {
   return (
     <aside data-site="toc">

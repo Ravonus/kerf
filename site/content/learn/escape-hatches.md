@@ -2,13 +2,13 @@
 
 :::learn
 - How to reach a DOM element when only the element can do the job
-- How to keep things outside Weft in step with your state, and when you shouldn't
-- How Weft decides when work stops, and how to clean up what you start
+- How to keep things outside Kerf in step with your state, and when you shouldn't
+- How Kerf decides when work stops, and how to clean up what you start
 - How to reuse stateful logic between components with plain functions
 - How to load data, show loading states, and keep text, media and canvases from moving the page
 :::
 
-So far, everything has stayed inside Weft: state in boxes, values derived from them, TSX that follows both. That covers
+So far, everything has stayed inside Kerf: state in boxes, values derived from them, TSX that follows both. That covers
 most of an app. Some things live outside it, though: a DOM element you need to focus, a socket to a chat server, a
 timer, a map widget, a request that answers later, a canvas. This chapter is about stepping outside, safely, and
 coming back. Most apps need these tools in a few places, and the first lesson of each page is often that you need them
@@ -22,7 +22,7 @@ variable or through a function:
 :::demo escape-focus
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 
 export function Focus() {
   let field: HTMLInputElement | undefined
@@ -43,13 +43,13 @@ and how a component hands one of its elements to its parent.
 
 ## Effects
 
-An effect keeps something outside Weft in step with state. `watch(source, act)` runs `act` now and whenever what
+An effect keeps something outside Kerf in step with state. `watch(source, act)` runs `act` now and whenever what
 `source` read changes, and a function it returns cleans up before the next run:
 
 :::demo escape-room
 
 ```tsx
-import { state, watch } from '@weft-js/core'
+import { state, watch } from '@kerf/core'
 
 export function Room() {
   const room = state('general')
@@ -61,18 +61,18 @@ export function Room() {
 }
 ```
 
-There's no dependency array: Weft follows what the source reads.
+There's no dependency array: Kerf follows what the source reads.
 
 Read **[Effects](/learn/effects)** to learn how `watch`, `onMount` and `onCleanup` work, when they run, and how
-`@weft-js/core/browser` turns browser events into values.
+`@kerf/core/browser` turns browser events into values.
 
 ## You might not need an effect
 
-Most effects in other frameworks copy one value into another, or run code because of a click. In Weft, a value computed
+Most effects in other frameworks copy one value into another, or run code because of a click. In Kerf, a value computed
 from others is `derived`, and code caused by an event goes in its handler:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 
 export function Name() {
   const first = state('Ada')
@@ -94,8 +94,8 @@ owner goes, what it owns stops:
 :::demo escape-owner
 
 ```tsx
-import { state } from '@weft-js/core'
-import { interval } from '@weft-js/core/browser'
+import { state } from '@kerf/core'
+import { interval } from '@kerf/core/browser'
 
 export function Ticker() {
   const seconds = state(0)
@@ -110,12 +110,12 @@ start yourself, and how `createRoot` makes an owner where there isn't one.
 
 ## Reusing logic
 
-React has custom hooks. Weft has functions: anything that makes state, derived values or effects can move out of a
+React has custom hooks. Kerf has functions: anything that makes state, derived values or effects can move out of a
 component into a function, and each call gets its own:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
-import { Button } from '@weft-js/warp'
+import { derived, state } from '@kerf/core'
+import { Button } from '@kerf/veneer'
 
 function counter(start = 0) {
   const count = state(start)
@@ -137,7 +137,7 @@ export function Tally() {
 ```
 
 Read **[Reusing logic](/learn/reusing-logic)** to learn why there are no rules about call order, why you pass getters,
-and how warp-core's behaviours attach with `use`.
+and how veneer-core's behaviours attach with `use`.
 
 ## Async and loading states
 
@@ -148,8 +148,8 @@ one is on its way, so you can dim the old one instead of emptying the page:
 :::demo loading
 
 ```tsx
-import { Boundary, resource } from '@weft-js/core'
-import { Spinner } from '@weft-js/warp'
+import { Boundary, resource } from '@kerf/core'
+import { Spinner } from '@kerf/veneer'
 
 function Report(props: { city: string }) {
   const report = resource((signal) =>
@@ -182,13 +182,13 @@ retries work, and how loaded data is rendered on the server.
 
 ## Text, media and shapes
 
-Some content needs to hold its place: text that hasn't arrived, text that streams, images, skeletons, canvases. Weft has
+Some content needs to hold its place: text that hasn't arrived, text that streams, images, skeletons, canvases. Kerf has
 a small module for each, so nothing moves as the page fills in:
 
 :::demo escape-stream
 
 ```tsx
-import { Text } from '@weft-js/core/text'
+import { Text } from '@kerf/core/text'
 
 export function Reply(props: { text: string }) {
   return <Text stream>{props.text}</Text>
@@ -196,7 +196,7 @@ export function Reply(props: { text: string }) {
 ```
 
 Read **[Text, media and shapes](/learn/text-media-and-shapes)** to learn about `<Text>`, `<Media>`,
-`<Boundary pending="shape">`, `<Surface>` and the `@weft-js/text` plugin.
+`<Boundary pending="shape">`, `<Surface>` and the `@kerf/text` plugin.
 
 ## Recap
 

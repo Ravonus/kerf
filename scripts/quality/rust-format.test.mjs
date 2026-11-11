@@ -21,7 +21,7 @@ function command(dir, cmd, args) {
 }
 
 function fixture(t) {
-  const dir = mkdtempSync(join(tmpdir(), 'weft-rust-format-'))
+  const dir = mkdtempSync(join(tmpdir(), 'kerf-rust-format-'))
   t.after(() => rmSync(dir, { recursive: true, force: true }))
   mkdirSync(join(dir, 'scripts/quality'), { recursive: true })
   copyFileSync(source, join(dir, 'scripts/quality/rust-format.mjs'))

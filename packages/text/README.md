@@ -1,10 +1,10 @@
 <p align="center">
-  <a href="https://github.com/Ravonus/weft">
-    <img src="https://raw.githubusercontent.com/Ravonus/weft/main/site/public/logo.svg" width="88" height="88" alt="Weft">
+  <a href="https://github.com/Ravonus/kerf">
+    <img src="https://raw.githubusercontent.com/Ravonus/kerf/main/site/public/logo.svg" width="88" height="88" alt="Kerf">
   </a>
 </p>
 
-<h1 align="center">@weft-js/text</h1>
+<h1 align="center">@kerf/text</h1>
 
 <p align="center">
   <strong>Fonts declared once, subset and fallback-matched at build time, and exact line breaking in the browser.</strong><br>
@@ -12,30 +12,30 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@weft-js/text"><img src="https://img.shields.io/npm/v/@weft-js/text?color=145c3c&label=npm" alt="npm version"></a>
-  <a href="https://github.com/Ravonus/weft/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
-  <a href="https://github.com/Ravonus/weft/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/weft/quality.yml?branch=main&label=checks" alt="checks"></a>
+  <a href="https://www.npmjs.com/package/@kerf/text"><img src="https://img.shields.io/npm/v/@kerf/text?color=145c3c&label=npm" alt="npm version"></a>
+  <a href="https://github.com/Ravonus/kerf/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-145c3c" alt="MIT license"></a>
+  <a href="https://github.com/Ravonus/kerf/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ravonus/kerf/quality.yml?branch=main&label=checks" alt="checks"></a>
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/docs">Docs</a> ·
-  <a href="https://github.com/Ravonus/weft/tree/main/examples">Examples</a> ·
-  <a href="https://github.com/Ravonus/weft/blob/main/CHANGELOG.md">Changelog</a> ·
-  <a href="https://github.com/Ravonus/weft">GitHub</a>
+  <a href="https://github.com/Ravonus/kerf/tree/main/docs">Docs</a> ·
+  <a href="https://github.com/Ravonus/kerf/tree/main/examples">Examples</a> ·
+  <a href="https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/Ravonus/kerf">GitHub</a>
 </p>
 
 > [!IMPORTANT]
 > **Early release (0.1.x).** APIs can change between minor versions. Pin the version and read the
-> [changelog](https://github.com/Ravonus/weft/blob/main/CHANGELOG.md) before you upgrade.
+> [changelog](https://github.com/Ravonus/kerf/blob/main/CHANGELOG.md) before you upgrade.
 
-Fonts and text for Weft. An app declares its fonts once, in `text()` in `weft.config.ts`. The build subsets each face,
+Fonts and text for Kerf. An app declares its fonts once, in `text()` in `kerf.config.ts`. The build subsets each face,
 writes a metric-matched fallback face so the swap doesn't shift layout, and preloads what's above the fold. The same
 plugin provides `text.measure`, the line breaking that canvas text and exact row heights need, loaded only when
 something measures.
 
-The package has four entries. `text()` (the main entry) is the plugin, `@weft-js/text/build` is the Node-only font
-build, and `@weft-js/text/measure` and `@weft-js/text/engine` are what a browser loads: nothing Node-only reaches them.
+The package has four entries. `text()` (the main entry) is the plugin, `@kerf/text/build` is the Node-only font
+build, and `@kerf/text/measure` and `@kerf/text/engine` are what a browser loads: nothing Node-only reaches them.
 
 ## Highlights
 
@@ -82,30 +82,30 @@ build, and `@weft-js/text/measure` and `@weft-js/text/engine` are what a browser
 
 ```bash
 # npm
-npm install @weft-js/text
+npm install @kerf/text
 
 # pnpm
-pnpm add @weft-js/text
+pnpm add @kerf/text
 
 # bun
-bun add @weft-js/text
+bun add @kerf/text
 ```
 
-Or let the `weft` CLI install it and add it to `weft.config.ts` in one step:
+Or let the `kerf` CLI install it and add it to `kerf.config.ts` in one step:
 
 ```bash
-npx weft add text
+npx kerf add text
 ```
 
-`weft add text` installs the package and adds `text()` to `plugins`. The `landing` template already lists it. `weft docs fonts` covers what an
+`kerf add text` installs the package and adds `text()` to `plugins`. The `landing` template already lists it. `kerf docs fonts` covers what an
 app uses from it.
 
 ## Quick start
 
 ```ts
-// weft.config.ts
-import { defineConfig } from '@weft-js/core/config'
-import { text } from '@weft-js/text'
+// kerf.config.ts
+import { defineConfig } from '@kerf/core/config'
+import { text } from '@kerf/text'
 
 export default defineConfig({
   plugins: [
@@ -136,7 +136,7 @@ body { font-family: "Inter", "Inter Fallback", sans-serif; }
 h1 { font-family: "Fraunces", "Fraunces Fallback", Georgia, serif; }
 ```
 
-There is nothing to import. `@weft-js/core/vite` loads the generated CSS in the client entry (Start) or the page (an
+There is nothing to import. `@kerf/core/vite` loads the generated CSS in the client entry (Start) or the page (an
 HTML app), and puts the preload links in the head.
 
 ## Fonts
@@ -150,7 +150,7 @@ Options of `text()`. Anything else is refused with the option's path (P115).
 | `fonts`   | `Record<string, Face>`     | `{}`        | Role to face. The keys are roles of your choosing; `body` and `display` are preloaded by default.            |
 | `subsets` | `Subset[]`                 | `['latin']` | Unicode ranges to cut every face to: `latin`, `latin-ext`, `cyrillic`, `cyrillic-ext`, `greek`, `greek-ext`, `vietnamese`. Must be non-empty. |
 | `measure` | `'auto' \| 'off'`          | `'auto'`    | `'auto'` provides `text.measure`, loaded lazily by what uses it; `'off'` leaves the slot unbound.            |
-| `engine`  | `'slim' \| 'pretext'`      | `'slim'`    | `'slim'` is `@weft-js/text/engine`; `'pretext'` is pinned upstream Pretext (33.9 KB br).                     |
+| `engine`  | `'slim' \| 'pretext'`      | `'slim'`    | `'slim'` is `@kerf/text/engine`; `'pretext'` is pinned upstream Pretext (33.9 KB br).                     |
 | `trim`    | `boolean`                  | `true`      | Pin custom axes the source never varies and load uncommon latin characters on demand. Builds only.           |
 
 ### Face options
@@ -170,7 +170,7 @@ Two roles on the same face (same family, `src`, weight and style) emit it once; 
 
 ### What the build does
 
-The build runs inside `@weft-js/core/vite`, through the `font.build@1` slot. For each face it:
+The build runs inside `@kerf/core/vite`, through the `font.build@1` slot. For each face it:
 
 1. Subsets the file per `unicode-range` (HarfBuzz, through `subset-font`) to hashed woff2 files. Results are cached
    by content hash, so an unchanged face isn't cut again.
@@ -184,7 +184,7 @@ The build runs inside `@weft-js/core/vite`, through the `font.build@1` slot. For
 The plugin also gives generated share cards the `display` and `body` faces, so their title and text are set in the
 app's fonts.
 
-`import 'weft:fonts'` still works and changes nothing. `import { preloads } from 'weft:fonts/preloads'` gives the
+`import 'kerf:fonts'` still works and changes nothing. `import { preloads } from 'kerf:fonts/preloads'` gives the
 preload list to a custom server.
 
 ### Trimming
@@ -192,7 +192,7 @@ preload list to a custom server.
 Font bytes are what hold back the largest paint on a text hero, so a build trims each face without being asked:
 
 - **Axes.** A custom axis (`SOFT`, `WONK`, `GRAD`…) is pinned to the one value your `font-variation-settings` give it,
-  or to the font's default if the source never sets it. An axis set to two values stays. A value Weft can't read from
+  or to the font's default if the source never sets it. An axis set to two values stays. A value Kerf can't read from
   the source (`var()`, a template, an expression) keeps every axis. `wght`, `wdth`, `opsz`, `slnt` and `ital` are never
   pinned: CSS drives them.
 - **Characters.** `latin` becomes two files. The core is preloaded: ASCII, common punctuation, and every other latin
@@ -203,7 +203,7 @@ Font bytes are what hold back the largest paint on a text hero, so a build trims
 > Only your own source is read. A pinned value applies to every use of the face, so an axis set at runtime or by a
 > dependency's CSS needs declaring: `axes: { SOFT: [0, 100] }`. `trim: false` turns all trimming off.
 
-`weft dev` always serves whole faces, so an axis you are editing responds.
+`kerf dev` always serves whole faces, so an axis you are editing responds.
 
 ### Using a face
 
@@ -214,11 +214,11 @@ rather than `system-ui` or a generic (X002): canvas and CSS can resolve those di
 ## Measuring text
 
 `text()` provides the `text.measure@1` slot, on the client and in workers. It is what canvas `s.text()` in a
-`<Surface>`, `measure()`, `lines()` and `fit()` from `@weft-js/core/text`, and a warp list given `text` use to know a
+`<Surface>`, `measure()`, `lines()` and `fit()` from `@kerf/core/text`, and a veneer list given `text` use to know a
 paragraph's height without rendering it. Nothing is loaded until one of them measures. Without the slot, canvas
-`s.text()` fails with P101; on `webgl2` the mirror is the visible text and no plugin is needed. See `weft docs surface`.
+`s.text()` fails with P101; on `webgl2` the mirror is the visible text and no plugin is needed. See `kerf docs surface`.
 
-`engine: 'slim'` (the default) loads `@weft-js/text/engine`. `engine: 'pretext'` loads upstream `@chenglou/pretext`
+`engine: 'slim'` (the default) loads `@kerf/text/engine`. `engine: 'pretext'` loads upstream `@chenglou/pretext`
 behind the same calls.
 
 ### The engine
@@ -228,7 +228,7 @@ Pretext does the hard part: it ports Blink's, WebKit's and Gecko's line breaking
 JavaScript, so a paragraph's height comes from arithmetic over canvas widths instead of DOM reflow. This package
 changes none of that logic. It specialises Pretext per engine, cuts its tables down to a base alphabet, moves the
 rest into lazy chunks, and puts a small "lite" tier in front for plain Latin and emoji text. Credit for the
-engine goes to Pretext. Bugs in the slicing are ours. Research and numbers: [archived research](https://github.com/Ravonus/weft/blob/archive/evals-2026-11/docs/research/12-text-engine-slim.md).
+engine goes to Pretext. Bugs in the slicing are ours. Research and numbers: [archived research](https://github.com/Ravonus/kerf/blob/archive/evals-2026-11/docs/research/12-text-engine-slim.md).
 
 `loadTextEngine()` picks the engine from the user agent the way Pretext's `getLayoutEngine()` does: `Firefox/` is
 Gecko, `AppleWebKit/537.36` is Blink, any other `AppleWebKit/` is WebKit (Safari, and every iOS browser), and anything
@@ -236,10 +236,10 @@ else is laid out as Blink. Only that engine's chunk loads.
 
 ### Engine API
 
-<!-- example: skip @weft-js/text/engine ships no type declarations yet, and text, width and lineHeight are yours -->
+<!-- example: skip @kerf/text/engine ships no type declarations yet, and text, width and lineHeight are yours -->
 
 ```ts
-import { loadTextEngine } from '@weft-js/text/engine'
+import { loadTextEngine } from '@kerf/text/engine'
 // Load only this browser's engine chunk.
 const te = await loadTextEngine()
 const h = te.prepare(text, '16px Inter', { whiteSpace: 'normal' })
@@ -250,8 +250,8 @@ const ranges = te.lines(h, width)
 te.clear()
 ```
 
-It follows Weft's `MeasureProvider` contract (`prepare`, `layout`, `lines`, `lineText`, `clear`, see
-[`src/types.ts`](https://github.com/Ravonus/weft/blob/main/packages/text/src/types.ts)).
+It follows Kerf's `MeasureProvider` contract (`prepare`, `layout`, `lines`, `lineText`, `clear`, see
+[`src/types.ts`](https://github.com/Ravonus/kerf/blob/main/packages/text/src/types.ts)).
 
 | Call                              | Returns                       | What it does                                                                                     |
 | --------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -287,10 +287,10 @@ A handle has `exact` and `ready`. While a pack it needs is still loading, `layou
 `exact: false`. Once `ready` settles the same handle is exact, so there's no need to prepare it again. Call
 `load(needs(...))` before preparing to never see an estimate:
 
-<!-- example: skip @weft-js/text/engine ships no type declarations yet, and text, width and lineHeight are yours -->
+<!-- example: skip @kerf/text/engine ships no type declarations yet, and text, width and lineHeight are yours -->
 
 ```ts
-import { loadTextEngine } from '@weft-js/text/engine'
+import { loadTextEngine } from '@kerf/text/engine'
 
 const te = await loadTextEngine()
 const font = '16px Inter'
@@ -311,17 +311,17 @@ Brotli 11 after terser, measured with `node scripts/specialize.mjs --no-rare` an
 | Gecko  | 16.57 KB (exact tier in base; no lite tier yet) | n/a               | 7.76 KB                           | complex 2.1, spacing 0.8               |
 
 Upstream `prepare` + `layout` + `clearCache` was 33.9 KB br for all engines in one file when research 12 measured it.
-The base figures include the 0.21 KB detector shell (`dist/index.js`). `pnpm --filter @weft-js/text size` writes the
+The base figures include the 0.21 KB detector shell (`dist/index.js`). `pnpm --filter @kerf/text size` writes the
 current figures to `dist/size.json`.
 
 ## API reference
 
 | Export                   | Side        | What it is                                                                                         |
 | ------------------------ | ----------- | -------------------------------------------------------------------------------------------------- |
-| `@weft-js/text`          | config      | `text(options?)`, the plugin for `weft.config.ts`: provides `font.build@1` and `text.measure@1`. Also `SUBSETS`, every subset the build can cut, and the `TextOptions`, `Face` and `Subset` types. |
-| `@weft-js/text/build`    | Node, build | `createFontBuild({ fonts, subsets, trim })`, the `font.build@1` provider, plus its helpers: `RANGES`, `BUDGET`, `rangeText`, `toRange`, `scanAxes`, `readAxes`, `pinned`, `fallbackFace`. |
-| `@weft-js/text/measure`  | browser     | `createMeasure({ engine })`, the `text.measure@1` provider: this package's engine, or upstream Pretext behind the same calls. Reached only through the slot's `import()`. |
-| `@weft-js/text/engine`   | browser     | `loadTextEngine(name?)` and `detectEngine(ua?)`: the built per-engine chunks behind a 0.21 KB detector. |
+| `@kerf/text`          | config      | `text(options?)`, the plugin for `kerf.config.ts`: provides `font.build@1` and `text.measure@1`. Also `SUBSETS`, every subset the build can cut, and the `TextOptions`, `Face` and `Subset` types. |
+| `@kerf/text/build`    | Node, build | `createFontBuild({ fonts, subsets, trim })`, the `font.build@1` provider, plus its helpers: `RANGES`, `BUDGET`, `rangeText`, `toRange`, `scanAxes`, `readAxes`, `pinned`, `fallbackFace`. |
+| `@kerf/text/measure`  | browser     | `createMeasure({ engine })`, the `text.measure@1` provider: this package's engine, or upstream Pretext behind the same calls. Reached only through the slot's `import()`. |
+| `@kerf/text/engine`   | browser     | `loadTextEngine(name?)` and `detectEngine(ua?)`: the built per-engine chunks behind a 0.21 KB detector. |
 
 <details>
 <summary>Slots provided</summary>
@@ -329,7 +329,7 @@ current figures to `dist/size.json`.
 | Slot              | Sides            | Provider                                         | When                    |
 | ----------------- | ---------------- | ------------------------------------------------ | ----------------------- |
 | `font.build@1`    | build            | `createFontBuild` from `plugin/build.mjs`        | Always                  |
-| `text.measure@1`  | client, worker   | `createMeasure` from `@weft-js/text/measure`     | Unless `measure: 'off'` |
+| `text.measure@1`  | client, worker   | `createMeasure` from `@kerf/text/measure`     | Unless `measure: 'off'` |
 
 The plugin asks for read access to `**/*.{woff2,woff,ttf,otf}` and nothing else.
 
@@ -380,14 +380,14 @@ An axis that stops responding in a build but works in dev was pinned by trimming
 
 ## Accuracy
 
-`pnpm --filter @weft-js/text test:accuracy` runs headless Chrome and WebKit. It compares every paragraph's line count
+`pnpm --filter @kerf/text test:accuracy` runs headless Chrome and WebKit. It compares every paragraph's line count
 with unmodified Pretext at 11 widths and with DOM heights at 320 and 480 px. It also compares `lines()` with
 `walkLineRanges()` on lite handles. The corpus covers Latin, hard Latin, emoji, Arabic, CJK, Thai and mixed text,
 1,000 paragraphs each. Fonts are Arial, Times New Roman, Georgia, Verdana and Helvetica.
 
 The bar is zero differences from upstream, and the 2026-10-28 run met it. Every DOM mismatch is one upstream has too.
 
-`pnpm --filter @weft-js/text test` (vitest, no browser) checks:
+`pnpm --filter @kerf/text test` (vitest, no browser) checks:
 
 - the restricted break scans against upstream's full ones, on the corpus and a fuzz over the alphabet, with and
   without the rare pack;
@@ -400,7 +400,7 @@ The bar is zero differences from upstream, and the 2026-10-28 run met it. Every 
 1. Bump `devDependencies["@chenglou/pretext"]` and run `npm pack @chenglou/pretext@<v>` into a clean folder. Check its
    sha256 and update the `pretext` block.
 2. Replace `vendor/pretext/src` and `vendor/pretext/LICENSE` with the tarball's. Leave out its tests.
-3. Run `pnpm --filter @weft-js/text gen` and check its output:
+3. Run `pnpm --filter @kerf/text gen` and check its output:
    - The specialiser fails loudly if a moved function or a profile field disappeared.
    - The printed fold count must stay explainable.
    - Profile folds only touch `profile.`, `engineProfile.` and `getEngineProfile().`.
@@ -413,30 +413,30 @@ The bar is zero differences from upstream, and the 2026-10-28 run met it. Every 
 
 | Package                                                                                   | What it is                                                                          |
 | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [`@weft-js/core`](https://www.npmjs.com/package/@weft-js/core)                | The compiler and runtime. `@weft-js/core/text` and `<Surface>` use `text.measure`; `@weft-js/core/vite` loads the font CSS. |
-| [`@weft-js/cli`](https://www.npmjs.com/package/@weft-js/cli)                  | `weft add text`, `weft docs fonts`, and `weft check` for the X codes.               |
-| [`@weft-js/warp`](https://www.npmjs.com/package/@weft-js/warp)                | The component library. A warp list given `text` measures rows through this package. |
-| [`@weft-js/plugin-media`](https://www.npmjs.com/package/@weft-js/plugin-media) | The image build: the other half of a fast first paint.                              |
-| [`@weft-js/create`](https://www.npmjs.com/package/@weft-js/create)            | `npm create @weft-js`; the `landing` template ships with `text()`.                  |
+| [`@kerf/core`](https://www.npmjs.com/package/@kerf/core)                | The compiler and runtime. `@kerf/core/text` and `<Surface>` use `text.measure`; `@kerf/core/vite` loads the font CSS. |
+| [`@kerf/cli`](https://www.npmjs.com/package/@kerf/cli)                  | `kerf add text`, `kerf docs fonts`, and `kerf check` for the X codes.               |
+| [`@kerf/veneer`](https://www.npmjs.com/package/@kerf/veneer)                | The component library. A veneer list given `text` measures rows through this package. |
+| [`@kerf/media`](https://www.npmjs.com/package/@kerf/media) | The image build: the other half of a fast first paint.                              |
+| [`create-kerf`](https://www.npmjs.com/package/create-kerf)            | `npm create kerf`; the `landing` template ships with `text()`.                  |
 
 ## Contributing
 
-See [CONTRIBUTING.md](https://github.com/Ravonus/weft/blob/main/CONTRIBUTING.md). The repo is one pnpm workspace; from
+See [CONTRIBUTING.md](https://github.com/Ravonus/kerf/blob/main/CONTRIBUTING.md). The repo is one pnpm workspace; from
 its root:
 
 | Command                                              | What it does                                                         |
 | ---------------------------------------------------- | -------------------------------------------------------------------- |
-| `pnpm --filter @weft-js/text gen`                    | Writes `gen/<engine>/` with `scripts/specialize.mjs`.                |
-| `pnpm --filter @weft-js/text test`                   | Regenerates, then runs the vitest suites.                            |
-| `pnpm --filter @weft-js/text build`                  | Regenerates and bundles `dist/` with terser.                         |
-| `pnpm --filter @weft-js/text size`                   | Writes brotli sizes per chunk to `dist/size.json`.                   |
-| `pnpm --filter @weft-js/text coverage`               | Finds prepare-time code that never runs, for the "rare" pack.        |
-| `pnpm --filter @weft-js/text typecheck`              | Regenerates, then type-checks.                                       |
-| `pnpm --filter @weft-js/text test:accuracy`          | The Chrome and WebKit accuracy run against upstream.                 |
-| `pnpm --filter @weft-js/text test:conformance`       | Builds, then runs the provider conformance check in Chrome and WebKit. |
+| `pnpm --filter @kerf/text gen`                    | Writes `gen/<engine>/` with `scripts/specialize.mjs`.                |
+| `pnpm --filter @kerf/text test`                   | Regenerates, then runs the vitest suites.                            |
+| `pnpm --filter @kerf/text build`                  | Regenerates and bundles `dist/` with terser.                         |
+| `pnpm --filter @kerf/text size`                   | Writes brotli sizes per chunk to `dist/size.json`.                   |
+| `pnpm --filter @kerf/text coverage`               | Finds prepare-time code that never runs, for the "rare" pack.        |
+| `pnpm --filter @kerf/text typecheck`              | Regenerates, then type-checks.                                       |
+| `pnpm --filter @kerf/text test:accuracy`          | The Chrome and WebKit accuracy run against upstream.                 |
+| `pnpm --filter @kerf/text test:conformance`       | Builds, then runs the provider conformance check in Chrome and WebKit. |
 
 ## License
 
-[MIT](https://github.com/Ravonus/weft/blob/main/LICENSE). The engine is built from
+[MIT](https://github.com/Ravonus/kerf/blob/main/LICENSE). The engine is built from
 [Pretext](https://github.com/chenglou/pretext) by Cheng Lou, MIT; its license ships as
-[`vendor/pretext/LICENSE`](https://github.com/Ravonus/weft/blob/main/packages/text/vendor/pretext/LICENSE).
+[`vendor/pretext/LICENSE`](https://github.com/Ravonus/kerf/blob/main/packages/text/vendor/pretext/LICENSE).

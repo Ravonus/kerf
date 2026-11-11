@@ -1,4 +1,4 @@
-// @weft-js/core/browser: browser events as reactive values (PLAN §4.2, research 07 §6): `online`, `visible`, `lifecycle`,
+// @kerf/core/browser: browser events as reactive values (PLAN §4.2, research 07 §6): `online`, `visible`, `lifecycle`,
 // `media`, `on`, `interval` and `tabs.channel` (research 32); `storage` is `state(…, { persist })` inside `defineState`
 // (§4.5).
 //
@@ -18,7 +18,7 @@ type Handlers = Set<Handler> & { h?: Handler }
 
 const targets = new WeakMap<EventTarget, Map<string, Handlers>>()
 
-/** Dev only: what is open right now and how to close it, for @weft-js/core/test's leak check (T012). */
+/** Dev only: what is open right now and how to close it, for @kerf/core/test's leak check (T012). */
 export const open = new Map<object, [what: string, close: () => void]>()
 
 const where = () => (devComponent.label ? ` in ${devComponent.label}` : '')
@@ -336,7 +336,7 @@ function channel<T>(name: string, schema: StandardSchema<T>): TabChannel<T> {
   owned(`tabs.channel('${name}')`)
   let line = lines.get(name)
   if (!line) {
-    const made: TabLine = { bc: new BroadcastChannel(`weft:tab:${name}`), refs: 0, fns: new Set() }
+    const made: TabLine = { bc: new BroadcastChannel(`kerf:tab:${name}`), refs: 0, fns: new Set() }
     // a snapshot: a handler can remove itself while this runs
     made.bc.onmessage = (e) => {
       for (const f of [...made.fns]) f(e.data)
@@ -352,7 +352,7 @@ function channel<T>(name: string, schema: StandardSchema<T>): TabChannel<T> {
     if (!ok) {
       if (DEV)
         console.warn(
-          `weft: tabs.channel('${name}') dropped a message its schema refuses (another deploy's tab?)`,
+          `kerf: tabs.channel('${name}') dropped a message its schema refuses (another deploy's tab?)`,
         )
       return
     }

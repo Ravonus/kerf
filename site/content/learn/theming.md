@@ -1,19 +1,19 @@
 # Theming
 
 :::learn
-- What Warp's six dials are, and how they set the look through `data-*` attributes
+- What Veneer's six dials are, and how they set the look through `data-*` attributes
 - How dark mode works, and how to add a theme switch that remembers the choice
 - How to scope a theme to part of a page
-- What the `--warp-*` tokens are, and how to set your brand colour and override a token safely
+- What the `--veneer-*` tokens are, and how to set your brand colour and override a token safely
 - How to name your own colours, retune the system, restyle each part, and ship named themes
 :::
 
-[Using Warp](/learn/warp) said that Warp's look comes from tokens, so it follows the theme and the dials with no change
+[Using Veneer](/learn/veneer) said that Veneer's look comes from tokens, so it follows the theme and the dials with no change
 to your code. This page is about those dials and tokens: what they are, how to set them for a whole app or one corner of
 a page, and how your own CSS and canvases can follow them too.
 
 To try all of it at once, open the [Theme studio](/components/theme-studio): every control there writes a key of
-`warp()`, real components take it as you go, and it hands you the config to paste into weft.config.ts.
+`veneer()`, real components take it as you go, and it hands you the config to paste into kerf.config.ts.
 
 :::demo style-dials
 
@@ -32,7 +32,7 @@ element for what's inside it:
 | `density` | `compact`, `cozy`, `comfortable` | `cozy` |
 | `motion` | `full`, `reduce` | follows the system's `prefers-reduced-motion` |
 | `fields` | `floating`, `classic` | `floating` |
-| `flair` | `sweep`, `none` | Warp's own choice per component |
+| `flair` | `sweep`, `none` | Veneer's own choice per component |
 
 - **theme** is light or dark.
 - **expression** is how much personality the page has. `quiet` is plain and calm, `balanced` is the default, and `vivid`
@@ -40,28 +40,28 @@ element for what's inside it:
 - **density** scales the space steps and control heights, for a dense admin table or a roomy marketing page.
 - **motion** turns animation down. Under `reduce`, an animation runs at most once and spinners become an opacity pulse.
 - **fields** puts every field's label in the border (`floating`) or above it (`classic`).
-- **flair** turns Warp's signature sweep on for buttons and surfaces too, or off.
+- **flair** turns Veneer's signature sweep on for buttons and surfaces too, or off.
 
 Because they are attributes, CSS does all the work. Switching a dial writes one attribute; no component runs again, and
 there is no theme object passed through your tree.
 
 :::note React developers
-In React a theme is often a context provider and a hook in every component that reads it. Weft has no theme context. The
+In React a theme is often a context provider and a hook in every component that reads it. Kerf has no theme context. The
 dials are attributes and the tokens are CSS custom properties, so the browser resolves them per element, on the server's
 HTML as much as on the client, and changing one never re-runs a component.
 :::
 
 ## Dark mode
 
-With no `data-theme` anywhere, Warp follows the system: a reader with a dark OS gets the dark theme, and it changes the
+With no `data-theme` anywhere, Veneer follows the system: a reader with a dark OS gets the dark theme, and it changes the
 moment they switch. Most apps can stop there.
 
-To let people choose, write the dial with `setDial` from `@weft-js/warp`. `persist: true` remembers the choice in
+To let people choose, write the dial with `setDial` from `@kerf/veneer`. `persist: true` remembers the choice in
 `localStorage`, and `auto` removes the attribute so the system decides again:
 
 ```tsx
-import { onMount, state } from '@weft-js/core'
-import { getDial, Segmented, setDial } from '@weft-js/warp'
+import { onMount, state } from '@kerf/core'
+import { getDial, Segmented, setDial } from '@kerf/veneer'
 
 type Theme = 'auto' | 'light' | 'dark'
 
@@ -93,19 +93,19 @@ export function ThemeSwitch() {
 }
 ```
 
-`setDial` checks the value (a wrong one throws a `RangeError`), writes the attribute, and fires a `warp:dial` event on
+`setDial` checks the value (a wrong one throws a `RangeError`), writes the attribute, and fires a `veneer:dial` event on
 the document with `{ name, value }` so other parts of the page can follow. It also takes `url: true` to put the dial in
 the address (`?theme=dark`), which is handy for sharing a screenshot's settings.
 
 ### No flash on load
 
 A persisted choice lives in the browser, but the server renders the page before any script runs. Without help, a reader
-who chose dark would see the light page for a moment. `dialScript` from `@weft-js/warp/plugin` is a tiny inline script
+who chose dark would see the light page for a moment. `dialScript` from `@kerf/veneer/plugin` is a tiny inline script
 that restores the saved dials before the first paint. Put it in `site.head`:
 
 ```ts
-import { defineConfig } from '@weft-js/core/config'
-import { dialScript, warp } from '@weft-js/warp/plugin'
+import { defineConfig } from '@kerf/core/config'
+import { dialScript, veneer } from '@kerf/veneer/plugin'
 
 export default defineConfig({
   site: {
@@ -113,7 +113,7 @@ export default defineConfig({
     title: '%s · Roastery',
     head: dialScript,
   },
-  plugins: [warp()],
+  plugins: [veneer()],
 })
 ```
 
@@ -128,7 +128,7 @@ default, and `dialScript` has already set the right attribute by the time anyone
 Dials nest. An attribute on any element applies to everything inside it, and the nearest one wins:
 
 ```tsx
-import { Card, Split, Stack, Text } from '@weft-js/warp'
+import { Card, Split, Stack, Text } from '@kerf/veneer'
 
 export function Layout() {
   return (
@@ -159,70 +159,70 @@ attribute itself is simpler, as in the demo: `data-theme={theme.value}`.
 
 ## Tokens
 
-Every value Warp draws with is a CSS custom property named `--warp-*`. A few of the families:
+Every value Veneer draws with is a CSS custom property named `--veneer-*`. A few of the families:
 
 | Family | Examples |
 |---|---|
-| Surfaces | `--warp-color-page`, `--warp-color-surface`, `--warp-color-surface-raised`, `--warp-color-surface-sunken` |
-| Text | `--warp-color-text`, `--warp-color-text-subtle`, `--warp-color-text-faint` |
-| Tones | `--warp-color-<tone>-solid`, `-soft`, `-text`, `-border`, `-on-solid`, for each of `neutral`, `accent`, `positive`, `caution`, `critical`, `info` |
-| Space | `--warp-space-hair` … `--warp-space-page` |
-| Shape | `--warp-radius-control`, `--warp-radius-surface`, `--warp-radius-round`, `--warp-elevation-1` … `-3` |
-| Type | `--warp-text-<role>-size`, `-leading`, `-weight`; `--warp-font-sans`, `--warp-font-display`, `--warp-font-mono` |
-| Motion | `--warp-duration-fast`, `--warp-duration-base`, `--warp-ease-out`, `--warp-ease-spring` |
+| Surfaces | `--veneer-color-page`, `--veneer-color-surface`, `--veneer-color-surface-raised`, `--veneer-color-surface-sunken` |
+| Text | `--veneer-color-text`, `--veneer-color-text-subtle`, `--veneer-color-text-faint` |
+| Tones | `--veneer-color-<tone>-solid`, `-soft`, `-text`, `-border`, `-on-solid`, for each of `neutral`, `accent`, `positive`, `caution`, `critical`, `info` |
+| Space | `--veneer-space-hair` … `--veneer-space-page` |
+| Shape | `--veneer-radius-control`, `--veneer-radius-surface`, `--veneer-radius-round`, `--veneer-elevation-1` … `-3` |
+| Type | `--veneer-text-<role>-size`, `-leading`, `-weight`; `--veneer-font-sans`, `--veneer-font-display`, `--veneer-font-mono` |
+| Motion | `--veneer-duration-fast`, `--veneer-duration-base`, `--veneer-ease-out`, `--veneer-ease-spring` |
 
 The dials change their values, so your own CSS that reads them follows the theme for free:
 
 ```css
 /* src/app.css */
 .receipt {
-  background: var(--warp-color-surface-sunken);
-  color: var(--warp-color-text-subtle);
-  border-radius: var(--warp-radius-surface);
-  padding: var(--warp-space-group);
-  transition: background var(--warp-duration-base)
-    var(--warp-ease-out);
+  background: var(--veneer-color-surface-sunken);
+  color: var(--veneer-color-text-subtle);
+  border-radius: var(--veneer-radius-surface);
+  padding: var(--veneer-space-group);
+  transition: background var(--veneer-duration-base)
+    var(--veneer-ease-out);
 }
 ```
 
 That rule is right in light and dark, at every density, and under reduced motion. The same rule with `#f6f6f6` and
 `16px` would be D001 and D002, and would stay light in dark mode.
 
-`weft tokens` writes the resolved tokens to `.weft/tokens/` as DTCG 2025.10, one file per theme and expression, for
+`kerf tokens` writes the resolved tokens to `.kerf/tokens/` as DTCG 2025.10, one file per theme and expression, for
 Figma, Style Dictionary or Terrazzo.
 
 ## Your brand: the seed
 
-Warp's colours are derived from a **seed**. Give `warp()` your brand accent and every accent token, in both themes and
+Veneer's colours are derived from a **seed**. Give `veneer()` your brand accent and every accent token, in both themes and
 at every expression, is worked out from it:
 
 ```ts
-import { defineConfig } from '@weft-js/core/config'
-import { warp } from '@weft-js/warp/plugin'
+import { defineConfig } from '@kerf/core/config'
+import { veneer } from '@kerf/veneer/plugin'
 
 export default defineConfig({
-  plugins: [warp({ seed: { accent: '#0a7d4f' } })],
+  plugins: [veneer({ seed: { accent: '#0a7d4f' } })],
 })
 ```
 
-The build runs Warp's contrast check on the result: every text and fill pair, and the focus ring, at every dial stop.
-Warp fits the seed so that it passes; what can still fail is a token you override yourself.
+The build runs Veneer's contrast check on the result: every text and fill pair, and the focus ring, at every dial stop.
+Veneer fits the seed so that it passes; what can still fail is a token you override yourself.
 
 ## Overriding a token
 
-`tokens` in `warp()` sets any `--warp-*` token for the whole app, and `radius` and `fonts` are shortcuts for the common
+`tokens` in `veneer()` sets any `--veneer-*` token for the whole app, and `radius` and `fonts` are shortcuts for the common
 ones:
 
 ```ts
-import { defineConfig } from '@weft-js/core/config'
-import { warp } from '@weft-js/warp/plugin'
+import { defineConfig } from '@kerf/core/config'
+import { veneer } from '@kerf/veneer/plugin'
 
 export default defineConfig({
   plugins: [
-    warp({
+    veneer({
       radius: 'round',
       fonts: { display: 'Fraunces' },
-      tokens: { '--warp-color-page': 'oklch(0.98 0.01 85)' },
+      tokens: { '--veneer-color-page': 'oklch(0.98 0.01 85)' },
     }),
   ],
 })
@@ -232,7 +232,7 @@ Each override goes through the same contrast check. If a page colour leaves body
 fails with D010 and lists each failing pair, so a brand tweak can't quietly make the app unreadable in dark mode.
 
 :::deepdive How the overrides land
-The plugin writes your overrides into `@layer warp.base`, a later layer than `warp.tokens`, on `:root` and on every
+The plugin writes your overrides into `@layer veneer.base`, a later layer than `veneer.tokens`, on `:root` and on every
 element that carries a dial. That last part matters: each dial scope recomputes the tokens below it, so an override set
 only on `:root` would be undone inside a `data-expression` scope. Writing it on every scope root keeps your value
 everywhere, and keeping it in a layer means your own unlayered CSS can still change it locally.
@@ -240,17 +240,17 @@ everywhere, and keeping it in a layer means your own unlayered CSS can still cha
 
 ## Your own colours, parts and themes
 
-The seed and tokens retune what Warp already draws. For more than that, `warp()` takes four more options. They work
+The seed and tokens retune what Veneer already draws. For more than that, `veneer()` takes four more options. They work
 like a Tailwind config: name things once, then use the names everywhere.
 
 ```ts
-import { defineConfig } from '@weft-js/core/config'
-import { warp } from '@weft-js/warp/plugin'
+import { defineConfig } from '@kerf/core/config'
+import { veneer } from '@kerf/veneer/plugin'
 
 export default defineConfig({
   plugins: [
-    warp({
-      // Named colours: --warp-color-brand, tone="brand",
+    veneer({
+      // Named colours: --veneer-color-brand, tone="brand",
       // and bg-brand in Tailwind
       colors: { brand: '#e8590c', ink: '#1b1b1f' },
       // The system's own scales, app-wide
@@ -286,7 +286,7 @@ export default defineConfig({
 })
 ```
 
-- **colors** names a colour. Each becomes a token, `--warp-color-brand`, and a tone: `<Button tone="brand">` gets the
+- **colors** names a colour. Each becomes a token, `--veneer-color-brand`, and a tone: `<Button tone="brand">` gets the
   full set of fills, hovers and text that the built-in tones have. Every option below takes the name.
 - **system** retunes the scales every component reads: `radius`, `space`, `pad`, `control` heights, `font`, `shadow`,
   `duration`, `ease`, `border`, `icon` and the `text` roles.
@@ -301,11 +301,11 @@ A part that sets a button's fill moves its tone's channels, not just `background
 and the sweep all follow it. The build checks text against the fill it sits on, so `text: 'white'` on a light brand is
 D010, with the ratio.
 
-To switch themes at run time, `setPalette` works like `setDial`, and `dials: { palette: 'ocean' }` in `warp()` makes one
+To switch themes at run time, `setPalette` works like `setDial`, and `dials: { palette: 'ocean' }` in `veneer()` makes one
 the default:
 
 ```tsx
-import { setPalette } from '@weft-js/warp'
+import { setPalette } from '@kerf/veneer'
 
 export function OceanButton() {
   return (
@@ -321,12 +321,12 @@ other dials.
 
 ## Canvas and surfaces follow too
 
-A canvas has no CSS, so it can't read a custom property by itself. A surface from `@weft-js/core/surface` gets the
+A canvas has no CSS, so it can't read a custom property by itself. A surface from `@kerf/core/surface` gets the
 tokens on `s.tokens`, by camelCase name, as `{ css, linear }`. Reading one inside `s.draw` makes the drawing repaint when
 the theme changes:
 
 ```tsx
-import { defineSurface, Surface } from '@weft-js/core/surface'
+import { defineSurface, Surface } from '@kerf/core/surface'
 
 export const Fill = defineSurface<{ ratio: number }, 'canvas2d'>(
   {
@@ -355,18 +355,18 @@ export function Progress() {
 }
 ```
 
-`s.tokens.colorAccentSolid` reads `--color-accent-solid` if your page defines it, else `--warp-color-accent-solid`. The
+`s.tokens.colorAccentSolid` reads `--color-accent-solid` if your page defines it, else `--veneer-color-accent-solid`. The
 [Surfaces reference](/reference/surface) covers the rest of `s`.
 
 ## Recap
 
 - Six dials set the look: `theme`, `expression`, `density`, `motion`, `fields`, `flair`. Each is a `data-*` attribute on
   `<html>` or any element, and the nearest one wins.
-- With no `data-theme`, Warp follows the system. `setDial('theme', …, { persist: true })` plus `dialScript` in
+- With no `data-theme`, Veneer follows the system. `setDial('theme', …, { persist: true })` plus `dialScript` in
   `site.head` gives a remembered choice with no flash.
 - Read and write dials in `onMount` or handlers, never while rendering on the server.
-- Tokens are `--warp-*` custom properties. Use them in your own CSS and it follows every dial.
-- `warp({ seed, radius, fonts, tokens })` sets the brand; every override is contrast-checked, and a failing one is D010.
+- Tokens are `--veneer-*` custom properties. Use them in your own CSS and it follows every dial.
+- `veneer({ seed, radius, fonts, tokens })` sets the brand; every override is contrast-checked, and a failing one is D010.
 - `colors`, `system`, `parts` and `themes` name your own colours, retune the scales, restyle each element per state, and
   ship named looks that `data-palette` or `setPalette` switch.
 
@@ -377,8 +377,8 @@ Write a `DarkToggle` component: a `Switch` labelled "Dark mode" that sets the pa
 to the system's choice when off, and remembers it across visits.
 :::solution
 ```tsx
-import { onMount, state } from '@weft-js/core'
-import { getDial, setDial, Switch } from '@weft-js/warp'
+import { onMount, state } from '@kerf/core'
+import { getDial, setDial, Switch } from '@kerf/veneer'
 
 export function DarkToggle() {
   const dark = state(false)
@@ -410,7 +410,7 @@ Your marketing page is `vivid`, but its pricing table should read calmly. Withou
 section below quiet and compact.
 
 ```tsx
-import { Card, Grid, Text } from '@weft-js/warp'
+import { Card, Grid, Text } from '@kerf/veneer'
 
 export function Pricing() {
   return (
@@ -425,7 +425,7 @@ export function Pricing() {
 ```
 :::solution
 ```tsx
-import { Card, Grid, Text } from '@weft-js/warp'
+import { Card, Grid, Text } from '@kerf/veneer'
 
 export function Pricing() {
   return (
@@ -464,11 +464,11 @@ This stylesheet looks right in light mode and wrong in dark. Rewrite it with tok
 :::solution
 ```css
 .note {
-  background: var(--warp-color-caution-soft);
-  color: var(--warp-color-caution-text);
-  border: var(--warp-border-hairline) solid
-    var(--warp-color-caution-border);
-  border-radius: var(--warp-radius-surface);
+  background: var(--veneer-color-caution-soft);
+  color: var(--veneer-color-caution-text);
+  border: var(--veneer-border-hairline) solid
+    var(--veneer-color-caution-border);
+  border-radius: var(--veneer-radius-surface);
 }
 ```
 

@@ -61,7 +61,7 @@ export async function devStyles(env, manifest, abs, entry) {
       const mod =
         (await env.moduleGraph.getModuleByUrl(url).catch(() => undefined)) ??
         (await env.moduleGraph.ensureEntryFromUrl(url).catch(() => undefined))
-      if (!mod || seen.has(mod) || mod.id?.startsWith('\0virtual:weft/routes')) return // routes import every route
+      if (!mod || seen.has(mod) || mod.id?.startsWith('\0virtual:kerf/routes')) return // routes import every route
       seen.add(mod)
       await env.transformRequest(mod.url).catch(() => {})
       for (const next of mod.importedModules) {
@@ -160,7 +160,7 @@ export function skeletonExport(file) {
 
 /** Whether a source specifier can name a non-module stylesheet or token sheet. */
 export function shapeStyleSpecifier(spec) {
-  return /(?<!\.module)\.css$/.test(spec) || /^weft:tokens\/[\w/-]+$/.test(spec)
+  return /(?<!\.module)\.css$/.test(spec) || /^kerf:tokens\/[\w/-]+$/.test(spec)
 }
 
 // Inline CSS is data until a consumer applies it. Other dependencies remain unproven.
@@ -198,7 +198,7 @@ export function shapeSignature(file) {
 }
 
 /**
- * The routes table's stylesheets and `shapeEntry`. A stylesheet edit in `weft dev` lands here instead of reloading the
+ * The routes table's stylesheets and `shapeEntry`. A stylesheet edit in `kerf dev` lands here instead of reloading the
  * page: a shape reads its CSS when it's shown.
  */
 function shapeStyles(files) {
@@ -210,9 +210,9 @@ function shapeStyles(files) {
 const styles = [${requests.map((_, i) => `style${i}`).join(', ')}]
 ${accept}const shapeEntry = (module, sheets, name, kind) => {
   const component = Reflect.get(module, name)
-  const groupCss = Reflect.get(module, '$weftShapeCss')
+  const groupCss = Reflect.get(module, '$kerfShapeCss')
   const lead = typeof groupCss === 'string' && groupCss ? [groupCss] : []
-  const thin = kind === 'generated' && Reflect.get(module, '$weftShapeThin') === true
+  const thin = kind === 'generated' && Reflect.get(module, '$kerfShapeThin') === true
   return typeof component === 'function'
     ? { kind, component, css: null, get cssText() { return [...lead, ...sheets.map((i) => styles[i])] }, cssStatus: 'partial', bytes: null, thin }
     : { kind: 'unavailable', reason: 'missing-shape', css: null, bytes: null }
@@ -230,7 +230,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
   const shape = (
     file,
     name = 'default$shape',
-    request = file + '?weft-shape',
+    request = file + '?kerf-shape',
     kind = 'generated',
   ) => {
     if (!shapeFiles.has(request)) shapeFiles.set(request, shapeFiles.size)
@@ -253,7 +253,7 @@ export function clientRoutes(manifest, abs, plan, css = {}) {
     if (!/\.[jt]sx$/.test(file))
       return `${id}: { kind: 'unavailable', reason: 'unsupported-file', css: null, bytes: null }`
     if (kind === 'custom') {
-      const request = `virtual:weft/shape-override/${encodeURIComponent(file)}.tsx`
+      const request = `virtual:kerf/shape-override/${encodeURIComponent(file)}.tsx`
       return `${id}: ${shape(file, 'default', request, 'override')}`
     }
     return `${id}: ${shape(file)}`

@@ -1,4 +1,4 @@
-import { Card, Markdown } from '@weft-js/warp'
+import { Card, Markdown } from '@kerf/veneer'
 import { COMMENT } from './markdown-data'
 
 export const MarkdownComment = () => (

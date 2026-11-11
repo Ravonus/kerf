@@ -8,10 +8,10 @@ const slugOf = (name) => name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase
 const oneLine = (text) => text.replace(/\s+/g, ' ').trim()
 
 const toolkitPaths = {
-  weft: ['../core/src/index.ts'],
-  'weft/*': ['../core/src/*'],
-  '@weft-js/warp-core': ['../warp-core/src/index.ts'],
-  '@weft-js/warp-icons': ['../warp-icons/src/gen/index.tsx'],
+  kerf: ['../core/src/index.ts'],
+  'kerf/*': ['../core/src/*'],
+  '@kerf/veneer-core': ['../veneer-core/src/index.ts'],
+  '@kerf/veneer-icons': ['../veneer-icons/src/gen/index.tsx'],
 }
 
 function readProps(decl, param, checker) {
@@ -87,7 +87,7 @@ function readProps(decl, param, checker) {
 }
 
 export function readToolkit(repo) {
-  const warp = join(repo, 'packages/warp')
+  const veneer = join(repo, 'packages/veneer')
   const parsed = ts.parseJsonConfigFileContent(
     {
       compilerOptions: {
@@ -105,11 +105,11 @@ export function readToolkit(repo) {
       files: ['src/index.ts'],
     },
     ts.sys,
-    warp,
+    veneer,
   )
   const program = ts.createProgram(parsed.fileNames, parsed.options)
   const checker = program.getTypeChecker()
-  const entry = program.getSourceFile(join(warp, 'src/index.ts'))
+  const entry = program.getSourceFile(join(veneer, 'src/index.ts'))
   const out = []
   for (let sym of checker.getExportsOfModule(checker.getSymbolAtLocation(entry))) {
     const name = sym.name
@@ -124,7 +124,7 @@ export function readToolkit(repo) {
     const param = sig.parameters[0]
     const props = readProps(decl, param, checker)
     const doc = oneLine(ts.displayPartsToString(sym.getDocumentationComment(checker)))
-    const rel = relative(warp, file)
+    const rel = relative(veneer, file)
     const body = decl.getText()
     const parts = [...new Set([...body.matchAll(/data-part="([a-z-]+)"/g)].map((m) => m[1]))]
     const scope = /data-scope="([a-z-]+)"/.exec(body)?.[1]
@@ -136,7 +136,7 @@ export function readToolkit(repo) {
     out.push({
       name,
       slug: slugOf(name),
-      file: `packages/warp/${rel}`,
+      file: `packages/veneer/${rel}`,
       doc,
       props,
       parts,

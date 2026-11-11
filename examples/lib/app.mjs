@@ -55,16 +55,16 @@ export function detect(pkg) {
   )
 }
 
-/** A `scaffold` variant is what create-weft writes today, regenerated each load, so nothing under examples can fork it. */
+/** A `scaffold` variant is what create-kerf writes today, regenerated each load, so nothing under examples can fork it. */
 function generate(app, name, options) {
   const dir = join(
-    process.env.BENCH_WORK ?? join(homedir(), '.cache/weft-app-bench'),
+    process.env.BENCH_WORK ?? join(homedir(), '.cache/kerf-app-bench'),
     'gen',
     app,
     name,
   )
   const { scaffold } = createRequire(import.meta.url)(
-    join(here, '../packages/create/src/index.mjs'),
+    join(here, '../packages/create-kerf/src/index.mjs'),
   )
   rmSync(dir, { recursive: true, force: true })
   // A fixed secret: the default is random, and would change the build key every load.
@@ -106,7 +106,7 @@ function resolveVariant(name, spec, app, dir) {
     start: spec.start ?? (pkg.scripts?.start ? 'npm run start' : null),
     src: spec.src ?? ['src'],
     publicDir: spec.publicDir ?? 'public',
-    tarballs: stack.family === 'weft',
+    tarballs: stack.family === 'kerf',
   }
 }
 

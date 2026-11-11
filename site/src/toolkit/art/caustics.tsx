@@ -1,4 +1,4 @@
-import { DitherField } from '@weft-js/warp'
+import { DitherField } from '@kerf/veneer'
 import { type ArtProps, type Meta } from './shared'
 import code from './caustics.tsx?raw'
 
@@ -17,7 +17,7 @@ const SIZE = 4096,
   PART = SIZE / (PI * 2)
 const sin = (v: number) => WAVE[(v * PART + SIZE * 512) & (SIZE - 1)]!
 
-// Where a warped wave crosses zero there is a thin bright line. Two sheets of those cross and knot into a net.
+// Where a veneered wave crosses zero there is a thin bright line. Two sheets of those cross and knot into a net.
 function sheet(x: number, y: number, t: number) {
   const u = x * 5.2 + 1.5 * sin(y * 3.1 + t * 0.3),
     w = y * 5.6 + 1.5 * sin(x * 2.7 - t * 0.27),
@@ -42,9 +42,9 @@ export default function Caustics({ live = true }: ArtProps) {
       pattern="blue"
       ramp={[
         'none',
-        '--warp-color-info-soft',
-        '--warp-color-info-border',
-        '--warp-color-info-text',
+        '--veneer-color-info-soft',
+        '--veneer-color-info-border',
+        '--veneer-color-info-text',
       ]}
       cell={3}
       gain={1.5}

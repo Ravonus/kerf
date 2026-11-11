@@ -1,21 +1,21 @@
 {
-  "name": "@weft-js/agent",
-  "version": "0.1.4",
-  "description": "@weft-js/agent: an assistant that runs your app. Server functions become its tools by opting in, with grants per role and per token, conversations, usage, and bridges to Claude, the Claude CLI or your own Rust",
+  "name": "@kerf/agent",
+  "version": "0.1.0",
+  "description": "@kerf/agent: an assistant that runs your app. Server functions become its tools by opting in, with grants per role and per token, conversations, usage, and bridges to Claude, the Claude CLI or your own Rust",
   "keywords": [
     "agent",
     "claude",
     "mcp",
-    "weft"
+    "kerf"
   ],
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/agent#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/agent#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/agent"
   },
   "files": [
@@ -48,17 +48,17 @@
     "typescript": "6.0.3"
   },
   "devDependencies": {
-    "@weft-js/cli": "workspace:*",
-    "@weft-js/core": "workspace:*",
-    "@weft-js/start": "workspace:*",
+    "@kerf/cli": "workspace:*",
+    "@kerf/core": "workspace:*",
+    "@kerf/start": "workspace:*",
     "drizzle-orm": "0.45.4",
     "vitest": "5.0.5",
     "zod": "4.6.7"
   },
   "peerDependencies": {
     "@anthropic-ai/sdk": "^1.0.0",
-    "@weft-js/core": "*",
-    "@weft-js/start": "*",
+    "@kerf/core": "*",
+    "@kerf/start": "*",
     "drizzle-orm": "^0.45.0",
     "zod": "^4.0.0"
   },

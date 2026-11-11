@@ -1,0 +1,50 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Progress: linear, circular, indeterminate ------------------------------------- */
+:where([data-scope="progress"][data-part="root"]) { display: grid; gap: var(--veneer-space-tight); min-inline-size: 0; }
+:where([data-scope="progress"] [data-part="label-row"]:not([data-scope="progress"] [data-scope="meter"] *:not([data-scope="progress"] [data-scope="meter"] [data-scope="progress"] *))) { display: flex; justify-content: space-between; gap: var(--veneer-space-related); font-size: var(--veneer-text-caption-size); color: var(--veneer-color-text-subtle); }
+:where([data-scope="progress"] [data-part="label-row"]:not([data-scope="progress"] [data-scope="meter"] *:not([data-scope="progress"] [data-scope="meter"] [data-scope="progress"] *)) > :first-child) { color: var(--veneer-color-text); font-weight: 500; }
+:where([data-scope="progress"] [data-part="value-text"]) { font-variant-numeric: tabular-nums; }
+:where([data-scope="progress"] [data-part="track"]:not([data-scope="progress"] :is([data-scope="agenda"],[data-scope="meter"],[data-scope="slider"],[data-scope="switch"]) *:not([data-scope="progress"] :is([data-scope="agenda"],[data-scope="meter"],[data-scope="slider"],[data-scope="switch"]) [data-scope="progress"] *))) {
+  position: relative; overflow: clip; block-size: calc(4px - 1px * var(--veneer-x)); border-radius: var(--veneer-radius-round);
+  background: var(--veneer-color-surface-active);
+}
+:where([data-scope="progress"] [data-part="range"]:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) *:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) [data-scope="progress"] *))) {
+  position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: 100%; border-radius: inherit;
+  background: var(--_solid);
+  /* the fill moves through the rail: clip, not scale, so the leading edge keeps its radius */
+  clip-path: inset(0 calc(100% - var(--_v, 0) * 100%) 0 0 round var(--veneer-radius-round));
+  transition: clip-path var(--veneer-sweep-duration) var(--veneer-sweep-ease);
+}
+:where([data-scope="progress"][data-state="indeterminate"] [data-part="range"]:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) *:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) [data-scope="progress"] *))) {
+  inline-size: 38%; clip-path: none;
+  animation: veneer-indeterminate calc(1400ms * (2 - var(--veneer-motion-scale))) var(--veneer-ease-in-out) infinite;
+}
+@keyframes veneer-indeterminate {
+  from { translate: -100% 0; opacity: calc(0.35 + 0.65 * var(--veneer-motion-scale)); }
+  50% { opacity: 1; }
+  to { translate: calc(100% / 0.38 * var(--veneer-motion-scale) + 0% ) 0; opacity: calc(0.35 + 0.65 * var(--veneer-motion-scale)); }
+}
+:where([data-scope="progress"][data-shape="circle"]) { display: inline-grid; place-items: center; inline-size: var(--_size, 48px); block-size: var(--_size, 48px); }
+:where([data-scope="progress"][data-shape="circle"] svg) { grid-area: 1 / 1; inline-size: 100%; block-size: 100%; rotate: -90deg; overflow: visible; }
+:where([data-scope="progress"][data-shape="circle"] circle) { fill: none; stroke-width: calc(3px - 0.5px * var(--veneer-x)); }
+:where([data-scope="progress"][data-shape="circle"] [data-part="track"]:not([data-scope="progress"] :is([data-scope="agenda"],[data-scope="meter"],[data-scope="slider"],[data-scope="switch"]) *:not([data-scope="progress"] :is([data-scope="agenda"],[data-scope="meter"],[data-scope="slider"],[data-scope="switch"]) [data-scope="progress"] *))) { stroke: var(--veneer-color-surface-active); block-size: auto; background: none; }
+:where([data-scope="progress"][data-shape="circle"] [data-part="range"]:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) *:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) [data-scope="progress"] *))) {
+  stroke: var(--_solid); stroke-linecap: round; position: static; scale: 1;
+  stroke-dasharray: 100 100; stroke-dashoffset: calc(100 - var(--_v, 0) * 100);
+  transition: stroke-dashoffset var(--veneer-duration-slow) var(--veneer-ease-out);
+}
+:where([data-expression="vivid"] [data-scope="progress"][data-shape="circle"] [data-part="range"]:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) *:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) [data-scope="progress"] *))) { stroke-linecap: butt; }
+:where([data-scope="progress"][data-shape="circle"] [data-part="value-text"]) { grid-area: 1 / 1; font: 500 11px/1 var(--veneer-font-mono); }
+
+
+/* -- Reduced motion (review 02 M6, review 03 M11). veneer.base stops every loop under reduce
+   (skeletons go still, spinners and indeterminate bars pulse in opacity only). Components add
+   one thing: the indeterminate bar fills its track, so the still, pulsing state reads as
+   "working", not as a stuck 38% value. -------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+:where(:root:not([data-motion="full"])) :where([data-scope="progress"][data-state="indeterminate"] [data-part="range"]:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) *:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) [data-scope="progress"] *))) { inline-size: 100%; translate: none; }
+}
+
+:where([data-motion="reduce"]) :where([data-scope="progress"][data-state="indeterminate"] [data-part="range"]:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) *:not([data-scope="progress"] :is([data-scope="availability"],[data-scope="meter"],[data-scope="slider"]) [data-scope="progress"] *))) { inline-size: 100%; translate: none; }
+}

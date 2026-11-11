@@ -17,9 +17,9 @@ it's published, unless you'd rather not be named.
 
 ## What's supported
 
-Weft is young, so only the latest published version of each `@weft-js/*` package gets security fixes.
+Kerf is young, so only the latest published version of each `@kerf/*` package gets security fixes.
 
 ## In scope
 
-The packages in this repository, the compiler, and what `npm create @weft-js` generates. A problem in a dependency is in scope
-if Weft's use of it makes it exploitable. Otherwise, please report it to that project.
+The packages in this repository, the compiler, and what `npm create kerf` generates. A problem in a dependency is in scope
+if Kerf's use of it makes it exploitable. Otherwise, please report it to that project.

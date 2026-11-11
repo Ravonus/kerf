@@ -87,7 +87,7 @@ export type SubEntry = [
   cursor?: string,
   buffer?: number,
 ]
-/** The body of `/_weft/rt`: the cursor, subscriptions to add, and subscriptions to drop. */
+/** The body of `/_kerf/rt`: the cursor, subscriptions to add, and subscriptions to drop. */
 export interface Body {
   k?: string
   c?: string | undefined
@@ -162,9 +162,9 @@ export interface Hub {
   close(c: Conn): void
   find(k: string): Conn | undefined
   connections(): Conn[]
-  /** @weft-js/core/test: a message straight to every reader of a stream. */
+  /** @kerf/core/test: a message straight to every reader of a stream. */
   push(id: string, msg: unknown): number
-  /** Server-side counts for tests and `weft browser`. */
+  /** Server-side counts for tests and `kerf browser`. */
   stats(): { connections: number; subscriptions: number; channels: number }
   /** The live mode this server settled on: `.liveMode` on the client, and health routes. */
   live(): LiveState

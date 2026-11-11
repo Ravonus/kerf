@@ -1,4 +1,4 @@
-import { Text, Ticker } from '@weft-js/warp'
+import { Text, Ticker } from '@kerf/veneer'
 
 export const TickerPlay = (p: {
   value: number

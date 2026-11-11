@@ -1,5 +1,5 @@
-// The weft() Vite plugin's feature imports: an app pays for @weft-js/core/persist and @weft-js/core/history only where it uses them.
-import weft from '../vite.mjs'
+// The kerf() Vite plugin's feature imports: an app pays for @kerf/core/persist and @kerf/core/history only where it uses them.
+import kerf from '../vite.mjs'
 
 type Hook = {
   name: string
@@ -8,7 +8,7 @@ type Hook = {
     handler: (code: string, id: string) => { code: string } | undefined
   }
 }
-const features = (weft() as unknown[] as Hook[]).find((p) => p.name === 'weft:features')!
+const features = (kerf() as unknown[] as Hook[]).find((p) => p.name === 'kerf:features')!
 const { filter, handler } = features.transform
 const run = (code: string, id = '/app/src/state/cart.ts') =>
   filter.id.include.test(id) && !filter.id.exclude.test(id) && filter.code.test(code)
@@ -16,15 +16,15 @@ const run = (code: string, id = '/app/src/state/cart.ts') =>
     : code
 
 test('adds the module for each option a file uses, and nothing otherwise', () => {
-  expect(run(`state(0, { persist: 'local' })`)).toMatch(/^import '@weft-js\/core\/persist';/)
+  expect(run(`state(0, { persist: 'local' })`)).toMatch(/^import '@kerf\/core\/persist';/)
   expect(run(`defineState('b', setup, { history: { limit: 10 } })`)).toMatch(
-    /^import '@weft-js\/core\/history';/,
+    /^import '@kerf\/core\/history';/,
   )
-  expect(run(`state(0, { history: false })`)).not.toMatch(/weft\/history/) // a box opting out isn't a scope opting in
+  expect(run(`state(0, { history: false })`)).not.toMatch(/kerf\/history/) // a box opting out isn't a scope opting in
   expect(run(`state(0)`)).toBe(`state(0)`)
 })
 
-test("leaves node_modules and weft's own source alone", () => {
+test("leaves node_modules and kerf's own source alone", () => {
   expect(run(`x = { persist: 1 }`, '/app/node_modules/lib/index.js')).toBe(`x = { persist: 1 }`)
   expect(run(`x = { persist: 1 }`, '/repo/packages/core/src/scope.ts')).toBe(`x = { persist: 1 }`)
 })

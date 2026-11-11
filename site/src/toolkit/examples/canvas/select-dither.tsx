@@ -1,4 +1,4 @@
-import { DitherStage } from '@weft-js/warp'
+import { DitherStage } from '@kerf/veneer'
 import { Choose } from './stage-landing'
 
 export const StageSelectDither = () => (

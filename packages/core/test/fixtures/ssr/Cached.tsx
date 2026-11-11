@@ -1,5 +1,5 @@
 // resource(…, { data: false }) for test/async.test.tsx: the caller's cache transfers the value, not the page data.
-import { resource } from '@weft-js/core'
+import { resource } from '@kerf/core'
 
 export type Read = (id: string) => { name: string } | Promise<{ name: string }>
 

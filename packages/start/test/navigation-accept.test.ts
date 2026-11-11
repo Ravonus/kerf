@@ -1,19 +1,19 @@
 // @vitest-environment jsdom
 // @vitest-environment-options {"url":"http://localhost/"}
 import type * as ActualHelpers from '../src/run/helpers'
-import type * as Core from '@weft-js/core'
+import type * as Core from '@kerf/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClientRoutes } from '../src/run'
 
 import { Navigation } from '../src/run/navigation'
 import { ask, current_, guess } from '../src/run/helpers'
 import { applyMatches } from '../src/router'
-import { flush } from '@weft-js/core'
-vi.mock('@weft-js/core', async (load) => ({
+import { flush } from '@kerf/core'
+vi.mock('@kerf/core', async (load) => ({
   ...(await load<typeof Core>()),
   flush: vi.fn(),
 }))
-vi.mock('@weft-js/core/head', () => ({ setHead: vi.fn() }))
+vi.mock('@kerf/core/head', () => ({ setHead: vi.fn() }))
 vi.mock('../src/router', () => ({
   client: {},
   applyMatches: vi.fn(),

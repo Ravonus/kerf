@@ -1,4 +1,4 @@
-// A small protocol client for /_weft/ws: tests and the runtime matrix use it. Node's global WebSocket can't set `Origin`,
+// A small protocol client for /_kerf/ws: tests and the runtime matrix use it. Node's global WebSocket can't set `Origin`,
 // so this one is `ws`-free: it's the platform's, with the header passed where the platform allows it.
 import { createHash } from 'node:crypto'
 import { request as httpRequest } from 'node:http'
@@ -13,7 +13,7 @@ export function handshake(url, headers = {}) {
     const req = httpRequest({
       host: u.hostname,
       port: u.port,
-      path: '/_weft/ws',
+      path: '/_kerf/ws',
       headers: {
         connection: 'Upgrade',
         upgrade: 'websocket',
@@ -38,7 +38,7 @@ export function handshake(url, headers = {}) {
 
 /** An open socket, from the app's own origin. `headers`: a session cookie. */
 export async function open(url, headers = {}) {
-  const ws = new WebSocket(url.replace(/^http/, 'ws') + '/_weft/ws', {
+  const ws = new WebSocket(url.replace(/^http/, 'ws') + '/_kerf/ws', {
     headers: { origin: new URL(url).origin, ...headers },
   })
   const frames = []

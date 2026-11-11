@@ -1,0 +1,21 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.inputs-rich {
+/* -- phone ----------------------------------------------------------- */
+  :where([data-part="country"]) {
+    all: unset; display: inline-flex; align-items: center; gap: 6px; align-self: stretch; cursor: pointer;
+    margin-inline-start: calc(var(--veneer-pad-control) * -1); padding-inline: var(--veneer-pad-control) 10px;
+    border-inline-end: var(--veneer-border-hairline) solid var(--veneer-color-border);
+    border-start-start-radius: var(--veneer-radius-control); border-end-start-radius: var(--veneer-radius-control);
+    font: 500 var(--veneer-text-body-size) / 1 var(--veneer-text-body-font); color: var(--veneer-color-text); white-space: nowrap;
+  }
+  :where([data-part="country"]:hover) { background: var(--veneer-color-surface-hover); }
+  :where([data-part="country"]:focus-visible) { outline: var(--veneer-focus-width) solid var(--veneer-color-focus); outline-offset: -2px; }
+  :where([data-part="country"] b) { font: 500 11px/1 var(--veneer-font-mono); letter-spacing: 0.04em; padding: 3px 4px; border-radius: var(--veneer-radius-mark); background: var(--veneer-color-surface-sunken); color: var(--veneer-color-text-subtle); }
+  :where([data-part="country"] svg) { inline-size: 14px; block-size: 14px; color: var(--veneer-color-text-subtle); }
+  :where([data-scope="popover"] label[data-part="search"]:not([data-scope="popover"] :is([data-scope="log"],[data-scope="select"],[data-scope="system-page"]) *:not([data-scope="popover"] :is([data-scope="log"],[data-scope="select"],[data-scope="system-page"]) [data-scope="popover"] *))) { display: flex; align-items: center; gap: 8px; block-size: var(--veneer-control-md); padding-inline: 10px; margin-block-end: 6px; border-radius: var(--veneer-radius-control); background: var(--veneer-color-surface-sunken); border: var(--veneer-border-hairline) solid var(--veneer-color-border-control); }
+  :where([data-scope="popover"] label[data-part="search"]:focus-within:not([data-scope="popover"] :is([data-scope="log"],[data-scope="select"],[data-scope="system-page"]) *:not([data-scope="popover"] :is([data-scope="log"],[data-scope="select"],[data-scope="system-page"]) [data-scope="popover"] *))) { border-color: var(--veneer-color-focus); box-shadow: 0 0 0 1px var(--veneer-color-focus); }
+  :where([data-scope="popover"] label[data-part="search"]:not([data-scope="popover"] :is([data-scope="log"],[data-scope="select"],[data-scope="system-page"]) *:not([data-scope="popover"] :is([data-scope="log"],[data-scope="select"],[data-scope="system-page"]) [data-scope="popover"] *)) input) { all: unset; flex: 1; min-inline-size: 0; font-size: var(--veneer-text-control-size); }
+  :where([data-scope="popover"] label[data-part="search"] input)::-webkit-search-cancel-button { display: none; }
+  :where([data-scope="popover"] label[data-part="search"] input)::placeholder { color: var(--veneer-color-text-subtle); }
+  :where([data-scope="popover"] label[data-part="search"]:not([data-scope="popover"] :is([data-scope="log"],[data-scope="select"],[data-scope="system-page"]) *:not([data-scope="popover"] :is([data-scope="log"],[data-scope="select"],[data-scope="system-page"]) [data-scope="popover"] *)) svg) { inline-size: 16px; block-size: 16px; color: var(--veneer-color-text-subtle); flex: none; }
+}

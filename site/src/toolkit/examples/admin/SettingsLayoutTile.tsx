@@ -3,7 +3,7 @@ import {
   SettingsSection,
   Stack,
   Switch,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { SettingsWidth } from './shared'
 
 export const SettingsLayoutTile = () => (

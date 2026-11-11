@@ -5,17 +5,17 @@
 - How to import and export a component
 - When to use default exports and when to use named exports
 - How to keep several components in one file, and when to split them
-- What Weft's compiler and tools care about in how you export
+- What Kerf's compiler and tools care about in how you export
 :::
 
 Components are made to be reused, so sooner or later one file holds too many of them. Moving a component into its own
 file and importing it where it's needed keeps files short and lets you use the component from anywhere in the app. This
-is plain JavaScript modules: Weft adds no import system of its own, and only a few of its tools look at how you export.
+is plain JavaScript modules: Kerf adds no import system of its own, and only a few of its tools look at how you export.
 
 ## The root component file
 
 In [Your first component](/learn/your-first-component) you wrote a `Profile` component and a `Gallery` that uses it, in
-one file. In a Weft app made with `@weft-js/start`, the page a visitor sees is a route file under `src/routes`, and the
+one file. In a Kerf app made with `@kerf/start`, the page a visitor sees is a route file under `src/routes`, and the
 route's page is that file's default export:
 
 ```tsx
@@ -72,12 +72,12 @@ export default function Scientists() {
 }
 ```
 
-Notice the import: `'../components/Profile'` has no `.tsx` at the end. Vite, which runs Weft's dev server and build,
+Notice the import: `'../components/Profile'` has no `.tsx` at the end. Vite, which runs Kerf's dev server and build,
 resolves the extension for you, so leave it off.
 
 ### The `#/` alias
 
-Paths like `'../../components/Profile'` get long and break when a file moves. A Weft app has an alias for its `src`
+Paths like `'../../components/Profile'` get long and break when a file moves. A Kerf app has an alias for its `src`
 folder: `#/components/Profile` means `src/components/Profile`, from any file.
 
 ```tsx
@@ -89,7 +89,7 @@ export default function People() {
 }
 ```
 
-The alias is `paths` in `tsconfig.json` (`"#/*": ["./src/*"]`). Vite, the editor and `weft check` all read it from
+The alias is `paths` in `tsconfig.json` (`"#/*": ["./src/*"]`). Vite, the editor and `kerf check` all read it from
 there, so you can change it or add your own in that one place.
 
 ## Default and named exports
@@ -107,16 +107,16 @@ another name. A named import must use the exported name (or rename it on purpose
 
 Both kinds have their place:
 
-- **Route files** must default-export their page, because that's where `@weft-js/start` looks for it.
-- **Component files** can use either. Warp, Weft's own component kit, uses named exports throughout
-  (`import { Button, Card } from '@weft-js/warp'`), which has two advantages: every import of a component uses the same
+- **Route files** must default-export their page, because that's where `@kerf/start` looks for it.
+- **Component files** can use either. Veneer, Kerf's own component kit, uses named exports throughout
+  (`import { Button, Card } from '@kerf/veneer'`), which has two advantages: every import of a component uses the same
   name, so a search finds every use, and an editor can offer the import as you type the name.
 
 Pick one style for your own components and stick to it. These pages use a default export for a route's page and named
 exports for everything else.
 
 :::pitfall Name your default exports
-`export default function () {}` is valid JavaScript, but give the function a name. Weft's compiler finds components by
+`export default function () {}` is valid JavaScript, but give the function a name. Kerf's compiler finds components by
 their name: a function whose name starts with a capital letter is a component, and only a component gets its props made
 live and its body checked. Hot reload swaps components by name too. An anonymous default export has no name, so it misses
 all of that. `export default function Gallery() {}` costs nothing extra.
@@ -166,17 +166,17 @@ The `<>` and `</>` around the two components are a fragment: a way to return two
 A component that's only used inside its own file doesn't need an export at all. That's the case for `Profile` in the
 first example on this page, and it's fine to keep small helpers private like that.
 
-## What Weft looks at when you export
+## What Kerf looks at when you export
 
-Most of this page is JavaScript, and works as it does anywhere. A few of Weft's tools do read your exports, and knowing
+Most of this page is JavaScript, and works as it does anywhere. A few of Kerf's tools do read your exports, and knowing
 what they look for saves you a surprise.
 
 ### Exported components write their prop types down
 
-Inside one file, Weft can work out a component's prop types from the places that use it, so you may leave a private
+Inside one file, Kerf can work out a component's prop types from the places that use it, so you may leave a private
 component's props unannotated (see [Passing props](/learn/passing-props)). An export is a public API: any file may import
-it, and a caller's edit shouldn't quietly change it. So `weft check` reports **W081** for an exported component whose
-props have no written type, and its fix writes the inferred type for you. `weft dev` writes it on save, marked with an
+it, and a caller's edit shouldn't quietly change it. So `kerf check` reports **W081** for an exported component whose
+props have no written type, and its fix writes the inferred type for you. `kerf dev` writes it on save, marked with an
 `/*inferred*/` comment so it shows up in your diff; if callers later need something else, **W082** says the written type
 is out of date.
 
@@ -193,7 +193,7 @@ export function Badge(props: { label: string; count: number }) {
 
 ### Hot reload works per component
 
-In development, editing a component swaps that component in place: Weft registers every top-level component in a file,
+In development, editing a component swaps that component in place: Kerf registers every top-level component in a file,
 and only the components whose code changed are rebuilt. A component's state survives the edit when the state keeps its
 name and its starting value. A module can take its own update like this only when **everything it exports is a
 component** (or a type). If a component file also exports a plain value, such as a list of prices or a helper function,
@@ -222,8 +222,8 @@ export function Menu() {
 
 ### What reaches the browser follows your imports
 
-With `@weft-js/start`, a page is rendered on the server, and only the components that need to run in the browser (because
-they handle an event, hold state or use a `ref`) are sent there as code. Weft works this out by following your imports
+With `@kerf/start`, a page is rendered on the server, and only the components that need to run in the browser (because
+they handle an event, hold state or use a `ref`) are sent there as code. Kerf works this out by following your imports
 from file to file, one top-level binding at a time. Two things follow from that:
 
 - Files under `src/server/` and any file named `*.server.ts` never reach the browser. A component that imports a server
@@ -236,7 +236,7 @@ from file to file, one top-level binding at a time. Two things follow from that:
 
 :::deepdive Barrel files
 A barrel is an `index.ts` that re-exports a folder's components (`export * from './Button'`), so callers can import them
-all from one place. It works in Weft as anywhere, but it has a cost here: a module made only of `export * from` lines
+all from one place. It works in Kerf as anywhere, but it has a cost here: a module made only of `export * from` lines
 isn't a component module, so an edit to one of its components can't be taken by the barrel itself during hot reload, and
 everything that imports through it runs again. Import a component from its own file when you can, and keep barrels
 for packages you publish.
@@ -250,7 +250,7 @@ for packages you publish.
   `import X from './X'` or `import { X } from './X'`.
 - `#/` is the alias for `src/`, set in `tsconfig.json`.
 - Name every component, default exports included: the compiler and hot reload find components by name.
-- Exported components write their prop types down (W081); `weft dev` and `weft fix` write them for you.
+- Exported components write their prop types down (W081); `kerf dev` and `kerf fix` write them for you.
 - Keep component files to components, so hot reload can swap them in place.
 
 ## Try it
@@ -333,7 +333,7 @@ export function Price(props: { amount: number }) {
 :::
 
 :::challenge Give the export a type
-`weft check` reports W081 on this file. What does it want, and what does the fix look like?
+`kerf check` reports W081 on this file. What does it want, and what does the fix look like?
 
 <!-- example: skip the starting point, which reports W081 -->
 ```tsx
@@ -344,7 +344,7 @@ export function Hello(props) {
 ```
 :::solution
 An exported component writes its prop type down, so a caller somewhere else can't change a public API without anyone
-seeing it. `weft fix` (or saving under `weft dev`) writes the type it inferred from the callers. You can also write it
+seeing it. `kerf fix` (or saving under `kerf dev`) writes the type it inferred from the callers. You can also write it
 yourself:
 
 ```tsx

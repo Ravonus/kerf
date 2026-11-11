@@ -1,4 +1,4 @@
-import { enter, hydrate, hydration, level as staticLevel } from '@weft-js/core/dom'
+import { enter, hydrate, hydration, level as staticLevel } from '@kerf/core/dom'
 import { client, createRouteState, type Component, type RoutePayload } from '../router'
 import { App } from '../view'
 import { ErrorPage, NotFoundPage } from '../builtin'
@@ -14,8 +14,8 @@ export const streamed = globalThis as typeof globalThis & {
 
 export function prepare(routes: ClientRoutes, options: { container?: Element }) {
   const container = options.container ?? document.getElementById('app')!
-  const page: RoutePayload = JSON.parse(document.getElementById('weft-route')!.textContent)
-  const data = JSON.parse(document.getElementById('weft-data')?.textContent ?? 'null')
+  const page: RoutePayload = JSON.parse(document.getElementById('kerf-route')!.textContent)
+  const data = JSON.parse(document.getElementById('kerf-data')?.textContent ?? 'null')
   const tags = page.m.map((m) => m.t ?? [])
   const comps: Record<string, Component> = {}
   // The built-in 404 and error pages stand in only when the app has no route file for them.

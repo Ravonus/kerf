@@ -1,4 +1,4 @@
-import { SankeyChart } from '@weft-js/warp'
+import { SankeyChart } from '@kerf/veneer'
 
 import { BUILD_FLOW } from '../../world'
 

@@ -1,7 +1,7 @@
 import { upperMedian as median } from '../../scripts/lib/helpers.mjs'
 // The reactive core alone, no DOM: js-reactivity-benchmark's kairo cases, cellx, a dynamic graph, then creation and
 // memory. One library per process, so one's JIT state can't touch another's.
-//   node --expose-gc reactive.mjs weft|weft-base|solid|alien [--rounds 9]
+//   node --expose-gc reactive.mjs kerf|kerf-base|solid|alien [--rounds 9]
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { getHeapStatistics } from 'node:v8'
@@ -11,7 +11,7 @@ const lib = process.argv[2]
 const rounds = Number(process.argv[process.argv.indexOf('--rounds') + 1]) || 9
 const m = await import(pathToFileURL(join(here, 'dist/reactive', `${lib}.mjs`)))
 
-const weft = () => ({
+const kerf = () => ({
   signal: (v) => {
     const s = m.state(v)
     return {
@@ -56,7 +56,7 @@ const alien = () => ({
   },
   root: (fn) => fn(() => {}),
 })
-const r = lib === 'solid' ? solid() : lib === 'alien' ? alien() : weft()
+const r = lib === 'solid' ? solid() : lib === 'alien' ? alien() : kerf()
 const { signal, computed, effect, batch, root } = r
 const assert = (ok, what) => {
   if (!ok) throw new Error(`${lib}: ${what}`)

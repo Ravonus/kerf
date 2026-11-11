@@ -1,5 +1,5 @@
 // Not graded: measures the work each interaction costs in the agent's final app (200 rows).
-// weft-allow T001: measurement probe, not graded; it writes numbers to a file instead of asserting
+// kerf-allow T001: measurement probe, not graded; it writes numbers to a file instead of asserting
 import { screen } from '@testing-library/dom'
 import { writeFileSync } from 'node:fs'
 import { stats } from '#adapter'

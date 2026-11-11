@@ -1,0 +1,36 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Tooltip (hint: never essential) ------------------------------------------ */
+:where([data-scope="tooltip"][data-part="content"]) {
+  --_side-x: 0; --_side-y: 1;
+  position: fixed; inset: auto; margin: 0; box-sizing: border-box; max-inline-size: 240px;
+  padding: 5px 8px; border: 0; border-radius: var(--veneer-radius-mark);
+  background: var(--veneer-color-surface-inverse); color: var(--veneer-color-on-inverse);
+  font: 500 var(--veneer-text-caption-size)/1.35 var(--veneer-text-body-font); letter-spacing: 0; text-transform: none;
+  pointer-events: auto; overflow: visible;
+  transform-origin: var(--veneer-origin, 50% 100%);
+  opacity: 0; scale: var(--veneer-motion-scale-from); translate: 0 0;
+  transition: opacity calc(var(--veneer-duration-fast) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+              scale calc(var(--veneer-duration-fast) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+              translate calc(var(--veneer-duration-fast) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+              overlay calc(var(--veneer-duration-fast) * var(--veneer-duration-exit-k)) allow-discrete,
+              display calc(var(--veneer-duration-fast) * var(--veneer-duration-exit-k)) allow-discrete;
+}
+:where([data-scope="tooltip"][data-part="content"]:popover-open) {
+  opacity: 1; translate: 0 0; scale: 1;
+  transition: opacity var(--veneer-duration-fast) var(--veneer-ease-out), translate var(--veneer-duration-base) var(--veneer-ease-out), scale var(--veneer-duration-base) var(--veneer-ease-out),
+              overlay var(--veneer-duration-fast) allow-discrete, display var(--veneer-duration-fast) allow-discrete;
+}
+@starting-style {
+  :where([data-scope="tooltip"][data-part="content"]:popover-open) { opacity: 0; scale: var(--veneer-motion-scale-from); translate: calc(var(--_side-x) * var(--veneer-motion-distance) * 0.4) calc(var(--_side-y) * var(--veneer-motion-distance) * 0.4); }
+/* the next tip in a run arrives at once: the first waited, these are already trusted */
+:where([data-scope="tooltip"][data-part="content"][data-warm]:popover-open) { transition-duration: 0ms; }
+}
+:where([data-scope="tooltip"] kbd) { margin-inline-start: 6px; font: 500 10.5px/1.25 var(--veneer-font-mono); opacity: 0.75; }
+
+/* presentation="inline": the tip shown under its trigger, in the page's flow (docs, previews) */
+:where([data-scope="tooltip"][data-part="content"])[data-presentation="inline"] {
+  position: relative; inset: auto; display: block; inline-size: fit-content; max-inline-size: min(240px, 100%); margin-block-start: 6px;
+  opacity: 1; translate: none; scale: none; transition: none;
+}
+}

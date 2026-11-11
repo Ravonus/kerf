@@ -1,0 +1,216 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Dialog (native <dialog>.showModal()) -------------------------------- */
+/* type-to-confirm (AlertDialog confirmText): the field is a sweep host; once the text matches,
+   the sweep pins in, painted critical — the field now arms a destructive action */
+:where([data-part="confirm-field"]) { position: relative; display: block; border-radius: var(--veneer-radius-control); }
+:where([data-part="confirm-field"][data-match]) { --veneer-color-sweep: var(--veneer-color-sweep-critical); }   /* JS holds the phase "in" while it matches */
+:where([data-part="confirm-field"][data-match]) > input { border-color: var(--veneer-color-critical-border); }
+:where(dialog[data-scope="dialog"]),
+:where(dialog[data-scope="sheet"]),
+:where(dialog[data-scope="palette"]) {
+  box-sizing: border-box; padding: 0; color: var(--veneer-color-text);
+  background: var(--veneer-color-surface-overlay);
+  border: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  box-shadow: var(--veneer-elevation-3);
+  overscroll-behavior: contain;
+}
+:where(dialog[data-scope="dialog"]) {
+  --_w: 560px;
+  inline-size: min(var(--_w), calc(100vw - var(--veneer-space-page) * 2));
+  max-inline-size: none; max-block-size: min(86dvh, 760px);
+  border-radius: var(--veneer-radius-surface);
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  /* exit (and base) state. It scales about the control that opened it (--veneer-origin), so it comes from somewhere */
+  transform-origin: var(--veneer-origin, 50% 50%);
+  opacity: 0; translate: 0 calc(var(--veneer-motion-distance) * 0.25); scale: var(--veneer-motion-scale-from);
+  transition:
+    opacity calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+    translate calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+    scale calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+    overlay calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) allow-discrete,
+    display calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) allow-discrete;
+}
+:where(dialog[data-scope="dialog"]:not([open])) { display: none; }
+:where(dialog[data-scope="dialog"][open]) {
+  opacity: 1; translate: 0 0; scale: 1;
+  transition:
+    opacity var(--veneer-duration-base) var(--veneer-ease-out), translate var(--veneer-spring-duration) var(--veneer-ease-spring),
+    scale var(--veneer-spring-duration) var(--veneer-ease-spring),
+    overlay var(--veneer-duration-slow) allow-discrete, display var(--veneer-duration-slow) allow-discrete;
+}
+@starting-style {
+  :where(dialog[data-scope="dialog"][open]) { opacity: 0; translate: 0 var(--veneer-motion-distance); scale: var(--veneer-motion-scale-from); }
+}
+/* the pick: one pass of kerf across the top edge as it arrives, then gone */
+:where(dialog[data-scope="dialog"][open]):where(:not([data-flair="none"]))::before,
+:where(dialog[data-scope="sheet"][open]):where(:not([data-flair="none"]))::before {
+  content: ""; position: absolute; inset: -1px -1px auto; block-size: var(--veneer-sweep-width); background: var(--veneer-color-sweep); border-radius: inherit;
+  pointer-events: none; transform-origin: 0 50%;
+  animation: veneer-pick calc(var(--veneer-sweep-duration) * 1.2) var(--veneer-sweep-ease-in) both;
+}
+:where(dialog[data-tone="critical"])::before { background: var(--veneer-color-sweep-critical); }
+@keyframes veneer-pick { from { scale: 0 1; opacity: 1; } 62% { scale: 1 1; opacity: 1; } to { scale: 1 1; opacity: 0; } }
+/* contents arrive after the panel, once, in reading order */
+:where(dialog[data-scope="dialog"][open]) > :where([data-part="body"]),
+:where(dialog[data-scope="dialog"][open]) > :where([data-part="footer"]) { animation: veneer-rise var(--veneer-spring-duration) var(--veneer-ease-spring) calc(var(--veneer-stagger) * var(--_i, 1)) backwards; }
+:where(dialog[data-scope="dialog"][open]) > :where([data-part="footer"]) { --_i: 2; }
+@keyframes veneer-rise { from { opacity: 0; translate: 0 calc(var(--veneer-motion-distance) * 0.75); } }
+:where(dialog[data-size="sm"]) { --_w: 420px; }
+:where(dialog[data-size="lg"]) { --_w: 800px; }
+/* placement: where it sits, and it arrives from that edge. Centre is the default and has no attribute */
+:where(dialog[data-scope="dialog"][data-placement="top"]) { margin-block: var(--veneer-space-page) auto; --_off: 0 calc(var(--veneer-motion-distance) * -1); }
+:where(dialog[data-scope="dialog"][data-placement="bottom"]) { margin-block: auto var(--veneer-space-page); --_off: 0 var(--veneer-motion-distance); }
+:where(dialog[data-scope="dialog"][data-placement="left"]) { margin-inline: var(--veneer-space-page) auto; --_off: calc(var(--veneer-motion-distance) * -1) 0; }
+:where(dialog[data-scope="dialog"][data-placement="right"]) { margin-inline: auto var(--veneer-space-page); --_off: var(--veneer-motion-distance) 0; }
+:where(dialog[data-scope="dialog"][data-placement="full"]) {
+  --_off: 0 var(--veneer-motion-distance);
+  inline-size: 100%; block-size: 100dvh; max-block-size: none; margin: 0; border: 0; border-radius: 0;
+}
+:where(dialog[data-scope="dialog"][data-placement]:not([open])) { translate: var(--_off); }
+@starting-style {
+  :where(dialog[data-scope="dialog"][data-placement][open]) { translate: var(--_off); }
+}
+/* backdrop: scrim + the dial's blur (12 · 6 · 0) */
+:where(dialog[data-scope="dialog"])::backdrop,
+:where(dialog[data-scope="sheet"])::backdrop,
+:where(dialog[data-scope="palette"])::backdrop {
+  background: transparent; backdrop-filter: blur(0px);
+  transition: background-color calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+              backdrop-filter calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) var(--veneer-ease-in),
+              overlay calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) allow-discrete,
+              display calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) allow-discrete;
+}
+:where(dialog[data-scope="dialog"][open])::backdrop,
+:where(dialog[data-scope="sheet"][open])::backdrop,
+:where(dialog[data-scope="palette"][open])::backdrop {
+  background: var(--veneer-color-scrim); backdrop-filter: blur(var(--veneer-blur-overlay));
+  transition: background-color var(--veneer-duration-slow) var(--veneer-ease-out), backdrop-filter var(--veneer-duration-slow) var(--veneer-ease-out),
+              overlay var(--veneer-duration-slow) allow-discrete, display var(--veneer-duration-slow) allow-discrete;
+}
+@starting-style {
+  :where(dialog[data-scope="dialog"][open])::backdrop,
+  :where(dialog[data-scope="sheet"][open])::backdrop,
+  :where(dialog[data-scope="palette"][open])::backdrop { background: transparent; backdrop-filter: blur(0px); }
+}
+
+/* parts (shared by dialog, alert dialog and sheet) */
+:where([data-scope="dialog"] [data-part="header"]:not([data-scope="dialog"] :is([data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"],[data-scope="shell"]) *:not([data-scope="dialog"] :is([data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="sheet"],[data-scope="shell"]) [data-scope="dialog"] *))),
+:where([data-scope="sheet"] [data-part="header"]:not([data-scope="sheet"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="shell"]) *:not([data-scope="sheet"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="panel"],[data-scope="plan"],[data-scope="room"],[data-scope="shell"]) [data-scope="sheet"] *))) {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--veneer-space-tight) var(--veneer-space-group); align-items: start;
+  padding: var(--veneer-pad-surface) var(--veneer-pad-surface) var(--veneer-space-group);
+}
+:where([data-scope="dialog"] [data-part="title"]:not([data-scope="dialog"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="dialog"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="sheet"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="dialog"] *))),
+:where([data-scope="sheet"] [data-part="title"]:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) *:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="auth"],[data-scope="callout"],[data-scope="checklist"],[data-scope="dialog"],[data-scope="dropzone"],[data-scope="empty-state"],[data-scope="event-card"],[data-scope="hero"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="section-message"],[data-scope="shell"],[data-scope="sidenav"],[data-scope="sidenav-title"],[data-scope="steps"],[data-scope="surface"],[data-scope="toast"],[data-scope="year"]) [data-scope="sheet"] *))) {
+  margin: 0; font-family: var(--veneer-text-heading-font); font-size: var(--veneer-text-heading-size);
+  font-weight: var(--veneer-text-heading-weight); letter-spacing: var(--veneer-text-heading-tracking); line-height: var(--veneer-text-heading-leading);
+}
+:where([data-scope="dialog"] [data-part="description"]:not([data-scope="dialog"] :is([data-scope="alert"],[data-scope="empty-state"],[data-scope="group"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="sheet"],[data-scope="steps"],[data-scope="toast"]) *:not([data-scope="dialog"] :is([data-scope="alert"],[data-scope="empty-state"],[data-scope="group"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="sheet"],[data-scope="steps"],[data-scope="toast"]) [data-scope="dialog"] *))),
+:where([data-scope="sheet"] [data-part="description"]:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="empty-state"],[data-scope="group"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="steps"],[data-scope="toast"]) *:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="empty-state"],[data-scope="group"],[data-scope="item"],[data-scope="page-header"],[data-scope="panel"],[data-scope="popover"],[data-scope="steps"],[data-scope="toast"]) [data-scope="sheet"] *))) {
+  grid-column: 1; margin: 0; color: var(--veneer-color-text-subtle); font-size: var(--veneer-text-body-size); line-height: var(--veneer-text-body-leading);
+}
+:where([data-scope="dialog"] [data-part="close"]:not([data-scope="dialog"] :is([data-scope="alert"],[data-scope="doc-tabs"],[data-scope="sheet"]) *:not([data-scope="dialog"] :is([data-scope="alert"],[data-scope="doc-tabs"],[data-scope="sheet"]) [data-scope="dialog"] *))),
+:where([data-scope="sheet"] [data-part="close"]:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="doc-tabs"]) *:not([data-scope="sheet"] :is([data-scope="alert"],[data-scope="dialog"],[data-scope="doc-tabs"]) [data-scope="sheet"] *))) { grid-column: 2; grid-row: 1; margin-block-start: -17px; margin-inline-end: -17px; }
+/* the close cross: just the X, small and tucked into the corner. No box, fill or sweep round it, and nothing lifts:
+   under the hand the X wipes to the accent left to right, and on the way out wipes off the same way, never back. The
+   accent is a copy of the glyph ([data-part="ink"], CloseX) over it, shown through a mask that grows from the left
+   and leaves into the right: only the mask's size moves, so its anchor can jump sides unseen at 0 and 100%. Its
+   target stays hit-min from ::after, so the smaller mark is no harder to reach */
+:where([data-scope="button"][data-part="close"]) {
+  inline-size: 24px; block-size: 24px; min-inline-size: 0; min-block-size: 0; padding: 0;
+  background: none; border-color: transparent; box-shadow: none; translate: none;
+  color: var(--veneer-color-text-subtle); --veneer-btn-fill: 0; --_layer-a: 0; --_on: 0;
+}
+:where([data-scope="button"][data-part="close"])::before,
+:where([data-scope="button"][data-part="close"]) > :where([data-part="sweep"]) { display: none; }
+:where([data-scope="button"][data-part="close"])::after { inset: min(0px, calc((100% - var(--veneer-hit-min)) / 2)); }
+:where([data-scope="button"][data-part="close"]) > svg { inline-size: 14px; block-size: 14px; stroke-width: 2; }
+:where([data-scope="button"][data-part="close"]:is(:hover, :focus-visible)) { box-shadow: none; translate: none; }
+:where([data-scope="button"][data-part="close"]) > [data-part="ink"] {
+  position: absolute; inset: 0; margin: auto; color: var(--veneer-color-accent-text); pointer-events: none;
+  mask: linear-gradient(#000 0 0) right / 0% 100% no-repeat;
+  transition: mask-size var(--veneer-sweep-duration) var(--veneer-sweep-ease);
+}
+:where([data-scope="button"][data-part="close"]:is(:hover, :focus-visible)) > [data-part="ink"] { mask-position: left; mask-size: 100% 100%; }
+:where([data-scope="dialog"] [data-part="body"]:not([data-scope="dialog"] :is([data-scope="banner"],[data-scope="board"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) *:not([data-scope="dialog"] :is([data-scope="banner"],[data-scope="board"],[data-scope="diff"],[data-scope="docs"],[data-scope="field"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="sheet"],[data-scope="system-page"]) [data-scope="dialog"] *))),
+:where([data-scope="sheet"] [data-part="body"]:not([data-scope="sheet"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="system-page"]) *:not([data-scope="sheet"] :is([data-scope="banner"],[data-scope="board"],[data-scope="dialog"],[data-scope="diff"],[data-scope="docs"],[data-scope="filter-panel"],[data-scope="float-panel"],[data-scope="kv"],[data-scope="menu-screen"],[data-scope="message"],[data-scope="reasoning"],[data-scope="system-page"]) [data-scope="sheet"] *))) {
+  overflow: auto; overscroll-behavior: contain; padding: 0 var(--veneer-pad-surface) var(--veneer-pad-surface);
+  display: grid; gap: var(--veneer-space-group); align-content: start; min-block-size: 0;
+}
+/* a floating field as the body's first child: room for its label to rise into the notch (the body scrolls, so it clips) */
+:where([data-scope="dialog"], [data-scope="sheet"]) > :where([data-part="body"]:has(> [data-scope="field"]:first-child)) { padding-block-start: var(--veneer-space-related); }
+:where([data-scope="dialog"] [data-part="footer"]:not([data-scope="dialog"] :is([data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="dialog"] :is([data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) [data-scope="dialog"] *))),
+:where([data-scope="sheet"] [data-part="footer"]:not([data-scope="sheet"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="sheet"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="table"],[data-scope="tour"]) [data-scope="sheet"] *))) {
+  display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--veneer-space-related);
+  padding: var(--veneer-space-group) var(--veneer-pad-surface);
+  border-block-start: var(--veneer-border-hairline) solid var(--veneer-color-border);
+  background: var(--veneer-color-surface);
+  border-end-start-radius: inherit; border-end-end-radius: inherit;
+}
+/* alert dialog: a tone mark, no close button, footer without a rule */
+:where(dialog[role="alertdialog"]) { --_w: 440px; }
+:where([data-scope="dialog"][role="alertdialog"] [data-part="footer"]:not([data-scope="dialog"] :is([data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="dialog"] :is([data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) [data-scope="dialog"] *))) { border: 0; background: transparent; padding-block-start: 0; }
+:where([data-scope="dialog"] [data-part="mark"]:not([data-scope="dialog"] :is([data-scope="assistant"],[data-scope="checkbox"],[data-scope="meter"],[data-scope="push-ask"]) *:not([data-scope="dialog"] :is([data-scope="assistant"],[data-scope="checkbox"],[data-scope="meter"],[data-scope="push-ask"]) [data-scope="dialog"] *))) {
+  inline-size: 36px; block-size: 36px; display: grid; place-items: center; border-radius: var(--veneer-radius-control);
+  background: var(--_soft); color: var(--_text); margin-block-end: var(--veneer-space-related);
+}
+:where([data-scope="dialog"] [data-part="mark"]:not([data-scope="dialog"] :is([data-scope="assistant"],[data-scope="checkbox"],[data-scope="meter"],[data-scope="push-ask"]) *:not([data-scope="dialog"] :is([data-scope="assistant"],[data-scope="checkbox"],[data-scope="meter"],[data-scope="push-ask"]) [data-scope="dialog"] *)) svg[data-icon]) { inline-size: var(--veneer-icon-lg); block-size: var(--veneer-icon-lg); }
+
+/* phone placement: a dialog becomes a bottom-anchored form sheet */
+@media (max-width: 599.98px) {
+  :where(dialog[data-scope="dialog"]:not([role="alertdialog"]):not([data-placement="center"])) {
+    margin: auto 0 0; inline-size: 100%; max-block-size: 92dvh;
+    border-end-start-radius: 0; border-end-end-radius: 0; border-inline: 0; border-block-end: 0;
+    padding-block-end: env(safe-area-inset-bottom, 0px);
+    translate: 0 calc(100% * var(--veneer-motion-scale)); scale: 1;
+  }
+  :where(dialog[data-scope="dialog"]:not([role="alertdialog"]):not([data-placement="center"])[open]) { translate: 0 0; }
+  @starting-style {
+    :where(dialog[data-scope="dialog"]:not([role="alertdialog"]):not([data-placement="center"])[open]) { translate: 0 calc(100% * var(--veneer-motion-scale)); scale: 1; }
+  }
+  :where(dialog[data-scope="dialog"] [data-part="footer"]:not([data-scope="dialog"] :is([data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="dialog"] :is([data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) [data-scope="dialog"] *))),
+  :where(dialog[data-scope="sheet"] [data-part="footer"]:not([data-scope="sheet"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="sheet"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="table"],[data-scope="tour"]) [data-scope="sheet"] *))) { flex-direction: column; align-items: stretch; }
+  :where(dialog[data-scope="dialog"] [data-part="footer"]:not([data-scope="dialog"] :is([data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="dialog"] :is([data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="sheet"],[data-scope="table"],[data-scope="tour"]) [data-scope="dialog"] *)) > [data-scope="button"]),
+  :where(dialog[data-scope="sheet"] [data-part="footer"]:not([data-scope="sheet"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="table"],[data-scope="tour"]) *:not([data-scope="sheet"] :is([data-scope="dialog"],[data-scope="inbox"],[data-scope="palette"],[data-scope="popconfirm"],[data-scope="prefs-matrix"],[data-scope="table"],[data-scope="tour"]) [data-scope="sheet"] *)) > [data-scope="button"]) {
+    block-size: var(--veneer-control-lg);
+  }
+}
+
+/* presentation="inline": the dialog drawn open in the page's flow, for docs and previews. A non-modal <dialog open>:
+   no top layer, scrim, focus trap or scroll lock. It takes its size's width, up to its box's, and never moves.
+   The four inline rules (dialog, sheet, popover, tooltip) weigh one attribute, outside :where(): a site that splits CSS
+   per component can load the shared floating-panel and placement rules after them, and order must not undo them */
+:where(dialog[data-scope="dialog"])[data-presentation="inline"] {
+  position: relative; inset: auto; z-index: auto; margin: 0; inline-size: min(var(--_w), 100%); block-size: auto; max-block-size: none;
+  opacity: 1; translate: none; scale: none; transition: none;
+}
+
+/* -- Modal backdrop as a part (for non-<dialog> hosts such as the frames) ---------- */
+:where([data-scope="backdrop"]) {
+  position: fixed; inset: 0; z-index: var(--veneer-z-overlay); background: var(--veneer-color-scrim); backdrop-filter: blur(var(--veneer-blur-overlay));
+  animation: veneer-fade-in var(--veneer-duration-slow) var(--veneer-ease-out) both;
+}
+:where([data-scope="backdrop"][data-state="closed"]) { animation: veneer-fade-out calc(var(--veneer-duration-slow) * var(--veneer-duration-exit-k)) var(--veneer-ease-in) both; }
+
+
+/* ---------------------------------------------------------------------------
+   6 · PATTERNS FROM OTHER KITS (COVERAGE §2, comp rows)
+   ------------------------------------------------------------------------ */
+
+
+
+
+/* ---------------------------------------------------------------- forced colours (01-foundations §12)
+   Every state this file draws with a background opts out of the UA repaint and is redrawn with system
+   colours, so selection differs by colour and fill, never by a tint the UA would flatten. */
+@media (forced-colors: active) {
+/* list items: the active option or item reads as the system selection */
+  :where([data-scope="menu"] [data-part="item"]:is(:focus):not([data-scope="menu"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="menu"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="menu"] *))),
+  :where([data-scope="menu"] [data-part="item"]:is([data-state="open"]):not([data-scope="menu"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="menu"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="menu"] *))),
+  :where([data-scope="select"] [data-part="item"][data-highlighted]:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="select"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="palette"],[data-scope="segmented"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="select"] *))),
+  :where([data-scope="palette"] [data-part="item"][aria-selected="true"]:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) *:not([data-scope="palette"] :is([data-scope="accordion"],[data-scope="checklist"],[data-scope="gallery"],[data-scope="list"],[data-scope="menu"],[data-scope="navlist"],[data-scope="pagination"],[data-scope="segmented"],[data-scope="select"],[data-scope="sidenav"],[data-scope="sortable"],[data-scope="steps"],[data-scope="tab-bar"]) [data-scope="palette"] *))),
+  :where([role="listbox"] [role="option"][data-highlighted]) {
+    forced-color-adjust: none; background: Highlight; color: HighlightText; box-shadow: none;
+  }
+}
+}

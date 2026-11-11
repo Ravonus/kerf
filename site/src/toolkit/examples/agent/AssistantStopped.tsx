@@ -1,4 +1,4 @@
-import { Assistant } from '@weft-js/warp'
+import { Assistant } from '@kerf/veneer'
 import { CUT_OFF } from './shared'
 
 export const AssistantStopped = () => (

@@ -1,4 +1,4 @@
-// The site's expression (../expression): vivid unless the reader chose another stop. weft.config.ts's head paints the
+// The site's expression (../expression): vivid unless the reader chose another stop. kerf.config.ts's head paints the
 // root from it (and the saved stop) before the first frame, and every dial on the page renders it on the server, so the
 // server's markup is what a fresh visitor sees.
 import { EXPRESSION } from '../expression'

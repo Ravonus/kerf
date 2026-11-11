@@ -1,9 +1,9 @@
-import { CheckIcon, CopyIcon } from '@weft-js/warp-icons'
+import { CheckIcon, CopyIcon } from '@kerf/veneer-icons'
 import { demos } from '../demos'
 import code from '../generated/demos.json'
-import '@weft-js/warp-core/styles/components/button.css'
-import '@weft-js/warp-core/styles/components/copy.css'
-import '@weft-js/warp-core/styles/rich/codeblock.css'
+import '@kerf/veneer-core/styles/components/button.css'
+import '@kerf/veneer-core/styles/components/copy.css'
+import '@kerf/veneer-core/styles/rich/codeblock.css'
 import '../styles/example.css'
 
 /** A live example: what it is, the running result beside its real source, what to try, and why it matters. */
@@ -41,7 +41,7 @@ export function Example(props: {
           </div>
           <div
             data-part="source"
-            // oxlint-disable-next-line weft/no-html-sink -- highlighted at build time from this repo's demos
+            // oxlint-disable-next-line kerf/no-html-sink -- highlighted at build time from this repo's demos
             innerHTML={(code as Record<string, string>)[props.id]}
           ></div>
         </div>

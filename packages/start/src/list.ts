@@ -1,5 +1,5 @@
 // The list contract: one way to ask for a page or a cursor, whatever holds
-// the rows. `listInput` is a schema a `query` takes as its `input`, and a source is what the `@weft-js/db` subpaths build.
+// the rows. `listInput` is a schema a `query` takes as its `input`, and a source is what the `@kerf/db` subpaths build.
 //
 //   export const tasks = query({
 //     input: listInput({ sort: ['rank', 'title'], filter: ['status'], search: ['title'], pageSize: { default: 25, max: 100 } }),
@@ -36,7 +36,7 @@ export interface ListParams {
   filter: Record<string, Scalar | Scalar[]>
 }
 
-/** The envelope Warp's `Table` reads. `next` and `prev` go back in as `cursor` or `page`; absent means no such page. */
+/** The envelope Veneer's `Table` reads. `next` and `prev` go back in as `cursor` or `page`; absent means no such page. */
 export interface ListPage<T> {
   items: T[]
   total?: number
@@ -172,7 +172,7 @@ export function listInput(spec: ListSpec): StandardSchemaV1<ListRequest | undefi
     }
     return { value: params }
   }
-  return { '~standard': { version: 1, vendor: 'weft', validate } }
+  return { '~standard': { version: 1, vendor: 'kerf', validate } }
 }
 
 // ---- sources --------------------------------------------------------------------------------------------------------

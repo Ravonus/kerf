@@ -12,7 +12,7 @@ const isMissing = (error: unknown, pkg: string) => {
   )
 }
 
-/** `await driver('@weft-js/db/kysely', 'kysely', () => import('kysely'))`. The import stays literal so a bundler still sees it. */
+/** `await driver('@kerf/db/kysely', 'kysely', () => import('kysely'))`. The import stays literal so a bundler still sees it. */
 export async function driver<T>(subpath: string, pkg: string, load: () => Promise<T>): Promise<T> {
   try {
     return await load()

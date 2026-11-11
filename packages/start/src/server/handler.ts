@@ -26,9 +26,9 @@ export function makeHandler(
     const scope = exec.createScope(request, services.scopeOptions)
     scope.requestId = requestIdOf(incoming, options.site)
     const { pathname } = new URL(request.url)
-    if (pathname === '/_weft/health') return health(options.dev)
+    if (pathname === '/_kerf/health') return health(options.dev)
     // The build's prerender only lists cards: it holds no secrets and may have no database.
-    if (pathname === '/_weft/og-routes') return als.run(scope, () => route(request, scope))
+    if (pathname === '/_kerf/og-routes') return als.run(scope, () => route(request, scope))
     await services.boot()
     if (options.liveRequired?.length) await hub().probed
     if (hub().refused)

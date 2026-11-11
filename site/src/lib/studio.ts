@@ -1,4 +1,4 @@
-// The theme studio's model: a `warp()` config compiled in the browser by warp's own theme compiler, as one named
+// The theme studio's model: a `veneer()` config compiled in the browser by veneer's own theme compiler, as one named
 // theme ("studio"), so only the preview under [data-palette="studio"] takes it.
 import {
   checkTokens,
@@ -7,11 +7,11 @@ import {
   seedByName,
   themeCss,
   themeOptions,
-} from '@weft-js/warp/theme'
+} from '@kerf/veneer/theme'
 import facts from '../generated/theme-context.json'
 
 type Value = string | number
-/** What the studio edits: the same keys `warp()` takes in weft.config.ts. */
+/** What the studio edits: the same keys `veneer()` takes in kerf.config.ts. */
 export interface StudioConfig {
   seed?: { accent?: string; neutral?: string }
   colors?: Record<string, string>
@@ -23,7 +23,7 @@ export interface StudioConfig {
 
 export const STUDIO_PALETTE = 'studio'
 const context = { ...facts, tokenNames: new Set(facts.tokenNames) }
-/** Every `--warp-*` token the stylesheet declares, for the token picker. */
+/** Every `--veneer-*` token the stylesheet declares, for the token picker. */
 export const TOKEN_NAMES: readonly string[] = facts.tokenNames
 
 export interface Compiled {
@@ -108,14 +108,14 @@ function source(v: unknown, depth: number): string {
   return rows.length ? `{\n${rows.join('\n')}\n${'  '.repeat(depth)}}` : '{}'
 }
 
-/** weft.config.ts with this theme: the whole app gets it. */
+/** kerf.config.ts with this theme: the whole app gets it. */
 export function configSource(config: StudioConfig): string {
   return [
-    "import { defineConfig } from '@weft-js/start'",
-    "import { warp } from '@weft-js/warp/plugin'",
+    "import { defineConfig } from '@kerf/start'",
+    "import { veneer } from '@kerf/veneer/plugin'",
     '',
     'export default defineConfig({',
-    `  plugins: [warp(${source(config, 1).replace(/^\{\}$/, '')})],`,
+    `  plugins: [veneer(${source(config, 1).replace(/^\{\}$/, '')})],`,
     '})',
     '',
   ].join('\n')

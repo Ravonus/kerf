@@ -1,5 +1,5 @@
-import { context } from '@weft-js/core'
-import { Card, Heading, Inset } from '@weft-js/warp'
+import { context } from '@kerf/core'
+import { Card, Heading, Inset } from '@kerf/veneer'
 
 type Level = 2 | 3 | 4 | 5 | 6
 // Heading depth. Outside every Section, the fallback

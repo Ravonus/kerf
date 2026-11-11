@@ -11,7 +11,7 @@
 Some state belongs to the whole app: the basket that the header counts and the checkout lists, the signed-in user's
 preferences, the document an editor has open. Passing it down from the root would thread it through every layer, and a
 [context](/learn/passing-data-deeply) is built for values that differ by subtree, not one value for everyone.
-`defineState` is Weft's tool for this: a named scope of boxes, derived values and actions that any component imports.
+`defineState` is Kerf's tool for this: a named scope of boxes, derived values and actions that any component imports.
 
 :::demo scope
 
@@ -19,7 +19,7 @@ preferences, the document an editor has open. Passing it down from the root woul
 
 ```tsx
 // src/state/basket.ts
-import { defineState, derived, state } from '@weft-js/core'
+import { defineState, derived, state } from '@kerf/core'
 
 export const basket = defineState('basket', () => {
   const items = state<string[]>([])
@@ -86,7 +86,7 @@ two setups that read each other are a cycle, and throw S009.
 
 ## Keeping the update logic in one place
 
-React has `useReducer` for moving update logic out of event handlers into one function. Weft has no reducer hook, and
+React has `useReducer` for moving update logic out of event handlers into one function. Kerf has no reducer hook, and
 doesn't need one. A scope's actions *are* that place: every way the state can change is a named function next to the
 state, and components only call them.
 
@@ -94,7 +94,7 @@ state, and components only call them.
 
 ```tsx
 // src/state/board.ts
-import { defineState, derived, state } from '@weft-js/core'
+import { defineState, derived, state } from '@kerf/core'
 
 export const board = defineState(
   'board',
@@ -152,7 +152,7 @@ export function tasksReducer(
 ```
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   tasksReducer,
   type Task,
@@ -209,7 +209,7 @@ actions, or for state with many kinds of change that you want to log or replay. 
 are shorter and say the same thing.
 
 :::deepdive Compared with Redux, Zustand and Context with a reducer
-- **Redux** keeps app state in one store, changed by dispatching actions to reducers, and read with selectors. A Weft
+- **Redux** keeps app state in one store, changed by dispatching actions to reducers, and read with selectors. A Kerf
   app usually has several small scopes instead of one store. Actions are functions on the scope. Selectors aren't
   needed: reads are already fine-grained, so a component that reads `basket.count.value` follows `count` and nothing
   else. Undo, which Redux apps add with a library, is the `history` option.
@@ -217,7 +217,7 @@ are shorter and say the same thing.
   `defineState` is that, with boxes instead of a `set` function, and with persistence, tab sync and undo as options
   rather than middleware.
 - **Context with `useReducer`** is React's built-in answer, and it re-renders every consumer when the value changes.
-  Weft splits the two jobs: [`context`](/learn/passing-data-deeply) for values that depend on where in the tree you are,
+  Kerf splits the two jobs: [`context`](/learn/passing-data-deeply) for values that depend on where in the tree you are,
   and `defineState` for one shared value, with no re-rendering either way.
 :::
 
@@ -270,7 +270,7 @@ A box made inside a scope's setup can be kept in the browser:
 
 ```ts
 // src/state/prefs.ts
-import { defineState, state } from '@weft-js/core'
+import { defineState, state } from '@kerf/core'
 
 export const prefs = defineState('prefs', () => ({
   theme: state<'light' | 'dark'>('light', { persist: 'cookie' }),
@@ -291,7 +291,7 @@ comes back from storage was written by an older version of your app, or edited b
 
 ```ts
 // src/state/cart.ts
-import { defineState, derived, state } from '@weft-js/core'
+import { defineState, derived, state } from '@kerf/core'
 import { z } from 'zod'
 
 const Lines = z.record(z.string(), z.number())
@@ -328,7 +328,7 @@ When the shape changes, bump `version` and say how to turn the old shape into th
 
 ```ts
 // src/state/reading.ts
-import { defineState, state } from '@weft-js/core'
+import { defineState, state } from '@kerf/core'
 import { z } from 'zod'
 
 const Reading = z.object({
@@ -363,7 +363,7 @@ then the schema.
 
 :::pitfall `persist` only works inside a scope
 `persist` and `sync` are options of a box made inside a `defineState` setup. On a box in a component or a module, they
-do nothing. The scope gives the stored value its key, `weft:<app>:<scope>.<box>`, which is why a persisted box must be
+do nothing. The scope gives the stored value its key, `kerf:<app>:<scope>.<box>`, which is why a persisted box must be
 returned from the setup or given a `name: '…'`. Persisting an object without a schema, or a box with neither a returned
 key nor a `name`, throws **S008** in development.
 :::
@@ -395,7 +395,7 @@ never appear on another's page.
 - **What the server changed travels with the page.** Boxes the server render left different from their initial value
   are sent with the HTML, so the browser starts from the same state. Keep them plain data: ids, numbers, strings. A
   `Date`, a `Map` or a class instance can't make the trip, and is reported in development as S010.
-- **`cookie` boxes render right the first time.** `@weft-js/start` hands the request's cookies to the render, so a theme
+- **`cookie` boxes render right the first time.** `@kerf/start` hands the request's cookies to the render, so a theme
   persisted to a cookie is in the server's HTML.
 - **`local` and `session` boxes render their initial value on the server**, which can't see the browser's storage. After
   hydration the stored value arrives, and the page may flash. Reading one in a server render is **S013**. Use a cookie
@@ -403,10 +403,10 @@ never appear on another's page.
 
 ## Testing a scope
 
-`scope(handle)` from `@weft-js/core/test` makes a fresh instance of a scope with no UI, so tests don't share state:
+`scope(handle)` from `@kerf/core/test` makes a fresh instance of a scope with no UI, so tests don't share state:
 
 ```ts
-import { scope } from '@weft-js/core/test'
+import { scope } from '@kerf/core/test'
 import { expect, test } from 'vitest'
 import { cart } from '../state/cart'
 
@@ -434,7 +434,7 @@ the query. See [Loading data](/learn/loading-data).
 
 - `defineState(name, setup, options?)` makes a named scope. The setup runs once per app, on first use.
 - Components import the scope, read `.value`, and call its actions. Reads are fine-grained: no selectors.
-- Actions keep update logic in one place. Weft has no `useReducer`; a reducer is an ordinary function if you want one.
+- Actions keep update logic in one place. Kerf has no `useReducer`; a reducer is an ordinary function if you want one.
 - `{ history: { limit } }` gives `$history` with undo and redo, one step per action.
 - `persist` keeps a box through reloads (`local`, `session`, `cookie`, `memory`); objects need a schema, and shape
   changes need `version` and `migrate`.
@@ -448,7 +448,7 @@ Add a `clear` action to a basket scope, and a button in a header component that 
 the basket is empty.
 :::solution
 ```tsx
-import { defineState, derived, state } from '@weft-js/core'
+import { defineState, derived, state } from '@kerf/core'
 
 const shop = defineState('shop', () => {
   const items = state<string[]>([])
@@ -481,7 +481,7 @@ Keep a light or dark theme that survives reloads, and that the server can put in
 Add a component that toggles it.
 :::solution
 ```tsx
-import { defineState, state } from '@weft-js/core'
+import { defineState, state } from '@kerf/core'
 
 const look = defineState('look', () => ({
   theme: state<'light' | 'dark'>('light', { persist: 'cookie' }),
@@ -509,7 +509,7 @@ A board scope with history has `remove(city)` and `insert(city, at)`. Moving a p
 reverse. Make a move one step.
 :::solution
 ```tsx
-import { defineState, state } from '@weft-js/core'
+import { defineState, state } from '@kerf/core'
 
 export const route = defineState(
   'route',
@@ -540,7 +540,7 @@ undo.
 Write a test for a cart scope: adding two different products gives a count of two, and `$reset()` empties it.
 :::solution
 ```ts
-import { scope } from '@weft-js/core/test'
+import { scope } from '@kerf/core/test'
 import { expect, test } from 'vitest'
 import { cart } from '../state/cart'
 

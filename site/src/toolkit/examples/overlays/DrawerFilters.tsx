@@ -1,4 +1,4 @@
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 import {
   Button,
   Checkbox,
@@ -7,7 +7,7 @@ import {
   Stack,
   Switch,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { FILTER_REGIONS } from './shared'
 
 export function DrawerFilters() {

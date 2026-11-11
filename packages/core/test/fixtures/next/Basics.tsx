@@ -1,6 +1,6 @@
 // Constructs research 19 step 1 lowers: templates, attributes, class/style, properties, events, text, components,
 // fragments, and JSX nested in expressions. next.test.tsx renders them with both back ends and compares.
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 
 export function Hello() {
   return <p>Hello, world</p>

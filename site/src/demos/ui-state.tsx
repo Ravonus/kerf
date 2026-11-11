@@ -3,9 +3,9 @@ import {
   derived,
   state,
   type State,
-} from '@weft-js/core'
-import { interaction } from '@weft-js/core/interaction'
-import { Card, Checkbox } from '@weft-js/warp'
+} from '@kerf/core'
+import { interaction } from '@kerf/core/interaction'
+import { Card, Checkbox } from '@kerf/veneer'
 
 // What's ticked is data: one box each, read by both
 // panes, and with sync: 'tabs' by every tab.

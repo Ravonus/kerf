@@ -1,6 +1,6 @@
-// The theme studio: edit a `warp()` config, see real components take it, copy it into weft.config.ts.
-import { derived, onMount, state, watch } from '@weft-js/core'
-import { Button, Tabs } from '@weft-js/warp'
+// The theme studio: edit a `veneer()` config, see real components take it, copy it into kerf.config.ts.
+import { derived, onMount, state, watch } from '@kerf/core'
+import { Button, Tabs } from '@kerf/veneer'
 import { compile, configSource, STUDIO_PALETTE, type StudioConfig } from '../../lib/studio'
 import { ratio } from '../../lib/contrast'
 import { keepConfig, loadConfig, shareLink } from '../../lib/studio-store'
@@ -34,9 +34,9 @@ function Contrast(props: { stage: () => HTMLElement | undefined; look: string })
       return getComputedStyle(probe).color
     }
     read.value = [
-      ['Text on page', ratio(v('--warp-color-text'), v('--warp-color-page'))],
-      ['Accent text', ratio(v('--warp-color-accent-text'), v('--warp-color-page'))],
-      ['Ink on accent', ratio(v('--warp-color-accent-on-solid'), v('--warp-color-accent-solid'))],
+      ['Text on page', ratio(v('--veneer-color-text'), v('--veneer-color-page'))],
+      ['Accent text', ratio(v('--veneer-color-accent-text'), v('--veneer-color-page'))],
+      ['Ink on accent', ratio(v('--veneer-color-accent-on-solid'), v('--veneer-color-accent-solid'))],
     ]
     probe.remove()
   }
@@ -66,7 +66,7 @@ function Output(props: { cfg: Cfg }) {
   return (
     <section data-studio="output" aria-label="Your theme">
       <header>
-        <h2>weft.config.ts</h2>
+        <h2>kerf.config.ts</h2>
         <Button
           size="sm"
           emphasis="soft"

@@ -1,5 +1,5 @@
 // `defineState` through a render and hydration (test/ssr-state.test.tsx): cookie, local and render-written boxes.
-import { untrack } from '@weft-js/core'
+import { untrack } from '@kerf/core'
 import { prefs } from './Prefs.state'
 
 export function Prefs(props: { label?: string }) {

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Checkbox } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Checkbox } from '@kerf/veneer'
 
 export function CheckboxBasic() {
   const on = state(true)

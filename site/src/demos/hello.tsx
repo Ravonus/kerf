@@ -1,4 +1,4 @@
-import { Card } from '@weft-js/warp'
+import { Card } from '@kerf/veneer'
 
 function Greeting(props: {
   name: string

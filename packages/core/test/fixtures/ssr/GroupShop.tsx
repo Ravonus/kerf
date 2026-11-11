@@ -1,8 +1,8 @@
 // The groups version of the v3 shop (examples/style-groups) with data loaded, for the round trip in test/style.test.tsx.
 // Same as Shop.tsx, on the components rewritten with style groups.
-import { derived, state, untrack } from '@weft-js/core'
-import type { Product } from '../../../../../evals/reference-v3/weft/src/api'
-import type { Cart } from '../../../../../evals/reference-v3/weft/src/App'
+import { derived, state, untrack } from '@kerf/core'
+import type { Product } from '../../../../../evals/reference-v3/kerf/src/api'
+import type { Cart } from '../../../../../evals/reference-v3/kerf/src/App'
 import { CartView } from '../../../../../examples/style-groups/src/components/CartView'
 import { Header } from '../../../../../examples/style-groups/src/components/Header'
 import {

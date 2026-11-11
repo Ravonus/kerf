@@ -16,8 +16,8 @@ spikes/native/android/app/.cxx/
 packages/core/native/
 packages/core/bench/corpus/
 packages/core/test/corpus-gen/
-**/.weft/*
-!**/.weft/plugins.lock.json
+**/.kerf/*
+!**/.kerf/plugins.lock.json
 .release/
 # Secrets. scripts/quality/tarballs.mjs fails if any of these stops being ignored.
 .env
@@ -34,16 +34,16 @@ netlify.env
 # cli tests check a copy of start's fixture here (packages/cli/test/helpers.mjs startApp).
 packages/start/test/.tmp/
 
-# Template test apps are regenerated from packages/create/templates.
-packages/create/test/.tmp-templates/
+# Template test apps are regenerated from packages/create-kerf/templates.
+packages/create-kerf/test/.tmp-templates/
 
 # Generated site content.
 /site/public/reference/
 /site/public/learn/
 
 # Regenerated test and benchmark output.
-/packages/warp/test/a11y/gallery/assets/
-/packages/warp-icons/contact-sheet.html
+/packages/veneer/test/a11y/gallery/assets/
+/packages/veneer-icons/contact-sheet.html
 /packages/cli/.vitest/
 /evals/results/sites/first-run-*.json
 /benchmarks/speed/lab.json

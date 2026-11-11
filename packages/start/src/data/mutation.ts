@@ -1,4 +1,4 @@
-import { DEV, flush, untrack, type State } from '@weft-js/core'
+import { DEV, flush, untrack, type State } from '@kerf/core'
 import { client, peers } from '../router'
 import { entries, entry, setBase, staleTags, relieve, cache, type Entry, type Layer } from './cache'
 import { fnOf, fns, go, runtime, server } from './foundation'
@@ -93,7 +93,7 @@ function applyResult(o: {
       // next value (refetched now) instead of flashing back to the old one.
       if (DEV && !e.tags.some((t) => a.t?.includes(t)))
         console.warn(
-          `weft: S011 \`${fn.$id}\`'s optimistic updated \`${e.key}\` (tags ${JSON.stringify(e.tags)}), but its invalidated tags ${JSON.stringify(a.t ?? [])} don't cover it: the prediction had no fresh value to land on.\n  fix: add one of its tags to \`invalidates\``,
+          `kerf: S011 \`${fn.$id}\`'s optimistic updated \`${e.key}\` (tags ${JSON.stringify(e.tags)}), but its invalidated tags ${JSON.stringify(a.t ?? [])} don't cover it: the prediction had no fresh value to land on.\n  fix: add one of its tags to \`invalidates\``,
         )
       wait(e)
       e.held = true

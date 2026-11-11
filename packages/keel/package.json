@@ -1,0 +1,63 @@
+{
+  "name": "@kerf/keel",
+  "version": "0.1.0",
+  "description": "@kerf/keel: KEEL generation for kerf. The `keel-lit` surface kind (surface.renderer@1) and KEEL's generative modules: trees, looks, light.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
+    "directory": "packages/keel"
+  },
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/keel#readme",
+  "bugs": {
+    "url": "https://github.com/Ravonus/kerf/issues"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.mjs"
+    },
+    "./runtime": "./src/runtime.ts",
+    "./stage": "./src/stage.ts",
+    "./lit": {
+      "types": "./vendor/lit.d.mts",
+      "default": "./vendor/lit.mjs"
+    },
+    "./modules/*": {
+      "types": "./vendor/modules/*.d.mts",
+      "default": "./vendor/modules/*.mjs"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:e2e": "node test/e2e.mjs",
+    "vendor": "node scripts/vendor.mjs"
+  },
+  "peerDependencies": {
+    "@kerf/core": "*"
+  },
+  "devDependencies": {
+    "@kerf/core": "workspace:*",
+    "@kerf/scroll": "workspace:*",
+    "esbuild": "0.28.2",
+    "playwright-core": "1.64.1",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "keywords": [
+    "kerf"
+  ],
+  "files": [
+    "src",
+    "vendor",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

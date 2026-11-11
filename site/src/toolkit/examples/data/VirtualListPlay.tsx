@@ -1,4 +1,4 @@
-import { VirtualList } from '@weft-js/warp'
+import { VirtualList } from '@kerf/veneer'
 
 import { money as _Shared0 } from './shared-project'
 

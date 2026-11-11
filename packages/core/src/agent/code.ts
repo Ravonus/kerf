@@ -17,7 +17,7 @@ const q = (t: Query | Target): string => {
   return `screen.getByText(${s(t.text)})`
 }
 
-/** The recorded steps as a `@weft-js/core/test` test: role/label/text queries, user actions, clock and net, real assertions. */
+/** The recorded steps as a `@kerf/core/test` test: role/label/text queries, user actions, clock and net, real assertions. */
 export function buildCode(steps: Step[], o: CodeOptions = {}) {
   const comp = o.component ?? 'App'
   const used = new Set(['render', 'screen'])
@@ -103,7 +103,7 @@ function finishCode({
   body.splice(renderAt, 0, `render(${comp}${o.props ? `, ${o.props}` : ''})`)
   const lines = [
     `import { expect, test } from 'vitest'`,
-    `import { ${[...used].sort().join(', ')} } from '@weft-js/core/test'`,
+    `import { ${[...used].sort().join(', ')} } from '@kerf/core/test'`,
     `import { ${comp} } from ${JSON.stringify(o.from ?? `./${comp}`)}`,
     ...(o.imports ?? []),
     '',

@@ -3,7 +3,7 @@
 import { createRequire } from 'node:module'
 
 const { chromium } = createRequire(
-  new URL('../../packages/warp/package.json', new URL('../qa.mjs', import.meta.url)),
+  new URL('../../packages/veneer/package.json', new URL('../qa.mjs', import.meta.url)),
 )('playwright-core')
 export const base = process.argv[2] ?? 'http://localhost:3300'
 export const b = await chromium.launch()
@@ -31,7 +31,7 @@ export const check = async (
 export const same = (got, want, what) => {
   if (String(got) !== String(want)) throw new Error(`${what}: got ${got}, want ${want}`)
 }
-/** warp.flow waits for a person: nothing moves until the first scroll. A pixel arms it, as a reader would. */
+/** veneer.flow waits for a person: nothing moves until the first scroll. A pixel arms it, as a reader would. */
 export const arm = async (page) => {
   await page.mouse.move(640, 300)
   await page.mouse.wheel(0, 1)

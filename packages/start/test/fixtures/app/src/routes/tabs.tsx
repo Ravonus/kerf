@@ -1,5 +1,5 @@
-import { defineState, state } from '@weft-js/core'
-import { tabs } from '@weft-js/core/browser'
+import { defineState, state } from '@kerf/core'
+import { tabs } from '@kerf/core/browser'
 import { object } from '../schema'
 
 const Cart = defineState('cart', () => ({

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Tabs, Text } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Tabs, Text } from '@kerf/veneer'
 import { REGIONS } from './shared'
 
 export function TabsOverflow() {

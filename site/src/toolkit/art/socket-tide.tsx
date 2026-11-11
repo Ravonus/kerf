@@ -1,5 +1,5 @@
-import { Canvas, type CanvasFrame as Frame } from '@weft-js/warp'
-import { state } from '@weft-js/core'
+import { Canvas, type CanvasFrame as Frame } from '@kerf/veneer'
+import { state } from '@kerf/core'
 import { inks, rng, type ArtProps, type Meta } from './shared'
 import code from './socket-tide.tsx?raw'
 
@@ -14,11 +14,11 @@ export const meta: Meta = {
 const SLOTS = 288,
   TAU = Math.PI * 2
 const colours = inks({
-  rule: '--warp-color-border',
-  low: '--warp-color-accent-border',
-  high: '--warp-color-accent-text',
-  hand: '--warp-color-sweep',
-  label: '--warp-color-text-faint',
+  rule: '--veneer-color-border',
+  low: '--veneer-color-accent-border',
+  high: '--veneer-color-accent-text',
+  hand: '--veneer-color-sweep',
+  label: '--veneer-color-text-faint',
 })
 
 const day = (() => {
@@ -53,7 +53,7 @@ function tideRings(ctx: CanvasRenderingContext2D, c: ReturnType<typeof colours>,
 function tideHours(ctx: CanvasRenderingContext2D, c: ReturnType<typeof colours>, ring: Ring) {
   const { cx, cy, inner } = ring
   ctx.fillStyle = c.label
-  ctx.font = '11px var(--warp-font-mono, monospace)'
+  ctx.font = '11px var(--veneer-font-mono, monospace)'
   ctx.textAlign = 'center'
   for (let h = 0; h < 24; h += 6) {
     const a = (h / 24) * TAU - Math.PI / 2

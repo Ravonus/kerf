@@ -1,6 +1,6 @@
-# Contributing to Weft
+# Contributing to Kerf
 
-Thanks for helping. Weft is a fine-grained reactive TSX framework with a Rust compiler, and Warp is its UI toolkit. This
+Thanks for helping. Kerf is a fine-grained reactive TSX framework with a Rust compiler, and Veneer is its UI toolkit. This
 page is everything you need: how to get set up, the one command to run, and what a good pull request looks like.
 
 ## Setup
@@ -9,7 +9,7 @@ You need [Node 26](.nvmrc) and [Rust](https://rustup.rs). rustup picks the right
 
 ```bash
 git clone <your fork>
-cd weft
+cd kerf
 pnpm run setup   # one install for every package, then the compiler
 pnpm run check   # everything
 ```
@@ -32,10 +32,10 @@ and CI runs them for you.
 | `pnpm run fix`                     | Fixes what a machine can fix. Run it first when `check` complains.              |
 | `pnpm run hooks`                   | Turns on an optional pre-commit hook that checks staged files in a few seconds. |
 
-To work on one package: `pnpm --filter @weft-js/<name> test`. To undo the hook: `git config --unset core.hooksPath`.
+To work on one package: `pnpm --filter @kerf/<name> test`. To undo the hook: `git config --unset core.hooksPath`.
 
-`pnpm run check` is about the code in this repo. Don't confuse it with `weft check`, which is the product: the diagnostics an
-app built with Weft gets.
+`pnpm run check` is about the code in this repo. Don't confuse it with `kerf check`, which is the product: the diagnostics an
+app built with Kerf gets.
 
 ## The rules
 
@@ -56,7 +56,7 @@ and run them with the package's `test:e2e` script. The direct Node test in `core
 exception. Packages using Vitest have one root `vitest.config.ts`; shared realtime base configurations remain valid.
 `node scripts/quality/conventions.mjs` checks tracked package paths and the Node entry import closure.
 
-**Boundaries.** warp-core doesn't import a framework: that goes in `bindings/`. Core doesn't import Node. Nothing a browser
+**Boundaries.** veneer-core doesn't import a framework: that goes in `bindings/`. Core doesn't import Node. Nothing a browser
 loads may reach Node code, however many files away. `scripts/quality/boundaries.mjs` follows the imports to check.
 Browser code doesn't call `crypto.randomUUID`, which a page on plain http (a LAN address) doesn't have: use
 `crypto.getRandomValues`. `scripts/quality/browser-apis.mjs` follows the same imports, and the site's client code.
@@ -91,10 +91,10 @@ Run `node scripts/quality/rust-format.mjs` to check, or add `--write` to format 
 
 ## Speed and size
 
-Speed comes first, then bytes. If you change the compiler, the runtime, Warp or warp-core:
+Speed comes first, then bytes. If you change the compiler, the runtime, Veneer or veneer-core:
 
 - `node packages/core/scripts/size.mjs` and the tests in each package hold the size budgets.
-- `node benchmarks/compare/measure.mjs` measures every stack in `benchmarks/compare`, not only Weft, and you commit the new line in
+- `node benchmarks/compare/measure.mjs` measures every stack in `benchmarks/compare`, not only Kerf, and you commit the new line in
   `evals/results/compare-history.jsonl` and the regenerated `compare.html`. [benchmarks/compare/README.md](benchmarks/compare/README.md)
   has the rules.
 
@@ -104,24 +104,24 @@ A diagnostic is a stable code, one line of why, a fix, and an autofix when the c
 
 1. Pick the next free code in its family in `packages/cli/src/catalog/<family>.mjs`, and add an entry with `catches`, `fix` and an
    `example` that triggers it. The catalog's `probe()` runs the examples, so docs only claim what the compiler really reports.
-2. Report it. Compiler diagnostics use `Diagnostic::new` in a pass under `crates/weft-compiler/src/analyze/`. CLI ones go in the matching
+2. Report it. Compiler diagnostics use `Diagnostic::new` in a pass under `crates/kerf-compiler/src/analyze/`. CLI ones go in the matching
    `packages/cli/src/*-checks.mjs`.
-3. Add a test that it fires, and one that the right code stays quiet: `crates/weft-compiler/tests/compile/`, or
+3. Add a test that it fires, and one that the right code stays quiet: `crates/kerf-compiler/tests/compile/`, or
    `packages/cli/test/`.
 4. If the rule is new to users, document it in `packages/cli/docs/rules.md`.
 
 After a compiler change, rebuild with `pnpm run build:native` in `packages/core`.
 
-## Adding a Warp component
+## Adding a Veneer component
 
-1. Behaviour that isn't tied to a framework goes in `packages/warp-core/src`. Its CSS goes in the spec's stylesheets in
-   `docs/design/warp/tokens/`, under a `/* -- Name` header; `pnpm run build:css` in `packages/warp-core` splits them into
+1. Behaviour that isn't tied to a framework goes in `packages/veneer-core/src`. Its CSS goes in the spec's stylesheets in
+   `docs/design/veneer/tokens/`, under a `/* -- Name` header; `pnpm run build:css` in `packages/veneer-core` splits them into
    `styles/components/`.
-2. The component goes in `packages/warp/src/<Name>.tsx`, using `data-scope` and `data-part` the way its neighbours do.
-3. Export it from `packages/warp/src/index.ts` with a doc comment, and register it in `packages/warp/src/plugin/catalog.mjs` and
-   `packages/warp/scripts/size.mjs`.
-4. Add a test in `packages/warp/test/`, including hydration if it has state. Keyboard use and screen readers count: see
-   `packages/warp/test/a11y/`.
+2. The component goes in `packages/veneer/src/<Name>.tsx`, using `data-scope` and `data-part` the way its neighbours do.
+3. Export it from `packages/veneer/src/index.ts` with a doc comment, and register it in `packages/veneer/src/plugin/catalog.mjs` and
+   `packages/veneer/scripts/size.mjs`.
+4. Add a test in `packages/veneer/test/`, including hydration if it has state. Keyboard use and screen readers count: see
+   `packages/veneer/test/a11y/`.
 
 ## A good pull request
 
@@ -135,7 +135,7 @@ After a compiler change, rebuild with `pnpm run build:native` in `packages/core`
 
 [docs/README.md](docs/README.md) lists where each doc lives. In short:
 
-- **Reference** is `packages/cli/docs/*.md`: exact API, commands, config keys and codes. `weft docs` prints these pages to
+- **Reference** is `packages/cli/docs/*.md`: exact API, commands, config keys and codes. `kerf docs` prints these pages to
   apps and agents, and the site serves them under `/reference`. A change to a public API updates its page here.
 - **Learn** is `site/content/learn/*.md`: the tutorial. Change it when what a reader should learn changes.
 - A package's `README.md` says what it's for, how to install it and where its docs are. It doesn't repeat them.
@@ -149,14 +149,14 @@ at `git log` for the feel:
 
 ```
 Keep a hovered toast paused in WebKit after it moves into a modal
-weft add: an unscoped name for an unpublished add-on gets the plain message
+kerf add: an unscoped name for an unpublished add-on gets the plain message
 ```
 
 Add a body when the why isn't obvious. Sign off every commit (see below).
 
 ## Developer Certificate of Origin
 
-Weft uses the [Developer Certificate of Origin](https://developercertificate.org), not a CLA. It's a short statement that you
+Kerf uses the [Developer Certificate of Origin](https://developercertificate.org), not a CLA. It's a short statement that you
 wrote the code or have the right to send it. Agree by adding a sign-off to each commit:
 
 ```bash

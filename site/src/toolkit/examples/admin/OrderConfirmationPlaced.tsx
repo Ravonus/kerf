@@ -1,4 +1,4 @@
-import { OrderConfirmation } from '@weft-js/warp'
+import { OrderConfirmation } from '@kerf/veneer'
 import { PEOPLE } from '../../world'
 
 export const OrderConfirmationPlaced = () => (

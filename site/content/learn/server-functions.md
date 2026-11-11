@@ -8,7 +8,7 @@
 :::
 
 A page needs to read data and change it. In most stacks that means designing an API: routes, methods, request and
-response shapes, a client to call them, and code to keep the two sides in step. With `@weft-js/start` you write a
+response shapes, a client to call them, and code to keep the two sides in step. With `@kerf/start` you write a
 function on the server and import it in a component. The call crosses the network, but your code doesn't have to know.
 
 The last page, [Loading data](/learn/loading-data), read queries from `load` and from components. This one is about
@@ -22,7 +22,7 @@ server is its `run`:
 
 ```ts
 // src/server/count.ts
-import { query } from '@weft-js/start'
+import { query } from '@kerf/start'
 import { eq } from 'drizzle-orm'
 import { todos } from '#/db/schema'
 
@@ -52,14 +52,14 @@ export function Counter() {
 That's the whole API. There is no route to name, no `fetch` to write, and the types go straight through: `count.value`
 is a `number | undefined` because `run` returns a number.
 
-What makes this safe is the build. The `weft:start` plugin gives every export in a server module an id, and in the
-browser's copy of the file it replaces each one with a small stub that calls `/_weft/fn/<id>`. `run`, the database
+What makes this safe is the build. The `kerf:start` plugin gives every export in a server module an id, and in the
+browser's copy of the file it replaces each one with a small stub that calls `/_kerf/fn/<id>`. `run`, the database
 import and everything else in the file never reach the browser. That is also why a `query` or `mutation` written
 anywhere else is an error, **Q003**: its `run` and imports would ship to the client, so the build refuses.
 
 :::note A server module is the boundary
 Think of `src/server/` as the line between the two sides. Anything imported only from there stays on the server.
-Importing `@weft-js/start/db` or `@weft-js/start/auth` from a file the browser loads is **Q012**. Shared types and
+Importing `@kerf/start/db` or `@kerf/start/auth` from a file the browser loads is **Q012**. Shared types and
 plain helpers can sit anywhere, such as `src/lib/`, and both sides can import them.
 :::
 
@@ -87,7 +87,7 @@ A mutation is a write. It's declared the same way, with `invalidates` in place o
 
 ```ts
 // src/server/rename.ts
-import { FnError, mutation } from '@weft-js/start'
+import { FnError, mutation } from '@kerf/start'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'
@@ -121,7 +121,7 @@ export const renameTodo = mutation({
 Calling a mutation runs it, and returns a promise of what `run` returned. A handler is where that usually happens:
 
 ```tsx
-import { Button } from '@weft-js/warp'
+import { Button } from '@kerf/veneer'
 import { renameTodo } from '#/server/rename'
 
 export function MakeUrgent(props: { id: string; title: string }) {
@@ -162,7 +162,7 @@ Anything can call a server function's URL with anything, so a function that take
 schema. The input is checked on the server before `run` sees it, and `run` gets the parsed value, typed by the schema:
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { z } from 'zod'
 
 export const planTrip = mutation({
@@ -182,12 +182,12 @@ Input that doesn't fit is refused with **Q002** (status 400). `run` never sees i
 with the path to its field, which is what [`<Form>`](/learn/forms-and-validation) shows next to the inputs.
 
 Any [Standard Schema](https://standardschema.dev) library works: Zod, Valibot, ArkType, and the schemas Drizzle derives
-from your tables. That last one means a table can be its own validator. `schemasOf` from `@weft-js/start/db` makes a
+from your tables. That last one means a table can be its own validator. `schemasOf` from `@kerf/start/db` makes a
 `select`, `insert` and `update` schema for every table, and lets you tighten a column:
 
 ```ts
-import { mutation } from '@weft-js/start'
-import { schemasOf } from '@weft-js/start/db'
+import { mutation } from '@kerf/start'
+import { schemasOf } from '@kerf/start/db'
 import { z } from 'zod'
 import * as schema from '#/db/schema'
 
@@ -228,7 +228,7 @@ app already has. Its default export runs once per request, and what it returns i
 
 ```ts
 // src/context.server.ts
-import { session } from '@weft-js/start/auth'
+import { session } from '@kerf/start/auth'
 import auth from '#/auth.server'
 import { db } from '#/db/index.server'
 
@@ -238,7 +238,7 @@ export default async ({ request }: { request: Request }) => ({
 
 type Session = Awaited<ReturnType<typeof auth.session>>
 
-declare module '@weft-js/start' {
+declare module '@kerf/start' {
   interface Context {
     db: typeof db
     user: Session['user']
@@ -267,7 +267,7 @@ so by throwing, and how you throw decides what the browser sees.
 **`FnError`** is a failure with a message meant for the person using the app, and an HTTP status:
 
 ```ts
-import { FnError } from '@weft-js/start'
+import { FnError } from '@kerf/start'
 
 export function mustOwn(owner: string, userId: string) {
   if (owner !== userId) {
@@ -282,7 +282,7 @@ export function mustOwn(owner: string, userId: string) {
 issue, so `<Form>` shows it next to the field (status 422):
 
 ```ts
-import { invalid, mutation } from '@weft-js/start'
+import { invalid, mutation } from '@kerf/start'
 import { z } from 'zod'
 
 const TAKEN = new Set(['admin', 'root'])
@@ -303,7 +303,7 @@ reads `code` and `data`, so it can branch on the kind of failure instead of pars
 
 ```ts
 // src/server/booking.ts
-import { mutation, raise } from '@weft-js/start'
+import { mutation, raise } from '@kerf/start'
 import { z } from 'zod'
 
 export const bookTable = mutation({
@@ -324,9 +324,9 @@ On the browser's side, every failure arrives as an `FnError`, with `message`, `s
 field, for Q002 and `invalid`) and `data` (for `raise`). The call's promise rejects with it:
 
 ```tsx
-import { state } from '@weft-js/core'
-import { FnError } from '@weft-js/start'
-import { Alert, Button } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { FnError } from '@kerf/start'
+import { Alert, Button } from '@kerf/veneer'
 import { bookTable } from '#/server/booking'
 
 export function Book() {
@@ -351,7 +351,7 @@ export function Book() {
 }
 ```
 
-The diagnostics Weft itself throws (Q002, A002 and the rest) are `StartError`s on the server. They reach the browser as
+The diagnostics Kerf itself throws (Q002, A002 and the rest) are `StartError`s on the server. They reach the browser as
 `FnError`s too, with the code in `code`.
 
 ### Redirecting
@@ -360,7 +360,7 @@ A mutation can finish by sending the browser somewhere: `redirect('/todos')` in 
 the call returns. It throws, so nothing after it runs:
 
 ```ts
-import { mutation, redirect } from '@weft-js/start'
+import { mutation, redirect } from '@kerf/start'
 import { z } from 'zod'
 
 export const finishSetup = mutation({
@@ -390,7 +390,7 @@ gets the input and the cache, and changes a query's cached value with a draft yo
 
 ```ts
 // src/server/rename-fast.ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'
@@ -421,7 +421,7 @@ export const renameFast = mutation({
 with none). The recipe edits a copy-on-write draft: only the row it touches is copied, so every other row keeps its
 identity and its place on the page.
 
-What Weft does with it:
+What Kerf does with it:
 
 1. The call starts. `optimistic` runs in the browser, and its change is applied as a **layer** on top of the cached
    value. Every component reading `listTodos` shows it at once.
@@ -439,7 +439,7 @@ mutation that changes the rows of two queries calls `cache.update` once for each
 everything else.
 
 :::deepdive One round trip
-A change in most apps costs two trips: the write, then a refetch of everything that might have changed. Weft does it in
+A change in most apps costs two trips: the write, then a refetch of everything that might have changed. Kerf does it in
 one. The browser sends the mutation with the list of queries the page is showing. The server runs the mutation, works out
 which of those queries share a tag with `invalidates`, runs them, and sends their values back with the result. This is
 sometimes called single-flight.
@@ -470,7 +470,7 @@ Each has a page with the fix, such as [Q004](/reference/codes/Q004).
 
 For a function that does heavy CPU work, such as search, parsing or images, the body can be Rust instead of TypeScript.
 The declaration stays: the same import, call, cache, tags and errors, with `impl` in place of `run` and an `output`
-schema as the contract. Nothing changes for the component that calls it. Rust is never needed for Weft; it's there for
+schema as the contract. Nothing changes for the component that calls it. Rust is never needed for Kerf; it's there for
 the functions where it pays. [Rust, in depth](/learn/rust) walks through it.
 
 ## Recap
@@ -493,7 +493,7 @@ The [Full stack reference](/reference/start#server-functions) has every option.
 This mutation works, but anyone signed in can delete anyone's todo by sending its id. Fix it.
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'
@@ -511,7 +511,7 @@ export const removeTodo = mutation({
 Put the owner in the `where`, so a stranger's id matches no row:
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'
@@ -536,7 +536,7 @@ and comparing, because nothing can change between the check and the write.
 Ticking a todo waits for the server before the box changes. Add an `optimistic` to this mutation so it flips at once.
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { and, eq, not } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'
@@ -557,7 +557,7 @@ export const flipTodo = mutation({
 Predict the change on the cached list:
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { and, eq, not } from 'drizzle-orm'
 import { z } from 'zod'
 import { todos } from '#/db/schema'
@@ -590,7 +590,7 @@ Signing up with a name that's taken shows "Server function failed." in productio
 taken." next to the field instead.
 
 ```ts
-import { mutation } from '@weft-js/start'
+import { mutation } from '@kerf/start'
 import { z } from 'zod'
 
 const names = new Set(['ada'])
@@ -608,7 +608,7 @@ export const register = mutation({
 A plain `Error` is an unexpected failure, so its message is hidden. A field that's wrong is `invalid()`:
 
 ```ts
-import { invalid, mutation } from '@weft-js/start'
+import { invalid, mutation } from '@kerf/start'
 import { z } from 'zod'
 
 const names = new Set(['ada'])

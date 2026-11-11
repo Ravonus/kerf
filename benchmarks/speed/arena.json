@@ -1,7 +1,7 @@
 [
  {
   "r": 0,
-  "subject": "weft",
+  "subject": "kerf",
   "mode": "hz",
   "shape": "all",
   "obs": 1,
@@ -11,7 +11,7 @@
   "paints": 1038,
   "stacks": [
    {
-    "name": "@weft-js/core",
+    "name": "@kerf/core",
     "mean": 0.10803639706067199,
     "median": 0.1,
     "p95": 0.16666674613952637,
@@ -75,7 +75,7 @@
  },
  {
   "r": 1,
-  "subject": "weft",
+  "subject": "kerf",
   "mode": "hz",
   "shape": "all",
   "obs": 1,
@@ -85,7 +85,7 @@
   "paints": 1040,
   "stacks": [
    {
-    "name": "@weft-js/core",
+    "name": "@kerf/core",
     "mean": 0.10707374550830359,
     "median": 0.09800004959106445,
     "p95": 0.16000003814697267,
@@ -149,7 +149,7 @@
  },
  {
   "r": 2,
-  "subject": "weft",
+  "subject": "kerf",
   "mode": "hz",
   "shape": "all",
   "obs": 1,
@@ -159,7 +159,7 @@
   "paints": 1038,
   "stacks": [
    {
-    "name": "@weft-js/core",
+    "name": "@kerf/core",
     "mean": 0.09837644264615815,
     "median": 0.09333340326944987,
     "p95": 0.13666669527689615,

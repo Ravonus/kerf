@@ -1,5 +1,5 @@
-import { esc } from '@weft-js/core/markup'
-export { esc } from '@weft-js/core/markup'
+import { esc } from '@kerf/core/markup'
+export { esc } from '@kerf/core/markup'
 
 export const json = (v: unknown) => JSON.stringify(v ?? null).replace(/</g, '\\u003c')
 /**
@@ -12,7 +12,7 @@ export const moved = (href: string) =>
 export const thenable = (v: unknown): v is PromiseLike<unknown> =>
   typeof (v as Partial<PromiseLike<unknown>> | null | undefined)?.then === 'function'
 
-/** `/` → `index`, `/users/42` → `users/42`: the card path under `/_weft/og/`. */
+/** `/` → `index`, `/users/42` → `users/42`: the card path under `/_kerf/og/`. */
 export const cardPath = (path: string) =>
   path.replace(/[?#].*/, '').replace(/^\/+|\/+$/g, '') || 'index'
 

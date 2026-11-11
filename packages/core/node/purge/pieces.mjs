@@ -43,7 +43,7 @@ export function makePieces(sheets, keep, { parse, split, needs, layerOrder, GROU
         walk(owner, parse(n.body), [...heads, n.head])
         continue
       }
-      if (/\[data-weft=["']?styled/.test(n.head)) continue // the style gate's reveal: only ever in the late sheet
+      if (/\[data-kerf=["']?styled/.test(n.head)) continue // the style gate's reveal: only ever in the late sheet
       const need = split(n.head, ',')
         .map((s) => (keep.some((k) => s.includes(k)) ? { all: [], any: [] } : needs(s)))
         .filter(Boolean)

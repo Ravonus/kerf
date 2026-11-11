@@ -1,4 +1,4 @@
-import { Badge, Row, Stack, Text } from '@weft-js/warp'
+import { Badge, Row, Stack, Text } from '@kerf/veneer'
 import { DEPLOYS, TONE_OF } from '../../world'
 
 export const StackDeployLog = () => (

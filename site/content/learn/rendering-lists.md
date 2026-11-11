@@ -9,7 +9,7 @@
 :::
 
 You'll often show several similar components from a collection of data: products in a shop, messages in a thread,
-scientists in a gallery. You write this as you would in React, with JavaScript's array methods inside the markup. Weft
+scientists in a gallery. You write this as you would in React, with JavaScript's array methods inside the markup. Kerf
 then turns a `.map` in your markup into a keyed list, which keeps each row alive as the list changes and moves rows
 rather than rebuilding them.
 
@@ -57,7 +57,7 @@ export function Scientists() {
 ```
 
 An array in braces renders each of its items in order. `.map` turns each string into an `<li>`, and `key={person}`
-tells Weft which row is which; more on that below. For a list of strings or numbers you can leave `key` out, and the
+tells Kerf which row is which; more on that below. For a list of strings or numbers you can leave `key` out, and the
 value itself is the key.
 
 ## Filtering arrays of items
@@ -109,7 +109,7 @@ of the page, put the filtered list in a `derived`. Then other code (a count, an 
 list without repeating the filter:
 
 ```tsx
-import { derived, state } from '@weft-js/core'
+import { derived, state } from '@kerf/core'
 import { people } from '#/data/people'
 
 export function ByProfession() {
@@ -171,13 +171,13 @@ export function Names() {
 Over an array of objects, a `.map` without `key` is **W010**. When the items have an `id`, the compiler's fix adds
 `key={p.id}` for you.
 
-### Why Weft needs keys
+### Why Kerf needs keys
 
 Imagine files on your desktop without names. You'd refer to them by position: the first file, the second. That works
-until a file is deleted, and then "the second file" means a different file. A key is a row's name: it lets Weft tell,
+until a file is deleted, and then "the second file" means a different file. A key is a row's name: it lets Kerf tell,
 after the array changes, which row each item belongs to.
 
-For each change to the array, Weft compares the new keys with the old ones:
+For each change to the array, Kerf compares the new keys with the old ones:
 
 - **A key that stays** keeps its row: the same DOM nodes, the same component, the same state inside it. If the item is
   at a new position, the row's nodes are moved there. If the item is a new object under the same key, the row is
@@ -205,11 +205,11 @@ they were. Your notes now belong to the wrong people.
 ### Rules of keys
 
 - **Keys are unique among siblings.** Two lists can use the same keys; within one list they can't repeat. If two items
-  share a key, Weft keeps the row for the first and builds the repeat afresh on every change, which is slow and loses
+  share a key, Kerf keeps the row for the first and builds the repeat afresh on every change, which is slow and loses
   that row's state.
 - **Keys don't change.** Don't make them while rendering. `key={Math.random()}` gives every row a new key every time the
   list changes, so every row is rebuilt, and on a page rendered on the server the keys differ between server and browser
-  as well. `weft check` warns about a key from `Math.random()`, `Date.now()`, `crypto.randomUUID()` or `performance.now()`
+  as well. `kerf check` warns about a key from `Math.random()`, `Date.now()`, `crypto.randomUUID()` or `performance.now()`
   as **W044**.
 - **A row has one key.** When a row's root is a fragment (`<>`), or a conditional with two branches, put the same key on
   each of its top-level elements. Different keys on one row are W010.
@@ -242,7 +242,7 @@ Two habits keep large lists cheap. The compiler checks both.
 When you update one item, build the new array so that every other item is the same object as before:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 type Product = { id: string; name: string; price: number }
 
@@ -273,7 +273,7 @@ export function Prices() {
 
 `p.id === id ? { ...p, price } : p` makes a new object for one item and keeps the rest. The tempting
 `products.value.map(p => ({ ...p, price }))` gives every item a new identity, so every row runs its bindings on every
-change: one DOM write, hundreds of re-runs. The compiler reports that as **W014**, in one file, and `weft check` follows
+change: one DOM write, hundreds of re-runs. The compiler reports that as **W014**, in one file, and `kerf check` follows
 the box through props into other files.
 
 ### Read one entry per row with `.get`
@@ -283,7 +283,7 @@ A common shape is a list of products and a separate object of counts: `cart = st
 instead: `cart.get(p.id)` subscribes the row to that one key, and only the row whose entry changed runs again.
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 const products = [
   { id: 'espresso', name: 'Espresso' },
@@ -316,10 +316,10 @@ compiler warns about a whole-object read in a row as **W017**. When the row is a
 reads the whole object in the parent's list and re-runs every row the same way.
 
 :::note Where `.get` and `.set` come from
-`box.get(key)`, `box.set(fn)` and `state.linked` live in `@weft-js/core/keyed`. You don't import it yourself: the
-`@weft-js/core` entry includes it, and under Weft's Vite plugin a module that mentions `.get`, `.set` or `.linked` pulls
+`box.get(key)`, `box.set(fn)` and `state.linked` live in `@kerf/core/keyed`. You don't import it yourself: the
+`@kerf/core` entry includes it, and under Kerf's Vite plugin a module that mentions `.get`, `.set` or `.linked` pulls
 it in, so a page that uses none of them doesn't pay for it. Only code that reaches them by a name known at run time,
-such as `box[method]`, needs `import '@weft-js/core/keyed'`.
+such as `box[method]`, needs `import '@kerf/core/keyed'`.
 :::
 
 [Keyed state and entries](/learn/entries) goes further into entries, and the Reference page on
@@ -447,7 +447,7 @@ Fix the update.
 
 <!-- example: skip the starting point, which reports W014 -->
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Sale() {
   const products = state([
@@ -477,7 +477,7 @@ export function Sale() {
 Copy only the item that changes, and keep every other item as the same object:
 
 ```tsx
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 
 export function Sale() {
   const products = state([

@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   Flow,
@@ -9,7 +9,7 @@ import {
   Stack,
   SystemPage,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { PROJECTS } from '../../world'
 import { WIZARD, FRAMEWORKS } from './tour-coachmark'
 
@@ -42,7 +42,7 @@ export function FlowNewProject() {
         <Select
           label="Framework"
           options={FRAMEWORKS}
-          defaultValue="weft"
+          defaultValue="kerf"
         />
       ),
     },
@@ -105,7 +105,7 @@ export const SystemPage404 = () => (
     as="h3"
     kind="404"
     onSearch={() => {}}
-    searchLabel="Search weft"
+    searchLabel="Search kerf"
     primary={{ label: 'Go to dashboard' }}
     secondary={{ label: 'Report a broken link' }}
     meta="/projects/9921 · ref req_8f2a1c"
@@ -115,8 +115,8 @@ export const SystemPage404 = () => (
 const ACCOUNTS = [
   {
     id: 'mara',
-    email: 'mara@weft.dev',
-    detail: 'weft · this workspace',
+    email: 'mara@kerf.dev',
+    detail: 'kerf · this workspace',
     current: true,
   },
   {
@@ -140,7 +140,7 @@ export function SystemPage403() {
       kind="403"
       autofocus={false}
       object={PROJECT}
-      account="noor@weft.dev"
+      account="noor@kerf.dev"
       accounts={ACCOUNTS}
       onSwitch={() => {}}
       request={{

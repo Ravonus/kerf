@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
-// weft/pay end to end over `fakePay` (research 10 §8): a real mutation opens the checkout, a signed webhook goes through
+// kerf/pay end to end over `fakePay` (research 10 §8): a real mutation opens the checkout, a signed webhook goes through
 // the real ledger, and a `.live` query shows the grant. Nothing here reaches a network.
-import { derived } from '@weft-js/core'
-import { clock, net, render, screen, user } from '@weft-js/core/test'
-import { entitlementTag, price, product } from '@weft-js/pay'
-import type { RailEvent } from '@weft-js/pay'
-import { definePay, memoryPayStore } from '@weft-js/pay/server'
-import { fakePay } from '@weft-js/pay/test'
-import { mutation, query, redirect } from '@weft-js/start'
+import { derived } from '@kerf/core'
+import { clock, net, render, screen, user } from '@kerf/core/test'
+import { entitlementTag, price, product } from '@kerf/pay'
+import type { RailEvent } from '@kerf/pay'
+import { definePay, memoryPayStore } from '@kerf/pay/server'
+import { fakePay } from '@kerf/pay/test'
+import { mutation, query, redirect } from '@kerf/start'
 
 const DAY = 86_400_000
 const pro = product({
@@ -56,7 +56,7 @@ const has = query({
   run: async ({ ctx }) => ctx.entitlements.has('pro'),
 })
 
-declare module '@weft-js/start' {
+declare module '@kerf/start' {
   interface Context {
     user: { id: string } | null
   }

@@ -1,5 +1,5 @@
-import { state } from '@weft-js/core'
-import { Button, CartButton } from '@weft-js/warp'
+import { state } from '@kerf/core'
+import { Button, CartButton } from '@kerf/veneer'
 
 // -- shop --
 

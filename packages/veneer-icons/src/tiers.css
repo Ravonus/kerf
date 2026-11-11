@@ -1,0 +1,16 @@
+/* The runtime tier switch. veneer's expression stops set these four properties, so the nearest data-expression wins with
+   no script and no reflow; a page without veneer shows balanced. */
+/* veneer's layer order, first: a layer ranks by when the page first names it, and this file can load before veneer.css. */
+@layer veneer, app, theme, base, components, utilities;
+@layer veneer.tokens, veneer.base, veneer.signature, veneer.layout, veneer.components, veneer.inputs, veneer.inputs-rich, veneer.data, veneer.app, veneer.flows, veneer.marketing, veneer.canvas, veneer.flow;
+@layer veneer.components {
+  :where(svg[data-icon] [data-t="o"]) { display: var(--veneer-icon-o, inline); }
+  :where(svg[data-icon] [data-t="q"]) { display: var(--veneer-icon-q, none); }
+  :where(svg[data-icon] [data-t="b"]) { display: var(--veneer-icon-b, inline); }
+  :where(svg[data-icon] [data-t="v"]) { display: var(--veneer-icon-v, none); }
+  /* Pixels need whole cells: under 16 px they lose rows, so the pixel tier shows the balanced line there (--veneer-icon-fine). */
+  @container (max-width: 15.5px) {
+    :where(svg[data-icon] [data-t="b"]) { display: var(--veneer-icon-fine, var(--veneer-icon-b, inline)); }
+    :where(svg[data-icon] [data-t="v"]) { display: none; }
+  }
+}

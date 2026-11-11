@@ -1,4 +1,4 @@
-// The helpers weft's own back end emits (research 19 §3): one job each, named for it. Hydratable output uses the
+// The helpers kerf's own back end emits (research 19 §3): one job each, named for it. Hydratable output uses the
 // claiming versions of `tpl` and `child` from claim.ts (`htpl`, `hchild`), so client-only apps don't ship them.
 // Bindings here write, on their first run while hydrating, only what the claimed element doesn't already show: the
 // server wrote the rest. A template that missed was built fresh and comes before its own bindings, so they write
@@ -25,7 +25,7 @@ export function tpl(html: string, svg?: boolean): () => Node {
   return () => {
     if (!node) {
       const t = document.createElement('template')
-      // oxlint-disable-next-line weft/no-html-sink -- `html` is a template the compiler wrote from static markup, never a runtime value
+      // oxlint-disable-next-line kerf/no-html-sink -- `html` is a template the compiler wrote from static markup, never a runtime value
       t.innerHTML = svg ? `<svg>${html}</svg>` : html
       node = svg ? t.content.firstChild!.firstChild! : t.content.firstChild!
     }
@@ -169,7 +169,7 @@ export function kids(props: Record<string, unknown>, el: Element) {
 }
 
 /**
- * `name`/`loc` (dev builds): the component's name and `file:line`, for error messages. A component @weft-js/core/hmr
+ * `name`/`loc` (dev builds): the component's name and `file:line`, for error messages. A component @kerf/core/hmr
  * registered (`$$h`) mounts through it, so a new module version can swap it in place.
  */
 export function component<P>(Comp: (props: P) => unknown, props: P, name?: string, loc?: string) {
@@ -251,7 +251,7 @@ export function spread(el: Element, props: () => Record<string, unknown>) {
       if (fn) el.addEventListener(name, (listeners[key] = fn as EventListener), capture)
       else delete listeners[key]
     } else if (key === 'dangerouslySetInnerHTML')
-      // oxlint-disable-next-line weft/no-html-sink -- `dangerouslySetInnerHTML` is the app saying this markup is safe; the name is the warning
+      // oxlint-disable-next-line kerf/no-html-sink -- `dangerouslySetInnerHTML` is the app saying this markup is safe; the name is the warning
       el.innerHTML = (value as { __html?: string } | null | undefined)?.__html ?? ''
     else if (key === 'autoFocus') focus(el as HTMLElement, value)
     else if (key === 'class' || key === 'className') className(el, value, prev)

@@ -11,14 +11,14 @@ export const repo = repoRoot
 /** Paths for the default harness or one explicitly owned staging root. */
 export function evalPaths(root) {
   if (root && (!isAbsolute(root) || resolve(root) === '/'))
-    throw new Error('WEFT_EVAL_ROOT must be an absolute non-root directory')
+    throw new Error('KERF_EVAL_ROOT must be an absolute non-root directory')
   const state = root ? join(resolve(root), 'state') : '/private/tmp/aeval'
   const projects = root ? join(resolve(root), 'projects') : '/private/tmp/projects'
   return { state, projects, goldens: join(state, 'golden'), tgz: join(state, 'tgz') }
 }
-export const { state, projects, goldens, tgz } = evalPaths(process.env.WEFT_EVAL_ROOT)
+export const { state, projects, goldens, tgz } = evalPaths(process.env.KERF_EVAL_ROOT)
 export const realHome = process.env.HOME
-export const hostHome = process.env.WEFT_EVAL_HOST_HOME ?? realHome
+export const hostHome = process.env.KERF_EVAL_HOST_HOME ?? realHome
 export const registryPort = 4873
 export const nodeBin = dirname(process.execPath)
 const claudeLink = join(realHome, '.local/bin/claude')

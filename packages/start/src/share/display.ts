@@ -1,4 +1,4 @@
-import { NONE } from '@weft-js/core/interaction'
+import { NONE } from '@kerf/core/interaction'
 import { tab } from '../link'
 import { clients, lines, shown, siblings, tabs, type Client, type Triple } from './state'
 

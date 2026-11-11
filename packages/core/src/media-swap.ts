@@ -1,7 +1,7 @@
 // The swap runtime of `encoder: 'compatible'` (research 15 §5), a lazy chunk nothing loads without a compatible copy.
 // The page shows the efficient file; a save has to get one that opens anywhere.
 //
-// Measured with real right-clicks in headed Chromium and Firefox (packages/plugin-media/test/save.headful.mjs): Chromium
+// Measured with real right-clicks in headed Chromium and Firefox (packages/media/test/save.headful.mjs): Chromium
 // saves what the handler sets inside `contextmenu`, but Firefox only saves a URL that has finished loading, so a swap at
 // the click is too late for it. Intent therefore starts at a 150 ms hover, and the click and long-press are the backstop.
 //   Stills: drop the `<source>`s, and the `<img>` is already the fallback at the same widths and size.

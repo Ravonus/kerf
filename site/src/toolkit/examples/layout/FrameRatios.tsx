@@ -1,4 +1,4 @@
-import { Frame, Grid, Text } from '@weft-js/warp'
+import { Frame, Grid, Text } from '@kerf/veneer'
 import { RATIOS } from './shared'
 
 export const FrameRatios = () => (

@@ -1,11 +1,11 @@
 // One browser, one socket: a page that uses `share`, `channel` and `live` at once.
-import { state } from '@weft-js/core'
-import { interaction } from '@weft-js/core/interaction'
+import { state } from '@kerf/core'
+import { interaction } from '@kerf/core/interaction'
 import { shareStats } from '../../../../../src/share'
 import { room } from '../server/chat'
 import { bump, counter } from '../server/feed'
-import '../../../../../../warp/src/ui'
-import { Button } from '../../../../../../warp/src/Button'
+import '../../../../../../veneer/src/ui'
+import { Button } from '../../../../../../veneer/src/Button'
 
 if (typeof window !== 'undefined') (window as any).__share = shareStats
 

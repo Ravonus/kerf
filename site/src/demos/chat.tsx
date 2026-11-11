@@ -1,6 +1,6 @@
-import { skip } from '@weft-js/start'
-import { state } from '@weft-js/core'
-import { Badge, Button, Card, Input } from '@weft-js/warp'
+import { skip } from '@kerf/start'
+import { state } from '@kerf/core'
+import { Badge, Button, Card, Input } from '@kerf/veneer'
 import { wire } from '../lib/wire'
 import { room } from '../server/chat'
 
@@ -43,7 +43,7 @@ export default function Chat() {
         <p>
           This site runs on functions, which can't hold
           the chat's socket. Run it with{' '}
-          <code>weft dev</code> to try it.
+          <code>kerf dev</code> to try it.
         </p>
       )}
       {joined.value &&

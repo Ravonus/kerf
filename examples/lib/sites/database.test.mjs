@@ -8,7 +8,7 @@ describe('against Postgres and a browser', { skip: !pgUp }, () => {
 
   test('a clone holds exactly the seed, a reset brings it back, and two seed builds agree', async () => {
     const a = await ensureSeed(),
-      name = 'weft_bench_test_clone',
+      name = 'kerf_bench_test_clone',
       again = `${a}_t`
     await clone(name)
     const seeded = await contentHash(name)

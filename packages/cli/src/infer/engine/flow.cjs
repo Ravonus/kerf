@@ -256,7 +256,7 @@ function infer(c, sites, host) {
     noCallers: false,
   }
   if (this.routes(c.file) && c.isDefault) {
-    st.type = `import('@weft-js/start').RouteProps${facts.exportsLoad ? '<typeof load>' : ''}`
+    st.type = `import('@kerf/start').RouteProps${facts.exportsLoad ? '<typeof load>' : ''}`
     st.route = true
     return st
   }

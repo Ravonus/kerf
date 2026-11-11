@@ -7,7 +7,7 @@ import {
   state,
   untrack,
   type State,
-} from '@weft-js/core'
+} from '@kerf/core'
 import { surfaceText, type PaintedText, type TextHost } from '../surface-text'
 import type { FrameTime, SurfaceBackend } from '../surface'
 import type { Mounting } from './mount'

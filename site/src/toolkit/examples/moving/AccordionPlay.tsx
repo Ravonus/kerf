@@ -1,4 +1,4 @@
-import { Accordion, Stack } from '@weft-js/warp'
+import { Accordion, Stack } from '@kerf/veneer'
 import { QUESTIONS } from './shared'
 
 export const AccordionPlay = ({

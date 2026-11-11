@@ -1,0 +1,36 @@
+/* generated from docs/design/veneer/tokens by veneer-core/scripts/split-css.mjs: do not edit */
+@layer veneer.components {
+/* -- Menubar: a row of menu buttons; once one is open, hover moves between them */
+:where([data-scope="menubar"]) {
+  display: flex; gap: 2px; padding: 3px; border: var(--veneer-border-hairline) solid var(--veneer-color-border); border-radius: calc(var(--veneer-radius-control) + 3px);
+  background: var(--veneer-color-surface-raised); inline-size: fit-content;
+}
+:where([data-scope="menubar"] > [role="menuitem"]) {
+  block-size: calc(var(--veneer-control-md) - 6px); padding-inline: 10px; border: 0; border-radius: var(--veneer-radius-control); background: transparent;
+  color: var(--veneer-color-text); font: 500 var(--veneer-text-body-size)/1 var(--veneer-text-body-font); cursor: default;
+}
+:where([data-scope="menubar"] > [role="menuitem"]:hover),
+:where([data-scope="menubar"] > [role="menuitem"][aria-expanded="true"]) { background: color-mix(in oklab, currentColor 7%, transparent); }
+
+
+
+
+/* ---------------------------------------------------------------------------
+   TOUCH TARGETS (00 §1.5; 01 §2 "Touch floor"). Every target reaches hit-min (44px on a coarse
+   pointer, 24px on a fine one) without changing its visual box: a centred ::after expander,
+   never smaller than the target. --_hit is the per-axis inset; 0 when the box is already big enough.
+   ------------------------------------------------------------------------ */
+:where(a[data-scope="link"]),
+:where([data-scope="logo"]),
+:where([data-scope="anchor-heading"] > a[data-part="anchor"]),
+:where([data-scope="relative-time"]),
+:where([data-scope="truncate"] > [data-part="toggle"]),
+:where([data-scope="menubar"] > [role="menuitem"]),
+:where([data-scope="ai-label"]) { position: relative; }
+
+/* pills and menubar items sit in a row with room above and below: block axis only */
+:where([data-scope="pill"])::after,
+:where([data-scope="menubar"] > [role="menuitem"])::after {
+  content: ""; position: absolute; inset-inline: 0; inset-block: min(0px, calc((100% - var(--veneer-hit-min)) / 2));
+}
+}

@@ -1,4 +1,4 @@
-/* @weft-js/scroll: the root, viewport and bars. Every look is a custom property, so a theme or the `bar` options
+/* @kerf/scroll: the root, viewport and bars. Every look is a custom property, so a theme or the `bar` options
    restyle DOM bars and canvas bars alike. Nothing here declares them, so any layer or theme may: the defaults are the
    fallbacks. Before the script runs the viewport scrolls natively, with its own bars; in native mode it keeps
    scrolling natively after, with those bars hidden. */

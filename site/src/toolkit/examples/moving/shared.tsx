@@ -5,7 +5,7 @@ import {
   Stack,
   Switch,
   Text,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { DEPLOYS } from '../../world'
 
 export const SECTIONS = [
@@ -125,7 +125,7 @@ export const QUESTIONS = [
     title: 'Can I bring my own domain?',
     content:
       'Yes. Add it under Settings, then ' +
-      'point a CNAME at weft.app.',
+      'point a CNAME at kerf.app.',
   },
   {
     value: 'bill',

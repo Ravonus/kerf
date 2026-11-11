@@ -1,4 +1,4 @@
-// An `AgentStore` on the app's own Drizzle tables (`weft add agent` writes them to `src/db/agent.schema.ts`), on
+// An `AgentStore` on the app's own Drizzle tables (`kerf add agent` writes them to `src/db/agent.schema.ts`), on
 // Postgres, SQLite or MySQL. JSON goes in text columns and flags in integers, so one store reads all three.
 import {
   and,
@@ -12,7 +12,7 @@ import {
   type SQL,
   type Table,
 } from 'drizzle-orm'
-import type { DbHandle } from '@weft-js/start/db/core'
+import type { DbHandle } from '@kerf/start/db/core'
 import type { AgentToken, Conversation, Message, PendingCall, Usage } from './index'
 import type { AgentStore, TokenRow } from './store'
 
@@ -207,12 +207,12 @@ function heldAndTokens(client: Client, upsert: Upsert, { pending, tokens }: Agen
   } satisfies Partial<AgentStore>
 }
 
-/** An `AgentStore` on the app's Drizzle database and the tables `weft add agent` wrote. */
-export function drizzleAgentStore(db: { $weft: DbHandle }, tables: AgentTables): AgentStore {
+/** An `AgentStore` on the app's Drizzle database and the tables `kerf add agent` wrote. */
+export function drizzleAgentStore(db: { $kerf: DbHandle }, tables: AgentTables): AgentStore {
   const client = db as unknown as Client
-  const mysql = db.$weft.dialect === 'mysql'
+  const mysql = db.$kerf.dialect === 'mysql'
   // written by turns and by the MCP endpoint, outside any one function: the app's queries tag them `agent`
-  for (const t of Object.values(tables)) db.$weft.exempt.add(getTableName(t))
+  for (const t of Object.values(tables)) db.$kerf.exempt.add(getTableName(t))
   const upsert: Upsert = async (table, row) => {
     const { id: _, ...set } = row
     const insert = client.insert(table).values(row)

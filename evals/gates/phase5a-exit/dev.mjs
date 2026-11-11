@@ -2,10 +2,10 @@ import { spawn } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 
 export async function dev(context) {
-  const { freePort, weft, dir, until, call, ID, sleep, check, main, cleanMain, docs, cleanDocs } =
+  const { freePort, kerf, dir, until, call, ID, sleep, check, main, cleanMain, docs, cleanDocs } =
     context
   const port = await freePort()
-  const child = spawn(weft(), ['dev', '--port', String(port)], {
+  const child = spawn(kerf(), ['dev', '--port', String(port)], {
     cwd: dir,
     stdio: ['ignore', 'pipe', 'pipe'],
     detached: true,
@@ -23,7 +23,7 @@ export async function dev(context) {
   const polls = []
   try {
     await until(
-      `weft dev: ${output}`,
+      `kerf dev: ${output}`,
       async () => (await call(url, ID.search, { q: 'lantern', limit: 1 })).status === 200,
       240_000,
     )
@@ -63,13 +63,13 @@ export async function dev(context) {
     try {
       if (child.pid) process.kill(-child.pid, 'SIGKILL')
     } catch {}
-    await check('stopping `weft dev` stops the sidecar', async () => {
+    await check('stopping `kerf dev` stops the sidecar', async () => {
       context.ok(addr, 'never listened')
       await until(
         'the port to close',
         async () => {
           try {
-            await fetch(`http://${addr}/_weft/health`)
+            await fetch(`http://${addr}/_kerf/health`)
             return false
           } catch {
             return true
@@ -136,7 +136,7 @@ async function devChecks({
 
   await check('dev: a crash restarts the sidecar', async () => {
     const addr = [...getOutput().matchAll(/search: listening on (\S+)/g)].at(-1)[1]
-    const { pid } = await (await fetch(`http://${addr}/_weft/health`)).json()
+    const { pid } = await (await fetch(`http://${addr}/_kerf/health`)).json()
     polls.length = 0
     process.kill(pid, 'SIGKILL')
     await until('a failure', () => polls.some((p) => p.status !== 200), 5000)

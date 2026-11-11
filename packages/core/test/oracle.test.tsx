@@ -1,30 +1,30 @@
-// The corpus oracle (research 19 §5.4): repo components plus a generated corpus, rendered by weft's DOM output and
-// by its server render hydrated (`?weft-ssr` + `?weft-hydrate`). Hydration must claim everything (0 misses) without
+// The corpus oracle (research 19 §5.4): repo components plus a generated corpus, rendered by kerf's DOM output and
+// by its server render hydrated (`?kerf-ssr` + `?kerf-hydrate`). Hydration must claim everything (0 misses) without
 // writing to the DOM. After mounting and after every scripted interaction (click each button, type in each input)
 // both DOMs must match each other and what Solid's back end built for the same script, recorded before step 5
 // deleted it (oracle.golden.json). Comments, attribute order and class order are left out of the comparison.
-// weft-allow T005, T008: differential oracle; it compares raw DOM, and cases without a recorded trace skip that check
+// kerf-allow T005, T008: differential oracle; it compares raw DOM, and cases without a recorded trace skip that check
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { renderToString } from '@weft-js/core/ssr'
-import { hydrate } from '@weft-js/core/dom'
-import { flush, render } from '@weft-js/core/test'
+import { renderToString } from '@kerf/core/ssr'
+import { hydrate } from '@kerf/core/dom'
+import { flush, render } from '@kerf/core/test'
 import { hydration } from '../src/hydrate'
 import * as basics from './fixtures/next/Basics'
 // oxlint-disable-next-line import/no-duplicates -- the query makes it a different module
-import * as basicsServer from './fixtures/next/Basics.tsx?weft-ssr'
-import * as basicsClient from './fixtures/next/Basics.tsx?weft-hydrate'
+import * as basicsServer from './fixtures/next/Basics.tsx?kerf-ssr'
+import * as basicsClient from './fixtures/next/Basics.tsx?kerf-hydrate'
 import * as two from './fixtures/next/Step2'
-import * as twoServer from './fixtures/next/Step2.tsx?weft-ssr'
-import * as twoClient from './fixtures/next/Step2.tsx?weft-hydrate'
+import * as twoServer from './fixtures/next/Step2.tsx?kerf-ssr'
+import * as twoClient from './fixtures/next/Step2.tsx?kerf-hydrate'
 import * as bench from './fixtures/next/Bench'
-import * as benchServer from './fixtures/next/Bench.tsx?weft-ssr'
-import * as benchClient from './fixtures/next/Bench.tsx?weft-hydrate'
+import * as benchServer from './fixtures/next/Bench.tsx?kerf-ssr'
+import * as benchClient from './fixtures/next/Bench.tsx?kerf-hydrate'
 import * as shop from './fixtures/ssr/Shop'
-import * as shopServer from './fixtures/ssr/Shop.tsx?weft-ssr'
-import * as shopClient from './fixtures/ssr/Shop.tsx?weft-hydrate'
+import * as shopServer from './fixtures/ssr/Shop.tsx?kerf-ssr'
+import * as shopClient from './fixtures/ssr/Shop.tsx?kerf-hydrate'
 
 type Comp = (props: never) => unknown
 type Case = {
@@ -35,7 +35,7 @@ type Case = {
   client: Comp
   /** Buttons the script leaves alone (`selector`). */
   skip?: string
-  /** Solid's output was wrong here (none recorded): compare weft's two renders only. */
+  /** Solid's output was wrong here (none recorded): compare kerf's two renders only. */
   solidWrong?: string
 }
 
@@ -51,12 +51,12 @@ const pick = (mods: Record<string, unknown>, query: string) =>
 const corpus = {
   dom: pick(import.meta.glob('./corpus-gen/C*.tsx', { eager: true }), ''),
   server: pick(
-    import.meta.glob('./corpus-gen/C*.tsx', { eager: true, query: '?weft-ssr' }),
-    '?weft-ssr',
+    import.meta.glob('./corpus-gen/C*.tsx', { eager: true, query: '?kerf-ssr' }),
+    '?kerf-ssr',
   ),
   client: pick(
-    import.meta.glob('./corpus-gen/C*.tsx', { eager: true, query: '?weft-hydrate' }),
-    '?weft-hydrate',
+    import.meta.glob('./corpus-gen/C*.tsx', { eager: true, query: '?kerf-hydrate' }),
+    '?kerf-hydrate',
   ),
 }
 const fields = {
@@ -195,7 +195,7 @@ const digest = (text: string) =>
   text.length <= 1500 ? text : `sha256:${createHash('sha256').update(text).digest('hex')}`
 
 test.each(cases.map((c) => [c.name, c]))(
-  '%s: weft DOM = weft SSR + hydrate = Solid (recorded), through every interaction',
+  '%s: kerf DOM = kerf SSR + hydrate = Solid (recorded), through every interaction',
   async (_, c) => {
     const started = performance.now()
     let last = started
@@ -226,7 +226,7 @@ test.each(cases.map((c) => [c.name, c]))(
     warn.mockRestore()
     expect(hydration.misses).toBe(0)
     expect(mutations).toHaveLength(0)
-    h.querySelector('script[data-weft]')?.remove()
+    h.querySelector('script[data-kerf]')?.remove()
 
     const want = c.solidWrong ? undefined : golden[c.name]
     if (!c.solidWrong) expect(want, 'a recorded trace').toBeDefined()

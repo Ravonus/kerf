@@ -1,12 +1,12 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   Grid,
   SignaturePad,
   Stack,
   Text,
-} from '@weft-js/warp'
-import type { SignatureValue } from '@weft-js/warp'
+} from '@kerf/veneer'
+import type { SignatureValue } from '@kerf/veneer'
 import { Cell } from '../../world'
 
 export const SignaturePadStates = () => (
@@ -52,7 +52,7 @@ export function FormDataAgreement() {
           Data processing agreement
         </Text>
         <Text subtle>
-          weft GmbH will process logs only to run your
+          kerf GmbH will process logs only to run your
           deploys.
         </Text>
       </Stack>

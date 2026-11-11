@@ -2,7 +2,7 @@
 evals/results/
 site/content/
 packages/cli/docs/
-packages/warp/test/a11y/gallery/assets/
+packages/veneer/test/a11y/gallery/assets/
 **/vendor/
 **/gen/
 **/generated/

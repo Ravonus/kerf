@@ -1,4 +1,4 @@
-import { state } from '@weft-js/core'
+import { state } from '@kerf/core'
 import {
   Button,
   CountrySelect,
@@ -11,7 +11,7 @@ import {
   TimeZoneSelect,
   Toaster,
   toast,
-} from '@weft-js/warp'
+} from '@kerf/veneer'
 import { Cell } from '../../world'
 import {
   NEAR_COUNTRIES,

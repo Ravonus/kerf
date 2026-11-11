@@ -1,16 +1,16 @@
 {
-  "name": "@weft-js/text",
-  "version": "0.1.4",
-  "description": "weft's text: fonts for the build (subsets, matched fallbacks) and exact line breaking in the browser, on Pretext by Cheng Lou (@chenglou/pretext 1.0.0, MIT)",
+  "name": "@kerf/text",
+  "version": "0.1.0",
+  "description": "kerf's text: fonts for the build (subsets, matched fallbacks) and exact line breaking in the browser, on Pretext by Cheng Lou (@chenglou/pretext 1.0.0, MIT)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ravonus/weft.git",
+    "url": "git+https://github.com/Ravonus/kerf.git",
     "directory": "packages/text"
   },
-  "homepage": "https://github.com/Ravonus/weft/tree/main/packages/text#readme",
+  "homepage": "https://github.com/Ravonus/kerf/tree/main/packages/text#readme",
   "bugs": {
-    "url": "https://github.com/Ravonus/weft/issues"
+    "url": "https://github.com/Ravonus/kerf/issues"
   },
   "type": "module",
   "sideEffects": [
@@ -51,7 +51,7 @@
     "subset-font": "2.9.0"
   },
   "peerDependencies": {
-    "@weft-js/core": "*"
+    "@kerf/core": "*"
   },
   "devDependencies": {
     "@fontsource/inter": "5.3.0",
@@ -60,13 +60,13 @@
     "terser": "5.51.2",
     "typescript": "6.0.3",
     "vitest": "5.0.5",
-    "@weft-js/core": "workspace:*"
+    "@kerf/core": "workspace:*"
   },
   "engines": {
     "node": ">=24"
   },
   "keywords": [
-    "weft"
+    "kerf"
   ],
   "files": [
     "dist",

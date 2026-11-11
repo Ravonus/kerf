@@ -80,13 +80,13 @@ async function open(context: Playwright.BrowserContext, path = '/ui-state', init
     window.WebSocket = class extends Real {
       constructor(u: string | URL, ...a: [protocols?: string | string[]]) {
         super(u, ...a)
-        if (String(u).includes('/_weft/ws')) window.__sockets.push(this)
+        if (String(u).includes('/_kerf/ws')) window.__sockets.push(this)
       }
     }
   })
   if (init) await page.addInitScript(init)
   await page.goto(url + path)
-  await page.waitForFunction(() => window.__weft?.hydrated, null, { timeout: 15_000 })
+  await page.waitForFunction(() => window.__kerf?.hydrated, null, { timeout: 15_000 })
   Object.assign(page, { errors })
   return page as Playwright.Page & { errors: string[] }
 }

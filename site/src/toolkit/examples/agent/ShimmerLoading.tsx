@@ -1,4 +1,4 @@
-import { Shimmer, Stack } from '@weft-js/warp'
+import { Shimmer, Stack } from '@kerf/veneer'
 
 export const ShimmerLoading = () => (
   <Stack gap="related">

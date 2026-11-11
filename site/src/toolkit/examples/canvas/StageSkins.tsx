@@ -1,4 +1,4 @@
-import { DitherStage } from '@weft-js/warp'
+import { DitherStage } from '@kerf/veneer'
 import { Skins } from './stage-landing'
 
 // -- DitherStage

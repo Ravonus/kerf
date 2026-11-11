@@ -1,6 +1,6 @@
 // All a page that's only being read runs (PLAN §11). It starts `full` (the router, the runtime) when the page needs code at once, when something happens on an island, or when an island that
 // wants to be running, or that isn't in the first view and so wasn't preloaded, comes into view. A visitor who asked for
-// less data gets it on interaction only. `#weft-route` and the islands' comments are read by `start()` once it's here.
+// less data gets it on interaction only. `#kerf-route` and the islands' comments are read by `start()` once it's here.
 
 /** What the inline script left on `window`: the queue, and how to play or wake it. */
 export interface Held {

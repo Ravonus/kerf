@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 const require = createRequire(import.meta.url)
 const { transform } = require('../compiler.cjs')
-const fixtures = new URL('../../../evals/buggy-v4/weft/react-isms/', import.meta.url)
+const fixtures = new URL('../../../evals/buggy-v4/kerf/react-isms/', import.meta.url)
 
 const cases = [
   ['state', 'useState', 'state(initial)'],
