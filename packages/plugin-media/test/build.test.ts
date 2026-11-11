@@ -151,6 +151,16 @@ it('a PNG with alpha is a graphic: AVIF plus a lossless PNG fallback', async () 
   expect(asset.sources.map((s: { type: string }) => s.type)).toEqual(['image/avif', 'image/png'])
 })
 
+it('the cache keeps names apart: the same bytes under a new name come out under the new name', async () => {
+  const bytes = await photo(240, 160)
+  const build = createMediaBuild({ widths: [200], quality: { scorer: 'none' } })
+  const first = await build.build({ file: '/x/old-name.jpg', bytes }, { cacheDir })
+  const renamed = await build.build({ file: '/x/new-name.jpg', bytes }, { cacheDir })
+  expect(first.asset.src).toMatch(/^old-name-/)
+  expect(renamed.asset.src).toMatch(/^new-name-/)
+  expect(renamed.files.every((f: { name: string }) => f.name.startsWith('new-name-'))).toBe(true)
+})
+
 it('SVG: unsafe files are refused (M012); safe ones go through SVGO with their size', async () => {
   const build = createMediaBuild()
   const evil = await build.build(

@@ -92,8 +92,10 @@ export function createMediaBuild(input = {}) {
         }
       }
       const stem = basename(file, extname(file)).replace(/[^\w-]+/g, '-')
+      // The name too: the files are named after the source, so a renamed source must not get the old names back.
       const key = createHash('sha256')
         .update(bytes)
+        .update(name)
         .update(JSON.stringify(o))
         .update(String(VERSION))
         .update(audio ? readFileSync(audio) : '')
