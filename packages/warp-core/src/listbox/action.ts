@@ -101,6 +101,7 @@ export class ListboxAction {
     this.#list.id = this.#id
     this.#list.setAttribute('role', 'listbox')
     this.#list.setAttribute('aria-label', this.#o.label)
+    if (this.#o.multiple) this.#list.setAttribute('aria-multiselectable', 'true')
     this.#face = this.#el('span', 'shuttle', this.#list)
     this.#all = []
     this.#buildRows()
@@ -199,14 +200,14 @@ export class ListboxAction {
         ? 0
         : Math.max(
             0,
-            this.#rows.findIndex((r) => r.item.value === this.#o.value),
+            this.#rows.findIndex((r) => this.#on(r.item.value)),
           ),
       false,
     )
   }
+  #on = (v: string) => (this.#o.multiple ? !!this.#o.values?.includes(v) : v === this.#o.value)
   #mark() {
-    for (const r of this.#all)
-      r.el.setAttribute('aria-selected', String(r.item.value === this.#o.value))
+    for (const r of this.#all) r.el.setAttribute('aria-selected', String(this.#on(r.item.value)))
   }
   #reposition = () => {
     this.#frame = 0
@@ -243,7 +244,7 @@ export class ListboxAction {
           ? 0
           : Math.max(
               0,
-              this.#rows.findIndex((r) => r.item.value === this.#o.value),
+              this.#rows.findIndex((r) => this.#on(r.item.value)),
             )
     this.#trigger.setAttribute('aria-expanded', 'true')
     this.#control.setAttribute('data-hold', '')
@@ -313,6 +314,7 @@ export class ListboxAction {
   }
   #pick(i: number, reason: ChangeReason) {
     const r = this.#rows[i]
+    if (this.#o.multiple) return r && this.#o.onPick(r.item.value, reason) // a list of many stays open
     this.#hide(true)
     if (r && r.item.value !== this.#o.value) this.#o.onPick(r.item.value, reason)
   }
@@ -340,7 +342,7 @@ export class ListboxAction {
       return
     }
     if (key === 'Tab') {
-      if (this.#sheet) this.#hide(true)
+      if (this.#sheet || this.#o.multiple) this.#hide(true)
       else this.#pick(this.#at, 'keyboard')
       return
     }

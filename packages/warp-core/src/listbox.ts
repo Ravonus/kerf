@@ -26,6 +26,10 @@ export interface ListboxOptions {
   presentation?: Presentation | undefined
   /** A search input over the rows. */
   search?: boolean | undefined
+  /** Rows toggle instead of choosing one: a pick doesn't close the list, and `values` are the ones on. */
+  multiple?: boolean | undefined
+  /** With `multiple`, the values that are on. */
+  values?: readonly string[] | undefined
   onPick(value: string, reason: ChangeReason): void
   onOpenChange?(open: boolean): void
 }

@@ -7,6 +7,7 @@ export { Toggle, type ToggleProps } from './Toggle'
 export { Field, Input, Search, Textarea, type FieldProps } from './Field'
 export { NumberField, type NumberFieldProps } from './NumberField'
 export { CompactSelect, Select, type Option, type OptionGroup } from './Select'
+export { MultiSelect, type MultiSelectProps } from './MultiSelect'
 export {
   Switch,
   Checkbox,

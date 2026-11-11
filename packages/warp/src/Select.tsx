@@ -26,7 +26,7 @@ export type Option = {
 export type OptionGroup = { group: string; options: Option[] }
 
 /** Past this many options a Select searches (03 §4); `searchable` says so either way. */
-const LONG = 15
+export const LONG = 15
 
 function item(option: () => Option, selectedValue: () => string) {
   return (
@@ -80,7 +80,7 @@ interface ListProps {
   searchable?: boolean
 }
 
-const OWN = [
+export const OWN = [
   'options',
   'placeholder',
   'value',
@@ -93,7 +93,7 @@ const OWN = [
   'searchable',
 ]
 
-function listItems(props: ListProps) {
+export function listItems(props: Pick<ListProps, 'options' | 'placeholder'>) {
   return derived<ListItem[]>(() => [
     ...(props.placeholder !== undefined ? [{ value: '', label: props.placeholder }] : []),
     ...props.options.flatMap<ListItem>((o) =>
@@ -209,12 +209,20 @@ function useList(props: ListProps) {
   ] as const
 }
 
-const Chevron = () => (
+export const Chevron = () => (
   <span data-part="indicator" aria-hidden="true">
     <DownIcon />
   </span>
 )
-const FOR_CARRIER = ['name', 'form', 'required', 'autocomplete', 'onChange', 'onInput', 'readonly']
+export const FOR_CARRIER = [
+  'name',
+  'form',
+  'required',
+  'autocomplete',
+  'onChange',
+  'onInput',
+  'readonly',
+]
 
 /**
  * A select in the field shell, drawn by Warp on every device: a popover on a desktop, a sheet on a phone (03 §4), a search
