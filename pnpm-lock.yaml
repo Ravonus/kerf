@@ -481,6 +481,9 @@ importers:
       '@weft-js/core':
         specifier: workspace:*
         version: link:../core
+      '@weft-js/plugin-media':
+        specifier: workspace:*
+        version: link:../plugin-media
       '@weft-js/scroll':
         specifier: workspace:*
         version: link:../scroll
