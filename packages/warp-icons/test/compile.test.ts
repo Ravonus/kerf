@@ -266,7 +266,7 @@ test('publish writes each variant as a static file, and uploads nothing', async 
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
-})
+}, 30_000) // it draws every icon twice: under a second alone, several on a loaded gate
 test('findings: unknown is an error code, dynamic and escaped are info codes', () => {
   const root = mkdtempSync(join(tmpdir(), 'icons-find-'))
   try {
