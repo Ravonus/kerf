@@ -86,6 +86,11 @@ export function agentExtension(core: Core): ServerExtension {
     context: (ctx) => bearer(core, ctx),
     guard,
     async handle(request, path, ext) {
+      const [head, which, ...rest] = path.split('/')
+      if (head === 'bridges') {
+        const b = core.options.bridges.find((x) => x.id === which && x.serve)
+        return b ? b.serve!(request, rest.join('/')) : new Response('Not found', { status: 404 })
+      }
       if (path !== 'mcp') return new Response('Not found', { status: 404 })
       const ctx = await ext.ctx()
       if (!ctx.agent)

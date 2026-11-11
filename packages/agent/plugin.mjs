@@ -28,7 +28,7 @@ const diagnostics = [
     'AGENT003',
     'error',
     'No bridge can answer here',
-    'Set ANTHROPIC_API_KEY, sign in to the `claude` CLI, or add a bridge',
+    'Start the Rust bridge daemon, set ANTHROPIC_API_KEY, or sign in to the `claude` CLI',
   ],
   ['AGENT004', 'error', 'An empty message', 'Say something first'],
   ['AGENT005', 'error', 'A held call answered twice', 'Each is approved or declined once'],
@@ -69,7 +69,11 @@ export const agent = definePlugin({
   version: '0.1.0',
   weft: '*',
   namespace: 'AGENT',
-  permissions: { net: ['api.anthropic.com'], env: ['ANTHROPIC_API_KEY'], spawn: ['claude'] },
+  permissions: {
+    net: ['api.anthropic.com'],
+    env: ['ANTHROPIC_API_KEY', 'AGENT_BRIDGE', 'AGENT_BRIDGE_TOKEN'],
+    spawn: ['claude'],
+  },
   contribute: () => ({
     provides: [
       provide(extension, {
@@ -108,7 +112,12 @@ export const agent = definePlugin({
       {
         name: 'rustBridge',
         import: '@weft-js/agent/rust',
-        summary: 'Answer through your own server function, Rust or not',
+        summary: 'Answer through the Rust bridge daemon and its signed-in CLIs',
+      },
+      {
+        name: 'fnBridge',
+        import: '@weft-js/agent/fn',
+        summary: 'Answer through your own server function',
       },
       { name: 'fakeBridge', import: '@weft-js/agent/test', summary: 'A scripted bridge for tests' },
     ],

@@ -186,6 +186,7 @@ export async function turn(
           messages: [...history, ...(reply.parts.length ? [reply] : [])],
           tools: toolsFor(grants),
           signal,
+          who: c.owner,
           text: (delta) => emit({ type: 'text', delta }),
           ...(live && { mcp: live.mcp }),
         },

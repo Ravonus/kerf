@@ -33,6 +33,7 @@
     "./drizzle": "./src/drizzle.ts",
     "./anthropic": "./src/bridges/anthropic.ts",
     "./cli": "./src/bridges/cli.ts",
+    "./fn": "./src/bridges/fn.ts",
     "./rust": "./src/bridges/rust.ts",
     "./test": "./src/test.ts",
     "./plugin": "./plugin.mjs"

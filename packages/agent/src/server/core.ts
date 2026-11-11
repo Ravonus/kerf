@@ -73,9 +73,11 @@ export function makeCore(options: AgentOptions) {
     steps: options.steps ?? 8,
     grantsOf,
     usable: () => options.bridges.filter((b) => b.available?.() ?? true),
+    /** `id` if it can answer, else `AGENT_BRIDGE`'s, else the first that can. */
     bridge(id?: string) {
       const usable = options.bridges.filter((b) => b.available?.() ?? true)
-      return usable.find((b) => b.id === id) ?? usable[0]
+      const preferred = process.env.AGENT_BRIDGE?.trim()
+      return usable.find((b) => b.id === id) ?? usable.find((b) => b.id === preferred) ?? usable[0]
     },
     async mine(ctx: Context, id: string) {
       const c = await store.conversation(id)
