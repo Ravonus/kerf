@@ -8,6 +8,8 @@ export const safe = (v) =>
 export const px = (v) => (Number.isFinite(v) ? `${v}px` : v)
 
 const stack = (v) =>
-  v.includes(',') ? v : `${JSON.stringify(v)}, ui-sans-serif, system-ui, sans-serif`
+  v.includes(',') || v.startsWith('var(')
+    ? v
+    : `${JSON.stringify(v)}, ui-sans-serif, system-ui, sans-serif`
 export const fontValue = (v) =>
   ['sans', 'display', 'mono'].includes(v) ? `var(--warp-font-${v})` : stack(v)

@@ -108,6 +108,12 @@ describe('text roles', () => {
       }).tokens.css ?? ''
     expect(css).toContain('--warp-text-narrative-size:28px;--warp-text-narrative-leading:0.96')
     expect(css).toContain('--warp-text-narrative-font:Georgia, serif')
+    // a family name gets a stack; a stack or a variable stays as written
+    const fonts = run({
+      system: { text: { initial: { font: 'var(--font-script)' }, eyebrow: { font: 'Inter' } } },
+    }).tokens.css
+    expect(fonts).toContain('--warp-text-initial-font:var(--font-script)')
+    expect(fonts).toContain('--warp-text-eyebrow-font:"Inter", ui-sans-serif')
     expect(css).toContain(
       '@layer warp.layout{:where([data-scope="text"][data-role="narrative"]){font-size:var(--warp-text-narrative-size);line-height:var(--warp-text-narrative-leading);font-family:var(--warp-text-narrative-font)}',
     )
