@@ -36,6 +36,15 @@ export function liveTarget(preset = 'node') {
 export const holdsSockets = (preset = 'node') =>
   liveTarget(preset).held || /^(cloudflare[-_]durable|deno[-_]deploy)/.test(preset)
 
+/**
+ * Whether the page dials a socket (`__WEFT_SOCKETS__`): only when the server answers one, an app with a channel or
+ * shared state (`sockets`) on a host that can hold it. A socket nobody serves never fails, so a page that dialed one
+ * would wait on it for good; without one, streams and live queries go straight to SSE.
+ * @param {{ sockets: boolean, build: boolean, preset?: string }} app
+ */
+export const pageSockets = ({ sockets, build, preset }) =>
+  sockets && (!build || holdsSockets(preset))
+
 const SKIP = new Set(['node_modules', '.weft', '.output', 'dist'])
 
 /** `live: { required: true }` on a query, and `.live(input, { required: true })` in a component, with where. */

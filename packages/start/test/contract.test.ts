@@ -2,7 +2,7 @@
 // no converter, C002 for a value its `output` rejects; Q012 when the database or auth reaches the client graph.
 import { z } from 'zod'
 import { busProblem as busProblemSource, describe as contract } from '../src/contract.mjs'
-import { holdsSockets } from '../src/live-target.mjs'
+import { holdsSockets, pageSockets } from '../src/live-target.mjs'
 import { createScope, fetchQuery } from '../src/exec'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -252,6 +252,15 @@ test("R024: which presets can hold a browser's socket", () => {
       holdsSockets,
     ),
   ).toEqual([])
+})
+
+test('the page dials a socket only when the server answers one', () => {
+  // a stream with no channel: the server has no socket, so SSE, in dev and built
+  expect(pageSockets({ sockets: false, build: false })).toBe(false)
+  expect(pageSockets({ sockets: false, build: true, preset: 'node_server' })).toBe(false)
+  expect(pageSockets({ sockets: true, build: false })).toBe(true)
+  expect(pageSockets({ sockets: true, build: true, preset: 'node_server' })).toBe(true)
+  expect(pageSockets({ sockets: true, build: true, preset: 'vercel' })).toBe(false)
 })
 
 test('R002 reads a `.live(` call, not the word in prose', () => {
