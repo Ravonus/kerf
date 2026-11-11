@@ -9,7 +9,7 @@ import {
   type Presentation,
 } from '@weft-js/warp-core'
 import { bindable } from './bind'
-import { Field, type FieldProps } from './Field'
+import { Field, type FieldProps, type FieldShell } from './Field'
 import { use } from '@weft-js/warp-core/weft'
 import './fields'
 import '@weft-js/warp-core/styles/components/listbox.css'
@@ -93,7 +93,7 @@ const OWN = [
   'searchable',
 ]
 
-function listItems(props: ListProps) {
+function listItems(props: Pick<ListProps, 'options' | 'placeholder'>) {
   return derived<ListItem[]>(() => [
     ...(props.placeholder !== undefined ? [{ value: '', label: props.placeholder }] : []),
     ...props.options.flatMap<ListItem>((o) =>
@@ -331,5 +331,124 @@ export function CompactSelect(
         <Chevron />
       </div>
     </div>
+  )
+}
+
+/** Props for MultiSelect. */
+export type MultiSelectProps = FieldShell & {
+  label: string
+  /** Each value posts as its own field under this name. */
+  name?: string | undefined
+  form?: string | undefined
+  options: (Option | OptionGroup)[]
+  /** Shown when nothing is on. */
+  placeholder?: string
+  value?: State<string[]> | string[]
+  defaultValue?: string[]
+  /** Called with every value that's on after a row is turned on or off, and whether a pointer, a key or code did it. */
+  onValueChange?: (values: string[], reason: ChangeReason) => void
+  open?: State<boolean> | boolean
+  defaultOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  presentation?: Presentation
+  /** Puts a search field at the top of the list. On by itself past 15 options. */
+  searchable?: boolean
+  /** How many picks the trigger names before it says "+N". */
+  show?: number
+}
+
+const MULTI_OWN = [...OWN, 'show', 'name', 'form']
+
+/**
+ * A Select of many: the same list, popover or sheet, where a pick turns a row on or off and the list stays open. The
+ * trigger names what's on ("Oat milk, Vanilla +2"); a form gets one hidden input per value under `name`, as a
+ * `<select multiple>` would post them.
+ */
+export function MultiSelect(props: MultiSelectProps) {
+  const p0 = untrack(() => props)
+  const v = bindable<string[]>(
+    () => p0.value,
+    () => p0.defaultValue,
+    [],
+    () => p0.onValueChange,
+  )
+  const shown = bindable<boolean>(
+    () => p0.open,
+    () => p0.defaultOpen,
+    false,
+    () => p0.onOpenChange,
+  )
+  // the placeholder is what the trigger says with nothing on, not a row to pick
+  const items = listItems({
+    get options() {
+      return p0.options
+    },
+  })
+  const text = derived(() => {
+    const on = v.value
+    const names = items.value.filter((i) => on.includes(i.value)).map((i) => i.label)
+    const n = p0.show ?? 2
+    return names.length <= n ? names.join(', ') : `${names.slice(0, n).join(', ')} +${names.length - n}`
+  })
+  let trigger: HTMLButtonElement | undefined
+  use(
+    listbox,
+    () => trigger,
+    () => ({
+      open: p0.open !== undefined || p0.defaultOpen ? shown.value : undefined,
+      label: p0.label,
+      items: items.value,
+      value: '',
+      multiple: true,
+      values: v.value,
+      presentation: p0.presentation,
+      search: p0.searchable ?? items.value.length > LONG,
+      onPick: (picked: string, reason: ChangeReason) => {
+        const on = untrack(() => v.value)
+        v.set(on.includes(picked) ? on.filter((x) => x !== picked) : [...on, picked], reason)
+      },
+      onOpenChange: (o: boolean) => {
+        if (o !== untrack(() => shown.value)) shown.set(o)
+      },
+    }),
+  )
+  return (
+    <Field
+      {...omit(p0, MULTI_OWN)}
+      label={p0.label}
+      filled
+      labelled
+      reset={() => {
+        if (untrack(() => p0.value) === undefined) v.reset()
+      }}
+      end={<Chevron />}
+      control={(p) => (
+        <>
+          <button
+            ref={(n: HTMLButtonElement) => (trigger = n)}
+            type="button"
+            data-part="input"
+            id={p.id}
+            role="combobox"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-labelledby={`${p.id}-l`}
+            aria-describedby={p.describedby}
+            aria-invalid={p.invalid ? 'true' : undefined}
+            aria-required={p.rest.required ? 'true' : undefined}
+            aria-readonly={p.rest.readonly ? 'true' : undefined}
+            {...omit(p.rest, FOR_CARRIER)}
+          >
+            <span data-part="value" data-placeholder={p0.placeholder}>
+              {text.value}
+            </span>
+          </button>
+          {p0.name &&
+            v.value.map((x) => (
+              <input key={x} type="hidden" name={p0.name} form={p0.form} value={x} disabled={p.rest.disabled} />
+            ))}
+        </>
+      )}
+    />
   )
 }

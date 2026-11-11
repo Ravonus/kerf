@@ -106,3 +106,30 @@ test('a delegated pointer event resolves its option once before comparing row id
   expect(closest.mock.contexts[0]).toBe(target)
   expect(control.querySelector('[data-highlighted]')).toBe(rows[99])
 })
+
+test('a list of many toggles rows, stays open, and marks every value that is on', () => {
+  const picks: string[] = []
+  const opts: ListboxOptions = {
+    label: 'Milk',
+    value: '',
+    multiple: true,
+    values: ['oat'],
+    open: true,
+    presentation: 'popover',
+    items: [
+      { value: 'oat', label: 'Oat' },
+      { value: 'almond', label: 'Almond' },
+    ],
+    onPick: (v) => picks.push(v),
+  }
+  const { control, trigger, action } = mount(opts)
+  const list = control.querySelector('[role="listbox"]')!
+  expect(list.getAttribute('aria-multiselectable')).toBe('true')
+  const rows = control.querySelectorAll<HTMLElement>('[role="option"]')
+  expect([...rows].map((r) => r.getAttribute('aria-selected'))).toEqual(['true', 'false'])
+  rows[1]!.click()
+  expect(picks).toEqual(['almond'])
+  action.update({ ...opts, values: ['oat', 'almond'] })
+  expect(trigger.getAttribute('aria-expanded')).toBe('true')
+  expect([...rows].map((r) => r.getAttribute('aria-selected'))).toEqual(['true', 'true'])
+})
