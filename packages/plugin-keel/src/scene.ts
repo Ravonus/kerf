@@ -51,15 +51,33 @@ export interface SceneFrame {
   readonly time: number
 }
 
+/** A section's pass over its scene: a paper panel's sweep and edge, and the darkening and blur under it. */
+export interface ScenePost {
+  readonly progress?: number
+  readonly position?: number
+  readonly tear?: number
+  /** `#rrggbb`, or display values 0..1. */
+  readonly colour?: string | readonly [number, number, number]
+  readonly darken?: number
+  readonly blur?: number
+}
+
+/** A scene as a finish draws it: its stage and camera, or a function that draws it onto the current target. */
+export type SceneShot = { readonly scene: LitStage; readonly camera: LitCamera } | (() => void)
+
 /** A scene built on the stage's surface, ready to draw. */
 export interface LiveScene {
   readonly stage: LitStage
   readonly camera: LitCamera
+  /** What tracks on the `post` target gave at the last `at`; null without them. */
+  readonly post: ScenePost | null
   /** Poses the scene at `position`, in viewports since its section began to enter (1 ≈ one viewport). */
   at(position: number, frame: SceneFrame): void
   setQuality(levers: Levers): void
   /** Draws it to whatever the renderer targets. */
   render(): void
+  /** The scene for a finish to draw, its camera fitted to the canvas: a function when the scene draws itself. */
+  shot(): SceneShot
   /** Frees its geometry, materials and textures. */
   dispose(): void
 }
@@ -71,16 +89,20 @@ export interface SceneHost {
   readonly quality: Levers
 }
 
-/** Draws two scenes as one while the page hands over from `a` to `b`; `t` runs 0 to 1. */
+/** Draws every frame: a hand-over from `a` to `b` at `t`, or one scene with `a` = `b` and `t` = 1. */
 export interface SceneBlend {
   draw(a: LiveScene, b: LiveScene, t: number, options: BlendOptions): void
   dispose?(): void
 }
-/** How a hand-over looks. `lines: false` under reduced motion: a plain dissolve. */
+/** How a frame looks: the incoming scene's hand-over, the levers in force and the active section's pass. */
 export interface BlendOptions {
   readonly mode: 'noise' | 'radial' | 'fade'
   readonly pointer: { readonly x: number; readonly y: number } | null
+  readonly centre: { readonly x: number; readonly y: number } | null
+  /** False under reduced motion, or when the scene fills in without line work. */
   readonly lines: boolean
+  readonly levers: Levers
+  readonly post: ScenePost | null
 }
 
 /** What `build` gets: the host's surface, seed and levers, the scene's modules, and a sampler for its tracks. */
@@ -102,7 +124,10 @@ export interface Built {
 export interface SceneSpec<M extends ModuleId, B extends Built> {
   /** Loaded before `build`. `tracks`, and `camera-rail` when the tracks key a camera, come on their own. */
   readonly modules?: readonly M[]
-  /** Keyed tracks in sequence units. A `camera` target drives the camera through `camera-rail`. */
+  /**
+   * Keyed tracks in sequence units. A `camera` target drives the camera through `camera-rail`; a `post` target
+   * (`progress`, `position`, `tear`, `colour`, `darken`, `blur`) feeds the section's pass.
+   */
   readonly tracks?: readonly Track[]
   /** The rail's pointer pan and tilt, default fov and path. */
   readonly rail?: Omit<RailOptions<readonly Track[]>, 'tracks'>
@@ -168,6 +193,7 @@ export function defineScene<M extends ModuleId = never, B extends Built = Built>
 ): SceneDef {
   const tracks = spec.tracks ?? []
   const rides = tracks.some((track) => track.target === (spec.rail?.name ?? 'camera'))
+  const posts = tracks.some((track) => track.target === 'post')
   const ids = [
     ...new Set<ModuleId>([
       ...(spec.modules ?? []),
@@ -199,12 +225,15 @@ export function defineScene<M extends ModuleId = never, B extends Built = Built>
         built.camera.aspect = aspect
         built.camera.updateProjectionMatrix()
       }
-      return {
+      const live: LiveScene & { post: ScenePost | null } = {
         stage: built.stage,
         camera: built.camera,
+        post: null,
         at(position, frame) {
           if (rail && apply) apply(built.camera, rail.at(position, frame))
-          spec.at?.call(built, position, frame, sample(position, frame.time))
+          const values = sample(position, frame.time)
+          if (posts) live.post = values.post as ScenePost
+          spec.at?.call(built, position, frame, values)
         },
         setQuality: (levers) => spec.setQuality?.call(built, levers),
         render() {
@@ -212,11 +241,18 @@ export function defineScene<M extends ModuleId = never, B extends Built = Built>
           if (spec.render) spec.render.call(built)
           else renderer.render(built.stage, built.camera)
         },
+        shot() {
+          fit()
+          return spec.render
+            ? () => spec.render!.call(built)
+            : { scene: built.stage, camera: built.camera }
+        },
         dispose() {
           spec.dispose?.call(built)
           disposeTree(built.stage)
         },
       }
+      return live
     },
   }
 }

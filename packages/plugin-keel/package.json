@@ -31,6 +31,7 @@
     "./stage": "./src/stage.ts",
     "./scene": "./src/scene.ts",
     "./governor": "./src/governor.ts",
+    "./blend": "./src/blend.ts",
     "./lit": {
       "types": "./vendor/lit.d.mts",
       "default": "./vendor/lit.mjs"

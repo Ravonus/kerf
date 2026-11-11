@@ -110,3 +110,44 @@ describe('defineScene', () => {
     await expect(scene.build(h)).resolves.toHaveProperty('at')
   })
 })
+
+describe('defineScene for a blend', () => {
+  it("feeds the section's pass from tracks on the `post` target", async () => {
+    const scene = defineScene({
+      tracks: [
+        {
+          target: 'post',
+          property: 'progress',
+          keys: [
+            [0, 0],
+            [2, 2],
+          ],
+        },
+        { target: 'post', property: 'tear', keys: [[0, 1]] },
+      ],
+      build: () => ({ stage: node(), camera: node() }) as never,
+    })
+    const live = await scene.build(host().host)
+    expect(live.post).toBeNull()
+    live.at(1, FRAME)
+    expect(live.post).toEqual({ progress: 1, tear: 1 })
+  })
+
+  it('gives a finish its stage and fitted camera, or its own draw when it renders itself', async () => {
+    const stage = node()
+    const plain = await defineScene({
+      build: () => ({ stage: stage as never, camera: node() as never }),
+    }).build(host().host)
+    expect(plain.shot()).toEqual({ scene: stage, camera: plain.camera })
+    expect(plain.camera.aspect).toBe(2)
+    const own = vi.fn()
+    const drawn = await defineScene({
+      build: () => ({ stage: node(), camera: node() }) as never,
+      render: own,
+    }).build(host().host)
+    const shot = drawn.shot()
+    expect(typeof shot).toBe('function')
+    ;(shot as () => void)()
+    expect(own).toHaveBeenCalledOnce()
+  })
+})
