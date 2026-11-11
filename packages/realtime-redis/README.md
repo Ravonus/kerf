@@ -189,12 +189,39 @@ than in `url`.
 | `redisBus(options)` | `@weft-js/realtime-redis` | A `Bus` over Redis pub/sub, connecting on first use. Throws Q013 without a `redis://` or `rediss://` URL, except during a build. |
 | `bus(options?)` | `@weft-js/realtime-redis` | The `realtime.bus` provider the plugin loads: `redisBus` with `url` defaulting to `REDIS_URL`. |
 | `RedisBusOptions` | `@weft-js/realtime-redis` | Type: `{ url: string; prefix?: string }`. |
+| `redisStore(options?)` | `@weft-js/realtime-redis` | The shared query cache on Redis: default-export it from `src/cache.server.ts`. Values are JSON with their `life` as a TTL; tag versions live in Redis, so every instance sees an invalidation. |
+| `redisRateLimit(options?)` | `@weft-js/realtime-redis` | Better Auth's rate limit on Redis, counted once across instances: `createAuth({ options: { rateLimit: { customStorage: redisRateLimit() } } })`. |
+| `RedisStoreOptions` | `@weft-js/realtime-redis` | Type: `{ url?: string; prefix?: string }`. `url` defaults to `REDIS_URL`. |
 | default export, `redis` | `@weft-js/realtime-redis/plugin` | The plugin for `weft.config.ts`. Takes the same options as `bus()`. |
 
 The returned bus has `name: 'redis'`, `publish(channel, message)`, `subscribe(channel, on, gap?)` (resolves once Redis
 confirms the subscription, with a function that stops it) and `close()`.
 
 ## Recipes
+
+### The shared cache and sign-in limits on Redis
+
+The bus carries realtime messages. The same Redis can also hold the query cache and auth's rate limit, so several
+instances agree on both:
+
+```ts
+// src/cache.server.ts
+import { redisStore } from '@weft-js/realtime-redis'
+export default redisStore()
+```
+
+```ts
+// src/auth.server.ts
+import { redisRateLimit } from '@weft-js/realtime-redis'
+export default createAuth({
+  db,
+  secret,
+  options: {
+    ...options,
+    rateLimit: { customStorage: redisRateLimit() },
+  },
+})
+```
 
 ### Several apps on one Redis
 

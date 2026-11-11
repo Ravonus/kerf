@@ -156,7 +156,10 @@ export const frame = (scope: Scope): Scope =>
 
 // ---- the shared tagged cache --------------------------------------------------------------------------------------
 
-/** Where `cache: { life }` values live. Memory by default; Nitro storage (fs, KV, Redis) plugs in here. */
+/**
+ * Where `cache: { life }` values live: memory by default, or what `src/cache.server.ts` exports (`redisStore()` from
+ * `@weft-js/realtime-redis`, so every server reads the same values and an invalidation reaches all of them).
+ */
 export interface Store {
   get(key: string): Stored | undefined | Promise<Stored | undefined>
   set(key: string, value: Stored): void | Promise<void>
@@ -164,6 +167,7 @@ export interface Store {
   versions(tags: string[]): number[] | Promise<number[]>
   bump(tags: string[]): void | Promise<void>
 }
+/** One value in the shared cache: the result, its tags and their versions when it ran, and when it expires. */
 export interface Stored {
   v: unknown
   tags: string[]
@@ -171,15 +175,49 @@ export interface Stored {
   expires: number
 }
 
-export function memoryStore(): Store {
+/** How much `memoryStore` keeps: values (least recently used go first) and tag versions. */
+export interface MemoryLimits {
+  values?: number
+  tags?: number
+}
+
+/**
+ * One process's store, bounded: past `values` entries the least recently used goes, an expired value goes when it's
+ * read, and past `tags` versions they all start over. Versions come from one counter that never repeats, and a tag
+ * nobody has bumped since the restart reads as the counter's value then, so a value stored before can never match.
+ */
+export function memoryStore({
+  values: most = 10_000,
+  tags: mostTags = 100_000,
+}: MemoryLimits = {}): Store {
   const values = new Map<string, Stored>()
   const tags = new Map<string, number>()
+  let counter = 0
+  let floor = 0
   return {
-    get: (k) => values.get(k),
-    set: (k, v) => void values.set(k, v),
-    versions: (t) => t.map((x) => tags.get(x) ?? 0),
-    bump: (t) => {
-      for (const x of t) tags.set(x, (tags.get(x) ?? 0) + 1)
+    get(k) {
+      const hit = values.get(k)
+      if (!hit) return undefined
+      values.delete(k)
+      if (hit.expires <= Date.now()) return undefined
+      values.set(k, hit)
+      return hit
+    },
+    set(k, v) {
+      values.delete(k)
+      values.set(k, v)
+      for (const old of values.keys()) {
+        if (values.size <= most) break
+        values.delete(old)
+      }
+    },
+    versions: (t) => t.map((x) => tags.get(x) ?? floor),
+    bump(t) {
+      if (tags.size + t.length > mostTags) {
+        tags.clear()
+        floor = ++counter
+      }
+      for (const x of t) tags.set(x, ++counter)
     },
   }
 }

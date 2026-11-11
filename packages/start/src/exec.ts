@@ -48,6 +48,8 @@ import {
 import { validate, formInput, checked, checkTags } from './exec/validation'
 import { landed, shown, said } from './exec/landing'
 import { remember, rewarm, warms } from './exec/warm'
+import { callImpl } from './exec/impl'
+import { once } from './exec/once'
 export {
   createScope,
   finishScope,
@@ -133,52 +135,49 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
     const stored = cached?.scope
       ? `${key}@${String((early as { user?: { id?: string | number } } | undefined)?.user?.id ?? '')}`
       : key
-    if (cached) {
-      const hit = await store.get(stored)
-      if (hit && hit.expires > Date.now() && same(hit.versions, await store.versions(hit.tags)))
-        return hit.v
-    }
-    const versions = cached ? await store.versions(entry.tags) : []
-    const ctx = early ?? (await scope.ctx())
-    const touched = tracker(scope)
-    const added: string[] = []
-    const v = await call(scope, fn, valid, cached ? shared(ctx, fn, scope) : ctx, {
-      touched,
-      added,
-    })
-    const fresh = [...new Set(added)].filter((t) => !entry.tags.includes(t))
-    if (fresh.length) {
-      entry.tags.push(...fresh)
-      if (cached) versions.push(...(await store.versions(fresh)))
-    }
-    if (scope.options.dev) await checked(v, fn, scope)
-    if (touched) {
-      untouched(fn, touched.read, entry.tags, scope)
-      missedTags(fn, 'read', touched.read, entry.tags, scope)
-      reads.set(fn.$id, touched.read)
-    }
-    if (cached) {
-      await store.set(stored, {
-        v,
-        tags: entry.tags,
-        versions,
-        expires: Date.now() + seconds(cached.life) * 1000,
+    /** Run the query and store what it returns. */
+    const compute = async () => {
+      const versions = cached ? await store.versions(entry.tags) : []
+      const ctx = early ?? (await scope.ctx())
+      const touched = tracker(scope)
+      const added: string[] = []
+      const v = await call(scope, fn, valid, cached ? shared(ctx, fn, scope) : ctx, {
+        touched,
+        added,
       })
-      if (warms(fn)) remember(stored, fn, input, entry.tags)
+      const fresh = [...new Set(added)].filter((t) => !entry.tags.includes(t))
+      if (fresh.length) {
+        entry.tags.push(...fresh)
+        if (cached) versions.push(...(await store.versions(fresh)))
+      }
+      if (scope.options.dev) await checked(v, fn, scope)
+      if (touched) {
+        untouched(fn, touched.read, entry.tags, scope)
+        missedTags(fn, 'read', touched.read, entry.tags, scope)
+        reads.set(fn.$id, touched.read)
+      }
+      if (cached) {
+        await store.set(stored, {
+          v,
+          tags: entry.tags,
+          versions,
+          expires: Date.now() + seconds(cached.life) * 1000,
+        })
+        if (warms(fn)) remember(stored, fn, input, entry.tags)
+      }
+      return v
     }
-    return v
+    if (!cached) return compute()
+    const hit = await store.get(stored)
+    if (hit && hit.expires > Date.now() && same(hit.versions, await store.versions(hit.tags)))
+      return hit.v
+    const done = await once(stored, async () => ({ v: await compute(), tags: entry.tags }))
+    entry.tags = [...done.tags]
+    return done.v
   })().then(
     (v) => Object.assign(entry, { done: true, v }),
     (err) => {
-      if (isRedirect(err) && scope.started) {
-        const message = `\`${fn.$id}\` called \`redirect('${err.href}')\` after the page started streaming: the status is already sent`
-        scope.options.onDiagnostic?.({ code: 'Q007', severity: 'error', message })
-        err = new StartError(
-          'Q007',
-          message,
-          `call \`${fn.$id.replace(/\..*$/, '')}.fetch()\` in the route's \`load\`, which runs before the first byte`,
-        )
-      }
+      err = afterStart(err, scope, fn)
       Object.assign(entry, { done: true, e: err })
       throw err
     },
@@ -186,6 +185,20 @@ function fetchEntry(scope: Scope, fn: Fn, input: unknown): ScopeEntry {
   entry.p.catch(() => {}) // a failure surfaces where the value is read
   scope.entries.set(key, entry)
   return entry
+}
+
+/** A `redirect()` after the page started streaming can't change the status: Q007 says so, with where to move it. */
+function afterStart(err: unknown, scope: Scope, fn: Fn): unknown {
+  if (isRedirect(err) && scope.started) {
+    const message = `\`${fn.$id}\` called \`redirect('${err.href}')\` after the page started streaming: the status is already sent`
+    scope.options.onDiagnostic?.({ code: 'Q007', severity: 'error', message })
+    err = new StartError(
+      'Q007',
+      message,
+      `call \`${fn.$id.replace(/\..*$/, '')}.fetch()\` in the route's \`load\`, which runs before the first byte`,
+    )
+  }
+  return err
 }
 
 /** A query's tags. One that takes `ctx` is one user's, so it reads `ctx`; a signed-out caller fails here, as `guard` would. */
@@ -199,25 +212,6 @@ export async function tagsOf(fn: Fn, input: unknown, scope: Pick<Scope, 'ctx'>):
 }
 
 const same = (a: number[], b: number[]) => a.length === b.length && a.every((x, i) => x === b[i])
-
-/** A body in another process (research 36): what it adds to the tags and reports it touched arrive with the value. */
-async function callImpl(
-  fn: Fn,
-  input: unknown,
-  ctx: Context,
-  scope: Scope,
-  track: { touched?: Touched | undefined; added: string[] },
-) {
-  const { touched, added } = track
-  const {
-    value,
-    tags,
-    touched: tables,
-  } = await fn.def.impl!.call({ fn, input, ctx, request: scope.request })
-  added.push(...tags)
-  if (touched) for (const t of tables) touched[fn.kind === 'query' ? 'read' : 'write'].add(t)
-  return value
-}
 
 const OWN = new Set([
   '$id',

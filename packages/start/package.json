@@ -29,6 +29,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./data": "./src/data.ts",
+    "./cache": "./src/cache.ts",
     "./derive": "./src/derive.mjs",
     "./media": "./src/media.ts",
     "./hub": "./src/hub.ts",

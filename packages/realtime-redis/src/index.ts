@@ -79,3 +79,5 @@ export function redisBus({ url, prefix = 'weft:' }: RedisBusOptions): Bus {
 /** The `realtime.bus` provider: `REDIS_URL` unless the plugin was given a `url`. */
 export const bus = (options: Partial<RedisBusOptions> = {}) =>
   redisBus({ ...options, url: options.url ?? process.env.REDIS_URL ?? '' })
+
+export { redisRateLimit, redisStore, type RedisStoreOptions } from './store'
